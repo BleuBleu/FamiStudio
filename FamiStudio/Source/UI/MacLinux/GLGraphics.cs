@@ -313,43 +313,46 @@ namespace FamiStudio
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
         {
-            DrawRotatedBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0);
+            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
         }
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity)
         {
-            DrawRotatedBitmap(bmp, x, y, width, height, opacity, 0);
-        }
-
-        public void DrawRotatedBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, int rotation)
-        {
             Debug.Assert(rotation == 0 || rotation == 90); // All we support right now.
+
+            int x0 = (int)x;
+            int y0 = (int)y;
+            int x1 = (int)(x + width);
+            int y1 = (int)(y + height);
 
             GL.Enable(EnableCap.Texture2D);
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.Color4(1.0f, 1.0f, 1.0f, opacity);
 
             GL.Begin(BeginMode.Quads);
-            if (rotation == 90)
-            {
-                GL.TexCoord2(0, 0); GL.Vertex2(x, y);
-                GL.TexCoord2(1, 0); GL.Vertex2(x, y - width);
-                GL.TexCoord2(1, 1); GL.Vertex2(x + height, y - width);
-                GL.TexCoord2(0, 1); GL.Vertex2(x + height, y );
-            }
-            else
-            {
-                int x0 = (int)x;
-                int y0 = (int)y;
-                int x1 = (int)(x + width);
-                int y1 = (int)(y + height);
-
-                GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
-                GL.TexCoord2(1, 0); GL.Vertex2(x1, y0);
-                GL.TexCoord2(1, 1); GL.Vertex2(x1, y1);
-                GL.TexCoord2(0, 1); GL.Vertex2(x0, y1);
-            }
+            GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
+            GL.TexCoord2(1, 0); GL.Vertex2(x1, y0);
+            GL.TexCoord2(1, 1); GL.Vertex2(x1, y1);
+            GL.TexCoord2(0, 1); GL.Vertex2(x0, y1);
             GL.End();
+
+            GL.Disable(EnableCap.Texture2D);
+        }
+
+        // HACK : Very specific call only used by video rendering, too lazy to do the proper transforms.
+        public void DrawRotatedFlippedBitmap(GLBitmap bmp, float x, float y, float width, float height)
+        {
+            GL.Enable(EnableCap.Texture2D);
+            GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
+            GL.Color4(1.0f, 1.0f, 1.0f, opacity);
+
+            GL.Begin(BeginMode.Quads);
+            GL.TexCoord2(0, 1); GL.Vertex2(x, y);
+            GL.TexCoord2(1, 1); GL.Vertex2(x, y - width);
+            GL.TexCoord2(1, 0); GL.Vertex2(x + height, y - width);
+            GL.TexCoord2(0, 0); GL.Vertex2(x + height, y );
+            GL.End();
+
             GL.Disable(EnableCap.Texture2D);
         }
 

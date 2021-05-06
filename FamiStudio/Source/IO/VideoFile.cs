@@ -641,8 +641,8 @@ namespace FamiStudio
                         // Composite the channel renders.
                         foreach (var s in channelStates)
                         {
-                            int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
-                            videoGraphics.DrawRotatedBitmap(s.bitmap, channelPosX0, videoResY, s.bitmap.Size.Width, s.bitmap.Size.Height, 1.0f, 90);
+                            int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
+                            videoGraphics.DrawRotatedFlippedBitmap(s.bitmap, channelPosX1, videoResY, s.bitmap.Size.Width, s.bitmap.Size.Height);
                         }
 
                         // Gradient

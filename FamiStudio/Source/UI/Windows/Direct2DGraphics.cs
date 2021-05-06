@@ -126,18 +126,6 @@ namespace FamiStudio
             renderTarget.Transform = mat;
         }
 
-        public void PushRotation(float r11, float r12, float r21, float r22)
-        {
-            var mat = renderTarget.Transform;
-            matrixStack.Push(mat);
-            // HACK : Doesnt multiply, just replaces.
-            mat.M11 = r11;
-            mat.M12 = r12;
-            mat.M21 = r21;
-            mat.M22 = r22;
-            renderTarget.Transform = mat;
-        }
-
         public void PushScale(float x, float y)
         {
             var mat = renderTarget.Transform;
@@ -192,14 +180,22 @@ namespace FamiStudio
             renderTarget.DrawBitmap(bmp, new RawRectangleF(x, y, x + width, y + height), opacity, BitmapInterpolationMode.NearestNeighbor);
         }
 
-        public void DrawRotatedBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity, int rotation)
+        // HACK : Very specific call only used by video rendering, too lazy to do the proper transforms.
+        public void DrawRotatedFlippedBitmap(Bitmap bmp, float x, float y, float width, float height)
         {
-            Debug.Assert(rotation == 90);
+            var mat = renderTarget.Transform;
+            matrixStack.Push(mat);
 
-            PushRotation(0, -1, 1, 0);
-            PushTranslation(x, y);
-            renderTarget.DrawBitmap(bmp, new RawRectangleF(0, 0, width, height), opacity, BitmapInterpolationMode.NearestNeighbor);
-            PopTransform();
+            mat.M11 =  0;
+            mat.M12 = -1;
+            mat.M21 = -1;
+            mat.M22 =  0;
+            mat.M31 += x;
+            mat.M32 += y;
+            renderTarget.Transform = mat;
+
+            renderTarget.DrawBitmap(bmp, new RawRectangleF(0, 0, width, height), 1.0f, BitmapInterpolationMode.NearestNeighbor);
+
             PopTransform();
         }
 
