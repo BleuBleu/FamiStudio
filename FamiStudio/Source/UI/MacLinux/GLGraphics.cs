@@ -318,8 +318,6 @@ namespace FamiStudio
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity)
         {
-            Debug.Assert(rotation == 0 || rotation == 90); // All we support right now.
-
             int x0 = (int)x;
             int y0 = (int)y;
             int x1 = (int)(x + width);
@@ -344,13 +342,13 @@ namespace FamiStudio
         {
             GL.Enable(EnableCap.Texture2D);
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
-            GL.Color4(1.0f, 1.0f, 1.0f, opacity);
+            GL.Color4(1.0f, 1.0f, 1.0f, 1.0f);
 
             GL.Begin(BeginMode.Quads);
-            GL.TexCoord2(0, 1); GL.Vertex2(x, y);
+            GL.TexCoord2(0, 0); GL.Vertex2(x - height, y);
+            GL.TexCoord2(1, 0); GL.Vertex2(x - height, y - width);
             GL.TexCoord2(1, 1); GL.Vertex2(x, y - width);
-            GL.TexCoord2(1, 0); GL.Vertex2(x + height, y - width);
-            GL.TexCoord2(0, 0); GL.Vertex2(x + height, y );
+            GL.TexCoord2(0, 1); GL.Vertex2(x, y );
             GL.End();
 
             GL.Disable(EnableCap.Texture2D);
