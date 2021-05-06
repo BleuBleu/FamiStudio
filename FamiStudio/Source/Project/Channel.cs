@@ -744,7 +744,7 @@ namespace FamiStudio
                 }
             }
 
-            return -1;
+            return Song.CountNotesBetween(startLocation, Song.EndLocation);
         }
 
         public bool FindNextNoteForSlide(NoteLocation location, int maxNotes, out NoteLocation nextNoteLocation, bool endAfterCutDelay)

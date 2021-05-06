@@ -590,6 +590,7 @@ namespace FamiStudio
 
         public void Export()
         {
+            StopEverything();
             exportDialog = new ExportDialog(project);
             exportDialog.ShowDialog(mainForm);
         }
@@ -607,6 +608,7 @@ namespace FamiStudio
             }
             else
             {
+                StopEverything();
                 exportDialog.Export(mainForm, true);
             }
         }

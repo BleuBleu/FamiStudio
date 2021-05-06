@@ -2,6 +2,25 @@
 
 Version history / release notes for each release.
 
+## Version 3.0.0
+
+Changes :
+
+* Redesigned FamiStudio tempo
+* Redesigned note editing
+* MIDI import/export support
+* Oscilloscope in toolbar
+* Optional scrollbars
+* Revamped Mac version.
+* Configurable QWERTY keyboard keys
+* Improved sound engine music data compression (15-30% smaller)
+* Audio expansion volume/low-pass filter configuration
+* S5B and VRC7 and now properly low-pass filtered
+* Ability to re-order songs.
+* Hi-DPI support on Linux
+* Quick DPCM source data reload
+* Improved video rendering speed.
+
 ## Version 2.4.2 (Hotfix)
 
 Fixes:

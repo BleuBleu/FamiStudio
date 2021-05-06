@@ -306,6 +306,8 @@ namespace FamiStudio
         int captureMouseY = 0;
         int captureScrollX = 0;
         int captureScrollY = 0;
+        int captureSelectionMin = -1;
+        int captureSelectionMax = -1;
         int playingNote = -1;
         int selectionMin = -1;
         int selectionMax = -1;
@@ -1721,6 +1723,24 @@ namespace FamiStudio
             }
         }
 
+        private void PromoteTransaction(TransactionScope scope, int objectId = -1, int subIdx = -1)
+        {
+            // HACK : When promoting transaction, we end up saving the app state at the 
+            // moment when the transaction is promoted. This lead to selections being in
+            // the wrong place. 
+            var tempSelectionMin = selectionMin;
+            var tempSelectionMax = selectionMax;
+
+            selectionMin = captureSelectionMin;
+            selectionMax = captureSelectionMax;
+
+            App.UndoRedoManager.AbortTransaction();
+            App.UndoRedoManager.BeginTransaction(scope, objectId, subIdx);
+
+            selectionMin = tempSelectionMin;
+            selectionMax = tempSelectionMax;
+        }
+
         private bool IsNoteSelected(NoteLocation location, int duration = 0)
         {
             if (IsSelectionValid())
@@ -2302,7 +2322,10 @@ namespace FamiStudio
             var duration = Math.Min(distanceToNextNote, note.Duration);
             var slideDuration = note.IsSlideNote ? channel.GetSlideNoteDuration(note, location) : -1;
             var color = GetNoteColor(channel, note.Value, note.Instrument, song.Project);
-            var selected = IsNoteSelected(location, duration);
+            var selected = isActiveChannel && IsNoteSelected(location, duration);
+
+            if (!isActiveChannel)
+                color = Color.FromArgb((int)(color.A * 0.2f), color);
 
             // Draw first part, from start to release point.
             if (note.HasRelease)
@@ -2958,40 +2981,53 @@ namespace FamiStudio
 
             bool left = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
-            bool foundNote = GetNoteValueForCoord(e.X, e.Y, out byte noteValue);
 
-            if (editMode == EditionMode.DPCMMapping && left && foundNote)
+            if (editMode == EditionMode.DPCMMapping && left)
             {
-                // In case we were dragging a sample.
-                EndCaptureOperation(e);
-
-                var mapping = App.Project.GetDPCMMapping(noteValue);
-                if (left && mapping != null)
+                if (GetNoteValueForCoord(e.X, e.Y, out byte noteValue))
                 {
-                    var freqIdx = App.PalPlayback ? 1 : 0;
-                    var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
-                    dlg.Properties.AddDropDownList("Pitch :", DPCMSampleRate.Strings[freqIdx], DPCMSampleRate.Strings[freqIdx][mapping.Pitch]); // 0
-                    dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
-                    dlg.Properties.Build();
+                    // In case we were dragging a sample.
+                    EndCaptureOperation(e);
 
-                    if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                    var mapping = App.Project.GetDPCMMapping(noteValue);
+                    if (left && mapping != null)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
-                        mapping.Pitch = DPCMSampleRate.GetIndexForName(App.PalPlayback, dlg.Properties.GetPropertyValue<string>(0));
-                        mapping.Loop  = dlg.Properties.GetPropertyValue<bool>(1);
-                        App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
+                        var freqIdx = App.PalPlayback ? 1 : 0;
+                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
+                        dlg.Properties.AddDropDownList("Pitch :", DPCMSampleRate.Strings[freqIdx], DPCMSampleRate.Strings[freqIdx][mapping.Pitch]); // 0
+                        dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
+                        dlg.Properties.Build();
+
+                        if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                            mapping.Pitch = DPCMSampleRate.GetIndexForName(App.PalPlayback, dlg.Properties.GetPropertyValue<string>(0));
+                            mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
+                            App.UndoRedoManager.EndTransaction();
+                            ConditionalInvalidate();
+                        }
                     }
                 }
             }
-            else if (right && editMode == EditionMode.Channel && e.Y < headerSizeY && e.X > whiteKeySizeX)
+            else if (right && editMode == EditionMode.Channel)
             {
-                int patIdx = Song.PatternIndexFromAbsoluteNoteIndex((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
-                if (patIdx >= 0 && patIdx < Song.Length)
+                if (IsMouseInHeader(e.X, e.Y))
                 {
-                    SetSelection(Song.GetPatternStartAbsoluteNoteIndex(patIdx), Song.GetPatternStartAbsoluteNoteIndex(patIdx + 1) - 1);
-                    ConditionalInvalidate();
+                    int patIdx = Song.PatternIndexFromAbsoluteNoteIndex((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
+                    if (patIdx >= 0 && patIdx < Song.Length)
+                        SetSelection(Song.GetPatternStartAbsoluteNoteIndex(patIdx), Song.GetPatternStartAbsoluteNoteIndex(patIdx + 1) - 1);
                 }
+                else if (GetLocationForCoord(e.X, e.Y, out var location, out byte noteValue))
+                {
+                    var channel = Song.Channels[editChannel];
+                    var note = channel.FindMusicalNoteAtLocation(ref location, -1);
+                    if (note != null && (note.IsStop || note.IsMusical && note.Value != noteValue))
+                    {
+                        var absoluteNoteIndex = location.ToAbsoluteNoteIndex(Song);
+                        SetSelection(absoluteNoteIndex, absoluteNoteIndex + Math.Min(note.Duration, channel.GetDistanceToNextNote(location)) - 1);
+                    }
+                }
+                ConditionalInvalidate();
             }
         }
 
@@ -3021,6 +3057,8 @@ namespace FamiStudio
             captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
             captureWaveTime = editMode == EditionMode.DPCM ? GetWaveTimeForPixel(e.X - whiteKeySizeX) : 0.0f;
             captureNoteValue = numNotes - Utils.Clamp((e.Y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, numNotes);
+            captureSelectionMin = selectionMin;
+            captureSelectionMax = selectionMax;
 
             captureMouseAbsoluteIdx = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
             if (allowSnap)
@@ -4884,6 +4922,7 @@ namespace FamiStudio
                         else 
                         {
                             tooltipList.Add("{T} {MouseLeft} Add stop note");
+                            tooltipList.Add("{MouseRight} {MouseRight} Select entire note");
                         }
 
                         tooltipList.Add("{MouseWheel} Pan");
@@ -5127,10 +5166,7 @@ namespace FamiStudio
                                         newPatternMaxIdx != initialPatternMinIdx;
 
                 if (multiplePatterns)
-                {
-                    App.UndoRedoManager.AbortTransaction();
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-                }
+                    PromoteTransaction(TransactionScope.Channel, Song.Id, editChannel);
             }
 
             var copy = ModifierKeys.HasFlag(Keys.Control);
@@ -5258,10 +5294,7 @@ namespace FamiStudio
                     {
                         // Check if need to promote transaction.
                         if (App.UndoRedoManager.UndoScope == TransactionScope.Pattern)
-                        {
-                            App.UndoRedoManager.AbortTransaction();
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-                        }
+                            PromoteTransaction(TransactionScope.Channel, Song.Id, editChannel);
 
                         if (pattern == null)
                         {

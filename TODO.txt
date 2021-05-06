@@ -16,7 +16,7 @@ FamiStudio 3.0.0
 Doc 
 === 
 - Hayabusa DPCM doc. 
-- Vxx is supported.
+x Vxx is supported.
 - MIDI 
 - Note editing
 - Tempo
@@ -36,23 +36,6 @@ Testing
 - Test tempo UI a lot. 
 / Rebuild all DLLs on all platforms.
 - Retest DPCM editor (capture ops).
-
-FamiStudio 3.0.0 Features
-=========================
-- Redesigned tempo.
-- Redesigned note editing
-- MIDI import/export
-- Oscilloscope
-- Scrollbars
-- Configurable QWERTY keyboard keys
-- Revamped Mac version.
-- Improved sound engine music data compression (15-30% smaller)
-- Audio expansion volume/low pass filter
-- S5B and VRC7 and now properly low-pass filtered.
-- Ability to re-order songs.
-- Hi-DPI support on Linux
-- Quick DPCM source data reload
-- Improved video rendering speed.
 
 Linux notes 
 =========== 

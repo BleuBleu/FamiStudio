@@ -270,7 +270,8 @@ Note that only a small subset of features is supported. Only the following effec
 * Pxx (Fine pitch) : Fully supported.
 * Hxx (FDS Modulation depth) : Fully supported.
 * Ixx/Jxx (FDS Modulation speed) : Fully supported, but combined in one 16-bit value.
-* Sxx (delayed cut) : Fully supported. 
+* Sxx (Delayed cut) : Fully supported. 
+* Vxx (Timbre) : Supported, but only affects the duty cycle of 2A03 and VRC6 square channels. Does not affect Saw or anything else.
 
 Besides effects, there are also other limitations:
 
@@ -279,7 +280,7 @@ Besides effects, there are also other limitations:
 * Namco 163 instrument can only have a single waveform. Any other waveform than zero will be ignored.
 * VRC7 1xx/2xx/3xx/Qxx/Rxx effects will likely not sound like FamiTracker and will need manual corrections.
 * Instruments using both pitch and arpeggio envelopes at the same time will not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker re-triggers the pitch envelope at each arpeggio notes (probably the more sensible way), while FamiStudio simply runs both at the same time.
-* VRC6 saw channel is not influenced by duty cycle in FamiStudio. FamiStudio always allow the full volume range for the saw. Import/export process does not try account for this. This might lead to volume inconsistencies between FamiTracker and FamiStudio where the volume needs to be doubled or halved to sound correct.
+* VRC6 saw channel is not influenced by duty cycle in FamiStudio. FamiStudio has a "saw master volume" on VRC6 instruments. Import/export process does not try account for this. Manual corrections may be needed.
 * Vibrato effect might sound a bit different, please see table above for exact mappings.
 * The noise channel in FamiStudio is not affected by pitch envelope or any pitch effects (1xx, 2xx, 3xx, Qxx and Rxx).
 
