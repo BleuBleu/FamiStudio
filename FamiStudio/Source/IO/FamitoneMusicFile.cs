@@ -1232,7 +1232,7 @@ namespace FamiStudio
             var bestSize = int.MaxValue;
             var bestMinNotesForJump = 0;
 
-            for (int i = 8; i < 32; i++)
+            for (int i = 8; i <= 40; i++)
             {
                 var size = CompressAndOutputSongData(songData, i, false);
 #if DEBUG
