@@ -1,6 +1,6 @@
 FamiStudio 3.0.0 
 ================
-- Delayed cut fix is probably no good.
+- Delayed cut fix is probably no good. 
 - Convert demo songs to new tempo (when file format is frozen). 
 	- Gimmick 
 	- Tower 
@@ -34,7 +34,8 @@ Testing
 	- Re-test FT2 stock with compression thing vs. 2 notes. 
 - Import/export format, retest all of them. Create FamiTracker unit tests.
 - Test tempo UI a lot. 
-- Linux/Mac : Rebuild all DLLs.
+- Rebuild all DLLs on all platforms.
+- Retest DPCM editor (capture ops).
 
 FamiStudio 3.0.0 Features
 =========================
@@ -89,6 +90,7 @@ Discord
  
 Backlog: 
 ========= 
+- Loop in selection.
 - Raw FDS modulation table envelope. 
 - Rendering of note is sub-optimal, BG + lines + attack, etc. D2D batches if same shader. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
