@@ -1,7 +1,7 @@
 FamiStudio 3.0.0 
 ================
 - Delayed cut fix is probably no good. 
-- Sound engine, bump version to 3.0.0, re-export + recompile everything.
+/ Sound engine, bump version to 3.0.0, re-export + recompile everything.
 - Convert demo songs to new tempo (when file format is frozen). 
 	- Gimmick 
 	- Tower 
@@ -25,17 +25,16 @@ Doc
 
 Testing 
 ======= 
-- Note : Run unit test for player.
 - MacOS : Scaling, etc. Find someone with a mac to test. Look at CPU usage. 
 - MacOS: Test with weird keyboards, see if GTK colors look ok.
-- Linux : Test scaling more. 
+- Linux : Test scaling more, ask sirocyl!
 - Windows : Scaling, 150% and stuff for the warning in dialogs. 
 - Engine :  
 	- Re-test delayed note, @no_ref delayed note fix. 
 	- Re-test FT2 stock with compression thing vs. 2 notes. 
-- Import/export format, retest all of them. Create FamiTracker unit tests.
+- Import/export format, retest all of them.
 - Test tempo UI a lot. 
-- Rebuild all DLLs on all platforms.
+/ Rebuild all DLLs on all platforms.
 - Retest DPCM editor (capture ops).
 
 FamiStudio 3.0.0 Features
