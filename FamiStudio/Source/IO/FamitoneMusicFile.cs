@@ -1158,7 +1158,7 @@ namespace FamiStudio
                 var isJumpCode = jumpToRefs.Contains(i);
                 var isJumpLabel = IsRef(b);
 
-                if (byteString != null && (isJumpLabel || isLabel || isRef || isJumpCode))
+                if (byteString != null && (isJumpLabel || isLabel || isRef || isJumpCode || byteString.Length > 120))
                 {
                     if (writeLines)
                         lines.Add(byteString);
