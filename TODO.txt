@@ -1,7 +1,7 @@
 FamiStudio 3.0.0 
 ================
 - Delayed cut fix is probably no good. 
-- ROM + sound engine, bump version to 3.0.0, re-export + recompile everything.
+- Sound engine, bump version to 3.0.0, re-export + recompile everything.
 - Convert demo songs to new tempo (when file format is frozen). 
 	- Gimmick 
 	- Tower 
