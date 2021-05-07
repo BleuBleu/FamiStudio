@@ -1,7 +1,7 @@
 FamiStudio 3.0.0 
 ================
-- Delayed cut fix is probably no good. 
 / Sound engine, bump version to 3.0.0, re-export + recompile everything.
+=> Recompile NesSndEmu on other platforms.
 - Convert demo songs to new tempo (when file format is frozen). 
 	- Gimmick 
 	- Tower 
@@ -22,6 +22,7 @@ x Vxx is supported.
 - Tempo
 - F1-F12 keys.
 - QWERTY keys (remove stop note on drawing)
+- 1/2, 1/4 playback.
 
 Testing 
 ======= 
