@@ -428,7 +428,7 @@ namespace FamiStudio
                     for (int j = 0; j < oldNoteLength; j++)
                     {
                         var oldIdx = i * oldNoteLength + j;
-                        var newIdx = i * newNoteLength + (int)Math.Floor(j * ratio);
+                        var newIdx = i * newNoteLength + (int)Math.Floor(j * ratio + 0.001f);
 
                         oldNotes.TryGetValue(oldIdx, out var oldNote);
                         pattern.Notes.TryGetValue(newIdx, out var newNote);
@@ -444,7 +444,7 @@ namespace FamiStudio
                             if (oldNote.IsMusical)
                             {
                                 var release = oldNote.Release;
-                                oldNote.Duration = (int)Math.Floor(oldNote.Duration * ratio);
+                                oldNote.Duration = (int)Math.Floor(oldNote.Duration * ratio + 0.001f);
                                 if (release > 0)
                                     oldNote.Release = (int)Math.Floor(release * ratio);
                             }

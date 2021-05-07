@@ -12,6 +12,7 @@ Changes :
 * Oscilloscope in toolbar
 * Optional scrollbars
 * Revamped Mac version.
+* 1/2 and 1/4 playback speed.
 * Configurable QWERTY keyboard keys
 * Improved sound engine music data compression (15-30% smaller)
 * Audio expansion volume/low-pass filter configuration
