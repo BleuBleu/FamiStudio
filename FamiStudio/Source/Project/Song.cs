@@ -152,6 +152,7 @@ namespace FamiStudio
 
             UpdatePatternStartNotes();
             InvalidateCumulativePatternCache();
+            CleanupUnusedPatterns();
         }
 
         public void SetDefaultPatternLength(int newLength)

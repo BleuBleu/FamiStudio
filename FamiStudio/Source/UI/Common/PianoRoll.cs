@@ -3311,7 +3311,7 @@ namespace FamiStudio
 
                 if (pattern == null)
                 {
-                    if (createMissingPatterns)
+                    if (createMissingPatterns && p < Song.Length)
                     {
                         pattern = channel.CreatePatternAndInstance(p);
                     }

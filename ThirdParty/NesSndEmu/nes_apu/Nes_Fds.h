@@ -70,7 +70,6 @@ private:
 
 	void run_until(cpu_time_t);
 	void run_fds(cpu_time_t end_time);
-	void update_volume();
 };
 
 #endif

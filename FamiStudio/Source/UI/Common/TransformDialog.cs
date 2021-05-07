@@ -127,6 +127,12 @@ namespace FamiStudio
                     app.Project.GetSong(songId).DeleteNotesPastMaxInstanceLength();
                 }
 
+                if (reduceNoteLengths)
+                {
+                    foreach (var songId in songIds)
+                        app.Project.GetSong(songId).SetNoteDurationToMaximumLength();
+                }
+
                 if (mergeIdenticalPatterns)
                 {
                     foreach (var songId in songIds)
@@ -137,12 +143,6 @@ namespace FamiStudio
                 {
                     foreach (var songId in songIds)
                         app.Project.GetSong(songId).DeleteEmptyPatterns();
-                }
-
-                if (reduceNoteLengths)
-                {
-                    foreach (var songId in songIds)
-                        app.Project.GetSong(songId).SetNoteDurationToMaximumLength();
                 }
 
                 app.UndoRedoManager.EndTransaction();

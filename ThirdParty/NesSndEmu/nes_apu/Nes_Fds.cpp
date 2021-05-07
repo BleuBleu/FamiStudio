@@ -36,21 +36,7 @@ void Nes_Fds::reset()
 void Nes_Fds::volume(double v)
 {
 	vol = v;
-	update_volume();
-}
-
-void Nes_Fds::update_volume()
-{
-	float masterVolume = 1.0f;
-
-	switch (osc.regs[9] & 0x03)
-	{
-		case 1: masterVolume = 2.0f / 3.0f; break;
-		case 2: masterVolume = 2.0f / 4.0f; break;
-		case 3: masterVolume = 2.0f / 5.0f; break;
-	}
-
-	synth.volume(vol * masterVolume * 0.13f);
+	synth.volume(vol * 0.13f);
 }
 
 void Nes_Fds::treble_eq(blip_eq_t const& eq)
@@ -106,11 +92,6 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 		}
 
 		osc.regs[reg] = data;
-
-		if (reg == 9)
-		{
-			update_volume();
-		}
 	}
 }
 
@@ -210,6 +191,9 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 		int volume = min(osc.volume_env, 0x20);
 		int amp = osc.wave[(osc.phase >> 16) & 0x3f] * volume;
 
+		// Master volume.
+		amp = amp * 2 / ((osc.regs[9] & 0x03) + 2);
+
 		int delta = amp - last_amp;
 		if (delta)
 		{
@@ -242,8 +226,6 @@ void Nes_Fds::stop_seeking(blip_time_t& clock)
 		if (shadow_regs[i] >= 0)
 			write_register(clock += 4, regs_addr + i, shadow_regs[i]);
 	}
-
-	update_volume();
 }
 
 void Nes_Fds::write_shadow_register(int addr, int data)
@@ -251,7 +233,7 @@ void Nes_Fds::write_shadow_register(int addr, int data)
 	if (addr >= wave_addr && addr < (wave_addr + wave_count))
 	{
 		// Ignore write enable.
-		shadow_wave[addr - wave_addr] = data;
+		shadow_wave[addr - wave_addr] = (data & 0x3f) - 0x20;
 	}
 	else if (addr >= regs_addr && addr < (regs_addr + regs_count))
 	{
