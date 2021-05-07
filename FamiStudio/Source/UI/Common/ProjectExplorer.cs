@@ -1154,6 +1154,22 @@ namespace FamiStudio
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
                                 instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
+
+                                // HACK : Copy some envelope related stuff. Need to cleanup the envelope code.
+                                switch (envelopeDragIdx)
+                                {
+                                    case EnvelopeType.FdsWaveform:
+                                        instrumentDst.FdsWavePreset  = instrumentSrc.FdsWavePreset;
+                                        break;
+                                    case EnvelopeType.FdsModulation:
+                                        instrumentDst.FdsModPreset   = instrumentSrc.FdsModPreset;
+                                        break;
+                                    case EnvelopeType.N163Waveform:
+                                        instrumentDst.N163WavePreset = instrumentSrc.N163WavePreset;
+                                        instrumentDst.N163WaveSize   = instrumentSrc.N163WaveSize;
+                                        break;
+                                }
+
                                 App.UndoRedoManager.EndTransaction();
 
                                 InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);

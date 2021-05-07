@@ -58,11 +58,14 @@ namespace FamiStudio
             "ExportFamiTone2"
         };
 
-        Project project;
-        MultiPropertyDialog dialog;
-        uint lastExportCrc;
-        string lastExportFilename;
-        int[] midiInstrumentMapping;
+        private Project project;
+        private MultiPropertyDialog dialog;
+        private uint lastExportCrc;
+        private string lastExportFilename;
+        private int[] midiInstrumentMapping;
+
+        public delegate void EmptyDelegate();
+        public event EmptyDelegate Exporting;
 
         public unsafe ExportDialog(Project project)
         {
@@ -671,6 +674,8 @@ namespace FamiStudio
             using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Info))
             {
                 var selectedFormat = (ExportFormat)dialog.SelectedIndex;
+
+                Exporting?.Invoke();
 
                 if (!repeatLast)
                     lastExportFilename = null;

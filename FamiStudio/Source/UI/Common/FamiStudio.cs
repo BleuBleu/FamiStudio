@@ -417,13 +417,14 @@ namespace FamiStudio
                     }
                 }
 
+                FreeExportDialog();
+
                 undoRedoManager.PreUndoRedo -= UndoRedoManager_PreUndoRedo;
                 undoRedoManager.PostUndoRedo -= UndoRedoManager_PostUndoRedo;
                 undoRedoManager.TransactionBegan -= UndoRedoManager_PreUndoRedo;
                 undoRedoManager.TransactionEnded -= UndoRedoManager_PostUndoRedo;
                 undoRedoManager.Updated -= UndoRedoManager_Updated;
                 undoRedoManager = null;
-                exportDialog = null;
                 project = null;
 
                 StopEverything();
@@ -443,6 +444,15 @@ namespace FamiStudio
             InitProject();
         }
 
+        private void FreeExportDialog()
+        {
+            if (exportDialog != null)
+            {
+                exportDialog.Exporting -= ExportDialog_Exporting;
+                exportDialog = null;
+            }
+        }
+
         private void InitProject()
         {
             StopRecording();
@@ -458,7 +468,8 @@ namespace FamiStudio
             InitializeInstrumentPlayer();
             InitializeOscilloscope();
 
-            exportDialog = null;
+            FreeExportDialog();
+
             undoRedoManager = new UndoRedoManager(project, this);
             undoRedoManager.PreUndoRedo += UndoRedoManager_PreUndoRedo;
             undoRedoManager.PostUndoRedo += UndoRedoManager_PostUndoRedo;
@@ -590,8 +601,10 @@ namespace FamiStudio
 
         public void Export()
         {
-            StopEverything();
+            FreeExportDialog();
+
             exportDialog = new ExportDialog(project);
+            exportDialog.Exporting += ExportDialog_Exporting;
             exportDialog.ShowDialog(mainForm);
         }
 
@@ -604,13 +617,17 @@ namespace FamiStudio
             else if (!exportDialog.CanRepeatLastExport(project))
             {
                 DisplayWarning("Project has changed too much to repeat last export.");
-                exportDialog = null;
+                FreeExportDialog();
             }
             else
             {
-                StopEverything();
                 exportDialog.Export(mainForm, true);
             }
+        }
+
+        private void ExportDialog_Exporting()
+        {
+            StopEverything();
         }
 
         public void OpenConfigDialog()
@@ -741,6 +758,8 @@ namespace FamiStudio
 
         private void TransformDialog_CleaningUp()
         {
+            StopEverything();
+
             // We might be deleting data like entire songs/envelopes/samples that
             // are being edited right now.
             Sequencer.Reset();

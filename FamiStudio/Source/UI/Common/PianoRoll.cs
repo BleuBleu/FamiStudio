@@ -3017,6 +3017,11 @@ namespace FamiStudio
                     if (patIdx >= 0 && patIdx < Song.Length)
                         SetSelection(Song.GetPatternStartAbsoluteNoteIndex(patIdx), Song.GetPatternStartAbsoluteNoteIndex(patIdx + 1) - 1);
                 }
+                else if (IsMouseInEffectPanel(e.X, e.Y))
+                {
+                    if (GetEffectNoteForCoord(e.X, e.Y, out var location))
+                        SetSelection(Song.GetPatternStartAbsoluteNoteIndex(location.PatternIndex), Song.GetPatternStartAbsoluteNoteIndex(location.PatternIndex + 1) - 1);
+                }
                 else if (GetLocationForCoord(e.X, e.Y, out var location, out byte noteValue))
                 {
                     var channel = Song.Channels[editChannel];
