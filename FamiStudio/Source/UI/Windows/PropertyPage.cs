@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Reflection;
 
 #if FAMISTUDIO_WINDOWS
-using RenderTheme = FamiStudio.Direct2DTheme;
+    using RenderTheme = FamiStudio.Direct2DTheme;
 #else
     using RenderTheme = FamiStudio.GLTheme;
 #endif
@@ -104,7 +104,7 @@ namespace FamiStudio
 
             if (warningIcons ==  null)
             {
-                string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
+                string suffix = Direct2DTheme.DialogScaling > 1 ? "@2x" : "";
                 
                 warningIcons = new Bitmap[3];
                 warningIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
@@ -895,6 +895,8 @@ namespace FamiStudio
             else
                 prop.warningIcon.Image = warningIcons[(int)type];
 
+            prop.warningIcon.Width  = (int)(16 * RenderTheme.DialogScaling);
+            prop.warningIcon.Height = (int)(16 * RenderTheme.DialogScaling);
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
             toolTip.SetToolTip(prop.warningIcon, comment);
         }
