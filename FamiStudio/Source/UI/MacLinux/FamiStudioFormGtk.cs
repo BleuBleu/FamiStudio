@@ -53,8 +53,8 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-            WidthRequest  = GtkUtils.ScaleGtkWidget(1280);
-            HeightRequest = GtkUtils.ScaleGtkWidget(720);
+            WidthRequest  = GtkUtils.ScaleGtkWidget(1024);
+            HeightRequest = GtkUtils.ScaleGtkWidget(576);
             controls.Resize(GtkUtils.ScaleWindowCoord(WidthRequest), GtkUtils.ScaleWindowCoord(HeightRequest));
 
             Events |= 
@@ -75,6 +75,8 @@ namespace FamiStudio
 #endif
 
             doubleClickTime = Gtk.Settings.GetForScreen(Gdk.Screen.Default).DoubleClickTime;
+
+            Maximize();
         }
         
         protected override bool OnExposeEvent(Gdk.EventExpose evnt)
