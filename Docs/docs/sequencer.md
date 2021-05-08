@@ -14,13 +14,13 @@ Clicking in the timeline (header) of the sequencer will move the play position. 
 
 Clicking on a channel will make it the active one. Alternatively, you can press the keyboard key **1...5** (more if using expansion) to quickly change the active channel.
 
-## Muting/soloing channels
+## Muting & soloing channels
 
 Left-clicking on the icon of a channel (Square, triangle, noise, DPCM) will toggle mute. Right-clicking will toggle solo.
 
 ## Force display channel
 
-Clicking the tiny square icon next to the channel name will force display it in the piano roll.  Alternatively, you can press the keyboard key **Ctrl + 1...5** (more if using expansion).
+Clicking the tiny square icon next to the channel name will force display it in the piano roll.  Alternatively, you can press the keyboard key **Ctrl + F1...F5** (more if using expansion).
 
 ![](images/ForceDisplayButton.png#center)
 
@@ -28,9 +28,9 @@ Channels that are force displayed and are not the current channel will appear di
 
 ![](images/ForceDisplayPianoRoll.png#center)
 
-This can also achieved with the keyboard by pressing Ctrl + 1...5 (the number of the channel).
+This can also achieved with the keyboard by pressing Ctrl + F1...F5 (the number of the channel).
 
-## Adding/removing patterns
+## Adding & removing patterns
 
 You can add a new pattern by left-clicking on an empty space. Right-clicking deletes.
 
@@ -48,7 +48,7 @@ You can select multiple patterns in a rectangular grid, first select a pattern a
 
 ![](images/SquareSelection.png#center)
 
-## Moving/copying patterns
+## Moving & copying patterns
 
 When one or multiple patterns are selected, dragging them will move them in the timeline. While dragging, holding CTRL will create another instance of the pattern(s). An instance is a copy that is linked to the original pattern, it will have the same name and color. Modifying one instance will modify all of them. This will be shown by a "link" icon when dragging.
 
@@ -62,9 +62,17 @@ Dragging a pattern to a different channel will create a copy, but delete the ori
 
 ![](images/MovePatternDifferentChannel.png#center)
 
-## Cut/copy/pasting patterns
+## Copy & pasting patterns
 
 When one or multiple patterns are selected, press CTRL+C (or CTRL+X for cut). Move the selection somewhere else and paste with CTRL+V. Copy and pasting always create instances of patterns.
+
+### Copying & pasting patterns between projects
+
+Copy and pasting patterns between projects is possible When doing so, FamiStudio will assume patterns having the same name are identical. If a pattern is not found, it will offer you to create it for you. 
+
+For example, if you copy a pattern named "Chorus1" from a project to another. If no such pattern is found, it will be copied. Otherwise, if an existing pattern named "Chorus1" is found in the second project, it will assume it is the same.
+
+Inside patterns, for notes and instrument, the [same rule](pianoroll.md#copy-pasting-notes-between-projects) applies.
 
 ## Paste Special
 
@@ -75,14 +83,6 @@ Pressing CTRL+SHIFT+V will open the **Paste Special** dialog which gives more op
 * **Insert** : Will insert the copied patterns and move all the existing ones to the right.
 * **Extend song** : Will extend the song duration to accomodate the newly inserted patterns (Only available when Insert is enabled).
 * **Repeat** : Allows pasting the copied patterns multiple times in a row.
-
-## Copy/pasting patterns between projects
-
-Copy and pasting patterns between projects is possible When doing so, FamiStudio will assume patterns having the same name are identical. If a pattern is not found, it will offer you to create it for you. 
-
-For example, if you copy a pattern named "Chorus1" from a project to another. If no such pattern is found, it will be copied. Otherwise, if an existing pattern named "Chorus1" is found in the second project, it will assume it is the same.
-
-Inside patterns, for notes and instrument, the [same rule](pianoroll.md#copy-pasting-notes-between-projects) applies.
 
 ## Setting the loop point
 

@@ -112,3 +112,27 @@ Double-clicking on an existing sample will show its properties. These are the pr
 * **Loop** : Makes the sample loop or not.
 
 ![](images/DPCMProperties.png#center)
+
+## Sampling Instruments 
+
+Contribution by *.Hayabusa*, thanks!
+
+If you will like to sample some instrument, for example the Sunsoft Bass on your own, you can try this method. This is the same technique that was used in Sunsoft games.
+
+1. All you need to have is 5 different samples of same instrument, those samples should play these notes : A#, B, C, C#, D. These samples should be relatively high-pitched, since we will be pitching these down. Also this will help keeping the size down.
+
+2. Assign those 5 samples to corresponding notes, furthermore you will use these samples on lower notes, by assigning each one with lower pitch, to it's corresponding notes. For example let's take first source sample, A#, which with pitch 15, which is, of course the same A#. If you will lower the pitch to 14, it will become note F. With pitch 13, it will become D. And you will assign this same sample, by lowering pitch like that to it's corresponding notes.
+
+Here is a chart of how many semitones it goes down by decreasing the pitch, currently as i write this, i only got to pitch 7, which is -24 semitones, so in theory, you can sample whole 2 octaves by using just 5 samples.
+
+Pitch | Semitones
+--- | --- 
+15 | 0 
+14 | -5
+13 | -8
+12 | -12
+11 | -15
+10 | -17
+9 | -19
+8 | -22
+7 | -24

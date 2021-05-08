@@ -257,4 +257,4 @@ Every feature supported in FamiStudio is supported by this sound engine. If you 
     
 ## Exporting Music/SFX to the engine
 
-You can export music or sound effect data to the engine by using either the [Export Dialog](importexport.md) or from the [command line](cmdline.md).
+You can export music or sound effect data to the engine by using either the [Export Dialog](export.md) or from the [command line](cmdline.md).

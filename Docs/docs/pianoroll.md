@@ -23,11 +23,67 @@ In FamiTracker tempo mode, you do not have access to the individual frames, so t
 
 Clicking in the timeline (header) of the piano roll will move the play position. You can also drag the seek back to more it more accurately.
 
-## Adding and deleting notes
+## Adding & deleting notes
 
-Clicking a pattern in the sequencer will scroll the piano roll to its location. Left-clicking in the piano roll will add a note of the currently selected instrument. Holding the mouse when clicking will allow you to drag the note and will give audio feedback. You cannot add a note where the is not a pattern created.
+Clicking a pattern in the sequencer will scroll the piano roll to its location. 
+
+Left-clicking in the piano roll will add a note of the currently selected instrument and dragging while still holding the left button will allow you to set the duration. A pattern may be automatically created if you click on an area where there was no pattern. 
+
+![](images/CreateNote.gif#center)
 
 Right-clicking deletes a note.
+
+## Moving & resizing notes
+
+When moving the mouse around the piano roll, the note under the mouse cursor will be highlighted and the mouse cursor will change to reflect the type of action you can do :
+
+![](images/EditNote.gif#center)
+
+Possible actions are:
+
+* Move one or multiple note(s)
+* Resize one or multiple note(s)
+* Move the release point of a note
+
+## Note duration & priority
+
+FamiStudio is a monophonic app, in other words, only one note can play at a time on a given channel. 
+
+The general rule is that the latest/newest note (the one that is rightmost on the timeline) always has priority, this mean that it can interrupt a previous note, making it sorted than it would normally be. 
+
+As you can see, in the following example, even through i am trying to resize the left note, I cannot go beyond the right note. If I move the right now back, it is still interrupting the left note. Only when I move the right now far enough to the right we can see the real duration of the left note.
+
+![](images/NotePriority.gif#center)
+
+## Selecting notes
+
+There are three main wars of selecting notes, selected notes will appear with a thick silver border. 
+
+* You can select notes by right-clicking and dragging in the header of the piano roll or anywhere in the background of the piano roll (where there is no note). 
+* You can select an entire pattern by double right clicking in the header of a pattern.
+* You can select the duration of a note by double right clicking in the above or below a now.
+
+The following images shows all 3 techniques.
+
+![](images/SelectNotes.gif#center)
+
+Once notes are selected, then can be moved or resized all at once. They can also be moved or transposed using the keyboard array keys (up, down, left and right). Holding CTRL while doing so will make the notes move by larger increments.
+
+## Release point
+
+Using Shift+click on an existing will add a release point on a note. Release points are shown as making the note thinner and triggers the envelope to jump to the release point. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release point to an instrument that does not have a release envelope.
+
+Once a note has a release point, it can be moved by dragging. To remove a release point, you can right-click on it, or shift-click again.
+
+![](images/ReleaseNote.gif#center)
+
+## Stop notes
+
+Using T+click will add a stop note. A stop note simple stops the sound and are displayed as little triangles. Although they are displayed next to the note preceding them, they actually have no pitch or instrument, they simply stop the sound. 
+
+*As of FamiStudio 3.0.0 stop notes are no longer needed since they have been replaced by note durations. There are cases where stop notes will still remain when notes are detected to have inconsistent durations, but those should be relatively rare.*
+
+![](images/StopNote.png#center)
 
 ## Instrument Picker
 
@@ -35,9 +91,11 @@ Holding **I** and clicking on a note will make the instrument of that note the c
 
 ![](images/InstrumentPicker.png#center)
 
-## Recoding mode
+## Recording mode
 
 Recording mode is another way to input notes and is enabled by pressing the record button on the toolbar. Recording mode allows inputting notes using a MIDI controller or using a piano-type layout on the QWERTY keyboard. This layout is very similar to what FamiTracker uses. Note that this is not a "real-time" recording mode, simply a note-by-note input mode.
+
+This is default layout for an en-US keyboard. The [Configuration Dialog](config.md) allows re-mapping the keys for other types of keyboards.
 
 ![](images/QWERTY.png#center)
 
@@ -51,7 +109,6 @@ There are a few other special keys that are enabled when recording mode is activ
 
 * **Backspace**: moves back by 1 note (or snapping interval), erasing any note inside the interval. 
 * **Tab**: Advances by 1 note (or snapping interval), not recording anything.
-* **1**: Inserts a stop note and advances.
 * **Page Up/Down**: Moves the octave range that can be inputted using the QWERTY keyboard up/down.
 
 ## Snapping
@@ -60,21 +117,7 @@ Snapping can be toggle by clicking the little magnet in the top-left corner of t
 
 ![](images/Snap.png#center)
 
-Using FamiStudio tempo mode will allow you to use both fractional snapping (1/4, 1/3, 1/2) and integer snapping (1, 2, 3, 4). FamiTracker tempo mode is limited to integer snapping since it does not give you full control over the individual frames. Fractional snapping will perform rounding when the number of frames in a note isnt exactly divisible by the precision.
-
 Adding, selecting and dragging of notes are currently the only actions affected by snapping. More might be added in future based on user feedback.
-
-## Stop & Release notes
-
-Using Ctrl+click will add a stop note. Stops notes are displayed as little triangles. Although they are displayed next to the note preceding them, they actually have no pitch or instrument, they simply stop the sound. Stop notes are important because on the NES, a note will play indefinitely unless you tell it to stop.
-
-![](images/StopNote.png#center)
-
-Using Shift+click will add a release notes. Release notes are shown as making the note thinner and triggers the envelope to jump to the release point. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release note to an instrument that does not have a release envelope.
-
-![](images/ReleaseNote.png#center)
-
-Hovering the mouse in the piano roll will display the location and note in the toolbar. Hovering over a note will display which instrument it uses.
 
 ## Note attack
 
@@ -106,15 +149,17 @@ You can change which arpeggio is associated with a note the same way to can repl
 
 If an instrument uses an arpeggio envelope and also uses an arpeggio chord, the chord will take over and completely override the arpeggio envelope of the instrument. 
 
-## Selecting and editing notes
-
-You can select notes by right-clicking and dragging in the header of the piano roll or anywhere in the background of the piano roll (where there is no note). Selected notes will appear with a thick silver border. Once notes are selected, then can be moved using the arrows keys (up, down, left and right). Holding CTRL while doing so will make the notes move by larger increments.
-
-![](images/SelectNotes.png#center)
-
-## Cutting, copying and pasting notes
+## Copying & pasting notes
 
 Much like the sequencer, selcted notes can be copy (or cut) by pressing CTRL+C (or CTRL+X). You can then move the selection somewhere else and paste the notes with CTRL+V.
+
+### Copying & pasting notes between projects 
+
+It is possible to copy notes from one project to another. When doing so, FamiStudio will first look to make sure the instruments used by these notes exist in the other project. It will look for instruments having _the same name_. If some instruments are not found in the second project, it will offer you to create them for you, thus bringing the instrument from one project to another.
+
+For example, if you copy a note from project 1 using an instrument called "Piano", FamiStudio will look for an instrument named "Piano" in the second. If it finds one, it will assume it is the same (even though it might not be). If no "Piano" instrument is found, it will offer you to create it for you.
+
+This can be used as a way of transfering instruments from one project to another. Place a few notes using all the instruments you can to transfer. Copy them and paste them in the second project.
 
 ## Special paste
 
@@ -140,15 +185,7 @@ Much like Special paste, "Special delete" is a more advanced form of deletion. Y
 
 * **Delete Effects** : You can choose here the list of effects to delete. All unchecked effects will be preserved.
 
-## Copy & pasting notes between projects 
-
-It is possible to copy notes from one project to another. When doing so, FamiStudio will first look to make sure the instruments used by these notes exist in the other project. It will look for instruments having _the same name_. If some instruments are not found in the second project, it will offer you to create them for you, thus bringing the instrument from one project to another.
-
-For example, if you copy a note from project 1 using an instrument called "Piano", FamiStudio will look for an instrument named "Piano" in the second. If it finds one, it will assume it is the same (even though it might not be). If no "Piano" instrument is found, it will offer you to create it for you.
-
-This can be used as a way of transfering instruments from one project to another. Place a few notes using all the instruments you can to transfer. Copy them and paste them in the second project.
-
-## Editing volume tracks & effects
+## Editing volume & effects
 
 The effect panel can be opened by clicking the little triangle at the top-left of the piano roll. 
 
@@ -171,28 +208,28 @@ For effects that have huge values (such as FDS Depth), you can hold Shift to fin
 
 ![](images/VolumeTrack.png#center)
 
-## Volume track
+### Volume track
 
 The volume tracks dictates how loud the current channel should play. This volume is combined with volume envelope by multiplication (50% volume track x 50% envelope volume = 25% total volume). It is much more efficient to use volume envelopes wherever possible and only use volume tracks to control the global volume of the song.
 
-## Vibrato depth & speed.
+### Vibrato depth & speed
 
 Vibrato depth and speed are used to add vibrato to a portion of the song without having to bother creating a new instrument. Please note that vibrato will temporarely override any pitch envelope on the current instrument. When vibrato is disabled (by setting depth or speed, or both to zero), the instrument will essentially have no pitch envelope until a new note is played.
 
-The depth values for the vibrato are indentical to FamiTracker but the speeds are slightly different. The way FamiTracker implements vibrato, while clever, is flawed as it undersamples the vibrato curve at high speed, leading to aliasing which ends up with a low-frequency tone that has a "ringing" sound to it. Please see the [Import/Export](importexport.md) for a table that maps between FamiStudio and FamiTracker.
+The depth values for the vibrato are indentical to FamiTracker but the speeds are slightly different. The way FamiTracker implements vibrato, while clever, is flawed as it undersamples the vibrato curve at high speed, leading to aliasing which ends up with a low-frequency tone that has a "ringing" sound to it. Please see the [Export](export.md) page for a table that maps between FamiStudio and FamiTracker.
 
-## Pitch 
+### Pitch 
 
 Controls the global pitch of the track. Can be used to make an entire channel slightly out of tune.
 
-## Duty Cycle
+### Duty Cycle
 
 Allow changing the duty cycle of an instrument without using a duty cycle envelope. This can only affect instruments with no duty cycle envelopes. This effect is mostly just there for compatibility with FamiTracker. Unless you have special cases where you often need to change the duty cycle, you should always favor creating different instruments instead of using this effect. 
 
-## Speed
+### Speed
 
 This changes the speed parameter of the FamiTracker tempo settings and is only available in FamiTracker tempo mode. Larger values will make the song scroll slower. Please refer to the [Editing Songs & Project](song.md) section for more information about tempo management.
 
-## Note and Cut delay
+### Note and Cut delay
 
 Note delays allows delaying the moment a note is played by a few frames while cut delay will stop a note after a few frames. This also is only available in FamiTracker tempo mode. Please refer to the [Editing Songs & Project](song.md) section for more information about tempo management.

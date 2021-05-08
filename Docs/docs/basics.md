@@ -46,7 +46,7 @@ The sequencer and piano roll will display the information for the currently sele
 
 # Toolbar
 
-The main toolbar contains your usual stuff: file operation, undo/redo, timecode and play control.
+The main toolbar contains your usual stuff: file operation, undo/redo, timecode, oscilloscope and play controls.
 
 ![](images/Toolbar.png#center)
 
@@ -60,13 +60,18 @@ Keyboard shortcuts or special actions are always displayed as tooltips in the up
 
 Besides the toolbar, space bar is used to play/pause the song. Ctrl-space plays in pattern loop mode, Shift-space plays in song loop mode.
 
+## Changing the playback speed
+
+Rotating the mouse-wheel over the play button will allow you to change the playback speed to 1/2 or 1/4 speed. This is useful to hear very small/short notes.
+
+![](images/PlaybackSpeed.gif#center)
+
 ## Changing the looping mode
 
-There are 3 looping modes:
+There are 2 looping modes:
 
-* **Song**: loops the entire song
-* **Pattern**: loops at the end of the current pattern
-* **None**: stops at the end of the song
+* **Song / None**: Loops the entire song if a loop point is step, stops at the end if there are no loop point.
+* **Pattern**: Loops over the current pattern.
 
 ## Saving the project
 
@@ -74,7 +79,7 @@ Clicking on the icon save the project, right-clicking is a "save as..." and will
 
 ## Exporting to various formats
 
-Please see the [Import/Export](importexport.md) section for details on how to export to various formats.
+Please see the [Export](export.md) section for details on how to export to various formats.
 
 ## Cleanup dialog
 
@@ -117,6 +122,7 @@ Here is a list of useful keyboard shortcuts:
 * **Enter**: Toggles recording mode.
 * **Ctrl+Space**: Plays from beginning of current pattern.
 * **Shift+Space**: Plays from beginning of the song.
+* **Ctrl+Shift+Space**: Plays from loop point of the song (if any).
 * **Home**: Seeks back to beginning of the song.
 * **Ctrl+Home**: Seeks to beginning of the current pattern.
 * **Esc**: Stops any lindering sound, stops recording mode, clears the selection.
@@ -127,10 +133,11 @@ Here is a list of useful keyboard shortcuts:
 * **Ctrl+E**: Export
 * **Ctrl+Shift+E**: Repeat last export
 * **Ctrl+O**: Open
+* **Shift+Q**: Toggle QWERTY keyboard input.
 * **Delete**: Delete selected patterns or notes.
 * **Escape**: Deselects patterns or notes, stops any sound that is stuck playing.
-* **1...5**: Changes the active channel (more than 5 if you have expansion audio enabled).
-* **Ctrl+1...5**: Force display a channel. (more than 5 if you have expansion audio enabled).
+* **F1...F5**: Changes the active channel (more than 5 if you have expansion audio enabled).
+* **Ctrl+F1...F5**: Force display a channel. (more than 5 if you have expansion audio enabled).
 
 Some keyboard shortcuts specific to the sequencer:
 
@@ -138,14 +145,14 @@ Some keyboard shortcuts specific to the sequencer:
 
 Some keyboard shortcuts specific to the piano roll:
 
-* **Ctrl+Click**: Adds a stop note.
 * **Shift+Click**: Adds a release note.
 * **S+Click** (and drag): Creates or edit a slide note.
 * **A+Click**: Toggles the attack of a note.
-* **I+Click** : Instrument picker
+* **I+Click**: Instrument picker
+* **T+Click**: Adds an orphan stop note.
 * **~ (Tilde)**: Expand/collapse the effect panel.
 * **Shift+S**: Toggles snapping.
 
-When QWERTY keyboard input is active, some of the keys will be overriden to support piano input.
+When QWERTY keyboard input is active, some of the keys will be overriden to support piano input. This is default layout for an en-US keyboard. The [Configuration Dialog](config.md) allows re-mapping the keys for other types of keyboards.
 
 ![](images/QWERTY.png#center)

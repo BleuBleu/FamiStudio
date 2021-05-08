@@ -27,7 +27,7 @@ Double-clicking on an instrument will show its properties.
 
 You can an instrument by pressing the "+" sign, and you can one by right-clicking on it. Deleting an instrument will delete all notes used by that instrument.
 
-## Replacing an instrument by another
+## Replacing instruments
 
 Clicking on an instrument name and dragging it over another instrument will allow you to replace all notes of the first instrument by the second. This is useful prior to deleting an instrument.
 

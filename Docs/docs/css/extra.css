@@ -44,3 +44,11 @@ img[src*="#center"] {
 th {
     text-align: center;
 }
+.bs-sidebar .nav > li > a {
+    display: block;
+    padding: 1px 10px;
+    z-index: 1;
+}
+.col-md-3 {
+    max-width:30%;
+}
