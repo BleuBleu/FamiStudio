@@ -9,6 +9,11 @@ Testing
 ======= 
 - Linux : Ask sirocyl!
 
+Doc
+=========
+- Remove version warning.
+- Changelog 3.0.0
+
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 
