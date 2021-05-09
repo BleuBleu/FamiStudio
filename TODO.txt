@@ -1,9 +1,6 @@
 FamiStudio 3.0.0 
 ================
 / Sound engine, bump version to 3.0.0, re-export + recompile everything.
-- Convert demo songs to new tempo (when file format is frozen). 
-	- Gimmick 
-	- Tower 
 
 Testing 
 ======= 
