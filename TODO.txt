@@ -1,13 +1,12 @@
 FamiStudio 3.0.0 
 ================
-/ Sound engine, bump version to 3.0.0, re-export + recompile everything.
 
 Testing 
 ======= 
 - Linux : Ask sirocyl!
 
 Doc
-=========
+===
 - Remove version warning.
 - Changelog 3.0.0
 
