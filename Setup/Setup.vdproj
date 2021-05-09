@@ -28,13 +28,7 @@
         "Entry"
         {
         "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "OwnerKey" = "8:_5907743FD4B7075E982831F3D61936A1"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
+        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -46,7 +40,13 @@
         "Entry"
         {
         "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
+        "OwnerKey" = "8:_5907743FD4B7075E982831F3D61936A1"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -141,6 +141,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_BE2D9D0E176D4BD5B5F1123B2CF4FDE6"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_C64AEB8134F64395A6F5F28F66685034"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -172,13 +178,13 @@
         "Entry"
         {
         "MsmKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
-        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
+        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
+        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -190,19 +196,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
+        "OwnerKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
+        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -214,13 +214,19 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B2961EA04D6C3B0F391D53E11E6CC725"
+        "OwnerKey" = "8:_F8442B1E6721F9F7CA7633937BAFE4FF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
+        "OwnerKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -666,6 +672,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BE2D9D0E176D4BD5B5F1123B2CF4FDE6"
+            {
+            "SourcePath" = "8:Demo Songs\\Gyruss.fms"
+            "TargetName" = "8:Gyruss.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C64AEB8134F64395A6F5F28F66685034"
