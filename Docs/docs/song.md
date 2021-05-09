@@ -24,11 +24,16 @@ The tempo mode will affect how the tempo of you songs is calculated, how much co
 
 ### FamiStudio Tempo Mode
 
-FamiStudio tempo modes gives full control over every frame (1/60th of a second on NTSC, 1/50th on PAL). It is the default mode. In this mode you will see the individual frames in the piano roll and will have more precise control on where each note starts/end. On the other hand, it makes suddent tempo changes harder to manage, and it is also harder to achieve "non-integral" tempos. It can faithfully recreate the vast majority of the NES music library very easily. 
-
-For example, a C-D-E scale where each note is stopped for 1 frame between each note will look like this using FamiStudio tempo. The dashed lines seperate individual frames, so you can place a stop note (triangle) 1 frame before the new note starts. Very intuituve and visual.
+FamiStudio tempo modes gives full control over every frame (1/60th of a second on NTSC, 1/50th on PAL). It is the default mode. In this mode you will see the individual frames in the piano roll and will have more precise control on where each note starts/end. 
+For example, a C-D-E-F scale where each note is stopped for 1 frame between each note will look like this using FamiStudio tempo. The dashed lines seperate individual frames, so you can leave and empty frame 1 frame before the new note starts. Very intuituve and visual.
 
 ![](images/TempoExampleFamiStudio.png#center) 
+
+FamiStudio tempo mode let's you simply choose a BPM value for the song (or an individual pattern) and will automatically choose the appropriate number of frames to make each notes. Some BPMs will require the use of a *groove" which is an uneven sequence of frames. 
+
+For example, at 142 BPM (in NTSC), FamiStudio will know to use a 7-6-6 groove, which mean that the first note will be 7 frames long, then followed by two notes of 6 frames, and the whole thing will repeat until there is a tempo change in the song. But in order to keep the piano roll nice and even, FamiStudio will only only display the minimum values of the groove, 6 in our example. This mean that out of 19 frames in the groove, you only have control over 18. In other words, every 3rd note, FamiStudio will inject an empty frame for which you dont have any control. Effects, instrument envelopes & arpeggios will still advance on these empty frames, but otherwise no new note will be processed. You can tell FamiStudio *where* to inject this empty frame, by changing the **Groove Padding Mode** (Beginning, Middle or End).
+
+On of the limitation of FamiStudio tempo mode is that it will limit your ability to suddently changes tempo in the middle of a pattern. When using FamiStudio tempo, you can only change the BPM at the start of a new pattern.
 
 ### FamiTracker Tempo Mode
 
@@ -43,15 +48,13 @@ Same example, but using FamiTracker tempo. Here we dont have the individual fram
 You should use FamiStudio tempo mode if:
 
 * You want to be able to visually control the position of every note at a frame-level precision.
-* You are not too strict about the BPM you want to achieve.
-* You are not planning to do sophisticated tempo changes during the song.
+* You are not planning to do smooth tempo changes during the song and you are OK with changing the tempo only at the start of a new pattern.
 
 You should use FamiTracker tempo mode if:
 
 * You are OK with using effects tracks (delayed notes, cuts) to finely tune the start/end of each notes.
-* You want to achieve a very specific BPM, even if this mean some notes will be uneven.
-* You want to have complex tempo changes during the song.
 * You need compatibility with FamiTracker.
+* You want to have smooth tempo changes during the song, especially in the middle of a pattern.
 
 # Editing songs
 
@@ -60,6 +63,10 @@ Right below the project name are the songs.
 ## Adding/Deleting songs
 
 To add new songs, simply click on the little "+" icon on the song header.
+
+## Reordering songs
+
+You can drag & drop songs to reorder them in the list. Songs are the only things that are not always sorted alphabetically in the project explorer.
 
 ## Importing/Merging songs
 
@@ -94,9 +101,9 @@ Properties unique FamiStudio tempo mode:
 
 ## Tempo
 
-Configuring tempo in FamiStudio is definately less intuitive than in a regular DAW, so please bear with me. This is both for technical reasons (the fact that the NES runs at 50/60 FPS) and historical reasons (influence from FamiTracker).
+Configuring tempo in FamiStudio is definately less intuitive than in a regular DAW, so please bear with me. This mainly for technical reasons (the fact that the NES runs at 50/60 FPS).
 
-The key thing to understand is that the piano roll simply gives you a series of, what I am going to loosely call, **notes** (**rows** if you come from FamiTracker). It is up to the composer to configure these notes and achieve the desired tempo and time signature.
+The key thing to understand is that the piano roll simply gives you a series of, what I am going to loosely call, **notes** (**rows** if you come from FamiTracker). It is up to the composer to configure these notes and achieve the desired time signature.
 
 For example, let's look at the simple melody of the children song "A, B, C, ...". On the right side are the song settings that were used to achieve this. In this example, the project was set to use the FamiStudio tempo mode, but the same logic applies to the FamiTracker tempo mode. 
 
@@ -114,25 +121,18 @@ Observations:
 
 Here we chosen to have 1 bar = 1 pattern, we could have chosen to fit the whole song in a single pattern, this is totally arbitrary. You should try to use a pattern size is a good tradeoff between reusability (being able to copy patterns and re-use them) and size (having many small patterns is annoying).
 
-The **Frames per Note** setting is the main driver of tempo and determines the base length our "notes". The more frames (1/60th of a second) we wait, the slower the song will play. So 8 frames per note give us a BPM of 112.5. When using FamiTracker tempo, this is the equalivalent of the **Speed** parameter.
-
 Also we have chosen to assemble 4 notes into a beat, and 4 beats in a pattern (16 notes), which is how we get something that looks like a 4/4 time signature. This also means our smallest granularity for our melody is 1/16th of a note. That being said, you can move notes at the frame-level, so you actually have a lot more control than this.
 
-### Composite notes
-
-Note that you arent not limited to the BPM values suggested by the different note lengths. You can create in-between ones by putting multiples notes into a larger one. For example, Gimmick! uses a 11 frames per note, but puts 2 notes inside it. One of 5 frames and one of 6 frames. This creates an approximate tempo of 163.6 BPM and the different note lengths is not audible.
-
-![](images/GimmickNote.png#center)
-
-The FamiTracker documentation has a [handy chart](http://famitracker.com/wiki/index.php?title=Common_tempo_values) for these. Note that you are limited to 18 frames per note a the moment.
+When using FamiStudio tempo mode, as you change the BPM, the number of frames (1/60th of a second) in a note may change. At a BPM of 112.5, FamiStudio calculates that we need 8 frames per note. When using FamiTracker tempo, this is the equalivalent of the **Speed** parameter.
+e a the moment.
 
 ## FamiStudio Tempo & PAL conversion
 
 This is a more technical discussion of how FamiStudio tempo handles NTSC -> PAL and PAL -> NTSC conversion.
 
-### NTSC to PAL
+### Example of NTSC to PAL conversion
 
-For example, in the image below, we have a NTSC song with 6 frames (1/60th of a sec) per note. On PAL system (50 FPS), if were were to play back this song, it would play 20% slower.
+For example, in the image below, we have a NTSC at 150 BPM, so we have frames (1/60th of a sec) per note. On PAL system (50 FPS), if were were to play back this song, it would play 20% slower.
 
 ![](images/NtscPalFrames6.png#center)
 
@@ -140,7 +140,7 @@ To faitfully play back our NTSC song on PAL systems, FamiStudio will sometimes r
 
 ![](images/PalSkipFrames6.png#center)
 
-This makes the playback speed almost the same, but unfortunately, this is not always this simple. Let's take a note length of 8 frames for example. Again, if we were to try to naively play this back on PAL, it would play back 20% slower than NTSC.
+This makes the playback speed almost the same, but unfortunately, this is not always this simple. Let's look at an exemple with a BPM of 112.5, which is 8 frames per note. Again, if we were to try to naively play this back on PAL, it would play back 20% slower than NTSC.
 
 ![](images/NtscPalFrames8.png#center)
 
@@ -152,59 +152,12 @@ The solution here is to skip 4 NTSC frames, over 3 notes to distribute the error
 
 ![](images/PalSkipFrames8-3Notes.png#center)
 
-This table sumarizes the number of frames that will be skipped on PAL for different note length.
+### Tempo Envelopes
 
-Number of NTSC frames (1/60 sec) | Number of frames skipped by PAL | Positions of potential double-frames | BPM
---- | --- | --- | ---
- 1 |  1 double frames over 6 notes | 1 | 900.0 
- 2 |  1 double frames over 3 notes | 01 |450.0 
- 3 |  1 double frames over 2 notes | 010 |300.0 
- 4 |  2 double frames over 3 notes | 0100 |225.0 
- 5 |  5 double frames over 6 notes | 01000 |180.0 
- 6 |  1 double frames over 1 notes | 010000 |150.0 
- 7 |  7 double frames over 6 notes | 0100010 |128.6 
- 8 |  4 double frames over 3 notes | 01000100 |112.5 
- 9 |  3 double frames over 2 notes | 010001000 |100.0 
-10 |  5 double frames over 3 notes | 0100001000 |90.0 
-11 | 11 double frames over 6 notes | 01000001000 |81.8 
-12 |  2 double frames over 1 notes | 010000010000 |75.0 
-13 | 13 double frames over 6 notes | 0100010001000 |69.2 
-14 |  7 double frames over 3 notes | 01000100001000 |64.3 
-15 |  5 double frames over 2 notes | 010000100001000 |60.0 
-16 |  8 double frames over 3 notes | 0100001000010000 |56.3 
-17 | 17 double frames over 6 notes | 01000001000001000 |52.9
-18 |  3 double frames over 1 notes | 010000010000010000 |50.0
+So in general, FamiStudio will automatically compute what is called a *tempo envelope* that needs to be applied when playing on the non-native platform (e.g. playing a NTSC song on PAL, and vice versa). This envelope will determine where double-frames must be ran (playing NTSC on PAL), or where idle frames must be inserted (playing PAL on NSTC). 
 
-### PAL to NTSC
+This tempo envelope will be optimized and will try to place the double/idle frames following these rules:
 
-The sample principle apply when playing PAL songs on NTSC, but instead of running 2 frames rapidly, the sound engine will simply "do nothing" (idle) every once in a while to avoid going too fast. 
-
-Number of PAL frames(1/50 sec) | Number of idle frames in NTSC | Positions of potential idle-frames | BPM
---- | --- | --- | ---
- 1 | idle  1 frames over 5 notes | 1 | 750.0
- 2 | idle  2 frames over 5 notes | 01 | 375.0
- 3 | idle  3 frames over 5 notes | 010 | 250.0
- 4 | idle  4 frames over 5 notes | 0100 | 187.5
- 5 | idle  1 frames over 1 notes | 01000 | 150.0
- 6 | idle  6 frames over 5 notes | 010010 | 125.0
- 7 | idle  7 frames over 5 notes | 0100010 | 107.1
- 8 | idle  8 frames over 5 notes | 01000100 | 93.8
- 9 | idle  9 frames over 5 notes | 010000100 | 83.3
-10 | idle  2 frames over 1 notes | 0100001000 | 75.0
-11 | idle 11 frames over 5 notes | 01001001000 | 68.2
-12 | idle 12 frames over 5 notes | 010010000100 | 62.5
-13 | idle 13 frames over 5 notes | 0100010001000 | 57.7
-14 | idle 14 frames over 5 notes | 01000100001000 | 53.6
-15 | idle  3 frames over 1 notes | 010000100001000 | 50.0
-16 | idle 16 frames over 5 notes | 0010001000100010 | 46.9
-17 | idle 17 frames over 5 notes | 00100010001000100 | 44.1
-18 | idle 18 frames over 5 notes | 001000100010000100 | 41.7
-
-### Position of double or idle frames
-
-The position of potential double or idle frames where chosen to try to:
-
-* Distribute the double/idle frames as evenly as possible while maintaining deterministic positions inside the notes
-* Avoid placing a double/idle frame on the first frame of the note, where the attack usually is
-* Avoid placing a double/idle frame on the last frame of the note, where a stop note could be
-* Avoid placing a double/idle frames on the 2 middle notes, to allow 1/2 notes to be used occasionally and improve support for composite notes.
+* Distribute the double/idle frames as evenly as possible while maintaining deterministic positions inside the notes.
+* Avoid placing a double/idle frame on the first frame of the note, where the attack usually is.
+* Avoid placing a double/idle frame on the last frame of the note, where a silent note could be.

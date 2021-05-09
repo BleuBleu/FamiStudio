@@ -117,7 +117,7 @@ Double-clicking on an existing sample will show its properties. These are the pr
 
 Contribution by *.Hayabusa*, thanks!
 
-If you will like to sample some instrument, for example the Sunsoft Bass on your own, you can try this method. This is the same technique that was used in Sunsoft games.
+If you want to sample some instrument, for example the Sunsoft Bass on your own, you can try this method. This is the same technique that was used in Sunsoft games.
 
 1. All you need to have is 5 different samples of same instrument, those samples should play these notes : A#, B, C, C#, D. These samples should be relatively high-pitched, since we will be pitching these down. Also this will help keeping the size down.
 
