@@ -878,6 +878,24 @@ namespace FamiStudio
             song.SetLength(patternInfos.Count);
         }
 
+        private static string GetMIDINoteFriendlyName(int value)
+        {
+            if (value < 12)
+            {
+                int octave = -1;
+                int note   = value;
+
+                return Note.NoteNames[note] + octave.ToString();
+            }
+            else
+            {
+                int octave = (value - 1) / 12;
+                int note   = (value - 1) % 12;
+
+                return Note.NoteNames[note] + octave.ToString();
+            }
+        }
+
         private bool FilterNoteEvent(NoteEvent evt, MidiSource source)
         {
             if (evt.note >= Note.MusicalNoteMin &&
@@ -906,7 +924,7 @@ namespace FamiStudio
             }
             else
             {
-                Log.LogMessage(LogSeverity.Warning, $"Note on MIDI channel {evt.channel}, MIDI tick {evt.tick} is outside of range supported by FamiStudio (C0 to B7). Ignoring.");
+                Log.LogMessage(LogSeverity.Warning, $"Note {GetMIDINoteFriendlyName(evt.note)} on MIDI channel {evt.channel}, MIDI tick {evt.tick} is outside of range supported by FamiStudio (C0 to B7). Ignoring.");
             }
 
             return false;
