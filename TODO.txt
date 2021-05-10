@@ -1,5 +1,16 @@
-FamiStudio 3.0.0 
-================
+FamiStudio 3.0.0 Beta
+=====================
+/ Drag to zero = crash
+- CMD/Ctrl mess.
+- how2 import song crash. (no repro)
+/ QWERTY input doesnt work on Mac/Linux?
+	x Alt keys dont work.
+	x Can key code go over 256??
+- MIDI import error. => "None" mapping.
+- MIDI polyphony error.
+- MIDI transpose option?
+- Add names of out of range notes in MIDI import
+- Resize note crash? No repro.
 
 Testing 
 ======= 

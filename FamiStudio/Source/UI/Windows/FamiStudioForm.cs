@@ -60,12 +60,12 @@ namespace FamiStudio
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            famistudio.KeyDown(e);
+            famistudio.KeyDown(e, (int)e.KeyCode);
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
-            famistudio.KeyUp(e);
+            famistudio.KeyUp(e, (int)e.KeyCode);
         }
 
         public static bool IsKeyDown(Keys k)
@@ -81,7 +81,7 @@ namespace FamiStudio
                 keyData == Keys.Right ||
                 keyData == Keys.Tab)
             {
-                famistudio.KeyDown(new KeyEventArgs(keyData));
+                famistudio.KeyDown(new KeyEventArgs(keyData), (int)keyData);
                 return true;
             }
             else

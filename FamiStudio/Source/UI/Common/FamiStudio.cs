@@ -1,6 +1,7 @@
 #define DEVELOPMENT_VERSION
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -43,8 +44,8 @@ namespace FamiStudio
         private int previewDPCMSampleId = -1;
         private int previewDPCMSampleRate = 44100;
         private bool previewDPCMIsSource = false;
-        private Keys lastRecordingKeyDown = Keys.None;
-        private bool[] keyStates = new bool[256];
+        private int lastRecordingKeyDown = -1;
+        private BitArray keyStates = new BitArray(65536);
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
 #endif
@@ -997,9 +998,9 @@ namespace FamiStudio
             }
         }
         
-        private bool PreventKeyRepeat(KeyEventArgs e, bool keyDown)
+        private bool PreventKeyRepeat(int rawKeyCode, bool keyDown)
         {
-            var keyCode = (int)e.KeyCode;
+            var keyCode = rawKeyCode;
 
             if (keyCode < keyStates.Length && keyDown != keyStates[keyCode])
             {
@@ -1010,18 +1011,18 @@ namespace FamiStudio
             return false;
         }
 
-        protected bool HandleRecordingKey(KeyEventArgs e, bool keyDown)
+        protected bool HandleRecordingKey(int rawKeyCode, bool keyDown)
         {
-            if (Settings.KeyCodeToNoteMap.TryGetValue((int)e.KeyCode, out var noteValue))
+            if (Settings.KeyCodeToNoteMap.TryGetValue(rawKeyCode, out var noteValue))
             {
-                if (!PreventKeyRepeat(e, keyDown))
+                if (!PreventKeyRepeat(rawKeyCode, keyDown))
                     return true;
 
                 if (keyDown)
                 {
                     if (noteValue == 0)
                     {
-                        lastRecordingKeyDown = Keys.None;
+                        lastRecordingKeyDown = -1;
                         StopOrReleaseIntrumentNote(true);
                     }
                     else
@@ -1029,14 +1030,14 @@ namespace FamiStudio
                         noteValue = noteValue - 1 + Note.FromFriendlyName("C0") + (baseRecordingOctave * 12);
                         noteValue = Utils.Clamp(noteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
 
-                        lastRecordingKeyDown = e.KeyCode;
+                        lastRecordingKeyDown = rawKeyCode;
 
                         PlayInstrumentNote(noteValue, true, true);
                     }
                 }
-                else if (e.KeyCode == lastRecordingKeyDown)
+                else if (rawKeyCode == lastRecordingKeyDown)
                 {
-                    lastRecordingKeyDown = Keys.None;
+                    lastRecordingKeyDown = -1;
                     StopOrReleaseIntrumentNote(false);
                 }
 
@@ -1046,7 +1047,7 @@ namespace FamiStudio
             return false;
         }
 
-        public void KeyDown(KeyEventArgs e)
+        public void KeyDown(KeyEventArgs e, int rawKeyCode)
         {
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
             bool shift = e.Modifiers.HasFlag(Keys.Shift);
@@ -1067,7 +1068,7 @@ namespace FamiStudio
                 return;
             }
 
-            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e, true))
+            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(rawKeyCode, true))
             {
                 return;
             }
@@ -1214,12 +1215,12 @@ namespace FamiStudio
                 Sequencer.PasteSpecial();
         }
 
-        public void KeyUp(KeyEventArgs e)
+        public void KeyUp(KeyEventArgs e, int rawKeyCode)
         {
             bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
             bool shift = e.Modifiers.HasFlag(Keys.Shift);
 
-            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e, false))
+            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(rawKeyCode, false))
             {
                 if (recordingMode)
                     return;
@@ -1289,7 +1290,7 @@ namespace FamiStudio
             if (recordingMode)
             {
                 recordingMode = false;
-                lastRecordingKeyDown = Keys.None;
+                lastRecordingKeyDown = -1;
                 StopInstrument();
                 InvalidateEverything();
             }

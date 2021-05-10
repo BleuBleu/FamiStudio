@@ -1875,7 +1875,7 @@ namespace FamiStudio
                         if (hoverNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresNoteHighlight(captureOperation))
                         {
                             hoverLocation = hoverNoteLocation;
-                            hoverNote = song.Channels[editChannel].PatternInstances[hoverLocation.PatternIndex].Notes[hoverLocation.NoteIndex];
+                            hoverNote = song.Channels[editChannel].GetNoteAt(hoverLocation);
                         }
                         else if (captureOperation == CaptureOperation.None)
                         {

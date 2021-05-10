@@ -410,7 +410,7 @@ namespace FamiStudio
             for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
             {
                 var k0 = QwertyKeys[idx, 0];
-                var k1 = QwertyKeys[idx, 0];
+                var k1 = QwertyKeys[idx, 1];
 
                 if (k0 >= 0)
                     KeyCodeToNoteMap[k0] = idx;
