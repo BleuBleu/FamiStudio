@@ -728,13 +728,13 @@ namespace FamiStudio
 
                         if (hasOctave)
                         {
+                            period *= (1 << octave);
                             while (note > 12)
                             {
                                 note -= 12;
                                 octave++;
                             }
                             note += octave * 12;
-                            period *= (1 << octave);
                             finePitch = period - noteTable[note];
                         }
                     }
