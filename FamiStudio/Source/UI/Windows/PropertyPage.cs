@@ -777,7 +777,7 @@ namespace FamiStudio
                 {
                     for (int i = 0; i < properties.Count; i++)
                     {
-                        if (properties[i].control == sender && properties[i].listDoubleClick != null)
+                        if (properties[i].control == sender && properties[i].listRightClick != null)
                         {
                             properties[i].listRightClick(this, i, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
                         }
