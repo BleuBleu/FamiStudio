@@ -647,7 +647,9 @@ namespace FamiStudio
             timeSignatureEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
             tempoEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
             programChangeEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
-            noteEvents.Sort((e1, e2) => e1.tick.CompareTo(e2.tick));
+
+            // Favor note OFF before note ON to avoid false polyphony warnings.
+            noteEvents.Sort((e1, e2) => e1.tick == e2.tick ? e1.on.CompareTo(e2.on) : e1.tick.CompareTo(e2.tick)); 
 
             numTracks = track;
 
