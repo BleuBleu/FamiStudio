@@ -434,7 +434,7 @@ namespace FamiStudio
             SetKeyMap(winKey, true);
 
             var args = new System.Windows.Forms.KeyEventArgs(winKey | winMod);
-            famistudio.KeyDown(args);
+            famistudio.KeyDown(args, (int)evnt.Key);
             foreach (var ctrl in controls.Controls)
                 ctrl.KeyDown(args);
 
@@ -450,7 +450,7 @@ namespace FamiStudio
 
             var args = new System.Windows.Forms.KeyEventArgs(winKey | winMod);
 
-            famistudio.KeyUp(args);
+            famistudio.KeyUp(args, (int)evnt.Key);
             foreach (var ctrl in controls.Controls)
                 ctrl.KeyUp(args);
 
