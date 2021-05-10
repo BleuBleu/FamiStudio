@@ -520,7 +520,7 @@ namespace FamiStudio
             if (buffer == null)
                 return false;
 
-            var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version);
+            var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version, ProjectBufferFlags.Clipboard);
 
             missingSamples = LoadAndMergeSampleList(serializer, true);
             missingArpeggios = LoadAndMergeArpeggioList(serializer, true);
@@ -534,7 +534,7 @@ namespace FamiStudio
             if (buffer == null)
                 return null;
 
-            var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version);
+            var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version, ProjectBufferFlags.Clipboard);
 
             LoadAndMergeSampleList(serializer, false, createMissingSamples);
             LoadAndMergeArpeggioList(serializer, false, createMissingArpeggios);
@@ -699,7 +699,7 @@ namespace FamiStudio
             }
 
             var decompressedBuffer = Compression.DecompressBytes(buffer, 4);
-            var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version);
+            var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version, ProjectBufferFlags.Clipboard);
 
             LoadAndMergeSampleList(serializer, false, createMissingSamples);
             LoadAndMergeArpeggioList(serializer, false, createMissingArpeggios);

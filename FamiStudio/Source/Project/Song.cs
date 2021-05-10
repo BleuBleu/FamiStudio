@@ -314,6 +314,7 @@ namespace FamiStudio
         
         public int GetPatternStartAbsoluteNoteIndex(int patternIdx, int note = 0)
         {
+            Debug.Assert(patternIdx <= songLength);
             return patternStartNote[patternIdx] + note;
         }
 

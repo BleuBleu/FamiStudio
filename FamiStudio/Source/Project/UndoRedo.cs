@@ -126,14 +126,14 @@ namespace FamiStudio
 
         private byte[] CaptureState()
         {
-            var buffer = new ProjectSaveBuffer(project, true);
+            var buffer = new ProjectSaveBuffer(project, ProjectBufferFlags.UndoRedo);
             Serialize(buffer);
             return Compression.CompressBytes(buffer.GetBuffer(), CompressionLevel.Fastest);
         }
 
         private void RestoreState(byte[] state, bool serializeAppState = true)
         {
-            var buffer = new ProjectLoadBuffer(project, Compression.DecompressBytes(state), Project.Version, true);
+            var buffer = new ProjectLoadBuffer(project, Compression.DecompressBytes(state), Project.Version, ProjectBufferFlags.UndoRedo);
             Serialize(buffer, serializeAppState);
         }
     };

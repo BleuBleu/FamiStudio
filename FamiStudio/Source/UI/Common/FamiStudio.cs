@@ -63,7 +63,6 @@ namespace FamiStudio
         public int BaseRecordingOctave => baseRecordingOctave;
         public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : 0xffff; set => songPlayer.ChannelMask = value; }
-        public int PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set => songPlayer.PlayRate = value; }
 
         public Project Project => project;
         public Song Song => song;
@@ -800,7 +799,9 @@ namespace FamiStudio
 
             int channel = Sequencer.SelectedChannel;
 
-            if (instrument == null)
+            // Non-recorded notes are the ones that are playing when creating/dragging notes.
+            // We dont want to assume DPCM channel when getting a null intrument.
+            if (instrument == null && allowRecording) 
             {
                 channel = ChannelType.Dpcm;
             }

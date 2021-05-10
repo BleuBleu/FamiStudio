@@ -88,9 +88,10 @@ namespace FamiStudio
             dlg.Properties.AddButton(null, "Select None", SelectClicked); // 5
             dlg.Properties.Build();
             dlg.Properties.PropertyChanged += MappingProperties_PropertyChanged;
-            dlg.Properties.SetPropertyEnabled(3, allowChannel10Mapping);
-            dlg.Properties.SetPropertyEnabled(4, allowChannel10Mapping);
-            dlg.Properties.SetPropertyEnabled(5, allowChannel10Mapping);
+            dlg.Properties.SetPropertyEnabled(1, src.type != MidiSourceType.None);
+            dlg.Properties.SetPropertyEnabled(3, src.type != MidiSourceType.None && allowChannel10Mapping);
+            dlg.Properties.SetPropertyEnabled(4, src.type != MidiSourceType.None && allowChannel10Mapping);
+            dlg.Properties.SetPropertyEnabled(5, src.type != MidiSourceType.None && allowChannel10Mapping);
 
             if (dlg.ShowDialog(null) == DialogResult.OK)
             {
@@ -98,9 +99,9 @@ namespace FamiStudio
                 var sourceName = dlg.Properties.GetPropertyValue<string>(1);
                 var keysBool   = dlg.Properties.GetPropertyValue<bool[]>(3);
 
-                src.type = sourceType;
-                src.index = sourceType == MidiSourceType.None ? 0 : (int.Parse(sourceName.Substring(sourceType == MidiSourceType.Track ? 6 : 8)) - 1); // TEMPOTODO : Got a crash here.
-                src.keys = 0ul;
+                src.type  = sourceType;
+                src.index = sourceType == MidiSourceType.None ? 0 : (Utils.ParseIntWithTrailingGarbage(sourceName.Substring(sourceType == MidiSourceType.Track ? 6 : 8)) - 1);
+                src.keys  = 0ul;
 
                 for (int i = 0; i < keysBool.Length; i++)
                 {
@@ -139,9 +140,10 @@ namespace FamiStudio
                 allowChannel10Mapping = channelIdx == 9;
             }
 
-            props.SetPropertyEnabled(3, allowChannel10Mapping);
-            props.SetPropertyEnabled(4, allowChannel10Mapping);
-            props.SetPropertyEnabled(5, allowChannel10Mapping);
+            props.SetPropertyEnabled(1, sourceType != MidiSourceType.None);
+            props.SetPropertyEnabled(3, sourceType != MidiSourceType.None && allowChannel10Mapping);
+            props.SetPropertyEnabled(4, sourceType != MidiSourceType.None && allowChannel10Mapping);
+            props.SetPropertyEnabled(5, sourceType != MidiSourceType.None && allowChannel10Mapping);
         }
 
         private string[] GetSourceNames(int type)

@@ -371,8 +371,8 @@ namespace FamiStudio
                 g.PushClip(trackNameSizeX, 0, Width, headerSizeY);
                 g.PushTranslation(trackNameSizeX, 0);
                 g.FillRectangle(
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(minSelectedPatternIdx + 0) * noteSizeX) - scrollX, 0,
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(maxSelectedPatternIdx + 1) * noteSizeX) - scrollX, headerSizeY,
+                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length)) * noteSizeX) - scrollX, 0,
+                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length)) * noteSizeX) - scrollX, headerSizeY,
                     showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
                 g.PopTransform();
                 g.PopClip();
@@ -460,8 +460,8 @@ namespace FamiStudio
             if (IsSelectionValid())
             {
                 g.FillRectangle(
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(minSelectedPatternIdx + 0) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0),
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(maxSelectedPatternIdx + 1) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1),
+                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length)) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0),
+                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length)) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1),
                     showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
             }
 
@@ -1185,7 +1185,8 @@ namespace FamiStudio
             minSelectedChannelIdx = 0;
             maxSelectedChannelIdx = Song.Channels.Length - 1;
 
-            Song.InvalidateCumulativePatternCache();
+            song.InvalidateCumulativePatternCache();
+            song.DeleteNotesPastMaxInstanceLength();
 
             App.UndoRedoManager.EndTransaction();
             PatternsPasted?.Invoke();

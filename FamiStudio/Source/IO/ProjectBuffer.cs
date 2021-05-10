@@ -29,10 +29,19 @@ namespace FamiStudio
         void Serialize(ref DPCMSample pattern);
         bool IsReading { get; }
         bool IsWriting { get; }
-        bool IsForUndoRedo { get; }
+        bool IsForUndoRedo  { get; }
+        bool IsForClipboard { get; }
         int Version { get; }
         Project Project { get; }
         void InitializeList<T>(ref List<T> list, int count) where T : new();
+    };
+
+    [Flags]
+    public enum ProjectBufferFlags
+    {
+        None      = 0,
+        UndoRedo  = 1,
+        Clipboard = 2
     };
 
     public class ProjectSaveBuffer : ProjectBuffer
@@ -40,12 +49,12 @@ namespace FamiStudio
         private Project project;
         private List<byte> buffer = new List<byte>();
         private int idx = 0;
-        private bool undoRedo;
+        private ProjectBufferFlags flags = ProjectBufferFlags.None;
 
-        public ProjectSaveBuffer(Project p, bool forUndoRedo = false)
+        public ProjectSaveBuffer(Project p, ProjectBufferFlags flags = ProjectBufferFlags.None)
         {
-            project = p;
-            undoRedo = forUndoRedo;
+            this.project = p;
+            this.flags = flags;
         }
 
         public byte[] GetBuffer()
@@ -209,7 +218,8 @@ namespace FamiStudio
         public Project Project => project;
         public bool IsReading => false;
         public bool IsWriting => true;
-        public bool IsForUndoRedo => undoRedo;
+        public bool IsForUndoRedo  => flags.HasFlag(ProjectBufferFlags.UndoRedo);
+        public bool IsForClipboard => flags.HasFlag(ProjectBufferFlags.Clipboard);
         public int Version => Project.Version;
     };
 
@@ -219,15 +229,15 @@ namespace FamiStudio
         private byte[] buffer;
         private int idx = 0;
         private int version;
-        private bool undoRedo;
+        private ProjectBufferFlags flags = ProjectBufferFlags.None;
         private Dictionary<int, int> idRemapTable = new Dictionary<int, int>();
 
-        public ProjectLoadBuffer(Project p, byte[] buffer, int version, bool forUndoRedo = false)
+        public ProjectLoadBuffer(Project p, byte[] buffer, int version, ProjectBufferFlags flags = ProjectBufferFlags.None)
         {
             this.project = p;
             this.buffer = buffer;
             this.version = version;
-            this.undoRedo = forUndoRedo;
+            this.flags = flags;
         }
 
         public void RemapId(int oldId, int newId)
@@ -304,7 +314,7 @@ namespace FamiStudio
             Serialize(ref argb);
             c = System.Drawing.Color.FromArgb(argb);
 
-            if (forceThemeColor && !undoRedo)
+            if (forceThemeColor && !IsForUndoRedo)
                 ThemeBase.EnforceThemeColor(ref c);
         }
 
@@ -420,7 +430,8 @@ namespace FamiStudio
         public Project Project => project;
         public bool IsReading => true;
         public bool IsWriting => false;
-        public bool IsForUndoRedo => undoRedo;
+        public bool IsForUndoRedo  => flags.HasFlag(ProjectBufferFlags.UndoRedo);
+        public bool IsForClipboard => flags.HasFlag(ProjectBufferFlags.Clipboard);
         public int Version => version;
     }
     
@@ -567,6 +578,7 @@ namespace FamiStudio
         public bool IsReading => false;
         public bool IsWriting => true;
         public bool IsForUndoRedo => false;
+        public bool IsForClipboard => false;
         public int Version => Project.Version;
     };
 }
