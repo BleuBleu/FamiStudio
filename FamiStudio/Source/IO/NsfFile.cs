@@ -386,6 +386,9 @@ namespace FamiStudio
                 instrument.Envelopes[EnvelopeType.DutyCycle].Values[0] = (sbyte)duty;
             }
 
+            if (expansion == ExpansionType.Vrc6)
+                instrument.Vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Full;
+
             return instrument;
         }
 
