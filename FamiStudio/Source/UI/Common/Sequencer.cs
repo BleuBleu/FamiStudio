@@ -1455,8 +1455,8 @@ namespace FamiStudio
             }
             else if (showSelection)
             {
-                bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
-                bool shift = ModifierKeys.HasFlag(Keys.Shift);
+                bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
+                bool shift = e.Modifiers.HasFlag(Keys.Shift);
 
                 if (ctrl)
                 {

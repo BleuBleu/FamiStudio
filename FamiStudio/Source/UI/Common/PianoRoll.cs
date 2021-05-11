@@ -3502,8 +3502,8 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None)
                 return;
 
-            bool ctrl  = ModifierKeys.HasFlag(Keys.Control);
-            bool shift = ModifierKeys.HasFlag(Keys.Shift);
+            bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
+            bool shift = e.Modifiers.HasFlag(Keys.Shift);
 
             if (e.KeyCode == Keys.Escape)
             {
@@ -3514,7 +3514,7 @@ namespace FamiStudio
             {
                 ToggleEffectPannel();
             }
-            else if (e.KeyCode == Keys.S && ModifierKeys.HasFlag(Keys.Shift))
+            else if (e.KeyCode == Keys.S && shift)
             {
                 if (IsSnappingAllowed)
                 {
