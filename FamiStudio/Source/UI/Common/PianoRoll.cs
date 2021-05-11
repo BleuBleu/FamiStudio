@@ -5243,6 +5243,10 @@ namespace FamiStudio
                         newNote.Flags = oldNote.Flags;
                         newNote.Duration = (ushort)Math.Max(1, oldNote.Duration + deltaDuration);
                         newNote.Release = oldNote.Release;
+
+                        // HACK : Try to preserve releases
+                        if (oldNote.HasRelease && !newNote.HasRelease && newNote.Duration > 1)
+                            newNote.Release = newNote.Duration - 1;
                     }
                     else if (oldNote.IsStop)
                     {
@@ -5428,7 +5432,13 @@ namespace FamiStudio
             TransformNotes(min, max, false, final, false, (note, idx) =>
             {
                 if (note != null && note.IsMusical)
+                {
+                    // HACK : Try to preserve releases.
+                    var hadRelease = note.HasRelease;
                     note.Duration = (ushort)Math.Max(1, note.Duration + deltaNoteIdx);
+                    if (hadRelease && !note.HasRelease && note.Duration > 1)
+                        note.Release = note.Duration - 1;
+                }
 
                 return note;
             });
