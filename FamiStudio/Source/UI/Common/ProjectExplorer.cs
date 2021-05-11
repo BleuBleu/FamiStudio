@@ -362,6 +362,9 @@ namespace FamiStudio
         int mouseLastY = 0;
         int captureMouseX = -1;
         int captureMouseY = -1;
+        int captureButtonRelX = -1;
+        int captureButtonRelY = -1;
+        int captureButtonIdx = -1;
         int captureScrollY = -1;
         int envelopeDragIdx = -1;
         bool captureThresholdMet = false;
@@ -688,6 +691,11 @@ namespace FamiStudio
             var firstParam = true;
             var y = -scrollY;
 
+            var minInstIdx = 1000000;
+            var maxInstIdx = 0;
+            var minArpIdx  = 1000000;
+            var maxArpIdx  = 0;
+
             for (int i = 0; i < buttons.Count; i++)
             {
                 var button = buttons[i];
@@ -720,6 +728,23 @@ namespace FamiStudio
                 else
                 {
                     g.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.color, buttonSizeY, 0.8f), theme.BlackBrush);
+                }
+
+                if (button.type == ButtonType.Instrument)
+                {
+                    if (button.instrument != null)
+                    {
+                        minInstIdx = Math.Min(minInstIdx, i);
+                        maxInstIdx = Math.Max(maxInstIdx, i);
+                    }
+                }
+                else if (button.type == ButtonType.Arpeggio)
+                {
+                    if (button.arpeggio != null)
+                    {
+                        minArpIdx = Math.Min(minArpIdx, i);
+                        maxArpIdx = Math.Max(maxArpIdx, i);
+                    }
                 }
 
                 var leftPadding = 0;
@@ -791,20 +816,44 @@ namespace FamiStudio
                 y += buttonSizeY;
             }
 
-            if (captureOperation == CaptureOperation.DragSong && captureThresholdMet)
+            if (captureOperation != CaptureOperation.None && captureThresholdMet)
             {
-                var pt = this.PointToClient(Cursor.Position);
-                var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
-
-                if (buttonIdx >= 0)
+                if (captureOperation == CaptureOperation.DragSong)
                 {
-                    var button = buttons[buttonIdx];
+                    var pt = PointToClient(Cursor.Position);
+                    var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
 
-                    if (button.type == ButtonType.Song ||
-                        button.type == ButtonType.SongHeader)
+                    if (buttonIdx >= 0)
                     {
-                        var lineY = (buttonIdx + 1)  * buttonSizeY;
-                        g.DrawLine(0, lineY, Width - scrollBarThickness, lineY, g.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                        var button = buttons[buttonIdx];
+
+                        if (button.type == ButtonType.Song ||
+                            button.type == ButtonType.SongHeader)
+                        {
+                            var lineY = (buttonIdx + 1) * buttonSizeY;
+                            g.DrawLine(0, lineY, Width - scrollBarThickness, lineY, g.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                        }
+                    }
+                }
+                else if (captureOperation == CaptureOperation.DragInstrument ||
+                         captureOperation == CaptureOperation.DragArpeggio)
+                {
+                    var pt = PointToClient(Cursor.Position);
+                    if (ClientRectangle.Contains(pt))
+                    {
+                        if (envelopeDragIdx >= 0)
+                        {
+                            g.DrawBitmap(bmpEnvelopes[envelopeDragIdx], pt.X - captureButtonRelX, pt.Y - captureButtonRelY, 0.5f);
+                        }
+                        else
+                        {
+                            var minY = (captureOperation == CaptureOperation.DragInstrument ? minInstIdx : minArpIdx) * buttonSizeY;
+                            var maxY = (captureOperation == CaptureOperation.DragInstrument ? maxInstIdx : maxArpIdx) * buttonSizeY;
+                            var color = (captureOperation == CaptureOperation.DragInstrument ? draggedInstrument.Color : draggedArpeggio.Color);
+                            var dragY = Utils.Clamp(pt.Y - captureButtonRelY, minY, maxY);
+
+                            g.FillRectangle(0, dragY, actualWidth, dragY + buttonSizeY, g.GetSolidBrush(color, 1, 0.5f));
+                        }
                     }
                 }
             }
@@ -867,9 +916,11 @@ namespace FamiStudio
             }
         }
 
-        private int GetButtonAtCoord(int x, int y, out SubButtonType sub)
+        private int GetButtonAtCoord(int x, int y, out SubButtonType sub, out int buttonRelX, out int buttonRelY)
         {
             sub = SubButtonType.Max;
+            buttonRelX = 0;
+            buttonRelY = 0;
 
             if (needsScrollBar && x >= Width - scrollBarThickness)
                 return -1;
@@ -886,6 +937,9 @@ namespace FamiStudio
                     return buttonIndex;
                 }
 
+                buttonRelX = x;
+                buttonRelY = y - buttonIndex * buttonSizeY;
+
                 var subButtons = button.GetSubButtons(out _);
                 if (subButtons != null)
                 {
@@ -901,10 +955,11 @@ namespace FamiStudio
                         if (dx >= 0 && dx < 16 * RenderTheme.MainWindowScaling &&
                             dy >= 0 && dy < 16 * RenderTheme.MainWindowScaling)
                         {
+                            buttonRelX = dx;
+                            buttonRelY = dy;
                             sub = subButtons[i];
                             break;
                         }
-                        
                     }
                 }
 
@@ -914,6 +969,11 @@ namespace FamiStudio
             {
                 return -1;
             }
+        }
+
+        private int GetButtonAtCoord(int x, int y, out SubButtonType sub)
+        {
+            return GetButtonAtCoord(x, y, out sub, out _, out _);
         }
 
         private void UpdateToolTip(MouseEventArgs e)
@@ -1101,7 +1161,9 @@ namespace FamiStudio
                         DPCMSampleDraggedOutside?.Invoke(draggedSample, PointToScreen(new Point(e.X, e.Y)));
                     }
                 }
-                else if (captureOperation == CaptureOperation.DragSong)
+                else if (captureOperation == CaptureOperation.DragSong ||
+                         captureOperation == CaptureOperation.DragInstrument ||
+                         captureOperation == CaptureOperation.DragArpeggio)
                 {
                     ConditionalInvalidate();
                 }
@@ -1173,7 +1235,6 @@ namespace FamiStudio
                                 App.UndoRedoManager.EndTransaction();
 
                                 InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);
-                                ConditionalInvalidate();
                             }
                         }
                     }
@@ -1214,7 +1275,6 @@ namespace FamiStudio
                                 App.UndoRedoManager.EndTransaction();
 
                                 ArpeggioEdited?.Invoke(arpeggioDst);
-                                ConditionalInvalidate();
                             }
                         }
                     }
@@ -1237,7 +1297,6 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
 
                         DPCMSampleMapped?.Invoke(draggedSample, PointToScreen(new Point(e.X, e.Y)));
-                        ConditionalInvalidate();
                     }
                 }
             }
@@ -1276,13 +1335,18 @@ namespace FamiStudio
             sliderDragButton = null;
             captureOperation = CaptureOperation.None;
             Capture = false;
+
+            ConditionalInvalidate();
         }
 
-        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op)
+        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op, int buttonIdx = -1, int buttonRelX = 0, int buttonRelY = 0)
         {
             Debug.Assert(captureOperation == CaptureOperation.None);
             captureMouseX = e.X;
             captureMouseY = e.Y;
+            captureButtonIdx = buttonIdx;
+            captureButtonRelX = buttonRelX;
+            captureButtonRelY = buttonRelY;
             captureScrollY = scrollY;
             Capture = true;
             captureOperation = op;
@@ -1543,7 +1607,7 @@ namespace FamiStudio
                 return;
             }
 
-            var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
+            var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType, out var buttonRelX, out var buttonRelY);
 
             if (buttonIdx >= 0)
             {
@@ -1573,7 +1637,7 @@ namespace FamiStudio
                         ConditionalInvalidate();
                     }
 
-                    StartCaptureOperation(e, CaptureOperation.DragSong);
+                    StartCaptureOperation(e, CaptureOperation.DragSong, buttonIdx);
                     draggedSong = button.song;
                 }
                 else if (left && button.type == ButtonType.InstrumentHeader)
@@ -1614,7 +1678,7 @@ namespace FamiStudio
                     {
                         envelopeDragIdx = -1;
                         draggedInstrument = selectedInstrument;
-                        StartCaptureOperation(e, CaptureOperation.DragInstrument);
+                        StartCaptureOperation(e, CaptureOperation.DragInstrument, buttonIdx, buttonRelX, buttonRelY);
                     }
 
                     if (subButtonType == SubButtonType.Expand)
@@ -1645,7 +1709,7 @@ namespace FamiStudio
                         if (UpdateSliderValue(button, e, true))
                         {
                             sliderDragButton = button;
-                            StartCaptureOperation(e, CaptureOperation.MoveSlider);
+                            StartCaptureOperation(e, CaptureOperation.MoveSlider, buttonIdx);
                             ConditionalInvalidate();
                         }
                         else
@@ -1728,9 +1792,12 @@ namespace FamiStudio
                 {
                     selectedArpeggio = button.arpeggio;
 
-                    envelopeDragIdx = -1;
-                    draggedArpeggio = selectedArpeggio;
-                    StartCaptureOperation(e, CaptureOperation.DragArpeggio);
+                    if (selectedArpeggio != null)
+                    {
+                        envelopeDragIdx = -1;
+                        draggedArpeggio = selectedArpeggio;
+                        StartCaptureOperation(e, CaptureOperation.DragArpeggio, buttonIdx, buttonRelX, buttonRelY);
+                    }
 
                     if (subButtonType < SubButtonType.EnvelopeMax)
                     {
@@ -1814,7 +1881,7 @@ namespace FamiStudio
                     else if (subButtonType == SubButtonType.Max)
                     {
                         draggedSample = button.sample;
-                        StartCaptureOperation(e, CaptureOperation.DragSample);
+                        StartCaptureOperation(e, CaptureOperation.DragSample, buttonIdx);
                         ConditionalInvalidate();
                     }
                 }
