@@ -67,7 +67,7 @@ namespace FamiStudio
 
             if (d2dGraphics != null)
             {
-                d2dGraphics.Resize(ClientSize.Width, ClientSize.Height);
+                d2dGraphics.Resize(Math.Max(1, ClientSize.Width), Math.Max(1, ClientSize.Height));
             }
         }
 
