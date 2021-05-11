@@ -1181,7 +1181,7 @@ namespace FamiStudio
                 startPatternIndex += patterns.GetLength(0);
             }
 
-            maxSelectedPatternIdx = minSelectedPatternIdx + numColumnsToPaste;
+            maxSelectedPatternIdx = minSelectedPatternIdx + numColumnsToPaste - 1;
             minSelectedChannelIdx = 0;
             maxSelectedChannelIdx = Song.Channels.Length - 1;
 
