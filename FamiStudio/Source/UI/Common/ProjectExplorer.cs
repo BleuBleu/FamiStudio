@@ -835,8 +835,7 @@ namespace FamiStudio
                         }
                     }
                 }
-                else if (captureOperation == CaptureOperation.DragInstrument ||
-                         captureOperation == CaptureOperation.DragArpeggio)
+                else if (captureOperation == CaptureOperation.DragInstrument || (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null))
                 {
                     var pt = PointToClient(Cursor.Position);
                     if (ClientRectangle.Contains(pt))
@@ -1792,12 +1791,9 @@ namespace FamiStudio
                 {
                     selectedArpeggio = button.arpeggio;
 
-                    if (selectedArpeggio != null)
-                    {
-                        envelopeDragIdx = -1;
-                        draggedArpeggio = selectedArpeggio;
-                        StartCaptureOperation(e, CaptureOperation.DragArpeggio, buttonIdx, buttonRelX, buttonRelY);
-                    }
+                    envelopeDragIdx = -1;
+                    draggedArpeggio = selectedArpeggio;
+                    StartCaptureOperation(e, CaptureOperation.DragArpeggio, buttonIdx, buttonRelX, buttonRelY);
 
                     if (subButtonType < SubButtonType.EnvelopeMax)
                     {
