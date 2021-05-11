@@ -83,6 +83,7 @@ namespace FamiStudio
         const int DefaultScrollMargin = 128;
         const int DefaultNoteResizeMargin = 8;
         const int DefaultHeaderTextPosY = 1;
+        const int DefaultBeatTextPosX = 3;
 
         int numNotes;
         int numOctaves;
@@ -135,6 +136,7 @@ namespace FamiStudio
         int scrollMargin;
         int noteResizeMargin;
         int headerTextPosY;
+        int beatTextPosX;
         float envelopeSizeY;
 
         int ScaleForZoom(int value)
@@ -435,6 +437,7 @@ namespace FamiStudio
             effectNamePosX = (int)(DefaultEffectNamePosX * scaling);
             effectNamePosY = (int)(DefaultEffectNamePosY * scaling);
             headerTextPosY = (int)(DefaultHeaderTextPosY * scaling);
+            beatTextPosX = (int)(DefaultBeatTextPosX * scaling);
             effectIconSizeX = (int)(DefaultEffectIconSizeX * scaling);
             effectValuePosTextOffsetY = (int)(DefaultEffectValuePosTextOffsetY * scaling);
             effectValueNegTextOffsetY = (int)(DefaultEffectValueNegTextOffsetY * scaling);
@@ -1072,15 +1075,34 @@ namespace FamiStudio
 
                 DrawSelectionRect(g, headerSizeY);
 
+                var beatLabelSizeX = g.MeasureString("88.88", ThemeBase.FontMedium);
+
                 // Draw the header bars
                 for (int p = a.minVisiblePattern; p < a.maxVisiblePattern; p++)
                 {
-                    var sx = Song.GetPatternLength(p) * noteSizeX;
-                    int px = Song.GetPatternStartAbsoluteNoteIndex(p) * noteSizeX - scrollX;
+                    var patternLen = Song.GetPatternLength(p);
+
+                    var sx = patternLen * noteSizeX;
+                    var px = Song.GetPatternStartAbsoluteNoteIndex(p) * noteSizeX - scrollX;
                     if (p != 0)
                         g.DrawLine(px, 0, px, headerSizeY, theme.BlackBrush, 3.0f);
+
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
-                    g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, px, headerTextPosY, theme.LightGreyFillBrush1, sx);
+                    var beatLen = Song.GetPatternBeatLength(p);
+                    var beatSizeX = beatLen * noteSizeX;
+
+                    // Is there enough room to draw beat labels?
+                    if ((beatSizeX + beatTextPosX) > beatLabelSizeX)
+                    {
+                        var numBeats = (int)Math.Ceiling(patternLen / (float)beatLen);
+                        for (int i = 0; i < numBeats; i++)
+                            g.DrawText($"{p}.{i + 1}", ThemeBase.FontMedium, px + beatTextPosX + beatSizeX * i, headerTextPosY, theme.LightGreyFillBrush1);
+                    }
+                    else
+                    {
+                        g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, px, headerTextPosY, theme.LightGreyFillBrush1, sx);
+                    }
+
                     if (pattern != null)
                         g.DrawText(pattern.Name, ThemeBase.FontMediumCenter, px, headerTextPosY + headerSizeY / 2, theme.BlackBrush, sx);
                 }
