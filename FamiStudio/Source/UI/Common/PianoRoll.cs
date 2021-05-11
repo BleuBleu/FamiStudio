@@ -82,6 +82,7 @@ namespace FamiStudio
         const int DefaultMinScrollBarLength = 128;
         const int DefaultScrollMargin = 128;
         const int DefaultNoteResizeMargin = 8;
+        const int DefaultHeaderTextPosY = 1;
 
         int numNotes;
         int numOctaves;
@@ -133,6 +134,7 @@ namespace FamiStudio
         int maxZoomLevel;
         int scrollMargin;
         int noteResizeMargin;
+        int headerTextPosY;
         float envelopeSizeY;
 
         int ScaleForZoom(int value)
@@ -432,6 +434,7 @@ namespace FamiStudio
             snapIconPosY = (int)(DefaultSnapIconPosY * scaling);
             effectNamePosX = (int)(DefaultEffectNamePosX * scaling);
             effectNamePosY = (int)(DefaultEffectNamePosY * scaling);
+            headerTextPosY = (int)(DefaultHeaderTextPosY * scaling);
             effectIconSizeX = (int)(DefaultEffectIconSizeX * scaling);
             effectValuePosTextOffsetY = (int)(DefaultEffectValuePosTextOffsetY * scaling);
             effectValueNegTextOffsetY = (int)(DefaultEffectValueNegTextOffsetY * scaling);
@@ -1048,7 +1051,7 @@ namespace FamiStudio
                     if (x != 0)
                         g.DrawLine(x, 0, x, headerSizeY / 2, theme.BlackBrush, 1.0f);
                     if (zoomLevel >= 1 && n != env.Length)
-                        g.DrawText(n.ToString(), ThemeBase.FontMediumCenter, x, effectNamePosY, theme.LightGreyFillBrush1, noteSizeX);
+                        g.DrawText(n.ToString(), ThemeBase.FontMediumCenter, x, headerTextPosY, theme.LightGreyFillBrush1, noteSizeX);
                 }
 
                 g.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, theme.BlackBrush);
@@ -1077,9 +1080,9 @@ namespace FamiStudio
                     if (p != 0)
                         g.DrawLine(px, 0, px, headerSizeY, theme.BlackBrush, 3.0f);
                     var pattern = Song.Channels[editChannel].PatternInstances[p];
-                    g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, px, effectNamePosY, theme.LightGreyFillBrush1, sx);
+                    g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, px, headerTextPosY, theme.LightGreyFillBrush1, sx);
                     if (pattern != null)
-                        g.DrawText(pattern.Name, ThemeBase.FontMediumCenter, px, effectNamePosY + headerSizeY / 2, theme.BlackBrush, sx);
+                        g.DrawText(pattern.Name, ThemeBase.FontMediumCenter, px, headerTextPosY + headerSizeY / 2, theme.BlackBrush, sx);
                 }
 
                 int maxX = Song.GetPatternStartAbsoluteNoteIndex(a.maxVisiblePattern) * noteSizeX - scrollX;
@@ -1099,7 +1102,7 @@ namespace FamiStudio
                 ForEachWaveTimecode(g, a, (time, x, level, idx) =>
                 {
                     if (time != 0.0f)
-                        g.DrawText(time.ToString($"F{level + 1}"), ThemeBase.FontMediumCenter, x - 100, effectNamePosY, theme.LightGreyFillBrush1, 200);
+                        g.DrawText(time.ToString($"F{level + 1}"), ThemeBase.FontMediumCenter, x - 100, headerTextPosY, theme.LightGreyFillBrush1, 200);
                 });
 
                 // Processed Range
