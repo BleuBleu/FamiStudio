@@ -90,6 +90,8 @@ namespace FamiStudio
                 return System.Windows.Forms.Keys.F1 + (k - Gdk.Key.F1);
             else if (k == Gdk.Key.Control_R || k == Gdk.Key.Control_L)
                 return System.Windows.Forms.Keys.Control;
+            else if (k == Gdk.Key.Meta_R || k == Gdk.Key.Meta_L)
+                return System.Windows.Forms.Keys.Control;
             else if (k == Gdk.Key.Alt_R || k == Gdk.Key.Alt_L)
                 return System.Windows.Forms.Keys.Alt;
             else if (k == Gdk.Key.Shift_R || k == Gdk.Key.Shift_L)

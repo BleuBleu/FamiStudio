@@ -3,6 +3,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
@@ -41,7 +42,7 @@ namespace FamiStudio
         private GLControl captureControl = null;
         private System.Windows.Forms.MouseButtons captureButton   = System.Windows.Forms.MouseButtons.None;
         private System.Windows.Forms.MouseButtons lastButtonPress = System.Windows.Forms.MouseButtons.None;
-        private bool[] keys = new bool[256];
+        private BitArray keys = new BitArray(65536);
         private System.Windows.Forms.Keys modifiers = System.Windows.Forms.Keys.None;
 
         public FamiStudioForm(FamiStudio famistudio) : base(new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), 1, 0, GraphicsContextFlags.Default)
@@ -247,7 +248,7 @@ namespace FamiStudio
 
         void Handle_FocusOutEvent(object o, FocusOutEventArgs args)
         {
-            Array.Clear(keys, 0, keys.Length);
+            keys.SetAll(false);
             modifiers = System.Windows.Forms.Keys.None;
         }
 
