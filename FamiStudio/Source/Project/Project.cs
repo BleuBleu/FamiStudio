@@ -972,8 +972,29 @@ namespace FamiStudio
                 {
                     Log.LogMessage(LogSeverity.Warning, $"Project already contains an instrument named '{existingInstrument.Name}', assuming it is the same.");
 
-                    other.ReplaceInstrument(otherInstrument, existingInstrument);
-                    other.DeleteInstrument(otherInstrument);
+                    if (existingInstrument.ExpansionType == otherInstrument.ExpansionType)
+                    {
+                        other.ReplaceInstrument(otherInstrument, existingInstrument);
+                        other.DeleteInstrument(otherInstrument);
+                    }
+                    else
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Instrument '{otherInstrument.Name}' already exists but uses a different expansion, renaming.");
+
+                        // Generate a new name that is unique in both projects.
+                        for (int j = 2; ; j++)
+                        {
+                            var newName = otherInstrument.Name += $" ({j})";
+                            if (GetInstrument(newName) == null && instruments.FindIndex(k => k.Name == newName) < 0)
+                            {
+                                otherInstrument.Name = newName;
+                                break;
+                            }
+                        }
+
+                        instruments.Add(otherInstrument);
+                        i++;
+                    }
                 }
                 else
                 {
