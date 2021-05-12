@@ -795,7 +795,7 @@ namespace FamiStudio
             }
         }
 
-        public int GetAddressForSample(DPCMSample sample)
+        public int GetAddressForSample(DPCMSample sample, out int len)
         {
             lock (DPCMSample.ProcessedDataLock)
             {
@@ -807,16 +807,23 @@ namespace FamiStudio
                     if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
                     {
                         if (mapping.Sample == sample)
+                        {
+                            len = mapping.Sample.ProcessedData.Length;
                             return addr;
+                        }
                         addr += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
 
                         if (addr >= MaxMappedSampleSize)
+                        {
+                            len = 0;
                             return -1;
+                        }
 
                         visitedSamples.Add(mapping.Sample);
                     }
                 }
 
+                len = 0;
                 return addr;
             }
         }

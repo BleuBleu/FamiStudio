@@ -443,7 +443,7 @@ namespace FamiStudio
 
                     if (mapping != null && mapping.Sample != null)
                     {
-                        sampleOffset = Math.Max(0, project.GetAddressForSample(mapping.Sample)) >> 6;
+                        sampleOffset = Math.Max(0, project.GetAddressForSample(mapping.Sample, out _)) >> 6;
                         sampleSize = mapping.Sample.ProcessedData.Length >> 4;
                         sampleName = $"({mapping.Sample.Name})";
                         samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
