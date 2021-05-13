@@ -414,6 +414,14 @@ namespace FamiStudio
 
                 pattern.DeleteAllNotes();
 
+                int GetNewNoteIndex(int oldIdx)
+                {
+                    var noteIdx  = oldIdx / oldNoteLength;
+                    var frameIdx = oldIdx % oldNoteLength;
+
+                    return noteIdx * newNoteLength + (int)Math.Floor(frameIdx * ratio + 0.001f);
+                }
+
                 // Resize the pattern while applying some kind of priority in case we
                 // 2 notes append to map to the same note (when shortening notes). 
                 //
@@ -424,34 +432,31 @@ namespace FamiStudio
                 //   4) Empty note.
 
                 // TODO: Merge notes/slide + fx seperately.
-                for (int i = 0; i < oldPatternLength / oldNoteLength; i++)
+                for (int i = 0; i < oldPatternLength; i++)
                 {
-                    for (int j = 0; j < oldNoteLength; j++)
+                    var oldIdx = i;
+                    var newIdx = GetNewNoteIndex(i);
+
+                    oldNotes.TryGetValue(oldIdx, out var oldNote);
+                    pattern.Notes.TryGetValue(newIdx, out var newNote);
+
+                    if (oldNote == null)
+                        continue;
+
+                    int oldPriority = GetNoteResizePriority(oldNote);
+                    int newPriority = GetNoteResizePriority(newNote);
+
+                    if (oldPriority < newPriority)
                     {
-                        var oldIdx = i * oldNoteLength + j;
-                        var newIdx = i * newNoteLength + (int)Math.Floor(j * ratio + 0.001f);
-
-                        oldNotes.TryGetValue(oldIdx, out var oldNote);
-                        pattern.Notes.TryGetValue(newIdx, out var newNote);
-
-                        if (oldNote == null)
-                            continue;
-
-                        int oldPriority = GetNoteResizePriority(oldNote);
-                        int newPriority = GetNoteResizePriority(newNote);
-
-                        if (oldPriority < newPriority)
+                        if (oldNote.IsMusical)
                         {
-                            if (oldNote.IsMusical)
-                            {
-                                var release = oldNote.Release;
-                                oldNote.Duration = (int)Math.Floor(oldNote.Duration * ratio + 0.001f);
-                                if (release > 0)
-                                    oldNote.Release = (int)Math.Floor(release * ratio);
-                            }
-
-                            pattern.SetNoteAt(newIdx, oldNote);
+                            var release = oldNote.Release;
+                            oldNote.Duration = Math.Max(1, GetNewNoteIndex(i + oldNote.Duration) - newIdx);
+                            if (release > 0)
+                                oldNote.Release = Math.Max(1, GetNewNoteIndex(i + oldNote.Release) - newIdx);
                         }
+
+                        pattern.SetNoteAt(newIdx, oldNote);
                     }
                 }
 
