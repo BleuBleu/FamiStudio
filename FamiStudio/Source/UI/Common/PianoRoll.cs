@@ -157,6 +157,9 @@ namespace FamiStudio
 
         enum SnapResolution
         {
+            OneQuarter,
+            OneThird,
+            OneHalf,
             OneNote,
             TwoNote,
             ThreeNote,
@@ -166,6 +169,9 @@ namespace FamiStudio
 
         readonly double[] SnapResolutionFactors = new[]
         {
+            1.0 / 4.0,
+            1.0 / 3.0,
+            1.0 / 2.0,
             1.0,
             2.0,
             3.0,
@@ -779,6 +785,9 @@ namespace FamiStudio
             bmpSlide = g.CreateBitmapFromResource("Slide");
             bmpSnap = g.CreateBitmapFromResource("Snap");
             bmpSnapRed = g.CreateBitmapFromResource("SnapRed");
+            bmpSnapResolution[(int)SnapResolution.OneQuarter] = g.CreateBitmapFromResource("Snap1_4");
+            bmpSnapResolution[(int)SnapResolution.OneThird] = g.CreateBitmapFromResource("Snap1_3");
+            bmpSnapResolution[(int)SnapResolution.OneHalf] = g.CreateBitmapFromResource("Snap1_2");
             bmpSnapResolution[(int)SnapResolution.OneNote] = g.CreateBitmapFromResource("Snap1");
             bmpSnapResolution[(int)SnapResolution.TwoNote] = g.CreateBitmapFromResource("Snap2");
             bmpSnapResolution[(int)SnapResolution.ThreeNote] = g.CreateBitmapFromResource("Snap3");
@@ -3990,7 +3999,7 @@ namespace FamiStudio
                 if (left)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
                 else
-                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)SnapResolution.OneNote);
+                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
 
                 ConditionalInvalidate();
                 return true;
@@ -5032,8 +5041,46 @@ namespace FamiStudio
 
                 Debug.Assert(snapFactor >= 1.0); // Fractional snapping is no longer supported.
 
-                var numNotes = noteLength * (int)snapFactor;
-                var snappedNoteIndex = (location.NoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
+                var snappedNoteIndex = location.NoteIndex;
+                if (snapFactor >= 1.0)
+                {
+	                var numNotes = noteLength * (int)snapFactor;
+	                snappedNoteIndex = (location.NoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
+          		}
+                else
+                {
+                    // Subtract the base note so that snapping inside a note is always deterministic. 
+                    // Otherwise, rounding errors can create a different snapping pattern every note (6-5-5-6 like Gimmick).
+                    var baseNodeIdx  = location.NoteIndex / noteLength * noteLength;
+                    var noteFrameIdx = location.NoteIndex % noteLength;
+                    var numSnapPoints = (int)Math.Round(1.0 / snapFactor);
+
+                    // This is terrible...
+                    if (roundUp)
+                    {
+                        for (int i = 0; i <= numSnapPoints; i++)
+                        {
+                            var snapPoint = (int)Math.Round(i / (double)numSnapPoints * noteLength);
+                            if (noteFrameIdx < snapPoint)
+                            {
+                                snappedNoteIndex = baseNodeIdx + snapPoint;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int i = numSnapPoints - 1; i >= 0; i--)
+                        {
+                            var snapPoint = (int)Math.Round(i / (double)numSnapPoints * noteLength);
+                            if (noteFrameIdx >= snapPoint)
+                            {
+                                snappedNoteIndex = baseNodeIdx + snapPoint;
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 if (!roundUp)
                     snappedNoteIndex = Math.Min(Song.GetPatternLength(location.PatternIndex) - 1, snappedNoteIndex);
@@ -5689,7 +5736,7 @@ namespace FamiStudio
                 if (e.Delta > 0)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
                 else
-                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)SnapResolution.OneNote);
+                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
 
                 ConditionalInvalidate();
             }
