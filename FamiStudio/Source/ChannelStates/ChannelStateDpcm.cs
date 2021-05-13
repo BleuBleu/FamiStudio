@@ -20,7 +20,7 @@
                 if (mapping != null && mapping.Sample != null)
                 {
                     var addr = FamiStudio.StaticProject.GetAddressForSample(mapping.Sample, out var len) >> 6;
-                    if (addr >= 0 && addr <= 0xff && len >= 0 && len < DPCMSample.MaxSampleSize) 
+                    if (addr >= 0 && addr <= 0xff && len >= 0 && len <= DPCMSample.MaxSampleSize) 
                     {
                         WriteRegister(NesApu.APU_DMC_START, addr);
                         WriteRegister(NesApu.APU_DMC_LEN, len >> 4);
