@@ -325,19 +325,19 @@ namespace FamiStudio
 
         public void Trim()
         {
-            int maxLength = 0;
+            int maxPatternIdx = 0;
             foreach (var channel in channels)
             {
                 for (int i = 0; i < Length; i++)
                 {
                     if (channel.PatternInstances[i] != null)
                     {
-                        maxLength = Math.Max(maxLength, i);
+                        maxPatternIdx = Math.Max(maxPatternIdx, i);
                     }
                 }
             }
 
-            SetLength(maxLength);
+            SetLength(maxPatternIdx + 1);
         }
 
         public void DeleteEmptyPatterns()
