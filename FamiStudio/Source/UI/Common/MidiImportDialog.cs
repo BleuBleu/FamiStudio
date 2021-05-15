@@ -200,7 +200,7 @@ namespace FamiStudio
                 {
                     gridData[i, 1] = $"Track {src.index + 1}";
 
-                    if (string.IsNullOrEmpty(trackNames[src.index]))
+                    if (!string.IsNullOrEmpty(trackNames[src.index]))
                         gridData[i, 1] += $" ({trackNames[src.index]})";
                 }
                 else if (src.type == MidiSourceType.Channel)

@@ -1048,7 +1048,16 @@ namespace FamiStudio
             foreach (var textEvent in textEvents)
             {
                 if (textEvent.type == 3)
-                    trackNames[textEvent.track] = textEvent.text;
+                {
+                    var trackName = textEvent.text;
+                    if (trackName != null)
+                    {
+                        // Sanitize name a bit.
+                        trackName = trackName.Trim();
+                        trackName = trackName.Trim(new[] { '\0' });
+                        trackNames[textEvent.track] = trackName;
+                    }
+                }
             }
 
             var names = new string[numTracks];
