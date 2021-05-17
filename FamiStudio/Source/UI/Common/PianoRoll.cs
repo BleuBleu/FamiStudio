@@ -1976,7 +1976,7 @@ namespace FamiStudio
                                         released = false;
                                 }
 
-                                if (it.Location == hoverLocation)
+                                if (isActiveChannel && it.Location == hoverLocation)
                                 {
                                     hoverReleased = released;
                                     hoverLastNoteValue = lastNoteValue;
@@ -1998,7 +1998,7 @@ namespace FamiStudio
                                 }
                             }
 
-                            if (hoverNote != null)
+                            if (isActiveChannel && hoverNote != null)
                             {
                                 if (hoverNote.IsMusical)
                                 {
