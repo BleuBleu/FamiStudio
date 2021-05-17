@@ -346,6 +346,7 @@ namespace FamiStudio
             }
 
             song.DeleteNotesPastMaxInstanceLength();
+            song.InvalidateCumulativePatternCache();
             song.Project.Validate();
         }
     }
