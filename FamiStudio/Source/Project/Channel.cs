@@ -1049,7 +1049,10 @@ namespace FamiStudio
             }
 
             // Do a second pass to handle inconsistent durations and find the stop notes to keep.
-            var stopNotesToPreserve = new Dictionary<Note, Pattern>();
+            var inconsistentDurationStopNotes = new Dictionary<Note, Pattern>();
+            var loopPointStopNote = (Note)null;
+            var loopPointStopNotePattern = (Pattern)null;
+            var foundMusicalNoteAfterLoopPoint = false;
 
             l0 = NoteLocation.Invalid;
             n0 = (Note)null;
@@ -1066,27 +1069,45 @@ namespace FamiStudio
                     var l1 = new NoteLocation(p1, kv.Key);
                     var n1 = kv.Value;
 
-                    if (n1.IsStop && n0 != null)
+                    if (n1.IsStop)
                     {
-                        Debug.Assert(n0.Duration != 0);
+                        if (n0 != null)
+                        {
+                            Debug.Assert(n0.Duration != 0);
 
-                        var duration = (ushort)song.CountNotesBetween(l0, l1);
-                        if (n0.Duration != duration)
-                            stopNotesToPreserve[n1] = pattern;
+                            var duration = (ushort)song.CountNotesBetween(l0, l1);
+                            if (n0.Duration != duration)
+                            {
+                                inconsistentDurationStopNotes[n1] = pattern;
+                            }
 
-                        n0 = null;
+                            n0 = null;
+                        }
+                        if (song.LoopPoint >= 0 && l1.PatternIndex >= song.LoopPoint && !foundMusicalNoteAfterLoopPoint && loopPointStopNote == null)
+                        {
+                            loopPointStopNote = n1;
+                            loopPointStopNotePattern = pattern;
+                        }
                     }
                     else if (n1.IsMusical)
                     {
                         l0 = l1;
                         n0 = n1;
+
+                        if (song.LoopPoint >= 0 && l1.PatternIndex >= song.LoopPoint && !foundMusicalNoteAfterLoopPoint)
+                        {
+                            foundMusicalNoteAfterLoopPoint = true;
+                        }
                     }
                 }
             }
 
             // Print messages.
-            foreach (var kv in stopNotesToPreserve)
-                Log.LogMessage(LogSeverity.Warning, $"Iconsistent note duration, orphan note added. (Song={song.Name}, Channel={NameWithExpansion}, Pattern={kv.Value.Name})");
+            foreach (var kv in inconsistentDurationStopNotes)
+                Log.LogMessage(LogSeverity.Warning, $"Iconsistent note duration, orphan stop note added. (Song={song.Name}, Channel={NameWithExpansion}, Pattern={kv.Value.Name})");
+
+            if (loopPointStopNote != null)
+                Log.LogMessage(LogSeverity.Warning, $"Stop note found at beginning of loop point, orphan stop note added. (Song={song.Name}, Channel={NameWithExpansion}, Pattern={loopPointStopNotePattern.Name})");
 
             // Cleanup.
             foreach (var pattern in patterns)
@@ -1095,7 +1116,7 @@ namespace FamiStudio
                 {
                     var note = kv.Value;
 
-                    if ((note.IsStop || note.IsRelease) && !stopNotesToPreserve.ContainsKey(note))
+                    if ((note.IsStop || note.IsRelease) && !inconsistentDurationStopNotes.ContainsKey(note) && note != loopPointStopNote)
                     {
                         note.Value = Note.NoteInvalid;
                         note.Duration = 0;
