@@ -937,7 +937,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                         channel.PatternInstances[patternIdx] = channel.CreatePattern();
-                        channel.InvalidateCumulativePatternCache(patternIdx);
+                        channel.InvalidateCumulativePatternCache();
                         PatternClicked?.Invoke(channelIdx, patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ClearSelection();
@@ -1003,7 +1003,7 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                         channel.PatternInstances[patternIdx] = null;
-                        channel.InvalidateCumulativePatternCache(patternIdx);
+                        channel.InvalidateCumulativePatternCache();
                         App.UndoRedoManager.EndTransaction();
                         ClearSelection();
                         ConditionalInvalidate();

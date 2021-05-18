@@ -287,7 +287,7 @@ namespace FamiStudio
                 }
             }
 
-            InvalidateCumulativePatternCache(minLocation.PatternIndex);
+            InvalidateCumulativePatternCache(minLocation.PatternIndex, maxLocation.PatternIndex);
         }
 
         public Pattern CreatePattern(string name = null)
@@ -628,9 +628,21 @@ namespace FamiStudio
             return -1;
         }
 
-        public void InvalidateCumulativePatternCache(int patternIdx = 0)
+        public void InvalidateCumulativePatternCache()
         {
-            maxValidCacheIndex = Math.Min(patternIdx - 1, maxValidCacheIndex);
+            maxValidCacheIndex = -1;
+        }
+
+        public void InvalidateCumulativePatternCache(int startPatternIdx, int endPatternIdx)
+        {
+            for (int idx = startPatternIdx; idx <= endPatternIdx && maxValidCacheIndex != -1; idx++)
+            {
+                var pattern = patternInstances[idx];
+                if (pattern != null)
+                {
+                    InvalidateCumulativePatternCache(pattern);
+                }
+            }
         }
 
         public void InvalidateCumulativePatternCache(Pattern pattern)

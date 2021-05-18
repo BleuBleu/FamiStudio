@@ -2888,12 +2888,12 @@ namespace FamiStudio
                     it.Note.SetEffectValue(selectedEffectIdx, value + effectDelta);
                 }
 
-                channel.InvalidateCumulativePatternCache(minLocation.PatternIndex);
+                channel.InvalidateCumulativePatternCache(minLocation.PatternIndex, maxLocation.PatternIndex);
             }
             else
             {
                 note.SetEffectValue(selectedEffectIdx, newValue);
-                channel.InvalidateCumulativePatternCache(captureNoteLocation.PatternIndex);
+                channel.InvalidateCumulativePatternCache(pattern);
             }
 
             ConditionalInvalidate();
@@ -3381,7 +3381,7 @@ namespace FamiStudio
                     PatternChanged?.Invoke(pattern);
             }
 
-            channel.InvalidateCumulativePatternCache(minLocation.PatternIndex);
+            channel.InvalidateCumulativePatternCache(minLocation.PatternIndex, maxLocation.PatternIndex);
 
             if (doTransaction)
                 App.UndoRedoManager.EndTransaction();
@@ -3723,7 +3723,7 @@ namespace FamiStudio
                 newNote.HasVolume = false;
                 newNote.Duration = nextFrame - currentFrame;
                 pattern.Notes[location.NoteIndex] = newNote;
-                channel.InvalidateCumulativePatternCache(location.PatternIndex);
+                channel.InvalidateCumulativePatternCache(pattern);
                 PatternChanged?.Invoke(pattern);
 
                 AdvanceRecording(currentFrame);
@@ -4379,7 +4379,7 @@ namespace FamiStudio
         {
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[patternIdx];
-            channel.InvalidateCumulativePatternCache(patternIdx);
+            channel.InvalidateCumulativePatternCache(pattern);
             PatternChanged?.Invoke(pattern);
         }
 
@@ -5397,7 +5397,7 @@ namespace FamiStudio
                     note.Arpeggio = channel.SupportsArpeggios ? currentArpeggio : null;
                     note.Duration = (ushort)(dragNoteOldDuration - dragNote.Duration);
 
-                    channel.InvalidateCumulativePatternCache(dragNoteLocation.PatternIndex);
+                    channel.InvalidateCumulativePatternCache(pattern);
                 }
                 else
                 {
@@ -5413,12 +5413,12 @@ namespace FamiStudio
                 p1 = Song.PatternIndexFromAbsoluteNoteIndex(dragFrameMax + 1);
                 for (int p = p0; p <= p1 && p < Song.Length; p++)
                     PatternChanged?.Invoke(channel.PatternInstances[p]);
-                channel.InvalidateCumulativePatternCache(p0);
+                channel.InvalidateCumulativePatternCache(p0, p1);
                 p0 = Song.PatternIndexFromAbsoluteNoteIndex(dragFrameMin + deltaNoteIdx + 0);
                 p1 = Song.PatternIndexFromAbsoluteNoteIndex(dragFrameMax + deltaNoteIdx + 1);
                 for (int p = p0; p <= p1 && p < Song.Length; p++)
                     PatternChanged?.Invoke(channel.PatternInstances[p]);
-                channel.InvalidateCumulativePatternCache(p0);
+                channel.InvalidateCumulativePatternCache(p0, p1);
             }
 
             if (final)
@@ -5509,7 +5509,7 @@ namespace FamiStudio
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
             var note = pattern.Notes[captureNoteLocation.NoteIndex];
             note.Release = (ushort)Utils.Clamp(Song.CountNotesBetween(captureNoteLocation, location), 1, note.Duration - 1);
-            channel.InvalidateCumulativePatternCache(captureNoteLocation.PatternIndex);
+            channel.InvalidateCumulativePatternCache(pattern);
             ConditionalInvalidate();
         }
 

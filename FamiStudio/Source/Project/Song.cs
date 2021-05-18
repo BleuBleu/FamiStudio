@@ -234,7 +234,7 @@ namespace FamiStudio
         public void ClearPatternCustomSettings(int patternIdx)
         {
             patternCustomSettings[patternIdx].Clear();
-            InvalidateCumulativePatternCache(patternIdx);
+            InvalidateCumulativePatternCache();
             UpdatePatternStartNotes();
         }
 
@@ -268,7 +268,7 @@ namespace FamiStudio
                 patternCustomSettings[patternIdx].groovePaddingMode = groovePaddingMode;
             }
 
-            InvalidateCumulativePatternCache(patternIdx);
+            InvalidateCumulativePatternCache();
             UpdatePatternStartNotes();
         }
 
@@ -748,10 +748,10 @@ namespace FamiStudio
             InvalidateCumulativePatternCache();
         }
 
-        public void InvalidateCumulativePatternCache(int patternIdx = 0)
+        public void InvalidateCumulativePatternCache()
         {
             foreach (var channel in channels)
-                channel.InvalidateCumulativePatternCache(patternIdx);
+                channel.InvalidateCumulativePatternCache();
         }
 
         public void RemoveUnsupportedEffects()
