@@ -1147,6 +1147,14 @@ namespace FamiStudio
 
             if (((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && editEnvelope < EnvelopeType.RegularCount) || (editMode == EditionMode.Channel))
             {
+                var seekFrame = editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : GetSeekFrameToDraw();
+                if (seekFrame >= 0)
+                {
+                    g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
+                    g.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), theme.BlackBrush);
+                    g.DrawLine(0, headerSizeY / 2, 0, headerSizeY, GetSeekBarBrush(), 3);
+                    g.PopTransform();
+                }
             }
 
             g.PopClip();
@@ -1273,25 +1281,13 @@ namespace FamiStudio
             if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled))
             {
                 var showQwerty = App.IsRecording || App.IsQwertyPianoEnabled;
-                var keyStrings = new string[Note.MusicalNoteMax];
 
                 foreach (var kv in Settings.KeyCodeToNoteMap)
                 {
                     var i = kv.Value - 1;
                     var k = kv.Key;
 
-                    if (i < 0 || i >= keyStrings.Length)
-                        continue;
-
-                    if (keyStrings[i] == null)
-                        keyStrings[i] = PlatformUtils.KeyCodeToString(k);
-                    else
-                        keyStrings[i] += $"   {PlatformUtils.KeyCodeToString(k)}";
-                }
-
-                for (int i = 0; i < Note.MusicalNoteMax; i++)
-                {
-                    if (keyStrings[i] == null)
+                    if (i < 0)
                         continue;
 
                     int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + App.BaseRecordingOctave)) - scrollY;
@@ -1303,7 +1299,7 @@ namespace FamiStudio
                     else
                         brush = IsBlackKey(i % 12) ? theme.LightGreyFillBrush2 : theme.BlackBrush;
 
-                    g.DrawText(keyStrings[i], ThemeBase.FontVerySmallCenter, 0, y - recordingKeyOffsetY + g.WindowScaling * 2, brush, blackKeySizeX);
+                    g.DrawText(PlatformUtils.KeyCodeToString(k), ThemeBase.FontVerySmallCenter, 0, y - recordingKeyOffsetY + g.WindowScaling * 2, brush, blackKeySizeX);
                 }
             }
 
@@ -1422,6 +1418,8 @@ namespace FamiStudio
                     int maxX = Song.GetPatternStartAbsoluteNoteIndex(a.maxVisiblePattern) * noteSizeX - scrollX;
                     g.DrawLine(maxX, 0, maxX, Height, theme.BlackBrush, 3.0f);
 
+                    int seekX = GetSeekFrameToDraw() * noteSizeX - scrollX;
+                    g.DrawLine(seekX, 0, seekX, effectPanelSizeY, GetSeekBarBrush(), 3);
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
@@ -1895,6 +1893,8 @@ namespace FamiStudio
 
                     if (editMode != EditionMode.VideoRecording)
                     {
+                        int seekX = GetSeekFrameToDraw() * noteSizeX - scrollX;
+                        g.DrawLine(seekX, 0, seekX, Height, GetSeekBarBrush(), 3);
                     }
 
                     // Highlight note under mouse.
@@ -2175,6 +2175,8 @@ namespace FamiStudio
                     var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio);
                     if (seekFrame >= 0)
                     {
+                        var seekX = seekFrame * noteSizeX - scrollX;
+                        g.DrawLine(seekX, 0, seekX, Height, GetSeekBarBrush(), 3);
                     }
                 }
 
@@ -2356,6 +2358,8 @@ namespace FamiStudio
             var color = GetNoteColor(channel, note.Value, note.Instrument, song.Project);
             var selected = isActiveChannel && IsNoteSelected(location, duration);
 
+            if (!isActiveChannel)
+                color = Color.FromArgb((int)(color.A * 0.2f), color);
 
             // Draw first part, from start to release point.
             if (note.HasRelease)
@@ -2646,6 +2650,8 @@ namespace FamiStudio
                 var playTime = playPosition / (float)App.PreviewDPCMSampleRate;
                 if (!App.PreviewDPCMIsSource)
                     playTime += editSample.ProcessedStartTime;
+                var seekX = GetPixelForWaveTime(playTime, scrollX);
+                g.DrawLine(seekX, 0, seekX, Height, App.PreviewDPCMIsSource ? theme.LightGreyFillBrush1 : processedBrush, 3);
             }
 
             // Title + source/processed info.
