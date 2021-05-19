@@ -181,7 +181,9 @@ namespace FamiStudio
             }
             else if (newNote.IsMusical)
             {
-                bool instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentReload;
+                bool n163WaveformChanged = newNote.Instrument?.ExpansionType == ExpansionType.N163 &&
+                    Utils.ByteArrayCompare<sbyte>(note?.Instrument?.Envelopes[EnvelopeType.N163Waveform].Values, newNote.Instrument.Envelopes[EnvelopeType.N163Waveform].Values);
+                bool instrumentChanged = note.Instrument != newNote.Instrument || forceInstrumentReload || n163WaveformChanged;
                 bool arpeggioChanged   = note.Arpeggio   != newNote.Arpeggio;
 
                 note = newNote;

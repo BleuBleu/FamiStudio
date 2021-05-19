@@ -328,5 +328,10 @@ namespace FamiStudio
             }
             catch { }
         }
+
+        public static bool ByteArrayCompare<T>(ReadOnlySpan<T> a1, ReadOnlySpan<T> a2) where T : IEquatable<T>
+        {
+            return a1.SequenceEqual(a2);
+        }
     }
 }
