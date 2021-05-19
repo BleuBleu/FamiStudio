@@ -1281,13 +1281,25 @@ namespace FamiStudio
             if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled))
             {
                 var showQwerty = App.IsRecording || App.IsQwertyPianoEnabled;
+                var keyStrings = new string[Note.MusicalNoteMax];
 
                 foreach (var kv in Settings.KeyCodeToNoteMap)
                 {
                     var i = kv.Value - 1;
                     var k = kv.Key;
 
-                    if (i < 0)
+                    if (i < 0 || i >= keyStrings.Length)
+                        continue;
+
+                    if (keyStrings[i] == null)
+                        keyStrings[i] = PlatformUtils.KeyCodeToString(k);
+                    else
+                        keyStrings[i] += $"   {PlatformUtils.KeyCodeToString(k)}";
+                }
+
+                for (int i = 0; i < Note.MusicalNoteMax; i++)
+                {
+                    if (keyStrings[i] == null)
                         continue;
 
                     int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + App.BaseRecordingOctave)) - scrollY;
@@ -1299,7 +1311,7 @@ namespace FamiStudio
                     else
                         brush = IsBlackKey(i % 12) ? theme.LightGreyFillBrush2 : theme.BlackBrush;
 
-                    g.DrawText(PlatformUtils.KeyCodeToString(k), ThemeBase.FontVerySmallCenter, 0, y - recordingKeyOffsetY + g.WindowScaling * 2, brush, blackKeySizeX);
+                    g.DrawText(keyStrings[i], ThemeBase.FontVerySmallCenter, 0, y - recordingKeyOffsetY + g.WindowScaling * 2, brush, blackKeySizeX);
                 }
             }
 
