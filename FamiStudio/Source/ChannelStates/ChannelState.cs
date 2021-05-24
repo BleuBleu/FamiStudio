@@ -62,11 +62,12 @@ namespace FamiStudio
 
             var channel = song.GetChannelByType(channelType);
             var pattern = channel.PatternInstances[location.PatternIndex];
+            var newNote = (Note)null;
 
-            if (pattern == null)
-                return;
-
-            pattern.Notes.TryGetValue(location.NoteIndex, out var newNote);
+            if (pattern != null)
+            {
+                pattern.Notes.TryGetValue(location.NoteIndex, out newNote);
+            }
 
             var needClone = true;
 
