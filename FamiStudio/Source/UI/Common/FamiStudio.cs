@@ -580,6 +580,10 @@ namespace FamiStudio
                         UpdateTitle();
                     }
                 }
+                else
+                {
+                    return false;
+                }
             }
             else
             {
