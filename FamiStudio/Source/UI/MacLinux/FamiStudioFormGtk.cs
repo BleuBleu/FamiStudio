@@ -525,7 +525,11 @@ namespace FamiStudio
         protected bool OnIdleProcessMain()
         {
             RenderFrame();
-            famistudio.Tick();
+
+            // Window becomes null when exiting the app.
+            if (GdkWindow != null)
+                famistudio.Tick();
+
             return true;
         }
 
@@ -539,7 +543,7 @@ namespace FamiStudio
             if (force)
                 Invalidate();
 
-            if (glInit && controls.Redraw())
+            if (glInit && GdkWindow != null && controls.Redraw())
             {
                 GraphicsContext.CurrentContext.SwapBuffers();
             }
@@ -607,7 +611,7 @@ namespace FamiStudio
         protected override bool OnDeleteEvent(Gdk.Event evnt)
         {
             if (!famistudio.TryClosing())
-                return false;
+                return true;
 
             Application.Quit();
 
