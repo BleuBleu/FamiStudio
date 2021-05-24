@@ -690,7 +690,12 @@ namespace FamiStudio
                     if (time >= patternLength)
                         break;
 
-                    Debug.Assert(!note.IsRelease);
+                    // Cant keep this assert. We sometimes will go through here 
+                    // when using simple notes (NSF export and other formats).
+                    // TODO : Add a project flag to tell us if we are in compound
+                    // or simple notes.
+
+                    // Debug.Assert(!note.IsRelease);
 
                     if ((note.IsStop || note.IsMusical) && cache.firstNoteIndex < 0)
                     {

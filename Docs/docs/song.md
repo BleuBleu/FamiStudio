@@ -124,7 +124,6 @@ Here we chosen to have 1 bar = 1 pattern, we could have chosen to fit the whole 
 Also we have chosen to assemble 4 notes into a beat, and 4 beats in a pattern (16 notes), which is how we get something that looks like a 4/4 time signature. This also means our smallest granularity for our melody is 1/16th of a note. That being said, you can move notes at the frame-level, so you actually have a lot more control than this.
 
 When using FamiStudio tempo mode, as you change the BPM, the number of frames (1/60th of a second) in a note may change. At a BPM of 112.5, FamiStudio calculates that we need 8 frames per note. When using FamiTracker tempo, this is the equalivalent of the **Speed** parameter.
-e a the moment.
 
 ## FamiStudio Tempo & PAL conversion
 
