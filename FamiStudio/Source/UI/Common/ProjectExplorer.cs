@@ -2014,10 +2014,6 @@ namespace FamiStudio
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
-                project.Name = dlg.Properties.GetPropertyValue<string>(0);
-                project.Author = dlg.Properties.GetPropertyValue<string>(1);
-                project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
-
                 var tempoMode    = TempoType.GetValueForName    (dlg.Properties.GetPropertyValue<string>(5));
                 var expansion    = ExpansionType.GetValueForName(dlg.Properties.GetPropertyValue<string>(3));
                 var palAuthoring = MachineType.GetValueForName  (dlg.Properties.GetPropertyValue<string>(6)) == 1;
@@ -2036,6 +2032,10 @@ namespace FamiStudio
                     transFlags = TransactionFlags.StopAudio;
 
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, transFlags);
+
+                project.Name      = dlg.Properties.GetPropertyValue<string>(0);
+                project.Author    = dlg.Properties.GetPropertyValue<string>(1);
+                project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
 
                 if (changedExpansion || changedNumChannels)
                 {
