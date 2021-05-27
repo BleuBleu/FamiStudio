@@ -1327,15 +1327,14 @@ namespace FamiStudio
                 }
             }
 
-            draggedArpeggio = null;
-            draggedInstrument = null;
-            draggedSample = null;
-            draggedSong = null;
-            sliderDragButton = null;
-            captureOperation = CaptureOperation.None;
-            Capture = false;
-
+            EndCaptureOperation();
             ConditionalInvalidate();
+        }
+
+        protected override void OnMouseCaptureChanged(EventArgs e)
+        {
+            EndCaptureOperation();
+            base.OnMouseCaptureChanged(e);
         }
 
         private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op, int buttonIdx = -1, int buttonRelX = 0, int buttonRelY = 0)
@@ -1350,6 +1349,18 @@ namespace FamiStudio
             Capture = true;
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
+        }
+
+        private void EndCaptureOperation()
+        {
+            // TODO : Move all the mouseup code here, like the piano roll.
+            draggedArpeggio = null;
+            draggedInstrument = null;
+            draggedSample = null;
+            draggedSong = null;
+            sliderDragButton = null;
+            captureOperation = CaptureOperation.None;
+            Capture = false;
         }
 
         private void AbortCaptureOperation()

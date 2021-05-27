@@ -1179,6 +1179,11 @@ namespace FamiStudio
             return loc;
         }
 
+        public bool IsInside(Song s)
+        {
+            return PatternIndex < s.Length;
+        }
+
         public int DistanceTo(Song s, NoteLocation other)
         {
             return s.CountNotesBetween(this, other);

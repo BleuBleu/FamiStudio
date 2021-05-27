@@ -108,9 +108,17 @@ namespace FamiStudio
                     }
 
                     if (newNote.HasRelease)
-                        releaseCounter = newNote.Release;
+                    {
+                        var releaseLocation = location.Advance(song, newNote.Release);
+                        // Don't process release that go beyond the end of the song.
+                        if (releaseLocation.IsInSong(song))
+                           releaseCounter = newNote.Release;
+                    }
 
-                    durationCounter = newNote.Duration;
+                    var stopLocation = location.Advance(song, newNote.Duration);
+                    // Don't stop notes that go beyond the end of the song.
+                    if (stopLocation.IsInSong(song))
+                        durationCounter = newNote.Duration;
                 }
 
                 // Store note for later if delayed.
