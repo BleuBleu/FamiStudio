@@ -2134,7 +2134,7 @@ namespace FamiStudio
                         if (GetLocationForCoord(pt.X, pt.Y, out _, out var hoverNoteValue))
                         {
                             var mapping = App.Project.GetDPCMMapping(hoverNoteValue);
-                            if (mapping != null)
+                            if (mapping != null && mapping.Sample != null)
                             {
                                 var y = virtualSizeY - hoverNoteValue * noteSizeY - scrollY;
 
@@ -3036,7 +3036,7 @@ namespace FamiStudio
                     EndCaptureOperation(e);
 
                     var mapping = App.Project.GetDPCMMapping(noteValue);
-                    if (left && mapping != null)
+                    if (left && mapping != null && mapping.Sample != null)
                     {
                         var freqIdx = App.PalPlayback ? 1 : 0;
                         var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
@@ -4184,11 +4184,11 @@ namespace FamiStudio
                     {
                         MapDPCMSample(noteValue);
                     }
-                    else if (left && mapping != null)
+                    else if (left && mapping != null && mapping.Sample != null)
                     {
                         StartDragDPCMSampleMapping(e, noteValue);
                     }
-                    else if (right && mapping != null)
+                    else if (right && mapping != null && mapping.Sample != null)
                     {
                         ClearDPCMSampleMapping(noteValue);
                     }
