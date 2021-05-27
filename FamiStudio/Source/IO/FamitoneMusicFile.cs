@@ -976,7 +976,7 @@ namespace FamiStudio
                             }
 
                             if (!emittedSlideNote)
-                                songData.Add($"${EncodeNoteValue(c, note.Value, numNotes):x2}*");
+                                songData.Add($"${EncodeNoteValue(c, note.Value, numNotes):x2}+*");
                         }
                         else
                         {
@@ -1015,7 +1015,7 @@ namespace FamiStudio
                                 it.Next();
                             }
 
-                            songData.Add($"${(byte)(0x81 | (numEmptyNotes << 1)):x2}*");
+                            songData.Add($"${(byte)(0x81 | (numEmptyNotes << 1)):x2}+*");
                         }
                     }
                 }
@@ -1036,13 +1036,16 @@ namespace FamiStudio
         // minNotesForJump is the minimum of notes to even consider doing a jump back to a reference. 
         int CompressAndOutputSongData(List<string> data, int minNotesForJump, bool writeLines)
         {
+            // We add some suffixes to the data to tell us a bit more info about they represent:
+            //   - A "+" suffix means its the beginning of an opcode.
+            //   - A "*" suffix means its the end of a note.
             bool IsLabelOrRef(string str) => str[0] == ll[0];
             bool IsLabel(string str) => str[str.Length - 1] == ':';
             bool IsRef(string str) => str[0] == ll[0] && str[str.Length - 1] != ':';
             bool IsNote(string str) => str[str.Length - 1] == '*';
-            bool IsOpcode(string str) => str[str.Length - 1] == '+';
+            bool IsOpcode(string str) => str[str.Length - 1] == '+' || str[str.Length - 2] == '+';
             string CleanNote(string str) => str.TrimEnd(new[] { '*', '+' });
-         
+
             // Number of bytes to hash to start searching.
             const int HashNumBytes = 4;
 
@@ -1054,73 +1057,75 @@ namespace FamiStudio
             for (int i = 0; i < data.Count;)
             {
                 var crc = 0u;
-                var foundLabelOrRef = false;
-                var compressible = IsOpcode(data[i]) || IsNote(data[i]); // Cant only compress at the start of an opcode or a regular note.
+                var compressible = IsOpcode(data[i]); // Cant only compress at the start of an opcode
 
-                // Look ahead 4 bytes and compute hash.
-                for (int k = i; k < data.Count && k < i + HashNumBytes; k++)
+                if (compressible)
                 {
-                    var b = data[k];
-
-                    if (IsLabelOrRef(b))
+                    // Look ahead 4 bytes and compute hash.
+                    for (int k = i; k < data.Count && k < i + HashNumBytes; k++)
                     {
-                        foundLabelOrRef = true;
-                        break;
+                        var b = data[k];
+
+                        if (IsLabelOrRef(b))
+                        {
+                            compressible = false;
+                            break;
+                        }
+
+                        crc = CRC32.Compute(b, crc);
                     }
 
-                    crc = CRC32.Compute(b, crc);
-                }
-
-                // Look at all the patterns matching the hash, take the longest.
-                if (compressible && !foundLabelOrRef && patterns.TryGetValue(crc, out var matchingPatterns))
-                {
-                    var bestPatternIdx = -1;
-                    var bestPatternLen = -1;
-                    var bestPatternNumNotes = -1;
-
-                    foreach (var idx in matchingPatterns)
+                    // Look at all the patterns matching the hash, take the longest.
+                    if (compressible && patterns.TryGetValue(crc, out var matchingPatterns))
                     {
-                        var lastNoteIdx = -1;
-                        var numNotes = 0;
+                        var bestPatternIdx = -1;
+                        var bestPatternLen = -1;
+                        var bestPatternNumNotes = -1;
 
-                        for (int j = idx, k = i; j < compressedData.Count && k < data.Count && numNotes < 250; j++, k++)
+                        foreach (var idx in matchingPatterns)
                         {
-                            if (compressedData[j] != data[k] || IsLabelOrRef(compressedData[j]))
-                                break;
+                            var lastNoteIdx = -1;
+                            var numNotes = 0;
 
-                            if (IsNote(compressedData[j]))
+                            for (int j = idx, k = i; j < compressedData.Count && k < data.Count && numNotes < 250; j++, k++)
                             {
-                                numNotes++;
-                                lastNoteIdx = j;
+                                if (compressedData[j] != data[k] || IsLabelOrRef(compressedData[j]))
+                                    break;
+
+                                if (IsNote(compressedData[j]))
+                                {
+                                    numNotes++;
+                                    lastNoteIdx = j;
+                                }
+                            }
+
+                            if (numNotes >= minNotesForJump)
+                            {
+                                var matchLen = lastNoteIdx - idx + 1;
+                                if (matchLen > bestPatternLen)
+                                {
+                                    bestPatternIdx = idx;
+                                    bestPatternLen = matchLen;
+                                    bestPatternNumNotes = numNotes;
+                                }
                             }
                         }
 
-                        if (numNotes >= minNotesForJump)
+                        // Output a jump to a ref if we found a good match.
+                        if (bestPatternIdx > 0)
                         {
-                            var matchLen = lastNoteIdx - idx + 1;
-                            if (matchLen > bestPatternLen)
-                            {
-                                bestPatternIdx = idx;
-                                bestPatternLen = matchLen;
-                                bestPatternNumNotes = numNotes;
-                            }
+                            refs.Add(bestPatternIdx);
+                            jumpToRefs.Add(compressedData.Count);
+
+                            compressedData.Add("$ff");
+                            compressedData.Add($"${bestPatternNumNotes:x2}");
+                            compressedData.Add($"{ll}ref{bestPatternIdx}");
+
+                            i += bestPatternLen;
+
+                            // No point of hashing jumps, we will never want to reuse those.
+                            continue;
                         }
-                    }
-
-                    // Output a jump to a ref if we found a good match.
-                    if (bestPatternIdx > 0)
-                    {
-                        refs.Add(bestPatternIdx);
-                        jumpToRefs.Add(compressedData.Count);
-
-                        compressedData.Add("$ff");
-                        compressedData.Add($"${bestPatternNumNotes:x2}");
-                        compressedData.Add($"{ll}ref{bestPatternIdx}");
-
-                        i += bestPatternLen;
-
-                        // No point of hashing jumps, we will never want to reuse those.
-                        continue; 
                     }
                 }
 
