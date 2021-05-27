@@ -448,7 +448,12 @@ namespace FamiStudio
         public void DeleteSample(DPCMSample sample)
         {
             samples.Remove(sample);
-            ReplaceSample(sample, null);
+
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && samplesMapping[i].Sample == sample)
+                    samplesMapping[i] = null;
+            }
         }
 
         public void DeleteAllSamples()
@@ -1329,6 +1334,15 @@ namespace FamiStudio
             }
         }
 
+        private void ClearMappingsWithNullSamples()
+        {
+            for (int i = 0; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null && samplesMapping[i].Sample == null)
+                    samplesMapping[i] = null;
+            }
+        }
+
 #if DEBUG
         private void ValidateDPCMSamples(Dictionary<int, object> idMap)
         {
@@ -1402,7 +1416,7 @@ namespace FamiStudio
             ulong mappingMask = 0;
             for (int i = 0; i < 64; i++)
             {
-                if (samplesMapping[i] != null)
+                if (samplesMapping[i] != null && samplesMapping[i].Sample != null)
                     mappingMask |= (((ulong)1) << i);
             }
             buffer.Serialize(ref mappingMask);
@@ -1426,6 +1440,9 @@ namespace FamiStudio
         {
             SerializeDPCMSamples(buffer);
             SerializeDPCMSamplesMapping(buffer);
+
+            if (!buffer.IsForUndoRedo)
+                ClearMappingsWithNullSamples();
         }
 
         public void SerializeInstrumentState(ProjectBuffer buffer)
