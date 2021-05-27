@@ -1331,11 +1331,13 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+#if FAMISTUDIO_WINDOWS
         protected override void OnMouseCaptureChanged(EventArgs e)
         {
             EndCaptureOperation();
             base.OnMouseCaptureChanged(e);
         }
+#endif
 
         private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op, int buttonIdx = -1, int buttonRelX = 0, int buttonRelY = 0)
         {
