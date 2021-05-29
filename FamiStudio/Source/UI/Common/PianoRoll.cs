@@ -3428,9 +3428,15 @@ namespace FamiStudio
                 {
                     int value = note.Value + amount;
                     if (value < Note.MusicalNoteMin || value > Note.MusicalNoteMax)
+                    {
                         note.Clear();
+                    }
                     else
+                    {
                         note.Value = (byte)value;
+                        if (note.IsSlideNote)
+                            note.SlideNoteTarget = (byte)Utils.Clamp(note.SlideNoteTarget + amount, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                    }
 
                     processedNotes.Add(note);
                 }
