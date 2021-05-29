@@ -3235,6 +3235,8 @@ namespace FamiStudio
 
             if (success)
             {
+                draggedSample = null;
+
                 if (PlatformUtils.MessageBox($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
