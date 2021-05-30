@@ -296,7 +296,7 @@ namespace FamiStudio
             id = newId;
         }
 
-        public void Validate(Project project, Dictionary<int, object> idMap)
+        public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
 #if DEBUG
             project.ValidateId(id);
@@ -449,7 +449,7 @@ namespace FamiStudio
             buffer.Serialize(ref pitch);
         }
 
-        public void Validate(Project project, Dictionary<int, object> idMap)
+        public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
             if (sample != null)
             {

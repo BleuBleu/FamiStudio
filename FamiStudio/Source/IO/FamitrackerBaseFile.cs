@@ -919,7 +919,7 @@ namespace FamiStudio
             project.ConvertToCompoundNotes();
             project.InvalidateCumulativePatternCache();
             project.SortEverything(false);
-            project.Validate();
+            project.ValidateIntegrity();
 
             PrintAdditionalWarnings();
 

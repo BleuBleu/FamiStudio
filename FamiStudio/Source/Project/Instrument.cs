@@ -206,7 +206,7 @@ namespace FamiStudio
             return serializer.CRC;
         }
 
-        public void Validate(Project project, Dictionary<int, object> idMap)
+        public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
 #if DEBUG
             project.ValidateId(id);

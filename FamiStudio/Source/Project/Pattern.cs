@@ -274,7 +274,7 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        public void Validate(Channel channel, Dictionary<int, object> idMap)
+        public void ValidateIntegrity(Channel channel, Dictionary<int, object> idMap)
         {
             Debug.Assert(this.song == channel.Song);
 

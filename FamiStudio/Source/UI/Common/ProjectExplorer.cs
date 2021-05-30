@@ -1353,9 +1353,13 @@ namespace FamiStudio
             captureThresholdMet = !captureNeedsThreshold[(int)op];
         }
 
+        // TODO : Move all the mouse up code here, like the piano roll.
         private void EndCaptureOperation()
         {
-            // TODO : Move all the mouseup code here, like the piano roll.
+            // Should never be needed, but why not.
+            if (App.UndoRedoManager.HasTransactionInProgress)
+                App.UndoRedoManager.AbortTransaction();
+
             draggedArpeggio = null;
             draggedInstrument = null;
             draggedSample = null;
@@ -2305,6 +2309,19 @@ namespace FamiStudio
                 }
 #endif
             }
+        }
+
+        public void ValidateIntegrity()
+        {
+#if DEBUG
+            if (App.Project != null)
+            {
+                Debug.Assert(App.Project.SongExists(selectedSong));
+
+                if (selectedInstrument != null)
+                    Debug.Assert(App.Project.InstrumentExists(selectedInstrument));
+            }
+#endif
         }
 
         public void SerializeState(ProjectBuffer buffer)

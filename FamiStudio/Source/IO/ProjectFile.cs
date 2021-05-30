@@ -41,7 +41,7 @@ namespace FamiStudio
                     var serializer = new ProjectLoadBuffer(project, buffer, loadVersion);
                     project.SerializeState(serializer);
                     project.Filename = filename;
-                    project.Validate();
+                    project.ValidateIntegrity();
                     return project;
                 }
             }

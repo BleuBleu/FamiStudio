@@ -539,7 +539,7 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        public void Validate(Project project, Dictionary<int, object> idMap)
+        public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
             Debug.Assert(project.Songs.Contains(this));
             Debug.Assert(project.GetSong(id) == this);
@@ -556,7 +556,7 @@ namespace FamiStudio
 
             foreach (var channel in channels)
             {
-                channel.Validate(this, idMap);
+                channel.ValidateIntegrity(this, idMap);
 
                 // This is extremely heavy handed, but it is important. 
                 // Notes used to be struct and they got changed to classes later on.

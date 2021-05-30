@@ -3224,25 +3224,34 @@ namespace FamiStudio
 
         private void EndDragDPCMSampleMapping(MouseEventArgs e)
         {
-            bool success = false;
             if (GetNoteValueForCoord(e.X, e.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
             {
-                App.Project.UnmapDPCMSample(noteValue);
-                App.Project.MapDPCMSample(noteValue, draggedSample.Sample, draggedSample.Pitch, draggedSample.Loop);
-                DPCMSampleMapped?.Invoke(noteValue);
-                success = true;
-            }
+                var sample = draggedSample;
 
-            if (success)
-            {
+                // Map the sample right away so that it renders correctly as the message box pops.
+                App.Project.UnmapDPCMSample(noteValue);
+                App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
+
                 draggedSample = null;
 
                 if (PlatformUtils.MessageBox($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
+                    // Need to promote the transaction to project level since we are going to be transposing 
+                    // potentially in multiple songs.
+                    App.UndoRedoManager.RestoreTransaction(false);
+                    App.UndoRedoManager.AbortTransaction();
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                    // Need to redo everything + transpose.
+                    App.Project.UnmapDPCMSample(captureNoteValue);
+                    App.Project.UnmapDPCMSample(noteValue);
+                    App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
                     App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
                 }
 
+                DPCMSampleMapped?.Invoke(noteValue);
                 ManyPatternChanged?.Invoke();
+
                 App.UndoRedoManager.EndTransaction();
             }
             else
@@ -4624,7 +4633,7 @@ namespace FamiStudio
 
         private void StartDragDPCMSampleMapping(MouseEventArgs e, byte noteValue)
         {
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
             StartCaptureOperation(e, CaptureOperation.DragSample);
             draggedSample = App.Project.GetDPCMMapping(noteValue);
             App.Project.UnmapDPCMSample(noteValue);
@@ -5443,7 +5452,7 @@ namespace FamiStudio
 
             if (final)
             {
-                App.Project.Validate();
+                App.Project.ValidateIntegrity();
                 App.UndoRedoManager.EndTransaction();
                 App.StopInstrument();
             }

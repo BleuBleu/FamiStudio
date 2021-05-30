@@ -38,7 +38,7 @@ namespace FamiStudio
             this.envelope.Loop = 0;
         }
 
-        public void Validate(Project project, Dictionary<int, object> idMap)
+        public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)
         {
 #if DEBUG
             project.ValidateId(id);

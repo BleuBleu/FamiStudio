@@ -1090,7 +1090,7 @@ namespace FamiStudio
             song.Trim();
             project.ConvertToCompoundNotes();
             project.Cleanup();
-            project.Validate();
+            project.ValidateIntegrity();
         }
 
         public Project Load(string filename, int expansion, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony, int measuresPerPattern)

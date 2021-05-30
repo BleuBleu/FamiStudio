@@ -909,7 +909,7 @@ namespace FamiStudio
         }
 
 #if DEBUG
-        public void Validate(Song song, Dictionary<int, object> idMap)
+        public void ValidateIntegrity(Song song, Dictionary<int, object> idMap)
         {
             Debug.Assert(this == song.GetChannelByType(type));
             Debug.Assert(this.song == song);
@@ -917,7 +917,7 @@ namespace FamiStudio
             foreach (var inst in patternInstances)
                 Debug.Assert(inst == null || patterns.Contains(inst));
             foreach (var pat in patterns)
-                pat.Validate(this, idMap);
+                pat.ValidateIntegrity(this, idMap);
 
             for (int i = 0; i <= maxValidCacheIndex; i++)
             {

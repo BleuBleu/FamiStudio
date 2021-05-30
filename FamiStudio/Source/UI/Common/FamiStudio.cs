@@ -1,4 +1,4 @@
-#define DEVELOPMENT_VERSION
+//#define DEVELOPMENT_VERSION
 
 using System;
 using System.Collections;
@@ -357,6 +357,9 @@ namespace FamiStudio
 
         private void UndoRedoManager_PreUndoRedo(TransactionScope scope, TransactionFlags flags)
         {
+            ValidateIntegrity();
+
+
             // Special category for stuff that is so important, we should stop the song.
             if (flags.HasFlag(TransactionFlags.StopAudio))
             {
@@ -377,6 +380,8 @@ namespace FamiStudio
 
         private void UndoRedoManager_PostUndoRedo(TransactionScope scope, TransactionFlags flags)
         {
+            ValidateIntegrity();
+
             if (flags.HasFlag(TransactionFlags.ReinitializeAudio))
             {
                 palPlayback = project.PalMode;
@@ -395,6 +400,16 @@ namespace FamiStudio
         private void UndoRedoManager_Updated()
         {
             ToolBar.ConditionalInvalidate();
+        }
+
+        private void ValidateIntegrity()
+        {
+#if DEBUG
+            if (Song != null)
+            {
+                project.SongExists(song);
+            }
+#endif
         }
 
         public bool CheckUnloadProject()
@@ -1176,6 +1191,15 @@ namespace FamiStudio
             {
                 ToggleQwertyPiano();
             }
+#if FAMISTUDIO_MACOS
+            else if (ctrl && e.KeyCode == Keys.Q)
+            {
+                if (TryClosing())
+                {
+                    Application.Quit();
+                }
+            }
+#endif
 #if FAMISTUDIO_WINDOWS
             else if (e.KeyData == Keys.Up    ||
                      e.KeyData == Keys.Down  ||

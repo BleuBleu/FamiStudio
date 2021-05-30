@@ -115,6 +115,11 @@ namespace FamiStudio
             return arpeggios.Find(a => a.Name == name);
         }
 
+        public bool SongExists(Song song)
+        {
+            return songs.Contains(song);
+        }
+
         public bool InstrumentExists(Instrument inst)
         {
             return instruments.Contains(inst);
@@ -320,7 +325,7 @@ namespace FamiStudio
 
             newSong.SerializeState(loadSerializer);
 #if DEBUG
-            Validate();
+            ValidateIntegrity();
 #endif
             return newSong;
         }
@@ -942,7 +947,7 @@ namespace FamiStudio
 
             // Purely to pass validation.
             other.EnsureNextIdIsLargeEnough(); 
-            other.Validate();
+            other.ValidateIntegrity();
 
             // Ignore songs that have name conflicts.
             for (int i = 0; i < other.songs.Count;)
@@ -966,7 +971,7 @@ namespace FamiStudio
             }
 
             other.Cleanup();
-            other.Validate();
+            other.ValidateIntegrity();
 
             // Match existing instruments by name.
             for (int i = 0; i < other.instruments.Count;)
@@ -1009,8 +1014,8 @@ namespace FamiStudio
             }
 
             other.Cleanup();
-            other.Validate();
-            Validate();
+            other.ValidateIntegrity();
+            ValidateIntegrity();
 
             // Match existing arpeggios by name.
             for (int i = 0; i < other.arpeggios.Count;)
@@ -1032,8 +1037,8 @@ namespace FamiStudio
             }
 
             other.Cleanup();
-            other.Validate();
-            Validate();
+            other.ValidateIntegrity();
+            ValidateIntegrity();
 
             // Match existing samples by name.
             for (int i = 0; i < other.samples.Count;)
@@ -1055,8 +1060,8 @@ namespace FamiStudio
             }
 
             other.Cleanup();
-            other.Validate();
-            Validate();
+            other.ValidateIntegrity();
+            ValidateIntegrity();
 
             // Merge sample mappings.
             for (int i = 0; i < samplesMapping.Length; i++)
@@ -1078,8 +1083,8 @@ namespace FamiStudio
             }
 
             other.Cleanup();
-            other.Validate();
-            Validate();
+            other.ValidateIntegrity();
+            ValidateIntegrity();
 
             // Finally add the songs.
             foreach (var song in other.Songs)
@@ -1089,7 +1094,7 @@ namespace FamiStudio
             }
 
             SortEverything(false);
-            Validate();
+            ValidateIntegrity();
 
             return true;
         }
@@ -1348,14 +1353,14 @@ namespace FamiStudio
         {
             foreach (var sample in samples)
             {
-                sample.Validate(this, idMap);
+                sample.ValidateIntegrity(this, idMap);
             }
 
             foreach (var mapping in samplesMapping)
             {
                 if (mapping != null)
                 {
-                    mapping.Validate(this, idMap);
+                    mapping.ValidateIntegrity(this, idMap);
                 }
             }
         }
@@ -1364,7 +1369,7 @@ namespace FamiStudio
         {
             foreach (var inst in instruments)
             {
-                inst.Validate(this, idMap);
+                inst.ValidateIntegrity(this, idMap);
             }
         }
 
@@ -1372,7 +1377,7 @@ namespace FamiStudio
         {
             foreach (var arp in arpeggios)
             {
-                arp.Validate(this, idMap);
+                arp.ValidateIntegrity(this, idMap);
             }
         }
 
@@ -1382,7 +1387,7 @@ namespace FamiStudio
         }
 #endif
 
-        public void Validate()
+        public void ValidateIntegrity()
         {
 #if DEBUG
             var idMap = new Dictionary<int, object>(); ;
@@ -1392,7 +1397,7 @@ namespace FamiStudio
             ValidateArpeggios(idMap);
 
             foreach (var song in Songs)
-                song.Validate(this, idMap);
+                song.ValidateIntegrity(this, idMap);
 
             Debug.Assert(!UsesExpansionAudio || pal == false);
             Debug.Assert(Note.EmptyNote.IsEmpty);
@@ -1545,7 +1550,7 @@ namespace FamiStudio
             var newProject = new Project();
             var loadSerializer = new ProjectLoadBuffer(newProject, saveSerializer.GetBuffer(), Version);
             newProject.SerializeState(loadSerializer);
-            newProject.Validate();
+            newProject.ValidateIntegrity();
             return newProject;
         }
     }

@@ -179,7 +179,7 @@ namespace FamiStudio
             trans.Begin();
             index++;
             TransactionBegan?.Invoke(scope, flags);
-            project.Validate();
+            project.ValidateIntegrity();
         }
 
         public void EndTransaction()
@@ -191,7 +191,7 @@ namespace FamiStudio
             trans.End();
             TransactionEnded?.Invoke(trans.Scope, trans.Flags);
             Updated?.Invoke();
-            project.Validate();
+            project.ValidateIntegrity();
         }
 
         public void AbortTransaction()
@@ -203,15 +203,25 @@ namespace FamiStudio
             index--;
             TransactionEnded?.Invoke(trans.Scope, trans.Flags);
             Updated?.Invoke();
-            project.Validate();
+            project.ValidateIntegrity();
         }
 
         public void RestoreTransaction(bool serializeAppState = true)
         {
             Debug.Assert(!transactions.Last().IsEnded);
             Debug.Assert(index == transactions.Count);
-            transactions[transactions.Count - 1].Undo(serializeAppState);
-            project.Validate();
+            var trans = transactions[transactions.Count - 1];
+
+            // Cant restore these transactions for the moment as we dont notify the app
+            // which hold pointers to the current song. This can lead to a situation where
+            // the app is pointing to a old/dangling copy of the song.
+            Debug.Assert(
+                trans.Scope != TransactionScope.Project &&
+                trans.Scope != TransactionScope.ProjectNoDPCMSamples);
+
+            trans.Undo(serializeAppState);
+            Updated?.Invoke();
+            project.ValidateIntegrity();
         }
 
         public bool HasTransactionInProgress
