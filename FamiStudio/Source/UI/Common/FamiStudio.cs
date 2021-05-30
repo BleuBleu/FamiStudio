@@ -1196,7 +1196,7 @@ namespace FamiStudio
             {
                 if (TryClosing())
                 {
-                    Application.Quit();
+                    Gtk.Application.Quit();
                 }
             }
 #endif
