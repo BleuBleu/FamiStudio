@@ -120,6 +120,7 @@ namespace FamiStudio
         DateTime warningTime;
         string warning = "";
 
+        int lastButtonX = 500;
         bool oscilloscopeVisible = false;
         bool lastOscilloscopeHadNonZeroSample = false;
         bool redTooltip = false;
@@ -310,9 +311,14 @@ namespace FamiStudio
                 var btn = buttons[i];
 
                 if (i == ButtonHelp)
+                {
                     btn.X = buttonSizeX;
+                }
                 else
+                {
                     btn.X = posX;
+                    lastButtonX = posX + buttonSizeX;
+                }
 
                 btn.Y = buttonPosY;
                 btn.Size = buttonSizeX;
@@ -726,6 +732,8 @@ namespace FamiStudio
             var messageFont = ThemeBase.FontMedium;
             var messageFontCenter = ThemeBase.FontMediumCenter;
 
+            g.PushClip(lastButtonX, 0, Width, Height);
+
             if (!string.IsNullOrEmpty(warning))
             {
                 var span = DateTime.Now - warningTime;
@@ -796,6 +804,8 @@ namespace FamiStudio
                     posY += tooltipLineSizeY;
                 }
             }
+
+            g.PopClip();
         }
 
         protected override void OnRender(RenderGraphics g)

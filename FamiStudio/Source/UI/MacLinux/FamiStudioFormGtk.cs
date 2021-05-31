@@ -54,8 +54,8 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-            WidthRequest  = GtkUtils.ScaleGtkWidget(1280);
-            HeightRequest = GtkUtils.ScaleGtkWidget(720);
+            WidthRequest  = GtkUtils.ScaleGtkWidget(640);
+            HeightRequest = GtkUtils.ScaleGtkWidget(360);
             controls.Resize(GtkUtils.ScaleWindowCoord(WidthRequest), GtkUtils.ScaleWindowCoord(HeightRequest));
 
             Events |= 
