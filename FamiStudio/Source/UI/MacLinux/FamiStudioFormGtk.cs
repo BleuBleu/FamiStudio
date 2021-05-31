@@ -610,7 +610,7 @@ namespace FamiStudio
             }
         }
 
-        public bool ShouldIgnoreMouseWheel(Control ctrl, MouseEventArgs e)
+        public bool ShouldIgnoreMouseWheel(GLControl ctrl, System.Windows.Forms.MouseEventArgs e)
         {
             return false;
         }
