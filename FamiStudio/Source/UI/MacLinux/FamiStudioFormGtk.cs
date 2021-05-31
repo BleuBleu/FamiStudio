@@ -530,7 +530,9 @@ namespace FamiStudio
 
             // Window becomes null when exiting the app.
             if (GdkWindow != null)
+            {
                 famistudio.Tick();
+            }
 
             return true;
         }
@@ -548,6 +550,10 @@ namespace FamiStudio
             if (glInit && GdkWindow != null && controls.Redraw())
             {
                 GraphicsContext.CurrentContext.SwapBuffers();
+            }
+            else
+            {
+                System.Threading.Thread.Sleep(4);
             }
         }
 
