@@ -804,7 +804,14 @@ namespace FamiStudio
             scale.ValuePos = PositionType.Right;
             scale.Value = value;
             scale.FormatValue += Scale_FormatValue;
+            scale.ChangeValue += Scale_ChangeValue;
             return scale;
+        }
+
+        void Scale_ChangeValue(object o, ChangeValueArgs args)
+        {
+            int idx = GetPropertyIndex(o as Widget);
+            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
         }
 
         void Scale_FormatValue(object o, FormatValueArgs args)
@@ -943,6 +950,9 @@ namespace FamiStudio
                     break;
                 case PropertyType.ProgressBar:
                     (prop.control as ProgressBar).Fraction = (float)value;
+                    break;
+                case PropertyType.Slider:
+                    (prop.control as HScale).Value = (double)value;
                     break;
             }
         }
