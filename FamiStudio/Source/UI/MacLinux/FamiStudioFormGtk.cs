@@ -92,9 +92,9 @@ namespace FamiStudio
                 MacOSInit();
 #endif
                 Cursors.Initialize();
-                RefreshLayout();
                 exposed = true;
             }
+            RefreshLayout();
             return base.OnExposeEvent(evnt);
         }
 
