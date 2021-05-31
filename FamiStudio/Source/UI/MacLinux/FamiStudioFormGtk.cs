@@ -54,8 +54,8 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-            WidthRequest  = GtkUtils.ScaleGtkWidget(1280);
-            HeightRequest = GtkUtils.ScaleGtkWidget(720);
+            WidthRequest  = GtkUtils.ScaleGtkWidget(640);
+            HeightRequest = GtkUtils.ScaleGtkWidget(360);
             controls.Resize(GtkUtils.ScaleWindowCoord(WidthRequest), GtkUtils.ScaleWindowCoord(HeightRequest));
 
             Events |= 
@@ -77,6 +77,8 @@ namespace FamiStudio
 
             doubleClickTime = Gtk.Settings.GetForScreen(Gdk.Screen.Default).DoubleClickTime;
 
+            Resize(GtkUtils.ScaleGtkWidget(1280), GtkUtils.ScaleGtkWidget(720));
+
 #if FAMISTUDIO_LINUX
             Maximize();
 #endif
@@ -90,9 +92,9 @@ namespace FamiStudio
                 MacOSInit();
 #endif
                 Cursors.Initialize();
-                RefreshLayout();
                 exposed = true;
             }
+            RefreshLayout();
             return base.OnExposeEvent(evnt);
         }
 
