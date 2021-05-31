@@ -77,6 +77,8 @@ namespace FamiStudio
 
             doubleClickTime = Gtk.Settings.GetForScreen(Gdk.Screen.Default).DoubleClickTime;
 
+            Resize(GtkUtils.ScaleGtkWidget(1280), GtkUtils.ScaleGtkWidget(720));
+
 #if FAMISTUDIO_LINUX
             Maximize();
 #endif
