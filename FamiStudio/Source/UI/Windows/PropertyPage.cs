@@ -697,7 +697,7 @@ namespace FamiStudio
         {
             var slider = new Slider(value, min, max, increment, numDecimals);
             slider.FormatValueEvent += Slider_FormatValueEvent;
-            slider.ValueChangedEvent += Slider_ValueChangedEvent; // MATTT : Linux too!
+            slider.ValueChangedEvent += Slider_ValueChangedEvent;
             slider.Font = font;
             return slider;
         }
