@@ -1828,10 +1828,8 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        public override void DoMouseWheel(MouseEventArgs e)
         {
-            base.OnMouseWheel(e);
-
             if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
             {
                 if (ModifierKeys.HasFlag(Keys.Shift))
@@ -1843,6 +1841,15 @@ namespace FamiStudio
             else
             {
                 ZoomAtLocation(e.X, e.Delta);
+            }
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            if (!ParentForm.ShouldIgnoreMouseWheel(this, e))
+            {
+                DoMouseWheel(e);
+                base.OnMouseWheel(e);
             }
         }
 

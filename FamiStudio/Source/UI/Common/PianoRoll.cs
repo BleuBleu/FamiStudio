@@ -5739,10 +5739,8 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        public override void DoMouseWheel(MouseEventArgs e)
         {
-            base.OnMouseWheel(e);
-
             if (e.X > whiteKeySizeX)
             {
                 if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
@@ -5769,6 +5767,24 @@ namespace FamiStudio
 
                 ConditionalInvalidate();
             }
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            if (!ParentForm.ShouldIgnoreMouseWheel(this, e))
+            {
+                DoMouseWheel(e);
+                base.OnMouseWheel(e);
+            }
+        }
+
+        public bool ShouldIgnoreMouseWheel(MouseEventArgs e)
+        {
+#if FAMISTUDIO_WINDOWS
+            return false;
+#else
+            return false;
+#endif
         }
 
 #if FAMISTUDIO_WINDOWS

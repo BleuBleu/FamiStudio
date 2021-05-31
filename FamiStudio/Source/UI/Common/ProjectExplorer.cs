@@ -1378,10 +1378,18 @@ namespace FamiStudio
                 App.UndoRedoManager.AbortTransaction();
         }
 
+        public override void DoMouseWheel(MouseEventArgs e)
+        {
+            DoScroll(e.Delta > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
+        }
+
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            base.OnMouseWheel(e);
-            DoScroll(e.Delta > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
+            if (!ParentForm.ShouldIgnoreMouseWheel(this, e))
+            {
+                DoMouseWheel(e);
+                base.OnMouseWheel(e);
+            }
         }
 
         protected override void OnResize(EventArgs e)

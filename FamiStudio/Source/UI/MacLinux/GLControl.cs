@@ -32,6 +32,7 @@ namespace FamiStudio
         protected virtual void OnMouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnKeyDown(System.Windows.Forms.KeyEventArgs e) { }
         protected virtual void OnKeyUp(System.Windows.Forms.KeyEventArgs e) { }
+        public virtual void DoMouseWheel(MouseEventArgs e) { }
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
         public void Render(GLGraphics g) { OnRender(g); }

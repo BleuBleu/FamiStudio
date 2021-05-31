@@ -837,7 +837,7 @@ namespace FamiStudio
             SetToolTip("");
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        public override void DoMouseWheel(MouseEventArgs e)
         {
             foreach (var btn in buttons)
             {
@@ -847,8 +847,15 @@ namespace FamiStudio
                     break;
                 }
             }
+        }
 
-            base.OnMouseWheel(e);
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            if (!ParentForm.ShouldIgnoreMouseWheel(this, e))
+            {
+                DoMouseWheel(e);
+                base.OnMouseWheel(e);
+            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

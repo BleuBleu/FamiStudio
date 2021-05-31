@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Runtime.InteropServices;
@@ -19,6 +20,7 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => projectExplorer;
 
         private Timer timer = new Timer();
+        private static bool mouseWheelRouting = false;
 
         [DllImport("USER32.dll")]
         private static extern short GetKeyState(int key);
@@ -40,6 +42,22 @@ namespace FamiStudio
             toolbar.Height = (int)(toolbar.Height * scaling);
             tableLayout.RowStyles[0].Height = (int)(tableLayout.RowStyles[0].Height * scaling);
             projectExplorer.Width = (int)(projectExplorer.Width * scaling);
+
+            try
+            {
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey("Control Panel\\Desktop"))
+                {
+                    if (key != null)
+                    {
+                        Object o = key.GetValue("MouseWheelRouting");
+                        if (o != null)
+                            mouseWheelRouting = (int)(o) != 0;
+                    }
+                }
+            }
+            catch
+            {
+            }
         }
 
         private void timer_Tick(object sender, EventArgs e)
@@ -56,6 +74,48 @@ namespace FamiStudio
             }
 
             base.OnFormClosing(e);
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+        }
+
+        public bool ShouldIgnoreMouseWheel(Control ctrl, MouseEventArgs e)
+        {
+            if (!mouseWheelRouting)
+            {
+                var pt = new System.Drawing.Point(e.X, e.Y);
+                var outsideClientRectangle = !ctrl.ClientRectangle.Contains(pt);
+                if (outsideClientRectangle)
+                {
+                    var controls = new Direct2DControl[]
+                    {
+                        toolbar,
+                        sequencer,
+                        pianoRoll,
+                        projectExplorer
+                    };
+
+                    foreach (var ctrl2 in controls)
+                    {
+                        if (ctrl2 != ctrl)
+                        {
+                            var pt2 = ctrl2.PointToClient(ctrl.PointToScreen(pt));
+
+                            if (ctrl2.ClientRectangle.Contains(pt2))
+                            {
+                                ctrl2.DoMouseWheel(new MouseEventArgs(e.Button, e.Clicks, pt2.X, pt2.Y, e.Delta));
+                                break;
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)

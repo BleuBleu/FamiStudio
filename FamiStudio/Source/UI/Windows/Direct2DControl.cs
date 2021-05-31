@@ -106,6 +106,10 @@ namespace FamiStudio
             }
         }
 
+        public virtual void DoMouseWheel(MouseEventArgs e)
+        {
+        }
+
         public new FamiStudioForm ParentForm { get => base.ParentForm as FamiStudioForm; }
         public FamiStudio App { get => (base.ParentForm as FamiStudioForm)?.FamiStudio; }
     }

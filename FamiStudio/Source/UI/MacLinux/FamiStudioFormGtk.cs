@@ -610,6 +610,11 @@ namespace FamiStudio
             }
         }
 
+        public bool ShouldIgnoreMouseWheel(Control ctrl, MouseEventArgs e)
+        {
+            return false;
+        }
+
         protected override bool OnDeleteEvent(Gdk.Event evnt)
         {
             if (!famistudio.TryClosing())
