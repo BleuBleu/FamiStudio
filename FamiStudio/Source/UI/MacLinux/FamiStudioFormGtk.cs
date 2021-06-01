@@ -32,6 +32,7 @@ namespace FamiStudio
 
         bool exposed = false;
         bool glInit  = false;
+        bool firstTickDone = false;
 
         private int  doubleClickTime = 250;
         private uint lastMouseButton = 999;
@@ -92,9 +93,9 @@ namespace FamiStudio
                 MacOSInit();
 #endif
                 Cursors.Initialize();
+                RefreshLayout();
                 exposed = true;
             }
-            RefreshLayout();
             return base.OnExposeEvent(evnt);
         }
 
@@ -526,6 +527,16 @@ namespace FamiStudio
 
         protected bool OnIdleProcessMain()
         {
+#if FAMISTUDIO_MACOS
+            // HACK : On MacOS, in retina, sometimes the OS will force-resize the window
+            // without notifying us. Just refresh the layout on the first frame to be safe.
+            if (!firstTickDone)
+            {
+                RefreshLayout();
+                firstTickDone = true;
+            }
+#endif
+
             RenderFrame();
 
             // Window becomes null when exiting the app.
