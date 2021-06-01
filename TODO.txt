@@ -1,21 +1,6 @@
-FamiStudio 3.0.0 Beta
-=====================
-
-Testing 
-======= 
-- Test drag between P.E. and piano roll with scaling.
-- Linux : Ask sirocyl!
-
 Videos:
 =======
-- Trailer
-- Tutorial 3.0.0
 - Tutorial for FamiTracker
-
-Doc
-===
-- Remove version warning.
-- Changelog 3.0.0
 
 Linux notes 
 =========== 
@@ -50,18 +35,27 @@ MkDocs
 Discord 
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
- 
-Backlog: 
-========= 
-- Scale mark system a la beepbox?
+
+FamiStudio 3.1.0
+================
+- Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
+- Fine pitch adjust in DPCM editor.
+- Save snapping + qwerty settings. 
+- Force reload FDS/N163/VRC7 instrument when song is playing and the user tweaks stuff.
+- Scale mark system a la beepbox? (or highlight keys)
+- Is it needed to clear the undo/redo stack when saving?
 - End of song looping behavior?
 - Multiple sample import. => Or import samples from other projects?
-- Loop prevention for envelope (brad issue). 
-- Left/right pan with +/- (cubase style)?
 - Stereo WAV/MP3/Video?
+- Left/right pan with +/- (cubase style)?
+- Highlight piano keys when they are pressed with QWERTY or MIDI. 
 - Loop in selection for sequencer.
+- Keyboard shortcut for snapping precision.
+
+Backlog: 
+========= 
+- Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
 - Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID). 
 - Installer on Japanese machine? 
-- Highlight piano keys when they are pressed with QWERTY or MIDI. 
