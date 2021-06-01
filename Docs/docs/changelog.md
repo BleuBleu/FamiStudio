@@ -11,16 +11,20 @@ Changes :
 * MIDI import/export support
 * Oscilloscope in toolbar
 * Optional scrollbars
-* Revamped Mac version.
-* 1/2 and 1/4 playback speed.
+* Revamped Mac version
+* 1/2 and 1/4 playback speed
 * Configurable QWERTY keyboard keys
 * Improved sound engine music data compression (15-30% smaller)
 * Audio expansion volume/low-pass filter configuration
 * S5B and VRC7 and now properly low-pass filtered
-* Ability to re-order songs.
+* Ability to re-order songs
 * Hi-DPI support on Linux
 * Quick DPCM source data reload
-* Improved video rendering speed.
+* Improved video rendering speed
+
+Breaking/behavior changes:
+
+* Setting a zero volume on the volume track of the triangle channel will now stop the sound. This was always the intention (this is what SoundEngine/NSF and FamiTracker does) but it was not correctly implemented inside FamiStudio.
 
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
 	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/7j9mhY9XNsc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

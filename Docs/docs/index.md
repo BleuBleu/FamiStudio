@@ -2,8 +2,6 @@
 
 Welcome to the FamiStudio documentation. Please use the __User Guide__ menu above to navigate the the various sections or use the Table of Contents below. Also, you can use the __Search__ button to search for a specific topic.
 
-<p style="color:red;"><b>Disclaimer : The documentation is currently being updated for the next version of FamiStudio. Some features in the documentation may not be present in the current version (2.4.2) for a few weeks.</b></p>
-
 # Table of Contents 
 
 * [FamiStudio Basics](basics.md)
@@ -27,7 +25,7 @@ Welcome to the FamiStudio documentation. Please use the __User Guide__ menu abov
 The quickest way of getting started with FamiStudio is simply to follow this tutorial video step by step. It will walk you through the creation a simple song, from beginning to end.
 
 <div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
-	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/YN79633FrDg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/UyECgqFbZPQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 # Installation
