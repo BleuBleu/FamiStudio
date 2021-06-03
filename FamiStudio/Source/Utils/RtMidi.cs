@@ -71,7 +71,7 @@ namespace FamiStudio
         {
             get
             {
-                return rtmidi_get_port_count(midiIn);
+                return midiIn == IntPtr.Zero ? 0 : rtmidi_get_port_count(midiIn);
             }
         }
 
@@ -94,6 +94,7 @@ namespace FamiStudio
         {
             if (callback != null)
             {
+                Debug.Assert(midiIn != null);
                 rtmidi_in_cancel_callback(midiIn);
                 rtmidi_close_port(midiIn);
                 callback = null;
