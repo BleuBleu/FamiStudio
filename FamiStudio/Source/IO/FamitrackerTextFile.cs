@@ -671,6 +671,7 @@ namespace FamiStudio
             ConvertPitchEnvelopes(project);
             var envelopes = MergeIdenticalEnvelopes(project);
 
+            var uniqueWarnings = new HashSet<string>();
             var lines = new List<string>();
 
             lines.Add("# FamiTracker text export 0.4.2");
@@ -727,7 +728,7 @@ namespace FamiStudio
                     for (int j = 0; j < envArray.Length; j++)
                     {
                         var env = envArray[j];
-                        lines.Add($"MACRO{suffix}{i,8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                        lines.Add($"MACRO{suffix}{ReverseEnvelopeTypeLookup[i],8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                     }
                 }
             }
@@ -1035,6 +1036,12 @@ namespace FamiStudio
                                 {
                                     arpeggioString += note.Arpeggio.Envelope.Length >= 2 ? $"{Utils.Clamp(note.Arpeggio.Envelope.Values[1], 0, 15):X1}" : "0";
                                     arpeggioString += note.Arpeggio.Envelope.Length >= 3 ? $"{Utils.Clamp(note.Arpeggio.Envelope.Values[2], 0, 15):X1}" : "0";
+
+                                    if (note.Arpeggio.Envelope.Length    != 3 ||
+                                        note.Arpeggio.Envelope.Values[0] != 0)
+                                    {
+                                        uniqueWarnings.Add($"FamiTracker only supports arpeggios of exactly 3 notes and the first value needs to be zero. Arpeggio {note.Arpeggio.Name} will not sound correct.");
+                                    }
                                 }
                                 else
                                 {
@@ -1101,6 +1108,9 @@ namespace FamiStudio
             }
 
             lines.Add("# End of export");
+
+            foreach (var warning in uniqueWarnings)
+                Log.LogMessage(LogSeverity.Warning, warning);
 
             File.WriteAllLines(filename, lines);
 
