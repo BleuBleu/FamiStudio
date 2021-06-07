@@ -750,7 +750,7 @@ namespace FamiStudio
                     {
                         var sliderRenderer = new CellRendererProgress();
                         sliderRenderer.Value = 50; // MATTT
-                            renderer = sliderRenderer;
+                        renderer = sliderRenderer;
                         break;
                     }
                     case ColumnType.Button:
