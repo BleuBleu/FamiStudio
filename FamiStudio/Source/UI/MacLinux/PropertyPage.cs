@@ -720,7 +720,9 @@ namespace FamiStudio
         {
             for (int i = 0; i < properties.Count; i++)
             {
-                if (properties[i].control is ScrolledWindow scroll)
+                var prop = properties[i];
+
+                if (prop.control is ScrolledWindow scroll)
                 {
                     if (scroll.Child is TreeView treeView)
                     {
@@ -728,13 +730,13 @@ namespace FamiStudio
                         {
                             var columnIndex = Array.IndexOf(treeView.Columns, col);
 
-                            if (args.Event.Type == EventType.TwoButtonPress && args.Event.Button == 1)
+                            if (args.Event.Type == EventType.TwoButtonPress && args.Event.Button == 1 && prop.listDoubleClick != null)
                             {
-                                properties[i].listDoubleClick(this, i, path.Indices[0], columnIndex);
+                                prop.listDoubleClick(this, i, path.Indices[0], columnIndex);
                             }
-                            else if (args.Event.Button == 3)
+                            else if (args.Event.Button == 3 && prop.listRightClick != null)
                             {
-                                properties[i].listRightClick(this, i, path.Indices[0], columnIndex);
+                                prop.listRightClick(this, i, path.Indices[0], columnIndex);
                             }
                         }
                     }
