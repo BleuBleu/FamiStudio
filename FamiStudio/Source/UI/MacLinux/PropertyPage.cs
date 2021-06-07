@@ -40,10 +40,20 @@ namespace FamiStudio
         Error
     };
 
+    public enum ColumnType
+    {
+        CheckBox,
+        Label,
+        Button,
+        DropDown,
+        Slider
+    };
+
     public class PropertyPage : Gtk.Table
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
         public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
+        public delegate string ListFormatText(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex, object value);
         public delegate string SliderFormatText(double value);
 
         private static Pixbuf[] warningIcons;
@@ -58,7 +68,8 @@ namespace FamiStudio
             public ListClicked listDoubleClick;
             public ListClicked listRightClick;
             public SliderFormatText sliderFormat;
-            public WarningImage warningIcon; // TEMPOTODO : Will this look ok on Mac?
+            public WarningImage warningIcon;
+            public ColumnDesc[] columns;
             public string multilineLabelText; // HACK for multiline labels.
         };
 
@@ -68,6 +79,13 @@ namespace FamiStudio
         private List<Property> properties = new List<Property>();
         private int advancedPropertyStart = -1;
         private bool showWarnings = false;
+
+        // For some grid operators.
+        private TreePath dragPath;
+        private TreeViewColumn dragColumn;
+        private int dragPropertyIndex = -1;
+        private int dragRowIndex = -1;
+        private int dragColIndex = -1;
 
         public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
         public event PropertyChangedDelegate PropertyChanged;
@@ -663,21 +681,24 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private ListStore CreateListStoreFromData(string[,] data)
+        private ListStore CreateListStoreFromData(object[,] data)
         {
             var types = new Type[data.GetLength(1)];
 
             for (int i = 0; i < types.Length; i++)
-                types[i] = typeof(string);
+            {
+                var val = data[0, i];
+                types[i] = val != null ? val.GetType() : typeof(string);
+            }
 
             var listStore = new ListStore(types);
 
             for (int j = 0; j < data.GetLength(0); j++)
             {
-                var values = new string[data.GetLength(1)];
+                var values = new object[data.GetLength(1)];
 
                 for (int i = 0; i < data.GetLength(1); i++)
-                    values[i] = data[j, i];
+                    values[i] = data[j, i]; // MATTT : Format strings!
 
                 listStore.AppendValues(values);
             }
@@ -685,14 +706,62 @@ namespace FamiStudio
             return listStore;
         }
 
-        private ScrolledWindow CreateTreeView(string[] columnNames, string[,] data)
+        private ScrolledWindow CreateTreeView(ColumnDesc[] columnDescs, object[,] data)
         {
             var treeView = new TreeView();
-            var rendererText = new CellRendererText();
 
-            for (int i = 0; i < columnNames.Length; i++)
+            for (int i = 0; i < columnDescs.Length; i++)
             {
-                var column = new TreeViewColumn(columnNames[i], rendererText, "text", i);
+                var desc = columnDescs[i];
+                var renderer = (CellRenderer)null;
+                var attr = "text";
+
+                switch (desc.Type)
+                {
+                    case ColumnType.Label:
+                    {
+                        var textRenderer = new CellRendererText();
+                        renderer = textRenderer;
+                        break;
+                    }
+                    case ColumnType.CheckBox:
+                    {
+                        var toggleRenderer = new CellRendererToggle();
+                        toggleRenderer.Toggled += ToggleRenderer_Toggled;
+                        renderer = toggleRenderer;
+                        attr = "active";
+                        break;
+                    }
+                    case ColumnType.DropDown:
+                    {
+                        var comboRenderer = new CellRendererCombo();
+                        var listStore = new ListStore(typeof(string));
+                        for (int j = 0; j < desc.DropDownValues.Length; j++)
+                            listStore.AppendValues(desc.DropDownValues[j]);
+                        comboRenderer.Editable = true;
+                        comboRenderer.Model = listStore;
+                        comboRenderer.Text = "B"; // MATTT
+                        comboRenderer.Edited += ComboRenderer_Edited;
+                        comboRenderer.TextColumn = 0;
+                        renderer = comboRenderer;
+                        break;
+                    }
+                    case ColumnType.Slider:
+                    {
+                        var sliderRenderer = new CellRendererProgress();
+                        sliderRenderer.Value = 50; // MATTT
+                            renderer = sliderRenderer;
+                        break;
+                    }
+                    case ColumnType.Button:
+                    {
+                        var buttonRenderer = new CellRendererText();
+                        renderer = buttonRenderer;
+                        break;
+                    }
+                }
+
+                var column = new TreeViewColumn(columnDescs[i].Name, renderer, attr, i);
                 column.SortColumnId = -1; // Disable sorting
                 treeView.AppendColumn(column);
             }
@@ -703,6 +772,7 @@ namespace FamiStudio
             treeView.Model = CreateListStoreFromData(data);
             treeView.EnableGridLines = TreeViewGridLines.Both;
             treeView.ButtonPressEvent += TreeView_ButtonPressEvent;
+            treeView.ButtonReleaseEvent += TreeView_ButtonReleaseEvent;
             treeView.Show();
 
             var scroll = new ScrolledWindow(null, null);
@@ -715,26 +785,53 @@ namespace FamiStudio
             return scroll;
         }
 
+        void ToggleRenderer_Toggled(object o, ToggledArgs args)
+        {
+        }
+
+        void ComboRenderer_Edited(object o, EditedArgs args)
+        {
+        }
+
         [GLib.ConnectBefore]
         void TreeView_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
             for (int i = 0; i < properties.Count; i++)
             {
-                if (properties[i].control is ScrolledWindow scroll)
+                var prop = properties[i];
+
+                if (prop.control is ScrolledWindow scroll)
                 {
                     if (scroll.Child is TreeView treeView)
                     {
                         if (treeView.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out var path, out var col, out var ix, out var iy))
                         {
                             var columnIndex = Array.IndexOf(treeView.Columns, col);
+                            var columnDesc = prop.columns[columnIndex];
 
-                            if (args.Event.Type == EventType.TwoButtonPress && args.Event.Button == 1)
+                            if (columnDesc.Type == ColumnType.Slider)
                             {
-                                properties[i].listDoubleClick(this, i, path.Indices[0], columnIndex);
+                                var area = treeView.GetCellArea(path, col);
+
+                                dragPath = path;
+                                dragColumn = col;
+                                dragPropertyIndex = i;
+                                dragRowIndex = path.Indices[0];
+                                dragColIndex = columnIndex;
+
+                                var percent = (args.Event.X - area.Left) / (float)area.Width;
+                                Debug.WriteLine(percent.ToString());
                             }
-                            else if (args.Event.Button == 3)
+                            else
                             {
-                                properties[i].listRightClick(this, i, path.Indices[0], columnIndex);
+                                if (args.Event.Type == EventType.TwoButtonPress && args.Event.Button == 1 && prop.listDoubleClick != null)
+                                {
+                                    prop.listDoubleClick(this, i, path.Indices[0], columnIndex);
+                                }
+                                else if (args.Event.Button == 3 && prop.listRightClick != null)
+                                {
+                                    prop.listRightClick(this, i, path.Indices[0], columnIndex);
+                                }
                             }
                         }
                     }
@@ -742,15 +839,26 @@ namespace FamiStudio
             }
         }
 
-        public int AddMultiColumnList(string[] columnNames, string[,] data, ListClicked doubleClick, ListClicked rightClick)
+        [GLib.ConnectBefore]
+        void TreeView_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
+        {
+            dragPath = null;
+            dragColumn = null;
+            dragPropertyIndex = -1;
+            dragRowIndex = -1;
+            dragColIndex = -1;
+        }
+
+        public int AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, ListFormatText format, ListClicked doubleClick = null, ListClicked rightClick = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
-                    control = CreateTreeView(columnNames, data),
+                    control = CreateTreeView(columnDescs, data),
                     listDoubleClick = doubleClick,
-                    listRightClick = rightClick
+                    listRightClick = rightClick,
+                    columns = columnDescs
                 });
             return properties.Count - 1;
         }
@@ -1010,4 +1118,34 @@ namespace FamiStudio
             }
         }
     }
+
+    public class ColumnDesc
+    {
+        public string Name;
+        public ColumnType Type = ColumnType.Label;
+        public string[] DropDownValues;
+        public int SliderMin;
+        public int SliderMax;
+
+        public ColumnDesc(string name, ColumnType type = ColumnType.Label)
+        {
+            Name = name;
+            Type = type;
+        }
+
+        public ColumnDesc(string name, string[] values)
+        {
+            Name = name;
+            Type = ColumnType.DropDown;
+            DropDownValues = values;
+        }
+
+        public ColumnDesc(string name, int min, int max)
+        {
+            Name = name;
+            Type = ColumnType.Slider;
+            SliderMin = min;
+            SliderMax = max;
+        }
+    };
 }

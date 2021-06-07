@@ -1485,7 +1485,7 @@ namespace FamiStudio
                 dlg.Properties.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Label"), new ColumnDesc("DropDown", new[] { "A", "B", "C" }), new ColumnDesc("Button", ColumnType.Button), new ColumnDesc("Slider", -100, 100) }, data, null, null);
                 dlg.Properties.Build();
 
-                dlg.ShowDialog();
+                dlg.ShowDialog(mainForm);
             }
 
             ToolBar.Tick();
