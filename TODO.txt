@@ -36,22 +36,6 @@ Discord
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
 
-FamiStudio 3.1.0
-================
-- Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
-- Fine pitch adjust in DPCM editor.
-- Save snapping + qwerty settings. 
-- Force reload FDS/N163/VRC7 instrument when song is playing and the user tweaks stuff.
-- Scale mark system a la beepbox? (or highlight keys)
-- Is it needed to clear the undo/redo stack when saving?
-- End of song looping behavior?
-- Multiple sample import. => Or import samples from other projects?
-- Stereo WAV/MP3/Video?
-- Left/right pan with +/- (cubase style)?
-- Highlight piano keys when they are pressed with QWERTY or MIDI. 
-- Loop in selection for sequencer.
-- Keyboard shortcut for snapping precision.
-
 Backlog: 
 ========= 
 - Loop prevention for envelope (brad issue). 
