@@ -189,8 +189,8 @@ namespace FamiStudio
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200, 100, "Volume adjustment (%)")
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
-                // new DPCMSampleParamInfo(sample, "Low-pass filter", 0, 100, 0, "Low-pass filter") // Not satisfied with this, disabling.
-                //    { GetValue = () => { return sample.LowPassFilter; }, SetValue = (v) => { sample.LowPassFilter = v; sample.Process(); } },
+                new DPCMSampleParamInfo(sample, "Fine Tuning", 0, 200, 100, "Very fine pitch adjustment to help tune notes")
+                    { GetValue = () => { return (int)Math.Round((sample.FinePitch - 0.95f) * 2000); }, SetValue = (v) => { sample.FinePitch = (v / 2000.0f) + 0.95f; sample.Process(); }, GetValueString = () => { return (sample.FinePitch * 100.0f).ToString("N2") + "%"; } },
                 new DPCMSampleParamInfo(sample, "Process as PAL", 0, 1, 0, "Use PAL sample rates for all processing\nFor DMC source data, assumes PAL sample rate")
                     { GetValue = () => { return  sample.PalProcessing ? 1 : 0; }, SetValue = (v) => { sample.PalProcessing = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Trim Zero Volume", 0, 1, 0, "Trim parts of the source data that is considered too low to be audible")

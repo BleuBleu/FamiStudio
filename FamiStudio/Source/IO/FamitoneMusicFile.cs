@@ -1197,6 +1197,8 @@ namespace FamiStudio
                 }
             }
 
+            Debug.Assert(byteString == null);
+
             return size;
         }
 

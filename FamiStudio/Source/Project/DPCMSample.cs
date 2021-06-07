@@ -22,13 +22,14 @@ namespace FamiStudio
         private float  processedDataStartTime;
 
         // Processing parameters.
-        private int  sampleRate = 15;
-        private int  previewRate = 15;
-        private int  volumeAdjust = 100;
-        private int  paddingMode = DPCMPaddingType.PadTo16Bytes;
-        private bool reverseBits;
-        private bool trimZeroVolume;
-        private bool palProcessing;
+        private int   sampleRate = 15;
+        private int   previewRate = 15;
+        private int   volumeAdjust = 100;
+        private float finePitch = 1.0f;
+        private int   paddingMode = DPCMPaddingType.PadTo16Bytes;
+        private bool  reverseBits;
+        private bool  trimZeroVolume;
+        private bool  palProcessing;
         private SampleVolumePair[] volumeEnvelope = new SampleVolumePair[4]
         {
             new SampleVolumePair(0, 1.0f),
@@ -60,10 +61,11 @@ namespace FamiStudio
         public bool     TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
         public bool     PalProcessing  { get => palProcessing;  set => palProcessing  = value; }
         public int      VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
+        public float    FinePitch      { get => finePitch;      set => finePitch      = value; }
         public int      PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
         public SampleVolumePair[] VolumeEnvelope { get => volumeEnvelope; }
 
-        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
+        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || Utils.IsNearlyEqual(finePitch, 1.0f) || trimZeroVolume || reverseBits;
 
         public static object ProcessedDataLock = new object();
         public const int MaxSampleSize = (255 << 4) + 1;
@@ -124,6 +126,7 @@ namespace FamiStudio
             sampleRate = 15; 
             previewRate = 15;
             volumeAdjust = 100;
+            finePitch = 1.0f;
             trimZeroVolume = false;
             reverseBits = false;
             palProcessing = false;
@@ -154,7 +157,7 @@ namespace FamiStudio
                 var targetSampleRate = DPCMSampleRate.Frequencies[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
-                if (!SourceDataIsWav && volumeAdjust == 100 && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume)
+                if (!SourceDataIsWav && volumeAdjust == 100 && Utils.IsNearlyEqual(finePitch, 1.0f) && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume)
                 {
                     processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
 
@@ -183,6 +186,17 @@ namespace FamiStudio
                         }
 
                         WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
+                    }
+
+                    if (!Utils.IsNearlyEqual(finePitch, 1.0f))
+                    {
+                        var newLength = (int)Math.Round(sourceWavData.Length * finePitch);
+                        if (newLength != sourceWavData.Length)
+                        {
+                            var resampledWavData = new short[newLength];
+                            WaveUtils.Resample(sourceWavData, 0, sourceWavData.Length, resampledWavData);
+                            sourceWavData = resampledWavData;
+                        }
                     }
 
                     /*
