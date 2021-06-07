@@ -40,6 +40,7 @@ Discord
 
 FamiStudio 3.1.0
 ================
+- Patterns one-based, start at one.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 / Fine pitch adjust in DPCM editor.
 - Save snapping + qwerty settings + some export settings.
@@ -51,6 +52,7 @@ FamiStudio 3.1.0
 - Stereo WAV/MP3/Video?
 - Left/right pan with +/- (cubase style)?
 - Highlight piano keys when they are pressed with QWERTY or MIDI. 
+	=> Checkbox, label, dropdown, slider + button.
 	=> Can we have sliders/combos in listview? Would be much cleaner and open many options.
 	=> + Function to format text. (pan %)
 - Noise slides?

@@ -160,15 +160,15 @@ namespace FamiStudio
             return btn;
         }
 
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                var p = base.CreateParams;
-                p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
-                return p;
-            }
-        }
+        //protected override CreateParams CreateParams
+        //{
+        //    get
+        //    {
+        //        var p = base.CreateParams;
+        //        p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
+        //        return p;
+        //    }
+        //}
 
         private void MultiPropertyDialog_KeyDown(object sender, KeyEventArgs e)
         {

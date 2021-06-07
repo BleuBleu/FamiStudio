@@ -140,6 +140,7 @@ namespace FamiStudio
                 NewProject();
             }
 
+
 #if !DEBUG
             if (Settings.CheckUpdates)
             {
@@ -1442,6 +1443,8 @@ namespace FamiStudio
             }
         }
 
+        bool first = true;
+
         public void Tick()
         {
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
@@ -1450,6 +1453,39 @@ namespace FamiStudio
             {
                 RecreateAudioPlayers();
                 audioDeviceChanged = false;
+            }
+
+            if (first)
+            {
+                first = false;
+                var dlg = new PropertyDialog(500, true, true, mainForm);
+
+                var data = new object[,]
+                {
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Allo",  "C", null, -50 },
+                { false, "Hola",  "A", null,  99 }
+                };
+
+                dlg.Properties.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Label"), new ColumnDesc("DropDown", new[] { "A", "B", "C" }), new ColumnDesc("Button", ColumnType.Button), new ColumnDesc("Slider", -100, 100) }, data, null, null);
+                dlg.Properties.Build();
+
+                dlg.ShowDialog();
             }
 
             ToolBar.Tick();

@@ -40,10 +40,20 @@ namespace FamiStudio
         Error
     };
 
+    public enum ColumnType
+    {
+        CheckBox,
+        Label,
+        Button,
+        DropDown,
+        Slider
+    };
+
     public partial class PropertyPage : UserControl
     {
         public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
         public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
+        public delegate string ListFormatText(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex, object value);
         public delegate string SliderFormatText(double value);
 
         private static Bitmap[] warningIcons;
@@ -57,6 +67,7 @@ namespace FamiStudio
             public ButtonPropertyClicked click;
             public ListClicked listDoubleClick;
             public ListClicked listRightClick;
+            public ListFormatText listFormatText;
             public SliderFormatText sliderFormat;
             public PictureBox warningIcon;
         };
@@ -731,23 +742,27 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private ListView CreateListView(string[] columnNames, string[,] data)
+        public static string DefaultListFormatText(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex, object value)
         {
-            var list = new ListView();
+            return value == null ? "" : value.ToString();
+        }
 
-            foreach (var col in columnNames)
+        private PropertyPageListView CreateListView(ColumnDesc[] columnDescs, object[,] data, ListFormatText format)
+        {
+            var list = new PropertyPageListView();
+
+            foreach (var col in columnDescs)
             {
-                var header = list.Columns.Add(col);
-                header.Width = -2; // Auto size.
+                list.AddColumn(col);
             }
 
             if (data != null)
             {
                 for (int i = 0; i < data.GetLength(0); i++)
                 {
-                    var item = list.Items.Add(data[i, 0]);
+                    var item = list.Items.Add(format(this, properties.Count, i, 0, data[i, 0]));
                     for (int j = 1; j < data.GetLength(1); j++)
-                        item.SubItems.Add(data[i, j]);
+                        item.SubItems.Add(format(this, properties.Count, i, j, data[i, j]));
                 }
             }
 
@@ -770,7 +785,7 @@ namespace FamiStudio
         {
             if (e.Button == MouseButtons.Right)
             {
-                var listView = sender as ListView;
+                var listView = sender as PropertyPageListView;
                 var hitTest = listView.HitTest(e.Location);
 
                 if (hitTest.Item != null)
@@ -788,7 +803,7 @@ namespace FamiStudio
 
         private void ListView_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            var listView = sender as ListView;
+            var listView = sender as PropertyPageListView;
             var hitTest = listView.HitTest(e.Location);
 
             if (hitTest.Item != null)
@@ -803,21 +818,25 @@ namespace FamiStudio
             }
         }
         
-        public void AddMultiColumnList(string[] columnNames, string[,] data, ListClicked doubleClick, ListClicked rightClick)
+        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, ListFormatText format, ListClicked doubleClick = null, ListClicked rightClick = null)
         {
+            if (format == null)
+                format = DefaultListFormatText;
+
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
-                    control = CreateListView(columnNames, data),
+                    control = CreateListView(columnDescs, data, format),
                     listDoubleClick = doubleClick,
-                    listRightClick = rightClick
+                    listRightClick = rightClick,
+                    listFormatText = format
                 });
         }
 
         public void UpdateMultiColumnList(int idx, string[,] data, string[] columnNames = null)
         {
-            var list = properties[idx].control as ListView;
+            var list = properties[idx].control as PropertyPageListView;
 
             for (int i = 0; i < data.GetLength(0); i++)
             {
@@ -1091,4 +1110,34 @@ namespace FamiStudio
             ResumeLayout();
         }
     }
+
+    public class ColumnDesc
+    {
+        public string Name;
+        public ColumnType Type = ColumnType.Label;
+        public string[] DropDownValues;
+        public int SliderMin;
+        public int SliderMax;
+
+        public ColumnDesc(string name, ColumnType type = ColumnType.Label)
+        {
+            Name = name;
+            Type = type;
+        }
+
+        public ColumnDesc(string name, string[] values)
+        {
+            Name = name;
+            Type = ColumnType.DropDown;
+            DropDownValues = values;
+        }
+
+        public ColumnDesc(string name, int min, int max)
+        {
+            Name = name;
+            Type = ColumnType.Slider;
+            SliderMin = min;
+            SliderMax = max;
+        }
+    };
 }

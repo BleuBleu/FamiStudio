@@ -128,6 +128,9 @@
     <Compile Include="Source\UI\Windows\LabelTrackBar.Designer.cs">
       <DependentUpon>LabelTrackBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="Source\UI\Windows\PropertyPageListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Source\UI\Windows\Slider.cs">
       <SubType>UserControl</SubType>
     </Compile>
