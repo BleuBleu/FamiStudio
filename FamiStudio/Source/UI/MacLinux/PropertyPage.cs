@@ -921,6 +921,14 @@ namespace FamiStudio
             }
         }
 
+        public void UpdateMultiColumnList(int idx, int rowIdx, int colIdx, object value)
+        {
+            var scroll = properties[idx].control as ScrolledWindow;
+            var treeView = scroll.Child as TreeView;
+            treeView.Model.GetIter(out var iter, new TreePath(new[] { rowIdx }));
+            treeView.Model.SetValue(iter, colIdx, value);
+        }
+
         private HScale CreateSlider(double value, double min, double max, double increment, int numDecimals, string tooltip = null)
         {
             var scale = new HScale(min, max, increment);
