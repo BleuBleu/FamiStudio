@@ -719,7 +719,7 @@ namespace FamiStudio
             treeView.EnableGridLines = TreeViewGridLines.Both;
             treeView.ButtonPressEvent += TreeView_ButtonPressEvent;
             treeView.ButtonReleaseEvent += TreeView_ButtonReleaseEvent;
-            treeView.Selection.Mode = SelectionMode.None;
+            treeView.Selection.Mode = SelectionMode.Single;
             treeView.Show();
 
             treeView.Events |= EventMask.PointerMotionMask;
