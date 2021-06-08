@@ -765,6 +765,13 @@ namespace FamiStudio
             list.AutoResizeColumns();
         }
 
+        public void UpdateMultiColumnList(int idx, int rowIdx, int colIdx, object value)
+        {
+            var list = properties[idx].control as PropertyPageListView;
+            list.UpdateData(rowIdx, colIdx, value);
+            //list.AutoResizeColumns();
+        }
+
         public void SetPropertyEnabled(int idx, bool enabled)
         {
             var label = properties[idx].control as Label;

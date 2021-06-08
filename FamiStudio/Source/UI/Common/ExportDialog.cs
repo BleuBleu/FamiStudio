@@ -145,11 +145,11 @@ namespace FamiStudio
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
-                    //page.AddLabel(null, "Channels :"); // 9
                     page.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Channel"), new ColumnDesc("Pan (% L/R)", ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 9
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
                     page.PropertyChanged += WavMp3_PropertyChanged;
+                    page.PropertyClicked += WavMp3_PropertyClicked;
                     break;
                 case ExportFormat.Video:
                     page.AddButton("Path To FFmpeg:", Settings.FFmpegExecutablePath, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
@@ -306,6 +306,14 @@ namespace FamiStudio
             {
                 props.SetPropertyEnabled(5, (string)value != "Duration");
                 props.SetPropertyEnabled(6, (string)value == "Duration");
+            }
+        }
+
+        private void WavMp3_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        {
+            if (propIdx == 9 && click == ClickType.Right && colIdx == 2)
+            {
+                props.UpdateMultiColumnList(propIdx, rowIdx, colIdx, 50);
             }
         }
 

@@ -103,6 +103,12 @@ namespace FamiStudio
             EndUpdate();
         }
 
+        public void UpdateData(int rowIdx, int colIdx, object data)
+        {
+            listData[rowIdx, colIdx] = data;
+            Items[rowIdx].SubItems[colIdx].Text = string.Format(columnDescs[colIdx].StringFormat, data);
+        }
+
         public void RenameColumns(string[] columnNames)
         {
             Debug.Assert(columnNames.Length == Columns.Count);
@@ -287,25 +293,28 @@ namespace FamiStudio
         {
             base.OnMouseDown(e);
 
-            if (GetItemAndSubItemAt(e.X, e.Y, out var itemIdex, out var subItemIndex))
+            if (e.Button == MouseButtons.Left)
             {
-                var desc = columnDescs[subItemIndex];
-                if (desc.Type == ColumnType.Slider)
+                if (GetItemAndSubItemAt(e.X, e.Y, out var itemIdex, out var subItemIndex))
                 {
-                    var sliderRect = GetProgressBarRect(Items[itemIdex].SubItems[subItemIndex].Bounds);
-                    if (sliderRect.Contains(e.X, e.Y))
+                    var desc = columnDescs[subItemIndex];
+                    if (desc.Type == ColumnType.Slider)
                     {
-                        sliderItemIndex = itemIdex;
-                        sliderSubItemIndex = subItemIndex;
-                        Capture = true;
+                        var sliderRect = GetProgressBarRect(Items[itemIdex].SubItems[subItemIndex].Bounds);
+                        if (sliderRect.Contains(e.X, e.Y))
+                        {
+                            sliderItemIndex = itemIdex;
+                            sliderSubItemIndex = subItemIndex;
+                            Capture = true;
+                        }
                     }
-                }
-                else if (desc.Type == ColumnType.CheckBox)
-                {
-                    var newVal = !(bool)listData[itemIdex, subItemIndex];
-                    listData[itemIdex, subItemIndex] = newVal;
-                    ValueChanged?.Invoke(this, itemIdex, subItemIndex, newVal);
-                    Invalidate();
+                    else if (desc.Type == ColumnType.CheckBox)
+                    {
+                        var newVal = !(bool)listData[itemIdex, subItemIndex];
+                        listData[itemIdex, subItemIndex] = newVal;
+                        ValueChanged?.Invoke(this, itemIdex, subItemIndex, newVal);
+                        Invalidate();
+                    }
                 }
             }
         }
