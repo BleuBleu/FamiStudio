@@ -1455,6 +1455,8 @@ namespace FamiStudio
                 audioDeviceChanged = false;
             }
 
+            /*
+             // MATTT : Remove this.
             if (first)
             {
                 first = false;
@@ -1462,9 +1464,9 @@ namespace FamiStudio
 
                 var data = new object[,]
                 {
-                { false, "Hello", "B", null,  10 },
-                { false, "Hello", "B", null,  20 },
-                { true, "Hello", "B", null,  30 },
+                { false, "Hello", "B", "1",  10 },
+                { false, "Hello", "B", "2",  20 },
+                { true, "Hello", "B", "3",  30 },
                 { false, "Hello", "B", null,  40 },
                 { false, "Hello", "B", null,  50 },
                 { true, "Hello", "B", null,  60 },
@@ -1487,6 +1489,7 @@ namespace FamiStudio
 
                 dlg.ShowDialog(mainForm);
             }
+            */
 
             ToolBar.Tick();
             PianoRoll.Tick();

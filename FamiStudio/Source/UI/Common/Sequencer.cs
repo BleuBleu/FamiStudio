@@ -1713,12 +1713,11 @@ namespace FamiStudio
 
             var tempoProperties = new TempoProperties(dlg.Properties, song, patternIdx, minPattern, maxPattern);
 
-            dlg.Properties.UserData = song;
             dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
             tempoProperties.AddProperties();
             tempoProperties.EnableProperties(enabled);
             dlg.Properties.PropertyChanged += PatternCustomSettings_PropertyChanged;
-            dlg.Properties.UserData = tempoProperties;
+            dlg.Properties.PropertiesUserData = tempoProperties;
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -1735,7 +1734,7 @@ namespace FamiStudio
         {
             if (propIdx == 0)
             {
-                var tempoProperties = props.UserData as TempoProperties;
+                var tempoProperties = props.PropertiesUserData as TempoProperties;
                 tempoProperties.EnableProperties((bool)value);
             }
         }

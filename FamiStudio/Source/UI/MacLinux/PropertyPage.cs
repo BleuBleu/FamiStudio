@@ -623,15 +623,12 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private ListStore CreateListStoreFromData(object[,] data)
+        private ListStore CreateListStoreFromData(ColumnDesc[] columns, object[,] data)
         {
             var types = new Type[data.GetLength(1)];
 
             for (int i = 0; i < types.Length; i++)
-            {
-                var val = data[0, i];
-                types[i] = val != null ? val.GetType() : typeof(string);
-            }
+                types[i] = columns[i].GetPropertyType();
 
             var listStore = new ListStore(types);
 
@@ -640,7 +637,7 @@ namespace FamiStudio
                 var values = new object[data.GetLength(1)];
 
                 for (int i = 0; i < data.GetLength(1); i++)
-                    values[i] = data[j, i]; // MATTT : Format strings!
+                    values[i] = data[j, i];
 
                 listStore.AppendValues(values);
             }
@@ -648,7 +645,7 @@ namespace FamiStudio
             return listStore;
         }
 
-        private ScrolledWindow CreateTreeView(ColumnDesc[] columnDescs, object[,] data)
+        private ScrolledWindow CreateTreeView(ColumnDesc[] columnDescs, object[,] data, int height)
         {
             var treeView = new TreeView();
 
@@ -681,8 +678,8 @@ namespace FamiStudio
                         for (int j = 0; j < desc.DropDownValues.Length; j++)
                             listStore.AppendValues(desc.DropDownValues[j]);
                         comboRenderer.Editable = true;
+                        comboRenderer.HasEntry = false;
                         comboRenderer.Model = listStore;
-                        comboRenderer.Text = "B"; // MATTT
                         comboRenderer.Edited += ComboRenderer_Edited;
                         comboRenderer.TextColumn = 0;
                         renderer = comboRenderer;
@@ -690,20 +687,25 @@ namespace FamiStudio
                     }
                     case ColumnType.Slider:
                     {
+                        // TODO : Right now, we dont apply the formatting. To support
+                        // this we will need to add an extra string column to our model,
+                        // update it with the formatting and tell the renderer to use
+                        // that volum as the "text" attribute. Or create our own cell
+                        // renderer that supports formatting.
                         var sliderRenderer = new CellRendererProgress();
-                        sliderRenderer.Value = 20; // MATTT
-                        sliderRenderer.Text = "Allo"; // MATTT
                         attr = "value";
                         renderer = sliderRenderer;
                         break;
                     }
                     case ColumnType.Button:
                     {
-                        var buttonRenderer = new CellRendererText();
+                        var buttonRenderer = new CellRendererButton();
                         renderer = buttonRenderer;
                         break;
                     }
                 }
+
+                renderer.Data[0] = treeView;
 
                 var column = new TreeViewColumn(columnDescs[i].Name, renderer, attr, i);
                 column.SortColumnId = -1; // Disable sorting
@@ -713,10 +715,11 @@ namespace FamiStudio
             if (data == null)
                 data = new string[0, 0];
 
-            treeView.Model = CreateListStoreFromData(data);
+            treeView.Model = CreateListStoreFromData(columnDescs, data);
             treeView.EnableGridLines = TreeViewGridLines.Both;
             treeView.ButtonPressEvent += TreeView_ButtonPressEvent;
             treeView.ButtonReleaseEvent += TreeView_ButtonReleaseEvent;
+            treeView.Selection.Mode = SelectionMode.None;
             treeView.Show();
 
             treeView.Events |= EventMask.PointerMotionMask;
@@ -725,33 +728,70 @@ namespace FamiStudio
             var scroll = new ScrolledWindow(null, null);
             scroll.HscrollbarPolicy = PolicyType.Never;
             scroll.VscrollbarPolicy = PolicyType.Automatic;
-            scroll.HeightRequest = GtkUtils.ScaleGtkWidget(300);
+            scroll.HeightRequest = GtkUtils.ScaleGtkWidget(height);
             scroll.ShadowType = ShadowType.EtchedIn;
             scroll.Add(treeView);
 
             return scroll;
         }
 
+        int GetColumnIndex(TreeView treeView, CellRenderer renderer)
+        { 
+            for (int i = 0; i < treeView.Columns.Length; i++)
+            {
+                if (treeView.Columns[i].CellRenderers[0] == renderer)
+                    return i;
+            }
+
+            Debug.Assert(false);
+            return -1;
+        }
+
+        void ToggleRenderer_Toggled(object o, ToggledArgs args)
+        {
+            var renderer = o as CellRenderer;
+            var treeView = renderer.Data[0] as TreeView;
+            var colIdx = GetColumnIndex(treeView, renderer);
+
+            treeView.Model.GetIter(out var iter, new TreePath(args.Path));
+            var newVal = !(bool)treeView.Model.GetValue(iter, colIdx);
+            treeView.Model.SetValue(iter, colIdx, newVal);
+        }
+
+        void ComboRenderer_Edited(object o, EditedArgs args)
+        {
+            var renderer = o as CellRenderer;
+            var treeView = renderer.Data[0] as TreeView;
+            var colIdx = GetColumnIndex(treeView, renderer);
+
+            treeView.Model.GetIter(out var iter, new TreePath(args.Path));
+            treeView.Model.SetValue(iter, colIdx, args.NewText);
+        }
+
         [GLib.ConnectBefore]
         void TreeView_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
         {
+            var treeView = o as TreeView;
+
             if (dragPath != null)
             {
-                var treeView = o as TreeView;
                 var area = treeView.GetCellArea(dragPath, dragColumn);
                 var percent = (int)Utils.Clamp(Math.Round((args.Event.X - area.Left) / (float)area.Width * 100.0f), 0.0f, 100.0f);
 
                 if (treeView.Model.GetIter(out var iter, dragPath))
                     treeView.Model.SetValue(iter, dragColIndex, percent);
             }
-        }
+            else if (treeView.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out var path, out var col, out var ix, out var iy))
+            {
+                var columnIndex = Array.IndexOf(treeView.Columns, col);
 
-        void ToggleRenderer_Toggled(object o, ToggledArgs args)
-        {
-        }
-
-        void ComboRenderer_Edited(object o, EditedArgs args)
-        {
+                if (treeView.Columns[columnIndex].CellRenderers[0] is CellRendererButton button)
+                {
+                    button.LastMouseX = (int)args.Event.X;
+                    button.LastMouseY = (int)args.Event.Y;
+                    treeView.QueueDraw();
+                }
+            }
         }
 
         [GLib.ConnectBefore]
@@ -770,7 +810,7 @@ namespace FamiStudio
                             var columnIndex = Array.IndexOf(treeView.Columns, col);
                             var columnDesc = prop.columns[columnIndex];
 
-                            if (columnDesc.Type == ColumnType.Slider)
+                            if (columnDesc.Type == ColumnType.Slider && args.Event.Button == 1)
                             {
                                 var area = treeView.GetCellArea(path, col);
 
@@ -784,6 +824,17 @@ namespace FamiStudio
 
                                 if (treeView.Model.GetIter(out var iter, path))
                                     treeView.Model.SetValue(iter, columnIndex, percent);
+                            }
+                            else if (columnDesc.Type == ColumnType.Button)
+                            {
+                                var cellArea = treeView.GetBackgroundArea(path, col);
+                                var button = treeView.Columns[columnIndex].CellRenderers[0] as CellRendererButton;
+                                var buttonRect = button.GetButtonRectangle(cellArea);
+
+                                if (buttonRect.Contains((int)args.Event.X, (int)args.Event.Y))
+                                {
+                                    PropertyClicked?.Invoke(this, ClickType.Button, i, path.Indices[0], columnIndex);
+                                }
                             }
                             else
                             {
@@ -816,13 +867,13 @@ namespace FamiStudio
             }
         }
 
-        public int AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data)
+        public int AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int height = 300)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
-                    control = CreateTreeView(columnDescs, data),
+                    control = CreateTreeView(columnDescs, data, height),
                     columns = columnDescs
                 });
             return properties.Count - 1;
@@ -857,7 +908,7 @@ namespace FamiStudio
             }
             else
             {
-                treeView.Model = CreateListStoreFromData(data);
+                treeView.Model = CreateListStoreFromData(properties[idx].columns, data);
             }
 
             if (columnNames != null)

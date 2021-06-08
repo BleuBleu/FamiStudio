@@ -19,10 +19,9 @@ namespace FamiStudio
         private int advancedPropertyStart = -1;
         private bool showWarnings = false;
 
-        public object UserData { get => userData; set => userData = value; }
+        public object PropertiesUserData { get => userData; set => userData = value; }
         public bool HasAdvancedProperties { get => advancedPropertyStart > 0; }
         public bool ShowWarnings { get => showWarnings; set => showWarnings = value; }
-
     }
 
     public enum PropertyType
@@ -86,6 +85,19 @@ namespace FamiStudio
             Name = name;
             Type = ColumnType.DropDown;
             DropDownValues = values;
+        }
+
+        public Type GetPropertyType()
+        {
+            switch (this.Type)
+            {
+                case ColumnType.Slider:
+                    return typeof(int);
+                case ColumnType.CheckBox: 
+                    return typeof(bool);
+                default: 
+                    return typeof(string);
+            }
         }
     };
 }

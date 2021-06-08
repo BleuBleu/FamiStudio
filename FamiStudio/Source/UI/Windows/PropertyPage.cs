@@ -676,7 +676,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private PropertyPageListView CreateListView(ColumnDesc[] columnDescs, object[,] data)
+        private PropertyPageListView CreateListView(ColumnDesc[] columnDescs, object[,] data, int height = 300)
         {
             var list = new PropertyPageListView(columnDescs);
 
@@ -684,7 +684,7 @@ namespace FamiStudio
                 list.UpdateData(data);
 
             list.Font = font;
-            list.Height = (int)(300 * RenderTheme.DialogScaling);
+            list.Height = (int)(height * RenderTheme.DialogScaling);
             list.MultiSelect = false;
             list.View = View.Details;
             list.GridLines = true;
@@ -743,13 +743,13 @@ namespace FamiStudio
             }
         }
         
-        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data)
+        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int height)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
-                    control = CreateListView(columnDescs, data)
+                    control = CreateListView(columnDescs, data, height)
                 });
         }
 

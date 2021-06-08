@@ -146,7 +146,7 @@ namespace FamiStudio
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
                     //page.AddLabel(null, "Channels :"); // 9
-                    page.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Channel"), new ColumnDesc("Pan (% L/R)", ColumnType.Slider, "{0} %") }, GetDefaultChannelsData()); // 9
+                    page.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Channel"), new ColumnDesc("Pan (% L/R)", ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 9
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
                     page.PropertyChanged += WavMp3_PropertyChanged;
@@ -166,7 +166,7 @@ namespace FamiStudio
                     page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
                     page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
                     page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
-                    page.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Channel"), new ColumnDesc("Pan (% L/R)", ColumnType.Slider, "{0} %") }, GetDefaultChannelsData()); // 9
+                    page.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Channel"), new ColumnDesc("Pan (% L/R)", ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 9
                     page.PropertyClicked += VideoPage_PropertyClicked;
                     break;
                 case ExportFormat.Nsf:

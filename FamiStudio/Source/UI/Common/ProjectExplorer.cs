@@ -2131,7 +2131,6 @@ namespace FamiStudio
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 
-            dlg.Properties.UserData = song;
             dlg.Properties.AddColoredString(song.Name, song.Color); // 0
             dlg.Properties.AddColorPicker(song.Color); // 1
             dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2
