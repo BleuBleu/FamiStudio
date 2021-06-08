@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace FamiStudio
         private int comboItemIndex     = -1;
         private int comboSubItemIndex  = -1;
 
+        private Bitmap bmpCheck;
         private object[,] listData;
         private List<ColumnDesc> columnDescs = new List<ColumnDesc>();
 
@@ -58,9 +60,11 @@ namespace FamiStudio
             }
 
             foreColorBrush = new SolidBrush(ForeColor);
-            blackPen = new Pen(Color.Black, 1.51f);
+            blackPen = new Pen(Color.Black);
             DoubleBuffered = true;
             OwnerDraw = true;
+
+            bmpCheck = System.Drawing.Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Check.png")) as System.Drawing.Bitmap;
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -220,22 +224,26 @@ namespace FamiStudio
                 var check = (bool)listData[e.ItemIndex, e.ColumnIndex];
                 var checkRect = GetCheckBoxRect(e.Bounds);
 
+                if (check)
+                    e.Graphics.DrawImage(bmpCheck, checkRect);
                 e.Graphics.DrawRectangle(blackPen, checkRect);
 
-                if (check)
-                {
-                    var oldSmoothingMode = e.Graphics.SmoothingMode;
-                    e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                    e.Graphics.DrawLine(blackPen, checkRect.Left  + 2, checkRect.Top + 2, checkRect.Right - 2, checkRect.Bottom - 2);
-                    e.Graphics.DrawLine(blackPen, checkRect.Right - 2, checkRect.Top + 2, checkRect.Left  + 2, checkRect.Bottom - 2);
-                    e.Graphics.SmoothingMode = oldSmoothingMode;
-                }
+                /*
+            if (check)
+            {
+                var oldSmoothingMode = e.Graphics.SmoothingMode;
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                e.Graphics.DrawLine(blackPen, checkRect.Left  + 2, checkRect.Top + 2, checkRect.Right - 2, checkRect.Bottom - 2);
+                e.Graphics.DrawLine(blackPen, checkRect.Right - 2, checkRect.Top + 2, checkRect.Left  + 2, checkRect.Bottom - 2);
+                e.Graphics.SmoothingMode = oldSmoothingMode;
+            }
+                */
             }
             else 
             {
                 var textRect = e.Bounds;
                 textRect.Inflate(-4, -4);
-                e.Graphics.DrawString(Items[e.ItemIndex].SubItems[e.ColumnIndex].Text, Font, foreColorBrush, textRect);
+                e.Graphics.DrawString(Items[e.ItemIndex].SubItems[e.ColumnIndex].Text, Font, foreColorBrush, textRect.Left, textRect.Top);
             }
         }
 

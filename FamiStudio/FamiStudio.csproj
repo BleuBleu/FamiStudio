@@ -402,6 +402,7 @@
     <EmbeddedResource Include="Resources\PlayQuarter.png" />
     <EmbeddedResource Include="Resources\ConfigGeneral%402x.png" />
     <EmbeddedResource Include="Resources\ConfigGeneral.png" />
+    <EmbeddedResource Include="Resources\Check.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

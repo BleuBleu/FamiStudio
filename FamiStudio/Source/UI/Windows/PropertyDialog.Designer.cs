@@ -46,7 +46,6 @@
             this.propertyPage.Padding = new System.Windows.Forms.Padding(3);
             this.propertyPage.Size = new System.Drawing.Size(298, 200);
             this.propertyPage.TabIndex = 17;
-            this.propertyPage.UserData = null;
             this.propertyPage.PropertyWantsClose += new PropertyPage.PropertyWantsCloseDelegate(this.propertyPage_PropertyWantsClose);
             // 
             // buttonYes

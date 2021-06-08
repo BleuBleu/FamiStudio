@@ -743,7 +743,7 @@ namespace FamiStudio
             }
         }
         
-        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int height)
+        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int height = 300)
         {
             properties.Add(
                 new Property()

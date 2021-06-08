@@ -1455,7 +1455,6 @@ namespace FamiStudio
                 audioDeviceChanged = false;
             }
 
-            /*
              // MATTT : Remove this.
             if (first)
             {
@@ -1489,7 +1488,6 @@ namespace FamiStudio
 
                 dlg.ShowDialog(mainForm);
             }
-            */
 
             ToolBar.Tick();
             PianoRoll.Tick();
