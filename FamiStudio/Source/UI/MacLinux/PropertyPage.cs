@@ -25,6 +25,7 @@ namespace FamiStudio
             public Label label;
             public Widget control;
             public int leftMargin;
+            public string sliderFormat;
             public WarningImage warningIcon;
             public ColumnDesc[] columns;
             public string multilineLabelText; // HACK for multiline labels.
@@ -213,7 +214,7 @@ namespace FamiStudio
         private void Cb_Toggled(object sender, EventArgs e)
         {
             int idx = GetPropertyIndex(sender as Widget);
-            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
+            PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
         private ColorSelector CreatePictureBox(System.Drawing.Color color) 
@@ -336,7 +337,7 @@ namespace FamiStudio
         private void UpDown_ValueChanged1(object sender, EventArgs e)
         {
             int idx = GetPropertyIndex(sender as Widget);
-            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
+            PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
         private DomainSpinButton CreateDomainUpDown(int[] values, int value)
@@ -366,7 +367,7 @@ namespace FamiStudio
         private void Cb_Changed(object sender, EventArgs e)
         {
             int idx = GetPropertyIndex(sender as Widget);
-            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
+            PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
         private CheckBoxList CreateCheckedListBox(string[] values, bool[] selected)
@@ -430,28 +431,22 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
+        public int AddButton(string label, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Button,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateButton(value, tooltip),
-                    click = clickDelegate
+                    control = CreateButton(value, tooltip)
                 });
             return properties.Count - 1;
         }
 
         void Button_Clicked(object sender, EventArgs e)
         {
-            for (int i = 0; i < properties.Count; i++)
-            {
-                if (properties[i].control == sender)
-                {
-                    properties[i].click(this, i);
-                }
-            }
+            var propIdx = GetPropertyIndex(sender as Widget);
+            PropertyClicked?.Invoke(this, ClickType.Button, propIdx, -1, -1);
         }
 
         public int AddLabel(string label, string value, bool multiline = false, string tooltip = null)
@@ -792,13 +787,13 @@ namespace FamiStudio
                             }
                             else
                             {
-                                if (args.Event.Type == EventType.TwoButtonPress && args.Event.Button == 1 && prop.listDoubleClick != null)
+                                if (args.Event.Type == EventType.TwoButtonPress)
                                 {
-                                    prop.listDoubleClick(this, i, path.Indices[0], columnIndex);
+                                    PropertyClicked?.Invoke(this, ClickType.Double, i, path.Indices[0], columnIndex);
                                 }
-                                else if (args.Event.Button == 3 && prop.listRightClick != null)
+                                else if (args.Event.Button == 3)
                                 {
-                                    prop.listRightClick(this, i, path.Indices[0], columnIndex);
+                                    PropertyClicked?.Invoke(this, ClickType.Right, i, path.Indices[0], columnIndex);
                                 }
                             }
                         }
@@ -821,15 +816,13 @@ namespace FamiStudio
             }
         }
 
-        public int AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, ListFormatText format, ListClicked doubleClick = null, ListClicked rightClick = null)
+        public int AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
                     control = CreateTreeView(columnDescs, data),
-                    listDoubleClick = doubleClick,
-                    listRightClick = rightClick,
                     columns = columnDescs
                 });
             return properties.Count - 1;
@@ -891,7 +884,7 @@ namespace FamiStudio
         void Scale_ChangeValue(object o, ChangeValueArgs args)
         {
             int idx = GetPropertyIndex(o as Widget);
-            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
+            PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
         void Scale_FormatValue(object o, FormatValueArgs args)
@@ -899,10 +892,10 @@ namespace FamiStudio
             var idx = GetPropertyIndex(o as Widget);
 
             if (idx >= 0 && properties[idx].sliderFormat != null)
-                args.RetVal = properties[idx].sliderFormat(args.Value);
+                args.RetVal = string.Format(properties[idx].sliderFormat, args.Value);
         }
 
-        public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, SliderFormatText format = null, string tooltip = null)
+        public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, string format = "{0}", string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -1090,34 +1083,4 @@ namespace FamiStudio
             }
         }
     }
-
-    public class ColumnDesc
-    {
-        public string Name;
-        public ColumnType Type = ColumnType.Label;
-        public string[] DropDownValues;
-        public int SliderMin;
-        public int SliderMax;
-
-        public ColumnDesc(string name, ColumnType type = ColumnType.Label)
-        {
-            Name = name;
-            Type = type;
-        }
-
-        public ColumnDesc(string name, string[] values)
-        {
-            Name = name;
-            Type = ColumnType.DropDown;
-            DropDownValues = values;
-        }
-
-        public ColumnDesc(string name, int min, int max)
-        {
-            Name = name;
-            Type = ColumnType.Slider;
-            SliderMin = min;
-            SliderMax = max;
-        }
-    };
 }
