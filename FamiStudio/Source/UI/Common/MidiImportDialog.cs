@@ -33,7 +33,7 @@ namespace FamiStudio
                 dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 3
                 dialog.Properties.AddCheckBox("Create PAL project:", false); // 4
                 dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 5
-                dialog.Properties.AddMultiColumnList(new[] { new ColumnDesc("NES Channel"), new ColumnDesc("MIDI Source") }, null, null, MappingListDoubleClicked, null); // 6
+                dialog.Properties.AddMultiColumnList(new[] { new ColumnDesc("NES Channel"), new ColumnDesc("MIDI Source") }, null); // 6
                 dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, only blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
@@ -42,9 +42,9 @@ namespace FamiStudio
             }
         }
 
-        private void Properties_PropertyChanged(PropertyPage props, int idx, object value)
+        private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (idx == 0)
+            if (propIdx == 0)
             {
                 var expansion = ExpansionType.GetValueForName((string)value);
                 var newChannelCount = Channel.GetChannelCountForExpansion(expansion);
@@ -84,10 +84,11 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("Source:", srcNames, srcNames[src.index]); // 1
             dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 2
             dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 3
-            dlg.Properties.AddButton(null, "Select All",  SelectClicked); // 4
-            dlg.Properties.AddButton(null, "Select None", SelectClicked); // 5
+            dlg.Properties.AddButton(null, "Select All"); // 4
+            dlg.Properties.AddButton(null, "Select None"); // 5
             dlg.Properties.Build();
             dlg.Properties.PropertyChanged += MappingProperties_PropertyChanged;
+            dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
             dlg.Properties.SetPropertyEnabled(1, src.type != MidiSourceType.None);
             dlg.Properties.SetPropertyEnabled(3, src.type != MidiSourceType.None && allowChannel10Mapping);
             dlg.Properties.SetPropertyEnabled(4, src.type != MidiSourceType.None && allowChannel10Mapping);
@@ -113,24 +114,27 @@ namespace FamiStudio
             }
         }
 
-        private void SelectClicked(PropertyPage props, int propertyIndex)
+        private void MappingProperties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            var keys = new bool[MidiFileReader.MidiDrumKeyNames.Length];
-
-            if (propertyIndex == 4)
+            if (click == ClickType.Button && (propIdx == 4 || propIdx == 5))
             {
-                for (int i = 0; i < keys.Length; i++)
-                    keys[i] = true;
-            }
+                var keys = new bool[MidiFileReader.MidiDrumKeyNames.Length];
 
-            props.UpdateCheckBoxList(3, keys);
+                if (propIdx == 4)
+                {
+                    for (int i = 0; i < keys.Length; i++)
+                        keys[i] = true;
+                }
+
+                props.UpdateCheckBoxList(3, keys);
+            }
         }
 
-        private void MappingProperties_PropertyChanged(PropertyPage props, int idx, object value)
+        private void MappingProperties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             var sourceType = MidiSourceType.GetValueForName(props.GetPropertyValue<string>(0));
 
-            if (idx == 0)
+            if (propIdx == 0)
                 props.UpdateDropDownListItems(1, GetSourceNames(sourceType));
 
             var allowChannel10Mapping = false;

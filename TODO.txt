@@ -52,14 +52,21 @@ FamiStudio 3.1.0
 - Stereo WAV/MP3/Video?
 - Left/right pan with +/- (cubase style)?
 - Highlight piano keys when they are pressed with QWERTY or MIDI. 
-	=> Checkbox, label, dropdown, slider + button.
-	=> Can we have sliders/combos in listview? Would be much cleaner and open many options.
-	=> + Function to format text. (pan %)
 - Noise slides?
 - Loop in selection for sequencer.
 - Keyboard shortcut for snapping precision.
 - .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
 - True portable mode (save FamiStudio.ini in same folder).
+
+
+Grid refactor:
+- Format : just a string
+	=> If good, change slider format too.
+- Events : global to prop page, not grid.
+- Add row/column to property changed.
+- Retest all grids.
+- Strange white rectangle near checkbox.
+
 
 Backlog: 
 ========= 

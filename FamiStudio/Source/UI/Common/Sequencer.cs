@@ -1223,9 +1223,9 @@ namespace FamiStudio
             }
         }
 
-        private void PasteSpecialDialog_PropertyChanged(PropertyPage props, int idx, object value)
+        private void PasteSpecialDialog_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (idx == 0)
+            if (propIdx == 0)
                 props.SetPropertyEnabled(1, (bool)value);
         }
 
@@ -1731,9 +1731,9 @@ namespace FamiStudio
             }
         }
 
-        private void PatternCustomSettings_PropertyChanged(PropertyPage props, int idx, object value)
+        private void PatternCustomSettings_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (idx == 0)
+            if (propIdx == 0)
             {
                 var tempoProperties = props.UserData as TempoProperties;
                 tempoProperties.EnableProperties((bool)value);

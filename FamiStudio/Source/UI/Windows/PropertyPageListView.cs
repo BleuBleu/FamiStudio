@@ -19,55 +19,114 @@ namespace FamiStudio
 
         private ComboBox comboBox = new ComboBox();
         private Brush foreColorBrush;
+        private Pen blackPen;
 
-        private bool hasAnyButtons = false;
-        private bool hasAnySliders = false;
+        private bool hasAnyDropDowns  = false;
+        private bool hasAnyButtons    = false;
 
         private int sliderItemIndex    = -1;
         private int sliderSubItemIndex = -1;
         private int comboItemIndex     = -1;
         private int comboSubItemIndex  = -1;
 
+        private object[,] listData;
         private List<ColumnDesc> columnDescs = new List<ColumnDesc>();
 
-        public delegate void ValueChangedDelegate(int itemIndex, int columnIndex, object value);
-        public delegate void ButtonPressedDelegate(int itemIndex, int columnIndex);
+        public delegate void ValueChangedDelegate(object sender, int itemIndex, int columnIndex, object value);
+        public delegate void ButtonPressedDelegate(object sender, int itemIndex, int columnIndex);
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
 
-        public PropertyPageListView()
+        [DllImport("user32.dll")]
+        private static extern long ShowScrollBar(IntPtr hwnd, int wBar, bool bShow);
+        private int SB_HORZ = 0;
+
+        public PropertyPageListView(ColumnDesc[] columns)
         {
-            comboBox.Items.Add("NC");
-            comboBox.Items.Add("WA");
-            comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox.Visible = false;
-            comboBox.LostFocus += ComboBox_LostFocus;
-            comboBox.SelectedValueChanged += ComboBox_SelectedValueChanged;
-            comboBox.DropDownClosed += ComboBox_DropDownClosed;
+            foreach (var col in columns)
+                AddColumn(col);
 
-            //comboBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 8.0f, FontStyle.Regular);
+            if (hasAnyDropDowns)
+            {
+                comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+                comboBox.Visible = false;
+                comboBox.LostFocus += ComboBox_LostFocus;
+                comboBox.SelectedValueChanged += ComboBox_SelectedValueChanged;
+                comboBox.DropDownClosed += ComboBox_DropDownClosed;
 
-            // MATTT : Only add when there is at least one dropdown columns.
-            Controls.Add(comboBox);
+                Controls.Add(comboBox);
+            }
 
             foreColorBrush = new SolidBrush(ForeColor);
+            blackPen = new Pen(Color.Black, 1.51f);
             DoubleBuffered = true;
+            OwnerDraw = true;
         }
 
-        public ColumnHeader AddColumn(ColumnDesc desc)
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            ShowScrollBar(Handle, SB_HORZ, false);
+        }
+
+        public void UpdateData(object[,] data)
+        {
+            BeginUpdate();
+
+            listData = data;
+
+            for (int i = 0; i < data.GetLength(0); i++)
+            {
+                if (i >= Items.Count)
+                {
+                    var item = Items.Add(string.Format(columnDescs[0].StringFormat, data[i, 0]));
+                    for (int j = 1; j < data.GetLength(1); j++)
+                        item.SubItems.Add(string.Format(columnDescs[j].StringFormat, data[i, j]));
+                }
+                else
+                {
+                    var item = Items[i];
+                    for (int j = 0; j < data.GetLength(1); j++)
+                        item.SubItems[j].Text = string.Format(columnDescs[j].StringFormat, data[i, j]);
+                }
+            }
+
+            while (Items.Count > data.GetLength(0))
+            {
+                Items.RemoveAt(data.GetLength(0));
+            }
+
+            EndUpdate();
+        }
+
+        public void RenameColumns(string[] columnNames)
+        {
+            Debug.Assert(columnNames.Length == Columns.Count);
+
+            for (int i = 0; i < Columns.Count; i++)
+            {
+                var header = Columns[i] as ColumnHeader;
+                header.Text = columnNames[i];
+            }
+        }
+
+        public void AutoResizeColumns()
+        {
+            for (int i = 0; i < Columns.Count; i++)
+            {
+                var header = Columns[i] as ColumnHeader;
+                header.Width = -2;
+            }
+        }
+
+        private ColumnHeader AddColumn(ColumnDesc desc)
         {
             Debug.Assert(desc.Type != ColumnType.CheckBox || Columns.Count == 0);
 
-            if (desc.Type == ColumnType.CheckBox)
-            {
-                CheckBoxes = true;
-            }
-            if (desc.Type == ColumnType.Button || desc.Type == ColumnType.Slider)
-            {
-                OwnerDraw = true;
-                if (desc.Type == ColumnType.Button) hasAnyButtons = true;
-                if (desc.Type == ColumnType.Slider) hasAnySliders = true;
-            }
+            if (desc.Type == ColumnType.Button)
+                hasAnyButtons = true;
+            if (desc.Type == ColumnType.DropDown)
+                hasAnyDropDowns = true;
 
             columnDescs.Add(desc);
             var header = Columns.Add(desc.Name);
@@ -77,11 +136,18 @@ namespace FamiStudio
 
             return header;
         }
-        
+
         protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
         {
             e.DrawDefault = true;
             base.OnDrawColumnHeader(e);
+        }
+
+        protected override void OnColumnWidthChanging(ColumnWidthChangingEventArgs e)
+        {
+            e.Cancel = columnDescs[e.ColumnIndex].Type == ColumnType.CheckBox;
+            e.NewWidth = Columns[e.ColumnIndex].Width; 
+            base.OnColumnWidthChanging(e);
         }
 
         private Rectangle GetButtonRect(Rectangle subItemRect)
@@ -89,29 +155,29 @@ namespace FamiStudio
             return new Rectangle(subItemRect.Right - subItemRect.Height + 2, subItemRect.Top + 2, subItemRect.Height - 5, subItemRect.Height - 6);
         }
 
-        private Rectangle GetProgressBarRect(Rectangle subItemRect, float value = 1.0f)
+        private Rectangle GetProgressBarRect(Rectangle subItemRect, int percent = 100)
         {
             var rc = subItemRect;
             rc.Inflate(-4, -4);
-            rc = new Rectangle(rc.Left, rc.Top, (int)Math.Round(rc.Width * value), rc.Height);
+            rc = new Rectangle(rc.Left, rc.Top, (int)Math.Round(rc.Width * (percent / 100.0f)), rc.Height);
             return rc;
+        }
+
+        private Rectangle GetCheckBoxRect(Rectangle subItemRect)
+        {
+            var rc = subItemRect;
+            var checkSize = rc.Height - 10;
+            return new Rectangle(rc.Left + rc.Width / 2 - checkSize / 2 - 1, rc.Top + rc.Height / 2 - checkSize / 2 - 1, checkSize, checkSize);
         }
 
         protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
         {
             var desc = columnDescs[e.ColumnIndex];
 
-            if (desc.Type == ColumnType.Button ||
-                desc.Type == ColumnType.Slider)
-            {
-                if ((e.ItemState & ListViewItemStates.Selected) != 0)
-                    e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
-                else
-                    e.DrawBackground();
-            }
-
             if (desc.Type == ColumnType.Button)
             {
+                e.DrawBackground();
+
                 var textRect = e.Bounds;
                 textRect.Inflate(-4, -4);
                 e.Graphics.DrawString("B", Font, foreColorBrush, textRect);
@@ -139,8 +205,7 @@ namespace FamiStudio
             {
                 e.DrawBackground();
 
-                // MATTT : Text label + hide if too small.
-                var fillRect = GetProgressBarRect(e.Bounds, 0.5f); // MATTT
+                var fillRect = GetProgressBarRect(e.Bounds, (int)listData[e.ItemIndex, e.ColumnIndex]);
                 var borderRect = GetProgressBarRect(e.Bounds);
 
                 e.Graphics.FillRectangle(SystemBrushes.ActiveCaption, fillRect);
@@ -148,12 +213,29 @@ namespace FamiStudio
 
                 var sf = new StringFormat();
                 sf.Alignment = StringAlignment.Center;
-                e.Graphics.DrawString("50%", Font, foreColorBrush, borderRect, sf); // MATTT
+                e.Graphics.DrawString(Items[e.ItemIndex].SubItems[e.ColumnIndex].Text, Font, foreColorBrush, borderRect, sf);
             }
-            else
+            else if (desc.Type == ColumnType.CheckBox)
             {
-                e.DrawDefault = true;
-                base.OnDrawSubItem(e);
+                var check = (bool)listData[e.ItemIndex, e.ColumnIndex];
+                var checkRect = GetCheckBoxRect(e.Bounds);
+
+                e.Graphics.DrawRectangle(blackPen, checkRect);
+
+                if (check)
+                {
+                    var oldSmoothingMode = e.Graphics.SmoothingMode;
+                    e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    e.Graphics.DrawLine(blackPen, checkRect.Left  + 2, checkRect.Top + 2, checkRect.Right - 2, checkRect.Bottom - 2);
+                    e.Graphics.DrawLine(blackPen, checkRect.Right - 2, checkRect.Top + 2, checkRect.Left  + 2, checkRect.Bottom - 2);
+                    e.Graphics.SmoothingMode = oldSmoothingMode;
+                }
+            }
+            else 
+            {
+                var textRect = e.Bounds;
+                textRect.Inflate(-4, -4);
+                e.Graphics.DrawString(Items[e.ItemIndex].SubItems[e.ColumnIndex].Text, Font, foreColorBrush, textRect);
             }
         }
 
@@ -179,22 +261,43 @@ namespace FamiStudio
             return false;
         }
 
+        private void UpdateSliderDrag(MouseEventArgs e)
+        {
+            if (sliderItemIndex >= 0)
+            {
+                var sliderRect = GetProgressBarRect(Items[sliderItemIndex].SubItems[sliderSubItemIndex].Bounds);
+                var value = Utils.Clamp((int)Math.Round((e.X - sliderRect.Left) / (float)sliderRect.Width * 100.0f), 0, 100);
+
+                listData[sliderItemIndex, sliderSubItemIndex] = value;
+                Items[sliderItemIndex].SubItems[sliderSubItemIndex].Text = string.Format(columnDescs[sliderSubItemIndex].StringFormat, value);
+
+                ValueChanged?.Invoke(this, sliderItemIndex, sliderSubItemIndex, value);
+            }
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
 
-            if (hasAnySliders && GetItemAndSubItemAt(e.X, e.Y, out var itemIdex, out var subItemIndex))
+            if (GetItemAndSubItemAt(e.X, e.Y, out var itemIdex, out var subItemIndex))
             {
                 var desc = columnDescs[subItemIndex];
                 if (desc.Type == ColumnType.Slider)
                 {
-                    var thumbRect = GetProgressBarRect(Items[itemIdex].SubItems[subItemIndex].Bounds);
-                    if (thumbRect.Contains(e.X, e.Y))
+                    var sliderRect = GetProgressBarRect(Items[itemIdex].SubItems[subItemIndex].Bounds);
+                    if (sliderRect.Contains(e.X, e.Y))
                     {
                         sliderItemIndex = itemIdex;
                         sliderSubItemIndex = subItemIndex;
                         Capture = true;
                     }
+                }
+                else if (desc.Type == ColumnType.CheckBox)
+                {
+                    var newVal = !(bool)listData[itemIdex, subItemIndex];
+                    listData[itemIdex, subItemIndex] = newVal;
+                    ValueChanged?.Invoke(this, itemIdex, subItemIndex, newVal);
+                    Invalidate();
                 }
             }
         }
@@ -205,13 +308,16 @@ namespace FamiStudio
 
             if (hasAnyButtons)
                 Invalidate();
+
+            UpdateSliderDrag(e);
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (sliderItemIndex >= 0)
             {
-                // MATTT : Raise event to change slider value here.
+                UpdateSliderDrag(e);
+
                 sliderItemIndex = -1;
                 sliderSubItemIndex = -1;
             }
@@ -243,7 +349,7 @@ namespace FamiStudio
                     var buttonRect = GetButtonRect(Items[itemIdex].SubItems[subItemIndex].Bounds);
                     if (buttonRect.Contains(e.X, e.Y))
                     {
-                        ButtonPressed?.Invoke(itemIdex, subItemIndex);
+                        ButtonPressed?.Invoke(this, itemIdex, subItemIndex);
                     }
                 }
             }
@@ -261,9 +367,11 @@ namespace FamiStudio
             if (comboItemIndex >= 0 && comboSubItemIndex >= 0)
             {
                 var combo = sender as ComboBox;
-                if (combo.Visible)
+                if (comboItemIndex >= 0)
                 {
-                    ValueChanged?.Invoke(comboItemIndex, comboSubItemIndex, combo.Text);
+                    listData[comboItemIndex, comboSubItemIndex] = combo.Text;
+                    Items[comboItemIndex].SubItems[comboSubItemIndex].Text = combo.Text;
+                    ValueChanged?.Invoke(this, comboItemIndex, comboSubItemIndex, combo.Text);
                     combo.Visible = false;
                 }
             }

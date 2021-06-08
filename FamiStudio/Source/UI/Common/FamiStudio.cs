@@ -1464,15 +1464,15 @@ namespace FamiStudio
                 {
                 { false, "Hello", "B", null,  10 },
                 { false, "Hello", "B", null,  20 },
-                { false, "Hello", "B", null,  30 },
+                { true, "Hello", "B", null,  30 },
                 { false, "Hello", "B", null,  40 },
                 { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  60 },
-                { false, "Hello", "B", null,  70 },
+                { true, "Hello", "B", null,  60 },
+                { true, "Hello", "B", null,  70 },
                 { false, "Hello", "B", null,  80 },
-                { false, "Hello", "B", null,  90 },
+                { true, "Hello", "B", null,  90 },
                 { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
+                { true, "Hello", "B", null,  50 },
                 { false, "Hello", "B", null,  50 },
                 { false, "Hello", "B", null,  50 },
                 { false, "Hello", "B", null,  50 },
@@ -1482,7 +1482,7 @@ namespace FamiStudio
                 { false, "Hola",  "A", null,  99 }
                 };
 
-                dlg.Properties.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Label"), new ColumnDesc("DropDown", new[] { "A", "B", "C" }), new ColumnDesc("Button", ColumnType.Button), new ColumnDesc("Slider", -100, 100) }, data, null, null);
+                dlg.Properties.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Label"), new ColumnDesc("DropDown", new[] { "A", "B", "C" }), new ColumnDesc("Button", ColumnType.Button), new ColumnDesc("Slider", ColumnType.Slider, "{0} %") }, data);
                 dlg.Properties.Build();
 
                 dlg.ShowDialog(mainForm);

@@ -104,15 +104,15 @@ namespace FamiStudio
             }
         }
 
-        private void Props_PropertyChanged(PropertyPage props, int idx, object value)
+        private void Props_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             if (song.UsesFamiTrackerTempo)
             {
                 var tempo = song.FamitrackerTempo;
                 var speed = song.FamitrackerSpeed;
 
-                if (idx == famitrackerTempoPropIdx ||
-                    idx == famitrackerSpeedPropIdx)
+                if (propIdx == famitrackerTempoPropIdx ||
+                    propIdx == famitrackerSpeedPropIdx)
                 {
                     tempo = props.GetPropertyValue<int>(famitrackerTempoPropIdx);
                     speed = props.GetPropertyValue<int>(famitrackerSpeedPropIdx);
@@ -127,7 +127,7 @@ namespace FamiStudio
                 var notesPerBeat = props.GetPropertyValue<int>(notesPerBeatPropIdx);
 
                 // Changing the number of notes in a beat will affect the list of available BPMs.
-                if (idx == notesPerBeatPropIdx)
+                if (propIdx == notesPerBeatPropIdx)
                 {
                     tempoList = FamiStudioTempoUtils.GetAvailableTempos(song.Project.PalMode, notesPerBeat);
                     tempoStrings = tempoList.Select(t => t.bpm.ToString("n1") + (t.groove.Length == 1 ? " *" : "")).ToArray();
@@ -135,8 +135,8 @@ namespace FamiStudio
                 }
 
                 // Changing the BPM affects the grooves and note length.
-                if (idx == famistudioBpmPropIdx ||
-                    idx == notesPerBeatPropIdx)
+                if (propIdx == famistudioBpmPropIdx ||
+                    propIdx == notesPerBeatPropIdx)
                 {
                     var tempoIndex    = Array.IndexOf(tempoStrings, props.GetPropertyValue<string>(famistudioBpmPropIdx));
                     var tempoInfo     = tempoList[tempoIndex];

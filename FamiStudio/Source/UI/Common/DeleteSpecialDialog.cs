@@ -36,14 +36,14 @@ namespace FamiStudio
             dialog.Name = "DeleteSpecialDialog";
         }
 
-        private void Properties_PropertyChanged(PropertyPage props, int idx, object value)
+        private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             if (inPropertyChanged)
                 return;
 
             inPropertyChanged = true; // Prevent recursion.
 
-            if (idx == 1)
+            if (propIdx == 1)
             {
                 bool allEffects = (bool)value;
 
@@ -52,7 +52,7 @@ namespace FamiStudio
                     props.SetPropertyValue(kv.Key, allEffects);
                 }
             }
-            else if (propToEffect.ContainsKey(idx))
+            else if (propToEffect.ContainsKey(propIdx))
             {
                 bool allEffects = true;
 

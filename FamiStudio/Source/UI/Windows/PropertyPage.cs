@@ -49,12 +49,16 @@ namespace FamiStudio
         Slider
     };
 
+    public enum ClickType
+    {
+        Left,
+        Right,
+        Double,
+        Button
+    };
+
     public partial class PropertyPage : UserControl
     {
-        public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
-        public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
-        public delegate string ListFormatText(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex, object value);
-        public delegate string SliderFormatText(double value);
 
         private static Bitmap[] warningIcons;
 
@@ -64,11 +68,7 @@ namespace FamiStudio
             public Label label;
             public Control control;
             public int leftMarging;
-            public ButtonPropertyClicked click;
-            public ListClicked listDoubleClick;
-            public ListClicked listRightClick;
-            public ListFormatText listFormatText;
-            public SliderFormatText sliderFormat;
+            public string sliderFormat;
             public PictureBox warningIcon;
         };
 
@@ -80,10 +80,12 @@ namespace FamiStudio
         private int advancedPropertyStart = -1;
         private bool showWarnings = false;
 
-        public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
+        public delegate void PropertyChangedDelegate(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value);
         public event PropertyChangedDelegate PropertyChanged;
         public delegate void PropertyWantsCloseDelegate(int idx);
         public event PropertyWantsCloseDelegate PropertyWantsClose;
+        public delegate void PropertyClickedDelegate(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx);
+        public event PropertyClickedDelegate PropertyClicked;
 
         public int LayoutHeight => layoutHeight;
         public int PropertyCount => properties.Count;
@@ -93,12 +95,6 @@ namespace FamiStudio
 
         [DllImport("user32.dll")]
         static extern bool HideCaret(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        private static extern long ShowScrollBar(IntPtr hwnd, int wBar, bool bShow);
-        private int SB_HORZ = 0;
-        //private int SB_VERT = 1;
-        //private int SB_BOTH = 3;
 
         public PropertyPage()
         {
@@ -363,7 +359,7 @@ namespace FamiStudio
         private void UpDown_ValueChanged(object sender, EventArgs e)
         {
             int idx = GetPropertyIndexForControl(sender as Control);
-            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
+            PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
         private DomainUpDown CreateDomainUpDown(int[] values, int value)
@@ -394,7 +390,7 @@ namespace FamiStudio
         private void Cb_CheckedChanged(object sender, EventArgs e)
         {
             int idx = GetPropertyIndexForControl(sender as Control);
-            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
+            PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
         private ComboBox CreateDropDownList(string[] values, string value, string tooltip = null)
@@ -415,7 +411,7 @@ namespace FamiStudio
         private void Cb_SelectedIndexChanged(object sender, EventArgs e)
         {
             int idx = GetPropertyIndexForControl(sender as Control);
-            PropertyChanged?.Invoke(this, idx, GetPropertyValue(idx));
+            PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
         private CheckedListBox CreateCheckedListBox(string[] values, bool[] selected)
@@ -438,7 +434,7 @@ namespace FamiStudio
         {
             var button = new Button();
             button.Text = text;
-            button.Click += TextBox_Click;
+            button.Click += Button_Click;
             button.FlatStyle = FlatStyle.Flat;
             button.Font = font;
             button.ForeColor = ThemeBase.LightGreyFillColor2;
@@ -447,15 +443,10 @@ namespace FamiStudio
             return button;
         }
 
-        private void TextBox_Click(object sender, EventArgs e)
+        private void Button_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < properties.Count; i++)
-            {
-                if (properties[i].control == sender)
-                {
-                    properties[i].click(this, i);
-                }
-            }
+            var propIdx = GetPropertyIndexForControl(sender as Control);
+            PropertyClicked?.Invoke(this, ClickType.Button, propIdx, -1, -1);
         }
 
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
@@ -511,15 +502,14 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddButton(string label, string value, ButtonPropertyClicked clickDelegate, string tooltip = null)
+        public int AddButton(string label, string value, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Button,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateButton(value, tooltip),
-                    click = clickDelegate
+                    control = CreateButton(value, tooltip)
                 });
             return properties.Count - 1;
         }
@@ -716,20 +706,20 @@ namespace FamiStudio
         private void Slider_ValueChangedEvent(Slider slider, double value)
         {
             var idx = GetPropertyIndexForControl(slider);
-            PropertyChanged?.Invoke(this, idx, value);
+            PropertyChanged?.Invoke(this, idx, -1, -1, value);
         }
 
         private string Slider_FormatValueEvent(Slider slider, double value)
         {
             var idx = GetPropertyIndexForControl(slider);
 
-            if (idx >= 0 && properties[idx].sliderFormat != null)
-                return properties[idx].sliderFormat(value);
+            if (idx >= 0)
+                return string.Format(properties[idx].sliderFormat, value);
 
             return null;
         }
 
-        public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, SliderFormatText format = null, string tooltip = null)
+        public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, string format = "{0}", string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -742,29 +732,12 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public static string DefaultListFormatText(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex, object value)
+        private PropertyPageListView CreateListView(ColumnDesc[] columnDescs, object[,] data)
         {
-            return value == null ? "" : value.ToString();
-        }
-
-        private PropertyPageListView CreateListView(ColumnDesc[] columnDescs, object[,] data, ListFormatText format)
-        {
-            var list = new PropertyPageListView();
-
-            foreach (var col in columnDescs)
-            {
-                list.AddColumn(col);
-            }
+            var list = new PropertyPageListView(columnDescs);
 
             if (data != null)
-            {
-                for (int i = 0; i < data.GetLength(0); i++)
-                {
-                    var item = list.Items.Add(format(this, properties.Count, i, 0, data[i, 0]));
-                    for (int j = 1; j < data.GetLength(1); j++)
-                        item.SubItems.Add(format(this, properties.Count, i, j, data[i, j]));
-                }
-            }
+                list.UpdateData(data);
 
             list.Font = font;
             list.Height = (int)(300 * RenderTheme.DialogScaling);
@@ -772,13 +745,26 @@ namespace FamiStudio
             list.View = View.Details;
             list.GridLines = true;
             list.FullRowSelect = true;
+            list.HeaderStyle = ColumnHeaderStyle.Nonclickable;
             list.MouseDoubleClick += ListView_MouseDoubleClick;
             list.MouseDown += ListView_MouseDown;
+            list.ButtonPressed += ListView_ButtonPressed;
+            list.ValueChanged += ListView_ValueChanged;
             list.BackColor = ThemeBase.LightGreyFillColor2;
 
-            ShowScrollBar(list.Handle, SB_HORZ, false);
-
             return list;
+        }
+
+        private void ListView_ButtonPressed(object sender, int itemIndex, int columnIndex)
+        {
+            var propIdx = GetPropertyIndexForControl(sender as Control);
+            PropertyClicked?.Invoke(this, ClickType.Button, propIdx, itemIndex, columnIndex);
+        }
+
+        private void ListView_ValueChanged(object sender, int itemIndex, int columnIndex, object value)
+        {
+            var propIdx = GetPropertyIndexForControl(sender as Control);
+            PropertyChanged?.Invoke(this, propIdx, itemIndex, columnIndex, value);
         }
 
         private void ListView_MouseDown(object sender, MouseEventArgs e)
@@ -790,13 +776,8 @@ namespace FamiStudio
 
                 if (hitTest.Item != null)
                 {
-                    for (int i = 0; i < properties.Count; i++)
-                    {
-                        if (properties[i].control == sender && properties[i].listRightClick != null)
-                        {
-                            properties[i].listRightClick(this, i, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
-                        }
-                    }
+                    var propIdx = GetPropertyIndexForControl(sender as Control);
+                    PropertyClicked?.Invoke(this, ClickType.Right, propIdx, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
                 }
             }
         }
@@ -810,70 +791,34 @@ namespace FamiStudio
             {
                 for (int i = 0; i < properties.Count; i++)
                 {
-                    if (properties[i].control == sender && properties[i].listDoubleClick != null)
+                    if (properties[i].control == sender)
                     {
-                        properties[i].listDoubleClick(this, i, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
+                        PropertyClicked?.Invoke(this, ClickType.Double, i, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
                     }
                 }
             }
         }
         
-        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, ListFormatText format, ListClicked doubleClick = null, ListClicked rightClick = null)
+        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data)
         {
-            if (format == null)
-                format = DefaultListFormatText;
-
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
-                    control = CreateListView(columnDescs, data, format),
-                    listDoubleClick = doubleClick,
-                    listRightClick = rightClick,
-                    listFormatText = format
+                    control = CreateListView(columnDescs, data)
                 });
         }
 
-        public void UpdateMultiColumnList(int idx, string[,] data, string[] columnNames = null)
+        public void UpdateMultiColumnList(int idx, object[,] data, string[] columnNames = null)
         {
             var list = properties[idx].control as PropertyPageListView;
 
-            for (int i = 0; i < data.GetLength(0); i++)
-            {
-                if (i >= list.Items.Count)
-                {
-                    var item = list.Items.Add(data[i, 0]);
-                    for (int j = 1; j < data.GetLength(1); j++)
-                        item.SubItems.Add(data[i, j]);
-                }
-                else
-                {
-                    var item = list.Items[i];
-                    for (int j = 0; j < data.GetLength(1); j++)
-                        item.SubItems[j].Text = data[i, j];
-                }
-            }
-
-            while (list.Items.Count > data.GetLength(0)) 
-            {
-                list.Items.RemoveAt(data.GetLength(0));
-            }
+            list.UpdateData(data);
 
             if (columnNames != null)
-            {
-                Debug.Assert(list.Columns.Count == columnNames.Length);
-                for (int i = 0; i < list.Columns.Count; i++)
-                {
-                    var header = list.Columns[i] as ColumnHeader;
-                    header.Text  = columnNames[i];
-                }
-            }
+                list.RenameColumns(columnNames);
 
-            for (int i = 0; i < list.Columns.Count; i++)
-            {
-                var header = list.Columns[i] as ColumnHeader;
-                header.Width = -2;
-            }
+            list.AutoResizeColumns();
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)
@@ -1116,13 +1061,13 @@ namespace FamiStudio
         public string Name;
         public ColumnType Type = ColumnType.Label;
         public string[] DropDownValues;
-        public int SliderMin;
-        public int SliderMax;
+        public string StringFormat = "{0}";
 
-        public ColumnDesc(string name, ColumnType type = ColumnType.Label)
+        public ColumnDesc(string name, ColumnType type = ColumnType.Label, string format = "{0}")
         {
             Name = name;
             Type = type;
+            StringFormat = type == ColumnType.CheckBox ? "" : format;
         }
 
         public ColumnDesc(string name, string[] values)
@@ -1130,14 +1075,6 @@ namespace FamiStudio
             Name = name;
             Type = ColumnType.DropDown;
             DropDownValues = values;
-        }
-
-        public ColumnDesc(string name, int min, int max)
-        {
-            Name = name;
-            Type = ColumnType.Slider;
-            SliderMin = min;
-            SliderMax = max;
         }
     };
 }
