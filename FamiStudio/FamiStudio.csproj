@@ -121,6 +121,9 @@
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Common\PropertyPageCommon.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Windows\LabelTrackBar.cs">
       <SubType>UserControl</SubType>

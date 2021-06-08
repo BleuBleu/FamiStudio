@@ -15,51 +15,8 @@ using System.Reflection;
 
 namespace FamiStudio
 {
-    public enum PropertyType
-    {
-        String,
-        ColoredString,
-        NumericUpDown,
-        DomainUpDown,
-        Slider,
-        CheckBox,
-        DropDownList,
-        CheckBoxList,
-        ColorPicker,
-        Label,
-        Button,
-        MultilineString,
-        ProgressBar,
-        Radio
-    };
-
-    public enum CommentType
-    {
-        Good,
-        Warning,
-        Error
-    };
-
-    public enum ColumnType
-    {
-        CheckBox,
-        Label,
-        Button,
-        DropDown,
-        Slider
-    };
-
-    public enum ClickType
-    {
-        Left,
-        Right,
-        Double,
-        Button
-    };
-
     public partial class PropertyPage : UserControl
     {
-
         private static Bitmap[] warningIcons;
 
         class Property
@@ -76,22 +33,9 @@ namespace FamiStudio
         private Font font;
         private Bitmap colorBitmap;
         private List<Property> properties = new List<Property>();
-        private object userData;
-        private int advancedPropertyStart = -1;
-        private bool showWarnings = false;
-
-        public delegate void PropertyChangedDelegate(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value);
-        public event PropertyChangedDelegate PropertyChanged;
-        public delegate void PropertyWantsCloseDelegate(int idx);
-        public event PropertyWantsCloseDelegate PropertyWantsClose;
-        public delegate void PropertyClickedDelegate(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx);
-        public event PropertyClickedDelegate PropertyClicked;
 
         public int LayoutHeight => layoutHeight;
         public int PropertyCount => properties.Count;
-        public object UserData { get => userData; set => userData = value; }
-        public bool HasAdvancedProperties { get => advancedPropertyStart > 0; }
-        public bool ShowWarnings { get => showWarnings; set => showWarnings = value; }
 
         [DllImport("user32.dll")]
         static extern bool HideCaret(IntPtr hWnd);
@@ -1055,26 +999,4 @@ namespace FamiStudio
             ResumeLayout();
         }
     }
-
-    public class ColumnDesc
-    {
-        public string Name;
-        public ColumnType Type = ColumnType.Label;
-        public string[] DropDownValues;
-        public string StringFormat = "{0}";
-
-        public ColumnDesc(string name, ColumnType type = ColumnType.Label, string format = "{0}")
-        {
-            Name = name;
-            Type = type;
-            StringFormat = type == ColumnType.CheckBox ? "" : format;
-        }
-
-        public ColumnDesc(string name, string[] values)
-        {
-            Name = name;
-            Type = ColumnType.DropDown;
-            DropDownValues = values;
-        }
-    };
 }

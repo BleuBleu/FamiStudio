@@ -15,47 +15,8 @@ using Pango;
 
 namespace FamiStudio
 {
-    public enum PropertyType
+    public partial class PropertyPage : Gtk.Table
     {
-        String,
-        ColoredString,
-        NumericUpDown,
-        DomainUpDown,
-        Slider,
-        CheckBox,
-        DropDownList,
-        CheckBoxList,
-        ColorPicker,
-        Label,
-        Button,
-        MultilineString,
-        ProgressBar,
-        Radio
-    };
-
-    public enum CommentType
-    {
-        Good,
-        Warning,
-        Error
-    };
-
-    public enum ColumnType
-    {
-        CheckBox,
-        Label,
-        Button,
-        DropDown,
-        Slider
-    };
-
-    public class PropertyPage : Gtk.Table
-    {
-        public delegate void ButtonPropertyClicked(PropertyPage props, int propertyIndex);
-        public delegate void ListClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex);
-        public delegate string ListFormatText(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex, object value);
-        public delegate string SliderFormatText(double value);
-
         private static Pixbuf[] warningIcons;
 
         class Property
@@ -64,21 +25,14 @@ namespace FamiStudio
             public Label label;
             public Widget control;
             public int leftMargin;
-            public ButtonPropertyClicked click;
-            public ListClicked listDoubleClick;
-            public ListClicked listRightClick;
-            public SliderFormatText sliderFormat;
             public WarningImage warningIcon;
             public ColumnDesc[] columns;
             public string multilineLabelText; // HACK for multiline labels.
         };
 
-        private object userData;
         private System.Drawing.Color color;
         private Pixbuf colorBitmap;
         private List<Property> properties = new List<Property>();
-        private int advancedPropertyStart = -1;
-        private bool showWarnings = false;
 
         // For some grid operators.
         private TreePath dragPath;
@@ -87,14 +41,7 @@ namespace FamiStudio
         private int dragRowIndex = -1;
         private int dragColIndex = -1;
 
-        public delegate void PropertyChangedDelegate(PropertyPage props, int idx, object value);
-        public event PropertyChangedDelegate PropertyChanged;
-        public delegate void PropertyWantsCloseDelegate(int idx);
-        public event PropertyWantsCloseDelegate PropertyWantsClose;
-        public new object UserData { get => userData; set => userData = value; }
         public int PropertyCount => properties.Count;
-        public bool HasAdvancedProperties { get => advancedPropertyStart > 0; }
-        public bool ShowWarnings { get => showWarnings; set => showWarnings = value; }
 
         public PropertyPage() : base(1, 1, false)
         {
