@@ -749,7 +749,9 @@ namespace FamiStudio
                     case ColumnType.Slider:
                     {
                         var sliderRenderer = new CellRendererProgress();
-                        sliderRenderer.Value = 50; // MATTT
+                        sliderRenderer.Value = 20; // MATTT
+                        sliderRenderer.Text = "Allo"; // MATTT
+                        attr = "value";
                         renderer = sliderRenderer;
                         break;
                     }
@@ -775,6 +777,9 @@ namespace FamiStudio
             treeView.ButtonReleaseEvent += TreeView_ButtonReleaseEvent;
             treeView.Show();
 
+            treeView.Events |= EventMask.PointerMotionMask;
+            treeView.MotionNotifyEvent += TreeView_MotionNotifyEvent;
+
             var scroll = new ScrolledWindow(null, null);
             scroll.HscrollbarPolicy = PolicyType.Never;
             scroll.VscrollbarPolicy = PolicyType.Automatic;
@@ -783,6 +788,20 @@ namespace FamiStudio
             scroll.Add(treeView);
 
             return scroll;
+        }
+
+        [GLib.ConnectBefore]
+        void TreeView_MotionNotifyEvent(object o, MotionNotifyEventArgs args)
+        {
+            if (dragPath != null)
+            {
+                var treeView = o as TreeView;
+                var area = treeView.GetCellArea(dragPath, dragColumn);
+                var percent = (int)Utils.Clamp(Math.Round((args.Event.X - area.Left) / (float)area.Width * 100.0f), 0.0f, 100.0f);
+
+                if (treeView.Model.GetIter(out var iter, dragPath))
+                    treeView.Model.SetValue(iter, dragColIndex, percent);
+            }
         }
 
         void ToggleRenderer_Toggled(object o, ToggledArgs args)
@@ -819,8 +838,10 @@ namespace FamiStudio
                                 dragRowIndex = path.Indices[0];
                                 dragColIndex = columnIndex;
 
-                                var percent = (args.Event.X - area.Left) / (float)area.Width;
-                                Debug.WriteLine(percent.ToString());
+                                var percent = (int)Utils.Clamp(Math.Round((args.Event.X - area.Left) / (float)area.Width * 100.0f), 0.0f, 100.0f);
+
+                                if (treeView.Model.GetIter(out var iter, path))
+                                    treeView.Model.SetValue(iter, columnIndex, percent);
                             }
                             else
                             {
@@ -842,11 +863,15 @@ namespace FamiStudio
         [GLib.ConnectBefore]
         void TreeView_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
         {
-            dragPath = null;
-            dragColumn = null;
-            dragPropertyIndex = -1;
-            dragRowIndex = -1;
-            dragColIndex = -1;
+            // MATTT : Trigger change event here!
+            if (dragPath != null)
+            {
+                dragPath = null;
+                dragColumn = null;
+                dragPropertyIndex = -1;
+                dragRowIndex = -1;
+                dragColIndex = -1;
+            }
         }
 
         public int AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, ListFormatText format, ListClicked doubleClick = null, ListClicked rightClick = null)

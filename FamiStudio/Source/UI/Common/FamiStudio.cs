@@ -1462,15 +1462,15 @@ namespace FamiStudio
 
                 var data = new object[,]
                 {
+                { false, "Hello", "B", null,  10 },
+                { false, "Hello", "B", null,  20 },
+                { false, "Hello", "B", null,  30 },
+                { false, "Hello", "B", null,  40 },
                 { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
-                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  60 },
+                { false, "Hello", "B", null,  70 },
+                { false, "Hello", "B", null,  80 },
+                { false, "Hello", "B", null,  90 },
                 { false, "Hello", "B", null,  50 },
                 { false, "Hello", "B", null,  50 },
                 { false, "Hello", "B", null,  50 },
