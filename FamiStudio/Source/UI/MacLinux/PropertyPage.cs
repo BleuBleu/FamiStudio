@@ -720,6 +720,8 @@ namespace FamiStudio
             treeView.ButtonPressEvent += TreeView_ButtonPressEvent;
             treeView.ButtonReleaseEvent += TreeView_ButtonReleaseEvent;
             treeView.Selection.Mode = SelectionMode.Single;
+            treeView.Realized += TreeView_Realized;
+            treeView.SizeAllocated += TreeView_SizeAllocated;
             treeView.Show();
 
             treeView.Events |= EventMask.PointerMotionMask;
@@ -733,6 +735,68 @@ namespace FamiStudio
             scroll.Add(treeView);
 
             return scroll;
+        }
+
+        void TreeView_SizeAllocated(object o, SizeAllocatedArgs args)
+        {
+            var treeView = o as TreeView;
+            UpdateColumnWidths(treeView);
+        }
+
+        void TreeView_Realized(object sender, EventArgs e)
+        {
+            //var treeView = sender as TreeView;
+            //UpdateColumnWidths(treeView);
+        }
+
+        void UpdateColumnWidths(TreeView treeView)
+        {
+            var propIdx = GetPropertyIndex(treeView.Parent);
+            var prop = properties[propIdx];
+            var columnDescs = prop.columns;
+
+            var itemHeight = treeView.GetCellArea(new TreePath(new[] { 0 }), treeView.Columns[0]).Height;
+            var total = 0;
+            var totalWidths = 0.0f;
+
+            for (int i = 0; i < treeView.Columns.Length; i++)
+            {
+                var column = treeView.Columns[i];
+
+                // Leave the last column as autosize to avoid going larger than the allocation.
+                column.Sizing = i == treeView.Columns.Length - 1 ? TreeViewColumnSizing.Autosize : TreeViewColumnSizing.Fixed;
+
+                if (columnDescs[i].Width == 0.0f)
+                {
+                    // Dont update width if not needed, this can make the "SizeAllocated" 
+                    // event go in an infinite loop.
+                    if (column.FixedWidth != itemHeight)
+                        column.FixedWidth = itemHeight;
+
+                    total += treeView.Columns[i].FixedWidth;
+                }
+                totalWidths += columnDescs[i].Width;
+            }
+
+            Debug.Assert(Utils.IsNearlyEqual(totalWidths, 1.0f));
+
+            var remaining = treeView.Allocation.Width - total;
+
+            for (int i = 0; i < treeView.Columns.Length - 1; i++)
+            {
+                if (columnDescs[i].Width != 0.0f)
+                {
+                    var column = treeView.Columns[i];
+                    var newWidth = (int)Math.Floor(remaining * columnDescs[i].Width);
+
+                    // Dont update width if not needed, this can make the "SizeAllocated" 
+                    // event go in an infinite loop.
+                    if (column.Width != newWidth)
+                        column.FixedWidth = newWidth;
+                }
+            }
+
+            treeView.QueueDraw();
         }
 
         int GetColumnIndex(TreeView treeView, CellRenderer renderer)
@@ -756,7 +820,10 @@ namespace FamiStudio
             treeView.Model.GetIter(out var iter, new TreePath(args.Path));
             var newVal = !(bool)treeView.Model.GetValue(iter, colIdx);
             treeView.Model.SetValue(iter, colIdx, newVal);
-        }
+
+            var propIdx = GetPropertyIndex(treeView.Parent);
+            PropertyChanged?.Invoke(this, propIdx, int.Parse(args.Path), colIdx, newVal);
+}
 
         void ComboRenderer_Edited(object o, EditedArgs args)
         {
@@ -766,6 +833,9 @@ namespace FamiStudio
 
             treeView.Model.GetIter(out var iter, new TreePath(args.Path));
             treeView.Model.SetValue(iter, colIdx, args.NewText);
+
+            var propIdx = GetPropertyIndex(treeView.Parent);
+            PropertyChanged?.Invoke(this, propIdx, int.Parse(args.Path), colIdx, args.NewText);
         }
 
         [GLib.ConnectBefore]
@@ -780,16 +850,24 @@ namespace FamiStudio
 
                 if (treeView.Model.GetIter(out var iter, dragPath))
                     treeView.Model.SetValue(iter, dragColIndex, percent);
+
+                var propIdx = GetPropertyIndex(treeView.Parent);
+                PropertyChanged?.Invoke(this, propIdx, dragRowIndex, dragColIndex, percent);
             }
             else if (treeView.GetPathAtPos((int)args.Event.X, (int)args.Event.Y, out var path, out var col, out var ix, out var iy))
             {
+                var propIdx = GetPropertyIndex((o as Widget).Parent);
                 var columnIndex = Array.IndexOf(treeView.Columns, col);
+                var columnDesc = properties[propIdx].columns[columnIndex];
 
-                if (treeView.Columns[columnIndex].CellRenderers[0] is CellRendererButton button)
+                if (columnDesc.Enabled)
                 {
-                    button.LastMouseX = (int)args.Event.X;
-                    button.LastMouseY = (int)args.Event.Y;
-                    treeView.QueueDraw();
+                    if (treeView.Columns[columnIndex].CellRenderers[0] is CellRendererButton button)
+                    {
+                        button.LastMouseX = (int)args.Event.X;
+                        button.LastMouseY = (int)args.Event.Y;
+                        treeView.QueueDraw();
+                    }
                 }
             }
         }
@@ -810,41 +888,54 @@ namespace FamiStudio
                             var columnIndex = Array.IndexOf(treeView.Columns, col);
                             var columnDesc = prop.columns[columnIndex];
 
-                            if (columnDesc.Type == ColumnType.Slider && args.Event.Button == 1)
+                            if (columnDesc.Enabled)
                             {
-                                var area = treeView.GetCellArea(path, col);
-
-                                dragPath = path;
-                                dragColumn = col;
-                                dragPropertyIndex = i;
-                                dragRowIndex = path.Indices[0];
-                                dragColIndex = columnIndex;
-
-                                var percent = (int)Utils.Clamp(Math.Round((args.Event.X - area.Left) / (float)area.Width * 100.0f), 0.0f, 100.0f);
-
-                                if (treeView.Model.GetIter(out var iter, path))
-                                    treeView.Model.SetValue(iter, columnIndex, percent);
-                            }
-                            else if (columnDesc.Type == ColumnType.Button)
-                            {
-                                var cellArea = treeView.GetBackgroundArea(path, col);
-                                var button = treeView.Columns[columnIndex].CellRenderers[0] as CellRendererButton;
-                                var buttonRect = button.GetButtonRectangle(cellArea);
-
-                                if (buttonRect.Contains((int)args.Event.X, (int)args.Event.Y))
+                                if (columnDesc.Type == ColumnType.Slider && args.Event.Button == 1)
                                 {
-                                    PropertyClicked?.Invoke(this, ClickType.Button, i, path.Indices[0], columnIndex);
+                                    var area = treeView.GetCellArea(path, col);
+
+                                    dragPath = path;
+                                    dragColumn = col;
+                                    dragPropertyIndex = i;
+                                    dragRowIndex = path.Indices[0];
+                                    dragColIndex = columnIndex;
+
+                                    var percent = (int)Utils.Clamp(Math.Round((args.Event.X - area.Left) / (float)area.Width * 100.0f), 0.0f, 100.0f);
+
+                                    if (treeView.Model.GetIter(out var iter, path))
+                                        treeView.Model.SetValue(iter, columnIndex, percent);
+
+                                    var propIdx = GetPropertyIndex(treeView.Parent);
+                                    PropertyChanged?.Invoke(this, propIdx, dragRowIndex, dragColIndex, percent);
                                 }
-                            }
-                            else
-                            {
-                                if (args.Event.Type == EventType.TwoButtonPress)
+                                else if (columnDesc.Type == ColumnType.Button)
                                 {
-                                    PropertyClicked?.Invoke(this, ClickType.Double, i, path.Indices[0], columnIndex);
+                                    var cellArea = treeView.GetBackgroundArea(path, col);
+                                    var button = treeView.Columns[columnIndex].CellRenderers[0] as CellRendererButton;
+                                    var buttonRect = button.GetButtonRectangle(cellArea);
+
+                                    if (buttonRect.Contains((int)args.Event.X, (int)args.Event.Y))
+                                    {
+                                        PropertyClicked?.Invoke(this, ClickType.Button, i, path.Indices[0], columnIndex);
+                                    }
                                 }
-                                else if (args.Event.Button == 3)
+                                else if (columnDesc.Type == ColumnType.DropDown)
                                 {
-                                    PropertyClicked?.Invoke(this, ClickType.Right, i, path.Indices[0], columnIndex);
+                                    // Open the combo box right away, otherwise we need to click twice.
+                                    var column = treeView.Columns[columnIndex];
+                                    var combo = column.CellRenderers[0] as CellRendererCombo;
+                                    treeView.SetCursorOnCell(path, column, combo, true);
+                                }
+                                else
+                                {
+                                    if (args.Event.Type == EventType.TwoButtonPress)
+                                    {
+                                        PropertyClicked?.Invoke(this, ClickType.Double, i, path.Indices[0], columnIndex);
+                                    }
+                                    else if (args.Event.Button == 3)
+                                    {
+                                        PropertyClicked?.Invoke(this, ClickType.Right, i, path.Indices[0], columnIndex);
+                                    }
                                 }
                             }
                         }
@@ -856,7 +947,6 @@ namespace FamiStudio
         [GLib.ConnectBefore]
         void TreeView_ButtonReleaseEvent(object o, ButtonReleaseEventArgs args)
         {
-            // MATTT : Trigger change event here!
             if (dragPath != null)
             {
                 dragPath = null;
@@ -872,14 +962,14 @@ namespace FamiStudio
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.CheckBoxList,
+                    type = PropertyType.MultiColumnList,
                     control = CreateTreeView(columnDescs, data, height),
                     columns = columnDescs
                 });
             return properties.Count - 1;
         }
 
-        public void UpdateMultiColumnList(int idx, string[,] data, string[] columnNames = null)
+        public void UpdateMultiColumnList(int idx, object[,] data, string[] columnNames = null)
         {
             var scroll = properties[idx].control as ScrolledWindow;
             var treeView = scroll.Child as TreeView;
@@ -895,7 +985,7 @@ namespace FamiStudio
 
                     do
                     {
-                        var values = new string[data.GetLength(1)];
+                        var values = new object[data.GetLength(1)];
 
                         for (int i = 0; i < data.GetLength(1); i++)
                             values[i] = data[j, i];
@@ -919,6 +1009,33 @@ namespace FamiStudio
                     treeView.Columns[i].Title = columnNames[i];
                 }
             }
+        }
+
+        public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
+        {
+            var prop = properties[propIdx];
+            var scroll = prop.control as ScrolledWindow;
+            var treeView = scroll.Child as TreeView;
+
+            // This is the only type we toggle right now. Add more as we go.
+            Debug.Assert(prop.columns[colIdx].Type == ColumnType.Slider);
+
+            var column = treeView.Columns[colIdx];
+
+            switch (prop.columns[colIdx].Type)
+            {
+                case ColumnType.Slider:
+                {
+                    var progressRenderer = column.CellRenderers[0] as CellRendererProgress;
+                    column.SetAttributes(progressRenderer, enabled ? "value" : "", colIdx);
+                    progressRenderer.Text = enabled ? null : "N/A";
+                    progressRenderer.Value = 0;
+                    break;
+                }
+            }
+
+            prop.columns[colIdx].Enabled = enabled;
+            treeView.QueueDraw();
         }
 
         public void UpdateMultiColumnList(int idx, int rowIdx, int colIdx, object value)
@@ -1066,6 +1183,18 @@ namespace FamiStudio
         public T GetPropertyValue<T>(int idx)
         {
             return (T)GetPropertyValue(idx);
+        }
+
+        public T GetPropertyValue<T>(int idx, int rowIdx, int colIdx)
+        {
+            var prop = properties[idx];
+            Debug.Assert(prop.type == PropertyType.MultiColumnList);
+
+            var scroll = properties[idx].control as ScrolledWindow;
+            var treeView = scroll.Child as TreeView;
+
+            treeView.Model.GetIter(out var iter, new TreePath(new[] { rowIdx }));
+            return (T)treeView.Model.GetValue(iter, colIdx);
         }
 
         public void SetPropertyValue(int idx, object value)

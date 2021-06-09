@@ -1443,7 +1443,7 @@ namespace FamiStudio
             }
         }
 
-        //bool first = true;
+        bool first = false;
 
         public void Tick()
         {
@@ -1454,7 +1454,7 @@ namespace FamiStudio
                 RecreateAudioPlayers();
                 audioDeviceChanged = false;
             }
-            /*
+
              // MATTT : Remove this.
             if (first)
             {
@@ -1488,7 +1488,7 @@ namespace FamiStudio
 
                 dlg.ShowDialog(mainForm);
             }
-            */
+
             ToolBar.Tick();
             PianoRoll.Tick();
             Sequencer.Tick();

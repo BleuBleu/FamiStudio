@@ -231,7 +231,7 @@ namespace FamiStudio
                     PlatformUtils.KeyCodeToString((int)args.Event.Key) != null)
                 {
                     if (args.Event.Key != Gdk.Key.Escape)
-                        AssignQwertyKey(itemIndex, columnIndex - 2, (int)args.Event.Key);
+                        AssignQwertyKey(rowIdx, colIdx - 2, (int)args.Event.Key);
                     dlg.Accept();
                 }
             };

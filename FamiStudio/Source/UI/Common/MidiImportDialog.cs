@@ -153,15 +153,32 @@ namespace FamiStudio
             }
         }
 
+        const string NoneString = "None (Leave channel blank)";
+
+        private string GetChannelName(int idx)
+        {
+            return $"Channel {idx + 1}";
+        }
+
+        private string GetTrackName(int idx)
+        {
+            var str = $"Track {idx + 1}";
+
+            if (!string.IsNullOrEmpty(trackNames[idx]))
+                str += $" ({trackNames[idx]})";
+
+            return str;
+        }
+
         private string[] GetSourceNames()
         {
             var sourceNames = new string[16 + trackNames.Length + 1];
 
-            sourceNames[0] = "None (Leave channel blank)";
+            sourceNames[0] = NoneString;
             for (int i = 0; i < 16; i++)
-                sourceNames[i + 1] = $"Channel {i + 1}";
+                sourceNames[i + 1] = GetChannelName(i);
             for (int i = 0; i < trackNames.Length; i++)
-                sourceNames[i + 17] = $"Track {i + 1} ({trackNames[i]})";
+                sourceNames[i + 17] = GetTrackName(i);
 
             return sourceNames;
         }
@@ -197,21 +214,18 @@ namespace FamiStudio
 
                 if (src.type == MidiSourceType.Track)
                 {
-                    gridData[i, 1] = $"Track {src.index + 1}";
-
-                    if (!string.IsNullOrEmpty(trackNames[src.index]))
-                        gridData[i, 1] += $" ({trackNames[src.index]})";
+                    gridData[i, 1] = GetTrackName(src.index);
                 }
                 else if (src.type == MidiSourceType.Channel)
                 {
-                    gridData[i, 1] = $"Channel {src.index + 1}";
+                    gridData[i, 1] = GetChannelName(src.index);
 
                     if (src.index == 9)
                         gridData[i, 2] = src.keys == MidiFileReader.AllDrumKeysMask ? "All keys" : "Filtered keys";
                 }
                 else
                 {
-                    gridData[i, 1] = "None";
+                    gridData[i, 1] = NoneString;
                 }
             }
 
