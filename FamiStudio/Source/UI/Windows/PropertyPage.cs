@@ -742,13 +742,19 @@ namespace FamiStudio
                 }
             }
         }
-        
+
+        public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
+        {
+            var listView = properties[propIdx].control as PropertyPageListView;
+            listView.SetColumnEnabled(colIdx, enabled);
+        }
+
         public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int height = 300)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.CheckBoxList,
+                    type = PropertyType.MultiColumnList,
                     control = CreateListView(columnDescs, data, height)
                 });
         }
@@ -858,6 +864,14 @@ namespace FamiStudio
         public T GetPropertyValue<T>(int idx)
         {
             return (T)GetPropertyValue(idx);
+        }
+
+        public T GetPropertyValue<T>(int idx, int rowIdx, int colIdx)
+        {
+            var prop = properties[idx];
+            Debug.Assert(prop.type == PropertyType.MultiColumnList);
+            var list = prop.control as PropertyPageListView;
+            return (T)list.GetData(rowIdx, colIdx);
         }
 
         public int GetSelectedIndex(int idx)

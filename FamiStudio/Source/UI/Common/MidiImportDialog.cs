@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Media;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -32,11 +33,12 @@ namespace FamiStudio
                 dialog.Properties.AddIntegerRange("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 2
                 dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 3
                 dialog.Properties.AddCheckBox("Create PAL project:", false); // 4
-                dialog.Properties.AddLabel(null, "Channel mapping (double-click on a row to change)"); // 5
-                dialog.Properties.AddMultiColumnList(new[] { new ColumnDesc("NES Channel"), new ColumnDesc("MIDI Source") }, null); // 6
+                dialog.Properties.AddLabel(null, "Channel mapping:"); // 5
+                dialog.Properties.AddMultiColumnList(new[] { new ColumnDesc("NES Channel", 0.25f), new ColumnDesc("MIDI Source", 0.45f, GetSourceNames()), new ColumnDesc("Channel 10 Keys", 0.3f, ColumnType.Button) }, null); // 6
                 dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, only blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
+                dialog.Properties.PropertyClicked += Properties_PropertyClicked;
 
                 UpdateListView();
             }
@@ -71,105 +73,97 @@ namespace FamiStudio
                 if (!allowPal)
                     dialog.Properties.SetPropertyValue(4, false);
             }
-        }
-
-        void MappingListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
-        {
-            var src = channelSources[itemIndex];
-            var srcNames = GetSourceNames(src.type);
-            var allowChannel10Mapping = src.type == MidiSourceType.Channel && src.index == 9;
-
-            var dlg = new PropertyDialog(300, true, true, dialog);
-            dlg.Properties.AddDropDownList("Source Type:", MidiSourceType.Names, MidiSourceType.Names[src.type]); // 0
-            dlg.Properties.AddDropDownList("Source:", srcNames, srcNames[src.index]); // 1
-            dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 2
-            dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 3
-            dlg.Properties.AddButton(null, "Select All"); // 4
-            dlg.Properties.AddButton(null, "Select None"); // 5
-            dlg.Properties.Build();
-            dlg.Properties.PropertyChanged += MappingProperties_PropertyChanged;
-            dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
-            dlg.Properties.SetPropertyEnabled(1, src.type != MidiSourceType.None);
-            dlg.Properties.SetPropertyEnabled(3, src.type != MidiSourceType.None && allowChannel10Mapping);
-            dlg.Properties.SetPropertyEnabled(4, src.type != MidiSourceType.None && allowChannel10Mapping);
-            dlg.Properties.SetPropertyEnabled(5, src.type != MidiSourceType.None && allowChannel10Mapping);
-
-            if (dlg.ShowDialog(null) == DialogResult.OK)
+            else if (propIdx == 6)
             {
-                var sourceType = MidiSourceType.GetValueForName(dlg.Properties.GetPropertyValue<string>(0));
-                var sourceName = dlg.Properties.GetPropertyValue<string>(1);
-                var keysBool   = dlg.Properties.GetPropertyValue<bool[]>(3);
+                Debug.Assert(colIdx == 1);
 
-                src.type  = sourceType;
-                src.index = sourceType == MidiSourceType.None ? 0 : (Utils.ParseIntWithTrailingGarbage(sourceName.Substring(sourceType == MidiSourceType.Track ? 6 : 8)) - 1);
-                src.keys  = 0ul;
+                var src = channelSources[rowIdx];
+                var str = (string)value;
 
-                for (int i = 0; i < keysBool.Length; i++)
+                if (str.StartsWith("Track"))
                 {
-                    if (keysBool[i])
-                        src.keys |= (1ul << i);
+                    src.type  = MidiSourceType.Track;
+                    src.index = Utils.ParseIntWithTrailingGarbage(str.Substring(6)) - 1;
+                }
+                else if (str.StartsWith("Channel"))
+                {
+                    src.type  = MidiSourceType.Channel;
+                    src.index = Utils.ParseIntWithTrailingGarbage(str.Substring(8)) - 1;
+                }
+                else
+                {
+                    src.type  = MidiSourceType.None;
+                    src.index = 0;
                 }
 
                 UpdateListView();
             }
         }
 
+        private void Properties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        {
+            if (click == ClickType.Button && colIdx == 2)
+            {
+                var src = channelSources[rowIdx];
+
+                if (src.type == MidiSourceType.Channel && src.index == 9)
+                {
+                    var dlg = new PropertyDialog(300, true, true, dialog);
+                    dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 0
+                    dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 1
+                    dlg.Properties.AddButton(null, "Select All"); // 2
+                    dlg.Properties.AddButton(null, "Select None"); // 3
+                    dlg.Properties.Build();
+                    dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
+
+                    if (dlg.ShowDialog(null) == DialogResult.OK)
+                    {
+                        var keysBool = dlg.Properties.GetPropertyValue<bool[]>(1);
+
+                        src.keys = 0ul;
+                        for (int i = 0; i < keysBool.Length; i++)
+                        {
+                            if (keysBool[i])
+                                src.keys |= (1ul << i);
+                        }
+
+                        UpdateListView();
+                    }
+                }
+                else
+                {
+                    SystemSounds.Beep.Play();
+                }
+            }
+        }
+
         private void MappingProperties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (click == ClickType.Button && (propIdx == 4 || propIdx == 5))
+            if (click == ClickType.Button && (propIdx == 2 || propIdx == 3))
             {
                 var keys = new bool[MidiFileReader.MidiDrumKeyNames.Length];
 
-                if (propIdx == 4)
+                if (propIdx == 2)
                 {
                     for (int i = 0; i < keys.Length; i++)
                         keys[i] = true;
                 }
 
-                props.UpdateCheckBoxList(3, keys);
+                props.UpdateCheckBoxList(1, keys);
             }
         }
 
-        private void MappingProperties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        private string[] GetSourceNames()
         {
-            var sourceType = MidiSourceType.GetValueForName(props.GetPropertyValue<string>(0));
+            var sourceNames = new string[16 + trackNames.Length + 1];
 
-            if (propIdx == 0)
-                props.UpdateDropDownListItems(1, GetSourceNames(sourceType));
+            sourceNames[0] = "None (Leave channel blank)";
+            for (int i = 0; i < 16; i++)
+                sourceNames[i + 1] = $"Channel {i + 1}";
+            for (int i = 0; i < trackNames.Length; i++)
+                sourceNames[i + 17] = $"Track {i + 1} ({trackNames[i]})";
 
-            var allowChannel10Mapping = false;
-            if (sourceType == MidiSourceType.Channel)
-            {
-                var channelIdx = int.Parse(props.GetPropertyValue<string>(1).Substring(8)) - 1;
-                allowChannel10Mapping = channelIdx == 9;
-            }
-
-            props.SetPropertyEnabled(1, sourceType != MidiSourceType.None);
-            props.SetPropertyEnabled(3, sourceType != MidiSourceType.None && allowChannel10Mapping);
-            props.SetPropertyEnabled(4, sourceType != MidiSourceType.None && allowChannel10Mapping);
-            props.SetPropertyEnabled(5, sourceType != MidiSourceType.None && allowChannel10Mapping);
-        }
-
-        private string[] GetSourceNames(int type)
-        {
-            if (type == MidiSourceType.Track)
-            {
-                var sourceNames = new string[trackNames.Length];
-                for (int i = 0; i < trackNames.Length; i++)
-                    sourceNames[i] = $"Track {i + 1} ({trackNames[i]})";
-                return sourceNames;
-            }
-            else if (type == MidiSourceType.Channel)
-            {
-                var sourceNames = new string[16];
-                for (int i = 0; i < 16; i++)
-                    sourceNames[i] = $"Channel {i + 1}";
-                return sourceNames;
-            }
-            else
-            {
-                return new[] { "N/A" };
-            }
+            return sourceNames;
         }
 
         private bool[] GetSelectedChannel10Keys(MidiFileReader.MidiSource source)
@@ -189,13 +183,14 @@ namespace FamiStudio
 
             Debug.Assert(channelSources.Length == channels.Length);
 
-            var gridData = new string[channels.Length, 2];
+            var gridData = new object[channels.Length, 3];
 
             for (int i = 0; i < channels.Length; i++)
             {
                 var src = channelSources[i];
 
                 gridData[i, 0] = ChannelType.Names[channels[i]];
+                gridData[i, 2] = "N/A";
 
                 if (i >= ChannelType.ExpansionAudioStart)
                     gridData[i, 0] += $" ({ExpansionType.ShortNames[expansion]})";
@@ -209,10 +204,10 @@ namespace FamiStudio
                 }
                 else if (src.type == MidiSourceType.Channel)
                 {
-                    if (src.index == 9 && src.keys != MidiFileReader.AllDrumKeysMask)
-                        gridData[i, 1] = $"Channel {src.index + 1} (Filtered keys)";
-                    else
-                        gridData[i, 1] = $"Channel {src.index + 1}";
+                    gridData[i, 1] = $"Channel {src.index + 1}";
+
+                    if (src.index == 9)
+                        gridData[i, 2] = src.keys == MidiFileReader.AllDrumKeysMask ? "All keys" : "Filtered keys";
                 }
                 else
                 {

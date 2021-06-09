@@ -116,6 +116,8 @@ namespace FamiStudio
 
         private void Btn_Click(object sender, EventArgs e)
         {
+            SuspendLayout();
+
             for (int i = 0; i < tabs.Count; i++)
             {
                 if (tabs[i].button == sender)
@@ -130,6 +132,8 @@ namespace FamiStudio
                     tabs[i].properties.Visible = false;
                 }
             }
+
+            ResumeLayout();
         }
 
         private Button AddButton(string text, Bitmap image)

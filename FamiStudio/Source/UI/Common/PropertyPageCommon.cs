@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,6 +35,7 @@ namespace FamiStudio
         CheckBox,
         DropDownList,
         CheckBoxList,
+        MultiColumnList,
         ColorPicker,
         Label,
         Button,
@@ -69,22 +71,28 @@ namespace FamiStudio
     public class ColumnDesc
     {
         public string Name;
+        public bool Enabled = true;
+        public float Width = 0.0f;
         public ColumnType Type = ColumnType.Label;
         public string[] DropDownValues;
         public string StringFormat = "{0}";
 
-        public ColumnDesc(string name, ColumnType type = ColumnType.Label, string format = "{0}")
+        public ColumnDesc(string name, float width, ColumnType type = ColumnType.Label, string format = "{0}")
         {
+            Debug.Assert(type != ColumnType.CheckBox || width == 0.0f);
+
             Name = name;
             Type = type;
             StringFormat = type == ColumnType.CheckBox ? "" : format;
+            Width = type == ColumnType.CheckBox ? 0.0f : width;
         }
 
-        public ColumnDesc(string name, string[] values)
+        public ColumnDesc(string name, float width, string[] values)
         {
             Name = name;
             Type = ColumnType.DropDown;
             DropDownValues = values;
+            Width = width;
         }
 
         public Type GetPropertyType()

@@ -1443,7 +1443,7 @@ namespace FamiStudio
             }
         }
 
-        bool first = true;
+        //bool first = true;
 
         public void Tick()
         {
@@ -1454,7 +1454,7 @@ namespace FamiStudio
                 RecreateAudioPlayers();
                 audioDeviceChanged = false;
             }
-
+            /*
              // MATTT : Remove this.
             if (first)
             {
@@ -1483,12 +1483,12 @@ namespace FamiStudio
                 { false, "Hola",  "A", null,  99 }
                 };
 
-                dlg.Properties.AddMultiColumnList(new[] { new ColumnDesc("", ColumnType.CheckBox), new ColumnDesc("Label"), new ColumnDesc("DropDown", new[] { "A", "B", "C" }), new ColumnDesc("Button", ColumnType.Button), new ColumnDesc("Slider", ColumnType.Slider, "{0} %") }, data);
+                dlg.Properties.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Label", 0.2f), new ColumnDesc("DropDown", 0.3f, new[] { "A", "B", "C" }), new ColumnDesc("Button", 0.2f, ColumnType.Button), new ColumnDesc("Slider", 0.3f, ColumnType.Slider, "{0} %") }, data);
                 dlg.Properties.Build();
 
                 dlg.ShowDialog(mainForm);
             }
-
+            */
             ToolBar.Tick();
             PianoRoll.Tick();
             Sequencer.Tick();

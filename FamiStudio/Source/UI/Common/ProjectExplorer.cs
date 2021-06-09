@@ -1977,7 +1977,7 @@ namespace FamiStudio
                         {
                             var filename = PlatformUtils.ShowSaveFileDialog("Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
                             if (filename != null)
-                                WaveFile.Save(button.sample.SourceWavData.Samples, filename, button.sample.SourceWavData.SampleRate);
+                                WaveFile.Save(button.sample.SourceWavData.Samples, filename, button.sample.SourceWavData.SampleRate, 1);
                         }
                         else
                         {

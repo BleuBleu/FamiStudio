@@ -448,7 +448,7 @@ namespace FamiStudio
             public short[] wav;
         };
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool stereo, float[] pan)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -583,7 +583,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, "Exporting audio...");
 
                 // Save audio to temporary file.
-                WavMp3ExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, (samples, fn) => { WaveFile.Save(samples, fn, SampleRate); });
+                WavMp3ExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
 
                 var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
 
