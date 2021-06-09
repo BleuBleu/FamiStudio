@@ -80,10 +80,10 @@ namespace FamiStudio
             return page;
         }
 
-        private void ProjectCleanup_PropertyChanged(PropertyPage props, int idx, object value)
+        private void ProjectCleanup_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             // Applying processing implies deleting source data.
-            if (idx == 5)
+            if (propIdx == 5)
             {
                 var applyProcessing = (bool)value;
 

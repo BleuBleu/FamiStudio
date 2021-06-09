@@ -327,13 +327,13 @@ namespace FamiStudio
 
             if (song != null)
             {
-                WavMp3ExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro,
-                     (samples, fn) =>
+                WavMp3ExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro, false, null,
+                     (samples, samplesChannels, fn) =>
                      {
                          if (mp3)
-                             Mp3File.Save(samples, fn, sampleRate, bitrate);
+                             Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
                          else
-                             WaveFile.Save(samples, fn, sampleRate);
+                             WaveFile.Save(samples, fn, sampleRate, samplesChannels);
                      });
             }
         }

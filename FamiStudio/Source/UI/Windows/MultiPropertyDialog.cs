@@ -116,6 +116,8 @@ namespace FamiStudio
 
         private void Btn_Click(object sender, EventArgs e)
         {
+            SuspendLayout();
+
             for (int i = 0; i < tabs.Count; i++)
             {
                 if (tabs[i].button == sender)
@@ -130,6 +132,8 @@ namespace FamiStudio
                     tabs[i].properties.Visible = false;
                 }
             }
+
+            ResumeLayout();
         }
 
         private Button AddButton(string text, Bitmap image)
@@ -160,15 +164,15 @@ namespace FamiStudio
             return btn;
         }
 
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                var p = base.CreateParams;
-                p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
-                return p;
-            }
-        }
+        //protected override CreateParams CreateParams
+        //{
+        //    get
+        //    {
+        //        var p = base.CreateParams;
+        //        p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
+        //        return p;
+        //    }
+        //}
 
         private void MultiPropertyDialog_KeyDown(object sender, KeyEventArgs e)
         {

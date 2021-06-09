@@ -140,6 +140,7 @@ namespace FamiStudio
                 NewProject();
             }
 
+
 #if !DEBUG
             if (Settings.CheckUpdates)
             {
@@ -1442,6 +1443,8 @@ namespace FamiStudio
             }
         }
 
+        bool first = false;
+
         public void Tick()
         {
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
@@ -1450,6 +1453,40 @@ namespace FamiStudio
             {
                 RecreateAudioPlayers();
                 audioDeviceChanged = false;
+            }
+
+             // MATTT : Remove this.
+            if (first)
+            {
+                first = false;
+                var dlg = new PropertyDialog(500, true, true, mainForm);
+
+                var data = new object[,]
+                {
+                { false, "Hello", "B", "1",  10 },
+                { false, "Hello", "B", "2",  20 },
+                { true, "Hello", "B", "3",  30 },
+                { false, "Hello", "B", null,  40 },
+                { false, "Hello", "B", null,  50 },
+                { true, "Hello", "B", null,  60 },
+                { true, "Hello", "B", null,  70 },
+                { false, "Hello", "B", null,  80 },
+                { true, "Hello", "B", null,  90 },
+                { false, "Hello", "B", null,  50 },
+                { true, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Hello", "B", null,  50 },
+                { false, "Allo",  "C", null, -50 },
+                { false, "Hola",  "A", null,  99 }
+                };
+
+                dlg.Properties.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Label", 0.2f), new ColumnDesc("DropDown", 0.3f, new[] { "A", "B", "C" }), new ColumnDesc("Button", 0.2f, ColumnType.Button), new ColumnDesc("Slider", 0.3f, ColumnType.Slider, "{0} %") }, data);
+                dlg.Properties.Build();
+
+                dlg.ShowDialog(mainForm);
             }
 
             ToolBar.Tick();

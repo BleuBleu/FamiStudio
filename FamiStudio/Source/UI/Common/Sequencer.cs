@@ -1223,9 +1223,9 @@ namespace FamiStudio
             }
         }
 
-        private void PasteSpecialDialog_PropertyChanged(PropertyPage props, int idx, object value)
+        private void PasteSpecialDialog_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (idx == 0)
+            if (propIdx == 0)
                 props.SetPropertyEnabled(1, (bool)value);
         }
 
@@ -1713,12 +1713,11 @@ namespace FamiStudio
 
             var tempoProperties = new TempoProperties(dlg.Properties, song, patternIdx, minPattern, maxPattern);
 
-            dlg.Properties.UserData = song;
             dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
             tempoProperties.AddProperties();
             tempoProperties.EnableProperties(enabled);
             dlg.Properties.PropertyChanged += PatternCustomSettings_PropertyChanged;
-            dlg.Properties.UserData = tempoProperties;
+            dlg.Properties.PropertiesUserData = tempoProperties;
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -1731,11 +1730,11 @@ namespace FamiStudio
             }
         }
 
-        private void PatternCustomSettings_PropertyChanged(PropertyPage props, int idx, object value)
+        private void PatternCustomSettings_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (idx == 0)
+            if (propIdx == 0)
             {
-                var tempoProperties = props.UserData as TempoProperties;
+                var tempoProperties = props.PropertiesUserData as TempoProperties;
                 tempoProperties.EnableProperties((bool)value);
             }
         }

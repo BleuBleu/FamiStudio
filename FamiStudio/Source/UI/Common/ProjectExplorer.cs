@@ -1977,7 +1977,7 @@ namespace FamiStudio
                         {
                             var filename = PlatformUtils.ShowSaveFileDialog("Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
                             if (filename != null)
-                                WaveFile.Save(button.sample.SourceWavData.Samples, filename, button.sample.SourceWavData.SampleRate);
+                                WaveFile.Save(button.sample.SourceWavData.Samples, filename, button.sample.SourceWavData.SampleRate, 1);
                         }
                         else
                         {
@@ -2105,11 +2105,11 @@ namespace FamiStudio
             }
         }
 
-        private void ProjectProperties_PropertyChanged(PropertyPage props, int idx, object value)
+        private void ProjectProperties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             var noExpansion = props.GetPropertyValue<string>(3) == ExpansionType.Names[ExpansionType.None];
 
-            if (idx == 3) // Expansion
+            if (propIdx == 3) // Expansion
             {
                 props.SetPropertyEnabled(4, (string)value == ExpansionType.Names[ExpansionType.N163]);
                 props.SetPropertyEnabled(6, props.GetPropertyValue<string>(5) == "FamiStudio" && noExpansion);
@@ -2119,7 +2119,7 @@ namespace FamiStudio
                 else
                     props.SetDropDownListIndex(6, 0);
             }
-            else if (idx == 5) // Tempo Mode
+            else if (propIdx == 5) // Tempo Mode
             {
                 props.SetPropertyEnabled(6, (string)value == TempoType.Names[TempoType.FamiStudio]);
             }
@@ -2131,7 +2131,6 @@ namespace FamiStudio
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 
-            dlg.Properties.UserData = song;
             dlg.Properties.AddColoredString(song.Name, song.Color); // 0
             dlg.Properties.AddColorPicker(song.Color); // 1
             dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2

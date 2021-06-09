@@ -21,7 +21,7 @@ namespace FamiStudio
         [DllImport(ShineMp3Dll, CallingConvention = CallingConvention.StdCall, EntryPoint = "ShineMp3Encode")]
         extern static int ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples, IntPtr wavData, int mp3_bitrate, int mp3_data_size, IntPtr mp3_data);
 
-        public unsafe static bool Save(short[] wavData, string filename, int sampleRate, int bitRate)
+        public unsafe static bool Save(short[] wavData, string filename, int sampleRate, int bitRate, int numChannels)
         {
             if (sampleRate < 44100)
             {
@@ -36,7 +36,7 @@ namespace FamiStudio
             {
                 fixed (byte* mp3Ptr = &mp3Data[0])
                 {
-                    mp3Size = ShineMp3Encode(sampleRate, 1, wavData.Length, new IntPtr(wavPtr), bitRate, mp3Data.Length, new IntPtr(mp3Ptr));
+                    mp3Size = ShineMp3Encode(sampleRate, numChannels, wavData.Length, new IntPtr(wavPtr), bitRate, mp3Data.Length, new IntPtr(mp3Ptr));
                 }
             }
 

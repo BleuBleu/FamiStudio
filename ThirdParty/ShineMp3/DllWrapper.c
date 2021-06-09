@@ -25,14 +25,14 @@ int __stdcall ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples
 	shine_t s = shine_initialise(&config);
 
 	int samples_per_pass = shine_samples_per_pass(s);
-	int wav_buffer_size = samples_per_pass * sizeof(short);
+	int wav_buffer_size = samples_per_pass * sizeof(short) * wav_channels;
 	int mp3_buffer_pos = 0;
 
 	short* wav_buffer = (short*)malloc(wav_buffer_size);
 
-	for (int i = 0; i < wav_num_samples; i += samples_per_pass)
+	for (int i = 0; i < wav_num_samples; i += samples_per_pass * wav_channels)
 	{
-		int batch_size = (wav_num_samples - i) * sizeof(short);
+		int batch_size = (wav_num_samples - i) * sizeof(short) * wav_channels;
 
 		if (batch_size >= wav_buffer_size)
 		{

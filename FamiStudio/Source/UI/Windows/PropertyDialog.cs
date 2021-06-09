@@ -64,15 +64,15 @@ namespace FamiStudio
             toolTip.SetToolTip(buttonAdvanced, "Toggle Advanced Options");
         }
 
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                var p = base.CreateParams;
-                p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
-                return p;
-            }
-        }
+        //protected override CreateParams CreateParams
+        //{
+        //    get
+        //    {
+        //        var p = base.CreateParams;
+        //        p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
+        //        return p;
+        //    }
+        //}
 
         protected override void OnLoad(EventArgs e)
         {

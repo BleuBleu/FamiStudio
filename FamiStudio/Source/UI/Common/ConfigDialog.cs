@@ -144,11 +144,12 @@ namespace FamiStudio
                 {
                     // TODO : Tooltips.
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
-                    page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, FormatDecibels); // 1
-                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, FormatDecibels); // 2
-                    page.AddButton(null, "Reset to default", ResetMixerClicked, "Resets this expansion to the default settings.");
+                    page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+#;-#;+0:N1} dB"); // 1
+                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+#;-#;+0:N1} dB"); // 2
+                    page.AddButton(null, "Reset to default", "Resets this expansion to the default settings."); // 3
                     page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4
                     page.PropertyChanged += MixerPage_PropertyChanged;
+                    page.PropertyClicked += MixerPage_PropertyClicked;
                     break;
                 }
                 case ConfigSection.MIDI:
@@ -175,8 +176,9 @@ namespace FamiStudio
                 case ConfigSection.QWERTY:
                 {
                     page.AddLabel(null, "Double click in the 2 last columns to assign a key. Right click to clear a key.", true); // 0
-                    page.AddMultiColumnList(new[] { "Octave", "Note", "Key", "Key (alt)" }, GetQwertyMappingStrings(), QwertyListDoubleClicked, QwertyListRightClicked); // 1
-                    page.AddButton(null, "Reset to default", ResetQwertyClicked); 
+                    page.AddMultiColumnList(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings()); // 1
+                    page.AddButton(null, "Reset to default");
+                    page.PropertyClicked += QwertyPage_PropertyClicked;
                     break;
                 }
 #if FAMISTUDIO_MACOS
@@ -199,20 +201,66 @@ namespace FamiStudio
             return page;
         }
 
-        private string FormatDecibels(double value)
+        private void QwertyPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            return $"{(value >= 0 ? "+" : "")}{value:N1} dB";
+            if (propIdx == 1 && colIdx >= 2)
+            {
+                if (click == ClickType.Double)
+                {
+                    var dlg = new PropertyDialog(300, false, true, dialog);
+                    dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
+                    dlg.Properties.Build();
+
+                    // TODO : Make this cross-platform.
+#if FAMISTUDIO_WINDOWS
+                    dlg.KeyDown += (sender, e) =>
+                    {
+                        if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null)
+                        {
+                            if (e.KeyCode != Keys.Escape)
+                                AssignQwertyKey(rowIdx, colIdx - 2, (int)e.KeyCode);
+                            dlg.Close();
+                        }
+                    };
+#else
+            dlg.KeyPressEvent += (o, args) =>
+            {
+                // These 2 keys are used by the QWERTY input.
+                if (args.Event.Key != Gdk.Key.Tab &&
+                    args.Event.Key != Gdk.Key.BackSpace && 
+                    PlatformUtils.KeyCodeToString((int)args.Event.Key) != null)
+                {
+                    if (args.Event.Key != Gdk.Key.Escape)
+                        AssignQwertyKey(rowIdx, colIdx - 2, (int)args.Event.Key);
+                    dlg.Accept();
+                }
+            };
+#endif
+                    dlg.ShowDialog(null);
+
+                    pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+                }
+                else if (click == ClickType.Right)
+                {
+                    qwertyKeys[rowIdx, colIdx - 2] = -1;
+                    pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+                }
+            }
+            else if (propIdx == 2 && click == ClickType.Button)
+            {
+                Array.Copy(Settings.DefaultQwertyKeys, qwertyKeys, Settings.DefaultQwertyKeys.Length);
+                pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+            }
         }
 
-        private string FormatHz(double value)
+        private void MixerPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            return $"{value:N0} Hz";
-        }
-
-        private void ResetQwertyClicked(PropertyPage props, int propertyIndex)
-        {
-            Array.Copy(Settings.DefaultQwertyKeys, qwertyKeys, Settings.DefaultQwertyKeys.Length);
-            pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+            if (propIdx == 3 && click == ClickType.Button)
+            {
+                var expansion = props.GetSelectedIndex(0);
+                expansionMixer[expansion] = Settings.DefaultExpansionMixerSettings[expansion];
+                RefreshMixerSettings();
+            }
         }
 
         private string[,] GetQwertyMappingStrings()
@@ -263,54 +311,6 @@ namespace FamiStudio
             qwertyKeys[idx, keyIndex] = keyCode;
         }
 
-        void QwertyListDoubleClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
-        {
-            if (columnIndex < 2)
-                return;
-
-            var dlg = new PropertyDialog(300, false, true, dialog);
-            dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
-            dlg.Properties.Build();
-
-            // TODO : Make this cross-platform.
-#if FAMISTUDIO_WINDOWS
-            dlg.KeyDown += (sender, e) => 
-            {
-                if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null) 
-                {
-                    if (e.KeyCode != Keys.Escape)
-                        AssignQwertyKey(itemIndex, columnIndex - 2, (int)e.KeyCode);
-                    dlg.Close();
-                }
-            };
-#else
-            dlg.KeyPressEvent += (o, args) =>
-            {
-                // These 2 keys are used by the QWERTY input.
-                if (args.Event.Key != Gdk.Key.Tab &&
-                    args.Event.Key != Gdk.Key.BackSpace && 
-                    PlatformUtils.KeyCodeToString((int)args.Event.Key) != null)
-                {
-                    if (args.Event.Key != Gdk.Key.Escape)
-                        AssignQwertyKey(itemIndex, columnIndex - 2, (int)args.Event.Key);
-                    dlg.Accept();
-                }
-            };
-#endif
-            dlg.ShowDialog(null);
-
-            pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
-        }
-
-        void QwertyListRightClicked(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
-        {
-            if (columnIndex >= 2)
-            {
-                qwertyKeys[itemIndex, columnIndex - 2] = -1;
-                pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
-            }
-        }
-
         private void RefreshMixerSettings()
         {
             var props = pages[(int)ConfigSection.Mixer];
@@ -320,36 +320,29 @@ namespace FamiStudio
             props.SetPropertyValue(2, (double)expansionMixer[expansion].treble);
         }
 
-        private void MixerPage_PropertyChanged(PropertyPage props, int idx, object value)
+        private void MixerPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             var expansion = props.GetSelectedIndex(0);
 
-            if (idx == 0)
+            if (propIdx == 0)
             {
                 RefreshMixerSettings();
             }
-            else if (idx == 1)
+            else if (propIdx == 1)
             {
                 // MATTT : Make sure slider updates on Linux / Mac.
                 expansionMixer[expansion].volume = (float)(double)value;
             }
-            else if (idx == 2)
+            else if (propIdx == 2)
             {
                 expansionMixer[expansion].treble = (float)(double)value;
             }
         }
 
-        private void ResetMixerClicked(PropertyPage props, int propertyIndex)
-        {
-            var expansion = props.GetSelectedIndex(0);
-            expansionMixer[expansion] = Settings.DefaultExpansionMixerSettings[expansion];
-            RefreshMixerSettings();
-        }
-
 #if FAMISTUDIO_MACOS
-        private void PageGeneral_PropertyChanged(PropertyPage props, int idx, object value)
+        private void PageGeneral_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (props == pages[(int)ConfigSection.General] && idx == 1)
+            if (props == pages[(int)ConfigSection.General] && propIdx == 1)
             {
                 var macOsPage = pages[(int)ConfigSection.MacOS];
                 macOsPage.SetPropertyEnabled(0, (bool)value);

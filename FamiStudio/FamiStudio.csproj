@@ -121,12 +121,18 @@
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Common\PropertyPageCommon.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Windows\LabelTrackBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Source\UI\Windows\LabelTrackBar.Designer.cs">
       <DependentUpon>LabelTrackBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Source\UI\Windows\PropertyPageListView.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Source\UI\Windows\Slider.cs">
       <SubType>UserControl</SubType>
@@ -396,6 +402,7 @@
     <EmbeddedResource Include="Resources\PlayQuarter.png" />
     <EmbeddedResource Include="Resources\ConfigGeneral%402x.png" />
     <EmbeddedResource Include="Resources\ConfigGeneral.png" />
+    <EmbeddedResource Include="Resources\Check.png" />
     <Content Include="ShineMp3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
