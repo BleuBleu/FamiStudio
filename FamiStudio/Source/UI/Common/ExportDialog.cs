@@ -71,10 +71,8 @@ namespace FamiStudio
             int width  = 600;
             int height = 550;
 
-#if FAMISTUDIO_LINUX 
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
             height += 80;
-#elif FAMISTUDIO_MACOS
-            height += 40;
 #endif
 
             this.dialog = new MultiPropertyDialog(width, height, 200);
