@@ -657,6 +657,7 @@ namespace FamiStudio
         {
             // Only hashing fields that would have an impact on the generated UI.
             uint crc = CRC32.Compute(project.ExpansionAudio);
+            crc = CRC32.Compute(project.ExpansionNumChannels, crc);
 
             foreach (var song in project.Songs)
             {
