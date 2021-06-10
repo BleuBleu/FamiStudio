@@ -278,6 +278,7 @@
     <Compile Include="Source\UI\MacLinux\CairoImage.cs" />
     <EmbeddedResource Include="Resources\FamiStudio_64.png" />
     <Compile Include="Source\UI\MacLinux\GLWindow.cs" />
+    <Compile Include="Source\UI\MacLinux\CellRendererButton.cs" />
     <EmbeddedResource Include="Resources\ConfigMacOS.png" />
     <EmbeddedResource Include="Resources\ConfigMacOS%402x.png" />
   </ItemGroup>
