@@ -459,6 +459,12 @@ namespace FamiStudio
             return samples;
         }
 
+        public void ForceInstrumentsReload()
+        {
+            foreach (var channelState in channelStates)
+                channelState.ForceInstrumentReload();
+        }
+
         public void NotifyInstrumentLoaded(Instrument instrument, int channelTypeMask)
         {
             foreach (var channelState in channelStates)
