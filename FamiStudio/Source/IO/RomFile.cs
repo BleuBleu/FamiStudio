@@ -38,7 +38,7 @@ namespace FamiStudio
                     Array.Resize(ref songIds, MaxSongs);
 
                 var project = originalProject.DeepClone();
-                project.RemoveAllSongsBut(songIds);
+                project.DeleteAllSongsBut(songIds);
                 project.SetExpansionAudio(ExpansionType.None);
 
                 var headerBytes = new byte[RomHeaderLength];

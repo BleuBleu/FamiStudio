@@ -254,7 +254,7 @@ namespace FamiStudio
                     }
                     else if (type == ButtonType.Instrument && instrument == null)
                     {
-                        var label = "DPCM Instrument";
+                        var label = Project.DPCMInstrumentName;
                         if (projectExplorer.App.Project != null)
                         {
                             var mappedSamplesSize = projectExplorer.App.Project.GetTotalMappedSampleSize();
@@ -1478,8 +1478,8 @@ namespace FamiStudio
                         bool success = false;
                         if (songIds.Count > 0)
                         {
-                            otherProject.RemoveAllSongsBut(songIds.ToArray());
-                            success = App.Project.MergeSongs(otherProject);
+                            otherProject.DeleteAllSongsBut(songIds.ToArray());
+                            success = App.Project.MergeProject(otherProject);
                         }
 
                         if (success)
@@ -1518,7 +1518,17 @@ namespace FamiStudio
 
                         if (instrumentProject != null)
                         {
+                            var hasDpcmInstrument = false;
+
+                            var instruments = new List<Instrument>();
                             var instrumentNames = new List<string>();
+
+                            if (instrumentProject.HasAnyMappedSamples)
+                            {
+                                hasDpcmInstrument = true;
+                                instruments.Add(null);
+                                instrumentNames.Add(Project.DPCMInstrumentName);
+                            }
 
                             foreach (var instrument in instrumentProject.Instruments)
                             {
@@ -1527,26 +1537,38 @@ namespace FamiStudio
                                 if (instrument.ExpansionType != ExpansionType.None)
                                     instName += $" ({ExpansionType.ShortNames[instrument.ExpansionType]})";
 
+                                instruments.Add(instrument);
                                 instrumentNames.Add(instName);
                             }
 
                             var dlg = new PropertyDialog(300);
-                            dlg.Properties.AddLabel(null, "Select instruments to import:");
-                            dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null);
+                            dlg.Properties.AddLabel(null, "Select instruments to import:"); // 0
+                            dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null); // 1
+                            dlg.Properties.AddButton(null, "Select All"); // 2
+                            dlg.Properties.AddButton(null, "Select None"); // 3
                             dlg.Properties.Build();
+                            dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
                             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                             {
                                 var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                                var instrumentsToMerge = new List<Instrument>();
+                                var instrumentsIdsToMerge = new List<int>();
 
-                                for (int i = 0; i < selected.Length; i++)
+                                for (int i = hasDpcmInstrument ? 1 : 0; i < selected.Length; i++)
                                 {
                                     if (selected[i])
-                                        instrumentsToMerge.Add(instrumentProject.Instruments[i]);
+                                        instrumentsIdsToMerge.Add(instruments[i].Id);
                                 }
 
-                                success = App.Project.MergeOtherProjectInstruments(instrumentsToMerge);
+                                // Wipe everything but the instruments we want.
+                                if (!hasDpcmInstrument || selected[0] == false)
+                                    instrumentProject.DeleteAllSamples();
+                                instrumentProject.DeleteAllSongs();
+                                instrumentProject.DeleteAllArpeggios();
+                                instrumentProject.DeleteAllInstrumentBut(instrumentsIdsToMerge.ToArray());
+                                instrumentProject.DeleteUnmappedSamples();
+
+                                success = App.Project.MergeProject(instrumentProject);
                             }
                         }
                     }
@@ -1563,53 +1585,143 @@ namespace FamiStudio
             RefreshButtons();
         }
 
+        private void ImportInstrument_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        {
+            if (click == ClickType.Button)
+            {
+                var newValues = new bool[props.GetPropertyValue<bool[]>(1).Length];
+
+                if (propIdx == 2)
+                {
+                    for (int i = 0; i < newValues.Length; i++)
+                        newValues[i] = true;
+                }
+
+                props.UpdateCheckBoxList(1, newValues);
+            }
+        }
+
         private void LoadDPCMSample()
         {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc)|*.wav;*.dmc|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+            var filenames = PlatformUtils.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc|FamiStudio Files (*.fms)|*.fms", ref Settings.LastSampleFolder, true);
 
-            if (filename != null)
+            if (filenames != null && filenames.Length > 0)
             {
-                var sampleName = Path.GetFileNameWithoutExtension(filename);
-                if (sampleName.Length > 16)
-                    sampleName = sampleName.Substring(0, 16);
-                sampleName = App.Project.GenerateUniqueDPCMSampleName(sampleName);
-
-                var dlgLog = new LogDialog(ParentForm);
-                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+                var numFamiStudioFiles = 0;
+                var numSamplesFiles = 0;
+                foreach (var fn in filenames)
                 {
-                    if (Path.GetExtension(filename).ToLower() == ".wav")
+                    if (Path.GetExtension(fn) == ".fms")
+                        numFamiStudioFiles++;
+                    else
+                        numSamplesFiles++;
+                }
+
+                if (numFamiStudioFiles > 1 || (numFamiStudioFiles == 1 && numSamplesFiles != 0))
+                {
+                    PlatformUtils.MessageBox("You can only select one FamiStudio project to import samples from.", "Error", MessageBoxButtons.OK);
+                    return;
+                }
+                else if (numFamiStudioFiles == 1)
+                {
+                    Project samplesProject = App.OpenProjectFile(filenames[0], false);
+
+                    if (samplesProject != null)
                     {
-                        var wavData = WaveFile.Load(filename, out var sampleRate);
-                        if (wavData != null)
+                        var samplesNames = new List<string>();
+
+                        foreach (var sample in samplesProject.Samples)
+                            samplesNames.Add(sample.Name);
+
+                        var dlg = new PropertyDialog(300);
+                        dlg.Properties.AddLabel(null, "Select samples to import:"); // 0
+                        dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null); // 1
+                        dlg.Properties.AddButton(null, "Select All"); // 2
+                        dlg.Properties.AddButton(null, "Select None"); // 3
+                        dlg.Properties.Build();
+                        dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
+
+                        if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                         {
-                            var maximumSamples = sampleRate * 2;
-                            if (wavData.Length > maximumSamples)
+                            var dlgLog = new LogDialog(ParentForm);
+
+                            using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                             {
-                                Array.Resize(ref wavData, maximumSamples);
-                                Log.LogMessage(LogSeverity.Warning, "The maximum supported length for a WAV file is 2.0 seconds. Truncating.");
+                                var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                var sampleIdsToMerge = new List<int>();
+
+                                for (int i = 0; i < selected.Length; i++)
+                                {
+                                    if (selected[i])
+                                        sampleIdsToMerge.Add(samplesProject.Samples[i].Id);
+                                }
+
+                                // Wipe everything but the instruments we want.
+                                samplesProject.DeleteAllSongs();
+                                samplesProject.DeleteAllArpeggios();
+                                samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
+                                samplesProject.DeleteAllInstruments();
+
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+
+                                bool success = App.Project.MergeProject(samplesProject);
+
+                                if (success)
+                                    App.UndoRedoManager.EndTransaction();
+                                else
+                                    App.UndoRedoManager.AbortTransaction();
                             }
 
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                            App.Project.CreateDPCMSampleFromWavData(sampleName, wavData, sampleRate, filename);
-                            App.UndoRedoManager.EndTransaction();
+                            RefreshButtons();
+                            dlgLog.ShowDialogIfMessages();
                         }
                     }
-                    else if (Path.GetExtension(filename).ToLower() == ".dmc")
+                }
+                else if (numSamplesFiles > 1)
+                {
+                    var dlgLog = new LogDialog(ParentForm);
+                    using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                     {
-                        var dmcData = File.ReadAllBytes(filename);
-                        if (dmcData.Length > DPCMSample.MaxSampleSize)
-                        {
-                            Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
-                            Log.LogMessage(LogSeverity.Warning, $"The maximum supported size for a DMC is {DPCMSample.MaxSampleSize} bytes. Truncating.");
-                        }
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                        App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData, filename);
+
+                        foreach (var filename in filenames)
+                        {
+                            var sampleName = Path.GetFileNameWithoutExtension(filename);
+                            if (sampleName.Length > 16)
+                                sampleName = sampleName.Substring(0, 16);
+                            sampleName = App.Project.GenerateUniqueDPCMSampleName(sampleName);
+
+                            if (Path.GetExtension(filename).ToLower() == ".wav")
+                            {
+                                var wavData = WaveFile.Load(filename, out var sampleRate);
+                                if (wavData != null)
+                                {
+                                    var maximumSamples = sampleRate * 2;
+                                    if (wavData.Length > maximumSamples)
+                                    {
+                                        Array.Resize(ref wavData, maximumSamples);
+                                        Log.LogMessage(LogSeverity.Warning, "The maximum supported length for a WAV file is 2.0 seconds. Truncating.");
+                                    }
+
+                                    App.Project.CreateDPCMSampleFromWavData(sampleName, wavData, sampleRate, filename);
+                                }
+                            }
+                            else if (Path.GetExtension(filename).ToLower() == ".dmc")
+                            {
+                                var dmcData = File.ReadAllBytes(filename);
+                                if (dmcData.Length > DPCMSample.MaxSampleSize)
+                                {
+                                    Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
+                                    Log.LogMessage(LogSeverity.Warning, $"The maximum supported size for a DMC is {DPCMSample.MaxSampleSize} bytes. Truncating.");
+                                }
+                                App.Project.CreateDPCMSampleFromDmcData(sampleName, dmcData, filename);
+                            }
+                        }
+
                         App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                        dlgLog.ShowDialogIfMessages();
                     }
-
-                    RefreshButtons();
-
-                    dlgLog.ShowDialogIfMessages();
                 }
             }
         }

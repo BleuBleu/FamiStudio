@@ -42,22 +42,37 @@ namespace FamiStudio
             Marshal.FreeCoTaskMem(p);
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, object parentWindowUnused = null)
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindowUnused = null)
         {
             var ofd = new OpenFileDialog()
             {
                 Filter = extensions,
                 Title = title,
-                InitialDirectory = defaultPath
+                InitialDirectory = defaultPath,
+                Multiselect = multiselect
             };
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 defaultPath = System.IO.Path.GetDirectoryName(ofd.FileName);
-                return ofd.FileName;
+
+                if (multiselect)
+                    return ofd.FileNames;
+                else
+                    return new[] { ofd.FileName };
             }
 
             return null;
+        }
+
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, object parentWindowUnused = null)
+        {
+            var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindowUnused);
+
+            if (filenames == null || filenames.Length == 0)
+                return null;
+
+            return filenames[0];
         }
 
         public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)

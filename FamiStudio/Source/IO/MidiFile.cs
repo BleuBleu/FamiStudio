@@ -1545,7 +1545,7 @@ namespace FamiStudio
                 (instrumentMode == MidiExportInstrumentMode.Channel && instrumentMapping.Length == originalProject.GetSong(songId).Channels.Length));
 
             project = originalProject.DeepClone();
-            project.RemoveAllSongsBut(new int[] { songId }, true);
+            project.DeleteAllSongsBut(new int[] { songId }, true);
             project.ConvertToSimpleNotes();
             song = project.Songs[0];
 

@@ -87,7 +87,7 @@ namespace FamiStudio
                     Array.Resize(ref songIds, MaxSongs);
 
                 var project = originalProject.DeepClone();
-                project.RemoveAllSongsBut(songIds);
+                project.DeleteAllSongsBut(songIds);
 
                 if (project.ExpansionAudio != ExpansionType.Fds)
                     project.SetExpansionAudio(ExpansionType.Fds);

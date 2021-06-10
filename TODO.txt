@@ -43,6 +43,8 @@ Discord
 FamiStudio 3.1.0
 ================
 - Multiple sample import. => Or import samples from other projects?
+	=> Re-test song merge a lot. Removed a few cleanups.
+	=> Re-test expansions issue (same instrument name, diff expansions, etc.)
 - Save snapping + qwerty settings + some export settings.
 - Patterns one-based, start at one.
 x Force reload FDS/N163/VRC7 instrument when song is playing and the user tweaks stuff.

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 
 namespace FamiStudio
@@ -91,86 +92,100 @@ namespace FamiStudio
 
         unsafe void PlayerThread(object o)
         {
-            activeChannel = -1;
-
-            var lastNoteWasRelease = false;
-            var lastReleaseTime = DateTime.Now;
-
-            var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
-
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, expansionAudio, numExpansionChannels, dmcCallback);
-            for (int i = 0; i < channelStates.Length; i++)
-                NesApu.EnableChannel(apuIndex, i, 0);
-
-            while (true)
+#if DEBUG
+            try
             {
-                int idx = WaitHandle.WaitAny(waitEvents);
+#endif
+                activeChannel = -1;
 
-                if (idx == 0)
-                {
-                    break;
-                }
+                var lastNoteWasRelease = false;
+                var lastReleaseTime = DateTime.Now;
 
-                if (!noteQueue.IsEmpty)
+                var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
+
+                NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, expansionAudio, numExpansionChannels, dmcCallback);
+                for (int i = 0; i < channelStates.Length; i++)
+                    NesApu.EnableChannel(apuIndex, i, 0);
+
+                while (true)
                 {
-                    PlayerNote lastNote = new PlayerNote();
-                    while (noteQueue.TryDequeue(out PlayerNote note))
+                    int idx = WaitHandle.WaitAny(waitEvents);
+
+                    if (idx == 0)
                     {
-                        lastNote = note;
+                        break;
                     }
 
-                    activeChannel = lastNote.channel;
+                    if (!noteQueue.IsEmpty)
+                    {
+                        PlayerNote lastNote = new PlayerNote();
+                        while (noteQueue.TryDequeue(out PlayerNote note))
+                        {
+                            lastNote = note;
+                        }
+
+                        activeChannel = lastNote.channel;
+                        if (activeChannel >= 0)
+                        {
+                            if (lastNote.note.IsMusical)
+                                channelStates[activeChannel].ForceInstrumentReload();
+
+                            channelStates[activeChannel].PlayNote(lastNote.note);
+
+                            if (lastNote.note.IsRelease)
+                            {
+                                lastNoteWasRelease = true;
+                                lastReleaseTime = DateTime.Now;
+                            }
+                            else
+                            {
+                                lastNoteWasRelease = false;
+                            }
+                        }
+
+                        for (int i = 0; i < channelStates.Length; i++)
+                            NesApu.EnableChannel(apuIndex, i, i == activeChannel ? 1 : 0);
+                    }
+
+                    if (lastNoteWasRelease &&
+                        activeChannel >= 0 &&
+                        Settings.InstrumentStopTime >= 0 &&
+                        DateTime.Now.Subtract(lastReleaseTime).TotalSeconds >= Settings.InstrumentStopTime)
+                    {
+                        NesApu.EnableChannel(apuIndex, activeChannel, 0);
+                        activeChannel = -1;
+                    }
+
                     if (activeChannel >= 0)
                     {
-                        if (lastNote.note.IsMusical)
-                            channelStates[activeChannel].ForceInstrumentReload();
+                        channelStates[activeChannel].Update();
 
-                        channelStates[activeChannel].PlayNote(lastNote.note);
-
-                        if (lastNote.note.IsRelease)
-                        {
-                            lastNoteWasRelease = true;
-                            lastReleaseTime = DateTime.Now;
-                        }
-                        else
-                        {
-                            lastNoteWasRelease = false;
-                        }
+                        for (int i = 0; i < EnvelopeType.Count; i++)
+                            envelopeFrames[i] = channelStates[activeChannel].GetEnvelopeFrame(i);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < EnvelopeType.Count; i++)
+                            envelopeFrames[i] = 0;
+                        foreach (var channel in channelStates)
+                            channel.ClearNote();
                     }
 
-                    for (int i = 0; i < channelStates.Length; i++)
-                        NesApu.EnableChannel(apuIndex, i, i == activeChannel ? 1 : 0);
+                    EndFrame();
                 }
 
-                if (lastNoteWasRelease &&
-                    activeChannel >= 0 &&
-                    Settings.InstrumentStopTime >= 0 &&
-                    DateTime.Now.Subtract(lastReleaseTime).TotalSeconds >= Settings.InstrumentStopTime)
-                {
-                    NesApu.EnableChannel(apuIndex, activeChannel, 0);
-                    activeChannel = -1;
-                }
+                audioStream.Stop();
+                while (sampleQueue.TryDequeue(out _)) ;
 
-                if (activeChannel >= 0)
-                {
-                    channelStates[activeChannel].Update();
-
-                    for (int i = 0; i < EnvelopeType.Count; i++)
-                        envelopeFrames[i] = channelStates[activeChannel].GetEnvelopeFrame(i);
-                }
-                else
-                {
-                    for (int i = 0; i < EnvelopeType.Count; i++)
-                        envelopeFrames[i] = 0;
-                    foreach (var channel in channelStates)
-                        channel.ClearNote();
-                }
-
-                EndFrame();
+#if DEBUG
             }
-
-            audioStream.Stop();
-            while (sampleQueue.TryDequeue(out _)) ;
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                if (Debugger.IsAttached)
+                    Debugger.Break();
+            }
+#endif
         }
 
         public bool IsPlaying => activeChannel >= 0;

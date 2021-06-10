@@ -29,7 +29,7 @@ namespace FamiStudio
         public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData)
         {
             var project = originalProject.DeepClone();
-            project.RemoveAllSongsBut(songIds, deleteUnusedData);
+            project.DeleteAllSongsBut(songIds, deleteUnusedData);
 
             SetInvariantCulture();
 

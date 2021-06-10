@@ -658,7 +658,7 @@ namespace FamiStudio
         public bool Save(Project originalProject, string filename, int[] songIds)
         {
             var project = originalProject.DeepClone();
-            project.RemoveAllSongsBut(songIds);
+            project.DeleteAllSongsBut(songIds);
 
             if (project.UsesFamiStudioTempo)
             {
