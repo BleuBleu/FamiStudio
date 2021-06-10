@@ -1820,7 +1820,7 @@ namespace FamiStudio
             if (channel.Type == ChannelType.Dpcm)
             {
                 var mapping = project.GetDPCMMapping(noteValue);
-                if (mapping != null && mapping.Sample != null)
+                if (mapping != null)
                     return mapping.Sample.Color;
             }
             else if (instrument != null)
@@ -2089,18 +2089,17 @@ namespace FamiStudio
                     for (int i = 0; i < Note.MusicalNoteMax; i++)
                     {
                         var mapping = App.Project.GetDPCMMapping(i);
-                        if (mapping != null && mapping.Sample != null)
+                        if (mapping != null)
                         {
                             var y = virtualSizeY - i * noteSizeY - scrollY;
 
                             g.PushTranslation(0, y);
                             g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(mapping.Sample.Color, noteSizeY, 0.8f), theme.BlackBrush, 1);
-                            if (mapping.Sample != null)
-                            {
-                                string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.Strings[App.PalPlayback ? 1 : 0][mapping.Pitch]}";
-                                if (mapping.Loop) text += ", Looping";
-                                g.DrawText(text, ThemeBase.FontSmall, dpcmTextPosX, dpcmTextPosY, theme.BlackBrush);
-                            }
+
+                            string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.Strings[App.PalPlayback ? 1 : 0][mapping.Pitch]}";
+                            if (mapping.Loop) text += ", Looping";
+                            g.DrawText(text, ThemeBase.FontSmall, dpcmTextPosX, dpcmTextPosY, theme.BlackBrush);
+
                             g.PopTransform();
                         }
                     }
@@ -2134,7 +2133,7 @@ namespace FamiStudio
                         if (GetLocationForCoord(pt.X, pt.Y, out _, out var hoverNoteValue))
                         {
                             var mapping = App.Project.GetDPCMMapping(hoverNoteValue);
-                            if (mapping != null && mapping.Sample != null)
+                            if (mapping != null)
                             {
                                 var y = virtualSizeY - hoverNoteValue * noteSizeY - scrollY;
 
@@ -3036,7 +3035,7 @@ namespace FamiStudio
                     EndCaptureOperation(e);
 
                     var mapping = App.Project.GetDPCMMapping(noteValue);
-                    if (left && mapping != null && mapping.Sample != null)
+                    if (left && mapping != null)
                     {
                         var freqIdx = App.PalPlayback ? 1 : 0;
                         var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
@@ -4201,11 +4200,11 @@ namespace FamiStudio
                     {
                         MapDPCMSample(noteValue);
                     }
-                    else if (left && mapping != null && mapping.Sample != null)
+                    else if (left && mapping != null)
                     {
                         StartDragDPCMSampleMapping(e, noteValue);
                     }
-                    else if (right && mapping != null && mapping.Sample != null)
+                    else if (right && mapping != null)
                     {
                         ClearDPCMSampleMapping(noteValue);
                     }

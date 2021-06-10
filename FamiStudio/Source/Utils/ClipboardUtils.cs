@@ -219,10 +219,7 @@ namespace FamiStudio
             var samples = new HashSet<DPCMSample>();
 
             foreach (var kv in mappings)
-            {
-                if (kv.Value.Sample != null)
-                    samples.Add(kv.Value.Sample);
-            }
+                samples.Add(kv.Value.Sample);
 
             int numSamples = samples.Count;
             serializer.Serialize(ref numSamples);
@@ -465,7 +462,7 @@ namespace FamiStudio
                     if (note != null)
                     {
                         var mapping = project.GetDPCMMapping(note.Value);
-                        if (mapping != null && mapping.Sample != null)
+                        if (mapping != null)
                             samples[note.Value] = mapping;
                     }
                 }
@@ -617,7 +614,7 @@ namespace FamiStudio
                             foreach (var n in pattern.Notes.Values)
                             {
                                 var mapping = project.GetDPCMMapping(n.Value);
-                                if (mapping != null && mapping.Sample != null)
+                                if (mapping != null)
                                     uniqueDPCMMappings[n.Value] = mapping;
                             }
                         }

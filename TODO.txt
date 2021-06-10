@@ -44,10 +44,10 @@ FamiStudio 3.1.0
 ================
 - Multiple sample import. => Or import samples from other projects?
 - Save snapping + qwerty settings + some export settings.
-	=> Make sure we can repeat last import with stereo settings.
 - Patterns one-based, start at one.
 x Force reload FDS/N163/VRC7 instrument when song is playing and the user tweaks stuff.
 
+x Remove mapping.sample null check.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 / Fine pitch adjust in DPCM editor.
 - Is it needed to clear the undo/redo stack when saving? Make it an option?
@@ -55,8 +55,8 @@ x Stereo WAV/MP3/Video?
 - Highlight piano keys when they are pressed with QWERTY or MIDI. 
 - Noise slides? What about slow slides?
 - Loop in selection for sequencer.
-- Keyboard shortcut for snapping precision.
-- .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
+- Keyboard shortcut for snapping precision?
+x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
 - True portable mode (save FamiStudio.ini in same folder).
 
 - LOW PRIO : End of song looping behavior?

@@ -525,7 +525,7 @@ namespace FamiStudio
                             {
                                 var mapping = project.GetDPCMMapping(note.Value);
 
-                                if (mapping != null && mapping.Sample != null)
+                                if (mapping != null)
                                 {
                                     return true;
                                 }

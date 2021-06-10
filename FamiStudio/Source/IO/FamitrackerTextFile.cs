@@ -807,7 +807,7 @@ namespace FamiStudio
                 {
                     var mapping = project.SamplesMapping[i];
 
-                    if (mapping != null && mapping.Sample != null)
+                    if (mapping != null)
                     {
                         int note     = i + Note.DPCMNoteMin;
                         var octave   = (note - 1) / 12 ;

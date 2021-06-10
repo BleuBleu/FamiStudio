@@ -749,7 +749,7 @@ namespace FamiStudio
             var usedSamples = new HashSet<DPCMSample>();
             foreach (var mapping in samplesMapping)
             {
-                if (mapping != null && mapping.Sample != null)
+                if (mapping != null)
                 {
                     usedSamples.Add(mapping.Sample);
                 }
@@ -779,7 +779,7 @@ namespace FamiStudio
 
                 foreach (var mapping in samplesMapping)
                 {
-                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    if (mapping != null && !visitedSamples.Contains(mapping.Sample))
                     {
                         var addrEnd = addr + ((mapping.Sample.ProcessedData.Length + 63) & 0xffc0);
 
@@ -814,7 +814,7 @@ namespace FamiStudio
 
                 foreach (var mapping in samplesMapping)
                 {
-                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    if (mapping != null && !visitedSamples.Contains(mapping.Sample))
                     {
                         if (mapping.Sample == sample)
                         {
@@ -847,7 +847,7 @@ namespace FamiStudio
 
                 foreach (var mapping in samplesMapping)
                 {
-                    if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                    if (mapping != null && !visitedSamples.Contains(mapping.Sample))
                     {
                         size += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
                         visitedSamples.Add(mapping.Sample);
@@ -865,7 +865,7 @@ namespace FamiStudio
 
             foreach (var mapping in samplesMapping)
             {
-                if (mapping != null && mapping.Sample != null && !visitedSamples.Contains(mapping.Sample))
+                if (mapping != null && !visitedSamples.Contains(mapping.Sample))
                 {
                     sampleData.AddRange(mapping.Sample.ProcessedData);
                     var paddedSize = ((sampleData.Count + 63) & 0xffc0) - sampleData.Count;
@@ -1255,7 +1255,7 @@ namespace FamiStudio
                         foreach (var note in pattern.Notes.Values)
                         {
                             var mapping = GetDPCMMapping(note.Value);
-                            if (mapping != null && mapping.Sample != null)
+                            if (mapping != null)
                             {
                                 usedMappingIndices.Add(note.Value - Note.DPCMNoteMin);
                             }
@@ -1360,6 +1360,7 @@ namespace FamiStudio
             {
                 if (mapping != null)
                 {
+                    Debug.Assert(mapping.Sample != null);
                     mapping.ValidateIntegrity(this, idMap);
                 }
             }
@@ -1421,7 +1422,7 @@ namespace FamiStudio
             ulong mappingMask = 0;
             for (int i = 0; i < 64; i++)
             {
-                if (samplesMapping[i] != null && samplesMapping[i].Sample != null)
+                if (samplesMapping[i] != null)
                     mappingMask |= (((ulong)1) << i);
             }
             buffer.Serialize(ref mappingMask);

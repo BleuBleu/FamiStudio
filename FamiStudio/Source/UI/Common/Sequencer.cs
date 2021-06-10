@@ -642,7 +642,7 @@ namespace FamiStudio
             if (dpcm)
             {
                 var mapping = App.Project.GetDPCMMapping(note.Value);
-                if (mapping != null && mapping.Sample != null)
+                if (mapping != null)
                     color = mapping.Sample.Color;
             }
             else if (instrument != null)

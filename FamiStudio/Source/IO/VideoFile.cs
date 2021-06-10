@@ -618,7 +618,7 @@ namespace FamiStudio
                                 if (s.channel.Type == ChannelType.Dpcm)
                                 {
                                     var mapping = project.GetDPCMMapping(s.note.Value);
-                                    if (mapping != null && mapping.Sample != null)
+                                    if (mapping != null)
                                         color = mapping.Sample.Color;
                                 }
                                 else

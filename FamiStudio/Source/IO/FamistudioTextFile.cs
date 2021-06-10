@@ -72,7 +72,7 @@ namespace FamiStudio
             {
                 var mapping = project.SamplesMapping[i];
 
-                if (mapping != null && mapping.Sample != null)
+                if (mapping != null)
                     lines.Add($"\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(i + Note.DPCMNoteMin))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}");
             }
 
