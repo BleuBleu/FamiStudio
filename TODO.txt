@@ -1,4 +1,6 @@
-- SFX is playing?
+- Linux stall from github
+x NSF import cmd line
+- Command line crash if NSF doesnt exist.
 
 Videos:
 =======
@@ -40,15 +42,16 @@ Discord
 
 FamiStudio 3.1.0
 ================
+- Multiple sample import. => Or import samples from other projects?
+- Save snapping + qwerty settings + some export settings.
+	=> Make sure we can repeat last import with stereo settings.
 - Patterns one-based, start at one.
+x Force reload FDS/N163/VRC7 instrument when song is playing and the user tweaks stuff.
+
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 / Fine pitch adjust in DPCM editor.
-- Save snapping + qwerty settings + some export settings.
-- Force reload FDS/N163/VRC7 instrument when song is playing and the user tweaks stuff.
-- Scale mark system a la beepbox? (or highlight keys)
 - Is it needed to clear the undo/redo stack when saving? Make it an option?
-- Multiple sample import. => Or import samples from other projects?
-- Stereo WAV/MP3/Video?
+x Stereo WAV/MP3/Video?
 - Highlight piano keys when they are pressed with QWERTY or MIDI. 
 - Noise slides? What about slow slides?
 - Loop in selection for sequencer.
@@ -58,13 +61,6 @@ FamiStudio 3.1.0
 
 - LOW PRIO : End of song looping behavior?
 - LOW PRIO : Left/right pan with +/- (cubase style)?
-
-Grid refactor:
-x Use bitmap for checkmark
-x Text is weird on windows.
-- Function to enable/disable column?
-- Retest all grids.
-- Tweak colors on GTK. Header is black.
 
 Backlog: 
 ========= 

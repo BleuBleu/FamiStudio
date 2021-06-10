@@ -396,6 +396,11 @@ namespace FamiStudio
             {
                 InvalidateEverything(true);
             }
+
+            if (scope == TransactionScope.Instrument && songPlayer != null)
+            {
+                songPlayer.ForceInstrumentsReload();
+            }
         }
 
         private void UndoRedoManager_Updated()
