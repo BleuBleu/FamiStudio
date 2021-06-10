@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (3.0.0)
+; FAMISTUDIO SOUND ENGINE (3.1.0)
 ; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without

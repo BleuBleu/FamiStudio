@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (3.0.0)
+; FAMISTUDIO SOUND ENGINE (3.1.0)
 ; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -634,6 +634,10 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 .export famistudio_sfx_init
 .export famistudio_sfx_play
 .export famistudio_sfx_sample_play
+.exportzp FAMISTUDIO_SFX_CH0
+.exportzp FAMISTUDIO_SFX_CH1
+.exportzp FAMISTUDIO_SFX_CH2
+.exportzp FAMISTUDIO_SFX_CH3
 .endif
 
 .segment .string(FAMISTUDIO_CA65_CODE_SEGMENT)
