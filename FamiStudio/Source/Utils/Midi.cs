@@ -59,7 +59,11 @@ namespace FamiStudio
 
         public static void Shutdown()
         {
-
+            if (midiInProc != null)
+            {
+                Close();
+                midiInProc = null;
+            }
         }
 
         public static int InputCount
