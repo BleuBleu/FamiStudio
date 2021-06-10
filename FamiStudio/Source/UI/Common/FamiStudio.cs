@@ -676,7 +676,6 @@ namespace FamiStudio
                 return false;
             }
 
-            // Dont bother exiting cleanly on Linux.
             Midi.NotePlayed -= Midi_NotePlayed;
             Midi.Shutdown();
 
