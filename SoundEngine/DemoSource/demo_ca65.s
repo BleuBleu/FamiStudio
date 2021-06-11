@@ -1,3 +1,32 @@
+; include the file below to set if we are building the C version of the demo
+; the C version of the demo simply replaces small portions of the code with a c version
+
+.include "demo_ca65.inc"
+.if FAMISTUDIO_DEMO_USE_C
+; functions that the C library expects 
+.export __STARTUP__:absolute=1
+; this is for the C stack and are set in the mapper file
+.import __STACK_START__, __STACKSIZE__
+.include "zeropage.inc"
+
+; Functions defined in C (using C decl instead of fastcall)
+.import _play_song, _update, _sfx_init
+
+; Variables and values used in the C code must be prefixed with underscore
+; so re-export the necessary ones here
+.exportzp _gamepad_pressed=gamepad_pressed, _p0=p0
+.exportzp sp
+; TODO make the song data writer include these exports
+.export _silver_surfer_c_stephen_ruddy_music_data=silver_surfer_c_stephen_ruddy_music_data
+.export _journey_to_silius_music_data=journey_to_silius_music_data
+.export _shatterhand_music_data=shatterhand_music_data
+.export _song_title_silver_surfer=song_title_silver_surfer
+.export _song_title_jts=song_title_jts
+.export _song_title_shatterhand=song_title_shatterhand
+.export _sounds=sounds
+.export _update_title=update_title
+.endif
+
 .segment "HEADER"
 INES_MAPPER = 0 ; 0 = NROM
 INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
@@ -34,6 +63,10 @@ r4: .res 1
 
 ; General purpose pointers.
 p0: .res 2
+.if FAMISTUDIO_DEMO_USE_C
+; Pointer to the C stack head
+sp = $80
+.endif
 
 .segment "RAM"
 ; TODO: These 2 arent actually used at the same time... unify.
@@ -59,6 +92,10 @@ FAMISTUDIO_USE_VIBRATO        = 1
 FAMISTUDIO_USE_ARPEGGIO       = 1
 FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
 FAMISTUDIO_DPCM_OFF           = $e000
+
+.if FAMISTUDIO_DEMO_USE_C
+FAMISTUDIO_CFG_C_BINDINGS = 1
+.endif
 
 ; CA65-specifc config.
 .define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
@@ -89,6 +126,7 @@ song_title_shatterhand:
 
 NUM_SONGS = 3
 
+_exit:
 reset:
 
     sei       ; mask interrupts
@@ -131,6 +169,14 @@ reset:
         inx
         inx
         bne @clear_oam_loop
+    .if FAMISTUDIO_DEMO_USE_C
+        ; Initialize the C stack
+        lda #<(__STACK_START__+__STACKSIZE__)
+        sta	sp
+        lda	#>(__STACK_START__+__STACKSIZE__)
+        sta	sp + 1
+        lda #$40
+    .endif
     ; wait for second vblank
     @wait_vblank_loop2:
         bit $2002
@@ -354,7 +400,16 @@ gamepad_poll_dpcm_safe:
     rts
 
 play_song:
-
+.if FAMISTUDIO_DEMO_USE_C
+    jsr _play_song
+    rts
+update_title:
+    ldx #2
+    ldy #15
+    jsr draw_text
+    jsr ppu_update
+    rts
+.else
     @text_ptr = p0
 
     lda song_index
@@ -405,8 +460,8 @@ play_song:
     ldy #15
     jsr draw_text
     jsr ppu_update
-
     rts
+.endif
 
 equalizer_lookup:
     .byte $f0, $f0, $f0, $f0 ; 0
@@ -499,15 +554,21 @@ main:
 
     jsr ppu_update
 
+.if FAMISTUDIO_DEMO_USE_C
+    jsr _sfx_init
+.else
     ; Load SFX
     ldx #<sounds
     ldy #>sounds
     jsr famistudio_sfx_init
+.endif
 
 @loop:
-
     jsr gamepad_poll_dpcm_safe
-    
+
+.if FAMISTUDIO_DEMO_USE_C
+    jsr _update
+.else
     @check_right:
         lda gamepad_pressed
         and #PAD_R
@@ -585,11 +646,9 @@ main:
         ldx #FAMISTUDIO_SFX_CH1
         jsr famistudio_sfx_play
         beq @draw
-
 @draw:
-
     jsr famistudio_update ; TODO: Call in NMI.
-    
+.endif    
     lda #0
     jsr update_equalizer
     lda #1
