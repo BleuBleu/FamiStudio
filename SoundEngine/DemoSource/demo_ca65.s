@@ -1,7 +1,12 @@
+
 ; include the file below to set if we are building the C version of the demo
 ; the C version of the demo simply replaces small portions of the code with a c version
 
 .include "demo_ca65.inc"
+
+.ifndef FAMISTUDIO_DEMO_USE_C
+FAMISTUDIO_DEMO_USE_C = 0
+.endif
 .if FAMISTUDIO_DEMO_USE_C
 ; functions that the C library expects 
 .export __STARTUP__:absolute=1
@@ -10,20 +15,15 @@
 .include "zeropage.inc"
 
 ; Functions defined in C (using C decl instead of fastcall)
-.import _play_song, _update, _sfx_init
+.import _play_song, _update, _init
 
-; Variables and values used in the C code must be prefixed with underscore
+; Variables and functions used in the C code must be prefixed with underscore
 ; so re-export the necessary ones here
 .exportzp _gamepad_pressed=gamepad_pressed, _p0=p0
 .exportzp sp
-; TODO make the song data writer include these exports
-.export _silver_surfer_c_stephen_ruddy_music_data=silver_surfer_c_stephen_ruddy_music_data
-.export _journey_to_silius_music_data=journey_to_silius_music_data
-.export _shatterhand_music_data=shatterhand_music_data
 .export _song_title_silver_surfer=song_title_silver_surfer
 .export _song_title_jts=song_title_jts
 .export _song_title_shatterhand=song_title_shatterhand
-.export _sounds=sounds
 .export _update_title=update_title
 .endif
 
@@ -555,7 +555,7 @@ main:
     jsr ppu_update
 
 .if FAMISTUDIO_DEMO_USE_C
-    jsr _sfx_init
+    jsr _init
 .else
     ; Load SFX
     ldx #<sounds
