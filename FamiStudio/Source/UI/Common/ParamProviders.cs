@@ -86,15 +86,9 @@ namespace FamiStudio
                         if (instrument.Envelopes[EnvelopeType.Pitch].Relative != newRelative)
                         {
                             if (newRelative)
-                            {
-                                if (PlatformUtils.MessageBox("Do you want to try to convert the pitch envelope from absolute to relative?", "Pitch Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                                    instrument.Envelopes[EnvelopeType.Pitch].ConvertToRelative();
-                            }
+                                instrument.Envelopes[EnvelopeType.Pitch].ConvertToRelative();
                             else
-                            {
-                                if (PlatformUtils.MessageBox("Do you want to try to convert the pitch envelope from relative to absolute?", "Pitch Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                                    instrument.Envelopes[EnvelopeType.Pitch].ConvertToAbsolute();
-                            }
+                                instrument.Envelopes[EnvelopeType.Pitch].ConvertToAbsolute();
                         }
 
                         instrument.Envelopes[EnvelopeType.Pitch].Relative = newRelative;

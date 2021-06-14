@@ -1356,6 +1356,10 @@ namespace FamiStudio
         // TODO : Move all the mouse up code here, like the piano roll.
         private void EndCaptureOperation()
         {
+            // Should never be needed, but why not.
+            if (App.UndoRedoManager.HasTransactionInProgress)
+                App.UndoRedoManager.AbortTransaction();
+
             draggedArpeggio = null;
             draggedInstrument = null;
             draggedSample = null;

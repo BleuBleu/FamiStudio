@@ -55,6 +55,7 @@ x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
 x True portable mode (save FamiStudio.ini in same folder).
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. Add more low bitrates. Less high.
+- Review OnMouseCaptureChanged, not good when playing with VRC7 params.
 - Scales
 - Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
 
