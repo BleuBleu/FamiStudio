@@ -2,6 +2,9 @@
 x NSF import cmd line
 - Command line crash if NSF doesnt exist.
 
+- Add Tools to github.
+- Merge CC65 stuff.
+
 Videos:
 =======
 - Tutorial for FamiTracker
@@ -40,29 +43,48 @@ Discord
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
 
-FamiStudio 3.1.0
-================
-- Multiple sample import. => Or import samples from other projects?
-	=> Re-test song merge a lot. Removed a few cleanups.
-	=> Re-test expansions issue (same instrument name, diff expansions, etc.)
-- Save snapping + qwerty settings + some export settings.
-- Patterns one-based, start at one.
+FamiStudio 3.1.0 (Small quality of life release)
+================================================
+x Patterns one-based, start at one.
 x Force reload FDS/N163/VRC7 instrument when song is playing and the user tweaks stuff.
-
+x Metronome?
 x Remove mapping.sample null check.
-- Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
-/ Fine pitch adjust in DPCM editor.
-- Is it needed to clear the undo/redo stack when saving? Make it an option?
+x Multiple sample import. => Or import samples from other projects?
 x Stereo WAV/MP3/Video?
+x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
+/ Fine pitch adjust in DPCM editor.
+- Scales
+- Sample display semitones + cents.
+- True portable mode (save FamiStudio.ini in same folder).
+
+- Move "relative pitch env" to param.
+- Save snapping + qwerty settings + some export settings.
+- Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
+- Is it needed to clear the undo/redo stack when saving? Make it an option? (What about when we add the filename?)
+/ Osc export. Add more low bitrates. Less high.
 - Highlight piano keys when they are pressed with QWERTY or MIDI. 
-- Noise slides? What about slow slides?
+- Noise slides? Could be different opcode with lookup table slope.
 - Loop in selection for sequencer.
 - Keyboard shortcut for snapping precision?
-x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
-- True portable mode (save FamiStudio.ini in same folder).
 
 - LOW PRIO : End of song looping behavior?
 - LOW PRIO : Left/right pan with +/- (cubase style)?
+
+Testing
+=======
+- Re-test song merge a lot. Removed a few cleanups.
+- Re-test expansions issue (same instrument name, diff expansions, etc.)
+- Stereo video crackles?
+
+Random features ideas
+=====================
+- Overclocking (2x, 3x, 4x would be a good start). Would need to switch to a ROM with IRQ, MMC3? 
+- Volume slides (how to make user friendly?)
+- Hardware sweep (how to not conflict with smooth vibrato?)
+- Write delta counter (Zxx).
+- Noise slides.
+- Multi-expansions (dont want that garbage in the sound engine, would need to be a seperate NSF thing).
+- Oscilloscope only video mode.
 
 Backlog: 
 ========= 
