@@ -401,7 +401,7 @@ namespace FamiStudio
                 g.PushTranslation(px, 0);
 
                 g.PushClip(1, 0, sx, Height);
-                var text = i.ToString();
+                var text = (i + 1).ToString();
                 if (Song.PatternHasCustomSettings(i))
                     text += "*";
                 g.DrawText(text, ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
