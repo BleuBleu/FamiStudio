@@ -630,7 +630,15 @@ namespace FamiStudio
         public void NotifyPatternChange(Pattern pattern)
         {
             if (pattern != null)
-                patternBitmapCache.Remove(pattern.Id);
+            {
+                if (patternBitmapCache.TryGetValue(pattern.Id, out var list))
+                {
+                    foreach (var bmp in list)
+                        bmp.Dispose();
+
+                    patternBitmapCache.Remove(pattern.Id);
+                }
+            }
         }
 
         private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleY, bool dpcm, uint[] data)
