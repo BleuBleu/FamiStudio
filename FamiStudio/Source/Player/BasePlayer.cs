@@ -479,8 +479,11 @@ namespace FamiStudio
 
         public void ForceInstrumentsReload()
         {
-            foreach (var channelState in channelStates)
-                channelState.ForceInstrumentReload();
+            if (channelStates != null)
+            {
+                foreach (var channelState in channelStates)
+                    channelState.ForceInstrumentReload();
+            }
         }
 
         public void NotifyInstrumentLoaded(Instrument instrument, int channelTypeMask)

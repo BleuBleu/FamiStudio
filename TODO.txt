@@ -52,16 +52,16 @@ x Remove mapping.sample null check.
 x Multiple sample import. => Or import samples from other projects?
 x Stereo WAV/MP3/Video?
 x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
-/ Fine pitch adjust in DPCM editor.
+x True portable mode (save FamiStudio.ini in same folder).
+/ Fine pitch adjust in DPCM editor. Make backward, save in file.
+/ Oscilloscope export. Add more low bitrates. Less high.
 - Scales
 - Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
-x True portable mode (save FamiStudio.ini in same folder).
 
 - Move "relative pitch env" to param.
 - Save snapping + qwerty settings + some export settings.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Is it needed to clear the undo/redo stack when saving? Make it an option? (What about when we add the filename?)
-/ Osc export. Add more low bitrates. Less high.
 - Highlight piano keys when they are pressed with QWERTY or MIDI. 
 - Noise slides? Could be different opcode with lookup table slope.
 - Loop in selection for sequencer.

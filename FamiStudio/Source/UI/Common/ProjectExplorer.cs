@@ -671,7 +671,7 @@ namespace FamiStudio
         {
             if (App.Project != null)
             {
-                if (App.Project.ExpansionAudio != ExpansionType.None && App.Project.Instruments.Find(i => InstrumentParamProvider.HasParams(i)) != null)
+                if (App.Project.Instruments.Find(i => InstrumentParamProvider.HasParams(i)) != null)
                     return true;
 
                 if (App.Project.Samples.Count > 0)
@@ -930,7 +930,7 @@ namespace FamiStudio
             {
                 var button = buttons[buttonIndex];
 
-                if (ShowExpandButtons() && x < (expandButtonPosX + expandButtonSizeX) && ((button.instrument != null && button.instrument.IsExpansionInstrument) || (button.sample != null))) 
+                if (ShowExpandButtons() && x < (expandButtonPosX + expandButtonSizeX) && ((button.instrument != null && InstrumentParamProvider.HasParams(button.instrument)) || (button.sample != null))) 
                 {
                     sub = SubButtonType.Expand;
                     return buttonIndex;
@@ -1356,10 +1356,6 @@ namespace FamiStudio
         // TODO : Move all the mouse up code here, like the piano roll.
         private void EndCaptureOperation()
         {
-            // Should never be needed, but why not.
-            if (App.UndoRedoManager.HasTransactionInProgress)
-                App.UndoRedoManager.AbortTransaction();
-
             draggedArpeggio = null;
             draggedInstrument = null;
             draggedSample = null;
@@ -2288,8 +2284,6 @@ namespace FamiStudio
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
-            if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
-                dlg.Properties.AddCheckBox("Relative pitch envelope:", instrument.Envelopes[EnvelopeType.Pitch].Relative); // 2
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -2301,28 +2295,6 @@ namespace FamiStudio
                 if (App.Project.RenameInstrument(instrument, newName))
                 {
                     instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
-                    if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
-                    {
-                        var newRelative = dlg.Properties.GetPropertyValue<bool>(2);
-                        if (instrument.Envelopes[EnvelopeType.Pitch].Relative != newRelative)
-                        {
-                            if (!instrument.Envelopes[EnvelopeType.Pitch].IsEmpty(EnvelopeType.Pitch))
-                            {
-                                if (newRelative)
-                                {
-                                    if (PlatformUtils.MessageBox("Do you want to try to convert the pitch envelope from absolute to relative?", "Pitch Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                                        instrument.Envelopes[EnvelopeType.Pitch].ConvertToRelative();
-                                }
-                                else
-                                {
-                                    if (PlatformUtils.MessageBox("Do you want to try to convert the pitch envelope from relative to absolute?", "Pitch Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                                        instrument.Envelopes[EnvelopeType.Pitch].ConvertToAbsolute();
-                                }
-                            }
-
-                            instrument.Envelopes[EnvelopeType.Pitch].Relative = newRelative;
-                        }
-                    }
                     InstrumentColorChanged?.Invoke(instrument);
                     RefreshButtons();
                     App.UndoRedoManager.EndTransaction();
