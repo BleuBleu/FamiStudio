@@ -1034,7 +1034,7 @@ namespace FamiStudio
         }
 
         // minNotesForJump is the minimum of notes to even consider doing a jump back to a reference. 
-        int CompressAndOutputSongData(List<string> data, int minNotesForJump, bool writeLines)
+        int CompressAndOutputSongData(List<string> data, int songIdx, int minNotesForJump, bool writeLines)
         {
             // We add some suffixes to the data to tell us a bit more info about they represent:
             //   - A "+" suffix means its the beginning of an opcode.
@@ -1119,7 +1119,7 @@ namespace FamiStudio
 
                             compressedData.Add("$ff");
                             compressedData.Add($"${bestPatternNumNotes:x2}");
-                            compressedData.Add($"{ll}ref{bestPatternIdx}");
+                            compressedData.Add($"{ll}song{songIdx}ref{bestPatternIdx}");
 
                             i += bestPatternLen;
 
@@ -1173,7 +1173,7 @@ namespace FamiStudio
                 if (isRef)
                 {
                     if (writeLines)
-                        lines.Add($"{ll}ref{i}:");
+                        lines.Add($"{ll}song{songIdx}ref{i}:");
                 }
 
                 if (isLabel)
@@ -1239,7 +1239,7 @@ namespace FamiStudio
 
             for (int i = 8; i <= 40; i++)
             {
-                var size = CompressAndOutputSongData(songData, i, false);
+                var size = CompressAndOutputSongData(songData, songIdx, i, false);
 #if DEBUG
                 Log.LogMessage(LogSeverity.Info, $"Compression with a match of {i} notes = {size} bytes.");
 #endif
@@ -1253,7 +1253,7 @@ namespace FamiStudio
                 }
             }
 
-            return CompressAndOutputSongData(songData, bestMinNotesForJump, true);
+            return CompressAndOutputSongData(songData, songIdx, bestMinNotesForJump, true);
         }
         
         private void SetupFormat(int format)
