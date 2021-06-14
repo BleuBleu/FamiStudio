@@ -1,3 +1,9 @@
+3.0.1
+=====
+- CTRL + SHIFT ISSUE
+- Github linux audio issue
+- MacOS leak issue.
+
 Videos:
 =======
 - Tutorial for FamiTracker
