@@ -1282,4 +1282,69 @@ namespace FamiStudio
             return Array.IndexOf(Names, str);
         }
     }
+
+    public static class ScaleType
+    {
+        public const int Major = 0;
+        public const int Minor = 1;
+        public const int PentatonicMajor = 2;
+        public const int PentatonicMinor = 3;
+        public const int HarmonicMajor = 4;
+        public const int HarmonicMinor = 5;
+        public const int DorianMode = 6;
+        public const int PhrygianMode = 7;
+        public const int LydianMode = 8;
+        public const int MixolydianMode = 9;
+        public const int LocrianMode = 10;
+
+        public static readonly string[] Names =
+        {
+            "Major (Ionian mode)",
+            "Minor (Aeolian mode)",
+            "Major Pentatonic",
+            "Minor Pentatonic",
+            "Harmonic Major",
+            "Harmonic Minor",
+            "Dorian mode",
+            "Phrygian mode",
+            "Lydian mode",
+            "Mixolydian mode",
+            "Locrian mode"
+        };
+
+        public static readonly int[][] Degrees = new[]
+        {
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // Major
+            new [] { 0, 2, 3, 5, 7, 8, 10 }, // Minor
+            // UNDONE
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // PentatonicMajor 
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // PentatonicMinor
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // HarmonicMajor 
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // HarmonicMinor
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // DorianMode 
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // PhrygianMode
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // LydianMode 
+            new [] { 0, 2, 4, 5, 7, 9, 11 }, // MixolydianMode
+            new [] { 0, 2, 4, 5, 7, 9, 11 }  // LocrianMode
+        };
+    }
+
+    public static class DegreeType
+    {
+        public static readonly string[] Names =
+        {
+            "1",
+            "#1",
+            "2",
+            "#2",
+            "3",
+            "4",
+            "#4",
+            "5",
+            "#5",
+            "6",
+            "#6",
+            "7"
+        };
+    }
 }

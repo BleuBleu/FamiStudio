@@ -3020,6 +3020,22 @@ namespace FamiStudio
             }
         }
 
+        protected void ConfigureScales(MouseEventArgs e)
+        {
+            App.StopOrReleaseIntrumentNote();
+
+            var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 300, false, e.Y > Height / 2);
+
+            dlg.Properties.AddCheckBox("Scale highlight:", false); // 0
+            dlg.Properties.AddDropDownList("Scale :", ScaleType.Names, ScaleType.Names[0]); // 1
+            dlg.Properties.AddCheckBoxList("Custom degrees:", DegreeType.Names, null); // 2
+            dlg.Properties.Build();
+
+            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+            { 
+            }
+        }
+
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             base.OnMouseDoubleClick(e);
@@ -3054,30 +3070,41 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (right && editMode == EditionMode.Channel)
+            else if (editMode == EditionMode.Channel)
             {
-                if (IsMouseInHeader(e.X, e.Y))
+                if (left)
                 {
-                    int patIdx = Song.PatternIndexFromAbsoluteNoteIndex((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
-                    if (patIdx >= 0 && patIdx < Song.Length)
-                        SetSelection(Song.GetPatternStartAbsoluteNoteIndex(patIdx), Song.GetPatternStartAbsoluteNoteIndex(patIdx + 1) - 1);
-                }
-                else if (IsMouseInEffectPanel(e.X, e.Y))
-                {
-                    if (GetEffectNoteForCoord(e.X, e.Y, out var location))
-                        SetSelection(Song.GetPatternStartAbsoluteNoteIndex(location.PatternIndex), Song.GetPatternStartAbsoluteNoteIndex(location.PatternIndex + 1) - 1);
-                }
-                else if (GetLocationForCoord(e.X, e.Y, out var location, out byte noteValue))
-                {
-                    var channel = Song.Channels[editChannel];
-                    var note = channel.FindMusicalNoteAtLocation(ref location, -1);
-                    if (note != null && (note.IsStop || note.IsMusical && note.Value != noteValue))
+                    if (IsMouseInPiano(e.X, e.Y))
                     {
-                        var absoluteNoteIndex = location.ToAbsoluteNoteIndex(Song);
-                        SetSelection(absoluteNoteIndex, absoluteNoteIndex + Math.Min(note.Duration, channel.GetDistanceToNextNote(location)) - 1);
+                        ConfigureScales(e);
                     }
                 }
-                ConditionalInvalidate();
+                else if (right)
+                {
+                    if (IsMouseInHeader(e.X, e.Y))
+                    {
+                        int patIdx = Song.PatternIndexFromAbsoluteNoteIndex((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
+                        if (patIdx >= 0 && patIdx < Song.Length)
+                            SetSelection(Song.GetPatternStartAbsoluteNoteIndex(patIdx), Song.GetPatternStartAbsoluteNoteIndex(patIdx + 1) - 1);
+                    }
+                    else if (IsMouseInEffectPanel(e.X, e.Y))
+                    {
+                        if (GetEffectNoteForCoord(e.X, e.Y, out var location))
+                            SetSelection(Song.GetPatternStartAbsoluteNoteIndex(location.PatternIndex), Song.GetPatternStartAbsoluteNoteIndex(location.PatternIndex + 1) - 1);
+                    }
+                    else if (GetLocationForCoord(e.X, e.Y, out var location, out byte noteValue))
+                    {
+                        var channel = Song.Channels[editChannel];
+                        var note = channel.FindMusicalNoteAtLocation(ref location, -1);
+                        if (note != null && (note.IsStop || note.IsMusical && note.Value != noteValue))
+                        {
+                            var absoluteNoteIndex = location.ToAbsoluteNoteIndex(Song);
+                            SetSelection(absoluteNoteIndex, absoluteNoteIndex + Math.Min(note.Duration, channel.GetDistanceToNextNote(location)) - 1);
+                        }
+                    }
+
+                    ConditionalInvalidate();
+                }
             }
         }
 
@@ -4886,7 +4913,7 @@ namespace FamiStudio
             }
             else if (IsMouseInPiano(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan";
+                tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan\n{MouseLeft} {MouseLeft} Configure scales";
             }
             else if (IsMouseOnSnapResolutionButton(e.X, e.Y))
             {

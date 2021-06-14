@@ -53,13 +53,41 @@ x Multiple sample import. => Or import samples from other projects?
 x Stereo WAV/MP3/Video?
 x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
 x True portable mode (save FamiStudio.ini in same folder).
+x Move "relative pitch env" to param.
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. Add more low bitrates. Less high.
-- Review OnMouseCaptureChanged, not good when playing with VRC7 params.
 - Scales
+	List:
+		- Major (Ionian mode)
+		- Minor (Aeolian mode)
+		- Major Pentatonic
+		- Minor Pentatonic
+		- Harmonic Major
+		- Harmonic Minor
+		- Dorian mode
+		- Phrygian mode
+		- Lydian mode
+		- Mixolydian mode
+		- Locrian mode
+		- Custom
+	Custom Degrees:
+		- 1
+		- #1
+		- 2
+		- #2
+		- 3
+		- 4
+		- #4
+		- 5
+		- #5
+		- 6
+		- #6
+		- 7
+	
+- Replace checklistbox.
+- Review OnMouseCaptureChanged, not good when playing with VRC7 params.
 - Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
 
-- Move "relative pitch env" to param.
 - Save snapping + qwerty settings + some export settings.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Is it needed to clear the undo/redo stack when saving? Make it an option? (What about when we add the filename?)
