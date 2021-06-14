@@ -151,10 +151,10 @@ for %%x in (%*) do (
 )
 
 :: Compile everything.
-..\..\..\NES\tools\bin\ca65 test_ca65.s -g -o test_ca65.o
-..\..\..\NES\tools\bin\ld65 -C test_ca65.cfg -o test_ca65.nes test_ca65.o --mapfile test_ca65.map --dbgfile test_ca65.dbg
-..\..\..\NES\tools\bin\asm6\asm6 test_asm6.asm test_asm6.nes
-..\..\..\NES\tools\bin\NESASM\NESASM3 test_nesasm.asm
+..\..\Tools\ca65 test_ca65.s -g -o test_ca65.o
+..\..\Tools\ld65 -C test_ca65.cfg -o test_ca65.nes test_ca65.o --mapfile test_ca65.map --dbgfile test_ca65.dbg
+..\..\Tools\asm6 test_asm6.asm test_asm6.nes
+..\..\Tools\NESASM3 test_nesasm.asm
 
 :: Binary comparison of all 3 ROMs.
 fc /b test_ca65.nes test_asm6.nes > nul
