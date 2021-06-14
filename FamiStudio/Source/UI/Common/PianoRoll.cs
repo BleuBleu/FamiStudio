@@ -3026,6 +3026,8 @@ namespace FamiStudio
 
             var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 300, false, e.Y > Height / 2);
 
+            // Need root note : Start with the one that the user clicked on.
+
             dlg.Properties.AddCheckBox("Scale highlight:", false); // 0
             dlg.Properties.AddDropDownList("Scale :", ScaleType.Names, ScaleType.Names[0]); // 1
             dlg.Properties.AddCheckBoxList("Custom degrees:", DegreeType.Names, null); // 2
