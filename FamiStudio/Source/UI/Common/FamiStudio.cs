@@ -5,8 +5,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
@@ -44,6 +46,8 @@ namespace FamiStudio
         private int previewDPCMSampleId = -1;
         private int previewDPCMSampleRate = 44100;
         private bool previewDPCMIsSource = false;
+        private bool metronome = false;
+        private short[] metronomeSound;
         private int lastRecordingKeyDown = -1;
         private BitArray keyStates = new BitArray(65536);
 #if FAMISTUDIO_WINDOWS
@@ -59,6 +63,7 @@ namespace FamiStudio
         public bool IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool IsRecording => recordingMode;
         public bool IsQwertyPianoEnabled => qwertyPiano;
+        public bool IsMetronomeEnabled => metronome;
         public bool FollowModeEnabled { get => followMode; set => followMode = value; }
         public int BaseRecordingOctave => baseRecordingOctave;
         public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
@@ -130,6 +135,7 @@ namespace FamiStudio
             InitializeSongPlayer();
             InitializeMidi();
             InitializeMultiMediaNotifications();
+            InitializeMetronome();
 
             if (!string.IsNullOrEmpty(filename))
             {
@@ -303,7 +309,7 @@ namespace FamiStudio
             mainForm.Run();
         }
 
-        public void InitializeMultiMediaNotifications()
+        private void InitializeMultiMediaNotifications()
         {
 #if FAMISTUDIO_WINDOWS
             // Windows 7 falls back to XAudio 2.7 which does not have 
@@ -318,12 +324,27 @@ namespace FamiStudio
 #endif
         }
 
+        private void InitializeMetronome()
+        {
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Resources.Metronome.wav"))
+            {
+                using (var reader = new BinaryReader(stream))
+                {
+                    metronomeSound = new short[reader.BaseStream.Length / 2];
+                    var i = 0;
+
+                    while (reader.BaseStream.Position != reader.BaseStream.Length)
+                        metronomeSound[i++] = reader.ReadInt16();
+                }
+            }
+        }
+
         private void MmNoticiations_DefaultDeviceChanged()
         {
             audioDeviceChanged = true;
         }
 
-        public void InitializeMidi()
+        private void InitializeMidi()
         {
             Midi.Initialize();
 
@@ -888,6 +909,15 @@ namespace FamiStudio
         {
             Debug.Assert(songPlayer == null);
             songPlayer = new SongPlayer(palPlayback);
+            songPlayer.Beat += SongPlayer_Beat;
+        }
+
+        private void SongPlayer_Beat()
+        {
+            if (songPlayer != null && metronome)
+            {
+                songPlayer.PlayRawPcmSample(metronomeSound, 44100, 1.0f);
+            }
         }
 
         private void InitializeInstrumentPlayer()
@@ -903,6 +933,7 @@ namespace FamiStudio
             {
                 songPlayer.Stop();
                 songPlayer.Shutdown();
+                songPlayer.Beat -= SongPlayer_Beat;
                 songPlayer = null;
             }
         }
@@ -1350,6 +1381,11 @@ namespace FamiStudio
                 ToolBar.Invalidate();
                 PianoRoll.Invalidate();
             }
+        }
+
+        public void ToggleMetronome()
+        {
+            metronome = !metronome;
         }
 
         public void SeekSong(int frame)

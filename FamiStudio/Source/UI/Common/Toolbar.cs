@@ -41,10 +41,11 @@ namespace FamiStudio
         const int ButtonRewind    = 13;
         const int ButtonLoop      = 14;
         const int ButtonQwerty    = 15;
-        const int ButtonMachine   = 16;
-        const int ButtonFollow    = 17;
-        const int ButtonHelp      = 18;
-        const int ButtonCount     = 19;
+        const int ButtonMetronome = 16;
+        const int ButtonMachine   = 17;
+        const int ButtonFollow    = 18;
+        const int ButtonHelp      = 19;
+        const int ButtonCount     = 20;
 
         const int DefaultTimecodeOffsetX         = 38; // Offset from config button.
         const int DefaultTimecodePosY            = 4;
@@ -142,6 +143,7 @@ namespace FamiStudio
         RenderBitmap bmpPalToNtsc;
         RenderBitmap bmpRec;
         RenderBitmap bmpRecRed;
+        RenderBitmap bmpMetronome;
         Button[] buttons = new Button[ButtonCount];
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
@@ -166,6 +168,7 @@ namespace FamiStudio
             bmpPalToNtsc   = g.CreateBitmapFromResource("PALToNTSC");
             bmpRec         = g.CreateBitmapFromResource("Rec");
             bmpRecRed      = g.CreateBitmapFromResource("RecRed");
+            bmpMetronome   = g.CreateBitmapFromResource("Metronome");
 
             buttons[ButtonNew]       = new Button { Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
@@ -183,6 +186,7 @@ namespace FamiStudio
             buttons[ButtonRewind]    = new Button { Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
             buttons[ButtonQwerty]    = new Button { Bmp = g.CreateBitmapFromResource("QwertyPiano"), Click = OnQwerty, Enabled = OnQwertyEnabled };
+            buttons[ButtonMetronome] = new Button { Bmp = g.CreateBitmapFromResource("Metronome"), Click = OnMetronome, Enabled = OnMetronomeEnabled };
             buttons[ButtonMachine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[ButtonFollow]    = new Button { Bmp = g.CreateBitmapFromResource("Follow"), Click = OnFollow, Enabled = OnFollowEnabled };
             buttons[ButtonHelp]      = new Button { Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
@@ -203,6 +207,7 @@ namespace FamiStudio
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
             buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
             buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift} {Q}";
+            buttons[ButtonMetronome].ToolTip = "{MouseLeft} Toggle metronome while song is playing";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonFollow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
@@ -274,6 +279,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpPalToNtsc);
             Utils.DisposeAndNullify(ref bmpRec);
             Utils.DisposeAndNullify(ref bmpRecRed);
+            Utils.DisposeAndNullify(ref bmpMetronome);
 
             foreach (var b in buttons)
                 Utils.DisposeAndNullify(ref b.Bmp);
@@ -539,6 +545,16 @@ namespace FamiStudio
         private ButtonStatus OnQwertyEnabled()
         {
             return App.IsQwertyPianoEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
+        }
+
+        private void OnMetronome()
+        {
+            App.ToggleMetronome();
+        }
+
+        private ButtonStatus OnMetronomeEnabled()
+        {
+            return App.IsMetronomeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
         private RenderBitmap OnLoopGetBitmap()

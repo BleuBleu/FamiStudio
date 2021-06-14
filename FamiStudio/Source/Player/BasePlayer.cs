@@ -23,6 +23,9 @@ namespace FamiStudio
 
     public class BasePlayer : IPlayerInterface
     {
+        public delegate void EmptyDelegate();
+        public event EmptyDelegate Beat;
+
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
         protected int sampleRate;
@@ -247,6 +250,7 @@ namespace FamiStudio
             EndFrame();
 
             playPosition = playLocation.ToAbsoluteNoteIndex(song);
+            ConditionalEmitBeatEvent();
 
             return true;
         }
@@ -374,7 +378,21 @@ namespace FamiStudio
             if (advancedPattern)
                 ResetFamiStudioTempo();
 
+            ConditionalEmitBeatEvent();
+
             return true;
+        }
+
+        private void ConditionalEmitBeatEvent()
+        {
+            if (Beat != null)
+            {
+                var beatLength = song.GetPatternBeatLength(playLocation.PatternIndex);
+                if (playLocation.NoteIndex % beatLength == 0)
+                {
+                    Beat?.Invoke();
+                }
+            }
         }
 
         private ChannelState CreateChannelState(int apuIdx, int channelType, int expNumChannels, bool pal)

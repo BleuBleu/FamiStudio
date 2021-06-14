@@ -189,17 +189,5 @@ namespace FamiStudio
         }
 
         public bool IsPlaying => activeChannel >= 0;
-
-        public void PlayRawPcmSample(short[] data, int sampleRate, float volume)
-        {
-            audioStream.PlayImmediate(data, sampleRate, volume);
-        }
-
-        public void StopRawPcmSample()
-        {
-            audioStream.StopImmediate();
-        }
-
-        public int RawPcmSamplePlayPosition => audioStream.ImmediatePlayPosition;
     }
 }
