@@ -1628,6 +1628,12 @@ namespace FamiStudio
 
                     if (samplesProject != null)
                     {
+                        if (samplesProject.Samples.Count == 0)
+                        {
+                            PlatformUtils.MessageBox("The selected project does not contain any samples.", "Error", MessageBoxButtons.OK);
+                            return;
+                        }
+
                         var samplesNames = new List<string>();
 
                         foreach (var sample in samplesProject.Samples)
@@ -1677,7 +1683,7 @@ namespace FamiStudio
                         }
                     }
                 }
-                else if (numSamplesFiles > 1)
+                else if (numSamplesFiles > 0)
                 {
                     var dlgLog = new LogDialog(ParentForm);
                     using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
