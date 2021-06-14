@@ -421,13 +421,23 @@ namespace FamiStudio
 
         private static string GetConfigFilePath()
         {
+            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var portableFile = Path.Combine(appPath, "portable.txt");
+
+            if (File.Exists(portableFile))
+            {
+                return appPath;
+            }
+            else
+            {
 #if FAMISTUDIO_WINDOWS
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
 #elif FAMISTUDIO_LINUX
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
 #else
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
 #endif
+            }
         }
 
         private static string GetConfigFileName()

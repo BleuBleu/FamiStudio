@@ -54,8 +54,8 @@ x Stereo WAV/MP3/Video?
 x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
 / Fine pitch adjust in DPCM editor.
 - Scales
-- Sample display semitones + cents.
-- True portable mode (save FamiStudio.ini in same folder).
+- Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
+x True portable mode (save FamiStudio.ini in same folder).
 
 - Move "relative pitch env" to param.
 - Save snapping + qwerty settings + some export settings.
