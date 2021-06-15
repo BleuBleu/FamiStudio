@@ -932,7 +932,8 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    bool shift = ModifierKeys.HasFlag(Keys.Shift);
+                    var ctrl  = ModifierKeys.HasFlag(Keys.Control);
+                    var shift = ModifierKeys.HasFlag(Keys.Shift);
 
                     if (left && setLoop)
                     {
@@ -958,7 +959,7 @@ namespace FamiStudio
                             PatternClicked?.Invoke(channelIdx, patternIdx);
                         }
 
-                        if (shift && minSelectedChannelIdx >= 0 && minSelectedPatternIdx >= 0)
+                        if (shift && !ctrl && minSelectedChannelIdx >= 0 && minSelectedPatternIdx >= 0)
                         {
                             if (channelIdx < minSelectedChannelIdx)
                             {
