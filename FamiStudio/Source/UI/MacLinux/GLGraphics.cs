@@ -152,6 +152,7 @@ namespace FamiStudio
 
         public void Dispose()
         {
+            Utils.DisposeAndNullify(ref Bitmap);
         }
     }
 
