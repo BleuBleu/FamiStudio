@@ -1843,7 +1843,7 @@ namespace FamiStudio
                 editMode == EditionMode.VideoRecording ||
                 editMode == EditionMode.DPCMMapping)
             {
-                int maxX = editMode == EditionMode.Channel ? song.GetPatternStartAbsoluteNoteIndex(a.maxVisiblePattern) * noteSizeX - scrollX : Width;
+                var maxX  = editMode == EditionMode.Channel ? song.GetPatternStartAbsoluteNoteIndex(a.maxVisiblePattern) * noteSizeX - scrollX : Width;
 
                 // Draw the note backgrounds
                 for (int i = a.minVisibleOctave; i < a.maxVisibleOctave; i++)
@@ -1857,6 +1857,35 @@ namespace FamiStudio
                             g.FillRectangle(0, y - noteSizeY, maxX, y, theme.DarkGreyFillBrush1);
                         if (i * 12 + j != numNotes)
                             g.DrawLine(0, y, maxX, y, theme.BlackBrush);
+                    }
+                }
+
+                // Draw scales.
+                if (editMode == EditionMode.Channel)
+                {
+                    var channel = song.Channels[editChannel];
+                    var degrees = channel.ScaleDegrees;
+
+                    if (degrees != 0)
+                    {
+                        // Transpose by root note
+                        degrees <<= channel.ScaleRootNote;
+                        degrees |= (degrees & 0xfff000) >> 12;
+
+                        for (int i = a.minVisibleOctave; i < a.maxVisibleOctave; i++)
+                        {
+                            int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
+
+                            for (int j = 0; j < 12; j++)
+                            {
+                                if ((degrees & (1 << j)) != 0)
+                                {
+                                    // MATTT : Set a real color here. This is just to test.
+                                    int y = octaveBaseY - j * noteSizeY;
+                                    g.FillRectangle(0, y - noteSizeY, maxX, y, g.GetSolidBrush(Color.Red, 0.5f, 0.25f));
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -2983,7 +3012,7 @@ namespace FamiStudio
                     y >= rect.Top && y <= rect.Bottom);
         }
 
-        protected void PlayPiano(int x, int y)
+        protected int GetPianoNote(int x, int y)
         {
             y -= headerAndEffectSizeY;
 
@@ -2992,30 +3021,28 @@ namespace FamiStudio
                 for (int j = 0; j < 12 && i * 12 + j < numNotes; j++)
                 {
                     if (IsBlackKey(j) && PointInRectangle(GetKeyRectangle(i, j), x, y))
-                    {
-                        int note = i * 12 + j + 1;
-                        if (note != playingNote)
-                        {
-                            playingNote = note;
-                            App.PlayInstrumentNote(playingNote, true, true);
-                            ConditionalInvalidate();
-                        }
-                        return;
-                    }
+                        return i * 12 + j + 1;
                 }
                 for (int j = 0; j < 12 && i * 12 + j < numNotes; j++)
                 {
                     if (!IsBlackKey(j) && PointInRectangle(GetKeyRectangle(i, j), x, y))
-                    {
-                        int note = i * 12 + j + 1;
-                        if (note != playingNote)
-                        {
-                            playingNote = note;
-                            App.PlayInstrumentNote(playingNote, true, true);
-                            ConditionalInvalidate();
-                        }
-                        return;
-                    }
+                        return i * 12 + j + 1;
+                }
+            }
+
+            return -1;
+        }
+
+        protected void PlayPiano(int x, int y)
+        {
+            var note = GetPianoNote(x, y);
+            if (note >= 0)
+            {
+                if (note != playingNote)
+                {
+                    playingNote = note;
+                    App.PlayInstrumentNote(playingNote, true, true);
+                    ConditionalInvalidate();
                 }
             }
         }
@@ -3024,17 +3051,89 @@ namespace FamiStudio
         {
             App.StopOrReleaseIntrumentNote();
 
-            var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 300, false, e.Y > Height / 2);
+            var note = GetPianoNote(e.X, e.Y);
+            if (note >= 0)
+            {
+                var channel = Song.Channels[editChannel];
+                var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 300, false, e.Y > Height / 2);
+                var highlight = channel.ScaleDegrees != 0;
+                var scaleIndex = highlight ? ScaleType.FindScaleIndex(channel.ScaleDegrees) : 0;
+                var customScale = ScaleType.IsCustom(scaleIndex);
+                var customDegrees = new bool[DegreeType.Names.Length];
 
-            // Need root note : Start with the one that the user clicked on.
+                if (customScale)
+                {
+                    for (int i = 0; i < 12; i++)
+                    {
+                        if ((channel.ScaleDegrees & (1 << i)) != 0)
+                            customDegrees[i] = true;
+                    }
+                }
 
-            dlg.Properties.AddCheckBox("Scale highlight:", false); // 0
-            dlg.Properties.AddDropDownList("Scale :", ScaleType.Names, ScaleType.Names[0]); // 1
-            dlg.Properties.AddCheckBoxList("Custom degrees:", DegreeType.Names, null); // 2
-            dlg.Properties.Build();
+                dlg.Properties.AddCheckBox("Scale highlight:", highlight); // 0
+                dlg.Properties.AddDropDownList("Scale:", ScaleType.Names, ScaleType.Names[scaleIndex]); // 1
+                dlg.Properties.AddDropDownList("Root Note:", Note.NoteNames, Note.NoteNames[(note - 1) % 12]); // 2
+                dlg.Properties.AddCheckBoxList("Custom degrees:", DegreeType.Names, customDegrees); // 3
+                dlg.Properties.SetPropertyEnabled(1, highlight);
+                dlg.Properties.SetPropertyEnabled(2, highlight);
+                dlg.Properties.SetPropertyEnabled(3, highlight);
+                dlg.Properties.SetPropertyEnabled(3, highlight && customScale);
+                dlg.Properties.PropertyChanged += ScaleProperties_PropertyChanged;
+                dlg.Properties.Build();
 
-            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
-            { 
+                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                {
+                    highlight   = dlg.Properties.GetPropertyValue<bool>(0);
+                    scaleIndex  = dlg.Properties.GetSelectedIndex(1);
+                    customScale = ScaleType.IsCustom(scaleIndex);
+
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+
+                    if (highlight)
+                    {
+                        if (customScale)
+                        {
+                            customDegrees = dlg.Properties.GetPropertyValue<bool[]>(3);
+
+                            var packed = 0;
+                            for (int i = 0; i < 12; i++)
+                            {
+                                if (customDegrees[i])
+                                    packed |= (1 << i);
+                            }
+                            channel.ScaleDegrees = packed;
+                        }
+                        else
+                        {
+                            channel.ScaleDegrees = ScaleType.Degrees[scaleIndex];
+                        }
+
+                        channel.ScaleRootNote = dlg.Properties.GetSelectedIndex(2);
+                    }
+                    else
+                    {
+                        channel.ScaleDegrees  = 0;
+                        channel.ScaleRootNote = 0;
+                    }
+
+                    App.UndoRedoManager.EndTransaction();
+                }
+            }
+        }
+
+        private void ScaleProperties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        {
+            // MATTT : Change the custom degrees when scale change.
+            if (propIdx == 0 || propIdx == 1)
+            {
+                var highlight   = props.GetPropertyValue<bool>(0);
+                var scaleIndex  = props.GetSelectedIndex(1);
+                var customScale = ScaleType.IsCustom(scaleIndex);
+
+                props.SetPropertyEnabled(1, highlight);
+                props.SetPropertyEnabled(2, highlight);
+                props.SetPropertyEnabled(3, highlight);
+                props.SetPropertyEnabled(3, highlight && customScale);
             }
         }
 

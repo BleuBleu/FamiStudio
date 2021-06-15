@@ -13,6 +13,8 @@ namespace FamiStudio
         private PatternCumulativeCache[] patternCache = new PatternCumulativeCache[Song.MaxLength];
         private List<Pattern> patterns = new List<Pattern>();
         private int type;
+        private int scaleRootNote;
+        private int scaleDegrees; 
 
         public int Type => type;
         public string Name => ChannelType.Names[type];
@@ -22,6 +24,9 @@ namespace FamiStudio
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
         public bool IsExpansionChannel => type >= ChannelType.ExpansionAudioStart;
+
+        public int ScaleRootNote { get => scaleRootNote; set => scaleRootNote = value; }
+        public int ScaleDegrees { get => scaleDegrees; set => scaleDegrees = value; }
 
         public bool IsFdsWaveChannel => type == ChannelType.FdsWave;
         public bool IsN163WaveChannel => type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8;
@@ -1678,5 +1683,88 @@ namespace FamiStudio
         {
             SetCurrentNote(next, nextIdx);
         }
+    }
+
+    public static class ScaleType
+    {
+        public const int Major = 0;
+        public const int Minor = 1;
+        public const int PentatonicMajor = 2;
+        public const int PentatonicMinor = 3;
+        public const int HarmonicMajor = 4;
+        public const int HarmonicMinor = 5;
+        public const int DorianMode = 6;
+        public const int PhrygianMode = 7;
+        public const int LydianMode = 8;
+        public const int MixolydianMode = 9;
+        public const int LocrianMode = 10;
+
+        public static readonly string[] Names =
+        {
+            "Major (Ionian mode)",
+            "Minor (Aeolian mode)",
+            "Major Pentatonic",
+            "Minor Pentatonic",
+            "Harmonic Major",
+            "Harmonic Minor",
+            "Dorian mode",
+            "Phrygian mode",
+            "Lydian mode",
+            "Mixolydian mode",
+            "Locrian mode",
+            "Custom"
+        };
+
+        public static int FindScaleIndex(int degrees)
+        {
+            var idx = Array.IndexOf(Degrees, degrees);
+
+            if (idx < 0)
+                idx = Degrees.Length - 1; // Custom;
+
+            return idx;
+        }
+
+        public static bool IsCustom(int index)
+        {
+            return index == Degrees.Length - 1;
+        }
+
+        // TODO : Use bitfields here.
+        public static readonly int[] Degrees = new[]
+        {
+            0b101011010101, // Major
+            0b010110101101, // Minor
+            // UNDONE
+            0b101011010101, // PentatonicMajor 
+            0b101011010101, // PentatonicMinor
+            0b101011010101, // HarmonicMajor 
+            0b101011010101, // HarmonicMinor
+            0b101011010101, // DorianMode 
+            0b101011010101, // PhrygianMode
+            0b101011010101, // LydianMode 
+            0b101011010101, // MixolydianMode
+            0b101011010101, // LocrianMode
+            0b000000000000, // Custom
+        };
+    }
+
+    public static class DegreeType
+    {
+        public static readonly string[] Names =
+        {
+            "1",
+            "#1",
+            "2",
+            "#2",
+            "3",
+            "4",
+            "#4",
+            "5",
+            "#5",
+            "6",
+            "#6",
+            "7"
+        };
     }
 }
