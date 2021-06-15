@@ -538,6 +538,13 @@ namespace FamiStudio
                 noteEvents.Add(noteEvent);
             }
 
+            // Polyphonic Key Pressure
+            else if (statusHiByte == 0b1010)
+            {
+                var key      = bytes[idx++];
+                var pressure = bytes[idx++];
+            }
+
             // Channel pressure
             else if (statusHiByte == 0b1101)
             {
