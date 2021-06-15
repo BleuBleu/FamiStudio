@@ -1,8 +1,9 @@
 3.0.1
 =====
-- CTRL + SHIFT ISSUE
 - Github linux audio issue
-- MacOS leak issue.
+/ MacOS leak issue (wav/mp3 export?) no repro
+/ Nickitus note issue (sent FMS) no repro
+- jroweboy compression
 
 Videos:
 =======
