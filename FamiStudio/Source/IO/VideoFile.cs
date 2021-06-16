@@ -72,20 +72,13 @@ namespace FamiStudio
             int lastIdx = -1;
             int oscLen = oscilloscope.GetLength(0);
 
+            // We simplified the rendering.
+            Debug.Assert(oscLen == windowSize);
+
             for (int i = 0; i < oscLen; ++i)
             {
-                var idx = Utils.Clamp(position - windowSize / 2 + i * windowSize / oscLen, 0, wav.Length - 1);
-                var avg = (float)wav[idx];
-                var cnt = 1;
-
-                if (lastIdx >= 0)
-                {
-                    for (int j = lastIdx + 1; j < idx; j++, cnt++)
-                        avg += wav[j];
-                    avg /= cnt;
-                }
-
-                var sample = Utils.Clamp((int)(avg * scaleY), short.MinValue, short.MaxValue);
+                var idx = Utils.Clamp(position - windowSize / 2 + i, 0, wav.Length - 1);
+                var sample = Utils.Clamp((int)(wav[idx] * scaleY), short.MinValue, short.MaxValue);
 
                 var x = Utils.Lerp(minX, maxX, i / (float)(oscLen - 1));
                 var y = Utils.Lerp(minY, maxY, (sample - short.MinValue) / (float)(ushort.MaxValue));
@@ -569,8 +562,10 @@ namespace FamiStudio
             else
                 SmoothFamiStudioScrolling(metadata, song);
 
+            var oscWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
+
             var videoImage   = new byte[videoResY * videoResX * 4];
-            var oscilloscope = new float[channelResY, 2];
+            var oscilloscope = new float[oscWindowSize, 2];
 
             // Start ffmpeg with pipe input.
             var tempFolder = Utils.GetTemporaryDiretory();
@@ -673,7 +668,7 @@ namespace FamiStudio
                             var oscMinY = (int)(ChannelIconPosY + s.bmpIcon.Size.Height + 10);
                             var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
 
-                            GenerateOscilloscope(s.wav, frame.wavOffset, (int)Math.Round(SampleRate * OscilloscopeWindowSize), oscLookback, oscScale, channelPosX0 + 10, oscMinY, channelPosX1 - 10, oscMaxY, oscilloscope);
+                            GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0 + 10, oscMinY, channelPosX1 - 10, oscMaxY, oscilloscope);
 
                             videoGraphics.AntiAliasing = true;
                             videoGraphics.DrawLine(oscilloscope, theme.LightGreyFillBrush1);
