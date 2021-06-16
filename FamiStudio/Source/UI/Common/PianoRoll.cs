@@ -2874,23 +2874,28 @@ namespace FamiStudio
 
             var note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
 
-            int newValue;
+            var newValue = 0;
+            var effectDelta = 0;
+            
             if (shift)
             {
                 if (!note.HasValidEffectValue(selectedEffectIdx))
                     note.SetEffectValue(selectedEffectIdx, Note.GetEffectDefaultValue(Song, selectedEffectIdx));
 
-                newValue = Utils.Clamp(note.GetEffectValue(selectedEffectIdx) + (mouseLastY - e.Y), minValue, maxValue);
+                effectDelta = captureMouseY - e.Y;
+                newValue = Utils.Clamp(note.GetEffectValue(selectedEffectIdx) + effectDelta, minValue, maxValue);
+
+                Debug.WriteLine(effectDelta.ToString());
             }
             else
             {
                 var ratio = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
                 newValue = (int)Math.Round(ratio * (maxValue - minValue) + minValue);
+                effectDelta = newValue - captureEffectValue;
             }
 
             if (captureOperation == CaptureOperation.ChangeSelectionEffectValue)
             {
-                var effectDelta = newValue - captureEffectValue;
                 var minLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin);
                 var maxLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax);
 
