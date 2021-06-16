@@ -356,6 +356,9 @@
     <EmbeddedResource Include="Resources\PlayQuarter.png" />
     <EmbeddedResource Include="Resources\ConfigGeneral%402x.png" />
     <EmbeddedResource Include="Resources\ConfigGeneral.png" />
+    <EmbeddedResource Include="Resources\Metronome.wav" />
+    <EmbeddedResource Include="Resources\Metronome%402x.png" />
+    <EmbeddedResource Include="Resources\Metronome.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall%402x.png" />
     <EmbeddedResource Include="Resources\CutDelaySmall.png" />
     <EmbeddedResource Include="Resources\NoteDelaySmall%402x.png" />
