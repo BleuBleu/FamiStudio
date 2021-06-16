@@ -2884,8 +2884,6 @@ namespace FamiStudio
 
                 effectDelta = captureMouseY - e.Y;
                 newValue = Utils.Clamp(note.GetEffectValue(selectedEffectIdx) + effectDelta, minValue, maxValue);
-
-                Debug.WriteLine(effectDelta.ToString());
             }
             else
             {
