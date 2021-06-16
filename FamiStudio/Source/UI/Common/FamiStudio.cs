@@ -634,7 +634,8 @@ namespace FamiStudio
 
             if (success)
             {
-                undoRedoManager.Clear();
+                if (Settings.ClearUndoRedoOnSave)
+                    undoRedoManager.Clear();
             }
             else
             {

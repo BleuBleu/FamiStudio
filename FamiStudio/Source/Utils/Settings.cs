@@ -32,6 +32,7 @@ namespace FamiStudio
         public static bool CheckUpdates = true;
         public static bool TrackPadControls = false;
         public static bool ShowTutorial = true;
+        public static bool ClearUndoRedoOnSave = true;
 
         // User Interface section
         public static int DpiScaling = 0;
@@ -206,9 +207,10 @@ namespace FamiStudio
             Version = ini.GetInt("General", "Version", 0);
 
             // General
-            CheckUpdates     = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            CheckUpdates = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
             TrackPadControls = ini.GetBool(Version < 2 ? "UI" : "General", "TrackPadControls", false); // At version 2 (FamiStudio 3.0.0, changed section)
-            ShowTutorial     = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
 
             // UI
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
@@ -332,6 +334,7 @@ namespace FamiStudio
             ini.SetBool("General", "CheckUpdates", CheckUpdates);
             ini.SetBool("General", "TrackPadControls", TrackPadControls);
             ini.SetBool("General", "ShowTutorial", ShowTutorial);
+            ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);
 
             // UI
             ini.SetInt("UI", "DpiScaling", DpiScaling);

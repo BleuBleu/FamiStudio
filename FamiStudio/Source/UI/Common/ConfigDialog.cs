@@ -102,10 +102,11 @@ namespace FamiStudio
                 {
                     page.AddCheckBox("Check for updates:", Settings.CheckUpdates); // 0
                     page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 1
+                    page.AddCheckBox("Clear Undo/Redo on Save:", Settings.ClearUndoRedoOnSave); // 2
 #if FAMISTUDIO_MACOS
                     page.PropertyChanged += PageGeneral_PropertyChanged;
 #endif
-                    break;
+                        break;
                 }
 
                 case ConfigSection.UserInterface:
@@ -366,6 +367,7 @@ namespace FamiStudio
                 // General
                 Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(0);
                 Settings.TrackPadControls = pageGeneral.GetPropertyValue<bool>(1);
+                Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(2);
 
                 // UI
                 var scalingString = pageUI.GetPropertyValue<string>(0);
