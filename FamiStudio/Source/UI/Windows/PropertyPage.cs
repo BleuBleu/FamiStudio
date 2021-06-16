@@ -358,20 +358,34 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private CheckedListBox CreateCheckedListBox(string[] values, bool[] selected)
+        private PropertyPageListView CreateCheckedListBox(string[] values, bool[] selected)
         {
-            var listBox = new PaddedCheckedListBox();
+            var columns = new[]
+            {
+                new ColumnDesc("A", 0.0f, ColumnType.CheckBox),
+                new ColumnDesc("B", 1.0f, ColumnType.Label)
+            };
+
+            var list = new PropertyPageListView(columns);
+            var data = new object[values.Length, 2];
 
             for (int i = 0; i < values.Length; i++)
-                listBox.Items.Add(values[i], selected != null ? selected[i] : true);
+            {
+                data[i, 0] = selected != null ? selected[i] : false;
+                data[i, 1] = values[i];
+            }
 
-            listBox.IntegralHeight = false;
-            listBox.Font = font;
-            listBox.Height = (int)(200 * RenderTheme.DialogScaling);
-            listBox.CheckOnClick = true;
-            listBox.SelectionMode = SelectionMode.One;
+            list.UpdateData(data);
 
-            return listBox;
+            list.Font = font;
+            list.Height = (int)(200 * RenderTheme.DialogScaling);
+            list.HeaderStyle = ColumnHeaderStyle.None;
+            //list.MouseDoubleClick += ListView_MouseDoubleClick;
+            //list.MouseDown += ListView_MouseDown;
+            //list.ButtonPressed += ListView_ButtonPressed;
+            //list.ValueChanged += ListView_ValueChanged;
+
+            return list;
         }
 
         private Button CreateButton(string text, string tooltip)
@@ -395,20 +409,29 @@ namespace FamiStudio
 
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
-            var listBox = (properties[idx].control as PaddedCheckedListBox);
+            var list = properties[idx].control as PropertyPageListView;
 
-            listBox.Items.Clear();
+            Debug.Assert(values.Length == list.Items.Count);
+
             for (int i = 0; i < values.Length; i++)
-                listBox.Items.Add(values[i], selected != null ? selected[i] : true);
+            {
+                list.SetData(i, 0, selected != null ? selected[i] : true);
+                list.SetData(i, 1, values[i]);
+            }
+
+            list.Invalidate();
         }
 
         public void UpdateCheckBoxList(int idx, bool[] selected)
         {
-            var listBox = (properties[idx].control as PaddedCheckedListBox);
+            var list = properties[idx].control as PropertyPageListView;
 
-            Debug.Assert(selected.Length == listBox.Items.Count);
-            for (int i = 0; i < listBox.Items.Count; i++)
-                listBox.SetItemChecked(i, selected[i]);
+            Debug.Assert(selected.Length == list.Items.Count);
+
+            for (int i = 0; i < selected.Length; i++)
+                list.SetData(i, 0, selected[i]);
+
+            list.Invalidate();
         }
 
         public int AddColoredString(string value, Color color)
@@ -685,16 +708,10 @@ namespace FamiStudio
 
             list.Font = font;
             list.Height = (int)(height * RenderTheme.DialogScaling);
-            list.MultiSelect = false;
-            list.View = View.Details;
-            list.GridLines = true;
-            list.FullRowSelect = true;
-            list.HeaderStyle = ColumnHeaderStyle.Nonclickable;
             list.MouseDoubleClick += ListView_MouseDoubleClick;
             list.MouseDown += ListView_MouseDown;
             list.ButtonPressed += ListView_ButtonPressed;
             list.ValueChanged += ListView_ValueChanged;
-            list.BackColor = ThemeBase.LightGreyFillColor2;
 
             return list;
         }

@@ -59,6 +59,12 @@ namespace FamiStudio
 
             DoubleBuffered = true;
             OwnerDraw = true;
+            MultiSelect = false;
+            View = View.Details;
+            GridLines = true;
+            FullRowSelect = true;
+            HeaderStyle = ColumnHeaderStyle.Nonclickable;
+            BackColor = ThemeBase.LightGreyFillColor2;
 
             bmpCheck = System.Drawing.Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Check.png")) as System.Drawing.Bitmap;
         }
@@ -115,6 +121,11 @@ namespace FamiStudio
         public object GetData(int rowIdx, int colIdx)
         {
             return listData[rowIdx, colIdx];
+        }
+
+        public void SetData(int rowIdx, int colIdx, object val)
+        {
+            listData[rowIdx, colIdx] = val;
         }
 
         public void UpdateData(int rowIdx, int colIdx, object data)
