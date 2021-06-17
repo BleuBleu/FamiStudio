@@ -2,6 +2,22 @@
 
 Version history / release notes for each release.
 
+## Version 3.0.1 (Hotfix)
+
+Fixes:
+
+* Fixed crash on startup on Linux when RtMidi fails to initialize
+* Fixed fine effect adjustment (SHIFT + drag) when multiple values are selected
+* Fixed race condition when stopping song playback that could cause a crash
+* Fixed small OpenGL leaks
+* Fixed pattern duplication when CTRL+SHIFT were already pressed when starting the drag
+* Fixed import of MIDI files containing polyphonic key pressure events
+* Fixed duplicated labels when exporting projects containing multiple songs to Famitone2 or FamiStudio sound engine
+* Fixed crash when double clicking or left clicking in some cells of grids
+* Fixed export of VRC6 duty cycles to FamiTracker
+* Properly shutting down MIDI input on Windows
+* Adding error message when trying to import NSF using multiple expansion chips
+
 ## Version 3.0.0
 
 Changes :
