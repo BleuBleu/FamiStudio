@@ -54,7 +54,17 @@ namespace FamiStudio
         public static void Initialize()
         {
             if (midiIn == IntPtr.Zero)
-                midiIn = rtmidi_in_create(0, "FamiStudio", 0);
+            {
+                try
+                {
+                    midiIn = rtmidi_in_create(0, "FamiStudio", 0);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error initializing RtMidi. MIDI input will not be available.");
+                    midiIn = IntPtr.Zero;
+                }
+            }
         }
 
         public static void Shutdown()
