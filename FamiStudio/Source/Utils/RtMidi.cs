@@ -62,6 +62,7 @@ namespace FamiStudio
                 catch (Exception e)
                 {
                     Console.WriteLine("Error initializing RtMidi. MIDI input will not be available.");
+                    Console.WriteLine(e.Message);
                     midiIn = IntPtr.Zero;
                 }
             }
