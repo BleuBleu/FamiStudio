@@ -3424,6 +3424,9 @@ namespace FamiStudio
 
             Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int minVal, out int maxVal);
 
+            startFrameIdx = Math.Max(startFrameIdx, 0);
+            endFrameIdx   = Math.Min(endFrameIdx, EditEnvelope.Length - 1);
+
             for (int i = startFrameIdx; i <= endFrameIdx; i++)
                 EditEnvelope.Values[i] = (sbyte)Utils.Clamp(function(EditEnvelope.Values[i], i - startFrameIdx), minVal, maxVal);
 

@@ -1,3 +1,26 @@
+3.0.2
+=====
+- Steo FDS crash
+Exception in Gtk# callback delegate
+	  Note: Applications can use GLib.ExceptionManager.UnhandledException to handle the exception.
+	System.IndexOutOfRangeException: Index was outside the bounds of the array.
+	  at FamiStudio.PianoRoll.TransformEnvelopeValues (System.Int32 startFrameIdx, System.Int32 endFrameIdx, System.Func`3[T1,T2,TResult] function) [0x00079] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at FamiStudio.PianoRoll.ReplaceEnvelopeValues (System.SByte[] values, System.Int32 startIdx) [0x0000d] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at FamiStudio.PianoRoll.PasteEnvelopeValues () [0x00013] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at FamiStudio.PianoRoll.Paste () [0x00030] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at FamiStudio.PianoRoll.OnKeyDown (System.Windows.Forms.KeyEventArgs e) [0x00103] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at FamiStudio.GLControl.KeyDown (System.Windows.Forms.KeyEventArgs e) [0x00000] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at FamiStudio.FamiStudioForm.OnKeyPressEvent (Gdk.EventKey evnt) [0x00052] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at Gtk.Widget.keypressevent_cb (System.IntPtr widget, System.IntPtr evnt) [0x00014] in <e2cf54bd50544b3dbf94649395d8c893>:0 
+	  at GLib.ExceptionManager.RaiseUnhandledException (System.Exception e, System.Boolean is_terminal) [0x00000] in <ed39f21b9e9343dcbd442a17ad356a9f>:0 
+	  at Gtk.Widget.keypressevent_cb (System.IntPtr widget, System.IntPtr evnt) [0x00000] in <e2cf54bd50544b3dbf94649395d8c893>:0 
+	  at Gtk.Application.gtk_main () [0x00000] in <e2cf54bd50544b3dbf94649395d8c893>:0 
+	  at Gtk.Application.Run () [0x00000] in <e2cf54bd50544b3dbf94649395d8c893>:0 
+	  at FamiStudio.FamiStudioForm.Run () [0x00000] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at FamiStudio.FamiStudio.Run () [0x00000] in <15fb4b89991b4ac782451adb7de06724>:0 
+	  at FamiStudio.Program.Main (System.String[] args) [0x00000] in <15fb4b89991b4ac782451adb7de06724>:0 
+- RtMidi again?
+
 Videos:
 =======
 - Tutorial for FamiTracker
