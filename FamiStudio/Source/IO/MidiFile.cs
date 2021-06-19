@@ -699,7 +699,7 @@ namespace FamiStudio
                 for (int i = ChannelType.ExpansionAudioStart; i < channelSources.Length; i++)
                 {
                     if (channelSources[i].type != MidiSourceType.None)
-                        num163Channels = Math.Max(num163Channels, i - ChannelType.ExpansionAudioStart);
+                        num163Channels = Math.Max(num163Channels, i - ChannelType.ExpansionAudioStart + 1);
                 }
             }
 
