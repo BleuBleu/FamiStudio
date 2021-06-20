@@ -371,7 +371,7 @@ namespace FamiStudio
 
             for (int i = 0; i < values.Length; i++)
             {
-                data[i, 0] = selected != null ? selected[i] : false;
+                data[i, 0] = selected != null ? selected[i] : true;
                 data[i, 1] = values[i];
             }
 
@@ -865,10 +865,10 @@ namespace FamiStudio
                     return (prop.control as ComboBox).Text;
                 case PropertyType.CheckBoxList:
                     {
-                        var listBox = prop.control as CheckedListBox;
-                        var selected = new bool[listBox.Items.Count];
-                        for (int i = 0; i < listBox.Items.Count; i++)
-                            selected[i] = listBox.GetItemChecked(i);
+                        var listView = prop.control as PropertyPageListView;
+                        var selected = new bool[listView.Items.Count];
+                        for (int i = 0; i < listView.Items.Count; i++)
+                            selected[i] = (bool)listView.GetData(i, 0);
                         return selected;
                     }
                 case PropertyType.Button:
