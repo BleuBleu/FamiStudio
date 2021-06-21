@@ -5,6 +5,8 @@ namespace FamiStudio
 {
     public abstract class ChannelState
     {
+        const int CyclesBetweenChannels = 120;
+
         protected int apuIdx;
         protected int channelType;
         protected int releaseCounter = 0;
@@ -452,6 +454,7 @@ namespace FamiStudio
         public virtual void UpdateAPU()
         {
             noteTriggered = false;
+            NesApu.SkipCycles(apuIdx, CyclesBetweenChannels);
         }
 
         public Note CurrentNote

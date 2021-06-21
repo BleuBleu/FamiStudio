@@ -1,10 +1,3 @@
-- Linux stall from github
-x NSF import cmd line
-- Command line crash if NSF doesnt exist.
-
-- Add Tools to github.
-- Merge CC65 stuff.
-
 Videos:
 =======
 - Tutorial for FamiTracker
@@ -54,48 +47,29 @@ x Stereo WAV/MP3/Video?
 x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
 x True portable mode (save FamiStudio.ini in same folder).
 x Move "relative pitch env" to param.
+x Is it needed to clear the undo/redo stack when saving? Make it an option? (What about when we add the filename?)
+x Replace checklistbox.
+x More verts in video osc?
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
-/ Oscilloscope export. Add more low bitrates. Less high.
-- Scales
-	List:
-		- Major (Ionian mode)
-		- Minor (Aeolian mode)
-		- Major Pentatonic
-		- Minor Pentatonic
-		- Harmonic Major
-		- Harmonic Minor
-		- Dorian mode
-		- Phrygian mode
-		- Lydian mode
-		- Mixolydian mode
-		- Locrian mode
-		- Custom
-	Custom Degrees:
-		- 1
-		- #1
-		- 2
-		- #2
-		- 3
-		- 4
-		- #4
-		- 5
-		- #5
-		- 6
-		- #6
-		- 7
-	
-- Replace checklistbox.
-- Review OnMouseCaptureChanged, not good when playing with VRC7 params.
+/ Oscilloscope export. Add more low bitrates + review is high bitrates are acutally used. If you choose 12000, does it really use that? Less high.
+/ Scales? Or juste highlight.
+- Merge CC65 stuff.
+- OGG export?
+/ Compare noise channel in metal crusher.
+	=> Recompare volumes vs. other emus.
+- Look at changes in Nes_Osc
+	=> Phase matching in sqaures, good
+	=> Why are the Blip_Synth all <xxx, 1> now? Makes it go to the max volume?
+- Loop in selection for sequencer.
+- Look at wave offset (msg from Twitter)
+- Review OnMouseCaptureChanged, not good when playing with params.
 - Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
-
 - Save snapping + qwerty settings + some export settings.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
-- Is it needed to clear the undo/redo stack when saving? Make it an option? (What about when we add the filename?)
 - Highlight piano keys when they are pressed with QWERTY or MIDI. 
 - Noise slides? Could be different opcode with lookup table slope.
-- Loop in selection for sequencer.
-- Keyboard shortcut for snapping precision?
 
+- CUT : Keyboard shortcut for snapping precision?
 - LOW PRIO : End of song looping behavior?
 - LOW PRIO : Left/right pan with +/- (cubase style)?
 
@@ -104,6 +78,7 @@ Testing
 - Re-test song merge a lot. Removed a few cleanups.
 - Re-test expansions issue (same instrument name, diff expansions, etc.)
 - Stereo video crackles?
+- WS clips children on win7
 
 Random features ideas
 =====================
@@ -117,6 +92,7 @@ Random features ideas
 
 Backlog: 
 ========= 
+- Selection with min/max note.
 - Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 

@@ -93,11 +93,16 @@ struct Nes_Triangle : Nes_Osc
 struct Nes_Noise : Nes_Envelope
 {
 	int noise;
+	bool pal_mode;
 	Blip_Synth<blip_med_quality,15> synth;
 	
 	void run( cpu_time_t, cpu_time_t );
 	void reset() {
-		noise = 1 << 14;
+		// Although the specs says it is initialized at 1, the reality 
+		// is that by the time any music starts playing, it will be 
+		// in a random state. This will avoid having to skip cycles
+		// at the beginning of the song.
+		noise = 4141;
 		Nes_Envelope::reset();
 	}
 };

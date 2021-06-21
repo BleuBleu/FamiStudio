@@ -427,9 +427,12 @@ void Nes_Dmc::run( cpu_time_t time, cpu_time_t end_time )
 
 #include BLARGG_ENABLE_OPTIMIZER
 
-static const short noise_period_table [16] = {
-	0x004, 0x008, 0x010, 0x020, 0x040, 0x060, 0x080, 0x0A0,
-	0x0CA, 0x0FE, 0x17C, 0x1FC, 0x2FA, 0x3F8, 0x7F2, 0xFE4
+static const short noise_period_table [2] [16] = {
+	0x004, 0x008, 0x010, 0x020, 0x040, 0x060, 0x080, 0x0A0,  // NTSC
+	0x0CA, 0x0FE, 0x17C, 0x1FC, 0x2FA, 0x3F8, 0x7F2, 0xFE4,
+	
+	0x004, 0x008, 0x00E, 0x01E, 0x03C, 0x058, 0x076, 0x094,  // PAL
+	0x0BC, 0x0EC, 0x162, 0x1D8, 0x2C4, 0x3B0, 0x762, 0xEC2
 };
 
 void Nes_Noise::run( cpu_time_t time, cpu_time_t end_time )
@@ -438,7 +441,7 @@ void Nes_Noise::run( cpu_time_t time, cpu_time_t end_time )
 		return;
 	
 	const int volume = this->volume();
-	int amp = (noise & 1) ? volume : 0;
+	int amp = (noise & 1) ? 0 : volume;
 	int delta = update_amp( amp );
 	if ( delta )
 		synth.offset( time, delta, output );
@@ -447,19 +450,18 @@ void Nes_Noise::run( cpu_time_t time, cpu_time_t end_time )
 	if ( time < end_time )
 	{
 		const int mode_flag = 0x80;
-		
-		int period = noise_period_table [regs [2] & 15];
-		if ( !volume )
+		const int tap = (regs[2] & mode_flag ? 6 : 1);
+		const int period = noise_period_table [pal_mode] [regs [2] & 15];
+
+		if (!volume)
 		{
-			// round to next multiple of period
-			time += (end_time - time + period - 1) / period * period;
-			
-			// approximate noise cycling while muted, by shuffling up noise register
-			// to do: precise muted noise cycling?
-			if ( !(regs [2] & mode_flag) ) {
-				int feedback = (noise << 13) ^ (noise << 14);
-				noise = (feedback & 0x4000) | (noise >> 1);
-			}
+			do
+			{
+				int feedback = (noise & 0x01) ^ ((noise >> tap) & 0x01);
+				noise = (noise >> 1) | (feedback << 14);
+				time += period;
+			} 
+			while (time < end_time);
 		}
 		else
 		{
@@ -469,27 +471,20 @@ void Nes_Noise::run( cpu_time_t time, cpu_time_t end_time )
 			Blip_Buffer::resampled_time_t rperiod = output->resampled_duration( period );
 			Blip_Buffer::resampled_time_t rtime = output->resampled_time( time );
 			
-			int noise = this->noise;
-			int delta = amp * 2 - volume;
-			const int tap = (regs [2] & mode_flag ? 8 : 13);
-			
-			do {
-				int feedback = (noise << tap) ^ (noise << 14);
+			do 
+			{
+				int feedback = (noise & 0x01) ^ ((noise >> tap) & 0x01);
+				noise = (noise >> 1) | (feedback << 14);
+
+				amp = (noise & 1) ? 0 : volume;
+				delta = update_amp(amp);
+				if (delta)
+					synth.offset_resampled(rtime, delta, output);
+				
 				time += period;
-				
-				if ( (noise + 1) & 2 ) {
-					// bits 0 and 1 of noise differ
-					delta = -delta;
-					synth.offset_resampled( rtime, delta, output );
-				}
-				
 				rtime += rperiod;
-				noise = (feedback & 0x4000) | (noise >> 1);
 			}
 			while ( time < end_time );
-			
-			last_amp = (delta + volume) >> 1;
-			this->noise = noise;
 		}
 	}
 	

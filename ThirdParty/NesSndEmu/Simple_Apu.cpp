@@ -187,6 +187,15 @@ int Simple_Apu::read_status()
 	return apu.read_status( clock() );
 }
 
+void Simple_Apu::skip_cycles(long cycles)
+{
+	if (!seeking)
+	{
+		time += cycles;
+		apu.run_until(time);
+	}
+}
+
 void Simple_Apu::end_frame()
 {
 	time = 0;

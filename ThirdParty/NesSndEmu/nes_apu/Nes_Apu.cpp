@@ -75,7 +75,7 @@ void Nes_Apu::volume( double v )
 	dmc.nonlinear = false;
 	square_synth.volume( 0.1128 * v );
 	triangle.synth.volume( 0.12765 * v );
-	noise.synth.volume( 0.0741 * v );
+	noise.synth.volume( 0.095 * v );
 	dmc.synth.volume( 0.42545 * v );
 }
 
@@ -90,6 +90,7 @@ void Nes_Apu::reset( bool pal_mode, int initial_dmc_dac )
 	// to do: time pal frame periods exactly
 	frame_period = pal_mode ? 8314 : 7458;
 	dmc.pal_mode = pal_mode;
+	noise.pal_mode = pal_mode;
 	
 	square1.reset();
 	square2.reset();
