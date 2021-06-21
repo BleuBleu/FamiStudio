@@ -69,6 +69,8 @@ struct Nes_Square : Nes_Envelope
 		sweep_delay = 0;
 		Nes_Envelope::reset();
 	}
+	cpu_time_t maintain_phase( cpu_time_t time, cpu_time_t end_time,
+			cpu_time_t timer_period );
 };
 
 // Nes_Triangle
@@ -84,9 +86,11 @@ struct Nes_Triangle : Nes_Osc
 	void clock_linear_counter();
 	void reset() {
 		linear_counter = 0;
-		phase = phase_range;
+		phase = 1;
 		Nes_Osc::reset();
 	}
+	cpu_time_t maintain_phase( cpu_time_t time, cpu_time_t end_time,
+			cpu_time_t timer_period );
 };
 
 // Nes_Noise
@@ -116,7 +120,7 @@ struct Nes_Dmc : Nes_Osc
 	int buf;
 	int bits_remain;
 	int bits;
-	bool buf_empty;
+	bool buf_full;
 	bool silence;
 	
 	enum { loop_flag = 0x40 };
@@ -144,6 +148,7 @@ struct Nes_Dmc : Nes_Osc
 	void reload_sample();
 	void reset();
 	int count_reads( cpu_time_t, cpu_time_t* ) const;
+	cpu_time_t next_read_time() const;
 };
 
 #endif

@@ -61,7 +61,7 @@ struct apu_snapshot_t
 		byte buf;
 		byte bits_remain;
 		byte bits;
-		byte buf_empty;
+		byte buf_full;
 		byte silence;
 		byte irq_flag;
 	} dmc;

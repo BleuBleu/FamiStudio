@@ -50,16 +50,13 @@ x Move "relative pitch env" to param.
 x Is it needed to clear the undo/redo stack when saving? Make it an option? (What about when we add the filename?)
 x Replace checklistbox.
 x More verts in video osc?
+x Compare noise channel in metal crusher.
+x Look at changes in Nes_Osc
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. Add more low bitrates + review is high bitrates are acutally used. If you choose 12000, does it really use that? Less high.
 / Scales? Or juste highlight.
 - Merge CC65 stuff.
 - OGG export?
-/ Compare noise channel in metal crusher.
-	=> Recompare volumes vs. other emus.
-- Look at changes in Nes_Osc
-	=> Phase matching in sqaures, good
-	=> Why are the Blip_Synth all <xxx, 1> now? Makes it go to the max volume?
 - Loop in selection for sequencer.
 - Look at wave offset (msg from Twitter)
 - Review OnMouseCaptureChanged, not good when playing with params.

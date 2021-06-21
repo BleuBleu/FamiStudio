@@ -62,7 +62,7 @@ struct apu_reflection
 		REFLECT( state.buf,             osc.buf );
 		REFLECT( state.bits_remain,     osc.bits_remain );
 		REFLECT( state.bits,            osc.bits );
-		REFLECT( state.buf_empty,       osc.buf_empty );
+		REFLECT( state.buf_full,        osc.buf_full);
 		REFLECT( state.silence,         osc.silence );
 		REFLECT( state.irq_flag,        osc.irq_flag );
 		if ( mode )
