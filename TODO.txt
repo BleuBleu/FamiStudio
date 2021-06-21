@@ -1,5 +1,8 @@
 3.0.2
 =====
+- Osc upside down (check video too).
+- Yellow tooltip linux mint?
+- Better fine pitch adjustment?
 - RtMidi again?
 - Assert importing metal crusher famitracker TXT.
 
