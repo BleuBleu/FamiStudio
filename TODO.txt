@@ -19,6 +19,12 @@ Linux notes
 		- Choose Release (no debug info) 
 		- Generate. 
 		- make! 
+	- OGG:
+		- Download ogg/vorbis code
+		- cmake-gui, static lib, configure
+		- CMakeFiles/vorbis.dir/flags.make, add -fPIC
+			C_FLAGS = -O3 -DNDEBUG -fPIC 
+		- Same for OGG
 	- NesSndEmu + NotSoFatso, run script. 
 	- RtMidi, need to add static C/C++ libs to cmake file. 
  
