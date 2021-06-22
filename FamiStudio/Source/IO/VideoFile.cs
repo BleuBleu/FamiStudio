@@ -673,7 +673,8 @@ namespace FamiStudio
                             var oscMinY = (int)(ChannelIconPosY + s.bmpIcon.Size.Height + 10);
                             var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
 
-                            GenerateOscilloscope(s.wav, frame.wavOffset, (int)Math.Round(SampleRate * OscilloscopeWindowSize), oscLookback, oscScale, channelPosX0 + 10, oscMinY, channelPosX1 - 10, oscMaxY, oscilloscope);
+                            // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
+                            GenerateOscilloscope(s.wav, frame.wavOffset, (int)Math.Round(SampleRate * OscilloscopeWindowSize), oscLookback, oscScale, channelPosX0 + 10, oscMaxY, channelPosX1 - 10, oscMinY, oscilloscope);
 
                             videoGraphics.AntiAliasing = true;
                             videoGraphics.DrawLine(oscilloscope, theme.LightGreyFillBrush1);

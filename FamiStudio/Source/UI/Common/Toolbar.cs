@@ -702,7 +702,7 @@ namespace FamiStudio
             if (oscilloscopeGeometry != null && lastOscilloscopeHadNonZeroSample)
             {
                 float scaleX = oscilloscopeSizeX;
-                float scaleY = oscilloscopeSizeY / 2;
+                float scaleY = oscilloscopeSizeY / -2; // D3D is upside down compared to how we display waves typically.
 
                 RenderGeometry geo = g.CreateGeometry(oscilloscopeGeometry, false);
                 g.PushTransform(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2, scaleX, scaleY);
