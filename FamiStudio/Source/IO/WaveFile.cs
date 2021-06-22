@@ -103,18 +103,20 @@ namespace FamiStudio
 
         public unsafe static short[] Load(string filename, out int sampleRate)
         {
+            sampleRate = 0;
+
             try
             {
                 var bytes = File.ReadAllBytes(filename);
 
                 if (bytes != null && bytes.Length >= 12)
                 {
-                    if (bytes[0]  == (byte)'R' &&
-                        bytes[1]  == (byte)'I' &&
-                        bytes[2]  == (byte)'F' &&
-                        bytes[3]  == (byte)'F' &&
-                        bytes[8]  == (byte)'W' &&
-                        bytes[9]  == (byte)'A' &&
+                    if (bytes[0] == (byte)'R' &&
+                        bytes[1] == (byte)'I' &&
+                        bytes[2] == (byte)'F' &&
+                        bytes[3] == (byte)'F' &&
+                        bytes[8] == (byte)'W' &&
+                        bytes[9] == (byte)'A' &&
                         bytes[10] == (byte)'V' &&
                         bytes[11] == (byte)'E')
                     {
@@ -175,16 +177,23 @@ namespace FamiStudio
                             else
                             {
                                 Log.LogMessage(LogSeverity.Error, "Incompatible wave format. Only 16-bit, uncompressed, mono and stereo wave files are supported.");
+                                return null;
                             }
+                        }
+                        else
+                        {
+                            Log.LogMessage(LogSeverity.Error, "Cannot find format and data chunks. Make sure the file is a valid WAV file and is not corrupted.");
+                            return null;
                         }
                     }
                 }
+
+                Log.LogMessage(LogSeverity.Error, "Invalid WAV file header. Make sure the file is a valid WAV file and is not corrupted.");
             }
             catch
             {
             }
 
-            sampleRate = 0;
             return null;
         }
     }
