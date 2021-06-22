@@ -109,6 +109,8 @@ namespace FamiStudio
 
         public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
+            // MATTT : Make it work on all platforms.
+#if FAMISTUDIO_WINDOWS
             if (!Initialize(ffmpegExecutable, channelMask, loopCount))
                 return false;
 
@@ -320,6 +322,7 @@ namespace FamiStudio
                 videoGraphics.Dispose();
             }
 
+#endif
             return true;
         }         
     }

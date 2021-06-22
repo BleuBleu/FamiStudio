@@ -305,6 +305,9 @@
     <EmbeddedResource Include="Resources\gtk_linux_hidpi.rc" />
     <Compile Include="Source\UI\MacLinux\CairoImage.cs" />
     <Compile Include="Source\UI\MacLinux\CellRendererButton.cs" />
+    <Content Include="libVorbis.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
