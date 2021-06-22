@@ -5,15 +5,6 @@
 #include <math.h>
 #include <vorbis/vorbisenc.h>
 
-#ifdef _WIN32 /* We need the following two to set stdin/stdout to binary */
-#include <io.h>
-#include <fcntl.h>
-#endif
-
-#if defined(__MACOS__) && defined(__MWERKS__)
-#include <console.h>      /* CodeWarrior's Mac "command-line" support */
-#endif
-
 #define READ 1024
 signed char readbuffer[READ * 4 + 44]; /* out of the data segment, not the stack */
 
