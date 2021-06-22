@@ -1,6 +1,8 @@
 3.0.2
 =====
 - Osc upside down (check video too).
+x Make sure we show error message when bad wav file.
+x AZERTY keyboard issue.
 - Yellow tooltip linux mint?
 - Better fine pitch adjustment?
 - RtMidi again?
