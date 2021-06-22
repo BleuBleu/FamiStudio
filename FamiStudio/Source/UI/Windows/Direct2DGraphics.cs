@@ -229,14 +229,14 @@ namespace FamiStudio
             PopTransform();
         }
 
-        public void DrawLine(float[,] points, Brush brush)
+        public void DrawLine(float[,] points, Brush brush, float width = 1.0f)
         {
             PushTranslation(0.5f, 0.5f);
             for (int i = 0; i < points.GetLength(0) - 1; i++)
             {
                 renderTarget.DrawLine(
                     new RawVector2(points[i + 0, 0], points[i + 0, 1]),
-                    new RawVector2(points[i + 1, 0], points[i + 1, 1]), brush, 1.0f, strokeStyleMiterNoScaling);
+                    new RawVector2(points[i + 1, 0], points[i + 1, 1]), brush, width, strokeStyleMiterNoScaling);
             }
             PopTransform();
         }

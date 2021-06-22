@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    static class WavMp3ExportUtils
+    static class AudioExportUtils
     {
         public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, int channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, Action<short[], int, string> function)
         {
@@ -138,6 +138,32 @@ namespace FamiStudio
             {
                 return 0;
             }
+        }
+    }
+
+    public static class AudioFormatType
+    {
+        public const int Wav = 0;
+        public const int Mp3 = 1;
+        public const int Vorbis = 2;
+
+        public static readonly string[] Names =
+        {
+            "WAV",
+            "MP3",
+            "Ogg Vorbis"
+        };
+
+        public static readonly string[] Extentions =
+        {
+            "wav",
+            "mp3",
+            "ogg",
+        };
+
+        public static int GetValueForName(string str)
+        {
+            return Array.IndexOf(Names, str);
         }
     }
 }

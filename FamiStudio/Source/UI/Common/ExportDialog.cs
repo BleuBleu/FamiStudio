@@ -29,7 +29,7 @@ namespace FamiStudio
 
         string[] ExportFormatNames =
         {
-            "WAV / MP3",
+            "WAV / MP3 / OGG",
             "Video",
             "NSF",
             "ROM / FDS",
@@ -134,7 +134,7 @@ namespace FamiStudio
             {
                 case ExportFormat.WavMp3:
                     page.AddDropDownList("Song :", songNames, songNames[0]); // 0
-                    page.AddDropDownList("Format :", new[] { "WAV", "MP3" }, "WAV"); // 1
+                    page.AddDropDownList("Format :", AudioFormatType.Names, AudioFormatType.Names[0]); // 1
                     page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
                     page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
                     page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
@@ -162,7 +162,7 @@ namespace FamiStudio
                     page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
                     page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
                     page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 5
-                    page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
+                    page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "3000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
                     page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
                     page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
                     page.AddCheckBox("Stereo", false); // 9
@@ -290,7 +290,7 @@ namespace FamiStudio
         {
             if (propIdx == 1)
             {
-                props.SetPropertyEnabled(3, (string)value == "MP3");
+                props.SetPropertyEnabled(3, (string)value != "WAV");
             }
             else if (propIdx == 4)
             {
@@ -378,20 +378,26 @@ namespace FamiStudio
         private void ExportWavMp3()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.WavMp3);
-            var format = props.GetPropertyValue<string>(1);
+            var format = props.GetSelectedIndex(1);
+            var filename = (string)null;
 
-            var filename = "";
-
-            if (format == "MP3")
-                filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export MP3 File", "MP3 Audio File (*.mp3)|*.mp3", ref Settings.LastExportFolder);
+            if (lastExportFilename != null)
+            {
+                filename = lastExportFilename;
+            }
             else
-                filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Wave File", "Wave Audio File (*.wav)|*.wav", ref Settings.LastExportFolder);
+            {
+                filename = PlatformUtils.ShowSaveFileDialog(
+                    $"Export {AudioFormatType.Names[format]} File",
+                    $"{AudioFormatType.Names[format]} Audio File (*.{AudioFormatType.Extentions[format]})|*.{AudioFormatType.Extentions[format]}",
+                    ref Settings.LastExportFolder);
+            }
 
             if (filename != null)
             {
                 var songName = props.GetPropertyValue<string>(0);
                 var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2), CultureInfo.InvariantCulture);
-                var bitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
+                var bitrate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
                 var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
                 var duration  = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
                 var separateFiles = props.GetPropertyValue<bool>(7);
@@ -410,13 +416,21 @@ namespace FamiStudio
                     pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
                 }
 
-                WavMp3ExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
+                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
                      (samples, samplesChannels, fn) => 
                      {
-                         if (format == "MP3")
-                             Mp3File.Save(samples, fn, sampleRate, bitRate, samplesChannels);
-                         else
-                             WaveFile.Save(samples, fn, sampleRate, samplesChannels);
+                         switch (format)
+                         {
+                             case AudioFormatType.Mp3:
+                                 Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                 break;
+                             case AudioFormatType.Wav:
+                                 WaveFile.Save(samples, fn, sampleRate, samplesChannels);
+                                 break;
+                             case AudioFormatType.Vorbis:
+                                 VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                 break;
+                         }
                      });
 
                 lastExportFilename = filename;
@@ -458,7 +472,8 @@ namespace FamiStudio
                     pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
                 }
 
-                new VideoFile().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                new VideoFilePianoRoll().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                //new VideoFileOscilloscope().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
 
                 lastExportFilename = filename;
             }

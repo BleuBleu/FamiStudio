@@ -93,11 +93,14 @@
     <Compile Include="Source\IO\MidiFile.cs" />
     <Compile Include="Source\IO\Mp3File.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
+    <Compile Include="Source\IO\VorbisFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\RomFileBase.cs" />
-    <Compile Include="Source\IO\VideoFile.cs" />
+    <Compile Include="Source\IO\VideoFileBase.cs" />
+    <Compile Include="Source\IO\VideoFileOscilloscope.cs" />
+    <Compile Include="Source\IO\VideoFilePianoRoll.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
@@ -106,7 +109,7 @@
     <Compile Include="Source\ChannelStates\ChannelStateN163.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateS5B.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
-    <Compile Include="Source\IO\WavMp3ExportUtils.cs" />
+    <Compile Include="Source\IO\AudioExportUtils.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MultiMediaNotifications.cs" />
@@ -355,6 +358,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="NotSoFatso.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Vorbis.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
