@@ -9,6 +9,8 @@ using Microsoft.Win32;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -145,35 +147,53 @@ namespace FamiStudio
         [DllImport("user32.dll")]
         static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
 
+        static Dictionary<Tuple<IntPtr, uint>, string> KeyCodeStringCache = new Dictionary<Tuple<IntPtr, uint>, string>();
+
+        static readonly byte[] keyStateNull = new byte[256];
+
+        // Needed to get rid of dead keys.
+        // https://web.archive.org/web/20101004154432/http://blogs.msdn.com/b/michkap/archive/2006/04/06/569632.aspx
+        // https://web.archive.org/web/20100820152419/http://blogs.msdn.com/b/michkap/archive/2007/10/27/5717859.aspx
+        private static void ClearKeyboardBuffer(uint vk, uint sc, IntPtr hkl)
+        {
+            var rc = 0;
+            var sb = new StringBuilder(10);
+            do
+            {
+                rc = ToUnicodeEx(vk, sc, keyStateNull, sb, sb.Capacity, 0, hkl);
+            }
+            while (rc < 0);
+        }
+
         public static string KeyCodeToString(int key)
         {
-            byte[] keyboardState = new byte[255];
-            bool keyboardStateStatus = GetKeyboardState(keyboardState);
+            var virtualKeyCode = (uint)key;
+            var scanCode = MapVirtualKey(virtualKeyCode, 0);
+            var inputLocaleIdentifier = GetKeyboardLayout(0);
 
-            if (!keyboardStateStatus)
+            var mapKey = new Tuple<IntPtr, uint>(inputLocaleIdentifier, virtualKeyCode);
+
+            if (!KeyCodeStringCache.TryGetValue(mapKey, out var str))
             {
-                return "";
-            }
+                StringBuilder result = new StringBuilder();
+                ToUnicodeEx(virtualKeyCode, scanCode, keyStateNull, result, 5, 0, inputLocaleIdentifier);
+                ClearKeyboardBuffer(virtualKeyCode, scanCode, inputLocaleIdentifier);
 
-            uint virtualKeyCode = (uint)key;
-            uint scanCode = MapVirtualKey(virtualKeyCode, 0);
-            IntPtr inputLocaleIdentifier = GetKeyboardLayout(0);
+                // Fall back to Key enum for special keys.
+                if (result.Length == 0)
+                {
+                    str = ((System.Windows.Forms.Keys)key).ToString();
+                }
+                else
+                {
+                    str = result.ToString().ToUpper();
 
-            StringBuilder result = new StringBuilder();
-            ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, (int)5, (uint)0, inputLocaleIdentifier);
+                    // Ignore invisible characters.
+                    if (str.Length == 1 && str[0] <= 32)
+                        str = null;
+                }
 
-            // Fall back to Key enum for special keys.
-            if (result.Length == 0)
-            {
-                return ((System.Windows.Forms.Keys)key).ToString();
-            }
-
-            var str = result.ToString().ToUpper();
-
-            // Ignore invisible characters.
-            if (str.Length == 1 && str[0] <= 32)
-            {
-                return null;
+                KeyCodeStringCache.Add(mapKey, str);
             }
 
             return str;
