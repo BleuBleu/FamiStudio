@@ -8,6 +8,7 @@ using System.IO;
     using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
+    using RenderGeometry = SharpDX.Direct2D1.PathGeometry;
     using RenderControl  = FamiStudio.Direct2DControl;
     using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
     using RenderTheme    = FamiStudio.Direct2DTheme;
@@ -15,6 +16,7 @@ using System.IO;
     using RenderFont     = FamiStudio.GLFont;
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
+    using RenderGeometry = FamiStudio.GLGeometry;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLOffscreenGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
@@ -22,73 +24,13 @@ using System.IO;
 
 namespace FamiStudio
 {
-    class VideoFile
+    class VideoFilePianoRoll : VideoFileBase
     {
-        const int   ChannelIconTextSpacing = 8;
-        const int   ChannelIconPosY = 26;
-        const int   SegmentTransitionNumFrames = 16;
-        const int   SampleRate = 44100;
-        const int   ThinNoteThreshold     = 288;
-        const int   VeryThinNoteThreshold = 192;
-        const float OscilloscopeWindowSize = 0.075f; // in sec.
-
-        int videoResX = 1920;
-        int videoResY = 1080;
-
-        // Mostly from : https://github.com/kometbomb/oscilloscoper/blob/master/src/Oscilloscope.cpp
-        private void GenerateOscilloscope(short[] wav, int position, int windowSize, int maxLookback, float scaleY, float minX, float minY, float maxX, float maxY, float[,] oscilloscope)
-        {
-            // Find a point where the waveform crosses the axis, looks nicer.
-            int lookback = 0;
-            int orig = wav[position];
-
-            // If sample is negative, go back until positive.
-            if (orig < 0)
-            {
-                while (lookback < maxLookback)
-                {
-                    if (position == 0 || wav[--position] > 0)
-                        break;
-
-                    lookback++;
-                }
-
-                orig = wav[position];
-            }
-
-
-            // Then look for a zero crossing.
-            if (orig > 0)
-            {
-                while (lookback < maxLookback)
-                {
-                    if (position == wav.Length -1 || wav[++position] < 0)
-                        break;
-
-                    lookback++;
-                }
-            }
-
-            int lastIdx = -1;
-            int oscLen = oscilloscope.GetLength(0);
-
-            // We simplified the rendering.
-            Debug.Assert(oscLen == windowSize);
-
-            for (int i = 0; i < oscLen; ++i)
-            {
-                var idx = Utils.Clamp(position - windowSize / 2 + i, 0, wav.Length - 1);
-                var sample = Utils.Clamp((int)(wav[idx] * scaleY), short.MinValue, short.MaxValue);
-
-                var x = Utils.Lerp(minX, maxX, i / (float)(oscLen - 1));
-                var y = Utils.Lerp(minY, maxY, (sample - short.MinValue) / (float)(ushort.MaxValue));
-
-                oscilloscope[i, 0] = x;
-                oscilloscope[i, 1] = y;
-
-                lastIdx = idx;
-            }
-        }
+        const int ChannelIconTextSpacing = 8;
+        const int ChannelIconPosY = 26;
+        const int SegmentTransitionNumFrames = 16;
+        const int ThinNoteThreshold = 288;
+        const int VeryThinNoteThreshold = 192;
 
         private void ComputeChannelsScroll(VideoFrameMetadata[] frames, int channelMask, int numVisibleNotes)
         {
@@ -334,54 +276,6 @@ namespace FamiStudio
             }
         }
 
-        private Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut)
-        {
-            var psi = new ProcessStartInfo(ffmpegExecutable, commandLine);
-
-            psi.UseShellExecute = false;
-            psi.WorkingDirectory = Path.GetDirectoryName(ffmpegExecutable);
-            psi.CreateNoWindow = true;
-            psi.WindowStyle = ProcessWindowStyle.Hidden;
-
-            if (redirectStdIn)
-            {
-                psi.RedirectStandardInput = true;
-            }
-
-            if (redirectStdOut)
-            {
-                psi.RedirectStandardOutput = true;
-            }
-
-            return Process.Start(psi);
-        }
-
-        bool DetectFFmpeg(string ffmpegExecutable)
-        {
-            try
-            {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true);
-                var output = process.StandardOutput.ReadToEnd();
-
-                var ret = true;
-                if (!output.Contains("--enable-libx264"))
-                {
-                    Log.LogMessage(LogSeverity.Error, "ffmpeg does not seem to be compiled with x264 support. Make sure you have the GPL version.");
-                    ret = false;
-                }
-
-                process.WaitForExit();
-                process.Dispose();
-
-                return ret;
-            }
-            catch
-            {
-                Log.LogMessage(LogSeverity.Error, "Error launching ffmpeg. Make sure the path is correct.");
-                return false;
-            }
-        }
-
         private void ExtendSongForLooping(Song song, int loopCount)
         {
             // For looping, we simply extend the song by copying pattern instances.
@@ -426,29 +320,9 @@ namespace FamiStudio
 #endif
         }
 
-        class VideoChannelState
-        {
-            public int videoChannelIndex;
-            public int songChannelIndex;
-            public int patternIndex;
-            public string channelText;
-            public int volume;
-            public Note note;
-            public Channel channel;
-            public RenderBitmap bmpIcon;
-            public RenderGraphics graphics;
-            public RenderBitmap bitmap;
-            public short[] wav;
-        };
-
         public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool stereo, float[] pan)
         {
-            if (channelMask == 0 || loopCount < 1)
-                return false;
-
-            Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
-
-            if (!DetectFFmpeg(ffmpegExecutable))
+            if (!Initialize(ffmpegExecutable, channelMask, loopCount))
                 return false;
             
             videoResX = resX;
@@ -485,8 +359,6 @@ namespace FamiStudio
 
             // Generate WAV data for each individual channel for the oscilloscope.
             var channelStates = new List<VideoChannelState>();
-
-            List<short[]> channelsWavData  = new List<short[]>();
             var maxAbsSample = 0;
 
             for (int i = 0, channelIndex = 0; i < song.Channels.Length; i++)
@@ -500,7 +372,6 @@ namespace FamiStudio
                 state.videoChannelIndex = channelIndex;
                 state.songChannelIndex = i;
                 state.channel = song.Channels[i];
-                state.patternIndex = 0;
                 state.channelText = state.channel.Name + (state.channel.IsExpansionChannel ? $" ({song.Project.ExpansionAudioShortName})" : "");
                 state.wav = new WavPlayer(SampleRate, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1);
                 state.graphics = RenderGraphics.Create(channelResX, channelResY, false);
@@ -578,7 +449,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, "Exporting audio...");
 
                 // Save audio to temporary file.
-                WavMp3ExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+                AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
 
                 var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
 
@@ -603,22 +474,22 @@ namespace FamiStudio
                         // Render the piano rolls for each channels.
                         foreach (var s in channelStates)
                         {
-                            s.volume = frame.channelVolumes[s.songChannelIndex];
-                            s.note = frame.channelNotes[s.songChannelIndex];
+                            var volume = frame.channelVolumes[s.songChannelIndex];
+                            var note   = frame.channelNotes[s.songChannelIndex];
 
                             var color = Color.Transparent;
 
-                            if (s.note.IsMusical)
+                            if (note.IsMusical)
                             {
                                 if (s.channel.Type == ChannelType.Dpcm)
                                 {
-                                    var mapping = project.GetDPCMMapping(s.note.Value);
+                                    var mapping = project.GetDPCMMapping(note.Value);
                                     if (mapping != null)
                                         color = mapping.Sample.Color;
                                 }
                                 else
                                 {
-                                    color = Color.FromArgb(128 + s.volume * 127 / 15, s.note.Instrument != null ? s.note.Instrument.Color : ThemeBase.DarkGreyFillColor2);
+                                    color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : ThemeBase.DarkGreyFillColor2);
                                 }
                             }
 
@@ -627,7 +498,7 @@ namespace FamiStudio
 #else
                             s.graphics.BeginDraw();
 #endif
-                            pianoRoll.RenderVideoFrame(s.graphics, Channel.ChannelTypeToIndex(s.channel.Type), frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], s.note.Value, color);
+                            pianoRoll.RenderVideoFrame(s.graphics, Channel.ChannelTypeToIndex(s.channel.Type), frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
                             s.graphics.EndDraw();
                         }
 
@@ -668,11 +539,15 @@ namespace FamiStudio
                             var oscMinY = (int)(ChannelIconPosY + s.bmpIcon.Size.Height + 10);
                             var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
 
-                            GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0 + 10, oscMinY, channelPosX1 - 10, oscMaxY, oscilloscope);
+                            // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
+                            GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0 + 10, oscMaxY, channelPosX1 - 10, oscMinY, oscilloscope);
+
+                            var geo = videoGraphics.CreateGeometry(oscilloscope, false);
 
                             videoGraphics.AntiAliasing = true;
-                            videoGraphics.DrawLine(oscilloscope, theme.LightGreyFillBrush1);
+                            videoGraphics.DrawGeometry(geo, theme.LightGreyFillBrush1);
                             videoGraphics.AntiAliasing = false;
+                            geo.Dispose();
                         }
 
                         // Watermark.
@@ -729,112 +604,4 @@ namespace FamiStudio
         public int NumFrames => endFrame - startFrame;
         public float scroll;
     }
-
-    class VideoFrameMetadata
-    {
-        public int     playPattern;
-        public float   playNote;
-        public int     wavOffset;
-        public Note[]  channelNotes;
-        public int[]   channelVolumes;
-        public float[] scroll;
-    };
-
-    class VideoMetadataPlayer : BasePlayer
-    {
-        int numSamples = 0;
-        int prevNumSamples = 0;
-        List<VideoFrameMetadata> metadata;
-
-        public VideoMetadataPlayer(int sampleRate, int maxLoop) : base(NesApu.APU_WAV_EXPORT, sampleRate)
-        {
-            maxLoopCount = maxLoop;
-            metadata = new List<VideoFrameMetadata>();
-        }
-
-        private void WriteMetadata(List<VideoFrameMetadata> metadata)
-        {
-            var meta = new VideoFrameMetadata();
-
-            meta.playPattern = playLocation.PatternIndex;
-            meta.playNote = playLocation.NoteIndex;
-            meta.wavOffset = prevNumSamples;
-            meta.channelNotes = new Note[song.Channels.Length];
-            meta.channelVolumes = new int[song.Channels.Length];
-
-            for (int i = 0; i < channelStates.Length; i++)
-            {
-                meta.channelNotes[i] = channelStates[i].CurrentNote;
-                meta.channelVolumes[i] = channelStates[i].CurrentVolume;
-            }
-
-            metadata.Add(meta);
-
-            prevNumSamples = numSamples;
-        }
-
-        public VideoFrameMetadata[] GetVideoMetadata(Song song, bool pal, int duration)
-        {
-            int maxSample = int.MaxValue;
-
-            if (duration > 0)
-                maxSample = duration * sampleRate;
-
-            if (BeginPlaySong(song, pal, 0))
-            {
-                WriteMetadata(metadata);
-
-                while (PlaySongFrame() && numSamples < maxSample)
-                {
-                    WriteMetadata(metadata);
-                }
-            }
-
-            return metadata.ToArray();
-        }
-
-        protected override short[] EndFrame()
-        {
-            numSamples += base.EndFrame().Length;
-            return null;
-        }
-    }
-
-    static class VideoResolution
-    {
-        public static readonly string[] Names =
-        {
-            "1080p",
-            "720p",
-            "576p",
-            "480p"
-        };
-
-        public static readonly int[] ResolutionY =
-        {
-            1080,
-            720,
-            576,
-            480
-        };
-
-        public static readonly int[] ResolutionX =
-        {
-            1920,
-            1280,
-            1024,
-            854
-        };
-
-        public static int GetIndexForName(string str)
-        {
-            return Array.IndexOf(Names, str);
-        }
-    }
-
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-    class DummyGLControl : GLControl
-    {
-    };
-#endif
 }
