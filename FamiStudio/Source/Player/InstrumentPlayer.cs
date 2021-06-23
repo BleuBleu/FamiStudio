@@ -16,9 +16,12 @@ namespace FamiStudio
         int activeChannel = -1;
         int expansionAudio = ExpansionType.None;
         int numExpansionChannels = 0;
+        int playingNote = Note.NoteInvalid;
         int[] envelopeFrames = new int[EnvelopeType.Count];
         ConcurrentQueue<PlayerNote> noteQueue = new ConcurrentQueue<PlayerNote>();
         bool IsRunning => playerThread != null;
+
+        public int PlayingNote => playingNote;
 
         public InstrumentPlayer(bool pal) : base(NesApu.APU_INSTRUMENT, pal, DefaultSampleRate, Settings.NumBufferedAudioFrames)
         {
@@ -158,10 +161,13 @@ namespace FamiStudio
 
                     if (activeChannel >= 0)
                     {
-                        channelStates[activeChannel].Update();
+                        var channel = channelStates[activeChannel];
+                        channel.Update();
 
                         for (int i = 0; i < EnvelopeType.Count; i++)
-                            envelopeFrames[i] = channelStates[activeChannel].GetEnvelopeFrame(i);
+                            envelopeFrames[i] = channel.GetEnvelopeFrame(i);
+
+                        playingNote = channel.CurrentNote != null && channel.CurrentNote.IsMusical ? channel.CurrentNote.Value : Note.NoteInvalid;
                     }
                     else
                     {
@@ -169,6 +175,8 @@ namespace FamiStudio
                             envelopeFrames[i] = 0;
                         foreach (var channel in channelStates)
                             channel.ClearNote();
+
+                        playingNote = Note.NoteInvalid;
                     }
 
                     EndFrame();

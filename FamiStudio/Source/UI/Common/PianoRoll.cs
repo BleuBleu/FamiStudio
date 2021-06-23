@@ -319,6 +319,7 @@ namespace FamiStudio
         int captureSelectionMin = -1;
         int captureSelectionMax = -1;
         int playingNote = -1;
+        int highlightNote = -1;
         int selectionMin = -1;
         int selectionMax = -1;
         int dragSeekPosition = -1;
@@ -699,6 +700,15 @@ namespace FamiStudio
         {
             get { return showSelection; }
             set { showSelection = value; ConditionalInvalidate(); }
+        }
+
+        public void HighlightPianoNote(int note)
+        {
+            if (note != highlightNote)
+            {
+                highlightNote = note;
+                ConditionalInvalidate();
+            }
         }
 
         public void ConditionalInvalidate()
@@ -1235,10 +1245,10 @@ namespace FamiStudio
             var dragOctave = (dragLastNoteValue - 1) / 12;
             var dragNote = (dragLastNoteValue - 1) % 12;
 
-            if (playingNote > 0)
+            if (highlightNote >= Note.MusicalNoteMin && highlightNote <  Note.MusicalNoteMax)
             {
-                playOctave = (playingNote - 1) / 12;
-                playNote = (playingNote - 1) - playOctave * 12;
+                playOctave = (highlightNote - 1) / 12;
+                playNote = (highlightNote - 1) - playOctave * 12;
 
                 if (!IsBlackKey(playNote))
                     g.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);

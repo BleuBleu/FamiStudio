@@ -960,6 +960,7 @@ namespace FamiStudio
                 instrumentPlayer.Stop(true);
                 instrumentPlayer.Shutdown();
                 instrumentPlayer = null;
+                PianoRoll.HighlightPianoNote(Note.NoteInvalid);
             }
         }
 
@@ -1521,6 +1522,11 @@ namespace FamiStudio
 
             ConditionalShowTutorial();
             CheckNewReleaseDone();
+
+            if (instrumentPlayer != null)
+            {
+                PianoRoll.HighlightPianoNote(instrumentPlayer.PlayingNote);
+            }
         }
 
         private void sequencer_PatternClicked(int trackIndex, int patternIndex)
