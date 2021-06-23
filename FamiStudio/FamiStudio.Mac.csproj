@@ -284,6 +284,9 @@
     <Compile Include="Source\UI\MacLinux\CellRendererButton.cs" />
     <EmbeddedResource Include="Resources\ConfigMacOS.png" />
     <EmbeddedResource Include="Resources\ConfigMacOS%402x.png" />
+    <Content Include="Vorbis.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
