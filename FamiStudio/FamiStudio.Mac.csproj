@@ -318,6 +318,8 @@
     <Content Include="NotSoFatso.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\LoopSelection%402x.png" />
+    <EmbeddedResource Include="Resources\LoopSelection.png" />
     <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
     <EmbeddedResource Include="Resources\ExportVideo.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />

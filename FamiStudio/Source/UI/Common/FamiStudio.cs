@@ -65,6 +65,7 @@ namespace FamiStudio
         public bool IsQwertyPianoEnabled => qwertyPiano;
         public bool IsMetronomeEnabled => metronome;
         public bool FollowModeEnabled { get => followMode; set => followMode = value; }
+        public bool SequencerHasSelection => Sequencer.GetPatternSelectionRange(out _, out _);
         public int BaseRecordingOctave => baseRecordingOctave;
         public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : 0xffff; set => songPlayer.ChannelMask = value; }
@@ -101,6 +102,7 @@ namespace FamiStudio
             Sequencer.ControlActivated += Sequencer_ControlActivated;
             Sequencer.PatternModified += Sequencer_PatternModified;
             Sequencer.PatternsPasted += PianoRoll_NotesPasted;
+            Sequencer.SelectionChanged += Sequencer_SelectionChanged;
             PianoRoll.PatternChanged += pianoRoll_PatternChanged;
             PianoRoll.ManyPatternChanged += PianoRoll_ManyPatternChanged;
             PianoRoll.DPCMSampleChanged += PianoRoll_DPCMSampleChanged;
@@ -155,6 +157,16 @@ namespace FamiStudio
 #endif
         }
 
+        private void Sequencer_SelectionChanged()
+        {
+            ToolBar.ConditionalInvalidate();
+
+            if (songPlayer != null)
+            {
+                Sequencer.GetPatternSelectionRange(out var min, out var max);
+                songPlayer.SetSelectionRange(min, max);
+            }
+        }
 
         public void SetToolTip(string msg, bool red = false)
         {
@@ -909,8 +921,10 @@ namespace FamiStudio
         private void InitializeSongPlayer()
         {
             Debug.Assert(songPlayer == null);
+            Sequencer.GetPatternSelectionRange(out var min, out var max);
             songPlayer = new SongPlayer(palPlayback);
             songPlayer.Beat += SongPlayer_Beat;
+            songPlayer.SetSelectionRange(min, max);
         }
 
         private void SongPlayer_Beat()

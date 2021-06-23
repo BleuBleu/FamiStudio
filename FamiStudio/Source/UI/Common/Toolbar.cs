@@ -133,6 +133,7 @@ namespace FamiStudio
         RenderBitmap bmpLoopNone;
         RenderBitmap bmpLoopSong;
         RenderBitmap bmpLoopPattern;
+        RenderBitmap bmpLoopSelection;
         RenderBitmap bmpPlay;
         RenderBitmap bmpPlayHalf;
         RenderBitmap bmpPlayQuarter;
@@ -155,20 +156,21 @@ namespace FamiStudio
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
 
-            bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
-            bmpLoopSong    = g.CreateBitmapFromResource("Loop");
-            bmpLoopPattern = g.CreateBitmapFromResource("LoopPattern");
-            bmpPlay        = g.CreateBitmapFromResource("Play");
-            bmpPlayHalf    = g.CreateBitmapFromResource("PlayHalf");
-            bmpPlayQuarter = g.CreateBitmapFromResource("PlayQuarter");
-            bmpPause       = g.CreateBitmapFromResource("Pause");
-            bmpNtsc        = g.CreateBitmapFromResource("NTSC");
-            bmpPal         = g.CreateBitmapFromResource("PAL");
-            bmpNtscToPal   = g.CreateBitmapFromResource("NTSCToPAL");
-            bmpPalToNtsc   = g.CreateBitmapFromResource("PALToNTSC");
-            bmpRec         = g.CreateBitmapFromResource("Rec");
-            bmpRecRed      = g.CreateBitmapFromResource("RecRed");
-            bmpMetronome   = g.CreateBitmapFromResource("Metronome");
+            bmpLoopNone      = g.CreateBitmapFromResource("LoopNone");
+            bmpLoopSong      = g.CreateBitmapFromResource("Loop");
+            bmpLoopPattern   = g.CreateBitmapFromResource("LoopPattern");
+            bmpLoopSelection = g.CreateBitmapFromResource("LoopSelection");
+            bmpPlay          = g.CreateBitmapFromResource("Play");
+            bmpPlayHalf      = g.CreateBitmapFromResource("PlayHalf");
+            bmpPlayQuarter   = g.CreateBitmapFromResource("PlayQuarter");
+            bmpPause         = g.CreateBitmapFromResource("Pause");
+            bmpNtsc          = g.CreateBitmapFromResource("NTSC");
+            bmpPal           = g.CreateBitmapFromResource("PAL");
+            bmpNtscToPal     = g.CreateBitmapFromResource("NTSCToPAL");
+            bmpPalToNtsc     = g.CreateBitmapFromResource("PALToNTSC");
+            bmpRec           = g.CreateBitmapFromResource("Rec");
+            bmpRecRed        = g.CreateBitmapFromResource("RecRed");
+            bmpMetronome     = g.CreateBitmapFromResource("Metronome");
 
             buttons[ButtonNew]       = new Button { Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
@@ -205,7 +207,7 @@ namespace FamiStudio
             buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
-            buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
+            buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode (Song, Pattern/Selection)";
             buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift} {Q}";
             buttons[ButtonMetronome].ToolTip = "{MouseLeft} Toggle metronome while song is playing";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
@@ -269,6 +271,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpLoopNone);
             Utils.DisposeAndNullify(ref bmpLoopSong);
             Utils.DisposeAndNullify(ref bmpLoopPattern);
+            Utils.DisposeAndNullify(ref bmpLoopSelection);
             Utils.DisposeAndNullify(ref bmpPlay);
             Utils.DisposeAndNullify(ref bmpPlayHalf);
             Utils.DisposeAndNullify(ref bmpPlayQuarter);
@@ -562,7 +565,7 @@ namespace FamiStudio
             switch (App.LoopMode)
             {
                 case LoopMode.Pattern:
-                    return bmpLoopPattern;
+                    return App.SequencerHasSelection ? bmpLoopSelection : bmpLoopPattern;
                 default:
                     return App.Song.LoopPoint < 0 ? bmpLoopNone : bmpLoopSong;
             }

@@ -150,6 +150,7 @@ namespace FamiStudio
         public event EmptyDelegate ControlActivated;
         public event EmptyDelegate PatternModified;
         public event EmptyDelegate PatternsPasted;
+        public event EmptyDelegate SelectionChanged;
 
         public Sequencer()
         {
@@ -257,12 +258,29 @@ namespace FamiStudio
             maxSelectedChannelIdx = -1;
             minSelectedPatternIdx = -1;
             maxSelectedPatternIdx = -1;
+            SelectionChanged?.Invoke();
         }
 
         private bool IsPatternSelected(int channelIdx, int patternIdx)
         {
             return channelIdx >= minSelectedChannelIdx && channelIdx <= maxSelectedChannelIdx &&
                    patternIdx >= minSelectedPatternIdx && patternIdx <= maxSelectedPatternIdx;
+        }
+
+        public bool GetPatternSelectionRange(out int minPatternIdx, out int maxPatternIdx)
+        {
+            if (IsSelectionValid(true))
+            {
+                minPatternIdx = minSelectedChannelIdx;
+                maxPatternIdx = maxSelectedChannelIdx;
+                return true;
+            }
+            else
+            {
+                minPatternIdx = -1;
+                maxPatternIdx = -1;
+                return false;
+            }
         }
 
         protected override void OnRenderInitialized(RenderGraphics g)
@@ -325,7 +343,7 @@ namespace FamiStudio
             base.OnResize(e);
         }
 
-        private bool IsSelectionValid(bool allChannels = false)
+        protected bool IsSelectionValid(bool allChannels = false)
         {
             if (allChannels)
             {
@@ -972,6 +990,7 @@ namespace FamiStudio
                             }
 
                             fullColumnSelection = false;
+                            SelectionChanged?.Invoke();
                             return;
                         }
                         else if (!IsPatternSelected(channelIdx, patternIdx) && pattern != null)
@@ -981,6 +1000,7 @@ namespace FamiStudio
                             minSelectedPatternIdx = patternIdx;
                             maxSelectedPatternIdx = patternIdx;
                             fullColumnSelection = false;
+                            SelectionChanged?.Invoke();
                         }
 
                         selectionDragAnchorPatternIdx = patternIdx;
@@ -1190,6 +1210,7 @@ namespace FamiStudio
 
             App.UndoRedoManager.EndTransaction();
             PatternsPasted?.Invoke();
+            SelectionChanged?.Invoke();
             ConditionalInvalidate();
         }
 
@@ -1263,6 +1284,7 @@ namespace FamiStudio
                         maxSelectedChannelIdx = channelIdx;
                         minSelectedPatternIdx = patternIdx;
                         maxSelectedPatternIdx = patternIdx;
+                        SelectionChanged?.Invoke();
                         ConditionalInvalidate();
                     }
                     else
@@ -1370,6 +1392,7 @@ namespace FamiStudio
 
                         ConditionalInvalidate();
                         PatternModified?.Invoke();
+                        SelectionChanged?.Invoke();
                     }
                 }
                 else if (captureOperation == CaptureOperation.DragSeekBar)
@@ -1539,6 +1562,7 @@ namespace FamiStudio
             }
 
             ConditionalInvalidate();
+            SelectionChanged?.Invoke();
         }
 
         private void UpdateAltZoom(MouseEventArgs e)

@@ -58,14 +58,14 @@ x Replace checklistbox.
 x More verts in video osc?
 x Compare noise channel in metal crusher.
 x Look at changes in Nes_Osc
+x OGG export.
+x Make sure osc in video are flipped (3.0.2 fix, but video files have changed).
+x Loop in selection for sequencer.
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. Add more low bitrates + review is high bitrates are acutally used. If you choose 12000, does it really use that? Less high.
 / Scales? Or juste highlight.
-- Make sure osc in video are flipped (3.0.2 fix, but video files have changed).
 - Improve fine FX adjust (shift + drag, Gopnick request)
 - Merge CC65 stuff.
-- OGG export?
-- Loop in selection for sequencer.
 - Look at wave offset (msg from Twitter)
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
@@ -85,6 +85,9 @@ Testing
 - Re-test expansions issue (same instrument name, diff expansions, etc.)
 - Stereo video crackles?
 - WS clips children on win7
+- Test OGG a bit more, make sure UI + command line works good
+- Double check osc flipping in toolbar + video
+- 
 
 Random features ideas
 =====================

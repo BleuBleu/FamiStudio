@@ -34,6 +34,8 @@ namespace FamiStudio
         protected int frameNumber = 0;
         protected int playbackRate = 1; // 1 = normal, 2 = 1/2, 4 = 1/4, etc.
         protected int playbackRateCounter = 1;
+        protected int minSelectedPattern = -1;
+        protected int maxSelectedPattern = -1;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
         protected Song song;
@@ -92,6 +94,12 @@ namespace FamiStudio
                 Debug.Assert(value == 1 || value == 2 || value == 4);
                 playbackRate = value;
             }
+        }
+
+        public void SetSelectionRange(int min, int max)
+        {
+            minSelectedPattern = min;
+            maxSelectedPattern = max;
         }
 
         // Returns the number of frames to run (0, 1 or 2)
@@ -331,11 +339,36 @@ namespace FamiStudio
             if (++playLocation.NoteIndex >= song.GetPatternLength(playLocation.PatternIndex))
             {
                 playLocation.NoteIndex = 0;
+
                 if (loopMode != LoopMode.Pattern)
                 {
                     playLocation.PatternIndex++;
                     advancedPattern = true;
                     forceResetTempo = playLocation.PatternIndex == song.LoopPoint;
+                }
+                else
+                {
+                    // Make sure the selection is valid, updated on another thread, so could be 
+                    // sketchy.
+                    var minPatternIdx = minSelectedPattern;
+                    var maxPatternIdx = maxSelectedPattern;
+
+                    if (minPatternIdx >= 0 && 
+                        maxPatternIdx >= 0 &&
+                        maxPatternIdx >= minPatternIdx &&
+                        minPatternIdx <  song.Length)
+                    {
+                        if (playLocation.PatternIndex + 1 > maxPatternIdx)
+                        {
+                            playLocation.PatternIndex = minPatternIdx;
+                        }
+                        else
+                        {
+                            playLocation.PatternIndex++;
+                            advancedPattern = true;
+                            forceResetTempo = playLocation.PatternIndex == song.LoopPoint;
+                        }
+                    }
                 }
             }
 

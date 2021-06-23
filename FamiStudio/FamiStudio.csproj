@@ -360,6 +360,8 @@
     <Content Include="NotSoFatso.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\LoopSelection%402x.png" />
+    <EmbeddedResource Include="Resources\LoopSelection.png" />
     <Content Include="Vorbis.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
