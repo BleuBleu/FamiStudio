@@ -136,7 +136,7 @@ namespace FamiStudio
             var filename = MacUtils.ShowOpenDialog(title, extensionList, defaultPath);
             if (!string.IsNullOrEmpty(filename))
                 defaultPath = Path.GetDirectoryName(filename);
-            return filename;
+            return new[] { filename }; // MATTT this isnt right!
 #else
             Gtk.Rc.ResetStyles(Gtk.Settings.GetForScreen(Gdk.Screen.Default));
             Gtk.Rc.ReparseAll();
