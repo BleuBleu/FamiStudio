@@ -1524,9 +1524,7 @@ namespace FamiStudio
             CheckNewReleaseDone();
 
             if (instrumentPlayer != null)
-            {
                 PianoRoll.HighlightPianoNote(instrumentPlayer.PlayingNote);
-            }
         }
 
         private void sequencer_PatternClicked(int trackIndex, int patternIndex)

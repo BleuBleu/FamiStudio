@@ -64,9 +64,8 @@ x Loop in selection for sequencer.
 x Highlight piano keys when they are pressed with QWERTY or MIDI. 
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. Add more low bitrates + review is high bitrates are acutally used. If you choose 12000, does it really use that? Less high.
-/ Scales? Or juste highlight.
+/ Scales? Or just highlight.
 - Improve fine FX adjust (shift + drag, Gopnick request)
-- Look at wave offset (msg from Twitter)
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
 - Save snapping + qwerty settings + some export settings.
@@ -75,6 +74,7 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Noise slides? Could be different opcode with lookup table slope.
 - Volume slides.
 
+- LOW PRIO : Look at wave offset (msg from Twitter)
 - CUT : Keyboard shortcut for snapping precision?
 - LOW PRIO : End of song looping behavior?
 - LOW PRIO : Left/right pan with +/- (cubase style)?
