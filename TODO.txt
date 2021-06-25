@@ -4,6 +4,7 @@ x Make sure we show error message when bad wav file.
 x AZERTY keyboard issue.
 x Assert importing metal crusher famitracker TXT.
 x Osc upside down (check video too).
+x Song undo/redo bug from youtube?
 - Make auto-scroll gradual (and symmetric)
 - Fine pitch adjust busted?
 - Linux scaling crash.
