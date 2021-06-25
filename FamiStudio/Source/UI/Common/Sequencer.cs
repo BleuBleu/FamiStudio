@@ -1508,18 +1508,25 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void ScrollIfSelectionNearEdge(int mouseX)
+        {
+            if ((mouseX - trackNameSizeX) < 0)
+            {
+                var scrollAmount = (trackNameSizeX - mouseX) / (float)trackNameSizeX;
+                scrollX -= (int)(16 * scrollAmount);
+                ClampScroll();
+            }
+            else if ((Width - mouseX) < trackNameSizeX)
+            {
+                var scrollAmount = (mouseX - (Width - trackNameSizeX)) / (float)trackNameSizeX;
+                scrollX += (int)(16 * scrollAmount);
+                ClampScroll();
+            }
+        }
+
         private void UpdateSelection(int mouseX, bool first = false)
         {
-            if ((mouseX - trackNameSizeX) < 100)
-            {
-                scrollX -= 16;
-                ClampScroll();
-            }
-            else if ((Width - mouseX) < 100)
-            {
-                scrollX += 16;
-                ClampScroll();
-            }
+            ScrollIfSelectionNearEdge(mouseX);
 
             int noteIdx = (int)((mouseX - trackNameSizeX + scrollX) / noteSizeX);
             int patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);
