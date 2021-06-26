@@ -382,7 +382,7 @@ namespace FamiStudio
                             }
                             else if (instrument.ExpansionType == ExpansionType.Vrc6)
                             {
-                                 if (parameters.TryGetValue("Vrc6SawMasterVolume", out var vrc6SawVolumeStr)) instrument.Vrc6SawMasterVolume = byte.Parse(vrc6SawVolumeStr);
+                                 if (parameters.TryGetValue("Vrc6SawMasterVolume", out var vrc6SawVolumeStr)) instrument.Vrc6SawMasterVolume = (byte)Vrc6SawMasterVolumeType.GetValueForName(vrc6SawVolumeStr);
                             }
                             else if (instrument.ExpansionType == ExpansionType.Vrc7)
                             {
