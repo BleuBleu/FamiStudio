@@ -6,8 +6,10 @@ x Assert importing metal crusher famitracker TXT.
 x Osc upside down (check video too).
 x Song undo/redo bug from youtube?
 x Make auto-scroll gradual (and symmetric)
-- Fine pitch adjust busted?
-- Linux scaling crash.
+x Linux scaling crash.
+x Fine pitch adjust busted?
+
+Mystery bugs:
 - Openal 1.21.1 issue?
 - Yellow tooltip linux mint?
 - RtMidi again?
