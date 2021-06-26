@@ -2,6 +2,37 @@
 
 Version history / release notes for each release.
 
+## Version 3.0.2 (Hotfix)
+
+Fixes:
+
+* Fixed crash when pasting past end of an envelope
+* Fixed FamiTracker (FTM/TXT) import when a jump or skip effect is exactly at row 255
+* Fixed FamiStudio currupting the keyboard state on some european keyboards
+* Fixed oscilloscope vertical orientation in toolbar + video export
+* Fixed crash when using 150% scaling on Linux
+* Fixed fine effect adjustment (shift + drag) again
+* Stopping all audio when undo/redo happens to change the selected song
+* Showing all 8 channels when importing MIDI using N163 expansion
+* Added error message when trying to import a corrupted WAV file
+* Made auto-scrolling when selecting more gradual in both sequencer and piano roll.
+
+## Version 3.0.1 (Hotfix)
+
+Fixes:
+
+* Fixed crash on startup on Linux when RtMidi fails to initialize
+* Fixed fine effect adjustment (SHIFT + drag) when multiple values are selected
+* Fixed race condition when stopping song playback that could cause a crash
+* Fixed small OpenGL leaks
+* Fixed pattern duplication when CTRL+SHIFT were already pressed when starting the drag
+* Fixed import of MIDI files containing polyphonic key pressure events
+* Fixed duplicated labels when exporting projects containing multiple songs to Famitone2 or FamiStudio sound engine
+* Fixed crash when double clicking or left clicking in some cells of grids
+* Fixed export of VRC6 duty cycles to FamiTracker
+* Properly shutting down MIDI input on Windows
+* Adding error message when trying to import NSF using multiple expansion chips
+
 ## Version 3.0.0
 
 Changes :

@@ -308,7 +308,6 @@ namespace FamiStudio
         int captureNoteAbsoluteIdx = 0;
         int captureMouseAbsoluteIdx = 0;
         int captureNoteValue = 0;
-        int captureEffectValue = 0;
         float captureWaveTime = 0.0f;
         int mouseLastX = 0;
         int mouseLastY = 0;
@@ -2892,8 +2891,6 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
             }
 
-            captureEffectValue = note != null && note.HasValidEffectValue(selectedEffectIdx) ? note.GetEffectValue(selectedEffectIdx) : int.MinValue;
-
             UpdateChangeEffectValue(e);
         }
 
@@ -2901,49 +2898,56 @@ namespace FamiStudio
         {
             Debug.Assert(selectedEffectIdx >= 0);
 
-            if (captureOperation == CaptureOperation.ChangeSelectionEffectValue)
-                App.UndoRedoManager.RestoreTransaction(false);
+            App.UndoRedoManager.RestoreTransaction(false);
 
-            bool shift = ModifierKeys.HasFlag(Keys.Shift);
+            var shift = ModifierKeys.HasFlag(Keys.Shift);
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
+
+            if (pattern == null)
+                pattern = channel.CreatePatternAndInstance(captureNoteLocation.PatternIndex);
+
             var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
             var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
 
             var note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
 
-            int newValue;
+            if (!note.HasValidEffectValue(selectedEffectIdx))
+                note.SetEffectValue(selectedEffectIdx, Note.GetEffectDefaultValue(Song, selectedEffectIdx));
+
+            var originalValue = note.GetEffectValue(selectedEffectIdx);
+            var delta = 0;
+
             if (shift)
             {
-                if (!note.HasValidEffectValue(selectedEffectIdx))
-                    note.SetEffectValue(selectedEffectIdx, Note.GetEffectDefaultValue(Song, selectedEffectIdx));
-
-                newValue = Utils.Clamp(note.GetEffectValue(selectedEffectIdx) + (mouseLastY - e.Y), minValue, maxValue);
+                delta = (captureMouseY - e.Y) / 4;
             }
             else
             {
                 var ratio = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
-                newValue = (int)Math.Round(ratio * (maxValue - minValue) + minValue);
+                var newValue = (int)Math.Round(ratio * (maxValue - minValue) + minValue);
+                delta = newValue - originalValue;
             }
 
             if (captureOperation == CaptureOperation.ChangeSelectionEffectValue)
             {
-                var effectDelta = newValue - captureEffectValue;
                 var minLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin);
                 var maxLocation = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMax);
 
                 for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, Note.GetFilterForEffect(selectedEffectIdx)); !it.Done; it.Next())
                 {
                     var value = it.Note.GetEffectValue(selectedEffectIdx);
-                    it.Note.SetEffectValue(selectedEffectIdx, value + effectDelta);
+                    it.Note.SetEffectValue(selectedEffectIdx, value + delta);
                 }
 
                 channel.InvalidateCumulativePatternCache(minLocation.PatternIndex, maxLocation.PatternIndex);
             }
             else
             {
-                note.SetEffectValue(selectedEffectIdx, newValue);
+                var value = note.GetEffectValue(selectedEffectIdx);
+                note.SetEffectValue(selectedEffectIdx, value + delta);
+
                 channel.InvalidateCumulativePatternCache(pattern);
             }
 
@@ -3558,6 +3562,9 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
 
             Envelope.GetMinMaxValue(editInstrument, editEnvelope, out int minVal, out int maxVal);
+
+            startFrameIdx = Math.Max(startFrameIdx, 0);
+            endFrameIdx   = Math.Min(endFrameIdx, EditEnvelope.Length - 1);
 
             for (int i = startFrameIdx; i <= endFrameIdx; i++)
                 EditEnvelope.Values[i] = (sbyte)Utils.Clamp(function(EditEnvelope.Values[i], i - startFrameIdx), minVal, maxVal);
@@ -4532,12 +4539,14 @@ namespace FamiStudio
         {
             if ((mouseX - whiteKeySizeX) < 0)
             {
-                scrollX -= 32;
+                var scrollAmount = (whiteKeySizeX - mouseX) / (float)whiteKeySizeX;
+                scrollX -= (int)(32 * scrollAmount);
                 ClampScroll();
             }
-            else if ((Width - mouseX) < 100)
+            else if ((Width - mouseX) < whiteKeySizeX)
             {
-                scrollX += 32;
+                var scrollAmount = (mouseX - (Width - whiteKeySizeX)) / (float)whiteKeySizeX;
+                scrollX += (int)(32 * scrollAmount);
                 ClampScroll();
             }
         }

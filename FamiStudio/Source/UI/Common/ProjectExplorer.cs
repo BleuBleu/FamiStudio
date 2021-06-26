@@ -2427,6 +2427,8 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
+            var oldSelectedSong = selectedSong;
+
             buffer.Serialize(ref selectedSong);
             buffer.Serialize(ref selectedInstrument);
             buffer.Serialize(ref selectedArpeggio);

@@ -648,7 +648,15 @@ namespace FamiStudio
         public void NotifyPatternChange(Pattern pattern)
         {
             if (pattern != null)
-                patternBitmapCache.Remove(pattern.Id);
+            {
+                if (patternBitmapCache.TryGetValue(pattern.Id, out var list))
+                {
+                    foreach (var bmp in list)
+                        bmp.Dispose();
+
+                    patternBitmapCache.Remove(pattern.Id);
+                }
+            }
         }
 
         private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleY, bool dpcm, uint[] data)
@@ -942,7 +950,8 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    bool shift = ModifierKeys.HasFlag(Keys.Shift);
+                    var ctrl  = ModifierKeys.HasFlag(Keys.Control);
+                    var shift = ModifierKeys.HasFlag(Keys.Shift);
 
                     if (left && setLoop)
                     {
@@ -968,7 +977,7 @@ namespace FamiStudio
                             PatternClicked?.Invoke(channelIdx, patternIdx);
                         }
 
-                        if (shift && minSelectedChannelIdx >= 0 && minSelectedPatternIdx >= 0)
+                        if (shift && !ctrl && minSelectedChannelIdx >= 0 && minSelectedPatternIdx >= 0)
                         {
                             if (channelIdx < minSelectedChannelIdx)
                             {
@@ -1522,18 +1531,25 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
+        private void ScrollIfSelectionNearEdge(int mouseX)
+        {
+            if ((mouseX - trackNameSizeX) < 0)
+            {
+                var scrollAmount = (trackNameSizeX - mouseX) / (float)trackNameSizeX;
+                scrollX -= (int)(16 * scrollAmount);
+                ClampScroll();
+            }
+            else if ((Width - mouseX) < trackNameSizeX)
+            {
+                var scrollAmount = (mouseX - (Width - trackNameSizeX)) / (float)trackNameSizeX;
+                scrollX += (int)(16 * scrollAmount);
+                ClampScroll();
+            }
+        }
+
         private void UpdateSelection(int mouseX, bool first = false)
         {
-            if ((mouseX - trackNameSizeX) < 100)
-            {
-                scrollX -= 16;
-                ClampScroll();
-            }
-            else if ((Width - mouseX) < 100)
-            {
-                scrollX += 16;
-                ClampScroll();
-            }
+            ScrollIfSelectionNearEdge(mouseX);
 
             int noteIdx = (int)((mouseX - trackNameSizeX + scrollX) / noteSizeX);
             int patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);

@@ -152,6 +152,7 @@ namespace FamiStudio
 
         public void Dispose()
         {
+            Utils.DisposeAndNullify(ref Bitmap);
         }
     }
 
@@ -756,17 +757,35 @@ namespace FamiStudio
             return id;
         }
 
-        public unsafe GLBitmap CreateBitmapFromResource(string name)
+        public GLBitmap CreateBitmapFromResource(string name)
         {
-            string suffix = GLTheme.MainWindowScaling > 1 ? "@2x" : "";
             var assembly = Assembly.GetExecutingAssembly();
 
+            bool needsScaling = false;
             Gdk.Pixbuf pixbuf = null;
 
-            if (assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}{suffix}.png") != null)
-                pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}{suffix}.png");
+            if (GLTheme.MainWindowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
+            {
+                pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}@15x.png");
+            }
+            else if (GLTheme.MainWindowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
+            {
+                pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}@2x.png");
+                needsScaling = GLTheme.MainWindowScaling != 2.0f;
+            }
             else
+            {
                 pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
+            }
+
+            // Pre-resize all images so we dont have to deal with scaling later.
+            if (needsScaling)
+            {
+                var newWidth  = Math.Max(1, (int)(pixbuf.Width  * (windowScaling / 2.0f)));
+                var newHeight = Math.Max(1, (int)(pixbuf.Height * (windowScaling / 2.0f)));
+
+                pixbuf = pixbuf.ScaleSimple(newWidth, newHeight, Gdk.InterpType.Bilinear);
+            }
 
             return new GLBitmap(CreateGLTexture(pixbuf), pixbuf.Width, pixbuf.Height);
         }

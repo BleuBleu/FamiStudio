@@ -26,7 +26,10 @@ namespace FamiStudio
         public OpenALStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             if (context == null)
+            {
                 context = new AudioContext();
+                Console.WriteLine($"Default OpenAL audio device is '{AudioContext.DefaultDevice}'");
+            }
 
             freq = rate;
             source = AL.GenSource();

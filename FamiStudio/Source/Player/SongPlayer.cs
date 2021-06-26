@@ -37,10 +37,14 @@ namespace FamiStudio
 
         public void Stop()
         {
-            if (playerThread != null)
+            // Keeping a local variable of the thread since the song may
+            // end naturally and may set playerThread = null after we have set
+            // the stop event.
+            var thread = playerThread;
+            if (thread != null)
             {
                 stopEvent.Set();
-                playerThread.Join();
+                thread.Join();
                 Debug.Assert(playerThread == null);
             }
         }

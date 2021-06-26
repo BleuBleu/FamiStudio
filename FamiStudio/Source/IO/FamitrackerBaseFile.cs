@@ -190,7 +190,7 @@ namespace FamiStudio
 
         protected Project project;
         protected Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
-        protected Dictionary<Pattern, byte> patternLengths = new Dictionary<Pattern, byte>();
+        protected Dictionary<Pattern, int> patternLengths = new Dictionary<Pattern, int>();
         protected int barLength = -1;
 
         protected int ConvertExpansionAudio(int exp)
@@ -275,7 +275,7 @@ namespace FamiStudio
             return arp;
         }
 
-        protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, byte> patternLengths, bool allowSongEffects)
+        protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, int> patternLengths, bool allowSongEffects)
         {
             Note note = null;
 
@@ -288,13 +288,13 @@ namespace FamiStudio
                     if (allowSongEffects && !patternLengths.ContainsKey(pattern))
                     {
                         pattern.Song.SetLoopPoint(fx.param);
-                        patternLengths[pattern] = (byte)(n + 1);
+                        patternLengths[pattern] = n + 1;
                     }
                     return;
                 case Effect_Skip:
                     // Ignore if there was a Dxx or Bxx before.
                     if (!patternLengths.ContainsKey(pattern))
-                        patternLengths[pattern] = (byte)(n + 1);
+                        patternLengths[pattern] = n + 1;
                     return;
                 case Effect_Speed:
                     if (pattern.Channel.SupportsEffect(Note.EffectSpeed))

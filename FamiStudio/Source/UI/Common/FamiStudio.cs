@@ -393,7 +393,6 @@ namespace FamiStudio
         {
             ValidateIntegrity();
 
-
             // Special category for stuff that is so important, we should stop the song.
             if (flags.HasFlag(TransactionFlags.StopAudio))
             {
@@ -444,9 +443,10 @@ namespace FamiStudio
         private void ValidateIntegrity()
         {
 #if DEBUG
-            if (Song != null)
+            if (song != null)
             {
                 project.SongExists(song);
+                Debug.Assert(song == ProjectExplorer.SelectedSong);
             }
 #endif
         }
@@ -1586,6 +1586,8 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
+            var oldSong = song;
+
             buffer.Serialize(ref ghostChannelMask);
             buffer.Serialize(ref song);
 
@@ -1604,6 +1606,13 @@ namespace FamiStudio
 
                 RefreshLayout();
                 mainForm.Invalidate();
+
+                // When the song changes between undo/redos, must stop the audio.
+                if (oldSong.Id != song.Id)
+                {
+                    Debug.Assert(ProjectExplorer.SelectedSong == song);
+                    projectExplorer_SongSelected(song);
+                }
             }
         }
 

@@ -538,6 +538,13 @@ namespace FamiStudio
                 noteEvents.Add(noteEvent);
             }
 
+            // Polyphonic Key Pressure
+            else if (statusHiByte == 0b1010)
+            {
+                var key      = bytes[idx++];
+                var pressure = bytes[idx++];
+            }
+
             // Channel pressure
             else if (statusHiByte == 0b1101)
             {
@@ -682,10 +689,22 @@ namespace FamiStudio
             return bestTempo;
         }
 
-        private void CreateProjectAndSong(int expansion, bool pal)
+        private void CreateProjectAndSong(int expansion, MidiSource[] channelSources, bool pal)
         {
+            var num163Channels = 1;
+
+            // Autodetect number of N163 channels.
+            if (expansion == ExpansionType.N163)
+            {
+                for (int i = ChannelType.ExpansionAudioStart; i < channelSources.Length; i++)
+                {
+                    if (channelSources[i].type != MidiSourceType.None)
+                        num163Channels = Math.Max(num163Channels, i - ChannelType.ExpansionAudioStart + 1);
+                }
+            }
+
             project = new Project();
-            project.SetExpansionAudio(expansion);
+            project.SetExpansionAudio(expansion, num163Channels);
             project.PalMode = pal;
 
             song = project.CreateSong();
@@ -1110,7 +1129,7 @@ namespace FamiStudio
                 if (!ReadAllTracks())
                     return null;
 
-                CreateProjectAndSong(expansion, pal);
+                CreateProjectAndSong(expansion, channelSources, pal);
                 CreateInstruments();
                 CreatePatterns(out var patternInfos, measuresPerPattern);
 

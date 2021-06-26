@@ -865,6 +865,7 @@ namespace FamiStudio
                 case EXTSOUND_S5B:  project.SetExpansionAudio(ExpansionType.S5B);  break;
                 case 0: break;
                 default:
+                    Log.LogMessage(LogSeverity.Error, "NSF uses multiple expansion chips at the same time. This is not supported.");
                     NsfClose(nsf); // Unsupported expansion combination.
                     return null;
             }
