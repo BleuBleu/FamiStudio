@@ -170,7 +170,7 @@ namespace FamiStudio
         }
 
         public bool SupportsReleaseNotes => type != ChannelType.Dpcm;
-        public bool SupportsSlideNotes => type != ChannelType.Noise && type != ChannelType.Dpcm;
+        public bool SupportsSlideNotes => type != ChannelType.Dpcm;
         public bool SupportsArpeggios => type != ChannelType.Dpcm;
 
         public bool SupportsEffect(int effect)
@@ -480,6 +480,11 @@ namespace FamiStudio
                         break;
                 }
             }
+            else if (type == ChannelType.Noise)
+            {
+                slideShift = -4;
+                pitchShift =  0;
+            }
             else
             {
                 // For most channels, we have 1 bit of fraction to better handle slopes.
@@ -513,6 +518,8 @@ namespace FamiStudio
             return new SparseChannelNoteIterator(this, start, end, filter);
         }
 
+
+
         public bool ComputeSlideNoteParams(Note note, NoteLocation location, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
         {
             Debug.Assert(note.IsMusical);
@@ -522,7 +529,11 @@ namespace FamiStudio
             if (applyShifts)
                 GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out slideShift);
 
-            pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
+            // Noise is special, no periods.
+            if (type == ChannelType.Noise)
+                pitchDelta = note.Value - note.SlideNoteTarget;
+            else
+                pitchDelta = noteTable[note.Value] - noteTable[note.SlideNoteTarget];
 
             if (pitchDelta != 0)
             {

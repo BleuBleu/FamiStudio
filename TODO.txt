@@ -71,13 +71,29 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Save snapping + qwerty settings + some export settings.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Merge CC65 stuff.
-- Noise slides? Could be different opcode with lookup table slope.
+- Noise slides
+	- Why cant i draw a slide when dragging outside of the piano roll?
+	/ Sound engine (other assemblies)
+	x Sound engine export (add USE_XXX msg)
+	- Run unit test
+	- FamiTracker import (just 1xx/2xx, minimum speed is 1 per frame).
+	- FamiTracker export
+	- Add slides to unit test.
 - Volume slides.
+- Option to use code instead of volume table.
+- MMC3 rom.
+
+
 
 - LOW PRIO : Look at wave offset (msg from Twitter)
 - CUT : Keyboard shortcut for snapping precision?
 - LOW PRIO : End of song looping behavior?
 - LOW PRIO : Left/right pan with +/- (cubase style)?
+
+Doc
+===
+- Add replace instrument (with selection) info
+- 
 
 Testing
 =======

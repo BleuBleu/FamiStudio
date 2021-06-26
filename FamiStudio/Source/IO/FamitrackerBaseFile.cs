@@ -625,6 +625,13 @@ namespace FamiStudio
                         {
                             var fx = fxData[location.NoteIndex, i];
 
+                            // These seem to have no effect on the noise channel.
+                            if (c.Type == ChannelType.Noise && (fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown || fx.fx == Effect_Portamento))
+                            {
+                                fx.fx = Effect_None;
+                                fx.param = 0;
+                            }
+
                             if (fx.param != 0)
                             {
                                 // When the effect it turned on, we need to add a note.
@@ -710,6 +717,8 @@ namespace FamiStudio
                                 //               don't know how many frames it will take to get there.
                                 if (slideTarget != 0)
                                 {
+                                    Debug.Assert(c.Type != ChannelType.Noise);
+
                                     // Advance in the song until we have the correct number of frames.
                                     var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / (slideSpeed << octaveSlideShift)));
                                     note.SlideNoteTarget = (byte)slideTarget;
@@ -767,9 +776,19 @@ namespace FamiStudio
                                     // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
                                     numFrames = Math.Max(1, numFrames - (note.HasNoteDelay ? note.NoteDelay : 0));
 
-                                    // Compute the pitch delta and find the closest target note.
-                                    var newNotePitch = Utils.Clamp(noteTable[slideSource] + numFrames * (slideSpeed << octaveSlideShift), 0, pitchLimit);
-                                    var newNote = FindBestMatchingNote(noteTable, newNotePitch, Math.Sign(slideSpeed));
+                                    var newNote = 0;
+
+                                    // Noise is much simpler.
+                                    if (c.Type == ChannelType.Noise)
+                                    {
+                                        newNote = Utils.Clamp(slideSpeed * numFrames, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                                    }
+                                    else
+                                    {
+                                        // Compute the pitch delta and find the closest target note.
+                                        var newNotePitch = Utils.Clamp(noteTable[slideSource] + numFrames * (slideSpeed << octaveSlideShift), 0, pitchLimit);
+                                        newNote = FindBestMatchingNote(noteTable, newNotePitch, Math.Sign(slideSpeed));
+                                    }
 
                                     note.SlideNoteTarget = (byte)newNote;
 

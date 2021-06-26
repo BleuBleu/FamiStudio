@@ -42,6 +42,7 @@ namespace FamiStudio
         private bool usesVolumeTrack = false;
         private bool usesPitchTrack = false;
         private bool usesSlideNotes = false;
+        private bool usesNoiseSlideNotes = false;
         private bool usesVibrato = false;
         private bool usesArpeggio = false;
         private bool usesDutyCycleEffect = false;
@@ -972,6 +973,9 @@ namespace FamiStudio
                                     songData.Add($"${EncodeNoteValue(c, note.SlideNoteTarget):x2}*");
                                     usesSlideNotes = true;
                                     emittedSlideNote = true;
+
+                                    if (channel.Type == ChannelType.Noise)
+                                        usesNoiseSlideNotes = true;
                                 }
                             }
 
@@ -1478,6 +1482,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Fine pitch track is used, you must set FAMISTUDIO_USE_PITCH_TRACK = 1.");
                     if (usesSlideNotes)
                         Log.LogMessage(LogSeverity.Info, "Slide notes are used, you must set FAMISTUDIO_USE_SLIDE_NOTES = 1.");
+                    if (usesNoiseSlideNotes)
+                        Log.LogMessage(LogSeverity.Info, "Slide notes are used on the noise channel, you must set FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1.");
                     if (usesVibrato)
                         Log.LogMessage(LogSeverity.Info, "Vibrato effect is used, you must set FAMISTUDIO_USE_VIBRATO = 1.");
                     if (usesArpeggio)
