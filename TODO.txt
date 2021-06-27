@@ -75,11 +75,9 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 	- Run unit test
 	- Add slides to unit test.
 	- Documentation (sound engine, FT)
+	- Make sure enabled on ROM + NSF.
 - Volume slides.
-- Option to use code instead of volume table.
 - MMC3 rom.
-
-
 
 - LOW PRIO : Look at wave offset (msg from Twitter)
 - CUT : Keyboard shortcut for snapping precision?
