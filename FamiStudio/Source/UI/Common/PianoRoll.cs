@@ -6004,8 +6004,12 @@ namespace FamiStudio
 
         private bool GetNoteValueForCoord(int x, int y, out byte noteValue)
         {
-            noteValue = (byte)(numNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, numNotes));
-            return x > whiteKeySizeX && y > headerAndEffectSizeY;
+            var rawNoteValue = ((y - headerAndEffectSizeY) + scrollY) / noteSizeY;
+            noteValue = (byte)(numNotes - Utils.Clamp(rawNoteValue, 0, numNotes));
+
+            // Allow to go outside the window when a capture is in progress.
+            var captureInProgress = captureOperation != CaptureOperation.None;
+            return x > whiteKeySizeX && ((y > headerAndEffectSizeY && !captureInProgress) || (rawNoteValue >= 0 && captureInProgress));
         }
 
         private bool GetLocationForCoord(int x, int y, out NoteLocation location, out byte noteValue, bool allowSnap = false)

@@ -72,12 +72,12 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Merge CC65 stuff.
 - Noise slides
-	- Why cant i draw a slide when dragging outside of the piano roll?
+	x Why cant i draw a slide when dragging outside of the piano roll?
 	/ Sound engine (other assemblies)
 	x Sound engine export (add USE_XXX msg)
+	x FamiTracker import (just 1xx/2xx, minimum speed is 1 per frame).
+	x FamiTracker export
 	- Run unit test
-	- FamiTracker import (just 1xx/2xx, minimum speed is 1 per frame).
-	- FamiTracker export
 	- Add slides to unit test.
 - Volume slides.
 - Option to use code instead of volume table.
