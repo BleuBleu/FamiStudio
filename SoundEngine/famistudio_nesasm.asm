@@ -179,28 +179,32 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
-FAMISTUDIO_USE_VOLUME_TRACK   = 1
+FAMISTUDIO_USE_VOLUME_TRACK      = 1
 
 ; Must be enabled if any song uses the pitch track. The pitch track allows manipulating the pitch at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#pitch
-FAMISTUDIO_USE_PITCH_TRACK    = 1
+FAMISTUDIO_USE_PITCH_TRACK       = 1
 
 ; Must be enabled if any song uses slide notes. Slide notes allows portamento and slide effects.
 ; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
-FAMISTUDIO_USE_SLIDE_NOTES    = 1
+FAMISTUDIO_USE_SLIDE_NOTES       = 1
+
+; Must be enabled if any song uses slide notes on the noise channel too. 
+; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
+; FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1
 
 ; Must be enabled if any song uses the vibrato speed/depth effect track. 
 ; More information at: https://famistudio.org/doc/pianoroll/#vibrato-depth-speed
-FAMISTUDIO_USE_VIBRATO        = 1
+FAMISTUDIO_USE_VIBRATO           = 1
 
 ; Must be enabled if any song uses arpeggios (not to be confused with instrument arpeggio envelopes, those are always
 ; supported).
 ; More information at: (TODO)
-FAMISTUDIO_USE_ARPEGGIO       = 1
+FAMISTUDIO_USE_ARPEGGIO          = 1
 
 ; Must be enabled if any song uses the "Duty Cycle" effect (equivalent of FamiTracker Vxx, also called "Timbre").  
-; FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1
+; FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
 
     .endif
 
@@ -306,6 +310,10 @@ FAMISTUDIO_USE_PITCH_TRACK = 0
 FAMISTUDIO_USE_SLIDE_NOTES = 0
     .endif
 
+    .ifndef FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 0
+    .endif
+
     .ifndef FAMISTUDIO_USE_VIBRATO
 FAMISTUDIO_USE_VIBRATO = 0
     .endif
@@ -333,6 +341,10 @@ FAMISTUDIO_EXP_NOTE_START = 5
     .endif
     .if (FAMISTUDIO_EXP_VRC6) != 0
 FAMISTUDIO_EXP_NOTE_START = 7
+    .endif
+
+    .if (FAMISTUDIO_USE_NOISE_SLIDE_NOTES != 0) & (FAMISTUDIO_USE_SLIDE_NOTES = 0)
+    .error "Noise slide notes can only be used when regular slide notes are enabled too."
     .endif
 
     .if (FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS != 0) & (FAMISTUDIO_USE_FAMITRACKER_TEMPO = 0)
@@ -391,6 +403,15 @@ FAMISTUDIO_NUM_PITCH_ENVELOPES  = 3
 FAMISTUDIO_NUM_CHANNELS         = 5
 FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
     .endif
+
+    .if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+FAMISTUDIO_NUM_SLIDES = FAMISTUDIO_NUM_PITCH_ENVELOPES + 1
+    .else
+FAMISTUDIO_NUM_SLIDES = FAMISTUDIO_NUM_PITCH_ENVELOPES
+    .endif
+
+; Keep the noise slide at the end so the pitch envelopes/slides are in sync.
+FAMISTUDIO_NOISE_SLIDE_INDEX = FAMISTUDIO_NUM_SLIDES - 1
 
 FAMISTUDIO_CH0_ENVS = 0
 FAMISTUDIO_CH1_ENVS = 3
@@ -499,9 +520,9 @@ famistudio_pitch_env_fine_value:  .rs FAMISTUDIO_NUM_PITCH_ENVELOPES
     .endif
 
     .if FAMISTUDIO_USE_SLIDE_NOTES
-famistudio_slide_step:            .rs FAMISTUDIO_NUM_PITCH_ENVELOPES
-famistudio_slide_pitch_lo:        .rs FAMISTUDIO_NUM_PITCH_ENVELOPES
-famistudio_slide_pitch_hi:        .rs FAMISTUDIO_NUM_PITCH_ENVELOPES
+famistudio_slide_step:            .rs FAMISTUDIO_NUM_SLIDES
+famistudio_slide_pitch_lo:        .rs FAMISTUDIO_NUM_SLIDES
+famistudio_slide_pitch_hi:        .rs FAMISTUDIO_NUM_SLIDES
     .endif
 
 famistudio_chn_ptr_lo:            .rs FAMISTUDIO_NUM_CHANNELS
@@ -956,7 +977,7 @@ famistudio_music_stop:
 
     sta famistudio_slide_step, x
     inx
-    cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
+    cpx #FAMISTUDIO_NUM_SLIDES
     bne .set_slides
     .endif
 
@@ -1516,6 +1537,44 @@ reg_sweep\@ = \9
 
     .if idx\@ = 3 ; Noise channel is a bit special    
 
+    .if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+
+    ; Check if there is an active slide on the noise channel.
+    ldy famistudio_slide_step+FAMISTUDIO_NOISE_SLIDE_INDEX
+    beq .no_noise_slide\@
+
+        ; We have 4 bits of fraction for noise slides.
+        sta <.tmp\@
+        lda famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+        cmp #$80
+        ror a
+        sta <.pitch\@+1
+        lda famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+        ror a
+        sta <.pitch\@+0
+
+        lda <.pitch\@+1
+        cmp #$80
+        ror <.pitch\@+1
+        ror <.pitch\@+0
+
+        lda <.pitch\@+1
+        cmp #$80
+        ror <.pitch\@+1
+        ror <.pitch\@+0
+
+        lda <.pitch\@+1
+        cmp #$80
+        ror <.pitch\@+1
+        lda <.pitch\@+0
+        ror a
+
+        clc 
+        adc <.tmp\@
+
+    .endif
+
+.no_noise_slide\@:
     and #$0f
     eor #$0f
     sta <.tmp\@
@@ -1533,11 +1592,13 @@ reg_sweep\@ = \9
     .endif
     tax
 
+    ; This basically does same as "famistudio_channel_to_pitch_env"
     .if idx\@ < 3
         ldy #idx\@
     .else
         ldy #(idx\@ - 2)
     .endif
+
     .if (FAMISTUDIO_EXP_VRC6 != 0) & (idx\@ = 7)
         jsr famistudio_get_note_pitch_vrc6_saw
     .else
@@ -2474,7 +2535,7 @@ famistudio_update:
 
 .slide_next:
     inx 
-    cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
+    cpx #FAMISTUDIO_NUM_SLIDES
     bne .slide_process
     .endif
 
@@ -3400,7 +3461,43 @@ famistudio_channel_update:
     jmp .read_byte 
 
     .if FAMISTUDIO_USE_SLIDE_NOTES
+
+    .if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+.noise_slide:
+    lda [.channel_data_ptr],y ; Read slide step size
+    iny
+    sta famistudio_slide_step+FAMISTUDIO_NOISE_SLIDE_INDEX
+    lda [.channel_data_ptr],y ; Read slide note from
+    iny
+    sec
+    sbc [.channel_data_ptr],y ; Read slide note to
+    sta famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    bpl .positive_noise_slide
+.negative_noise_slide:
+    ; Sign extend.
+    lda #$ff
+    bmi .noise_shift
+.positive_noise_slide:
+    lda #$00
+.noise_shift:    
+    sta famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    ; Noise slides have 4-bits of fraction.
+    asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    jmp .slide_done_pos
+    .endif
+
 .special_code_slide:
+    .if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+        cpx #3
+        beq .noise_slide
+   .endif
     stx <.tmp_chan_idx
     lda famistudio_channel_to_slide,x
     tax
@@ -3493,11 +3590,11 @@ famistudio_channel_update:
     .endif
     ldx <.tmp_chan_idx
     ldy #2
+.slide_done_pos:
     lda [.channel_data_ptr],y ; Re-read the target note (ugly...)
     sta famistudio_chn_note,x ; Store note code
     famistudio_add_16_8 .channel_data_ptr, #3
 
-.slide_done_pos:
     ldy #0
     jmp .sec_and_done
     .endif
@@ -4502,14 +4599,50 @@ famistudio_channel_to_arpeggio_env:
     .endif
     .endif
 
-; For a given channel, returns the index of the slide/pitch envelope.
-famistudio_channel_to_pitch_env:
+    .if (FAMISTUDIO_USE_SLIDE_NOTES != 0)
 famistudio_channel_to_slide:
+; This table will only be defined if we use noise slides, otherwise identical to "famistudio_channel_to_pitch_env".
+    .if FAMISTUDIO_USE_NOISE_SLIDE_NOTES    
     .byte $00
     .byte $01
     .byte $02
-    .byte $ff ; no slide for noise
+    .byte FAMISTUDIO_NOISE_SLIDE_INDEX ; Keep the noise slide at the end so the pitch envelopes/slides are in sync.
     .byte $ff ; no slide for DPCM
+    .if FAMISTUDIO_NUM_SLIDES >= 4
+    .byte $03
+    .endif
+    .if FAMISTUDIO_NUM_SLIDES >= 5
+    .byte $04
+    .endif    
+    .if FAMISTUDIO_NUM_SLIDES >= 6
+    .byte $05
+    .endif
+    .if FAMISTUDIO_NUM_SLIDES >= 7
+    .byte $06
+    .endif
+    .if FAMISTUDIO_NUM_SLIDES >= 8
+    .byte $07
+    .endif
+    .if FAMISTUDIO_NUM_SLIDES >= 9
+    .byte $08
+    .endif
+    .if FAMISTUDIO_NUM_SLIDES >= 10
+    .byte $09
+    .endif
+    .if FAMISTUDIO_NUM_SLIDES >= 11
+    .byte $0a
+    .endif
+    .endif
+    .endif
+
+; For a given channel, returns the index of the pitch envelope.
+famistudio_channel_to_pitch_env:
+    .if (FAMISTUDIO_USE_NOISE_SLIDE_NOTES != 0)
+    .byte $00
+    .byte $01
+    .byte $02
+    .byte $ff ; no pitch envelopes for noise
+    .byte $ff ; no pitch envelopes slide for DPCM
     .if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 4
     .byte $03
     .endif
@@ -4533,6 +4666,7 @@ famistudio_channel_to_slide:
     .endif
     .if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 11
     .byte $0a
+    .endif
     .endif
 
     .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT

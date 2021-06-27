@@ -1511,8 +1511,6 @@ famistudio_get_note_pitch_vrc6_saw:
 
 .if idx = 3 ; Noise channel is a bit special    
 
-    ; NOISETODO : Add noise slide here.
-
 .if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
 
     ; Check if there is an active slide on the noise channel.
