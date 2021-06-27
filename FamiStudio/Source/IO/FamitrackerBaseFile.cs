@@ -498,7 +498,9 @@ namespace FamiStudio
                 }
             }
 
-            return false;
+            //nextLocation = new NoteLocation(channel.Song.Length - 1, channel.Song.GetPatternLength(channel.Song.Length - 1) - 1);
+            nextLocation = channel.Song.EndLocation;
+            return true;
         }
 
         private int FindBestMatchingNote(ushort[] noteTable, int pitch, int sign)
@@ -745,7 +747,7 @@ namespace FamiStudio
                                         note.SlideNoteTarget = (byte)slideTarget;
                                     }
 
-                                    if (nextLocation.PatternIndex < s.Length)
+                                    if (nextLocation.IsInSong(s))
                                     {
                                         // Add an extra note with no attack to stop the slide.
                                         var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
@@ -777,11 +779,44 @@ namespace FamiStudio
                                     numFrames = Math.Max(1, numFrames - (note.HasNoteDelay ? note.NoteDelay : 0));
 
                                     var newNote = 0;
+                                    var clearSlide = false;
 
-                                    // Noise is much simpler.
+                                    // Noise is much simpler. Or is it?
                                     if (c.Type == ChannelType.Noise)
                                     {
-                                        newNote = Utils.Clamp(slideSpeed * numFrames, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                                        // FamiTracker clamps noise channel period between 0 and 2047. There is no 
+                                        // way for us to know the state of the current period here, so we will assume
+                                        // we are in the [17,31] range and stop the slide when it hits zero.
+                                        if (slideSpeed < 0)
+                                        {
+                                            var famitrackerNoiseValue = (note.Value & 0xf) | 0x10; // See CNoiseChan::HandleNote
+                                            for (int i = 1; i < numFrames; i++)
+                                            {
+                                                famitrackerNoiseValue += slideSpeed;
+                                                if (famitrackerNoiseValue <= 0)
+                                                {
+                                                    numFrames = i;
+                                                    var newNextLocation = location;
+                                                    s.AdvanceNumberOfFrames(ref newNextLocation, numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode);
+                                                    nextLocation = NoteLocation.Min(nextLocation, newNextLocation);
+                                                    Log.LogMessage(LogSeverity.Warning, $"Effect 1xx on noise channel may not song correct due to the massive differences in how both app handle those. {GetPatternString(c.PatternInstances[location.PatternIndex], location.NoteIndex)}");
+                                                    clearSlide = true;
+                                                    break;
+                                                }                        
+                                            }
+                                        }
+
+                                        var newNoteValue = note.Value + slideSpeed * numFrames;
+
+                                        // We dont support wrapping around.
+                                        if (newNoteValue < Note.MusicalNoteMin || 
+                                            newNoteValue > Note.MusicalNoteMax)
+                                        {
+                                            newNoteValue = Utils.Clamp(newNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                                            Log.LogMessage(LogSeverity.Warning, $"Noise slide tries to go outside of the {Note.GetFriendlyName(Note.MusicalNoteMin)} - {Note.GetFriendlyName(Note.MusicalNoteMax)} range and will be clamped. Manual correction will be required. {GetPatternString(c.PatternInstances[location.PatternIndex], location.NoteIndex)}");
+                                        }
+
+                                        newNote = newNoteValue;
                                     }
                                     else
                                     {
@@ -792,20 +827,26 @@ namespace FamiStudio
 
                                     note.SlideNoteTarget = (byte)newNote;
 
-                                    // If the FX was turned off, we need to add an extra note.
-                                    var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
-                                    if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote) || !nextNote.IsValid)
+                                    if (nextLocation.IsInSong(s))
                                     {
-                                        nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
-                                        nextNote.Instrument = note.Instrument;
-                                        nextNote.Value = (byte)newNote;
-                                        nextNote.HasAttack = false;
-                                        it.Resync();
+                                        // If the FX was turned off, we need to add an extra note.
+                                        var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
+                                        if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote) || !nextNote.IsValid)
+                                        {
+                                            nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
+                                            nextNote.Instrument = note.Instrument;
+                                            nextNote.Value = (byte)newNote;
+                                            nextNote.HasAttack = false;
+                                            it.Resync();
+                                        }
+                                        else if (nextNote != null && nextNote.IsRelease)
+                                        {
+                                            Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nextLocation.NoteIndex)}");
+                                        }
                                     }
-                                    else if (nextNote != null && nextNote.IsRelease)
-                                    {
-                                        Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nextLocation.NoteIndex)}");
-                                    }
+
+                                    if (clearSlide)
+                                        slideSpeed = 0;
                                 }
                             }
                         }
