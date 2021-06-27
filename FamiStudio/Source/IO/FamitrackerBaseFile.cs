@@ -628,7 +628,7 @@ namespace FamiStudio
                             var fx = fxData[location.NoteIndex, i];
 
                             // These seem to have no effect on the noise channel.
-                            if (c.Type == ChannelType.Noise && (fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown || fx.fx == Effect_Portamento))
+                            if (c.IsNoiseChannel && (fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown || fx.fx == Effect_Portamento))
                             {
                                 fx.fx = Effect_None;
                                 fx.param = 0;
@@ -719,7 +719,7 @@ namespace FamiStudio
                                 //               don't know how many frames it will take to get there.
                                 if (slideTarget != 0)
                                 {
-                                    Debug.Assert(c.Type != ChannelType.Noise);
+                                    Debug.Assert(!c.IsNoiseChannel);
 
                                     // Advance in the song until we have the correct number of frames.
                                     var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / (slideSpeed << octaveSlideShift)));
@@ -782,7 +782,7 @@ namespace FamiStudio
                                     var clearSlide = false;
 
                                     // Noise is much simpler. Or is it?
-                                    if (c.Type == ChannelType.Noise)
+                                    if (c.IsNoiseChannel)
                                     {
                                         // FamiTracker clamps noise channel period between 0 and 2047. There is no 
                                         // way for us to know the state of the current period here, so we will assume

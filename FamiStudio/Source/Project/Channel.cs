@@ -31,6 +31,7 @@ namespace FamiStudio
         public bool IsFdsWaveChannel => type == ChannelType.FdsWave;
         public bool IsN163WaveChannel => type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8;
         public bool IsVrc7FmChannel => type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6;
+        public bool IsNoiseChannel => type == ChannelType.Noise;
 
         public Channel(Song song, int type, int songLength)
         {
