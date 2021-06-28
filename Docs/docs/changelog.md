@@ -11,6 +11,7 @@ Fixes:
 * Fixed FamiStudio currupting the keyboard state on some european keyboards
 * Fixed oscilloscope vertical orientation in toolbar + video export
 * Fixed crash when using 150% scaling on Linux
+* Fixed crash when parsing FamiStudio text file using VRC6 expansion.
 * Fixed fine effect adjustment (shift + drag) again
 * Stopping all audio when undo/redo happens to change the selected song
 * Showing all 8 channels when importing MIDI using N163 expansion
