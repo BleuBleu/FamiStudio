@@ -15,6 +15,7 @@ namespace FamiStudio
         protected int delayedCutCounter = 0;
         protected int delayedNoteSlidePitch = 0;
         protected int delayedNoteSlideStep = 0;
+        protected int delayedNoteVolumeSlideStep = 0;
         protected Note delayedNote = null;
         protected Note note = new Note(Note.NoteInvalid);
         protected int dutyCycle = 0;
@@ -33,6 +34,9 @@ namespace FamiStudio
         protected int slidePitch = 0;
         protected int slideShift = 0;
         protected int pitchShift = 0;
+        protected int volume = Note.VolumeMax << 4;
+        protected int volumeSlideStep = 0;
+        protected int volumeSlideTarget = 0;
         protected byte noteValueBeforeSlide = 0;
         protected IPlayerInterface player;
 
@@ -47,7 +51,6 @@ namespace FamiStudio
             maximumPeriod = NesApu.GetPitchLimitForChannelType(channelType);
             noteTable = NesApu.GetNoteTableForChannelType(channelType, pal, numN163Channels);
             note.Value = Note.NoteStop;
-            note.Volume = Note.VolumeMax;
             note.FinePitch = 0;
             Channel.GetShiftsForType(type, numN163Channels, out pitchShift, out slideShift);
         }
@@ -123,6 +126,11 @@ namespace FamiStudio
                         durationCounter = newNote.Duration;
                 }
 
+                if (newNote.HasVolumeSlide)
+                {
+                    channel.ComputeVolumeSlideNoteParams(newNote, location, famitrackerSpeed, palPlayback, out volumeSlideStep, out _);
+                }
+
                 // Store note for later if delayed.
                 if (newNote.HasNoteDelay)
                 {
@@ -130,20 +138,20 @@ namespace FamiStudio
                     delayedNoteCounter = newNote.NoteDelay + 1;
                     delayedNoteSlidePitch = noteSlidePitch;
                     delayedNoteSlideStep  = noteSlideStep;
+                    delayedNoteVolumeSlideStep = volumeSlideStep;
                     return;
                 }
 
-                PlayNote(newNote, noteSlidePitch, noteSlideStep, needClone);
+                PlayNote(newNote, noteSlidePitch, noteSlideStep, volumeSlideStep, needClone);
             }
         }
 
-        public void PlayNote(Note newNote, int noteSlidePitch = 0, int noteSlideStep = 0, bool needClone = true)
+        public void PlayNote(Note newNote, int noteSlidePitch = 0, int noteSlideStep = 0, int noteVolumeSlideStep = 0, bool needClone = true)
         {
             if (needClone)
                 newNote = newNote.Clone();
 
             // Pass on the same effect values if this note doesn't specify them.
-            if (!newNote.HasVolume         && note.HasVolume)          newNote.Volume      = note.Volume;
             if (!newNote.HasFinePitch      && note.HasFinePitch)       newNote.FinePitch   = note.FinePitch;
             if (!newNote.HasFdsModDepth    && note.HasFdsModDepth)     newNote.FdsModDepth = note.FdsModDepth;
             if (!newNote.HasFdsModSpeed    && note.HasFdsModSpeed)     newNote.FdsModSpeed = note.FdsModSpeed;
@@ -280,6 +288,18 @@ namespace FamiStudio
                 envelopeValues[EnvelopeType.DutyCycle] = dutyCycle;
             }
 
+            if (note.HasVolume)
+            {
+                volume = note.Volume << 4;
+                volumeSlideStep = 0;
+            }
+
+            if (note.HasVolumeSlide)
+            {
+                volumeSlideTarget = note.VolumeSlideTarget << 4;
+                volumeSlideStep = noteVolumeSlideStep;
+            }
+
             if (note.HasCutDelay)
             {
                 delayedCutCounter = note.CutDelay + 1;
@@ -310,7 +330,7 @@ namespace FamiStudio
             {
                 if (--delayedCutCounter == 0)
                 {
-                    PlayNote(new Note(Note.NoteStop), 0, 0, false);
+                    PlayNote(new Note(Note.NoteStop), 0, 0, 0, false);
                 }
             }
         }
@@ -320,6 +340,7 @@ namespace FamiStudio
             UpdateDelayedNote();
             UpdateEnvelopes();
             UpdateSlide();
+            UpdateVolumeSlide();
             UpdateAPU();
         }
 
@@ -380,11 +401,27 @@ namespace FamiStudio
                     (slideStep < 0 && slidePitch < 0))
                 {
                     slidePitch = 0;
+                    slideStep = 0;
                 }
             }
             else
             {
                 slidePitch = 0;
+            }
+        }
+
+        private void UpdateVolumeSlide()
+        {
+            if (volumeSlideStep != 0)
+            {
+                volume += volumeSlideStep;
+
+                if ((volumeSlideStep > 0 && volume >= volumeSlideTarget) ||
+                    (volumeSlideStep < 0 && volume <= volumeSlideTarget))
+                {
+                    volume = volumeSlideTarget;
+                    volumeSlideStep = 0;
+                }
             }
         }
 
@@ -443,7 +480,8 @@ namespace FamiStudio
 
         protected int GetVolume()
         {
-            return MultiplyVolumes(note.Volume, envelopeValues[EnvelopeType.Volume]);
+            // TODO : Move the 4 to a constant.
+            return MultiplyVolumes(volume >> 4, envelopeValues[EnvelopeType.Volume]);
         }
 
         protected int GetDuty()
@@ -467,6 +505,6 @@ namespace FamiStudio
                 return n;
             }
         }
-        public int  CurrentVolume => MultiplyVolumes(note.Volume, envelopeValues[EnvelopeType.Volume]);
+        public int  CurrentVolume => MultiplyVolumes(volume >> 4, envelopeValues[EnvelopeType.Volume]);
     };
 }

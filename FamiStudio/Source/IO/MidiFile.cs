@@ -1504,7 +1504,7 @@ namespace FamiStudio
 
                             if (note.IsSlideNote && slideToPitchWheel)
                             {
-                                var slideDuration = channel.GetSlideNoteDuration(note, new NoteLocation(p, time));
+                                var slideDuration = channel.GetSlideNoteDuration(new NoteLocation(p, time));
                                 var semitones = note.SlideNoteTarget - note.Value;
 
                                 if (semitones < 0 && semitones < -pitchWheelRange)

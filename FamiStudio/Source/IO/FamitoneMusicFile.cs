@@ -40,6 +40,7 @@ namespace FamiStudio
 
         private bool usesFamiTrackerTempo = false;
         private bool usesVolumeTrack = false;
+        private bool usesVolumeSlide = false;
         private bool usesPitchTrack = false;
         private bool usesSlideNotes = false;
         private bool usesNoiseSlideNotes = false;
@@ -720,6 +721,7 @@ namespace FamiStudio
                 var arpeggio = (Arpeggio)null;
                 var sawVolume = Vrc6SawMasterVolumeType.Half;
                 var sawVolumeChanged = false;
+                var lastVolume = 15;
 
 	            songData.Add($"{ll}song{songIdx}ch{c}:");
 
@@ -741,6 +743,7 @@ namespace FamiStudio
                         // to a section where the instrument was set from a previous pattern.
                         instrument = null;
                         arpeggio = null;
+                        lastVolume = -1;
 
                         if (sawVolumeChanged)
                             sawVolume = -1;
@@ -812,8 +815,33 @@ namespace FamiStudio
 
                         if (note.HasVolume)
                         {
-                            songData.Add($"${(byte)(0x70 | note.Volume):x2}+");
+                            if (note.Volume != lastVolume)
+                            {
+                                songData.Add($"${(byte)(0x70 | note.Volume):x2}+");
+                                lastVolume = note.Volume;
+                            }
+
                             usesVolumeTrack = true;
+
+                            if (note.HasVolumeSlide)
+                            {
+                                var location = new NoteLocation(p, time);
+                                channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizeNtsc, out var _);
+                                channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal,  out var _);
+
+                                if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
+                                    stepSizePal = stepSizeNtsc;
+                                else if (machine == MachineType.PAL)
+                                    stepSizeNtsc = stepSizePal;
+
+                                var stepSize = Math.Max(Math.Abs(stepSizeNtsc), Math.Abs(stepSizePal)) * Math.Sign(stepSizeNtsc);
+                                songData.Add($"${0x6e:x2}+");
+                                songData.Add($"${(byte)stepSize:x2}");
+                                songData.Add($"${note.VolumeSlideTarget << 4:x2}");
+
+                                lastVolume = note.VolumeSlideTarget;
+                                usesVolumeSlide = true;
+                            }
                         }
 
                         if (note.HasFinePitch)
@@ -1308,15 +1336,16 @@ namespace FamiStudio
                                 if (note.IsRelease)
                                     note.Value = Note.NoteInvalid;
 
-                                note.HasAttack    = true;
-                                note.HasVibrato   = false;
-                                note.HasVolume    = false;
-                                note.IsSlideNote  = false;
-                                note.HasFinePitch = false;
-                                note.HasDutyCycle = false;
-                                note.HasNoteDelay = false;
-                                note.HasCutDelay  = false;
-                                note.Arpeggio     = null;
+                                note.HasAttack      = true;
+                                note.HasVibrato     = false;
+                                note.HasVolume      = false;
+                                note.HasVolumeSlide = false;
+                                note.IsSlideNote    = false;
+                                note.HasFinePitch   = false;
+                                note.HasDutyCycle   = false;
+                                note.HasNoteDelay   = false;
+                                note.HasCutDelay    = false;
+                                note.Arpeggio       = null;
                             }
                             else
                             {
@@ -1478,6 +1507,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Project uses delayed notes or cuts, you must set FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1.");
                     if (usesVolumeTrack)
                         Log.LogMessage(LogSeverity.Info, "Volume track is used, you must set FAMISTUDIO_USE_VOLUME_TRACK = 1.");
+                    if (usesVolumeSlide)
+                        Log.LogMessage(LogSeverity.Info, "Volume slides are used, you must set FAMISTUDIO_USE_VOLUME_SLIDES = 1.");
                     if (usesPitchTrack)
                         Log.LogMessage(LogSeverity.Info, "Fine pitch track is used, you must set FAMISTUDIO_USE_PITCH_TRACK = 1.");
                     if (usesSlideNotes)

@@ -178,19 +178,24 @@ namespace FamiStudio
         {
             switch (effect)
             {
-                case Note.EffectVolume: return type != ChannelType.Dpcm;
-                case Note.EffectFinePitch: return type != ChannelType.Noise && type != ChannelType.Dpcm;
+                case Note.EffectVolume:       return type != ChannelType.Dpcm;
+                case Note.EffectFinePitch:    return type != ChannelType.Noise && type != ChannelType.Dpcm;
                 case Note.EffectVibratoSpeed: return type != ChannelType.Noise && type != ChannelType.Dpcm;
                 case Note.EffectVibratoDepth: return type != ChannelType.Noise && type != ChannelType.Dpcm;
-                case Note.EffectFdsModDepth: return type == ChannelType.FdsWave;
-                case Note.EffectFdsModSpeed: return type == ChannelType.FdsWave;
-                case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
-                case Note.EffectDutyCycle: return type == ChannelType.Square1 || type == ChannelType.Square2 || type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2 || type == ChannelType.Vrc6Square1 || type == ChannelType.Vrc6Square2 || type == ChannelType.Noise;
-                case Note.EffectNoteDelay: return song.UsesFamiTrackerTempo;
-                case Note.EffectCutDelay: return song.UsesFamiTrackerTempo;
+                case Note.EffectFdsModDepth:  return type == ChannelType.FdsWave;
+                case Note.EffectFdsModSpeed:  return type == ChannelType.FdsWave;
+                case Note.EffectSpeed:        return song.UsesFamiTrackerTempo;
+                case Note.EffectDutyCycle:    return type == ChannelType.Square1 || type == ChannelType.Square2 || type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2 || type == ChannelType.Vrc6Square1 || type == ChannelType.Vrc6Square2 || type == ChannelType.Noise;
+                case Note.EffectNoteDelay:    return song.UsesFamiTrackerTempo;
+                case Note.EffectCutDelay:     return song.UsesFamiTrackerTempo;
             }
 
             return true;
+        }
+
+        public bool ShouldDisplayEffect(int effect)
+        {
+            return SupportsEffect(effect) && effect != Note.EffectVolumeSlide;
         }
 
         public void MakePatternsWithDifferentLengthsUnique()
@@ -495,10 +500,18 @@ namespace FamiStudio
         }
 
         // Duration in number of notes, simply to draw in the piano roll.
-        public int GetSlideNoteDuration(Note note, NoteLocation location)
+        public int GetSlideNoteDuration(NoteLocation location)
         {
-            Debug.Assert(note.IsMusical);
+            Debug.Assert(GetNoteAt(location).IsMusical);
             FindNextNoteForSlide(location, 256, out var nextLocation, true); // 256 is kind of arbitrary. 
+            return Song.CountNotesBetween(location, nextLocation);
+        }
+
+        // Duration in number of notes, simply to draw in the piano roll.
+        public int GetVolumeSlideDuration(NoteLocation location)
+        {
+            Debug.Assert(GetNoteAt(location).HasVolume);
+            FindNextNoteForVolumeSlide(location, out var nextLocation);
             return Song.CountNotesBetween(location, nextLocation);
         }
 
@@ -519,12 +532,10 @@ namespace FamiStudio
             return new SparseChannelNoteIterator(this, start, end, filter);
         }
 
-
-
         public bool ComputeSlideNoteParams(Note note, NoteLocation location, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
         {
             Debug.Assert(note.IsMusical);
-
+            
             var slideShift = 0;
 
             if (applyShifts)
@@ -578,10 +589,54 @@ namespace FamiStudio
                     frameCount = note.HasCutDelay ? note.CutDelay : 0;
                 }
 
+                // Compute slide params.
                 var absStepPerFrame = Math.Abs(pitchDelta) / Math.Max(1, frameCount);
 
                 stepSize = Utils.Clamp((int)Math.Ceiling(absStepPerFrame) * -Math.Sign(pitchDelta), sbyte.MinValue, sbyte.MaxValue);
                 stepSizeFloat = pitchDelta / Math.Max(1, frameCount);
+
+                return true;
+            }
+            else
+            {
+                stepSize = 0;
+                stepSizeFloat = 0.0f;
+
+                return false;
+            }
+        }
+
+        // MATTT : Is note needed here? We have the location....
+        public bool ComputeVolumeSlideNoteParams(Note note, NoteLocation location, int famitrackerSpeed, bool pal, out int stepSize, out float stepSizeFloat)
+        {
+            Debug.Assert(note.HasVolumeSlide);
+
+            var volumeDelta = note.Volume - note.VolumeSlideTarget;
+
+            if (volumeDelta != 0)
+            {
+                // Find the next note to calculate the slope.
+                FindNextNoteForVolumeSlide(location, out var nextLocation);
+
+                // Approximate how many frames separates these 2 notes.
+                var delayFrames = -(note.HasNoteDelay ? note.NoteDelay : 0);
+                if (Song.UsesFamiTrackerTempo)
+                {
+                    var nextNote = GetNoteAt(nextLocation);
+                    if (nextNote != null && nextNote.HasNoteDelay)
+                        delayFrames += nextNote.NoteDelay;
+                }
+
+                var frameCount = Song.CountFramesBetween(location, nextLocation, famitrackerSpeed, pal) + delayFrames;
+
+                volumeDelta <<= 4;
+
+                // Compute slide params.
+                var absStepPerFrame = Math.Abs(volumeDelta) / Math.Max(1, frameCount);
+
+                // SMMMFFFF : We have 4-bits of fraction for volume slides. 
+                stepSize = Utils.Clamp((int)Math.Ceiling(absStepPerFrame) * -Math.Sign(volumeDelta), sbyte.MinValue, sbyte.MaxValue);
+                stepSizeFloat = volumeDelta / Math.Max(1, frameCount);
 
                 return true;
             }
@@ -609,7 +664,7 @@ namespace FamiStudio
             return null;
         }
 
-        public int GetCachedLastValidEffectValue(int patternIdx, int effect)
+        public int GetCachedLastValidEffectValue(int patternIdx, int effect, out NoteLocation lastLocation)
         {
             if (patternIdx >= 0)
             {
@@ -617,10 +672,27 @@ namespace FamiStudio
 
                 var cache = patternCache[patternIdx];
                 if ((cache.lastEffectMask & (1 << effect)) != 0)
+                {
+                    lastLocation = cache.lastEffectLocation[effect];
                     return cache.lastEffectValues[effect];
+                }
             }
 
+            lastLocation = NoteLocation.Invalid;
             return Note.GetEffectDefaultValue(song, effect);
+        }
+
+        public int GetEffectValueAt(NoteLocation location, int effect)
+        {
+            var val = GetCachedLastValidEffectValue(location.PatternIndex - 1, effect, out _);
+
+            for (var it = GetSparseNoteIterator(new NoteLocation(location.PatternIndex, 0), location, Note.GetFilterForEffect(effect)); !it.Done; it.Next())
+            {
+                if (it.Note != null && it.Note.HasVolume)
+                    return it.Note.Volume;
+            }
+
+            return val;
         }
 
         public NoteLocation GetCachedLastMusicalNoteWithAttackLocation(int patternIdx)
@@ -640,6 +712,17 @@ namespace FamiStudio
             {
                 ConditionalUpdateCumulativeCache(patternIdx);
                 return patternCache[patternIdx].firstNoteIndex;
+            }
+
+            return -1;
+        }
+
+        public int GetCachedFirstVolumeIndex(int patternIdx)
+        {
+            if (patternIdx >= 0)
+            {
+                ConditionalUpdateCumulativeCache(patternIdx);
+                return patternCache[patternIdx].firstVolumeIndex;
             }
 
             return -1;
@@ -719,6 +802,11 @@ namespace FamiStudio
                         cache.firstNoteIndex = time;
                     }
 
+                    if (note.HasVolume && cache.firstVolumeIndex < 0)
+                    {
+                        cache.firstVolumeIndex = time;
+                    }
+
                     if (note.IsMusical)
                     {
                         // If its the first note ever, consider it has an attack.
@@ -732,6 +820,7 @@ namespace FamiStudio
                         {
                             cache.lastEffectMask |= (1 << j);
                             cache.lastEffectValues[j] = note.GetEffectValue(j);
+                            cache.lastEffectLocation[j] = new NoteLocation(p, time);
                         }
                     }
                 }
@@ -766,6 +855,7 @@ namespace FamiStudio
                 }
             }
 
+            // Then look in the following patterns using the cache.
             for (var p = location.PatternIndex + 1; p < song.Length; p++)
             {
                 var firstNoteIdx = GetCachedFirstNoteIndex(p);
@@ -808,6 +898,50 @@ namespace FamiStudio
 
             Song.AdvanceNumberOfNotes(ref nextNoteLocation, duration);
 
+            return true;
+        }
+
+        public bool FindNextNoteForVolumeSlide(NoteLocation location, out NoteLocation nextNoteLocation)
+        {
+            var patternLength = song.GetPatternLength(location.PatternIndex);
+            var pattern = patternInstances[location.PatternIndex];
+
+            Debug.Assert(pattern.Notes.ContainsKey(location.NoteIndex));
+            Debug.Assert(pattern.Notes[location.NoteIndex].HasVolume);
+
+            song.AdvanceNumberOfNotes(ref location, 1);
+
+            // Look in current pattern.
+            var idx = pattern.BinarySearchList(pattern.Notes.Keys, location.NoteIndex, true);
+
+            if (idx >= 0)
+            {
+                for (; idx < pattern.Notes.Values.Count; idx++)
+                {
+                    var note = pattern.Notes.Values[idx];
+                    if (note.MatchesFilter(NoteFilter.EffectVolume))
+                    {
+                        location.NoteIndex = pattern.Notes.Keys[idx];
+                        nextNoteLocation = location;
+                        return true;
+                    }
+                }
+            }
+
+            // Then look in the following patterns using the cache.
+            for (var p = location.PatternIndex + 1; p < song.Length; p++)
+            {
+                var firstNoteIdx = GetCachedFirstVolumeIndex(p);
+                if (firstNoteIdx >= 0)
+                {
+                    var note = patternInstances[p].Notes[firstNoteIdx];
+                    nextNoteLocation.PatternIndex = p;
+                    nextNoteLocation.NoteIndex = firstNoteIdx;
+                    return true;
+                }
+            }
+
+            nextNoteLocation = song.EndLocation;
             return true;
         }
 
@@ -959,6 +1093,7 @@ namespace FamiStudio
                 patternCacheCopy[i] = new PatternCumulativeCache();
                 patternCacheCopy[i].CopyFrom(patternCache[i]);
                 patternCacheCopy[i].firstNoteIndex = patternCache[i].firstNoteIndex;
+                patternCacheCopy[i].firstVolumeIndex = patternCache[i].firstVolumeIndex;
             }
 
             InvalidateCumulativePatternCache();
@@ -1337,6 +1472,7 @@ namespace FamiStudio
         {
             // Index of the first note in the pattern, -1 if none.
             public int firstNoteIndex;
+            public int firstVolumeIndex;
 
             // Last note that had an attack before the end of the pattern.
             public NoteLocation lastNoteLocation;
@@ -1344,6 +1480,7 @@ namespace FamiStudio
             // Cumulative effect values from all the previous patterns.
             public int   lastEffectMask;
             public int[] lastEffectValues = new int[Note.EffectCount];
+            public NoteLocation[] lastEffectLocation = new NoteLocation[Note.EffectCount];
 
             public PatternCumulativeCache()
             {
@@ -1356,19 +1493,25 @@ namespace FamiStudio
                 lastNoteLocation = other.lastNoteLocation;
                 lastEffectMask = other.lastEffectMask;
                 firstNoteIndex = -1;
-                Array.Copy(other.lastEffectValues, lastEffectValues, lastEffectValues.Length);
+                firstVolumeIndex = -1;
+                Array.Copy(other.lastEffectValues,   lastEffectValues,   lastEffectValues.Length);
+                Array.Copy(other.lastEffectLocation, lastEffectLocation, lastEffectLocation.Length);
             }
 
             public bool IsEqual(PatternCumulativeCache other)
             {
                 bool equal = lastNoteLocation == other.lastNoteLocation &&
                     lastEffectMask == other.lastEffectMask &&
-                    firstNoteIndex == other.firstNoteIndex;
+                    firstNoteIndex == other.firstNoteIndex &&
+                    firstVolumeIndex == other.firstVolumeIndex;
 
                 for (int i = 0; i < Note.EffectCount; i++)
                 {
                     if ((lastEffectMask & (1 << i)) != 0)
-                        equal &= (lastEffectValues[i] == other.lastEffectValues[i]);
+                    {
+                        equal &= (lastEffectValues[i]   == other.lastEffectValues[i]);
+                        equal &= (lastEffectLocation[i] == other.lastEffectLocation[i]);
+                    }
                 }
 
                 return equal;
@@ -1377,6 +1520,7 @@ namespace FamiStudio
             public void Invalidate()
             {
                 firstNoteIndex   = -1;
+                firstVolumeIndex = -1;
                 lastNoteLocation = NoteLocation.Invalid;
                 lastEffectMask   = 0;
             }

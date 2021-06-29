@@ -17,7 +17,8 @@ namespace FamiStudio
         // Version 8  = FamiStudio 2.3.0 (FamiTracker compatibility improvements)
         // Version 9  = FamiStudio 2.4.0 (DPCM sample editor)
         // Version 10 = FamiStudio 3.0.0 (VRC6 saw master volume, groove, song sorting)
-        public static int Version = 10;
+        // Version 11 = FamiStudio 3.1.0 (Volume slides, DPCM fine pitch)
+        public static int Version = 11;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
 

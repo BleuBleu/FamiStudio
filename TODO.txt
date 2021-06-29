@@ -65,6 +65,7 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. Add more low bitrates + review is high bitrates are acutally used. If you choose 12000, does it really use that? Less high.
 / Scales? Or just highlight.
+- Make auto scrolling even more gradual on Linux/MacOS.
 - Improve fine FX adjust (shift + drag, Gopnick request)
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
@@ -77,6 +78,14 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 	- Documentation (sound engine, FT)
 	- Make sure enabled on ROM + NSF.
 - Volume slides.
+	/ Sound engine code (optimize when end of slide matches next volume)
+	- Past/delete special
+	- FamiTracker import/export.
+	- Can we keep more precision on VRC6/FDS/etc? Maybe for later.
+	- Unit test.
+	- Documentation.
+	- Enable in ROM/NSF.
+- Is it necessary to clear slides on new notes in sound engine??
 - MMC3 rom.
 
 - LOW PRIO : Look at wave offset (msg from Twitter)

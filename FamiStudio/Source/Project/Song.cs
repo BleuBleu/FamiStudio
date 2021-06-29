@@ -1192,7 +1192,7 @@ namespace FamiStudio
         public override bool Equals(object obj)
         {
             var other = (NoteLocation)obj;
-            return PatternIndex == other.PatternIndex && NoteIndex == other.PatternIndex;
+            return PatternIndex == other.PatternIndex && NoteIndex == other.NoteIndex;
         }
 
         public override int GetHashCode()

@@ -424,6 +424,12 @@ namespace FamiStudio
                     buffer.Serialize(ref sourceFilename);
                 }
 
+                if (buffer.Version >= 11)
+                {
+                    // MATTT : Serialize this once its finished.
+                    //buffer.Serialize(ref finePitch);
+                }
+
                 // The process data will not be stored in the file, it will 
                 // be reprocessed every time we reopen the file.
                 if (buffer.IsForUndoRedo)
