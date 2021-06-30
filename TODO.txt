@@ -79,13 +79,21 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 	- Make sure enabled on ROM + NSF.
 - Volume slides.
 	/ Sound engine code (optimize when end of slide matches next volume)
-	- Past/delete special
+	- Add max distance (256?) too.
+	- Paste/delete special
 	- FamiTracker import/export.
 	- Can we keep more precision on VRC6/FDS/etc? Maybe for later.
 	- Unit test.
 	- Documentation.
 	- Enable in ROM/NSF.
-- Is it necessary to clear slides on new notes in sound engine??
+	- Do for expansions too!
+- Is it necessary to clear slides on new notes in sound engine?? 
+	=> The slope is clamped, so yeah probably.
+	=> Add a BRK and test it.
+- Refactor "Y" use in "famistudio_channel_update", increment only at the end.
+	=> Slides uses the "Y" register temporarely.
+	=> @regular_note use the Y=0 to clear the slide
+	=> @release_note use Y=0 to read the release point.
 - MMC3 rom.
 
 - LOW PRIO : Look at wave offset (msg from Twitter)

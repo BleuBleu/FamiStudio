@@ -674,9 +674,11 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 .export famistudio_music_stop
 .export famistudio_update
 .if FAMISTUDIO_CFG_SFX_SUPPORT
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+.export famistudio_sfx_sample_play
+.endif
 .export famistudio_sfx_init
 .export famistudio_sfx_play
-.export famistudio_sfx_sample_play
 .exportzp FAMISTUDIO_SFX_CH0
 .exportzp FAMISTUDIO_SFX_CH1
 .exportzp FAMISTUDIO_SFX_CH2
@@ -1349,7 +1351,7 @@ famistudio_music_pause:
 ; pitch envelopes, slide notes and fine pitch tracks.
 ; 
 ; [in] x : note index.
-; [in] y : pitch envelope index.
+; [in] y : slide/pitch envelope index.
 ; [out] famistudio_ptr1 : Final note pitch.
 ;======================================================================================================================
 
@@ -1551,27 +1553,21 @@ famistudio_get_note_pitch_vrc6_saw:
 
         ; We have 4 bits of fraction for noise slides.
         sta @tmp
+
+        lda famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+        sta @pitch+0
         lda famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
         cmp #$80
         ror
-        sta @pitch+1
-        lda famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+        ror @pitch+0
+        cmp #$80
         ror
-        sta @pitch+0
-
-        lda @pitch+1
-        cmp #$80
-        ror @pitch+1
         ror @pitch+0
-
-        lda @pitch+1
         cmp #$80
-        ror @pitch+1
+        ror
         ror @pitch+0
-
-        lda @pitch+1
         cmp #$80
-        ror @pitch+1
+        ror
         lda @pitch+0
         ror
 
@@ -2591,7 +2587,7 @@ famistudio_update:
     bmi @slide_upper_half
 
 @slide_lower_half:
-    bmi @clear_slide
+    bmi @clear_volume_slide
 
 @slide_upper_half:
     sta famistudio_chn_volume_track,x
@@ -3298,6 +3294,7 @@ famistudio_channel_update:
     @tmp_slide_from       = famistudio_r1
     @tmp_slide_idx        = famistudio_r1
     @tmp_duty_cycle       = famistudio_r1
+    @tmp_pitch_hi         = famistudio_r1
     @update_flags         = famistudio_r2 ; bit 7 = no attack, bit 6 = has set delayed cut.
     @slide_delta_lo       = famistudio_ptr1_hi
     @channel_data_ptr     = famistudio_ptr0
@@ -3572,16 +3569,16 @@ famistudio_channel_update:
 @positive_noise_slide:
     lda #$00
 @noise_shift:    
-    sta famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
     ; Noise slides have 4-bits of fraction.
     asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
-    rol famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol
     asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
-    rol famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol
     asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
-    rol famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol
     asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
-    rol famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol
+    sta famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
     jmp @slide_done_pos
 .endif
 
