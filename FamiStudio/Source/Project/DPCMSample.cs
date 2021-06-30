@@ -65,7 +65,7 @@ namespace FamiStudio
         public int      PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
         public SampleVolumePair[] VolumeEnvelope { get => volumeEnvelope; }
 
-        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || Utils.IsNearlyEqual(finePitch, 1.0f) || trimZeroVolume || reverseBits;
+        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || !Utils.IsNearlyEqual(finePitch, 1.0f) || trimZeroVolume || reverseBits;
 
         public static object ProcessedDataLock = new object();
         public const int MaxSampleSize = (255 << 4) + 1;

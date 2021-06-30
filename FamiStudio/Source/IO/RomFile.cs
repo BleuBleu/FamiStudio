@@ -27,7 +27,9 @@ namespace FamiStudio
 
         public unsafe bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
+#if !DEBUG
             try
+#endif
             {
                 if (songIds.Length == 0)
                     return false;
@@ -143,6 +145,7 @@ namespace FamiStudio
 
                 Log.LogMessage(LogSeverity.Info, $"ROM export successful, final file size {romBytes.Count} bytes.");
             }
+#if !DEBUG
             catch (Exception e)
             {
                 Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
@@ -150,6 +153,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, e.StackTrace);
                 return false;
             }
+#endif
 
             return true;
         }

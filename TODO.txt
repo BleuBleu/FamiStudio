@@ -72,9 +72,9 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Save snapping + qwerty settings + some export settings.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Merge CC65 stuff.
+- Add proper error message for ROM overflow.
+- Volume scaling
 - Noise slides
-	- Run unit test
-	- Add slides to unit test.
 	- Documentation (sound engine, FT)
 	- Make sure enabled on ROM + NSF.
 - Volume slides.

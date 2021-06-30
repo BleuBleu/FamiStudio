@@ -33,7 +33,7 @@ CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$d80 {SONGDATASTART}=$8e00", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_VRC6=1", nsf_famistudio_vrc6_ntsc
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$e80 {SONGDATASTART}=$8f00", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_VRC7=1", nsf_famistudio_vrc7_ntsc
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$b80 {SONGDATASTART}=$8c00", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_MMC5=1", nsf_famistudio_mmc5_ntsc
-CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8c00", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_S5B=1", nsf_famistudio_s5b_ntsc
+CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$c80 {SONGDATASTART}=$8d00", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_S5B=1", nsf_famistudio_s5b_ntsc
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$e80 {SONGDATASTART}=$8f00", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_FDS=1", nsf_famistudio_fds_ntsc
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$e80 {SONGDATASTART}=$8f00", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=1", nsf_famistudio_n163_1ch_ntsc
 CALL :CompileNsfPermutation nsf_template.cfg, "{CODESIZE}=$e80 {SONGDATASTART}=$8f00", "-D FAMISTUDIO=1 -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=2", nsf_famistudio_n163_2ch_ntsc
