@@ -72,11 +72,10 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Save snapping + qwerty settings + some export settings.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Merge CC65 stuff.
-- Add proper error message for ROM overflow.
-- Volume scaling
+- Volume scaling?
 - Noise slides
 	- Documentation (sound engine, FT)
-	- Make sure enabled on ROM + NSF.
+	/ Make sure enabled on ROM + NSF.
 - Volume slides.
 	/ Sound engine code (optimize when end of slide matches next volume)
 	- Add max distance (256?) too.
@@ -90,14 +89,14 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Is it necessary to clear slides on new notes in sound engine?? 
 	=> The slope is clamped, so yeah probably.
 	=> Add a BRK and test it.
-- Refactor "Y" use in "famistudio_channel_update", increment only at the end.
-	=> Slides uses the "Y" register temporarely.
-	=> @regular_note use the Y=0 to clear the slide
-	=> @release_note use Y=0 to read the release point.
 - MMC3 rom.
-
-- LOW PRIO : Look at wave offset (msg from Twitter)
+	x Add proper error message for ROM overflow.
+	- MATTT
+	- Retest FDS with larger ROM
+	- Bump version to 3.1.0
+	
 - CUT : Keyboard shortcut for snapping precision?
+- LOW PRIO : Look at wave offset (msg from Twitter)
 - LOW PRIO : End of song looping behavior?
 - LOW PRIO : Left/right pan with +/- (cubase style)?
 

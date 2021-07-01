@@ -9,16 +9,15 @@ namespace FamiStudio
 {
     public class RomFileBase
     {
-        public const int MaxSongs = 8;
+        public const int MaxSongs = 12;
 
         // 64 bytes header.
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         protected unsafe struct RomProjectInfo
         {
             public byte maxSong;
-            public byte dpcmPageStart;
-            public byte dpcmPageCount;
-            public fixed byte reserved[5];
+            public byte fdsFileCount; // Number of files on FDS
+            public fixed byte reserved[6];
             public fixed byte name[28];
             public fixed byte author[28];
         }

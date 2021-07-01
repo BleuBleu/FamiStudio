@@ -15,7 +15,7 @@ namespace FamiStudio
         //   0x7600: Song data for the current song
         //   0xc000: DPCM data
 
-        const int FdsSongDataAddr    = 0x7600;
+        const int FdsSongDataAddr    = 0x7600; // MATTT : Switch to 15 songs for FDS too.
         const int FdsMaxDpcmSize     = 0x2000 - 10; // 8KB - 10 bytes of vectors
         const int FdsDpcmStart       = 0xc000;
         const int FdsMaxFileSize     = 65500; // 1 side for now.
@@ -165,7 +165,7 @@ namespace FamiStudio
                 //File.WriteAllBytes("D:\\dump\\fdsdata.bin", fdsFileBytes.ToArray());
 
                 // Use this field for the number of files.
-                projectInfo.dpcmPageCount = (byte)fileIndex;
+                projectInfo.fdsFileCount = (byte)fileIndex;
 
                 // Pad rest with zeroes.
                 fdsFileBytes.AddRange(new byte[FdsMaxFileSize - fdsFileBytes.Count]);
