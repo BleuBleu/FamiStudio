@@ -6,7 +6,7 @@ Version history / release notes for each release.
 
 Fixes:
 
-* Fixed crash when pasting past end of an envelope
+* Fixed crash when pasting past the end of an envelope
 * Fixed FamiTracker (FTM/TXT) import when a jump or skip effect is exactly at row 255
 * Fixed FamiStudio currupting the keyboard state on some european keyboards
 * Fixed oscilloscope vertical orientation in toolbar + video export
