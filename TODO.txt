@@ -92,12 +92,6 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Is it necessary to clear slides on new notes in sound engine?? 
 	=> The slope is clamped, so yeah probably.
 	=> Add a BRK and test it.
-- MMC3 rom.
-	x Add proper error message for ROM overflow.
-	- MATTT
-	- Retest FDS with larger ROM
-	- Bump version to 3.1.0
-	
 - CUT : Keyboard shortcut for snapping precision?
 - LOW PRIO : Look at wave offset (msg from Twitter)
 - LOW PRIO : End of song looping behavior?
@@ -116,7 +110,7 @@ Testing
 - WS clips children on win7
 - Test OGG a bit more, make sure UI + command line works good
 - Double check osc flipping in toolbar + video
-- 
+- Test ROM with noise/volume slides.
 
 Random features ideas
 =====================

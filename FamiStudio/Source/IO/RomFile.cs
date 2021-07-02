@@ -144,7 +144,7 @@ namespace FamiStudio
 
                 //File.WriteAllBytes("D:\\debug.bin", songDataBytes.ToArray());
 
-                // Add extra empty banks if we havent reached the minimum.
+                // Add extra empty banks if we haven't reached the minimum.
                 int numPrgBanks = songBanks.Count;
 
                 if (numPrgBanks < RomMinNumberBanks)
