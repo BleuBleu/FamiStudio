@@ -453,7 +453,7 @@ namespace FamiStudio
                             var release = oldNote.Release;
                             oldNote.Duration = Math.Max(1, GetNewNoteIndex(i + oldNote.Duration) - newIdx);
                             if (release > 0)
-                                oldNote.Release = Math.Max(1, GetNewNoteIndex(i + oldNote.Release) - newIdx);
+                                oldNote.Release = Math.Max(1, GetNewNoteIndex(i + release) - newIdx);
                         }
 
                         pattern.SetNoteAt(newIdx, oldNote);
