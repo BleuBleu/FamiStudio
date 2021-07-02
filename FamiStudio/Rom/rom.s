@@ -873,7 +873,7 @@ load_success:
     sta $8000
     sty $8001       
 
-    ; Load song pointer (always gonne be 0x8000 now...).
+    ; Load song pointer
     ldy song_addr_start+1, x ; hi-byte
     lda song_addr_start+0, x ; lo-byte
     tax

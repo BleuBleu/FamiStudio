@@ -26,7 +26,7 @@ namespace FamiStudio
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         protected unsafe struct RomSongEntry
         {
-            public byte page;
+            public byte bank;
             public ushort address;
             public byte flags;
             public fixed byte name[28];
@@ -102,7 +102,7 @@ namespace FamiStudio
             {
                 fixed (RomSongEntry* songEntry = &songTable[i])
                 {
-                    songEntry->page = 0;
+                    songEntry->bank = 0;
                     songEntry->address = (ushort)songLoadAddr;
                     Marshal.Copy(EncodeAndCenterString(project.Songs[i].Name), 0, new IntPtr(songEntry->name), 28);
                 }

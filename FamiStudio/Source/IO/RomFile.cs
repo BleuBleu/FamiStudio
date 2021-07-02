@@ -17,7 +17,7 @@ namespace FamiStudio
         //   0xfe00 [fixed] : Song table (max 15 songs, to not step over vectors).
 
         const int RomSongDataStart    = 0x8000;
-        const int RomPageSize         = 0x2000; // MMC3 has 8KB pages.
+        const int RomBankSize         = 0x2000; // MMC3 has 8KB banks.
         const int RomCodeAndTocSize   = 0x1400; // 5KB of code + TOC + vectors. 
         const int RomTocOffset        = 0x1200; // Table of content is right after the code at FE00
         const int RomTileSize         = 0x2000; // 8KB CHR data.
@@ -25,7 +25,7 @@ namespace FamiStudio
         const int RomMinNumberBanks   = 2;
         const int RomCodeDpcmNumBanks = 2;
         const int RomHeaderLength     = 16;     // INES header size.
-        const int RomHeaderPrgOffset  = 4;      // Offset of the PRG page count in INES header.
+        const int RomHeaderPrgOffset  = 4;      // Offset of the PRG bank count in INES header.
         const int RomDpcmStart        = 0xc000;
         const int MaxDpcmSize         = 0x2c00; // 11KB
 
@@ -69,7 +69,7 @@ namespace FamiStudio
                 var songTable   = BuildSongTableOfContent(project);
 
                 // Gathersong data.
-                var songDataBytes = new List<byte>();
+                var songBanks = new List<List<byte>>();
 
                 // Export each song individually, build TOC at the same time.
                 for (int i = 0; i < project.Songs.Count; i++)
@@ -85,21 +85,59 @@ namespace FamiStudio
 
                     if (songBytes.Length > MaxSongSize)
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"Song {song.Name} has a size of {songDataBytes.Count}, which is larger than the maximum allowed for ROM export ({MaxSongSize}). Truncating.");
+                        Log.LogMessage(LogSeverity.Warning, $"Song {song.Name} has a size of {songBytes.Length}, which is larger than the maximum allowed for ROM export ({MaxSongSize}). Truncating.");
                         Array.Resize(ref songBytes, MaxSongSize);
                     }
 
-                    var numPages = Utils.DivideAndRoundUp(songBytes.Length, RomPageSize);
-                    Debug.Assert(numPages <= 2);
+                    var numBanks = Utils.DivideAndRoundUp(songBytes.Length, RomBankSize);
+                    Debug.Assert(numBanks <= 2);
 
-                    // Use full pages, pad with zero.
-                    Array.Resize(ref songBytes, numPages * RomPageSize);
+                    var songBank = songBanks.Count;
+                    var songAddr = RomSongDataStart;
 
-                    songTable[i].page    = (byte)(songDataBytes.Count / RomPageSize);
-                    songTable[i].address = (ushort)(RomSongDataStart);
+                    // If single bank, look for an existing bank with some free space at the end.
+                    if (numBanks == 1)
+                    {
+                        var foundExistingBank = false;
+
+                        for (int j = 0; j < songBanks.Count; j++)
+                        {
+                            var freeSpace = RomBankSize - songBanks[j].Count;
+                            if (songBytes.Length <= freeSpace)
+                            {
+                                songBank = j;
+                                songAddr = RomSongDataStart + songBanks[j].Count;
+                                songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, songAddr, RomDpcmStart, pal ? MachineType.PAL : MachineType.NTSC);
+                                Debug.Assert(songBytes.Length <= freeSpace);
+                                foundExistingBank = true;
+                                break;
+                            }
+                        }
+
+                        // No free space found, allocation a new partial bank.
+                        if (!foundExistingBank)
+                            songBanks.Add(new List<byte>());
+
+                        songBanks[songBank].AddRange(songBytes);
+                    }
+                    else
+                    {
+                        // When a song uses 2 banks, allocate a new full one and a partial one.
+                        var bank0 = new List<byte>();
+                        var bank1 = new List<byte>();
+
+                        for (int j = 0; j < RomBankSize; j++)
+                            bank0.Add(songBytes[j]);
+                        for (int j = RomBankSize; j < songBytes.Length; j++)
+                            bank1.Add(songBytes[j]);
+
+                        songBanks.Add(bank0);
+                        songBanks.Add(bank1);
+                    }
+
+                    songTable[i].bank    = (byte)songBank;
+                    songTable[i].address = (ushort)songAddr;
                     songTable[i].flags   = (byte)(song.UsesDpcm ? 1 : 0);
-
-                    songDataBytes.AddRange(songBytes);
 
                     Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
@@ -107,21 +145,22 @@ namespace FamiStudio
                 //File.WriteAllBytes("D:\\debug.bin", songDataBytes.ToArray());
 
                 // Add extra empty banks if we havent reached the minimum.
-                int numPrgBanks = songDataBytes.Count / RomPageSize;
+                int numPrgBanks = songBanks.Count;
 
                 if (numPrgBanks < RomMinNumberBanks)
                 {
                     for (int i = numPrgBanks; i < RomMinNumberBanks; i++)
-                    {
-                        numPrgBanks++;
-                        songDataBytes.AddRange(new byte[RomPageSize]);
-                    }
+                        songBanks.Add(new List<byte>());
                 }
                 else if ((numPrgBanks & 1) != 0)
                 {
-                    numPrgBanks++;
-                    songDataBytes.AddRange(new byte[RomPageSize]);
+                    songBanks.Add(new List<byte>());
                 }
+
+                // Build final song bank data.
+                var songBanksBytes = new byte[songBanks.Count * RomBankSize];
+                for (int i = 0; i < songBanks.Count; i++)
+                    Array.Copy(songBanks[i].ToArray(), 0, songBanksBytes, i * RomBankSize, songBanks[i].Count);
 
                 // Patch in code (project info and song table are after the code, 0xf000).
                 Marshal.Copy(new IntPtr(&projectInfo), codeBytes, RomTocOffset, sizeof(RomProjectInfo));
@@ -132,13 +171,13 @@ namespace FamiStudio
                         Marshal.Copy(new IntPtr(songEntry), codeBytes, RomTocOffset + sizeof(RomProjectInfo) + i * sizeof(RomSongEntry), sizeof(RomSongEntry));
                 }
 
-                // Patch header (iNES header always counts in 16KB pages, MMC3 counts in 8KB pages)
-                headerBytes[RomHeaderPrgOffset] = (byte)((numPrgBanks + RomCodeDpcmNumBanks) * RomPageSize / 0x4000);
+                // Patch header (iNES header always counts in 16KB banks, MMC3 counts in 8KB banks)
+                headerBytes[RomHeaderPrgOffset] = (byte)((numPrgBanks + RomCodeDpcmNumBanks) * RomBankSize / 0x4000);
 
                 // Build final ROM and save.
                 var romBytes = new List<byte>();
                 romBytes.AddRange(headerBytes);
-                romBytes.AddRange(songDataBytes);
+                romBytes.AddRange(songBanksBytes);
 
                 // Samples are at the end, right before the source engine code. MMC3 second to last and last banks respectively.
                 if (project.UsesSamples)

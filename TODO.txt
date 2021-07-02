@@ -72,7 +72,10 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 - Save snapping + qwerty settings + some export settings.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Merge CC65 stuff.
-- Volume scaling?
+- Volume/effect scaling?
+- Square selection.
+- TailWindz : Scroll bar thickness.
+- TailWindz : CTRL + Scroll should do "something"
 - Noise slides
 	- Documentation (sound engine, FT)
 	/ Make sure enabled on ROM + NSF.
@@ -84,7 +87,7 @@ x Highlight piano keys when they are pressed with QWERTY or MIDI.
 	- Can we keep more precision on VRC6/FDS/etc? Maybe for later.
 	- Unit test.
 	- Documentation.
-	- Enable in ROM/NSF.
+	/ Enable in ROM/NSF.
 	- Do for expansions too!
 - Is it necessary to clear slides on new notes in sound engine?? 
 	=> The slope is clamped, so yeah probably.
