@@ -1748,11 +1748,17 @@ famistudio_update_fds_channel_sound:
     sta FAMISTUDIO_FDS_SWEEP_ENV
 
 .compute_volume:
-    lda famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        ora famistudio_chn_volume_track+5 
+        lda famistudio_chn_volume_track+5 
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif        
+        ora famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
         tax
         lda famistudio_volume_table, x 
+    .else
+        lda famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .endif
     asl a ; FDS volume is 6-bits, but clamped to 32. Just double it.
 
@@ -1912,9 +1918,15 @@ famistudio_update_vrc7_channel_sound:
 
     ; Read/multiply volume
     ldx famistudio_vrc7_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        ora famistudio_chn_volume_track+5, y
+        lda famistudio_chn_volume_track+5, y
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif
+        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+    .else
+        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
     tax
 
@@ -2045,9 +2057,15 @@ famistudio_update_n163_channel_sound:
 
     ; Read/multiply volume
     ldx famistudio_n163_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        ora famistudio_chn_volume_track+5, y
+        lda famistudio_chn_volume_track+5, y
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif        
+        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+    .else
+        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
     tax
 
@@ -2121,9 +2139,15 @@ famistudio_update_s5b_channel_sound:
 
     ; Read/multiply volume
     ldx famistudio_s5b_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        ora famistudio_chn_volume_track+5, y
+        lda famistudio_chn_volume_track+5, y
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif        
+        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+    .else
+        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
     tax
 
@@ -2611,7 +2635,11 @@ famistudio_update:
     bmi .slide_upper_half
 
 .slide_lower_half:
+    sta famistudio_chn_volume_track,x
+    cmp famistudio_chn_volume_slide_target,x
+    beq .clear_volume_slide
     bmi .clear_volume_slide
+    bcc .volume_slide_next
 
 .slide_upper_half:
     sta famistudio_chn_volume_track,x
@@ -3305,6 +3333,10 @@ val\@ = \2
 ;======================================================================================================================
 
 famistudio_channel_update:
+
+    ; TODO : This function is an absolute mess:
+    ;   - Change all increments of the ptr to "iny" and increment the real pointer once.
+    ;   - See if we can unify the old FT2 "special_code" with our "special_code_6x".
 
 .tmp_ptr_lo           = famistudio_r0
 .tmp_chan_idx         = famistudio_r0

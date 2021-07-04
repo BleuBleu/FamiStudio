@@ -39,7 +39,8 @@ namespace FamiStudio
         const int DefaultButtonTextNoIconPosX = 4;
         const int DefaultSubButtonSpacingX    = 18;
         const int DefaultSubButtonPosY        = 3;
-        const int DefaultScrollBarThickness   = 10;
+        const int DefaultScrollBarThickness1  = 10;
+        const int DefaultScrollBarThickness2  = 16;
         const int DefaultButtonSizeY          = 21;
         const int DefaultSliderPosX           = 100;
         const int DefaultSliderPosY           = 3;
@@ -493,8 +494,8 @@ namespace FamiStudio
             checkBoxPosY         = (int)(DefaultCheckBoxPosY * scaling);
             draggedLineSizeY     = (int)(DefaultDraggedLineSizeY * scaling);
             virtualSizeY         = App?.Project == null ? Height : buttons.Count * buttonSizeY;
-            needsScrollBar       = virtualSizeY > Height; 
-            scrollBarThickness   = needsScrollBar ? (int)(DefaultScrollBarThickness * scaling) : 0;      
+            needsScrollBar       = virtualSizeY > Height;
+            scrollBarThickness   = needsScrollBar ? (int)((Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : DefaultScrollBarThickness1) * scaling) : 0;
         }
 
         public void Reset()
@@ -507,6 +508,13 @@ namespace FamiStudio
             selectedArpeggio = null;
             SongSelected?.Invoke(selectedSong);
             RefreshButtons();
+            ConditionalInvalidate();
+        }
+
+        public void LayoutChanged()
+        {
+            UpdateRenderCoords();
+            ClampScroll();
             ConditionalInvalidate();
         }
 

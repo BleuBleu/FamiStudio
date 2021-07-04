@@ -45,9 +45,10 @@ namespace FamiStudio
         const int DefaultHeaderIconPosX      = 3;
         const int DefaultHeaderIconPosY      = 3;
         const int DefaultHeaderIconSizeX     = 12;
-        const int DefaultScrollBarThickness  = 10;
+        const int DefaultScrollBarThickness1 = 10;
+        const int DefaultScrollBarThickness2 = 16;
         const int DefaultMinScrollBarLength  = 128;
-        const float ContinuousFollowPercent = 0.75f;
+        const float ContinuousFollowPercent  = 0.75f;
 
         const int MinZoomLevel = -2;
         const int MaxZoomLevel =  4;
@@ -212,7 +213,7 @@ namespace FamiStudio
             headerIconPosX     = (int)(DefaultHeaderIconPosX * scaling);
             headerIconPosY     = (int)(DefaultHeaderIconPosY * scaling);
             headerIconSizeX    = (int)(DefaultHeaderIconSizeX * scaling);
-            scrollBarThickness = Settings.ShowScrollBars ? (int)(DefaultScrollBarThickness * scaling) : 0;
+            scrollBarThickness = (int)((Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0)) * scaling);
             minScrollBarLength = (int)(DefaultMinScrollBarLength * scaling);
             noteSizeX          = ScaleForZoom(1.0f) * scaling;
         }
@@ -229,8 +230,10 @@ namespace FamiStudio
 
         public int ComputeDesiredSizeY()
         {
+            var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
+
             // Does not include scaling.
-            return ComputeDesiredTrackSizeY() * GetChannelCount() + DefaultHeaderSizeY + (Settings.ShowScrollBars ? DefaultScrollBarThickness : 0) + 1;
+            return ComputeDesiredTrackSizeY() * GetChannelCount() + DefaultHeaderSizeY + scrollBarSize + 1;
         }
 
         public void LayoutChanged()

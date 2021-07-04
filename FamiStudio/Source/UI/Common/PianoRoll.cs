@@ -78,7 +78,8 @@ namespace FamiStudio
         const int DefaultMinNoteSizeForText = 24;
         const int DefaultWaveGeometrySampleSize = 2;
         const int DefaultWaveDisplayPaddingY = 8;
-        const int DefaultScrollBarThickness = 10;
+        const int DefaultScrollBarThickness1 = 10;
+        const int DefaultScrollBarThickness2 = 16;
         const int DefaultMinScrollBarLength = 128;
         const int DefaultScrollMargin = 128;
         const int DefaultNoteResizeMargin = 8;
@@ -472,7 +473,7 @@ namespace FamiStudio
             barSizeX = noteSizeX * (Song == null ? 16 : Song.BeatLength);
             headerAndEffectSizeY = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
             noteTextPosY = scaling > 1 ? 0 : 1; // Pretty hacky.
-            scrollBarThickness = Settings.ShowScrollBars ? (int)(DefaultScrollBarThickness * scaling) : 0;
+            scrollBarThickness = (int)((Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0)) * scaling);
             minScrollBarLength = (int)(DefaultMinScrollBarLength * scaling);
             virtualSizeY = numNotes * noteSizeY;
             scrollMargin = (int)(DefaultScrollMargin * scaling);
@@ -2852,7 +2853,7 @@ namespace FamiStudio
 
         private void RenderScrollBars(RenderGraphics g, RenderArea a)
         {
-            if (Settings.ShowScrollBars && editMode != EditionMode.VideoRecording)
+            if (Settings.ScrollBars != Settings.ScrollBarsNone && editMode != EditionMode.VideoRecording)
             {
                 bool h = false;
                 bool v = false;

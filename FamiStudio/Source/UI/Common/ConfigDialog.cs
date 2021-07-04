@@ -15,6 +15,7 @@ namespace FamiStudio
             Sound,
             Mixer,
             MIDI,
+            FFmpeg,
             QWERTY,
 #if FAMISTUDIO_MACOS
             MacOS,
@@ -29,6 +30,7 @@ namespace FamiStudio
             "Sound",
             "Mixer",
             "MIDI",
+            "FFmpeg",
             "QWERTY",
 #if FAMISTUDIO_MACOS
             "MacOS",
@@ -60,6 +62,13 @@ namespace FamiStudio
             "Sequencer",
             "Piano Roll",
             "Both"
+        };
+
+        public string[] ScrollBarsStrings =
+        {
+            "None",
+            "Thin",
+            "Thick"
         };
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
@@ -125,10 +134,10 @@ namespace FamiStudio
                     page.AddDropDownList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
                     page.AddDropDownList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex]);  // 2
                     page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex]); // 3
-                    page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 4
-                    page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 5
-                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes); // 6
-                    page.AddCheckBox("Show Scroll Bars:", Settings.ShowScrollBars); // 7
+                    page.AddDropDownList("Scroll Bars:", ScrollBarsStrings, ScrollBarsStrings[Settings.ScrollBars]); // 4
+                    page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
+                    page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 6
+                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes); // 7
                     page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope); // 8
                     page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 9
                     break;
@@ -145,8 +154,8 @@ namespace FamiStudio
                 {
                     // TODO : Tooltips.
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
-                    page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+#;-#;+0:N1} dB"); // 1
-                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+#;-#;+0:N1} dB"); // 2
+                    page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB"); // 1
+                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB"); // 2
                     page.AddButton(null, "Reset to default", "Resets this expansion to the default settings."); // 3
                     page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4
                     page.PropertyChanged += MixerPage_PropertyChanged;
@@ -174,6 +183,17 @@ namespace FamiStudio
                     page.AddDropDownList("Device :", midiDevices.ToArray(), midiDevice); // 0
                     break;
                 }
+                case ConfigSection.FFmpeg:
+                    page.AddLabel(null, "Video export requires FFmpeg. If you already have it, set the path to the ffmpeg executable by clicking the button below, otherwise follow the download link.", true); // 0
+                    page.AddButton(null, Settings.FFmpegExecutablePath, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 1
+#if FAMISTUDIO_MACOS
+                    // GTK LinkButtons dont work on MacOS, use a button (https://github.com/quodlibet/quodlibet/issues/2306)
+                    page.AddButton(" ", "Download FFmpeg here"); // 2
+#else
+                    page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
+#endif
+                    page.PropertyClicked += FFmpegPage_PropertyClicked;
+                    break;
                 case ConfigSection.QWERTY:
                 {
                     page.AddLabel(null, "Double click in the 2 last columns to assign a key. Right click to clear a key.", true); // 0
@@ -200,6 +220,33 @@ namespace FamiStudio
             pages[(int)section] = page;
 
             return page;
+        }
+
+        private void FFmpegPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        {
+            if (click == ClickType.Button)
+            {
+                if (propIdx == 1)
+                {
+#if FAMISTUDIO_WINDOWS
+                    var ffmpegExeFilter = "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe";
+#else
+                    var ffmpegExeFilter = "FFmpeg Executable (ffmpeg)|*.*";
+#endif
+
+                    var dummy = "";
+                    var filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
+
+                    if (filename != null)
+                    {
+                        props.SetPropertyValue(propIdx, filename);
+                    }
+                }
+                else if (propIdx == 2)
+                {
+                    Utils.OpenUrl("https://famistudio.org/doc/ffmpeg/");
+                }
+            }
         }
 
         private void QwertyPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
@@ -373,13 +420,13 @@ namespace FamiStudio
                 var scalingString = pageUI.GetPropertyValue<string>(0);
 
                 Settings.DpiScaling = scalingString == "System" ? 0 : int.Parse(scalingString.Substring(0, 3));
-                Settings.TimeFormat = Array.IndexOf(TimeFormatStrings, pageUI.GetPropertyValue<string>(1));
-                Settings.FollowMode = Array.IndexOf(FollowModeStrings, pageUI.GetPropertyValue<string>(2));
-                Settings.FollowSync = Array.IndexOf(FollowSyncStrings, pageUI.GetPropertyValue<string>(3));
-                Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(4);
-                Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(5);
-                Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(6);
-                Settings.ShowScrollBars = pageUI.GetPropertyValue<bool>(7);
+                Settings.TimeFormat = pageUI.GetSelectedIndex(1);
+                Settings.FollowMode = pageUI.GetSelectedIndex(2);
+                Settings.FollowSync = pageUI.GetSelectedIndex(3);
+                Settings.ScrollBars = pageUI.GetSelectedIndex(4);
+                Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(5);
+                Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
+                Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(7);
                 Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(8);
                 Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(9);
 
@@ -396,6 +443,11 @@ namespace FamiStudio
                 var pageMIDI = pages[(int)ConfigSection.MIDI];
 
                 Settings.MidiDevice = pageMIDI.GetPropertyValue<string>(0);
+
+                // FFmpeg
+                var pageFFmpeg = pages[(int)ConfigSection.FFmpeg];
+
+                Settings.FFmpegExecutablePath = pageFFmpeg.GetPropertyValue<string>(1);
 
                 // QWERTY
                 Array.Copy(qwertyKeys, Settings.QwertyKeys, Settings.QwertyKeys.Length);

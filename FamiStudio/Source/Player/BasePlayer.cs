@@ -23,8 +23,8 @@ namespace FamiStudio
 
     public class BasePlayer : IPlayerInterface
     {
-        public delegate void EmptyDelegate();
-        public event EmptyDelegate Beat;
+        public delegate void BeatDelegate(bool first);
+        public event BeatDelegate Beat;
 
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
@@ -38,6 +38,7 @@ namespace FamiStudio
         protected int maxSelectedPattern = -1;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
+        protected bool seeking = false;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
@@ -234,6 +235,7 @@ namespace FamiStudio
 
             if (startNote != 0)
             {
+                seeking = true;
                 NesApu.StartSeeking(apuIndex);
 
                 AdvanceChannels();
@@ -247,6 +249,7 @@ namespace FamiStudio
                 }
 
                 NesApu.StopSeeking(apuIndex);
+                seeking = false;
             }
             else
             {
@@ -258,7 +261,7 @@ namespace FamiStudio
             EndFrame();
 
             playPosition = playLocation.ToAbsoluteNoteIndex(song);
-            ConditionalEmitBeatEvent();
+            ConditionalEmitBeatEvent(true);
 
             return true;
         }
@@ -411,19 +414,19 @@ namespace FamiStudio
             if (advancedPattern)
                 ResetFamiStudioTempo();
 
-            ConditionalEmitBeatEvent();
+            ConditionalEmitBeatEvent(false);
 
             return true;
         }
 
-        private void ConditionalEmitBeatEvent()
+        private void ConditionalEmitBeatEvent(bool first)
         {
-            if (Beat != null)
+            if (Beat != null && !seeking)
             {
                 var beatLength = song.GetPatternBeatLength(playLocation.PatternIndex);
                 if (playLocation.NoteIndex % beatLength == 0)
                 {
-                    Beat?.Invoke();
+                    Beat?.Invoke(first);
                 }
             }
         }

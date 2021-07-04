@@ -178,7 +178,8 @@ namespace FamiStudio
         {
             switch (effect)
             {
-                case Note.EffectVolume:       return type != ChannelType.Dpcm;
+                case Note.EffectVolume:
+                case Note.EffectVolumeSlide:  return type != ChannelType.Dpcm;
                 case Note.EffectFinePitch:    return type != ChannelType.Noise && type != ChannelType.Dpcm;
                 case Note.EffectVibratoSpeed: return type != ChannelType.Noise && type != ChannelType.Dpcm;
                 case Note.EffectVibratoDepth: return type != ChannelType.Noise && type != ChannelType.Dpcm;
@@ -628,6 +629,7 @@ namespace FamiStudio
                 }
 
                 var frameCount = Song.CountFramesBetween(location, nextLocation, famitrackerSpeed, pal) + delayFrames;
+                var volumeDeltaUnshifted = volumeDelta;
 
                 volumeDelta <<= 4;
 
@@ -636,7 +638,7 @@ namespace FamiStudio
 
                 // SMMMFFFF : We have 4-bits of fraction for volume slides. 
                 stepSize = Utils.Clamp((int)Math.Ceiling(absStepPerFrame) * -Math.Sign(volumeDelta), sbyte.MinValue, sbyte.MaxValue);
-                stepSizeFloat = volumeDelta / Math.Max(1, frameCount);
+                stepSizeFloat = volumeDeltaUnshifted / (float)Math.Max(1, frameCount);
 
                 return true;
             }

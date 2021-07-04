@@ -133,7 +133,8 @@ namespace FamiStudio
             label.LinkColor = ThemeBase.LightGreyFillColor1;
             label.Links.Add(0, str.Length, url);
             label.LinkClicked += Label_LinkClicked;
-            label.AutoSize = true;
+            label.TextAlign = ContentAlignment.BottomCenter;
+            //label.AutoSize = true;
             label.ForeColor = ThemeBase.LightGreyFillColor2;
             label.BackColor = BackColor;
             toolTip.SetToolTip(label, tooltip);

@@ -28,7 +28,7 @@ namespace FamiStudio
 {
     class VideoFileOscilloscope : VideoFileBase
     {
-        private void BuildChannelColors(List<VideoChannelState> channels, VideoFrameMetadata[] meta)
+        private void BuildChannelColors(List<VideoChannelState> channels, VideoFrameMetadata[] meta, int colorMode)
         {
             Color[,] colors = new Color[meta.Length, meta[0].channelNotes.Length];
 
@@ -49,13 +49,20 @@ namespace FamiStudio
 
                         if (channels[j].channel.Type == ChannelType.Dpcm)
                         {
-                            var mapping = channels[j].channel.Song.Project.GetDPCMMapping(note.Value);
-                            if (mapping != null)
-                                color = mapping.Sample.Color;
+                            if (colorMode == OscilloscopeColorType.InstrumentsAndSamples)
+                            {
+                                var mapping = channels[j].channel.Song.Project.GetDPCMMapping(note.Value);
+                                if (mapping != null)
+                                    color = mapping.Sample.Color;
+                            }
+                            else
+                            {
+                                color = ThemeBase.LightGreyFillColor1;
+                            }
                         }
                         else
                         {
-                            color = note.Instrument != null ? note.Instrument.Color : ThemeBase.DarkGreyFillColor2;
+                            color = note.Instrument != null && colorMode != OscilloscopeColorType.None ? note.Instrument.Color : ThemeBase.LightGreyFillColor1;
                         }
 
                         colors[i, j] = color;
@@ -75,7 +82,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        colors[i, j] = ThemeBase.DarkGreyFillColor2;
+                        colors[i, j] = ThemeBase.LightGreyFillColor1;
                     }
                 }
             }
@@ -107,7 +114,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
             // MATTT : Make it work on all platforms.
 #if FAMISTUDIO_WINDOWS
@@ -169,8 +176,8 @@ namespace FamiStudio
                 longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, ThemeBase.FontBigUnscaled));
             }
 
-            // TODO : Make this configurable one day.
-            var numColumns = channelStates.Count > 8 ? 3 : 2;
+            numColumns = Math.Min(numColumns, channelStates.Count);
+
             var numRows = (int)Math.Ceiling(channelStates.Count / (float)numColumns);
 
             var channelResXFloat = videoResX / (float)numColumns;
@@ -185,7 +192,7 @@ namespace FamiStudio
             var font = smallChannelText ? ThemeBase.FontMediumUnscaled : ThemeBase.FontBigUnscaled;
             //var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = 5; // channelResY < ThinNoteThreshold ? 3 : 5;
-            var gradientSizeY = channelResY / 2;
+            var gradientSizeY = channelResY / 4;
             var gradientBrush = videoGraphics.CreateVerticalGradientBrush(0, gradientSizeY, Color.Black, Color.FromArgb(0, Color.Black));
 
             foreach (var s in channelStates)
@@ -194,7 +201,7 @@ namespace FamiStudio
             // Generate the metadata for the video so we know what's happening at every frame
             var metadata = new VideoMetadataPlayer(SampleRate, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
-            BuildChannelColors(channelStates, metadata);
+            BuildChannelColors(channelStates, metadata, colorMode);
 
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
@@ -324,6 +331,25 @@ namespace FamiStudio
 
 #endif
             return true;
-        }         
+        }
+    }
+
+    static class OscilloscopeColorType
+    {
+        public const int None = 0;
+        public const int Instruments = 1;
+        public const int InstrumentsAndSamples = 2;
+
+        public static readonly string[] Names =
+        {
+            "None",
+            "Instruments",
+            "Instruments and Samples"
+        };
+
+        public static int GetIndexForName(string str)
+        {
+            return Array.IndexOf(Names, str);
+        }
     }
 }

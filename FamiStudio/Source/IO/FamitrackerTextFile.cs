@@ -858,6 +858,7 @@ namespace FamiStudio
                     var prevNoteValue = Note.NoteInvalid;
                     var prevInstrument = (Instrument)null;
                     var prevSlideEffect = Effect_None;
+                    var activeVolumeSlide = false;
                     var prevArpeggio = (Arpeggio)null;
                     var famitrackerSpeed = song.FamitrackerSpeed;
                     
@@ -1006,6 +1007,30 @@ namespace FamiStudio
                                 }
 
                                 prevSlideEffect = Effect_None;
+                            }
+
+                            if (note.HasVolumeSlide)
+                            {
+                                if (channel.ComputeVolumeSlideNoteParams(note, location, famitrackerSpeed, false, out _, out var stepSizeFloat))
+                                {
+                                    if (stepSizeFloat < 0)
+                                    {
+                                        var clampedSlope = Utils.Clamp((int)Math.Round(-stepSizeFloat * 8.0f), 0, 15);
+                                        effectString += $" A{clampedSlope << 4:X2}";
+                                    }
+                                    else
+                                    {
+                                        var clampedSlope = Utils.Clamp((int)Math.Round(stepSizeFloat * 8.0f), 0, 15);
+                                        effectString += $" A{clampedSlope:X2}";
+                                    }
+
+                                    activeVolumeSlide = true;
+                                }
+                            }
+                            else if (note.HasVolume && activeVolumeSlide)
+                            {
+                                effectString += $" A00";
+                                activeVolumeSlide = false;
                             }
 
                             if (location.NoteIndex == patternLen - 1)

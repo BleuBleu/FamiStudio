@@ -47,7 +47,8 @@ namespace FamiStudio
         private int previewDPCMSampleRate = 44100;
         private bool previewDPCMIsSource = false;
         private bool metronome = false;
-        private short[] metronomeSound;
+        private short[] metronomeSound1;
+        private short[] metronomeSound2;
         private int lastRecordingKeyDown = -1;
         private BitArray keyStates = new BitArray(65536);
 #if FAMISTUDIO_WINDOWS
@@ -342,11 +343,31 @@ namespace FamiStudio
             {
                 using (var reader = new BinaryReader(stream))
                 {
-                    metronomeSound = new short[reader.BaseStream.Length / 2];
-                    var i = 0;
+                    // The metronome is played on a different audio stream that doesn't 
+                    // go through all the NES emulation + frame buffering, so we need
+                    // add an artificial delay to make it sync properly. The reason for
+                    // the 2x - 1 is that the NES audio stream has x buffer frames, and we 
+                    // also buffer x frames from the NES emulation. -1 is to account for 
+                    // the fact that one of those buffer should always be in flight. On
+                    // the first frame, the audio stream isnt started so we dont delay as
+                    // much.
+                    var frameNumSamples = (int)Math.Ceiling(44100.0f / (palPlayback ? NesApu.FpsPAL : NesApu.FpsNTSC));
+                    var delayNumFrames1 = (Settings.NumBufferedAudioFrames * 1 - 1) * frameNumSamples;
+                    var delayNumFrames2 = (Settings.NumBufferedAudioFrames * 2 - 1) * frameNumSamples;
+
+                    // Pad the first part with a bunch of zero samples.
+                    metronomeSound1 = new short[reader.BaseStream.Length / 2 + delayNumFrames1];
+                    metronomeSound2 = new short[reader.BaseStream.Length / 2 + delayNumFrames2];
+
+                    var i = delayNumFrames1;
+                    var j = delayNumFrames2;
 
                     while (reader.BaseStream.Position != reader.BaseStream.Length)
-                        metronomeSound[i++] = reader.ReadInt16();
+                    {
+                        var sample = reader.ReadInt16();
+                        metronomeSound1[i++] = sample;
+                        metronomeSound2[j++] = sample;
+                    }
                 }
             }
         }
@@ -421,6 +442,7 @@ namespace FamiStudio
                 InitializeInstrumentPlayer();
                 InitializeSongPlayer();
                 InitializeOscilloscope();
+                InitializeMetronome();
                 InvalidateEverything(true);
             }
 
@@ -519,9 +541,15 @@ namespace FamiStudio
             song = project.Songs[0];
             palPlayback = project.PalMode;
 
+            ToolBar.Reset();
+            ProjectExplorer.Reset();
+            PianoRoll.Reset();
+            Sequencer.Reset();
+
             InitializeSongPlayer();
             InitializeInstrumentPlayer();
             InitializeOscilloscope();
+            InitializeMetronome();
 
             FreeExportDialog();
 
@@ -531,11 +559,6 @@ namespace FamiStudio
             undoRedoManager.TransactionBegan += UndoRedoManager_PreUndoRedo;
             undoRedoManager.TransactionEnded += UndoRedoManager_PostUndoRedo;
             undoRedoManager.Updated += UndoRedoManager_Updated;
-
-            ToolBar.Reset();
-            ProjectExplorer.Reset();
-            PianoRoll.Reset();
-            Sequencer.Reset();
 
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
             PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
@@ -699,6 +722,7 @@ namespace FamiStudio
                 RecreateAudioPlayers();
                 RefreshLayout();
                 InitializeMidi();
+                InitializeMetronome();
                 InvalidateEverything(true);
             }
         }
@@ -726,6 +750,7 @@ namespace FamiStudio
             Sequencer.LayoutChanged();
             PianoRoll.LayoutChanged();
             ToolBar.LayoutChanged();
+            ProjectExplorer.LayoutChanged();
         }
 
         private void CheckForNewRelease()
@@ -927,11 +952,15 @@ namespace FamiStudio
             songPlayer.SetSelectionRange(min, max);
         }
 
-        private void SongPlayer_Beat()
+        private void SongPlayer_Beat(bool first)
         {
+            // This code will be ran on the player thread, but its ok since even if the 
+            // main thread is about to stop the player, it will have to wait for the player 
+            // thread to finish (join) before setting songPlayer to null.
             if (songPlayer != null && metronome)
             {
-                songPlayer.PlayRawPcmSample(metronomeSound, 44100, 1.0f);
+                var sound = first ? metronomeSound1 : metronomeSound2;
+                songPlayer.PlayRawPcmSample(sound, 44100, 1.0f);
             }
         }
 
@@ -1065,6 +1094,7 @@ namespace FamiStudio
                     InitializeSongPlayer();
                     InitializeInstrumentPlayer();
                     InitializeOscilloscope();
+                    InitializeMetronome();
                 }
 
                 InvalidateEverything(true);
@@ -1473,6 +1503,7 @@ namespace FamiStudio
             InitializeSongPlayer();
             InitializeInstrumentPlayer();
             InitializeOscilloscope();
+            InitializeMetronome();
         }
 
         private void ConditionalShowTutorial()

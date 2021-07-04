@@ -14,7 +14,8 @@ namespace FamiStudio
         enum ExportFormat
         {
             WavMp3,
-            Video,
+            VideoPianoRoll,
+            VideoOscilloscope,
             Nsf,
             Rom,
             Midi,
@@ -30,7 +31,8 @@ namespace FamiStudio
         string[] ExportFormatNames =
         {
             "WAV / MP3 / OGG",
-            "Video",
+            "Video (Piano Roll)",
+            "Video (Oscilloscope)",
             "NSF",
             "ROM / FDS",
             "MIDI",
@@ -46,6 +48,7 @@ namespace FamiStudio
         string[] ExportIcons =
         {
             "ExportWav",
+            "ExportVideo",
             "ExportVideo",
             "ExportNsf",
             "ExportRom",
@@ -126,6 +129,25 @@ namespace FamiStudio
             return data;
         }
 
+        private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
+        {
+            if (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath))
+            {
+                page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 1
+                page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 2
+                page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
+                page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000"); // 4
+                page.AddIntegerRange("Loop Count :", 1, 1, 8); // 5
+                return true;
+            }
+            else
+            {
+                page.AddLabel(null, "Video export requires FFmpeg. Please go in the application settings and look for the 'FFmpeg' section.", true);
+                return false;
+            }
+        }
+
         private PropertyPage CreatePropertyPage(PropertyPage page, ExportFormat format)
         {
             var songNames = GetSongNames();
@@ -150,26 +172,26 @@ namespace FamiStudio
                     page.PropertyChanged += WavMp3_PropertyChanged;
                     page.PropertyClicked += WavMp3_PropertyClicked;
                     break;
-                case ExportFormat.Video:
-                    page.AddButton("Path To FFmpeg:", Settings.FFmpegExecutablePath, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
-#if FAMISTUDIO_MACOS
-                    // GTK LinkButtons dont work on MacOS, use a button (https://github.com/quodlibet/quodlibet/issues/2306)
-                    page.AddButton(" ", "Download FFmpeg here"); // 1
-#else
-                    page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
-#endif
-                    page.AddDropDownList("Song :", songNames, songNames[0]); // 2
-                    page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
-                    page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
-                    page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 5
-                    page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "3000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
-                    page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
-                    page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
-                    page.AddCheckBox("Stereo", false); // 9
-                    page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 10
-                    page.SetColumnEnabled(10, 2, false);
-                    page.PropertyChanged += VideoPage_PropertyChanged;
-                    page.PropertyClicked += VideoPage_PropertyClicked;
+                case ExportFormat.VideoPianoRoll:
+                    if (AddCommonVideoProperties(page, songNames)) // 0-5
+                    {
+                        page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
+                        page.AddCheckBox("Stereo", false); // 7
+                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 8
+                        page.SetColumnEnabled(8, 2, false);
+                        page.PropertyChanged += VideoPage_PropertyChanged;
+                    }
+                    break;
+                case ExportFormat.VideoOscilloscope:
+                    if (AddCommonVideoProperties(page, songNames)) // 0-5
+                    {
+                        page.AddIntegerRange("Oscilloscope Columns :", 2, 1, 3); // 6
+                        page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 7
+                        page.AddCheckBox("Stereo", false); // 8
+                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 9
+                        page.SetColumnEnabled(9, 2, false);
+                        page.PropertyChanged += VideoPage_PropertyChanged;
+                    }
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
@@ -240,40 +262,9 @@ namespace FamiStudio
 
         private void VideoPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (propIdx == 9)
+            if (propIdx == props.PropertyCount - 2) // Stereo
             {
-                props.SetColumnEnabled(10, 2, (bool)value);
-            }
-        }
-
-        private void VideoPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
-        {
-            if (click == ClickType.Button)
-            {
-                if (propIdx == 0)
-                {
-#if FAMISTUDIO_WINDOWS
-                    var ffmpegExeFilter = "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe";
-#else
-                    var ffmpegExeFilter = "FFmpeg Executable (ffmpeg)|*.*";
-#endif
-
-                    var dummy = "";
-                    var filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
-
-                    if (filename != null)
-                    {
-                        props.SetPropertyValue(propIdx, filename);
-
-                        // Update settings right away.
-                        Settings.FFmpegExecutablePath = filename;
-                        Settings.Save();
-                    }
-                }
-                else if (propIdx == 1)
-                {
-                    Utils.OpenUrl("https://famistudio.org/doc/ffmpeg/");
-                }
+                props.SetColumnEnabled(props.PropertyCount - 1, 2, (bool)value);
             }
         }
 
@@ -446,7 +437,7 @@ namespace FamiStudio
                 var zoomValues = new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" };
                 var frameRates = new[] { "50/60 FPS", "25/30 FPS" };
 
-                var props = dialog.GetPropertyPage((int)ExportFormat.Video);
+                var props = dialog.GetPropertyPage((int)ExportFormat.VideoPianoRoll);
                 var ffmpeg = props.GetPropertyValue<string>(0);
                 var songName = props.GetPropertyValue<string>(2);
                 var resolutionIdx = VideoResolution.GetIndexForName(props.GetPropertyValue<string>(3));
@@ -455,10 +446,13 @@ namespace FamiStudio
                 var halfFrameRate = Array.IndexOf(frameRates, props.GetPropertyValue<string>(4)) == 1;
                 var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5), CultureInfo.InvariantCulture);
                 var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(6), CultureInfo.InvariantCulture);
-                var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(7)) - 3;
-                var loopCount = props.GetPropertyValue<int>(8);
-                var stereo = props.GetPropertyValue<bool>(9);
-                var selectedChannels = props.GetPropertyValue<bool[]>(10);
+                var pianoRoll = props.GetSelectedIndex(7) == 0;
+                var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(8)) - 3;
+                var oscNumColumns = props.GetPropertyValue<int>(9);
+                var oscColorMode = props.GetSelectedIndex(10);
+                var loopCount = props.GetPropertyValue<int>(11);
+                var stereo = props.GetPropertyValue<bool>(12);
+                var selectedChannels = props.GetPropertyValue<bool[]>(13);
                 var song = project.GetSong(songName);
 
                 var channelCount = project.GetActiveChannelCount();
@@ -466,14 +460,20 @@ namespace FamiStudio
                 var pan = new float[channelCount];
                 for (int i = 0; i < channelCount; i++)
                 {
-                    if (props.GetPropertyValue<bool>(10, i, 0))
+                    if (props.GetPropertyValue<bool>(13, i, 0))
                         channelMask |= (1 << i);
 
-                    pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
+                    pan[i] = props.GetPropertyValue<int>(13, i, 2) / 100.0f;
                 }
 
-                new VideoFilePianoRoll().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
-                //new VideoFileOscilloscope().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                if (pianoRoll)
+                {
+                    new VideoFilePianoRoll().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                }
+                else
+                {
+                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                }
 
                 lastExportFilename = filename;
             }
@@ -587,7 +587,7 @@ namespace FamiStudio
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
                 new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
-                filename = lastExportFilename;
+                lastExportFilename = filename;
             }
         }
 
@@ -712,7 +712,7 @@ namespace FamiStudio
                 switch (selectedFormat)
                 {
                     case ExportFormat.WavMp3: ExportWavMp3(); break;
-                    case ExportFormat.Video: ExportVideo(); break;
+                    case ExportFormat.VideoPianoRoll: ExportVideo(); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
                     case ExportFormat.Rom: ExportRom(); break;
                     case ExportFormat.Midi: ExportMidi(); break;

@@ -489,7 +489,7 @@ namespace FamiStudio
                                 }
                                 else
                                 {
-                                    color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : ThemeBase.DarkGreyFillColor2);
+                                    color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : ThemeBase.LightGreyFillColor1);
                                 }
                             }
 
