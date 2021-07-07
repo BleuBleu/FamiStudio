@@ -1223,6 +1223,7 @@ namespace FamiStudio
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
                                 instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
+                                instrumentDst.Envelopes[envelopeDragIdx].ClampToValidRange(instrumentDst, envelopeDragIdx);
 
                                 // HACK : Copy some envelope related stuff. Need to cleanup the envelope code.
                                 switch (envelopeDragIdx)

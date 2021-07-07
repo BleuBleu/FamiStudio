@@ -28,6 +28,21 @@ Linux notes
 	- NesSndEmu + NotSoFatso, run script. 
 	- RtMidi, need to add static C/C++ libs to cmake file. 
  
+MacOS notes
+===========
+- If problem installing MacOS VM, see @DOUG fix at
+  https://www.geekrar.com/how-to-fix-the-cpu-has-been-disabled-by-the-guest-os/
+	cpuid.0.eax = "0000:0000:0000:0000:0000:0000:0000:1011"
+	cpuid.0.ebx = "0111:0101:0110:1110:0110:0101:0100:0111"
+	cpuid.0.ecx = "0110:1100:0110:0101:0111:0100:0110:1110"
+	cpuid.0.edx = "0100:1001:0110:0101:0110:1110:0110:1001"
+	cpuid.1.eax = "0000:0000:0000:0001:0000:0110:0111:0001"
+	cpuid.1.ebx = "0000:0010:0000:0001:0000:1000:0000:0000"
+	cpuid.1.ecx = "1000:0010:1001:1000:0010:0010:0000:0011"
+	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
+- NAT network doesnt work, try using NAT (select only ethernet) + do that:
+	ethernet0.virtualDev = "vmxnet3"
+
 Trailer/scroll 
 ============== 
 - Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece. 
@@ -68,6 +83,9 @@ x Metronome
 / Oscilloscope export. 
 	=> Dont render frame lines in video.
 / Scales? Or just highlight.
+x CRASH! Copy VRC6 envelope to normal instrument, play => Crash @Steo
+- BUG: Retina dialog position (2x too far)
+- FTI issue jrowe.
 - Make auto scrolling even more gradual on Linux/MacOS.
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
@@ -87,7 +105,7 @@ x TailWindz : Scroll bar thickness.
 	- Unit test.
 	- Documentation.
 	/ Enable in ROM/NSF.
-	
+
 - LOW PRIO : Left/right pan with +/- (cubase style)?
 
 Doc
