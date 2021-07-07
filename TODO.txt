@@ -79,18 +79,21 @@ x Loop in selection for sequencer.
 x Highlight piano keys when they are pressed with QWERTY or MIDI. 
 x BUG! Slider texture format in mixer displays "0:N1".
 x Metronome 
+x CRASH! Copy VRC6 envelope to normal instrument, play => Crash @Steo
+x BUG: Retina dialog position (2x too far)
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. 
 	=> Dont render frame lines in video.
 / Scales? Or just highlight.
-x CRASH! Copy VRC6 envelope to normal instrument, play => Crash @Steo
-- BUG: Retina dialog position (2x too far)
+- OpenTK PR!
+/ MacOS : Does MIDI work still? @bluegestalt crashes, works on my side...
 - FTI issue jrowe.
 - Make auto scrolling even more gradual on Linux/MacOS.
 - Review OnMouseCaptureChanged, not good when playing with params.
-- Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
+/ Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
 - Save snapping + qwerty settings + some export settings.
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
+- DPCM instrument: double-click starts/end transaction. Add threshold for capture op.
 - Merge CC65 stuff.
 - Volume/effect scaling?
 - Square selection.
