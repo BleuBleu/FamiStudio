@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -51,6 +52,7 @@ namespace FamiStudio
         private short[] metronomeSound2;
         private int lastRecordingKeyDown = -1;
         private BitArray keyStates = new BitArray(65536);
+        private ConcurrentQueue<Tuple<int, bool>> midiNoteQueue = new ConcurrentQueue<Tuple<int, bool>>();
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
 #endif
@@ -383,6 +385,8 @@ namespace FamiStudio
 
             Midi.Close();
             Midi.NotePlayed -= Midi_NotePlayed;
+
+            while (midiNoteQueue.TryDequeue(out _)) ;
 
             if (Midi.InputCount > 0)
             {
@@ -1348,15 +1352,26 @@ namespace FamiStudio
 
         private void Midi_NotePlayed(int n, bool on)
         {
-            if (on)
+            midiNoteQueue.Enqueue(new Tuple<int, bool>(n, on));
+        }
+
+        private void ProcessedQueuedMidiNotes()
+        {
+            while (midiNoteQueue.TryDequeue(out var t))
             {
-                PlayInstrumentNote(Utils.Clamp(n - 11, Note.MusicalNoteMin, Note.MusicalNoteMax), true, true);
-                lastMidiNote = n;
-            }
-            else if (n == lastMidiNote)
-            {
-                StopOrReleaseIntrumentNote(false);
-                lastMidiNote = -1;
+                var n  = t.Item1;
+                var on = t.Item2;
+
+                if (on)
+                {
+                    PlayInstrumentNote(Utils.Clamp(n - 11, Note.MusicalNoteMin, Note.MusicalNoteMax), true, true);
+                    lastMidiNote = n;
+                }
+                else if (n == lastMidiNote)
+                {
+                    StopOrReleaseIntrumentNote(false);
+                    lastMidiNote = -1;
+                }
             }
         }
 
@@ -1539,6 +1554,8 @@ namespace FamiStudio
                 RecreateAudioPlayers();
                 audioDeviceChanged = false;
             }
+
+            ProcessedQueuedMidiNotes();
 
             ToolBar.Tick();
             PianoRoll.Tick();
