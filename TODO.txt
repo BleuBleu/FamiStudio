@@ -61,7 +61,6 @@ FamiStudio 3.1.0 (Small quality of life release)
 ================================================
 x Patterns one-based, start at one.
 x Force reload FDS/N163/VRC7 instrument when song is playing and the user tweaks stuff.
-x Metronome?
 x Remove mapping.sample null check.
 x Multiple sample import. => Or import samples from other projects?
 x Stereo WAV/MP3/Video?
@@ -69,6 +68,7 @@ x .exportzp FAMISTUDIO_SFX_CH0 (brad issue)
 x True portable mode (save FamiStudio.ini in same folder).
 x Move "relative pitch env" to param.
 x Is it needed to clear the undo/redo stack when saving? Make it an option? (What about when we add the filename?)
+	=> Will always ask to save...
 x Replace checklistbox.
 x More verts in video osc?
 x Compare noise channel in metal crusher.
@@ -84,15 +84,12 @@ x BUG: Retina dialog position (2x too far)
 / Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. 
 	=> Dont render frame lines in video.
-/ Scales? Or just highlight.
 - OpenTK PR!
 / MacOS : Does MIDI work still? @bluegestalt crashes, works on my side...
 - FTI issue jrowe.
 - Make auto scrolling even more gradual on Linux/MacOS.
 - Review OnMouseCaptureChanged, not good when playing with params.
-/ Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
 - Save snapping + qwerty settings + some export settings.
-- Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - DPCM instrument: double-click starts/end transaction. Add threshold for capture op.
 - Merge CC65 stuff.
 - Volume/effect scaling?
@@ -109,6 +106,9 @@ x TailWindz : Scroll bar thickness.
 	- Documentation.
 	/ Enable in ROM/NSF.
 
+- CUT: Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
+- CUT: Scales? Or just highlight.
+- CUT: Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - LOW PRIO : Left/right pan with +/- (cubase style)?
 
 Doc
@@ -127,8 +127,6 @@ Testing
 - Test OGG a bit more, make sure UI + command line works good
 - Double check osc flipping in toolbar + video
 - Test ROM with noise/volume slides.
-
-
 
 Random features ideas
 =====================
