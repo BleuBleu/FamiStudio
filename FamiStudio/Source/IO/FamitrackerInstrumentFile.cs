@@ -138,14 +138,8 @@ namespace FamiStudio
             {
                 var seqCount = bytes[offset++];
 
-                if (seqCount != SEQ_COUNT)
-                {
-                    Log.LogMessage(LogSeverity.Error, $"Unexpected number of envelopes ({seqCount}).");
-                    return null;
-                }
-
                 // Envelopes
-                for (int i = 0; i < SEQ_COUNT; i++)
+                for (int i = 0; i < seqCount; i++)
                 {
                     if (bytes[offset++] == 1)
                         ReadEnvelope(bytes, ref offset, instrument, EnvelopeTypeLookup[i]);
