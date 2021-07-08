@@ -264,7 +264,7 @@ namespace FamiStudio
             true,  // DragNote
             false, // DragSelection
             false, // AltZoom
-            false, // DragSample
+            true,  // DragSample
             false, // DragSeekBar
             false, // DragWaveVolumeEnvelope
             false, // ScrollBarX
@@ -1980,35 +1980,6 @@ namespace FamiStudio
                     }
                 }
 
-                // Draw scales.
-                if (editMode == EditionMode.Channel)
-                {
-                    var channel = song.Channels[editChannel];
-                    var degrees = channel.ScaleDegrees;
-
-                    if (degrees != 0)
-                    {
-                        // Transpose by root note
-                        degrees <<= channel.ScaleRootNote;
-                        degrees |= (degrees & 0xfff000) >> 12;
-
-                        for (int i = a.minVisibleOctave; i < a.maxVisibleOctave; i++)
-                        {
-                            int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
-
-                            for (int j = 0; j < 12; j++)
-                            {
-                                if ((degrees & (1 << j)) != 0)
-                                {
-                                    // MATTT : Set a real color here. This is just to test.
-                                    int y = octaveBaseY - j * noteSizeY;
-                                    g.FillRectangle(0, y - noteSizeY, maxX, y, g.GetSolidBrush(Color.Red, 0.5f, 0.25f));
-                                }
-                            }
-                        }
-                    }
-                }
-
                 DrawSelectionRect(g, Height);
 
                 if (editMode == EditionMode.Channel ||
@@ -2247,10 +2218,10 @@ namespace FamiStudio
                             g.PushTranslation(0, y);
                             g.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, g.GetVerticalGradientBrush(mapping.Sample.Color, noteSizeY, 0.8f), theme.BlackBrush, 1);
 
-                            string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.Strings[App.PalPlayback ? 1 : 0][mapping.Pitch]}";
+                            string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                             if (mapping.Loop) text += ", Looping";
-                            g.DrawText(text, ThemeBase.FontSmall, dpcmTextPosX, dpcmTextPosY, theme.BlackBrush);
 
+                            g.DrawText(text, ThemeBase.FontSmall, dpcmTextPosX, dpcmTextPosY, theme.BlackBrush);
                             g.PopTransform();
                         }
                     }
@@ -2819,8 +2790,10 @@ namespace FamiStudio
             // Title + source/processed info.
             g.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeBase.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
             g.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY, whiteKeyBrush);
-            g.DrawText($"Processed Data (DMC) : {editSample.ProcessedSampleRate} Hz, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY, whiteKeyBrush);
-            g.DrawText($"Preview Playback : {editSample.GetPlaybackSampleRate(App.PalPlayback)} Hz, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY * 2, whiteKeyBrush);
+            g.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY, whiteKeyBrush);
+            g.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", ThemeBase.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY * 2, whiteKeyBrush);
+
+            
 
             g.PopClip();
             g.PopTransform();
@@ -3222,96 +3195,6 @@ namespace FamiStudio
             }
         }
 
-        protected void ConfigureScales(MouseEventArgs e)
-        {
-            App.StopOrReleaseIntrumentNote();
-
-            var note = GetPianoNote(e.X, e.Y);
-            if (note >= 0)
-            {
-                var channel = Song.Channels[editChannel];
-                var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 300, false, e.Y > Height / 2);
-                var highlight = channel.ScaleDegrees != 0;
-                var scaleIndex = highlight ? ScaleType.FindScaleIndex(channel.ScaleDegrees) : 0;
-                var customScale = ScaleType.IsCustom(scaleIndex);
-                var customDegrees = new bool[DegreeType.Names.Length];
-
-                if (customScale)
-                {
-                    for (int i = 0; i < 12; i++)
-                    {
-                        if ((channel.ScaleDegrees & (1 << i)) != 0)
-                            customDegrees[i] = true;
-                    }
-                }
-
-                dlg.Properties.AddCheckBox("Scale highlight:", highlight); // 0
-                dlg.Properties.AddDropDownList("Scale:", ScaleType.Names, ScaleType.Names[scaleIndex]); // 1
-                dlg.Properties.AddDropDownList("Root Note:", Note.NoteNames, Note.NoteNames[(note - 1) % 12]); // 2
-                dlg.Properties.AddCheckBoxList("Custom degrees:", DegreeType.Names, customDegrees); // 3
-                dlg.Properties.SetPropertyEnabled(1, highlight);
-                dlg.Properties.SetPropertyEnabled(2, highlight);
-                dlg.Properties.SetPropertyEnabled(3, highlight);
-                dlg.Properties.SetPropertyEnabled(3, highlight && customScale);
-                dlg.Properties.PropertyChanged += ScaleProperties_PropertyChanged;
-                dlg.Properties.Build();
-
-                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
-                {
-                    highlight   = dlg.Properties.GetPropertyValue<bool>(0);
-                    scaleIndex  = dlg.Properties.GetSelectedIndex(1);
-                    customScale = ScaleType.IsCustom(scaleIndex);
-
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-
-                    if (highlight)
-                    {
-                        if (customScale)
-                        {
-                            customDegrees = dlg.Properties.GetPropertyValue<bool[]>(3);
-
-                            var packed = 0;
-                            for (int i = 0; i < 12; i++)
-                            {
-                                if (customDegrees[i])
-                                    packed |= (1 << i);
-                            }
-                            channel.ScaleDegrees = packed;
-                        }
-                        else
-                        {
-                            channel.ScaleDegrees = ScaleType.Degrees[scaleIndex];
-                        }
-
-                        channel.ScaleRootNote = dlg.Properties.GetSelectedIndex(2);
-                    }
-                    else
-                    {
-                        channel.ScaleDegrees  = 0;
-                        channel.ScaleRootNote = 0;
-                    }
-
-                    App.UndoRedoManager.EndTransaction();
-                }
-            }
-        }
-
-        private void ScaleProperties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
-        {
-            // MATTT : Change the custom degrees when scale change.
-            if (propIdx == 0 || propIdx == 1)
-            {
-                var highlight   = props.GetPropertyValue<bool>(0);
-                var scaleIndex  = props.GetSelectedIndex(1);
-                var customScale = ScaleType.IsCustom(scaleIndex);
-
-                props.SetPropertyEnabled(1, highlight);
-                props.SetPropertyEnabled(2, highlight);
-                props.SetPropertyEnabled(3, highlight);
-                props.SetPropertyEnabled(3, highlight && customScale);
-            }
-        }
-
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             base.OnMouseDoubleClick(e);
@@ -3329,16 +3212,17 @@ namespace FamiStudio
                     var mapping = App.Project.GetDPCMMapping(noteValue);
                     if (left && mapping != null)
                     {
-                        var freqIdx = App.PalPlayback ? 1 : 0;
-                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 160, false, e.Y > Height / 2);
-                        dlg.Properties.AddDropDownList("Pitch :", DPCMSampleRate.Strings[freqIdx], DPCMSampleRate.Strings[freqIdx][mapping.Pitch]); // 0
+                        var strings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
+
+                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 270, false, e.Y > Height / 2);
+                        dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
                         dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
                         dlg.Properties.Build();
 
                         if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                         {
                             App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
-                            mapping.Pitch = DPCMSampleRate.GetIndexForName(App.PalPlayback, dlg.Properties.GetPropertyValue<string>(0));
+                            mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
                             mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
                             App.UndoRedoManager.EndTransaction();
                             ConditionalInvalidate();
@@ -3348,14 +3232,7 @@ namespace FamiStudio
             }
             else if (editMode == EditionMode.Channel)
             {
-                if (left)
-                {
-                    if (IsMouseInPiano(e.X, e.Y))
-                    {
-                        ConfigureScales(e);
-                    }
-                }
-                else if (right)
+                if (right)
                 {
                     if (IsMouseInHeader(e.X, e.Y))
                     {
@@ -3476,6 +3353,9 @@ namespace FamiStudio
                     case CaptureOperation.ChangeSelectionEffectValue:
                         UpdateChangeEffectValue(e);
                         break;
+                    case CaptureOperation.DragSample:
+                        UpdateDragDPCMSampleMapping(e);
+                        break;
                     case CaptureOperation.DrawEnvelope:
                         DrawEnvelope(e);
                         break;
@@ -3526,46 +3406,58 @@ namespace FamiStudio
                 }
             }
         }
+        private void UpdateDragDPCMSampleMapping(MouseEventArgs e)
+        {
+            if (draggedSample == null)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                draggedSample = App.Project.GetDPCMMapping(captureNoteValue);
+                App.Project.UnmapDPCMSample(captureNoteValue);
+            }
+        }
 
         private void EndDragDPCMSampleMapping(MouseEventArgs e)
         {
-            if (GetNoteValueForCoord(e.X, e.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
+            if (draggedSample != null)
             {
-                var sample = draggedSample;
-
-                // Map the sample right away so that it renders correctly as the message box pops.
-                App.Project.UnmapDPCMSample(noteValue);
-                App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
-
-                draggedSample = null;
-
-                if (PlatformUtils.MessageBox($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (GetNoteValueForCoord(e.X, e.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
                 {
-                    // Need to promote the transaction to project level since we are going to be transposing 
-                    // potentially in multiple songs.
-                    App.UndoRedoManager.RestoreTransaction(false);
-                    App.UndoRedoManager.AbortTransaction();
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                    var sample = draggedSample;
 
-                    // Need to redo everything + transpose.
-                    App.Project.UnmapDPCMSample(captureNoteValue);
+                    // Map the sample right away so that it renders correctly as the message box pops.
                     App.Project.UnmapDPCMSample(noteValue);
                     App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
-                    App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
+
+                    draggedSample = null;
+
+                    if (PlatformUtils.MessageBox($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        // Need to promote the transaction to project level since we are going to be transposing 
+                        // potentially in multiple songs.
+                        App.UndoRedoManager.RestoreTransaction(false);
+                        App.UndoRedoManager.AbortTransaction();
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                        // Need to redo everything + transpose.
+                        App.Project.UnmapDPCMSample(captureNoteValue);
+                        App.Project.UnmapDPCMSample(noteValue);
+                        App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
+                        App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
+                    }
+
+                    DPCMSampleMapped?.Invoke(noteValue);
+                    ManyPatternChanged?.Invoke();
+
+                    App.UndoRedoManager.EndTransaction();
                 }
+                else
+                {
+                    App.UndoRedoManager.RestoreTransaction(false);
+                    App.UndoRedoManager.AbortTransaction();
 
-                DPCMSampleMapped?.Invoke(noteValue);
-                ManyPatternChanged?.Invoke();
-
-                App.UndoRedoManager.EndTransaction();
-            }
-            else
-            {
-                App.UndoRedoManager.RestoreTransaction(false);
-                App.UndoRedoManager.AbortTransaction();
-
-                if (noteValue != captureNoteValue && draggedSample != null)
-                    SystemSounds.Beep.Play();
+                    if (noteValue != captureNoteValue && draggedSample != null)
+                        SystemSounds.Beep.Play();
+                }
             }
         }
 
@@ -4955,10 +4847,8 @@ namespace FamiStudio
 
         private void StartDragDPCMSampleMapping(MouseEventArgs e, byte noteValue)
         {
-            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
             StartCaptureOperation(e, CaptureOperation.DragSample);
-            draggedSample = App.Project.GetDPCMMapping(noteValue);
-            App.Project.UnmapDPCMSample(noteValue);
+            draggedSample = null;
         }
 
         private void ClearDPCMSampleMapping(byte noteValue)

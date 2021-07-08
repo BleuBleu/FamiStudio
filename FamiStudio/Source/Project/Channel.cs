@@ -13,8 +13,6 @@ namespace FamiStudio
         private PatternCumulativeCache[] patternCache = new PatternCumulativeCache[Song.MaxLength];
         private List<Pattern> patterns = new List<Pattern>();
         private int type;
-        private int scaleRootNote;
-        private int scaleDegrees; 
 
         public int Type => type;
         public string Name => ChannelType.Names[type];
@@ -24,9 +22,6 @@ namespace FamiStudio
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
         public bool IsExpansionChannel => type >= ChannelType.ExpansionAudioStart;
-
-        public int ScaleRootNote { get => scaleRootNote; set => scaleRootNote = value; }
-        public int ScaleDegrees { get => scaleDegrees; set => scaleDegrees = value; }
 
         public bool IsFdsWaveChannel => type == ChannelType.FdsWave;
         public bool IsN163WaveChannel => type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8;
@@ -179,16 +174,16 @@ namespace FamiStudio
             switch (effect)
             {
                 case Note.EffectVolume:
-                case Note.EffectVolumeSlide:  return type != ChannelType.Dpcm;
-                case Note.EffectFinePitch:    return type != ChannelType.Noise && type != ChannelType.Dpcm;
+                case Note.EffectVolumeSlide: return type != ChannelType.Dpcm;
+                case Note.EffectFinePitch: return type != ChannelType.Noise && type != ChannelType.Dpcm;
                 case Note.EffectVibratoSpeed: return type != ChannelType.Noise && type != ChannelType.Dpcm;
                 case Note.EffectVibratoDepth: return type != ChannelType.Noise && type != ChannelType.Dpcm;
-                case Note.EffectFdsModDepth:  return type == ChannelType.FdsWave;
-                case Note.EffectFdsModSpeed:  return type == ChannelType.FdsWave;
-                case Note.EffectSpeed:        return song.UsesFamiTrackerTempo;
-                case Note.EffectDutyCycle:    return type == ChannelType.Square1 || type == ChannelType.Square2 || type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2 || type == ChannelType.Vrc6Square1 || type == ChannelType.Vrc6Square2 || type == ChannelType.Noise;
-                case Note.EffectNoteDelay:    return song.UsesFamiTrackerTempo;
-                case Note.EffectCutDelay:     return song.UsesFamiTrackerTempo;
+                case Note.EffectFdsModDepth: return type == ChannelType.FdsWave;
+                case Note.EffectFdsModSpeed: return type == ChannelType.FdsWave;
+                case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
+                case Note.EffectDutyCycle: return type == ChannelType.Square1 || type == ChannelType.Square2 || type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2 || type == ChannelType.Vrc6Square1 || type == ChannelType.Vrc6Square2 || type == ChannelType.Noise;
+                case Note.EffectNoteDelay: return song.UsesFamiTrackerTempo;
+                case Note.EffectCutDelay: return song.UsesFamiTrackerTempo;
             }
 
             return true;
@@ -240,7 +235,7 @@ namespace FamiStudio
                 {
                     if (instanceLengthMap.TryGetValue(pattern, out var grooveAndPadMode))
                     {
-                        if (groove        != grooveAndPadMode.Item1 ||
+                        if (groove != grooveAndPadMode.Item1 ||
                             groovePadMode != grooveAndPadMode.Item2)
                         {
                             pattern = pattern.ShallowClone();
@@ -490,7 +485,7 @@ namespace FamiStudio
             else if (type == ChannelType.Noise)
             {
                 slideShift = -4;
-                pitchShift =  0;
+                pitchShift = 0;
             }
             else
             {
@@ -536,7 +531,7 @@ namespace FamiStudio
         public bool ComputeSlideNoteParams(Note note, NoteLocation location, int famitrackerSpeed, ushort[] noteTable, bool pal, bool applyShifts, out int pitchDelta, out int stepSize, out float stepSizeFloat)
         {
             Debug.Assert(note.IsMusical);
-            
+
             var slideShift = 0;
 
             if (applyShifts)
@@ -998,7 +993,7 @@ namespace FamiStudio
                     }
                 }
             }
-            
+
             return null;
         }
 
@@ -1314,9 +1309,9 @@ namespace FamiStudio
                 patternReleaseStops[i, 0] = -1;
                 patternReleaseStops[i, 1] = -1;
             }
-            
-            var releasesToCreate    = new HashSet<NoteLocation>();
-            var stopsToCreate       = new HashSet<NoteLocation>();
+
+            var releasesToCreate = new HashSet<NoteLocation>();
+            var stopsToCreate = new HashSet<NoteLocation>();
             var patternsToDuplicate = new HashSet<int>();
 
             var loc0 = new NoteLocation(0, 0);
@@ -1397,7 +1392,7 @@ namespace FamiStudio
                         visitedPatterns.Add(pattern);
                         patternStopReleaseMap[key] = pattern;
                     }
-                    else 
+                    else
                     {
                         // Otherwise create a unique pattern for each combination of release/stop.
                         if (patternStopReleaseMap.TryGetValue(key, out var patternToCopy))
@@ -1480,7 +1475,7 @@ namespace FamiStudio
             public NoteLocation lastNoteLocation;
 
             // Cumulative effect values from all the previous patterns.
-            public int   lastEffectMask;
+            public int lastEffectMask;
             public int[] lastEffectValues = new int[Note.EffectCount];
             public NoteLocation[] lastEffectLocation = new NoteLocation[Note.EffectCount];
 
@@ -1496,7 +1491,7 @@ namespace FamiStudio
                 lastEffectMask = other.lastEffectMask;
                 firstNoteIndex = -1;
                 firstVolumeIndex = -1;
-                Array.Copy(other.lastEffectValues,   lastEffectValues,   lastEffectValues.Length);
+                Array.Copy(other.lastEffectValues, lastEffectValues, lastEffectValues.Length);
                 Array.Copy(other.lastEffectLocation, lastEffectLocation, lastEffectLocation.Length);
             }
 
@@ -1511,7 +1506,7 @@ namespace FamiStudio
                 {
                     if ((lastEffectMask & (1 << i)) != 0)
                     {
-                        equal &= (lastEffectValues[i]   == other.lastEffectValues[i]);
+                        equal &= (lastEffectValues[i] == other.lastEffectValues[i]);
                         equal &= (lastEffectLocation[i] == other.lastEffectLocation[i]);
                     }
                 }
@@ -1521,10 +1516,10 @@ namespace FamiStudio
 
             public void Invalidate()
             {
-                firstNoteIndex   = -1;
+                firstNoteIndex = -1;
                 firstVolumeIndex = -1;
                 lastNoteLocation = NoteLocation.Invalid;
-                lastEffectMask   = 0;
+                lastEffectMask = 0;
             }
         };
     }
@@ -1679,7 +1674,7 @@ namespace FamiStudio
     // Basically to ease the migration to solid notes at FamiStudio 3.0.0.
     public class SparseChannelNoteIterator
     {
-        private NoteLocation current; 
+        private NoteLocation current;
         private NoteLocation next;
         private NoteLocation end;
 
@@ -1693,10 +1688,10 @@ namespace FamiStudio
         public NoteLocation Location => current;
         public NoteLocation NextLocation => next;
         public int PatternIndex => current.PatternIndex;
-        public int NoteIndex    => current.NoteIndex;
+        public int NoteIndex => current.NoteIndex;
 
         public Pattern Pattern => pattern;
-        public Note    Note    => note;
+        public Note Note => note;
 
         public int DistanceToNextNote => channel.Song.CountNotesBetween(current, next);
 
@@ -1716,7 +1711,7 @@ namespace FamiStudio
                     if (nextNote != null && !nextNote.IsMusicalOrStop && nextNote.HasCutDelay)
                         return DistanceToNextNote + 1;
                 }
-               
+
                 return DistanceToNextNote;
             }
         }
@@ -1736,8 +1731,8 @@ namespace FamiStudio
             }
 
             this.channel = c;
-            this.filter  = f;
-            this.end     = end;
+            this.filter = f;
+            this.end = end;
 
             Debug.Assert(start.NoteIndex < c.Song.GetPatternLength(start.PatternIndex));
 
@@ -1804,7 +1799,7 @@ namespace FamiStudio
                 if (pattern.Notes.Values[nextIdx].MatchesFilter(filter))
                 {
                     next.PatternIndex = current.PatternIndex;
-                    next.NoteIndex    = pattern.Notes.Keys[nextIdx];
+                    next.NoteIndex = pattern.Notes.Keys[nextIdx];
                     return;
                 }
             }
@@ -1825,7 +1820,7 @@ namespace FamiStudio
                         if (pat.Notes.Values[nextIdx].MatchesFilter(filter))
                         {
                             next.PatternIndex = p;
-                            next.NoteIndex    = pat.Notes.Keys[nextIdx];
+                            next.NoteIndex = pat.Notes.Keys[nextIdx];
                             return;
                         }
                     }
@@ -1841,88 +1836,5 @@ namespace FamiStudio
         {
             SetCurrentNote(next, nextIdx);
         }
-    }
-
-    public static class ScaleType
-    {
-        public const int Major = 0;
-        public const int Minor = 1;
-        public const int PentatonicMajor = 2;
-        public const int PentatonicMinor = 3;
-        public const int HarmonicMajor = 4;
-        public const int HarmonicMinor = 5;
-        public const int DorianMode = 6;
-        public const int PhrygianMode = 7;
-        public const int LydianMode = 8;
-        public const int MixolydianMode = 9;
-        public const int LocrianMode = 10;
-
-        public static readonly string[] Names =
-        {
-            "Major (Ionian mode)",
-            "Minor (Aeolian mode)",
-            "Major Pentatonic",
-            "Minor Pentatonic",
-            "Harmonic Major",
-            "Harmonic Minor",
-            "Dorian mode",
-            "Phrygian mode",
-            "Lydian mode",
-            "Mixolydian mode",
-            "Locrian mode",
-            "Custom"
-        };
-
-        public static int FindScaleIndex(int degrees)
-        {
-            var idx = Array.IndexOf(Degrees, degrees);
-
-            if (idx < 0)
-                idx = Degrees.Length - 1; // Custom;
-
-            return idx;
-        }
-
-        public static bool IsCustom(int index)
-        {
-            return index == Degrees.Length - 1;
-        }
-
-        // TODO : Use bitfields here.
-        public static readonly int[] Degrees = new[]
-        {
-            0b101011010101, // Major
-            0b010110101101, // Minor
-            // UNDONE
-            0b101011010101, // PentatonicMajor 
-            0b101011010101, // PentatonicMinor
-            0b101011010101, // HarmonicMajor 
-            0b101011010101, // HarmonicMinor
-            0b101011010101, // DorianMode 
-            0b101011010101, // PhrygianMode
-            0b101011010101, // LydianMode 
-            0b101011010101, // MixolydianMode
-            0b101011010101, // LocrianMode
-            0b000000000000, // Custom
-        };
-    }
-
-    public static class DegreeType
-    {
-        public static readonly string[] Names =
-        {
-            "1",
-            "#1",
-            "2",
-            "#2",
-            "3",
-            "4",
-            "#4",
-            "5",
-            "#5",
-            "6",
-            "#6",
-            "7"
-        };
     }
 }

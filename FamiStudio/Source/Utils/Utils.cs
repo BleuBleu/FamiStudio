@@ -44,6 +44,11 @@ namespace FamiStudio
             return Math.Abs(a - b) < delta;
         }
 
+        public static bool IsNearlyEqual(int a, int b, int delta = 10)
+        {
+            return Math.Abs(a - b) < delta;
+        }
+
         public static int SignedCeil(float x)
         {
             return (x > 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System;
 using System.IO;
+using System.Globalization;
 
 namespace FamiStudio
 {
@@ -90,6 +91,11 @@ namespace FamiStudio
         public float GetPlaybackSampleRate(bool palPlayback)
         {
             return DPCMSampleRate.Frequencies[palPlayback ? 1 : 0, previewRate];
+        }
+
+        public float GetPlaybackCents(bool palPlayback)
+        {
+            return DPCMSampleRate.GetSemitones(palPlayback, previewRate);
         }
 
         public float GetPlaybackDuration(bool palPlayback)
@@ -190,7 +196,7 @@ namespace FamiStudio
 
                     if (!Utils.IsNearlyEqual(finePitch, 1.0f))
                     {
-                        var newLength = (int)Math.Round(sourceWavData.Length * finePitch);
+                        var newLength = (int)Math.Round(sourceWavData.Length / finePitch);
                         if (newLength != sourceWavData.Length)
                         {
                             var resampledWavData = new short[newLength];
@@ -426,8 +432,7 @@ namespace FamiStudio
 
                 if (buffer.Version >= 11)
                 {
-                    // MATTT : Serialize this once its finished.
-                    //buffer.Serialize(ref finePitch);
+                    buffer.Serialize(ref finePitch);
                 }
 
                 // The process data will not be stored in the file, it will 
@@ -592,7 +597,8 @@ namespace FamiStudio
             return Array.IndexOf(Names, str);
         }
     };
-    
+
+
     public static class DPCMSampleRate
     {
         // From NESDEV wiki.
@@ -640,54 +646,49 @@ namespace FamiStudio
             }
         };
 
-        // From NESDEV wiki.
-        // [0,x] = NTSC
-        // [1,x] = PAL
-        public static readonly string[][] Strings =
+        public static float GetSemitones(bool pal, int idx)
         {
-            // NTSC
-            new [] {
-                "0 (4.2 KHz)",
-                "1 (4.7 KHz)",
-                "2 (5.3 KHz)",
-                "3 (5.6 KHz)",
-                "4 (6.3 KHz)",
-                "5 (7.0 KHz)",
-                "6 (7.9 KHz)",
-                "7 (8.3 KHz)",
-                "8 (9.4 KHz)",
-                "9 (11.1 KHz)",
-                "10 (12.6 KHz)",
-                "11 (13.9 KHz)",
-                "12 (16.9 KHz)",
-                "13 (21.3 KHz)",
-                "14 (24.9 KHz)",
-                "15 (33.1 KHz)"
-            },
-            // PAL
-            new [] {
-                "0 (4.2 KHz)",
-                "1 (4.7 KHz)",
-                "2 (5.3 KHz)",
-                "3 (5.6 KHz)",
-                "4 (6.0 KHz)",
-                "5 (7.0 KHz)",
-                "6 (7.9 KHz)",
-                "7 (8.4 KHz)",
-                "8 (9.4 KHz)",
-                "9 (11.2 KHz)",
-                "10 (12.6 KHz)",
-                "11 (14.1 KHz)",
-                "12 (17.0 KHz)",
-                "13 (21.3 KHz)",
-                "14 (25.2 KHz)",
-                "15 (33.3 KHz)"
-            }
-        };
+            var f = Frequencies[pal ? 1 : 0, idx];
+            var b = Frequencies[pal ? 1 : 0, 15];
 
-        public static int GetIndexForName(bool pal, string str)
+            return (float)Math.Log(f / b, 2.0) * 12;
+        }
+
+        public static string GetString(bool index, bool pal, bool freq, bool semitones, int idx)
         {
-            return Array.IndexOf(Strings[pal ? 1 : 0], str);
+            var str = "";
+
+            if (index)
+            {
+                str += $"[{idx}]";
+            }
+
+            if (freq)
+            {
+                if (str != "") str += " ";
+                var f = Frequencies[pal ? 1 : 0, idx];
+                str += (f / 1000).ToString("n1", CultureInfo.CurrentCulture) + " KHz";
+            }
+
+            if (semitones)
+            {
+                if (str != "") str += " ";
+                if (freq) str += "(";
+                str += GetSemitones(pal, idx).ToString("n2", CultureInfo.CurrentCulture) + " semitones";
+                if (freq) str += ")";
+            }
+
+            return str;
+        }
+
+        public static string[] GetStringList(bool index, bool pal, bool freq, bool semitones)
+        {
+            var strings = new string[Frequencies.GetLength(1)];
+
+            for (int i = 0; i < Frequencies.GetLength(1); i++)
+                strings[i] = GetString(index, pal, freq, semitones, i);
+
+            return strings;
         }
     };
 }

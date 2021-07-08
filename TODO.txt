@@ -81,16 +81,17 @@ x BUG! Slider texture format in mixer displays "0:N1".
 x Metronome 
 x CRASH! Copy VRC6 envelope to normal instrument, play => Crash @Steo
 x BUG: Retina dialog position (2x too far)
-/ Fine pitch adjust in DPCM editor. Make backward, save in file.
+x MacOS : Does MIDI work still? @bluegestalt crashes, works on my side...
+x Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
+x DPCM instrument: double-click starts/end transaction. Add threshold for capture op.
+x Fine pitch adjust in DPCM editor. Make backward, save in file.
 / Oscilloscope export. 
 	=> Dont render frame lines in video.
 - OpenTK PR!
-/ MacOS : Does MIDI work still? @bluegestalt crashes, works on my side...
 - FTI issue jrowe.
 - Make auto scrolling even more gradual on Linux/MacOS.
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Save snapping + qwerty settings + some export settings.
-- DPCM instrument: double-click starts/end transaction. Add threshold for capture op.
 - Merge CC65 stuff.
 - Volume/effect scaling?
 - Square selection.
@@ -106,8 +107,6 @@ x TailWindz : Scroll bar thickness.
 	- Documentation.
 	/ Enable in ROM/NSF.
 
-- CUT: Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful). Need something like -5s, 30 cents notations. Nonstandard. -530 cents?
-- CUT: Scales? Or just highlight.
 - CUT: Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - LOW PRIO : Left/right pan with +/- (cubase style)?
 
@@ -140,6 +139,7 @@ Random features ideas
 
 Backlog: 
 ========= 
+- Scales
 - Selection with min/max note.
 - Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
