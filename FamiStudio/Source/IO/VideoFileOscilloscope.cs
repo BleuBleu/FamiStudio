@@ -5,9 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 #if FAMISTUDIO_WINDOWS
-    using RenderFont     = SharpDX.DirectWrite.TextFormat;
+using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
     using RenderBrush    = SharpDX.Direct2D1.Brush;
     using RenderGeometry = SharpDX.Direct2D1.PathGeometry;
@@ -226,6 +227,8 @@ namespace FamiStudio
 
                 var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
 
+                Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
+
                 // Generate each of the video frames.
                 using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
                 {
@@ -320,6 +323,8 @@ namespace FamiStudio
             finally
 #endif
             {
+                Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.Normal;
+
                 foreach (var c in channelStates)
                     c.bmpIcon.Dispose();
 

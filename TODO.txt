@@ -88,12 +88,13 @@ x Fine pitch adjust in DPCM editor. Make backward, save in file.
 x FTI issue jrowe.
 / Oscilloscope export. 
 	=> Dont render frame lines in video.
+- Remove diacritics in text boxes.
+- Square selection.
 - OpenTK PR!
 - Make auto scrolling even more gradual on Linux/MacOS.
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Save snapping + qwerty settings + some export settings.
 - Volume/effect scaling?
-- Square selection.
 - Merge CC65 stuff (when back in main branch).
 x TailWindz : Scroll bar thickness.
 - TailWindz : CTRL + Scroll should do "something"
@@ -107,7 +108,6 @@ x TailWindz : Scroll bar thickness.
 	- Documentation.
 	/ Enable in ROM/NSF.
 
-- CUT: Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - LOW PRIO : Left/right pan with +/- (cubase style)?
 
 Doc
@@ -139,6 +139,7 @@ Random features ideas
 
 Backlog: 
 ========= 
+- Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Scales
 - Selection with min/max note.
 - Loop prevention for envelope (brad issue). 

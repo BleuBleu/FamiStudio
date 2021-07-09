@@ -99,7 +99,9 @@ namespace FamiStudio
                 psi.RedirectStandardOutput = true;
             }
 
-            return Process.Start(psi);
+            var process = Process.Start(psi);
+            process.PriorityClass = ProcessPriorityClass.BelowNormal;
+            return process;
         }
 
         protected bool DetectFFmpeg(string ffmpegExecutable)

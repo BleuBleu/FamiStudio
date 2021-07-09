@@ -428,51 +428,52 @@ namespace FamiStudio
             }
         }
 
-        private void ExportVideo()
+        private void ExportVideo(bool pianoRoll)
         {
             var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
 
             if (filename != null)
             {
-                var zoomValues = new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" };
-                var frameRates = new[] { "50/60 FPS", "25/30 FPS" };
+                var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
 
-                var props = dialog.GetPropertyPage((int)ExportFormat.VideoPianoRoll);
-                var ffmpeg = props.GetPropertyValue<string>(0);
-                var songName = props.GetPropertyValue<string>(2);
-                var resolutionIdx = VideoResolution.GetIndexForName(props.GetPropertyValue<string>(3));
+                var stereoPropIdx   = pianoRoll ? 7 : 8;
+                var channelsPropIdx = pianoRoll ? 8 : 9;
+
+                var songName = props.GetPropertyValue<string>(0);
+                var resolutionIdx = props.GetSelectedIndex(1);
                 var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
                 var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
-                var halfFrameRate = Array.IndexOf(frameRates, props.GetPropertyValue<string>(4)) == 1;
-                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5), CultureInfo.InvariantCulture);
-                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(6), CultureInfo.InvariantCulture);
-                var pianoRoll = props.GetSelectedIndex(7) == 0;
-                var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(8)) - 3;
-                var oscNumColumns = props.GetPropertyValue<int>(9);
-                var oscColorMode = props.GetSelectedIndex(10);
-                var loopCount = props.GetPropertyValue<int>(11);
-                var stereo = props.GetPropertyValue<bool>(12);
-                var selectedChannels = props.GetPropertyValue<bool[]>(13);
+                var halfFrameRate = props.GetSelectedIndex(2) == 1;
+                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
+                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
+                var loopCount = props.GetPropertyValue<int>(5);
+                var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
+                var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
                 var song = project.GetSong(songName);
-
                 var channelCount = project.GetActiveChannelCount();
                 var channelMask = 0;
+
                 var pan = new float[channelCount];
                 for (int i = 0; i < channelCount; i++)
                 {
-                    if (props.GetPropertyValue<bool>(13, i, 0))
+                    if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
                         channelMask |= (1 << i);
 
-                    pan[i] = props.GetPropertyValue<int>(13, i, 2) / 100.0f;
+                    pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
                 }
 
                 if (pianoRoll)
                 {
-                    new VideoFilePianoRoll().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                    var pianoRollZoom = props.GetSelectedIndex(6) - 3;
+
+                    new VideoFilePianoRoll().Save(project, song.Id, loopCount, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
                 }
                 else
                 {
-                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                    var oscNumColumns = props.GetPropertyValue<int>(6);
+                    var oscColorMode  = props.GetSelectedIndex(7);
+
+                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
                 }
 
                 lastExportFilename = filename;
@@ -712,7 +713,8 @@ namespace FamiStudio
                 switch (selectedFormat)
                 {
                     case ExportFormat.WavMp3: ExportWavMp3(); break;
-                    case ExportFormat.VideoPianoRoll: ExportVideo(); break;
+                    case ExportFormat.VideoPianoRoll: ExportVideo(true); break;
+                    case ExportFormat.VideoOscilloscope: ExportVideo(false); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
                     case ExportFormat.Rom: ExportRom(); break;
                     case ExportFormat.Midi: ExportMidi(); break;
