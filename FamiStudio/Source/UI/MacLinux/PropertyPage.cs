@@ -176,14 +176,17 @@ namespace FamiStudio
             return textBox;
         }
 
-        void TextBox_Changed(object sender, EventArgs e)
+        private void TextBox_Changed(object sender, EventArgs e)
         {
-            var textBox = sender as Entry;
+            ForceTextBoxASCII(sender as Entry);
+        }
 
+        private void ForceTextBoxASCII(Entry textBox)
+        {
             // All of our text storage is ASCII at the moment, so enforce it right away
             // to prevent issues later on.
             var oldText = textBox.Text;
-            var newText = System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(oldText));
+            var newText = Utils.ForceASCII(oldText);
 
             if (oldText != newText)
             {
@@ -1162,7 +1165,8 @@ namespace FamiStudio
             {
                 case PropertyType.String:
                 case PropertyType.ColoredString:
-                    return (prop.control as Entry).Text;
+                    ForceTextBoxASCII(prop.control as Entry);
+                    return Utils.For (prop.control as Entry).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as SpinButton).Value;
                 case PropertyType.DomainUpDown:

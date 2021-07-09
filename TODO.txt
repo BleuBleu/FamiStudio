@@ -88,15 +88,15 @@ x Fine pitch adjust in DPCM editor. Make backward, save in file.
 x FTI issue jrowe.
 / Oscilloscope export. 
 	=> Dont render frame lines in video.
-- Remove diacritics in text boxes.
+x Remove diacritics in text boxes.
+x TailWindz : Scroll bar thickness.
+/ OpenTK PR!
 - Square selection.
-- OpenTK PR!
 - Make auto scrolling even more gradual on Linux/MacOS.
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Save snapping + qwerty settings + some export settings.
 - Volume/effect scaling?
 - Merge CC65 stuff (when back in main branch).
-x TailWindz : Scroll bar thickness.
 - TailWindz : CTRL + Scroll should do "something"
 - Noise slides
 	- Documentation (sound engine, FT)

@@ -175,20 +175,23 @@ namespace FamiStudio
 
         private void TextBox_TextChanged(object sender, EventArgs e)
         {
-            var textBox = sender as TextBox;
+            ForceTextBoxASCII(sender as TextBox);
+        }
 
+        private void ForceTextBoxASCII(TextBox textBox)
+        {
             // All of our text storage is ASCII at the moment, so enforce it right away
             // to prevent issues later on.
             var oldText = textBox.Text;
-            var newText = System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(oldText));
+            var newText = Utils.ForceASCII(oldText);
 
             if (oldText != newText)
             {
                 var selStart = textBox.SelectionStart;
-                var selLen   = textBox.SelectionLength;
+                var selLen = textBox.SelectionLength;
 
                 textBox.Text = newText;
-                textBox.SelectionStart  = selStart;
+                textBox.SelectionStart = selStart;
                 textBox.SelectionLength = selLen;
             }
         }
@@ -871,6 +874,7 @@ namespace FamiStudio
                 case PropertyType.String:
                 case PropertyType.ColoredString:
                 case PropertyType.MultilineString:
+                    ForceTextBoxASCII(prop.control as TextBox);
                     return (prop.control as TextBox).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as NumericUpDown).Value;

@@ -324,6 +324,11 @@ namespace FamiStudio
             return 0;
         }
 
+        public static string ForceASCII(string str)
+        {
+            return System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(str));
+        }
+
         public static void OpenUrl(string url)
         {
             try
