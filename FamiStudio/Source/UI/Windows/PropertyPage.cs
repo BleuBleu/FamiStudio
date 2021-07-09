@@ -154,6 +154,7 @@ namespace FamiStudio
 
             textBox.Text = txt;
             textBox.Font = font;
+            textBox.TextChanged += TextBox_TextChanged;
             textBox.BackColor = backColor;
 
             return textBox;
@@ -166,9 +167,30 @@ namespace FamiStudio
             textBox.Text = txt;
             textBox.Font = font;
             textBox.MaxLength = maxLength;
+            textBox.TextChanged += TextBox_TextChanged;
             toolTip.SetToolTip(textBox, tooltip);
 
             return textBox;
+        }
+
+        private void TextBox_TextChanged(object sender, EventArgs e)
+        {
+            var textBox = sender as TextBox;
+
+            // All of our text storage is ASCII at the moment, so enforce it right away
+            // to prevent issues later on.
+            var oldText = textBox.Text;
+            var newText = System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(oldText));
+
+            if (oldText != newText)
+            {
+                var selStart = textBox.SelectionStart;
+                var selLen   = textBox.SelectionLength;
+
+                textBox.Text = newText;
+                textBox.SelectionStart  = selStart;
+                textBox.SelectionLength = selLen;
+            }
         }
 
         private TextBox CreateMultilineTextBox(string txt)
