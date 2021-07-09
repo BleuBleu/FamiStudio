@@ -158,6 +158,7 @@ namespace FamiStudio
             textBox.Text = txt;
             textBox.ModifyBase(StateType.Normal, ToGdkColor(backColor));
             textBox.WidthRequest = GtkUtils.ScaleGtkWidget(50);
+            textBox.Changed += TextBox_Changed;
 
             return textBox;
         }
@@ -170,8 +171,26 @@ namespace FamiStudio
             textBox.MaxLength = maxLength;
             textBox.WidthRequest = GtkUtils.ScaleGtkWidget(50);
             textBox.TooltipText = tooltip;
+            textBox.Changed += TextBox_Changed;
 
             return textBox;
+        }
+
+        void TextBox_Changed(object sender, EventArgs e)
+        {
+            var textBox = sender as Entry;
+
+            // All of our text storage is ASCII at the moment, so enforce it right away
+            // to prevent issues later on.
+            var oldText = textBox.Text;
+            var newText = System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(oldText));
+
+            if (oldText != newText)
+            {
+                var cursorPos = textBox.Position;
+                textBox.Text = newText;
+                textBox.Position = cursorPos;
+            }
         }
 
         private ScrolledWindow CreateMultilineTextBox(string txt)
