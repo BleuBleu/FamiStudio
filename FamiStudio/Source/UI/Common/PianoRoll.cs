@@ -4607,13 +4607,13 @@ namespace FamiStudio
             if ((mouseX - whiteKeySizeX) < 0)
             {
                 var scrollAmount = (whiteKeySizeX - mouseX) / (float)whiteKeySizeX;
-                scrollX -= (int)(32 * scrollAmount);
+                scrollX -= (int)(2 * App.AverageTickRate * scrollAmount);
                 ClampScroll();
             }
             else if ((Width - mouseX) < whiteKeySizeX)
             {
                 var scrollAmount = (mouseX - (Width - whiteKeySizeX)) / (float)whiteKeySizeX;
-                scrollX += (int)(32 * scrollAmount);
+                scrollX += (int)(2 * App.AverageTickRate * scrollAmount);
                 ClampScroll();
             }
         }

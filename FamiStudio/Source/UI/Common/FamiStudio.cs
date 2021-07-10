@@ -56,6 +56,8 @@ namespace FamiStudio
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
 #endif
+        private DateTime lastTickTime = DateTime.Now;
+        private float averageTickRate = 4.0f;
 
         private bool newReleaseAvailable = false;
         private string newReleaseString = null;
@@ -73,6 +75,7 @@ namespace FamiStudio
         public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : 0xffff; set => songPlayer.ChannelMask = value; }
         public int PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { if (!IsPlaying) songPlayer.PlayRate = value; } }
+        public float AverageTickRate => averageTickRate;
 
         public Project Project => project;
         public Song Song => song;
@@ -1581,6 +1584,11 @@ namespace FamiStudio
 
             if (instrumentPlayer != null)
                 PianoRoll.HighlightPianoNote(instrumentPlayer.PlayingNote);
+
+            var tickTime = DateTime.Now;
+            var deltaMs = (float)(tickTime - lastTickTime).TotalMilliseconds;
+            averageTickRate = Utils.Lerp(averageTickRate, deltaMs, 0.01f);
+            lastTickTime = tickTime;
         }
 
         private void sequencer_PatternClicked(int trackIndex, int patternIndex)

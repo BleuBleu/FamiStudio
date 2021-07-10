@@ -1539,13 +1539,13 @@ namespace FamiStudio
             if ((mouseX - trackNameSizeX) < 0)
             {
                 var scrollAmount = (trackNameSizeX - mouseX) / (float)trackNameSizeX;
-                scrollX -= (int)(16 * scrollAmount);
+                scrollX -= (int)(App.AverageTickRate * scrollAmount);
                 ClampScroll();
             }
             else if ((Width - mouseX) < trackNameSizeX)
             {
                 var scrollAmount = (mouseX - (Width - trackNameSizeX)) / (float)trackNameSizeX;
-                scrollX += (int)(16 * scrollAmount);
+                scrollX += (int)(App.AverageTickRate * scrollAmount);
                 ClampScroll();
             }
         }
