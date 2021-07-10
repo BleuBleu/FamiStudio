@@ -26,7 +26,6 @@ namespace FamiStudio
 {
     class VideoFilePianoRoll : VideoFileBase
     {
-        const int ChannelIconTextSpacing = 8;
         const int ChannelIconPosY = 26;
         const int SegmentTransitionNumFrames = 16;
         const int ThinNoteThreshold = 288;

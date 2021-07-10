@@ -2003,8 +2003,8 @@ namespace FamiStudio
                                     g.DrawLine(x, 0, x, Height, theme.BlackBrush, i == 0 ? 3.0f : 1.0f);
                                 else if (i % noteLength == 0)
                                     g.DrawLine(x, 0, x, Height, theme.DarkGreyLineBrush1);
-                                else if (zoomLevel >= DrawFrameZoomLevel)
-                                    g.DrawLine(x, 0, x, Height, dashedVerticalLineBrush /*theme.DarkGreyLineBrush3*/);
+                                else if (zoomLevel >= DrawFrameZoomLevel && editMode != EditionMode.VideoRecording)
+                                    g.DrawLine(x, 0, x, Height, dashedVerticalLineBrush);
                             }
                         }
                         else

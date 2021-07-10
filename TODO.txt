@@ -86,10 +86,9 @@ x Sample display semitones + cents. (Could do "15 (C11 -17.9c)", not sure useful
 x DPCM instrument: double-click starts/end transaction. Add threshold for capture op.
 x Fine pitch adjust in DPCM editor. Make backward, save in file.
 x FTI issue jrowe.
-/ Oscilloscope export. 
-	=> Dont render frame lines in video.
 x Remove diacritics in text boxes.
 x TailWindz : Scroll bar thickness.
+/ Oscilloscope export. Make work on Linux/MacOS.
 / OpenTK PR!
 - Square selection.
 - Make auto scrolling even more gradual on Linux/MacOS.

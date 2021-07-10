@@ -21,6 +21,7 @@ namespace FamiStudio
     {
         protected const int SampleRate = 44100;
         protected const float OscilloscopeWindowSize = 0.075f; // in sec.
+        protected const int ChannelIconTextSpacing = 8;
 
         protected int videoResX = 1920;
         protected int videoResY = 1080;

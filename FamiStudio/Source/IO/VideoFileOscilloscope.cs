@@ -117,8 +117,6 @@ namespace FamiStudio
 
         public unsafe bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
-            // MATTT : Make it work on all platforms.
-#if FAMISTUDIO_WINDOWS
             if (!Initialize(ffmpegExecutable, channelMask, loopCount))
                 return false;
 
@@ -188,26 +186,26 @@ namespace FamiStudio
             var channelResY = (int)channelResYFloat;
 
             // Tweak some cosmetic stuff that depends on resolution.
-            var smallChannelText = false; // MATTT longestChannelName + 32 + ChannelIconTextSpacing > channelResY * 0.8f;
+            var smallChannelText = channelResY < 128;
             var bmpSuffix = smallChannelText ? "" : "@2x";
             var font = smallChannelText ? ThemeBase.FontMediumUnscaled : ThemeBase.FontBigUnscaled;
-            //var textOffsetY = smallChannelText ? 1 : 4;
-            var channelLineWidth = 5; // channelResY < ThinNoteThreshold ? 3 : 5;
-            var gradientSizeY = channelResY / 4;
-            var gradientBrush = videoGraphics.CreateVerticalGradientBrush(0, gradientSizeY, Color.Black, Color.FromArgb(0, Color.Black));
+            var textOffsetY = smallChannelText ? 1 : 4;
+            var channelLineWidth = resY >= 720 ? 5 : 3;
 
             foreach (var s in channelStates)
                 s.bmpIcon = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[s.channel.Type] + bmpSuffix);
 
+            var gradientSizeY = channelResY / 2;
+            var gradientBrush = videoGraphics.CreateVerticalGradientBrush(0, gradientSizeY, Color.Black, Color.FromArgb(0, Color.Black));
+
             // Generate the metadata for the video so we know what's happening at every frame
             var metadata = new VideoMetadataPlayer(SampleRate, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
-            BuildChannelColors(channelStates, metadata, colorMode);
-
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
-
             var oscWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
+
+            BuildChannelColors(channelStates, metadata, colorMode);
 
             var videoImage = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscWindowSize, 2];
@@ -278,17 +276,16 @@ namespace FamiStudio
                             var brush = videoGraphics.GetSolidBrush(frame.channelColors[i]);
 
                             videoGraphics.AntiAliasing = true;
-                            videoGraphics.DrawGeometry(geo, brush, 2.0f);
+                            videoGraphics.DrawGeometry(geo, brush, 1.0f);
                             videoGraphics.AntiAliasing = false;
                             geo.Dispose();
 
-                            //var channelNameSizeX = videoGraphics.MeasureString(s.channelText, font);
-                            var channelIconPosX = channelPosX0 + 20; // MATTT channelResY / 2 - (channelNameSizeX + s.bmpIcon.Size.Width + ChannelIconTextSpacing) / 2;
-                            var channelIconPosY = channelPosY0 + 20;
+                            var channelIconPosX = channelPosX0 + s.bmpIcon.Size.Width  / 2;
+                            var channelIconPosY = channelPosY0 + s.bmpIcon.Size.Height / 2;
 
                             videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
                             videoGraphics.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY);
-                            videoGraphics.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + 20, channelIconPosY + 0, theme.LightGreyFillBrush1); // MATTT
+                            videoGraphics.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, theme.LightGreyFillBrush1); 
 
                         }
 
@@ -334,7 +331,6 @@ namespace FamiStudio
                 videoGraphics.Dispose();
             }
 
-#endif
             return true;
         }
     }
