@@ -213,5 +213,10 @@ namespace FamiStudio
 
             return str;
         }
+
+        public static void SetProcessPriority(Process process, ProcessPriorityClass cls)
+        {
+                process.PriorityClass = cls;
+        }
     }
 }

@@ -452,7 +452,7 @@ namespace FamiStudio
 
                 var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
 
-                Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
+                PlatformUtils.SetProcessPriority(Process.GetCurrentProcess(), ProcessPriorityClass.BelowNormal);
 
                 // Generate each of the video frames.
                 using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
@@ -579,7 +579,7 @@ namespace FamiStudio
             finally
 #endif
             {
-                Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.Normal;
+                PlatformUtils.SetProcessPriority(Process.GetCurrentProcess(), ProcessPriorityClass.Normal);
 
                 pianoRoll.EndVideoRecording();
                 foreach (var c in channelStates)
