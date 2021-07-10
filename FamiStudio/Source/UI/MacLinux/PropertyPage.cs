@@ -1166,7 +1166,7 @@ namespace FamiStudio
                 case PropertyType.String:
                 case PropertyType.ColoredString:
                     ForceTextBoxASCII(prop.control as Entry);
-                    return Utils.For (prop.control as Entry).Text;
+                    return (prop.control as Entry).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as SpinButton).Value;
                 case PropertyType.DomainUpDown:

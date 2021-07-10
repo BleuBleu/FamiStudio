@@ -207,6 +207,11 @@ namespace FamiStudio
 
             BuildChannelColors(channelStates, metadata, colorMode);
 
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+            var dummyControl = new DummyGLControl();
+            dummyControl.Move(0, 0, videoResX, videoResY);
+#endif
+
             var videoImage = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscWindowSize, 2];
 
@@ -245,7 +250,7 @@ namespace FamiStudio
 
                         var frame = metadata[f];
 
-                        videoGraphics.BeginDraw();
+                        videoGraphics.BeginDraw(dummyControl, videoResY);
                         videoGraphics.Clear(ThemeBase.DarkGreyLineColor2);
 
                         // Draw gradients.
