@@ -1586,8 +1586,8 @@ namespace FamiStudio
                 PianoRoll.HighlightPianoNote(instrumentPlayer.PlayingNote);
 
             var tickTime = DateTime.Now;
-            var deltaMs = (float)(tickTime - lastTickTime).TotalMilliseconds;
-            averageTickRate = Utils.Lerp(averageTickRate, deltaMs, 0.01f);
+            var tickRate = (float)(tickTime - lastTickTime).TotalMilliseconds;
+            averageTickRate = Utils.Lerp(averageTickRate, tickRate, 0.01f);
             lastTickTime = tickTime;
         }
 

@@ -88,10 +88,16 @@ x Fine pitch adjust in DPCM editor. Make backward, save in file.
 x FTI issue jrowe.
 x Remove diacritics in text boxes.
 x TailWindz : Scroll bar thickness.
-/ Oscilloscope export. Make work on Linux/MacOS.
+x Oscilloscope export. Make work on Linux/MacOS.
+x Make auto scrolling even more gradual on Linux/MacOS.
 / OpenTK PR!
+- Volume slides.
+	- Add max distance (256?) too.
+	- Paste/delete special
+	- Unit test.
+	- Documentation.
+	/ Enable in ROM/NSF.
 - Square selection.
-- Make auto scrolling even more gradual on Linux/MacOS.
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Save snapping + qwerty settings + some export settings.
 - Volume/effect scaling?
@@ -100,12 +106,6 @@ x TailWindz : Scroll bar thickness.
 - Noise slides
 	- Documentation (sound engine, FT)
 	/ Make sure enabled on ROM + NSF.
-- Volume slides.
-	- Add max distance (256?) too.
-	- Paste/delete special
-	- Unit test.
-	- Documentation.
-	/ Enable in ROM/NSF.
 
 - LOW PRIO : Left/right pan with +/- (cubase style)?
 
