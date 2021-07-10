@@ -322,11 +322,6 @@ namespace FamiStudio
 
             return str.ToUpper();
         }
-
-        public static void SetProcessPriority(Process process, ProcessPriorityClass cls)
-        {
-            // TODO.
-        }
     }
 }
 

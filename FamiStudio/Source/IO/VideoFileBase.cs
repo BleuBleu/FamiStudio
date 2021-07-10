@@ -101,7 +101,7 @@ namespace FamiStudio
             }
 
             var process = Process.Start(psi);
-            PlatformUtils.SetProcessPriority(process, ProcessPriorityClass.BelowNormal);
+            process.PriorityClass = ProcessPriorityClass.BelowNormal;
             return process;
         }
 
