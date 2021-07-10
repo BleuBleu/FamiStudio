@@ -230,7 +230,10 @@ namespace FamiStudio
 
                 var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
 
+#if FAMISTUDIO_WINDOWS
+                // Cant raise the process priority without being admin on Linux/MacOS.
                 Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
+#endif
 
                 // Generate each of the video frames.
                 using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
@@ -250,7 +253,11 @@ namespace FamiStudio
 
                         var frame = metadata[f];
 
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
                         videoGraphics.BeginDraw(dummyControl, videoResY);
+#else
+                        videoGraphics.BeginDraw();
+#endif
                         videoGraphics.Clear(ThemeBase.DarkGreyLineColor2);
 
                         // Draw gradients.
@@ -325,7 +332,10 @@ namespace FamiStudio
             finally
 #endif
             {
+#if FAMISTUDIO_WINDOWS
+                // Cant raise the process priority without being admin on Linux/MacOS.
                 Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.Normal;
+#endif
 
                 foreach (var c in channelStates)
                     c.bmpIcon.Dispose();
