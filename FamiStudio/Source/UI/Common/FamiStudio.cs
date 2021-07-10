@@ -715,6 +715,14 @@ namespace FamiStudio
         private void ExportDialog_Exporting()
         {
             StopEverything();
+
+            // Make sure we arent in real-time mode, on Linux/MacOS, this mean we will 
+            // be constantly rendering frames as we export.
+            if (RealTimeUpdate || RealTimeUpdateUpdatesProjectExplorer)
+            {
+                PianoRoll.Reset();
+                Debug.Assert(!(RealTimeUpdate || RealTimeUpdateUpdatesProjectExplorer));
+            }
         }
 
         public void OpenConfigDialog()
