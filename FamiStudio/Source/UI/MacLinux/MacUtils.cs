@@ -46,6 +46,9 @@ namespace FamiStudio
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, bool bool1);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, int int1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
@@ -133,6 +136,8 @@ namespace FamiStudio
         static IntPtr selAlloc = SelRegisterName("alloc");
         static IntPtr selLength = SelRegisterName("length");
         static IntPtr selBytes = SelRegisterName("bytes");
+        static IntPtr selCount = SelRegisterName("count");
+        static IntPtr selGetObjectAtIndex = SelRegisterName("objectAtIndex:");
         static IntPtr selClearContents = SelRegisterName("clearContents");
         static IntPtr selStringForType = SelRegisterName("stringForType:");
         static IntPtr selSetStringForType = SelRegisterName("setString:forType:");
@@ -162,11 +167,13 @@ namespace FamiStudio
         static IntPtr selSetTitle = SelRegisterName("setTitle:");
         static IntPtr selInitWithData = SelRegisterName("initWithData:");
         static IntPtr selSetDirectoryURL = SelRegisterName("setDirectoryURL:");
+        static IntPtr selAllowsMultipleSelection = SelRegisterName("setAllowsMultipleSelection:");
         static IntPtr selSetAllowedFileTypes = SelRegisterName("setAllowedFileTypes:");
         static IntPtr selSetCanChooseDirectories = SelRegisterName("setCanChooseDirectories:");
         static IntPtr selSetCanCreateirectories = SelRegisterName("setCanCreateDirectories:");
         static IntPtr selRunModal = SelRegisterName("runModal");
         static IntPtr selURL = SelRegisterName("URL");
+        static IntPtr selURLs = SelRegisterName("URLs");
         static IntPtr selInit = SelRegisterName("init");
         static IntPtr selClassName = SelRegisterName("className");
         static IntPtr selSetMessageText = SelRegisterName("setMessageText:");
@@ -316,7 +323,26 @@ namespace FamiStudio
             Marshal.FreeHGlobal(buf);
 
             return array;
+        }
 
+        static unsafe public string[] FromNSArray(IntPtr nsArray)
+        {
+            var count = SendInt(nsArray, selCount);
+
+            if (count == 0)
+            {
+                return new string[0];
+            }
+
+            var items = new string[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                var obj = SendIntPtr(nsArray, selGetObjectAtIndex, i);
+                items[i] = FromNSURL(obj);
+            }
+
+            return items;
         }
 
         public static void CoreTextRegisterFont(string fontfile)
@@ -621,7 +647,7 @@ namespace FamiStudio
             }
         }
 
-        public static string ShowOpenDialog(string title, string[] extensions, string path = null)
+        public static string[] ShowOpenDialog(string title, string[] extensions, bool multiselect = false, string path = null)
         {
             var openPanel = SendIntPtr(clsNSOpenPanel, selOpenPanel);
             SendIntPtr(openPanel, selSetTitle, ToNSString(title));
@@ -630,10 +656,18 @@ namespace FamiStudio
             {
                 var url = ToNSURL(path);
                 SendIntPtr(openPanel, selSetDirectoryURL, url);
-            }   
+            }
 
-            var fileTypesArray = ToNSArray(extensions);
-            SendIntPtr(openPanel, selSetAllowedFileTypes, fileTypesArray);
+            if (extensions != null && extensions.Length > 0)
+            {
+                var fileTypesArray = ToNSArray(extensions);
+                SendIntPtr(openPanel, selSetAllowedFileTypes, fileTypesArray);
+            }
+
+            if (multiselect)
+            {
+                SendIntPtr(openPanel, selAllowsMultipleSelection, true);
+            }
 
             var status = SendInt(openPanel, selRunModal);
 
@@ -641,8 +675,16 @@ namespace FamiStudio
 
             if (status == NSOKButton)
             {
-                var url = SendIntPtr(openPanel, selURL);
-                return FromNSURL(url);
+                if (multiselect)
+                {
+                    var urls = SendIntPtr(openPanel, selURLs);
+                    return FromNSArray(urls);
+                }
+                else
+                {
+                    var url = SendIntPtr(openPanel, selURL);
+                    return new[] { FromNSURL(url) };
+                }
             }
 
             return null;
