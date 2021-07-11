@@ -130,13 +130,10 @@ namespace FamiStudio
             var extensionList = GetExtensionList(extensions);
 
 #if FAMISTUDIO_MACOS
-            // MATTT : Multiselect on MacOS!
-            Debug.Assert(!multiselect);
-
-            var filename = MacUtils.ShowOpenDialog(title, extensionList, defaultPath);
-            if (!string.IsNullOrEmpty(filename))
-                defaultPath = Path.GetDirectoryName(filename);
-            return new[] { filename }; // MATTT this isnt right!
+            var filenames = MacUtils.ShowOpenDialog(title, extensionList, multiselect, defaultPath);
+            if (filenames != null && !string.IsNullOrEmpty(filenames[0]))
+                defaultPath = Path.GetDirectoryName(filenames[0]);
+            return filenames;
 #else
             Gtk.Rc.ResetStyles(Gtk.Settings.GetForScreen(Gdk.Screen.Default));
             Gtk.Rc.ReparseAll();
