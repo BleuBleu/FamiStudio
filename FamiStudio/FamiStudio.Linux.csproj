@@ -356,6 +356,8 @@
     </Content>
     <EmbeddedResource Include="Resources\LoopSelection%402x.png" />
     <EmbeddedResource Include="Resources\LoopSelection.png" />
+    <EmbeddedResource Include="Resources\ConfigFFmpeg%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigFFmpeg.png" />
     <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
     <EmbeddedResource Include="Resources\ExportVideo.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />
