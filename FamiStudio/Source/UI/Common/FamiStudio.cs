@@ -57,7 +57,7 @@ namespace FamiStudio
         private MultiMediaNotificationListener mmNoticiations;
 #endif
         private DateTime lastTickTime = DateTime.Now;
-        private float averageTickRate = 4.0f;
+        private float averageTickRate = 8.0f;
 
         private bool newReleaseAvailable = false;
         private string newReleaseString = null;
@@ -1585,6 +1585,11 @@ namespace FamiStudio
             if (instrumentPlayer != null)
                 PianoRoll.HighlightPianoNote(instrumentPlayer.PlayingNote);
 
+            UpdateAverageTickRate();
+        }
+
+        private void UpdateAverageTickRate()
+        {
             var tickTime = DateTime.Now;
             var tickRate = (float)(tickTime - lastTickTime).TotalMilliseconds;
             averageTickRate = Utils.Lerp(averageTickRate, tickRate, 0.01f);

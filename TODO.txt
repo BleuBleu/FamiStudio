@@ -102,12 +102,12 @@ x Make auto scrolling even more gradual on Linux/MacOS.
 - Save snapping + qwerty settings + some export settings.
 - Volume/effect scaling?
 - Merge CC65 stuff (when back in main branch).
-- TailWindz : CTRL + Scroll should do "something"
 - Noise slides
 	- Documentation (sound engine, FT)
 	/ Make sure enabled on ROM + NSF.
 
-- LOW PRIO : Left/right pan with +/- (cubase style)?
+- CUT : Left/right pan with +/- (cubase style)?
+- CUT : TailWindz : CTRL + Scroll should do "something"
 
 Doc
 ===
