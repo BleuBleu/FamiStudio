@@ -507,7 +507,7 @@ namespace FamiStudio
         public int GetVolumeSlideDuration(NoteLocation location)
         {
             Debug.Assert(GetNoteAt(location).HasVolume);
-            FindNextNoteForVolumeSlide(location, out var nextLocation);
+            FindNextNoteForVolumeSlide(location, 256, out var nextLocation); // 256 is kind of arbitrary. 
             return Song.CountNotesBetween(location, nextLocation);
         }
 
@@ -612,7 +612,7 @@ namespace FamiStudio
             if (volumeDelta != 0)
             {
                 // Find the next note to calculate the slope.
-                FindNextNoteForVolumeSlide(location, out var nextLocation);
+                FindNextNoteForVolumeSlide(location, 256, out var nextLocation); // 256 is kind of arbitrary. 
 
                 // Approximate how many frames separates these 2 notes.
                 var delayFrames = -(note.HasNoteDelay ? note.NoteDelay : 0);
@@ -898,7 +898,7 @@ namespace FamiStudio
             return true;
         }
 
-        public bool FindNextNoteForVolumeSlide(NoteLocation location, out NoteLocation nextNoteLocation)
+        public bool FindNextNoteForVolumeSlide(NoteLocation location, int maxNotes, out NoteLocation nextNoteLocation)
         {
             var patternLength = song.GetPatternLength(location.PatternIndex);
             var pattern = patternInstances[location.PatternIndex];
@@ -906,6 +906,8 @@ namespace FamiStudio
             Debug.Assert(pattern.Notes.ContainsKey(location.NoteIndex));
             Debug.Assert(pattern.Notes[location.NoteIndex].HasVolume);
 
+            NoteLocation maxLocation = location;
+            Song.AdvanceNumberOfNotes(ref maxLocation, maxNotes);
             song.AdvanceNumberOfNotes(ref location, 1);
 
             // Look in current pattern.
@@ -919,7 +921,7 @@ namespace FamiStudio
                     if (note.MatchesFilter(NoteFilter.EffectVolume))
                     {
                         location.NoteIndex = pattern.Notes.Keys[idx];
-                        nextNoteLocation = location;
+                        nextNoteLocation = NoteLocation.Min(maxLocation, location);
                         return true;
                     }
                 }
@@ -934,11 +936,12 @@ namespace FamiStudio
                     var note = patternInstances[p].Notes[firstNoteIdx];
                     nextNoteLocation.PatternIndex = p;
                     nextNoteLocation.NoteIndex = firstNoteIdx;
+                    nextNoteLocation = NoteLocation.Min(maxLocation, nextNoteLocation);
                     return true;
                 }
             }
 
-            nextNoteLocation = song.EndLocation;
+            nextNoteLocation = NoteLocation.Min(maxLocation, song.EndLocation);
             return true;
         }
 

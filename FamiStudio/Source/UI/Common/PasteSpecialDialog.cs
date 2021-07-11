@@ -25,7 +25,7 @@ namespace FamiStudio
 
             for (int i = 0; i < Note.EffectCount; i++)
             {
-                if (channel.SupportsEffect(i))
+                if (channel.ShouldDisplayEffect(i))
                 {
                     propToEffect[dialog.Properties.PropertyCount] = i;
                     dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));

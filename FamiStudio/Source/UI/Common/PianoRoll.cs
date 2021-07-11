@@ -1374,6 +1374,8 @@ namespace FamiStudio
                             if (lastSlideLocation.IsValid && lastSlideLocation < lastValueLocation || !lastSlideLocation.IsValid)
                                 lastSlide = -1;
 
+                            var lastSlideDuration = lastSlide >= 0 ? channel.GetVolumeSlideDuration(lastSlideLocation) : -1;
+
                             lastFrame = lastValueLocation.IsValid ? lastValueLocation.ToAbsoluteNoteIndex(song) : -1;
 
                             var filter = Note.GetFilterForEffect(Note.EffectVolume) | Note.GetFilterForEffect(Note.EffectVolumeSlide);
@@ -1393,8 +1395,8 @@ namespace FamiStudio
 
                                     if (lastSlide >= 0)
                                     {
-                                        var X0 = lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame) * -noteSizeX;
-                                        var X1 = 0.0f;
+                                        var X0 = lastFrame < 0 ? -noteSizeX * 1000000 : (frame - lastFrame) * -noteSizeX;
+                                        var X1 = (frame - lastFrame - lastSlideDuration) * -noteSizeX;
                                         var sizeY0 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastValue / (float)Note.VolumeMax * effectPanelSizeY);
                                         var sizeY1 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastSlide / (float)Note.VolumeMax * effectPanelSizeY);
 
@@ -1412,30 +1414,35 @@ namespace FamiStudio
 
                                         if ((frame - lastFrame) == 1 && lastSlide < lastValue)
                                             singleFrameSlides.Add(NoteLocation.FromAbsoluteNoteIndex(song, lastFrame));
+
+                                        if ((frame - lastFrame) > lastSlideDuration)
+                                            g.FillRectangle(X1, effectPanelSizeY - sizeY1, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
                                     }
                                     else
                                     {
                                         var sizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastValue / (float)Note.VolumeMax * effectPanelSizeY);
-                                        g.FillRectangle(lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                                        g.FillRectangle(lastFrame < 0 ? -noteSizeX * 1000000 : (frame - lastFrame) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
                                     }
 
                                     lastSlide = note.HasVolumeSlide ? note.VolumeSlideTarget : -1;
                                     lastValue = note.Volume;
                                     lastFrame = frame;
 
+                                    if (lastSlide >= 0)
+                                        lastSlideDuration = channel.GetVolumeSlideDuration(location);
+
                                     g.PopTransform();
                                 }
                             }
 
-                            g.PushTranslation(Math.Max(0, lastFrame * noteSizeX - scrollX), 0);
+                            g.PushTranslation(Math.Max(lastFrame, 0) * noteSizeX - scrollX, 0);
 
                             if (lastSlide >= 0)
                             {
                                 var location = NoteLocation.FromAbsoluteNoteIndex(song, lastFrame);
-                                var slideDuration = channel.GetVolumeSlideDuration(location);
 
                                 var X0 = 0.0f;
-                                var X1 = slideDuration * noteSizeX;
+                                var X1 = lastSlideDuration * noteSizeX;
                                 var sizeY0 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastValue / (float)Note.VolumeMax * effectPanelSizeY);
                                 var sizeY1 = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor(lastSlide / (float)Note.VolumeMax * effectPanelSizeY);
 
@@ -1451,13 +1458,21 @@ namespace FamiStudio
                                 g.FillGeometry(geo, theme.DarkGreyFillBrush2);
                                 geo.Dispose();
 
-                                if (slideDuration == 1 && lastSlide < lastValue)
-                                    singleFrameSlides.Add(NoteLocation.FromAbsoluteNoteIndex(song, lastFrame));
+                                if (lastSlideDuration == 1 && lastSlide < lastValue)
+                                    singleFrameSlides.Add(location);
+
+                                var endLocation = location.Advance(song, lastSlideDuration);
+                                if (endLocation.IsInSong(song))
+                                {
+                                    var lastNote = channel.GetNoteAt(endLocation);
+                                    if (lastNote == null || !lastNote.HasVolume)
+                                        g.FillRectangle(X1, effectPanelSizeY - sizeY1, noteSizeX * 1000000, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                                }
                             }
                             else
                             {
                                 var lastSizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
-                                g.FillRectangle(0, effectPanelSizeY - lastSizeY, Width, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                                g.FillRectangle(0, effectPanelSizeY - lastSizeY, noteSizeX * 1000000, effectPanelSizeY, theme.DarkGreyFillBrush2);
                             }
 
                             g.PopTransform();
@@ -1475,7 +1490,7 @@ namespace FamiStudio
 
                                     var frame = location.ToAbsoluteNoteIndex(song);
                                     var sizeY = (maxValue == minValue) ? effectPanelSizeY : (float)Math.Floor((lastValue - minValue) / (float)(maxValue - minValue) * effectPanelSizeY);
-                                    g.FillRectangle(lastFrame < 0 ? -noteSizeX * 100000 : (frame - lastFrame) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
+                                    g.FillRectangle(lastFrame < 0 ? -noteSizeX * 1000000 : (frame - lastFrame) * -noteSizeX, effectPanelSizeY - sizeY, 0, effectPanelSizeY, theme.DarkGreyFillBrush2);
                                     lastValue = note.GetEffectValue(selectedEffectIdx);
                                     lastFrame = frame;
 
@@ -1867,7 +1882,13 @@ namespace FamiStudio
 
                 if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                 {
-                    PasteNotes(dlg.PasteNotes, dlg.PasteEffectMask, dlg.PasteMix, dlg.PasteRepeat);
+                    var effectMask = dlg.PasteEffectMask;
+
+                    // Include volume slides if volume is selected.
+                    if ((effectMask & Note.EffectVolumeMask) != 0 && Song.Channels[editChannel].SupportsEffect(Note.EffectVolumeSlide))
+                        effectMask |= Note.EffectVolumeAndSlideMask;
+
+                    PasteNotes(dlg.PasteNotes, effectMask, dlg.PasteMix, dlg.PasteRepeat);
 
                     lastPasteSpecialPasteMix = dlg.PasteMix;
                     lastPasteSpecialPasteNotes = dlg.PasteNotes;
@@ -3081,10 +3102,14 @@ namespace FamiStudio
             {
                 if (note.VolumeSlideTarget == note.Volume)
                     note.HasVolumeSlide = false;
+
+                pattern.InvalidateCumulativeCache();
                 App.UndoRedoManager.EndTransaction();
             }
-
-            pattern.InvalidateCumulativeCache();
+            else
+            {
+                pattern.InvalidateCumulativeCache();
+            }
         }
 
         void DrawEnvelope(MouseEventArgs e, bool first = false)

@@ -90,13 +90,13 @@ x Remove diacritics in text boxes.
 x TailWindz : Scroll bar thickness.
 x Oscilloscope export. Make work on Linux/MacOS.
 x Make auto scrolling even more gradual on Linux/MacOS.
+x BUG? MacOS ffmpeg browse
 / OpenTK PR!
 - Volume slides.
-	- Add max distance (256?) too.
-	- Paste/delete special
+	/ Enable in ROM/NSF.
+	/ Add max distance (256?) too.
 	- Unit test.
 	- Documentation.
-	/ Enable in ROM/NSF.
 - Square selection.
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Save snapping + qwerty settings + some export settings.
@@ -105,6 +105,8 @@ x Make auto scrolling even more gradual on Linux/MacOS.
 - Noise slides
 	- Documentation (sound engine, FT)
 	/ Make sure enabled on ROM + NSF.
+
+- BUG? MacOS Monterey retina detection?
 
 - CUT : Left/right pan with +/- (cubase style)?
 - CUT : TailWindz : CTRL + Scroll should do "something"
