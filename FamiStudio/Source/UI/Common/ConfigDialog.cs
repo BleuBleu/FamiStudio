@@ -112,7 +112,7 @@ namespace FamiStudio
                     page.AddCheckBox("Check for updates:", Settings.CheckUpdates); // 0
                     page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 1
                     page.AddCheckBox("Clear Undo/Redo on Save:", Settings.ClearUndoRedoOnSave); // 2
-                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.ClearUndoRedoOnSave); // 3
+                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy); // 3
                     page.AddButton(null, "Open Autosave folder"); // 4
                     page.PropertyClicked += PageGenerate_PropertyClicked;
 #if FAMISTUDIO_MACOS
@@ -426,6 +426,7 @@ namespace FamiStudio
                 Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(0);
                 Settings.TrackPadControls = pageGeneral.GetPropertyValue<bool>(1);
                 Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(2);
+                Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(3);
 
                 // UI
                 var scalingString = pageUI.GetPropertyValue<string>(0);
