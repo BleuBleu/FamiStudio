@@ -39,6 +39,7 @@ namespace FamiStudio
         public static bool TrackPadControls = false;
         public static bool ShowTutorial = true;
         public static bool ClearUndoRedoOnSave = true;
+        public static bool AutoSaveCopy = true;
 
         // User Interface section
         public static int DpiScaling = 0;
@@ -217,6 +218,7 @@ namespace FamiStudio
             TrackPadControls = ini.GetBool(Version < 2 ? "UI" : "General", "TrackPadControls", false); // At version 2 (FamiStudio 3.0.0, changed section)
             ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
+            AutoSaveCopy = ini.GetBool("General", "AutoSaveCopy", true);
 
             // UI
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
@@ -341,6 +343,7 @@ namespace FamiStudio
             ini.SetBool("General", "TrackPadControls", TrackPadControls);
             ini.SetBool("General", "ShowTutorial", ShowTutorial);
             ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);
+            ini.SetBool("General", "AutoSaveCopy", AutoSaveCopy);
 
             // UI
             ini.SetInt("UI", "DpiScaling", DpiScaling);
@@ -426,6 +429,11 @@ namespace FamiStudio
                 if (k1 >= 0)
                     KeyCodeToNoteMap[k1] = idx;
             }
+        }
+
+        public static string GetAutoSaveFilePath()
+        {
+            return Path.Combine(Settings.GetConfigFilePath(), "AutoSaves");
         }
 
         private static string GetConfigFilePath()

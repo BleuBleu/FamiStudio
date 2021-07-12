@@ -91,32 +91,35 @@ x TailWindz : Scroll bar thickness.
 x Oscilloscope export. Make work on Linux/MacOS.
 x Make auto scrolling even more gradual on Linux/MacOS.
 x BUG? MacOS ffmpeg browse
+x Autosave
 / OpenTK PR!
-- Volume slides.
-	/ Enable in ROM/NSF.
-	/ Add max distance (256?) too.
-	- Unit test.
-	- Documentation.
 - Square selection.
 - Review OnMouseCaptureChanged, not good when playing with params.
-- Save snapping + qwerty settings + some export settings.
 - Volume/effect scaling?
 - Merge CC65 stuff (when back in main branch).
-- Noise slides
-	- Documentation (sound engine, FT)
-	/ Make sure enabled on ROM + NSF.
-
+	
 - BUG? MacOS Monterey retina detection?
-
-- CUT : Left/right pan with +/- (cubase style)?
-- CUT : TailWindz : CTRL + Scroll should do "something"
-
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHighResolutionMagnifyAllowed</key>
+	<false/>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
+	
 Doc
 ===
 - Add replace instrument (with selection) info
 - Gopnick errors
 	1. Two attributes are missing, Instrument->Vrc6SawMasterVolume and Note->Release (legacy stuff?)
 	2. The "general structure" part suggests "PatternInstance" as a child of "Song" while the indentation in the actual files indicates that it's a child of "Channel"
+- Volume slide, noise slide
+- Metronome
+- OGG
+- 
+
+Youtube corrections:
+====================
+- Patterns are one based.
 
 Testing
 =======
@@ -124,22 +127,24 @@ Testing
 - Re-test expansions issue (same instrument name, diff expansions, etc.)
 - Stereo video crackles?
 - WS clips children on win7
+- Recompile, ROM, NSF, sound engine (re-export data).
 - Test OGG a bit more, make sure UI + command line works good
 - Double check osc flipping in toolbar + video
 - Test ROM with noise/volume slides.
+- Add volume + noise slides to unit tests.
 
-Random features ideas
-=====================
-- Overclocking (2x, 3x, 4x would be a good start). Would need to switch to a ROM with IRQ, MMC3? 
-- Volume slides (how to make user friendly?)
-- Hardware sweep (how to not conflict with smooth vibrato?)
-- Write delta counter (Zxx).
-- Noise slides.
+3.2.0
+=====
+- Overclocking (2x, 3x, 4x would be a good start).
 - Multi-expansions (dont want that garbage in the sound engine, would need to be a seperate NSF thing).
-- Oscilloscope only video mode.
 
 Backlog: 
 ========= 
+- Save snapping + qwerty settings + some export settings.
+- Left/right pan with +/- (cubase style)?
+- TailWindz : CTRL + Scroll should do "something"
+- Hardware sweep (how to not conflict with smooth vibrato?)
+- Write delta counter (Zxx).
 - Cleanup seq/project explorer like piano roll. Nothing crazy, but basic cleanup.
 - Scales
 - Selection with min/max note.

@@ -112,6 +112,9 @@ namespace FamiStudio
                     page.AddCheckBox("Check for updates:", Settings.CheckUpdates); // 0
                     page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 1
                     page.AddCheckBox("Clear Undo/Redo on Save:", Settings.ClearUndoRedoOnSave); // 2
+                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.ClearUndoRedoOnSave); // 3
+                    page.AddButton(null, "Open Autosave folder"); // 4
+                    page.PropertyClicked += PageGenerate_PropertyClicked;
 #if FAMISTUDIO_MACOS
                     page.PropertyChanged += PageGeneral_PropertyChanged;
 #endif
@@ -220,6 +223,14 @@ namespace FamiStudio
             pages[(int)section] = page;
 
             return page;
+        }
+
+        private void PageGenerate_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        {
+            if (click == ClickType.Button)
+            {
+                Utils.OpenUrl(Settings.GetAutoSaveFilePath());
+            }
         }
 
         private void FFmpegPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)

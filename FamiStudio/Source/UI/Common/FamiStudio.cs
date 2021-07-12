@@ -25,6 +25,8 @@ namespace FamiStudio
 {
     public class FamiStudio
     {
+        private const int MaxAutosaves = 30;
+
         private FamiStudioForm mainForm;
         private Project project;
         private Song song;
@@ -58,6 +60,8 @@ namespace FamiStudio
 #endif
         private DateTime lastTickTime = DateTime.Now;
         private float averageTickRate = 8.0f;
+        private int autoSaveIndex = 0;
+        private DateTime lastAutoSave;
 
         private bool newReleaseAvailable = false;
         private string newReleaseString = null;
@@ -153,7 +157,6 @@ namespace FamiStudio
             {
                 NewProject();
             }
-
 
 #if !DEBUG
             if (Settings.CheckUpdates)
@@ -462,6 +465,8 @@ namespace FamiStudio
             {
                 songPlayer.ForceInstrumentsReload();
             }
+
+            ConditionalAutoSave();
         }
 
         private void UndoRedoManager_Updated()
@@ -553,6 +558,7 @@ namespace FamiStudio
             PianoRoll.Reset();
             Sequencer.Reset();
 
+            InitializeAutoSave();
             InitializeSongPlayer();
             InitializeInstrumentPlayer();
             InitializeOscilloscope();
@@ -825,6 +831,55 @@ namespace FamiStudio
             }
             catch
             {
+            }
+        }
+
+        private void InitializeAutoSave()
+        {
+            var path = Settings.GetAutoSaveFilePath();
+            var maxTime = DateTime.MinValue;
+            var maxIdx = -1;
+
+            Directory.CreateDirectory(path);
+
+            for (int i = 0; i < MaxAutosaves; i++)
+            {
+                var filename = Path.Combine(path, $"AutoSave{i:D2}.fms");
+
+                if (File.Exists(filename))
+                {
+                    var time = File.GetLastWriteTime(filename);
+                    if (time > maxTime)
+                    {
+                        maxTime = time;
+                        maxIdx = i;
+                    }
+                }
+            }
+
+            autoSaveIndex = (maxIdx + 1) % MaxAutosaves;
+            lastAutoSave = DateTime.Now;
+        }
+
+        private void ConditionalAutoSave()
+        {
+            if (Settings.AutoSaveCopy)
+            {
+                var now = DateTime.Now;
+                var timespan = now - lastAutoSave;
+
+                if (timespan.TotalMinutes > 2)
+                {
+                    var path = Settings.GetAutoSaveFilePath();
+                    var filename = Path.Combine(path, $"AutoSave{autoSaveIndex:D2}.fms");
+
+                    var oldFilename = project.Filename;
+                    new ProjectFile().Save(project, filename);
+                    project.Filename = oldFilename;
+
+                    autoSaveIndex = (autoSaveIndex + 1) % MaxAutosaves;
+                    lastAutoSave = now;
+                }
             }
         }
 
