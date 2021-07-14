@@ -30,6 +30,10 @@ Linux notes
  
 MacOS notes
 ===========
+- MacOS Sierra, fully patched is 10.12.6, with AppKit version 1504.83.101
+- Must compile the MacLauncher with this to link to the AppKit version that
+  matches GTK+2. This will make MacOS load these older versions afterwards,
+  even on more recent OS'es.
 - If problem installing MacOS VM, see @DOUG fix at
   https://www.geekrar.com/how-to-fix-the-cpu-has-been-disabled-by-the-guest-os/
 	cpuid.0.eax = "0000:0000:0000:0000:0000:0000:0000:1011"
@@ -40,7 +44,7 @@ MacOS notes
 	cpuid.1.ebx = "0000:0010:0000:0001:0000:1000:0000:0000"
 	cpuid.1.ecx = "1000:0010:1001:1000:0010:0010:0000:0011"
 	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
-- NAT network doesnt work, try using NAT (select only ethernet) + do that:
+- If NAT network doesnt work (probleme is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
 
 Trailer/scroll 
@@ -92,20 +96,20 @@ x Oscilloscope export. Make work on Linux/MacOS.
 x Make auto scrolling even more gradual on Linux/MacOS.
 x BUG? MacOS ffmpeg browse
 x Autosave
+x BUG? MacOS Monterey retina detection?
+x ASM => ASM6
+x MacOS : Create a real menu at top, handle Quit correctly.
 / OpenTK PR!
 - Square selection.
+	- Drag selection, etc.
+	- Think of copy paste (think of making consistent w/ seq)
+	- Do sequencer too
+	- Test env/arp a lot!
+	- Stop notes
 - Review OnMouseCaptureChanged, not good when playing with params.
 - Volume/effect scaling?
 - Merge CC65 stuff (when back in main branch).
-	
-- BUG? MacOS Monterey retina detection?
-	<key>NSHighResolutionCapable</key>
-	<true/>
-	<key>NSHighResolutionMagnifyAllowed</key>
-	<false/>
-	<key>NSSupportsAutomaticGraphicsSwitching</key>
-	<true/>
-	
+		
 Doc
 ===
 - Add replace instrument (with selection) info
@@ -115,7 +119,6 @@ Doc
 - Volume slide, noise slide
 - Metronome
 - OGG
-- 
 
 Youtube corrections:
 ====================
