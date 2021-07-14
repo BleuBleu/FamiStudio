@@ -4631,14 +4631,14 @@ namespace FamiStudio
         {
             if ((mouseX - whiteKeySizeX) < 0)
             {
-                var scrollAmount = (whiteKeySizeX - mouseX) / (float)whiteKeySizeX;
-                scrollX -= (int)(2 * App.AverageTickRate * scrollAmount);
+                var scrollAmount = Utils.Clamp((whiteKeySizeX - mouseX) / (float)whiteKeySizeX, 0.0f, 1.0f);
+                scrollX -= (int)(App.AverageTickRate * scrollAmount);
                 ClampScroll();
             }
             else if ((Width - mouseX) < whiteKeySizeX)
             {
-                var scrollAmount = (mouseX - (Width - whiteKeySizeX)) / (float)whiteKeySizeX;
-                scrollX += (int)(2 * App.AverageTickRate * scrollAmount);
+                var scrollAmount = Utils.Clamp((mouseX - (Width - whiteKeySizeX)) / (float)whiteKeySizeX, 0.0f, 1.0f);
+                scrollX += (int)(App.AverageTickRate * scrollAmount);
                 ClampScroll();
             }
         }
