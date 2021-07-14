@@ -1686,7 +1686,7 @@ namespace FamiStudio
         {
             "NESASM",
             "CA65",
-            "ASM"
+            "ASM6"
         };
 
         public static int GetValueForName(string str)
