@@ -58,6 +58,9 @@ namespace FamiStudio
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, IntPtr intPtr2);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, IntPtr intPtr2, IntPtr intPtr3);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, int int1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
@@ -132,6 +135,8 @@ namespace FamiStudio
         static IntPtr clsNSData;
         static IntPtr clsNSNotificationCenter;
         static IntPtr clsNSApplication;
+        static IntPtr clsNSMenu;
+        static IntPtr clsNSMenuItem;
 
         static IntPtr selAlloc = SelRegisterName("alloc");
         static IntPtr selLength = SelRegisterName("length");
@@ -187,6 +192,13 @@ namespace FamiStudio
         static IntPtr selAddObserver = SelRegisterName("addObserver:selector:name:object:");
         static IntPtr selAddCursorRectCursor = SelRegisterName("addCursorRect:cursor:");
         static IntPtr selSharedApplication = SelRegisterName("sharedApplication");
+        static IntPtr selInitWithTitleActionKeyEquivalent = SelRegisterName("initWithTitle:action:keyEquivalent:");
+        static IntPtr selInitWithTitle = SelRegisterName("initWithTitle:");
+        static IntPtr selSetTarget = SelRegisterName("setTarget:");
+        static IntPtr selNew = SelRegisterName("new");
+        static IntPtr selAddItem = SelRegisterName("addItem:");
+        static IntPtr selSetSubmenu = SelRegisterName("setSubmenu:");
+        static IntPtr selSetMainMenu = SelRegisterName("setMainMenu:");
 
         static IntPtr generalPasteboard;
         static IntPtr famiStudioPasteboard;
@@ -217,6 +229,8 @@ namespace FamiStudio
             clsNSData = GetClass("NSData");
             clsNSNotificationCenter = GetClass("NSNotificationCenter");
             clsNSApplication = GetClass("NSApplication");
+            clsNSMenu = GetClass("NSMenu");
+            clsNSMenuItem = GetClass("NSMenuItem");
 
             dialogScaling = (float)SendFloat(nsWin, selBackingScaleFactor);
 
@@ -228,6 +242,27 @@ namespace FamiStudio
             generalPasteboard = SendIntPtr(clsNSPasteboard, selGeneralPasteboard);
             famiStudioPasteboard = SendIntPtr(clsNSPasteboard, selPasteboardWithName, ToNSString("FamiStudio"));
             nsApplication = SendIntPtr(clsNSApplication, selSharedApplication);
+
+            CreateMenu();
+        }
+
+        public static void CreateMenu()
+        {
+            var quitMenuItem = SendIntPtr(clsNSMenuItem, selAlloc);
+
+            SendIntPtr(quitMenuItem, selInitWithTitleActionKeyEquivalent, ToNSString("Quit"), SelRegisterName("windowShouldClose:"), ToNSString(""));
+            SendVoid(quitMenuItem, selSetTarget, nsWindow);
+
+            var appMenu = SendIntPtr(clsNSMenu, selNew);
+            SendIntPtr(appMenu, selAddItem, quitMenuItem);
+
+            var appMenuItem = SendIntPtr(clsNSMenuItem, selNew);
+            SendIntPtr(appMenuItem, selSetSubmenu, appMenu);
+
+            var mainMenu = SendIntPtr(clsNSMenu, selNew);
+            SendIntPtr(mainMenu, selAddItem, appMenuItem);
+
+            SendVoid(nsApplication, selSetMainMenu, mainMenu);
         }
 
         public static void AddNotificationCenterObserver(IntPtr observer, string selector, string notificationName, IntPtr obj)

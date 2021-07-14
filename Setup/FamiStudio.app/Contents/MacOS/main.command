@@ -41,4 +41,4 @@ fi
 LOG_FILE="$HOME/Library/Application Support/$APPNAME/$APPNAME.log"
 mkdir -p "`dirname \"$LOG_FILE\"`"
 
-exec -a \"$PROCESS_NAME\" "$LAUNCHER_PATH" "$EXE_PATH" 2>&1 1> "$LOG_FILE"
+"$LAUNCHER_PATH" "$EXE_PATH" 2>&1 1> "$LOG_FILE"
