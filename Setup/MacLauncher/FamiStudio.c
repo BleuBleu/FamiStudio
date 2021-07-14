@@ -18,9 +18,8 @@ int main(int argc, char *argv[])
     mono_config_parse (NULL);
 
     domain = mono_jit_init("FamiStudio");
-    //domain = mono_jit_init_version ("FamiStudio", "v4.6.1");
 
-    assembly = mono_domain_assembly_open (domain, argv[1]);
+    assembly = mono_domain_assembly_open(domain, argv[1]);
 
     if (!assembly)
     {   
@@ -28,7 +27,9 @@ int main(int argc, char *argv[])
         return -1;
     }
     
-    retval = mono_jit_exec (domain, assembly, argc - 1, argv + 1);
+    retval = mono_jit_exec(domain, assembly, argc - 1, argv + 1);
 
-    mono_jit_cleanup (domain);
+    mono_jit_cleanup(domain);
+
+    return 0;
 }
