@@ -4,6 +4,7 @@
 DIR=$(cd "$(dirname "$0")"; pwd)
 
 #change these values to match your app
+LAUNCHER_PATH="$DIR/FamiStudio"
 EXE_PATH="$DIR/FamiStudio.exe"
 PROCESS_NAME=FamiStudio
 APPNAME="FamiStudio"
@@ -36,13 +37,8 @@ then
     exit 1
 fi
 
-#Mono command line
-MONO_EXEC="exec -a \"$PROCESS_NAME\" mono"
-
 #create log file directory if it doesn't exist
 LOG_FILE="$HOME/Library/Application Support/$APPNAME/$APPNAME.log"
 mkdir -p "`dirname \"$LOG_FILE\"`"
 
-#run app using mono
-$MONO_EXEC $MONO_OPTIONS "$EXE_PATH" $* 2>&1 1> "$LOG_FILE"
-
+exec -a \"$PROCESS_NAME\" "$LAUNCHER_PATH" "$EXE_PATH" 2>&1 1> "$LOG_FILE"
