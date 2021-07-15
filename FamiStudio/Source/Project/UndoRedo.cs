@@ -153,6 +153,7 @@ namespace FamiStudio
         private Project project;
         private List<Transaction> transactions = new List<Transaction>();
         private int index = 0;
+        private int saveIndex = 0;
 
         public UndoRedoManager(Project proj, FamiStudio app) 
         {
@@ -232,6 +233,14 @@ namespace FamiStudio
             }
         }
 
+        public bool NeedsSaving
+        {
+            get
+            {
+                return saveIndex != index;
+            }
+        }
+
         public TransactionScope UndoScope
         {
             get { return index > 0 ? transactions[index - 1] .Scope : TransactionScope.Max; }
@@ -240,6 +249,11 @@ namespace FamiStudio
         public TransactionScope RedoScope
         {
             get { return index < transactions.Count ? transactions[index].Scope : TransactionScope.Max; }
+        }
+
+        public void NotifySaved()
+        {
+            saveIndex = index;
         }
 
         public void Undo()

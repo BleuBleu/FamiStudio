@@ -99,6 +99,7 @@ x Autosave
 x BUG? MacOS Monterey retina detection?
 x ASM => ASM6
 x MacOS : Create a real menu at top, handle Quit correctly.
+x Fix clear undo/redo on save
 / OpenTK PR!
 - Square selection.
 	- Drag selection, etc.
@@ -135,6 +136,23 @@ Testing
 - Double check osc flipping in toolbar + video
 - Test ROM with noise/volume slides.
 - Add volume + noise slides to unit tests.
+
+Change Log
+==========
+* Fine tuning parameter on DPCM samples
+* Stereo WAV/MP3/OGG/Video export
+* OGG export
+* Oscilloscope video export
+* Metronome
+* Noise slides
+* Volume slides
+* Noise emulation improvements
+* Portable mode (save settings in root folder if portable.txt is detected)
+* Option to auto-save copy every 2 minutes
+* Import samples from other projects
+* ROM export now uses MMC3 mapper
+* MacOS Monterey Beta support
+* Sound Engine CC65 bindings (Contribution from XXX)
 
 3.2.0
 =====

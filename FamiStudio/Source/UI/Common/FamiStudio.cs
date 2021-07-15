@@ -489,7 +489,7 @@ namespace FamiStudio
         {
             if (undoRedoManager != null)
             {
-                if (undoRedoManager.UndoScope != TransactionScope.Max)
+                if (undoRedoManager.NeedsSaving)
                 {
                     var result = PlatformUtils.MessageBox("Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel);
                     if (result == DialogResult.Cancel)
@@ -684,6 +684,8 @@ namespace FamiStudio
             {
                 if (Settings.ClearUndoRedoOnSave)
                     undoRedoManager.Clear();
+
+                undoRedoManager.NotifySaved();
             }
             else
             {
