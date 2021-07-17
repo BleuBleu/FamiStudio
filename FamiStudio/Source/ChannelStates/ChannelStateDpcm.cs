@@ -17,7 +17,7 @@
                 WriteRegister(NesApu.APU_SND_CHN, 0x0f);
 
                 var mapping = FamiStudio.StaticProject.GetDPCMMapping(note.Value);
-                if (mapping != null && mapping.Sample != null)
+                if (mapping != null)
                 {
                     var addr = FamiStudio.StaticProject.GetAddressForSample(mapping.Sample, out var len) >> 6;
                     if (addr >= 0 && addr <= 0xff && len >= 0 && len <= DPCMSample.MaxSampleSize) 

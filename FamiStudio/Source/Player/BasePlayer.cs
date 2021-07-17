@@ -23,6 +23,9 @@ namespace FamiStudio
 
     public class BasePlayer : IPlayerInterface
     {
+        public delegate void BeatDelegate(bool first);
+        public event BeatDelegate Beat;
+
         protected int apuIndex;
         protected NesApu.DmcReadDelegate dmcCallback;
         protected int sampleRate;
@@ -31,8 +34,11 @@ namespace FamiStudio
         protected int frameNumber = 0;
         protected int playbackRate = 1; // 1 = normal, 2 = 1/2, 4 = 1/4, etc.
         protected int playbackRateCounter = 1;
+        protected int minSelectedPattern = -1;
+        protected int maxSelectedPattern = -1;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
+        protected bool seeking = false;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
@@ -89,6 +95,12 @@ namespace FamiStudio
                 Debug.Assert(value == 1 || value == 2 || value == 4);
                 playbackRate = value;
             }
+        }
+
+        public void SetSelectionRange(int min, int max)
+        {
+            minSelectedPattern = min;
+            maxSelectedPattern = max;
         }
 
         // Returns the number of frames to run (0, 1 or 2)
@@ -223,6 +235,7 @@ namespace FamiStudio
 
             if (startNote != 0)
             {
+                seeking = true;
                 NesApu.StartSeeking(apuIndex);
 
                 AdvanceChannels();
@@ -236,6 +249,7 @@ namespace FamiStudio
                 }
 
                 NesApu.StopSeeking(apuIndex);
+                seeking = false;
             }
             else
             {
@@ -247,6 +261,7 @@ namespace FamiStudio
             EndFrame();
 
             playPosition = playLocation.ToAbsoluteNoteIndex(song);
+            ConditionalEmitBeatEvent(true);
 
             return true;
         }
@@ -327,11 +342,36 @@ namespace FamiStudio
             if (++playLocation.NoteIndex >= song.GetPatternLength(playLocation.PatternIndex))
             {
                 playLocation.NoteIndex = 0;
+
                 if (loopMode != LoopMode.Pattern)
                 {
                     playLocation.PatternIndex++;
                     advancedPattern = true;
                     forceResetTempo = playLocation.PatternIndex == song.LoopPoint;
+                }
+                else
+                {
+                    // Make sure the selection is valid, updated on another thread, so could be 
+                    // sketchy.
+                    var minPatternIdx = minSelectedPattern;
+                    var maxPatternIdx = maxSelectedPattern;
+
+                    if (minPatternIdx >= 0 && 
+                        maxPatternIdx >= 0 &&
+                        maxPatternIdx >= minPatternIdx &&
+                        minPatternIdx <  song.Length)
+                    {
+                        if (playLocation.PatternIndex + 1 > maxPatternIdx)
+                        {
+                            playLocation.PatternIndex = minPatternIdx;
+                        }
+                        else
+                        {
+                            playLocation.PatternIndex++;
+                            advancedPattern = true;
+                            forceResetTempo = playLocation.PatternIndex == song.LoopPoint;
+                        }
+                    }
                 }
             }
 
@@ -374,7 +414,21 @@ namespace FamiStudio
             if (advancedPattern)
                 ResetFamiStudioTempo();
 
+            ConditionalEmitBeatEvent(false);
+
             return true;
+        }
+
+        private void ConditionalEmitBeatEvent(bool first)
+        {
+            if (Beat != null && !seeking)
+            {
+                var beatLength = song.GetPatternBeatLength(playLocation.PatternIndex);
+                if (playLocation.NoteIndex % beatLength == 0)
+                {
+                    Beat?.Invoke(first);
+                }
+            }
         }
 
         private ChannelState CreateChannelState(int apuIdx, int channelType, int expNumChannels, bool pal)
@@ -457,6 +511,15 @@ namespace FamiStudio
             }
 
             return samples;
+        }
+
+        public void ForceInstrumentsReload()
+        {
+            if (channelStates != null)
+            {
+                foreach (var channelState in channelStates)
+                    channelState.ForceInstrumentReload();
+            }
         }
 
         public void NotifyInstrumentLoaded(Instrument instrument, int channelTypeMask)

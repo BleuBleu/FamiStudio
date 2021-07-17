@@ -66,7 +66,7 @@ namespace FamiStudio
                 Debug.Assert(!originalProject.UsesExpansionAudio || machine == MachineType.NTSC);
 
                 var project = originalProject.DeepClone();
-                project.RemoveAllSongsBut(songIds);
+                project.DeleteAllSongsBut(songIds);
 
                 // Header
                 var header = new NsfHeader();
@@ -914,7 +914,7 @@ namespace FamiStudio
                 else
                 {
                     // Reset everything until we find our first note.
-                    project.DeleteAllInstrument();
+                    project.DeleteAllInstruments();
                     project.DeleteAllSamples();
                     for (int c = 0; c < song.Channels.Length; c++)
                         channelStates[c] = new ChannelState();

@@ -125,14 +125,15 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, Window parentWindow = null)
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, Window parentWindow = null)
         {
             var extensionList = GetExtensionList(extensions);
+
 #if FAMISTUDIO_MACOS
-            var filename = MacUtils.ShowOpenDialog(title, extensionList, defaultPath);
-            if (!string.IsNullOrEmpty(filename))
-                defaultPath = Path.GetDirectoryName(filename);
-            return filename;
+            var filenames = MacUtils.ShowOpenDialog(title, extensionList, multiselect, defaultPath);
+            if (filenames != null && !string.IsNullOrEmpty(filenames[0]))
+                defaultPath = Path.GetDirectoryName(filenames[0]);
+            return filenames;
 #else
             Gtk.Rc.ResetStyles(Gtk.Settings.GetForScreen(Gdk.Screen.Default));
             Gtk.Rc.ReparseAll();
@@ -148,6 +149,7 @@ namespace FamiStudio
             filechooser.SkipTaskbarHint = true;
             filechooser.TransientFor = parentWindow != null ? parentWindow : FamiStudioForm.Instance;
             filechooser.SetCurrentFolder(defaultPath);
+            filechooser.SelectMultiple = multiselect;
 
             if (extensionList.Length > 0)
             {
@@ -156,17 +158,28 @@ namespace FamiStudio
                     filechooser.Filter.AddPattern($"*.{ext}");
             }
 
-            string filename = null;
+            string[] filenames = null;
             if (filechooser.Run() == (int)ResponseType.Accept)
             {
-                filename = filechooser.Filename;
-                defaultPath = Path.GetDirectoryName(filename);
+                filenames = filechooser.Filenames;
+                if (filenames.Length > 0)
+                    defaultPath = Path.GetDirectoryName(filenames[0]);
             }
 
             filechooser.Destroy();
 
-            return filename;
+            return filenames;
 #endif
+        }
+
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, Window parentWindow = null)
+        {
+            var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindow);
+
+            if (filenames == null || filenames.Length == 0)
+                return null;
+
+            return filenames[0];
         }
 
         public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)

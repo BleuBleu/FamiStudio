@@ -39,6 +39,16 @@ namespace FamiStudio
             return v0 * (1.0 - alpha) + v1 * alpha;
         }
 
+        public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
+        {
+            return Math.Abs(a - b) < delta;
+        }
+
+        public static bool IsNearlyEqual(int a, int b, int delta = 10)
+        {
+            return Math.Abs(a - b) < delta;
+        }
+
         public static int SignedCeil(float x)
         {
             return (x > 0) ? (int)Math.Ceiling(x) : (int)Math.Floor(x);
@@ -312,6 +322,11 @@ namespace FamiStudio
             }
 
             return 0;
+        }
+
+        public static string ForceASCII(string str)
+        {
+            return System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(str));
         }
 
         public static void OpenUrl(string url)

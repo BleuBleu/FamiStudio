@@ -87,7 +87,7 @@ namespace FamiStudio
                     Array.Resize(ref songIds, MaxSongs);
 
                 var project = originalProject.DeepClone();
-                project.RemoveAllSongsBut(songIds);
+                project.DeleteAllSongsBut(songIds);
 
                 if (project.ExpansionAudio != ExpansionType.Fds)
                     project.SetExpansionAudio(ExpansionType.Fds);
@@ -140,7 +140,7 @@ namespace FamiStudio
                     var song = project.Songs[i];
                     var songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, FdsSongDataAddr, FdsDpcmStart, MachineType.NTSC);
 
-                    songTable[i].page  = (byte)fileIndex;
+                    songTable[i].bank  = (byte)fileIndex;
                     songTable[i].flags = (byte)(song.UsesDpcm ? dpcmFileIndex : 0);
 
                     if (songBytes.Length > FdsMaxSongSize)
@@ -165,7 +165,7 @@ namespace FamiStudio
                 //File.WriteAllBytes("D:\\dump\\fdsdata.bin", fdsFileBytes.ToArray());
 
                 // Use this field for the number of files.
-                projectInfo.dpcmPageCount = (byte)fileIndex;
+                projectInfo.fdsFileCount = (byte)fileIndex;
 
                 // Pad rest with zeroes.
                 fdsFileBytes.AddRange(new byte[FdsMaxFileSize - fdsFileBytes.Count]);

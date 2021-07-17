@@ -28,5 +28,11 @@
 	<string>FamiStudio</string>
 	<key>NSMainNibFile</key>
 	<string>main.nib</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHighResolutionMagnifyAllowed</key>
+	<false/>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
 </dict>
 </plist>

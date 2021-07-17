@@ -69,7 +69,7 @@ namespace FamiStudio
             get
             {
                 var p = base.CreateParams;
-                p.ExStyle |= 0x2000000; // WS_EX_COMPOSITED
+                p.Style &= (~0x02000000); // WS_CLIPCHILDREN
                 return p;
             }
         }

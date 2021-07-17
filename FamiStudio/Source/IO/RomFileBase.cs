@@ -9,16 +9,15 @@ namespace FamiStudio
 {
     public class RomFileBase
     {
-        public const int MaxSongs = 8;
+        public const int MaxSongs = 12;
 
         // 64 bytes header.
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         protected unsafe struct RomProjectInfo
         {
             public byte maxSong;
-            public byte dpcmPageStart;
-            public byte dpcmPageCount;
-            public fixed byte reserved[5];
+            public byte fdsFileCount; // Number of files on FDS
+            public fixed byte reserved[6];
             public fixed byte name[28];
             public fixed byte author[28];
         }
@@ -27,7 +26,7 @@ namespace FamiStudio
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         protected unsafe struct RomSongEntry
         {
-            public byte page;
+            public byte bank;
             public ushort address;
             public byte flags;
             public fixed byte name[28];
@@ -103,7 +102,7 @@ namespace FamiStudio
             {
                 fixed (RomSongEntry* songEntry = &songTable[i])
                 {
-                    songEntry->page = 0;
+                    songEntry->bank = 0;
                     songEntry->address = (ushort)songLoadAddr;
                     Marshal.Copy(EncodeAndCenterString(project.Songs[i].Name), 0, new IntPtr(songEntry->name), 28);
                 }

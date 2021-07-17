@@ -13,7 +13,8 @@ namespace FamiStudio
         // Version in case we need to do deprecation.
         // Version 0-1 : Any FamiStudio < 3.0.0
         // Version 2   : FamiStudio 3.0.0
-        public const int SettingsVersion = 2;
+        // Version 3   : FamiStudio 3.1.0
+        public const int SettingsVersion = 3;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -22,6 +23,11 @@ namespace FamiStudio
         public const int FollowSyncSequencer = 0;
         public const int FollowSyncPianoRoll = 1;
         public const int FollowSyncBoth      = 2;
+
+        // Constants for scroll bars
+        public const int ScrollBarsNone      = 0;
+        public const int ScrollBarsThin      = 1;
+        public const int ScrollBarsThick     = 2;
 
         // Constants for Stop notes.
         public const int StopNotesFamiTrackerTempo = 0;
@@ -32,6 +38,10 @@ namespace FamiStudio
         public static bool CheckUpdates = true;
         public static bool TrackPadControls = false;
         public static bool ShowTutorial = true;
+        public static bool ClearUndoRedoOnSave = true;
+        public static bool OpenLastProjectOnStart = true;
+        public static bool AutoSaveCopy = true;
+        public static string LastProjectFile;
 
         // User Interface section
         public static int DpiScaling = 0;
@@ -43,7 +53,7 @@ namespace FamiStudio
         public static int FollowMode = 0;
         public static int FollowSync = 0;
         public static bool ShowNoteLabels = true;
-        public static bool ShowScrollBars = false;
+        public static int  ScrollBars = ScrollBarsNone;
         public static bool ShowOscilloscope = false;
         public static bool ForceCompactSequencer = false;
         public static bool ShowImplicitStopNotes = true;
@@ -206,9 +216,13 @@ namespace FamiStudio
             Version = ini.GetInt("General", "Version", 0);
 
             // General
-            CheckUpdates     = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            CheckUpdates = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
             TrackPadControls = ini.GetBool(Version < 2 ? "UI" : "General", "TrackPadControls", false); // At version 2 (FamiStudio 3.0.0, changed section)
-            ShowTutorial     = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
+            ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
+            OpenLastProjectOnStart = ini.GetBool("General", "OpenLastProjectOnStart", true);
+            AutoSaveCopy = ini.GetBool("General", "AutoSaveCopy", true);
+            LastProjectFile = OpenLastProjectOnStart ? ini.GetString("General", "LastProjectFile", "") : "";
 
             // UI
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
@@ -216,7 +230,7 @@ namespace FamiStudio
             FollowMode = ini.GetInt("UI", "FollowMode", FollowModeContinuous);
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
             ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
-            ShowScrollBars = ini.GetBool("UI", "ShowScrollBars", false);
+            ScrollBars = Version < 3 ? (ini.GetBool("UI", "ShowScrollBars", false) ? ScrollBarsThin : ScrollBarsNone) : ini.GetInt("UI", "ScrollBars", ScrollBarsNone);
             ShowOscilloscope = ini.GetBool("UI", "ShowOscilloscope", true);
             ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
             ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
@@ -332,6 +346,10 @@ namespace FamiStudio
             ini.SetBool("General", "CheckUpdates", CheckUpdates);
             ini.SetBool("General", "TrackPadControls", TrackPadControls);
             ini.SetBool("General", "ShowTutorial", ShowTutorial);
+            ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);
+            ini.SetBool("General", "OpenLastProjectOnStart", OpenLastProjectOnStart);
+            ini.SetString("General", "LastProjectFile", OpenLastProjectOnStart ? LastProjectFile : "");
+            ini.SetBool("General", "AutoSaveCopy", AutoSaveCopy);
 
             // UI
             ini.SetInt("UI", "DpiScaling", DpiScaling);
@@ -339,7 +357,7 @@ namespace FamiStudio
             ini.SetInt("UI", "FollowMode", FollowMode);
             ini.SetInt("UI", "FollowSync", FollowSync);
             ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
-            ini.SetBool("UI", "ShowScrollBars", ShowScrollBars);
+            ini.SetInt("UI", "ScrollBars", ScrollBars);
             ini.SetBool("UI", "ShowOscilloscope", ShowOscilloscope);
             ini.SetBool("UI", "ForceCompactSequencer", ForceCompactSequencer);
             ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
@@ -419,15 +437,30 @@ namespace FamiStudio
             }
         }
 
+        public static string GetAutoSaveFilePath()
+        {
+            return Path.Combine(Settings.GetConfigFilePath(), "AutoSaves");
+        }
+
         private static string GetConfigFilePath()
         {
+            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var portableFile = Path.Combine(appPath, "portable.txt");
+
+            if (File.Exists(portableFile))
+            {
+                return appPath;
+            }
+            else
+            {
 #if FAMISTUDIO_WINDOWS
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
 #elif FAMISTUDIO_LINUX
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
 #else
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
 #endif
+            }
         }
 
         private static string GetConfigFileName()

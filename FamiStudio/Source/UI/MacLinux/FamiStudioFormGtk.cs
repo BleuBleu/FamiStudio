@@ -32,7 +32,9 @@ namespace FamiStudio
 
         bool exposed = false;
         bool glInit  = false;
+#if FAMISTUDIO_MACOS
         bool firstTickDone = false;
+#endif
 
         private int  doubleClickTime = 250;
         private uint lastMouseButton = 999;

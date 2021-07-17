@@ -33,6 +33,7 @@ namespace FamiStudio
             "Duty Cycle",
             "Note Delay",
             "Cut Delay",
+            "Volume Slide"
         };
 
         public const int VolumeMax       = 0x0f;
@@ -51,29 +52,32 @@ namespace FamiStudio
         public const int DPCMNoteMin     = 0x0c;
         public const int DPCMNoteMax     = 0x4b;
         
-        public const int EffectVolume           =  0;
-        public const int EffectVibratoSpeed     =  1; // 4Xy
-        public const int EffectVibratoDepth     =  2; // 4xY
-        public const int EffectFinePitch        =  3; // Pxx
-        public const int EffectSpeed            =  4; // Fxx
-        public const int EffectFdsModDepth      =  5; // Gxx
-        public const int EffectFdsModSpeed      =  6; // Ixx/Jxx
-        public const int EffectDutyCycle        =  7; // Vxx
-        public const int EffectNoteDelay        =  8; // Gxx
-        public const int EffectCutDelay         =  9; // Sxx
-        public const int EffectCount            = 10;
+        public const int EffectVolume       =  0;
+        public const int EffectVibratoSpeed =  1; // 4Xy
+        public const int EffectVibratoDepth =  2; // 4xY
+        public const int EffectFinePitch    =  3; // Pxx
+        public const int EffectSpeed        =  4; // Fxx
+        public const int EffectFdsModDepth  =  5; // Gxx
+        public const int EffectFdsModSpeed  =  6; // Ixx/Jxx
+        public const int EffectDutyCycle    =  7; // Vxx
+        public const int EffectNoteDelay    =  8; // Gxx
+        public const int EffectCutDelay     =  9; // Sxx
+        public const int EffectVolumeSlide  = 10; // Axy
+        public const int EffectCount        = 11;
 
-        public const int EffectVolumeMask       = (1 << EffectVolume);
-        public const int EffectVibratoMask      = (1 << EffectVibratoSpeed) | (1 << EffectVibratoDepth);
-        public const int EffectFinePitchMask    = (1 << EffectFinePitch);
-        public const int EffectSpeedMask        = (1 << EffectSpeed);
-        public const int EffectFdsModDepthMask  = (1 << EffectFdsModDepth);
-        public const int EffectFdsModSpeedMask  = (1 << EffectFdsModSpeed);
-        public const int EffectDutyCycleMask    = (1 << EffectDutyCycle);
-        public const int EffectNoteDelayMask    = (1 << EffectNoteDelay);
-        public const int EffectCutDelayMask     = (1 << EffectCutDelay);
+        public const int EffectVolumeMask         = (1 << EffectVolume);
+        public const int EffectVibratoMask        = (1 << EffectVibratoSpeed) | (1 << EffectVibratoDepth);
+        public const int EffectFinePitchMask      = (1 << EffectFinePitch);
+        public const int EffectSpeedMask          = (1 << EffectSpeed);
+        public const int EffectFdsModDepthMask    = (1 << EffectFdsModDepth);
+        public const int EffectFdsModSpeedMask    = (1 << EffectFdsModSpeed);
+        public const int EffectDutyCycleMask      = (1 << EffectDutyCycle);
+        public const int EffectNoteDelayMask      = (1 << EffectNoteDelay);
+        public const int EffectCutDelayMask       = (1 << EffectCutDelay);
+        public const int EffectVolumeSlideMask    = (1 << EffectVolumeSlide);
+        public const int EffectVolumeAndSlideMask = (1 << EffectVolume) | (1 << EffectVolumeSlide);
 
-        public const int EffectAllMask          = 0x3ff; // Must be updated every time a new effect is added.
+        public const int EffectAllMask = 0x7ff; // Must be updated every time a new effect is added.
 
         // As of FamiStudio 3.0.0, these are semi-deprecated and mostly used in parts of the
         // code that have not been migrated to compound notes (notes with release and duration) 
@@ -95,6 +99,7 @@ namespace FamiStudio
 
         // Effects.
         private byte       volume;
+        private byte       volumeSlide;
         private byte       vibrato;
         private byte       speed;
         private sbyte      finePitch;
@@ -135,6 +140,7 @@ namespace FamiStudio
             {
                 effectMask = 0;
                 volume = 0;
+                volumeSlide = 0;
                 vibrato = 0;
                 speed = 0;
                 finePitch = 0;
@@ -162,12 +168,6 @@ namespace FamiStudio
         {
             get { return flags; }
             set { flags = value; }
-        }
-
-        public byte Slide
-        {
-            get { return slide; }
-            set { slide = value; }
         }
 
         public ushort EffectMask
@@ -285,6 +285,12 @@ namespace FamiStudio
             set { volume = (byte)Utils.Clamp(value, 0, VolumeMax); HasVolume = true; }
         }
 
+        public byte VolumeSlideTarget
+        {
+            get { Debug.Assert(HasVolume); Debug.Assert(HasVolumeSlide); return volumeSlide; }
+            set { volumeSlide = (byte)Utils.Clamp(value, 0, VolumeMax); HasVolumeSlide = true; }
+        }
+
         public byte RawVibrato
         {
             get { return vibrato; }
@@ -366,7 +372,13 @@ namespace FamiStudio
         public bool HasVolume
         {
             get { return (effectMask & EffectVolumeMask) != 0; }
-            set { if (value) effectMask |= EffectVolumeMask; else effectMask = (ushort)(effectMask & ~EffectVolumeMask); }
+            set { if (value) effectMask |= EffectVolumeMask; else effectMask = (ushort)(effectMask & ~EffectVolumeAndSlideMask); }
+        }
+        
+        public bool HasVolumeSlide
+        {
+            get { return (effectMask & EffectVolumeAndSlideMask) == EffectVolumeAndSlideMask; }
+            set { if (value) effectMask |= EffectVolumeAndSlideMask; else effectMask = (ushort)(effectMask & ~EffectVolumeSlideMask); }
         }
 
         public bool HasVibrato
@@ -494,7 +506,7 @@ namespace FamiStudio
             return IsMusical ? FriendlyName : base.ToString();
         }
 
-        public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && Slide == 0 && EffectMask == 0;
+        public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && SlideNoteTarget == 0 && EffectMask == 0;
         public bool HasJumpOrSkip => jump != 0xff || skip != 0xff;
 
         // To fix some bad data from old versions.
@@ -600,9 +612,10 @@ namespace FamiStudio
             if ((EffectMask & EffectFinePitchMask)   != 0) buffer.Serialize(ref finePitch);
             if ((EffectMask & EffectFdsModSpeedMask) != 0) buffer.Serialize(ref fdsModSpeed);
             if ((EffectMask & EffectFdsModDepthMask) != 0) buffer.Serialize(ref fdsModDepth);
-            if (buffer.Version >= 8 && (EffectMask & EffectDutyCycleMask) != 0) buffer.Serialize(ref dutyCycle);
-            if (buffer.Version >= 8 && (EffectMask & EffectNoteDelayMask) != 0) buffer.Serialize(ref noteDelay);
-            if (buffer.Version >= 8 && (EffectMask & EffectCutDelayMask)  != 0) buffer.Serialize(ref cutDelay);
+            if (buffer.Version >=  8 && (EffectMask & EffectDutyCycleMask) != 0) buffer.Serialize(ref dutyCycle);
+            if (buffer.Version >=  8 && (EffectMask & EffectNoteDelayMask) != 0) buffer.Serialize(ref noteDelay);
+            if (buffer.Version >=  8 && (EffectMask & EffectCutDelayMask)  != 0) buffer.Serialize(ref cutDelay);
+            if (buffer.Version >= 11 && (EffectMask & EffectVolumeAndSlideMask) == EffectVolumeAndSlideMask) buffer.Serialize(ref volumeSlide);
 
             // At version 7 (FamiStudio 2.2.0) we added support for arpeggios.
             if (buffer.Version >= 7)
@@ -614,6 +627,7 @@ namespace FamiStudio
             switch (fx)
             {
                 case EffectVolume       : return HasVolume;
+                case EffectVolumeSlide  : return HasVolumeSlide;
                 case EffectVibratoDepth : return HasVibrato;
                 case EffectVibratoSpeed : return HasVibrato;
                 case EffectFinePitch    : return HasFinePitch;
@@ -633,6 +647,7 @@ namespace FamiStudio
             switch (fx)
             {
                 case EffectVolume       : return Volume;
+                case EffectVolumeSlide  : return VolumeSlideTarget;
                 case EffectVibratoDepth : return VibratoDepth;
                 case EffectVibratoSpeed : return VibratoSpeed;
                 case EffectFinePitch    : return FinePitch;
@@ -651,16 +666,17 @@ namespace FamiStudio
         {
             switch (fx)
             {
-                case EffectVolume       : Volume       = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
-                case EffectVibratoDepth : VibratoDepth = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
-                case EffectVibratoSpeed : VibratoSpeed = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
-                case EffectFinePitch    : FinePitch    = (sbyte)Utils.Clamp(val, sbyte.MinValue, sbyte.MaxValue); break;
-                case EffectSpeed        : Speed        = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
-                case EffectFdsModDepth  : FdsModDepth  = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
-                case EffectFdsModSpeed  : FdsModSpeed  = (ushort)Utils.Clamp(val, ushort.MinValue, ushort.MaxValue); break;
-                case EffectDutyCycle    : DutyCycle    = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
-                case EffectNoteDelay    : NoteDelay    = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
-                case EffectCutDelay     : CutDelay     = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectVolume       : Volume            = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectVolumeSlide  : VolumeSlideTarget = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectVibratoDepth : VibratoDepth      = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectVibratoSpeed : VibratoSpeed      = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectFinePitch    : FinePitch         = (sbyte)Utils.Clamp(val, sbyte.MinValue, sbyte.MaxValue); break;
+                case EffectSpeed        : Speed             = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectFdsModDepth  : FdsModDepth       = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectFdsModSpeed  : FdsModSpeed       = (ushort)Utils.Clamp(val, ushort.MinValue, ushort.MaxValue); break;
+                case EffectDutyCycle    : DutyCycle         = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectNoteDelay    : NoteDelay         = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectCutDelay     : CutDelay          = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
             }
         }
         
@@ -669,6 +685,7 @@ namespace FamiStudio
             switch (fx)
             {
                 case EffectVolume       : HasVolume       = false; break;
+                case EffectVolumeSlide  : HasVolumeSlide  = false; break;
                 case EffectVibratoDepth : HasVibrato      = false; break;
                 case EffectVibratoSpeed : HasVibrato      = false; break;
                 case EffectFinePitch    : HasFinePitch    = false; break;
@@ -710,6 +727,7 @@ namespace FamiStudio
             switch (fx)
             {
                 case EffectVolume       : return VolumeMax;
+                case EffectVolumeSlide  : return VolumeMax;
                 case EffectVibratoDepth : return VibratoDepthMax;
                 case EffectVibratoSpeed : return VibratoSpeedMax;
                 case EffectFinePitch    : return FinePitchMax;

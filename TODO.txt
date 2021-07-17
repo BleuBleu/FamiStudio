@@ -1,13 +1,3 @@
-3.0.3
-=====
-- MacOS out of memory thing.
-- Monterey Beta Debug.
-
-Mystery bugs:
-- Openal 1.21.1 issue?
-- Yellow tooltip linux mint?
-- RtMidi again?
-
 Videos:
 =======
 - Tutorial for FamiTracker
@@ -29,9 +19,34 @@ Linux notes
 		- Choose Release (no debug info) 
 		- Generate. 
 		- make! 
+	- OGG:
+		- Download ogg/vorbis code
+		- cmake-gui, static lib, configure
+		- CMakeFiles/vorbis.dir/flags.make, add -fPIC
+			C_FLAGS = -O3 -DNDEBUG -fPIC 
+		- Same for OGG
 	- NesSndEmu + NotSoFatso, run script. 
 	- RtMidi, need to add static C/C++ libs to cmake file. 
  
+MacOS notes
+===========
+- MacOS Sierra, fully patched is 10.12.6, with AppKit version 1504.83.101
+- Must compile the MacLauncher with this to link to the AppKit version that
+  matches GTK+2. This will make MacOS load these older versions afterwards,
+  even on more recent OS'es.
+- If problem installing MacOS VM, see @DOUG fix at
+  https://www.geekrar.com/how-to-fix-the-cpu-has-been-disabled-by-the-guest-os/
+	cpuid.0.eax = "0000:0000:0000:0000:0000:0000:0000:1011"
+	cpuid.0.ebx = "0111:0101:0110:1110:0110:0101:0100:0111"
+	cpuid.0.ecx = "0110:1100:0110:0101:0111:0100:0110:1110"
+	cpuid.0.edx = "0100:1001:0110:0101:0110:1110:0110:1001"
+	cpuid.1.eax = "0000:0000:0000:0001:0000:0110:0111:0001"
+	cpuid.1.ebx = "0000:0010:0000:0001:0000:1000:0000:0000"
+	cpuid.1.ecx = "1000:0010:1001:1000:0010:0010:0000:0011"
+	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
+- If NAT network doesnt work (probleme is only in Monterey right now) do that:
+	ethernet0.virtualDev = "vmxnet3"
+
 Trailer/scroll 
 ============== 
 - Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece. 
@@ -46,10 +61,76 @@ Discord
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
 
+FamiStudio 3.1.0 (Small quality of life release)
+================================================
+/ OpenTK PR!
+- Merge CC65 stuff (when back in main branch).
+
+Doc
+===
+- Add replace instrument (with selection) info
+- Gopnick errors
+	1. Two attributes are missing, Instrument->Vrc6SawMasterVolume and Note->Release (legacy stuff?)
+	2. The "general structure" part suggests "PatternInstance" as a child of "Song" while the indentation in the actual files indicates that it's a child of "Channel"
+- Volume slide, noise slide
+- Metronome
+- OGG
+
+Youtube corrections:
+====================
+- Patterns are one based.
+
+Testing
+=======
+- Re-test song merge a lot. Removed a few cleanups.
+- Re-test expansions issue (same instrument name, diff expansions, etc.)
+- Stereo video crackles?
+- WS clips children on win7
+- Recompile, ROM, NSF, sound engine (re-export data).
+- Test OGG a bit more, make sure UI + command line works good
+- Double check osc flipping in toolbar + video
+- Test ROM with noise/volume slides.
+- Add volume + noise slides to unit tests.
+- Project explorer, re-test most capture operations.
+
+Change Log
+==========
+* Fine tuning parameter on DPCM samples
+* Stereo WAV/MP3/OGG/Video export
+* OGG export
+* Oscilloscope video export
+* Metronome
+* Noise slides
+* Volume slides
+* Noise emulation improvements
+* Portable mode (save settings in root folder if portable.txt is detected)
+* Import samples from other projects
+* ROM export now uses MMC3 mapper
+* Option to auto-save copy every 2 minutes
+* Option for thicker scroll bars.
+* MacOS Monterey Beta support
+* Sound Engine CC65 bindings (Contribution from XXX)
+
+3.2.0
+=====
+- Overclocking (2x, 3x, 4x would be a good start).
+- Multi-expansions (dont want that garbage in the sound engine, would need to be a seperate NSF thing).
+
 Backlog: 
 ========= 
+- Volume/effect scaling?
+- Save snapping + qwerty settings + some export settings.
+- Left/right pan with +/- (cubase style)?
+- TailWindz : CTRL + Scroll should do "something"
+- Hardware sweep (how to not conflict with smooth vibrato?)
+- Write delta counter (Zxx).
+- Scales
+- Selection with min/max note.
 - Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
 - Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID). 
 - Installer on Japanese machine? 
+- Square selection: Sort-of works, but problems are with stop notes. To know if a stop note is in the square
+  you need the previous note, but that note may just have been deleted (like in DeleteNotes), so its almost
+  impossible to do without caching the stop note values.

@@ -29,7 +29,7 @@ namespace FamiStudio
         public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData)
         {
             var project = originalProject.DeepClone();
-            project.RemoveAllSongsBut(songIds, deleteUnusedData);
+            project.DeleteAllSongsBut(songIds, deleteUnusedData);
 
             SetInvariantCulture();
 
@@ -72,7 +72,7 @@ namespace FamiStudio
             {
                 var mapping = project.SamplesMapping[i];
 
-                if (mapping != null && mapping.Sample != null)
+                if (mapping != null)
                     lines.Add($"\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(i + Note.DPCMNoteMin))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}");
             }
 
@@ -336,7 +336,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(ExpansionType.GetValueForShortName(expansion));
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
-                            if (!version.StartsWith("3.0"))
+                            if (!version.StartsWith("3.1"))
                             {
                                 Log.LogMessage(LogSeverity.Error, "File was created with an incompatible version of FamiStudio. The text format is only compatible with the current version.");
                                 return null;

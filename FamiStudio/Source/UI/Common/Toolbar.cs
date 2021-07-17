@@ -41,10 +41,11 @@ namespace FamiStudio
         const int ButtonRewind    = 13;
         const int ButtonLoop      = 14;
         const int ButtonQwerty    = 15;
-        const int ButtonMachine   = 16;
-        const int ButtonFollow    = 17;
-        const int ButtonHelp      = 18;
-        const int ButtonCount     = 19;
+        const int ButtonMetronome = 16;
+        const int ButtonMachine   = 17;
+        const int ButtonFollow    = 18;
+        const int ButtonHelp      = 19;
+        const int ButtonCount     = 20;
 
         const int DefaultTimecodeOffsetX         = 38; // Offset from config button.
         const int DefaultTimecodePosY            = 4;
@@ -132,6 +133,7 @@ namespace FamiStudio
         RenderBitmap bmpLoopNone;
         RenderBitmap bmpLoopSong;
         RenderBitmap bmpLoopPattern;
+        RenderBitmap bmpLoopSelection;
         RenderBitmap bmpPlay;
         RenderBitmap bmpPlayHalf;
         RenderBitmap bmpPlayQuarter;
@@ -142,6 +144,7 @@ namespace FamiStudio
         RenderBitmap bmpPalToNtsc;
         RenderBitmap bmpRec;
         RenderBitmap bmpRecRed;
+        RenderBitmap bmpMetronome;
         Button[] buttons = new Button[ButtonCount];
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
@@ -153,19 +156,21 @@ namespace FamiStudio
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
 
-            bmpLoopNone    = g.CreateBitmapFromResource("LoopNone");
-            bmpLoopSong    = g.CreateBitmapFromResource("Loop");
-            bmpLoopPattern = g.CreateBitmapFromResource("LoopPattern");
-            bmpPlay        = g.CreateBitmapFromResource("Play");
-            bmpPlayHalf    = g.CreateBitmapFromResource("PlayHalf");
-            bmpPlayQuarter = g.CreateBitmapFromResource("PlayQuarter");
-            bmpPause       = g.CreateBitmapFromResource("Pause");
-            bmpNtsc        = g.CreateBitmapFromResource("NTSC");
-            bmpPal         = g.CreateBitmapFromResource("PAL");
-            bmpNtscToPal   = g.CreateBitmapFromResource("NTSCToPAL");
-            bmpPalToNtsc   = g.CreateBitmapFromResource("PALToNTSC");
-            bmpRec         = g.CreateBitmapFromResource("Rec");
-            bmpRecRed      = g.CreateBitmapFromResource("RecRed");
+            bmpLoopNone      = g.CreateBitmapFromResource("LoopNone");
+            bmpLoopSong      = g.CreateBitmapFromResource("Loop");
+            bmpLoopPattern   = g.CreateBitmapFromResource("LoopPattern");
+            bmpLoopSelection = g.CreateBitmapFromResource("LoopSelection");
+            bmpPlay          = g.CreateBitmapFromResource("Play");
+            bmpPlayHalf      = g.CreateBitmapFromResource("PlayHalf");
+            bmpPlayQuarter   = g.CreateBitmapFromResource("PlayQuarter");
+            bmpPause         = g.CreateBitmapFromResource("Pause");
+            bmpNtsc          = g.CreateBitmapFromResource("NTSC");
+            bmpPal           = g.CreateBitmapFromResource("PAL");
+            bmpNtscToPal     = g.CreateBitmapFromResource("NTSCToPAL");
+            bmpPalToNtsc     = g.CreateBitmapFromResource("PALToNTSC");
+            bmpRec           = g.CreateBitmapFromResource("Rec");
+            bmpRecRed        = g.CreateBitmapFromResource("RecRed");
+            bmpMetronome     = g.CreateBitmapFromResource("Metronome");
 
             buttons[ButtonNew]       = new Button { Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
             buttons[ButtonOpen]      = new Button { Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
@@ -183,6 +188,7 @@ namespace FamiStudio
             buttons[ButtonRewind]    = new Button { Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
             buttons[ButtonLoop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
             buttons[ButtonQwerty]    = new Button { Bmp = g.CreateBitmapFromResource("QwertyPiano"), Click = OnQwerty, Enabled = OnQwertyEnabled };
+            buttons[ButtonMetronome] = new Button { Bmp = g.CreateBitmapFromResource("Metronome"), Click = OnMetronome, Enabled = OnMetronomeEnabled };
             buttons[ButtonMachine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[ButtonFollow]    = new Button { Bmp = g.CreateBitmapFromResource("Follow"), Click = OnFollow, Enabled = OnFollowEnabled };
             buttons[ButtonHelp]      = new Button { Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
@@ -201,8 +207,9 @@ namespace FamiStudio
             buttons[ButtonPlay].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
             buttons[ButtonRewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
             buttons[ButtonRec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
-            buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode";
+            buttons[ButtonLoop].ToolTip      = "{MouseLeft} Toggle Loop Mode (Song, Pattern/Selection)";
             buttons[ButtonQwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift} {Q}";
+            buttons[ButtonMetronome].ToolTip = "{MouseLeft} Toggle metronome while song is playing";
             buttons[ButtonMachine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
             buttons[ButtonFollow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
             buttons[ButtonHelp].ToolTip      = "{MouseLeft} Online documentation";
@@ -264,6 +271,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpLoopNone);
             Utils.DisposeAndNullify(ref bmpLoopSong);
             Utils.DisposeAndNullify(ref bmpLoopPattern);
+            Utils.DisposeAndNullify(ref bmpLoopSelection);
             Utils.DisposeAndNullify(ref bmpPlay);
             Utils.DisposeAndNullify(ref bmpPlayHalf);
             Utils.DisposeAndNullify(ref bmpPlayQuarter);
@@ -274,6 +282,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpPalToNtsc);
             Utils.DisposeAndNullify(ref bmpRec);
             Utils.DisposeAndNullify(ref bmpRecRed);
+            Utils.DisposeAndNullify(ref bmpMetronome);
 
             foreach (var b in buttons)
                 Utils.DisposeAndNullify(ref b.Bmp);
@@ -541,12 +550,22 @@ namespace FamiStudio
             return App.IsQwertyPianoEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
+        private void OnMetronome()
+        {
+            App.ToggleMetronome();
+        }
+
+        private ButtonStatus OnMetronomeEnabled()
+        {
+            return App.IsMetronomeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
+        }
+
         private RenderBitmap OnLoopGetBitmap()
         {
             switch (App.LoopMode)
             {
                 case LoopMode.Pattern:
-                    return bmpLoopPattern;
+                    return App.SequencerHasSelection ? bmpLoopSelection : bmpLoopPattern;
                 default:
                     return App.Song.LoopPoint < 0 ? bmpLoopNone : bmpLoopSong;
             }

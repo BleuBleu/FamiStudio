@@ -127,34 +127,47 @@ namespace FamiStudio
 
         private void PlayAsync()
         {
-            int nextBuffer = 0;
-            var waitEvents = new WaitHandle[] { quitEvent, bufferSemaphore };
-
-            while (true)
+#if DEBUG
+            try
             {
-                int idx = WaitHandle.WaitAny(waitEvents);
+#endif
+                int nextBuffer = 0;
+                var waitEvents = new WaitHandle[] { quitEvent, bufferSemaphore };
 
-                if (idx == 0)
+                while (true)
                 {
-                    break;
+                    int idx = WaitHandle.WaitAny(waitEvents);
+
+                    if (idx == 0)
+                    {
+                        break;
+                    }
+
+                    var size = memBuffers[nextBuffer].Size;
+                    var data = bufferFill();
+                    if (data != null)
+                    {
+                        size = data.Length * sizeof(short);
+                        Debug.Assert(data.Length * sizeof(short) <= memBuffers[nextBuffer].Size);
+                        Marshal.Copy(data, 0, memBuffers[nextBuffer].Pointer, data.Length);
+                    }
+
+                    audioBuffersRing[nextBuffer].AudioDataPointer = memBuffers[nextBuffer].Pointer;
+                    audioBuffersRing[nextBuffer].AudioBytes = size;
+
+                    sourceVoice.SubmitSourceBuffer(audioBuffersRing[nextBuffer], null);
+
+                    nextBuffer = ++nextBuffer % audioBuffersRing.Length;
                 }
-
-                var size = memBuffers[nextBuffer].Size;
-                var data = bufferFill();
-                if (data != null)
-                {
-                    size = data.Length * sizeof(short);
-                    Debug.Assert(data.Length * sizeof(short) <= memBuffers[nextBuffer].Size);
-                    Marshal.Copy(data, 0, memBuffers[nextBuffer].Pointer, data.Length);
-                }
-
-                audioBuffersRing[nextBuffer].AudioDataPointer = memBuffers[nextBuffer].Pointer;
-                audioBuffersRing[nextBuffer].AudioBytes = size;
-
-                sourceVoice.SubmitSourceBuffer(audioBuffersRing[nextBuffer], null);
-
-                nextBuffer = ++nextBuffer % audioBuffersRing.Length;
+#if DEBUG
             }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                if (Debugger.IsAttached)
+                    Debugger.Break();
+            }
+#endif
         }
 
         public void PlayImmediate(short[] data, int sampleRate, float volume)

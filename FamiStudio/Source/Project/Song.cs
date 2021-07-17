@@ -453,7 +453,7 @@ namespace FamiStudio
                             var release = oldNote.Release;
                             oldNote.Duration = Math.Max(1, GetNewNoteIndex(i + oldNote.Duration) - newIdx);
                             if (release > 0)
-                                oldNote.Release = Math.Max(1, GetNewNoteIndex(i + oldNote.Release) - newIdx);
+                                oldNote.Release = Math.Max(1, GetNewNoteIndex(i + release) - newIdx);
                         }
 
                         pattern.SetNoteAt(newIdx, oldNote);
@@ -525,7 +525,7 @@ namespace FamiStudio
                             {
                                 var mapping = project.GetDPCMMapping(note.Value);
 
-                                if (mapping != null && mapping.Sample != null)
+                                if (mapping != null)
                                 {
                                     return true;
                                 }
@@ -1192,7 +1192,7 @@ namespace FamiStudio
         public override bool Equals(object obj)
         {
             var other = (NoteLocation)obj;
-            return PatternIndex == other.PatternIndex && NoteIndex == other.PatternIndex;
+            return PatternIndex == other.PatternIndex && NoteIndex == other.NoteIndex;
         }
 
         public override int GetHashCode()

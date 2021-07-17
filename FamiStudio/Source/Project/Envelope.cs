@@ -425,6 +425,14 @@ namespace FamiStudio
             }
         }
 
+        public void ClampToValidRange(Instrument instrument, int type)
+        {
+            GetMinMaxValue(instrument, type, out var min, out var max);
+
+            for (int i = 0; i < length; i++)
+                values[i] = (sbyte)Utils.Clamp(values[i], min, max);
+        }
+
         private void FixBadEnvelopeLength()
         {
             if (values.Length != maxLength)

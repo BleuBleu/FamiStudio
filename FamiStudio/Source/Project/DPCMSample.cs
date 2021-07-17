@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System;
 using System.IO;
+using System.Globalization;
 
 namespace FamiStudio
 {
@@ -22,13 +23,14 @@ namespace FamiStudio
         private float  processedDataStartTime;
 
         // Processing parameters.
-        private int  sampleRate = 15;
-        private int  previewRate = 15;
-        private int  volumeAdjust = 100;
-        private int  paddingMode = DPCMPaddingType.PadTo16Bytes;
-        private bool reverseBits;
-        private bool trimZeroVolume;
-        private bool palProcessing;
+        private int   sampleRate = 15;
+        private int   previewRate = 15;
+        private int   volumeAdjust = 100;
+        private float finePitch = 1.0f;
+        private int   paddingMode = DPCMPaddingType.PadTo16Bytes;
+        private bool  reverseBits;
+        private bool  trimZeroVolume;
+        private bool  palProcessing;
         private SampleVolumePair[] volumeEnvelope = new SampleVolumePair[4]
         {
             new SampleVolumePair(0, 1.0f),
@@ -60,10 +62,11 @@ namespace FamiStudio
         public bool     TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
         public bool     PalProcessing  { get => palProcessing;  set => palProcessing  = value; }
         public int      VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
+        public float    FinePitch      { get => finePitch;      set => finePitch      = value; }
         public int      PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
         public SampleVolumePair[] VolumeEnvelope { get => volumeEnvelope; }
 
-        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || trimZeroVolume || reverseBits;
+        public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || !Utils.IsNearlyEqual(finePitch, 1.0f) || trimZeroVolume || reverseBits;
 
         public static object ProcessedDataLock = new object();
         public const int MaxSampleSize = (255 << 4) + 1;
@@ -88,6 +91,11 @@ namespace FamiStudio
         public float GetPlaybackSampleRate(bool palPlayback)
         {
             return DPCMSampleRate.Frequencies[palPlayback ? 1 : 0, previewRate];
+        }
+
+        public float GetPlaybackCents(bool palPlayback)
+        {
+            return DPCMSampleRate.GetSemitones(palPlayback, previewRate);
         }
 
         public float GetPlaybackDuration(bool palPlayback)
@@ -124,6 +132,7 @@ namespace FamiStudio
             sampleRate = 15; 
             previewRate = 15;
             volumeAdjust = 100;
+            finePitch = 1.0f;
             trimZeroVolume = false;
             reverseBits = false;
             palProcessing = false;
@@ -154,7 +163,7 @@ namespace FamiStudio
                 var targetSampleRate = DPCMSampleRate.Frequencies[palProcessing ? 1 : 0, sampleRate];
 
                 // Fast path for when there is (almost) nothing to do.
-                if (!SourceDataIsWav && volumeAdjust == 100 && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume)
+                if (!SourceDataIsWav && volumeAdjust == 100 && Utils.IsNearlyEqual(finePitch, 1.0f) && !UsesVolumeEnvelope && sampleRate == 15 && !trimZeroVolume)
                 {
                     processedData = WaveUtils.CopyDpcm(SourceDmcData.Data);
 
@@ -183,6 +192,17 @@ namespace FamiStudio
                         }
 
                         WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
+                    }
+
+                    if (!Utils.IsNearlyEqual(finePitch, 1.0f))
+                    {
+                        var newLength = (int)Math.Round(sourceWavData.Length / finePitch);
+                        if (newLength != sourceWavData.Length)
+                        {
+                            var resampledWavData = new short[newLength];
+                            WaveUtils.Resample(sourceWavData, 0, sourceWavData.Length, resampledWavData);
+                            sourceWavData = resampledWavData;
+                        }
                     }
 
                     /*
@@ -410,6 +430,11 @@ namespace FamiStudio
                     buffer.Serialize(ref sourceFilename);
                 }
 
+                if (buffer.Version >= 11)
+                {
+                    buffer.Serialize(ref finePitch);
+                }
+
                 // The process data will not be stored in the file, it will 
                 // be reprocessed every time we reopen the file.
                 if (buffer.IsForUndoRedo)
@@ -572,7 +597,8 @@ namespace FamiStudio
             return Array.IndexOf(Names, str);
         }
     };
-    
+
+
     public static class DPCMSampleRate
     {
         // From NESDEV wiki.
@@ -620,54 +646,49 @@ namespace FamiStudio
             }
         };
 
-        // From NESDEV wiki.
-        // [0,x] = NTSC
-        // [1,x] = PAL
-        public static readonly string[][] Strings =
+        public static float GetSemitones(bool pal, int idx)
         {
-            // NTSC
-            new [] {
-                "0 (4.2 KHz)",
-                "1 (4.7 KHz)",
-                "2 (5.3 KHz)",
-                "3 (5.6 KHz)",
-                "4 (6.3 KHz)",
-                "5 (7.0 KHz)",
-                "6 (7.9 KHz)",
-                "7 (8.3 KHz)",
-                "8 (9.4 KHz)",
-                "9 (11.1 KHz)",
-                "10 (12.6 KHz)",
-                "11 (13.9 KHz)",
-                "12 (16.9 KHz)",
-                "13 (21.3 KHz)",
-                "14 (24.9 KHz)",
-                "15 (33.1 KHz)"
-            },
-            // PAL
-            new [] {
-                "0 (4.2 KHz)",
-                "1 (4.7 KHz)",
-                "2 (5.3 KHz)",
-                "3 (5.6 KHz)",
-                "4 (6.0 KHz)",
-                "5 (7.0 KHz)",
-                "6 (7.9 KHz)",
-                "7 (8.4 KHz)",
-                "8 (9.4 KHz)",
-                "9 (11.2 KHz)",
-                "10 (12.6 KHz)",
-                "11 (14.1 KHz)",
-                "12 (17.0 KHz)",
-                "13 (21.3 KHz)",
-                "14 (25.2 KHz)",
-                "15 (33.3 KHz)"
-            }
-        };
+            var f = Frequencies[pal ? 1 : 0, idx];
+            var b = Frequencies[pal ? 1 : 0, 15];
 
-        public static int GetIndexForName(bool pal, string str)
+            return (float)Math.Log(f / b, 2.0) * 12;
+        }
+
+        public static string GetString(bool index, bool pal, bool freq, bool semitones, int idx)
         {
-            return Array.IndexOf(Strings[pal ? 1 : 0], str);
+            var str = "";
+
+            if (index)
+            {
+                str += $"[{idx}]";
+            }
+
+            if (freq)
+            {
+                if (str != "") str += " ";
+                var f = Frequencies[pal ? 1 : 0, idx];
+                str += (f / 1000).ToString("n1", CultureInfo.CurrentCulture) + " KHz";
+            }
+
+            if (semitones)
+            {
+                if (str != "") str += " ";
+                if (freq) str += "(";
+                str += GetSemitones(pal, idx).ToString("n2", CultureInfo.CurrentCulture) + " semitones";
+                if (freq) str += ")";
+            }
+
+            return str;
+        }
+
+        public static string[] GetStringList(bool index, bool pal, bool freq, bool semitones)
+        {
+            var strings = new string[Frequencies.GetLength(1)];
+
+            for (int i = 0; i < Frequencies.GetLength(1); i++)
+                strings[i] = GetString(index, pal, freq, semitones, i);
+
+            return strings;
         }
     };
 }

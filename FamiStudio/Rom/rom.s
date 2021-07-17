@@ -2,16 +2,18 @@
 ; Based off Brad's (rainwarrior.ca) CA65 template, both the regular and FDS version.
 
 ; Enable all features.
-FAMISTUDIO_CFG_EXTERNAL         = 1
-FAMISTUDIO_CFG_SMOOTH_VIBRATO   = 1
-FAMISTUDIO_CFG_DPCM_SUPPORT     = 1
-FAMISTUDIO_CFG_EQUALIZER        = 1
-FAMISTUDIO_USE_VOLUME_TRACK     = 1
-FAMISTUDIO_USE_PITCH_TRACK      = 1
-FAMISTUDIO_USE_SLIDE_NOTES      = 1
-FAMISTUDIO_USE_VIBRATO          = 1
-FAMISTUDIO_USE_ARPEGGIO         = 1
-FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1
+FAMISTUDIO_CFG_EXTERNAL          = 1
+FAMISTUDIO_CFG_SMOOTH_VIBRATO    = 1
+FAMISTUDIO_CFG_DPCM_SUPPORT      = 1
+FAMISTUDIO_CFG_EQUALIZER         = 1
+FAMISTUDIO_USE_VOLUME_TRACK      = 1
+FAMISTUDIO_USE_VOLUME_SLIDES     = 1
+FAMISTUDIO_USE_PITCH_TRACK       = 1
+FAMISTUDIO_USE_SLIDE_NOTES       = 1
+FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1
+FAMISTUDIO_USE_VIBRATO           = 1
+FAMISTUDIO_USE_ARPEGGIO          = 1
+FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
 
 .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
     FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
@@ -59,9 +61,9 @@ oam: .res 256        ; sprite OAM data to be uploaded by DMA
 
 .segment "HEADER"
 
-INES_MAPPER = 31 ; 31 = NSF-like mapper.
-INES_MIRROR = 1  ; 0 = horizontal mirroring, 1 = vertical mirroring
-INES_SRAM   = 0  ; 1 = battery backed SRAM at $6000-7FFF
+INES_MAPPER = 4 ; 4 = MMC3 mapper.
+INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
+INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 
 .if FAMISTUDIO_EXP_FDS
     .byte 'F','D','S',$1a
@@ -222,24 +224,24 @@ FILE_COUNT = 6 + 1
 .incbin "song.bin" ; Test song, Bloody Tears.
 .endif
 
+.segment "DPCM"
+
 .segment "TOC"
 
 ; Will be overwritten by FamiStudio.
 ; General info about the project (author, etc.), 64-bytes.
 max_song:        .byte $00
 .if FAMISTUDIO_EXP_FDS
-fds_unused:      .byte $00
 fds_file_count:  .byte $06 ; Number of actual file on the disk.
 .else
-dpcm_page_start: .byte $00
-dpcm_page_count: .byte $01 ; Test song has 1 page of DPCM.
+mmc_unused:      .byte $00
 .endif
-padding:         .res 5    ; reserved
+padding:         .res 6    ; reserved
 project_name:    .res 28   ; Project name
 project_author:  .res 28   ; Project author
 
-; Up to 8 songs for now, 256 bytes.
-MAX_SONGS = 8
+; Up to 12 songs for now, 384 bytes + 64 bytes header = 448 bytes.
+MAX_SONGS = 12
 
 ; Will be overwritten by FamiStudio.
 ; Each entry in the song table is 32-bytes:
@@ -325,6 +327,19 @@ default_palette:
 
 ;.endif
 
+.if !FAMISTUDIO_EXP_FDS
+; inital values for the mmc3_banks to load at startup.
+init_mmc3_banks:
+    .byte 0 ; CHR at 0 (2KB)
+    .byte 2 ; CHR at 800 (2KB)
+    .byte 4 ; CHR at 1000 (1KB)
+    .byte 5 ; CHR at 1400 (1KB)
+    .byte 6 ; CHR at 1800 (1KB)
+    .byte 7 ; CHR at 1C00 (1KB)
+    .byte 0 ; SONG data at 8000
+    .byte 1 ; SONG data at A000
+.endif
+
 .proc reset
 
     .if ::FAMISTUDIO_EXP_FDS
@@ -332,6 +347,12 @@ default_palette:
         lda $fa
         and #%11110111
         sta $4025
+    .else
+        ; MMC3 setup.
+        lda #00 ; vertical mirroring
+        sta $a000
+        lda #$00 ; disable wram, not needed for such a simple demo.
+        sta $a001
     .endif
 
     sei       ; mask interrupts
@@ -415,13 +436,20 @@ default_palette:
             dey
             sta (p0), y
             bne leftover_loop
-    .endif
 
-    ; Set correct file count.
-    .if ::FAMISTUDIO_EXP_FDS
         lda fds_file_count
         jsr fds_bios_set_file_count
         .word disk_id
+    .else
+        ; Setup initial MMC3 banks.
+        ldx #0
+        bank_loop:  
+            lda init_mmc3_banks, x
+            stx $8000
+            sta $8001       
+            inx
+            cpx #8
+            bne bank_loop
     .endif
 
     ; wait for second vblank
@@ -835,44 +863,17 @@ load_success:
 
 .else
 
-    ; Map the entire range for the song.
+    ; Map 2 consecutive 8KB pages from the song start page.
+    lda #6
     ldy song_page_start, x
-    sty $5000
+    sta $8000
+    sty $8001       
+    lda #7
     iny
-    sty $5001
-    iny
-    sty $5002
-    iny
-    sty $5003
-    iny
-    sty $5004
-    iny
-    sty $5005
-    iny
-    sty $5006
+    sta $8000
+    sty $8001       
 
-    ; If the song uses DPCM, map them as well.  
-    lda song_flags, x
-    beq samples_none
-
-    ldy dpcm_page_start
-    lda dpcm_page_count
-
-    cmp #1
-    beq samples_1_pages
-    cmp #2
-    beq samples_2_pages
-
-samples_3_pages:
-    sty $5004
-    iny
-samples_2_pages:
-    sty $5005
-    iny
-samples_1_pages:
-    sty $5006   
-
-samples_none:
+    ; Load song pointer
     ldy song_addr_start+1, x ; hi-byte
     lda song_addr_start+0, x ; lo-byte
     tax

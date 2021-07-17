@@ -374,6 +374,7 @@ namespace FamiStudio
                 case Effect_SlideUp:
                 case Effect_SlideDown:
                 case Effect_Arpeggio:
+                case Effect_VolumeSlide:
                     // These will be applied later.
                     return;
             }
@@ -389,35 +390,31 @@ namespace FamiStudio
             return $"(Song={pattern.Song.Name}, Channel={ChannelType.Names[pattern.ChannelType]}, Location={pattern.Name}:{n:X2})";
         }
 
-        private int FindPrevNoteForPortamento(Channel channel, int patternIdx, int noteIdx, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        private bool IsVolumeSlideEffect(RowFxData fx)
         {
-            var pattern = channel.PatternInstances[patternIdx];
-
-            for (var it = pattern.GetDenseNoteIterator(0, noteIdx, true); !it.Done; it.Next())
-            {
-                var note = it.CurrentNote;
-                if (note.IsMusical || note.IsStop)
-                    return note.Value;
-            }
-
-            for (var p = patternIdx - 1; p >= 0; p--)
-            {
-                pattern = channel.PatternInstances[p];
-                if (pattern != null)
-                {
-                    for (var it = pattern.GetDenseNoteIterator(0, channel.Song.GetPatternLength(p), true); !it.Done; it.Next())
-                    {
-                        var note = it.CurrentNote;
-                        if (note.IsMusical || note.IsStop)
-                            return note.Value;
-                    }
-                }
-            }
-
-            return Note.NoteInvalid;
+            return fx.fx == Effect_VolumeSlide;
         }
 
-        private bool FindNextSlideEffect(Channel channel, NoteLocation location, out NoteLocation nextLocation, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        private bool IsSlideEffect(RowFxData fx)
+        {
+            return fx.fx == Effect_PortaUp ||
+                   fx.fx == Effect_PortaDown ||
+                   fx.fx == Effect_Portamento ||
+                   fx.fx == Effect_SlideUp ||
+                   fx.fx == Effect_SlideDown;
+        }
+
+        private bool IsValidNote(Note note)
+        {
+            return note != null && note.IsValid;
+        }
+
+        private bool NoteHasVolume(Note note)
+        {
+            return note != null && note.HasVolume;
+        }
+
+        private bool FindNextEffect(Channel channel, NoteLocation location, out NoteLocation nextLocation, Dictionary<Pattern, RowFxData[,]> patternFxData, Func<Note, bool> filterNoteFunction, Func<RowFxData, bool> filterFxFunction)
         {
             nextLocation = NoteLocation.Invalid;
 
@@ -433,24 +430,20 @@ namespace FamiStudio
             {
                 var time = it.CurrentTime;
                 var note = it.CurrentNote;
-
+                
                 var fxChanged = false;
                 for (int i = 0; i < fxData.GetLength(1); i++)
                 {
                     var fx = fxData[time, i];
 
-                    if (fx.fx == Effect_PortaUp    || 
-                        fx.fx == Effect_PortaDown  ||
-                        fx.fx == Effect_Portamento ||
-                        fx.fx == Effect_SlideUp    ||
-                        fx.fx == Effect_SlideDown)
+                    if (filterFxFunction(fx))
                     {
                         fxChanged = true;
                         break;
                     }
                 }
 
-                if (note != null && note.IsValid || fxChanged)
+                if (filterNoteFunction(note) || fxChanged)
                 {
                     nextLocation.PatternIndex = location.PatternIndex;
                     nextLocation.NoteIndex = time;
@@ -477,18 +470,14 @@ namespace FamiStudio
                         {
                             var fx = fxData[time, i];
 
-                            if (fx.fx == Effect_PortaUp    || 
-                                fx.fx == Effect_PortaDown  || 
-                                fx.fx == Effect_Portamento || 
-                                fx.fx == Effect_SlideUp    ||
-                                fx.fx == Effect_SlideDown)
+                            if (filterFxFunction(fx))
                             {
                                 fxChanged = true;
                                 break;
                             }
                         }
 
-                        if (note != null && note.IsValid || fxChanged)
+                        if (filterNoteFunction(note) || fxChanged)
                         {
                             nextLocation.PatternIndex = p;
                             nextLocation.NoteIndex = time;
@@ -498,7 +487,8 @@ namespace FamiStudio
                 }
             }
 
-            return false;
+            nextLocation = channel.Song.EndLocation;
+            return true;
         }
 
         private int FindBestMatchingNote(ushort[] noteTable, int pitch, int sign)
@@ -586,7 +576,7 @@ namespace FamiStudio
             // Convert slide notes + portamento to our format.
             foreach (var c in s.Channels)
             {
-                if (!c.SupportsSlideNotes)
+                if (!c.SupportsEffect(Note.EffectVolumeSlide))
                     continue;
 
                 var songSpeed = s.FamitrackerSpeed;
@@ -596,7 +586,283 @@ namespace FamiStudio
                 var portamentoSpeed = 0;
                 var slideSpeed = 0;
                 var slideShift = c.IsN163WaveChannel ? 2 : 0;
-                var slideSign  = c.IsN163WaveChannel || c.IsFdsWaveChannel || c.IsVrc7FmChannel ? -1 : 1; // Inverted channels.
+                var slideSign = c.IsN163WaveChannel || c.IsFdsWaveChannel || c.IsVrc7FmChannel ? -1 : 1; // Inverted channels.
+
+                for (int p = 0; p < s.Length; p++)
+                {
+                    var pattern = c.PatternInstances[p];
+
+                    if (pattern == null)
+                        continue;
+
+                    var patternLen = s.GetPatternLength(p);
+
+                    for (var it = pattern.GetDenseNoteIterator(0, patternLen); !it.Done; it.Next())
+                    {
+                        var location = new NoteLocation(p, it.CurrentTime);
+                        var note = it.CurrentNote;
+
+                        // Look for speed changes.
+                        s.ApplySpeedEffectAt(location, ref songSpeed);
+
+                        if (!patternFxData.ContainsKey(pattern) || processedPatterns.Contains(pattern))
+                            continue;
+
+                        var fxData = patternFxData[pattern];
+                        var slideTarget = 0;
+
+                        for (int i = 0; i < fxData.GetLength(1); i++)
+                        {
+                            var fx = fxData[location.NoteIndex, i];
+
+                            // These seem to have no effect on the noise channel.
+                            if (c.IsNoiseChannel && (fx.fx == Effect_SlideUp || fx.fx == Effect_SlideDown || fx.fx == Effect_Portamento))
+                            {
+                                fx.fx = Effect_None;
+                                fx.param = 0;
+                            }
+
+                            if (fx.param != 0)
+                            {
+                                // When the effect it turned on, we need to add a note.
+                                if ((fx.fx == Effect_PortaUp ||
+                                     fx.fx == Effect_PortaDown ||
+                                     fx.fx == Effect_SlideUp ||
+                                     fx.fx == Effect_SlideDown) &&
+                                    lastNoteValue >= Note.MusicalNoteMin &&
+                                    lastNoteValue <= Note.MusicalNoteMax && (note == null || !note.IsValid))
+                                {
+                                    if (note == null)
+                                    {
+                                        note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+                                        it.Resync();
+                                    }
+
+                                    note.Value = lastNoteValue;
+                                    note.Instrument = lastNoteInstrument;
+                                    note.Arpeggio = lastNoteArpeggio;
+                                    note.HasAttack = false;
+                                }
+                            }
+
+                            if (fx.fx == Effect_PortaUp)
+                            {
+                                // If we have a Qxx/Rxx on the same row as a 1xx/2xx, things get weird.
+                                if (slideTarget == 0)
+                                    slideSpeed = (-fx.param * slideSign) << slideShift;
+                            }
+                            if (fx.fx == Effect_PortaDown)
+                            {
+                                // If we have a Qxx/Rxx on the same row as a 1xx/2xx, things get weird.
+                                if (slideTarget == 0)
+                                    slideSpeed = (fx.param * slideSign) << slideShift;
+                            }
+                            if (fx.fx == Effect_Portamento)
+                            {
+                                portamentoSpeed = fx.param;
+                            }
+                            if (fx.fx == Effect_SlideUp && note != null && note.IsMusical)
+                            {
+                                slideTarget = Utils.Clamp(note.Value + (fx.param & 0xf), Note.MusicalNoteMin, Note.MusicalNoteMax);
+                                slideSpeed = (-((fx.param >> 4) * 2 + 1)) << slideShift;
+                            }
+                            if (fx.fx == Effect_SlideDown && note != null && note.IsMusical)
+                            {
+                                slideTarget = Utils.Clamp(note.Value - (fx.param & 0xf), Note.MusicalNoteMin, Note.MusicalNoteMax);
+                                slideSpeed = (((fx.param >> 4) * 2 + 1)) << slideShift;
+                            }
+                        }
+
+                        // Create a slide note.
+                        if (note != null && note.IsMusical && !note.IsSlideNote)
+                        {
+                            var slideSource = note.Value;
+                            var noteTable = NesApu.GetNoteTableForChannelType(c.Type, s.Project.PalMode, s.Project.ExpansionNumChannels);
+                            var pitchLimit = NesApu.GetPitchLimitForChannelType(c.Type);
+
+                            // If we have a new note with auto-portamento enabled, we need to
+                            // swap the notes since our slide notes work backward compared to 
+                            // FamiTracker.
+                            if (portamentoSpeed != 0)
+                            {
+                                // Ignore notes with no attack since we created them to handle a previous slide.
+                                if (note.HasAttack && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax)
+                                {
+                                    slideSpeed = portamentoSpeed;
+                                    slideTarget = note.Value;
+                                    slideSource = lastNoteValue;
+                                    note.Value = lastNoteValue;
+                                }
+                            }
+
+                            // Our implementation of VRC7 pitches is quite different from FamiTracker.
+                            // Compensate for larger pitches in higher octaves by shifting. We cant shift by 
+                            // a large amount because the period is 9-bit and FamiTracker is restricted to 
+                            // this for slides (octave never changes).
+                            var octaveSlideShift = c.IsVrc7FmChannel && note.Value >= 12 ? 1 : 0;
+
+                            // 3xx/Qxy/Rxy : We know which note we are sliding to and the speed, but we 
+                            //               don't know how many frames it will take to get there.
+                            if (slideTarget != 0)
+                            {
+                                Debug.Assert(!c.IsNoiseChannel);
+
+                                // Advance in the song until we have the correct number of frames.
+                                var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / (slideSpeed << octaveSlideShift)));
+                                note.SlideNoteTarget = (byte)slideTarget;
+
+                                // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
+                                var nextLocation = location;
+                                s.AdvanceNumberOfFrames(ref nextLocation, numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode);
+
+                                // Still to see if there is a note between the current one and the 
+                                // next note, this could append if you add a note before the slide 
+                                // is supposed to finish.
+                                if (FindNextEffect(c, location, out var nextLocation2, patternFxData, IsValidNote, IsSlideEffect))
+                                {
+                                    nextLocation = NoteLocation.Min(nextLocation, nextLocation2);
+
+                                    // If the slide is interrupted by another slide effect, we will not reach 
+                                    // the final target, but rather some intermediate note. Let's do our best
+                                    // to interpolate and figure out the best note.
+                                    var numFramesUntilNextSlide = s.CountFramesBetween(location, nextLocation, songSpeed, s.Project.PalMode);
+                                    var ratio = Utils.Clamp(numFramesUntilNextSlide / numFrames, 0.0f, 1.0f);
+                                    var intermediatePitch = (int)Math.Round(Utils.Lerp(noteTable[slideSource], noteTable[slideTarget], ratio));
+
+                                    slideTarget = FindBestMatchingNote(noteTable, intermediatePitch, Math.Sign(slideSpeed));
+                                    note.SlideNoteTarget = (byte)slideTarget;
+                                }
+
+                                if (nextLocation.IsInSong(s))
+                                {
+                                    // Add an extra note with no attack to stop the slide.
+                                    var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
+                                    if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote) || !nextNote.IsValid)
+                                    {
+                                        nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
+                                        nextNote.Instrument = note.Instrument;
+                                        nextNote.Value = (byte)slideTarget;
+                                        nextNote.HasAttack = false;
+                                        it.Resync();
+                                    }
+                                    else if (nextNote != null && nextNote.IsRelease)
+                                    {
+                                        Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nextLocation.NoteIndex)}");
+                                    }
+                                }
+
+                                // 3xx, Qxx and Rxx stops when its done.
+                                slideSpeed = 0;
+                            }
+
+                            // 1xx/2xy : We know the speed at which we are sliding, but need to figure out what makes it stop.
+                            else if (slideSpeed != 0 && FindNextEffect(c, location, out var nextLocation, patternFxData, IsValidNote, IsSlideEffect))
+                            {
+                                // See how many frames until the slide stops.
+                                var numFrames = (int)Math.Round(s.CountFramesBetween(location, nextLocation, songSpeed, s.Project.PalMode));
+
+                                // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
+                                numFrames = Math.Max(1, numFrames - (note.HasNoteDelay ? note.NoteDelay : 0));
+
+                                var newNote = 0;
+                                var clearSlide = false;
+
+                                // Noise is much simpler. Or is it?
+                                if (c.IsNoiseChannel)
+                                {
+                                    // FamiTracker clamps noise channel period between 0 and 2047. There is no 
+                                    // way for us to know the state of the current period here, so we will assume
+                                    // we are in the [17,31] range and stop the slide when it hits zero.
+                                    if (slideSpeed < 0)
+                                    {
+                                        var famitrackerNoiseValue = (note.Value & 0xf) | 0x10; // See CNoiseChan::HandleNote
+                                        for (int i = 1; i < numFrames; i++)
+                                        {
+                                            famitrackerNoiseValue += slideSpeed;
+                                            if (famitrackerNoiseValue <= 0)
+                                            {
+                                                numFrames = i;
+                                                var newNextLocation = location;
+                                                s.AdvanceNumberOfFrames(ref newNextLocation, numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode);
+                                                nextLocation = NoteLocation.Min(nextLocation, newNextLocation);
+                                                Log.LogMessage(LogSeverity.Warning, $"Effect 1xx on noise channel may not song correct due to the massive differences in how both app handle those. {GetPatternString(c.PatternInstances[location.PatternIndex], location.NoteIndex)}");
+                                                clearSlide = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    var newNoteValue = note.Value + slideSpeed * numFrames;
+
+                                    // We dont support wrapping around.
+                                    if (newNoteValue < Note.MusicalNoteMin ||
+                                        newNoteValue > Note.MusicalNoteMax)
+                                    {
+                                        newNoteValue = Utils.Clamp(newNoteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
+                                        Log.LogMessage(LogSeverity.Warning, $"Noise slide tries to go outside of the {Note.GetFriendlyName(Note.MusicalNoteMin)} - {Note.GetFriendlyName(Note.MusicalNoteMax)} range and will be clamped. Manual correction will be required. {GetPatternString(c.PatternInstances[location.PatternIndex], location.NoteIndex)}");
+                                    }
+
+                                    newNote = newNoteValue;
+                                }
+                                else
+                                {
+                                    // Compute the pitch delta and find the closest target note.
+                                    var newNotePitch = Utils.Clamp(noteTable[slideSource] + numFrames * (slideSpeed << octaveSlideShift), 0, pitchLimit);
+                                    newNote = FindBestMatchingNote(noteTable, newNotePitch, Math.Sign(slideSpeed));
+                                }
+
+                                note.SlideNoteTarget = (byte)newNote;
+
+                                if (nextLocation.IsInSong(s))
+                                {
+                                    // If the FX was turned off, we need to add an extra note.
+                                    var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
+                                    if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote) || !nextNote.IsValid)
+                                    {
+                                        nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
+                                        nextNote.Instrument = note.Instrument;
+                                        nextNote.Value = (byte)newNote;
+                                        nextNote.HasAttack = false;
+                                        it.Resync();
+                                    }
+                                    else if (nextNote != null && nextNote.IsRelease)
+                                    {
+                                        Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nextLocation.NoteIndex)}");
+                                    }
+                                }
+
+                                if (clearSlide)
+                                    slideSpeed = 0;
+                            }
+                        }
+
+                        if (note != null && (note.IsMusical || note.IsStop))
+                        {
+                            lastNoteValue = note.IsSlideNote ? note.SlideNoteTarget : note.Value;
+                            lastNoteInstrument = note.Instrument;
+                            lastNoteArpeggio = note.Arpeggio;
+                        }
+                    }
+
+                    processedPatterns.Add(pattern);
+                }
+            }
+        }
+
+        private void CreateVolumeSlides(Song s, Dictionary<Pattern, RowFxData[,]> patternFxData)
+        {
+            var processedPatterns = new HashSet<Pattern>();
+
+            // Convert slide notes + portamento to our format.
+            foreach (var c in s.Channels)
+            {
+                if (!c.SupportsSlideNotes)
+                    continue;
+
+                var songSpeed = s.FamitrackerSpeed;
+                var lastVolume = (float)Note.VolumeMax;
+                var slideEndLocation = NoteLocation.Invalid;
+                var slideSlope = 0.0f;
 
                 for (int p = 0; p < s.Length; p++)
                 {
@@ -618,184 +884,86 @@ namespace FamiStudio
                         if (!patternFxData.ContainsKey(pattern) || processedPatterns.Contains(pattern))
                             continue;
 
+                        if (slideEndLocation.IsValid && location < slideEndLocation)
+                            continue;
+                        slideEndLocation = NoteLocation.Invalid;
+
                         var fxData = patternFxData[pattern];
-                        var slideTarget = 0;
+                        var hasVolumeSlide = false;
 
                         for (int i = 0; i < fxData.GetLength(1); i++)
                         {
                             var fx = fxData[location.NoteIndex, i];
 
-                            if (fx.param != 0)
+                            if (fx.fx == Effect_VolumeSlide)
                             {
-                                // When the effect it turned on, we need to add a note.
-                                if ((fx.fx == Effect_PortaUp   || 
-                                     fx.fx == Effect_PortaDown ||
-                                     fx.fx == Effect_SlideUp   ||
-                                     fx.fx == Effect_SlideDown) &&
-                                    lastNoteValue >= Note.MusicalNoteMin && 
-                                    lastNoteValue <= Note.MusicalNoteMax && (note == null || !note.IsValid))
+                                if (note == null)
                                 {
-                                    if (note == null)
-                                    {
-                                        note = pattern.GetOrCreateNoteAt(location.NoteIndex);
-                                        it.Resync();
-                                    }
-
-                                    note.Value      = lastNoteValue;
-                                    note.Instrument = lastNoteInstrument;
-                                    note.Arpeggio   = lastNoteArpeggio;
-                                    note.HasAttack  = false;
+                                    note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+                                    it.Resync();
                                 }
-                            }
 
-                            if (fx.fx == Effect_PortaUp)
-                            {
-                                // If we have a Qxx/Rxx on the same row as a 1xx/2xx, things get weird.
-                                if (slideTarget == 0)
-                                    slideSpeed = (-fx.param * slideSign) << slideShift;
-                            }
-                            if (fx.fx == Effect_PortaDown)
-                            {
-                                // If we have a Qxx/Rxx on the same row as a 1xx/2xx, things get weird.
-                                if (slideTarget == 0)
-                                    slideSpeed = ( fx.param * slideSign) << slideShift;
-                            }
-                            if (fx.fx == Effect_Portamento)
-                            {
-                                portamentoSpeed = fx.param;
-                            }
-                            if (fx.fx == Effect_SlideUp && note != null && note.IsMusical)
-                            {
-                                slideTarget = Utils.Clamp(note.Value + (fx.param & 0xf), Note.MusicalNoteMin, Note.MusicalNoteMax);
-                                slideSpeed = (-((fx.param >> 4) * 2 + 1)) << slideShift;
-                            }
-                            if (fx.fx == Effect_SlideDown && note != null && note.IsMusical)
-                            {
-                                slideTarget = Utils.Clamp(note.Value - (fx.param & 0xf), Note.MusicalNoteMin, Note.MusicalNoteMax);
-                                slideSpeed = (((fx.param >> 4) * 2 + 1)) << slideShift;
+                                if ((fx.param & 0x0f) != 0) // Slide down
+                                    slideSlope = -fx.param / 8.0f;
+                                else if ((fx.param & 0xf0) != 0) // Slide up
+                                    slideSlope =  (fx.param >> 4) / 8.0f;
+                                else
+                                    slideSlope = 0.0f;
+
+                                hasVolumeSlide = slideSlope != 0.0f;
                             }
                         }
 
-                        // Create a slide note.
-                        if (note != null && !note.IsSlideNote)
+                        if (note != null && note.HasVolume)
+                            lastVolume = note.Volume;
+
+                        // Create a volume slide if needed.
+                        if (note != null && slideSlope != 0 &&
+                            !(slideSlope < 0.0f && lastVolume <= 0.0f || slideSlope > 0.0f && lastVolume >= Note.VolumeMax) &&
+                            FindNextEffect(c, location, out var nextLocation, patternFxData, NoteHasVolume, IsVolumeSlideEffect))
                         {
-                            if (note.IsMusical)
+                            // See how many frames until the volume slide stops.
+                            var numFrames = (int)Math.Round(s.CountFramesBetween(location, nextLocation, songSpeed, s.Project.PalMode));
+
+                            // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
+                            numFrames = Math.Max(1, numFrames - (note.HasNoteDelay ? note.NoteDelay : 0));
+
+                            var newVolume = Utils.Clamp(lastVolume + numFrames * slideSlope, 0, Note.VolumeMax);
+
+                            // If the volume reaches zero or the max, it might have ended up earlier, let's figure that out.
+                            if ((int)lastVolume != newVolume && (newVolume == 0 || newVolume == Note.VolumeMax))
                             {
-                                var slideSource = note.Value;
-                                var noteTable   = NesApu.GetNoteTableForChannelType(c.Type, s.Project.PalMode, s.Project.ExpansionNumChannels);
-                                var pitchLimit  = NesApu.GetPitchLimitForChannelType(c.Type);
+                                numFrames = (int)Math.Round(Math.Abs((newVolume - lastVolume) / slideSlope));
+                                nextLocation = location;
+                                s.AdvanceNumberOfFrames(ref nextLocation, numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode);
+                            }
 
-                                // If we have a new note with auto-portamento enabled, we need to
-                                // swap the notes since our slide notes work backward compared to 
-                                // FamiTracker.
-                                if (portamentoSpeed != 0)
+                            if (!note.HasVolume)
+                                note.Volume = (byte)lastVolume;
+                            note.VolumeSlideTarget = (byte)newVolume;
+                            lastVolume = newVolume;
+
+                            if (nextLocation.IsInSong(s))
+                            {
+                                // If the FX was turned off, we need to add an extra note.
+                                var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
+                                if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote))
                                 {
-                                    // Ignore notes with no attack since we created them to handle a previous slide.
-                                    if (note.HasAttack && lastNoteValue >= Note.MusicalNoteMin && lastNoteValue <= Note.MusicalNoteMax)
-                                    {
-                                        slideSpeed  = portamentoSpeed;
-                                        slideTarget = note.Value;
-                                        slideSource = lastNoteValue;
-                                        note.Value  = lastNoteValue;
-                                    }
+                                    nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
+                                    nextNote.Volume = (byte)newVolume;
+                                    it.Resync();
                                 }
-
-                                // Our implementation of VRC7 pitches is quite different from FamiTracker.
-                                // Compensate for larger pitches in higher octaves by shifting. We cant shift by 
-                                // a large amount because the period is 9-bit and FamiTracker is restricted to 
-                                // this for slides (octave never changes).
-                                var octaveSlideShift = c.IsVrc7FmChannel && note.Value >= 12 ? 1 : 0;
-
-                                // 3xx/Qxy/Rxy : We know which note we are sliding to and the speed, but we 
-                                //               don't know how many frames it will take to get there.
-                                if (slideTarget != 0)
+                                else if (!nextNote.HasVolume)
                                 {
-                                    // Advance in the song until we have the correct number of frames.
-                                    var numFrames = Math.Max(1, Math.Abs((noteTable[slideSource] - noteTable[slideTarget]) / (slideSpeed << octaveSlideShift)));
-                                    note.SlideNoteTarget = (byte)slideTarget;
-
-                                    // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
-                                    var nextLocation = location;
-                                    s.AdvanceNumberOfFrames(ref nextLocation, numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode);
-
-                                    // Still to see if there is a note between the current one and the 
-                                    // next note, this could append if you add a note before the slide 
-                                    // is supposed to finish.
-                                    if (FindNextSlideEffect(c, location, out var nextLocation2, patternFxData))
-                                    {
-                                        nextLocation = NoteLocation.Min(nextLocation, nextLocation2);
-
-                                        // If the slide is interrupted by another slide effect, we will not reach 
-                                        // the final target, but rather some intermediate note. Let's do our best
-                                        // to interpolate and figure out the best note.
-                                        var numFramesUntilNextSlide = s.CountFramesBetween(location, nextLocation, songSpeed, s.Project.PalMode);
-                                        var ratio = Utils.Clamp(numFramesUntilNextSlide / numFrames, 0.0f, 1.0f);
-                                        var intermediatePitch = (int)Math.Round(Utils.Lerp(noteTable[slideSource], noteTable[slideTarget], ratio));
-
-                                        slideTarget = FindBestMatchingNote(noteTable, intermediatePitch, Math.Sign(slideSpeed));
-                                        note.SlideNoteTarget = (byte)slideTarget;
-                                    }
-
-                                    if (nextLocation.PatternIndex < s.Length)
-                                    {
-                                        // Add an extra note with no attack to stop the slide.
-                                        var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
-                                        if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote) || !nextNote.IsValid)
-                                        {
-                                            nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
-                                            nextNote.Instrument = note.Instrument;
-                                            nextNote.Value = (byte)slideTarget;
-                                            nextNote.HasAttack = false;
-                                            it.Resync();
-                                        }
-                                        else if (nextNote != null && nextNote.IsRelease)
-                                        {
-                                            Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nextLocation.NoteIndex)}");
-                                        }
-                                    }
-
-                                    // 3xx, Qxx and Rxx stops when its done.
-                                    slideSpeed = 0;
-                                }
-
-                                // 1xx/2xy : We know the speed at which we are sliding, but need to figure out what makes it stop.
-                                else if (slideSpeed != 0 && FindNextSlideEffect(c, location, out var nextLocation, patternFxData))
-                                {
-                                    // See how many frames until the slide stops.
-                                    var numFrames = (int)Math.Round(s.CountFramesBetween(location, nextLocation, songSpeed, s.Project.PalMode));
-
-                                    // TODO: Here we consider if the start note has a delay, but ignore the end note. It might have one too.
-                                    numFrames = Math.Max(1, numFrames - (note.HasNoteDelay ? note.NoteDelay : 0));
-
-                                    // Compute the pitch delta and find the closest target note.
-                                    var newNotePitch = Utils.Clamp(noteTable[slideSource] + numFrames * (slideSpeed << octaveSlideShift), 0, pitchLimit);
-                                    var newNote = FindBestMatchingNote(noteTable, newNotePitch, Math.Sign(slideSpeed));
-
-                                    note.SlideNoteTarget = (byte)newNote;
-
-                                    // If the FX was turned off, we need to add an extra note.
-                                    var nextPattern = c.PatternInstances[nextLocation.PatternIndex];
-                                    if (!nextPattern.Notes.TryGetValue(nextLocation.NoteIndex, out var nextNote) || !nextNote.IsValid)
-                                    {
-                                        nextNote = nextPattern.GetOrCreateNoteAt(nextLocation.NoteIndex);
-                                        nextNote.Instrument = note.Instrument;
-                                        nextNote.Value = (byte)newNote;
-                                        nextNote.HasAttack = false;
-                                        it.Resync();
-                                    }
-                                    else if (nextNote != null && nextNote.IsRelease)
-                                    {
-                                        Log.LogMessage(LogSeverity.Warning, $"A slide note ends on a release note. This is currently unsupported and will require manual correction. {GetPatternString(nextPattern, nextLocation.NoteIndex)}");
-                                    }
+                                    nextNote.Volume = (byte)newVolume;
                                 }
                             }
-                        }
+                            else
+                            {
+                                break;
+                            }
 
-                        if (note != null && (note.IsMusical || note.IsStop))
-                        {
-                            lastNoteValue      = note.IsSlideNote ? note.SlideNoteTarget : note.Value;
-                            lastNoteInstrument = note.Instrument;
-                            lastNoteArpeggio   = note.Arpeggio;
+                            slideEndLocation = nextLocation;
                         }
                     }
 
@@ -911,6 +1079,7 @@ namespace FamiStudio
                 s.UpdatePatternStartNotes();
 
                 CreateArpeggios(s, patternFxData);
+                CreateVolumeSlides(s, patternFxData);
                 CreateSlideNotes(s, patternFxData);
 
                 s.DeleteEmptyPatterns();

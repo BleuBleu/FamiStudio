@@ -141,6 +141,7 @@ namespace FamiStudio
             Console.WriteLine($"Supported commands and corresponding output format(s):");
             Console.WriteLine($"  wav-export : Export to a WAV file (*.wav).");
             Console.WriteLine($"  mp3-export : Export to a WAV file (*.mp3).");
+            Console.WriteLine($"  ogg-export : Export to a OGG file (*.ogg).");
             Console.WriteLine($"  nsf-export : Export to a NSF file (*.nsf).");
             Console.WriteLine($"  rom-export : Export to a NES ROM file (.nes).");
             Console.WriteLine($"  fds-export : Export to a FDS disk file (.fds).");
@@ -170,7 +171,7 @@ namespace FamiStudio
             Console.WriteLine($"  -wav-export-separate-channels : Export each channels to separate file (default:off).");
             Console.WriteLine($"  -wav-export-separate-intro : Export the intro of the song seperately from the looping section (default:off).");
             Console.WriteLine($"");
-            Console.WriteLine($"WAV export specific options");
+            Console.WriteLine($"MP3 export specific options");
             Console.WriteLine($"  -mp3-export-rate:<rate> : Sample rate of the exported mp3 : 44100 or 48000 (default:44100).");
             Console.WriteLine($"  -mp3-export-bitrate:<rate> : Bitrate of the exported mp3 : 96, 112, 128, 160, 192, 224 or 256 (default:192).");
             Console.WriteLine($"  -mp3-export-duration:<duration> : Duration in second, 0 plays song once and stop (default:0).");
@@ -178,6 +179,15 @@ namespace FamiStudio
             Console.WriteLine($"  -mp3-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
             Console.WriteLine($"  -mp3-export-separate-channels : Export each channels to separate file (default:off).");
             Console.WriteLine($"  -mp3-export-separate-intro : Export the intro of the song seperately from the looping section (default:off).");
+            Console.WriteLine($"");
+            Console.WriteLine($"OGG export specific options");
+            Console.WriteLine($"  -ogg-export-rate:<rate> : Sample rate of the exported mp3 : 44100 or 48000 (default:44100).");
+            Console.WriteLine($"  -ogg-export-bitrate:<rate> : Bitrate of the exported mp3 : 96, 112, 128, 160, 192, 224 or 256 (default:192).");
+            Console.WriteLine($"  -ogg-export-duration:<duration> : Duration in second, 0 plays song once and stop (default:0).");
+            Console.WriteLine($"  -ogg-export-loop:<count> : Number of times to play the song (default:1).");
+            Console.WriteLine($"  -ogg-export-channels:<mask> : Channel mask in hexadecimal, bit zero in channel 0 and so on (default:ff).");
+            Console.WriteLine($"  -ogg-export-separate-channels : Export each channels to separate file (default:off).");
+            Console.WriteLine($"  -ogg-export-separate-intro : Export the intro of the song seperately from the looping section (default:off).");
             Console.WriteLine($"");
             Console.WriteLine($"NSF export specific options");
             Console.WriteLine($"  -nsf-export-mode:<mode> : Target machine: ntsc or pal (default:project mode).");
@@ -303,9 +313,9 @@ namespace FamiStudio
             return songIds;
         }
 
-        private void WavMp3Export(string filename, bool mp3)
+        private void AudioExport(string filename, int format)
         {
-            var extension = mp3 ? "mp3" : "wav";
+            var extension = format == AudioFormatType.Mp3 ? "mp3" : (format == AudioFormatType.Vorbis ? "ogg" : "wav");
 
             if (!ValidateExtension(filename, "." + extension))
                 return;
@@ -327,13 +337,21 @@ namespace FamiStudio
 
             if (song != null)
             {
-                WavMp3ExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro,
-                     (samples, fn) =>
+                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro, false, null,
+                     (samples, samplesChannels, fn) =>
                      {
-                         if (mp3)
-                             Mp3File.Save(samples, fn, sampleRate, bitrate);
-                         else
-                             WaveFile.Save(samples, fn, sampleRate);
+                         switch (format)
+                         {
+                             case AudioFormatType.Mp3:
+                                 Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                 break;
+                             case AudioFormatType.Wav:
+                                 WaveFile.Save(samples, fn, sampleRate, samplesChannels);
+                                 break;
+                             case AudioFormatType.Vorbis:
+                                 VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                 break;
+                         }
                      });
             }
         }
@@ -578,8 +596,9 @@ namespace FamiStudio
 
                         switch (args[1].ToLower().Trim())
                         {
-                            case "wav-export": WavMp3Export(outputFilename, false); break;
-                            case "mp3-export": WavMp3Export(outputFilename, true); break;
+                            case "wav-export": AudioExport(outputFilename, AudioFormatType.Wav); break;
+                            case "mp3-export": AudioExport(outputFilename, AudioFormatType.Mp3); break;
+                            case "ogg-export": AudioExport(outputFilename, AudioFormatType.Vorbis); break;
                             case "nsf-export": NsfExport(outputFilename); break;
                             case "rom-export": RomExport(outputFilename); break;
                             case "fds-export": FdsExport(outputFilename); break;

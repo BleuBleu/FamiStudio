@@ -46,7 +46,7 @@ namespace FamiStudio
 
         const int FormatSubChunkSize = 16;
 
-        public unsafe static void Save(short[] samples, string filename, int sampleRate)
+        public unsafe static void Save(short[] samples, string filename, int sampleRate, int numChannels)
         {
             using (var file = new FileStream(filename, FileMode.Create))
             {
@@ -68,7 +68,7 @@ namespace FamiStudio
                 header.subChunk1Id[2] = (byte)'t';
                 header.subChunk1Id[3] = (byte)' ';
                 header.audioFormat = 1; // FOR PCM
-                header.numChannels = 1; // 1 for MONO, 2 for stereo
+                header.numChannels = (short)numChannels; // 1 for MONO, 2 for stereo
                 header.sampleRate = sampleRate; // ie 44100 hertz, cd quality audio
                 header.bitsPerSample = 16; // 
                 header.byteRate = header.sampleRate * header.numChannels * header.bitsPerSample / 8;

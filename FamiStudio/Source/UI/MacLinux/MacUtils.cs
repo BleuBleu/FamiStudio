@@ -46,6 +46,9 @@ namespace FamiStudio
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, bool bool1);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, int int1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
@@ -53,6 +56,9 @@ namespace FamiStudio
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, IntPtr intPtr2);
+
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, IntPtr intPtr2, IntPtr intPtr3);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, int int1);
@@ -129,10 +135,14 @@ namespace FamiStudio
         static IntPtr clsNSData;
         static IntPtr clsNSNotificationCenter;
         static IntPtr clsNSApplication;
+        static IntPtr clsNSMenu;
+        static IntPtr clsNSMenuItem;
 
         static IntPtr selAlloc = SelRegisterName("alloc");
         static IntPtr selLength = SelRegisterName("length");
         static IntPtr selBytes = SelRegisterName("bytes");
+        static IntPtr selCount = SelRegisterName("count");
+        static IntPtr selGetObjectAtIndex = SelRegisterName("objectAtIndex:");
         static IntPtr selClearContents = SelRegisterName("clearContents");
         static IntPtr selStringForType = SelRegisterName("stringForType:");
         static IntPtr selSetStringForType = SelRegisterName("setString:forType:");
@@ -162,11 +172,13 @@ namespace FamiStudio
         static IntPtr selSetTitle = SelRegisterName("setTitle:");
         static IntPtr selInitWithData = SelRegisterName("initWithData:");
         static IntPtr selSetDirectoryURL = SelRegisterName("setDirectoryURL:");
+        static IntPtr selAllowsMultipleSelection = SelRegisterName("setAllowsMultipleSelection:");
         static IntPtr selSetAllowedFileTypes = SelRegisterName("setAllowedFileTypes:");
         static IntPtr selSetCanChooseDirectories = SelRegisterName("setCanChooseDirectories:");
         static IntPtr selSetCanCreateirectories = SelRegisterName("setCanCreateDirectories:");
         static IntPtr selRunModal = SelRegisterName("runModal");
         static IntPtr selURL = SelRegisterName("URL");
+        static IntPtr selURLs = SelRegisterName("URLs");
         static IntPtr selInit = SelRegisterName("init");
         static IntPtr selClassName = SelRegisterName("className");
         static IntPtr selSetMessageText = SelRegisterName("setMessageText:");
@@ -180,6 +192,13 @@ namespace FamiStudio
         static IntPtr selAddObserver = SelRegisterName("addObserver:selector:name:object:");
         static IntPtr selAddCursorRectCursor = SelRegisterName("addCursorRect:cursor:");
         static IntPtr selSharedApplication = SelRegisterName("sharedApplication");
+        static IntPtr selInitWithTitleActionKeyEquivalent = SelRegisterName("initWithTitle:action:keyEquivalent:");
+        static IntPtr selInitWithTitle = SelRegisterName("initWithTitle:");
+        static IntPtr selSetTarget = SelRegisterName("setTarget:");
+        static IntPtr selNew = SelRegisterName("new");
+        static IntPtr selAddItem = SelRegisterName("addItem:");
+        static IntPtr selSetSubmenu = SelRegisterName("setSubmenu:");
+        static IntPtr selSetMainMenu = SelRegisterName("setMainMenu:");
 
         static IntPtr generalPasteboard;
         static IntPtr famiStudioPasteboard;
@@ -210,6 +229,8 @@ namespace FamiStudio
             clsNSData = GetClass("NSData");
             clsNSNotificationCenter = GetClass("NSNotificationCenter");
             clsNSApplication = GetClass("NSApplication");
+            clsNSMenu = GetClass("NSMenu");
+            clsNSMenuItem = GetClass("NSMenuItem");
 
             dialogScaling = (float)SendFloat(nsWin, selBackingScaleFactor);
 
@@ -221,6 +242,27 @@ namespace FamiStudio
             generalPasteboard = SendIntPtr(clsNSPasteboard, selGeneralPasteboard);
             famiStudioPasteboard = SendIntPtr(clsNSPasteboard, selPasteboardWithName, ToNSString("FamiStudio"));
             nsApplication = SendIntPtr(clsNSApplication, selSharedApplication);
+
+            CreateMenu();
+        }
+
+        public static void CreateMenu()
+        {
+            var quitMenuItem = SendIntPtr(clsNSMenuItem, selAlloc);
+
+            SendIntPtr(quitMenuItem, selInitWithTitleActionKeyEquivalent, ToNSString("Quit"), SelRegisterName("windowShouldClose:"), ToNSString(""));
+            SendVoid(quitMenuItem, selSetTarget, nsWindow);
+
+            var appMenu = SendIntPtr(clsNSMenu, selNew);
+            SendIntPtr(appMenu, selAddItem, quitMenuItem);
+
+            var appMenuItem = SendIntPtr(clsNSMenuItem, selNew);
+            SendIntPtr(appMenuItem, selSetSubmenu, appMenu);
+
+            var mainMenu = SendIntPtr(clsNSMenu, selNew);
+            SendIntPtr(mainMenu, selAddItem, appMenuItem);
+
+            SendVoid(nsApplication, selSetMainMenu, mainMenu);
         }
 
         public static void AddNotificationCenterObserver(IntPtr observer, string selector, string notificationName, IntPtr obj)
@@ -316,7 +358,26 @@ namespace FamiStudio
             Marshal.FreeHGlobal(buf);
 
             return array;
+        }
 
+        static unsafe public string[] FromNSArray(IntPtr nsArray)
+        {
+            var count = SendInt(nsArray, selCount);
+
+            if (count == 0)
+            {
+                return new string[0];
+            }
+
+            var items = new string[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                var obj = SendIntPtr(nsArray, selGetObjectAtIndex, i);
+                items[i] = FromNSURL(obj);
+            }
+
+            return items;
         }
 
         public static void CoreTextRegisterFont(string fontfile)
@@ -621,7 +682,7 @@ namespace FamiStudio
             }
         }
 
-        public static string ShowOpenDialog(string title, string[] extensions, string path = null)
+        public static string[] ShowOpenDialog(string title, string[] extensions, bool multiselect = false, string path = null)
         {
             var openPanel = SendIntPtr(clsNSOpenPanel, selOpenPanel);
             SendIntPtr(openPanel, selSetTitle, ToNSString(title));
@@ -630,10 +691,18 @@ namespace FamiStudio
             {
                 var url = ToNSURL(path);
                 SendIntPtr(openPanel, selSetDirectoryURL, url);
-            }   
+            }
 
-            var fileTypesArray = ToNSArray(extensions);
-            SendIntPtr(openPanel, selSetAllowedFileTypes, fileTypesArray);
+            if (extensions != null && extensions.Length > 0)
+            {
+                var fileTypesArray = ToNSArray(extensions);
+                SendIntPtr(openPanel, selSetAllowedFileTypes, fileTypesArray);
+            }
+
+            if (multiselect)
+            {
+                SendIntPtr(openPanel, selAllowsMultipleSelection, true);
+            }
 
             var status = SendInt(openPanel, selRunModal);
 
@@ -641,8 +710,16 @@ namespace FamiStudio
 
             if (status == NSOKButton)
             {
-                var url = SendIntPtr(openPanel, selURL);
-                return FromNSURL(url);
+                if (multiselect)
+                {
+                    var urls = SendIntPtr(openPanel, selURLs);
+                    return FromNSArray(urls);
+                }
+                else
+                {
+                    var url = SendIntPtr(openPanel, selURL);
+                    return new[] { FromNSURL(url) };
+                }
             }
 
             return null;

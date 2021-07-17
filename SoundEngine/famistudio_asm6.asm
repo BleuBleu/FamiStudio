@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (3.0.0)
+; FAMISTUDIO SOUND ENGINE (3.1.0)
 ; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -160,28 +160,36 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; Must be enabled if any song uses the volume track. The volume track allows manipulating the volume at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
-FAMISTUDIO_USE_VOLUME_TRACK   = 1
+FAMISTUDIO_USE_VOLUME_TRACK      = 1
+
+; Must be enabled if any song uses slides on the volume track. Volume track must be enabled too.
+; More information at: https://famistudio.org/doc/pianoroll/#editing-volume-tracks-effects
+; FAMISTUDIO_USE_VOLUME_SLIDES     = 1
 
 ; Must be enabled if any song uses the pitch track. The pitch track allows manipulating the pitch at the track level
 ; independently from instruments.
 ; More information at: https://famistudio.org/doc/pianoroll/#pitch
-FAMISTUDIO_USE_PITCH_TRACK    = 1
+FAMISTUDIO_USE_PITCH_TRACK       = 1
 
 ; Must be enabled if any song uses slide notes. Slide notes allows portamento and slide effects.
 ; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
-FAMISTUDIO_USE_SLIDE_NOTES    = 1
+FAMISTUDIO_USE_SLIDE_NOTES       = 1
+
+; Must be enabled if any song uses slide notes on the noise channel too. 
+; More information at: https://famistudio.org/doc/pianoroll/#slide-notes
+; FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1
 
 ; Must be enabled if any song uses the vibrato speed/depth effect track. 
 ; More information at: https://famistudio.org/doc/pianoroll/#vibrato-depth-speed
-FAMISTUDIO_USE_VIBRATO        = 1
+FAMISTUDIO_USE_VIBRATO           = 1
 
 ; Must be enabled if any song uses arpeggios (not to be confused with instrument arpeggio envelopes, those are always
 ; supported).
 ; More information at: (TODO)
-FAMISTUDIO_USE_ARPEGGIO       = 1
+FAMISTUDIO_USE_ARPEGGIO          = 1
 
 ; Must be enabled if any song uses the "Duty Cycle" effect (equivalent of FamiTracker Vxx, also called "Timbre").  
-; FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1
+; FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
 
 .endif
 
@@ -279,12 +287,20 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     FAMISTUDIO_USE_VOLUME_TRACK = 0
 .endif
 
+.ifndef FAMISTUDIO_USE_VOLUME_SLIDES
+    FAMISTUDIO_USE_VOLUME_SLIDES = 0
+.endif
+
 .ifndef FAMISTUDIO_USE_PITCH_TRACK
     FAMISTUDIO_USE_PITCH_TRACK = 0
 .endif
 
 .ifndef FAMISTUDIO_USE_SLIDE_NOTES
     FAMISTUDIO_USE_SLIDE_NOTES = 0
+.endif
+
+.ifndef FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+    FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 0
 .endif
 
 .ifndef FAMISTUDIO_USE_VIBRATO
@@ -316,6 +332,13 @@ FAMISTUDIO_USE_ARPEGGIO       = 1
     FAMISTUDIO_EXP_NOTE_START = 7
 .endif
 
+.if FAMISTUDIO_USE_NOISE_SLIDE_NOTES && (FAMISTUDIO_USE_SLIDE_NOTES = 0)
+    .error "Noise slide notes can only be used when regular slide notes are enabled too."
+.endif
+
+.if FAMISTUDIO_USE_VOLUME_SLIDES && (FAMISTUDIO_USE_VOLUME_TRACK = 0)
+    .error "Volume slides can only be used when the volume track is enabled too."
+.endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS && (FAMISTUDIO_USE_FAMITRACKER_TEMPO = 0)
     .error "Delayed notes or cuts only make sense when using FamiTracker tempo."
@@ -385,6 +408,21 @@ FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
     FAMISTUDIO_NUM_CHANNELS         = 5
     FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
 .endif
+
+.if FAMISTUDIO_EXP_NONE
+    FAMISTUDIO_NUM_VOLUME_SLIDES = 4
+.else
+    FAMISTUDIO_NUM_VOLUME_SLIDES = FAMISTUDIO_NUM_CHANNELS ; DPCM volume is unused.
+.endif
+
+.if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+    FAMISTUDIO_NUM_SLIDES = FAMISTUDIO_NUM_PITCH_ENVELOPES + 1
+.else
+    FAMISTUDIO_NUM_SLIDES = FAMISTUDIO_NUM_PITCH_ENVELOPES
+.endif
+
+; Keep the noise slide at the end so the pitch envelopes/slides are in sync.
+FAMISTUDIO_NOISE_SLIDE_INDEX = FAMISTUDIO_NUM_SLIDES - 1
 
 FAMISTUDIO_CH0_ENVS = 0
 FAMISTUDIO_CH1_ENVS = 3
@@ -488,9 +526,9 @@ famistudio_pitch_env_fine_value:  .dsb FAMISTUDIO_NUM_PITCH_ENVELOPES
 .endif
 
 .if FAMISTUDIO_USE_SLIDE_NOTES
-famistudio_slide_step:            .dsb FAMISTUDIO_NUM_PITCH_ENVELOPES
-famistudio_slide_pitch_lo:        .dsb FAMISTUDIO_NUM_PITCH_ENVELOPES
-famistudio_slide_pitch_hi:        .dsb FAMISTUDIO_NUM_PITCH_ENVELOPES
+famistudio_slide_step:            .dsb FAMISTUDIO_NUM_SLIDES
+famistudio_slide_pitch_lo:        .dsb FAMISTUDIO_NUM_SLIDES
+famistudio_slide_pitch_hi:        .dsb FAMISTUDIO_NUM_SLIDES
 .endif
 
 famistudio_chn_ptr_lo:            .dsb FAMISTUDIO_NUM_CHANNELS
@@ -503,6 +541,10 @@ famistudio_chn_return_hi:         .dsb FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_ref_len:           .dsb FAMISTUDIO_NUM_CHANNELS
 .if FAMISTUDIO_USE_VOLUME_TRACK
 famistudio_chn_volume_track:      .dsb FAMISTUDIO_NUM_CHANNELS
+.if FAMISTUDIO_USE_VOLUME_SLIDES
+famistudio_chn_volume_slide_step:   .dsb FAMISTUDIO_NUM_VOLUME_SLIDES
+famistudio_chn_volume_slide_target: .dsb FAMISTUDIO_NUM_VOLUME_SLIDES
+.endif
 .endif
 .if FAMISTUDIO_USE_VIBRATO || FAMISTUDIO_USE_ARPEGGIO
 famistudio_chn_env_override:      .dsb FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, bit 0 = arpeggio.
@@ -935,8 +977,18 @@ ldx #0
 @set_slides:
     sta famistudio_slide_step, x
     inx
-    cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
+    cpx #FAMISTUDIO_NUM_SLIDES
     bne @set_slides
+.endif
+
+.if FAMISTUDIO_USE_VOLUME_SLIDES
+    ldx #0
+@set_volume_slides:
+    sta famistudio_chn_volume_slide_step, x
+    sta famistudio_chn_volume_slide_target, x
+    inx
+    cpx #FAMISTUDIO_NUM_VOLUME_SLIDES
+    bne @set_volume_slides
 .endif
 
     ldx #0
@@ -1292,7 +1344,7 @@ famistudio_music_pause:
 
     pitch   = famistudio_ptr1
     tmp_ror = famistudio_r0
- 
+
 .if FAMISTUDIO_USE_PITCH_TRACK
 
     ; Pitch envelope + fine pitch (sign extended)
@@ -1319,6 +1371,7 @@ pos:
 .endif
 
 .if FAMISTUDIO_USE_SLIDE_NOTES
+
     ; Check if there is an active slide.
     lda famistudio_slide_step+pitch_env_offset, y 
     beq no_slide
@@ -1459,9 +1512,42 @@ nocut:
 
 .if idx = 3 ; Noise channel is a bit special    
 
+.if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+
+    ; Check if there is an active slide on the noise channel.
+    ldy famistudio_slide_step+FAMISTUDIO_NOISE_SLIDE_INDEX
+    beq no_noise_slide
+
+        ; We have 4 bits of fraction for noise slides.
+        sta tmp
+
+        lda famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+        sta pitch+0
+        lda famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+        cmp #$80
+        ror
+        ror pitch+0
+        cmp #$80
+        ror
+        ror pitch+0
+        cmp #$80
+        ror
+        ror pitch+0
+        cmp #$80
+        ror
+        lda pitch+0
+        ror
+
+        clc 
+        adc tmp
+
+.endif
+
+no_noise_slide:
     and #$0f
     eor #$0f
     sta tmp
+
     ldx famistudio_env_value+env_offset+FAMISTUDIO_ENV_DUTY_OFF
     lda famistudio_duty_lookup, x
     asl a
@@ -1476,11 +1562,13 @@ nocut:
     .endif
     tax
 
+    ; This basically does same as "famistudio_channel_to_pitch_env"
     .if idx < 3
         ldy #idx
     .else
         ldy #(idx - 2)
     .endif
+
     .if FAMISTUDIO_EXP_VRC6 && idx = 7
         jsr famistudio_get_note_pitch_vrc6_saw
     .else
@@ -1512,12 +1600,18 @@ nocut:
 .endif
 
 compute_volume:
-    lda famistudio_env_value+env_offset+FAMISTUDIO_ENV_VOLUME_OFF
 
     .if FAMISTUDIO_USE_VOLUME_TRACK    
-        ora famistudio_chn_volume_track+idx
+        lda famistudio_chn_volume_track+idx
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif
+        ora famistudio_env_value+env_offset+FAMISTUDIO_ENV_VOLUME_OFF
         tax
         lda famistudio_volume_table, x 
+    .else
+        lda famistudio_env_value+env_offset+FAMISTUDIO_ENV_VOLUME_OFF
     .endif
 
 .if FAMISTUDIO_EXP_VRC6 && idx = 7 
@@ -1597,11 +1691,17 @@ famistudio_update_fds_channel_sound:
     sta FAMISTUDIO_FDS_SWEEP_ENV
 
 @compute_volume:
-    lda famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        ora famistudio_chn_volume_track+5 
+        lda famistudio_chn_volume_track+5 
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif        
+        ora famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
         tax
         lda famistudio_volume_table, x 
+    .else
+        lda famistudio_env_value+FAMISTUDIO_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .endif
     asl ; FDS volume is 6-bits, but clamped to 32. Just double it.
 
@@ -1761,9 +1861,15 @@ famistudio_update_vrc7_channel_sound:
 
     ; Read/multiply volume
     ldx famistudio_vrc7_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        ora famistudio_chn_volume_track+5, y
+        lda famistudio_chn_volume_track+5, y
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif
+        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+    .else
+        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
     tax
 
@@ -1894,9 +2000,15 @@ famistudio_update_n163_channel_sound:
 
     ; Read/multiply volume
     ldx famistudio_n163_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        ora famistudio_chn_volume_track+5, y
+        lda famistudio_chn_volume_track+5, y
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif        
+        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+    .else
+        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
     tax
 
@@ -1970,9 +2082,15 @@ famistudio_update_s5b_channel_sound:
 
     ; Read/multiply volume
     ldx famistudio_s5b_env_table,y
-    lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        ora famistudio_chn_volume_track+5, y
+        lda famistudio_chn_volume_track+5, y
+        .if FAMISTUDIO_USE_VOLUME_SLIDES
+            ; During a slide, the lower 4 bits are fraction.
+            and #$f0
+        .endif        
+        ora famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
+    .else
+        lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
     tax
 
@@ -2415,8 +2533,73 @@ famistudio_update:
 
 @slide_next:
     inx 
-    cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
+    cpx #FAMISTUDIO_NUM_SLIDES
     bne @slide_process
+.endif
+
+.if FAMISTUDIO_USE_VOLUME_SLIDES
+
+; FIXME : This seem wayyyy more complicated than it should.
+; - The track volume has 4 bits of fraction : VVVVFFFF
+; - The slide step is signed : SVVVFFFF
+; - The slide target (end volume) is simply : VVVV0000
+;
+; foreach slides
+;     if step != 0
+;         volume += step
+;         if step > 0 && volume >= target || step < 0 && volume <= target
+;             volume = target
+;             step = 0
+
+@update_volume_slides:
+    ldx #0
+
+@volume_side_process:
+    lda famistudio_chn_volume_slide_step,x
+    beq @volume_slide_next
+    clc 
+    bmi @negative_volume_slide
+    
+@positive_volume_slide:
+    ; If the slide goes up, stop if we hit the target or go over it, over 15 (carry will be set)
+    adc famistudio_chn_volume_track,x
+    bcs @clear_volume_slide
+    sta famistudio_chn_volume_track,x
+    cmp famistudio_chn_volume_slide_target,x
+    bcc @volume_slide_next
+    bcs @clear_volume_slide
+
+@negative_volume_slide:
+    ; If the slide goes do, stop if we hit the target or go below it, or below zero.
+    ; This is a bit trickier since we cant rely on the carry or any flag to 
+    ; tell us if we wrapped around. 
+    adc famistudio_chn_volume_track,x
+    ldy famistudio_chn_volume_track,x
+    bmi @slide_upper_half
+
+@slide_lower_half:
+    sta famistudio_chn_volume_track,x
+    cmp famistudio_chn_volume_slide_target,x
+    beq @clear_volume_slide
+    bmi @clear_volume_slide
+    bcc @volume_slide_next
+
+@slide_upper_half:
+    sta famistudio_chn_volume_track,x
+    cmp famistudio_chn_volume_slide_target,x
+    beq @clear_volume_slide
+    bcs @volume_slide_next
+
+@clear_volume_slide:    
+    lda famistudio_chn_volume_slide_target,x
+    sta famistudio_chn_volume_track,x
+    lda #0
+    sta famistudio_chn_volume_slide_step,x
+
+@volume_slide_next:
+    inx 
+    cpx #FAMISTUDIO_NUM_VOLUME_SLIDES
+    bne @volume_side_process
 .endif
 
 .if FAMISTUDIO_CFG_EQUALIZER
@@ -3091,11 +3274,16 @@ ok:
 
 famistudio_channel_update:
 
+    ; TODO : This function is an absolute mess:
+    ;   - Change all increments of the ptr to "iny" and increment the real pointer once.
+    ;   - See if we can unify the old FT2 "special_code" with our "special_code_6x".
+
     tmp_ptr_lo           = famistudio_r0
     tmp_chan_idx         = famistudio_r0
     tmp_slide_from       = famistudio_r1
     tmp_slide_idx        = famistudio_r1
     tmp_duty_cycle       = famistudio_r1
+    tmp_pitch_hi         = famistudio_r1
     update_flags         = famistudio_r2 ; bit 7 = no attack, bit 6 = has set delayed cut.
     slide_delta_lo       = famistudio_ptr1_hi
     channel_data_ptr     = famistudio_ptr0
@@ -3192,6 +3380,18 @@ famistudio_channel_update:
     sta famistudio_vrc6_saw_volume
     jmp @read_byte
 
+.endif
+
+.if FAMISTUDIO_USE_VOLUME_SLIDES
+@special_code_volume_slide:
+    lda (channel_data_ptr),y
+    iny
+    sta famistudio_chn_volume_slide_step, x
+    lda (channel_data_ptr),y
+    sta famistudio_chn_volume_slide_target, x
+    famistudio_add_16_8 channel_data_ptr, #2
+    dey
+    jmp @read_byte 
 .endif
 
 .if FAMISTUDIO_USE_PITCH_TRACK
@@ -3339,7 +3539,43 @@ famistudio_channel_update:
     jmp @read_byte 
 
 .if FAMISTUDIO_USE_SLIDE_NOTES
+
+.if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+@noise_slide:
+    lda (channel_data_ptr),y ; Read slide step size
+    iny
+    sta famistudio_slide_step+FAMISTUDIO_NOISE_SLIDE_INDEX
+    lda (channel_data_ptr),y ; Read slide note from
+    iny
+    sec
+    sbc (channel_data_ptr),y ; Read slide note to
+    sta famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    bpl @positive_noise_slide
+@negative_noise_slide:
+    ; Sign extend.
+    lda #$ff
+    bmi @noise_shift
+@positive_noise_slide:
+    lda #$00
+@noise_shift:    
+    ; Noise slides have 4-bits of fraction.
+    asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol
+    asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol
+    asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol
+    asl famistudio_slide_pitch_lo+FAMISTUDIO_NOISE_SLIDE_INDEX
+    rol
+    sta famistudio_slide_pitch_hi+FAMISTUDIO_NOISE_SLIDE_INDEX
+    jmp @slide_done_pos
+.endif
+
 @special_code_slide:
+.if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+    cpx #3
+    beq @noise_slide
+.endif
     stx tmp_chan_idx
     lda famistudio_channel_to_slide,x
     tax
@@ -3432,11 +3668,11 @@ famistudio_channel_update:
     .endif
     ldx tmp_chan_idx
     ldy #2
+
+@slide_done_pos:
     lda (channel_data_ptr),y ; Re-read the target note (ugly...)
     sta famistudio_chn_note,x ; Store note code
     famistudio_add_16_8 channel_data_ptr, #3
-
-@slide_done_pos:
     ldy #0
     jmp @sec_and_done
 .endif
@@ -3651,7 +3887,7 @@ famistudio_channel_update:
 .elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
     .byte <@special_code_set_tempo_envelope           ; $6a
     .byte <@special_code_reset_tempo_envelope         ; $6b
-.else 
+.else
     .byte <@invalid_opcode                            ; $6a
     .byte <@invalid_opcode                            ; $6b
 .endif    
@@ -3664,7 +3900,12 @@ famistudio_channel_update:
 .else
     .byte <@invalid_opcode                            ; $6c
     .byte <@invalid_opcode                            ; $6d
-.endif        
+.endif
+.if FAMISTUDIO_USE_VOLUME_SLIDES
+    .byte <@special_code_volume_slide                 ; $6e
+.else
+    .byte <@invalid_opcode                            ; $6e
+.endif
 
 @famistudio_special_code_jmp_hi:
 .if FAMISTUDIO_USE_SLIDE_NOTES
@@ -3718,6 +3959,11 @@ famistudio_channel_update:
 .else
     .byte >@invalid_opcode                            ; $6c
     .byte >@invalid_opcode                            ; $6d    
+.endif
+.if FAMISTUDIO_USE_VOLUME_SLIDES
+    .byte >@special_code_volume_slide                 ; $6e
+.else
+    .byte >@invalid_opcode                            ; $6e
 .endif
 
 ;======================================================================================================================
@@ -4433,14 +4679,50 @@ famistudio_channel_to_arpeggio_env:
 .endif
 .endif
 
-; For a given channel, returns the index of the slide/pitch envelope.
-famistudio_channel_to_pitch_env:
+.if FAMISTUDIO_USE_SLIDE_NOTES
 famistudio_channel_to_slide:
+; This table will only be defined if we use noise slides, otherwise identical to "famistudio_channel_to_pitch_env".
+.if FAMISTUDIO_USE_NOISE_SLIDE_NOTES    
     .byte $00
     .byte $01
     .byte $02
-    .byte $ff ; no slide for noise
+    .byte FAMISTUDIO_NOISE_SLIDE_INDEX ; Keep the noise slide at the end so the pitch envelopes/slides are in sync.
     .byte $ff ; no slide for DPCM
+.if FAMISTUDIO_NUM_SLIDES >= 4
+    .byte $03
+.endif
+.if FAMISTUDIO_NUM_SLIDES >= 5
+    .byte $04
+.endif    
+.if FAMISTUDIO_NUM_SLIDES >= 6
+    .byte $05
+.endif
+.if FAMISTUDIO_NUM_SLIDES >= 7
+    .byte $06
+.endif
+.if FAMISTUDIO_NUM_SLIDES >= 8
+    .byte $07
+.endif
+.if FAMISTUDIO_NUM_SLIDES >= 9
+    .byte $08
+.endif
+.if FAMISTUDIO_NUM_SLIDES >= 10
+    .byte $09
+.endif
+.if FAMISTUDIO_NUM_SLIDES >= 11
+    .byte $0a
+.endif
+.endif
+.endif
+
+; For a given channel, returns the index of the pitch envelope.
+famistudio_channel_to_pitch_env:
+.if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
+    .byte $00
+    .byte $01
+    .byte $02
+    .byte $ff ; no pitch envelopes for noise
+    .byte $ff ; no pitch envelopes slide for DPCM
 .if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 4
     .byte $03
 .endif
@@ -4464,6 +4746,7 @@ famistudio_channel_to_slide:
 .endif
 .if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 11
     .byte $0a
+.endif
 .endif
 
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT

@@ -24,7 +24,7 @@ namespace FamiStudio
 
             for (int i = 0; i < Note.EffectCount; i++)
             {
-                if (channel.SupportsEffect(i))
+                if (channel.ShouldDisplayEffect(i))
                 {
                     propToEffect[dialog.Properties.PropertyCount] = i;
                     dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
@@ -36,14 +36,14 @@ namespace FamiStudio
             dialog.Name = "DeleteSpecialDialog";
         }
 
-        private void Properties_PropertyChanged(PropertyPage props, int idx, object value)
+        private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             if (inPropertyChanged)
                 return;
 
             inPropertyChanged = true; // Prevent recursion.
 
-            if (idx == 1)
+            if (propIdx == 1)
             {
                 bool allEffects = (bool)value;
 
@@ -52,7 +52,7 @@ namespace FamiStudio
                     props.SetPropertyValue(kv.Key, allEffects);
                 }
             }
-            else if (propToEffect.ContainsKey(idx))
+            else if (propToEffect.ContainsKey(propIdx))
             {
                 bool allEffects = true;
 

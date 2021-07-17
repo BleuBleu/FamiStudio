@@ -1504,7 +1504,7 @@ namespace FamiStudio
 
                             if (note.IsSlideNote && slideToPitchWheel)
                             {
-                                var slideDuration = channel.GetSlideNoteDuration(note, new NoteLocation(p, time));
+                                var slideDuration = channel.GetSlideNoteDuration(new NoteLocation(p, time));
                                 var semitones = note.SlideNoteTarget - note.Value;
 
                                 if (semitones < 0 && semitones < -pitchWheelRange)
@@ -1564,7 +1564,7 @@ namespace FamiStudio
                 (instrumentMode == MidiExportInstrumentMode.Channel && instrumentMapping.Length == originalProject.GetSong(songId).Channels.Length));
 
             project = originalProject.DeepClone();
-            project.RemoveAllSongsBut(new int[] { songId }, true);
+            project.DeleteAllSongsBut(new int[] { songId }, true);
             project.ConvertToSimpleNotes();
             song = project.Songs[0];
 

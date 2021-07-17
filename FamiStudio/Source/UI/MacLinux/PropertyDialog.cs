@@ -50,7 +50,7 @@ namespace FamiStudio
             this.leftAlign = leftAlign;
             this.topAlign  = topAlign;
 
-            Move(pt.X, pt.Y);
+            Move(initialLocation.X, initialLocation.Y);
         }
 
         private void Init()

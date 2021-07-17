@@ -14,7 +14,8 @@ namespace FamiStudio
         enum ExportFormat
         {
             WavMp3,
-            Video,
+            VideoPianoRoll,
+            VideoOscilloscope,
             Nsf,
             Rom,
             Midi,
@@ -29,8 +30,9 @@ namespace FamiStudio
 
         string[] ExportFormatNames =
         {
-            "WAV / MP3",
-            "Video",
+            "WAV / MP3 / OGG",
+            "Video (Piano Roll)",
+            "Video (Oscilloscope)",
             "NSF",
             "ROM / FDS",
             "MIDI",
@@ -47,6 +49,7 @@ namespace FamiStudio
         {
             "ExportWav",
             "ExportVideo",
+            "ExportVideo",
             "ExportNsf",
             "ExportRom",
             "ExportMIDI",
@@ -62,7 +65,6 @@ namespace FamiStudio
         private MultiPropertyDialog dialog;
         private uint lastExportCrc;
         private string lastExportFilename;
-        private int[] midiInstrumentMapping;
 
         public delegate void EmptyDelegate();
         public event EmptyDelegate Exporting;
@@ -72,10 +74,8 @@ namespace FamiStudio
             int width  = 600;
             int height = 550;
 
-#if FAMISTUDIO_LINUX 
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
             height += 80;
-#elif FAMISTUDIO_MACOS
-            height += 40;
 #endif
 
             this.dialog = new MultiPropertyDialog(width, height, 200);
@@ -97,20 +97,7 @@ namespace FamiStudio
             return names;
         }
 
-        private string[] GetChannelNames()
-        {
-            var channelTypes = project.GetActiveChannelList();
-            var channelNames = new string[channelTypes.Length];
-            for (int i = 0; i < channelTypes.Length; i++)
-            {
-                channelNames[i] = ChannelType.Names[channelTypes[i]];
-                if (i >= ChannelType.ExpansionAudioStart)
-                    channelNames[i] += $" ({project.ExpansionAudioShortName})";
-            }
-            return channelNames;
-        }
-
-        private bool[] GetDefaultSelectedChannels()
+        private object[,] GetDefaultChannelsData()
         {
             // Find all channels used by the project.
             var anyChannelActive = false;
@@ -128,14 +115,37 @@ namespace FamiStudio
                 }
             }
 
-            // All true if its an empty project.
-            if (!anyChannelActive)
+            var channelTypes = project.GetActiveChannelList();
+            var data = new object[channelTypes.Length, 3];
+            for (int i = 0; i < channelTypes.Length; i++)
             {
-                for (int i = 0; i < channelActives.Length; i++)
-                    channelActives[i] = true;
+                data[i, 0] = !anyChannelActive || channelActives[i];
+                data[i, 1] = ChannelType.Names[channelTypes[i]] ;
+                if (i >= ChannelType.ExpansionAudioStart)
+                    data[i, 1] += $" ({project.ExpansionAudioShortName})";
+                data[i, 2] = 50;
             }
 
-            return channelActives;
+            return data;
+        }
+
+        private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
+        {
+            if (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath))
+            {
+                page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 1
+                page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 2
+                page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
+                page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000"); // 4
+                page.AddIntegerRange("Loop Count :", 1, 1, 8); // 5
+                return true;
+            }
+            else
+            {
+                page.AddLabel(null, "Video export requires FFmpeg. Please go in the application settings and look for the 'FFmpeg' section.", true);
+                return false;
+            }
         }
 
         private PropertyPage CreatePropertyPage(PropertyPage page, ExportFormat format)
@@ -146,7 +156,7 @@ namespace FamiStudio
             {
                 case ExportFormat.WavMp3:
                     page.AddDropDownList("Song :", songNames, songNames[0]); // 0
-                    page.AddDropDownList("Format :", new[] { "WAV", "MP3" }, "WAV"); // 1
+                    page.AddDropDownList("Format :", AudioFormatType.Names, AudioFormatType.Names[0]); // 1
                     page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
                     page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
                     page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
@@ -154,27 +164,34 @@ namespace FamiStudio
                     page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
-                    page.AddCheckBoxList("Channels :", GetChannelNames(), GetDefaultSelectedChannels()); // 9
+                    page.AddCheckBox("Stereo", false); // 9
+                    page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 10
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
+                    page.SetColumnEnabled(10, 2, false);
                     page.PropertyChanged += WavMp3_PropertyChanged;
+                    page.PropertyClicked += WavMp3_PropertyClicked;
                     break;
-                case ExportFormat.Video:
-                    page.AddButton("Path To FFmpeg:", Settings.FFmpegExecutablePath, FFmpegPathButtonClicked, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 0
-#if FAMISTUDIO_MACOS
-                    // GTK LinkButtons dont work on MacOS, use a button (https://github.com/quodlibet/quodlibet/issues/2306)
-                    page.AddButton(" ", "Download FFmpeg here", FFmpegDownloadButtonClicked); // 1
-#else
-                    page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 1
-#endif
-                    page.AddDropDownList("Song :", songNames, songNames[0]); // 2
-                    page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 3
-                    page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 4
-                    page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 5
-                    page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "1000", "2000", "4000", "8000", "10000", "12000", "14000", "16000", "18000", "20000" }, "12000"); // 6
-                    page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 7
-                    page.AddIntegerRange("Loop Count :", 1, 1, 8); // 8
-                    page.AddCheckBoxList("Channels :", GetChannelNames(), GetDefaultSelectedChannels()); // 9
+                case ExportFormat.VideoPianoRoll:
+                    if (AddCommonVideoProperties(page, songNames)) // 0-5
+                    {
+                        page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
+                        page.AddCheckBox("Stereo", false); // 7
+                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 8
+                        page.SetColumnEnabled(8, 2, false);
+                        page.PropertyChanged += VideoPage_PropertyChanged;
+                    }
+                    break;
+                case ExportFormat.VideoOscilloscope:
+                    if (AddCommonVideoProperties(page, songNames)) // 0-5
+                    {
+                        page.AddIntegerRange("Oscilloscope Columns :", 2, 1, 3); // 6
+                        page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 7
+                        page.AddCheckBox("Stereo", false); // 8
+                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 9
+                        page.SetColumnEnabled(9, 2, false);
+                        page.PropertyChanged += VideoPage_PropertyChanged;
+                    }
                     break;
                 case ExportFormat.Nsf:
                     page.AddString("Name :", project.Name, 31); // 0
@@ -202,8 +219,7 @@ namespace FamiStudio
                     page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
                     page.AddIntegerRange("Pitch wheel range :", 24, 1, 24); // 3
                     page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
-                    page.AddLabel(null, "Double-click on a row to change."); // 5
-                    page.AddMultiColumnList(new[] { "", "" }, null, MidiInstrumentDoubleClick, null); // 6
+                    page.AddMultiColumnList(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
@@ -244,54 +260,78 @@ namespace FamiStudio
             return page;
         }
 
-        private void SoundEngine_PropertyChanged(PropertyPage props, int idx, object value)
+        private void VideoPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (idx == 1)
+            if (propIdx == props.PropertyCount - 2) // Stereo
+            {
+                props.SetColumnEnabled(props.PropertyCount - 1, 2, (bool)value);
+            }
+        }
+
+        private void SoundEngine_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        {
+            if (propIdx == 1)
             {
                 props.SetPropertyEnabled(2, (bool)value);
                 props.SetPropertyEnabled(3, (bool)value);
             }
         }
 
-        private void WavMp3_PropertyChanged(PropertyPage props, int idx, object value)
+        private void WavMp3_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (idx == 1)
+            if (propIdx == 1)
             {
-                props.SetPropertyEnabled(3, (string)value == "MP3");
+                props.SetPropertyEnabled(3, (string)value != "WAV");
             }
-            else if (idx == 4)
+            else if (propIdx == 4)
             {
                 props.SetPropertyEnabled(5, (string)value != "Duration");
                 props.SetPropertyEnabled(6, (string)value == "Duration");
             }
+            else if (propIdx == 7)
+            {
+                var separateChannels = (bool)value;
+
+                props.SetPropertyEnabled(9, !separateChannels);
+                if (separateChannels)
+                    props.SetPropertyValue(9, false);
+
+                props.SetColumnEnabled(10, 2, props.GetPropertyValue<bool>(9));
+            }
+            else if (propIdx == 9)
+            {
+                props.SetColumnEnabled(10, 2, (bool)value);
+            }
         }
 
-        private void Midi_PropertyChanged(PropertyPage props, int idx, object value)
+        private void WavMp3_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (idx == 4)
+            if (propIdx == 9 && click == ClickType.Right && colIdx == 2)
             {
-                midiInstrumentMapping = null;
-                UpdateMidiInstrumentMapping();
+                props.UpdateMultiColumnList(propIdx, rowIdx, colIdx, 50);
             }
+        }
+
+        private void Midi_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        {
+            if (propIdx == 4)
+                UpdateMidiInstrumentMapping();
         }
 
         private void UpdateMidiInstrumentMapping()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
             var mode  = props.GetSelectedIndex(4);
-            var data  = (string[,])null;
+            var data  = (object[,])null;
             var cols = new[] { "", "MIDI Instrument" };
 
             if (mode == MidiExportInstrumentMode.Instrument)
             {
-                if (midiInstrumentMapping == null)
-                    midiInstrumentMapping = new int[project.Instruments.Count];
-
-                data = new string[project.Instruments.Count, 2];
+                data = new object[project.Instruments.Count, 2];
                 for (int i = 0; i < project.Instruments.Count; i++)
                 {
                     data[i, 0] = project.Instruments[i].Name;
-                    data[i, 1] = MidiFileReader.MidiInstrumentNames[midiInstrumentMapping[i]];
+                    data[i, 1] = MidiFileReader.MidiInstrumentNames[0];
                 }
 
                 cols[0] = "FamiStudio Instrument";
@@ -300,61 +340,17 @@ namespace FamiStudio
             {
                 var firstSong = project.Songs[0];
 
-                if (midiInstrumentMapping == null)
-                    midiInstrumentMapping = new int[firstSong.Channels.Length];
-
-                data = new string[firstSong.Channels.Length, 2];
+                data = new object[firstSong.Channels.Length, 2];
                 for (int i = 0; i < firstSong.Channels.Length; i++)
                 {
                     data[i, 0] = firstSong.Channels[i].Name;
-                    data[i, 1] = MidiFileReader.MidiInstrumentNames[midiInstrumentMapping[i]];
+                    data[i, 1] = MidiFileReader.MidiInstrumentNames[0];
                 }
 
                 cols[0] = "NES Channel";
             }
 
-            props.UpdateMultiColumnList(6, data, cols);
-        }
-
-        private void MidiInstrumentDoubleClick(PropertyPage props, int propertyIndex, int itemIndex, int columnIndex)
-        {
-            Debug.Assert(midiInstrumentMapping != null);
-
-            var dlg = new PropertyDialog(400, true, true, dialog);
-            dlg.Properties.AddDropDownList("MIDI Instrument:", MidiFileReader.MidiInstrumentNames, MidiFileReader.MidiInstrumentNames[midiInstrumentMapping[itemIndex]]); // 0
-            dlg.Properties.Build();
-
-            if (dlg.ShowDialog(null) == DialogResult.OK)
-            {
-                midiInstrumentMapping[itemIndex] = dlg.Properties.GetSelectedIndex(0);
-                UpdateMidiInstrumentMapping();
-            }
-        }
-
-        private void FFmpegPathButtonClicked(PropertyPage props, int propertyIndex)
-        {
-            var dummy = "";
-#if FAMISTUDIO_WINDOWS
-            var ffmpegExeFilter = "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe";
-#else
-            var ffmpegExeFilter = "FFmpeg Executable (ffmpeg)|*.*";
-#endif
-
-            string filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
-
-            if (filename != null)
-            {
-                props.SetPropertyValue(propertyIndex, filename);
-
-                // Update settings right away.
-                Settings.FFmpegExecutablePath = filename;
-                Settings.Save();
-            }
-        }
-
-        private void FFmpegDownloadButtonClicked(PropertyPage props, int propertyIndex)
-        {
-            Utils.OpenUrl("https://famistudio.org/doc/ffmpeg/");
+            props.UpdateMultiColumnList(5, data, cols);
         }
 
         private int[] GetSongIds(bool[] selectedSongs)
@@ -373,78 +369,112 @@ namespace FamiStudio
         private void ExportWavMp3()
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.WavMp3);
-            var format = props.GetPropertyValue<string>(1);
+            var format = props.GetSelectedIndex(1);
+            var filename = (string)null;
 
-            var filename = "";
-
-            if (format == "MP3")
-                filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export MP3 File", "MP3 Audio File (*.mp3)|*.mp3", ref Settings.LastExportFolder);
+            if (lastExportFilename != null)
+            {
+                filename = lastExportFilename;
+            }
             else
-                filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Wave File", "Wave Audio File (*.wav)|*.wav", ref Settings.LastExportFolder);
+            {
+                filename = PlatformUtils.ShowSaveFileDialog(
+                    $"Export {AudioFormatType.Names[format]} File",
+                    $"{AudioFormatType.Names[format]} Audio File (*.{AudioFormatType.Extentions[format]})|*.{AudioFormatType.Extentions[format]}",
+                    ref Settings.LastExportFolder);
+            }
 
             if (filename != null)
             {
                 var songName = props.GetPropertyValue<string>(0);
                 var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2), CultureInfo.InvariantCulture);
-                var bitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
+                var bitrate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
                 var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
                 var duration  = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
                 var separateFiles = props.GetPropertyValue<bool>(7);
                 var separateIntro = props.GetPropertyValue<bool>(8);
-                var selectedChannels = props.GetPropertyValue<bool[]>(9);
+                var stereo = props.GetPropertyValue<bool>(9) && !separateFiles;
                 var song = project.GetSong(songName);
 
+                var channelCount = project.GetActiveChannelCount();
                 var channelMask = 0;
-                for (int i = 0; i < selectedChannels.Length; i++)
+                var pan = new float[channelCount];
+                for (int i = 0; i < channelCount; i++)
                 {
-                    if (selectedChannels[i])
+                    if (props.GetPropertyValue<bool>(10, i, 0))
                         channelMask |= (1 << i);
+
+                    pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
                 }
 
-                WavMp3ExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro,
-                     (samples, fn) => 
+                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
+                     (samples, samplesChannels, fn) => 
                      {
-                         if (format == "MP3")
-                             Mp3File.Save(samples, fn, sampleRate, bitRate);
-                         else
-                             WaveFile.Save(samples, fn, sampleRate);
+                         switch (format)
+                         {
+                             case AudioFormatType.Mp3:
+                                 Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                 break;
+                             case AudioFormatType.Wav:
+                                 WaveFile.Save(samples, fn, sampleRate, samplesChannels);
+                                 break;
+                             case AudioFormatType.Vorbis:
+                                 VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                 break;
+                         }
                      });
 
                 lastExportFilename = filename;
             }
         }
 
-        private void ExportVideo()
+        private void ExportVideo(bool pianoRoll)
         {
             var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
 
             if (filename != null)
             {
-                var zoomValues = new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" };
-                var frameRates = new[] { "50/60 FPS", "25/30 FPS" };
+                var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
 
-                var props = dialog.GetPropertyPage((int)ExportFormat.Video);
-                var ffmpeg = props.GetPropertyValue<string>(0);
-                var songName = props.GetPropertyValue<string>(2);
-                var resolutionIdx = VideoResolution.GetIndexForName(props.GetPropertyValue<string>(3));
+                var stereoPropIdx   = pianoRoll ? 7 : 8;
+                var channelsPropIdx = pianoRoll ? 8 : 9;
+
+                var songName = props.GetPropertyValue<string>(0);
+                var resolutionIdx = props.GetSelectedIndex(1);
                 var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
                 var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
-                var halfFrameRate = Array.IndexOf(frameRates, props.GetPropertyValue<string>(4)) == 1;
-                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(5), CultureInfo.InvariantCulture);
-                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(6), CultureInfo.InvariantCulture);
-                var pianoRollZoom = Array.IndexOf(zoomValues, props.GetPropertyValue<string>(7)) - 3;
-                var loopCount = props.GetPropertyValue<int>(8);
-                var selectedChannels = props.GetPropertyValue<bool[]>(9);
+                var halfFrameRate = props.GetSelectedIndex(2) == 1;
+                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
+                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
+                var loopCount = props.GetPropertyValue<int>(5);
+                var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
+                var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
                 var song = project.GetSong(songName);
-
+                var channelCount = project.GetActiveChannelCount();
                 var channelMask = 0;
-                for (int i = 0; i < selectedChannels.Length; i++)
+
+                var pan = new float[channelCount];
+                for (int i = 0; i < channelCount; i++)
                 {
-                    if (selectedChannels[i])
+                    if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
                         channelMask |= (1 << i);
+
+                    pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
                 }
 
-                new VideoFile().Save(project, song.Id, loopCount, ffmpeg, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom);
+                if (pianoRoll)
+                {
+                    var pianoRollZoom = props.GetSelectedIndex(6) - 3;
+
+                    new VideoFilePianoRoll().Save(project, song.Id, loopCount, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                }
+                else
+                {
+                    var oscNumColumns = props.GetPropertyValue<int>(6);
+                    var oscColorMode  = props.GetSelectedIndex(7);
+
+                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                }
 
                 lastExportFilename = filename;
             }
@@ -527,8 +557,13 @@ namespace FamiStudio
                 var slideNotes = props.GetPropertyValue<bool>(2);
                 var pitchRange = props.GetPropertyValue<int>(3);
                 var instrumentMode = props.GetSelectedIndex(4);
+                var song = project.GetSong(songName);
+                var instrumentMapping = new int[instrumentMode == MidiExportInstrumentMode.Channel ? song.Channels.Length : song.Project.Instruments.Count];
 
-                new MidiFileWriter().Save(project, filename, project.GetSong(songName).Id, instrumentMode, midiInstrumentMapping, velocity, slideNotes, pitchRange); 
+                for (int i = 0; i < instrumentMapping.Length; i++)
+                    instrumentMapping[i] = Array.IndexOf(MidiFileReader.MidiInstrumentNames, props.GetPropertyValue<string>(5, i, 1));
+
+                new MidiFileWriter().Save(project, filename, song.Id, instrumentMode, instrumentMapping, velocity, slideNotes, pitchRange); 
 
                 lastExportFilename = filename;
             }
@@ -553,7 +588,7 @@ namespace FamiStudio
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
                 new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
-                filename = lastExportFilename;
+                lastExportFilename = filename;
             }
         }
 
@@ -636,6 +671,7 @@ namespace FamiStudio
         {
             // Only hashing fields that would have an impact on the generated UI.
             uint crc = CRC32.Compute(project.ExpansionAudio);
+            crc = CRC32.Compute(project.ExpansionNumChannels, crc);
 
             foreach (var song in project.Songs)
             {
@@ -677,7 +713,8 @@ namespace FamiStudio
                 switch (selectedFormat)
                 {
                     case ExportFormat.WavMp3: ExportWavMp3(); break;
-                    case ExportFormat.Video: ExportVideo(); break;
+                    case ExportFormat.VideoPianoRoll: ExportVideo(true); break;
+                    case ExportFormat.VideoOscilloscope: ExportVideo(false); break;
                     case ExportFormat.Nsf: ExportNsf(); break;
                     case ExportFormat.Rom: ExportRom(); break;
                     case ExportFormat.Midi: ExportMidi(); break;

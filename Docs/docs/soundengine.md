@@ -258,3 +258,35 @@ Every feature supported in FamiStudio is supported by this sound engine. If you 
 ## Exporting Music/SFX to the engine
 
 You can export music or sound effect data to the engine by using either the [Export Dialog](export.md) or from the [command line](cmdline.md).
+
+## Issues with ASM6
+
+There is a bug in ASM6 that makes it use the wrong macro values in some rare situations. The FamiStudio sound engine is sometimes affected by this. 
+
+The bug is in the way ASM6 expands macros. You can fix it yourself in the original ASM6 code, or download the fixed executable from the [FamiStudio Github](https://github.com/BleuBleu/FamiStudio/blob/master/Tools/asm6_fixed.exe).
+
+Code fix if you want to compile it yourself:
+
+    void equ(label *id, char **next) {
+        char str[LINEMAX];
+        char *s=*next;
+        if(!labelhere)
+            errmsg=NeedName;//EQU without a name
+        else {
+            if((*labelhere).type==LABEL) {//new EQU.. good
+                reverse(str,s+strspn(s,whitesp));       //eat whitesp off both ends
+                reverse(s,str+strspn(str,whitesp));
+                if(*s) {
+                    (*labelhere).line=my_strdup(s);
+                    (*labelhere).type=EQUATE;
+                } else {
+                    errmsg=IncompleteExp;
+                }
+            } else if((*labelhere).type!=EQUATE) {
+                errmsg=LabelDefined;
+            } else {
+                (*labelhere).line = my_strdup(s); // ***** MISSING ASSIGNMENT HERE *****
+            }
+            *s=0;//end line
+        }
+    }

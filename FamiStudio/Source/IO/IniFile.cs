@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace FamiStudio
@@ -153,7 +154,14 @@ namespace FamiStudio
                 lines.Add("");
             }
 
-            System.IO.File.WriteAllLines(filename, lines);
+            try
+            {
+                System.IO.File.WriteAllLines(filename, lines);
+            }
+            catch
+            {
+                Console.WriteLine($"Error saving INI file {filename}.");
+            }
         }
     }
 }

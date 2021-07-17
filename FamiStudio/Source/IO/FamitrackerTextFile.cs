@@ -658,7 +658,7 @@ namespace FamiStudio
         public bool Save(Project originalProject, string filename, int[] songIds)
         {
             var project = originalProject.DeepClone();
-            project.RemoveAllSongsBut(songIds);
+            project.DeleteAllSongsBut(songIds);
 
             if (project.UsesFamiStudioTempo)
             {
@@ -808,7 +808,7 @@ namespace FamiStudio
                 {
                     var mapping = project.SamplesMapping[i];
 
-                    if (mapping != null && mapping.Sample != null)
+                    if (mapping != null)
                     {
                         int note     = i + Note.DPCMNoteMin;
                         var octave   = (note - 1) / 12 ;
@@ -858,6 +858,7 @@ namespace FamiStudio
                     var prevNoteValue = Note.NoteInvalid;
                     var prevInstrument = (Instrument)null;
                     var prevSlideEffect = Effect_None;
+                    var activeVolumeSlide = false;
                     var prevArpeggio = (Arpeggio)null;
                     var famitrackerSpeed = song.FamitrackerSpeed;
                     
@@ -917,12 +918,17 @@ namespace FamiStudio
                                 {
                                     stepSizeFloat /= 4.0f;
                                 }
+                                else if (channel.IsNoiseChannel)
+                                {
+                                    uniqueWarnings.Add($"Slide notes on the noise channel will almost certainly require manual correct. FamiTracker's support for them is very limited.");
+                                }
 
                                 // Undo any kind of shifting we had done. This will kill the 1-bit of fraction we have on most channel.
                                 var absNoteDelta  = Math.Abs(note.Value - note.SlideNoteTarget);
+                                var force1xx2xx = channel.IsNoiseChannel;
 
                                 // See if we can use Qxy/Rxy (slide up/down y semitones, at speed x), this is preferable.
-                                if (absNoteDelta < 16)
+                                if (absNoteDelta < 16 && !force1xx2xx)
                                 {
                                     if (prevSlideEffect == Effect_PortaUp   ||
                                         prevSlideEffect == Effect_PortaDown ||
@@ -956,7 +962,7 @@ namespace FamiStudio
 
                                     // If the previous note matched too, we can use 3xx (auto-portamento).
                                     // Avoid using portamento on instrument with relative pitch envelopes, their previous pitch isnt reliable.
-                                    if (prevNoteValue == note.Value && (prevInstrument == null || prevInstrument.Envelopes[EnvelopeType.Pitch].IsEmpty(EnvelopeType.Pitch) || !prevInstrument.Envelopes[EnvelopeType.Pitch].Relative))
+                                    if (!force1xx2xx && prevNoteValue == note.Value && (prevInstrument == null || prevInstrument.Envelopes[EnvelopeType.Pitch].IsEmpty(EnvelopeType.Pitch) || !prevInstrument.Envelopes[EnvelopeType.Pitch].Relative))
                                     {
                                         if (prevSlideEffect == Effect_PortaUp ||
                                             prevSlideEffect == Effect_PortaDown)
@@ -975,21 +981,19 @@ namespace FamiStudio
                                         if (channel.IsFdsWaveChannel || channel.IsN163WaveChannel)
                                             stepSizeFloat = -stepSizeFloat;
 
-                                        var absFloorStepSize = Math.Abs(Utils.SignedFloor(stepSizeFloat));
+                                        var absFloorStepSize = Math.Abs(Utils.SignedCeil(stepSizeFloat));
 
                                         if (prevSlideEffect == Effect_Portamento)
                                             effectString += $" 300";
 
-                                        if (note.SlideNoteTarget > note.Value)
-                                        {
-                                            effectString += $" 1{Math.Min(0xff, absFloorStepSize):X2}";
-                                            prevSlideEffect = Effect_PortaUp;
-                                        }
-                                        else if (note.SlideNoteTarget < note.Value)
-                                        {
-                                            effectString += $" 2{Math.Min(0xff, absFloorStepSize):X2}";
-                                            prevSlideEffect = Effect_PortaDown;
-                                        }
+                                        var fx = channel.IsNoiseChannel ? 
+                                            (note.SlideNoteTarget > note.Value ? "2" : "1") : 
+                                            (note.SlideNoteTarget > note.Value ? "1" : "2");
+
+                                        effectString += $" {fx}{Math.Min(0xff, absFloorStepSize):X2}";
+
+                                        // Doesnt matter if we set up/down.
+                                        prevSlideEffect = Effect_PortaUp;
                                     }
                                 }
                             }
@@ -1003,6 +1007,30 @@ namespace FamiStudio
                                 }
 
                                 prevSlideEffect = Effect_None;
+                            }
+
+                            if (note.HasVolumeSlide)
+                            {
+                                if (channel.ComputeVolumeSlideNoteParams(note, location, famitrackerSpeed, false, out _, out var stepSizeFloat))
+                                {
+                                    if (stepSizeFloat < 0)
+                                    {
+                                        var clampedSlope = Utils.Clamp((int)Math.Round(-stepSizeFloat * 8.0f), 0, 15);
+                                        effectString += $" A{clampedSlope << 4:X2}";
+                                    }
+                                    else
+                                    {
+                                        var clampedSlope = Utils.Clamp((int)Math.Round(stepSizeFloat * 8.0f), 0, 15);
+                                        effectString += $" A{clampedSlope:X2}";
+                                    }
+
+                                    activeVolumeSlide = true;
+                                }
+                            }
+                            else if (note.HasVolume && activeVolumeSlide)
+                            {
+                                effectString += $" A00";
+                                activeVolumeSlide = false;
                             }
 
                             if (location.NoteIndex == patternLen - 1)
