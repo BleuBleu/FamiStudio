@@ -24,6 +24,9 @@ is done in the demo.
 * NESASM: famistudio_nesasm.asm
 * ASM6:   famistudio_asm6.asm
 
+For C coding with CC65, there is a provided header file which can be used along with the normal ca65 include.
+See the documentation and demo for more information on how to include it.
+
 DEMO
 ====
 
@@ -32,6 +35,7 @@ all generate binary identical ROMs.
 
 The source code for the demo is located in the \DemoSource subfolder.
 
+* CC65:   DemoSource\demo_cc65.c
 * CA65:   DemoSource\demo_ca65.s
 * NESASM: DemoSource\demo_nesasm.asm
 * ASM6:   DemoSource\demo_asm6.asm

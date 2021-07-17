@@ -30,3 +30,8 @@ SoundEngine/UnitTests/*.inc
 FamiStudio/FamiStudio.args.json
 *.tmp
 *.ilk
+.vscode
+
+# This file is generated from the C file
+SoundEngine/DemoSource/demo_cc65.s
+
