@@ -74,7 +74,9 @@ namespace FamiStudio
             int width  = 600;
             int height = 550;
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+#if FAMISTUDIO_LINUX
+            height += 100;
+#elif FAMISTUDIO_MACOS
             height += 80;
 #endif
 
@@ -144,6 +146,10 @@ namespace FamiStudio
             else
             {
                 page.AddLabel(null, "Video export requires FFmpeg. Please go in the application settings and look for the 'FFmpeg' section.", true);
+#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+                // HACK : Last minute hack, too lazy to debug GTK layouting issues right now.
+                page.AddLabel(null, " ");
+#endif
                 return false;
             }
         }
