@@ -74,7 +74,7 @@ namespace FamiStudio
         public bool IsQwertyPianoEnabled => qwertyPiano;
         public bool IsMetronomeEnabled => metronome;
         public bool FollowModeEnabled { get => followMode; set => followMode = value; }
-        public bool SequencerHasSelection => Sequencer.GetPatternSelectionRange(out _, out _);
+        public bool SequencerHasSelection => Sequencer.GetPatternTimeSelectionRange(out _, out _);
         public int BaseRecordingOctave => baseRecordingOctave;
         public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : 0xffff; set => songPlayer.ChannelMask = value; }
@@ -149,13 +149,18 @@ namespace FamiStudio
             InitializeMultiMediaNotifications();
             InitializeMetronome();
 
+            if (string.IsNullOrEmpty(filename) && Settings.OpenLastProjectOnStart && !string.IsNullOrEmpty(Settings.LastProjectFile) && File.Exists(Settings.LastProjectFile))
+            {
+                filename = Settings.LastProjectFile;
+            }
+
             if (!string.IsNullOrEmpty(filename))
             {
                 OpenProject(filename);
             }
             else
             {
-                NewProject();
+                NewProject(true);
             }
 
 #if !DEBUG
@@ -172,7 +177,7 @@ namespace FamiStudio
 
             if (songPlayer != null)
             {
-                Sequencer.GetPatternSelectionRange(out var min, out var max);
+                Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
                 songPlayer.SetSelectionRange(min, max);
             }
         }
@@ -522,7 +527,7 @@ namespace FamiStudio
             return true;
         }
 
-        public void NewProject()
+        public void NewProject(bool isDefault = false)
         {
             if (!CheckUnloadProject())
             {
@@ -531,6 +536,9 @@ namespace FamiStudio
 
             project = new Project(true);
             InitProject();
+
+            if (!isDefault)
+                Settings.LastProjectFile = "";
         }
 
         private void FreeExportDialog()
@@ -598,6 +606,9 @@ namespace FamiStudio
                 if (project != null)
                 {
                     InitProject();
+
+                    if (Path.GetExtension(filename).ToLower() == ".fms")
+                        Settings.LastProjectFile = filename;
                 }
                 else
                 {
@@ -668,6 +679,7 @@ namespace FamiStudio
                     if (success)
                     {
                         UpdateTitle();
+                        Settings.LastProjectFile = project.Filename;
                     }
                 }
                 else
@@ -1018,7 +1030,7 @@ namespace FamiStudio
         private void InitializeSongPlayer()
         {
             Debug.Assert(songPlayer == null);
-            Sequencer.GetPatternSelectionRange(out var min, out var max);
+            Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
             songPlayer = new SongPlayer(palPlayback);
             songPlayer.Beat += SongPlayer_Beat;
             songPlayer.SetSelectionRange(min, max);

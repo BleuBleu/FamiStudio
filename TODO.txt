@@ -99,15 +99,10 @@ x BUG? MacOS Monterey retina detection?
 x ASM => ASM6
 x MacOS : Create a real menu at top, handle Quit correctly.
 x Fix clear undo/redo on save
+x Reopen last project option?
 / OpenTK PR!
-- Square selection.
-	- Drag selection, etc.
-	- Think of copy paste (think of making consistent w/ seq)
-	- Do sequencer too
-	- Test env/arp a lot!
-	- Stop notes
 - Merge CC65 stuff (when back in main branch).
-		
+
 Doc
 ===
 - Add replace instrument (with selection) info
@@ -173,3 +168,6 @@ Backlog:
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
 - Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID). 
 - Installer on Japanese machine? 
+- Square selection: Sort-of works, but problems are with stop notes. To know if a stop note is in the square
+  you need the previous note, but that note may just have been deleted (like in DeleteNotes), so its almost
+  impossible to do without caching the stop note values.

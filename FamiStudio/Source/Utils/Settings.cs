@@ -39,7 +39,9 @@ namespace FamiStudio
         public static bool TrackPadControls = false;
         public static bool ShowTutorial = true;
         public static bool ClearUndoRedoOnSave = true;
+        public static bool OpenLastProjectOnStart = true;
         public static bool AutoSaveCopy = true;
+        public static string LastProjectFile;
 
         // User Interface section
         public static int DpiScaling = 0;
@@ -218,7 +220,9 @@ namespace FamiStudio
             TrackPadControls = ini.GetBool(Version < 2 ? "UI" : "General", "TrackPadControls", false); // At version 2 (FamiStudio 3.0.0, changed section)
             ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
+            OpenLastProjectOnStart = ini.GetBool("General", "OpenLastProjectOnStart", true);
             AutoSaveCopy = ini.GetBool("General", "AutoSaveCopy", true);
+            LastProjectFile = OpenLastProjectOnStart ? ini.GetString("General", "LastProjectFile", "") : "";
 
             // UI
             DpiScaling = ini.GetInt("UI", "DpiScaling", 0);
@@ -343,6 +347,8 @@ namespace FamiStudio
             ini.SetBool("General", "TrackPadControls", TrackPadControls);
             ini.SetBool("General", "ShowTutorial", ShowTutorial);
             ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);
+            ini.SetBool("General", "OpenLastProjectOnStart", OpenLastProjectOnStart);
+            ini.SetString("General", "LastProjectFile", OpenLastProjectOnStart ? LastProjectFile : "");
             ini.SetBool("General", "AutoSaveCopy", AutoSaveCopy);
 
             // UI

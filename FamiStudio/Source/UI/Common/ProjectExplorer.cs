@@ -1671,7 +1671,7 @@ namespace FamiStudio
                 var numSamplesFiles = 0;
                 foreach (var fn in filenames)
                 {
-                    if (Path.GetExtension(fn) == ".fms")
+                    if (Path.GetExtension(fn).ToLower() == ".fms")
                         numFamiStudioFiles++;
                     else
                         numSamplesFiles++;
