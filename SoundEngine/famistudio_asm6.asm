@@ -4717,7 +4717,6 @@ famistudio_channel_to_slide:
 
 ; For a given channel, returns the index of the pitch envelope.
 famistudio_channel_to_pitch_env:
-.if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
     .byte $00
     .byte $01
     .byte $02
@@ -4746,7 +4745,6 @@ famistudio_channel_to_pitch_env:
 .endif
 .if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 11
     .byte $0a
-.endif
 .endif
 
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
