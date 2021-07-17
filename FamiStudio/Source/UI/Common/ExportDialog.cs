@@ -74,7 +74,9 @@ namespace FamiStudio
             int width  = 600;
             int height = 550;
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+#if FAMISTUDIO_LINUX
+            height += 100;
+#elif FAMISTUDIO_MACOS
             height += 80;
 #endif
 
