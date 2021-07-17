@@ -26,7 +26,6 @@ Changes:
 Breaking/behavior changes:
 * Pattern numbers in the sequencer and piano roll now start at 1 instead of 0. This is a purely esthetic change and does not impact anything.
 
-
 ## Version 3.0.2 (Hotfix)
 
 Fixes:
