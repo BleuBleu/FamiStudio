@@ -1,7 +1,48 @@
+FamiStudio 3.1.0 (Small quality of life release)
+================================================
+/ OpenTK PR!
+- Merge CC65 stuff (when back in main branch).
+
 Videos:
 =======
 - Tutorial for FamiTracker
 - Sampling soundfont instruments
+
+Doc
+===
+- Add replace instrument (with selection) info
+- Gopnick errors
+	1. Two attributes are missing, Instrument->Vrc6SawMasterVolume and Note->Release (legacy stuff?)
+	2. The "general structure" part suggests "PatternInstance" as a child of "Song" while the indentation in the actual files indicates that it's a child of "Channel"
+- Volume slide, noise slide
+- Metronome
+- OGG
+
+Youtube corrections:
+====================
+- Patterns are one based.
+
+Change Log
+==========
+* Fine tuning parameter on DPCM samples
+* Stereo WAV/MP3/OGG/Video export
+* OGG export
+* Oscilloscope video export
+* Metronome
+* Noise slides
+* Volume slides
+* Noise emulation improvements
+* Portable mode (save settings in root folder if portable.txt is detected)
+* Import samples from other projects
+* ROM export now uses MMC3 mapper
+* Option to auto-save copy every 2 minutes
+* Option for thicker scroll bars.
+* MacOS Monterey Beta support
+* Minor sequencer selection improvements.
+* Sound Engine CC65 bindings (Contribution from XXX)
+
+Breaking/behavior changes:
+* Pattern numbers in the sequencer and piano roll now start at 1 instead of 0. This is a purely esthetic change and does not impact anything.
 
 Linux notes 
 =========== 
@@ -35,6 +76,7 @@ MacOS notes
 - Must compile the MacLauncher with this to link to the AppKit version that
   matches GTK+2. This will make MacOS load these older versions afterwards,
   even on more recent OS'es.
+- Must compile vorbis on old version too (like Sierra). 
 - If problem installing MacOS VM, see @DOUG fix at
   https://www.geekrar.com/how-to-fix-the-cpu-has-been-disabled-by-the-guest-os/
 	cpuid.0.eax = "0000:0000:0000:0000:0000:0000:0000:1011"
@@ -45,7 +87,7 @@ MacOS notes
 	cpuid.1.ebx = "0000:0010:0000:0001:0000:1000:0000:0000"
 	cpuid.1.ecx = "1000:0010:1001:1000:0010:0010:0000:0011"
 	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
-- If NAT network doesnt work (probleme is only in Monterey right now) do that:
+- If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
 
 Trailer/scroll 
@@ -61,63 +103,6 @@ MkDocs
 Discord 
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
-
-FamiStudio 3.1.0 (Small quality of life release)
-================================================
-/ OpenTK PR!
-- Merge CC65 stuff (when back in main branch).
-
-Doc
-===
-- Add replace instrument (with selection) info
-- Gopnick errors
-	1. Two attributes are missing, Instrument->Vrc6SawMasterVolume and Note->Release (legacy stuff?)
-	2. The "general structure" part suggests "PatternInstance" as a child of "Song" while the indentation in the actual files indicates that it's a child of "Channel"
-- Volume slide, noise slide
-- Metronome
-- OGG
-
-Youtube corrections:
-====================
-- Patterns are one based.
-
-Testing
-=======
-x Re-test song merge a lot. Removed a few cleanups.
-x Re-test expansions issue (same instrument name, diff expansions, etc.)
-x Stereo video crackles?
-x WS clips children on win7
-x Test OGG a bit more, make sure UI + command line works good
-x Double check osc flipping in toolbar + video
-x Test ROM with noise/volume slides.
-x Project explorer, re-test most capture operations.
-x Add volume + noise slides to unit tests.
-x Update + rerun unit tests.
-- Sound engine is broken.
-- Recompile, ROM, NSF, sound engine (re-export data).
-- Recompile Vorbis on all platforms (240 fix)!
-
-Change Log
-==========
-* Fine tuning parameter on DPCM samples
-* Stereo WAV/MP3/OGG/Video export
-* OGG export
-* Oscilloscope video export
-* Metronome
-* Noise slides
-* Volume slides
-* Noise emulation improvements
-* Portable mode (save settings in root folder if portable.txt is detected)
-* Import samples from other projects
-* ROM export now uses MMC3 mapper
-* Option to auto-save copy every 2 minutes
-* Option for thicker scroll bars.
-* MacOS Monterey Beta support
-* Minor sequencer selection improvements.
-* Sound Engine CC65 bindings (Contribution from XXX)
-
-Breaking/behavior changes:
-* Pattern numbers in the sequencer and piano roll now start at 1 instead of 0. This is a purely esthetic change and does not impact anything.
 
 3.2.0
 =====
