@@ -53,131 +53,131 @@ shatterhand_music_data:
 @song0ch0:
 @song0ch0loop:
 	db $6a, <(@tempo_env_9_mid), >(@tempo_env_9_mid), $7e, $88
-@ref7:
+@song0ref7:
 	db $22, $9b, $f9, $83, $25, $89, $f9, $81, $62, $22, $22, $9b, $f9, $83, $27, $89, $f9, $81, $62, $22, $22, $9b, $f9, $83
 	db $2a, $89, $f9, $81, $62, $22, $22, $9b, $f9, $83, $29, $9b, $f9, $83, $27, $89, $f9, $81, $62, $29
-@ref51:
-	db $25, $89, $f9, $81, $62, $27, $20, $89, $f9, $81, $62, $25, $6b, $7e
+@song0ref51:
+	db $25, $89, $f9, $81, $62, $27, $20, $89, $f9, $81, $62, $25, $6b
 	db $ff, $32
-	dw @ref7
+	dw @song0ref7
 	db $6b, $00, $62, $25, $8d, $33, $89, $f9, $81, $62, $20
-@ref79:
+@song0ref78:
 	db $31, $89, $f9, $81, $62, $33, $2c, $89, $f9, $81, $62, $31, $33, $89, $f9, $81, $62, $2c
 	db $ff, $0a
-	dw @ref79
+	dw @song0ref78
 	db $27, $89, $f9, $81, $62, $2c
 	db $ff, $0a
-	dw @ref51
+	dw @song0ref51
 	db $29, $89, $f9, $81, $62, $20, $25, $89, $f9, $81, $62, $29, $20, $89, $f9, $81, $62, $25, $1d, $89, $f9, $81, $62, $20
-@ref133:
+@song0ref132:
 	db $20, $89, $f9, $81, $62, $1d, $22, $89, $f9, $81, $62, $20, $6b, $33, $89, $f9, $81, $62, $22, $00, $62, $22, $8d, $2a
 	db $89, $f9, $81, $62, $33, $00, $62, $33
-@ref165:
+@song0ref164:
 	db $8d, $62, $2a, $8f, $2c, $89, $f9, $81, $62, $2a, $00, $62, $2a, $8d, $62, $2c, $8f, $29, $89, $f9, $81, $62, $2c, $00
 	db $62, $2c, $8d, $62, $29, $8f, $2a, $89, $f9, $81, $62, $29, $00, $62, $29, $8d, $27, $ad, $f9, $83, $6b, $29, $89, $f9
 	db $81, $62, $27, $00, $62, $27, $8d, $25, $89, $f9, $81, $62, $29, $27, $d1, $f9, $83, $00, $62, $27, $8d, $1d, $89, $f9
 	db $81, $62, $27
 	db $ff, $0a
-	dw @ref133
+	dw @song0ref132
 	db $27, $89, $f9, $81, $62, $22
 	db $ff, $0a
-	dw @ref51
-@ref252:
+	dw @song0ref51
+@song0ref251:
 	db $22, $89, $f9, $81, $62, $20, $6b, $00, $62, $20, $8d, $62, $22, $8f, $2a, $89, $f9, $81, $62, $22, $00, $62, $22
 	db $ff, $3c
-	dw @ref165
+	dw @song0ref164
 	db $ff, $0a
-	dw @ref133
+	dw @song0ref132
 	db $27, $89, $f9, $81, $62, $22
 	db $ff, $0a
-	dw @ref51
+	dw @song0ref51
 	db $ff, $0a
-	dw @ref252
+	dw @song0ref251
 	db $8a
-@ref294:
+@song0ref293:
 	db $2f, $ad, $f9, $83, $31, $89, $f9, $81, $62, $2f
-@ref304:
+@song0ref303:
 	db $33, $89, $f9, $81, $62, $31, $35, $89, $f9, $81, $62, $33, $36, $9b, $f9, $83
-@ref320:
+@song0ref319:
 	db $38, $89, $f9, $81, $62, $36, $36, $89, $f9, $81, $62, $38, $00, $62, $38, $8d, $32, $ad, $f9, $83, $6b, $2f, $bf, $f9
 	db $83, $35, $8f, $f9, $81, $62, $2f, $33, $8f, $f9, $81, $62, $35, $32, $8f, $f9, $81, $62, $33, $33, $9b, $f9, $83, $2e
 	db $89, $f9, $81, $62, $33, $36, $9b, $f9, $83
-@ref377:
+@song0ref376:
 	db $35, $89
-@ref379:
+@song0ref378:
 	db $f9, $81, $62, $36, $33, $89, $f9, $81, $62, $35, $31, $89, $f9, $81, $62, $33, $6b, $00, $62, $33, $8d, $62, $31, $8f
 	db $ff, $13
-	dw @ref294
+	dw @song0ref293
 	db $31, $9b, $f9, $83
 	db $ff, $0a
-	dw @ref304
+	dw @song0ref303
 	db $00, $62, $33, $8d, $36, $ad, $f9, $83, $6b, $38, $bf
-@ref424:
+@song0ref423:
 	db $f9, $83, $38, $89, $f9, $83, $3a, $89, $f9, $81, $62, $38, $3d, $89, $f9, $81, $62, $3a, $38, $89, $f9, $81, $62, $3d
 	db $00, $62, $3d, $8d, $88, $2a, $89, $f9, $81, $62, $38
-@ref459:
+@song0ref458:
 	db $29, $89, $f9, $81, $62, $2a, $25, $89, $f9, $81, $62, $29, $1e, $89, $f9, $81, $62, $25, $1d, $89, $f9, $81, $62, $1e
 	db $ff, $55
-	dw @ref133
+	dw @song0ref132
 	db $ff, $0a
-	dw @ref133
+	dw @song0ref132
 	db $27, $89, $f9, $81, $62, $22
 	db $ff, $0a
-	dw @ref51
+	dw @song0ref51
 	db $ff, $11
-	dw @ref252
+	dw @song0ref251
 	db $ff, $3c
-	dw @ref165
+	dw @song0ref164
 	db $ff, $0a
-	dw @ref133
+	dw @song0ref132
 	db $27, $89, $f9, $81, $62, $22
 	db $ff, $0a
-	dw @ref51
+	dw @song0ref51
 	db $ff, $0a
-	dw @ref252
+	dw @song0ref251
 	db $31, $9b, $f9, $83, $31, $89, $f9, $83
 	db $ff, $0a
-	dw @ref304
+	dw @song0ref303
 	db $35, $ad, $f9, $83, $35, $89, $f9, $83, $33, $89, $f9, $81, $62, $35, $00, $62, $35, $8d, $32, $ad, $f9, $83, $6b, $33
 	db $bf, $f9, $83, $33, $89
-@ref559:
+@song0ref558:
 	db $f9, $83, $35, $89, $f9, $81, $62, $33, $36, $89, $f9, $81, $62, $35, $38, $ad, $f9, $83, $36, $89, $f9, $81, $62, $38
 	db $35, $89, $f9, $81, $62, $36, $00, $62, $36, $8d, $33, $ad, $f9, $83, $6b, $00, $62, $33, $9f
-@ref602:
+@song0ref601:
 	db $35, $9b, $f9, $83, $35, $89, $f9, $83, $36, $89, $f9, $81, $62, $35, $38, $89, $f9, $81, $62, $36, $3a, $ad, $f9, $83
 	db $38, $89, $f9, $81, $62, $3a, $36, $89, $f9, $81, $62, $38, $00, $62, $38, $8d
 	db $ff, $0a
-	dw @ref320
+	dw @song0ref319
 	db $35, $89, $f9, $81, $62, $36, $6b, $32, $bf, $f9, $83, $33, $bf, $f9, $83, $35, $89, $f9, $81, $62, $33, $35, $8b, $f9
 	db $81, $00, $62, $35, $8d, $35, $d1, $f9, $83, $6b, $3a, $89, $f9, $81, $62, $35
-@ref685:
+@song0ref684:
 	db $33, $89, $f9, $81, $62, $3a, $2e, $89, $f9, $81, $62, $33, $38, $89, $f9, $81, $62, $2e, $31, $89, $f9, $81, $62, $38
 	db $2c, $89, $f9, $81, $62, $31, $2a, $9b, $f9, $83, $00, $62, $2a, $8d, $2a, $89, $f9, $83
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $2a, $89, $f9, $81, $62, $25
 	db $ff, $0a
-	dw @ref459
-@ref739:
+	dw @song0ref458
+@song0ref738:
 	db $27, $89, $f9, $81, $62, $25, $6b, $2a, $89, $f9, $81, $62, $27, $2a, $89, $f9, $83, $00, $62, $2a, $8d, $2c, $89, $f9
 	db $81, $62, $2a, $2c, $89, $f9, $83, $00, $62, $2c, $8d, $2a, $89, $f9, $81, $62, $2c, $2a, $89, $f9, $83, $00, $62, $2a
 	db $8d, $2c, $89, $2c, $81, $62, $2a, $2c, $89, $f9, $83, $00, $62, $2c, $8d, $33, $89, $f9, $81, $62, $2c, $31, $89, $f9
 	db $81, $62, $33, $2f, $89, $f9, $81, $62, $31, $2e, $89, $f9, $81, $62, $2f, $6b, $3a, $89, $f9, $81, $62, $2e
 	db $ff, $24
-	dw @ref685
+	dw @song0ref684
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $2a, $89, $f9, $81, $62, $25
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $ff, $49
-	dw @ref739
+	dw @song0ref738
 	db $6b, $23, $9b, $f9, $83, $2a, $89, $f9, $81, $62, $23, $25, $9b, $f9, $83, $2c, $9b, $f9, $83, $27, $9b, $f9, $83, $2e
 	db $9b, $f9, $83, $35, $89, $f9, $81, $62, $2e, $36, $89, $f9, $81, $35, $8b
 	db $ff, $0d
-	dw @ref379
+	dw @song0ref378
 	db $6b, $36, $89, $f9, $81, $62, $31, $36, $89, $f9, $83, $00, $62, $36, $8d, $35, $89, $f9, $81, $62, $36
-@ref914:
+@song0ref913:
 	db $35, $89, $f9, $83, $00, $62, $35, $8d, $36, $89, $f9, $81, $62, $35, $36, $89, $f9, $83, $00, $62, $36, $8d, $1d, $89
 	db $f9, $81, $62, $36, $22, $89, $f9, $81, $62, $1d, $29, $89, $f9, $81, $62, $22, $31, $89, $f9, $81, $62, $29, $35, $ad
 	db $f9, $83, $fd
@@ -185,534 +185,534 @@ shatterhand_music_data:
 @song0ch1:
 @song0ch1loop:
 	db $8a
-@ref969:
+@song0ref968:
 	db $27, $9b, $f9, $83, $2a, $89, $f9, $81, $62, $27, $27, $9b, $f9, $83, $2c, $89, $f9, $81, $62, $27, $27, $9b, $f9, $83
 	db $2e, $89, $f9, $81, $62, $27, $27, $9b, $f9, $83, $2c, $9b, $f9, $83, $2a, $89, $f9, $81, $62, $2c
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $ff, $28
-	dw @ref969
+	dw @song0ref968
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $00, $62, $29, $8d, $36, $89, $f9, $81, $62, $25
-@ref1032:
+@song0ref1031:
 	db $35, $89, $f9, $81, $62, $36, $31, $89, $f9, $81, $62, $35, $36, $89, $f9, $81, $62, $31
 	db $ff, $0a
-	dw @ref1032
+	dw @song0ref1031
 	db $2a, $89, $f9, $81, $62, $31
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $2c, $89, $f9, $81, $62, $25, $29, $89, $f9, $81, $62, $2c, $25, $89, $f9, $81, $62, $29, $22, $89, $f9, $81, $62, $25
-@ref1086:
+@song0ref1085:
 	db $25, $89, $f9, $81, $62, $22
-@ref1092:
+@song0ref1091:
 	db $27, $89, $f9, $81, $62, $25, $3f, $89, $f9, $81, $62, $27, $00, $62, $27, $8d, $2e, $89, $f9, $81, $62, $3f, $00, $62
 	db $3f
-@ref1117:
+@song0ref1116:
 	db $8d, $62, $2e, $8f, $2f, $89, $f9, $81, $62, $2e, $00, $62, $2e, $8d, $62, $2f, $8f, $2c, $89, $f9, $81, $62, $2f, $00
 	db $62, $2f, $8d, $62, $2c, $8f, $2e, $89, $f9, $81, $62, $2c, $00, $62, $2c, $8d, $2a, $ad, $f9, $83, $2c, $89, $f9, $81
 	db $62, $2a, $00, $62, $2a, $8d, $29, $89, $f9, $81, $62, $2c, $2a, $d1, $f9, $83, $00, $62, $2a, $8d, $22, $89, $f9, $81
 	db $62, $2a
 	db $ff, $0a
-	dw @ref1086
+	dw @song0ref1085
 	db $2a, $89, $f9, $81, $62, $27
 	db $ff, $0a
-	dw @ref459
-@ref1203:
+	dw @song0ref458
+@song0ref1202:
 	db $27, $89, $f9, $81, $62, $25, $00, $62, $25, $8d, $62, $27, $8f, $2e, $89, $f9, $81, $62, $27, $00, $62, $27
 	db $ff, $3c
-	dw @ref1117
+	dw @song0ref1116
 	db $ff, $0a
-	dw @ref1086
+	dw @song0ref1085
 	db $2a, $89, $f9, $81, $62, $27
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $ff, $0a
-	dw @ref1203
+	dw @song0ref1202
 	db $8c, $33, $ad
 	db $ff, $0d
-	dw @ref559
-@ref1249:
+	dw @song0ref558
+@song0ref1248:
 	db $89, $f9, $81, $62, $36, $3a, $9b, $f9, $83
-@ref1258:
+@song0ref1257:
 	db $3b, $89, $f9, $81, $62, $3a, $3a, $89, $f9, $81, $62, $3b, $00, $62, $3b, $8d, $35, $ad, $f9, $83, $38, $bf, $f9, $83
 	db $38, $8f, $f9, $83, $36, $8f, $f9, $81, $62, $38, $35, $8f, $f9, $81, $62, $36, $36, $9b, $f9, $83, $33, $89, $f9, $81
 	db $62, $36, $3a, $d1, $f9, $83, $00, $62, $3a, $9f, $33, $ad
 	db $ff, $0d
-	dw @ref559
+	dw @song0ref558
 	db $ff, $0d
-	dw @ref1249
+	dw @song0ref1248
 	db $3d, $89, $f9, $81, $62, $3b, $00, $62, $3b, $8d, $3f, $ad, $f9, $83, $41, $bf, $f9, $83, $41, $89, $f9, $83, $42, $89
 	db $f9, $81, $62, $41, $44, $89, $f9, $81, $62, $42, $41, $89, $f9, $81, $62, $44, $00, $62, $44, $8d, $8a, $36, $89, $f9
 	db $81, $62, $41
 	db $ff, $0a
-	dw @ref1032
+	dw @song0ref1031
 	db $2a, $89, $f9, $81, $62, $31
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $ff, $50
-	dw @ref1092
+	dw @song0ref1091
 	db $ff, $0a
-	dw @ref1086
+	dw @song0ref1085
 	db $2a, $89, $f9, $81, $62, $27
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $ff, $11
-	dw @ref1203
+	dw @song0ref1202
 	db $ff, $3c
-	dw @ref1117
+	dw @song0ref1116
 	db $ff, $0a
-	dw @ref1086
+	dw @song0ref1085
 	db $2a, $89, $f9, $81, $62, $27
 	db $ff, $0a
-	dw @ref459
+	dw @song0ref458
 	db $ff, $0a
-	dw @ref1203
+	dw @song0ref1202
 	db $ff, $23
-	dw @ref602
+	dw @song0ref601
 	db $35, $ad, $f9, $83, $36, $bf, $f9, $83, $36, $8b, $f9, $81, $38, $89, $f9, $81, $62, $36, $3a, $89, $f9, $81, $62, $38
 	db $3b, $ad, $f9, $83, $3a, $89, $f9, $81, $62, $3b, $38, $89, $f9, $81, $62, $3a, $00, $62, $3a, $8d, $36, $ad, $f9, $83
 	db $00, $62, $36, $9f, $38, $9b
 	db $ff, $0b
-	dw @ref424
+	dw @song0ref423
 	db $3b, $89, $f9, $81, $62, $3a, $3d, $ad, $f9, $83, $3b, $89, $f9, $81, $62, $3d, $3a, $89, $f9, $81, $62, $3b, $00, $62
 	db $3b, $8d
 	db $ff, $0a
-	dw @ref1258
+	dw @song0ref1257
 	db $38, $89, $f9, $81, $62, $3a, $3a, $bf, $f9, $83, $3c, $bf, $f9, $83, $3d, $89, $f9, $81, $62, $3c, $3d, $89, $f9, $83
 	db $00, $62, $3d, $8d, $3e, $d1, $f9, $83, $3f, $89, $f9, $81, $62, $3e
-@ref1550:
+@song0ref1549:
 	db $3a, $89, $f9, $81, $62, $3f, $33, $89, $f9, $81, $62, $3a, $3d, $89, $f9, $81, $62, $33, $38, $89, $f9, $81, $62, $3d
 	db $31, $89, $f9, $81, $62, $38, $2f, $9b, $f9, $83, $00, $62, $2f, $8d, $36, $89, $f9, $81, $62, $2f
 	db $ff, $0f
-	dw @ref1032
+	dw @song0ref1031
 	db $ff, $0a
-	dw @ref1032
-@ref1600:
+	dw @song0ref1031
+@song0ref1599:
 	db $33, $89, $f9, $81, $62, $31, $2f, $89, $f9, $81, $62, $33, $2f, $89, $f9, $83, $00, $62, $2f, $8d, $31, $89, $f9, $81
 	db $62, $2f, $31, $89, $f9, $83, $00, $62, $31, $8d, $33, $89, $f9, $81, $62, $31, $33, $89, $f9, $83, $00, $62, $33, $8d
 	db $35, $89, $f9, $81, $62, $33
 	db $ff, $0c
-	dw @ref914
+	dw @song0ref913
 	db $ff, $0f
-	dw @ref377
+	dw @song0ref376
 	db $3f, $89, $f9, $81, $62, $31
 	db $ff, $25
-	dw @ref1550
+	dw @song0ref1549
 	db $ff, $0f
-	dw @ref1032
+	dw @song0ref1031
 	db $ff, $0a
-	dw @ref1032
+	dw @song0ref1031
 	db $ff, $2e
-	dw @ref1600
+	dw @song0ref1599
 	db $ff, $0c
-	dw @ref914
+	dw @song0ref913
 	db $ff, $0f
-	dw @ref377
+	dw @song0ref376
 	db $2f, $9b, $f9, $83, $36, $89, $f9, $81, $62, $2f, $31, $9b, $f9, $83, $38, $9b, $f9, $83, $33, $9b, $f9, $83, $3a, $9b
 	db $f9, $83, $41, $89, $f9, $81, $62, $3a, $42, $89, $f9, $81, $62, $41, $41, $89, $f9, $81, $62, $42, $3f, $89, $f9, $81
 	db $62, $41, $3d, $89, $f9, $81, $62, $3f
-@ref1740:
+@song0ref1739:
 	db $3f, $89, $f9, $81, $62, $3d, $3f, $89, $f9, $83, $00, $62, $3f, $8d, $3d, $89, $f9, $81, $62, $3f, $3d, $89, $f9, $83
 	db $00, $62, $3d, $8d
 	db $ff, $0c
-	dw @ref1740
+	dw @song0ref1739
 	db $22, $89, $f9, $81, $62, $3f, $29, $89, $f9, $81, $62, $22, $2e, $89, $f9, $81, $62, $29, $35, $89, $f9, $81, $62, $2e
 	db $3a, $ad, $f9, $83, $fd
 	dw @song0ch1loop
 @song0ch2:
 @song0ch2loop:
 	db $80
-@ref1804:
+@song0ref1803:
 	db $27
-@ref1805:
+@song0ref1804:
 	db $8b
-@ref1806:
+@song0ref1805:
 	db $00, $81, $27, $8b, $00, $81, $27, $8b, $00, $81
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $27, $8b, $00, $81, $27, $8b, $00, $81
-@ref1830:
+@song0ref1829:
 	db $25, $9d
-@ref1832:
+@song0ref1831:
 	db $00, $81, $22, $8b, $00, $81, $25, $8b, $00, $81, $29
 	db $ff, $0b
-	dw @ref1805
+	dw @song0ref1804
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0d
-	dw @ref1830
+	dw @song0ref1829
 	db $8b, $00, $81, $25, $f7, $00, $81, $25, $d3, $00, $81, $25, $8b
 	db $ff, $0a
-	dw @ref1832
+	dw @song0ref1831
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $27, $8b, $00, $81, $27, $8b
 	db $ff, $0a
-	dw @ref1832
-@ref1907:
+	dw @song0ref1831
+@song0ref1906:
 	db $27, $8b, $00, $81
-@ref1911:
+@song0ref1910:
 	db $2a
-@ref1912:
+@song0ref1911:
 	db $8b, $00, $81, $29
-@ref1916:
+@song0ref1915:
 	db $8b, $00, $81, $25, $8b, $00, $81, $27
-@ref1924:
+@song0ref1923:
 	db $8b, $00, $81, $23, $8b, $00, $81, $23, $8b, $00, $81, $23
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $8b, $00, $81, $23, $8b
 	db $ff, $0a
-	dw @ref1832
+	dw @song0ref1831
 	db $ff, $14
-	dw @ref1907
-@ref1968:
+	dw @song0ref1906
+@song0ref1967:
 	db $20, $8b, $00, $81, $20, $8b, $00, $81, $27, $8b, $00, $81, $2a, $8b, $00, $81
 	db $ff, $10
-	dw @ref1968
-@ref1987:
+	dw @song0ref1967
+@song0ref1986:
 	db $22
-@ref1988:
+@song0ref1987:
 	db $8b, $00, $81, $22, $8b, $00, $81, $29, $8b, $00, $81, $2c, $8b, $00, $81
 	db $ff, $10
-	dw @ref1987
+	dw @song0ref1986
 	db $ff, $10
-	dw @ref1968
+	dw @song0ref1967
 	db $ff, $10
-	dw @ref1987
-@ref2012:
+	dw @song0ref1986
+@song0ref2011:
 	db $27, $8b, $00, $81, $27, $8b, $00, $81, $25, $8b, $00, $81, $25
 	db $ff, $0b
-	dw @ref1924
+	dw @song0ref1923
 	db $22, $8b, $00, $81, $22, $8b, $00, $81
 	db $ff, $10
-	dw @ref1968
+	dw @song0ref1967
 	db $ff, $10
-	dw @ref1968
+	dw @song0ref1967
 	db $ff, $10
-	dw @ref1987
+	dw @song0ref1986
 	db $ff, $10
-	dw @ref1987
+	dw @song0ref1986
 	db $23
-@ref2049:
+@song0ref2048:
 	db $8b, $00, $81, $23, $8b, $00, $81, $2a, $8b, $00, $81, $2f
 	db $ff, $0c
-	dw @ref2049
+	dw @song0ref2048
 	db $8b, $00, $81, $25, $8b, $00, $93, $25, $8b, $00, $81, $25, $9d, $00, $81, $25, $8b, $00, $81, $25, $9d
 	db $ff, $0a
-	dw @ref1806
+	dw @song0ref1805
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $22
 	db $ff, $0b
-	dw @ref1916
+	dw @song0ref1915
 	db $ff, $19
-	dw @ref1911
+	dw @song0ref1910
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $8b, $00, $81, $23, $8b
 	db $ff, $0a
-	dw @ref1832
+	dw @song0ref1831
 	db $ff, $14
-	dw @ref1907
-@ref2151:
+	dw @song0ref1906
+@song0ref2150:
 	db $25
-@ref2152:
+@song0ref2151:
 	db $8b, $00, $81, $25, $8b, $00, $81, $25, $8b, $00, $81
 	db $ff, $0c
-	dw @ref2151
+	dw @song0ref2150
 	db $25, $8b, $00, $81, $25
-@ref2171:
+@song0ref2170:
 	db $8b, $00, $81, $26, $8b, $00, $81, $26, $8b, $00, $81, $26
 	db $ff, $0c
-	dw @ref2171
+	dw @song0ref2170
 	db $ff, $0b
-	dw @ref2171
+	dw @song0ref2170
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $ff, $0c
-	dw @ref1804
+	dw @song0ref1803
 	db $27, $8b, $00, $81, $27
-@ref2200:
+@song0ref2199:
 	db $8b, $00, $81, $28, $8b, $00, $81, $28, $8b, $00, $81, $28
 	db $ff, $0c
-	dw @ref2200
+	dw @song0ref2199
 	db $ff, $0b
-	dw @ref2200
-@ref2218:
+	dw @song0ref2199
+@song0ref2217:
 	db $29, $8b, $00, $81, $29, $8b, $00, $81, $29, $8b, $00, $81
 	db $ff, $0c
-	dw @ref2218
+	dw @song0ref2217
 	db $29
 	db $ff, $0b
-	dw @ref1912
+	dw @song0ref1911
 	db $ff, $0c
-	dw @ref2151
+	dw @song0ref2150
 	db $ff, $0c
-	dw @ref2151
+	dw @song0ref2150
 	db $25
-@ref2244:
+@song0ref2243:
 	db $8b, $00, $81, $22, $8b, $00, $81, $22, $8b, $00, $81, $22
 	db $ff, $0c
-	dw @ref2244
+	dw @song0ref2243
 	db $ff, $0c
-	dw @ref2244
+	dw @song0ref2243
 	db $ff, $0b
-	dw @ref1988
+	dw @song0ref1987
 	db $2e, $9d, $00, $81, $2e, $8b, $00, $81, $29, $8b, $00, $81, $22
 	db $ff, $0b
-	dw @ref1805
+	dw @song0ref1804
 	db $27
 	db $ff, $0b
-	dw @ref2152
-@ref2285:
+	dw @song0ref2151
+@song0ref2284:
 	db $25, $8b, $00, $81, $23, $af, $00, $81, $23, $8b, $00, $81, $23, $9d, $00, $81, $23, $8b, $00, $81, $23, $9d, $00, $81
 	db $23
-@ref2310:
+@song0ref2309:
 	db $8b, $00, $81, $20, $8b, $00, $81, $20, $8b, $00, $81, $20
 	db $ff, $0c
-	dw @ref2244
+	dw @song0ref2243
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0b
-	dw @ref2152
+	dw @song0ref2151
 	db $25
 	db $ff, $0b
-	dw @ref1924
+	dw @song0ref1923
 	db $25
 	db $ff, $0b
-	dw @ref1916
+	dw @song0ref1915
 	db $ff, $0d
-	dw @ref2012
+	dw @song0ref2011
 	db $8b, $00, $81
 	db $ff, $25
-	dw @ref2285
+	dw @song0ref2284
 	db $ff, $0c
-	dw @ref2244
+	dw @song0ref2243
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $ff, $0b
-	dw @ref2152
+	dw @song0ref2151
 	db $25
 	db $ff, $0b
-	dw @ref1924
+	dw @song0ref1923
 	db $25, $8b, $00, $81, $25
 	db $ff, $0c
-	dw @ref2310
+	dw @song0ref2309
 	db $8b, $00, $81, $20
 	db $ff, $0c
-	dw @ref2244
+	dw @song0ref2243
 	db $8b, $00, $81, $22
 	db $ff, $0c
-	dw @ref1924
+	dw @song0ref1923
 	db $8b, $00, $81, $23
 	db $ff, $0b
-	dw @ref2152
+	dw @song0ref2151
 	db $25
 	db $ff, $0b
-	dw @ref1916
+	dw @song0ref1915
 	db $27, $8b, $00, $93, $25, $8b, $00, $81, $25, $8b, $00, $93, $27, $8b, $00, $81, $27, $8b, $00, $93, $22
 	db $ff, $0c
-	dw @ref2244
+	dw @song0ref2243
 	db $8b, $00, $81, $22, $8b, $00, $81, $24, $8b, $00, $81, $26, $8b, $00, $81, $fd
 	dw @song0ch2loop
 @song0ch3:
 @song0ch3loop:
-@ref2437:
+@song0ref2436:
 	db $84, $2d, $a1, $86
-@ref2441:
+@song0ref2440:
 	db $27, $a1, $84, $2d, $a1, $86, $27, $a1, $84, $2d, $a1, $86, $27, $a1
 	db $ff, $0c
-	dw @ref2437
+	dw @song0ref2436
 	db $ff, $0a
-	dw @ref2437
+	dw @song0ref2436
 	db $2d, $a1, $2d, $a1, $2d, $a1, $2d, $a1, $2d, $a1, $86, $27, $8f, $84, $2d, $8f, $86, $27, $81, $27, $8b, $84
-@ref2483:
+@song0ref2482:
 	db $2d
-@ref2484:
+@song0ref2483:
 	db $8f, $82, $21, $8f, $8e, $2d, $8f, $86, $27, $8f, $8e, $2d, $8f, $82, $21, $8f, $21, $8f, $86, $27, $8f, $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
-@ref2513:
+	dw @song0ref2482
+@song0ref2512:
 	db $8e, $2d, $8f, $82, $21, $8f, $86, $27, $8f, $27, $8f, $82, $21, $8f, $86, $27, $8f, $27, $8f, $82, $21, $8f, $86, $27
 	db $ff, $0f
-	dw @ref2484
+	dw @song0ref2483
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $ff, $11
-	dw @ref2513
+	dw @song0ref2512
 	db $ff, $0f
-	dw @ref2484
+	dw @song0ref2483
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e, $2d, $8f, $86, $27, $8f, $82, $21, $8f
-@ref2587:
+@song0ref2586:
 	db $21, $8f, $86, $27, $8f, $82, $21, $8f, $86, $27, $8f, $27, $8f, $27
 	db $ff, $0f
-	dw @ref2484
+	dw @song0ref2483
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $ff, $11
-	dw @ref2513
+	dw @song0ref2512
 	db $ff, $0f
-	dw @ref2484
+	dw @song0ref2483
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $ff, $11
-	dw @ref2513
+	dw @song0ref2512
 	db $ff, $0f
-	dw @ref2484
+	dw @song0ref2483
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e
 	db $ff, $10
-	dw @ref2483
+	dw @song0ref2482
 	db $8e, $2d, $8f, $86, $27, $8f, $27, $8f, $82
 	db $ff, $0b
-	dw @ref2587
+	dw @song0ref2586
 	db $8f, $27, $8f
-@ref2671:
+@song0ref2670:
 	db $27, $a1, $27, $8f, $27, $a1, $27, $8f, $27, $a1, $82, $21, $8f, $86, $27, $8f, $82
 	db $ff, $0a
-	dw @ref2587
-@ref2691:
+	dw @song0ref2586
+@song0ref2690:
 	db $82, $21, $8f, $21, $8f, $84, $2d, $8f, $82, $21, $8f, $21, $8f, $84, $2d, $8f
 	db $ff, $0c
-	dw @ref2691
+	dw @song0ref2690
 	db $86, $27, $a1
 	db $ff, $0a
-	dw @ref2671
+	dw @song0ref2670
 	db $27, $8f, $27, $a1, $82, $21, $8f, $86, $27, $8f, $82
 	db $ff, $0a
-	dw @ref2587
+	dw @song0ref2586
 	db $ff, $0c
-	dw @ref2691
+	dw @song0ref2690
 	db $ff, $0c
-	dw @ref2691
+	dw @song0ref2690
 	db $86, $27, $a1
 	db $ff, $0a
-	dw @ref2441
+	dw @song0ref2440
 	db $84, $2d, $a1, $86, $27, $a1, $84, $2d, $a1, $86
 	db $ff, $0a
-	dw @ref2671
+	dw @song0ref2670
 	db $27, $8f, $27, $a1, $27, $8f, $27, $8f, $27, $8f, $27, $8f, $27, $8f, $82, $21, $8f, $21, $8f, $fd
 	dw @song0ch3loop
 @song0ch4:
 @song0ch4loop:
-@ref2778:
+@song0ref2777:
 	db $f7, $f7, $af, $f7, $f7, $af, $f7, $f7, $af, $f7, $f7, $af
 	db $ff, $0c
-	dw @ref2778
+	dw @song0ref2777
 	db $ff, $0c
-	dw @ref2778
+	dw @song0ref2777
 	db $ff, $0c
-	dw @ref2778
+	dw @song0ref2777
 	db $ff, $0c
-	dw @ref2778
+	dw @song0ref2777
 	db $ff, $0c
-	dw @ref2778
+	dw @song0ref2777
 	db $f7, $f7, $af, $fd
 	dw @song0ch4loop

@@ -132,76 +132,76 @@ journey_to_silius_music_data:
 .song0ch0loop:
 	.db $6a, LOW(.tempo_env_5_mid), HIGH(.tempo_env_5_mid), $00, $a5, $8a, $25, $91, $28, $91, $25, $91, $2a, $2b, $81, $2c, $9f
 	.db $2a, $91
-.ref22:
+.song0ref22:
 	.db $82, $20, $af, $f9, $87, $22
-.ref28:
+.song0ref28:
 	.db $d7, $f9, $87, $6b, $00, $a5, $8a, $25, $91, $28, $91, $25, $91, $2a, $2b, $81, $2c, $9f, $2a, $91, $82, $2c, $af, $f9
 	.db $87, $2a
 	.db $ff, $12
-	.dw .ref28
+	.dw .song0ref28
 	.db $ff, $1c
-	.dw .ref22
+	.dw .song0ref22
 	.db $d7, $f9, $87
-.ref63:
+.song0ref63:
 	.db $6b, $a7, $23, $91, $f9, $91, $22, $87, $f9, $87, $23, $91, $f9, $91, $23, $a5, $f9, $91, $22, $91, $f9, $91, $22, $87
 	.db $f9, $87, $23, $87, $f9, $af
 	.db $ff, $1d
-	.dw .ref63
+	.dw .song0ref63
 	.db $ff, $1d
-	.dw .ref63
+	.dw .song0ref63
 	.db $6b, $a7, $23, $91, $f9, $91, $22, $87, $f9, $87, $23, $91, $f9, $91, $20, $f7, $9b, $f9, $87, $8c
-.ref119:
+.song0ref119:
 	.db $25, $91, $6b, $89, $f9, $87, $25, $87, $f9, $87, $28, $87, $f9, $87, $25, $87, $f9, $87, $2a, $87, $f9, $87, $25, $91
 	.db $f9, $91, $2c, $9b, $f9, $87
-.ref149:
+.song0ref149:
 	.db $25, $87, $f9, $87, $2a, $87, $f9, $87, $25, $87, $f9, $87, $28, $87, $f9, $87, $25, $91, $f9, $91, $20, $91, $6b, $89
 	.db $f9, $87, $20, $87, $f9, $87, $23, $87, $f9, $87, $20, $87, $f9, $87, $23, $87, $f9, $87, $26, $62, $27, $81, $62, $28
 	.db $8b, $27, $87, $f9, $87, $25, $f7, $9b, $f9, $87
 	.db $ff, $19
-	.dw .ref119
+	.dw .song0ref119
 	.db $2a, $62, $2b, $81, $62, $2c, $9f
 	.db $ff, $21
-	.dw .ref149
+	.dw .song0ref149
 	.db $25, $87, $f9, $87, $26, $62, $27, $81, $62, $28, $8b, $27, $87, $f9, $87, $23, $87, $f9, $87, $25, $f7, $af, $f9, $87
 	.db $6b
-.ref245:
+.song0ref245:
 	.db $2a, $81, $62, $2b, $81, $62, $2c, $d9, $2a, $87, $f9, $87, $28, $87, $f9, $87, $27, $d7, $f9, $87, $28, $91, $f9, $87
 	.db $2a, $91, $f9, $87, $2a, $62, $2b, $81, $62, $2c, $8b, $6b, $f7, $93, $88, $2a, $62, $2b, $81, $62, $2c, $9f, $2a, $62
 	.db $2b, $81, $62, $2c, $8b, $2e, $91, $f9, $91, $2f, $9b, $f9, $af, $6b, $8c
 	.db $ff, $1a
-	.dw .ref245
+	.dw .song0ref245
 	.db $25, $91, $6b, $f7, $bb, $80, $25, $87, $f9, $87, $25, $87, $f9, $87, $25, $87, $f9, $87, $25, $87, $f9, $c3, $6b, $82
-.ref335:
+.song0ref335:
 	.db $25, $c3, $f9, $87, $25, $c3, $f9, $87, $25, $af, $f9, $87, $25, $cd, $f9, $91, $6b
 	.db $ff, $10
-	.dw .ref335
+	.dw .song0ref335
 	.db $6b
 	.db $ff, $10
-	.dw .ref335
+	.dw .song0ref335
 	.db $6b, $27, $c3, $f9, $87, $27, $c3, $f9, $87, $27, $af, $f9, $87, $27, $cd, $f9, $91, $6b, $25, $9b, $f9, $87, $25, $9b
 	.db $f9, $87, $25, $91, $f9, $87, $25, $91, $f9, $87, $25
-.ref394:
+.song0ref394:
 	.db $af, $f9, $87, $25, $9b, $f9, $87, $25, $91, $f9, $87, $25, $91
-.ref407:
+.song0ref407:
 	.db $f9, $87, $25, $91, $6b, $9d, $f9, $87, $25, $9b, $f9, $87, $25, $91, $f9, $87, $25, $91, $f9, $87, $25, $c3, $f9, $87
 	.db $23, $c3
 	.db $ff, $14
-	.dw .ref407
+	.dw .song0ref407
 	.db $ff, $18
-	.dw .ref394
+	.dw .song0ref394
 	.db $27, $91, $f9, $87, $2c, $91, $f9, $87, $2c, $f7, $af, $f9, $87, $6b, $00, $a5, $86
-.ref456:
+.song0ref456:
 	.db $25, $91, $27, $91
-.ref460:
+.song0ref460:
 	.db $28, $91, $2a, $91, $25, $91, $27, $91, $28, $91, $2a, $91, $25, $91, $27, $91, $28, $91, $2a, $91, $25, $91, $27, $91
 	.db $6b
 	.db $ff, $18
-	.dw .ref460
+	.dw .song0ref460
 	.db $28, $91, $2a, $91, $25, $91, $27, $91, $6b
 	.db $ff, $14
-	.dw .ref460
+	.dw .song0ref460
 	.db $27, $91, $28, $91, $2a, $91, $2c, $b9, $6b, $2f, $91, $31, $a5
-.ref513:
+.song0ref513:
 	.db $33, $91, $34, $91, $36, $91, $31, $91, $33, $91, $34, $91, $36, $a5, $38, $91, $39, $91, $3b, $91, $36, $91, $38, $91
 	.db $6b, $39, $91, $3b, $91, $3d, $f7, $f5, $62, $61, $05, $3d, $37, $a5, $fd
 	.dw .song0ch0loop
@@ -209,395 +209,395 @@ journey_to_silius_music_data:
 	.db $cf
 .song0ch1loop:
 	.db $88
-.ref557:
+.song0ref557:
 	.db $25, $87, $f9, $87, $28, $87, $f9, $87, $25, $87, $f9, $87, $2a, $62, $2b, $81, $62, $2c, $9f, $2a, $87, $f9, $87, $28
 	.db $9b, $f9, $87, $23, $af, $f9, $87, $25, $d7, $f9, $87
 	.db $ff, $19
-	.dw .ref557
+	.dw .song0ref557
 	.db $2f, $af, $f9, $87, $2e, $d7, $f9, $87
 	.db $ff, $21
-	.dw .ref557
+	.dw .song0ref557
 	.db $ff, $19
-	.dw .ref557
+	.dw .song0ref557
 	.db $2f, $af, $f9, $87, $2e, $d7, $f9, $87, $a7, $82
-.ref619:
+.song0ref619:
 	.db $28, $91, $f9, $91, $27, $87, $f9, $87, $28, $91, $f9, $91, $28, $a5, $f9, $91, $27, $91, $f9, $91, $27, $87, $f9, $87
 	.db $28, $87, $f9, $af, $a7
 	.db $ff, $1d
-	.dw .ref619
+	.dw .song0ref619
 	.db $ff, $1d
-	.dw .ref619
+	.dw .song0ref619
 	.db $28, $91, $f9, $91, $27, $87, $f9, $87, $28, $91, $f9, $91, $27, $f7, $af, $f9, $87, $93, $8e, $25, $b9, $28, $91, $25
 	.db $91, $2a, $91, $25, $a5, $2c, $a5, $25, $91, $2a, $91, $25, $91, $28, $91, $25, $91, $93, $20, $b9, $23, $91, $20, $91
 	.db $23, $91, $26, $27, $81, $28, $8b, $27, $91, $25, $f7, $91, $cf, $28, $91, $25, $91, $2a, $91, $25, $a5, $2a, $2b, $81
 	.db $2c, $9f, $25, $91, $2a, $91, $25, $91, $28, $91, $25, $91, $93, $20, $b9, $23, $91, $25, $91, $26, $27, $81, $28, $8b
 	.db $27, $91, $23, $91, $25, $f7, $91, $a7
-.ref758:
+.song0ref758:
 	.db $2a, $81, $2b, $81, $2c, $d9, $2a, $91, $28, $91, $27, $e1, $28, $9b, $2a, $87, $95, $2b, $81, $2c, $ef, $82, $27, $9b
 	.db $f9, $87, $27, $87, $f9, $87, $2a, $91, $f9, $91, $2c, $9b, $f9, $af, $a7, $8e
 	.db $ff, $10
-	.dw .ref758
+	.dw .song0ref758
 	.db $93, $25, $f7, $a5, $80, $20, $87, $f9, $87, $20, $87, $f9, $87, $20, $87, $f9, $87, $20, $87, $f9, $c3, $88
-.ref823:
+.song0ref823:
 	.db $2c, $c3, $f9, $87, $2a, $c3, $f9, $87, $28, $af, $f9, $87, $2a, $cd, $f9, $91
 	.db $ff, $10
-	.dw .ref823
+	.dw .song0ref823
 	.db $ff, $10
-	.dw .ref823
+	.dw .song0ref823
 	.db $2d, $c3, $f9, $87, $2c, $c3, $f9, $87, $2a, $af, $f9, $87, $2c, $cd, $f9, $91, $2c, $9b, $f9, $87, $2a, $9b, $f9, $87
 	.db $28, $91, $f9, $87, $2a, $91, $f9, $87
-.ref877:
+.song0ref877:
 	.db $2c, $af, $f9, $87, $2a, $9b, $f9, $87, $28, $91, $f9, $87, $2a, $91
-.ref891:
+.song0ref891:
 	.db $f9, $87, $2c, $91, $9d, $f9, $87, $2a, $9b, $f9, $87, $28, $91, $f9, $87, $2a, $91, $f9, $87, $28, $c3, $f9, $87, $27
 	.db $c3
 	.db $ff, $13
-	.dw .ref891
+	.dw .song0ref891
 	.db $ff, $19
-	.dw .ref877
+	.dw .song0ref877
 	.db $2c, $91, $f9, $87, $2f, $91, $f9, $87, $31, $f7, $af, $f9, $87, $84
 	.db $ff, $1c
-	.dw .ref456
+	.dw .song0ref456
 	.db $ff, $18
-	.dw .ref460
+	.dw .song0ref460
 	.db $ff, $18
-	.dw .ref460
+	.dw .song0ref460
 	.db $28, $91, $2a, $91, $27, $91, $28, $91, $2a, $91, $2c, $b9, $2f, $91, $31, $91, $93
 	.db $ff, $18
-	.dw .ref513
+	.dw .song0ref513
 	.db $39, $91, $3b, $91, $3d, $cd, $63, LOW(.env18), HIGH(.env18), $f7, $a5, $63, LOW(.env8), HIGH(.env8), $64, $81, $62, $61
 	.db $06, $3d, $30, $cd, $fd
 	.dw .song0ch1loop
 .song0ch2:
-.ref990:
+.song0ref990:
 	.db $98, $32, $31, $32, $81, $31, $32, $33, $32, $31, $32, $96, $32, $85, $00, $32, $85, $00, $2a, $85, $00, $2a, $85, $00
 	.db $26, $8f, $00
 .song0ch2loop:
 	.db $96
-.ref1019:
+.song0ref1019:
 	.db $28, $83, $00, $8b, $28, $83, $00, $8b, $2e, $8f, $00, $28, $83, $00, $8b, $28, $83, $00, $8b, $28, $83, $00, $8b, $2e
 	.db $8f, $00, $28, $83, $00, $8b
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
-.ref1055:
+	.dw .song0ref1019
+.song0ref1055:
 	.db $32, $8f, $00, $32, $8f, $00, $2a, $8f, $00, $26, $8f, $00, $32, $85, $00, $32, $85, $00, $89, $32, $85, $00, $2a, $85
 	.db $00, $2a, $85, $00, $26, $8f, $00
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
-.ref1095:
+	.dw .song0ref1019
+.song0ref1095:
 	.db $32, $85, $00, $32, $85, $00, $2a, $85, $00, $26, $85, $00, $32, $85, $00, $2a, $85, $00, $2a, $85, $00, $26, $85, $00
 	.db $ff, $17
-	.dw .ref990
+	.dw .song0ref990
 	.db $85, $00, $26, $85, $00
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1f
-	.dw .ref1055
+	.dw .song0ref1055
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $18
-	.dw .ref1095
+	.dw .song0ref1095
 	.db $ff, $17
-	.dw .ref990
+	.dw .song0ref990
 	.db $85, $00, $26, $85, $00
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1f
-	.dw .ref1055
+	.dw .song0ref1055
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $18
-	.dw .ref1095
+	.dw .song0ref1095
 	.db $ff, $17
-	.dw .ref990
+	.dw .song0ref990
 	.db $85, $00, $26, $85, $00
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1f
-	.dw .ref1055
+	.dw .song0ref1055
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $28, $83, $00, $8b, $2e, $8f, $00, $2e, $8f, $00, $2e, $8f, $00, $2e, $8f, $00, $95, $98, $2e, $83, $00, $9d, $96
-.ref1235:
+.song0ref1235:
 	.db $28, $83, $00, $c7, $28, $83, $00, $c7, $28, $83, $00, $b3, $28, $83, $00, $9f, $98, $2e, $83, $00, $8b, $96, $28, $83
 	.db $00, $9f
 	.db $ff, $18
-	.dw .ref1235
+	.dw .song0ref1235
 	.db $ff, $18
-	.dw .ref1235
+	.dw .song0ref1235
 	.db $ff, $10
-	.dw .ref1235
+	.dw .song0ref1235
 	.db $2e, $8f, $00, $2e, $8f, $00, $2e, $8f, $00
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1f
-	.dw .ref1055
+	.dw .song0ref1055
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $18
-	.dw .ref1095
+	.dw .song0ref1095
 	.db $ff, $17
-	.dw .ref990
+	.dw .song0ref990
 	.db $85, $00, $26, $85, $00
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1f
-	.dw .ref1055
+	.dw .song0ref1055
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $18
-	.dw .ref1095
+	.dw .song0ref1095
 	.db $ff, $17
-	.dw .ref990
+	.dw .song0ref990
 	.db $85, $00, $26, $85, $00
 	.db $ff, $1e
-	.dw .ref1019
+	.dw .song0ref1019
 	.db $ff, $18
-	.dw .ref1095
+	.dw .song0ref1095
 	.db $ff, $17
-	.dw .ref990
+	.dw .song0ref990
 	.db $85, $00, $26, $85, $00, $fd
 	.dw .song0ch2loop
 .song0ch3:
 	.db $92, $26, $83, $26, $85, $26, $83, $26, $87, $26, $87, $26, $87, $26, $87, $26, $87, $26, $87
 .song0ch3loop:
-.ref1380:
+.song0ref1380:
 	.db $90
-.ref1381:
+.song0ref1381:
 	.db $1c, $91, $1c, $91, $92, $26, $91, $90, $1c, $91, $1c, $91, $1c, $91, $92, $26, $91, $90, $1c, $91
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
-.ref1407:
+	.dw .song0ref1381
+.song0ref1407:
 	.db $94, $26, $91, $26, $91, $26, $91, $26, $91, $26, $87, $26, $91, $26, $87, $26, $87, $26, $87, $26, $91
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
-.ref1437:
+	.dw .song0ref1381
+.song0ref1437:
 	.db $94
-.ref1438:
+.song0ref1438:
 	.db $26, $87, $26, $87, $26, $87, $26, $87, $26, $87, $26, $87, $26, $87, $26, $87
 	.db $ff, $10
-	.dw .ref1438
+	.dw .song0ref1438
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $14
-	.dw .ref1407
+	.dw .song0ref1407
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1437
+	.dw .song0ref1437
 	.db $ff, $10
-	.dw .ref1438
+	.dw .song0ref1438
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $14
-	.dw .ref1407
+	.dw .song0ref1407
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1437
+	.dw .song0ref1437
 	.db $ff, $10
-	.dw .ref1438
+	.dw .song0ref1438
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $14
-	.dw .ref1407
+	.dw .song0ref1407
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $1c, $91, $92, $26, $91, $26, $91, $26, $91, $26, $a7, $26, $a3, $90
-.ref1546:
+.song0ref1546:
 	.db $1c, $cd, $1c, $cd, $1c, $b9, $1c, $a5, $92, $26, $91, $90, $1c, $a5, $1c, $cd, $1c, $cd, $1c, $b9, $1c, $a5, $92, $26
 	.db $91, $90, $1c, $a5
 	.db $ff, $16
-	.dw .ref1546
+	.dw .song0ref1546
 	.db $26, $91, $26, $91
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $14
-	.dw .ref1407
+	.dw .song0ref1407
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1437
+	.dw .song0ref1437
 	.db $ff, $10
-	.dw .ref1438
+	.dw .song0ref1438
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $14
-	.dw .ref1407
+	.dw .song0ref1407
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1381
+	.dw .song0ref1381
 	.db $ff, $10
-	.dw .ref1437
+	.dw .song0ref1437
 	.db $ff, $10
-	.dw .ref1438
+	.dw .song0ref1438
 	.db $ff, $10
-	.dw .ref1380
+	.dw .song0ref1380
 	.db $ff, $10
-	.dw .ref1437
+	.dw .song0ref1437
 	.db $ff, $10
-	.dw .ref1438
+	.dw .song0ref1438
 	.db $fd
 	.dw .song0ch3loop
 .song0ch4:
 	.db $cf
 .song0ch4loop:
-.ref1649:
+.song0ref1649:
 	.db $19, $91
-.ref1651:
+.song0ref1651:
 	.db $19, $91, $19, $91, $19, $91, $19, $91, $19, $91, $19, $91, $19, $91, $14, $91, $14, $91, $20, $91, $12, $91, $12, $91
 	.db $1e, $91, $12, $91, $1e, $91
 	.db $ff, $10
-	.dw .ref1649
-.ref1684:
+	.dw .song0ref1649
+.song0ref1684:
 	.db $10, $91, $10, $91, $1c, $91, $12, $91, $12, $91, $1e, $91, $12, $91, $1e, $91
 	.db $ff, $20
-	.dw .ref1649
+	.dw .song0ref1649
 	.db $ff, $10
-	.dw .ref1649
+	.dw .song0ref1649
 	.db $ff, $10
-	.dw .ref1684
+	.dw .song0ref1684
 	.db $ff, $10
-	.dw .ref1649
+	.dw .song0ref1649
 	.db $ff, $10
-	.dw .ref1649
+	.dw .song0ref1649
 	.db $ff, $10
-	.dw .ref1649
+	.dw .song0ref1649
 	.db $ff, $10
-	.dw .ref1649
+	.dw .song0ref1649
 	.db $ff, $10
-	.dw .ref1649
+	.dw .song0ref1649
 	.db $ff, $10
-	.dw .ref1649
+	.dw .song0ref1649
 	.db $ff, $12
-	.dw .ref1651
+	.dw .song0ref1651
 	.db $14, $91, $14, $91, $14, $91, $14, $91, $14, $91, $14, $91, $14
-.ref1743:
+.song0ref1743:
 	.db $91, $19, $91, $19, $91, $19, $91, $25, $91, $19, $91, $25, $91, $19, $91, $19, $91, $17, $91, $23, $91, $17, $91, $17
 	.db $91, $17, $91, $23, $91, $17, $91, $17, $91, $14, $91, $14, $91, $14, $91, $20, $91, $17, $91, $23, $91, $17, $91, $17
 	.db $91, $19, $91, $25, $91, $19, $91, $19, $91, $19, $91, $25, $91, $19, $91, $19
 	.db $ff, $40
-	.dw .ref1743
-.ref1810:
+	.dw .song0ref1743
+.song0ref1810:
 	.db $91, $12, $91, $12, $91, $1e, $91, $12, $91, $12, $91, $12, $91, $1e, $91, $12, $91, $14, $91, $14, $91, $20, $91, $14
 	.db $91, $14, $91, $14, $91, $20, $91, $14, $91, $19, $91, $19, $91, $25, $91, $19, $91, $25, $91, $19, $91, $19, $91, $25
-.ref1858:
+.song0ref1858:
 	.db $91, $19, $91, $19, $91, $25, $91, $19, $91, $19, $91, $25, $91, $19, $91, $25
 	.db $ff, $35
-	.dw .ref1810
+	.dw .song0ref1810
 	.db $19, $91, $19, $91, $19, $cd, $19, $cd, $19, $cd, $19, $b9, $19, $a5, $19, $91, $25, $91, $19, $91, $17, $cd, $17, $cd
 	.db $17, $b9, $17, $a5, $17, $91, $23, $91, $17, $91, $15, $cd, $15, $cd, $15, $b9, $15, $a5, $15, $91, $23, $91, $15, $91
 	.db $17, $cd, $17, $cd, $17, $b9, $17, $a5, $23, $91, $17, $91, $23
 	.db $ff, $10
-	.dw .ref1858
-.ref1941:
+	.dw .song0ref1858
+.song0ref1941:
 	.db $91, $17, $91, $17, $91, $23, $91, $17, $91, $17, $91, $23, $91, $17, $91, $23, $91, $15, $91, $15, $91, $21, $91, $15
 	.db $91, $15, $91, $21, $91, $15, $91, $21
 	.db $ff, $11
-	.dw .ref1941
+	.dw .song0ref1941
 	.db $19, $91, $19, $91, $25, $91, $19, $91, $19, $91, $25, $91, $19, $91, $25
 	.db $ff, $20
-	.dw .ref1941
+	.dw .song0ref1941
 	.db $ff, $10
-	.dw .ref1858
-.ref1997:
+	.dw .song0ref1858
+.song0ref1997:
 	.db $91, $19, $91, $19, $91, $19, $91, $25, $91, $19, $91, $19, $91, $23, $91, $25, $91, $17, $91, $17, $91, $17, $91, $23
 	.db $91, $17, $91, $17, $91, $21, $91, $23, $91, $16, $91, $16, $91, $16, $91, $22, $91, $16, $91, $16, $91, $14, $91, $22
 	.db $91, $15, $91, $15, $91, $15, $91, $21, $91, $15, $91, $15, $91, $1f, $91, $21
 	.db $ff, $40
-	.dw .ref1997
+	.dw .song0ref1997
 	.db $ff, $11
-	.dw .ref1997
+	.dw .song0ref1997
 	.db $19, $91, $19, $91, $25, $91, $19, $91, $19, $91, $25, $91, $19, $91, $25, $91, $fd
 	.dw .song0ch4loop

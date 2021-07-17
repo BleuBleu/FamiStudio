@@ -1,6 +1,7 @@
 Videos:
 =======
 - Tutorial for FamiTracker
+- Sampling soundfont instruments
 
 Linux notes 
 =========== 
@@ -90,7 +91,9 @@ x Test OGG a bit more, make sure UI + command line works good
 x Double check osc flipping in toolbar + video
 x Test ROM with noise/volume slides.
 x Project explorer, re-test most capture operations.
-- Add volume + noise slides to unit tests.
+x Add volume + noise slides to unit tests.
+x Update + rerun unit tests.
+- Sound engine is broken.
 - Recompile, ROM, NSF, sound engine (re-export data).
 - Recompile Vorbis on all platforms (240 fix)!
 
