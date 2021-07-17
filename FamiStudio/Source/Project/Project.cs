@@ -1039,7 +1039,7 @@ namespace FamiStudio
             // Match existing instruments by name.
             if (otherProject.instruments.Count > 0)
             {
-                for (int i = 0; i < otherProject.instruments.Count;)
+                for (int i = 0; i < otherProject.instruments.Count; i++)
                 {
                     var otherInstrument = otherProject.instruments[i];
                     var existingInstrument = GetInstrument(otherInstrument.Name);
@@ -1050,6 +1050,7 @@ namespace FamiStudio
                         if (existingInstrument.ExpansionType == otherInstrument.ExpansionType)
                         {
                             otherProject.ReplaceInstrument(otherInstrument, existingInstrument);
+                            otherProject.instruments.Insert(otherProject.instruments.IndexOf(otherInstrument), existingInstrument); // To pass validation.
                             otherProject.DeleteInstrument(otherInstrument);
                         }
                         else
@@ -1068,13 +1069,17 @@ namespace FamiStudio
                             }
 
                             instruments.Add(otherInstrument);
-                            i++;
                         }
+                    }
+                    else if (
+                        otherInstrument.ExpansionType == ExpansionType.None || 
+                        otherInstrument.ExpansionType == expansionAudio)
+                    {
+                        instruments.Add(otherInstrument);
                     }
                     else
                     {
-                        instruments.Add(otherInstrument);
-                        i++;
+                        Log.LogMessage(LogSeverity.Warning, $"Instrument '{otherInstrument.Name}' uses an incompatible audio expansion, ignoring.");
                     }
                 }
 
@@ -1085,7 +1090,7 @@ namespace FamiStudio
             // Match existing arpeggios by name.
             if (otherProject.arpeggios.Count > 0)
             {
-                for (int i = 0; i < otherProject.arpeggios.Count;)
+                for (int i = 0; i < otherProject.arpeggios.Count; i++)
                 {
                     var otherArpeggio = otherProject.arpeggios[i];
                     var existingArpeggio = GetArpeggio(otherArpeggio.Name);
@@ -1094,12 +1099,12 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Warning, $"Project already contains an arpeggio named '{existingArpeggio.Name}', assuming it is the same.");
 
                         otherProject.ReplaceArpeggio(otherArpeggio, existingArpeggio);
+                        otherProject.arpeggios.Insert(otherProject.arpeggios.IndexOf(otherArpeggio), existingArpeggio); // To pass validation.
                         otherProject.DeleteArpeggio(otherArpeggio);
                     }
                     else
                     {
                         arpeggios.Add(otherArpeggio);
-                        i++;
                     }
                 }
 
@@ -1110,7 +1115,7 @@ namespace FamiStudio
             // Match existing samples by name.
             if (otherProject.Samples.Count > 0)
             {
-                for (int i = 0; i < otherProject.samples.Count;)
+                for (int i = 0; i < otherProject.samples.Count; i++)
                 {
                     var otherSample = otherProject.samples[i];
                     var existingSample = GetSample(otherSample.Name);
@@ -1119,12 +1124,12 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Warning, $"Project already contains a DPCM sample named '{existingSample.Name}', assuming it is the same.");
 
                         otherProject.ReplaceSample(otherSample, existingSample);
+                        otherProject.samples.Insert(otherProject.samples.IndexOf(otherSample), existingSample); // To pass validation.
                         otherProject.DeleteSample(otherSample);
                     }
                     else
                     {
                         samples.Add(otherSample);
-                        i++;
                     }
                 }
 
@@ -1496,6 +1501,12 @@ namespace FamiStudio
                 if (samplesMapping[i] != null && samplesMapping[i].Sample == null)
                     samplesMapping[i] = null;
             }
+        }
+
+        public void DeleteAllMappings()
+        {
+            for (int i = 0; i < samplesMapping.Length; i++)
+                samplesMapping[i] = null;
         }
 
 #if DEBUG

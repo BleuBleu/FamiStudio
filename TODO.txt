@@ -82,7 +82,7 @@ Youtube corrections:
 
 Testing
 =======
-- Re-test song merge a lot. Removed a few cleanups.
+x Re-test song merge a lot. Removed a few cleanups.
 - Re-test expansions issue (same instrument name, diff expansions, etc.)
 - Stereo video crackles?
 - WS clips children on win7
@@ -110,6 +110,9 @@ Change Log
 * Option for thicker scroll bars.
 * MacOS Monterey Beta support
 * Sound Engine CC65 bindings (Contribution from XXX)
+
+Breaking/behavior changes:
+* Pattern numbers in the sequencer and piano roll now start at 1 instead of 0. This is a purely esthetic change and does not impact anything.
 
 3.2.0
 =====

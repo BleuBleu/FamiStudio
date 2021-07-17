@@ -1727,6 +1727,7 @@ namespace FamiStudio
                                 samplesProject.DeleteAllArpeggios();
                                 samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
                                 samplesProject.DeleteAllInstruments();
+                                samplesProject.DeleteAllMappings();
 
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
 
