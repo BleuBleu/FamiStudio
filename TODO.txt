@@ -83,15 +83,16 @@ Youtube corrections:
 Testing
 =======
 x Re-test song merge a lot. Removed a few cleanups.
-- Re-test expansions issue (same instrument name, diff expansions, etc.)
-- Stereo video crackles?
-- WS clips children on win7
-- Recompile, ROM, NSF, sound engine (re-export data).
-- Test OGG a bit more, make sure UI + command line works good
-- Double check osc flipping in toolbar + video
-- Test ROM with noise/volume slides.
+x Re-test expansions issue (same instrument name, diff expansions, etc.)
+x Stereo video crackles?
+x WS clips children on win7
+x Test OGG a bit more, make sure UI + command line works good
+x Double check osc flipping in toolbar + video
+x Test ROM with noise/volume slides.
+x Project explorer, re-test most capture operations.
 - Add volume + noise slides to unit tests.
-- Project explorer, re-test most capture operations.
+- Recompile, ROM, NSF, sound engine (re-export data).
+- Recompile Vorbis on all platforms (240 fix)!
 
 Change Log
 ==========
@@ -109,6 +110,7 @@ Change Log
 * Option to auto-save copy every 2 minutes
 * Option for thicker scroll bars.
 * MacOS Monterey Beta support
+* Minor sequencer selection improvements.
 * Sound Engine CC65 bindings (Contribution from XXX)
 
 Breaking/behavior changes:

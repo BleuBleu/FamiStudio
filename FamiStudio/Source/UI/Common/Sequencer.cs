@@ -1061,19 +1061,13 @@ namespace FamiStudio
                 }
                 else if (right && inPatternHeader && pattern != null)
                 {
-                    var delete = ((e.Y - headerSizeY) / (float)trackSizeY < (Song.Channels.Length - 0.25f)) ||
-                        PlatformUtils.MessageBox("Are you sure you want to delete this pattern?", "Delete pattern", MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-                    if (delete)
-                    {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                        channel.PatternInstances[patternIdx] = null;
-                        channel.InvalidateCumulativePatternCache();
-                        App.UndoRedoManager.EndTransaction();
-                        ClearSelection();
-                        ConditionalInvalidate();
-                        PatternModified?.Invoke();
-                    }
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                    channel.PatternInstances[patternIdx] = null;
+                    channel.InvalidateCumulativePatternCache();
+                    App.UndoRedoManager.EndTransaction();
+                    ClearSelection();
+                    ConditionalInvalidate();
+                    PatternModified?.Invoke();
 
                     return true;
                 }

@@ -1213,9 +1213,9 @@ namespace FamiStudio
 
                     if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
                     {
-                        if (envelopeDragIdx == -1)
+                        if (instrumentSrc.ExpansionType == instrumentDst.ExpansionType)
                         {
-                            if (instrumentSrc.ExpansionType == instrumentDst.ExpansionType)
+                            if (envelopeDragIdx == -1)
                             {
                                 if (PlatformUtils.MessageBox($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace intrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
                                 {
@@ -1226,34 +1226,38 @@ namespace FamiStudio
                                     InstrumentReplaced?.Invoke(instrumentDst);
                                 }
                             }
+                            else
+                            {
+                                if (PlatformUtils.MessageBox($"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                                {
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
+                                    instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
+                                    instrumentDst.Envelopes[envelopeDragIdx].ClampToValidRange(instrumentDst, envelopeDragIdx);
+
+                                    // HACK : Copy some envelope related stuff. Need to cleanup the envelope code.
+                                    switch (envelopeDragIdx)
+                                    {
+                                        case EnvelopeType.FdsWaveform:
+                                            instrumentDst.FdsWavePreset = instrumentSrc.FdsWavePreset;
+                                            break;
+                                        case EnvelopeType.FdsModulation:
+                                            instrumentDst.FdsModPreset = instrumentSrc.FdsModPreset;
+                                            break;
+                                        case EnvelopeType.N163Waveform:
+                                            instrumentDst.N163WavePreset = instrumentSrc.N163WavePreset;
+                                            instrumentDst.N163WaveSize = instrumentSrc.N163WaveSize;
+                                            break;
+                                    }
+
+                                    App.UndoRedoManager.EndTransaction();
+
+                                    InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);
+                                }
+                            }
                         }
                         else
                         {
-                            if (PlatformUtils.MessageBox($"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
-                                instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
-                                instrumentDst.Envelopes[envelopeDragIdx].ClampToValidRange(instrumentDst, envelopeDragIdx);
-
-                                // HACK : Copy some envelope related stuff. Need to cleanup the envelope code.
-                                switch (envelopeDragIdx)
-                                {
-                                    case EnvelopeType.FdsWaveform:
-                                        instrumentDst.FdsWavePreset = instrumentSrc.FdsWavePreset;
-                                        break;
-                                    case EnvelopeType.FdsModulation:
-                                        instrumentDst.FdsModPreset = instrumentSrc.FdsModPreset;
-                                        break;
-                                    case EnvelopeType.N163Waveform:
-                                        instrumentDst.N163WavePreset = instrumentSrc.N163WavePreset;
-                                        instrumentDst.N163WaveSize = instrumentSrc.N163WaveSize;
-                                        break;
-                                }
-
-                                App.UndoRedoManager.EndTransaction();
-
-                                InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);
-                            }
+                            App.DisplayWarning($"Incompatible audio expansion!"); ;
                         }
                     }
                 }
@@ -1482,11 +1486,17 @@ namespace FamiStudio
 
             if (shift)
             {
-                paramVal = Utils.Clamp(paramVal + (e.X - mouseLastX) * button.param.SnapValue, button.param.MinValue, button.param.MaxValue);
+                var delta = (e.X - captureMouseX) / 4;
+                if (delta != 0)
+                {
+                    paramVal = Utils.Clamp(paramVal + delta * button.param.SnapValue, button.param.MinValue, button.param.MaxValue);
+                    captureMouseX = e.X;
+                }
             }
             else
             {
                 paramVal = (int)Math.Round(Utils.Lerp(button.param.MinValue, button.param.MaxValue, Utils.Clamp((buttonX - (actualWidth - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
+                captureMouseX = e.X;
             }
 
             paramVal = button.param.SnapAndClampValue(paramVal);
@@ -1997,6 +2007,8 @@ namespace FamiStudio
 
                 if (left)
                 {
+                    captureMouseX = e.X; // Hack, UpdateSliderValue relies on this.
+
                     if (UpdateSliderValue(button, e, true))
                     {
                         sliderDragButton = button;

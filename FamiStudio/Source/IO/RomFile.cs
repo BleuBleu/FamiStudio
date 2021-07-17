@@ -145,14 +145,12 @@ namespace FamiStudio
                 //File.WriteAllBytes("D:\\debug.bin", songDataBytes.ToArray());
 
                 // Add extra empty banks if we haven't reached the minimum.
-                int numPrgBanks = songBanks.Count;
-
-                if (numPrgBanks < RomMinNumberBanks)
+                if (songBanks.Count < RomMinNumberBanks)
                 {
-                    for (int i = numPrgBanks; i < RomMinNumberBanks; i++)
+                    for (int i = songBanks.Count; i < RomMinNumberBanks; i++)
                         songBanks.Add(new List<byte>());
                 }
-                else if ((numPrgBanks & 1) != 0)
+                else if ((songBanks.Count & 1) != 0)
                 {
                     songBanks.Add(new List<byte>());
                 }
@@ -172,7 +170,7 @@ namespace FamiStudio
                 }
 
                 // Patch header (iNES header always counts in 16KB banks, MMC3 counts in 8KB banks)
-                headerBytes[RomHeaderPrgOffset] = (byte)((numPrgBanks + RomCodeDpcmNumBanks) * RomBankSize / 0x4000);
+                headerBytes[RomHeaderPrgOffset] = (byte)((songBanks.Count + RomCodeDpcmNumBanks) * RomBankSize / 0x4000);
 
                 // Build final ROM and save.
                 var romBytes = new List<byte>();

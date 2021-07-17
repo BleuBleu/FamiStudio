@@ -29,7 +29,10 @@ int __stdcall VorbisOggEncode(int wav_rate, int wav_channels, int wav_num_sample
 
 	vorbis_info_init(&vi);
 
-	//ret = vorbis_encode_init_vbr(&vi, 2, 44100, .4);
+	// This seem to the the maximum supported rate.
+	if (ogg_bitrate > 240)
+		ogg_bitrate = 240;
+
 	ret = vorbis_encode_init(&vi, wav_channels, wav_rate, -1, ogg_bitrate * 1000, -1);
 
 	if (ret) 
