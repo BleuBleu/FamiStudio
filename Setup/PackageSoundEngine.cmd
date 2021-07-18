@@ -1,3 +1,7 @@
 set /p Version=<Version.txt
-
-tar -a -c -f FamiStudio%Version%-SoundEngine.zip -C ..\SoundEngine\ *.asm *.nes *.s *.txt "DemoSource\*.asm" "DemoSource\*.s" "DemoSource\*.cfg" "DemoSource\*.chr" "DemoSource\*.dmc" "DemoSource\*.pal" "DemoSource\*.rle" "DemoSource\build*.bat" "DemoSource\export_from_famistudio.bat"
+if not exist ..\FamiStudio%Version%-SoundEngine mkdir ..\FamiStudio%Version%-SoundEngine
+robocopy ..\SoundEngine\ ..\FamiStudio%Version%-SoundEngine *.h *.asm *.nes *.s *.txt
+robocopy ..\SoundEngine\DemoSource\ ..\FamiStudio%Version%-SoundEngine\DemoSource *.c *.asm *.s *.cfg *.chr *.dmc *.pal *.rle build*.bat export_from_famistudio.bat
+del ..\FamiStudio%Version%-SoundEngine\DemoSource\*_cc65.s
+tar -a -c -f FamiStudio%Version%-SoundEngine.zip -C ..\FamiStudio%Version%-SoundEngine\ *
+rmdir /S /Q ..\FamiStudio%Version%-SoundEngine

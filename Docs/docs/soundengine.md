@@ -10,7 +10,7 @@ The engine is essentially a heavily modified version of [FamiTone2 by Shiru](htt
 
 The engine, as well as a demo project, is available for all 3 major assemblers:
 
-* CA65
+* CA65 (and CC65)
 * NESASM
 * ASM6
 
@@ -130,7 +130,7 @@ Note that unless specified, the engine uses `if` and not `ifdef` for all boolean
 
 You need to tell where you want to allocate the zeropage, RAM and code. This section will be slightly different for each assembler.
 
-#### CA65
+#### CA65 (and CC65)
 
 For CA65, you need to specify the name of your ZEROPAGE, RAM/BSS and CODE/PRG segments as c-style macros (`.define`) like the example below.
 
