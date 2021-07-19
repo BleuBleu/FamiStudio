@@ -2193,7 +2193,7 @@ namespace FamiStudio
                                         Array.Resize(ref wavData, maximumSamples);
 
                                     App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                                    button.sample.SetWavSourceData(wavData, sampleRate, button.sample.SourceFilename);
+                                    button.sample.SetWavSourceData(wavData, sampleRate, button.sample.SourceFilename, false);
                                     button.sample.Process();
                                     App.UndoRedoManager.EndTransaction();
                                 }
@@ -2205,7 +2205,7 @@ namespace FamiStudio
                                     Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
 
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-                                button.sample.SetDmcSourceData(dmcData, button.sample.SourceFilename);
+                                button.sample.SetDmcSourceData(dmcData, button.sample.SourceFilename, false);
                                 button.sample.Process();
                                 App.UndoRedoManager.EndTransaction();
                             }

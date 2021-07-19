@@ -4051,11 +4051,10 @@ sample_play:
     @tmp = famistudio_r0
     @sample_data_ptr = famistudio_ptr0
 
-    sta @tmp ; Sample number*3, offset in the sample table
-    asl a
-    clc
-    adc @tmp
+    asl ; Sample number * 4, offset in the sample table
+    asl 
     
+    clc
     adc famistudio_dpcm_list_lo
     sta @sample_data_ptr+0
     lda #0
@@ -4074,9 +4073,10 @@ sample_play:
     iny
     lda (@sample_data_ptr),y ; Pitch and loop
     sta FAMISTUDIO_APU_DMC_FREQ
-
-    lda #64 ; Reset DAC counter
+    iny
+    lda (@sample_data_ptr),y ; Initial DMC counter
     sta FAMISTUDIO_APU_DMC_RAW
+
     lda #%00011111 ; Start DMC
     sta FAMISTUDIO_APU_SND_CHN
 

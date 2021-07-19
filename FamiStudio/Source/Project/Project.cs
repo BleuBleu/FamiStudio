@@ -185,7 +185,7 @@ namespace FamiStudio
             if (sample == null)
                 return null;
 
-            sample.SetDmcSourceData(data, filename);
+            sample.SetDmcSourceData(data, filename, true);
             sample.Process();
 
             return sample;
@@ -198,7 +198,7 @@ namespace FamiStudio
             if (sample == null)
                 return null;
 
-            sample.SetWavSourceData(data, sampleRate, filename);
+            sample.SetWavSourceData(data, sampleRate, filename, true);
             sample.Process();
 
             return sample;
@@ -281,6 +281,32 @@ namespace FamiStudio
             }
             
             return -1;
+        }
+
+        public bool GetMinMaxMappedSampleIndex(out int minIdx, out int maxIdx)
+        {
+            minIdx = -1;
+            maxIdx = -1;
+
+            for (int i = 1; i < samplesMapping.Length; i++)
+            {
+                if (samplesMapping[i] != null)
+                {
+                    minIdx = i;
+                    break;
+                }
+            }
+
+            for (int i = samplesMapping.Length - 1; i >= 1; i--)
+            {
+                if (samplesMapping[i] != null)
+                {
+                    maxIdx = i;
+                    break;
+                }
+            }
+
+            return minIdx > 0 && maxIdx > 0;
         }
 
         public DPCMSample FindMatchingSample(byte[] data)
@@ -861,7 +887,7 @@ namespace FamiStudio
             }
         }
 
-        public int GetAddressForSample(DPCMSample sample, out int len)
+        public int GetAddressForSample(DPCMSample sample, out int len, out int dmcInitialValue)
         {
             lock (DPCMSample.ProcessedDataLock)
             {
@@ -875,6 +901,7 @@ namespace FamiStudio
                         if (mapping.Sample == sample)
                         {
                             len = mapping.Sample.ProcessedData.Length;
+                            dmcInitialValue = mapping.Sample.DmcInitialValueDiv2 * 2;
                             return addr;
                         }
                         addr += (mapping.Sample.ProcessedData.Length + 63) & 0xffc0;
@@ -882,6 +909,7 @@ namespace FamiStudio
                         if (addr >= MaxMappedSampleSize)
                         {
                             len = 0;
+                            dmcInitialValue = NesApu.DACDefaultValue;
                             return -1;
                         }
 
@@ -890,6 +918,7 @@ namespace FamiStudio
                 }
 
                 len = 0;
+                dmcInitialValue = NesApu.DACDefaultValue;
                 return addr;
             }
         }

@@ -76,7 +76,7 @@ namespace FamiStudio
 
             if (instrument.IsEnvelopeActive(EnvelopeType.Pitch))
             {
-                paramInfos.Add(new InstrumentParamInfo(instrument, "Pitch Envelope", 0, 1, 0, "", true) // MATTT : Tooltip!
+                paramInfos.Add(new InstrumentParamInfo(instrument, "Pitch Envelope", 0, 1, 0, "Absolute envelopes display the real pitch for a given time\nRelative envelopes adds the pitch to a running sum (FamiTracker-style)", true)
                 {
                     GetValue = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? 1 : 0; },
                     GetValueString = () => { return instrument.Envelopes[EnvelopeType.Pitch].Relative ? "Relative" : "Absolute"; },
@@ -205,6 +205,8 @@ namespace FamiStudio
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.SampleRate); }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Padding Mode", 0, 4, DPCMPaddingType.PadTo16Bytes, "Padding method for the processed DMC data", true)
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
+                new DPCMSampleParamInfo(sample, "DMC Initial Value", 0, 63, NesApu.DACDefaultValueDiv2, "Initial value of the DMC counter before any volume adjustment.\nThis is actually half of the value used in hardware.")
+                    { GetValue = () => { return sample.DmcInitialValueDiv2; }, SetValue = (v) => { sample.DmcInitialValueDiv2 = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200, 100, "Volume adjustment (%)")
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Fine Tuning", 0, 200, 100, "Very fine pitch adjustment to help tune notes")

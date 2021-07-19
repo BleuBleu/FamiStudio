@@ -1,7 +1,10 @@
 FamiStudio 3.1.0 (Small quality of life release)
 ================================================
 / OpenTK PR!
-- Merge CC65 stuff (when back in main branch).
+- DPCM start value (i think this along should be enough, looping mode is probably not needed)
+- Generate table of best pitch for samples
+- MATTT : Test MIDI import on Linux (combo boxes)
+- MATTT : Test expansion mixer slides.
 
 Videos:
 =======

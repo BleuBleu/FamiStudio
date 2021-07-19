@@ -2635,7 +2635,7 @@ namespace FamiStudio
             }
         }
 
-        private void RenderDmc(RenderGraphics g, RenderArea a, byte[] data, float rate, float baseTime, RenderBrush brush, bool isSource, bool drawSamples)
+        private void RenderDmc(RenderGraphics g, RenderArea a, byte[] data, float rate, float baseTime, RenderBrush brush, bool isSource, bool drawSamples, int dmcInitialValue)
         {
             var viewWidth     = Width - whiteKeySizeX;
             var realHeight    = Height - headerAndEffectSizeY;
@@ -2669,7 +2669,7 @@ namespace FamiStudio
                     var scaleX = 1.0f / (rate * viewTime) * viewWidth;
                     var biasX = GetPixelForWaveTime(baseTime, scrollX);
 
-                    var dpcmCounter = NesApu.DACDefaultValueDiv2;
+                    var dpcmCounter = dmcInitialValue;
 
                     for (int i = 0; i < minVisibleSample; i++)
                     {
@@ -2789,12 +2789,12 @@ namespace FamiStudio
             }
             else
             {
-                RenderDmc(g, a, editSample.SourceDmcData.Data, editSample.SourceSampleRate, 0.0f, theme.LightGreyFillBrush1, true, showSamples); 
+                RenderDmc(g, a, editSample.SourceDmcData.Data, editSample.SourceSampleRate, 0.0f, theme.LightGreyFillBrush1, true, showSamples, editSample.DmcInitialValueDiv2); 
             }
 
             // Processed waveform
             var processedBrush = g.GetSolidBrush(editSample.Color);
-            RenderDmc(g, a, editSample.ProcessedData, editSample.ProcessedSampleRate, editSample.ProcessedStartTime, processedBrush, false, showSamples);
+            RenderDmc(g, a, editSample.ProcessedData, editSample.ProcessedSampleRate, editSample.ProcessedStartTime, processedBrush, false, showSamples, editSample.GetVolumeScaleDmcInitialValueDiv2());
 
             // Play position
             var playPosition = App.PreviewDPCMWavPosition;

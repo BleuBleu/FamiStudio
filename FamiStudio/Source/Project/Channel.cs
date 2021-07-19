@@ -602,7 +602,6 @@ namespace FamiStudio
             }
         }
 
-        // MATTT : Is note needed here? We have the location....
         public bool ComputeVolumeSlideNoteParams(Note note, NoteLocation location, int famitrackerSpeed, bool pal, out int stepSize, out float stepSizeFloat)
         {
             Debug.Assert(note.HasVolumeSlide);

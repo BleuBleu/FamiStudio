@@ -128,9 +128,6 @@ namespace FamiStudio
                 else
                 {
                     kernelBinary += "_famitone2";
-
-                    if (project.UsesFamiStudioTempo)
-                        project.ConvertToFamiTrackerTempo(false);
                 }
 
                 switch (machine)

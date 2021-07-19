@@ -1144,7 +1144,7 @@ namespace FamiStudio
             }
 
             var playRate = (int)Math.Round(DPCMSampleRate.Frequencies[palPlayback ? 1 : 0, dmcRateIndex]);
-            WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out short[] wave);
+            WaveUtils.DpcmToWave(dmcData, sample.DmcInitialValueDiv2, out short[] wave);
 
             if (wave.Length > 0)
                 instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume);

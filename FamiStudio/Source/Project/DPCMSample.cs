@@ -28,6 +28,7 @@ namespace FamiStudio
         private int   volumeAdjust = 100;
         private float finePitch = 1.0f;
         private int   paddingMode = DPCMPaddingType.PadTo16Bytes;
+        private int   dmcInitialValueDiv2 = NesApu.DACDefaultValueDiv2;
         private bool  reverseBits;
         private bool  trimZeroVolume;
         private bool  palProcessing;
@@ -55,15 +56,16 @@ namespace FamiStudio
         public float ProcessedSampleRate => DPCMSampleRate.Frequencies[palProcessing ? 1 : 0, sampleRate];
         public float ProcessedDuration   => processedData.Length * 8 / ProcessedSampleRate;
 
-        public byte[]   ProcessedData  { get => processedData;  set => processedData  = value; }
-        public int      SampleRate     { get => sampleRate;     set => sampleRate     = value; }
-        public int      PreviewRate    { get => previewRate;    set => previewRate    = value; }
-        public bool     ReverseBits    { get => reverseBits;    set => reverseBits    = value; }
-        public bool     TrimZeroVolume { get => trimZeroVolume; set => trimZeroVolume = value; }
-        public bool     PalProcessing  { get => palProcessing;  set => palProcessing  = value; }
-        public int      VolumeAdjust   { get => volumeAdjust;   set => volumeAdjust   = value; }
-        public float    FinePitch      { get => finePitch;      set => finePitch      = value; }
-        public int      PaddingMode    { get => paddingMode;    set => paddingMode    = value; }
+        public byte[]   ProcessedData       { get => processedData;       set => processedData   = value; }
+        public int      SampleRate          { get => sampleRate;          set => sampleRate      = value; }
+        public int      PreviewRate         { get => previewRate;         set => previewRate     = value; }
+        public bool     ReverseBits         { get => reverseBits;         set => reverseBits     = value; }
+        public bool     TrimZeroVolume      { get => trimZeroVolume;      set => trimZeroVolume  = value; }
+        public bool     PalProcessing       { get => palProcessing;       set => palProcessing   = value; }
+        public int      VolumeAdjust        { get => volumeAdjust;        set => volumeAdjust    = value; }
+        public int      DmcInitialValueDiv2 { get => dmcInitialValueDiv2; set => dmcInitialValueDiv2 = value; }
+        public float    FinePitch           { get => finePitch;           set => finePitch       = value; }
+        public int      PaddingMode         { get => paddingMode;         set => paddingMode     = value; }
         public SampleVolumePair[] VolumeEnvelope { get => volumeEnvelope; }
 
         public bool HasAnyProcessingOptions => SourceDataIsWav || sampleRate != 15 || volumeAdjust != 100 || !Utils.IsNearlyEqual(finePitch, 1.0f) || trimZeroVolume || reverseBits;
@@ -103,20 +105,42 @@ namespace FamiStudio
             return processedData.Length * 8 / GetPlaybackSampleRate(palPlayback);
         }
 
-        public void SetDmcSourceData(byte[] data, string filename = null)
+        public int GetVolumeScaleDmcInitialValueDiv2()
+        {
+            var startVolume = volumeEnvelope[0].volume * (Math.Max(0, volumeAdjust) / 100.0f);
+            return Utils.Clamp((int)Math.Round((dmcInitialValueDiv2 - NesApu.DACDefaultValueDiv2) * startVolume) + NesApu.DACDefaultValueDiv2, 0, 63);
+        }
+
+        public void SetDmcSourceData(byte[] data, string filename, bool resetParams)
         {
             sourceData = new DPCMSampleDmcSourceData(data);
             sourceFilename = filename;
-            paddingMode = DPCMPaddingType.Unpadded;
-            ResetVolumeEnvelope();
+
+            if (resetParams)
+            {
+                paddingMode = DPCMPaddingType.Unpadded;
+                ResetVolumeEnvelope();
+            }
+            else
+            {
+                ClampVolumeEnvelope();
+            }
         }
 
-        public void SetWavSourceData(short[] data, int rate, string filename = null)
+        public void SetWavSourceData(short[] data, int rate, string filename, bool resetParams)
         {
             sourceData = new DPCMSampleWavSourceData(data, rate);
             sourceFilename = filename;
-            paddingMode = DPCMPaddingType.PadTo16Bytes;
-            ResetVolumeEnvelope();
+
+            if (resetParams)
+            {
+                paddingMode = DPCMPaddingType.PadTo16Bytes;
+                ResetVolumeEnvelope();
+            }
+            else
+            {
+                ClampVolumeEnvelope();
+            }
         }
 
         public bool TrimSourceSourceData(int sampleStart, int sampleEnd)
@@ -128,7 +152,7 @@ namespace FamiStudio
 
         public void PermanentlyApplyAllProcessing()
         {
-            SetDmcSourceData(processedData);
+            SetDmcSourceData(processedData, null, true);
             sampleRate = 15; 
             previewRate = 15;
             volumeAdjust = 100;
@@ -191,7 +215,7 @@ namespace FamiStudio
                             WaveUtils.ReverseDpcmBits(dmcData);
                         }
 
-                        WaveUtils.DpcmToWave(dmcData, NesApu.DACDefaultValueDiv2, out sourceWavData);
+                        WaveUtils.DpcmToWave(dmcData, dmcInitialValueDiv2, out sourceWavData);
                     }
 
                     if (!Utils.IsNearlyEqual(finePitch, 1.0f))
@@ -259,7 +283,9 @@ namespace FamiStudio
                             break;
                     }
 
-                    WaveUtils.WaveToDpcm(sourceWavData, minProcessingSample, maxProcessingSample, sourceSampleRate, targetSampleRate, NesApu.DACDefaultValueDiv2, roundMode, out processedData);
+                    var volumeScaledInitialDmcValue = GetVolumeScaleDmcInitialValueDiv2();
+
+                    WaveUtils.WaveToDpcm(sourceWavData, minProcessingSample, maxProcessingSample, sourceSampleRate, targetSampleRate, volumeScaledInitialDmcValue, roundMode, out processedData);
                 }
 
                 // If trimming is enabled, remove any extra 0x55 / 0xaa from the beginning and end.
@@ -433,6 +459,7 @@ namespace FamiStudio
                 if (buffer.Version >= 11)
                 {
                     buffer.Serialize(ref finePitch);
+                    buffer.Serialize(ref dmcInitialValueDiv2);
                 }
 
                 // The process data will not be stored in the file, it will 
@@ -481,7 +508,6 @@ namespace FamiStudio
                 Debug.Assert(project.GetSample(sample.Id) == sample);
                 Debug.Assert(project.Samples.Contains(sample));
             }
-
         }
     }
 

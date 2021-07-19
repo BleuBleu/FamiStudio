@@ -108,7 +108,10 @@ namespace FamiStudio
                 size += 2;
             }
 
-            lines.Add($"\t{dw} {ll}samples-3");
+            if (!project.GetMinMaxMappedSampleIndex(out var sampleTableOffset, out _))
+                sampleTableOffset = 1;
+
+            lines.Add($"\t{dw} {ll}samples-{sampleTableOffset * (kernel == FamiToneKernel.FamiTone2 ? 3 : 4)}");
 
             for (int i = 0; i < project.Songs.Count; i++)
             {
@@ -447,26 +450,37 @@ namespace FamiStudio
 
             if (project.UsesSamples)
             {
-                for (int i = 1; i < project.SamplesMapping.Length; i++)
+                if (project.GetMinMaxMappedSampleIndex(out var minMapping, out var maxMapping))
                 {
-                    var mapping = project.SamplesMapping[i];
-                    var sampleOffset = 0;
-                    var sampleSize = 0;
-                    var samplePitchAndLoop = 0;
-                    var sampleName = "";
-
-                    if (mapping != null)
+                    for (int i = minMapping; i <= maxMapping; i++)
                     {
-                        sampleOffset = Math.Max(0, project.GetAddressForSample(mapping.Sample, out _)) >> 6;
-                        sampleSize = mapping.Sample.ProcessedData.Length >> 4;
-                        sampleName = $"({mapping.Sample.Name})";
-                        samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
+                        var mapping = project.SamplesMapping[i];
+                        var sampleOffset = 0;
+                        var sampleSize = 0;
+                        var sampleInitialDmcValue = NesApu.DACDefaultValue;
+                        var samplePitchAndLoop = 0;
+                        var sampleName = "";
+
+                        if (mapping != null)
+                        {
+                            sampleOffset = Math.Max(0, project.GetAddressForSample(mapping.Sample, out _, out _)) >> 6;
+                            sampleSize = mapping.Sample.ProcessedData.Length >> 4;
+                            sampleName = $"({mapping.Sample.Name})";
+                            samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
+                            sampleInitialDmcValue = mapping.Sample.DmcInitialValueDiv2 * 2;
+                        }
+
+                        if (kernel == FamiToneKernel.FamiStudio)
+                        {
+                            size += 4;
+                            lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FAMISTUDIO_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2},${sampleInitialDmcValue:x2}\t;{i} {sampleName}");
+                        }
+                        else
+                        {
+                            size += 3;
+                            lines.Add($"\t{db} ${sampleOffset:x2}+{lo}(FT_DPCM_PTR),${sampleSize:x2},${samplePitchAndLoop:x2}\t;{i} {sampleName}");
+                        }
                     }
-
-                    var constName = kernel == FamiToneKernel.FamiStudio ? "FAMISTUDIO_DPCM_PTR" : "FT_DPCM_PTR";
-
-                    size += 3;
-                    lines.Add($"\t{db} ${sampleOffset:x2}+{lo}({constName}),${sampleSize:x2},${samplePitchAndLoop:x2}\t;{i} {sampleName}");
                 }
 
                 lines.Add("");
