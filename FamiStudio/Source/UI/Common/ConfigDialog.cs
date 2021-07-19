@@ -390,7 +390,6 @@ namespace FamiStudio
             }
             else if (propIdx == 1)
             {
-                // MATTT : Make sure slider updates on Linux / Mac.
                 expansionMixer[expansion].volume = (float)(double)value;
             }
             else if (propIdx == 2)
