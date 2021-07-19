@@ -415,9 +415,8 @@ namespace FamiStudio
 
                         comboBox.Items.Clear();
                         comboBox.Items.AddRange(desc.DropDownValues);
-                        comboBox.SelectedIndex = 0; // MATTT : How to get the selected index?
+                        comboBox.SelectedIndex = Array.IndexOf(desc.DropDownValues, listData[itemIdex, subItemIndex]);
                         comboBox.Bounds = Items[itemIdex].SubItems[subItemIndex].Bounds;
-                        //comboBox.Text = subItem.Text;
                         comboBox.Visible = true;
                         comboBox.DroppedDown = true;
 
