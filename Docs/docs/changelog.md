@@ -16,7 +16,7 @@ Changes:
 * Portable mode (save settings in root folder if portable.txt is detected)
 * Import samples from other projects
 * ROM export now uses MMC3 mapper
-* Fine tuning parameter on DPCM samples
+* Fine tuning + DMC initial value parameters on DPCM samples
 * Option to auto-save copy every 2 minutes
 * Option for thicker scroll bars
 * MacOS Monterey Beta support
