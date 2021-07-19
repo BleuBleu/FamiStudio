@@ -4,7 +4,6 @@ FamiStudio 3.1.0 (Small quality of life release)
 - DPCM start value (i think this along should be enough, looping mode is probably not needed)
 - Generate table of best pitch for samples
 - MATTT : Test MIDI import on Linux (combo boxes)
-- MATTT : Test expansion mixer slides.
 
 Videos:
 =======
