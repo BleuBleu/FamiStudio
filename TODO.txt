@@ -1,9 +1,6 @@
 FamiStudio 3.1.0 (Small quality of life release)
 ================================================
 / OpenTK PR!
-- DPCM start value (i think this along should be enough, looping mode is probably not needed)
-- Generate table of best pitch for samples
-- MATTT : Test MIDI import on Linux (combo boxes)
 
 Videos:
 =======
@@ -90,7 +87,8 @@ Discord
 - Multi-expansions (dont want that garbage in the sound engine, would need to be a seperate NSF thing).
 
 Backlog: 
-========= 
+=========
+- NSF import read DMC initial value.
 - Volume/effect scaling?
 - Save snapping + qwerty settings + some export settings.
 - Left/right pan with +/- (cubase style)?
@@ -98,7 +96,6 @@ Backlog:
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Write delta counter (Zxx).
 - Scales
-- Selection with min/max note.
 - Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
