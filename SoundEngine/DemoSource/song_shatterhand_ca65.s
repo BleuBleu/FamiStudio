@@ -7,7 +7,7 @@
 shatterhand_music_data:
 	.byte 1
 	.word @instruments
-	.word @samples-3
+	.word @samples-4
 	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4
 	.byte .lobyte(@tempo_env_9_mid), .hibyte(@tempo_env_9_mid), 0, 0
 

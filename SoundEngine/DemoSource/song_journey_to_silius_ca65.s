@@ -7,7 +7,7 @@
 journey_to_silius_music_data:
 	.byte 1
 	.word @instruments
-	.word @samples-3
+	.word @samples-64
 	.word @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4
 	.byte .lobyte(@tempo_env_5_mid), .hibyte(@tempo_env_5_mid), 0, 0
 
@@ -30,69 +30,28 @@ journey_to_silius_music_data:
 	.word @env1,@env0,@env9,@env8
 
 @samples:
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;1 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;2 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;3 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;4 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;5 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;6 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;7 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;8 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;9 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;10 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;11 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;12 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;13 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;14 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;15 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$08	;16 (Sample 2)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;17 
-	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$09	;18 (Sample 1)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;19 
-	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0a	;20 (Sample 1)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0a	;21 (Sample 2)
-	.byte $20+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0a	;22 (Sample 5)
-	.byte $30+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0c	;23 (Sample 4)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;24 
-	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0c	;25 (Sample 1)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;26 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;27 
-	.byte $40+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0d	;28 (Sample 3)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;29 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0d	;30 (Sample 2)
-	.byte $40+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0e	;31 (Sample 3)
-	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0e	;32 (Sample 1)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0e	;33 (Sample 2)
-	.byte $20+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0e	;34 (Sample 5)
-	.byte $30+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0f	;35 (Sample 4)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;36 
-	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0f	;37 (Sample 1)
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;38 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;39 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;40 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;41 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;42 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;43 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;44 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;45 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;46 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;47 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;48 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;49 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;50 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;51 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;52 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;53 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;54 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;55 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;56 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;57 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;58 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;59 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;60 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;61 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;62 
-	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00	;63 
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$08,$40	;16 (Sample 2)
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;17 
+	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$09,$40	;18 (Sample 1)
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;19 
+	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0a,$40	;20 (Sample 1)
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0a,$40	;21 (Sample 2)
+	.byte $20+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0a,$40	;22 (Sample 5)
+	.byte $30+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0c,$40	;23 (Sample 4)
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;24 
+	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0c,$40	;25 (Sample 1)
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;26 
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;27 
+	.byte $40+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0d,$40	;28 (Sample 3)
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;29 
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0d,$40	;30 (Sample 2)
+	.byte $40+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0e,$40	;31 (Sample 3)
+	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0e,$40	;32 (Sample 1)
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0e,$40	;33 (Sample 2)
+	.byte $20+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0e,$40	;34 (Sample 5)
+	.byte $30+.lobyte(FAMISTUDIO_DPCM_PTR),$3e,$0f,$40	;35 (Sample 4)
+	.byte $00+.lobyte(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;36 
+	.byte $10+.lobyte(FAMISTUDIO_DPCM_PTR),$3f,$0f,$40	;37 (Sample 1)
 
 @env0:
 	.byte $c0,$7f,$00,$00

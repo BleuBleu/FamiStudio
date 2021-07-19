@@ -3,7 +3,7 @@
 silver_surfer_c_stephen_ruddy_music_data:
 	db 1
 	dw @instruments
-	dw @samples-3
+	dw @samples-4
 	dw @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4
 	db <(@tempo_env_6_mid), >(@tempo_env_6_mid), 0, 0
 

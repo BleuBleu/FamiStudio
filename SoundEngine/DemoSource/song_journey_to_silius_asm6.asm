@@ -3,7 +3,7 @@
 journey_to_silius_music_data:
 	db 1
 	dw @instruments
-	dw @samples-3
+	dw @samples-64
 	dw @song0ch0,@song0ch1,@song0ch2,@song0ch3,@song0ch4
 	db <(@tempo_env_5_mid), >(@tempo_env_5_mid), 0, 0
 
@@ -23,69 +23,28 @@ journey_to_silius_music_data:
 	dw @env1,@env0,@env9,@env8
 
 @samples:
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;1 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;2 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;3 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;4 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;5 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;6 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;7 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;8 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;9 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;10 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;11 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;12 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;13 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;14 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;15 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3e,$08	;16 (Sample 2)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;17 
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$09	;18 (Sample 1)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;19 
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$0a	;20 (Sample 1)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3e,$0a	;21 (Sample 2)
-	db $20+<(FAMISTUDIO_DPCM_PTR),$3f,$0a	;22 (Sample 5)
-	db $30+<(FAMISTUDIO_DPCM_PTR),$3e,$0c	;23 (Sample 4)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;24 
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$0c	;25 (Sample 1)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;26 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;27 
-	db $40+<(FAMISTUDIO_DPCM_PTR),$3f,$0d	;28 (Sample 3)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;29 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3e,$0d	;30 (Sample 2)
-	db $40+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;31 (Sample 3)
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;32 (Sample 1)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$3e,$0e	;33 (Sample 2)
-	db $20+<(FAMISTUDIO_DPCM_PTR),$3f,$0e	;34 (Sample 5)
-	db $30+<(FAMISTUDIO_DPCM_PTR),$3e,$0f	;35 (Sample 4)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;36 
-	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$0f	;37 (Sample 1)
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;38 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;39 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;40 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;41 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;42 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;43 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;44 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;45 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;46 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;47 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;48 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;49 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;50 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;51 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;52 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;53 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;54 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;55 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;56 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;57 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;58 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;59 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;60 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;61 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;62 
-	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00	;63 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3e,$08,$40	;16 (Sample 2)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;17 
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$09,$40	;18 (Sample 1)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;19 
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$0a,$40	;20 (Sample 1)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3e,$0a,$40	;21 (Sample 2)
+	db $20+<(FAMISTUDIO_DPCM_PTR),$3f,$0a,$40	;22 (Sample 5)
+	db $30+<(FAMISTUDIO_DPCM_PTR),$3e,$0c,$40	;23 (Sample 4)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;24 
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$0c,$40	;25 (Sample 1)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;26 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;27 
+	db $40+<(FAMISTUDIO_DPCM_PTR),$3f,$0d,$40	;28 (Sample 3)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;29 
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3e,$0d,$40	;30 (Sample 2)
+	db $40+<(FAMISTUDIO_DPCM_PTR),$3f,$0e,$40	;31 (Sample 3)
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$0e,$40	;32 (Sample 1)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$3e,$0e,$40	;33 (Sample 2)
+	db $20+<(FAMISTUDIO_DPCM_PTR),$3f,$0e,$40	;34 (Sample 5)
+	db $30+<(FAMISTUDIO_DPCM_PTR),$3e,$0f,$40	;35 (Sample 4)
+	db $00+<(FAMISTUDIO_DPCM_PTR),$00,$00,$40	;36 
+	db $10+<(FAMISTUDIO_DPCM_PTR),$3f,$0f,$40	;37 (Sample 1)
 
 @env0:
 	db $c0,$7f,$00,$00
