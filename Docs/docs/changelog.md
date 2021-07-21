@@ -19,9 +19,9 @@ Changes:
 * Fine tuning + DMC initial value parameters on DPCM samples
 * Option to auto-save copy every 2 minutes
 * Option for thicker scroll bars
-* MacOS Monterey Beta support
 * Minor sequencer selection improvements
-* Sound Engine CC65 bindings (Contribution from jroweboy)
+* MacOS Monterey Beta support (Thanks OpenTK team!)
+* Sound Engine CC65 bindings (Contribution from jroweboy!)
 
 Breaking/behavior changes:
 * Pattern numbers in the sequencer and piano roll now start at 1 instead of 0. This is a purely esthetic change and does not impact anything.
