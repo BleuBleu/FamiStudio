@@ -1862,7 +1862,6 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
-            ConditionalInvalidate();
 
             mouseLastX = e.X;
             mouseLastY = e.Y;

@@ -98,7 +98,7 @@ void Simple_Apu::set_expansion_volume(int exp, double volume)
 	{
 		case expansion_none: apu.volume(volume); break;
 		case expansion_vrc6: vrc6.volume(volume); break;
-		case expansion_vrc7: vrc6.volume(volume); break;
+		case expansion_vrc7: vrc7.volume(volume); break;
 		case expansion_fds: fds.volume(volume); break;
 		case expansion_mmc5: mmc5.volume(volume); break;
 		case expansion_namco: namco.volume(volume); break;
