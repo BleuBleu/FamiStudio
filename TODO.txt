@@ -3,22 +3,19 @@ Multiexp prototype:
 / Project property selection.
 - Project/channel logic
 - Review all uses of expansionMask.
+- Review all SetExpansionAudio(), must use masks.
 - Warnings in project properties
 - Smaller sequencer, how?
-	x Min 21 pixels
-	x shave 1px top/bottom names (only when track size is lower than X 28?)
-	x Vary sequencer pattern note width.
-	x Move track icon + text by 1px.
 	- Piano roll maximize button (Recycle ~ shortcut?, change effect to CTRL + ~)
 	- Show instrument icons when hovering over project explorer.
-- NSF in/out
 - BUG : Allows creating MMC5 instrument, makes no sense.
 - FamiTracker in/out
 - Icons:
 	- Use chip icon for instrument
 	- VRC6/VRC7 difference.
 	- MMC5 = chip with a "5"?
-- Review all SetExpansionAudio(), must use masks.
+- NSF in/out
+- Sound engine, FamiTone export.
 
 Videos:
 =======
