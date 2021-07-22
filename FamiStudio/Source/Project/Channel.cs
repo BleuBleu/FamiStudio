@@ -1561,7 +1561,7 @@ namespace FamiStudio
             "Triangle",
             "Noise",
             "DPCM",
-            "Square 1 (VRC6)", // VRC6
+            "Square 1", // VRC6
             "Square 2", // VRC6
             "Saw", // VRC6
             "FM 1", // VRC7

@@ -5,16 +5,19 @@ Multiexp prototype:
 - Review all uses of expansionMask.
 - Warnings in project properties
 - Smaller sequencer, how?
-	- Min 21 pixels
-	- Larger piano when expansion is use 94 -> 134
-	- When track size is lower than X (28?), shave 1px top/bottom names.
-	- Vary sequencer pattern note width.
-	- Move track icon + text by 1px.
+	x Min 21 pixels
+	x shave 1px top/bottom names (only when track size is lower than X 28?)
+	x Vary sequencer pattern note width.
+	x Move track icon + text by 1px.
 	- Piano roll maximize button (Recycle ~ shortcut?, change effect to CTRL + ~)
+	- Show instrument icons when hovering over project explorer.
 - NSF in/out
 - BUG : Allows creating MMC5 instrument, makes no sense.
-- BUG : Mute mask is 16 bit?
-- FamiTrakcer in/out
+- FamiTracker in/out
+- Icons:
+	- Use chip icon for instrument
+	- VRC6/VRC7 difference.
+	- MMC5 = chip with a "5"?
 - Review all SetExpansionAudio(), must use masks.
 
 Videos:

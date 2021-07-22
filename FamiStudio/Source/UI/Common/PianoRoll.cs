@@ -47,7 +47,7 @@ namespace FamiStudio
         const int DefaultReleaseNoteSizeY = 8;
         const int DefaultEnvelopeSizeY = 9;
         const int DefaultEnvelopeMax = 127;
-        const int DefaultWhiteKeySizeX = 132;
+        const int DefaultWhiteKeySizeX = 94;
         const int DefaultWhiteKeySizeY = 20;
         const int DefaultBlackKeySizeX = 56;
         const int DefaultBlackKeySizeY = 14;

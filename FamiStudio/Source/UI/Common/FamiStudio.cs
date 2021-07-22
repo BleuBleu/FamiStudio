@@ -1322,9 +1322,10 @@ namespace FamiStudio
             if (!recordingMode && e.KeyCode >= Keys.F1 && e.KeyCode <= Keys.F12)
             {
                 if (ctrl)
-                    GhostChannelMask ^= (1 << (int)(e.KeyCode - Keys.F1));
+                    GhostChannelMask ^= (1 << (e.KeyCode - Keys.F1));
                 else
-                    Sequencer.SelectedChannel = (int)(e.KeyCode - Keys.F1);
+                    Sequencer.SelectedChannel = (e.KeyCode - Keys.F1);
+                Sequencer.ConditionalInvalidate();
             }
             else if ((ctrl && e.KeyCode == Keys.Y) || (ctrl && shift && e.KeyCode == Keys.Z))
             {

@@ -28,18 +28,17 @@ namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int DefaultTrackNameSizeX      = 132;
+        const int DefaultTrackNameSizeX      = 94;
         const int DefaultHeaderSizeY         = 17;
         const int DefaultPatternHeaderSizeY  = 13;
-        const int DefaultNoteSizeY           = 4;
         const int DefaultScrollMargin        = 128;
         const int DefaultBarTextPosY         = 2;
-        const int DefaultTrackIconPosX       = 3;
-        const int DefaultTrackIconPosY       = 4;
+        const int DefaultTrackIconPosX       = 2;
+        const int DefaultTrackIconPosY       = 3;
         const int DefaultTrackNamePosX       = 23;
         const int DefaultTrackNamePosY       = 4;
         const int DefaultGhostNoteOffsetX    = 16;
-        const int DefaultGhostNoteOffsetY    = 14;
+        const int DefaultGhostNoteOffsetY    = 15;
         const int DefaultPatternNamePosX     = 2;
         const int DefaultPatternNamePosY     = 1;
         const int DefaultHeaderIconPosX      = 3;
@@ -57,7 +56,6 @@ namespace FamiStudio
         int headerSizeY;
         int trackSizeY;
         int patternHeaderSizeY;
-        int noteSizeY;
         int scrollMargin;
         int barTextPosY;  
         int trackIconPosX;   
@@ -210,8 +208,6 @@ namespace FamiStudio
             trackNameSizeX     = (int)(DefaultTrackNameSizeX * scaling);
             headerSizeY        = (int)(DefaultHeaderSizeY * scaling);
             trackSizeY         = (int)(ComputeDesiredTrackSizeY() * scaling);
-            patternHeaderSizeY = (int)(DefaultPatternHeaderSizeY * scaling);
-            noteSizeY          = (int)(DefaultNoteSizeY * scaling);
             scrollMargin       = (int)(DefaultScrollMargin * scaling);
             barTextPosY        = (int)(DefaultBarTextPosY * scaling);
             trackIconPosX      = (int)(DefaultTrackIconPosX * scaling);
@@ -228,11 +224,28 @@ namespace FamiStudio
             scrollBarThickness = (int)((Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0)) * scaling);
             minScrollBarLength = (int)(DefaultMinScrollBarLength * scaling);
             noteSizeX          = ScaleForZoom(1.0f) * scaling;
+
+            // Shave a couple pixels when the size is getting too small.
+            if (TrackSizeIsSmall())
+            {
+                patternNamePosY    = (int)((DefaultPatternNamePosY - 1) * scaling);
+                patternHeaderSizeY = (int)((DefaultPatternHeaderSizeY - 2) * scaling);
+            }
+            else
+            {
+                patternNamePosY    = (int)(DefaultPatternNamePosY * scaling);
+                patternHeaderSizeY = (int)(DefaultPatternHeaderSizeY * scaling);
+            }
         }
 
         private int GetChannelCount()
         {
             return App?.Project != null ? App.Project.Songs[0].Channels.Length : 5;
+        }
+
+        private bool TrackSizeIsSmall()
+        {
+            return ComputeDesiredTrackSizeY() < 24;
         }
 
         private int ComputeDesiredTrackSizeY()
@@ -434,10 +447,6 @@ namespace FamiStudio
                 if (Song.PatternHasCustomSettings(i))
                     text += "*";
                 g.DrawText(text, ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
-
-                //if (Song.PatternHasCustomLength(i))
-                //    g.DrawBitmap(bmpCustomLength, sx - headerIconSizeX - headerIconPosX, headerIconPosY);
-
                 g.PopClip();
 
                 if (i == Song.LoopPoint)
@@ -674,7 +683,7 @@ namespace FamiStudio
             }
         }
 
-        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int minNote, int maxNote, float scaleY, bool dpcm, uint[] data)
+        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int noteSizeY, int minNote, int maxNote, float scaleY, bool dpcm, uint[] data)
         {
             var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
             var instrument = note.Instrument;
@@ -698,10 +707,8 @@ namespace FamiStudio
 
         private RenderBitmap GetPatternBitmapFromCache(RenderGraphics g, Pattern p, int patternLen)
         { 
-            int patternSizeX = Math.Max(1, patternLen);
-            int patternSizeY = trackSizeY - patternHeaderSizeY - 1;
-
-            var scaleY = (patternSizeY - noteSizeY) / (float)patternSizeY;
+            var patternSizeX = Math.Max(1, patternLen);
+            var patternSizeY = trackSizeY - patternHeaderSizeY - 1;
 
             RenderBitmap bmp;
 
@@ -712,6 +719,9 @@ namespace FamiStudio
                 if (bmp != null)
                     return bmp;
             }
+
+            var noteSizeY = (int)Math.Max(Math.Ceiling(patternSizeY * 0.1f), 2 * g.WindowScaling);
+            var scaleY = (patternSizeY - noteSizeY) / (float)patternSizeY;
 
             uint[] data = new uint[patternSizeX * patternSizeY];
 
@@ -749,7 +759,7 @@ namespace FamiStudio
                     var note  = musicalNotes[i].Item2;
                     var time1 = musicalNotes[i].Item1;
                     var time2 = i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : (int)ushort.MaxValue;
-                    DrawPatternBitmapNote(time1, Math.Min(time2, Math.Min(patternLen - 1, time1 + note.Duration)), note, patternSizeX, patternSizeY, minNote, maxNote, scaleY, p.ChannelType == ChannelType.Dpcm, data);
+                    DrawPatternBitmapNote(time1, Math.Min(time2, Math.Min(patternLen - 1, time1 + note.Duration)), note, patternSizeX, patternSizeY, noteSizeY, minNote, maxNote, scaleY, p.ChannelType == ChannelType.Dpcm, data);
                 }
             }
 
@@ -1786,14 +1796,14 @@ namespace FamiStudio
                 {
                     tooltip = "{MouseLeft} Toggle channel display";
                     int idx = (e.Y - headerSizeY) / trackSizeY + 1;
-                    if (idx >= 1 && idx <= 9)
+                    if (idx >= 1 && idx <= 12)
                         tooltip += $" {{Ctrl}} {{F{idx}}}";
                 }
                 else
                 {
                     tooltip = "{MouseLeft} Make channel active";
                     int idx = (e.Y - headerSizeY) / trackSizeY + 1;
-                    if (idx >= 1 && idx <= 9)
+                    if (idx >= 1 && idx <= 12)
                         tooltip += $" {{F{idx}}}";
                 }
             }
@@ -1862,7 +1872,6 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
-            ConditionalInvalidate();
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
