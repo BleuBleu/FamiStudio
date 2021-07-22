@@ -35,8 +35,8 @@ namespace FamiStudio
         private string author = "Unknown";
         private string copyright = "";
         private int tempoMode = TempoType.FamiStudio;
-        private int expansionAudio = ExpansionType.None;
-        private int expansionNumChannels = 1;
+        private int expansionMask = ExpansionType.NoneMask;
+        private int expansionNumN163Channels = 1; // For N163 only.
 
         // This flag has different meaning depending on the tempo mode:
         //  - In FamiStudio  mode, it means the source data is authored on PAL
@@ -48,13 +48,20 @@ namespace FamiStudio
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
         public List<Arpeggio>      Arpeggios      => arpeggios;
-        public int                 ExpansionAudio => expansionAudio;
-        public int                 ExpansionNumChannels => expansionNumChannels;
-        public string              ExpansionAudioName => ExpansionType.Names[expansionAudio];
-        public string              ExpansionAudioShortName => ExpansionType.ShortNames[expansionAudio];
-        public bool                UsesExpansionAudio   => expansionAudio != ExpansionType.None;
-        public bool                UsesFamiStudioTempo  => tempoMode == TempoType.FamiStudio;
-        public bool                UsesFamiTrackerTempo => tempoMode == TempoType.FamiTracker;
+        public int                 ExpansionAudioMask       => expansionMask;
+        public int                 ExpansionNumN163Channels => expansionNumN163Channels;
+        //public string              ExpansionAudioName => ExpansionType.Names[expansionAudio];
+        //public string              ExpansionAudioShortName => ExpansionType.ShortNames[expansionAudio];
+        public bool                UsesFamiStudioTempo   => tempoMode == TempoType.FamiStudio;
+        public bool                UsesFamiTrackerTempo  => tempoMode == TempoType.FamiTracker;
+
+        public bool                UsesAnyExpansionAudio => (expansionMask != ExpansionType.NoneMask);
+        public bool                UsesFdsExpansion      => (expansionMask  & ExpansionType.FdsMask)  != 0;
+        public bool                UsesN163Expansion     => (expansionMask  & ExpansionType.N163Mask) != 0;
+        public bool                UsesVrc6Expansion     => (expansionMask  & ExpansionType.Vrc6Mask) != 0;
+        public bool                UsesVrc7Expansion     => (expansionMask  & ExpansionType.Vrc7Mask) != 0;
+        public bool                UsesMmc5Expansion     => (expansionMask  & ExpansionType.Mmc5Mask) != 0;
+        public bool                UsesS5BExpansion      => (expansionMask  & ExpansionType.S5BMask)  != 0;
 
         public string Filename    { get => filename;  set => filename  = value; }
         public string Name        { get => name;      set => name      = value; }
@@ -83,9 +90,17 @@ namespace FamiStudio
             }
             set
             {
-                Debug.Assert(value == false || !UsesExpansionAudio);
-                pal = value && !UsesExpansionAudio;
+                Debug.Assert(value == false || !UsesAnyExpansionAudio);
+                pal = value && !UsesAnyExpansionAudio;
             }
+        }
+
+        public bool UsesExpansionAudio(int type)
+        {
+            if (type == ExpansionType.None)
+                return true;
+
+            return (expansionMask & (1 << (type - 1))) != 0;
         }
 
         public Song GetSong(int id)
@@ -366,7 +381,7 @@ namespace FamiStudio
 
         public Instrument CreateInstrument(int expansion, string name = null)
         {
-            if (expansion != ExpansionType.None && expansion != expansionAudio)
+            if (expansion != ExpansionType.None && !UsesExpansionAudio(expansion))
                 return null;
 
             if (name == null)
@@ -680,36 +695,33 @@ namespace FamiStudio
                 songs.Insert(0, song);
         }
 
-        public void SetExpansionAudio(int expansion, int numChannels = 1)
+        public void SetExpansionAudioMask(int newExpansionMask, int numChannels = 1)
         {
-            if (expansion == ExpansionType.N163 && numChannels == 0)
-                expansion = ExpansionType.None;
+            if ((newExpansionMask & ExpansionType.N163Mask) != 0 && numChannels == 0)
+                newExpansionMask &= ~ExpansionType.N163Mask;
 
-            if (expansion >= 0 && expansion < ExpansionType.Count)
+            var oldExpansionMask   = expansionMask;
+            var oldNumN163Channels = expansionNumN163Channels;
+
+            expansionMask = newExpansionMask;
+            expansionNumN163Channels = (newExpansionMask & ExpansionType.N163Mask) != 0 ? numChannels : 1;
+
+            foreach (var song in songs)
             {
-                var changed = expansionAudio != expansion;
-                var oldNumChannels = expansionNumChannels;
+                song.CreateChannels(true, oldExpansionMask, oldNumN163Channels);
+            }
 
-                expansionAudio = expansion;
-                expansionNumChannels = expansion == ExpansionType.N163 ? numChannels : 1;
-
-                foreach (var song in songs)
+            if (oldExpansionMask != newExpansionMask)
+            {
+                for (int i = instruments.Count - 1; i >= 0; i--)
                 {
-                    song.CreateChannels(true, ChannelType.ExpansionAudioStart + (!changed && expansion == ExpansionType.N163 ? oldNumChannels : 0));
-                }
-
-                if (changed)
-                {
-                    for (int i = instruments.Count - 1; i >= 0; i--)
-                    {
-                        var inst = instruments[i];
-                        if (inst.IsExpansionInstrument)
-                            DeleteInstrument(inst);
-                    }
+                    var inst = instruments[i];
+                    if (!UsesExpansionAudio(inst.ExpansionType))
+                        DeleteInstrument(inst);
                 }
             }
 
-            if (expansion != ExpansionType.None)
+            if (UsesAnyExpansionAudio)
                 pal = false;
         }
 
@@ -731,29 +743,48 @@ namespace FamiStudio
 
         public bool IsChannelActive(int channelType)
         {
-            if (channelType <= ChannelType.Dpcm)
+            return IsChannelActive(channelType, expansionMask, expansionNumN163Channels);
+        }
+
+        public int[] GetActiveExpansions()
+        {
+            if (!UsesAnyExpansionAudio)
+                return null;
+
+            var idx = 0;
+            var expansions = new int[Utils.NumberOfSetBits(expansionMask)];
+
+            for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+            {
+                if (UsesExpansionAudio(i))
+                    expansions[idx++] = i;
+            }
+
+            return expansions;
+        }
+
+        public static bool IsChannelActive(int channelType, int expansionMask, int numN163Channels)
+        {
+            if (channelType < ChannelType.ExpansionAudioStart)
                 return true;
 
-            if (channelType >= ChannelType.Vrc6Square1 && channelType <= ChannelType.Vrc6Saw)
-                return expansionAudio == ExpansionType.Vrc6;
+            if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.Vrc6)
+                return (expansionMask & ExpansionType.Vrc6Mask) != 0;
 
-            if (channelType == ChannelType.FdsWave)
-                return expansionAudio == ExpansionType.Fds;
+            if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.Vrc7)
+                return (expansionMask & ExpansionType.Vrc7Mask) != 0;
 
-            if (channelType >= ChannelType.Mmc5Square1 && channelType <= ChannelType.Mmc5Square2)
-                return expansionAudio == ExpansionType.Mmc5;
+            if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.Fds)
+                return (expansionMask & ExpansionType.FdsMask) != 0;
 
-            if (channelType == ChannelType.Mmc5Dpcm)
-                return false;
+            if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.Mmc5)
+                return (expansionMask & ExpansionType.Mmc5Mask) != 0 && channelType != ChannelType.Mmc5Dpcm;
 
-            if (channelType >= ChannelType.Vrc7Fm1 && channelType <= ChannelType.Vrc7Fm6)
-                return expansionAudio == ExpansionType.Vrc7;
+            if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.N163)
+                return (expansionMask & ExpansionType.N163Mask) != 0 && ChannelType.GetExpansionChannelIndexForChannelType(channelType) < numN163Channels;
 
-            if (channelType >= ChannelType.N163Wave1 && channelType <= ChannelType.N163Wave8)
-                return expansionAudio == ExpansionType.N163 && (channelType - ChannelType.N163Wave1) < expansionNumChannels;
-
-            if (channelType >= ChannelType.S5BSquare1 && channelType <= ChannelType.S5BSquare3)
-                return expansionAudio == ExpansionType.S5B;
+            if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.S5B)
+                return (expansionMask & ExpansionType.S5BMask) != 0;
 
             Debug.Assert(false);
 
@@ -764,7 +795,7 @@ namespace FamiStudio
         {
             get
             {
-                return expansionAudio != ExpansionType.None && expansionAudio != ExpansionType.Mmc5;
+                return UsesFdsExpansion || UsesN163Expansion || UsesVrc6Expansion || UsesVrc7Expansion || UsesS5BExpansion;
             }
         }
 
@@ -1000,8 +1031,9 @@ namespace FamiStudio
             // These validations only make sense when merging songs.
             if (otherProject.Songs.Count > 0)
             {
-                if (otherProject.expansionAudio != ExpansionType.None &&
-                    otherProject.expansionAudio != expansionAudio)
+                // EXPTODO
+                if (otherProject.expansionMask != ExpansionType.None &&
+                    otherProject.expansionMask != expansionMask)
                 {
                     Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses a different audio expansion.");
                     return false;
@@ -1013,7 +1045,7 @@ namespace FamiStudio
                     return false;
                 }
 
-                otherProject.SetExpansionAudio(expansionAudio, expansionNumChannels);
+                otherProject.SetExpansionAudioMask(expansionMask, expansionNumN163Channels);
             }
 
             // Change all the IDs in the source project.
@@ -1101,8 +1133,9 @@ namespace FamiStudio
                         }
                     }
                     else if (
+                        // EXPTODO
                         otherInstrument.ExpansionType == ExpansionType.None || 
-                        otherInstrument.ExpansionType == expansionAudio)
+                        otherInstrument.ExpansionType == expansionMask)
                     {
                         instruments.Add(otherInstrument);
                     }
@@ -1212,107 +1245,6 @@ namespace FamiStudio
             if (songs)
                 SortSongs();
         }
-
-        /*
-        public bool MergeOtherProjectInstruments(Project otherProject, List<Instrument> otherInstruments)
-        {
-            bool merged = false;
-
-            foreach (var otherInstrument in otherInstruments)
-            {
-                // Special case for DPCM instrument.
-                if (otherInstrument == null)
-                {
-                    int largestCommonId = Math.Max(FindLargestUniqueId(), otherProject.FindLargestUniqueId());
-                    EnsureNextIdIsLargeEnough(largestCommonId);
-
-                    otherProject.ValidateIntegrity();
-                    otherProject.DeleteUnmappedSamples();
-
-                    foreach (var sample in otherProject.Samples)
-                        sample.ChangeId(GenerateUniqueId());
-
-                    otherProject.EnsureNextIdIsLargeEnough();
-                    otherProject.ValidateIntegrity();
-
-                    // Match existing samples by name.
-                    for (int i = 0; i < otherProject.samples.Count;)
-                    {
-                        var otherSample = otherProject.samples[i];
-                        var existingSample = GetSample(otherSample.Name);
-                        if (existingSample != null)
-                        {
-                            Log.LogMessage(LogSeverity.Warning, $"Project already contains a DPCM sample named '{existingSample.Name}', assuming it is the same.");
-
-                            otherProject.ReplaceSample(otherSample, existingSample);
-                            otherProject.DeleteSample(otherSample);
-                        }
-                        else
-                        {
-                            samples.Add(otherSample);
-                            i++;
-                        }
-                    }
-
-                    otherProject.Cleanup();
-                    otherProject.ValidateIntegrity();
-                    ValidateIntegrity();
-
-                    // Merge sample mappings.
-                    for (int i = 0; i < samplesMapping.Length; i++)
-                    {
-                        var thisMapping = samplesMapping[i];
-                        var otherMapping = otherProject.samplesMapping[i];
-
-                        if (otherMapping != null)
-                        {
-                            if (thisMapping == null)
-                            {
-                                samplesMapping[i] = otherMapping;
-                            }
-                            else
-                            {
-                                Log.LogMessage(LogSeverity.Warning, $"Project already has a sample mapped at key {Note.GetFriendlyName(Note.DPCMNoteMin + i)}, ignoring.");
-                            }
-                        }
-                    }
-
-                    otherProject.Cleanup();
-                    otherProject.ValidateIntegrity();
-                    ValidateIntegrity();
-                    SortEverything(false);
-                }
-                else
-                {
-                    Debug.Assert(otherProject.InstrumentExists(otherInstrument));
-
-                    var existingInstrument = GetInstrument(otherInstrument.Name);
-                    if (existingInstrument != null)
-                    {
-                        Log.LogMessage(LogSeverity.Warning, $"Project already contains an instrument named '{existingInstrument.Name}', ignoring.");
-                    }
-                    else
-                    {
-                        if (otherInstrument.ExpansionType == ExpansionType.None ||
-                            otherInstrument.ExpansionType == expansionAudio)
-                        {
-                            merged = true;
-                            otherInstrument.ChangeId(GenerateUniqueId());
-                            instruments.Add(otherInstrument);
-                        }
-                        else
-                        {
-                            Log.LogMessage(LogSeverity.Warning, $"Instrument named '{otherInstrument.Name}' uses an expansion audio incompatible with this project. Ignoring.");
-                        }
-                    }
-                }
-            }
-
-            SortInstruments();
-
-            return merged;
-        }
-        */
 
         public void MergeIdenticalInstruments()
         {
@@ -1590,7 +1522,7 @@ namespace FamiStudio
             foreach (var song in Songs)
                 song.ValidateIntegrity(this, idMap);
 
-            Debug.Assert(!UsesExpansionAudio || pal == false);
+            Debug.Assert(!UsesAnyExpansionAudio || pal == false);
             Debug.Assert(Note.EmptyNote.IsEmpty);
 #endif
         }
@@ -1683,13 +1615,17 @@ namespace FamiStudio
             // At version 4 (FamiStudio 1.4.0) we added basic expansion audio.
             if (buffer.Version >= 4)
             {
-                buffer.Serialize(ref expansionAudio);
+                buffer.Serialize(ref expansionMask);
+
+                // At version 11 (FamiStudio 3.1.0) we added support for multiple audio expansions.
+                if (buffer.Version < 11)
+                    expansionMask = ExpansionType.GetValueToMask(expansionMask);
             }
 
             // At version 5 (FamiStudio 2.0.0) we added support for Namco 163 and advanced tempo mode.
             if (buffer.Version >= 5)
             {
-                buffer.Serialize(ref expansionNumChannels);
+                buffer.Serialize(ref expansionNumN163Channels);
                 buffer.Serialize(ref tempoMode);
             }
             else
@@ -1755,7 +1691,17 @@ namespace FamiStudio
         public const int Mmc5  = 4;
         public const int N163  = 5;
         public const int S5B   = 6;
+        public const int Start = 1;
+        public const int End   = 6;
         public const int Count = 7;
+
+        public const int NoneMask = 0;
+        public const int Vrc6Mask = (1 << 0);
+        public const int Vrc7Mask = (1 << 1);
+        public const int FdsMask  = (1 << 2);
+        public const int Mmc5Mask = (1 << 3);
+        public const int N163Mask = (1 << 4);
+        public const int S5BMask  = (1 << 5);
 
         public static readonly string[] Names =
         {
@@ -1778,6 +1724,11 @@ namespace FamiStudio
             "N163",
             "S5B"
         };
+
+        public static int GetValueToMask(int exp)
+        {
+            return exp == None ? NoneMask : 1 << (exp - 1);
+        }
 
         public static int GetValueForName(string str)
         {

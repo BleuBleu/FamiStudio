@@ -89,8 +89,9 @@ namespace FamiStudio
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
 
-                if (project.ExpansionAudio != ExpansionType.Fds)
-                    project.SetExpansionAudio(ExpansionType.Fds);
+                // Need to be using only FDS.
+                if (project.ExpansionAudioMask != ExpansionType.FdsMask)
+                    project.SetExpansionAudioMask(ExpansionType.FdsMask);
 
                 string fdsDiskName = "FamiStudio.Rom.fds";
                 if (project.UsesFamiTrackerTempo)

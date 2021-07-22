@@ -585,8 +585,8 @@ namespace FamiStudio
                 var lastNoteValue = (byte)Note.NoteInvalid;
                 var portamentoSpeed = 0;
                 var slideSpeed = 0;
-                var slideShift = c.IsN163WaveChannel ? 2 : 0;
-                var slideSign = c.IsN163WaveChannel || c.IsFdsWaveChannel || c.IsVrc7FmChannel ? -1 : 1; // Inverted channels.
+                var slideShift = c.IsN163Channel ? 2 : 0;
+                var slideSign = c.IsN163Channel || c.IsFdsChannel || c.IsVrc7Channel ? -1 : 1; // Inverted channels.
 
                 for (int p = 0; p < s.Length; p++)
                 {
@@ -677,7 +677,7 @@ namespace FamiStudio
                         if (note != null && note.IsMusical && !note.IsSlideNote)
                         {
                             var slideSource = note.Value;
-                            var noteTable = NesApu.GetNoteTableForChannelType(c.Type, s.Project.PalMode, s.Project.ExpansionNumChannels);
+                            var noteTable = NesApu.GetNoteTableForChannelType(c.Type, s.Project.PalMode, s.Project.ExpansionNumN163Channels);
                             var pitchLimit = NesApu.GetPitchLimitForChannelType(c.Type);
 
                             // If we have a new note with auto-portamento enabled, we need to
@@ -699,7 +699,7 @@ namespace FamiStudio
                             // Compensate for larger pitches in higher octaves by shifting. We cant shift by 
                             // a large amount because the period is 9-bit and FamiTracker is restricted to 
                             // this for slides (octave never changes).
-                            var octaveSlideShift = c.IsVrc7FmChannel && note.Value >= 12 ? 1 : 0;
+                            var octaveSlideShift = c.IsVrc7Channel && note.Value >= 12 ? 1 : 0;
 
                             // 3xx/Qxy/Rxy : We know which note we are sliding to and the speed, but we 
                             //               don't know how many frames it will take to get there.
@@ -1030,10 +1030,13 @@ namespace FamiStudio
                 }
             }
 
+            /*
+             * EXPTODO
             if (project.ExpansionAudio == ExpansionType.Vrc6)
             {
                 Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio is not affected by the duty cycle and is instead controlled by a 'Saw Master Volume' on this instrument. You will likely have to adjust this to get the correct volume.");
             }
+            */
 
             var mappedSamplesSize = project.GetTotalMappedSampleSize();
             if (mappedSamplesSize > Project.MaxMappedSampleSize)

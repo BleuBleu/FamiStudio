@@ -369,6 +369,8 @@ namespace FamiStudio
                 {
                     needMerge = true;
 
+                    /*
+                     * EXPTODO
                     if (!checkOnly && createMissing && (instType == ExpansionType.None || instType == serializer.Project.ExpansionAudio))
                     {
                         var instrument = serializer.Project.CreateInstrument(instType, instName);
@@ -380,6 +382,7 @@ namespace FamiStudio
                         serializer.RemapId(instId, -1);
                         dummyInstrument.SerializeState(serializer); // Skip
                     }
+                    */
                 }
             }
 

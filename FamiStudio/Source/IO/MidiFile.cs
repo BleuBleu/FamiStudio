@@ -704,7 +704,7 @@ namespace FamiStudio
             }
 
             project = new Project();
-            project.SetExpansionAudio(expansion, num163Channels);
+            project.SetExpansionAudioMask(expansion, num163Channels); // EXPTODO : Mask
             project.PalMode = pal;
 
             song = project.CreateSong();
@@ -732,6 +732,9 @@ namespace FamiStudio
             // Create a default instrument in case there isnt any program change.
             instrumentMap[0] = project.CreateInstrument(ExpansionType.None, MidiInstrumentNames[0]);
 
+            /*
+             *             EXPTODO
+
             if (project.UsesExpansionAudio)
                 instrumentMapExp[0] = project.CreateInstrument(project.ExpansionAudio, MidiInstrumentNames[0] + $" {project.ExpansionAudioShortName}");
 
@@ -745,6 +748,7 @@ namespace FamiStudio
                         instrumentMapExp[prgChange.prg] = project.CreateInstrument(project.ExpansionAudio, MidiInstrumentNames[prgChange.prg] + $" {project.ExpansionAudioShortName}");
                 }
             }
+            */
         }
 
         private void CreatePatterns(out List<MidiPatternInfo> patternInfos, int measuresPerPattern)
@@ -1090,6 +1094,8 @@ namespace FamiStudio
         private void Cleanup()
         {
             // Truncate # of N163 channels.
+            /*
+             * EXPTODO
             if (project.ExpansionAudio == ExpansionType.N163)
             {
                 var numN163Channels = 0;
@@ -1100,10 +1106,11 @@ namespace FamiStudio
                 }
 
                 if (numN163Channels == 0)
-                    project.SetExpansionAudio(ExpansionType.None);
+                    project.SetExpansionAudio(ExpansionType.NoneMask); // EXPTODO : Mask + multiexp?
                 else
-                    project.SetExpansionAudio(ExpansionType.N163, numN163Channels);
+                    project.SetExpansionAudio(ExpansionType.N163Mask, numN163Channels); // EXPTODO : Mask + multiexp?
             }
+            */
 
             song.MergeIdenticalPatterns();
             song.Trim();

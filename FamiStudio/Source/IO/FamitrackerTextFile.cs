@@ -114,7 +114,7 @@ namespace FamiStudio
                         if (convertedExp < 0)
                             return null;
 
-                        project.SetExpansionAudio(convertedExp);
+                        project.SetExpansionAudioMask(convertedExp); // EXPTODO
                     }
                     else if (line.StartsWith("MACHINE"))
                     {
@@ -124,7 +124,7 @@ namespace FamiStudio
                     else if (line.StartsWith("N163CHANNELS"))
                     {
                         var numExpChannels = int.Parse(line.Substring(12).Trim(' ', '"'));
-                        project.SetExpansionAudio(ExpansionType.N163, numExpChannels);
+                        project.SetExpansionAudioMask(ExpansionType.N163, numExpChannels); // EXPTODO.
                     }
                     else if (line.StartsWith("MACRO"))
                     {
@@ -464,10 +464,13 @@ namespace FamiStudio
 
                                 var fx = new RowFxData();
 
+                                /*
+                                 * EXPTODO
                                 if (project.ExpansionAudio == ExpansionType.Fds && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
                                     fx.fx = (byte)fdsFx;
                                 else
                                     fx.fx = TextToEffectLookup[fxStr[0]];
+                                    */
 
                                 fx.param = Convert.ToByte(fxStr.Substring(1), 16);
                                 patternFxData[pattern][n, k] = fx;
@@ -689,13 +692,14 @@ namespace FamiStudio
             lines.Add("# Global settings");
             lines.Add("MACHINE         " + (project.PalMode ? "1" : "0"));
             lines.Add("FRAMERATE       0");
-            lines.Add("EXPANSION       " + (project.ExpansionAudio != ExpansionType.None ? (1 << (project.ExpansionAudio - 1)) : 0));
+            lines.Add("EXPANSION       "  /*+ (project.ExpansionAudio != ExpansionType.None ? (1 << (project.ExpansionAudio - 1)) : 0)*/); // EXPTODO
             lines.Add("VIBRATO         1");
             lines.Add("SPLIT           32");
             lines.Add("");
 
-            var realNumExpansionChannels = project.ExpansionNumChannels;
+            var realNumExpansionChannels = project.ExpansionNumN163Channels;
 
+            /* EXPTODO
             if (project.ExpansionAudio == ExpansionType.N163)
             {
                 lines.Add("# Namco 163 global settings");
@@ -703,8 +707,9 @@ namespace FamiStudio
                 lines.Add("");
 
                 // The text format always export all 8 channels, even if there are less.
-                project.SetExpansionAudio(ExpansionType.N163, 8);
+                project.SetExpansionAudio(ExpansionType.N163, 8); // EXPTODO mask.
             }
+            */
 
             lines.Add("# Macros");
             for (int i = 0; i < EnvelopeType.RegularCount; i++)
@@ -717,6 +722,8 @@ namespace FamiStudio
                 }
             }
 
+            /*
+             * EXPTODO
             if (project.ExpansionAudio == ExpansionType.Vrc6 ||
                 project.ExpansionAudio == ExpansionType.N163)
             {
@@ -732,6 +739,7 @@ namespace FamiStudio
                     }
                 }
             }
+            */
 
             lines.Add("");
 
@@ -900,7 +908,7 @@ namespace FamiStudio
 
                                 // FamiTracker only has 12-pitches and doesnt change the octave when doing 
                                 // slides. This helps make the slides more compatible, but its not great.
-                                if (channel.IsVrc7FmChannel)
+                                if (channel.IsVrc7Channel)
                                 {
                                     while (noteValue >= 12 && slideTarget >= 12)
                                     {
@@ -914,7 +922,7 @@ namespace FamiStudio
                                 tempNote.SlideNoteTarget = slideTarget;
                                 channel.ComputeSlideNoteParams(tempNote, location, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat);
 
-                                if (channel.IsN163WaveChannel)
+                                if (channel.IsN163Channel)
                                 {
                                     stepSizeFloat /= 4.0f;
                                 }
@@ -978,7 +986,7 @@ namespace FamiStudio
                                     else
                                     {
                                         // Inverted channels.
-                                        if (channel.IsFdsWaveChannel || channel.IsN163WaveChannel)
+                                        if (channel.IsFdsChannel || channel.IsN163Channel)
                                             stepSizeFloat = -stepSizeFloat;
 
                                         var absFloorStepSize = Math.Abs(Utils.SignedCeil(stepSizeFloat));

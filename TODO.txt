@@ -1,3 +1,22 @@
+Multiexp prototype:
+/ Change NesSndEmu to support multiple expansions
+/ Project property selection.
+- Project/channel logic
+- Review all uses of expansionMask.
+- Warnings in project properties
+- Smaller sequencer, how?
+	- Min 21 pixels
+	- Larger piano when expansion is use 94 -> 134
+	- When track size is lower than X (28?), shave 1px top/bottom names.
+	- Vary sequencer pattern note width.
+	- Move track icon + text by 1px.
+	- Piano roll maximize button (Recycle ~ shortcut?, change effect to CTRL + ~)
+- NSF in/out
+- BUG : Allows creating MMC5 instrument, makes no sense.
+- BUG : Mute mask is 16 bit?
+- FamiTrakcer in/out
+- Review all SetExpansionAudio(), must use masks.
+
 Videos:
 =======
 - Sampling soundfont instruments

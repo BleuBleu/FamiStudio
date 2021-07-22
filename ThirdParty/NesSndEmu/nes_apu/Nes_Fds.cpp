@@ -51,47 +51,49 @@ void Nes_Fds::output(Blip_Buffer* buf)
 
 void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 {
-	require(addr >= wave_addr && addr < (regs_addr + regs_count));
-	require((unsigned)data <= 0xff);
-
-	run_until(time);
-
-	if (addr >= wave_addr && addr < (wave_addr + wave_count))
+	if (addr >= wave_addr && addr < (regs_addr + regs_count))
 	{
-		if (osc.regs[9] & 0x80)
-			osc.wave[addr - wave_addr] = (data & 0x3f) - 0x20;
-	}
-	else
-	{
-		cpu_addr_t reg = addr - regs_addr;
-		
-		switch (reg)
+		require((unsigned)data <= 0xff);
+
+		run_until(time);
+
+		if (addr >= wave_addr && addr < (wave_addr + wave_count))
 		{
-		case 0:
-			// TODO: Volume envelope support.
-			require(data & 0x80);
-			osc.volume_env = data & 0x3f;
-			break;
-		case 4:
-			// TODO: Sweep envelope support.
-			require(data & 0x80);
-			break;
-		case 5:
-			osc.mod_pos = data & 0x7f;
-			break;
-		case 7:
-			if (data & 0x80) 
-				osc.mod_phase = osc.mod_phase & 0x3F0000; 
-			break;
-		case 8:
-			// TODO: Ring buffer? I cant imagine that's of the hardware does it.
-			memcpy(&osc.modt[0], &osc.modt[2], modt_count - 2); 
-			osc.modt[modt_count - 2] = data;
-			osc.modt[modt_count - 1] = data;
-			break;
+			if (osc.regs[9] & 0x80)
+				osc.wave[addr - wave_addr] = (data & 0x3f) - 0x20;
 		}
+		else
+		{
+			cpu_addr_t reg = addr - regs_addr;
+		
+			switch (reg)
+			{
+			case 0:
+				// TODO: Volume envelope support.
+				require(data & 0x80);
+				osc.volume_env = data & 0x3f;
+				break;
+			case 4:
+				// TODO: Sweep envelope support.
+				require(data & 0x80);
+				break;
+			case 5:
+				osc.mod_pos = data & 0x7f;
+				break;
+			case 7:
+				if (data & 0x80) 
+					osc.mod_phase = osc.mod_phase & 0x3F0000; 
+				break;
+			case 8:
+				// TODO: Ring buffer? I cant imagine that's of the hardware does it.
+				memcpy(&osc.modt[0], &osc.modt[2], modt_count - 2); 
+				osc.modt[modt_count - 2] = data;
+				osc.modt[modt_count - 1] = data;
+				break;
+			}
 
-		osc.regs[reg] = data;
+			osc.regs[reg] = data;
+		}
 	}
 }
 

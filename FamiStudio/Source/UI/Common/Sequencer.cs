@@ -28,7 +28,7 @@ namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int DefaultTrackNameSizeX      = 94;
+        const int DefaultTrackNameSizeX      = 132;
         const int DefaultHeaderSizeY         = 17;
         const int DefaultPatternHeaderSizeY  = 13;
         const int DefaultNoteSizeY           = 4;
@@ -237,7 +237,7 @@ namespace FamiStudio
 
         private int ComputeDesiredTrackSizeY()
         {
-            return Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 32);
+            return Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
         }
 
         public int ComputeDesiredSizeY()
@@ -914,7 +914,7 @@ namespace FamiStudio
                     {
                         // Toggle Solo
                         if (App.ChannelMask == bit)
-                            App.ChannelMask = 0xffff;
+                            App.ChannelMask = -1;
                         else
                             App.ChannelMask = bit;
                     }
@@ -1245,7 +1245,7 @@ namespace FamiStudio
 
                         if (pattern != null && (i + startPatternIndex) < song.Length && song.Project.IsChannelActive(pattern.ChannelType))
                         {
-                            var channelIdx = Channel.ChannelTypeToIndex(pattern.ChannelType);
+                            var channelIdx = Channel.ChannelTypeToIndex(pattern.ChannelType, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels);
                             song.Channels[channelIdx].PatternInstances[i + startPatternIndex] = pattern;
                         }
                     }

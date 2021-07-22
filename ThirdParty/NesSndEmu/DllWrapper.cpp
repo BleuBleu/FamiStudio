@@ -10,12 +10,12 @@
 
 static Simple_Apu apu[3];
 
-extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int pal, int expansion, int (__cdecl *dmcReadFunc)(void* user_data, cpu_addr_t))
+extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int pal, int expansions, int (__cdecl *dmcReadFunc)(void* user_data, cpu_addr_t))
 {
 	if (apu[apuIdx].sample_rate(sampleRate, pal))
 		return -1;
 
-	apu[apuIdx].set_audio_expansion(expansion);
+	apu[apuIdx].set_audio_expansions(expansions);
 	apu[apuIdx].dmc_reader(dmcReadFunc, NULL);
 
 	return 0;
@@ -56,9 +56,9 @@ extern "C" void __stdcall NesApuReset(int apuIdx)
 	apu[apuIdx].reset();
 }
 
-extern "C" void __stdcall NesApuEnableChannel(int apuIdx, int idx, int enable)
+extern "C" void __stdcall NesApuEnableChannel(int apuIdx, int exp, int idx, int enable)
 {
-	apu[apuIdx].enable_channel(idx, enable != 0);
+	apu[apuIdx].enable_channel(exp, idx, enable != 0);
 }
 
 extern "C" void __stdcall NesApuStartSeeking(int apuIdx)
@@ -81,9 +81,9 @@ extern "C" void __stdcall NesApuTrebleEq(int apuIdx, int expansion, double trebl
 	apu[apuIdx].treble_eq(expansion, treble, sample_rate);
 }
 
-extern "C" int __stdcall NesApuGetAudioExpansion(int apuIdx)
+extern "C" int __stdcall NesApuGetAudioExpansions(int apuIdx)
 {
-	return apu[apuIdx].get_audio_expansion();
+	return apu[apuIdx].get_audio_expansions();
 }
 
 extern "C" void __stdcall NesApuSetExpansionVolume(int apuIdx, int expansion, double volume)

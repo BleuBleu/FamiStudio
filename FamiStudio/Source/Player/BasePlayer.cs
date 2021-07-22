@@ -42,7 +42,7 @@ namespace FamiStudio
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
-        protected int channelMask = 0xffff;
+        protected int channelMask = -1;
         protected int playPosition = 0;
         protected NoteLocation playLocation = new NoteLocation(0, 0);
 
@@ -206,11 +206,24 @@ namespace FamiStudio
             }
         }
 
+        protected void EnableChannelType(int channelType, bool enable)
+        {
+            var exp = ChannelType.GetExpansionTypeForChannelType(channelType);
+            var idx = ChannelType.GetExpansionChannelIndexForChannelType(channelType);
+
+            NesApu.EnableChannel(apuIndex, exp, idx, enable ? 1 : 0);
+        }
+
         protected void UpdateChannelsMuting()
         {
             for (int i = 0; i < channelStates.Length; i++)
             {
-                NesApu.EnableChannel(apuIndex, i, (channelMask & (1 << i)));
+                var state = channelStates[i];
+
+                var exp = ChannelType.GetExpansionTypeForChannelType(state.InnerChannelType);
+                var idx = ChannelType.GetExpansionChannelIndexForChannelType(state.InnerChannelType);
+
+                EnableChannelType(state.InnerChannelType, (channelMask & (1 << i)) != 0);
             }
         }
 
@@ -224,9 +237,9 @@ namespace FamiStudio
             playLocation = new NoteLocation(0, 0);
             frameNumber = 0;
             famitrackerTempoCounter = 0;
-            channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumChannels, palPlayback);
+            channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, song.Project.ExpansionAudio, song.Project.ExpansionNumChannels, dmcCallback);
+            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels, dmcCallback);
 
             ResetFamiStudioTempo();
             UpdateChannelsMuting();
@@ -526,7 +539,7 @@ namespace FamiStudio
         {
             foreach (var channelState in channelStates)
             {
-                if (((1 << channelState.GetChannelType()) & channelTypeMask) != 0)
+                if (((1 << channelState.InnerChannelType) & channelTypeMask) != 0)
                 {
                     channelState.IntrumentLoadedNotify(instrument);
                 }

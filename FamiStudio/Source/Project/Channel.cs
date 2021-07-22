@@ -17,16 +17,23 @@ namespace FamiStudio
         public int Type => type;
         public string Name => ChannelType.Names[type];
         public string ShortName => ChannelType.ShortNames[(int)type];
-        public string NameWithExpansion => IsExpansionChannel ? $"{Name} ({ExpansionType.ShortNames[song.Project.ExpansionAudio]})" : Name;
+        public string NameWithExpansion => ""; // EXPTODO IsExpansionChannel ? $"{Name} ({ExpansionType.ShortNames[song.Project.ExpansionAudio]})" : Name;
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
         public bool IsExpansionChannel => type >= ChannelType.ExpansionAudioStart;
+        public int Expansion => ChannelType.GetExpansionTypeForChannelType(type);
+        public int ExpansionChannelIndex => ChannelType.GetExpansionChannelIndexForChannelType(type);
+        public int Index => ChannelTypeToIndex(type, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels);
 
-        public bool IsFdsWaveChannel => type == ChannelType.FdsWave;
-        public bool IsN163WaveChannel => type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8;
-        public bool IsVrc7FmChannel => type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6;
-        public bool IsNoiseChannel => type == ChannelType.Noise;
+        public bool IsRegularChannel => Expansion == ExpansionType.None;
+        public bool IsFdsChannel     => Expansion == ExpansionType.Fds;
+        public bool IsN163Channel    => Expansion == ExpansionType.N163;
+        public bool IsVrc6Channel    => Expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Channel    => Expansion == ExpansionType.Vrc7;
+        public bool IsMmc5Channel    => Expansion == ExpansionType.Mmc5;
+        public bool IsS5BChannel     => Expansion == ExpansionType.S5B;
+        public bool IsNoiseChannel   => type == ChannelType.Noise;
 
         public Channel(Song song, int type, int songLength)
         {
@@ -60,30 +67,13 @@ namespace FamiStudio
             if (type == ChannelType.Dpcm)
                 return true;
 
-            if (instrument.ExpansionType == ExpansionType.None && type < ChannelType.ExpansionAudioStart)
+            if (instrument.ExpansionType == ExpansionType.None && (IsRegularChannel || IsMmc5Channel))
                 return true;
 
-            if (instrument.ExpansionType == ExpansionType.Vrc6 && type >= ChannelType.Vrc6Square1 && type <= ChannelType.Vrc6Saw)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.Vrc7 && type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.Fds && type == ChannelType.FdsWave)
-                return true;
-
-            if (type >= ChannelType.Mmc5Square1 && type <= ChannelType.Mmc5Square2)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.N163 && type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.S5B && type >= ChannelType.S5BSquare1 && type <= ChannelType.S5BSquare3)
-                return true;
-
-            return false;
+            return instrument.ExpansionType == Expansion;
         }
 
+        // EXPTODO : This is wrong
         public static int[] GetChannelsForExpansion(int expansion)
         {
             var channels = new List<int>(); ;
@@ -136,6 +126,7 @@ namespace FamiStudio
             return channels.ToArray();
         }
 
+        // EXPTODO : This is wrong.
         public static int GetChannelCountForExpansion(int expansion)
         {
             var count = 5;
@@ -535,7 +526,7 @@ namespace FamiStudio
             var slideShift = 0;
 
             if (applyShifts)
-                GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out slideShift);
+                GetShiftsForType(type, song.Project.ExpansionNumN163Channels, out _, out slideShift);
 
             // Noise is special, no periods.
             if (type == ChannelType.Noise)
@@ -1035,27 +1026,29 @@ namespace FamiStudio
 
             InvalidateCumulativePatternCache();
         }
-
-        public static int ChannelTypeToIndex(int type)
+        
+        public unsafe static int ChannelTypeToIndex(int type, int activeExpansions, int numN163Channels)
         {
             if (type < ChannelType.ExpansionAudioStart)
                 return type;
-            if (type >= ChannelType.Vrc6Square1 && type <= ChannelType.Vrc6Saw)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.Vrc6Square1;
-            if (type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.Vrc7Fm1;
-            if (type == ChannelType.FdsWave)
-                return ChannelType.ExpansionAudioStart;
-            if (type >= ChannelType.Mmc5Square1 && type <= ChannelType.Mmc5Square2)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.Mmc5Square1;
-            if (type == ChannelType.Mmc5Dpcm)
-                return -1;
-            if (type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.N163Wave1;
-            if (type >= ChannelType.S5BSquare1 && type <= ChannelType.S5BSquare3)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.S5BSquare1;
-            Debug.Assert(false);
-            return -1;
+
+            var exp = ChannelType.GetExpansionTypeForChannelType(type);
+            var idx = 5 + ChannelType.GetExpansionChannelIndexForChannelType(type);
+
+            if (exp == ExpansionType.Vrc6) return idx;
+            if ((activeExpansions & ExpansionType.Vrc6Mask) != 0) idx += 3;
+            if (exp == ExpansionType.Vrc7) return idx;
+            if ((activeExpansions & ExpansionType.Vrc7Mask) != 0) idx += 6;
+            if (exp == ExpansionType.Fds)  return idx; 
+            if ((activeExpansions & ExpansionType.FdsMask)  != 0) idx += 1;
+            if (exp == ExpansionType.Mmc5) return idx;
+            if ((activeExpansions & ExpansionType.Mmc5Mask) != 0) idx += 2; // (We never use the DPCM)
+            if (exp == ExpansionType.N163) return idx;
+            if ((activeExpansions & ExpansionType.N163Mask) != 0) idx += numN163Channels;
+
+            Debug.Assert((activeExpansions & ExpansionType.S5BMask) != 0);
+
+            return idx; 
         }
 
 #if DEBUG
@@ -1568,7 +1561,7 @@ namespace FamiStudio
             "Triangle",
             "Noise",
             "DPCM",
-            "Square 1", // VRC6
+            "Square 1 (VRC6)", // VRC6
             "Square 2", // VRC6
             "Saw", // VRC6
             "FM 1", // VRC7
@@ -1660,6 +1653,82 @@ namespace FamiStudio
             "Square",
             "Square"
         };
+
+        public static readonly int[] ExpansionTypes =
+        {
+            ExpansionType.None,
+            ExpansionType.None,
+            ExpansionType.None,
+            ExpansionType.None,
+            ExpansionType.None,
+            ExpansionType.Vrc6,
+            ExpansionType.Vrc6,
+            ExpansionType.Vrc6,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Fds,
+            ExpansionType.Mmc5,
+            ExpansionType.Mmc5,
+            ExpansionType.Mmc5,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.S5B,
+            ExpansionType.S5B,
+            ExpansionType.S5B
+        };
+
+        public static readonly int[] ExpansionChannelIndex =
+        {
+            0, // 2A03
+            1, // 2A03
+            2, // 2A03
+            3, // 2A03
+            4, // 2A03
+            0, // VRC6
+            1, // VRC6
+            2, // VRC6
+            0, // VRC7
+            1, // VRC7
+            2, // VRC7
+            3, // VRC7
+            4, // VRC7
+            5, // VRC7
+            0, // FDS
+            0, // MMC5
+            1, // MMC5
+            2, // MMC5
+            0, // N163
+            1, // N163
+            2, // N163
+            3, // N163
+            4, // N163
+            5, // N163
+            6, // N163
+            7, // N163
+            0, // S5B
+            1, // S5B
+            2  // S5B
+        };
+
+        public static int GetExpansionTypeForChannelType(int type)
+        {
+            return ExpansionTypes[type];
+        }
+
+        public static int GetExpansionChannelIndexForChannelType(int type)
+        {
+            return ExpansionChannelIndex[type];
+        }
 
         public static int GetValueForName(string str)
         {

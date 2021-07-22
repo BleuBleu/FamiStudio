@@ -25,7 +25,7 @@ Simple_Apu::Simple_Apu()
 	seeking = false;
 	time = 0;
 	frame_length = 29780;
-	expansion = expansion_none;
+	expansions = expansion_mask_none;
 	apu.dmc_reader( null_dmc_reader, NULL );
 }
 
@@ -54,24 +54,22 @@ blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 	return buf.sample_rate( rate );
 }
 
-void Simple_Apu::enable_channel(int idx, bool enable)
+void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 {
-	if (idx < 5)
+	if (expansion == 0)
 	{
 		apu.osc_output(idx, enable ? &buf : NULL);
 	}
 	else
 	{
-		idx -= 5;
-
 		switch (expansion)
 		{
-			case expansion_vrc6: vrc6.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_vrc7: vrc7.enable_channel(idx, enable); break;
-			case expansion_fds: fds.output(enable ? &buf : NULL); break;
-			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+		case expansion_vrc6: vrc6.osc_output(idx, enable ? &buf : NULL); break;
+		case expansion_vrc7: vrc7.enable_channel(idx, enable); break;
+		case expansion_fds: fds.output(enable ? &buf : NULL); break;
+		case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
+		case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
+		case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
 		}
 	}
 }
@@ -116,16 +114,12 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 		}
 		else
 		{
-			switch (expansion)
-			{
-				case expansion_vrc6: vrc6.write_shadow_register(addr, data); break;
-				case expansion_vrc7: vrc7.write_shadow_register(addr, data); break;
-				case expansion_fds: fds.write_shadow_register(addr, data); break;
-				case expansion_mmc5: mmc5.write_shadow_register(addr, data); break;
-				case expansion_namco: namco.write_shadow_register(addr, data); break;
-				case expansion_sunsoft: sunsoft.write_shadow_register(addr, data); break;
-
-			}
+			if (expansions & expansion_mask_vrc6) vrc6.write_shadow_register(addr, data);
+			if (expansions & expansion_mask_vrc7) vrc7.write_shadow_register(addr, data);
+			if (expansions & expansion_mask_fds) fds.write_shadow_register(addr, data);
+			if (expansions & expansion_mask_mmc5) mmc5.write_shadow_register(addr, data);
+			if (expansions & expansion_mask_namco) namco.write_shadow_register(addr, data);
+			if (expansions & expansion_mask_sunsoft) sunsoft.write_shadow_register(addr, data); 
 		}
 	}
 	else
@@ -136,15 +130,12 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 		}
 		else
 		{
-			switch (expansion)
-			{
-				case expansion_vrc6: vrc6.write_register(clock(), addr, data); break;
-				case expansion_vrc7: vrc7.write_register(clock(), addr, data); break;
-				case expansion_fds: fds.write_register(clock(), addr, data); break;
-				case expansion_mmc5: mmc5.write_register(clock(), addr, data); break;
-				case expansion_namco: namco.write_register(clock(), addr, data); break;
-				case expansion_sunsoft: sunsoft.write_register(clock(), addr, data); break;
-			}
+			if (expansions & expansion_mask_vrc6) vrc6.write_register(clock(), addr, data);
+			if (expansions & expansion_mask_vrc7) vrc7.write_register(clock(), addr, data);
+			if (expansions & expansion_mask_fds) fds.write_register(clock(), addr, data);
+			if (expansions & expansion_mask_mmc5) mmc5.write_register(clock(), addr, data);
+			if (expansions & expansion_mask_namco) namco.write_register(clock(), addr, data);
+			if (expansions & expansion_mask_sunsoft) sunsoft.write_register(clock(), addr, data);
 		}
 	}
 }
@@ -154,30 +145,24 @@ void Simple_Apu::start_seeking()
 	seeking = true;
 	apu.start_seeking();
 
-	switch (expansion)
-	{
-		case expansion_vrc6: vrc6.start_seeking(); break;
-		case expansion_vrc7: vrc7.start_seeking(); break;
-		case expansion_fds: fds.start_seeking(); break;
-		case expansion_mmc5: mmc5.start_seeking(); break;
-		case expansion_namco: namco.start_seeking(); break;
-		case expansion_sunsoft: sunsoft.start_seeking(); break;
-	}
+	if (expansions & expansion_mask_vrc6) vrc6.start_seeking();
+	if (expansions & expansion_mask_vrc7) vrc7.start_seeking();
+	if (expansions & expansion_mask_fds) fds.start_seeking();
+	if (expansions & expansion_mask_mmc5) mmc5.start_seeking();
+	if (expansions & expansion_mask_namco) namco.start_seeking();
+	if (expansions & expansion_mask_sunsoft) sunsoft.start_seeking();
 }
 
 void Simple_Apu::stop_seeking()
 {
 	apu.stop_seeking(time);
 
-	switch (expansion)
-	{
-		case expansion_vrc6: vrc6.stop_seeking(time); break;
-		case expansion_vrc7: vrc7.stop_seeking(time); break;
-		case expansion_fds: fds.stop_seeking(time); break;
-		case expansion_mmc5: mmc5.stop_seeking(time); break;
-		case expansion_namco: namco.stop_seeking(time); break;
-		case expansion_sunsoft: sunsoft.stop_seeking(time); break;
-	}
+	if (expansions & expansion_mask_vrc6) vrc6.stop_seeking(time);
+	if (expansions & expansion_mask_vrc7) vrc7.stop_seeking(time);
+	if (expansions & expansion_mask_fds) fds.stop_seeking(time);
+	if (expansions & expansion_mask_mmc5) mmc5.stop_seeking(time);
+	if (expansions & expansion_mask_namco) namco.stop_seeking(time);
+	if (expansions & expansion_mask_sunsoft) sunsoft.stop_seeking(time);
 
 	seeking = false;
 }
@@ -203,15 +188,12 @@ void Simple_Apu::end_frame()
 
 	apu.end_frame( frame_length );
 
-	switch (expansion)
-	{
-		case expansion_vrc6: vrc6.end_frame(frame_length); break;
-		case expansion_vrc7: vrc7.end_frame(frame_length); break;
-		case expansion_fds: fds.end_frame(frame_length); break;
-		case expansion_mmc5: mmc5.end_frame(frame_length); break;
-		case expansion_namco: namco.end_frame(frame_length); break;
-		case expansion_sunsoft: sunsoft.end_frame(frame_length); break;
-	}
+	if (expansions & expansion_mask_vrc6) vrc6.end_frame(frame_length);
+	if (expansions & expansion_mask_vrc7) vrc7.end_frame(frame_length);
+	if (expansions & expansion_mask_fds) fds.end_frame(frame_length); 
+	if (expansions & expansion_mask_mmc5) mmc5.end_frame(frame_length); 
+	if (expansions & expansion_mask_namco) namco.end_frame(frame_length); 
+	if (expansions & expansion_mask_sunsoft) sunsoft.end_frame(frame_length); 
 
 	buf.end_frame( frame_length );
 }
@@ -228,9 +210,9 @@ void Simple_Apu::reset()
 	sunsoft.reset();
 }
 
-void Simple_Apu::set_audio_expansion(long exp)
+void Simple_Apu::set_audio_expansions(long exp)
 {
-	expansion = exp;
+	expansions = exp;
 }
 
 long Simple_Apu::samples_avail() const

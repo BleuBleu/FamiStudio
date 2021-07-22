@@ -21,7 +21,7 @@ namespace FamiStudio
         public int ChannelType => channelType;
         public Color Color { get => color; set => color = value; }
         public Song Song => song;
-        public Channel Channel => song.Channels[Channel.ChannelTypeToIndex(channelType)];
+        public Channel Channel => song.Channels[Channel.ChannelTypeToIndex(channelType, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels)];
         public SortedList<int, Note> Notes => notes;
 
         public Pattern()

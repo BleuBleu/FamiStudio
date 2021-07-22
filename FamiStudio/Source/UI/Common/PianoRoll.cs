@@ -47,7 +47,7 @@ namespace FamiStudio
         const int DefaultReleaseNoteSizeY = 8;
         const int DefaultEnvelopeSizeY = 9;
         const int DefaultEnvelopeMax = 127;
-        const int DefaultWhiteKeySizeX = 94;
+        const int DefaultWhiteKeySizeX = 132;
         const int DefaultWhiteKeySizeY = 20;
         const int DefaultBlackKeySizeX = 56;
         const int DefaultBlackKeySizeY = 14;
@@ -2215,8 +2215,9 @@ namespace FamiStudio
                         var channelType = song.Channels[editChannel].Type;
                         var channelName = song.Channels[editChannel].Name;
 
-                        if (channelType >= ChannelType.ExpansionAudioStart)
-                            channelName += $" ({song.Project.ExpansionAudioName})";
+                        // EXPTODO
+                        //if (channelType >= ChannelType.ExpansionAudioStart)
+                        //    channelName += $" ({song.Project.ExpansionAudioName})";
 
                         g.DrawText($"Editing {channelName} Channel", ThemeBase.FontBig, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
                     }

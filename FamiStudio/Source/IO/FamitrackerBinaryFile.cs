@@ -65,7 +65,7 @@ namespace FamiStudio
                     numN163Channels = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             }
 
-            project.SetExpansionAudio(expansion, numN163Channels);
+            project.SetExpansionAudioMask(expansion, numN163Channels); // EXPTODO : Mask
             project.PalMode = machine == 1;
 
             if (numChannels != project.GetActiveChannelCount())
@@ -393,16 +393,22 @@ namespace FamiStudio
 
         private bool ReadSequencesVrc6(int idx)
         {
+            // EXPTODO
+            /*
             if (project.ExpansionAudio != ExpansionType.Vrc6)
                 return true;
+                */
 
             return ReadSequences2A03Vrc6(idx, envelopesExp);
         }
 
         private bool ReadSequencesN163(int idx)
         {
+            // EXPTODO
+            /*
             if (project.ExpansionAudio != ExpansionType.N163)
-                return true;
+               return true;
+               */
 
             var count = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             var indices = new int[count];
@@ -532,8 +538,9 @@ namespace FamiStudio
                         if (volume != 16)
                             pattern.GetOrCreateNoteAt(n).Volume = (byte)(volume & 0x0f);
 
-                        if (blockVersion < 5 && project.ExpansionAudio == ExpansionType.Fds && channel.Type == ChannelType.FdsWave && octave < 6 && octave != 0)
-                            octave += 2;
+                        // EXPTODO
+                        //if (blockVersion < 5 && project.ExpansionAudio == ExpansionType.Fds && channel.Type == ChannelType.FdsWave && octave < 6 && octave != 0)
+                        //    octave += 2;
 
                         if (note == 13)
                         {

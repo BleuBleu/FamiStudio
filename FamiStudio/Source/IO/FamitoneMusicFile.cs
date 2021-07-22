@@ -100,6 +100,8 @@ namespace FamiStudio
             lines.Add($"\t{db} {project.Songs.Count}");
             lines.Add($"\t{dw} {ll}instruments");
 
+            /*
+            EXPTODO
             if (project.ExpansionAudio == ExpansionType.Fds ||
                 project.ExpansionAudio == ExpansionType.N163 ||
                 project.ExpansionAudio == ExpansionType.Vrc7)
@@ -107,6 +109,7 @@ namespace FamiStudio
                 lines.Add($"\t{dw} {ll}instruments_{project.ExpansionAudioShortName.ToLower()}");
                 size += 2;
             }
+            */
 
             if (!project.GetMinMaxMappedSampleIndex(out var sampleTableOffset, out _))
                 sampleTableOffset = 1;
@@ -395,6 +398,8 @@ namespace FamiStudio
 
             lines.Add("");
 
+            /*
+             * EXPTODO
             // FDS, N163 and VRC7 instruments are special.
             if (project.ExpansionAudio == ExpansionType.Fds ||
                 project.ExpansionAudio == ExpansionType.N163 ||
@@ -444,6 +449,7 @@ namespace FamiStudio
 
                 lines.Add("");
             }
+            */
 
             // Write samples.
             lines.Add($"{ll}samples:");
@@ -645,7 +651,7 @@ namespace FamiStudio
         // we will need to reload our instrument next time we play a note.
         private bool OtherVrc7ChannelUsesCustomPatch(Song song, Channel channel, Instrument instrument, int patternIdx, int noteIdx)
         {
-            if (project.ExpansionAudio == ExpansionType.Vrc7 && 
+            if (/*project.ExpansionAudio == ExpansionType.Vrc7 && */ // EXPTODO
                 channel.IsExpansionChannel &&
                 instrument != null &&
                 instrument.IsExpansionInstrument &&
@@ -653,7 +659,7 @@ namespace FamiStudio
             {
                 foreach (var c in song.Channels)
                 {
-                    if (c != channel && c.IsVrc7FmChannel)
+                    if (c != channel && c.IsVrc7Channel)
                     {
                         var pattern = c.PatternInstances[patternIdx];
 
@@ -855,7 +861,7 @@ namespace FamiStudio
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizeNtsc, out var _);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal,  out var _);
 
-                                if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
+                                if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
                                     stepSizeNtsc = stepSizePal;
@@ -1004,15 +1010,15 @@ namespace FamiStudio
 
                             if (note.IsSlideNote)
                             {
-                                var noteTableNtsc = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumChannels);
-                                var noteTablePal  = NesApu.GetNoteTableForChannelType(channel.Type, true,  song.Project.ExpansionNumChannels);
+                                var noteTableNtsc = NesApu.GetNoteTableForChannelType(channel.Type, false, song.Project.ExpansionNumN163Channels);
+                                var noteTablePal  = NesApu.GetNoteTableForChannelType(channel.Type, true,  song.Project.ExpansionNumN163Channels);
 
                                 var found = true;
                                 var location = new NoteLocation(p, time);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal,  true,  true, out _, out int stepSizePal,  out _);
 
-                                if (song.Project.UsesExpansionAudio || machine == MachineType.NTSC)
+                                if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
                                     stepSizeNtsc = stepSizePal;
@@ -1414,7 +1420,7 @@ namespace FamiStudio
                     }
                 }
 
-                project.SetExpansionAudio(ExpansionType.None);
+                project.SetExpansionAudioMask(ExpansionType.NoneMask);
             }
         }
 

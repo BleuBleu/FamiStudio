@@ -63,7 +63,7 @@ namespace FamiStudio
                 if (songIds.Length == 0)
                     return false;
 
-                Debug.Assert(!originalProject.UsesExpansionAudio || machine == MachineType.NTSC);
+                Debug.Assert(!originalProject.UsesAnyExpansionAudio || machine == MachineType.NTSC);
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
@@ -84,7 +84,7 @@ namespace FamiStudio
                 header.playSpeedNTSC = 16639;
                 header.playSpeedPAL = 19997;
                 header.palNtscFlags = (byte)machine;
-                header.extensionFlags = (byte)(project.ExpansionAudio == ExpansionType.None ? 0 : 1 << (project.ExpansionAudio - 1));
+                header.extensionFlags = 0; // EXPTODO (byte)(project.ExpansionAudio == ExpansionType.None ? 0 : 1 << (project.ExpansionAudio - 1));
                 header.banks[0] = 0;
                 header.banks[1] = 1;
                 header.banks[2] = 2;
@@ -117,6 +117,8 @@ namespace FamiStudio
                         kernelBinary += "_famitracker";
                     }
 
+                    /*
+                     * EXP TODO
                     if (project.UsesExpansionAudio)
                     {
                         kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
@@ -124,6 +126,7 @@ namespace FamiStudio
                         if (project.ExpansionAudio == ExpansionType.N163)
                             kernelBinary += $"_{project.ExpansionNumChannels}ch";
                     }
+                    */
                 }
                 else
                 {
@@ -371,7 +374,8 @@ namespace FamiStudio
 
         private Instrument GetDutyInstrument(Channel channel, int duty)
         {
-            var expansion = channel.IsExpansionChannel && project.NeedsExpansionInstruments ? project.ExpansionAudio : ExpansionType.None;
+            // EXPTODO
+            var expansion = ExpansionType.None; // channel.IsExpansionChannel && project.NeedsExpansionInstruments ? project.ExpansionAudio : ExpansionType.None;
             var expPrefix = expansion == ExpansionType.None ? "" : ExpansionType.ShortNames[expansion] + " ";
             var name = $"{expPrefix}Duty {duty}";
 
@@ -511,7 +515,7 @@ namespace FamiStudio
         private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
-            var channelIdx = Channel.ChannelTypeToIndex(channel.Type);
+            var channelIdx = channel.Index;
             var hasNote = false;
 
             if (channel.Type == ChannelType.Dpcm)
@@ -587,11 +591,11 @@ namespace FamiStudio
                     volume = 15 - volume;
                 }
 
-                var hasOctave  = channel.IsVrc7FmChannel;
+                var hasOctave  = channel.IsVrc7Channel;
                 var hasVolume  = channel.Type != ChannelType.Triangle;
                 var hasPitch   = channel.Type != ChannelType.Noise;
                 var hasDuty    = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise || channel.Type == ChannelType.Vrc6Square1 || channel.Type == ChannelType.Vrc6Square2 || channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
-                var hasTrigger = channel.IsVrc7FmChannel;
+                var hasTrigger = channel.IsVrc7Channel;
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
@@ -715,7 +719,7 @@ namespace FamiStudio
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
-                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumChannels);
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
 
@@ -759,7 +763,7 @@ namespace FamiStudio
 
                     if (hasPitch && !stop)
                     {
-                        Channel.GetShiftsForType(channel.Type, project.ExpansionNumChannels, out int pitchShift, out _);
+                        Channel.GetShiftsForType(channel.Type, project.ExpansionNumN163Channels, out int pitchShift, out _);
 
                         // We scale all pitches changes (slides, fine pitch, pitch envelopes) for
                         // some channels with HUGE pitch values (N163, VRC7).
@@ -854,14 +858,15 @@ namespace FamiStudio
 
             switch (NsfGetExpansion(nsf))
             {
-                case EXTSOUND_VRC6: project.SetExpansionAudio(ExpansionType.Vrc6); break;
-                case EXTSOUND_VRC7: project.SetExpansionAudio(ExpansionType.Vrc7); break;
-                case EXTSOUND_FDS:  project.SetExpansionAudio(ExpansionType.Fds);  break;
-                case EXTSOUND_MMC5: project.SetExpansionAudio(ExpansionType.Mmc5); break;
-                case EXTSOUND_N163: project.SetExpansionAudio(ExpansionType.N163, GetNumNamcoChannels(filename, songIndex, numFrames)); break;
-                case EXTSOUND_S5B:  project.SetExpansionAudio(ExpansionType.S5B);  break;
+                case EXTSOUND_VRC6: project.SetExpansionAudioMask(ExpansionType.Vrc6Mask); break;
+                case EXTSOUND_VRC7: project.SetExpansionAudioMask(ExpansionType.Vrc7Mask); break;
+                case EXTSOUND_FDS:  project.SetExpansionAudioMask(ExpansionType.FdsMask);  break;
+                case EXTSOUND_MMC5: project.SetExpansionAudioMask(ExpansionType.Mmc5Mask); break;
+                case EXTSOUND_N163: project.SetExpansionAudioMask(ExpansionType.N163Mask, GetNumNamcoChannels(filename, songIndex, numFrames)); break;
+                case EXTSOUND_S5B:  project.SetExpansionAudioMask(ExpansionType.S5BMask);  break;
                 case 0: break;
                 default:
+                    // EXPTODO : Support multi expansion here.
                     Log.LogMessage(LogSeverity.Error, "NSF uses multiple expansion chips at the same time. This is not supported.");
                     NsfClose(nsf); // Unsupported expansion combination.
                     return null;

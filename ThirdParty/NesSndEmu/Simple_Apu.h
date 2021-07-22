@@ -19,14 +19,23 @@
 class Simple_Apu {
 public:
 
-	enum { expansion_none       = 0 };
-	enum { expansion_vrc6       = 1 };
-	enum { expansion_vrc7       = 2 };
-	enum { expansion_fds        = 3 };
-	enum { expansion_mmc5       = 4 };
-	enum { expansion_namco      = 5 };
-	enum { expansion_sunsoft    = 6 };
+	enum { expansion_none = 0 };
+	enum { expansion_vrc6 = 1 };
+	enum { expansion_vrc7 = 2 };
+	enum { expansion_fds = 3 };
+	enum { expansion_mmc5 = 4 };
+	enum { expansion_namco = 5 };
+	enum { expansion_sunsoft = 6 };
 
+	enum { expansion_mask_none       = 0 };
+	enum { expansion_mask_vrc6       = 1 << 0 };
+	enum { expansion_mask_vrc7       = 1 << 1 };
+	enum { expansion_mask_fds        = 1 << 2 };
+	enum { expansion_mask_mmc5       = 1 << 3 };
+	enum { expansion_mask_namco      = 1 << 4 };
+	enum { expansion_mask_sunsoft    = 1 << 5 };
+
+	/*
 	enum { channel_square1      = 0 };
 	enum { channel_square2      = 1 };
 	enum { channel_triangle     = 2 };
@@ -56,6 +65,7 @@ public:
 	enum { channel_s5b_square1  = 26 };
 	enum { channel_s5b_square2  = 27 };
 	enum { channel_s5b_square3  = 28 };
+	*/
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -83,13 +93,13 @@ public:
 	// Resets
 	void reset();
 
-	void set_audio_expansion(long exp);
-	int get_audio_expansion() const { return expansion; }
+	void set_audio_expansions(long exp);
+	int get_audio_expansions() const { return expansions; }
 
 	// Number of samples in buffer
 	long samples_avail() const;
 
-	void enable_channel(int, bool);
+	void enable_channel(int, int, bool);
 	
 	void treble_eq(int exp, double treble, int sample_rate);
 	void set_expansion_volume(int expansion, double evolume);
@@ -112,7 +122,7 @@ public:
 private:
 	bool pal_mode;
 	bool seeking;
-	int  expansion;
+	int  expansions;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
 	Nes_Vrc7 vrc7;

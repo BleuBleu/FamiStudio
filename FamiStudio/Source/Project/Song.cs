@@ -94,26 +94,42 @@ namespace FamiStudio
                 patternCustomSettings[i] = new PatternCustomSetting();
         }
 
-        public void CreateChannels(bool preserve = false, int numChannelsToPreserve = ChannelType.ExpansionAudioStart)
+        public void CreateChannels(bool preserve = false, int oldExpansionMask = 0, int oldN163Channels = 0)
         {
-            int channelCount = project.GetActiveChannelCount();
+            var channelCount = project.GetActiveChannelCount();
+            var oldChannels = channels;
 
+            channels = new Channel[channelCount];
+
+            // Optionally map the old channel to the new channels.
             if (preserve)
             {
-                Array.Resize(ref channels, channelCount);
-                for (int i = numChannelsToPreserve; i < channels.Length; i++)
-                    channels[i] = null;
-            }
-            else
-            {
-                channels = new Channel[channelCount];
+                for (int i = 0; i < ChannelType.Count; i++)
+                {
+                    var oldActive = Project.IsChannelActive(i, oldExpansionMask, oldN163Channels);
+                    var newActive = project.IsChannelActive(i);
+
+                    if (oldActive && newActive)
+                    {
+                        var oldIdx = Channel.ChannelTypeToIndex(i, oldExpansionMask, oldN163Channels);
+                        var newIdx = Channel.ChannelTypeToIndex(i, project.ExpansionAudioMask, project.ExpansionNumN163Channels);
+
+                        channels[newIdx] = oldChannels[oldIdx];
+                    }
+                }
             }
 
+            // Create the new ones.
             for (int i = 0; i < ChannelType.Count; i++)
             {
-                var idx = Channel.ChannelTypeToIndex(i);
-                if (project.IsChannelActive(i) && channels[idx] == null)
-                    channels[idx] = new Channel(this, i, songLength);
+                if (project.IsChannelActive(i))
+                {
+                    var idx = Channel.ChannelTypeToIndex(i, project.ExpansionAudioMask, project.ExpansionNumN163Channels);
+                    if (channels[idx] == null)
+                    {
+                        channels[idx] = new Channel(this, i, songLength);
+                    }
+                }
             }
         }
 
@@ -320,7 +336,7 @@ namespace FamiStudio
 
         public Channel GetChannelByType(int type)
         {
-            return channels[Channel.ChannelTypeToIndex(type)];
+            return channels[Channel.ChannelTypeToIndex(type, project.ExpansionAudioMask, project.ExpansionNumN163Channels)];
         }
 
         public void Trim()

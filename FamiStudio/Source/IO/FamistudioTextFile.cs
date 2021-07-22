@@ -41,7 +41,7 @@ namespace FamiStudio
             if (project.Name      != "")    projectLine += GenerateAttribute("Name", project.Name);
             if (project.Author    != "")    projectLine += GenerateAttribute("Author", project.Author);
             if (project.Copyright != "")    projectLine += GenerateAttribute("Copyright", project.Copyright);
-            if (project.UsesExpansionAudio) projectLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[project.ExpansionAudio]);
+            //if (project.UsesExpansionAudio) projectLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[project.ExpansionAudio]); EXPTODO
             if (project.PalMode)            projectLine += GenerateAttribute("PAL", true);
 
             lines.Add(projectLine);
@@ -82,7 +82,7 @@ namespace FamiStudio
                 var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
                 if (instrument.IsExpansionInstrument)
                 {
-                    instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[project.ExpansionAudio]);
+                    //instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[project.ExpansionAudio]); EXPTODO
 
                     if (instrument.ExpansionType == ExpansionType.Fds)
                     {
@@ -333,7 +333,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Name", out var name)) project.Name = name;
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
-                            if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(ExpansionType.GetValueForShortName(expansion));
+                            if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudioMask(ExpansionType.GetValueForShortName(expansion)); // EXPTODO mask
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
                             if (!version.StartsWith("3.1"))
@@ -363,7 +363,8 @@ namespace FamiStudio
                         }
                         case "Instrument":
                         {
-                            instrument = project.CreateInstrument(parameters.TryGetValue("Expansion", out _) ? project.ExpansionAudio : ExpansionType.None, parameters["Name"]);
+                            // EXPTODO
+                            //instrument = project.CreateInstrument(parameters.TryGetValue("Expansion", out _) ? project.ExpansionAudio : ExpansionType.None, parameters["Name"]);
 
                             if (instrument.ExpansionType == ExpansionType.Fds)
                             {

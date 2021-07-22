@@ -140,7 +140,7 @@ namespace FamiStudio
             {
                 // Super ghetto way of detecting if the runtime is installed is simply by calling
                 // any function that will cause a C++ DLL to be loaded.
-                NesApu.GetAudioExpansion(0);
+                NesApu.GetAudioExpansions(0);
                 return true;
             }
             catch

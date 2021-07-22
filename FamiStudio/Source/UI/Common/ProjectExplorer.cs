@@ -1907,15 +1907,26 @@ namespace FamiStudio
 
                     if (App.Project.NeedsExpansionInstruments)
                     {
-                        var expNames = new[] { ExpansionType.Names[ExpansionType.None], App.Project.ExpansionAudioName };
+                        var activeExpansions = App.Project.GetActiveExpansions();
+                        var expNames = new string[activeExpansions.Length + 1];
+
+                        expNames[0] = ExpansionType.Names[ExpansionType.None];
+                        for (int i = 0; i < activeExpansions.Length; i++)
+                            expNames[i + 1] = ExpansionType.Names[activeExpansions[i]];
+
                         var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 260, true);
-                        dlg.Properties.AddDropDownList("Expansion:", expNames, ExpansionType.Names[ExpansionType.None]); // 0
+                        dlg.Properties.AddDropDownList("Expansion:", expNames, expNames[0]); // 0
                         dlg.Properties.Build();
 
                         if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
-                            instrumentType = dlg.Properties.GetPropertyValue<string>(0) == ExpansionType.Names[ExpansionType.None] ? ExpansionType.None : App.Project.ExpansionAudio;
+                        {
+                            var selectedIdx = dlg.Properties.GetSelectedIndex(0);
+                            instrumentType = selectedIdx == 0 ? ExpansionType.None : activeExpansions[selectedIdx - 1];
+                        }
                         else
+                        {
                             return true;
+                        }
                     }
 
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -2344,30 +2355,51 @@ namespace FamiStudio
         {
             var project = App.Project;
 
+            var numExpansions = ExpansionType.End - ExpansionType.Start + 1;
+            var expNames = new string[numExpansions];
+            var expBools = new bool[numExpansions];
+            for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+            {
+                expNames[i - ExpansionType.Start] = ExpansionType.Names[i];
+                expBools[i - ExpansionType.Start] = project.UsesExpansionAudio(i);
+            }
+
             var dlg = new PropertyDialog(PointToScreen(pt), 320, true);
             dlg.Properties.AddString("Title :", project.Name, 31); // 0
             dlg.Properties.AddString("Author :", project.Author, 31); // 1
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
-            dlg.Properties.AddDropDownList("Expansion Audio :", ExpansionType.Names, project.ExpansionAudioName, CommonTooltips.ExpansionAudio); // 3
-            dlg.Properties.AddIntegerRange("N163 Channels :", project.ExpansionNumChannels, 1, 8, CommonTooltips.ExpansionNumChannels); // 4 (Namco)
-            dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 5
-            dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 6
-            dlg.Properties.SetPropertyEnabled(4, project.ExpansionAudio == ExpansionType.N163);
-            dlg.Properties.SetPropertyEnabled(6, project.UsesFamiStudioTempo && !project.UsesExpansionAudio);
+            dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 3
+            dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 4
+            dlg.Properties.AddIntegerRange("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, CommonTooltips.ExpansionNumChannels); // 5 (Namco)
+            dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, CommonTooltips.ExpansionAudio); // 6
+            dlg.Properties.SetPropertyEnabled(3, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
+            dlg.Properties.SetPropertyEnabled(5, project.UsesExpansionAudio(ExpansionType.N163));
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
             {
-                var tempoMode    = TempoType.GetValueForName    (dlg.Properties.GetPropertyValue<string>(5));
-                var expansion    = ExpansionType.GetValueForName(dlg.Properties.GetPropertyValue<string>(3));
-                var palAuthoring = MachineType.GetValueForName  (dlg.Properties.GetPropertyValue<string>(6)) == 1;
-                var numChannels  = dlg.Properties.GetPropertyValue<int>(4);
+                var selectedExpansions = dlg.Properties.GetPropertyValue<bool[]>(6);
+                var expansionMask = 0;
+                var expansionRemoved = false;
 
-                var changedTempoMode        = tempoMode    != project.TempoMode;
-                var changedExpansion        = expansion    != project.ExpansionAudio;
-                var changedNumChannels      = numChannels  != project.ExpansionNumChannels;
-                var changedAuthoringMachine = palAuthoring != project.PalMode;
+                for (int i = 0; i < selectedExpansions.Length; i++)
+                {
+                    var selected = selectedExpansions[i];
+                    expansionMask |= (selected ? 1 : 0) << i;
+
+                    if (project.UsesExpansionAudio(i + ExpansionType.Start) && !selected)
+                        expansionRemoved = true;
+                }
+
+                var tempoMode    = TempoType.GetValueForName    (dlg.Properties.GetPropertyValue<string>(3));
+                var palAuthoring = MachineType.GetValueForName  (dlg.Properties.GetPropertyValue<string>(4)) == 1;
+                var numChannels  = dlg.Properties.GetPropertyValue<int>(5);
+
+                var changedTempoMode        = tempoMode     != project.TempoMode;
+                var changedExpansion        = expansionMask != project.ExpansionAudioMask;
+                var changedNumChannels      = numChannels   != project.ExpansionNumN163Channels;
+                var changedAuthoringMachine = palAuthoring  != project.PalMode;
 
                 var transFlags = TransactionFlags.None;
 
@@ -2384,12 +2416,10 @@ namespace FamiStudio
 
                 if (changedExpansion || changedNumChannels)
                 {
-                    if (project.ExpansionAudio == ExpansionType.None ||
-                        (!changedExpansion && changedNumChannels) ||
-                        PlatformUtils.MessageBox($"Switching expansion audio will delete all instruments and channels using the old expansion?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (!expansionRemoved || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         selectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
-                        project.SetExpansionAudio(expansion, numChannels);
+                        project.SetExpansionAudioMask(expansionMask, numChannels);
                         ProjectModified?.Invoke();
                         Reset();
                     }
@@ -2429,6 +2459,8 @@ namespace FamiStudio
         {
             var noExpansion = props.GetPropertyValue<string>(3) == ExpansionType.Names[ExpansionType.None];
 
+            // EXPTODO : These indices will change.
+            /*
             if (propIdx == 3) // Expansion
             {
                 props.SetPropertyEnabled(4, (string)value == ExpansionType.Names[ExpansionType.N163]);
@@ -2443,6 +2475,7 @@ namespace FamiStudio
             {
                 props.SetPropertyEnabled(6, (string)value == TempoType.Names[TempoType.FamiStudio]);
             }
+            */
         }
 
         private void EditSongProperties(Point pt, Song song)

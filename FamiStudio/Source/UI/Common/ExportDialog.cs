@@ -123,8 +123,9 @@ namespace FamiStudio
             {
                 data[i, 0] = !anyChannelActive || channelActives[i];
                 data[i, 1] = ChannelType.Names[channelTypes[i]] ;
-                if (i >= ChannelType.ExpansionAudioStart)
-                    data[i, 1] += $" ({project.ExpansionAudioShortName})";
+                // EXPTODO
+                //if (i >= ChannelType.ExpansionAudioStart)
+                //    data[i, 1] += $" ({project.ExpansionAudioShortName})";
                 data[i, 2] = 50;
             }
 
@@ -208,16 +209,16 @@ namespace FamiStudio
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
 #endif
-                    page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
+                    //page.SetPropertyEnabled(3, !project.UsesExpansionAudio); EXPTODO
                     break;
                 case ExportFormat.Rom:
-                    page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == ExpansionType.Fds ? "FDS Disk" : "NES ROM"); // 0
+                    //page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == ExpansionType.Fds ? "FDS Disk" : "NES ROM"); // 0 EXPTODO
                     page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
                     page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
                     page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
                     page.AddCheckBoxList(null, songNames, null); // 2
-                    page.SetPropertyEnabled(0,  project.ExpansionAudio == ExpansionType.Fds);
-                    page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
+                    //page.SetPropertyEnabled(0,  project.ExpansionAudio == ExpansionType.Fds); EXPTODO
+                    //page.SetPropertyEnabled(3, !project.UsesExpansionAudio); EXPTODO
                     break;
                 case ExportFormat.Midi:
                     page.AddDropDownList("Song :", songNames, songNames[0]); // 0
@@ -676,8 +677,8 @@ namespace FamiStudio
         private uint ComputeProjectCrc(Project project)
         {
             // Only hashing fields that would have an impact on the generated UI.
-            uint crc = CRC32.Compute(project.ExpansionAudio);
-            crc = CRC32.Compute(project.ExpansionNumChannels, crc);
+            uint crc = 0; // EXPTODO CRC32.Compute(project.ExpansionAudio);
+            crc = CRC32.Compute(project.ExpansionNumN163Channels, crc);
 
             foreach (var song in project.Songs)
             {

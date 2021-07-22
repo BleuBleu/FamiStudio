@@ -384,7 +384,7 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private PropertyPageListView CreateCheckedListBox(string[] values, bool[] selected)
+        private PropertyPageListView CreateCheckedListBox(string[] values, bool[] selected, string tooltip = null)
         {
             var columns = new[]
             {
@@ -406,10 +406,7 @@ namespace FamiStudio
             list.Font = font;
             list.Height = (int)(200 * RenderTheme.DialogScaling);
             list.HeaderStyle = ColumnHeaderStyle.None;
-            //list.MouseDoubleClick += ListView_MouseDoubleClick;
-            //list.MouseDown += ListView_MouseDown;
-            //list.ButtonPressed += ListView_ButtonPressed;
-            //list.ValueChanged += ListView_ValueChanged;
+            toolTip.SetToolTip(list, tooltip);
 
             return list;
         }
@@ -675,7 +672,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddCheckBoxList(string label, string[] values, bool[] selected)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null)
         {
             properties.Add(
                 new Property()
