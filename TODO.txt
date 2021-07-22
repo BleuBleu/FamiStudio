@@ -1,3 +1,7 @@
+3.1.0
+=====
+- Recompile NesSndEmu on MacOS/Linux to get vrc7 volume fix.
+
 Videos:
 =======
 - Sampling soundfont instruments
