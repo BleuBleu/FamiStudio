@@ -278,6 +278,22 @@
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_s5b_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_vrc6_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_vrc7_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_8ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_8ch_ntsc.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

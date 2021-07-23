@@ -100,19 +100,13 @@ namespace FamiStudio
             lines.Add($"\t{db} {project.Songs.Count}");
             lines.Add($"\t{dw} {ll}instruments");
 
-            /*
-            EXPTODO
-            if (project.ExpansionAudio == ExpansionType.Fds ||
-                project.ExpansionAudio == ExpansionType.N163 ||
-                project.ExpansionAudio == ExpansionType.Vrc7)
+            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion)
             {
-                lines.Add($"\t{dw} {ll}instruments_{project.ExpansionAudioShortName.ToLower()}");
+                lines.Add($"\t{dw} {ll}instruments_exp");
                 size += 2;
             }
-            */
 
-            if (!project.GetMinMaxMappedSampleIndex(out var sampleTableOffset, out _))
-                sampleTableOffset = 1;
+            if (!project.GetMinMaxMappedSampleIndex(out var sampleTableOffset, out _))                sampleTableOffset = 1;
 
             lines.Add($"\t{dw} {ll}samples-{sampleTableOffset * (kernel == FamiToneKernel.FamiTone2 ? 3 : 4)}");
 
@@ -398,20 +392,20 @@ namespace FamiStudio
 
             lines.Add("");
 
-            /*
-             * EXPTODO
             // FDS, N163 and VRC7 instruments are special.
-            if (project.ExpansionAudio == ExpansionType.Fds ||
-                project.ExpansionAudio == ExpansionType.N163 ||
-                project.ExpansionAudio == ExpansionType.Vrc7)
+            if (project.UsesFdsExpansion  || 
+                project.UsesN163Expansion || 
+                project.UsesVrc7Expansion)
             {
-                lines.Add($"{ll}instruments_{project.ExpansionAudioShortName.ToLower()}:");
+                lines.Add($"{ll}instruments_exp:");
 
                 for (int i = 0, j = 0; i < project.Instruments.Count; i++)
                 {
                     var instrument = project.Instruments[i];
 
-                    if (instrument.ExpansionType != ExpansionType.None)
+                    if (instrument.IsFdsInstrument  || 
+                        instrument.IsVrc7Instrument || 
+                        instrument.IsN163Instrument)
                     {
                         var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                         var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -449,7 +443,6 @@ namespace FamiStudio
 
                 lines.Add("");
             }
-            */
 
             // Write samples.
             lines.Add($"{ll}samples:");
@@ -651,7 +644,7 @@ namespace FamiStudio
         // we will need to reload our instrument next time we play a note.
         private bool OtherVrc7ChannelUsesCustomPatch(Song song, Channel channel, Instrument instrument, int patternIdx, int noteIdx)
         {
-            if (/*project.ExpansionAudio == ExpansionType.Vrc7 && */ // EXPTODO
+            if (project.UsesVrc7Expansion && 
                 channel.IsExpansionChannel &&
                 instrument != null &&
                 instrument.IsExpansionInstrument &&
@@ -1456,6 +1449,14 @@ namespace FamiStudio
             {
                 foreach (var song in project.Songs)
                     song.PermanentlyApplyGrooves();
+            }
+
+            if (project.UsesMultipleExpansionAudios)
+            {
+                Debug.Assert(kernel == FamiToneKernel.FamiStudio);
+
+                // The sound engine for multiple expansion always has all expansion enabled.
+                project.SetExpansionAudioMask(ExpansionType.AllMask, 8);
             }
         }
 

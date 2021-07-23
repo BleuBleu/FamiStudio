@@ -44,6 +44,10 @@ namespace FamiStudio
         public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
 
+        public bool IsFdsInstrument  => expansion == global::FamiStudio.ExpansionType.Fds;
+        public bool IsVrc7Instrument => expansion == global::FamiStudio.ExpansionType.Vrc7;
+        public bool IsN163Instrument => expansion == global::FamiStudio.ExpansionType.N163;
+
         public Instrument()
         {
         }

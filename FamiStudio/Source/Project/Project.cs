@@ -48,20 +48,23 @@ namespace FamiStudio
         public List<Instrument>    Instruments    => instruments;
         public List<Song>          Songs          => songs;
         public List<Arpeggio>      Arpeggios      => arpeggios;
-        public int                 ExpansionAudioMask       => expansionMask;
-        public int                 ExpansionNumN163Channels => expansionNumN163Channels;
-        //public string              ExpansionAudioName => ExpansionType.Names[expansionAudio];
-        //public string              ExpansionAudioShortName => ExpansionType.ShortNames[expansionAudio];
-        public bool                UsesFamiStudioTempo   => tempoMode == TempoType.FamiStudio;
-        public bool                UsesFamiTrackerTempo  => tempoMode == TempoType.FamiTracker;
 
-        public bool                UsesAnyExpansionAudio => (expansionMask != ExpansionType.NoneMask);
-        public bool                UsesFdsExpansion      => (expansionMask  & ExpansionType.FdsMask)  != 0;
-        public bool                UsesN163Expansion     => (expansionMask  & ExpansionType.N163Mask) != 0;
-        public bool                UsesVrc6Expansion     => (expansionMask  & ExpansionType.Vrc6Mask) != 0;
-        public bool                UsesVrc7Expansion     => (expansionMask  & ExpansionType.Vrc7Mask) != 0;
-        public bool                UsesMmc5Expansion     => (expansionMask  & ExpansionType.Mmc5Mask) != 0;
-        public bool                UsesS5BExpansion      => (expansionMask  & ExpansionType.S5BMask)  != 0;
+        public bool UsesFamiStudioTempo  => tempoMode == TempoType.FamiStudio;
+        public bool UsesFamiTrackerTempo => tempoMode == TempoType.FamiTracker;
+
+        public int  ExpansionAudioMask       => expansionMask;
+        public int  ExpansionNumN163Channels => expansionNumN163Channels;
+                    
+        public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
+        public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
+        public bool UsesMultipleExpansionAudios => (Utils.NumberOfSetBits(expansionMask) > 1);
+        
+        public bool UsesFdsExpansion  => (expansionMask  & ExpansionType.FdsMask)  != 0;
+        public bool UsesN163Expansion => (expansionMask  & ExpansionType.N163Mask) != 0;
+        public bool UsesVrc6Expansion => (expansionMask  & ExpansionType.Vrc6Mask) != 0;
+        public bool UsesVrc7Expansion => (expansionMask  & ExpansionType.Vrc7Mask) != 0;
+        public bool UsesMmc5Expansion => (expansionMask  & ExpansionType.Mmc5Mask) != 0;
+        public bool UsesS5BExpansion  => (expansionMask  & ExpansionType.S5BMask)  != 0;
 
         public string Filename    { get => filename;  set => filename  = value; }
         public string Name        { get => name;      set => name      = value; }
@@ -92,6 +95,22 @@ namespace FamiStudio
             {
                 Debug.Assert(value == false || !UsesAnyExpansionAudio);
                 pal = value && !UsesAnyExpansionAudio;
+            }
+        }
+
+        public int SingleExpansion
+        {
+            get
+            {
+                Debug.Assert(UsesSingleExpansionAudio);
+
+                for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+                {
+                    if (UsesExpansionAudio(i))
+                        return i;
+                }
+
+                return -1;
             }
         }
 
@@ -1702,6 +1721,8 @@ namespace FamiStudio
         public const int Mmc5Mask = (1 << 3);
         public const int N163Mask = (1 << 4);
         public const int S5BMask  = (1 << 5);
+
+        public const int AllMask  = Vrc6Mask | Vrc7Mask | FdsMask | Mmc5Mask | N163Mask | S5BMask;
 
         public static readonly string[] Names =
         {

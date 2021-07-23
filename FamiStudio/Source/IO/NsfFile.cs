@@ -84,7 +84,7 @@ namespace FamiStudio
                 header.playSpeedNTSC = 16639;
                 header.playSpeedPAL = 19997;
                 header.palNtscFlags = (byte)machine;
-                header.extensionFlags = 0; // EXPTODO (byte)(project.ExpansionAudio == ExpansionType.None ? 0 : 1 << (project.ExpansionAudio - 1));
+                header.extensionFlags = (byte)(project.UsesAnyExpansionAudio ? project.ExpansionAudioMask : 0);
                 header.banks[0] = 0;
                 header.banks[1] = 1;
                 header.banks[2] = 2;
@@ -117,16 +117,20 @@ namespace FamiStudio
                         kernelBinary += "_famitracker";
                     }
 
-                    /*
-                     * EXP TODO
-                    if (project.UsesExpansionAudio)
+                    if (project.UsesSingleExpansionAudio)
                     {
-                        kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
-
-                        if (project.ExpansionAudio == ExpansionType.N163)
-                            kernelBinary += $"_{project.ExpansionNumChannels}ch";
+                        kernelBinary += $"_{ExpansionType.ShortNames[project.SingleExpansion].ToLower()}";
                     }
-                    */
+                    else if (project.UsesMultipleExpansionAudios)
+                    {
+                        kernelBinary += $"_multi";
+
+                        if (project.UsesN163Expansion)
+                            kernelBinary += $"_n163";
+                    }
+
+                    if (project.UsesN163Expansion)
+                        kernelBinary += $"_{project.ExpansionNumN163Channels}ch";
                 }
                 else
                 {
