@@ -44,19 +44,26 @@ namespace FamiStudio
 
         protected short[] MixSamples(short[] emulation, short[] metronome, int metronomeIndex)
         {
-            var newSamples = new short[emulation.Length];
-            var metronomeIdx = metronomeIndex;
+            if (metronome != null)
+            {
+                var newSamples = new short[emulation.Length];
+                var metronomeIdx = metronomeIndex;
 
-            var i = 0;
-            var j = metronomeIndex;
+                var i = 0;
+                var j = metronomeIndex;
 
-            for (; i < newSamples.Length && j < metronome.Length; i++, j++)
-                newSamples[i] = (short)Utils.Clamp(emulation[i] + metronome[j], short.MinValue, short.MaxValue);
+                for (; i < newSamples.Length && j < metronome.Length; i++, j++)
+                    newSamples[i] = (short)Utils.Clamp(emulation[i] + metronome[j], short.MinValue, short.MaxValue);
 
-            if (i != newSamples.Length)
-                Array.Copy(emulation, i, newSamples, i, newSamples.Length - 1);
+                if (i != newSamples.Length)
+                    Array.Copy(emulation, i, newSamples, i, newSamples.Length - 1);
 
-            return newSamples;
+                return newSamples;
+            }
+            else
+            {
+                return emulation;
+            }
         }
 
         protected short[] AudioBufferFillCallback()
@@ -71,7 +78,7 @@ namespace FamiStudio
                 bufferSemaphore.Release(); 
 
                 // Mix in metronome if needed.
-                if (pair.metronomePosition >= 0 && metronomeSound != null)
+                if (pair.metronomePosition >= 0)
                     pair.samples = MixSamples(pair.samples, metronomeSound, pair.metronomePosition);
 
                 return pair.samples;
