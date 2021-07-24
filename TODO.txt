@@ -1,3 +1,5 @@
+*** MERGE DPCM STOP FIX FROM 3.1.0!
+
 Multiexp prototype:
 / Change NesSndEmu to support multiple expansions
 / Project property selection.
