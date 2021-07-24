@@ -126,6 +126,8 @@ namespace FamiStudio
             var project = originalProject.DeepClone();
             var song = project.GetSong(songId);
 
+            ExtendSongForLooping(song, loopCount);
+
             Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
             var frameRateNumerator = song.Project.PalMode ? 5000773 : 6009883;
