@@ -56,7 +56,7 @@ namespace FamiStudio
                     newSamples[i] = (short)Utils.Clamp(emulation[i] + metronome[j], short.MinValue, short.MaxValue);
 
                 if (i != newSamples.Length)
-                    Array.Copy(emulation, i, newSamples, i, newSamples.Length - 1);
+                    Array.Copy(emulation, i, newSamples, i, newSamples.Length - i);
 
                 return newSamples;
             }
@@ -117,7 +117,9 @@ namespace FamiStudio
 
         protected override unsafe short[] EndFrame()
         {
-            if (beat && metronomeSound != null)
+            var metronome = metronomeSound;
+
+            if (beat && metronome != null)
                 metronomePlayPosition = 0;
 
             SamplePair pair = new SamplePair();
@@ -128,7 +130,7 @@ namespace FamiStudio
             if (metronomePlayPosition >= 0)
             {
                 metronomePlayPosition += pair.samples.Length;
-                if (metronomePlayPosition >= pair.samples.Length)
+                if (metronomePlayPosition >= metronome.Length)
                     metronomePlayPosition = -1;
             }
 
