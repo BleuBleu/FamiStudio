@@ -172,6 +172,8 @@ namespace FamiStudio
 
         public void PlayImmediate(short[] data, int sampleRate, float volume)
         {
+            Debug.Assert(Utils.IsInMainThread());
+
             StopImmediate();
 
             immediateDonePlaying = false;
@@ -192,6 +194,8 @@ namespace FamiStudio
 
         public void StopImmediate()
         {
+            Debug.Assert(Utils.IsInMainThread());
+
             if (immediateVoice != null)
             {
                 immediateVoice.Stop();

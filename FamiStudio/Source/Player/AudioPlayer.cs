@@ -94,11 +94,6 @@ namespace FamiStudio
             audioStream.PlayImmediate(data, sampleRate, volume);
         }
 
-        public void StopRawPcmSample()
-        {
-            audioStream.StopImmediate();
-        }
-
         public int RawPcmSamplePlayPosition => audioStream.ImmediatePlayPosition;
     };
 }

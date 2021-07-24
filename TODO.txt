@@ -8,6 +8,7 @@ x Stop note VS DPCM
 Beta bugs:
 - Osc doesnt take loops into account?
 - Freeze on metronome (macos)
+	=> Threading issue. Beat must come from main thread.
 - Pop when pause/unpause, startup, etc.
 - Crash "DPCM Bass.fti"
 x Crash stereo osc when first channel is not selected.
