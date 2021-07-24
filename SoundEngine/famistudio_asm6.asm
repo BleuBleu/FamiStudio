@@ -3674,18 +3674,18 @@ famistudio_channel_update:
     sta famistudio_chn_note,x ; Store note code
     famistudio_add_16_8 channel_data_ptr, #3
     ldy #0
-    jmp @sec_and_done
+    jmp @check_no_attack
 .endif
 
 @regular_note:    
     sta famistudio_chn_note,x ; Store note code
 .if FAMISTUDIO_USE_SLIDE_NOTES
     ldy famistudio_channel_to_slide,x ; Clear any previous slide on new node.
-    bmi @sec_and_done
+    bmi @check_no_attack
     lda #0
     sta famistudio_slide_step,y
 .endif
-@sec_and_done:
+@check_no_attack:
     bit update_flags
     bmi @no_attack
 .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
@@ -3706,9 +3706,15 @@ famistudio_channel_update:
         lda #1
         sta famistudio_chn_vrc7_trigger-5,x ; Set trigger flag for VRC7
 .endif    
+@sec_and_done:
     sec ; New note flag is set
     jmp @done
 @no_attack:
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+    cpx #4
+    beq @sec_and_done
+.endif
+@clc_and_done:
     clc ; Pretend there is no new note.
     jmp @done
 

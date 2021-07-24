@@ -1,6 +1,9 @@
 3.1.0
 =====
-- Recompile NesSndEmu on MacOS/Linux to get vrc7 volume fix.
+x Recompile NesSndEmu on MacOS/Linux to get vrc7 volume fix.
+x Stop note VS DPCM
+- Linux radio color
+- 
 
 Videos:
 =======
