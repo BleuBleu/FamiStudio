@@ -213,6 +213,8 @@ namespace FamiStudio
 
         public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
         {
+            Debug.Assert(Utils.IsInMainThread());
+
             StopImmediate();
 
             Pa_OpenDefaultStream(out immediateStream, 0, 1, PaSampleFormat.Int16, sampleRate, 0, immediateStreamCallback, IntPtr.Zero);
@@ -233,6 +235,8 @@ namespace FamiStudio
 
         public void StopImmediate()
         {
+            Debug.Assert(Utils.IsInMainThread());
+
             if (immediateStream != IntPtr.Zero)
             {
                 Pa_AbortStream(immediateStream);
