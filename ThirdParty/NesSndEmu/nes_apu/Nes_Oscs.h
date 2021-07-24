@@ -86,7 +86,7 @@ struct Nes_Triangle : Nes_Osc
 	void clock_linear_counter();
 	void reset() {
 		linear_counter = 0;
-		phase = 1;
+		phase = phase_range;
 		Nes_Osc::reset();
 	}
 	cpu_time_t maintain_phase( cpu_time_t time, cpu_time_t end_time,
