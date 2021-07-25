@@ -117,6 +117,7 @@ namespace FamiStudio
 
         protected override unsafe short[] EndFrame()
         {
+            // Update metronome if there is a beat.
             var metronome = metronomeSound;
 
             if (beat && metronome != null)
@@ -130,7 +131,7 @@ namespace FamiStudio
             if (metronomePlayPosition >= 0)
             {
                 metronomePlayPosition += pair.samples.Length;
-                if (metronomePlayPosition >= metronome.Length)
+                if (metronome == null || metronomePlayPosition >= metronome.Length)
                     metronomePlayPosition = -1;
             }
 

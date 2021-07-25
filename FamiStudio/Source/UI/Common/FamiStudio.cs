@@ -351,6 +351,8 @@ namespace FamiStudio
 
         private void InitializeMetronome()
         {
+            const int MetronomeVolume = 15000;
+
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Resources.Metronome.wav"))
             {
                 using (var reader = new BinaryReader(stream))
@@ -362,7 +364,7 @@ namespace FamiStudio
                     while (reader.BaseStream.Position != reader.BaseStream.Length)
                     {
                         var sample = reader.ReadInt16();
-                        metronomeSound[i++] = sample;
+                        metronomeSound[i++] = (short)((sample * MetronomeVolume) >> 15);
                     }
                 }
             }

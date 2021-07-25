@@ -6,11 +6,10 @@ x Stop note VS DPCM
 - 
 
 Beta bugs:
-x Freeze on metronome (macos)
-x Osc doesnt take loops into account?
-x Pop when pause/unpause, startup, etc.
-x Crash "DPCM Bass.fti"
-x Crash stereo osc when first channel is not selected.
+x Turn off metronome as it clicks = crash
+- Steo fine tuning crash
+- MacOS/Retina sample property size
+- 
 
 Videos:
 =======
