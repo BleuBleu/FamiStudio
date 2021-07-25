@@ -3239,7 +3239,7 @@ namespace FamiStudio
                     {
                         var strings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
 
-                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 270, false, e.Y > Height / 2);
+                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 280, false, e.Y > Height / 2);
                         dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
                         dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
                         dlg.Properties.Build();
