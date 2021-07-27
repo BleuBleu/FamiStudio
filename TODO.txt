@@ -7,9 +7,9 @@ x Stop note VS DPCM
 
 Beta bugs:
 x Add option for osc thickness
-- Pattern toolsip (in piano roll) are zero based.
-- Patterns in timer (toolbar) are zero based.
-- Copy pasting notes with slides to DPCM keeps the slides.
+x Pattern toolsip (in piano roll) are zero based.
+x Patterns in timer (toolbar) are zero based.
+x Copy pasting notes with slides to DPCM keeps the slides.
 - Sometimes it doesnt find ffmpeg on MacOS??
 
 Videos:

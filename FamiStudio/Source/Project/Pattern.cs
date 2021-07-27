@@ -178,6 +178,48 @@ namespace FamiStudio
             return pattern;
         }
 
+        public bool RemoveUnsupportedChannelFeatures(bool checkOnly = false)
+        {
+            var channel = Channel;
+            var foundAnyUnsupportedFeature = false;
+
+            foreach (var kv in notes)
+            {
+                var note = kv.Value;
+
+                for (int i = 0; i < Note.EffectCount; i++)
+                {
+                    if (note != null && note.HasValidEffectValue(i) && !channel.SupportsEffect(i))
+                    {
+                        if (!checkOnly)
+                            note.ClearEffectValue(i);
+                        foundAnyUnsupportedFeature = true;
+                    }
+                }
+
+                if (note.IsSlideNote && !channel.SupportsSlideNotes)
+                {
+                    if (!checkOnly)
+                        note.SlideNoteTarget = 0;
+                    foundAnyUnsupportedFeature = true;
+                }
+                if (note.IsArpeggio && !channel.SupportsArpeggios)
+                {
+                    if (!checkOnly)
+                        note.Arpeggio = null;
+                    foundAnyUnsupportedFeature = true;
+                }
+                if (note.Instrument != null && !channel.SupportsInstrument(note.Instrument))
+                {
+                    if (!checkOnly)
+                        note.Instrument = null;
+                    foundAnyUnsupportedFeature = true;
+                }
+            }
+
+            return foundAnyUnsupportedFeature;
+        }
+
         public uint ComputeCRC(uint crc = 0)
         {
             var serializer = new ProjectCrcBuffer(crc);
@@ -311,6 +353,8 @@ namespace FamiStudio
                 var arp = note.Arpeggio;
                 Debug.Assert(arp == null || song.Project.GetArpeggio(arp.Id) == arp);
             }
+
+            Debug.Assert(!RemoveUnsupportedChannelFeatures(true));
         }
 #endif
 

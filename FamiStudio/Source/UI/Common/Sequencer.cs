@@ -1389,6 +1389,7 @@ namespace FamiStudio
                                                 newName = destChannel.GenerateUniquePatternNameSmart(sourcePattern.Name);
 
                                             duplicatedPattern = sourcePattern.ShallowClone(destChannel);
+                                            duplicatedPattern.RemoveUnsupportedChannelFeatures();
                                             // Intentionally changing the color so that its clear it a clone.
                                             duplicatedPattern.Color = ThemeBase.RandomCustomColor();
                                             duplicatePatternMap.Add(sourcePattern, duplicatedPattern);
