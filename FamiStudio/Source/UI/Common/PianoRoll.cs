@@ -5174,7 +5174,7 @@ namespace FamiStudio
                 {
                     if (GetLocationForCoord(e.X, e.Y, out var location, out byte noteValue))
                     {
-                        newNoteTooltip = $"{Note.GetFriendlyName(noteValue)} [{location.PatternIndex:D3} : {location.NoteIndex:D3}]";
+                        newNoteTooltip = $"{Note.GetFriendlyName(noteValue)} [{location.PatternIndex+1:D3} : {location.NoteIndex:D3}]";
 
                         var channel = Song.Channels[editChannel];
                         var note = channel.FindMusicalNoteAtLocation(ref location, noteValue);
