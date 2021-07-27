@@ -32,11 +32,13 @@ namespace FamiStudio
             MediumRight,
             MediumUnscaled,
             MediumBold,
+            MediumBoldUnscaled,
             MediumBoldCenter,
             MediumBoldCenterEllipsis,
             MediumBigRight,
             Big,
             BigBold,
+            BigBoldUnscaled,
             BigCenter,
             BigUnscaled,
             Huge,
@@ -65,11 +67,13 @@ namespace FamiStudio
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 2 }, // MediumRight
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, NoScaling = true }, // MediumUnscaled
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Bold = true }, // MediumBold
+            new RenderFontDefinition() { Name = "QuickSand", Size = 12, Bold = true, NoScaling = true }, // MediumBoldUnscaled
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1, Bold = true }, // MediumBoldCenter
             new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1, Bold = true, Ellipsis = true }, // MediumBoldCenterEllipsis
             new RenderFontDefinition() { Name = "QuickSand", Size = 16, Alignment = 2 }, // MediumBigRight
             new RenderFontDefinition() { Name = "QuickSand", Size = 20 }, // Big
             new RenderFontDefinition() { Name = "QuickSand", Size = 20, Bold = true }, // BigBold
+            new RenderFontDefinition() { Name = "QuickSand", Size = 20, Bold = true, NoScaling = true }, // BigBoldUnscaled
             new RenderFontDefinition() { Name = "QuickSand", Size = 20, Alignment = 1 }, // BigCenter
             new RenderFontDefinition() { Name = "QuickSand", Size = 20, NoScaling = true }, // BigUnscaled
             new RenderFontDefinition() { Name = "QuickSand", Size = 28, Alignment = 1 } // Huge
@@ -87,11 +91,13 @@ namespace FamiStudio
         public static RenderFont FontMediumRight              => Fonts[(int)RenderFontStyle.MediumRight];
         public static RenderFont FontMediumUnscaled           => Fonts[(int)RenderFontStyle.MediumUnscaled];
         public static RenderFont FontMediumBold               => Fonts[(int)RenderFontStyle.MediumBold];
+        public static RenderFont FontMediumBoldUnscaled       => Fonts[(int)RenderFontStyle.MediumBoldUnscaled];
         public static RenderFont FontMediumBoldCenter         => Fonts[(int)RenderFontStyle.MediumBoldCenter];
         public static RenderFont FontMediumBoldCenterEllipsis => Fonts[(int)RenderFontStyle.MediumBoldCenterEllipsis];
         public static RenderFont FontMediumBigRight           => Fonts[(int)RenderFontStyle.MediumBigRight];
         public static RenderFont FontBig                      => Fonts[(int)RenderFontStyle.Big];
         public static RenderFont FontBigBold                  => Fonts[(int)RenderFontStyle.BigBold];
+        public static RenderFont FontBigBoldUnscaled          => Fonts[(int)RenderFontStyle.BigBoldUnscaled];
         public static RenderFont FontBigCenter                => Fonts[(int)RenderFontStyle.BigCenter];
         public static RenderFont FontBigUnscaled              => Fonts[(int)RenderFontStyle.BigUnscaled];
         public static RenderFont FontHuge                     => Fonts[(int)RenderFontStyle.Huge];

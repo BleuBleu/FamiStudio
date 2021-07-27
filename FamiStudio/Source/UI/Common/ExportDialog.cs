@@ -192,10 +192,11 @@ namespace FamiStudio
                     if (AddCommonVideoProperties(page, songNames)) // 0-5
                     {
                         page.AddIntegerRange("Oscilloscope Columns :", 1, 1, 3); // 6
-                        page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 7
-                        page.AddCheckBox("Stereo", false); // 8
-                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 9
-                        page.SetColumnEnabled(9, 2, false);
+                        page.AddIntegerRange("Oscilloscope Thickness :", 1, 1, 4); // 7
+                        page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
+                        page.AddCheckBox("Stereo", false); // 9
+                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 10
+                        page.SetColumnEnabled(10, 2, false);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
@@ -442,8 +443,8 @@ namespace FamiStudio
             {
                 var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
 
-                var stereoPropIdx   = pianoRoll ? 7 : 8;
-                var channelsPropIdx = pianoRoll ? 8 : 9;
+                var stereoPropIdx   = pianoRoll ? 7 : 9;
+                var channelsPropIdx = pianoRoll ? 8 : 10;
 
                 var songName = props.GetPropertyValue<string>(0);
                 var resolutionIdx = props.GetSelectedIndex(1);
@@ -476,10 +477,11 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var oscNumColumns = props.GetPropertyValue<int>(6);
-                    var oscColorMode  = props.GetSelectedIndex(7);
+                    var oscNumColumns    = props.GetPropertyValue<int>(6);
+                    var oscLineThickness = props.GetPropertyValue<int>(7);
+                    var oscColorMode     = props.GetSelectedIndex(8);
 
-                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
                 }
 
                 lastExportFilename = filename;

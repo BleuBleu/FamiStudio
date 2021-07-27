@@ -6,14 +6,18 @@ x Stop note VS DPCM
 - 
 
 Beta bugs:
-x Turn off metronome as it clicks = crash
-- Steo fine tuning crash
-- MacOS/Retina sample property size
-- 
+x Add option for osc thickness
+- Pattern toolsip (in piano roll) are zero based.
+- Patterns in timer (toolbar) are zero based.
+- Copy pasting notes with slides to DPCM keeps the slides.
+- Sometimes it doesnt find ffmpeg on MacOS??
 
 Videos:
 =======
-- Sampling soundfont instruments
+/ Sampling soundfont instruments
+	- Thumbnail
+	- Descripiton
+	- Link in video
 - Tutorial for FamiTracker
 
 Doc
