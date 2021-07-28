@@ -1,16 +1,6 @@
 3.1.0
 =====
-x Recompile NesSndEmu on MacOS/Linux to get vrc7 volume fix.
-x Stop note VS DPCM
 - Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
-- 
-
-Beta bugs:
-x Add option for osc thickness
-x Pattern toolsip (in piano roll) are zero based.
-x Patterns in timer (toolbar) are zero based.
-x Copy pasting notes with slides to DPCM keeps the slides.
-- Sometimes it doesnt find ffmpeg on MacOS??
 
 Videos:
 =======
