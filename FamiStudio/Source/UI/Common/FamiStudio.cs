@@ -122,6 +122,7 @@ namespace FamiStudio
             PianoRoll.NoteEyedropped += PianoRoll_NoteEyedropped;
             PianoRoll.DPCMSampleMapped += PianoRoll_DPCMSampleMapped;
             PianoRoll.DPCMSampleUnmapped += PianoRoll_DPCMSampleMapped;
+            PianoRoll.MaximizedChanged += PianoRoll_MaximizedChanged;
             ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
@@ -168,6 +169,11 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        private void PianoRoll_MaximizedChanged()
+        {
+            RefreshLayout();
         }
 
         private void Sequencer_SelectionChanged()
@@ -1325,6 +1331,17 @@ namespace FamiStudio
             else if (shift && e.KeyCode == Keys.K)
             {
                 ToggleQwertyPiano();
+            }
+            else if (e.KeyCode == Keys.Oem3)
+            {
+                if (ctrl)
+                {
+                    PianoRoll.ToggleEffectPannel();
+                }
+                else 
+                {
+                    PianoRoll.ToggleMaximize();
+                }
             }
 #if FAMISTUDIO_MACOS
             else if (ctrl && e.KeyCode == Keys.Q)

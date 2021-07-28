@@ -104,8 +104,8 @@ namespace FamiStudio
         int blackKeySizeX;
         int effectIconPosX;
         int effectIconPosY;
-        int snapIconPosX;
-        int snapIconPosY;
+        int headerIconsPosX;
+        int headerIconsPosY;
         int effectNamePosX;
         int effectNamePosY;
         int effectIconSizeX;
@@ -203,6 +203,7 @@ namespace FamiStudio
         RenderBitmap bmpEffectExpanded;
         RenderBitmap bmpEffectCollapsed;
         RenderBitmap bmpSlide;
+        RenderBitmap bmpMaximize;
         RenderBitmap bmpSnap;
         RenderBitmap bmpSnapRed;
         RenderBitmap[] bmpSnapResolution = new RenderBitmap[(int)SnapResolution.Max];
@@ -340,6 +341,7 @@ namespace FamiStudio
         int dragLastNoteValue = -1;
         SortedList<int, Note> dragNotes = new SortedList<int, Note>();
 
+        bool maximized = false;
         bool showSelection = false;
         bool showEffectsPanel = false;
         bool snap = false;
@@ -387,6 +389,7 @@ namespace FamiStudio
         private bool IsSnappingAllowed => editMode == EditionMode.Channel;
         private bool IsSnappingEnabled => IsSnappingAllowed && snap;
 
+        public bool IsMaximized                => maximized;
         public bool IsEditingInstrument        => editMode == EditionMode.Enveloppe; 
         public bool IsEditingArpeggio          => editMode == EditionMode.Arpeggio;
         public bool IsEditingDPCMSample        => editMode == EditionMode.DPCM;
@@ -405,6 +408,7 @@ namespace FamiStudio
         public delegate void DPCMMappingDelegate(int note);
 
         public event PatternDelegate     PatternChanged;
+        public event EmptyDelegate       MaximizedChanged;
         public event EmptyDelegate       ManyPatternChanged;
         public event EmptyDelegate       DPCMSampleChanged;
         public event EmptyDelegate       EnvelopeChanged;
@@ -443,8 +447,8 @@ namespace FamiStudio
             blackKeySizeX = (int)(DefaultBlackKeySizeX * scaling * videoScaleX);
             effectIconPosX = (int)(DefaultEffectIconPosX * scaling);
             effectIconPosY = (int)(DefaultEffectIconPosY * scaling);
-            snapIconPosX = (int)(DefaultSnapIconPosX * scaling);
-            snapIconPosY = (int)(DefaultSnapIconPosY * scaling);
+            headerIconsPosX = (int)(DefaultSnapIconPosX * scaling);
+            headerIconsPosY = (int)(DefaultSnapIconPosY * scaling);
             effectNamePosX = (int)(DefaultEffectNamePosX * scaling);
             effectNamePosY = (int)(DefaultEffectNamePosY * scaling);
             headerTextPosY = (int)(DefaultHeaderTextPosY * scaling);
@@ -799,6 +803,7 @@ namespace FamiStudio
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");
+            bmpMaximize = g.CreateBitmapFromResource("Maximize");
             bmpSnap = g.CreateBitmapFromResource("Snap");
             bmpSnapRed = g.CreateBitmapFromResource("SnapRed");
             bmpSnapResolution[(int)SnapResolution.OneQuarter] = g.CreateBitmapFromResource("Snap1_4");
@@ -910,6 +915,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpEffectCollapsed);
             Utils.DisposeAndNullify(ref bmpSlide);
             Utils.DisposeAndNullify(ref bmpSnap);
+            Utils.DisposeAndNullify(ref bmpMaximize);
             Utils.DisposeAndNullify(ref bmpSnapRed);
 
             for (int i = 0; i < (int)SnapResolution.Max; i++)
@@ -1188,11 +1194,12 @@ namespace FamiStudio
             if (editMode == EditionMode.Channel)
             {
                 g.DrawBitmap(showEffectsPanel ? bmpEffectExpanded : bmpEffectCollapsed, effectIconPosX, effectIconPosY);
+                g.DrawBitmap(bmpMaximize, whiteKeySizeX - ((int)bmpSnap.Size.Width + headerIconsPosX) * 1 - 1, headerIconsPosY, maximized ? 1.0f : 0.3f);
 
                 if (IsSnappingAllowed)
                 {
-                    g.DrawBitmap(bmpSnapResolution[(int)snapResolution], whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX - 1, snapIconPosY, IsSnappingEnabled ? 1.0f : 0.3f);
-                    g.DrawBitmap(App.IsRecording ? bmpSnapRed : bmpSnap, whiteKeySizeX - (int)bmpSnap.Size.Width * 1 - snapIconPosX * 1 - 1, snapIconPosY, IsSnappingEnabled || App.IsRecording ? 1.0f : 0.3f);
+                    g.DrawBitmap(App.IsRecording ? bmpSnapRed : bmpSnap, whiteKeySizeX - ((int)bmpSnap.Size.Width + headerIconsPosX) * 2 - 1, headerIconsPosY, IsSnappingEnabled || App.IsRecording ? 1.0f : 0.3f);
+                    g.DrawBitmap(bmpSnapResolution[(int)snapResolution], whiteKeySizeX - ((int)bmpSnap.Size.Width + headerIconsPosX) * 3 - 1, headerIconsPosY, IsSnappingEnabled ? 1.0f : 0.3f);
                 }
 
                 if (showEffectsPanel)
@@ -3777,10 +3784,6 @@ namespace FamiStudio
                 ClearSelection();
                 ConditionalInvalidate();
             }
-            else if (e.KeyCode == Keys.Oem3 && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM))
-            {
-                ToggleEffectPannel();
-            }
             else if (e.KeyCode == Keys.S && shift)
             {
                 if (IsSnappingAllowed)
@@ -3997,10 +4000,21 @@ namespace FamiStudio
             App.DisplayWarning("Selected instrument is incompatible with channel!");
         }
 
-        private void ToggleEffectPannel()
+        public void ToggleEffectPannel()
         {
-            Debug.Assert(editMode == EditionMode.Channel || editMode == EditionMode.DPCM);
-            showEffectsPanel = !showEffectsPanel;
+            if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM)
+            {
+                showEffectsPanel = !showEffectsPanel;
+                UpdateRenderCoords();
+                ClampScroll();
+                ConditionalInvalidate();
+            }
+        }
+
+        public void ToggleMaximize()
+        {
+            maximized = !maximized;
+            MaximizedChanged?.Invoke();
             UpdateRenderCoords();
             ClampScroll();
             ConditionalInvalidate();
@@ -4287,6 +4301,18 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleMouseDownMaximizeButton(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseOnMaximizeButton(e.X, e.Y))
+            {
+                ToggleMaximize();
+                ConditionalInvalidate();
+                return true;
+            }
+
+            return false;
+        }
+
         private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs e)
         {
             if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInTopLeftCorner(e.X, e.Y))
@@ -4488,6 +4514,7 @@ namespace FamiStudio
                 if (HandleMouseDownClearEffectValue(e)) goto Handled;
                 if (HandleMouseDownSnapResolutionButton(e)) goto Handled;
                 if (HandleMouseDownSnapButton(e)) goto Handled;
+                if (HandleMouseDownMaximizeButton(e)) goto Handled;
                 if (HandleMouseDownChannelNote(e)) goto Handled;
             }
 
@@ -5085,15 +5112,26 @@ namespace FamiStudio
 
         private bool IsMouseOnSnapResolutionButton(int x, int y)
         {
+            var posX = whiteKeySizeX - ((int)bmpSnap.Size.Width + headerIconsPosX) * 3 - 1;
             return IsSnappingAllowed &&
-                x > whiteKeySizeX - (int)bmpSnap.Size.Width * 2 - snapIconPosX * 2 && x < whiteKeySizeX - (int)bmpSnap.Size.Width - snapIconPosX &&
-                y > snapIconPosY && y < snapIconPosY + (int)bmpSnap.Size.Height;
+                x > posX && x < posX + (int)bmpSnap.Size.Width &&
+                y > headerIconsPosY && y < headerIconsPosY + (int)bmpSnap.Size.Height;
         }
+
         private bool IsMouseOnSnapButton(int x, int y)
         {
+            var posX = whiteKeySizeX - ((int)bmpSnap.Size.Width + headerIconsPosX) * 2 - 1;
             return IsSnappingAllowed &&
-                x > whiteKeySizeX - (int)bmpSnap.Size.Width - snapIconPosX && x < whiteKeySizeX &&
-                y > snapIconPosY && y < snapIconPosY + (int)bmpSnap.Size.Height;
+                x > posX && x < posX + (int)bmpSnap.Size.Width &&
+                y > headerIconsPosY && y < headerIconsPosY + (int)bmpSnap.Size.Height;
+        }
+
+        private bool IsMouseOnMaximizeButton(int x, int y)
+        {
+            var posX = whiteKeySizeX - ((int)bmpSnap.Size.Width + headerIconsPosX) * 1 - 1;
+            return 
+                x > posX && x < posX + (int)bmpSnap.Size.Width &&
+                y > headerIconsPosY && y < headerIconsPosY + (int)bmpSnap.Size.Height;
         }
 
         private bool IsMouseInNoteArea(int x, int y)
@@ -5135,9 +5173,13 @@ namespace FamiStudio
             {
                 tooltip = "{MouseLeft} Toggle snapping {Shift} {S} {MouseWheel} Change snap precision";
             }
+            else if (IsMouseOnMaximizeButton(e.X, e.Y))
+            {
+                tooltip = "{MouseLeft} Maximize/Minimize piano roll {~}";
+            }
             else if (IsMouseInTopLeftCorner(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Show/hide effect panel {~}";
+                tooltip = "{MouseLeft} Show/hide effect panel {Ctrl} {~}";
             }
             else if (IsMouseInEffectList(e.X, e.Y))
             {
@@ -6173,6 +6215,7 @@ namespace FamiStudio
             buffer.Serialize(ref zoomLevel);
             buffer.Serialize(ref selectedEffectIdx);
             buffer.Serialize(ref showEffectsPanel);
+            buffer.Serialize(ref maximized);
             buffer.Serialize(ref selectionMin);
             buffer.Serialize(ref selectionMax);
 

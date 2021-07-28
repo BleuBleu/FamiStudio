@@ -380,6 +380,8 @@
     <EmbeddedResource Include="Resources\LoopSelection.png" />
     <EmbeddedResource Include="Resources\ConfigFFmpeg%402x.png" />
     <EmbeddedResource Include="Resources\ConfigFFmpeg.png" />
+    <EmbeddedResource Include="Resources\Maximize%402x.png" />
+    <EmbeddedResource Include="Resources\Maximize.png" />
     <Content Include="Vorbis.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -176,7 +176,17 @@ namespace FamiStudio
 
         public void RefreshLayout()
         {
-            tableLayout.RowStyles[0].Height = (int)(sequencer.ComputeDesiredSizeY() * Direct2DTheme.MainWindowScaling);
+            sequencer.Enabled = !PianoRoll.IsMaximized;
+
+            if (PianoRoll.IsMaximized)
+            {
+                tableLayout.RowStyles[0].Height = 1;
+            }
+            else
+            {
+                tableLayout.RowStyles[0].Height = (int)(sequencer.ComputeDesiredSizeY() * Direct2DTheme.MainWindowScaling);
+            }
+
             PianoRoll.Invalidate();
         }
 

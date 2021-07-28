@@ -1,13 +1,12 @@
 Multiexp prototype:
 / Change NesSndEmu to support multiple expansions
 / Project property selection.
+- Smaller sequencer, how?
+	- Show instrument icons when hovering over project explorer.
 - Project/channel logic
 - Review all uses of expansionMask.
 - Review all SetExpansionAudio(), must use masks.
 - Warnings in project properties
-- Smaller sequencer, how?
-	- Piano roll maximize button (Recycle ~ shortcut?, change effect to CTRL + ~)
-	- Show instrument icons when hovering over project explorer.
 - BUG : Allows creating MMC5 instrument, makes no sense.
 - FamiTracker in/out
 - Icons:
