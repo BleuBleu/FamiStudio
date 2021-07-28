@@ -1,4 +1,4 @@
-//#define DEVELOPMENT_VERSION
+#define DEVELOPMENT_VERSION
 
 using System;
 using System.Collections;
@@ -50,8 +50,7 @@ namespace FamiStudio
         private int previewDPCMSampleRate = 44100;
         private bool previewDPCMIsSource = false;
         private bool metronome = false;
-        private short[] metronomeSound1;
-        private short[] metronomeSound2;
+        private short[] metronomeSound;
         private int lastRecordingKeyDown = -1;
         private BitArray keyStates = new BitArray(65536);
         private ConcurrentQueue<Tuple<int, bool>> midiNoteQueue = new ConcurrentQueue<Tuple<int, bool>>();
@@ -144,10 +143,10 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
             ProjectExplorer.DPCMSampleMapped += ProjectExplorer_DPCMSampleMapped;
 
+            InitializeMetronome();
             InitializeSongPlayer();
             InitializeMidi();
             InitializeMultiMediaNotifications();
-            InitializeMetronome();
 
             if (string.IsNullOrEmpty(filename) && Settings.OpenLastProjectOnStart && !string.IsNullOrEmpty(Settings.LastProjectFile) && File.Exists(Settings.LastProjectFile))
             {
@@ -352,34 +351,20 @@ namespace FamiStudio
 
         private void InitializeMetronome()
         {
+            const int MetronomeVolume = 15000;
+
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Resources.Metronome.wav"))
             {
                 using (var reader = new BinaryReader(stream))
                 {
-                    // The metronome is played on a different audio stream that doesn't 
-                    // go through all the NES emulation + frame buffering, so we need
-                    // add an artificial delay to make it sync properly. The reason for
-                    // the 2x - 1 is that the NES audio stream has x buffer frames, and we 
-                    // also buffer x frames from the NES emulation. -1 is to account for 
-                    // the fact that one of those buffer should always be in flight. On
-                    // the first frame, the audio stream isnt started so we dont delay as
-                    // much.
-                    var frameNumSamples = (int)Math.Ceiling(44100.0f / (palPlayback ? NesApu.FpsPAL : NesApu.FpsNTSC));
-                    var delayNumFrames1 = (Settings.NumBufferedAudioFrames * 1 - 1) * frameNumSamples;
-                    var delayNumFrames2 = (Settings.NumBufferedAudioFrames * 2 - 1) * frameNumSamples;
-
                     // Pad the first part with a bunch of zero samples.
-                    metronomeSound1 = new short[reader.BaseStream.Length / 2 + delayNumFrames1];
-                    metronomeSound2 = new short[reader.BaseStream.Length / 2 + delayNumFrames2];
+                    metronomeSound = new short[reader.BaseStream.Length / 2];
 
-                    var i = delayNumFrames1;
-                    var j = delayNumFrames2;
-
+                    var i = 0;
                     while (reader.BaseStream.Position != reader.BaseStream.Length)
                     {
                         var sample = reader.ReadInt16();
-                        metronomeSound1[i++] = sample;
-                        metronomeSound2[j++] = sample;
+                        metronomeSound[i++] = (short)((sample * MetronomeVolume) >> 15);
                     }
                 }
             }
@@ -457,7 +442,6 @@ namespace FamiStudio
                 InitializeInstrumentPlayer();
                 InitializeSongPlayer();
                 InitializeOscilloscope();
-                InitializeMetronome();
                 InvalidateEverything(true);
             }
 
@@ -570,7 +554,6 @@ namespace FamiStudio
             InitializeSongPlayer();
             InitializeInstrumentPlayer();
             InitializeOscilloscope();
-            InitializeMetronome();
 
             FreeExportDialog();
 
@@ -757,7 +740,6 @@ namespace FamiStudio
                 RecreateAudioPlayers();
                 RefreshLayout();
                 InitializeMidi();
-                InitializeMetronome();
                 InvalidateEverything(true);
             }
         }
@@ -1032,20 +1014,8 @@ namespace FamiStudio
             Debug.Assert(songPlayer == null);
             Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
             songPlayer = new SongPlayer(palPlayback);
-            songPlayer.Beat += SongPlayer_Beat;
+            songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
-        }
-
-        private void SongPlayer_Beat(bool first)
-        {
-            // This code will be ran on the player thread, but its ok since even if the 
-            // main thread is about to stop the player, it will have to wait for the player 
-            // thread to finish (join) before setting songPlayer to null.
-            if (songPlayer != null && metronome)
-            {
-                var sound = first ? metronomeSound1 : metronomeSound2;
-                songPlayer.PlayRawPcmSample(sound, 44100, 1.0f);
-            }
         }
 
         private void InitializeInstrumentPlayer()
@@ -1061,7 +1031,6 @@ namespace FamiStudio
             {
                 songPlayer.Stop();
                 songPlayer.Shutdown();
-                songPlayer.Beat -= SongPlayer_Beat;
                 songPlayer = null;
             }
         }
@@ -1178,7 +1147,6 @@ namespace FamiStudio
                     InitializeSongPlayer();
                     InitializeInstrumentPlayer();
                     InitializeOscilloscope();
-                    InitializeMetronome();
                 }
 
                 InvalidateEverything(true);
@@ -1528,6 +1496,8 @@ namespace FamiStudio
         public void ToggleMetronome()
         {
             metronome = !metronome;
+            if (songPlayer != null)
+                songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
         }
 
         public void SeekSong(int frame)
@@ -1599,7 +1569,6 @@ namespace FamiStudio
             InitializeSongPlayer();
             InitializeInstrumentPlayer();
             InitializeOscilloscope();
-            InitializeMetronome();
         }
 
         private void ConditionalShowTutorial()

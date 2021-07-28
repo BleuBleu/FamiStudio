@@ -242,18 +242,10 @@ namespace FamiStudio
                     {
                         var envelope = new List<SampleVolumePair>();
 
-                        volumeEnvelope[0].sample = 0;
-                        volumeEnvelope[volumeEnvelope.Length - 1].sample = SourceNumSamples - 1;
-
-                        envelope.Add(new SampleVolumePair(volumeEnvelope[0].sample, volumeEnvelope[0].volume * (volumeAdjust / 100.0f)));
-
-                        for (int i = 1; i < 4; i++)
-                        {
-                            if (volumeEnvelope[i].sample != envelope[envelope.Count - 1].sample)
-                            {
-                                envelope.Add(new SampleVolumePair(volumeEnvelope[i].sample, volumeEnvelope[i].volume * (volumeAdjust / 100.0f)));
-                            }
-                        }
+                        envelope.Add(new SampleVolumePair(0, volumeEnvelope[0].volume * (volumeAdjust / 100.0f)));
+                        envelope.Add(new SampleVolumePair(volumeEnvelope[1].sample, volumeEnvelope[1].volume * (volumeAdjust / 100.0f)));
+                        envelope.Add(new SampleVolumePair(volumeEnvelope[2].sample, volumeEnvelope[2].volume * (volumeAdjust / 100.0f)));
+                        envelope.Add(new SampleVolumePair(sourceWavData.Length - 1, volumeEnvelope[3].volume * (volumeAdjust / 100.0f)));
 
                         WaveUtils.AdjustVolume(sourceWavData, envelope);
                     }

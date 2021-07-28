@@ -15,6 +15,7 @@ Changes:
 * Noise emulation improvements
 * Portable mode (save settings in root folder if portable.txt is detected)
 * Import samples from other projects
+* Loop in selection mode
 * ROM export now uses MMC3 mapper
 * Fine tuning + DMC initial value parameters on DPCM samples
 * Option to auto-save copy every 2 minutes

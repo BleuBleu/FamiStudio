@@ -3,11 +3,24 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace FamiStudio
 {
     static class Utils
     {
+        private static Thread mainThread;
+
+        public static void Initialize()
+        {
+            mainThread = Thread.CurrentThread;
+        }
+
+        public static bool IsInMainThread()
+        {
+            return mainThread == Thread.CurrentThread;
+        }
+
         public static int Clamp(int val, int min, int max)
         {
             if (val < min) return min;

@@ -1,5 +1,3 @@
-*** MERGE DPCM STOP FIX FROM 3.1.0!
-
 Multiexp prototype:
 / Change NesSndEmu to support multiple expansions
 / Project property selection.
@@ -23,7 +21,10 @@ Multiexp prototype:
 	
 Videos:
 =======
-- Sampling soundfont instruments
+/ Sampling soundfont instruments
+	- Thumbnail
+	- Descripiton
+	- Link in video
 - Tutorial for FamiTracker
 
 Doc

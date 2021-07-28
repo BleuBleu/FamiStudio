@@ -663,7 +663,7 @@ namespace FamiStudio
                 var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
                 var numNoteDigits = Utils.NumDecimalDigits(App.Song.GetPatternLength(location.PatternIndex) - 1);
 
-                var patternString = location.PatternIndex.ToString("D" + numPatternDigits);
+                var patternString = (location.PatternIndex + 1).ToString("D" + numPatternDigits);
                 var noteString = location.NoteIndex.ToString("D" + numNoteDigits);
 
                 var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;

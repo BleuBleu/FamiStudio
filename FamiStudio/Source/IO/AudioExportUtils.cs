@@ -55,6 +55,7 @@ namespace FamiStudio
                 {
                     // Get all the samples for all channels.
                     var channelSamples = new short[song.Channels.Length][];
+                    var numStereoSamples = 0;
 
                     for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
                     {
@@ -63,11 +64,11 @@ namespace FamiStudio
                         {
                             var player = new WavPlayer(sampleRate, loopCount, channelBit);
                             channelSamples[channelIdx] = player.GetSongSamples(song, project.PalMode, duration);
+                            numStereoSamples = Math.Max(numStereoSamples, channelSamples[channelIdx].Length);
                         }
                     }
 
                     // Mix and interleave samples.
-                    var numStereoSamples = channelSamples[0].Length;
                     samples = new short[numStereoSamples * 2];
 
                     for (int i = 0; i < numStereoSamples; i++)

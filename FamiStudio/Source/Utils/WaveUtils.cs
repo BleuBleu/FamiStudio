@@ -340,8 +340,6 @@ namespace FamiStudio
             // Simple smoothstep interpolation (which is equivalent to cosine interpolation).
             for (int i = 0; i < volumeEnvelope.Count - 1; i++)
             {
-                Debug.Assert(volumeEnvelope[i].sample < volumeEnvelope[i + 1].sample);
-
                 var s0 = volumeEnvelope[i + 0].sample;
                 var s1 = volumeEnvelope[i + 1].sample;
                 var v0 = volumeEnvelope[i + 0].volume;
@@ -349,7 +347,7 @@ namespace FamiStudio
 
                 for (int j = s0; j <= s1; j++)
                 {
-                    var ratio  = (j - s0) / (float)(s1 - s0);
+                    var ratio  = s0 == s1 ? 0.0f : (j - s0) / (float)(s1 - s0);
                     var volume = Utils.Lerp(v0, v1, Utils.SmoothStep(ratio));
 
                     wave[j] = (short)Utils.Clamp((int)Math.Round(wave[j] * volume), short.MinValue, short.MaxValue);

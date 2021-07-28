@@ -3240,7 +3240,7 @@ namespace FamiStudio
                     {
                         var strings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
 
-                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 270, false, e.Y > Height / 2);
+                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 280, false, e.Y > Height / 2);
                         dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
                         dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
                         dlg.Properties.Build();
@@ -5175,7 +5175,7 @@ namespace FamiStudio
                 {
                     if (GetLocationForCoord(e.X, e.Y, out var location, out byte noteValue))
                     {
-                        newNoteTooltip = $"{Note.GetFriendlyName(noteValue)} [{location.PatternIndex:D3} : {location.NoteIndex:D3}]";
+                        newNoteTooltip = $"{Note.GetFriendlyName(noteValue)} [{location.PatternIndex+1:D3} : {location.NoteIndex:D3}]";
 
                         var channel = Song.Channels[editChannel];
                         var note = channel.FindMusicalNoteAtLocation(ref location, noteValue);

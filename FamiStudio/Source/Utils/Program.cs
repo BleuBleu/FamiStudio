@@ -53,6 +53,7 @@ namespace FamiStudio
 #endif
 
             Settings.Load();
+            Utils.Initialize();
             PlatformUtils.Initialize();
             RenderTheme.Initialize();
             NesApu.InitializeNoteTables();

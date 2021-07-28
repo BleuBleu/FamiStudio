@@ -18,11 +18,19 @@ namespace FamiStudio
     {
         protected const int DefaultSampleRate = 44100;
 
+        public struct SamplePair
+        {
+            public short[] samples;
+            public int metronomePosition;
+        };
+
         protected AudioStream audioStream;
         protected Thread playerThread;
         protected Semaphore bufferSemaphore;
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
-        protected ConcurrentQueue<short[]> sampleQueue = new ConcurrentQueue<short[]>();
+        protected ConcurrentQueue<SamplePair> sampleQueue = new ConcurrentQueue<SamplePair>();
+        protected short[] metronomeSound;
+        protected int metronomePlayPosition = -1;
         protected int numBufferedFrames = 3;
         protected IOscilloscope oscilloscope;
 
@@ -34,23 +42,52 @@ namespace FamiStudio
             audioStream = new AudioStream(sampleRate, bufferSize, numBufferedFrames, AudioBufferFillCallback);
         }
 
+        protected short[] MixSamples(short[] emulation, short[] metronome, int metronomeIndex)
+        {
+            if (metronome != null)
+            {
+                var newSamples = new short[emulation.Length];
+                var metronomeIdx = metronomeIndex;
+
+                var i = 0;
+                var j = metronomeIndex;
+
+                for (; i < newSamples.Length && j < metronome.Length; i++, j++)
+                    newSamples[i] = (short)Utils.Clamp(emulation[i] + metronome[j], short.MinValue, short.MaxValue);
+
+                if (i != newSamples.Length)
+                    Array.Copy(emulation, i, newSamples, i, newSamples.Length - i);
+
+                return newSamples;
+            }
+            else
+            {
+                return emulation;
+            }
+        }
+
         protected short[] AudioBufferFillCallback()
         {
-            short[] samples = null;
-            if (sampleQueue.TryDequeue(out samples))
+            SamplePair pair;
+            if (sampleQueue.TryDequeue(out pair))
             {
                 if (oscilloscope != null)
-                    oscilloscope.AddSamples(samples);
+                    oscilloscope.AddSamples(pair.samples);
 
                 // Tell player thread it needs to generate one more frame.
                 bufferSemaphore.Release(); 
-            }
-            //else
-            //{
-            //    Trace.WriteLine("Audio is starving!");
-            //}
 
-            return samples;
+                // Mix in metronome if needed.
+                if (pair.metronomePosition >= 0)
+                    pair.samples = MixSamples(pair.samples, metronomeSound, pair.metronomePosition);
+
+                return pair.samples;
+            }
+            else
+            {
+                // Trace.WriteLine("Audio is starving!");
+                return null;
+            }
         }
 
         protected void ResetThreadingObjects()
@@ -73,9 +110,32 @@ namespace FamiStudio
             oscilloscope = osc;
         }
 
+        public void SetMetronomeSound(short[] sound)
+        {
+            metronomeSound = sound;
+        }
+
         protected override unsafe short[] EndFrame()
         {
-            sampleQueue.Enqueue(base.EndFrame());
+            // Update metronome if there is a beat.
+            var metronome = metronomeSound;
+
+            if (beat && metronome != null)
+                metronomePlayPosition = 0;
+
+            SamplePair pair = new SamplePair();
+
+            pair.samples = base.EndFrame();
+            pair.metronomePosition = metronomePlayPosition;
+
+            if (metronomePlayPosition >= 0)
+            {
+                metronomePlayPosition += pair.samples.Length;
+                if (metronome == null || metronomePlayPosition >= metronome.Length)
+                    metronomePlayPosition = -1;
+            }
+
+            sampleQueue.Enqueue(pair);
 
             // Wait until we have queued the maximum number of buffered frames to start
             // the audio thread, otherwise, we risk starving on the first frame.
@@ -92,11 +152,6 @@ namespace FamiStudio
         public void PlayRawPcmSample(short[] data, int sampleRate, float volume)
         {
             audioStream.PlayImmediate(data, sampleRate, volume);
-        }
-
-        public void StopRawPcmSample()
-        {
-            audioStream.StopImmediate();
         }
 
         public int RawPcmSamplePlayPosition => audioStream.ImmediatePlayPosition;

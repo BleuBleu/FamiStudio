@@ -27,6 +27,7 @@ namespace FamiStudio
         };
 
         const int SEQ_COUNT = 5;
+        const int MAX_DSAMPLES = 64;
 
         private void ReadEnvelope(byte[] bytes, ref int offset, Instrument instrument, int envType)
         {
@@ -190,7 +191,7 @@ namespace FamiStudio
                 offset += assignedCount * 4;
 
                 var sampleCount = BitConverter.ToInt32(bytes, offset); offset += 4;
-                var sampleMap = new DPCMSample[sampleCount];
+                var sampleMap = new DPCMSample[MAX_DSAMPLES];
 
                 for (int i = 0; i < sampleCount; i++)
                 {

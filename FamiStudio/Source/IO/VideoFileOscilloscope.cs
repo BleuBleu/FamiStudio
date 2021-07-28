@@ -115,7 +115,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, int lineThickness, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
             if (!Initialize(ffmpegExecutable, channelMask, loopCount))
                 return false;
@@ -125,6 +125,8 @@ namespace FamiStudio
 
             var project = originalProject.DeepClone();
             var song = project.GetSong(songId);
+
+            ExtendSongForLooping(song, loopCount);
 
             Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
@@ -188,7 +190,9 @@ namespace FamiStudio
             // Tweak some cosmetic stuff that depends on resolution.
             var smallChannelText = channelResY < 128;
             var bmpSuffix = smallChannelText ? "" : "@2x";
-            var font = smallChannelText ? ThemeBase.FontMediumUnscaled : ThemeBase.FontBigUnscaled;
+            var font = lineThickness > 1 ?
+                (smallChannelText ? ThemeBase.FontMediumBoldUnscaled : ThemeBase.FontBigBoldUnscaled) : 
+                (smallChannelText ? ThemeBase.FontMediumUnscaled     : ThemeBase.FontBigUnscaled);
             var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = resY >= 720 ? 5 : 3;
 
@@ -288,7 +292,7 @@ namespace FamiStudio
                             var brush = videoGraphics.GetSolidBrush(frame.channelColors[i]);
 
                             videoGraphics.AntiAliasing = true;
-                            videoGraphics.DrawGeometry(geo, brush, 1.0f);
+                            videoGraphics.DrawGeometry(geo, brush, lineThickness);
                             videoGraphics.AntiAliasing = false;
                             geo.Dispose();
 
