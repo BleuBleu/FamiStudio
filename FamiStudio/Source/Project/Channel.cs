@@ -73,92 +73,36 @@ namespace FamiStudio
             return instrument.ExpansionType == Expansion;
         }
 
-        // EXPTODO : This is wrong
-        public static int[] GetChannelsForExpansion(int expansion)
+        public static int[] GetChannelsForExpansionMask(int expansionMask, int numN163Channels = 1)
         {
-            var channels = new List<int>(); ;
+            var channels = new List<int>();
 
-            channels.Add(ChannelType.Square1);
-            channels.Add(ChannelType.Square2);
-            channels.Add(ChannelType.Triangle);
-            channels.Add(ChannelType.Noise);
-            channels.Add(ChannelType.Dpcm);
-
-            switch (expansion)
+            for (int i = 0; i < ChannelType.Count; i++)
             {
-                case ExpansionType.Vrc6:
-                    channels.Add(ChannelType.Vrc6Square1);
-                    channels.Add(ChannelType.Vrc6Square2);
-                    channels.Add(ChannelType.Vrc6Saw);
-                    break;
-                case ExpansionType.Vrc7:
-                    channels.Add(ChannelType.Vrc7Fm1);
-                    channels.Add(ChannelType.Vrc7Fm2);
-                    channels.Add(ChannelType.Vrc7Fm3);
-                    channels.Add(ChannelType.Vrc7Fm4);
-                    channels.Add(ChannelType.Vrc7Fm5);
-                    channels.Add(ChannelType.Vrc7Fm6);
-                    break;
-                case ExpansionType.Fds:
-                    channels.Add(ChannelType.FdsWave);
-                    break;
-                case ExpansionType.Mmc5:
-                    channels.Add(ChannelType.Mmc5Square1);
-                    channels.Add(ChannelType.Mmc5Square2);
-                    break;
-                case ExpansionType.N163:
-                    channels.Add(ChannelType.N163Wave1);
-                    channels.Add(ChannelType.N163Wave2);
-                    channels.Add(ChannelType.N163Wave3);
-                    channels.Add(ChannelType.N163Wave4);
-                    channels.Add(ChannelType.N163Wave5);
-                    channels.Add(ChannelType.N163Wave6);
-                    channels.Add(ChannelType.N163Wave7);
-                    channels.Add(ChannelType.N163Wave8);
-                    break;
-                case ExpansionType.S5B:
-                    channels.Add(ChannelType.S5BSquare1);
-                    channels.Add(ChannelType.S5BSquare2);
-                    channels.Add(ChannelType.S5BSquare3);
-                    break;
+                if (Project.IsChannelActive(i, expansionMask, numN163Channels))
+                    channels.Add(i);
             }
 
             return channels.ToArray();
         }
 
-        // EXPTODO : This is wrong.
-        public static int GetChannelCountForExpansion(int expansion)
+        public static int GetChannelCountForExpansionMask(int expansionMask, int numN163Channels = 1)
         {
             var count = 5;
 
-            switch (expansion)
-            {
-                case ExpansionType.Vrc6:
-                    count += 3;
-                    break;
-                case ExpansionType.Vrc7:
-                    count += 6;
-                    break;
-                case ExpansionType.Fds:
-                    count += 1;
-                    break;
-                case ExpansionType.Mmc5:
-                    count += 2;
-                    break;
-                case ExpansionType.N163:
-                    count += 8;
-                    break;
-                case ExpansionType.S5B:
-                    count += 3;
-                    break;
-            }
+            if ((expansionMask & ExpansionType.Vrc6Mask) != 0) count += 3;
+            if ((expansionMask & ExpansionType.Vrc7Mask) != 0) count += 6;
+            if ((expansionMask & ExpansionType.FdsMask)  != 0) count += 1;
+            if ((expansionMask & ExpansionType.Mmc5Mask) != 0) count += 2;
+            if ((expansionMask & ExpansionType.N163Mask) != 0) count += numN163Channels;
+            if ((expansionMask & ExpansionType.S5BMask)  != 0) count += 3;
 
             return count;
         }
 
         public bool SupportsReleaseNotes => type != ChannelType.Dpcm;
-        public bool SupportsSlideNotes => type != ChannelType.Dpcm;
-        public bool SupportsArpeggios => type != ChannelType.Dpcm;
+        public bool SupportsSlideNotes   => type != ChannelType.Dpcm;
+        public bool SupportsArpeggios    => type != ChannelType.Dpcm;
 
         public bool SupportsEffect(int effect)
         {

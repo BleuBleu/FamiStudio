@@ -2364,14 +2364,14 @@ namespace FamiStudio
                 expBools[i - ExpansionType.Start] = project.UsesExpansionAudio(i);
             }
 
-            var dlg = new PropertyDialog(PointToScreen(pt), 320, true);
+            var dlg = new PropertyDialog(PointToScreen(pt), 360, true);
             dlg.Properties.AddString("Title :", project.Name, 31); // 0
             dlg.Properties.AddString("Author :", project.Author, 31); // 1
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
             dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 3
             dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 4
             dlg.Properties.AddIntegerRange("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, CommonTooltips.ExpansionNumChannels); // 5 (Namco)
-            dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, CommonTooltips.ExpansionAudio); // 6
+            dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, CommonTooltips.ExpansionAudio, 150); // 6
             dlg.Properties.SetPropertyEnabled(3, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
             dlg.Properties.SetPropertyEnabled(5, project.UsesExpansionAudio(ExpansionType.N163));
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;

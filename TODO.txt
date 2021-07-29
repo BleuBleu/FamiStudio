@@ -7,6 +7,9 @@ Multiexp prototype:
 - Review all SetExpansionAudio(), must use masks.
 - Warnings in project properties
 - BUG : Allows creating MMC5 instrument, makes no sense.
+- MIDI :
+	- Multiple expansion import
+	- Multiple expansion export
 - Icons:
 	- Use chip icon for instrument
 	- VRC6/VRC7 difference.
@@ -16,6 +19,7 @@ x NSF in/out
 x Sound engine, FamiTone export.
 
 Misc:
+- Mac/Linux : CheckListBox doesnt fire events (needed for Midi import/PAL).
 - Remove "NOne" piano roll mode.
 - Fix GTK single multiple label issue.	
 	

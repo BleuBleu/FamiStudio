@@ -20,8 +20,7 @@ namespace FamiStudio
         private int songDuration;
         private int numTracks;
 
-        private Dictionary<int, Instrument> instrumentMap    = new Dictionary<int, Instrument>();
-        private Dictionary<int, Instrument> instrumentMapExp = new Dictionary<int, Instrument>();
+        private Dictionary<int, Instrument>[] instrumentMap  = new Dictionary<int, Instrument>[ExpansionType.Count];
 
         private const int MinDrumKey = 24;
         private const int MaxDrumKey = 70;
@@ -689,22 +688,12 @@ namespace FamiStudio
             return bestTempo;
         }
 
-        private void CreateProjectAndSong(int expansion, MidiSource[] channelSources, bool pal)
+        private void CreateProjectAndSong(int expansionMask, MidiSource[] channelSources, bool pal)
         {
-            var num163Channels = 1;
-
-            // Autodetect number of N163 channels.
-            if (expansion == ExpansionType.N163)
-            {
-                for (int i = ChannelType.ExpansionAudioStart; i < channelSources.Length; i++)
-                {
-                    if (channelSources[i].type != MidiSourceType.None)
-                        num163Channels = Math.Max(num163Channels, i - ChannelType.ExpansionAudioStart + 1);
-                }
-            }
+            var num163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? 8 : 1;
 
             project = new Project();
-            project.SetExpansionAudioMask(expansion, num163Channels); // EXPTODO : Mask
+            project.SetExpansionAudioMask(expansionMask, num163Channels);
             project.PalMode = pal;
 
             song = project.CreateSong();
@@ -730,25 +719,37 @@ namespace FamiStudio
         private void CreateInstruments()
         {
             // Create a default instrument in case there isnt any program change.
-            instrumentMap[0] = project.CreateInstrument(ExpansionType.None, MidiInstrumentNames[0]);
+            instrumentMap[ExpansionType.None] = new Dictionary<int, Instrument>();
+            instrumentMap[ExpansionType.None][0] = project.CreateInstrument(ExpansionType.None, MidiInstrumentNames[0]);
 
-            /*
-             *             EXPTODO
-
-            if (project.UsesExpansionAudio)
-                instrumentMapExp[0] = project.CreateInstrument(project.ExpansionAudio, MidiInstrumentNames[0] + $" {project.ExpansionAudioShortName}");
+            if (project.UsesAnyExpansionAudio)
+            {
+                for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+                {
+                    if (project.UsesExpansionAudio(i))
+                    {
+                        instrumentMap[i] = new Dictionary<int, Instrument>();
+                        instrumentMap[i][0] = project.CreateInstrument(i, MidiInstrumentNames[0] + $" {ExpansionType.ShortNames[i]}");
+                    }
+                }
+            }
 
             foreach (var prgChange in programChangeEvents)
             {
-                if (!instrumentMap.ContainsKey(prgChange.prg))
+                if (!instrumentMap[ExpansionType.None].ContainsKey(prgChange.prg))
                 {
-                    instrumentMap[prgChange.prg] = project.CreateInstrument(ExpansionType.None, MidiInstrumentNames[prgChange.prg]);
+                    instrumentMap[ExpansionType.None][prgChange.prg] = project.CreateInstrument(ExpansionType.None, MidiInstrumentNames[prgChange.prg]);
 
-                    if (project.UsesExpansionAudio)
-                        instrumentMapExp[prgChange.prg] = project.CreateInstrument(project.ExpansionAudio, MidiInstrumentNames[prgChange.prg] + $" {project.ExpansionAudioShortName}");
+                    if (project.UsesAnyExpansionAudio)
+                    {
+                        for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+                        {
+                            if (project.UsesExpansionAudio(i))
+                                instrumentMap[i][prgChange.prg] = project.CreateInstrument(i, MidiInstrumentNames[prgChange.prg] + $" {ExpansionType.ShortNames[i]}");
+                        }
+                    }
                 }
             }
-            */
         }
 
         private void CreatePatterns(out List<MidiPatternInfo> patternInfos, int measuresPerPattern)
@@ -1029,7 +1030,7 @@ namespace FamiStudio
                     if (note.IsMusical)
                     {
                         var instrumentIdx = channelInstruments[evt.channel];
-                        note.Instrument = channel.IsExpansionChannel ? instrumentMapExp[instrumentIdx] : instrumentMap[instrumentIdx];
+                        note.Instrument = instrumentMap[channel.Expansion][instrumentIdx];
 
                         if (velocityAsVolume && channel.SupportsEffect(Note.EffectVolume))
                         {
@@ -1094,23 +1095,23 @@ namespace FamiStudio
         private void Cleanup()
         {
             // Truncate # of N163 channels.
-            /*
-             * EXPTODO
-            if (project.ExpansionAudio == ExpansionType.N163)
+            if (project.UsesN163Expansion)
             {
                 var numN163Channels = 0;
-                for (int i = 5; i < song.Channels.Length; i++)
+                for (int i = ChannelType.N163Wave1; i <= ChannelType.N163Wave8; i++)
                 {
-                    if (song.Channels[i].Patterns.Count > 0)
-                        numN163Channels = i - 4;
+                    var channel = song.GetChannelByType(i);
+                    if (channel.Patterns.Count > 0)
+                        numN163Channels = i - ChannelType.N163Wave1 + 1;
                 }
 
+                var expansionMask = project.ExpansionAudioMask;
+
                 if (numN163Channels == 0)
-                    project.SetExpansionAudio(ExpansionType.NoneMask); // EXPTODO : Mask + multiexp?
-                else
-                    project.SetExpansionAudio(ExpansionType.N163Mask, numN163Channels); // EXPTODO : Mask + multiexp?
+                    expansionMask &= ~(ExpansionType.N163Mask);
+
+                project.SetExpansionAudioMask(expansionMask, numN163Channels);
             }
-            */
 
             song.MergeIdenticalPatterns();
             song.Trim();
@@ -1119,13 +1120,13 @@ namespace FamiStudio
             project.ValidateIntegrity();
         }
 
-        public Project Load(string filename, int expansion, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony, int measuresPerPattern)
+        public Project Load(string filename, int expansionMask, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony, int measuresPerPattern)
         {
 #if !DEBUG
             try
 #endif
             {
-                Debug.Assert(Channel.GetChannelCountForExpansion(expansion) == channelSources.Length);
+                Debug.Assert(Channel.GetChannelCountForExpansionMask(expansionMask, 8) == channelSources.Length); 
 
                 idx = 0;
                 bytes = File.ReadAllBytes(filename);
@@ -1136,7 +1137,7 @@ namespace FamiStudio
                 if (!ReadAllTracks())
                     return null;
 
-                CreateProjectAndSong(expansion, channelSources, pal);
+                CreateProjectAndSong(expansionMask, channelSources, pal);
                 CreateInstruments();
                 CreatePatterns(out var patternInfos, measuresPerPattern);
 
