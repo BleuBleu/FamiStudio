@@ -526,26 +526,31 @@ FAMISTUDIO_ENV_VOLUME_OFF = 0
 FAMISTUDIO_ENV_NOTE_OFF   = 1
 FAMISTUDIO_ENV_DUTY_OFF   = 2
 
-; [MULTI] BEGIN : These will be in a lookup table.
+; EXPTODO : Make the real sound engine like this.
+FAMISTUDIO_VRC7_PITCH_SHIFT = 3
+
+.if (FAMISTUDIO_EXP_N163_CHN_CNT > 4)
+    FAMISTUDIO_N163_PITCH_SHIFT = 5
+.endif
+.if (FAMISTUDIO_EXP_N163_CHN_CNT > 2) & (FAMISTUDIO_EXP_N163_CHN_CNT <= 4)
+    FAMISTUDIO_N163_PITCH_SHIFT = 4
+.endif
+.if (FAMISTUDIO_EXP_N163_CHN_CNT > 1) & (FAMISTUDIO_EXP_N163_CHN_CNT <= 2)
+    FAMISTUDIO_N163_PITCH_SHIFT = 3
+.endif
+.if (FAMISTUDIO_EXP_N163_CHN_CNT = 1)
+    FAMISTUDIO_N163_PITCH_SHIFT = 2
+.endif 
+
+; [MULTI] BEGIN : We dont need this here.
 ;.if FAMISTUDIO_EXP_VRC7
-;    FAMISTUDIO_PITCH_SHIFT = 3
+;    FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_VRC7_PITCH_SHIFT
 ;.else
 ;    .if FAMISTUDIO_EXP_N163
-;        .if (FAMISTUDIO_EXP_N163_CHN_CNT > 4)
-;            FAMISTUDIO_PITCH_SHIFT = 5
-;        .endif
-;        .if (FAMISTUDIO_EXP_N163_CHN_CNT > 2) & (FAMISTUDIO_EXP_N163_CHN_CNT <= 4)
-;            FAMISTUDIO_PITCH_SHIFT = 4
-;        .endif
-;        .if (FAMISTUDIO_EXP_N163_CHN_CNT > 1) & (FAMISTUDIO_EXP_N163_CHN_CNT <= 2)
-;            FAMISTUDIO_PITCH_SHIFT = 3
-;        .endif
-;        .if (FAMISTUDIO_EXP_N163_CHN_CNT = 1)
-;            FAMISTUDIO_PITCH_SHIFT = 2
-;        .endif 
+;        FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_N163_PITCH_SHIFT
 ;    .else
 ;        FAMISTUDIO_PITCH_SHIFT = 0
-;    .endif
+;    .endif    
 ;.endif
 ; [MULTI] END
 
@@ -712,14 +717,18 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 famistudio_r0:   .res 1
 famistudio_r1:   .res 1
 famistudio_r2:   .res 1
+famistudio_r3:   .res 1 ; [MULTI] Extra ZP var
 
 famistudio_ptr0: .res 2
 famistudio_ptr1: .res 2
+famistudio_ptr2: .res 2 ; [MULTI] Extra ZP var
 
 famistudio_ptr0_lo = famistudio_ptr0+0
 famistudio_ptr0_hi = famistudio_ptr0+1
 famistudio_ptr1_lo = famistudio_ptr1+0
 famistudio_ptr1_hi = famistudio_ptr1+1
+famistudio_ptr2_lo = famistudio_ptr2+0 ; [MULTI] Extra ZP var
+famistudio_ptr2_hi = famistudio_ptr2+1 ; [MULTI] Extra ZP var
 
 ;======================================================================================================================
 ; CODE
@@ -1441,7 +1450,7 @@ famistudio_music_pause:
 ; [out] famistudio_ptr1 : Final note pitch.
 ;======================================================================================================================
 
-.macro famistudio_get_note_pitch_macro pitch_env_offset, note_table_lsb, note_table_msb
+.macro famistudio_get_note_pitch_macro pitch_env_offset, pitch_shift, note_table_lsb, note_table_msb
 
     .local @pitch
     .local @tmp_ror
@@ -1484,7 +1493,7 @@ famistudio_music_pause:
     beq @no_slide
 
     ; Add slide
-.if pitch_env_offset >= 3 && (FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163)
+.if pitch_shift >= 1
     ; These channels dont have fractional part for slides and have the same shift for slides + pitch.
     clc
     lda famistudio_slide_pitch_lo+pitch_env_offset, y 
@@ -1512,29 +1521,27 @@ famistudio_music_pause:
 
 @no_slide:    
 
-; MATTT
-;.if pitch_env_offset >= 3 && (FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163)
-;    .if FAMISTUDIO_PITCH_SHIFT >= 1
-;        asl @pitch+0
-;        rol @pitch+1
-;    .if FAMISTUDIO_PITCH_SHIFT >= 2
-;        asl @pitch+0
-;        rol @pitch+1
-;    .if FAMISTUDIO_PI;TCH_SHIFT >= 3
-;        asl @pitch+0
-;        rol @pitch+1
-;    .if FAMISTUDIO_PITCH_SHIFT >= 4
-;        asl @pitch+0
-;        rol @pitch+1
-;    .if FAMISTUDIO_PITCH_SHIFT >= 5
-;        asl @pitch+0
-;        rol @pitch+1
-;    .endif 
-;    .endif
-;    .endif
-;    .endif
-;    .endif
-;.endif
+    ; EXPTODO : Make the real sound engine like this.
+    .if pitch_shift >= 1
+        asl @pitch+0
+        rol @pitch+1
+    .if pitch_shift >= 2
+        asl @pitch+0
+        rol @pitch+1
+    .if pitch_shift >= 3
+        asl @pitch+0
+        rol @pitch+1
+    .if pitch_shift >= 4
+        asl @pitch+0
+        rol @pitch+1
+    .if pitch_shift >= 5
+        asl @pitch+0
+        rol @pitch+1
+    .endif 
+    .endif
+    .endif
+    .endif
+    .endif
 
     ; Finally, add note pitch.
     clc
@@ -1548,12 +1555,12 @@ famistudio_music_pause:
 .endmacro
 
 famistudio_get_note_pitch:
-    famistudio_get_note_pitch_macro 0, famistudio_note_table_lsb, famistudio_note_table_msb
+    famistudio_get_note_pitch_macro 0, 0, famistudio_note_table_lsb, famistudio_note_table_msb
     rts
 
 .if FAMISTUDIO_EXP_VRC6
 famistudio_get_note_pitch_vrc6_saw:
-    famistudio_get_note_pitch_macro 0, famistudio_saw_note_table_lsb, famistudio_saw_note_table_msb
+    famistudio_get_note_pitch_macro 0, 0, famistudio_saw_note_table_lsb, famistudio_saw_note_table_msb
     rts
 .endif
 
@@ -1786,7 +1793,7 @@ famistudio_update_fds_channel_sound:
     tax
 
     ldy #0
-    famistudio_get_note_pitch_macro FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX, famistudio_fds_note_table_lsb, famistudio_fds_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX, 0, famistudio_fds_note_table_lsb, famistudio_fds_note_table_msb
 
     lda @pitch+0
     sta FAMISTUDIO_FDS_FREQ_LO
@@ -1923,7 +1930,7 @@ famistudio_update_vrc7_channel_sound:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    famistudio_get_note_pitch_macro FAMISTUDIO_VRC7_CH0_PITCH_ENV_IDX, famistudio_vrc7_note_table_lsb, famistudio_vrc7_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_VRC7_CH0_PITCH_ENV_IDX, FAMISTUDIO_VRC7_PITCH_SHIFT, famistudio_vrc7_note_table_lsb, famistudio_vrc7_note_table_msb
 
     ; Compute octave by dividing by 2 until we are <= 512 (0x100).
     ldx #0
@@ -2091,7 +2098,7 @@ famistudio_update_n163_channel_sound:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    famistudio_get_note_pitch_macro FAMISTUDIO_N163_CH0_PITCH_ENV_IDX, famistudio_n163_note_table_lsb, famistudio_n163_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_N163_CH0_PITCH_ENV_IDX, FAMISTUDIO_N163_PITCH_SHIFT, famistudio_n163_note_table_lsb, famistudio_n163_note_table_msb
 
     ; Convert 16-bit -> 18-bit.
     asl @pitch+0
@@ -2188,7 +2195,7 @@ famistudio_update_s5b_channel_sound:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    famistudio_get_note_pitch_macro FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX, famistudio_note_table_lsb, famistudio_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX, 0, famistudio_note_table_lsb, famistudio_note_table_msb
 
     ; Write pitch
     lda famistudio_s5b_reg_table_lo,y
@@ -2254,15 +2261,15 @@ famistudio_update_row:
     ; [MULTI] BEGIN : This is a mess, use a lookup jmp table maybe?
     cpy #4 ; TODO: If samples are disabled, there is no point in doing this test most of the time.
     beq @dpcm
-    cpy #(FAMISTUDIO_VRC6_CH2_PITCH_ENV_IDX+1)
+    cpy #(FAMISTUDIO_VRC6_CH2_IDX+1)
     bcc @base_instrument ; 2A03 + VRC6
-    cpy #(FAMISTUDIO_VRC7_CH5_PITCH_ENV_IDX+1)
+    cpy #(FAMISTUDIO_VRC7_CH5_IDX+1)
     bcc @vrc7_instrument ; VRC7
-    cpy #(FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX+1)
+    cpy #(FAMISTUDIO_FDS_CH0_IDX+1)
     bcc @fds_instrument ; FDS
-    cpy #(FAMISTUDIO_MMC5_CH1_PITCH_ENV_IDX+1)
+    cpy #(FAMISTUDIO_MMC5_CH1_IDX+1)
     bcc @base_instrument ; MMC5
-    cpy #(FAMISTUDIO_N163_CH7_PITCH_ENV_IDX+1)
+    cpy #(FAMISTUDIO_N163_CH7_IDX+1)
     bcc @n163_instrument ; N163
     bcs @base_instrument ; S5B
     ; [MULTI] END
@@ -3201,7 +3208,7 @@ famistudio_set_fds_instrument:
     lda #0
     sta FAMISTUDIO_FDS_SWEEP_BIAS
 
-    lda famistudio_chn_inst_changed
+    lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
     bne @write_fds_wave
 
     iny ; Skip master volume + wave + mod envelope.
@@ -3264,7 +3271,7 @@ famistudio_set_fds_instrument:
             bne @mod_loop
 
         lda #0
-        sta famistudio_chn_inst_changed
+        sta famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
 
         ldy @tmp_y
 
@@ -3420,6 +3427,7 @@ famistudio_channel_update:
     @tmp_ptr_lo           = famistudio_r0
     @tmp_chan_idx         = famistudio_r0
     @tmp_slide_from       = famistudio_r1
+    @tmp_slide_to         = famistudio_r3
     @tmp_slide_idx        = famistudio_r1
     @tmp_duty_cycle       = famistudio_r1
     @tmp_pitch_hi         = famistudio_r1
@@ -3429,6 +3437,7 @@ famistudio_channel_update:
     @special_code_jmp_ptr = famistudio_ptr1
     @tempo_env_ptr        = famistudio_ptr1
     @volume_env_ptr       = famistudio_ptr1
+    @note_table_ptr       = famistudio_ptr2
 
     lda famistudio_chn_repeat,x
     beq @no_repeat
@@ -3729,39 +3738,39 @@ famistudio_channel_update:
     sta @tmp_slide_from
     iny
     lda (@channel_data_ptr),y ; Read slide note to
-    ldy @tmp_slide_from       ; reload note from
 .if FAMISTUDIO_DUAL_SUPPORT
     adc famistudio_pal_adjust
 .endif
-    stx @tmp_slide_idx ; X contained the slide index.    
-    tax
-.ifdef FAMISTUDIO_EXP_NOTE_START
-    lda @tmp_chan_idx
-    cmp #FAMISTUDIO_EXP_NOTE_START
-    bcs @note_table_expansion
-.endif
-    sec ; Subtract the pitch of both notes.
-    lda famistudio_note_table_lsb,y
-    sbc famistudio_note_table_lsb,x
-    sta @slide_delta_lo
-    lda famistudio_note_table_msb,y
-    sbc famistudio_note_table_msb,x
-.ifdef FAMISTUDIO_EXP_NOTE_START
-    jmp @note_table_done
-@note_table_expansion:
+    ; [MULTI] BEGIN : We need to handle multiple note tables here.
+    sta @tmp_slide_to  
+
+    lda famistudio_slide_to_note_table_lsb_lo,x
+    sta @note_table_ptr+0
+    lda famistudio_slide_to_note_table_lsb_hi,x
+    sta @note_table_ptr+1
+
     sec
-    lda famistudio_exp_note_table_lsb,y
-    sbc famistudio_exp_note_table_lsb,x
+    ldy @tmp_slide_from ; reload note from
+    lda (@note_table_ptr),y
+    ldy @tmp_slide_to
+    sbc (@note_table_ptr),y
     sta @slide_delta_lo
-    lda famistudio_exp_note_table_msb,y
-    sbc famistudio_exp_note_table_msb,x
-@note_table_done:
-.endif
-    ldx @tmp_slide_idx ; slide index.
+
+    lda famistudio_slide_to_note_table_msb_lo,x
+    sta @note_table_ptr+0
+    lda famistudio_slide_to_note_table_msb_hi,x
+    sta @note_table_ptr+1
+
+    ldy @tmp_slide_from ; reload note from
+    lda (@note_table_ptr),y
+    ldy @tmp_slide_to
+    sbc (@note_table_ptr),y
+    ; [MULTI] END
+
     sta famistudio_slide_pitch_hi,x
     .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7
-        cpx #3 ; Slide #3 is the first of expansion slides.
-        bcs @positive_shift
+        ldy famistudio_slide_to_pitch_shift,x
+        bpl @positive_shift
     .endif
     @negative_shift:
         lda @slide_delta_lo
@@ -3773,38 +3782,13 @@ famistudio_channel_update:
     @positive_shift:
         lda @slide_delta_lo
         sta famistudio_slide_pitch_lo,x
-
-        ; MATTT        
-        ;.if FAMISTUDIO_PITCH_SHIFT >= 1
-        ;    lda famistudio_slide_pitch_hi,x
-        ;    cmp #$80
-        ;    ror famistudio_slide_pitch_hi,x 
-        ;    ror famistudio_slide_pitch_lo,x
-        ;.if FAMISTUDIO_PITCH_SHIFT >= 2
-        ;    lda famistudio_slide_pitch_hi,x
-        ;    cmp #$80
-        ;    ror famistudio_slide_pitch_hi,x 
-        ;    ror famistudio_slide_pitch_lo,x
-        ;.if FAMISTUDIO_PITCH_SHIFT >= 3
-        ;    lda famistudio_slide_pitch_hi,x
-        ;    cmp #$80
-        ;    ror famistudio_slide_pitch_hi,x 
-        ;    ror famistudio_slide_pitch_lo,x
-        ;.if FAMISTUDIO_PITCH_SHIFT >= 4
-        ;    lda famistudio_slide_pitch_hi,x
-        ;    cmp #$80
-        ;    ror famistudio_slide_pitch_hi,x 
-        ;    ror famistudio_slide_pitch_lo,x
-        ;.if FAMISTUDIO_PITCH_SHIFT >= 5
-        ;    lda famistudio_slide_pitch_hi,x
-        ;    cmp #$80
-        ;    ror famistudio_slide_pitch_hi,x 
-        ;    ror famistudio_slide_pitch_lo,x
-        ;.endif 
-        ;.endif
-        ;.endif
-        ;.endif
-        ;.endif
+        @positive_shift_loop:
+            lda famistudio_slide_pitch_hi,x
+            cmp #$80
+            ror famistudio_slide_pitch_hi,x 
+            ror famistudio_slide_pitch_lo,x
+            dey 
+            bne @positive_shift_loop
     @shift_done:
     .endif
     ldx @tmp_chan_idx
@@ -4103,6 +4087,7 @@ famistudio_channel_update:
     .byte >@invalid_opcode                            ; $6a
     .byte >@invalid_opcode                            ; $6b    
 .endif    
+; EXPTODO : This is a problem.
 .if FAMISTUDIO_EXP_FDS        
     .byte >@special_code_fds_mod_speed                ; $6c
     .byte >@special_code_fds_mod_depth                ; $6d
@@ -4899,6 +4884,207 @@ famistudio_channel_to_slide:
     .byte FAMISTUDIO_S5B_CH2_PITCH_ENV_IDX
 .endif
 .endif
+
+famistudio_slide_to_pitch_shift:
+    .byte $ff
+    .byte $ff
+    .byte $ff
+.if FAMISTUDIO_EXP_VRC6
+    .byte $ff
+    .byte $ff
+    .byte $ff
+.endif
+.if FAMISTUDIO_EXP_VRC7
+    .byte FAMISTUDIO_VRC7_PITCH_SHIFT
+    .byte FAMISTUDIO_VRC7_PITCH_SHIFT
+    .byte FAMISTUDIO_VRC7_PITCH_SHIFT
+    .byte FAMISTUDIO_VRC7_PITCH_SHIFT
+    .byte FAMISTUDIO_VRC7_PITCH_SHIFT
+    .byte FAMISTUDIO_VRC7_PITCH_SHIFT
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte $ff
+.endif
+.if FAMISTUDIO_EXP_MMC5    
+    .byte $ff
+    .byte $ff
+.endif
+.if FAMISTUDIO_EXP_N163    
+    .byte FAMISTUDIO_N163_PITCH_SHIFT
+    .byte FAMISTUDIO_N163_PITCH_SHIFT
+    .byte FAMISTUDIO_N163_PITCH_SHIFT
+    .byte FAMISTUDIO_N163_PITCH_SHIFT
+    .byte FAMISTUDIO_N163_PITCH_SHIFT
+    .byte FAMISTUDIO_N163_PITCH_SHIFT
+    .byte FAMISTUDIO_N163_PITCH_SHIFT
+    .byte FAMISTUDIO_N163_PITCH_SHIFT
+.endif
+.if FAMISTUDIO_EXP_S5B    
+    .byte $ff
+    .byte $ff
+    .byte $ff
+.endif
+
+famistudio_slide_to_note_table_lsb_lo:
+    .byte <famistudio_note_table_lsb
+    .byte <famistudio_note_table_lsb
+    .byte <famistudio_note_table_lsb
+ .if FAMISTUDIO_EXP_VRC6
+    .byte <famistudio_note_table_lsb
+    .byte <famistudio_note_table_lsb
+    .byte <famistudio_saw_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_VRC7
+    .byte <famistudio_vrc7_note_table_lsb
+    .byte <famistudio_vrc7_note_table_lsb
+    .byte <famistudio_vrc7_note_table_lsb
+    .byte <famistudio_vrc7_note_table_lsb
+    .byte <famistudio_vrc7_note_table_lsb
+    .byte <famistudio_vrc7_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte <famistudio_fds_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_MMC5    
+    .byte <famistudio_note_table_lsb
+    .byte <famistudio_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_N163    
+    .byte <famistudio_n163_note_table_lsb
+    .byte <famistudio_n163_note_table_lsb
+    .byte <famistudio_n163_note_table_lsb
+    .byte <famistudio_n163_note_table_lsb
+    .byte <famistudio_n163_note_table_lsb
+    .byte <famistudio_n163_note_table_lsb
+    .byte <famistudio_n163_note_table_lsb
+    .byte <famistudio_n163_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_S5B    
+    .byte <famistudio_note_table_lsb
+    .byte <famistudio_note_table_lsb
+    .byte <famistudio_note_table_lsb
+.endif
+
+famistudio_slide_to_note_table_lsb_hi:
+    .byte >famistudio_note_table_lsb
+    .byte >famistudio_note_table_lsb
+    .byte >famistudio_note_table_lsb
+ .if FAMISTUDIO_EXP_VRC6
+    .byte >famistudio_note_table_lsb
+    .byte >famistudio_note_table_lsb
+    .byte >famistudio_saw_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_VRC7
+    .byte >famistudio_vrc7_note_table_lsb
+    .byte >famistudio_vrc7_note_table_lsb
+    .byte >famistudio_vrc7_note_table_lsb
+    .byte >famistudio_vrc7_note_table_lsb
+    .byte >famistudio_vrc7_note_table_lsb
+    .byte >famistudio_vrc7_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte >famistudio_fds_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_MMC5    
+    .byte >famistudio_note_table_lsb
+    .byte >famistudio_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_N163    
+    .byte >famistudio_n163_note_table_lsb
+    .byte >famistudio_n163_note_table_lsb
+    .byte >famistudio_n163_note_table_lsb
+    .byte >famistudio_n163_note_table_lsb
+    .byte >famistudio_n163_note_table_lsb
+    .byte >famistudio_n163_note_table_lsb
+    .byte >famistudio_n163_note_table_lsb
+    .byte >famistudio_n163_note_table_lsb
+.endif
+.if FAMISTUDIO_EXP_S5B    
+    .byte >famistudio_note_table_lsb
+    .byte >famistudio_note_table_lsb
+    .byte >famistudio_note_table_lsb
+.endif
+
+famistudio_slide_to_note_table_msb_lo:
+    .byte <famistudio_note_table_msb
+    .byte <famistudio_note_table_msb
+    .byte <famistudio_note_table_msb
+ .if FAMISTUDIO_EXP_VRC6
+    .byte <famistudio_note_table_msb
+    .byte <famistudio_note_table_msb
+    .byte <famistudio_saw_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_VRC7
+    .byte <famistudio_vrc7_note_table_msb
+    .byte <famistudio_vrc7_note_table_msb
+    .byte <famistudio_vrc7_note_table_msb
+    .byte <famistudio_vrc7_note_table_msb
+    .byte <famistudio_vrc7_note_table_msb
+    .byte <famistudio_vrc7_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte <famistudio_fds_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_MMC5    
+    .byte <famistudio_note_table_msb
+    .byte <famistudio_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_N163    
+    .byte <famistudio_n163_note_table_msb
+    .byte <famistudio_n163_note_table_msb
+    .byte <famistudio_n163_note_table_msb
+    .byte <famistudio_n163_note_table_msb
+    .byte <famistudio_n163_note_table_msb
+    .byte <famistudio_n163_note_table_msb
+    .byte <famistudio_n163_note_table_msb
+    .byte <famistudio_n163_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_S5B    
+    .byte <famistudio_note_table_msb
+    .byte <famistudio_note_table_msb
+    .byte <famistudio_note_table_msb
+.endif   
+
+famistudio_slide_to_note_table_msb_hi:
+    .byte >famistudio_note_table_msb
+    .byte >famistudio_note_table_msb
+    .byte >famistudio_note_table_msb
+ .if FAMISTUDIO_EXP_VRC6
+    .byte >famistudio_note_table_msb
+    .byte >famistudio_note_table_msb
+    .byte >famistudio_saw_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_VRC7
+    .byte >famistudio_vrc7_note_table_msb
+    .byte >famistudio_vrc7_note_table_msb
+    .byte >famistudio_vrc7_note_table_msb
+    .byte >famistudio_vrc7_note_table_msb
+    .byte >famistudio_vrc7_note_table_msb
+    .byte >famistudio_vrc7_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte >famistudio_fds_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_MMC5    
+    .byte >famistudio_note_table_msb
+    .byte >famistudio_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_N163    
+    .byte >famistudio_n163_note_table_msb
+    .byte >famistudio_n163_note_table_msb
+    .byte >famistudio_n163_note_table_msb
+    .byte >famistudio_n163_note_table_msb
+    .byte >famistudio_n163_note_table_msb
+    .byte >famistudio_n163_note_table_msb
+    .byte >famistudio_n163_note_table_msb
+    .byte >famistudio_n163_note_table_msb
+.endif
+.if FAMISTUDIO_EXP_S5B    
+    .byte >famistudio_note_table_msb
+    .byte >famistudio_note_table_msb
+    .byte >famistudio_note_table_msb
+.endif   
+
 .endif
 
 ; For a given channel, returns the index of the pitch envelope.
