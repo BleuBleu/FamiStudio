@@ -3,6 +3,7 @@ Multiexp prototype:
 / Project property selection.
 - Smaller sequencer, how?
 	- Show instrument icons when hovering over project explorer.
+- Remove "NOne" piano roll mode.
 - Project/channel logic
 - Review all uses of expansionMask.
 - Review all SetExpansionAudio(), must use masks.
@@ -17,6 +18,7 @@ Multiexp prototype:
 - Sound engine, FamiTone export.
 	- Update regular sound engine to use the VRC6_CH0 naming.
 	- Anything that compares >= 5 wont work.
+	- Move some stuff to base sound engine if doesnt hurt (NUM_CHANNEL = 28, etc)
 	
 Videos:
 =======

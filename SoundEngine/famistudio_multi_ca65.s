@@ -416,14 +416,69 @@ FAMISTUDIO_CH1_ENVS = 3
 FAMISTUDIO_CH2_ENVS = 6
 FAMISTUDIO_CH3_ENVS = 8
 
-FAMISTUDIO_VRC6_CH0_IDX = 5
-FAMISTUDIO_VRC7_CH0_IDX = 8
-FAMISTUDIO_FDS_CH0_IDX  = 14
-FAMISTUDIO_MMC5_CH0_IDX = 15
-FAMISTUDIO_N163_CH0_IDX = 17
-FAMISTUDIO_S5B_CH0_IDX  = 25
+;=================
+FAMISTUDIO_VRC6_CH0_PITCH_ENV_IDX = 3
+FAMISTUDIO_VRC6_CH1_PITCH_ENV_IDX = 4
+FAMISTUDIO_VRC6_CH2_PITCH_ENV_IDX = 5
+
+FAMISTUDIO_VRC7_CH0_PITCH_ENV_IDX = 6
+FAMISTUDIO_VRC7_CH1_PITCH_ENV_IDX = 7
+FAMISTUDIO_VRC7_CH2_PITCH_ENV_IDX = 8
+FAMISTUDIO_VRC7_CH3_PITCH_ENV_IDX = 9
+FAMISTUDIO_VRC7_CH4_PITCH_ENV_IDX = 10
+FAMISTUDIO_VRC7_CH5_PITCH_ENV_IDX = 11
+
+FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX  = 12
+
+FAMISTUDIO_MMC5_CH0_PITCH_ENV_IDX = 13
+FAMISTUDIO_MMC5_CH1_PITCH_ENV_IDX = 14
+
+FAMISTUDIO_N163_CH0_PITCH_ENV_IDX = 15
+FAMISTUDIO_N163_CH1_PITCH_ENV_IDX = 16
+FAMISTUDIO_N163_CH2_PITCH_ENV_IDX = 17
+FAMISTUDIO_N163_CH3_PITCH_ENV_IDX = 18
+FAMISTUDIO_N163_CH4_PITCH_ENV_IDX = 19
+FAMISTUDIO_N163_CH5_PITCH_ENV_IDX = 20
+FAMISTUDIO_N163_CH6_PITCH_ENV_IDX = 21
+FAMISTUDIO_N163_CH7_PITCH_ENV_IDX = 22
+
+FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX  = 23
+FAMISTUDIO_S5B_CH1_PITCH_ENV_IDX  = 24
+FAMISTUDIO_S5B_CH2_PITCH_ENV_IDX  = 25
+;=================
+
+FAMISTUDIO_EXPANSION_CH0_IDX = 5
 
 ; [MULTI] BEGIN : Channel envelope indices. Handled a bit differently.
+FAMISTUDIO_VRC6_CH0_IDX = 5
+FAMISTUDIO_VRC6_CH1_IDX = 6
+FAMISTUDIO_VRC6_CH2_IDX = 7
+
+FAMISTUDIO_VRC7_CH0_IDX = 8
+FAMISTUDIO_VRC7_CH1_IDX = 9
+FAMISTUDIO_VRC7_CH2_IDX = 10
+FAMISTUDIO_VRC7_CH3_IDX = 11
+FAMISTUDIO_VRC7_CH4_IDX = 12
+FAMISTUDIO_VRC7_CH5_IDX = 13
+
+FAMISTUDIO_FDS_CH0_IDX  = 14
+
+FAMISTUDIO_MMC5_CH0_IDX = 15
+FAMISTUDIO_MMC5_CH1_IDX = 16
+
+FAMISTUDIO_N163_CH0_IDX = 17
+FAMISTUDIO_N163_CH1_IDX = 18
+FAMISTUDIO_N163_CH2_IDX = 19
+FAMISTUDIO_N163_CH3_IDX = 20
+FAMISTUDIO_N163_CH4_IDX = 21
+FAMISTUDIO_N163_CH5_IDX = 22
+FAMISTUDIO_N163_CH6_IDX = 23
+FAMISTUDIO_N163_CH7_IDX = 24
+
+FAMISTUDIO_S5B_CH0_IDX  = 25
+FAMISTUDIO_S5B_CH1_IDX  = 26
+FAMISTUDIO_S5B_CH2_IDX  = 27
+
 ; VRC6
 FAMISTUDIO_VRC6_CH0_ENVS = 11
 FAMISTUDIO_VRC6_CH1_ENVS = 14
@@ -459,6 +514,13 @@ FAMISTUDIO_S5B_CH0_ENVS = 56
 FAMISTUDIO_S5B_CH1_ENVS = 58
 FAMISTUDIO_S5B_CH2_ENVS = 60
 ; [MULTI] END
+
+; EXPTODO : Make the real end=gine light this.
+FAMISTUDIO_VRC6_CH0_DUTY_IDX = 3
+FAMISTUDIO_VRC6_CH1_DUTY_IDX = 4
+FAMISTUDIO_VRC6_CH2_DUTY_IDX = 5
+FAMISTUDIO_MMC5_CH0_DUTY_IDX = 6
+FAMISTUDIO_MMC5_CH1_DUTY_IDX = 7
 
 FAMISTUDIO_ENV_VOLUME_OFF = 0
 FAMISTUDIO_ENV_NOTE_OFF   = 1
@@ -1335,6 +1397,13 @@ famistudio_music_pause:
     sta famistudio_env_value+FAMISTUDIO_VRC7_CH4_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_VRC7_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
+.if FAMISTUDIO_EXP_FDS
+    sta famistudio_env_value+FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.if FAMISTUDIO_EXP_MMC5
+    sta famistudio_env_value+FAMISTUDIO_MMC5_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    sta famistudio_env_value+FAMISTUDIO_MMC5_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
 .if FAMISTUDIO_EXP_N163
     sta famistudio_env_value+FAMISTUDIO_N163_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_N163_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
@@ -1344,13 +1413,6 @@ famistudio_music_pause:
     sta famistudio_env_value+FAMISTUDIO_N163_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_N163_CH6_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_N163_CH7_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-.endif
-.if FAMISTUDIO_EXP_FDS
-    sta famistudio_env_value+FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-.endif
-.if FAMISTUDIO_EXP_MMC5
-    sta famistudio_env_value+FAMISTUDIO_MMC5_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_MMC5_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
 .if FAMISTUDIO_EXP_S5B
     sta famistudio_env_value+FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
@@ -1684,10 +1746,10 @@ famistudio_get_note_pitch_vrc6_saw:
 
 @set_volume:
 
-.if idx = 0 || idx = 1 || idx = 3 || (idx >= 5 && FAMISTUDIO_EXP_MMC5)
+.if idx = 0 || idx = 1 || idx = 3 || (FAMISTUDIO_EXP_MMC5 && (idx = FAMISTUDIO_MMC5_CH0_IDX || idx = FAMISTUDIO_MMC5_CH1_IDX))
     ldx famistudio_env_value+env_offset+FAMISTUDIO_ENV_DUTY_OFF
     ora famistudio_duty_lookup, x
-.elseif (idx = 5 || idx = 6) && FAMISTUDIO_EXP_VRC6
+.elseif FAMISTUDIO_EXP_VRC6 && (idx = FAMISTUDIO_VRC6_CH0_IDX || idx = FAMISTUDIO_VRC6_CH1_IDX)
     ldx famistudio_env_value+env_offset+FAMISTUDIO_ENV_DUTY_OFF
     ora famistudio_vrc6_duty_lookup, x
 .endif
@@ -1724,7 +1786,7 @@ famistudio_update_fds_channel_sound:
     tax
 
     ldy #0
-    famistudio_get_note_pitch_macro 3, famistudio_fds_note_table_lsb, famistudio_fds_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX, famistudio_fds_note_table_lsb, famistudio_fds_note_table_msb
 
     lda @pitch+0
     sta FAMISTUDIO_FDS_FREQ_LO
@@ -1861,7 +1923,7 @@ famistudio_update_vrc7_channel_sound:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    famistudio_get_note_pitch_macro 3, famistudio_vrc7_note_table_lsb, famistudio_vrc7_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_VRC7_CH0_PITCH_ENV_IDX, famistudio_vrc7_note_table_lsb, famistudio_vrc7_note_table_msb
 
     ; Compute octave by dividing by 2 until we are <= 512 (0x100).
     ldx #0
@@ -2029,7 +2091,7 @@ famistudio_update_n163_channel_sound:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    famistudio_get_note_pitch_macro 3, famistudio_n163_note_table_lsb, famistudio_n163_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_N163_CH0_PITCH_ENV_IDX, famistudio_n163_note_table_lsb, famistudio_n163_note_table_msb
 
     ; Convert 16-bit -> 18-bit.
     asl @pitch+0
@@ -2126,7 +2188,7 @@ famistudio_update_s5b_channel_sound:
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    famistudio_get_note_pitch_macro 3, famistudio_note_table_lsb, famistudio_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX, famistudio_note_table_lsb, famistudio_note_table_msb
 
     ; Write pitch
     lda famistudio_s5b_reg_table_lo,y
@@ -2189,24 +2251,44 @@ famistudio_update_row:
     ldx famistudio_channel_env,y
     lda famistudio_chn_instrument,y
 
-    ; TODO: If samples are disabled, there is no point in doing this test most of the time.
-    cpy #4
-.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_S5B
-    bne @base_instrument
-.else
-    bcc @base_instrument
-.endif
-.if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163
+    ; [MULTI] BEGIN : This is a mess, use a lookup jmp table maybe?
+    cpy #4 ; TODO: If samples are disabled, there is no point in doing this test most of the time.
     beq @dpcm
+    cpy #(FAMISTUDIO_VRC6_CH2_PITCH_ENV_IDX+1)
+    bcc @base_instrument ; 2A03 + VRC6
+    cpy #(FAMISTUDIO_VRC7_CH5_PITCH_ENV_IDX+1)
+    bcc @vrc7_instrument ; VRC7
+    cpy #(FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX+1)
+    bcc @fds_instrument ; FDS
+    cpy #(FAMISTUDIO_MMC5_CH1_PITCH_ENV_IDX+1)
+    bcc @base_instrument ; MMC5
+    cpy #(FAMISTUDIO_N163_CH7_PITCH_ENV_IDX+1)
+    bcc @n163_instrument ; N163
+    bcs @base_instrument ; S5B
+    ; [MULTI] END
+
+    ; [MULTI] BEGIN : We use the code above instead
+    ;.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_S5B
+    ;    bne @base_instrument
+    ;.else
+    ;    bcc @base_instrument
+    ;.endif
+    ; [MULTI] END
+
+.if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163
+    ;beq @dpcm ; [MULTI] We dont need this.
     .if FAMISTUDIO_EXP_FDS
+    @fds_instrument:
         jsr famistudio_set_fds_instrument
         jmp @new_note
     .endif
     .if FAMISTUDIO_EXP_VRC7
+    @vrc7_instrument:
         jsr famistudio_set_vrc7_instrument
         jmp @new_note
     .endif
     .if FAMISTUDIO_EXP_N163
+    @n163_instrument:
         jsr famistudio_set_n163_instrument
         jmp @new_note
     .endif
@@ -2233,7 +2315,6 @@ famistudio_update_row:
         sta famistudio_chn_note_counter, x
 .endif
     @no_new_note:
-
     rts
 
 .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
@@ -2682,14 +2763,14 @@ famistudio_update:
     famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS, , #$f0, , FAMISTUDIO_ALIAS_NOISE_LO, , FAMISTUDIO_ALIAS_NOISE_VOL
 
 .if FAMISTUDIO_EXP_VRC6
-    famistudio_update_channel_sound 5, FAMISTUDIO_VRC6_CH0_ENVS, , , #$80, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL
-    famistudio_update_channel_sound 6, FAMISTUDIO_VRC6_CH1_ENVS, , , #$80, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL
-    famistudio_update_channel_sound 7, FAMISTUDIO_VRC6_CH2_ENVS, , , #$80, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH0_IDX, FAMISTUDIO_VRC6_CH0_ENVS, , , #$80, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH1_IDX, FAMISTUDIO_VRC6_CH1_ENVS, , , #$80, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL
+    famistudio_update_channel_sound FAMISTUDIO_VRC6_CH2_IDX, FAMISTUDIO_VRC6_CH2_ENVS, , , #$80, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL
 .endif
 
 .if FAMISTUDIO_EXP_MMC5
-    famistudio_update_channel_sound 5, FAMISTUDIO_MMC5_CH0_ENVS, famistudio_mmc5_pulse1_prev, , , FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL
-    famistudio_update_channel_sound 6, FAMISTUDIO_MMC5_CH1_ENVS, famistudio_mmc5_pulse2_prev, , , FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL
+    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH0_IDX, FAMISTUDIO_MMC5_CH0_ENVS, famistudio_mmc5_pulse1_prev, , , FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL
+    famistudio_update_channel_sound FAMISTUDIO_MMC5_CH1_IDX, FAMISTUDIO_MMC5_CH1_ENVS, famistudio_mmc5_pulse2_prev, , , FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL
 .endif
 
 .if FAMISTUDIO_EXP_FDS
@@ -2890,7 +2971,7 @@ famistudio_set_instrument:
     bne @duty
 .else
     beq @no_duty
-    cmp #5 ; S5B has no duty.
+    cmp #FAMISTUDIO_S5B_CH0_IDX ; S5B has no duty.
     bcc @duty
 .endif
     @no_duty:
@@ -3069,16 +3150,11 @@ famistudio_set_vrc7_instrument:
 
     famistudio_set_exp_instrument
 
-    lda @chan_idx
-    sec
-    sbc #5
-    tax
-
-    lda famistudio_chn_inst_changed,x
+    lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
     beq @done
 
     lda (@ptr),y
-    sta famistudio_chn_vrc7_patch, x
+    sta famistudio_chn_vrc7_patch-FAMISTUDIO_VRC7_CH0_IDX, x
     bne @done
 
     @read_custom_patch:
@@ -3260,15 +3336,10 @@ famistudio_set_n163_instrument:
     famistudio_set_exp_instrument
 
     ; Wave position
-    lda @chan_idx
-    sec
-    sbc #5
-    tax
-
-    lda famistudio_chn_inst_changed,x
+    lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
     beq @done
 
-    lda famistudio_n163_wave_table, x
+    lda famistudio_n163_wave_table-FAMISTUDIO_N163_CH0_IDX, x
     sta FAMISTUDIO_N163_ADDR
     lda (@ptr),y
     sta @wave_pos
@@ -3283,7 +3354,7 @@ famistudio_set_n163_instrument:
     sbc @wave_len
     sec
     sbc @wave_len
-    sta famistudio_chn_n163_wave_len, x
+    sta famistudio_chn_n163_wave_len-FAMISTUDIO_N163_CH0_IDX, x
     iny
 
     ; N163 wave pointer.
@@ -3552,7 +3623,7 @@ famistudio_channel_update:
     sta famistudio_duty_cycle,x
     sta @tmp_duty_cycle
     ldx @tmp_chan_idx
-    lda famistudio_channel_to_duty,x
+    lda famistudio_channel_to_duty_env,x
     tax 
     lda @tmp_duty_cycle
     sta famistudio_env_value,x
@@ -3744,18 +3815,18 @@ famistudio_channel_update:
     sta famistudio_chn_note,x ; Store note code
     famistudio_add_16_8 @channel_data_ptr, #3
     ldy #0
-    jmp @sec_and_done
+    jmp @check_no_attack
 .endif
 
 @regular_note:    
     sta famistudio_chn_note,x ; Store note code
 .if FAMISTUDIO_USE_SLIDE_NOTES
     ldy famistudio_channel_to_slide,x ; Clear any previous slide on new node.
-    bmi @sec_and_done
+    bmi @check_no_attack
     lda #0
     sta famistudio_slide_step,y
 .endif
-@sec_and_done:
+@check_no_attack:
     bit @update_flags
     bmi @no_attack
 .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
@@ -3768,17 +3839,25 @@ famistudio_channel_update:
     lda famistudio_chn_note,x ; Dont trigger attack on stop notes.
     beq @no_attack
 .if FAMISTUDIO_EXP_VRC7
-    cpx #5
-    bcs @vrc7_channel
-    sec ; New note flag is set
-    jmp @done
-    @vrc7_channel:
-        lda #1
-        sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set trigger flag for VRC7
-.endif    
+    cpx #FAMISTUDIO_VRC7_CH0_IDX
+    bcc @sec_and_done
+    ; [MULTI] BEGIN : Additionnal range test.
+    cpx #(FAMISTUDIO_VRC7_CH5_IDX+1)
+    bcs @sec_and_done
+    ; [MULTI] END
+    ; EXPTODO : Remove the sec + jmp + @label in regular sound engine too.
+    lda #1
+    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set trigger flag for VRC7
+.endif
+@sec_and_done:
     sec ; New note flag is set
     jmp @done
 @no_attack:
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+    cpx #4
+    beq @sec_and_done
+.endif
+@clc_and_done:
     clc ; Pretend there is no new note.
     jmp @done
 
@@ -3853,8 +3932,12 @@ famistudio_channel_update:
 @release_note:
 
 .if FAMISTUDIO_EXP_VRC7
-    cpx #5
+    cpx #FAMISTUDIO_VRC7_CH0_IDX
     bcc @apu_channel
+    ; [MULTI] BEGIN : Additionnal range test.
+    cpx #(FAMISTUDIO_VRC7_CH5_IDX+1)
+    bcs @apu_channel
+    ; [MULTI] END
     lda #$80
     sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set release flag for VRC7
     @apu_channel:
@@ -4703,6 +4786,13 @@ famistudio_channel_to_volume_env:
     .byte FAMISTUDIO_VRC7_CH4_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte FAMISTUDIO_VRC7_CH5_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
+.if FAMISTUDIO_EXP_FDS
+    .byte FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
+.if FAMISTUDIO_EXP_MMC5
+    .byte FAMISTUDIO_MMC5_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+    .byte FAMISTUDIO_MMC5_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
+.endif
 .if FAMISTUDIO_EXP_N163
     .byte FAMISTUDIO_N163_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte FAMISTUDIO_N163_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
@@ -4713,20 +4803,12 @@ famistudio_channel_to_volume_env:
     .byte FAMISTUDIO_N163_CH6_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte FAMISTUDIO_N163_CH7_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
-.if FAMISTUDIO_EXP_FDS
-    .byte FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-.endif
-.if FAMISTUDIO_EXP_MMC5
-    .byte FAMISTUDIO_MMC5_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    .byte FAMISTUDIO_MMC5_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-.endif
 .if FAMISTUDIO_EXP_S5B
     .byte FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     .byte FAMISTUDIO_S5B_CH2_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
 
-; EXPTODO : This will need to change.
 .if FAMISTUDIO_USE_ARPEGGIO
 ; For a given channel, returns the index of the arpeggio envelope.
 famistudio_channel_to_arpeggio_env:
@@ -4748,6 +4830,13 @@ famistudio_channel_to_arpeggio_env:
     .byte FAMISTUDIO_VRC7_CH4_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .byte FAMISTUDIO_VRC7_CH5_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
+.if FAMISTUDIO_EXP_FDS
+    .byte FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+.endif
+.if FAMISTUDIO_EXP_MMC5
+    .byte FAMISTUDIO_MMC5_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+    .byte FAMISTUDIO_MMC5_CH1_ENVS+FAMISTUDIO_ENV_NOTE_OFF
+.endif
 .if FAMISTUDIO_EXP_N163
     .byte FAMISTUDIO_N163_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .byte FAMISTUDIO_N163_CH1_ENVS+FAMISTUDIO_ENV_NOTE_OFF
@@ -4758,13 +4847,6 @@ famistudio_channel_to_arpeggio_env:
     .byte FAMISTUDIO_N163_CH6_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .byte FAMISTUDIO_N163_CH7_ENVS+FAMISTUDIO_ENV_NOTE_OFF
 .endif
-.if FAMISTUDIO_EXP_FDS
-    .byte FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-.endif
-.if FAMISTUDIO_EXP_MMC5
-    .byte FAMISTUDIO_MMC5_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-    .byte FAMISTUDIO_MMC5_CH1_ENVS+FAMISTUDIO_ENV_NOTE_OFF
-.endif
 .if FAMISTUDIO_EXP_S5B
     .byte FAMISTUDIO_S5B_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     .byte FAMISTUDIO_S5B_CH1_ENVS+FAMISTUDIO_ENV_NOTE_OFF
@@ -4772,7 +4854,6 @@ famistudio_channel_to_arpeggio_env:
 .endif
 .endif
 
-; EXPTODO : This will need to change.
 .if FAMISTUDIO_USE_SLIDE_NOTES
 famistudio_channel_to_slide:
 ; This table will only be defined if we use noise slides, otherwise identical to "famistudio_channel_to_pitch_env".
@@ -4782,34 +4863,44 @@ famistudio_channel_to_slide:
     .byte $02
     .byte FAMISTUDIO_NOISE_SLIDE_INDEX ; Keep the noise slide at the end so the pitch envelopes/slides are in sync.
     .byte $ff ; no slide for DPCM
-.if FAMISTUDIO_NUM_SLIDES >= 4
-    .byte $03
+.if FAMISTUDIO_EXP_VRC6
+    .byte FAMISTUDIO_VRC6_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC6_CH1_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC6_CH2_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_SLIDES >= 5
-    .byte $04
-.endif    
-.if FAMISTUDIO_NUM_SLIDES >= 6
-    .byte $05
+.if FAMISTUDIO_EXP_VRC7
+    .byte FAMISTUDIO_VRC7_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH1_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH2_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH3_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH4_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH5_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_SLIDES >= 7
-    .byte $06
+.if FAMISTUDIO_EXP_FDS
+    .byte FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_SLIDES >= 8
-    .byte $07
+.if FAMISTUDIO_EXP_MMC5    
+    .byte FAMISTUDIO_MMC5_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_MMC5_CH1_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_SLIDES >= 9
-    .byte $08
+.if FAMISTUDIO_EXP_N163    
+    .byte FAMISTUDIO_N163_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH1_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH2_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH3_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH4_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH5_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH6_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH7_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_SLIDES >= 10
-    .byte $09
-.endif
-.if FAMISTUDIO_NUM_SLIDES >= 11
-    .byte $0a
+.if FAMISTUDIO_EXP_S5B    
+    .byte FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_S5B_CH1_PITCH_ENV_IDX
+    .byte FAMISTUDIO_S5B_CH2_PITCH_ENV_IDX
 .endif
 .endif
 .endif
 
-; EXPTODO : This will need to change.
 ; For a given channel, returns the index of the pitch envelope.
 famistudio_channel_to_pitch_env:
     .byte $00
@@ -4817,32 +4908,42 @@ famistudio_channel_to_pitch_env:
     .byte $02
     .byte $ff ; no pitch envelopes for noise
     .byte $ff ; no pitch envelopes slide for DPCM
-.if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 4
-    .byte $03
+.if FAMISTUDIO_EXP_VRC6
+    .byte FAMISTUDIO_VRC6_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC6_CH1_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC6_CH2_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 5
-    .byte $04
-.endif    
-.if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 6
-    .byte $05
+.if FAMISTUDIO_EXP_VRC7
+    .byte FAMISTUDIO_VRC7_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH1_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH2_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH3_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH4_PITCH_ENV_IDX
+    .byte FAMISTUDIO_VRC7_CH5_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 7
-    .byte $06
+.if FAMISTUDIO_EXP_FDS
+    .byte FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 8
-    .byte $07
+.if FAMISTUDIO_EXP_MMC5    
+    .byte FAMISTUDIO_MMC5_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_MMC5_CH1_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 9
-    .byte $08
+.if FAMISTUDIO_EXP_N163    
+    .byte FAMISTUDIO_N163_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH1_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH2_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH3_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH4_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH5_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH6_PITCH_ENV_IDX
+    .byte FAMISTUDIO_N163_CH7_PITCH_ENV_IDX
 .endif
-.if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 10
-    .byte $09
-.endif
-.if FAMISTUDIO_NUM_PITCH_ENVELOPES >= 11
-    .byte $0a
+.if FAMISTUDIO_EXP_S5B    
+    .byte FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX
+    .byte FAMISTUDIO_S5B_CH1_PITCH_ENV_IDX
+    .byte FAMISTUDIO_S5B_CH2_PITCH_ENV_IDX
 .endif
 
-; EXPTODO : This will need to change.
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
 ; For a given channel, returns the index of the duty cycle in the "famistudio_duty_cycle" array.
 famistudio_channel_to_dutycycle:
@@ -4851,29 +4952,57 @@ famistudio_channel_to_dutycycle:
     .byte $ff
     .byte $02
     .byte $ff
-.if FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_VRC6
-    .byte $03
-    .byte $04
-.endif
 .if FAMISTUDIO_EXP_VRC6
-    .byte $05
+    .byte FAMISTUDIO_VRC6_CH0_DUTY_IDX
+    .byte FAMISTUDIO_VRC6_CH1_DUTY_IDX
+    .byte FAMISTUDIO_VRC6_CH2_DUTY_IDX
+.endif
+; [MULTI] BEGIN : Adding the unused channels between.
+.if FAMISTUDIO_EXP_VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte $ff ; FDS
+.endif
+; [MULTI] END
+.if FAMISTUDIO_EXP_MMC5
+    .byte FAMISTUDIO_MMC5_CH0_DUTY_IDX
+    .byte FAMISTUDIO_MMC5_CH1_DUTY_IDX
 .endif
 
 ; For a given channel, returns the index of the duty cycle envelope.
-famistudio_channel_to_duty:
+famistudio_channel_to_duty_env:
     .byte FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_DUTY_OFF
     .byte FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_DUTY_OFF
     .byte $ff
     .byte FAMISTUDIO_CH3_ENVS+FAMISTUDIO_ENV_DUTY_OFF
     .byte $ff
-.if FAMISTUDIO_EXP_MMC5
-    .byte FAMISTUDIO_MMC5_CH0_ENVS+FAMISTUDIO_ENV_DUTY_OFF
-    .byte FAMISTUDIO_MMC5_CH1_ENVS+FAMISTUDIO_ENV_DUTY_OFF
-.endif
 .if FAMISTUDIO_EXP_VRC6
     .byte FAMISTUDIO_VRC6_CH0_ENVS+FAMISTUDIO_ENV_DUTY_OFF
     .byte FAMISTUDIO_VRC6_CH1_ENVS+FAMISTUDIO_ENV_DUTY_OFF
     .byte FAMISTUDIO_VRC6_CH2_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+.endif
+; [MULTI] BEGIN : Adding the unused channels between.
+.if FAMISTUDIO_EXP_VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+    .byte $ff ; VRC7
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte $ff ; FDS
+.endif
+; [MULTI] END
+.if FAMISTUDIO_EXP_MMC5
+    .byte FAMISTUDIO_MMC5_CH0_ENVS+FAMISTUDIO_ENV_DUTY_OFF
+    .byte FAMISTUDIO_MMC5_CH1_ENVS+FAMISTUDIO_ENV_DUTY_OFF
 .endif
 .endif
 
