@@ -815,7 +815,13 @@ namespace FamiStudio
         {
             get
             {
-                return UsesFdsExpansion || UsesN163Expansion || UsesVrc6Expansion || UsesVrc7Expansion || UsesS5BExpansion;
+                for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+                {
+                    if (UsesExpansionAudio(i) && ExpansionType.NeedsExpansionInstrument(i))
+                        return true;
+                }
+
+                return false;
             }
         }
 
@@ -1746,6 +1752,11 @@ namespace FamiStudio
             "N163",
             "S5B"
         };
+
+        public static bool NeedsExpansionInstrument(int value)
+        {
+            return value == Fds || value == N163 || value == Vrc6 || value == Vrc7 || value == S5B;
+        }
 
         public static int GetValueFromMask(int mask)
         {

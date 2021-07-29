@@ -1908,20 +1908,22 @@ namespace FamiStudio
                     if (App.Project.NeedsExpansionInstruments)
                     {
                         var activeExpansions = App.Project.GetActiveExpansions();
-                        var expNames = new string[activeExpansions.Length + 1];
+                        var expNames = new List<string>();
 
-                        expNames[0] = ExpansionType.Names[ExpansionType.None];
+                        expNames.Add(ExpansionType.Names[ExpansionType.None]);
                         for (int i = 0; i < activeExpansions.Length; i++)
-                            expNames[i + 1] = ExpansionType.Names[activeExpansions[i]];
+                        {
+                            if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
+                                expNames.Add(ExpansionType.Names[activeExpansions[i]]);
+                        }
 
                         var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 260, true);
-                        dlg.Properties.AddDropDownList("Expansion:", expNames, expNames[0]); // 0
+                        dlg.Properties.AddDropDownList("Expansion:", expNames.ToArray(), expNames[0]); // 0
                         dlg.Properties.Build();
 
                         if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
                         {
-                            var selectedIdx = dlg.Properties.GetSelectedIndex(0);
-                            instrumentType = selectedIdx == 0 ? ExpansionType.None : activeExpansions[selectedIdx - 1];
+                            instrumentType = ExpansionType.GetValueForName(dlg.Properties.GetPropertyValue<string>(0));
                         }
                         else
                         {

@@ -6,14 +6,12 @@ Multiexp prototype:
 - Review all uses of expansionMask.
 - Review all SetExpansionAudio(), must use masks.
 - Warnings in project properties
-- BUG : Allows creating MMC5 instrument, makes no sense.
-- MIDI :
-	- Multiple expansion import
-	- Multiple expansion export
 - Icons:
 	- Use chip icon for instrument
 	- VRC6/VRC7 difference.
 	- MMC5 = chip with a "5"?
+x BUG : Allows creating MMC5 instrument, makes no sense.
+x MIDI
 x FamiTracker in/out? 
 x NSF in/out
 x Sound engine, FamiTone export.
