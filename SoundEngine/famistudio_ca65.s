@@ -568,7 +568,6 @@ FAMISTUDIO_ENV_VOLUME_OFF = 0
 FAMISTUDIO_ENV_NOTE_OFF   = 1
 FAMISTUDIO_ENV_DUTY_OFF   = 2
 
-; EXPTODO : Make the real sound engine like this.
 FAMISTUDIO_VRC7_PITCH_SHIFT = 3
 
 .if (FAMISTUDIO_EXP_N163_CHN_CNT > 4)
@@ -3788,8 +3787,8 @@ famistudio_channel_update:
     @positive_shift:
         lda @slide_delta_lo
         sta famistudio_slide_pitch_lo,x
-    ldy #FAMISTUDIO_PITCH_SHIFT
-    @positive_shift_loop:
+        ldy #FAMISTUDIO_PITCH_SHIFT
+        @positive_shift_loop:
             lda famistudio_slide_pitch_hi,x
             cmp #$80
             ror famistudio_slide_pitch_hi,x 

@@ -16,6 +16,7 @@ Multiexp prototype:
 	- MMC5 = chip with a "5"?
 - NSF in/out
 - Sound engine, FamiTone export.
+	- Pre-init, soft mask for expansions.
 	- Update regular sound engine to use the VRC6_CH0 naming.
 	- Anything that compares >= 5 wont work.
 	- Move some stuff to base sound engine if doesnt hurt (NUM_CHANNEL = 28, etc)
