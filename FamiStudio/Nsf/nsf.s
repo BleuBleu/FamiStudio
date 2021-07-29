@@ -133,8 +133,7 @@ nsf_mode: .res 1
 .ifdef FAMISTUDIO
 
     .ifdef FAMISTUDIO_MULTI_EXPANSION
-        ; MATTT
-        lda #0
+        lda nsf_expansion_mask
         jsr famistudio_multi_init
     .endif
 
@@ -166,6 +165,8 @@ nsf_mode: .res 1
 
 nsf_dpcm_page_start: .res 1
 nsf_dpcm_page_cnt:   .res 1
+nsf_expansion_mask:  .res 1
+nsf_unused:          .res 1
 
 ; each entry in the song table is 4 bytes
 ;  - first page of the song (1 byte)

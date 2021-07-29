@@ -549,6 +549,15 @@ FAMISTUDIO_EXPANSION_CH0_IDX = 5
 .endif
 ; [MULTI] END
 
+; [MULTI] BEGIN : Mask of active expansions.
+FAMISTUDIO_EXP_VRC6_MASK = $01
+FAMISTUDIO_EXP_VRC7_MASK = $02
+FAMISTUDIO_EXP_FDS_MASK  = $04
+FAMISTUDIO_EXP_MMC5_MASK = $08
+FAMISTUDIO_EXP_N163_MASK = $10
+FAMISTUDIO_EXP_S5B_MASK  = $20
+; [MULTI] END
+
 FAMISTUDIO_ENV_VOLUME_OFF = 0
 FAMISTUDIO_ENV_NOTE_OFF   = 1
 FAMISTUDIO_ENV_DUTY_OFF   = 2
@@ -680,6 +689,7 @@ famistudio_tempo_frame_num:       .res 1
 famistudio_tempo_frame_cnt:       .res 1
 .endif
 
+famistudio_expansion_mask:        .res 1 ; [MULTI] Mask of active expansions.
 famistudio_pal_adjust:            .res 1
 famistudio_song_list_lo:          .res 1
 famistudio_song_list_hi:          .res 1
@@ -927,6 +937,7 @@ FAMISTUDIO_FDS_ENV_SPEED  = $408A
 
 ; [MULTI] BEGIN : Special initialization function for multi-expansion engine.
 famistudio_multi_init:
+    sta famistudio_expansion_mask
     rts
 ; [MULTI] END
 
@@ -1012,11 +1023,23 @@ famistudio_init:
     sta FAMISTUDIO_APU_PL2_SWEEP
 
 .if FAMISTUDIO_EXP_VRC7
+@init_vrc7:
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_VRC7_MASK
+    beq @init_mmc5
+    ; [MULTI] END
     lda #0
     sta FAMISTUDIO_VRC7_SILENCE ; Enable VRC7 audio.
 .endif
 
 .if FAMISTUDIO_EXP_MMC5
+@init_mmc5:
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_MMC5_MASK
+    beq @init_s5b
+    ; [MULTI] END
     lda #$00
     sta FAMISTUDIO_MMC5_PCM_MODE
     lda #$03
@@ -1024,6 +1047,12 @@ famistudio_init:
 .endif
 
 .if FAMISTUDIO_EXP_S5B
+@init_s5b:
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_S5B_MASK
+    beq famistudio_music_stop
+    ; [MULTI] END
     lda #FAMISTUDIO_S5B_REG_TONE
     sta FAMISTUDIO_S5B_ADDR
     lda #$38 ; No noise, just 3 tones for now.
@@ -2785,21 +2814,46 @@ famistudio_update:
     famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS, , #$f0, , FAMISTUDIO_ALIAS_NOISE_LO, , FAMISTUDIO_ALIAS_NOISE_VOL
 
 .if FAMISTUDIO_EXP_VRC6
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_VRC6_MASK
+    bne @update_vrc6_sound
+    jmp @update_mmc5_sound
+    ; [MULTI] END
+@update_vrc6_sound:
     famistudio_update_channel_sound FAMISTUDIO_VRC6_CH0_IDX, FAMISTUDIO_VRC6_CH0_ENVS, , , #$80, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL
     famistudio_update_channel_sound FAMISTUDIO_VRC6_CH1_IDX, FAMISTUDIO_VRC6_CH1_ENVS, , , #$80, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL
     famistudio_update_channel_sound FAMISTUDIO_VRC6_CH2_IDX, FAMISTUDIO_VRC6_CH2_ENVS, , , #$80, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL
 .endif
 
 .if FAMISTUDIO_EXP_MMC5
+@update_mmc5_sound:
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_MMC5_MASK
+    beq @update_fds_sound
+    ; [MULTI] END
     famistudio_update_channel_sound FAMISTUDIO_MMC5_CH0_IDX, FAMISTUDIO_MMC5_CH0_ENVS, famistudio_mmc5_pulse1_prev, , , FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL
     famistudio_update_channel_sound FAMISTUDIO_MMC5_CH1_IDX, FAMISTUDIO_MMC5_CH1_ENVS, famistudio_mmc5_pulse2_prev, , , FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL
 .endif
 
 .if FAMISTUDIO_EXP_FDS
+@update_fds_sound:
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_FDS_MASK
+    beq @update_vrc7_sound
+    ; [MULTI] END
     jsr famistudio_update_fds_channel_sound
 .endif
 
 .if FAMISTUDIO_EXP_VRC7
+@update_vrc7_sound:
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_VRC7_MASK
+    beq @update_n163_sound
+    ; [MULTI] END
     ldy #0
     @vrc7_channel_loop:
         jsr famistudio_update_vrc7_channel_sound
@@ -2809,6 +2863,12 @@ famistudio_update:
 .endif
 
 .if FAMISTUDIO_EXP_N163
+@update_n163_sound:
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_N163_MASK
+    beq @update_s5b_sound
+    ; [MULTI] END
     ldy #0
     @n163_channel_loop:
         jsr famistudio_update_n163_channel_sound
@@ -2818,6 +2878,12 @@ famistudio_update:
 .endif
 
 .if FAMISTUDIO_EXP_S5B
+@update_s5b_sound:
+    ; [MULTI] BEGIN : Check the active expansion mask.
+    lda famistudio_expansion_mask
+    and #FAMISTUDIO_EXP_S5B_MASK
+    beq @update_sound_done
+    ; [MULTI] END
     ldy #0
     @s5b_channel_loop:
         jsr famistudio_update_s5b_channel_sound
@@ -2826,6 +2892,7 @@ famistudio_update:
         bne @s5b_channel_loop
 .endif
 
+@update_sound_done:
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
     lda famistudio_song_speed
     bmi @skip_famitracker_tempo_update ; bit 7 = paused

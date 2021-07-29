@@ -29,7 +29,7 @@ namespace FamiStudio
         const int NsfDpcmOffset      = 0xc000;
         const int NsfPageSize        = 0x1000;
 
-        const int NsfGlobalVarsSize     = 2;
+        const int NsfGlobalVarsSize     = 4;
         const int NsfSongTableEntrySize = 4;
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -197,12 +197,15 @@ namespace FamiStudio
 
                     nsfBytes.AddRange(project.GetPackedSampleData());
 
-                    nsfBytes[songTableIdx + 0] = (byte)dpcmPageStart; // DPCM_PAGE_START
-                    nsfBytes[songTableIdx + 1] = (byte)dpcmPageCount; // DPCM_PAGE_CNT
+                    nsfBytes[songTableIdx + 0] = (byte)dpcmPageStart;
+                    nsfBytes[songTableIdx + 1] = (byte)dpcmPageCount;
 
                     Log.LogMessage(LogSeverity.Info, $"DPCM samples size: {totalSampleSize} bytes.");
                     Log.LogMessage(LogSeverity.Info, $"DPCM padding size: {initPaddingSize + dpcmPadding} bytes.");
                 }
+
+                // This is only used in multi-expansion.
+                nsfBytes[songTableIdx + 2] = (byte)project.ExpansionAudioMask;
 
                 // Export each song individually, build TOC at the same time.
                 for (int i = 0; i < project.Songs.Count; i++)

@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (3.1.0)
+; FAMISTUDIO SOUND ENGINE (3.2.0)
 ; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -1016,11 +1016,13 @@ famistudio_init:
     sta FAMISTUDIO_APU_PL2_SWEEP
 
     .if FAMISTUDIO_EXP_VRC7
+.init_vrc7:
     lda #0
     sta FAMISTUDIO_VRC7_SILENCE ; Enable VRC7 audio.
     .endif
 
     .if FAMISTUDIO_EXP_MMC5
+.init_mmc5:
     lda #$00
     sta FAMISTUDIO_MMC5_PCM_MODE
     lda #$03
@@ -1028,6 +1030,7 @@ famistudio_init:
     .endif
 
     .if FAMISTUDIO_EXP_S5B
+.init_s5b:
     lda #FAMISTUDIO_S5B_REG_TONE
     sta FAMISTUDIO_S5B_ADDR
     lda #$38 ; No noise, just 3 tones for now.
@@ -2798,21 +2801,25 @@ famistudio_update:
     famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS, 0, #$f0, 0, FAMISTUDIO_ALIAS_NOISE_LO, 0, FAMISTUDIO_ALIAS_NOISE_VOL, 0
 
     .if FAMISTUDIO_EXP_VRC6
+.update_vrc6_sound:
     famistudio_update_channel_sound FAMISTUDIO_VRC6_CH0_IDX, FAMISTUDIO_VRC6_CH0_ENVS, 0, 0, #$80, FAMISTUDIO_VRC6_PL1_HI, FAMISTUDIO_VRC6_PL1_LO, FAMISTUDIO_VRC6_PL1_VOL, 0
     famistudio_update_channel_sound FAMISTUDIO_VRC6_CH1_IDX, FAMISTUDIO_VRC6_CH1_ENVS, 0, 0, #$80, FAMISTUDIO_VRC6_PL2_HI, FAMISTUDIO_VRC6_PL2_LO, FAMISTUDIO_VRC6_PL2_VOL, 0
     famistudio_update_channel_sound FAMISTUDIO_VRC6_CH2_IDX, FAMISTUDIO_VRC6_CH2_ENVS, 0, 0, #$80, FAMISTUDIO_VRC6_SAW_HI, FAMISTUDIO_VRC6_SAW_LO, FAMISTUDIO_VRC6_SAW_VOL, 0
     .endif
 
     .if FAMISTUDIO_EXP_MMC5
+.update_mmc5_sound:
     famistudio_update_channel_sound FAMISTUDIO_MMC5_CH0_IDX, FAMISTUDIO_MMC5_CH0_ENVS, famistudio_mmc5_pulse1_prev, 0, 0, FAMISTUDIO_MMC5_PL1_HI, FAMISTUDIO_MMC5_PL1_LO, FAMISTUDIO_MMC5_PL1_VOL, 0
     famistudio_update_channel_sound FAMISTUDIO_MMC5_CH1_IDX, FAMISTUDIO_MMC5_CH1_ENVS, famistudio_mmc5_pulse2_prev, 0, 0, FAMISTUDIO_MMC5_PL2_HI, FAMISTUDIO_MMC5_PL2_LO, FAMISTUDIO_MMC5_PL2_VOL, 0
     .endif
 
     .if FAMISTUDIO_EXP_FDS
+.update_fds_sound:
     jsr famistudio_update_fds_channel_sound
     .endif
 
     .if FAMISTUDIO_EXP_VRC7
+.update_vrc7_sound:
     ldy #0
     .vrc7_channel_loop:
         jsr famistudio_update_vrc7_channel_sound
@@ -2822,6 +2829,7 @@ famistudio_update:
     .endif
 
     .if FAMISTUDIO_EXP_N163
+.update_n163_sound:
     ldy #0
     .n163_channel_loop:
         jsr famistudio_update_n163_channel_sound
@@ -2831,6 +2839,7 @@ famistudio_update:
     .endif
 
     .if FAMISTUDIO_EXP_S5B
+.update_s5b_sound:
     ldy #0
     .s5b_channel_loop:
         jsr famistudio_update_s5b_channel_sound
@@ -2839,6 +2848,7 @@ famistudio_update:
         bne .s5b_channel_loop
     .endif
 
+.update_sound_done:
     .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
     lda famistudio_song_speed
     bmi .skip_famitracker_tempo_update ; bit 7 = paused
