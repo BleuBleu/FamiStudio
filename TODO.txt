@@ -14,12 +14,8 @@ Multiexp prototype:
 	- Use chip icon for instrument
 	- VRC6/VRC7 difference.
 	- MMC5 = chip with a "5"?
-- NSF in/out
-- Sound engine, FamiTone export.
-	- Pre-init, soft mask for expansions.
-	- Update regular sound engine to use the VRC6_CH0 naming.
-	- Anything that compares >= 5 wont work.
-	- Move some stuff to base sound engine if doesnt hurt (NUM_CHANNEL = 28, etc)
+x NSF in/out
+x Sound engine, FamiTone export.
 	
 Videos:
 =======

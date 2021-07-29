@@ -381,8 +381,7 @@ namespace FamiStudio
 
         private Instrument GetDutyInstrument(Channel channel, int duty)
         {
-            // EXPTODO
-            var expansion = ExpansionType.None; // channel.IsExpansionChannel && project.NeedsExpansionInstruments ? project.ExpansionAudio : ExpansionType.None;
+            var expansion = channel.Expansion;
             var expPrefix = expansion == ExpansionType.None ? "" : ExpansionType.ShortNames[expansion] + " ";
             var name = $"{expPrefix}Duty {duty}";
 
@@ -863,21 +862,19 @@ namespace FamiStudio
             project.Copyright = Marshal.PtrToStringAnsi(NsfGetCopyright(nsf));
             project.PalMode   = palSource;
 
-            switch (NsfGetExpansion(nsf))
+            // Our expansion mask is the same as NSF.
+            var expansionMask = NsfGetExpansion(nsf);
+
+            // The 2 upper bits of the mask need to be zero, we dont support these.
+            if (expansionMask != (expansionMask & ExpansionType.AllMask))
             {
-                case EXTSOUND_VRC6: project.SetExpansionAudioMask(ExpansionType.Vrc6Mask); break;
-                case EXTSOUND_VRC7: project.SetExpansionAudioMask(ExpansionType.Vrc7Mask); break;
-                case EXTSOUND_FDS:  project.SetExpansionAudioMask(ExpansionType.FdsMask);  break;
-                case EXTSOUND_MMC5: project.SetExpansionAudioMask(ExpansionType.Mmc5Mask); break;
-                case EXTSOUND_N163: project.SetExpansionAudioMask(ExpansionType.N163Mask, GetNumNamcoChannels(filename, songIndex, numFrames)); break;
-                case EXTSOUND_S5B:  project.SetExpansionAudioMask(ExpansionType.S5BMask);  break;
-                case 0: break;
-                default:
-                    // EXPTODO : Support multi expansion here.
-                    Log.LogMessage(LogSeverity.Error, "NSF uses multiple expansion chips at the same time. This is not supported.");
-                    NsfClose(nsf); // Unsupported expansion combination.
-                    return null;
+                Log.LogMessage(LogSeverity.Error, "NSF uses unknown or unsupported expansion chips, aborting.");
+                NsfClose(nsf);
+                return null;
             }
+
+            var numN163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? GetNumNamcoChannels(filename, songIndex, numFrames) : 1;
+            project.SetExpansionAudioMask(expansionMask, numN163Channels);
 
             var songName = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, songIndex));
 
