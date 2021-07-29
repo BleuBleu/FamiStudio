@@ -1,6 +1,8 @@
 3.1.0
 =====
 - Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
+x Loop selection bug
+- Missing volume slides in FamiStudio text.
 
 Videos:
 =======
