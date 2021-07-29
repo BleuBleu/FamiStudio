@@ -658,9 +658,9 @@ namespace FamiStudio
                     var modEnv = new sbyte[32];
 
                     for (int i = 0; i < 64; i++)
-                        wavEnv[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_FDSWAVETABLE, i);
+                        wavEnv[i] = (sbyte)(NsfGetState(nsf, channel.Type, STATE_FDSWAVETABLE, i) & 0x3f);
                     for (int i = 0; i < 32; i++)
-                        modEnv[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONTABLE, i);
+                        modEnv[i] = (sbyte)(NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONTABLE, i));
 
                     Envelope.ConvertFdsModulationToAbsolute(modEnv);
 

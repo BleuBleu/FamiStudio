@@ -425,6 +425,19 @@ namespace FamiStudio
             }
         }
 
+        public bool ValuesInValidRange(Instrument instrument, int type)
+        {
+            GetMinMaxValue(instrument, type, out var min, out var max);
+
+            for (int i = 0; i < length; i++)
+            {
+                if (values[i] < min || values[i] > max)
+                    return false;
+            }
+
+            return true;
+        }
+
         public void ClampToValidRange(Instrument instrument, int type)
         {
             GetMinMaxValue(instrument, type, out var min, out var max);

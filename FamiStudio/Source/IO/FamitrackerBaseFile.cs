@@ -1030,13 +1030,10 @@ namespace FamiStudio
                 }
             }
 
-            /*
-             * EXPTODO
-            if (project.ExpansionAudio == ExpansionType.Vrc6)
+            if (project.UsesVrc6Expansion)
             {
                 Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio is not affected by the duty cycle and is instead controlled by a 'Saw Master Volume' on this instrument. You will likely have to adjust this to get the correct volume.");
             }
-            */
 
             var mappedSamplesSize = project.GetTotalMappedSampleSize();
             if (mappedSamplesSize > Project.MaxMappedSampleSize)

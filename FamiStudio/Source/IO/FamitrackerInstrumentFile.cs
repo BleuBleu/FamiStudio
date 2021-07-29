@@ -94,14 +94,11 @@ namespace FamiStudio
             var instType = InstrumentTypeLookup[bytes[6]];
 
             // Needs to match the current expansion audio. Our enum happens to match (-1) for now.
-            /*
-             * EXPTODO
-            if (instType != ExpansionType.None && instType != project.ExpansionAudio)
+            if (instType != ExpansionType.None && !project.UsesExpansionAudio(instType))
             {
-                Log.LogMessage(LogSeverity.Error, "Audio expansion does not match the current project expansion.");
+                Log.LogMessage(LogSeverity.Error, "Audio expansion is not enabled in the current project.");
                 return null;
             }
-            */
 
             var offset = 7;
             var nameLen = BitConverter.ToInt32(bytes, offset); offset += 4;

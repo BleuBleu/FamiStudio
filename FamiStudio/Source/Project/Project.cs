@@ -120,7 +120,7 @@ namespace FamiStudio
             if (type == ExpansionType.None)
                 return true;
 
-            return (expansionMask & (1 << (type - 1))) != 0;
+            return (expansionMask & ExpansionType.GetMaskFromValue(type)) != 0;
         }
 
         public Song GetSong(int id)
@@ -1639,7 +1639,7 @@ namespace FamiStudio
 
                 // At version 11 (FamiStudio 3.1.0) we added support for multiple audio expansions.
                 if (buffer.Version < 12)
-                    expansionMask = ExpansionType.GetValueToMask(expansionMask);
+                    expansionMask = ExpansionType.GetMaskFromValue(expansionMask);
             }
 
             // At version 5 (FamiStudio 2.0.0) we added support for Namco 163 and advanced tempo mode.
@@ -1747,7 +1747,21 @@ namespace FamiStudio
             "S5B"
         };
 
-        public static int GetValueToMask(int exp)
+        public static int GetValueFromMask(int mask)
+        {
+            Debug.Assert(Utils.NumberOfSetBits(mask) <= 1);
+
+            if ((mask & ExpansionType.Vrc6Mask) != 0) return Vrc6;
+            if ((mask & ExpansionType.Vrc7Mask) != 0) return Vrc7;
+            if ((mask & ExpansionType.FdsMask)  != 0) return Fds;
+            if ((mask & ExpansionType.Mmc5Mask) != 0) return Mmc5;
+            if ((mask & ExpansionType.N163Mask) != 0) return N163;
+            if ((mask & ExpansionType.S5BMask)  != 0) return S5B;
+
+            return None;
+        }
+
+        public static int GetMaskFromValue(int exp)
         {
             return exp == None ? NoneMask : 1 << (exp - 1);
         }

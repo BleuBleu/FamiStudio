@@ -227,6 +227,9 @@ namespace FamiStudio
                 bool envelopeExists = envelopes[i] != null;
                 bool envelopeShouldExists = IsEnvelopeActive(i);
                 Debug.Assert(envelopeExists == envelopeShouldExists);
+
+                if (envelopeExists)
+                    Debug.Assert(envelopes[i].ValuesInValidRange(this, i));
             }
 #endif
         }
@@ -326,6 +329,13 @@ namespace FamiStudio
                     envelopes[EnvelopeType.DutyCycle].Length = 1;
                     envelopes[EnvelopeType.DutyCycle].Values[0] = (sbyte)dutyCycle;
                 }
+            }
+
+            // At FamiStudio 3.2.0, we realized that we had some FDS envelopes (likely imported from NSF)
+            // with bad values.
+            if (buffer.Version < 12 && IsFdsInstrument)
+            {
+                envelopes[EnvelopeType.FdsWaveform].ClampToValidRange(this, EnvelopeType.FdsWaveform);
             }
         }
     }

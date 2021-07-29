@@ -235,7 +235,10 @@ namespace FamiStudio
                     page.AddCheckBox("Delete unused data :", false); // 1
                     break;
                 case ExportFormat.FamiTracker:
-                    page.AddCheckBoxList(null, songNames, null); // 0
+                    if (!project.UsesMultipleExpansionAudios)
+                        page.AddCheckBoxList(null, songNames, null); // 0
+                    else
+                        page.AddLabel(null, "The original FamiTracker does not support multiple audio expansions. Limit yourself to a single expansion to enable export.", true);
                     break;
                 case ExportFormat.FamiTone2Music:
                 case ExportFormat.FamiStudioMusic:
@@ -592,12 +595,15 @@ namespace FamiStudio
 
         private void ExportFamiTracker()
         {
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
-            if (filename != null)
+            if (!project.UsesMultipleExpansionAudios)
             {
-                var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
-                new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
-                lastExportFilename = filename;
+                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
+                if (filename != null)
+                {
+                    var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
+                    new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
+                    lastExportFilename = filename;
+                }
             }
         }
 
@@ -679,7 +685,7 @@ namespace FamiStudio
         private uint ComputeProjectCrc(Project project)
         {
             // Only hashing fields that would have an impact on the generated UI.
-            uint crc = 0; // EXPTODO CRC32.Compute(project.ExpansionAudio);
+            uint crc = CRC32.Compute(project.ExpansionAudioMask);
             crc = CRC32.Compute(project.ExpansionNumN163Channels, crc);
 
             foreach (var song in project.Songs)

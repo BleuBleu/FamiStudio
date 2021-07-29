@@ -17,7 +17,7 @@ namespace FamiStudio
         public int Type => type;
         public string Name => ChannelType.Names[type];
         public string ShortName => ChannelType.ShortNames[(int)type];
-        public string NameWithExpansion => ""; // EXPTODO IsExpansionChannel ? $"{Name} ({ExpansionType.ShortNames[song.Project.ExpansionAudio]})" : Name;
+        public string NameWithExpansion => IsExpansionChannel ? $"{Name} ({ExpansionType.ShortNames[ChannelType.GetExpansionTypeForChannelType(type)]})" : Name;
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;

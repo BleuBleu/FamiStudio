@@ -114,7 +114,7 @@ namespace FamiStudio
                         if (convertedExp < 0)
                             return null;
 
-                        project.SetExpansionAudioMask(convertedExp); // EXPTODO
+                        project.SetExpansionAudioMask(ExpansionType.GetMaskFromValue(convertedExp));
                     }
                     else if (line.StartsWith("MACHINE"))
                     {
@@ -124,7 +124,7 @@ namespace FamiStudio
                     else if (line.StartsWith("N163CHANNELS"))
                     {
                         var numExpChannels = int.Parse(line.Substring(12).Trim(' ', '"'));
-                        project.SetExpansionAudioMask(ExpansionType.N163, numExpChannels); // EXPTODO.
+                        project.SetExpansionAudioMask(ExpansionType.N163Mask, numExpChannels); 
                     }
                     else if (line.StartsWith("MACRO"))
                     {
@@ -464,13 +464,10 @@ namespace FamiStudio
 
                                 var fx = new RowFxData();
 
-                                /*
-                                 * EXPTODO
-                                if (project.ExpansionAudio == ExpansionType.Fds && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
+                                if (project.UsesFdsExpansion && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
                                     fx.fx = (byte)fdsFx;
                                 else
                                     fx.fx = TextToEffectLookup[fxStr[0]];
-                                    */
 
                                 fx.param = Convert.ToByte(fxStr.Substring(1), 16);
                                 patternFxData[pattern][n, k] = fx;
@@ -660,6 +657,12 @@ namespace FamiStudio
 
         public bool Save(Project originalProject, string filename, int[] songIds)
         {
+            if (originalProject.UsesMultipleExpansionAudios)
+            {
+                Log.LogMessage(LogSeverity.Error, $"Project uses multiple audio expansions. The original FamiTracker did not support this.");
+                return false;
+            }
+
             var project = originalProject.DeepClone();
             project.DeleteAllSongsBut(songIds);
 
@@ -692,24 +695,22 @@ namespace FamiStudio
             lines.Add("# Global settings");
             lines.Add("MACHINE         " + (project.PalMode ? "1" : "0"));
             lines.Add("FRAMERATE       0");
-            lines.Add("EXPANSION       "  /*+ (project.ExpansionAudio != ExpansionType.None ? (1 << (project.ExpansionAudio - 1)) : 0)*/); // EXPTODO
+            lines.Add("EXPANSION       " + project.ExpansionAudioMask);
             lines.Add("VIBRATO         1");
             lines.Add("SPLIT           32");
             lines.Add("");
 
             var realNumExpansionChannels = project.ExpansionNumN163Channels;
 
-            /* EXPTODO
-            if (project.ExpansionAudio == ExpansionType.N163)
+            if (project.UsesN163Expansion)
             {
                 lines.Add("# Namco 163 global settings");
-                lines.Add($"N163CHANNELS    {project.ExpansionNumChannels}");
+                lines.Add($"N163CHANNELS    {project.ExpansionNumN163Channels}");
                 lines.Add("");
 
                 // The text format always export all 8 channels, even if there are less.
-                project.SetExpansionAudio(ExpansionType.N163, 8); // EXPTODO mask.
+                project.SetExpansionAudioMask(project.ExpansionAudioMask, 8);
             }
-            */
 
             lines.Add("# Macros");
             for (int i = 0; i < EnvelopeType.RegularCount; i++)
@@ -722,12 +723,9 @@ namespace FamiStudio
                 }
             }
 
-            /*
-             * EXPTODO
-            if (project.ExpansionAudio == ExpansionType.Vrc6 ||
-                project.ExpansionAudio == ExpansionType.N163)
+            if (project.UsesVrc6Expansion || project.UsesN163Expansion)
             {
-                var suffix = project.ExpansionAudio == ExpansionType.Vrc6 ? "VRC6" : "N163";
+                var suffix = project.UsesVrc6Expansion ? "VRC6" : "N163";
 
                 for (int i = 0; i < EnvelopeType.RegularCount; i++)
                 {
@@ -739,7 +737,6 @@ namespace FamiStudio
                     }
                 }
             }
-            */
 
             lines.Add("");
 
