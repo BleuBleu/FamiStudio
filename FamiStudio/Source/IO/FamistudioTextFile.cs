@@ -41,8 +41,23 @@ namespace FamiStudio
             if (project.Name      != "")    projectLine += GenerateAttribute("Name", project.Name);
             if (project.Author    != "")    projectLine += GenerateAttribute("Author", project.Author);
             if (project.Copyright != "")    projectLine += GenerateAttribute("Copyright", project.Copyright);
-            //if (project.UsesExpansionAudio) projectLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[project.ExpansionAudio]); EXPTODO
             if (project.PalMode)            projectLine += GenerateAttribute("PAL", true);
+
+            if (project.UsesAnyExpansionAudio)
+            {
+                var expansionStrings = new List<string>();
+
+                for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+                {
+                    if (project.UsesExpansionAudio(i))
+                        expansionStrings.Add(ExpansionType.ShortNames[i]);
+                }
+
+                projectLine += GenerateAttribute("Expansions", string.Join(",", expansionStrings));
+
+                if (project.UsesN163Expansion)
+                    projectLine += GenerateAttribute("NumN163Channels", project.ExpansionNumN163Channels);
+            }
 
             lines.Add(projectLine);
 
@@ -82,7 +97,7 @@ namespace FamiStudio
                 var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
                 if (instrument.IsExpansionInstrument)
                 {
-                    //instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[project.ExpansionAudio]); EXPTODO
+                   instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[instrument.ExpansionType]);
 
                     if (instrument.ExpansionType == ExpansionType.Fds)
                     {
@@ -333,10 +348,27 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Name", out var name)) project.Name = name;
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
-                            if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudioMask(ExpansionType.GetValueForShortName(expansion)); // EXPTODO mask
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
-                            if (!version.StartsWith("3.1"))
+                            if (parameters.TryGetValue("Expansions", out var expansions))
+                            {
+                                var expansionMask = 0;
+                                var expansionStrings = expansions.Split(',');
+
+                                foreach (var s in expansionStrings)
+                                {
+                                    var exp = ExpansionType.GetValueForShortName(s.Trim());
+                                    expansionMask |= ExpansionType.GetMaskFromValue(exp);
+                                }
+
+                                var numN163Channels = 1;
+                                if ((expansionMask & ExpansionType.N163Mask) != 0 && parameters.TryGetValue("NumN163Channels", out var numN163ChannelsStr))
+                                    numN163Channels = int.Parse(numN163ChannelsStr);
+
+                                project.SetExpansionAudioMask(expansionMask, numN163Channels);
+                            }
+
+                            if (!version.StartsWith("3.2"))
                             {
                                 Log.LogMessage(LogSeverity.Error, "File was created with an incompatible version of FamiStudio. The text format is only compatible with the current version.");
                                 return null;
@@ -363,8 +395,10 @@ namespace FamiStudio
                         }
                         case "Instrument":
                         {
-                            // EXPTODO
-                            //instrument = project.CreateInstrument(parameters.TryGetValue("Expansion", out _) ? project.ExpansionAudio : ExpansionType.None, parameters["Name"]);
+                            var instrumentExp = ExpansionType.None;
+                            if (parameters.TryGetValue("Expansion", out var instrumentExpStr))
+                                instrumentExp = ExpansionType.GetValueForShortName(instrumentExpStr);
+                            instrument = project.CreateInstrument(instrumentExp, parameters["Name"]);
 
                             if (instrument.ExpansionType == ExpansionType.Fds)
                             {

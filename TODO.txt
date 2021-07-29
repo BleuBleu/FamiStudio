@@ -1,9 +1,7 @@
 Multiexp prototype:
 / Change NesSndEmu to support multiple expansions
 / Project property selection.
-- Smaller sequencer, how?
-	- Show instrument icons when hovering over project explorer.
-- Remove "NOne" piano roll mode.
+- Show instrument icons when hovering over project explorer.
 - Project/channel logic
 - Review all uses of expansionMask.
 - Review all SetExpansionAudio(), must use masks.
@@ -16,6 +14,9 @@ Multiexp prototype:
 x FamiTracker in/out? 
 x NSF in/out
 x Sound engine, FamiTone export.
+
+Misc:
+- Remove "NOne" piano roll mode.
 - Fix GTK single multiple label issue.	
 	
 Videos:
