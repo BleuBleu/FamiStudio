@@ -1,15 +1,15 @@
-Multiexp prototype:
-/ Change NesSndEmu to support multiple expansions
-/ Project property selection.
+Multiexp:
 - Show instrument icons when hovering over project explorer.
-- Project/channel logic
-- Review all uses of expansionMask.
-- Review all SetExpansionAudio(), must use masks.
-- Warnings in project properties
+- Review everything that says "expansion".
+/ Project property selection.
+	- Warnings in project properties
+	- Fix N163 channels.
 - Icons:
 	- Use chip icon for instrument
 	- VRC6/VRC7 difference.
 	- MMC5 = chip with a "5"?
+x Change NesSndEmu to support multiple expansions
+x Project/channel logic
 x BUG : Allows creating MMC5 instrument, makes no sense.
 x MIDI
 x FamiTracker in/out? 
@@ -18,7 +18,7 @@ x Sound engine, FamiTone export.
 
 Misc:
 - Mac/Linux : CheckListBox doesnt fire events (needed for Midi import/PAL).
-- Remove "NOne" piano roll mode.
+- Remove "None" piano roll mode.
 - Fix GTK single multiple label issue.	
 	
 Videos:
