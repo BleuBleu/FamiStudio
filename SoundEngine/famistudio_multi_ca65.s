@@ -3497,7 +3497,6 @@ famistudio_channel_update:
     jmp (@special_code_jmp_ptr)
 
 .if FAMISTUDIO_EXP_FDS
-
 @special_code_fds_mod_depth:    
     lda (@channel_data_ptr),y
     famistudio_inc_16 @channel_data_ptr
@@ -3508,6 +3507,10 @@ famistudio_channel_update:
     jmp @read_byte
 
 @special_code_fds_mod_speed:
+    ; [MULTI] BEGIN : Hack, this code is shared by 2 expansions, check which one.
+    cpx #FAMISTUDIO_VRC6_CH2_IDX
+    beq @special_code_vrc6_saw_volume
+    ; [MULTI] END
     lda (@channel_data_ptr),y
     sta famistudio_fds_mod_speed+0
     iny
@@ -3519,15 +3522,14 @@ famistudio_channel_update:
     sta famistudio_fds_override_flags
     dey
     jmp @read_byte
+.endif
 
-.elseif FAMISTUDIO_EXP_VRC6
-
+.if FAMISTUDIO_EXP_VRC6
 @special_code_vrc6_saw_volume:
     lda (@channel_data_ptr),y
     famistudio_inc_16 @channel_data_ptr
     sta famistudio_vrc6_saw_volume
     jmp @read_byte
-
 .endif
 
 .if FAMISTUDIO_USE_VOLUME_SLIDES
@@ -4087,7 +4089,6 @@ famistudio_channel_update:
     .byte >@invalid_opcode                            ; $6a
     .byte >@invalid_opcode                            ; $6b    
 .endif    
-; EXPTODO : This is a problem.
 .if FAMISTUDIO_EXP_FDS        
     .byte >@special_code_fds_mod_speed                ; $6c
     .byte >@special_code_fds_mod_depth                ; $6d
