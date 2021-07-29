@@ -18,7 +18,8 @@ namespace FamiStudio
         // Version 9  = FamiStudio 2.4.0 (DPCM sample editor)
         // Version 10 = FamiStudio 3.0.0 (VRC6 saw master volume, groove, song sorting)
         // Version 11 = FamiStudio 3.1.0 (Volume slides, DPCM fine pitch)
-        public static int Version = 11;
+        // Version 12 = FamiStudio 3.2.0 (Multiple expansions, overclocking)
+        public static int Version = 12;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
 
@@ -1637,7 +1638,7 @@ namespace FamiStudio
                 buffer.Serialize(ref expansionMask);
 
                 // At version 11 (FamiStudio 3.1.0) we added support for multiple audio expansions.
-                if (buffer.Version < 11)
+                if (buffer.Version < 12)
                     expansionMask = ExpansionType.GetValueToMask(expansionMask);
             }
 

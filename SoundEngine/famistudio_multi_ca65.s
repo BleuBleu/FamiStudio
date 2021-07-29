@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (3.1.0)
+; FAMISTUDIO SOUND ENGINE (3.2.0)
 ; Copyright (c) 2019-2021 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -343,7 +343,7 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
     FAMISTUDIO_EXP_NONE = 0
 .endif
 
-; [MULTI] BEGIN : This will be handled differently with multiple expansions.
+; [MULTI] BEGIN : We dont use this in multi-expansion.
 ;.if (FAMISTUDIO_EXP_VRC7 + FAMISTUDIO_EXP_N163 + FAMISTUDIO_EXP_FDS)
 ;    FAMISTUDIO_EXP_NOTE_START = 5
 ;.endif
@@ -389,7 +389,7 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 
 FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
 
-; [MULTI] BEGIN : (2A03)+(VRC6)+(VRC7)+(FDS)+(MMC5)+(N163)+(S5B)
+; [MULTI] BEGIN : We have all channels active : (2A03)+(VRC6)+(VRC7)+(FDS)+(MMC5)+(N163)+(S5B)
 FAMISTUDIO_NUM_ENVELOPES        = (3+3+2+3)+(3+3+3)+(2+2+2+2+2+2)+(2)+(3+3)+(2+2+2+2+2+2+2+2)+(2+2+2)
 FAMISTUDIO_NUM_PITCH_ENVELOPES  = (3)+(3)+(6)+(1)+(2)+(1+1+1+1+1+1+1+1)+(3)
 FAMISTUDIO_NUM_CHANNELS         = (5)+(3)+(6)+(1)+(2)+(1+1+1+1+1+1+1+1)+(3)
@@ -416,111 +416,138 @@ FAMISTUDIO_CH1_ENVS = 3
 FAMISTUDIO_CH2_ENVS = 6
 FAMISTUDIO_CH3_ENVS = 8
 
-;=================
-FAMISTUDIO_VRC6_CH0_PITCH_ENV_IDX = 3
-FAMISTUDIO_VRC6_CH1_PITCH_ENV_IDX = 4
-FAMISTUDIO_VRC6_CH2_PITCH_ENV_IDX = 5
-
-FAMISTUDIO_VRC7_CH0_PITCH_ENV_IDX = 6
-FAMISTUDIO_VRC7_CH1_PITCH_ENV_IDX = 7
-FAMISTUDIO_VRC7_CH2_PITCH_ENV_IDX = 8
-FAMISTUDIO_VRC7_CH3_PITCH_ENV_IDX = 9
-FAMISTUDIO_VRC7_CH4_PITCH_ENV_IDX = 10
-FAMISTUDIO_VRC7_CH5_PITCH_ENV_IDX = 11
-
-FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX  = 12
-
-FAMISTUDIO_MMC5_CH0_PITCH_ENV_IDX = 13
-FAMISTUDIO_MMC5_CH1_PITCH_ENV_IDX = 14
-
-FAMISTUDIO_N163_CH0_PITCH_ENV_IDX = 15
-FAMISTUDIO_N163_CH1_PITCH_ENV_IDX = 16
-FAMISTUDIO_N163_CH2_PITCH_ENV_IDX = 17
-FAMISTUDIO_N163_CH3_PITCH_ENV_IDX = 18
-FAMISTUDIO_N163_CH4_PITCH_ENV_IDX = 19
-FAMISTUDIO_N163_CH5_PITCH_ENV_IDX = 20
-FAMISTUDIO_N163_CH6_PITCH_ENV_IDX = 21
-FAMISTUDIO_N163_CH7_PITCH_ENV_IDX = 22
-
-FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX  = 23
-FAMISTUDIO_S5B_CH1_PITCH_ENV_IDX  = 24
-FAMISTUDIO_S5B_CH2_PITCH_ENV_IDX  = 25
-;=================
-
 FAMISTUDIO_EXPANSION_CH0_IDX = 5
 
-; [MULTI] BEGIN : Channel envelope indices. Handled a bit differently.
-FAMISTUDIO_VRC6_CH0_IDX = 5
-FAMISTUDIO_VRC6_CH1_IDX = 6
-FAMISTUDIO_VRC6_CH2_IDX = 7
+; [MULTI] BEGIN : Changed channel indices.
+.if FAMISTUDIO_EXP_VRC6
+    FAMISTUDIO_VRC6_CH0_PITCH_ENV_IDX = 3
+    FAMISTUDIO_VRC6_CH1_PITCH_ENV_IDX = 4
+    FAMISTUDIO_VRC6_CH2_PITCH_ENV_IDX = 5
+.endif
+.if FAMISTUDIO_EXP_VRC7
+    FAMISTUDIO_VRC7_CH0_PITCH_ENV_IDX = 6
+    FAMISTUDIO_VRC7_CH1_PITCH_ENV_IDX = 7
+    FAMISTUDIO_VRC7_CH2_PITCH_ENV_IDX = 8
+    FAMISTUDIO_VRC7_CH3_PITCH_ENV_IDX = 9
+    FAMISTUDIO_VRC7_CH4_PITCH_ENV_IDX = 10
+    FAMISTUDIO_VRC7_CH5_PITCH_ENV_IDX = 11
+.endif
+.if FAMISTUDIO_EXP_FDS
+    FAMISTUDIO_FDS_CH0_PITCH_ENV_IDX  = 12
+.endif
+.if FAMISTUDIO_EXP_MMC5
+    FAMISTUDIO_MMC5_CH0_PITCH_ENV_IDX = 13
+    FAMISTUDIO_MMC5_CH1_PITCH_ENV_IDX = 14
+.endif
+.if FAMISTUDIO_EXP_N163
+    FAMISTUDIO_N163_CH0_PITCH_ENV_IDX = 15
+    FAMISTUDIO_N163_CH1_PITCH_ENV_IDX = 16
+    FAMISTUDIO_N163_CH2_PITCH_ENV_IDX = 17
+    FAMISTUDIO_N163_CH3_PITCH_ENV_IDX = 18
+    FAMISTUDIO_N163_CH4_PITCH_ENV_IDX = 19
+    FAMISTUDIO_N163_CH5_PITCH_ENV_IDX = 20
+    FAMISTUDIO_N163_CH6_PITCH_ENV_IDX = 21
+    FAMISTUDIO_N163_CH7_PITCH_ENV_IDX = 22
+.endif
+.if FAMISTUDIO_EXP_S5B
+    FAMISTUDIO_S5B_CH0_PITCH_ENV_IDX  = 23
+    FAMISTUDIO_S5B_CH1_PITCH_ENV_IDX  = 24
+    FAMISTUDIO_S5B_CH2_PITCH_ENV_IDX  = 25
+.endif
 
-FAMISTUDIO_VRC7_CH0_IDX = 8
-FAMISTUDIO_VRC7_CH1_IDX = 9
-FAMISTUDIO_VRC7_CH2_IDX = 10
-FAMISTUDIO_VRC7_CH3_IDX = 11
-FAMISTUDIO_VRC7_CH4_IDX = 12
-FAMISTUDIO_VRC7_CH5_IDX = 13
-
-FAMISTUDIO_FDS_CH0_IDX  = 14
-
-FAMISTUDIO_MMC5_CH0_IDX = 15
-FAMISTUDIO_MMC5_CH1_IDX = 16
-
-FAMISTUDIO_N163_CH0_IDX = 17
-FAMISTUDIO_N163_CH1_IDX = 18
-FAMISTUDIO_N163_CH2_IDX = 19
-FAMISTUDIO_N163_CH3_IDX = 20
-FAMISTUDIO_N163_CH4_IDX = 21
-FAMISTUDIO_N163_CH5_IDX = 22
-FAMISTUDIO_N163_CH6_IDX = 23
-FAMISTUDIO_N163_CH7_IDX = 24
-
-FAMISTUDIO_S5B_CH0_IDX  = 25
-FAMISTUDIO_S5B_CH1_IDX  = 26
-FAMISTUDIO_S5B_CH2_IDX  = 27
-
-; VRC6
-FAMISTUDIO_VRC6_CH0_ENVS = 11
-FAMISTUDIO_VRC6_CH1_ENVS = 14
-FAMISTUDIO_VRC6_CH2_ENVS = 17
-
-; VRC7
-FAMISTUDIO_VRC7_CH0_ENVS = 20
-FAMISTUDIO_VRC7_CH1_ENVS = 22
-FAMISTUDIO_VRC7_CH2_ENVS = 24
-FAMISTUDIO_VRC7_CH3_ENVS = 26
-FAMISTUDIO_VRC7_CH4_ENVS = 28
-FAMISTUDIO_VRC7_CH5_ENVS = 30
-
-; FDS
-FAMISTUDIO_FDS_CH0_ENVS = 32
-
-; MMC5
-FAMISTUDIO_MMC5_CH0_ENVS = 34
-FAMISTUDIO_MMC5_CH1_ENVS = 37
-
-; N163 
-FAMISTUDIO_N163_CH0_ENVS = 40
-FAMISTUDIO_N163_CH1_ENVS = 42
-FAMISTUDIO_N163_CH2_ENVS = 44
-FAMISTUDIO_N163_CH3_ENVS = 46
-FAMISTUDIO_N163_CH4_ENVS = 48
-FAMISTUDIO_N163_CH5_ENVS = 50
-FAMISTUDIO_N163_CH6_ENVS = 52
-FAMISTUDIO_N163_CH7_ENVS = 54
-
-; S5B
-FAMISTUDIO_S5B_CH0_ENVS = 56
-FAMISTUDIO_S5B_CH1_ENVS = 58
-FAMISTUDIO_S5B_CH2_ENVS = 60
+; [MULTI] BEGIN : Changed channel indices.
+.if FAMISTUDIO_EXP_VRC6
+    FAMISTUDIO_VRC6_CH0_IDX = 5
+    FAMISTUDIO_VRC6_CH1_IDX = 6
+    FAMISTUDIO_VRC6_CH2_IDX = 7
+.else
+    FAMISTUDIO_VRC6_CH0_IDX = -1
+    FAMISTUDIO_VRC6_CH1_IDX = -1
+.endif
+.if FAMISTUDIO_EXP_VRC7
+    FAMISTUDIO_VRC7_CH0_IDX = 8
+    FAMISTUDIO_VRC7_CH1_IDX = 9
+    FAMISTUDIO_VRC7_CH2_IDX = 10
+    FAMISTUDIO_VRC7_CH3_IDX = 11
+    FAMISTUDIO_VRC7_CH4_IDX = 12
+    FAMISTUDIO_VRC7_CH5_IDX = 13
+.endif
+.if FAMISTUDIO_EXP_FDS
+    FAMISTUDIO_FDS_CH0_IDX  = 14
+.endif
+.if FAMISTUDIO_EXP_MMC5
+    FAMISTUDIO_MMC5_CH0_IDX = 15
+    FAMISTUDIO_MMC5_CH1_IDX = 16
+.else
+    FAMISTUDIO_MMC5_CH0_IDX = -1
+    FAMISTUDIO_MMC5_CH1_IDX = -1
+.endif
+.if FAMISTUDIO_EXP_N163
+    FAMISTUDIO_N163_CH0_IDX = 17
+    FAMISTUDIO_N163_CH1_IDX = 18
+    FAMISTUDIO_N163_CH2_IDX = 19
+    FAMISTUDIO_N163_CH3_IDX = 20
+    FAMISTUDIO_N163_CH4_IDX = 21
+    FAMISTUDIO_N163_CH5_IDX = 22
+    FAMISTUDIO_N163_CH6_IDX = 23
+    FAMISTUDIO_N163_CH7_IDX = 24
+.endif
+.if FAMISTUDIO_EXP_S5B
+    FAMISTUDIO_S5B_CH0_IDX  = 25
+    FAMISTUDIO_S5B_CH1_IDX  = 26
+    FAMISTUDIO_S5B_CH2_IDX  = 27
+.endif
 ; [MULTI] END
 
-; EXPTODO : Make the real end=gine light this.
-FAMISTUDIO_VRC6_CH0_DUTY_IDX = 3
-FAMISTUDIO_VRC6_CH1_DUTY_IDX = 4
-FAMISTUDIO_VRC6_CH2_DUTY_IDX = 5
-FAMISTUDIO_MMC5_CH0_DUTY_IDX = 6
-FAMISTUDIO_MMC5_CH1_DUTY_IDX = 7
+; [MULTI] BEGIN : Changed channel indices.
+.if FAMISTUDIO_EXP_VRC6
+    FAMISTUDIO_VRC6_CH0_ENVS = 11
+    FAMISTUDIO_VRC6_CH1_ENVS = 14
+    FAMISTUDIO_VRC6_CH2_ENVS = 17
+.endif
+.if FAMISTUDIO_EXP_VRC7
+    FAMISTUDIO_VRC7_CH0_ENVS = 20
+    FAMISTUDIO_VRC7_CH1_ENVS = 22
+    FAMISTUDIO_VRC7_CH2_ENVS = 24
+    FAMISTUDIO_VRC7_CH3_ENVS = 26
+    FAMISTUDIO_VRC7_CH4_ENVS = 28
+    FAMISTUDIO_VRC7_CH5_ENVS = 30
+.endif
+.if FAMISTUDIO_EXP_FDS
+    FAMISTUDIO_FDS_CH0_ENVS = 32
+.endif
+.if FAMISTUDIO_EXP_MMC5
+    FAMISTUDIO_MMC5_CH0_ENVS = 34
+    FAMISTUDIO_MMC5_CH1_ENVS = 37
+.endif
+.if FAMISTUDIO_EXP_N163
+    FAMISTUDIO_N163_CH0_ENVS = 11
+    FAMISTUDIO_N163_CH1_ENVS = 42
+    FAMISTUDIO_N163_CH2_ENVS = 44
+    FAMISTUDIO_N163_CH3_ENVS = 46
+    FAMISTUDIO_N163_CH4_ENVS = 48
+    FAMISTUDIO_N163_CH5_ENVS = 50
+    FAMISTUDIO_N163_CH6_ENVS = 52
+    FAMISTUDIO_N163_CH7_ENVS = 54
+.endif
+.if FAMISTUDIO_EXP_S5B
+    FAMISTUDIO_S5B_CH0_ENVS = 56
+    FAMISTUDIO_S5B_CH1_ENVS = 58
+    FAMISTUDIO_S5B_CH2_ENVS = 60
+.endif
+; [MULTI] END
+
+; [MULTI] BEGIN : Changed channel indices.
+.if FAMISTUDIO_EXP_VRC6
+    FAMISTUDIO_VRC6_CH0_DUTY_IDX = 3
+    FAMISTUDIO_VRC6_CH1_DUTY_IDX = 4
+    FAMISTUDIO_VRC6_CH2_DUTY_IDX = 5
+.endif
+.if FAMISTUDIO_EXP_MMC5
+    FAMISTUDIO_MMC5_CH0_DUTY_IDX = 6
+    FAMISTUDIO_MMC5_CH1_DUTY_IDX = 7
+.endif
+; [MULTI] END
 
 FAMISTUDIO_ENV_VOLUME_OFF = 0
 FAMISTUDIO_ENV_NOTE_OFF   = 1
@@ -542,17 +569,15 @@ FAMISTUDIO_VRC7_PITCH_SHIFT = 3
     FAMISTUDIO_N163_PITCH_SHIFT = 2
 .endif 
 
-; [MULTI] BEGIN : We dont need this here.
-;.if FAMISTUDIO_EXP_VRC7
-;    FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_VRC7_PITCH_SHIFT
-;.else
-;    .if FAMISTUDIO_EXP_N163
-;        FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_N163_PITCH_SHIFT
-;    .else
-;        FAMISTUDIO_PITCH_SHIFT = 0
-;    .endif    
-;.endif
-; [MULTI] END
+.if FAMISTUDIO_EXP_VRC7
+    FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_VRC7_PITCH_SHIFT
+.else
+    .if FAMISTUDIO_EXP_N163
+        FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_N163_PITCH_SHIFT
+    .else
+        FAMISTUDIO_PITCH_SHIFT = 0
+    .endif    
+.endif
 
 .if FAMISTUDIO_EXP_N163
     FAMISTUDIO_N163_CHN_MASK = (FAMISTUDIO_EXP_N163_CHN_CNT - 1) << 4
@@ -1216,8 +1241,7 @@ famistudio_music_play:
     sec
     sbc @tmp
     clc
-; [MULTI] BEGIN : We have the full 28 channels on multi-expansion
-.elseif FAMISTUDIO_NUM_CHANNELS = 28
+.elseif FAMISTUDIO_NUM_CHANNELS = 28 ; This is only used by the multiple expansion version.
     asl
     asl
     sta @tmp
@@ -1227,7 +1251,6 @@ famistudio_music_play:
     sec
     sbc @tmp
     clc
-; [MULTI] END
 .endif
 
 .if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163
@@ -1521,7 +1544,6 @@ famistudio_music_pause:
 
 @no_slide:    
 
-    ; EXPTODO : Make the real sound engine like this.
     .if pitch_shift >= 1
         asl @pitch+0
         rol @pitch+1
@@ -2258,8 +2280,9 @@ famistudio_update_row:
     ldx famistudio_channel_env,y
     lda famistudio_chn_instrument,y
 
-    ; [MULTI] BEGIN : This is a mess, use a lookup jmp table maybe?
     cpy #4 ; TODO: If samples are disabled, there is no point in doing this test most of the time.
+
+    ; [MULTI] BEGIN : This is a mess, use a jump table maybe?
     beq @dpcm
     cpy #(FAMISTUDIO_VRC6_CH2_IDX+1)
     bcc @base_instrument ; 2A03 + VRC6
@@ -2274,16 +2297,8 @@ famistudio_update_row:
     bcs @base_instrument ; S5B
     ; [MULTI] END
 
-    ; [MULTI] BEGIN : We use the code above instead
-    ;.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_S5B
-    ;    bne @base_instrument
-    ;.else
-    ;    bcc @base_instrument
-    ;.endif
-    ; [MULTI] END
-
 .if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163
-    ;beq @dpcm ; [MULTI] We dont need this.
+    ;beq @dpcm ; [MULTI] We do this a bit earlier.
     .if FAMISTUDIO_EXP_FDS
     @fds_instrument:
         jsr famistudio_set_fds_instrument
@@ -3427,7 +3442,7 @@ famistudio_channel_update:
     @tmp_ptr_lo           = famistudio_r0
     @tmp_chan_idx         = famistudio_r0
     @tmp_slide_from       = famistudio_r1
-    @tmp_slide_to         = famistudio_r3
+    @tmp_slide_to         = famistudio_r3 ; [MULTI] Extra variable we need.
     @tmp_slide_idx        = famistudio_r1
     @tmp_duty_cycle       = famistudio_r1
     @tmp_pitch_hi         = famistudio_r1
@@ -3437,7 +3452,7 @@ famistudio_channel_update:
     @special_code_jmp_ptr = famistudio_ptr1
     @tempo_env_ptr        = famistudio_ptr1
     @volume_env_ptr       = famistudio_ptr1
-    @note_table_ptr       = famistudio_ptr2
+    @note_table_ptr       = famistudio_ptr2 ; [MULTI] Extra variable we need.
 
     lda famistudio_chn_repeat,x
     beq @no_repeat
@@ -3740,6 +3755,7 @@ famistudio_channel_update:
     sta @tmp_slide_from
     iny
     lda (@channel_data_ptr),y ; Read slide note to
+    ; ldy @tmp_slide_from       ; reload note from [MULTI] Not needed.
 .if FAMISTUDIO_DUAL_SUPPORT
     adc famistudio_pal_adjust
 .endif
@@ -3771,8 +3787,10 @@ famistudio_channel_update:
 
     sta famistudio_slide_pitch_hi,x
     .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7
+        ; [MULTI] BEGIN : Handled a using a lookup table.
         ldy famistudio_slide_to_pitch_shift,x
         bpl @positive_shift
+        ; [MULTI] END
     .endif
     @negative_shift:
         lda @slide_delta_lo
@@ -3784,7 +3802,8 @@ famistudio_channel_update:
     @positive_shift:
         lda @slide_delta_lo
         sta famistudio_slide_pitch_lo,x
-        @positive_shift_loop:
+    ; ldy #FAMISTUDIO_PITCH_SHIFT ; [MULTI] Alread loaded above.
+    @positive_shift_loop:
             lda famistudio_slide_pitch_hi,x
             cmp #$80
             ror famistudio_slide_pitch_hi,x 
@@ -3831,7 +3850,6 @@ famistudio_channel_update:
     cpx #(FAMISTUDIO_VRC7_CH5_IDX+1)
     bcs @sec_and_done
     ; [MULTI] END
-    ; EXPTODO : Remove the sec + jmp + @label in regular sound engine too.
     lda #1
     sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set trigger flag for VRC7
 .endif
@@ -4886,6 +4904,7 @@ famistudio_channel_to_slide:
 .endif
 .endif
 
+; [MULTI] BEGIN : Additionnal lookup tables to handle multiple expansions.
 famistudio_slide_to_pitch_shift:
     .byte $ff
     .byte $ff
@@ -5085,7 +5104,7 @@ famistudio_slide_to_note_table_msb_hi:
     .byte >famistudio_note_table_msb
     .byte >famistudio_note_table_msb
 .endif   
-
+; [MULTI] END
 .endif
 
 ; For a given channel, returns the index of the pitch envelope.
