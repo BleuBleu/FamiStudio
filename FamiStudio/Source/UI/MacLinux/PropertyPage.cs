@@ -1068,10 +1068,10 @@ namespace FamiStudio
             treeView.Model.SetValue(iter, colIdx, value);
         }
 
-        private HScale CreateSlider(double value, double min, double max, double increment, int numDecimals, string tooltip = null)
+        private HScale CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string tooltip = null)
         {
             var scale = new HScale(min, max, increment);
-            scale.DrawValue = true;
+            scale.DrawValue = showLabel;
             scale.ValuePos = PositionType.Right;
             scale.Value = value;
             scale.FormatValue += Scale_FormatValue;
@@ -1100,7 +1100,7 @@ namespace FamiStudio
                 {
                     type = PropertyType.Slider,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateSlider(value, min, max, increment, numDecimals, tooltip),
+                    control = CreateSlider(value, min, max, increment, numDecimals, format != null, tooltip),
                     sliderFormat = format
                 });
             return properties.Count - 1;
