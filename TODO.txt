@@ -1,21 +1,24 @@
+3.2.0
+=====
 Multiexp:
 - Review everything that says "expansion".
 / Project property selection.
 	- Warnings in project properties
 	- Fix N163 channels.
-x Icon, use chip icon for instrument
-x Change NesSndEmu to support multiple expansions
-x Project/channel logic
-x BUG : Allows creating MMC5 instrument, makes no sense.
-x MIDI
-x FamiTracker in/out? 
-x NSF in/out
-x Sound engine, FamiTone export.
-
 Misc:
 - Mac/Linux : CheckListBox doesnt fire events (needed for Midi import/PAL).
 - Remove "None" piano roll mode.
+- Make sure OnMouseLeave works on that too.
 - Fix GTK single multiple label issue.	
+
+DPCM/Tri volume thing (from tromino)
+- Look at blaarg non-linear buffer.
+- Look if this has changed in newer versions.
+- Build some unit tests I can run on real NES.
+
+Testing
+=======
+- Add multi-exp unit test.
 	
 Videos:
 =======
