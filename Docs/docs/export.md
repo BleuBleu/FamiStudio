@@ -2,16 +2,20 @@
 
 The export dialog is access through the main toolbar or with CTRL+E on the keyboard. To quickly repeat a previous export (same format and output file), you can right click on the export icon in the toolbar or press CTRL+SHIFT+E.
 
-## Wave / MP3 File
+## Wave / MP3 / OGG Vorbis File
 
-Only a single song can be exported at a time. You can choose the sample rate (and bitrate in case of MP3). It is recommended to stick to 44.1KHz if you want the sound to be exactly as you hear it in FamiStudio. Lower sample rate might lack high frequencies.
+Only a single song can be exported at a time. You can choose the sample rate (and bitrate in case of MP3/OGG). It is recommended to stick to 44.1KHz if you want the sound to be exactly as you hear it in FamiStudio. Lower sample rate might lack high frequencies.
 
 The song can be exported in one of two modes:
 
 * Play N Times: Will play the song a specified number of times.
 * Duration : Will loop though the song for the specified number of seconds.
 
-You can also export each channel to individual by enabling "Separate channel file". 
+Other options:
+
+* **Separate channel files** : Will output each channel in a seperate audio file.
+* **Seperate intro file** : Will output the part before the loop point (intro) in a seperate file. 
+* **Stereo** : Will output a stereo file and will allow setting the panning % in the channel list.
 
 Note that the quality of the MP3 encoding may not going to be as good as full fledge mp3 encoder such as LAME, but should be good enough for sending quick previews to people.
 
@@ -19,20 +23,35 @@ Note that the quality of the MP3 encoding may not going to be as good as full fl
 
 Channels can optionally be muted. This can be used, for example, to create stereo mix using and external application.
 
-## Video
+## Video (Piano Roll and Oscilloscope)
 
 Video export is a great way to add a visual element to your songs when sharing them on YouTube/social media. For this to work, you will need to [manually download FFmpeg](ffmpeg.md) and extract it somewhere on your computer. 
 
+Example of the piano roll format:
 ![](images/VideoScreenshot.jpg#center)
+
+Example of the oscilloscope format:
+![](images/VideoOscScreenshot.jpg#center)
 
 ![](images/ExportVideo.png#center)
 
 Besides the audio/video quality settings, there are a few options to control the look and feel of the video:
 
-* **Piano roll zoom** : The higher the zoom, the faster notes will scroll by. 
+* **Loop count** : Number of times to repeat the looping part of the song.
+* **Stereo** : Same as WAV/MP3/OGG.
 * **Channels** : It is recommended to not export channels that do not have any notes, this will leave more space to the other channels.
 
-## Nintendo Sound Format
+Options specific to piano roll video:
+
+* **Piano roll zoom** : The higher the zoom, the faster notes will scroll by. 
+
+Options specific to oscilloscope video:
+
+* **Oscilloscope Colums** : Number of columns to split the channels into.
+* **Oscilloscope Thickness** : Thickness of the oscilloscope line, in pixels.
+* **Oscilloscope Color** : Can color the oscilloscope using the colors of the instruments or samples. Otherwise will use a neutral light grey. 
+
+## Nintendo Sound Format (NSF)
 
 Every feature supported by FamiStudio can be used in an NSF. 
 
@@ -46,7 +65,7 @@ The maximum song size is approximately 28KB minus the size of the DPCM samples u
 
 Song(s) can be exported to a NES ROM file or a Famicom Disk System disk to play if back on an emulator or on actual hardware. 
 
-For ROM export, the current iteration uses [Mapper 31](https://wiki.nesdev.com/w/index.php/INES_Mapper_031) which is supported by most emulators and the [Everdrive N8](https://krikzz.com/store/home/31-everdrive-n8-nes.html). You can then copy the ROM to an SD card and listen to it on actual hardware. Note that expansion audio is not supported with this mapper.
+For ROM export uses the MMC3 mapper which is supported by most emulators and the [Everdrive N8](https://krikzz.com/store/home/31-everdrive-n8-nes.html). You can then copy the ROM to an SD card and listen to it on actual hardware. Note that expansion audio is not supported with this mapper.
 
 ![](images/Rom.png#center)
 
@@ -169,8 +188,8 @@ Here is an example of a very short file:
 					Note Time="0" Value="C4" Instrument="Lead2" Volume="15"
 					Note Time="70" Value="D#4" Instrument="Lead2"
 					Note Time="98" Value="D4" Instrument="Lead2"
-			PatternInstance Time="0" Pattern="Intro1"
-			PatternInstance Time="1" Pattern="Melody1"
+				PatternInstance Time="0" Pattern="Intro1"
+				PatternInstance Time="1" Pattern="Melody1"
 
 
 The possible types of objects and their attributes:
@@ -204,6 +223,7 @@ Instrument | Name | Yes | Name of the instrument.
 | N163WavePreset | | (N163 instrument only) Sine, Triangle, Sawtooth, Square 50%, Square 25%, Flat or Custom.
 | N163WaveSize | | (N163 instrument only) 4 to 248, multiple of 4 (4, 8, 12, etc.).
 | N163WavePos | | (N163 instrument only) 0 to 244, multiple of 4 (4, 8, 12, etc.).
+| Vrc6SawMasterVolume | | (VRC6 instrument only) Full, Half or Quarter.
 | Vrc7Patch | | (VRC7 instrument only) 0 to 15.
 | Vrc7Reg{1 to 8} | | (VRC7 instrument only, if Vrc7Patch is 0) Values of the 8 custom patch registers.
 Envelope | Type | Yes | Volume, Arpeggio, Pitch, DutyCycle, FDSWave, FDSMod or N163Wave.
@@ -237,6 +257,7 @@ Note | Time | Yes | The frame (or note) number inside the pattern where this not
 | Arpeggio | | Optional, name of the arpeggio to use.
 | Attack | | If the note has an attack, True of False.
 | Volume | | The volume of the note, 0 to 15.
+| VolumeSlide | | If specified, the note has a volume slide and slides to the specified value. Must also have a Volume.
 | VibratoSpeed | | The Vibrato speed, 0 to 12.
 | VibratoDepth | | The Vibrato depth, 0 to 15.
 | Speed | | (FamiTracker tempo only) Updates the FamiTracker speed to a new value.

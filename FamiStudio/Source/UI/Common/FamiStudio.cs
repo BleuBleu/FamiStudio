@@ -1,4 +1,4 @@
-#define DEVELOPMENT_VERSION
+//#define DEVELOPMENT_VERSION
 
 using System;
 using System.Collections;
