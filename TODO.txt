@@ -2,6 +2,12 @@
 =====
 - Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
 
+StudsX:
+- Is the clarinet VRC7 sound patch ok?
+- Instrument changes with no new note?
+- Pxx doesnt match with VRC7?
+- FamiTracker => FamiStudio tempo conversion is broken? See mathieuw.fms!
+
 Videos:
 =======
 / Sampling soundfont instruments
