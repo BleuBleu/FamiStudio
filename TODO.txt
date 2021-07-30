@@ -16,6 +16,7 @@ Doc
 * Noise slides
 * Volume slides
 * Minor sequencer selection improvements
+* Sound engine doc update (vol slide, memory, etc).
 
 Youtube corrections:
 ====================
