@@ -71,7 +71,13 @@ Rotating the mouse-wheel over the play button will allow you to change the playb
 There are 2 looping modes:
 
 * **Song / None**: Loops the entire song if a loop point is step, stops at the end if there are no loop point.
-* **Pattern**: Loops over the current pattern.
+* **Pattern** or **Selection**: Loops over the current pattern if there is no selection in the sequencer. If there is a selection, will loop over that selection. The icon in the toolbar will change to reflection this.
+
+![](images/LoopingMode.png#center)
+
+## Toggling the metronome
+
+The metronome can be enabled by clicking the icon on the toolbar. The metronome will tick at every beat and will only work when the song is playing.
 
 ## Saving the project
 
@@ -156,3 +162,4 @@ Some keyboard shortcuts specific to the piano roll:
 When QWERTY keyboard input is active, some of the keys will be overriden to support piano input. This is default layout for an en-US keyboard. The [Configuration Dialog](config.md) allows re-mapping the keys for other types of keyboards.
 
 ![](images/QWERTY.png#center)
+

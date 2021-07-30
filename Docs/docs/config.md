@@ -20,6 +20,12 @@ The configuration dialog dialog is accessed from the toolbar.
 
     Note that these are poorly supported on Linux due to the fact that the app uses GTK 2 and gestures are generally poorly supported in Linux.
 
+* **Clear Undo/Redo on save**: Wipes the undo/redo stack every time the project is saved. This help keep the memory usage lower, but limits your ability to undo indefinately.
+
+* **Open last project on start**: Remember which project you last open and re-opens it next time you launch FamiStudio.
+
+* **Auto-save a copy every 2 minutes**: Save a backup copy of the current project every 2 minutes. This may prevent loosing data when the application crashes.
+
 ## User Interface Configuration
 
 ![](images/ConfigUI.png#center)
@@ -33,19 +39,23 @@ The configuration dialog dialog is accessed from the toolbar.
     * **Jump**: Once the play position reaches the right edge of the screen, advances by a full screen.
     * **Continuous**: Once the play position is at least 75% of the way to the right, starts scrolling smoothly.<br><br>
 
-* **Follow Views**: Select which type of follow mode to use:
+* **Follow Views**: Select which views to scroll:
 
     * **Sequencer**: Only enables follow mode in the sequencer.
     * **Piano Roll**: Only enables follow mode in the piano roll.
     * **Both**: Enables follow mode on both controls.<br><br>
+
+* **Scroll Bars**: Display scrolls bars in the Sequencer and the Piano Roll.
+
+    * **None**: No scroll bares.
+    * **Thin**: Small scroll bars.
+    * **Thick**: Large scroll bars.<br><br>
 
 * **Show Piano Roll View Range**: Displays a yellow rectangle in the sequencer representing the view range of the piano roll.
 
 * **Show Note Labels**: Displays note labels (e.q. "C#3") in the piano roll.
 
 * **Show FamiTracker Stop Notes**: When using FamiTracker tempo mode, display implicity stop notes (whenever a note ends without being interrupted by another note) as little triangles. This makes it easier to set note delays for those.
-
-* **Show Scroll Bars**: Display scrolls bars in the Sequencer and the Piano Roll.
 
 * **Show Oscilloscope**: Display an oscilloscope in the toolbar.
 
@@ -78,6 +88,12 @@ Note that these settings have no effect outside of FamiStudio.
 ![](images/ConfigMIDI.png#center)
 
 * **Device**: Allows choosing the MIDI device to use for previewing instruments.
+
+## FFMpeg Configuration
+
+![](images/ConfigFFMpeg.png#center)
+
+FFMpeg is a video encoder required to enable video export. You can download it from [here](ffmpeg.md). Once downloaded and installed somewhere on your computer, you will need to tell FamiStudio where it is.
 
 ## QWERTY Configuration
 

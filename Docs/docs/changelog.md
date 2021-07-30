@@ -21,11 +21,17 @@ Changes:
 * Option to auto-save copy every 2 minutes
 * Option for thicker scroll bars
 * Minor sequencer selection improvements
-* MacOS Monterey Beta support (Thanks OpenTK team!)
+* MacOS Monterey Beta support, Beta 3 or newer needed (Thanks OpenTK team!)
 * Sound Engine CC65 bindings (Contribution from jroweboy!)
 
 Breaking/behavior changes:
+
 * Pattern numbers in the sequencer and piano roll now start at 1 instead of 0. This is a purely esthetic change and does not impact anything.
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/XEDQYOcedNk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
 
 ## Version 3.0.2 (Hotfix)
 

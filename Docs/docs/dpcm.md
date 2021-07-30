@@ -6,11 +6,27 @@ To use a DPCM sample, it first needs to be loaded, then it needs to be assigned 
 
 The samples workflow in FamiStudio is lossless in a way that once a sample is imported, any modification done to it will not modify the source data. Every time a parameter is changed, the source data will be re-processed to generate the final sample.
 
+This short 6 minutes tutorial will teach you the general workflow of DPCM samples in FamiStudio. 
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/w6T_5e9uRhs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
+
+This second tutorial is more advanced and will teach you how to sample instruments and dealing with looping samples.
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/vkJxpi_iQ0Q" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
+
 If you do not wish to use the built-in DPCM sample editor of FamiStudio there are many other alternative : [FamiTracker](http://famitracker.com/), [RJDMC](http://forums.famitracker.com/viewtopic.php?t=95) and [MakeDPCM](https://www.romhacking.net/utilities/1451/). 
 
 ## Loading DPCM Samples
 
-Samples are loaded by clicking the little folder icon next to the "DPCM Samples" section in the project explorer. FamiStudio can import samples from a WAV file or from a DMC file. Not that importing DMC files and doing extensive processing is not recommended as these samples are very low-quality fo begin with and any extra processing will degrade it further.
+Samples are loaded by clicking the little folder icon next to the "DPCM Samples" section in the project explorer. FamiStudio can import samples from WAV files or from a DMC files. Note that importing DMC files and doing extensive processing is not recommended as these samples are very low-quality fo begin with and any extra processing will degrade it further.
+
+It is also possible to import samples from another FamiStudio project. Note that doing this will not import the sample assignments to keys of the piano (DPCM Instrument). To import those as well, you mayb want to import the DPCM instrument in the Instrument section of the Project Explorer.
 
 Once loaded, you can rename a sample or change its color by double-clicking on this button. You can also play the sample by clicking the little play button next to it:
 
@@ -41,9 +57,13 @@ Once a sample is loaded, it can be expanded by clicking the little arrow to reve
 
 	* **Round to 16 + 1** : The sample will be resampled in a way that the end of sample aligned to 16 bytes (plus one). This may affect the pitch slightly. This is a good mode to create looping samples.
 
+* **DMC Initial Value** : Initial value of the DMC counter (0-63, values are actually 1/2 of what the hardware uses). This can be tweaked to that the first value matches the initial value of the WAV file, or to off the entire DMC data as a whole.
+
 * **Volume Adjust** : Global volume adjustment, from 0% to 200%. 
 
-* **Process	as PAL** : Perform all resampling/processing using PAL sample rates. 
+* **Fine Tuning** : Fine adjustment to the pitch, from 95% to 105%. Useful to adjust samples that are out of tune. 
+
+* **Process as PAL** : Perform all resampling/processing using PAL sample rates. 
 
 * **Trim Zero Volume** : Remove leading/trailing parts of the waveform that have near-zero volume.
 
@@ -125,7 +145,7 @@ If you want to sample some instrument, for example the Sunsoft Bass on your own,
 
 Here is a chart of how many semitones it goes down by decreasing the pitch, currently as i write this, i only got to pitch 7, which is -24 semitones, so in theory, you can sample whole 2 octaves by using just 5 samples.
 
-Pitch | Semitones
+Pitch | Semitones (approximate)
 --- | --- 
 15 | 0 
 14 | -5

@@ -36,6 +36,18 @@ When you have an expansion enabled and try to create an instrument, you will be 
 
 Certain expansion instrument have parameters that are very different from standard instrument. Some of these parameters are accessed by expanding the instrument by clicking on the little triangle on the left of its name.
 
+### VRC6
+
+VRC6 have a single extra parameter: 
+
+* **Saw Master Volume** : The saw channel tends to be very loud and its volume ranges from 0 to 63 (altough FamiStudio always work in the 0 to 15 range). 
+    * **Full** : Maps the 0-15 range to the full 0-63 range, very loud.
+    * **Half** : Maps the 0-15 range to the full 0-31 range, probably the best compromise.
+    * **Quarter** : Use the 0-15 values as is, quiet.
+
+![](images/VRC6.png#center)
+
+
 ### VRC7
 
 VRC7 instruments are by far the ones with the most parameters.

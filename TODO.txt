@@ -1,8 +1,6 @@
 3.1.0
 =====
 - Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
-x Loop selection bug
-- Missing volume slides in FamiStudio text.
 
 Videos:
 =======
@@ -14,13 +12,10 @@ Videos:
 
 Doc
 ===
-- Add replace instrument (with selection) info
-- Gopnick errors
-	1. Two attributes are missing, Instrument->Vrc6SawMasterVolume and Note->Release (legacy stuff?)
-	2. The "general structure" part suggests "PatternInstance" as a child of "Song" while the indentation in the actual files indicates that it's a child of "Channel"
-- Volume slide, noise slide
-- Metronome
-- OGG
+- Add replace instrument (with selection) info (GIF)
+* Noise slides
+* Volume slides
+* Minor sequencer selection improvements
 
 Youtube corrections:
 ====================
