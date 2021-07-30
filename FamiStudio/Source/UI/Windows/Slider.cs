@@ -45,7 +45,7 @@ namespace FamiStudio
             }
         }
 
-        public Slider(double val, double min, double max, double inc, int decimals)
+        public Slider(double val, double min, double max, double inc, int decimals, bool showLabel)
         {
             InitializeComponent();
             DoubleBuffered = true;
@@ -60,6 +60,9 @@ namespace FamiStudio
             format = new StringFormat();
             format.LineAlignment = StringAlignment.Center;
             format.Alignment = StringAlignment.Center;
+
+            if (!showLabel)
+                labelWidth = 0;
         }
 
         private Rectangle GetThumbRect()
@@ -127,15 +130,18 @@ namespace FamiStudio
             e.Graphics.DrawLine(darkGrayPen, thumbWidth / 2, Height / 2, Width - labelWidth - thumbWidth / 2, Height / 2);
             e.Graphics.FillRectangle(lightGrayBrush, GetThumbRect());
 
-            string str = null;
+            if (labelWidth > 0)
+            {
+                string str = null;
 
-            if (FormatValueEvent != null)
-                str = FormatValueEvent(this, value);
+                if (FormatValueEvent != null)
+                    str = FormatValueEvent(this, value);
 
-            if (str == null)
-                str = value.ToString($"N{numDecimals}");
+                if (str == null)
+                    str = value.ToString($"N{numDecimals}");
 
-            e.Graphics.DrawString(str, Font, lightGrayBrush, new RectangleF(Width - labelWidth, 0, labelWidth, Height), format);
+                e.Graphics.DrawString(str, Font, lightGrayBrush, new RectangleF(Width - labelWidth, 0, labelWidth, Height), format);
+            }
         }
     }
 }
