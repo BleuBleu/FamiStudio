@@ -143,6 +143,7 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleDeleted += ProjectExplorer_DPCMSampleDeleted;
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
             ProjectExplorer.DPCMSampleMapped += ProjectExplorer_DPCMSampleMapped;
+            ProjectExplorer.InstrumentsHovered += ProjectExplorer_InstrumentsHovered;
 
             InitializeMetronome();
             InitializeSongPlayer();
@@ -169,6 +170,11 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        private void ProjectExplorer_InstrumentsHovered(bool showExpansions)
+        {
+            Sequencer.ShowExpansionIcons = showExpansions;
         }
 
         private void PianoRoll_MaximizedChanged()

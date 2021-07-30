@@ -1,13 +1,9 @@
 Multiexp:
-- Show instrument icons when hovering over project explorer.
 - Review everything that says "expansion".
 / Project property selection.
 	- Warnings in project properties
 	- Fix N163 channels.
-- Icons:
-	- Use chip icon for instrument
-	- VRC6/VRC7 difference.
-	- MMC5 = chip with a "5"?
+x Icon, use chip icon for instrument
 x Change NesSndEmu to support multiple expansions
 x Project/channel logic
 x BUG : Allows creating MMC5 instrument, makes no sense.

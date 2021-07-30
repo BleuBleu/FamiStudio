@@ -400,7 +400,7 @@ namespace FamiStudio
         RenderBitmap   bmpCheckBoxNo;
         RenderBitmap   bmpButtonLeft;
         RenderBitmap   bmpButtonRight;
-        RenderBitmap[] bmpInstrument = new RenderBitmap[ExpansionType.Count];
+        RenderBitmap[] bmpExpansions = new RenderBitmap[ExpansionType.Count];
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[EnvelopeType.Count];
 
         public Song SelectedSong => selectedSong;
@@ -433,6 +433,7 @@ namespace FamiStudio
         }
 
         public delegate void EmptyDelegate();
+        public delegate void BoolDelegate(bool val);
         public delegate void InstrumentEnvelopeDelegate(Instrument instrument, int envelope);
         public delegate void InstrumentDelegate(Instrument instrument);
         public delegate void InstrumentPointDelegate(Instrument instrument, Point pos);
@@ -462,6 +463,7 @@ namespace FamiStudio
         public event DPCMSamplePointDelegate DPCMSampleDraggedOutside;
         public event DPCMSamplePointDelegate DPCMSampleMapped;
         public event EmptyDelegate ProjectModified;
+        public event BoolDelegate InstrumentsHovered;
 
         public ProjectExplorer()
         {
@@ -548,11 +550,11 @@ namespace FamiStudio
                 buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, icon = bmpSong, textBrush = theme.BlackBrush });
 
             buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments", font = ThemeBase.FontMediumBoldCenter });
-            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = ThemeBase.LightGreyFillColor1, textBrush = theme.BlackBrush, icon = bmpInstrument[ExpansionType.None] });
+            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = ThemeBase.LightGreyFillColor1, textBrush = theme.BlackBrush, icon = bmpExpansions[ExpansionType.None] });
 
             foreach (var instrument in project.Instruments)
             {
-                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = theme.BlackBrush, icon = bmpInstrument[instrument.ExpansionType] });
+                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = theme.BlackBrush, icon = bmpExpansions[instrument.ExpansionType] });
 
                 if (instrument != null && instrument == expandedInstrument)
                 {
@@ -603,13 +605,8 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
-            bmpInstrument[ExpansionType.None] = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[ExpansionType.Vrc6] = g.CreateBitmapFromResource("InstrumentKonami");
-            bmpInstrument[ExpansionType.Vrc7] = g.CreateBitmapFromResource("InstrumentKonami");
-            bmpInstrument[ExpansionType.Fds]  = g.CreateBitmapFromResource("InstrumentFds");
-            bmpInstrument[ExpansionType.Mmc5] = g.CreateBitmapFromResource("Instrument");
-            bmpInstrument[ExpansionType.N163] = g.CreateBitmapFromResource("InstrumentNamco");
-            bmpInstrument[ExpansionType.S5B]  = g.CreateBitmapFromResource("InstrumentSunsoft");
+            for (int i = 0; i < ExpansionType.Count; i++)
+                bmpExpansions[i] = g.CreateBitmapFromResource(ExpansionType.Icons[i]);
             
             bmpEnvelopes[EnvelopeType.Volume]        = g.CreateBitmapFromResource("Volume");
             bmpEnvelopes[EnvelopeType.Arpeggio]      = g.CreateBitmapFromResource("Arpeggio");
@@ -645,7 +642,7 @@ namespace FamiStudio
             theme.Terminate();
 
             for (int i = 0; i < ExpansionType.Count; i++)
-                Utils.DisposeAndNullify(ref bmpInstrument[i]);
+                Utils.DisposeAndNullify(ref bmpExpansions[i]);
             for (int i = 0; i < EnvelopeType.Count; i++)
                 Utils.DisposeAndNullify(ref bmpEnvelopes[i]);
 
@@ -1342,6 +1339,13 @@ namespace FamiStudio
             }
         }
 
+        protected void EmitInstrumentHoverEvent(MouseEventArgs e)
+        {
+            var buttonIdx = GetButtonAtCoord(e.X, e.Y, out _);
+            var showExpansions = buttonIdx >= 0 && (buttons[buttonIdx].type == ButtonType.Instrument || buttons[buttonIdx].type == ButtonType.InstrumentHeader);
+            InstrumentsHovered?.Invoke(showExpansions);
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -1357,9 +1361,15 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
+            EmitInstrumentHoverEvent(e); // EXPTODO : On mouse leave too!
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            InstrumentsHovered?.Invoke(false);
         }
 
         protected override void OnMouseUp(MouseEventArgs e)

@@ -101,6 +101,7 @@ namespace FamiStudio
         };
 
         bool showSelection = true;
+        bool showExpansionIcons = false;
         int captureMouseX = -1;
         int captureMouseY = -1;
         int captureScrollX = -1;
@@ -144,6 +145,7 @@ namespace FamiStudio
         RenderBrush selectionPatternBrush;
         RenderPath seekGeometry;
 
+        RenderBitmap[] bmpExpansions = new RenderBitmap[ExpansionType.Count];
         RenderBitmap[] bmpTracks = new RenderBitmap[ChannelType.Count];
         RenderBitmap bmpGhostNote;
         RenderBitmap bmpLoopPoint;
@@ -188,6 +190,19 @@ namespace FamiStudio
                 {
                     selectedChannel = value;
                     SelectedChannelChanged?.Invoke(selectedChannel);
+                    ConditionalInvalidate();
+                }
+            }
+        }
+
+        public bool ShowExpansionIcons
+        {
+            get { return showExpansionIcons; }
+            set
+            {
+                if (showExpansionIcons != value)
+                {
+                    showExpansionIcons = value;
                     ConditionalInvalidate();
                 }
             }
@@ -314,6 +329,8 @@ namespace FamiStudio
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
+            for (int i = 0; i < ExpansionType.Count; i++)
+                bmpExpansions[i] = g.CreateBitmapFromResource(ExpansionType.Icons[i] + "Light");
             for (int i = 0; i < ChannelType.Count; i++)
                 bmpTracks[i] = g.CreateBitmapFromResource(ChannelType.Icons[i]);
 
@@ -345,6 +362,8 @@ namespace FamiStudio
         {
             theme.Terminate();
 
+            for (int i = 0; i < ExpansionType.Count; i++)
+                Utils.DisposeAndNullify(ref bmpExpansions[i]);
             for (int i = 0; i < ChannelType.Count; i++)
                 Utils.DisposeAndNullify(ref bmpTracks[i]);
 
@@ -469,7 +488,10 @@ namespace FamiStudio
 
             // Icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-                g.DrawBitmap(bmpTracks[(int)Song.Channels[i].Type], trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
+            {
+                var bmp = showExpansionIcons && Song.Project.UsesAnyExpansionAudio ? bmpExpansions[Song.Channels[i].Expansion] : bmpTracks[Song.Channels[i].Type];
+                g.DrawBitmap(bmp, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
+            }
 
             // Track names
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
@@ -1873,6 +1895,7 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
+            ShowExpansionIcons = false;
 
             mouseLastX = e.X;
             mouseLastY = e.Y;

@@ -1753,6 +1753,18 @@ namespace FamiStudio
             "S5B"
         };
 
+        // TODO: This is really UI specific, move somewhere else...
+        public static readonly string[] Icons =
+        {
+            "Instrument",
+            "InstrumentVRC6",
+            "InstrumentVRC7",
+            "InstrumentFds",
+            "Instrument",
+            "InstrumentNamco",
+            "InstrumentSunsoft"
+        };
+
         public static bool NeedsExpansionInstrument(int value)
         {
             return value == Fds || value == N163 || value == Vrc6 || value == Vrc7 || value == S5B;
