@@ -298,8 +298,8 @@ namespace FamiStudio
         {
             if (IsSelectionValid())
             {
-                minPatternIdx = minSelectedChannelIdx;
-                maxPatternIdx = maxSelectedChannelIdx;
+                minPatternIdx = minSelectedPatternIdx;
+                maxPatternIdx = maxSelectedPatternIdx;
                 return true;
             }
             else

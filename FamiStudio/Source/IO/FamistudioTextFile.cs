@@ -234,6 +234,7 @@ namespace FamiStudio
 
                                 if (!note.HasAttack)     noteLine += GenerateAttribute("Attack", false);
                                 if (note.HasVolume)      noteLine += GenerateAttribute("Volume", note.Volume);
+                                if (note.HasVolumeSlide) noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
                                 if (note.HasVibrato)     noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
                                 if (note.HasSpeed)       noteLine += GenerateAttribute("Speed", note.Speed);
                                 if (note.HasFinePitch)   noteLine += GenerateAttribute("FinePitch", note.FinePitch);
@@ -564,6 +565,8 @@ namespace FamiStudio
 
                             if (parameters.TryGetValue("Volume", out var volumeStr) && channel.SupportsEffect(Note.EffectVolume))
                                 note.Volume = byte.Parse(volumeStr);
+                            if (parameters.TryGetValue("VolumeSlideTarget", out var volumeSlideStr) && channel.SupportsEffect(Note.EffectVolumeSlide))
+                                note.VolumeSlideTarget = byte.Parse(volumeSlideStr);
                             if (parameters.TryGetValue("VibratoSpeed", out var vibSpeedStr) && channel.SupportsEffect(Note.EffectVibratoSpeed))
                                 note.VibratoSpeed = byte.Parse(vibSpeedStr);
                             if (parameters.TryGetValue("VibratoDepth", out var vibDepthStr) && channel.SupportsEffect(Note.EffectVibratoDepth))
