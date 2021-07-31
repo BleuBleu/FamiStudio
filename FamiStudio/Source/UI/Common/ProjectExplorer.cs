@@ -554,7 +554,7 @@ namespace FamiStudio
 
             foreach (var instrument in project.Instruments)
             {
-                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = theme.BlackBrush, icon = bmpExpansions[instrument.ExpansionType] });
+                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = theme.BlackBrush, icon = bmpExpansions[instrument.Expansion] });
 
                 if (instrument != null && instrument == expandedInstrument)
                 {
@@ -1210,7 +1210,7 @@ namespace FamiStudio
 
                     if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
                     {
-                        if (instrumentSrc.ExpansionType == instrumentDst.ExpansionType)
+                        if (instrumentSrc.Expansion == instrumentDst.Expansion)
                         {
                             if (envelopeDragIdx == -1)
                             {
@@ -1612,13 +1612,8 @@ namespace FamiStudio
 
                             foreach (var instrument in instrumentProject.Instruments)
                             {
-                                var instName = instrument.Name;
-
-                                if (instrument.ExpansionType != ExpansionType.None)
-                                    instName += $" ({ExpansionType.ShortNames[instrument.ExpansionType]})";
-
                                 instruments.Add(instrument);
-                                instrumentNames.Add(instName);
+                                instrumentNames.Add(instrument.NameWithExpansion);
                             }
 
                             var dlg = new PropertyDialog(300);

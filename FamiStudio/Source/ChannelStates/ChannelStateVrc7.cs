@@ -25,9 +25,9 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.ExpansionType == ExpansionType.Vrc7);
+                Debug.Assert(instrument.Expansion == ExpansionType.Vrc7);
 
-                if (instrument.ExpansionType == ExpansionType.Vrc7)
+                if (instrument.Expansion == ExpansionType.Vrc7)
                 {
                     if (instrument.Vrc7Patch == 0)
                     {

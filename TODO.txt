@@ -2,9 +2,12 @@
 =====
 Multiexp:
 - Review everything that says "expansion".
-/ Project property selection.
-	- Warnings in project properties
-	- Fix N163 channels.
+
+DMC counter effect:
+- 
+
+Overclocking:
+- 
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.
@@ -21,7 +24,9 @@ Misc:
 Testing
 =======
 - Add multi-exp unit test.
-	
+- Test project/instrument merge (with expansions).
+- 
+
 Videos:
 =======
 / Sampling soundfont instruments

@@ -203,7 +203,7 @@ namespace FamiStudio
             foreach (var inst in instruments)
             {
                 var instId = inst.Id;
-                var instType = inst.ExpansionType;
+                var instType = inst.Expansion;
                 var instName = inst.Name;
                 serializer.Serialize(ref instId);
                 serializer.Serialize(ref instType);
@@ -358,7 +358,7 @@ namespace FamiStudio
 
                 if (existingInstrument != null)
                 {
-                    if (existingInstrument.ExpansionType == instType)
+                    if (existingInstrument.Expansion == instType)
                         serializer.RemapId(instId, existingInstrument.Id);
                     else
                         serializer.RemapId(instId, -1); // Incompatible expansion type, skip.
@@ -369,9 +369,7 @@ namespace FamiStudio
                 {
                     needMerge = true;
 
-                    /*
-                     * EXPTODO
-                    if (!checkOnly && createMissing && (instType == ExpansionType.None || instType == serializer.Project.ExpansionAudio))
+                    if (!checkOnly && createMissing && (instType == ExpansionType.None || serializer.Project.UsesExpansionAudio(instType)))
                     {
                         var instrument = serializer.Project.CreateInstrument(instType, instName);
                         serializer.RemapId(instId, instrument.Id);
@@ -382,7 +380,6 @@ namespace FamiStudio
                         serializer.RemapId(instId, -1);
                         dummyInstrument.SerializeState(serializer); // Skip
                     }
-                    */
                 }
             }
 

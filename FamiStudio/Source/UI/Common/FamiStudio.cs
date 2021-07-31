@@ -998,7 +998,7 @@ namespace FamiStudio
         public void StopOrReleaseIntrumentNote(bool allowRecording = false)
         {
             if (ProjectExplorer.SelectedInstrument != null &&
-                (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.ExpansionType == ExpansionType.Vrc7) &&
+                (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.Expansion == ExpansionType.Vrc7) &&
                 song.Channels[Sequencer.SelectedChannel].SupportsInstrument(ProjectExplorer.SelectedInstrument))
             {
                 instrumentPlayer.ReleaseNote(Sequencer.SelectedChannel);

@@ -67,10 +67,10 @@ namespace FamiStudio
             if (type == ChannelType.Dpcm)
                 return true;
 
-            if (instrument.ExpansionType == ExpansionType.None && (IsRegularChannel || IsMmc5Channel))
+            if (instrument.Expansion == ExpansionType.None && (IsRegularChannel || IsMmc5Channel))
                 return true;
 
-            return instrument.ExpansionType == Expansion;
+            return instrument.Expansion == Expansion;
         }
 
         public static int[] GetChannelsForExpansionMask(int expansionMask, int numN163Channels = 1)

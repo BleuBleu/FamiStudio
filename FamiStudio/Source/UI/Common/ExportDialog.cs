@@ -339,7 +339,7 @@ namespace FamiStudio
                 for (int i = 0; i < project.Instruments.Count; i++)
                 {
                     var inst = project.Instruments[i];
-                    data[i, 0] = $"{inst.Name}" + (inst.IsExpansionInstrument ? $" ({ExpansionType.ShortNames[inst.ExpansionType]})" : "");
+                    data[i, 0] = inst.NameWithExpansion;
                     data[i, 1] = MidiFileReader.MidiInstrumentNames[0];
                 }
 

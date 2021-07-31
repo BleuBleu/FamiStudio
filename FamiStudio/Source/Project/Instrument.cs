@@ -36,17 +36,18 @@ namespace FamiStudio
 
         public int Id => id;
         public string Name { get => name; set => name = value; }
+        public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.ShortNames[expansion]})");
         public Color Color { get => color; set => color = value; }
-        public int ExpansionType => expansion;
-        public bool IsExpansionInstrument => expansion != global::FamiStudio.ExpansionType.None;
+        public int Expansion => expansion;
+        public bool IsExpansionInstrument => expansion != ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
 
-        public bool IsFdsInstrument  => expansion == global::FamiStudio.ExpansionType.Fds;
-        public bool IsVrc7Instrument => expansion == global::FamiStudio.ExpansionType.Vrc7;
-        public bool IsN163Instrument => expansion == global::FamiStudio.ExpansionType.N163;
+        public bool IsFdsInstrument  => expansion == ExpansionType.Fds;
+        public bool IsVrc7Instrument => expansion == ExpansionType.Vrc7;
+        public bool IsN163Instrument => expansion == ExpansionType.N163;
 
         public Instrument()
         {

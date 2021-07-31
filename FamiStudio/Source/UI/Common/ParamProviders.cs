@@ -64,10 +64,10 @@ namespace FamiStudio
         {
             return
                 instrument.IsEnvelopeActive(EnvelopeType.Pitch) ||
-                instrument.ExpansionType == ExpansionType.Fds   ||
-                instrument.ExpansionType == ExpansionType.N163  ||
-                instrument.ExpansionType == ExpansionType.Vrc6  ||
-                instrument.ExpansionType == ExpansionType.Vrc7;
+                instrument.Expansion == ExpansionType.Fds   ||
+                instrument.Expansion == ExpansionType.N163  ||
+                instrument.Expansion == ExpansionType.Vrc6  ||
+                instrument.Expansion == ExpansionType.Vrc7;
         }
 
         static public ParamInfo[] GetParams(Instrument instrument)
@@ -96,7 +96,7 @@ namespace FamiStudio
                 });
             }
 
-            switch (instrument.ExpansionType)
+            switch (instrument.Expansion)
             {
                 case ExpansionType.Fds:
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, null, true)

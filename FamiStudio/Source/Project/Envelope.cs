@@ -406,7 +406,7 @@ namespace FamiStudio
             else if (type == EnvelopeType.DutyCycle)
             {
                 min = 0;
-                max = instrument.ExpansionType == ExpansionType.Vrc6 ? 7 : 3;
+                max = instrument.Expansion == ExpansionType.Vrc6 ? 7 : 3;
             }
             else if (type == EnvelopeType.FdsWaveform)
             {

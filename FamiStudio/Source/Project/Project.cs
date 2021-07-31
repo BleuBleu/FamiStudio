@@ -439,7 +439,7 @@ namespace FamiStudio
 
         public void ReplaceInstrument(Instrument instrumentOld, Instrument instrumentNew)
         {
-            Debug.Assert(instrumentNew == null || instrumentOld.ExpansionType == instrumentNew.ExpansionType);
+            Debug.Assert(instrumentNew == null || instrumentOld.Expansion == instrumentNew.Expansion);
 
             foreach (var song in songs)
             {
@@ -633,7 +633,7 @@ namespace FamiStudio
         {
             instruments.Sort((i1, i2) => 
             {
-                var expComp = i1.ExpansionType.CompareTo(i2.ExpansionType);
+                var expComp = i1.Expansion.CompareTo(i2.Expansion);
 
                 if (expComp != 0)
                     return expComp;
@@ -736,7 +736,7 @@ namespace FamiStudio
                 for (int i = instruments.Count - 1; i >= 0; i--)
                 {
                     var inst = instruments[i];
-                    if (!UsesExpansionAudio(inst.ExpansionType))
+                    if (!UsesExpansionAudio(inst.Expansion))
                         DeleteInstrument(inst);
                 }
             }
@@ -1057,11 +1057,9 @@ namespace FamiStudio
             // These validations only make sense when merging songs.
             if (otherProject.Songs.Count > 0)
             {
-                // EXPTODO
-                if (otherProject.expansionMask != ExpansionType.None &&
-                    otherProject.expansionMask != expansionMask)
+                if (!ExpansionType.IsMaskIncludedInTheOther(expansionMask, otherProject.expansionMask))
                 {
-                    Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses a different audio expansion(s).");
+                    Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses audio expansion(s) that are not enabled in the current project.");
                     return false;
                 }
 
@@ -1134,7 +1132,7 @@ namespace FamiStudio
                     {
                         Log.LogMessage(LogSeverity.Warning, $"Project already contains an instrument named '{existingInstrument.Name}', assuming it is the same.");
 
-                        if (existingInstrument.ExpansionType == otherInstrument.ExpansionType)
+                        if (existingInstrument.Expansion == otherInstrument.Expansion)
                         {
                             otherProject.ReplaceInstrument(otherInstrument, existingInstrument);
                             otherProject.instruments.Insert(otherProject.instruments.IndexOf(otherInstrument), existingInstrument); // To pass validation.
@@ -1158,11 +1156,8 @@ namespace FamiStudio
                             instruments.Add(otherInstrument);
                         }
                     }
-                    else if (
-                        // EXPTODO
-                        otherInstrument.ExpansionType == ExpansionType.None || 
-                        otherInstrument.ExpansionType == expansionMask)
-                    {
+                    else if (otherInstrument.Expansion == ExpansionType.None || (expansionMask & ExpansionType.GetMaskFromValue(otherInstrument.Expansion)) != 0)
+                    { 
                         instruments.Add(otherInstrument);
                     }
                     else
@@ -1768,6 +1763,19 @@ namespace FamiStudio
         public static bool NeedsExpansionInstrument(int value)
         {
             return value == Fds || value == N163 || value == Vrc6 || value == Vrc7 || value == S5B;
+        }
+
+        // Makes sure all the bits set in "sub" are also set in "reference".
+        public static bool IsMaskIncludedInTheOther(int referenceMask, int subMask)
+        {
+            for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+            {
+                var mask = GetMaskFromValue(i);
+                if ((mask & subMask) != 0 && (mask & referenceMask) == 0)
+                    return false;
+            }
+
+            return true;
         }
 
         public static int GetValueFromMask(int mask)

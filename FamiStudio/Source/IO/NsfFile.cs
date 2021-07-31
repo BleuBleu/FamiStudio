@@ -403,7 +403,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.ExpansionType == ExpansionType.Fds)
+                if (inst.Expansion == ExpansionType.Fds)
                 {
                     if (inst.FdsMasterVolume == masterVolume &&
                         wavEnv.SequenceEqual(inst.Envelopes[EnvelopeType.FdsWaveform].Values.Take(64)) &&
@@ -440,7 +440,7 @@ namespace FamiStudio
                 // Custom instrument, look for a match.
                 foreach (var inst in project.Instruments)
                 {
-                    if (inst.ExpansionType == ExpansionType.Vrc7)
+                    if (inst.Expansion == ExpansionType.Vrc7)
                     {
                         if (inst.Vrc7Patch == 0 && inst.Vrc7PatchRegs.SequenceEqual(patchRegs))
                             return inst;
@@ -479,7 +479,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.ExpansionType == ExpansionType.N163)
+                if (inst.Expansion == ExpansionType.N163)
                 {
                     if (inst.N163WavePos  == wavePos &&
                         inst.N163WaveSize == waveData.Length &&
@@ -511,7 +511,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.ExpansionType == ExpansionType.S5B)
+                if (inst.Expansion == ExpansionType.S5B)
                     return inst;
             }
 

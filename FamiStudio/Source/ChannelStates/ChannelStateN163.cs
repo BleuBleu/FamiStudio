@@ -25,9 +25,9 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.ExpansionType == ExpansionType.N163);
+                Debug.Assert(instrument.Expansion == ExpansionType.N163);
 
-                if (instrument.ExpansionType == ExpansionType.N163)
+                if (instrument.Expansion == ExpansionType.N163)
                 {
                     // This can actually trigger if you tweak an instrument while playing a song.
                     //Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
