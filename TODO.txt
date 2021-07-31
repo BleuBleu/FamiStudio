@@ -3,10 +3,16 @@
 - Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
 
 StudsX:
+- Syo song doesnt import when importing in a new project?
+- MIDI instrument bug syo
+x One too many row? NAH
+- FamiTracker => FamiStudio tempo conversion is broken? See mathieuw.fms!
+	=> Syo song has super short notes. Weird.
+
+Low prio:
 - Is the clarinet VRC7 sound patch ok?
 - Instrument changes with no new note?
 - Pxx doesnt match with VRC7?
-- FamiTracker => FamiStudio tempo conversion is broken? See mathieuw.fms!
 
 Videos:
 =======
