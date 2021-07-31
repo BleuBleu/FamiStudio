@@ -800,6 +800,7 @@ namespace FamiStudio
             bmpEffects[Note.EffectNoteDelay] = g.CreateBitmapFromResource("NoteDelaySmall");
             bmpEffects[Note.EffectCutDelay] = g.CreateBitmapFromResource("CutDelaySmall");
             bmpEffects[Note.EffectVolumeSlide] = g.CreateBitmapFromResource("VolumeSmall");
+            bmpEffects[Note.EffectDeltaCounter] = g.CreateBitmapFromResource("DutyCycleSmall"); // MATTT : Proper icon!
             bmpEffectExpanded = g.CreateBitmapFromResource("ExpandedSmall");
             bmpEffectCollapsed = g.CreateBitmapFromResource("CollapsedSmall");
             bmpSlide = g.CreateBitmapFromResource("Slide");

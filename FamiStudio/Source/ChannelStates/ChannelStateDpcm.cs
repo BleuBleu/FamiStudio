@@ -31,6 +31,12 @@
                 }
             }
 
+            // MATTT : Do we set it before or after?
+            if (note.HasDeltaCounter)
+            {
+                WriteRegister(NesApu.APU_DMC_RAW, note.DeltaCounter);
+            }
+
             base.UpdateAPU();
         }
     }

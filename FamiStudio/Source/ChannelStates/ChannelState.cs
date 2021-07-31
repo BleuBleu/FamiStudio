@@ -155,6 +155,7 @@ namespace FamiStudio
             if (!newNote.HasFinePitch      && note.HasFinePitch)       newNote.FinePitch   = note.FinePitch;
             if (!newNote.HasFdsModDepth    && note.HasFdsModDepth)     newNote.FdsModDepth = note.FdsModDepth;
             if (!newNote.HasFdsModSpeed    && note.HasFdsModSpeed)     newNote.FdsModSpeed = note.FdsModSpeed;
+            //if (!newNote.HasDeltaCounter   && note.HasDeltaCounter)    newNote.DeltaCounter = note.DeltaCounter; MATTT
             if (newNote.Instrument == null && note.Instrument != null) newNote.Instrument  = note.Instrument;
             if (newNote.Arpeggio   == null && note.Arpeggio   != null && !newNote.IsMusical) newNote.Arpeggio = note.Arpeggio;
 
