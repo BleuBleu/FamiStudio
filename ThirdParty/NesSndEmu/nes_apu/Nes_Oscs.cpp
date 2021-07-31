@@ -16,9 +16,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
 
 #include BLARGG_SOURCE_BEGIN
 
-// MATTT
-int toto = 0;
-
 // Nes_Osc
 
 void Nes_Osc::clock_length( int halt_mask )
@@ -271,7 +268,6 @@ void Nes_Dmc::reset()
 	next_irq = Nes_Apu::no_irq;
 	irq_flag = false;
 	irq_enabled = false;
-	toto = 0; // MATTT
 
 	Nes_Osc::reset();
 	period = 0x1AC;
@@ -405,7 +401,6 @@ void Nes_Dmc::run( cpu_time_t time, cpu_time_t end_time )
 	{
 		if ( delta )
 			synth.offset( time, delta, output );
-		toto += delta;
 	}
 	
 	time += delay;
@@ -433,11 +428,7 @@ void Nes_Dmc::run( cpu_time_t time, cpu_time_t end_time )
 					bits >>= 1;
 					if ( unsigned (dac + step) <= 0x7F ) {
 						dac += step;
-						//int delta = update_amp(dac);
-						//if (delta)
-						//	synth.offset_inline( time, delta, output );
 						synth.offset_inline(time, step, output);
-						toto += step;
 					}
 				}
 				
