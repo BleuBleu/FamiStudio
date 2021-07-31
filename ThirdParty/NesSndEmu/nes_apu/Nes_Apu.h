@@ -22,7 +22,7 @@ public:
 	~Nes_Apu();
 	
 	// Set buffer to generate all sound into, or disable sound if NULL
-	void output( Blip_Buffer* );
+	void output( Blip_Buffer*, Blip_Buffer* );
 	
 	// Set memory reader callback used by DMC oscillator to fetch samples.
 	// When callback is invoked, 'user_data' is passed unchanged as the

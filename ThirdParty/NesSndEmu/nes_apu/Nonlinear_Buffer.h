@@ -6,7 +6,9 @@
 #ifndef NONLINEAR_BUFFER_H
 #define NONLINEAR_BUFFER_H
 
-#include "Multi_Buffer.h"
+#include "Blip_Buffer.h"
+#include "blargg_common.h"
+
 class Nes_Apu;
 
 // Use to make samples non-linear in Blip_Buffer used for triangle, noise, and DMC only
@@ -15,7 +17,7 @@ public:
 	Nes_Nonlinearizer();
 	
 	// Must be called when buffer is cleared
-	void clear() { accum = 0x8000; }
+	void clear() { accum = 0; }
 	
 	// Enable/disable non-linear output
 	void enable( Nes_Apu&, bool = true );
@@ -23,7 +25,38 @@ public:
 	// Make at most 'count' samples in buffer non-linear and return number
 	// of samples modified. This many samples must then be read out of the buffer.
 	long make_nonlinear( Blip_Buffer&, long count );
-	
+
+	inline long lookup(long s)
+	{
+		// Here we have no low-pass filter, so the (shifted) samples are in the 0-65535 range.
+		if (s < 0) s = 0;
+		else if (s > 0xffff) s = 0xffff;
+
+		assert((s >> shift) < half * 2); // MATTT Disable!
+
+		float tnd = (s / 65535.0f * 202.0f);
+		return (long)((163.67f / (24329.0f / tnd + 100.0f)) * 65535.0f);
+
+		//return table[((s) >> shift) & entry_mask];
+	}
+
+	inline long lookup2(long s, long f)
+	{
+		// Here we have no low-pass filter, so the (shifted) samples are in the 0-65535 range.
+		if (s < 0) s = 0;
+		else if (s > 0xffff) s = 0xffff;
+
+		// MATTT Disable!
+		assert((s >> shift) < half * 2);
+		assert(f >= 0 && f < 0x4000); // 14-bit of fraction.
+
+		// Interpolate the 2 table entries.
+		long v0 = table[(((s) >> shift) + 0) & entry_mask];
+		long v1 = table[(((s) >> shift) + 1) & entry_mask];
+
+		return (v0 * (0x3fff - f) + v1 * f) >> 14;
+	}
+
 private:
 	enum { shift = 5 };
 	enum { half = 0x8000 >> shift };
@@ -31,34 +64,6 @@ private:
 	BOOST::uint16_t table [half * 2];
 	long accum;
 	bool nonlinear;
-};
-
-class Nonlinear_Buffer : public Multi_Buffer {
-public:
-	Nonlinear_Buffer();
-	~Nonlinear_Buffer();
-	
-	// Enable/disable non-linear output
-	void enable_nonlinearity( Nes_Apu&, bool = true );
-	
-	// Blip_Buffer to output other sound chips to
-	Blip_Buffer* buffer() { return &buf; }
-	
-	// See Multi_Buffer.h
-	blargg_err_t sample_rate( long rate, int msec = blip_default_length );
-	Multi_Buffer::sample_rate;
-	void clock_rate( long );
-	void bass_freq( int );
-	void clear();
-	channel_t channel( int );
-	void end_frame( blip_time_t, bool unused = true );
-	long samples_avail() const;
-	long read_samples( blip_sample_t*, long );
-	
-private:
-	Blip_Buffer buf;
-	Blip_Buffer tnd;
-	Nes_Nonlinearizer nonlinearizer;
 };
 
 #endif

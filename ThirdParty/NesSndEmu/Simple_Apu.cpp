@@ -3,6 +3,8 @@
 
 #include "Simple_Apu.h"
 
+#include <malloc.h>
+
 /* Copyright (C) 2003-2005 Shay Green. This module is free software; you
 can redistribute it and/or modify it under the terms of the GNU Lesser
 General Public License as published by the Free Software Foundation; either
@@ -14,6 +16,8 @@ more details. You should have received a copy of the GNU Lesser General
 Public License along with this module; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
 
+#define NONLINEAR_TND 1
+
 static int null_dmc_reader( void*, cpu_addr_t )
 {
 	return 0x55; // causes dmc sample to be flat
@@ -22,11 +26,14 @@ static int null_dmc_reader( void*, cpu_addr_t )
 Simple_Apu::Simple_Apu()
 {
 	pal_mode = false;
-	seeking = false;
+	seeking = false; 
 	time = 0;
 	frame_length = 29780;
 	expansions = expansion_mask_none;
 	apu.dmc_reader( null_dmc_reader, NULL );
+#if NONLINEAR_TND
+	nonlinearizer.enable(apu);
+#endif
 }
 
 Simple_Apu::~Simple_Apu()
@@ -43,22 +50,42 @@ blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 {
 	pal_mode = pal;
 	frame_length = pal ? 33247 : 29780;
-	apu.output( &buf );
+#if NONLINEAR_TND
+	apu.output(&buf, &tnd);
+#else
+	apu.output(&buf, &buf);
+#endif
 	vrc6.output(&buf);
 	vrc7.output(&buf);
 	fds.output(&buf);
 	mmc5.output(&buf);
 	namco.output(&buf);
 	sunsoft.output(&buf);
-	buf.clock_rate( pal ? 1662607 : 1789773 );
+	
+#if NONLINEAR_TND
+	tnd.clock_rate(pal ? 1662607 : 1789773);
+	buf.clock_rate(pal ? 1662607 : 1789773);
+
+	tnd.sample_rate(rate);
 	return buf.sample_rate( rate );
+#else
+	buf.clock_rate(pal ? 1662607 : 1789773);
+	return buf.sample_rate(rate);
+#endif
 }
 
 void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 {
 	if (expansion == 0)
 	{
-		apu.osc_output(idx, enable ? &buf : NULL);
+		#if NONLINEAR_TND
+			if (idx < 2)
+				apu.osc_output(idx, enable ? &buf : NULL);
+			else
+				apu.osc_output(idx, enable ? &tnd : NULL);
+		#else
+			apu.osc_output(idx, enable ? &buf : NULL);
+		#endif
 	}
 	else
 	{
@@ -94,7 +121,9 @@ void Simple_Apu::set_expansion_volume(int exp, double volume)
 {
 	switch (exp)
 	{
+	#if !NONLINEAR_TND
 		case expansion_none: apu.volume(volume); break;
+	#endif
 		case expansion_vrc6: vrc6.volume(volume); break;
 		case expansion_vrc7: vrc7.volume(volume); break;
 		case expansion_fds: fds.volume(volume); break;
@@ -196,6 +225,9 @@ void Simple_Apu::end_frame()
 	if (expansions & expansion_mask_sunsoft) sunsoft.end_frame(frame_length); 
 
 	buf.end_frame( frame_length );
+#if NONLINEAR_TND
+	tnd.end_frame( frame_length );
+#endif
 }
 
 void Simple_Apu::reset()
@@ -208,6 +240,7 @@ void Simple_Apu::reset()
 	mmc5.reset();
 	namco.reset();
 	sunsoft.reset();
+	nonlinearizer.clear();
 }
 
 void Simple_Apu::set_audio_expansions(long exp)
@@ -217,17 +250,77 @@ void Simple_Apu::set_audio_expansions(long exp)
 
 long Simple_Apu::samples_avail() const
 {
+#if NONLINEAR_TND
+	assert(buf.samples_avail() == tnd.samples_avail());
+#endif
 	return buf.samples_avail();
 }
 
-long Simple_Apu::read_samples( sample_t* p, long s )
+long Simple_Apu::read_samples( sample_t* out, long count )
 {
-	return buf.read_samples( p, s );
+#if NONLINEAR_TND
+	assert(buf.samples_avail() == tnd.samples_avail());
+
+	/*
+	sample_t* tnd_out = (sample_t*)alloca(count * sizeof(sample_t));
+
+	nonlinearizer.read_nonlinear(tnd, tnd_out, count);
+	buf.read_samples(out, count);
+
+	for (int n = count; n--; )
+	{
+		long s = *out + *tnd_out;
+
+		if ((BOOST::int16_t) s != s)
+			s = 0x7FFF - (s >> 24);
+
+		*out++ = (sample_t)s;
+		tnd_out++;
+	}
+	*/
+
+	long nonlinear_count = nonlinearizer.make_nonlinear(tnd, count);
+	assert(nonlinear_count == count);
+
+	if (count)
+	{
+		Blip_Reader lin;
+		Blip_Reader nonlin;
+
+		int lin_bass = lin.begin(buf);
+		int nonlin_bass = nonlin.begin(tnd);
+
+		for (int n = count; n--; )
+		{
+			int s = lin.read() + nonlin.read();
+			lin.next(lin_bass);
+			nonlin.next(nonlin_bass);
+			*out++ = s;
+
+			if ((BOOST::int16_t) s != s)
+				out[-1] = 0x7FFF - (s >> 24);
+		}
+
+		lin.end(buf);
+		nonlin.end(tnd);
+
+		buf.remove_samples(count);
+		tnd.remove_samples(count);
+	}
+
+#else
+	buf.read_samples(out, count);
+#endif
+
+	return count;
 }
 
 void Simple_Apu::remove_samples(long s)
 {
 	buf.remove_samples(s);
+#if NONLINEAR_TND
+	tnd.remove_samples(s);
+#endif
 }
 
 void Simple_Apu::save_snapshot( apu_snapshot_t* out ) const

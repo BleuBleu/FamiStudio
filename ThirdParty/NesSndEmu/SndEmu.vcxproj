@@ -136,7 +136,6 @@
     <ClInclude Include="nes_apu\Blip_Synth.h" />
     <ClInclude Include="nes_apu\emu2149.h" />
     <ClInclude Include="nes_apu\emu2413.h" />
-    <ClInclude Include="nes_apu\Multi_Buffer.h" />
     <ClInclude Include="nes_apu\Nes_Apu.h" />
     <ClInclude Include="nes_apu\Nes_Fds.h" />
     <ClInclude Include="nes_apu\Nes_Fme7.h" />
@@ -155,7 +154,6 @@
     <ClCompile Include="nes_apu\Blip_Buffer.cpp" />
     <ClCompile Include="nes_apu\emu2149.c" />
     <ClCompile Include="nes_apu\emu2413.c" />
-    <ClCompile Include="nes_apu\Multi_Buffer.cpp" />
     <ClCompile Include="nes_apu\Nes_Apu.cpp" />
     <ClCompile Include="nes_apu\Nes_Fds.cpp" />
     <ClCompile Include="nes_apu\Nes_Fme7.cpp" />

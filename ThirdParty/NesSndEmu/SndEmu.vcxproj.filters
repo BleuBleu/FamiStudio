@@ -30,9 +30,6 @@
     <ClInclude Include="nes_apu\Blip_Synth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="nes_apu\Multi_Buffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="nes_apu\Nes_Apu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -78,9 +75,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nes_apu\Blip_Buffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nes_apu\Multi_Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nes_apu\Nes_Apu.cpp">

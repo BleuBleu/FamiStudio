@@ -15,6 +15,7 @@
 #include "nes_apu/Nes_Sunsoft.h"
 #include "nes_apu/Nes_Fme7.h"
 #include "nes_apu/Blip_Buffer.h"
+#include "nes_apu/Nonlinear_Buffer.h"
 
 class Simple_Apu {
 public:
@@ -34,38 +35,6 @@ public:
 	enum { expansion_mask_mmc5       = 1 << 3 };
 	enum { expansion_mask_namco      = 1 << 4 };
 	enum { expansion_mask_sunsoft    = 1 << 5 };
-
-	/*
-	enum { channel_square1      = 0 };
-	enum { channel_square2      = 1 };
-	enum { channel_triangle     = 2 };
-	enum { channel_noise        = 3 };
-	enum { channel_dpcm         = 4 };
-	enum { channel_vrc6_square1 = 5 };
-	enum { channel_vrc6_square2 = 6 };
-	enum { channel_vrc6_saw     = 7 };
-	enum { channel_vrc7_fm1     = 8 };
-	enum { channel_vrc7_fm2     = 9 };
-	enum { channel_vrc7_fm3     = 10 };
-	enum { channel_vrc7_fm4     = 11 };
-	enum { channel_vrc7_fm5     = 12 };
-	enum { channel_vrc7_fm6     = 13 };
-	enum { channel_fds          = 14 };
-	enum { channel_mmc5_square1 = 15 };
-	enum { channel_mmc5_square2 = 16 };
-	enum { channel_mmc5_dpcm    = 17 };
-	enum { channel_n163_wave1   = 18 };
-	enum { channel_n163_wave2   = 19 };
-	enum { channel_n163_wave3   = 20 };
-	enum { channel_n163_wave4   = 21 };
-	enum { channel_n163_wave5   = 22 };
-	enum { channel_n163_wave6   = 23 };
-	enum { channel_n163_wave7   = 24 };
-	enum { channel_n163_wave8   = 25 };
-	enum { channel_s5b_square1  = 26 };
-	enum { channel_s5b_square2  = 27 };
-	enum { channel_s5b_square3  = 28 };
-	*/
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -131,7 +100,9 @@ private:
 	Nes_Namco namco;
 	//Nes_Sunsoft sunsoft; // My version, based on emu2149
 	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
+	Nes_Nonlinearizer nonlinearizer;
 	Blip_Buffer buf;
+	Blip_Buffer tnd;
 	blip_time_t time;
 	blip_time_t frame_length;
 	blip_time_t clock() { return time += 4; }
