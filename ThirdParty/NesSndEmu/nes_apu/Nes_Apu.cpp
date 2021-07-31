@@ -59,16 +59,11 @@ void Nes_Apu::buffer_cleared()
 void Nes_Apu::enable_nonlinear( double v )
 {
 	dmc.nonlinear = true;
-	square_synth.volume( 1.3 * 0.25751258 / 0.742467605 * 0.25 * v );
-	
-	// MATTT : 
-	// - My triangle is 42% too loud compared to FamiTracker.
-	// - Or its my square that's too low? 
-	// Compare with real NES + NSFPlay.
 
-	//const double tnd = 0.75 / 202 * 0.48;
-	//const double tnd = 0.75 / 202; // * 0.48;
-	const double tnd = 1.0 / 202; // * 0.48;
+	// Should be 0.00752 * 15, but i find this to be a better approximation.
+	square_synth.volume( 0.0087 * 15 * v );
+	
+	const double tnd = 1.0 / 202;
 	triangle.synth.volume( 3 * tnd * 15.0 );
 	noise.synth.volume( 2 * tnd * 15.0 );
 	dmc.synth.volume( tnd * 127.0 );
@@ -78,10 +73,10 @@ void Nes_Apu::enable_nonlinear( double v )
 
 void Nes_Apu::volume( double v )
 {
-	// assert(false); MATTT
-
 	dmc.nonlinear = false;
-	square_synth.volume( 0.1128 * v );
+
+	// Should be 0.00752 * 15, but i find this to be a better approximation.
+	square_synth.volume( 0.0087 * 15 * v );
 	triangle.synth.volume( 0.12765 * v );
 	noise.synth.volume( 0.095 * v );
 	dmc.synth.volume( 0.42545 * v );

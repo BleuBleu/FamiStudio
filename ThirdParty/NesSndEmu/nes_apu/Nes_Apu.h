@@ -103,10 +103,8 @@ public:
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
 
-// End of public interface.
-private:
-	friend class Nes_Nonlinearizer;
 	void enable_nonlinear( double volume );
+
 private:
 	// noncopyable
 	Nes_Apu( const Nes_Apu& );

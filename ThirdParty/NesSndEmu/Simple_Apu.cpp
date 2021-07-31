@@ -29,11 +29,9 @@ Simple_Apu::Simple_Apu()
 	seeking = false; 
 	time = 0;
 	frame_length = 29780;
+	tnd_volume = 1.0;
 	expansions = expansion_mask_none;
 	apu.dmc_reader( null_dmc_reader, NULL );
-#if NONLINEAR_TND
-	nonlinearizer.enable(apu);
-#endif
 }
 
 Simple_Apu::~Simple_Apu()
@@ -121,7 +119,9 @@ void Simple_Apu::set_expansion_volume(int exp, double volume)
 {
 	switch (exp)
 	{
-	#if !NONLINEAR_TND
+	#if NONLINEAR_TND
+		case expansion_none: apu.enable_nonlinear(volume); tnd_volume = volume; break;
+	#else
 		case expansion_none: apu.volume(volume); break;
 	#endif
 		case expansion_vrc6: vrc6.volume(volume); break;
@@ -232,7 +232,11 @@ void Simple_Apu::end_frame()
 
 void Simple_Apu::reset()
 {
+#if NONLINEAR_TND 
+	apu.enable_nonlinear(1.0);
+#endif
 	seeking = false;
+	nonlinear_accum = 0;
 	apu.reset(pal_mode);
 	vrc6.reset();
 	vrc7.reset();
@@ -240,7 +244,6 @@ void Simple_Apu::reset()
 	mmc5.reset();
 	namco.reset();
 	sunsoft.reset();
-	nonlinearizer.clear();
 }
 
 void Simple_Apu::set_audio_expansions(long exp)
@@ -256,34 +259,44 @@ long Simple_Apu::samples_avail() const
 	return buf.samples_avail();
 }
 
+inline long nonlinearize(long raw_sample, double volume)
+{
+	const int    sample_shift     = blip_sample_bits - 16;
+	const double sample_scale_inv = (1 << sample_shift) * 65535.0;
+	const double sample_scale     = 1.0 / sample_scale_inv;
+
+	// Using the 3 * tri (15) + 2 * noise (15) + dmc (127) approximation = maximum value is 202.
+	const double tnd_scale = 202.0;
+
+	// Convert the raw fixed point sample to floating point + apply nonlinear approximation.
+	double sample_float = max(0.00001, raw_sample * sample_scale);
+	double sample_nonlinear = 163.67 / (24329.0 / (sample_float * tnd_scale) + 100.0);
+
+	// Rescale to the fixed point, blip buffer format.
+	return (long)(sample_nonlinear * volume * sample_scale_inv);
+}
+
 long Simple_Apu::read_samples( sample_t* out, long count )
 {
 #if NONLINEAR_TND
 	assert(buf.samples_avail() == tnd.samples_avail());
 
-	/*
-	sample_t* tnd_out = (sample_t*)alloca(count * sizeof(sample_t));
-
-	nonlinearizer.read_nonlinear(tnd, tnd_out, count);
-	buf.read_samples(out, count);
-
-	for (int n = count; n--; )
-	{
-		long s = *out + *tnd_out;
-
-		if ((BOOST::int16_t) s != s)
-			s = 0x7FFF - (s >> 24);
-
-		*out++ = (sample_t)s;
-		tnd_out++;
-	}
-	*/
-
-	long nonlinear_count = nonlinearizer.make_nonlinear(tnd, count);
-	assert(nonlinear_count == count);
-
 	if (count)
 	{
+		// Apply non-linear mixing to the TND buffer.
+		Blip_Buffer::buf_t_* p = tnd.buffer_;
+
+		long prev = nonlinearize(nonlinear_accum, tnd_volume);
+
+		for (unsigned n = count; n--; )
+		{
+			nonlinear_accum += (long)*p;
+			long entry = nonlinearize(nonlinear_accum, tnd_volume);
+			*p++ = (entry - prev);
+			prev = entry;
+		}
+
+		// Then mix both blip buffers.
 		Blip_Reader lin;
 		Blip_Reader nonlin;
 

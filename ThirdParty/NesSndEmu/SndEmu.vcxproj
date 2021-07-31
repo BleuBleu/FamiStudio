@@ -145,7 +145,6 @@
     <ClInclude Include="nes_apu\Nes_Sunsoft.h" />
     <ClInclude Include="nes_apu\Nes_Vrc6.h" />
     <ClInclude Include="nes_apu\Nes_Vrc7.h" />
-    <ClInclude Include="nes_apu\Nonlinear_Buffer.h" />
     <ClInclude Include="Simple_Apu.h" />
   </ItemGroup>
   <ItemGroup>
@@ -163,7 +162,6 @@
     <ClCompile Include="nes_apu\Nes_Sunsoft.cpp" />
     <ClCompile Include="nes_apu\Nes_Vrc6.cpp" />
     <ClCompile Include="nes_apu\Nes_Vrc7.cpp" />
-    <ClCompile Include="nes_apu\Nonlinear_Buffer.cpp" />
     <ClCompile Include="Simple_Apu.cpp" />
   </ItemGroup>
   <ItemGroup>

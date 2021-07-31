@@ -12,11 +12,8 @@ Misc:
 - Fix GTK single multiple label issue.	
 
 DPCM/Tri volume thing (from tromino)
-x Look at blaarg non-linear buffer.
-x Look if this has changed in newer versions.
-- Plot nonlinear/linear curves, see what makes sense.
-- Review all volumes at the end. Use real values in low-level emulation, make my custom volume constants in the SimpleApu.
-- Build some unit tests I can run on real NES.
+- Run more tests on NES, with more volumes + noise too.
+- Add a global 80% volume to match FamiTracker.
 
 Testing
 =======

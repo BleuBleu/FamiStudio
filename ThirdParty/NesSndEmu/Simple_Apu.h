@@ -15,7 +15,6 @@
 #include "nes_apu/Nes_Sunsoft.h"
 #include "nes_apu/Nes_Fme7.h"
 #include "nes_apu/Blip_Buffer.h"
-#include "nes_apu/Nonlinear_Buffer.h"
 
 class Simple_Apu {
 public:
@@ -89,9 +88,24 @@ public:
 	bool is_seeking() const { return seeking; }
 
 private:
+
+	//inline long nonlinearize(long raw_sample) const
+	//{
+	//	const int   sample_shift = blip_sample_bits - 16;
+	//	const float sample_scale = (float)(1 << sample_shift);
+
+	//	double sample_float = raw_sample / (1 << sample_shift);
+
+	//	float sample_202_range = (s / 65535.0f * 202.0f);
+	//	return (long)((163.67f / (24329.0f / sample_202_range + 100.0f)) * 65535.0f);
+	//}
+
+private:
 	bool pal_mode;
 	bool seeking;
+	double tnd_volume;
 	int  expansions;
+	long nonlinear_accum;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
 	Nes_Vrc7 vrc7;
@@ -100,7 +114,6 @@ private:
 	Nes_Namco namco;
 	//Nes_Sunsoft sunsoft; // My version, based on emu2149
 	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
-	Nes_Nonlinearizer nonlinearizer;
 	Blip_Buffer buf;
 	Blip_Buffer tnd;
 	blip_time_t time;
