@@ -61,7 +61,7 @@ void Nes_Apu::enable_nonlinear( double v )
 	dmc.nonlinear = true;
 
 	// Should be 0.00752 * 15, but i find this to be a better approximation.
-	square_synth.volume( 0.0087 * 15 * v );
+	square_synth.volume( 0.00861 * 15 * v );
 	
 	const double tnd = 1.0 / 202;
 	triangle.synth.volume( 3 * tnd * 15.0 );
@@ -76,7 +76,7 @@ void Nes_Apu::volume( double v )
 	dmc.nonlinear = false;
 
 	// Should be 0.00752 * 15, but i find this to be a better approximation.
-	square_synth.volume( 0.0087 * 15 * v );
+	square_synth.volume( 0.00861 * 15 * v );
 	triangle.synth.volume( 0.12765 * v );
 	noise.synth.volume( 0.095 * v );
 	dmc.synth.volume( 0.42545 * v );
