@@ -30,7 +30,7 @@ Nes_Apu::Nes_Apu()
 	oscs [3] = &noise;
 	oscs [4] = &dmc;
 	
-	output( NULL );
+	output( NULL, NULL );
 	volume( 1.0 );
 	reset( false );
 }
@@ -59,13 +59,14 @@ void Nes_Apu::buffer_cleared()
 void Nes_Apu::enable_nonlinear( double v )
 {
 	dmc.nonlinear = true;
-	square_synth.volume( 1.3 * 0.25751258 / 0.742467605 * 0.25 * v );
+
+	// Should be 0.00752 * 15, but i find this to be a better approximation.
+	square_synth.volume( 0.0087 * 15 * v );
 	
-	// TODO : These do not exist in Blip Buffer 4.0, need to see what is the equivalent.
-	//const double tnd = 0.75 / 202 * 0.48;
-	//triangle.synth.volume_unit( 3 * tnd );
-	//noise.synth.volume_unit( 2 * tnd );
-	//dmc.synth.volume_unit( tnd );
+	const double tnd = 1.0 / 202;
+	triangle.synth.volume( 3 * tnd * 15.0 );
+	noise.synth.volume( 2 * tnd * 15.0 );
+	dmc.synth.volume( tnd * 127.0 );
 	
 	buffer_cleared();
 }
@@ -73,16 +74,21 @@ void Nes_Apu::enable_nonlinear( double v )
 void Nes_Apu::volume( double v )
 {
 	dmc.nonlinear = false;
-	square_synth.volume( 0.1128 * v );
+
+	// Should be 0.00752 * 15, but i find this to be a better approximation.
+	square_synth.volume( 0.0087 * 15 * v );
 	triangle.synth.volume( 0.12765 * v );
 	noise.synth.volume( 0.095 * v );
 	dmc.synth.volume( 0.42545 * v );
 }
 
-void Nes_Apu::output( Blip_Buffer* buffer )
+void Nes_Apu::output( Blip_Buffer* buffer, Blip_Buffer* buffer_tnd )
 {
-	for ( int i = 0; i < osc_count; i++ )
-		osc_output( i, buffer );
+	osc_output(0, buffer);
+	osc_output(1, buffer);
+	osc_output(2, buffer_tnd);
+	osc_output(3, buffer_tnd);
+	osc_output(4, buffer_tnd);
 }
 
 void Nes_Apu::reset( bool pal_mode, int initial_dmc_dac )

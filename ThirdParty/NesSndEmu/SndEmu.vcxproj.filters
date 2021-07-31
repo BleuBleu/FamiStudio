@@ -30,9 +30,6 @@
     <ClInclude Include="nes_apu\Blip_Synth.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="nes_apu\Multi_Buffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="nes_apu\Nes_Apu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -43,9 +40,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nes_apu\Nes_Vrc6.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="nes_apu\Nonlinear_Buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Simple_Apu.h">
@@ -80,9 +74,6 @@
     <ClCompile Include="nes_apu\Blip_Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="nes_apu\Multi_Buffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="nes_apu\Nes_Apu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -93,9 +84,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nes_apu\Nes_Vrc6.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="nes_apu\Nonlinear_Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DllWrapper.cpp">

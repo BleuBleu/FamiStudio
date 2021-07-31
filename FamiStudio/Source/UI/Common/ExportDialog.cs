@@ -213,13 +213,13 @@ namespace FamiStudio
                     //page.SetPropertyEnabled(3, !project.UsesExpansionAudio); EXPTODO
                     break;
                 case ExportFormat.Rom:
-                    //page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == ExpansionType.Fds ? "FDS Disk" : "NES ROM"); // 0 EXPTODO
+                    page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM"); // 0
                     page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
                     page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
                     page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
                     page.AddCheckBoxList(null, songNames, null); // 2
-                    //page.SetPropertyEnabled(0,  project.ExpansionAudio == ExpansionType.Fds); EXPTODO
-                    //page.SetPropertyEnabled(3, !project.UsesExpansionAudio); EXPTODO
+                    page.SetPropertyEnabled(0,  project.UsesFdsExpansion);
+                    page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     break;
                 case ExportFormat.Midi:
                     page.AddDropDownList("Song :", songNames, songNames[0]); // 0
