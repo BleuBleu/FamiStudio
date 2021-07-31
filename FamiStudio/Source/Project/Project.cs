@@ -1061,7 +1061,7 @@ namespace FamiStudio
                 if (otherProject.expansionMask != ExpansionType.None &&
                     otherProject.expansionMask != expansionMask)
                 {
-                    Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses a different audio expansion.");
+                    Log.LogMessage(LogSeverity.Error, $"Cannot import from a project that uses a different audio expansion(s).");
                     return false;
                 }
 

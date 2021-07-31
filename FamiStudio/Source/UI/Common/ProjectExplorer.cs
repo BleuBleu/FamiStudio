@@ -1361,7 +1361,7 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
-            EmitInstrumentHoverEvent(e); // EXPTODO : On mouse leave too!
+            EmitInstrumentHoverEvent(e);
 
             mouseLastX = e.X;
             mouseLastY = e.Y;

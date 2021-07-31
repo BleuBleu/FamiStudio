@@ -2220,11 +2220,7 @@ namespace FamiStudio
                     if (editMode == EditionMode.Channel)
                     {
                         var channelType = song.Channels[editChannel].Type;
-                        var channelName = song.Channels[editChannel].Name;
-
-                        // EXPTODO
-                        //if (channelType >= ChannelType.ExpansionAudioStart)
-                        //    channelName += $" ({song.Project.ExpansionAudioName})";
+                        var channelName = song.Channels[editChannel].NameWithExpansion;
 
                         g.DrawText($"Editing {channelName} Channel", ThemeBase.FontBig, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
                     }

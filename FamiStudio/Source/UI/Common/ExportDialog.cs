@@ -122,10 +122,7 @@ namespace FamiStudio
             for (int i = 0; i < channelTypes.Length; i++)
             {
                 data[i, 0] = !anyChannelActive || channelActives[i];
-                data[i, 1] = ChannelType.Names[channelTypes[i]] ;
-                // EXPTODO
-                //if (i >= ChannelType.ExpansionAudioStart)
-                //    data[i, 1] += $" ({project.ExpansionAudioShortName})";
+                data[i, 1] = ChannelType.GetNameWithExpansion(channelTypes[i]);
                 data[i, 2] = 50;
             }
 
@@ -210,7 +207,7 @@ namespace FamiStudio
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
 #endif
-                    //page.SetPropertyEnabled(3, !project.UsesExpansionAudio); EXPTODO
+                    page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     break;
                 case ExportFormat.Rom:
                     page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM"); // 0

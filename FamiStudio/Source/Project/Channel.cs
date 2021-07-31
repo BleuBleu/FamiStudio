@@ -17,7 +17,7 @@ namespace FamiStudio
         public int Type => type;
         public string Name => ChannelType.Names[type];
         public string ShortName => ChannelType.ShortNames[(int)type];
-        public string NameWithExpansion => IsExpansionChannel ? $"{Name} ({ExpansionType.ShortNames[ChannelType.GetExpansionTypeForChannelType(type)]})" : Name;
+        public string NameWithExpansion => ChannelType.GetNameWithExpansion(type);
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
@@ -1663,6 +1663,14 @@ namespace FamiStudio
             1, // S5B
             2  // S5B
         };
+
+        public static string GetNameWithExpansion(int type)
+        {
+            var str = Names[type];
+            if (ExpansionTypes[type] != ExpansionType.None)
+                str += $" ({ExpansionType.ShortNames[ExpansionTypes[type]]})" ;
+            return str;
+        }
 
         public static int GetExpansionTypeForChannelType(int type)
         {

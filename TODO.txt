@@ -5,15 +5,18 @@ Multiexp:
 / Project property selection.
 	- Warnings in project properties
 	- Fix N163 channels.
+
+DPCM/Tri volume thing (from tromino)
+- Run more tests on NES, with more volumes + noise too.
+- Add a global 80% volume to match FamiTracker.
+- Channels will need to be rebalanced a bit since i bumped the squares.
+- Compare with old FamiStudio to see if old project will sound like ass.
+	
 Misc:
 - Mac/Linux : CheckListBox doesnt fire events (needed for Midi import/PAL).
 - Remove "None" piano roll mode.
 - Make sure OnMouseLeave works on that too.
 - Fix GTK single multiple label issue.	
-
-DPCM/Tri volume thing (from tromino)
-- Run more tests on NES, with more volumes + noise too.
-- Add a global 80% volume to match FamiTracker.
 
 Testing
 =======
