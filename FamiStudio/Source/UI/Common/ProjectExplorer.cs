@@ -2377,6 +2377,7 @@ namespace FamiStudio
             }
 
             var dlg = new PropertyDialog(PointToScreen(pt), 360, true);
+            dlg.Properties.ShowWarnings = true;
             dlg.Properties.AddString("Title :", project.Name, 31); // 0
             dlg.Properties.AddString("Author :", project.Author, 31); // 1
             dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
@@ -2384,9 +2385,10 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 4
             dlg.Properties.AddIntegerRange("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, CommonTooltips.ExpansionNumChannels); // 5 (Namco)
             dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, CommonTooltips.ExpansionAudio, 150); // 6
-            dlg.Properties.SetPropertyEnabled(3, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
+            dlg.Properties.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
             dlg.Properties.SetPropertyEnabled(5, project.UsesExpansionAudio(ExpansionType.N163));
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
+            UpdateProjectPropertiesWarnings(dlg.Properties);
             dlg.Properties.Build();
 
             if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -2467,27 +2469,56 @@ namespace FamiStudio
             }
         }
 
+        private void UpdateProjectPropertiesWarnings(PropertyPage props)
+        {
+            var famiStudioTempo = props.GetPropertyValue<string>(3) == "FamiStudio";
+            var selectedExpansions = props.GetPropertyValue<bool[]>(6);
+            var numExpansionsSelected = 0;
+
+            for (int i = 0; i < selectedExpansions.Length; i++)
+            {
+                if (selectedExpansions[i])
+                    numExpansionsSelected++;
+            }
+
+            if (numExpansionsSelected > 1)
+                props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to the FamiStudio Sound Engine or FamiTracker.");
+            else
+                props.SetPropertyWarning(6, CommentType.Good, "");
+        }
+
         private void ProjectProperties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            var noExpansion = props.GetPropertyValue<string>(3) == ExpansionType.Names[ExpansionType.None];
+            var selectedExpansions = props.GetPropertyValue<bool[]>(6);
+            var anyExpansionsSelected = false;
+            var n163Selected = false;
 
-            // EXPTODO : These indices will change.
-            /*
-            if (propIdx == 3) // Expansion
+            for (int i = 0; i < selectedExpansions.Length; i++)
             {
-                props.SetPropertyEnabled(4, (string)value == ExpansionType.Names[ExpansionType.N163]);
-                props.SetPropertyEnabled(6, props.GetPropertyValue<string>(5) == "FamiStudio" && noExpansion);
+                if (selectedExpansions[i])
+                {
+                    if (i + ExpansionType.Start == ExpansionType.N163)
+                        n163Selected = true;
+                    anyExpansionsSelected = true;
+                }
+            }
 
-                if (noExpansion)
-                    props.SetDropDownListIndex(6, App.Project.PalMode ? 1 : 0);
+            if (propIdx == 6) // Expansion
+            {
+                props.SetPropertyEnabled(5, n163Selected);
+                props.SetPropertyEnabled(4, props.GetPropertyValue<string>(3) == "FamiStudio" && !anyExpansionsSelected);
+
+                if (anyExpansionsSelected)
+                    props.SetDropDownListIndex(4, 0);
                 else
-                    props.SetDropDownListIndex(6, 0);
+                    props.SetDropDownListIndex(4, App.Project.PalMode ? 1 : 0);
             }
-            else if (propIdx == 5) // Tempo Mode
+            else if (propIdx == 3) // Tempo Mode
             {
-                props.SetPropertyEnabled(6, (string)value == TempoType.Names[TempoType.FamiStudio]);
+                props.SetPropertyEnabled(4, (string)value == TempoType.Names[TempoType.FamiStudio] && !anyExpansionsSelected);
             }
-            */
+
+            UpdateProjectPropertiesWarnings(props);
         }
 
         private void EditSongProperties(Point pt, Song song)
