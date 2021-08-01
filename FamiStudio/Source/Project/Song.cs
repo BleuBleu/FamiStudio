@@ -720,6 +720,10 @@ namespace FamiStudio
                     foreach (var kv in notesCopy)
                     {
                         var note = kv.Value;
+
+                        if (note.IsMusical)
+                            note.Duration *= famitrackerSpeed;
+
                         pattern.Notes[kv.Key * newNoteLength] = note;
                     }
                 }
