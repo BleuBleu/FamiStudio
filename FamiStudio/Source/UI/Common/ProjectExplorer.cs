@@ -1528,8 +1528,11 @@ namespace FamiStudio
                         songNames.Add(song.Name);
 
                     var dlg = new PropertyDialog(300);
-                    dlg.Properties.AddLabel(null, "Select songs to import:");
-                    dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null);
+                    dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
+                    dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
+                    dlg.Properties.AddButton(null, "Select All"); // 2
+                    dlg.Properties.AddButton(null, "Select None"); // 3
+                    dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
                     dlg.Properties.Build();
 
                     if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
@@ -1563,6 +1566,22 @@ namespace FamiStudio
             }
 
             RefreshButtons();
+        }
+
+        private void ImportSongs_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        {
+            if (click == ClickType.Button)
+            {
+                var newValues = new bool[props.GetPropertyValue<bool[]>(1).Length];
+
+                if (propIdx == 2)
+                {
+                    for (int i = 0; i < newValues.Length; i++)
+                        newValues[i] = true;
+                }
+
+                props.UpdateCheckBoxList(1, newValues);
+            }
         }
 
         private void ImportInstruments()

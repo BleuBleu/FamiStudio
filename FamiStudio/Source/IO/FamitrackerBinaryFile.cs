@@ -529,7 +529,7 @@ namespace FamiStudio
                     // The TNMT song from FamiTracker has this.
                     if (n < song.PatternLength)
                     {
-                        if (volume != 16)
+                        if (volume != 16 && channel.SupportsEffect(Note.EffectVolume))
                             pattern.GetOrCreateNoteAt(n).Volume = (byte)(volume & 0x0f);
 
                         if (blockVersion < 5 && project.ExpansionAudio == ExpansionType.Fds && channel.Type == ChannelType.FdsWave && octave < 6 && octave != 0)
@@ -545,7 +545,7 @@ namespace FamiStudio
                         }
                         else if (note != 0)
                         {
-                            if (instrument < MaxInstruments && channel.Type != ChannelType.Dpcm)
+                            if (instrument < MaxInstruments && channel.SupportsInstrument(instruments[instrument]))
                                 pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
                             if (channel.Type == ChannelType.Noise)
                                 pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);

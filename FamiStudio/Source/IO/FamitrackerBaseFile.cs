@@ -1083,6 +1083,7 @@ namespace FamiStudio
                 CreateSlideNotes(s, patternFxData);
 
                 s.DeleteEmptyPatterns();
+                s.RemoveUnsupportedFeatures(); // Extra security.
             }
 
             project.ConvertToCompoundNotes();

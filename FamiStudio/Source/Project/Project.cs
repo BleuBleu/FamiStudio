@@ -689,13 +689,19 @@ namespace FamiStudio
             {
                 var changed = expansionAudio != expansion;
                 var oldNumChannels = expansionNumChannels;
+                var numChannelsToPreserved = GetActiveChannelCount();
+
+                if (changed)
+                    numChannelsToPreserved = ChannelType.ExpansionAudioStart;
+                else if (expansion == ExpansionType.N163)
+                    numChannelsToPreserved = ChannelType.ExpansionAudioStart + Math.Min(numChannels, expansionNumChannels);
 
                 expansionAudio = expansion;
                 expansionNumChannels = expansion == ExpansionType.N163 ? numChannels : 1;
 
                 foreach (var song in songs)
                 {
-                    song.CreateChannels(true, ChannelType.ExpansionAudioStart + (!changed && expansion == ExpansionType.N163 ? oldNumChannels : 0));
+                    song.CreateChannels(true, numChannelsToPreserved);
                 }
 
                 if (changed)

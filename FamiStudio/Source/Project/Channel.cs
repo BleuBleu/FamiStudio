@@ -194,6 +194,12 @@ namespace FamiStudio
             return SupportsEffect(effect) && effect != Note.EffectVolumeSlide;
         }
 
+        public void RemoveUnsupportedFeatures(bool checkOnly = false)
+        {
+            foreach (var pattern in patterns)
+                pattern.RemoveUnsupportedChannelFeatures(checkOnly);
+        }
+
         public void MakePatternsWithDifferentLengthsUnique()
         {
             var instanceLengthMap = new Dictionary<Pattern, int>();

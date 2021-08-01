@@ -752,6 +752,12 @@ namespace FamiStudio
             InvalidateCumulativePatternCache();
         }
 
+        public void RemoveUnsupportedFeatures(bool checkOnly = false)
+        {
+            foreach (var channel in channels)
+                channel.RemoveUnsupportedFeatures(checkOnly);
+        }
+
         public void InvalidateCumulativePatternCache()
         {
             foreach (var channel in channels)
@@ -1106,7 +1112,10 @@ namespace FamiStudio
                 ConvertToCompoundNotes();
 
             if (buffer.IsReading && !buffer.IsForUndoRedo)
+            {
+                RemoveUnsupportedFeatures();
                 DeleteEmptyNotes();
+            }
 
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
