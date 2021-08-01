@@ -5,7 +5,13 @@ DMC counter effect:
 - Check if we apply before, after, etc. Compare with FamiTracker.
 
 Overclocking:
-- 
+- Basic support in project + tempo
+- NesSndEmu partial frame update
+- How will it affect video?
+- ROM export
+- FDS export
+- NSF export
+- FamiTracker import (only certain frequencies)
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.
