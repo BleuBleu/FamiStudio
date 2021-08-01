@@ -214,7 +214,9 @@ namespace FamiStudio
                     page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
                     page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
                     page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
-                    page.AddCheckBoxList(null, songNames, null); // 2
+                    page.AddCheckBoxList(null, songNames, null); // 4
+                    if (project.UsesAnyExpansionAudio)
+                        page.AddLabel(null, "ROM export does not support audio expansions. FDS disk export only supports the FDS expansion. Any incompatible expansion channel(s) will be ignored during the export.", true);
                     page.SetPropertyEnabled(0,  project.UsesFdsExpansion);
                     page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     break;

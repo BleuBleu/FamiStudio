@@ -99,26 +99,26 @@ namespace FamiStudio
                 {
                    instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[instrument.Expansion]);
 
-                    if (instrument.Expansion == ExpansionType.Fds)
+                    if (instrument.IsFdsInstrument)
                     {
                         instrumentLine += GenerateAttribute("FdsWavePreset", WavePresetType.Names[instrument.FdsWavePreset]);
-                        instrumentLine += GenerateAttribute("FdsModPreset", WavePresetType.Names[instrument.FdsModPreset]);
+                        instrumentLine += GenerateAttribute("FdsModPreset",  WavePresetType.Names[instrument.FdsModPreset]);
                         if (instrument.FdsMasterVolume != 0) instrumentLine += GenerateAttribute("FdsMasterVolume", instrument.FdsMasterVolume);
                         if (instrument.FdsModSpeed     != 0) instrumentLine += GenerateAttribute("FdsModSpeed", instrument.FdsModSpeed);
                         if (instrument.FdsModDepth     != 0) instrumentLine += GenerateAttribute("FdsModDepth", instrument.FdsModDepth);
                         if (instrument.FdsModDelay     != 0) instrumentLine += GenerateAttribute("FdsModDelay", instrument.FdsModDelay);
                     }
-                    else if (instrument.Expansion == ExpansionType.N163)
+                    else if (instrument.IsN163Instrument)
                     {
                         instrumentLine += GenerateAttribute("N163WavePreset", WavePresetType.Names[instrument.N163WavePreset]);
                         instrumentLine += GenerateAttribute("N163WaveSize", instrument.N163WaveSize);
                         instrumentLine += GenerateAttribute("N163WavePos", instrument.N163WavePos);
                     }
-                    else if (instrument.Expansion == ExpansionType.Vrc6)
+                    else if (instrument.IsVrc6Instrument)
                     {
                         instrumentLine += GenerateAttribute("Vrc6SawMasterVolume", Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]);
                     }
-                    else if (instrument.Expansion == ExpansionType.Vrc7)
+                    else if (instrument.IsVrc7Instrument)
                     {
                         instrumentLine += GenerateAttribute("Vrc7Patch", instrument.Vrc7Patch);
 
@@ -401,7 +401,7 @@ namespace FamiStudio
                                 instrumentExp = ExpansionType.GetValueForShortName(instrumentExpStr);
                             instrument = project.CreateInstrument(instrumentExp, parameters["Name"]);
 
-                            if (instrument.Expansion == ExpansionType.Fds)
+                            if (instrument.IsFdsInstrument)
                             {
                                 if (parameters.TryGetValue("FdsWavePreset",   out var wavPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                 if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForName(modPresetStr);
@@ -410,17 +410,17 @@ namespace FamiStudio
                                 if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
                                 if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
                             }
-                            else if (instrument.Expansion == ExpansionType.N163)
+                            else if (instrument.IsN163Instrument)
                             {
                                  if (parameters.TryGetValue("N163WavePreset", out var wavPresetStr))    instrument.N163WavePreset = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                  if (parameters.TryGetValue("N163WaveSize",   out var n163WavSizeStr))  instrument.N163WaveSize   = byte.Parse(n163WavSizeStr);
                                  if (parameters.TryGetValue("N163WavePos",    out var n163WavPosStr))   instrument.N163WavePos    = byte.Parse(n163WavPosStr);
                             }
-                            else if (instrument.Expansion == ExpansionType.Vrc6)
+                            else if (instrument.IsVrc6Instrument)
                             {
                                  if (parameters.TryGetValue("Vrc6SawMasterVolume", out var vrc6SawVolumeStr)) instrument.Vrc6SawMasterVolume = (byte)Vrc6SawMasterVolumeType.GetValueForName(vrc6SawVolumeStr);
                             }
-                            else if (instrument.Expansion == ExpansionType.Vrc7)
+                            else if (instrument.IsVrc7Instrument)
                             {
                                 if (parameters.TryGetValue("Vrc7Patch", out var vrc7PatchStr)) instrument.Vrc7Patch = byte.Parse(vrc7PatchStr);
 

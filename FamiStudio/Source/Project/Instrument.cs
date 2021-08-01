@@ -10,7 +10,7 @@ namespace FamiStudio
     {
         private int id;
         private string name;
-        private int expansion = global::FamiStudio.ExpansionType.None;
+        private int expansion = ExpansionType.None;
         private Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         private Color color;
 
@@ -45,9 +45,12 @@ namespace FamiStudio
         public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
 
-        public bool IsFdsInstrument  => expansion == ExpansionType.Fds;
-        public bool IsVrc7Instrument => expansion == ExpansionType.Vrc7;
-        public bool IsN163Instrument => expansion == ExpansionType.N163;
+        public bool IsRegularInstrument => expansion == ExpansionType.None;
+        public bool IsFdsInstrument     => expansion == ExpansionType.Fds;
+        public bool IsVrc6Instrument    => expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Instrument    => expansion == ExpansionType.Vrc7;
+        public bool IsN163Instrument    => expansion == ExpansionType.N163;
+        public bool IsS5BInstrument     => expansion == ExpansionType.S5B;
 
         public Instrument()
         {
@@ -65,16 +68,16 @@ namespace FamiStudio
                     envelopes[i] = new Envelope(i);
             }
 
-            if (expansion == global::FamiStudio.ExpansionType.Fds)
+            if (expansion == ExpansionType.Fds)
             {
                 UpdateFdsWaveEnvelope();
                 UpdateFdsModulationEnvelope();
             }
-            else if (expansion == global::FamiStudio.ExpansionType.N163)
+            else if (expansion == ExpansionType.N163)
             {
                 UpdateN163WaveEnvelope();
             }
-            else if (expansion == global::FamiStudio.ExpansionType.Vrc7)
+            else if (expansion == ExpansionType.Vrc7)
             {
                 vrc7Patch = Vrc7InstrumentPatch.Bell;
                 Array.Copy(Vrc7InstrumentPatch.Infos[Vrc7InstrumentPatch.Bell].data, vrc7PatchRegs, 8);
@@ -91,18 +94,18 @@ namespace FamiStudio
             }
             else if (envelopeType == EnvelopeType.DutyCycle)
             {
-                return expansion == global::FamiStudio.ExpansionType.None ||
-                       expansion == global::FamiStudio.ExpansionType.Vrc6 ||
-                       expansion == global::FamiStudio.ExpansionType.Mmc5;
+                return expansion == ExpansionType.None ||
+                       expansion == ExpansionType.Vrc6 ||
+                       expansion == ExpansionType.Mmc5;
             }
             else if (envelopeType == EnvelopeType.FdsWaveform ||
                      envelopeType == EnvelopeType.FdsModulation)
             {
-                return expansion == global::FamiStudio.ExpansionType.Fds;
+                return expansion == ExpansionType.Fds;
             }
             else if (envelopeType == EnvelopeType.N163Waveform)
             {
-                return expansion == global::FamiStudio.ExpansionType.N163;
+                return expansion == ExpansionType.N163;
             }
 
             return false;
@@ -261,7 +264,7 @@ namespace FamiStudio
                 {
                     switch (expansion)
                     {
-                        case global::FamiStudio.ExpansionType.Fds:
+                        case ExpansionType.Fds:
                             buffer.Serialize(ref fdsMasterVolume);
                             buffer.Serialize(ref fdsWavPreset);
                             buffer.Serialize(ref fdsModPreset);
@@ -269,13 +272,13 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsModDepth); 
                             buffer.Serialize(ref fdsModDelay);
                             break;
-                        case global::FamiStudio.ExpansionType.N163:
+                        case ExpansionType.N163:
                             buffer.Serialize(ref n163WavePreset);
                             buffer.Serialize(ref n163WaveSize);
                             buffer.Serialize(ref n163WavePos);
                             break;
 
-                        case global::FamiStudio.ExpansionType.Vrc7:
+                        case ExpansionType.Vrc7:
                             buffer.Serialize(ref vrc7Patch);
                             buffer.Serialize(ref vrc7PatchRegs[0]);
                             buffer.Serialize(ref vrc7PatchRegs[1]);
@@ -286,7 +289,7 @@ namespace FamiStudio
                             buffer.Serialize(ref vrc7PatchRegs[6]);
                             buffer.Serialize(ref vrc7PatchRegs[7]);
                             break;
-                        case global::FamiStudio.ExpansionType.Vrc6:
+                        case ExpansionType.Vrc6:
                             // At version 10 (FamiStudio 3.0.0) we added a master volume to the VRC6 saw.
                             if (buffer.Version >= 10)
                                 buffer.Serialize(ref vrc6SawMasterVolume);

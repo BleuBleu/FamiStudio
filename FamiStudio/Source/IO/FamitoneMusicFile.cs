@@ -360,9 +360,9 @@ namespace FamiStudio
             {
                 var instrument = project.Instruments[i];
 
-                if (instrument.Expansion != ExpansionType.Fds &&
-                    instrument.Expansion != ExpansionType.N163 &&
-                    instrument.Expansion != ExpansionType.Vrc7)
+                if (!instrument.IsFdsInstrument  && 
+                    !instrument.IsN163Instrument && 
+                    !instrument.IsVrc7Instrument)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                     var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -377,8 +377,8 @@ namespace FamiStudio
                     else
                     {
                         var duty = instrument.IsEnvelopeActive(EnvelopeType.DutyCycle) ? instrument.Envelopes[EnvelopeType.DutyCycle].Values[0] : 0;
-                        var dutyShift = instrument.Expansion == ExpansionType.None ? 6    : 4;
-                        var dutyBits  = instrument.Expansion == ExpansionType.None ? 0x30 : 0;
+                        var dutyShift = instrument.IsRegularInstrument ? 6    : 4;
+                        var dutyBits  = instrument.IsRegularInstrument ? 0x30 : 0;
 
                         lines.Add($"\t{db} ${(duty << dutyShift) | dutyBits:x2} ;instrument {i:x2} ({instrument.Name})");
                         lines.Add($"\t{dw} {ll}env{volumeEnvIdx}, {ll}env{arpeggioEnvIdx}, {ll}env{pitchEnvIdx}");
@@ -413,7 +413,7 @@ namespace FamiStudio
 
                         lines.Add($"\t{dw} {ll}env{volumeEnvIdx}, {ll}env{arpeggioEnvIdx}, {ll}env{pitchEnvIdx}");
 
-                        if (instrument.Expansion == ExpansionType.Fds)
+                        if (instrument.IsFdsInstrument)
                         {
                             var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
@@ -422,7 +422,7 @@ namespace FamiStudio
                             lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
                             lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00");
                         }
-                        else if (instrument.Expansion == ExpansionType.N163)
+                        else if (instrument.IsN163Instrument)
                         {
                             var n163WaveIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.N163Waveform]]);
 
@@ -430,7 +430,7 @@ namespace FamiStudio
                             lines.Add($"\t{dw} {ll}env{n163WaveIdx}");
                             lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
                         }
-                        else if (instrument.Expansion == ExpansionType.Vrc7)
+                        else if (instrument.IsVrc7Instrument)
                         {
                             lines.Add($"\t{db} ${(instrument.Vrc7Patch << 4):x2}, $00");
                             lines.Add($"\t{db} {String.Join(",", instrument.Vrc7PatchRegs.Select(r => $"${r:x2}"))}");
@@ -645,9 +645,9 @@ namespace FamiStudio
         private bool OtherVrc7ChannelUsesCustomPatch(Song song, Channel channel, Instrument instrument, int patternIdx, int noteIdx)
         {
             if (project.UsesVrc7Expansion && 
-                channel.IsExpansionChannel &&
+                channel.IsVrc7Channel &&
                 instrument != null &&
-                instrument.IsExpansionInstrument &&
+                instrument.IsVrc7Instrument &&
                 instrument.Vrc7Patch == 0)
             {
                 foreach (var c in song.Channels)
@@ -660,7 +660,7 @@ namespace FamiStudio
                             note != null &&
                             note.Instrument != null &&
                             note.Instrument != instrument &&
-                            note.Instrument.IsExpansionInstrument &&
+                            note.Instrument.IsVrc7Instrument &&
                             note.Instrument.Vrc7Patch == 0)
                         {
                             return true;

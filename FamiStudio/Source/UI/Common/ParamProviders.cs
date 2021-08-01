@@ -64,10 +64,10 @@ namespace FamiStudio
         {
             return
                 instrument.IsEnvelopeActive(EnvelopeType.Pitch) ||
-                instrument.Expansion == ExpansionType.Fds   ||
-                instrument.Expansion == ExpansionType.N163  ||
-                instrument.Expansion == ExpansionType.Vrc6  ||
-                instrument.Expansion == ExpansionType.Vrc7;
+                instrument.IsFdsInstrument  ||
+                instrument.IsN163Instrument ||
+                instrument.IsVrc6Instrument ||
+                instrument.IsVrc7Instrument;
         }
 
         static public ParamInfo[] GetParams(Instrument instrument)

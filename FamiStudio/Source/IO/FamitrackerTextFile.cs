@@ -768,26 +768,26 @@ namespace FamiStudio
                 int pitEnvIdx = pitEnv != null && pitEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, EnvelopeType.Pitch],     instrument.Envelopes[EnvelopeType.Pitch])     : -1;
                 int dutEnvIdx = dutEnv != null && dutEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, EnvelopeType.DutyCycle], instrument.Envelopes[EnvelopeType.DutyCycle]) : -1;
 
-                if (instrument.Expansion == ExpansionType.None)
+                if (instrument.IsRegularInstrument)
                 {
                     lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
                 }
-                else if (instrument.Expansion == ExpansionType.Vrc6)
+                else if (instrument.IsVrc6Instrument)
                 {
                     lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
                 }
-                else if (instrument.Expansion == ExpansionType.Vrc7)
+                else if (instrument.IsVrc7Instrument)
                 {
                     lines.Add($"INSTVRC7{i,4}{instrument.Vrc7Patch,4} {String.Join(" ", instrument.Vrc7PatchRegs.Select(x => $"{x:X2}"))} \"{instrument.Name}\"");
                 }
-                else if (instrument.Expansion == ExpansionType.N163)
+                else if (instrument.IsN163Instrument)
                 {
                     lines.Add($"INSTN163{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4}{instrument.N163WaveSize,4}{instrument.N163WavePos,4}{1,4} \"{instrument.Name}\"");
 
                     var wavEnv = instrument.Envelopes[EnvelopeType.N163Waveform];
                     lines.Add($"N163WAVE{i,4}{0,6} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");
                 }
-                else if (instrument.Expansion == ExpansionType.Fds)
+                else if (instrument.IsFdsInstrument)
                 {
                     lines.Add($"INSTFDS{i,5}{1,6}{instrument.FdsModSpeed,4}{instrument.FdsModDepth,4}{instrument.FdsModDelay,4} \"{instrument.Name}\"");
 

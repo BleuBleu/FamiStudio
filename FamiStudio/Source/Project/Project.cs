@@ -1162,7 +1162,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"Instrument '{otherInstrument.Name}' uses an incompatible audio expansion, ignoring.");
+                        Log.LogMessage(LogSeverity.Warning, $"Instrument '{otherInstrument.Name}' uses an inactive audio expansion, ignoring.");
                     }
                 }
 

@@ -3164,14 +3164,14 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Enveloppe)
             {
-                if (editInstrument.Expansion == ExpansionType.Fds)
+                if (editInstrument.IsFdsInstrument)
                 {
                     if (editEnvelope == EnvelopeType.FdsWaveform)
                         editInstrument.FdsWavePreset = WavePresetType.Custom;
                     if (editEnvelope == EnvelopeType.FdsModulation)
                         editInstrument.FdsModPreset = WavePresetType.Custom;
                 }
-                else if (editInstrument.Expansion == ExpansionType.N163)
+                else if (editInstrument.IsN163Instrument)
                 {
                     if (editEnvelope == EnvelopeType.N163Waveform)
                         editInstrument.N163WavePreset = WavePresetType.Custom;

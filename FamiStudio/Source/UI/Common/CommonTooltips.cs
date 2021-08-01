@@ -12,8 +12,8 @@ namespace FamiStudio
 #endif
 
         // Project properties.
-        public readonly static string ExpansionAudio = "Expansion audio chip to use. This will add extra audio channels and disable any PAL support.";
-        public readonly static string ExpansionNumChannels = "Namco 163 audio supports between 1 and 8 channels. As you add more channels the audio quality will deteriorate.";
+        public readonly static string ExpansionAudio = "Expansion audio chip(s) to use. This will add extra audio channels and disable any PAL support.";
+        public readonly static string ExpansionNumChannels = "Namco 163 audio supports between 1 and 8 channels. As you add more channels the audio quality will deteriorate. Only available when the 'Namco 163' expansion is enabled.";
         public readonly static string TempoMode = "FamiStudio tempo gives you precise control to every frame, has good PAL/NTSC conversion support and is the recommended way to use FamiStudio.\nFamiTracker tempo behaves like FamiTracker with speed/tempo settings. Use only if you have very specific compatibility needs as support is limited and it will not yield the best FamiStudio experience.";
         public readonly static string AuthoringMachine = "For use with FamiStudio tempo. Defines the machine on which the music is edited. Playback to the other space will be approximate, but still good.";
 

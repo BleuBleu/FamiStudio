@@ -25,7 +25,7 @@ namespace FamiStudio
 
                 if (note.Instrument != null)
                 {
-                    Debug.Assert(note.Instrument.Expansion == ExpansionType.Vrc6);
+                    Debug.Assert(note.Instrument.IsVrc6Instrument);
                     sawMasterVolume = note.Instrument.Vrc6SawMasterVolume;
                 }
 
