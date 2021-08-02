@@ -761,7 +761,7 @@ namespace FamiStudio
                 bmp.LockBits(
                     new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
                     System.Drawing.Imaging.ImageLockMode.ReadOnly,
-                    System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                    System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
             Debug.Assert(bmpData.Stride == bmp.Width * 4);
 
