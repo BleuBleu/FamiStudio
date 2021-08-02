@@ -645,7 +645,7 @@ namespace FamiStudio
             var timeCodeSizeY = Height - timecodePosY * 2;
             var textColor = App.IsRecording ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
 
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2, 1.0f, true);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -731,7 +731,7 @@ namespace FamiStudio
                 g.PopTransform();
             }
 
-            g.DrawRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.LightGreyFillBrush2);
+            g.DrawRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.LightGreyFillBrush2, 1.0f, true);
         }
 
         private void RenderWarningAndTooltip(RenderGraphics g)
@@ -795,7 +795,7 @@ namespace FamiStudio
                                 posX -= (int)scaling;
 #endif
 
-                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush);
+                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush, 1, true);
                                 g.DrawText(str, messageFontCenter, posX, posY, messageBrush, specialCharacter.Width);
 
 #if !FAMISTUDIO_WINDOWS

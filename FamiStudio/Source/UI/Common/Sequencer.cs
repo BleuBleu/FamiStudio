@@ -562,7 +562,7 @@ namespace FamiStudio
                         g.PopClip();
 
                         if (IsPatternSelected(t, i))
-                            g.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2);
+                            g.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2, true);
 
                         g.PopTransform();
                     }
@@ -578,7 +578,7 @@ namespace FamiStudio
                 App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
 
                 g.PushTranslation(pianoRollMinNoteIdx * noteSizeX - scrollX + trackNameSizeX, pianoRollChannelIndex * trackSizeY);
-                g.DrawRectangle(1, patternHeaderSizeY + 1, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX - 1, trackSizeY - 2, theme.LightGreyFillBrush2, 1);
+                g.DrawRectangle(1, patternHeaderSizeY + 1, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX - 1, trackSizeY - 2, theme.LightGreyFillBrush2, 1, true);
                 g.PopTransform();
             }
 

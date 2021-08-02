@@ -102,13 +102,44 @@ namespace FamiStudio
 
     public class GLGeometry : IDisposable
     {
-        public float[,] Points { get; private set; }
-        public bool     Closed { get; private set; }
+        public float[,] Points         { get; private set; }
+        public float[,] LeakFreePoints { get; private set; }
 
         public GLGeometry(float[,] points, bool closed)
         {
-            Points = points;
-            Closed = closed;
+            var numPoints = points.GetLength(0);
+
+            var closedPoints   = new float[(numPoints + (closed ? 1 : 0)) * 1, points.GetLength(1)];
+            var leakFreePoints = new float[(numPoints + (closed ? 1 : 0)) * 2, points.GetLength(1)];
+
+            for (int i = 0; i < closedPoints.GetLength(0); i++)
+            {
+                closedPoints[i, 0] = points[i % points.GetLength(0), 0];
+                closedPoints[i, 1] = points[i % points.GetLength(0), 1];
+            }
+
+            for (int i = 0; i < closedPoints.GetLength(0) - 1; i++)
+            {
+                var x0 = closedPoints[i + 0, 0];
+                var x1 = closedPoints[i + 1, 0];
+                var y0 = closedPoints[i + 0, 1];
+                var y1 = closedPoints[i + 1, 1];
+
+                var dx = x1 - x0;
+                var dy = y1 - y0;
+                var len = (float)Math.Sqrt(dx * dx + dy + dy);
+
+                var nx = dx / len * 0.5f;
+                var ny = dy / len * 0.5f;
+
+                leakFreePoints[2 * i + 0, 0] = x0 - nx;
+                leakFreePoints[2 * i + 0, 1] = y0 - ny;
+                leakFreePoints[2 * i + 1, 0] = x1 + nx;
+                leakFreePoints[2 * i + 1, 1] = y1 + ny;
+            }
+
+            Points = closedPoints;
+            LeakFreePoints = leakFreePoints;
         }
 
         public void Dispose()
@@ -488,7 +519,7 @@ namespace FamiStudio
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool leakFree = false)
         {
             GL.PushMatrix();
             AddHalfPixelOffset();
@@ -526,8 +557,18 @@ namespace FamiStudio
                     GL.End();
                     GL.Disable(EnableCap.Texture2D);
                 }
-                else
+                else if (leakFree)
                 {
+                    GL.LineWidth(width);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex2(x0 - 0.5f, y0); GL.Vertex2(x1 + 0.5f, y0);
+                    GL.Vertex2(x1, y0 - 0.5f); GL.Vertex2(x1, y1 + 0.5f);
+                    GL.Vertex2(x1 + 0.5f, y1); GL.Vertex2(x0 - 0.5f, y1);
+                    GL.Vertex2(x0, y1 + 0.5f); GL.Vertex2(x0, y0 - 0.5f);
+                    GL.End();
+                }
+                else
+                { 
                     GL.LineWidth(width);
                     GL.Begin(PrimitiveType.LineLoop);
                     GL.Vertex2(x0, y0);
@@ -607,10 +648,10 @@ namespace FamiStudio
             }
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool leakFree = false)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush, width);
+            DrawRectangle(x0, y0, x1, y1, lineBrush, width, leakFree);
         }
 
         public GLGeometry CreateGeometry(float[,] points, bool closed = true)
@@ -652,7 +693,7 @@ namespace FamiStudio
             }
         }
 
-        public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f)
+        public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f, bool leakFree = false)
         {
             GL.PushMatrix();
             if (lineWidth == 1.0f) AddHalfPixelOffset();
@@ -661,17 +702,11 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && lineWidth > 1)
             {
-                var pts = new float[geo.Points.Length * 2 + (geo.Closed ? 2 : 0)];
+                var pts = new float[geo.Points.Length * 2];
                 for (int i = 0; i < geo.Points.GetLength(0); i++)
                 {
                     pts[i * 2 + 0] = geo.Points[i, 0];
                     pts[i * 2 + 1] = geo.Points[i, 1];
-                }
-
-                if (geo.Closed)
-                {
-                    pts[geo.Points.Length * 2 + 0] = geo.Points[0, 0];
-                    pts[geo.Points.Length * 2 + 1] = geo.Points[0, 1];
                 }
 
                 DrawThickLineAsPolygon(pts, brush, lineWidth);
@@ -681,8 +716,16 @@ namespace FamiStudio
             {
                 GL.LineWidth(lineWidth);
                 GL.EnableClientState(ArrayCap.VertexArray);
-                GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                GL.DrawArrays(geo.Closed ? PrimitiveType.LineLoop : PrimitiveType.LineStrip, 0, geo.Points.GetLength(0));
+                if (leakFree)
+                {
+                    GL.VertexPointer(2, VertexPointerType.Float, 0, geo.LeakFreePoints);
+                    GL.DrawArrays(PrimitiveType.LineStrip, 0, geo.LeakFreePoints.GetLength(0));
+                }
+                else
+                {
+                    GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
+                    GL.DrawArrays(PrimitiveType.LineStrip, 0, geo.Points.GetLength(0));
+                }
                 GL.DisableClientState(ArrayCap.VertexArray);
             }
             GL.Disable(EnableCap.LineSmooth);
