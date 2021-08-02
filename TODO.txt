@@ -1,6 +1,8 @@
 3.1.0
 =====
 - Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
+- ffmpeg in flatpak
+- Color osc by channel
 
 Low prio:
 - Is the clarinet VRC7 sound patch ok?
