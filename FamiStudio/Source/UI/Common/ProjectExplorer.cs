@@ -9,21 +9,12 @@ using FamiStudio.Properties;
 using Color = System.Drawing.Color;
 using System.Diagnostics;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderFont     = SharpDX.DirectWrite.TextFormat;
-    using RenderControl  = FamiStudio.Direct2DControl;
-    using RenderGraphics = FamiStudio.Direct2DGraphics;
-    using RenderTheme    = FamiStudio.Direct2DTheme;
-#else
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderFont     = FamiStudio.GLFont;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
-#endif
+using RenderBrush    = FamiStudio.GLBrush;
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderFont     = FamiStudio.GLFont;
+using RenderControl  = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLGraphics;
+using RenderTheme    = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {

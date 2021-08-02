@@ -8,21 +8,12 @@ using Color = System.Drawing.Color;
 using System.Media;
 using System.Diagnostics;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderPath     = SharpDX.Direct2D1.PathGeometry;
-    using RenderControl  = FamiStudio.Direct2DControl;
-    using RenderGraphics = FamiStudio.Direct2DGraphics;
-    using RenderTheme    = FamiStudio.Direct2DTheme;
-#else
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLGeometry;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
-#endif
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderBrush    = FamiStudio.GLBrush;
+using RenderPath     = FamiStudio.GLGeometry;
+using RenderControl  = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLGraphics;
+using RenderTheme    = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
@@ -546,6 +537,8 @@ namespace FamiStudio
             // Seek
             g.DrawLine(seekX + trackNameSizeX, 1, seekX + trackNameSizeX, Height, GetSeekBarBrush(), 3);
 
+            var t0 = PerformanceCounter.TimeSeconds();
+
             // Patterns
             for (int t = 0, py = 0; t < Song.Channels.Length; t++, py += trackSizeY)
             {
@@ -575,6 +568,9 @@ namespace FamiStudio
                     }
                 }
             }
+
+            var t1 = PerformanceCounter.TimeSeconds();
+            Trace.WriteLine($"{(t1 - t0) * 1000} ms");
 
             // Piano roll view rect
             if (Settings.ShowPianoRollViewRange)

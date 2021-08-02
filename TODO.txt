@@ -1,5 +1,9 @@
 3.2.0
 =====
+- Make sure sequencer doesnt render when collapsed.
+- Dont use DirectWrite anymore.
+- Process more events during video export, "initializing channels" is slow
+
 DMC counter effect:
 - Sound engine
 - Check if we apply before, after, etc. Compare with FamiTracker.
@@ -21,6 +25,7 @@ DPCM/Tri volume thing (from tromino)
 	
 Misc:
 - Mac/Linux : CheckListBox doesnt fire events (needed for Midi import/PAL).
+- Mac/Linux : Make sure piano roll maximize layout works, and also that sequencer doesnt render when disabled.
 - Remove "None" piano roll mode.
 - Make sure OnMouseLeave works on that too.
 - Fix GTK single multiple label issue.	

@@ -5,11 +5,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderTheme = FamiStudio.Direct2DTheme;
-#else
-    using RenderTheme = FamiStudio.GLTheme;
-#endif
+using RenderTheme = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {

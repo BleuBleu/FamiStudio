@@ -7,13 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
-#else
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderGraphics = FamiStudio.GLOffscreenGraphics;
-#endif
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderGraphics = FamiStudio.GLOffscreenGraphics;
 
 namespace FamiStudio
 {

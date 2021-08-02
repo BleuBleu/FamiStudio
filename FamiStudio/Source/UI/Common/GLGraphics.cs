@@ -186,6 +186,7 @@ namespace FamiStudio
         protected int windowSizeY;
         protected GLControl control;
         protected Rectangle scissor;
+        protected Rectangle baseScissorRect;
         protected Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
         protected Stack<Rectangle> clipStack = new Stack<Rectangle>();
         protected Stack<Vector4> transformStack = new Stack<Vector4>();
@@ -208,9 +209,18 @@ namespace FamiStudio
             this.windowSizeY = windowSizeY;
             this.control = control;
 
-            var controlRect = FlipRectangleY(new Rectangle(control.Left, control.Top, control.Width, control.Height));
-
+#if FAMISTUDIO_WINDOWS
+            var unflippedControlRect = new Rectangle(0, 0, control.Width, control.Height);
+            var controlRect = unflippedControlRect;
+            baseScissorRect = FlipRectangleY(controlRect);
+            GL.Viewport(0, 0, controlRect.Width, controlRect.Height);
+#else
+            var unflippedControlRect = new Rectangle(control.Left, control.Top, control.Width, control.Height);
+            controlRect = FlipRectangleY(unflippedControlRect);
+            baseScissorRect = unflippedControlRect;
             GL.Viewport(controlRect.Left, controlRect.Top, controlRect.Width, controlRect.Height);
+#endif
+
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
             GL.Ortho(0, control.Width, control.Height, 0, -1, 1);
@@ -291,8 +301,8 @@ namespace FamiStudio
             // our purpose, simply intersecting the rects does the job.
             clipStack.Push(scissor);
             scissor = new Rectangle(
-                (int)(transform.Z + control.Left + x0),
-                (int)(transform.W + control.Top + y0),
+                (int)(transform.Z + baseScissorRect.Left + x0),
+                (int)(transform.W + baseScissorRect.Top  + y0),
                 x1 - x0,
                 y1 - y0);
             scissor = FlipRectangleY(scissor);
@@ -328,7 +338,7 @@ namespace FamiStudio
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.Color4(1.0f, 1.0f, 1.0f, opacity);
 
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
             GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
             GL.TexCoord2(1, 0); GL.Vertex2(x1, y0);
             GL.TexCoord2(1, 1); GL.Vertex2(x1, y1);
@@ -345,7 +355,7 @@ namespace FamiStudio
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.Color4(1.0f, 1.0f, 1.0f, 1.0f);
 
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
             GL.TexCoord2(0, 0); GL.Vertex2(x - height, y);
             GL.TexCoord2(1, 0); GL.Vertex2(x - height, y - width);
             GL.TexCoord2(1, 1); GL.Vertex2(x, y - width);
@@ -363,7 +373,7 @@ namespace FamiStudio
             GL.Enable(EnableCap.Texture2D);
             GL.BindTexture(TextureTarget.Texture2D, font.Texture);
             GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
 
             int alignmentOffsetX = 0;
             if (font.Alignment != 0)
@@ -440,7 +450,7 @@ namespace FamiStudio
                     GL.Enable(EnableCap.Texture2D);
                     GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
                     GL.LineWidth(width);
-                    GL.Begin(BeginMode.Lines);
+                    GL.Begin(PrimitiveType.Lines);
 
                     var size = brush.Bitmap.Size;
                     GL.TexCoord2((x0 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
@@ -454,7 +464,7 @@ namespace FamiStudio
                 else
                 {
                     GL.LineWidth(width);
-                    GL.Begin(BeginMode.Lines);
+                    GL.Begin(PrimitiveType.Lines);
                     GL.Vertex2(x0, y0);
                     GL.Vertex2(x1, y1);
                     GL.End();
@@ -501,7 +511,7 @@ namespace FamiStudio
                     GL.Enable(EnableCap.Texture2D);
                     GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
                     GL.LineWidth(width);
-                    GL.Begin(BeginMode.LineLoop);
+                    GL.Begin(PrimitiveType.LineLoop);
 
                     var size = brush.Bitmap.Size;
                     GL.TexCoord2((x0 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
@@ -519,7 +529,7 @@ namespace FamiStudio
                 else
                 {
                     GL.LineWidth(width);
-                    GL.Begin(BeginMode.LineLoop);
+                    GL.Begin(PrimitiveType.LineLoop);
                     GL.Vertex2(x0, y0);
                     GL.Vertex2(x1, y0);
                     GL.Vertex2(x1, y1);
@@ -540,7 +550,7 @@ namespace FamiStudio
             if (!brush.IsGradient)
             {
                 GL.Color4(brush.Color0);
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Vertex2(x0, y0);
                 GL.Vertex2(x1, y0);
                 GL.Vertex2(x1, y1);
@@ -549,7 +559,7 @@ namespace FamiStudio
             }
             else if (brush.GradientSizeX == (x1 - x0))
             {
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(x1, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
@@ -558,7 +568,7 @@ namespace FamiStudio
             }
             else if (brush.GradientSizeY == (y1 - y0))
             {
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
                 GL.Color4(brush.Color0); GL.Vertex2(x1, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
@@ -569,7 +579,7 @@ namespace FamiStudio
             {
                 float xm = x0 + brush.GradientSizeX;
 
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(xm, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(xm, y1);
@@ -584,7 +594,7 @@ namespace FamiStudio
             {
                 float ym = y0 + brush.GradientSizeY;
 
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(x0, ym);
                 GL.Color4(brush.Color1); GL.Vertex2(x1, ym);
@@ -617,7 +627,7 @@ namespace FamiStudio
                 GL.Color4(brush.Color0);
                 GL.EnableClientState(ArrayCap.VertexArray);
                 GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                GL.DrawArrays(BeginMode.TriangleFan, 0, geo.Points.GetLength(0));
+                GL.DrawArrays(PrimitiveType.TriangleFan, 0, geo.Points.GetLength(0));
                 GL.DisableClientState(ArrayCap.VertexArray);
                 if (smooth)
                     GL.Disable(EnableCap.PolygonSmooth);
@@ -626,7 +636,7 @@ namespace FamiStudio
             {
                 Debug.Assert(brush.GradientSizeX == 0.0f);
 
-                GL.Begin(BeginMode.TriangleFan);
+                GL.Begin(PrimitiveType.TriangleFan);
                 for (int i = 0; i < geo.Points.GetLength(0); i++)
                 {
                     float lerp = geo.Points[i, 1] / (float)brush.GradientSizeY;
@@ -672,7 +682,7 @@ namespace FamiStudio
                 GL.LineWidth(lineWidth);
                 GL.EnableClientState(ArrayCap.VertexArray);
                 GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                GL.DrawArrays(geo.Closed ? BeginMode.LineLoop : BeginMode.LineStrip, 0, geo.Points.GetLength(0));
+                GL.DrawArrays(geo.Closed ? PrimitiveType.LineLoop : PrimitiveType.LineStrip, 0, geo.Points.GetLength(0));
                 GL.DisableClientState(ArrayCap.VertexArray);
             }
             GL.Disable(EnableCap.LineSmooth);
@@ -681,7 +691,7 @@ namespace FamiStudio
 
         protected void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
         {
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
             for (int i = 0; i < points.Length / 2 - 1; i++)
             {
                 float x0 = points[(i + 0) * 2 + 0];
@@ -744,6 +754,28 @@ namespace FamiStudio
             return new GLBrush(color0, color1, 0.0f, y1 - y0);
         }
 
+#if FAMISTUDIO_WINDOWS
+        public int CreateGLTexture(System.Drawing.Bitmap bmp)
+        {
+            var bmpData =
+                bmp.LockBits(
+                    new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
+                    System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                    System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+
+            Debug.Assert(bmpData.Stride == bmp.Width * 4);
+
+            int id = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, id);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, bmp.Width, bmp.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+
+            bmp.UnlockBits(bmpData);
+
+            return id;
+        }
+#else
         public int CreateGLTexture(Gdk.Pixbuf pixbuf)
         {
             Debug.Assert(pixbuf.Rowstride == pixbuf.Width * 4);
@@ -756,7 +788,42 @@ namespace FamiStudio
 
             return id;
         }
+#endif
 
+#if FAMISTUDIO_WINDOWS
+        public GLBitmap CreateBitmapFromResource(string name)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            bool needsScaling = false;
+            System.Drawing.Bitmap bmp;
+
+            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
+            {
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@15x.png")) as System.Drawing.Bitmap;
+            }
+            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
+            {
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@2x.png")) as System.Drawing.Bitmap;
+                needsScaling = windowScaling != 2.0f;
+            }
+            else
+            {
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png")) as System.Drawing.Bitmap;
+            }
+
+            // Pre-resize all images so we dont have to deal with scaling later.
+            if (needsScaling)
+            {
+                var newWidth = Math.Max(1, (int)(bmp.Width * (windowScaling / 2.0f)));
+                var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
+
+                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
+            }
+
+            return new GLBitmap(CreateGLTexture(bmp), bmp.Width, bmp.Height);
+        }
+#else
         public GLBitmap CreateBitmapFromResource(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -789,6 +856,7 @@ namespace FamiStudio
 
             return new GLBitmap(CreateGLTexture(pixbuf), pixbuf.Width, pixbuf.Height);
         }
+#endif
 
         public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
         {
@@ -845,7 +913,11 @@ namespace FamiStudio
             return default(T);
         }
 
-        public GLFont CreateFont(Gdk.Pixbuf pixbuf, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+#if FAMISTUDIO_WINDOWS
+        public GLFont CreateFont(System.Drawing.Bitmap bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+#else
+        public GLFont CreateFont(Gdk.Pixbuf bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+#endif
         {
             var font = (GLFont)null;
             var lines = def;
@@ -868,7 +940,7 @@ namespace FamiStudio
 
                             int glTex = existingTexture;
                             if (glTex == 0)
-                                glTex = CreateGLTexture(pixbuf);
+                                glTex = CreateGLTexture(bmp);
 
                             font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
                             break;

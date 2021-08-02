@@ -19,6 +19,16 @@ namespace FamiStudio
                 mainWindowScaling = Utils.Clamp(Settings.DpiScaling / 100.0f, 1, 2);
             else
                 mainWindowScaling = Utils.Clamp((int)(dialogScaling * 2.0f) / 2.0f, 1.0f, 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
+#elif FAMISTUDIO_WINDOWS
+            var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+
+            // For the main window, we only support 1x or 2x.
+            dialogScaling = graphics.DpiX / 96.0f;
+
+            if (Settings.DpiScaling != 0)
+                mainWindowScaling = Settings.DpiScaling / 100.0f;
+            else
+                mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
 #endif
         }
 
@@ -58,11 +68,15 @@ namespace FamiStudio
                         str = reader.ReadToEnd();
                     }
 
-                    var pixbuf = Gdk.Pixbuf.LoadFromResource(imgfile);
+#if FAMISTUDIO_WINDOWS
+                    var bmp = System.Drawing.Image.FromStream(typeof(GLTheme).Assembly.GetManifestResourceStream(imgfile)) as System.Drawing.Bitmap;
+#else
+                    var bmp = Gdk.Pixbuf.LoadFromResource(imgfile);
+#endif
                     var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                     fontTextureMap.TryGetValue(imgfile, out int texture);
-                    var font = g.CreateFont(pixbuf, lines, def.Size, def.Alignment, def.Ellipsis, texture);
+                    var font = g.CreateFont(bmp, lines, def.Size, def.Alignment, def.Ellipsis, texture);
 
                     fontTextureMap[imgfile] = font.Texture;
                     Fonts[i] = font;
