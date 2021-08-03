@@ -9,21 +9,12 @@ using FamiStudio.Properties;
 using Color = System.Drawing.Color;
 using System.Diagnostics;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderFont     = SharpDX.DirectWrite.TextFormat;
-    using RenderControl  = FamiStudio.Direct2DControl;
-    using RenderGraphics = FamiStudio.Direct2DGraphics;
-    using RenderTheme    = FamiStudio.Direct2DTheme;
-#else
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderFont     = FamiStudio.GLFont;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
-#endif
+using RenderBrush    = FamiStudio.GLBrush;
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderFont     = FamiStudio.GLFont;
+using RenderControl  = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLGraphics;
+using RenderTheme    = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
@@ -781,7 +772,7 @@ namespace FamiStudio
 
                         g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         g.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
-                        g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? theme.BlackBrush : disabledBrush);
+                        g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? theme.BlackBrush : disabledBrush, 1.0f, true);
                         g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }

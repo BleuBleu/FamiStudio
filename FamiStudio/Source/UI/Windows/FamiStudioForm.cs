@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
+using RenderTheme = FamiStudio.GLTheme;
+
 namespace FamiStudio
 {
     public partial class FamiStudioForm : Form
@@ -37,7 +39,7 @@ namespace FamiStudio
 
             InitializeComponent();
 
-            var scaling = Direct2DTheme.MainWindowScaling;
+            var scaling = RenderTheme.MainWindowScaling;
 
             toolbar.Height = (int)(toolbar.Height * scaling);
             tableLayout.RowStyles[0].Height = (int)(tableLayout.RowStyles[0].Height * scaling);
@@ -89,7 +91,7 @@ namespace FamiStudio
                 var outsideClientRectangle = !ctrl.ClientRectangle.Contains(pt);
                 if (outsideClientRectangle)
                 {
-                    var controls = new Direct2DControl[]
+                    var controls = new GLControl[]
                     {
                         toolbar,
                         sequencer,
@@ -184,7 +186,7 @@ namespace FamiStudio
             }
             else
             {
-                tableLayout.RowStyles[0].Height = (int)(sequencer.ComputeDesiredSizeY() * Direct2DTheme.MainWindowScaling);
+                tableLayout.RowStyles[0].Height = (int)(sequencer.ComputeDesiredSizeY() * RenderTheme.MainWindowScaling);
             }
 
             PianoRoll.Invalidate();

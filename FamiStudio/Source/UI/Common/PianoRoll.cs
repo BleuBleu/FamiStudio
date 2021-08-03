@@ -8,21 +8,12 @@ using FamiStudio.Properties;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderGeometry = SharpDX.Direct2D1.PathGeometry;
-    using RenderControl  = FamiStudio.Direct2DControl;
-    using RenderGraphics = FamiStudio.Direct2DGraphics;
-    using RenderTheme    = FamiStudio.Direct2DTheme;
-#else
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderGeometry = FamiStudio.GLGeometry;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
-#endif
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderBrush    = FamiStudio.GLBrush;
+using RenderGeometry = FamiStudio.GLGeometry;
+using RenderControl  = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLGraphics;
+using RenderTheme    = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
@@ -825,7 +816,7 @@ namespace FamiStudio
                     { 0, 0 },
                     { 0, noteSizeY },
                     { x, noteSizeY / 2 }
-                });
+                }, true);
 
                 releaseNoteGeometry[idx, 0] = g.CreateGeometry(new float[,]
                 {
@@ -833,21 +824,21 @@ namespace FamiStudio
                     { 0, noteSizeY },
                     { x + 1, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
                     { x + 1, noteSizeY / 2 - releaseNoteSizeY / 2 }
-                });
+                }, true);
 
                 stopReleaseNoteGeometry[idx, 0] = g.CreateGeometry(new float[,]
                 {
                     { 0, noteSizeY / 2 - releaseNoteSizeY / 2 },
                     { 0, noteSizeY / 2 + releaseNoteSizeY / 2 },
                     { x, noteSizeY / 2 }
-                });
+                }, true);
 
                 stopNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
                 {
                     { 0, 1 },
                     { 0, noteSizeY },
                     { x, noteSizeY / 2 }
-                });
+                }, true);
 
                 releaseNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
                 {
@@ -855,21 +846,21 @@ namespace FamiStudio
                     { 0, noteSizeY },
                     { x + 1, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
                     { x + 1, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 }
-                });
+                }, true);
 
                 stopReleaseNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
                 {
                     { 0, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 },
                     { 0, noteSizeY / 2 + releaseNoteSizeY / 2 },
                     { x, noteSizeY / 2 }
-                });
+                }, true);
 
                 slideNoteGeometry[idx] = g.CreateGeometry(new float[,]
                 {
                     { 0, 0 },
                     { x + 1, 0 },
                     { x + 1,  noteSizeY }
-                });
+                }, true);
             }
 
             seekGeometry = g.CreateGeometry(new float[,]
@@ -877,7 +868,7 @@ namespace FamiStudio
                 { -headerSizeY / 2, 1 },
                 { 0, headerSizeY - 2 },
                 { headerSizeY / 2, 1 }
-            });
+            }, true);
 
             sampleGeometry = g.CreateGeometry(new float[,]
             {
@@ -885,7 +876,7 @@ namespace FamiStudio
                 {  waveGeometrySampleSize, -waveGeometrySampleSize },
                 {  waveGeometrySampleSize,  waveGeometrySampleSize },
                 { -waveGeometrySampleSize,  waveGeometrySampleSize }
-            });
+            }, true);
         }
 
         protected override void OnRenderTerminated()
@@ -1175,7 +1166,7 @@ namespace FamiStudio
                 if (seekFrame >= 0)
                 {
                     g.PushTranslation(seekFrame * noteSizeX - scrollX, 0);
-                    g.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), theme.BlackBrush);
+                    g.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), theme.BlackBrush, 1, true);
                     g.DrawLine(0, headerSizeY / 2, 0, headerSizeY, GetSeekBarBrush(), 3);
                     g.PopTransform();
                 }
@@ -1548,7 +1539,7 @@ namespace FamiStudio
                             var hover = location == hoverLocation;
 
                             g.FillRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, singleFrameSlides.Contains(location) ? volumeSlideBarFillBrush : theme.LightGreyFillBrush1);
-                            g.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, hover ? theme.WhiteBrush : theme.BlackBrush, hover || IsNoteSelected(location) ? 2 : 1);
+                            g.DrawRectangle(0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY, hover ? theme.WhiteBrush : theme.BlackBrush, hover || IsNoteSelected(location) ? 2 : 1, true);
 
                             var text = effectValue.ToString();
                             if ((text.Length <= 2 && zoomLevel >= 0) || zoomLevel > 0)
@@ -2286,7 +2277,7 @@ namespace FamiStudio
                                 var y = virtualSizeY - hoverNoteValue * noteSizeY - scrollY;
 
                                 g.PushTranslation(0, y);
-                                g.DrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, theme.WhiteBrush, 2);
+                                g.DrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, theme.WhiteBrush, 2, true);
                                 g.PopTransform();
                             }
                         }
@@ -2347,7 +2338,7 @@ namespace FamiStudio
                         var y = (virtualSizeY - envelopeSizeY * (env.Values[i] + midValue)) - scrollY;
                         var selected = IsEnvelopeValueSelected(i);
                         g.FillRectangle(x, y - envelopeSizeY, x + noteSizeX, y, g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, (int)envelopeSizeY, 0.8f));
-                        g.DrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, theme.BlackBrush, selected ? 2 : 1);
+                        g.DrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, theme.BlackBrush, selected ? 2 : 1, true);
                         if (zoomLevel >= 1)
                             g.DrawText(env.Values[i].ToString("+#;-#;0"), ThemeBase.FontSmallCenter, x, y - envelopeSizeY - effectValuePosTextOffsetY, theme.LightGreyFillBrush1, noteSizeX);
                     }
@@ -2377,7 +2368,7 @@ namespace FamiStudio
                         var selected = IsEnvelopeValueSelected(i);
 
                         g.FillRectangle(x, y0, x + noteSizeX, y1, theme.LightGreyFillBrush1);
-                        g.DrawRectangle(x, y0, x + noteSizeX, y1, theme.BlackBrush, selected ? 2 : 1);
+                        g.DrawRectangle(x, y0, x + noteSizeX, y1, theme.BlackBrush, selected ? 2 : 1, true);
 
                         if (zoomLevel >= 1)
                         {
@@ -2443,7 +2434,7 @@ namespace FamiStudio
             if (!outline)
                 g.FillRectangle(0, 0, sx, sy, g.GetVerticalGradientBrush(color, sy, 0.8f));
 
-            g.DrawRectangle(0, 0, sx, sy, outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || outline ? 2 : 1);
+            g.DrawRectangle(0, 0, sx, sy, outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || outline ? 2 : 1, true);
 
             if (!outline)
             {
@@ -2487,7 +2478,7 @@ namespace FamiStudio
             
             if (!outline)
                 g.FillGeometry(paths[zoomLevel - MinZoomLevel, 0], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-            g.DrawGeometry(paths[zoomLevel - MinZoomLevel, 0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), outline || selected ? 2 : 1);
+            g.DrawGeometry(paths[zoomLevel - MinZoomLevel, 0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), outline || selected ? 2 : 1, false);
 
             if (!outline && note.Arpeggio != null)
             {

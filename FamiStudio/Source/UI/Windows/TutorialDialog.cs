@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 
+using RenderTheme = FamiStudio.GLTheme;
+
 namespace FamiStudio
 {
     public partial class TutorialDialog : Form
@@ -18,24 +20,24 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            string suffix = RenderTheme.DialogScaling >= 2.0f ? "@2x" : "";
             buttonLeft.Image   = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowLeft{suffix}.png"));
 
-            Width  = (int)(Direct2DTheme.DialogScaling * Width);
-            Height = (int)(Direct2DTheme.DialogScaling * Height);
-            label1.Height = (int)(Direct2DTheme.DialogScaling * label1.Height);
+            Width  = (int)(RenderTheme.DialogScaling * Width);
+            Height = (int)(RenderTheme.DialogScaling * Height);
+            label1.Height = (int)(RenderTheme.DialogScaling * label1.Height);
             pictureBox1.Top = (label1.Top + label1.Height) + 8;
             pictureBox1.Height = (int)(pictureBox1.Width / 1.7777777f); // 16:9
-            pictureBox1.Width = (int)(Direct2DTheme.DialogScaling * pictureBox1.Width);
-            pictureBox1.Height = (int)(Direct2DTheme.DialogScaling * pictureBox1.Height);
+            pictureBox1.Width = (int)(RenderTheme.DialogScaling * pictureBox1.Width);
+            pictureBox1.Height = (int)(RenderTheme.DialogScaling * pictureBox1.Height);
 
             label1.ForeColor = ThemeBase.LightGreyFillColor2;
             checkBoxDontShow.ForeColor = ThemeBase.LightGreyFillColor2;
 
-            buttonLeft.Width   = (int)(buttonLeft.Width   * Direct2DTheme.DialogScaling);
-            buttonLeft.Height  = (int)(buttonLeft.Height  * Direct2DTheme.DialogScaling);
-            buttonRight.Width  = (int)(buttonRight.Width  * Direct2DTheme.DialogScaling);
-            buttonRight.Height = (int)(buttonRight.Height * Direct2DTheme.DialogScaling);
+            buttonLeft.Width   = (int)(buttonLeft.Width   * RenderTheme.DialogScaling);
+            buttonLeft.Height  = (int)(buttonLeft.Height  * RenderTheme.DialogScaling);
+            buttonRight.Width  = (int)(buttonRight.Width  * RenderTheme.DialogScaling);
+            buttonRight.Height = (int)(buttonRight.Height * RenderTheme.DialogScaling);
 
             buttonRight.Left  = Width  - buttonRight.Width  - 10;
             buttonRight.Top   = Height - buttonRight.Height - 10;
@@ -62,7 +64,7 @@ namespace FamiStudio
             label1.Text = TutorialMessages.Messages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
 
-            string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            string suffix = RenderTheme.DialogScaling >= 2.0f ? "@2x" : "";
             buttonRight.Image = pageIndex == TutorialMessages.Messages.Length - 1 ?
                 Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png")) :
                 Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowRight{suffix}.png"));

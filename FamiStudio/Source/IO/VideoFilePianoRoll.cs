@@ -4,23 +4,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderFont     = SharpDX.DirectWrite.TextFormat;
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderGeometry = SharpDX.Direct2D1.PathGeometry;
-    using RenderControl  = FamiStudio.Direct2DControl;
-    using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
-    using RenderTheme    = FamiStudio.Direct2DTheme;
-#else
-    using RenderFont     = FamiStudio.GLFont;
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderGeometry = FamiStudio.GLGeometry;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLOffscreenGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
-#endif
+using RenderFont     = FamiStudio.GLFont;
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderBrush    = FamiStudio.GLBrush;
+using RenderGeometry = FamiStudio.GLGeometry;
+using RenderControl  = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLOffscreenGraphics;
+using RenderTheme    = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
@@ -468,21 +458,13 @@ namespace FamiStudio
                                 }
                             }
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                            s.graphics.BeginDraw(pianoRoll, channelResY);
-#else
-                            s.graphics.BeginDraw();
-#endif
+                            s.graphics.BeginDraw(new Rectangle(0, 0, channelResX, channelResY), videoResY);
                             pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
                             s.graphics.EndDraw();
                         }
 
                         // Render the full screen overlay.
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                        videoGraphics.BeginDraw(dummyControl, videoResY);
-#else
-                        videoGraphics.BeginDraw();
-#endif
+                        videoGraphics.BeginDraw(new Rectangle(0, 0, videoResX, videoResY), videoResY);
                         videoGraphics.Clear(Color.Black);
 
                         // Composite the channel renders.

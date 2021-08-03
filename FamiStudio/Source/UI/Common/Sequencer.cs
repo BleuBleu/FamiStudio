@@ -8,21 +8,12 @@ using Color = System.Drawing.Color;
 using System.Media;
 using System.Diagnostics;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderPath     = SharpDX.Direct2D1.PathGeometry;
-    using RenderControl  = FamiStudio.Direct2DControl;
-    using RenderGraphics = FamiStudio.Direct2DGraphics;
-    using RenderTheme    = FamiStudio.Direct2DTheme;
-#else
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderPath     = FamiStudio.GLGeometry;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
-#endif
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderBrush    = FamiStudio.GLBrush;
+using RenderPath     = FamiStudio.GLGeometry;
+using RenderControl  = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLGraphics;
+using RenderTheme    = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
@@ -355,7 +346,7 @@ namespace FamiStudio
                 { -headerSizeY / 2, 1 },
                 { 0, headerSizeY - 2 },
                 { headerSizeY / 2, 1 }
-            });
+            }, true);
         }
 
         protected override void OnRenderTerminated()
@@ -546,6 +537,10 @@ namespace FamiStudio
             // Seek
             g.DrawLine(seekX + trackNameSizeX, 1, seekX + trackNameSizeX, Height, GetSeekBarBrush(), 3);
 
+#if FAMISTUDIO_WINDOWS
+            var t0 = PerformanceCounter.TimeSeconds();
+#endif
+
             // Patterns
             for (int t = 0, py = 0; t < Song.Channels.Length; t++, py += trackSizeY)
             {
@@ -569,12 +564,17 @@ namespace FamiStudio
                         g.PopClip();
 
                         if (IsPatternSelected(t, i))
-                            g.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2);
+                            g.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2, true);
 
                         g.PopTransform();
                     }
                 }
             }
+
+#if FAMISTUDIO_WINDOWS
+            var t1 = PerformanceCounter.TimeSeconds();
+            Trace.WriteLine($"{(t1 - t0) * 1000} ms");
+#endif
 
             // Piano roll view rect
             if (Settings.ShowPianoRollViewRange)
@@ -582,7 +582,7 @@ namespace FamiStudio
                 App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
 
                 g.PushTranslation(pianoRollMinNoteIdx * noteSizeX - scrollX + trackNameSizeX, pianoRollChannelIndex * trackSizeY);
-                g.DrawRectangle(1, patternHeaderSizeY + 1, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX - 1, trackSizeY - 2, theme.LightGreyFillBrush2, 1);
+                g.DrawRectangle(1, patternHeaderSizeY + 1, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX - 1, trackSizeY - 2, theme.LightGreyFillBrush2, 1, true);
                 g.PopTransform();
             }
 

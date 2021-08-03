@@ -7,15 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-#if FAMISTUDIO_WINDOWS
-using RenderFont     = SharpDX.DirectWrite.TextFormat;
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderGeometry = SharpDX.Direct2D1.PathGeometry;
-    using RenderControl  = FamiStudio.Direct2DControl;
-    using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
-    using RenderTheme    = FamiStudio.Direct2DTheme;
-#else
     using RenderFont     = FamiStudio.GLFont;
     using RenderBitmap   = FamiStudio.GLBitmap;
     using RenderBrush    = FamiStudio.GLBrush;
@@ -23,7 +14,6 @@ using RenderFont     = SharpDX.DirectWrite.TextFormat;
     using RenderControl  = FamiStudio.GLControl;
     using RenderGraphics = FamiStudio.GLOffscreenGraphics;
     using RenderTheme    = FamiStudio.GLTheme;
-#endif
 
 namespace FamiStudio
 {
@@ -211,11 +201,6 @@ namespace FamiStudio
 
             BuildChannelColors(channelStates, metadata, colorMode);
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-            var dummyControl = new DummyGLControl();
-            dummyControl.Move(0, 0, videoResX, videoResY);
-#endif
-
             var videoImage = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscWindowSize, 2];
 
@@ -257,11 +242,7 @@ namespace FamiStudio
 
                         var frame = metadata[f];
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                        videoGraphics.BeginDraw(dummyControl, videoResY);
-#else
-                        videoGraphics.BeginDraw();
-#endif
+                        videoGraphics.BeginDraw(new Rectangle(0, 0, videoResX, videoResY), videoResY);
                         videoGraphics.Clear(ThemeBase.DarkGreyLineColor2);
 
                         // Draw gradients.

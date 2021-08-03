@@ -392,9 +392,9 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private CheckBoxList CreateCheckedListBox(string[] values, bool[] selected)
+        private CheckBoxList CreateCheckedListBox(string[] values, bool[] selected, int height)
         {
-            return new CheckBoxList(values, selected);
+            return new CheckBoxList(values, selected, height);
         }
 
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
@@ -633,14 +633,14 @@ namespace FamiStudio
                 combo.Active = 0;
         }
 
-        public int AddCheckBoxList(string label, string[] values, bool[] selected)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int height = 200)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
                     label = label != null ? CreateLabel(label) : null,
-                    control = CreateCheckedListBox(values, selected)
+                    control = CreateCheckedListBox(values, selected, height)
                 });
             return properties.Count - 1;
         }

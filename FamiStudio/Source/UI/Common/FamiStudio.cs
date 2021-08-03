@@ -15,11 +15,7 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderTheme = FamiStudio.Direct2DTheme;
-#else
-    using RenderTheme = FamiStudio.GLTheme;
-#endif
+using RenderTheme = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {

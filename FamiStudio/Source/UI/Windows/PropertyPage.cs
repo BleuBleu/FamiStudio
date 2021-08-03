@@ -7,11 +7,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Reflection;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderTheme = FamiStudio.Direct2DTheme;
-#else
-    using RenderTheme = FamiStudio.GLTheme;
-#endif
+using RenderTheme = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
@@ -55,7 +51,7 @@ namespace FamiStudio
 
             if (warningIcons ==  null)
             {
-                string suffix = Direct2DTheme.DialogScaling > 1 ? "@2x" : "";
+                string suffix = RenderTheme.DialogScaling > 1 ? "@2x" : "";
                 
                 warningIcons = new Bitmap[3];
                 warningIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;

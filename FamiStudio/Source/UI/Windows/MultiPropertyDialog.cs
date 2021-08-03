@@ -6,6 +6,8 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
+using RenderTheme = FamiStudio.GLTheme;
+
 namespace FamiStudio
 {
     public partial class MultiPropertyDialog : Form
@@ -26,28 +28,28 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            string suffix = RenderTheme.DialogScaling >= 2.0f ? "@2x" : "";
             this.buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             this.buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
-            this.Width    = (int)(width  * Direct2DTheme.DialogScaling);
+            this.Width    = (int)(width  * RenderTheme.DialogScaling);
             this.font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             this.fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
 
             toolTip.SetToolTip(buttonYes, "Accept");
             toolTip.SetToolTip(buttonNo, "Cancel");
 
-            tableLayout.ColumnStyles[0].Width = tabsWidth * Direct2DTheme.DialogScaling;
+            tableLayout.ColumnStyles[0].Width = tabsWidth * RenderTheme.DialogScaling;
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var suffix = Direct2DTheme.DialogScaling > 1.0f ? "@2x" : "";
+            var suffix = RenderTheme.DialogScaling > 1.0f ? "@2x" : "";
             var bmp = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}{suffix}.png")) as Bitmap;
 
-            if ((Direct2DTheme.DialogScaling % 1.0f) != 0.0f)
+            if ((RenderTheme.DialogScaling % 1.0f) != 0.0f)
             {
-                var newWidth  = (int)(bmp.Width  * (Direct2DTheme.DialogScaling / 2.0f));
-                var newHeight = (int)(bmp.Height * (Direct2DTheme.DialogScaling / 2.0f));
+                var newWidth  = (int)(bmp.Width  * (RenderTheme.DialogScaling / 2.0f));
+                var newHeight = (int)(bmp.Height * (RenderTheme.DialogScaling / 2.0f));
 
                 bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
             }
@@ -81,7 +83,7 @@ namespace FamiStudio
         {
             SuspendLayout();
 
-            int maxHeight = Math.Max((int)(32 * Direct2DTheme.DialogScaling * tabs.Count), Width / 2);
+            int maxHeight = Math.Max((int)(32 * RenderTheme.DialogScaling * tabs.Count), Width / 2);
             for (int i = 0; i < tabs.Count; i++)
             {
                 maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
@@ -89,10 +91,10 @@ namespace FamiStudio
 
             tableLayout.Height = maxHeight;
 
-            buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);
-            buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);
-            buttonNo.Width   = (int)(buttonNo.Width   * Direct2DTheme.DialogScaling);
-            buttonNo.Height  = (int)(buttonNo.Height  * Direct2DTheme.DialogScaling);
+            buttonYes.Width  = (int)(buttonYes.Width  * RenderTheme.DialogScaling);
+            buttonYes.Height = (int)(buttonYes.Height * RenderTheme.DialogScaling);
+            buttonNo.Width   = (int)(buttonNo.Width   * RenderTheme.DialogScaling);
+            buttonNo.Height  = (int)(buttonNo.Height  * RenderTheme.DialogScaling);
 
             Height = maxHeight + buttonNo.Height + 20;
 
@@ -139,7 +141,7 @@ namespace FamiStudio
         private Button AddButton(string text, Bitmap image)
         {
             var btn = new NoFocusButton();
-            var sizeY = (int)(32 * Direct2DTheme.DialogScaling);
+            var sizeY = (int)(32 * RenderTheme.DialogScaling);
 
             btn.BackColor = BackColor;
             btn.ForeColor = ThemeBase.LightGreyFillColor2;

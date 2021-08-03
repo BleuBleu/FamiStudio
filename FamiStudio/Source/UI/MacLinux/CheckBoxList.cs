@@ -11,7 +11,7 @@ namespace FamiStudio
         VBox vbox;
         List<CheckButton> checkButtons = new List<CheckButton>();
 
-        public CheckBoxList(string[] values, bool[] selected)
+        public CheckBoxList(string[] values, bool[] selected, int height)
         {
             vbox = new VBox();
             vbox.Show();

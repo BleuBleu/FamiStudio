@@ -6,15 +6,9 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Collections.Generic;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderFont     = SharpDX.DirectWrite.TextFormat;
-    using RenderBrush    = SharpDX.Direct2D1.Brush;
-    using RenderGraphics = FamiStudio.Direct2DGraphics;
-#else
-    using RenderFont     = FamiStudio.GLFont;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderGraphics = FamiStudio.GLGraphics;
-#endif
+using RenderFont     = FamiStudio.GLFont;
+using RenderBrush    = FamiStudio.GLBrush;
+using RenderGraphics = FamiStudio.GLGraphics;
 
 namespace FamiStudio
 {

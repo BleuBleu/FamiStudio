@@ -103,12 +103,54 @@ namespace FamiStudio
     public class GLGeometry : IDisposable
     {
         public float[,] Points { get; private set; }
-        public bool     Closed { get; private set; }
+
+        public Dictionary<float, float[,]> leakFreePoints = new Dictionary<float, float[,]>();
 
         public GLGeometry(float[,] points, bool closed)
         {
-            Points = points;
-            Closed = closed;
+            var numPoints = points.GetLength(0);
+
+            var closedPoints   = new float[(numPoints + (closed ? 1 : 0)) * 1, points.GetLength(1)];
+
+            for (int i = 0; i < closedPoints.GetLength(0); i++)
+            {
+                closedPoints[i, 0] = points[i % points.GetLength(0), 0];
+                closedPoints[i, 1] = points[i % points.GetLength(0), 1];
+            }
+
+            Points = closedPoints;
+        }
+
+        public float[,] GetLeakFreePoints(float lineWidth)
+        {
+            if (leakFreePoints.TryGetValue(lineWidth, out var points))
+                return points;
+
+            points = new float[Points.GetLength(0) * 2, Points.GetLength(1)];
+
+            for (int i = 0; i < Points.GetLength(0) - 1; i++)
+            {
+                var x0 = Points[i + 0, 0];
+                var x1 = Points[i + 1, 0];
+                var y0 = Points[i + 0, 1];
+                var y1 = Points[i + 1, 1];
+
+                var dx = x1 - x0;
+                var dy = y1 - y0;
+                var len = (float)Math.Sqrt(dx * dx + dy * dy);
+
+                var nx = dx / len * lineWidth * 0.5f;
+                var ny = dy / len * lineWidth * 0.5f;
+
+                points[2 * i + 0, 0] = x0 - nx;
+                points[2 * i + 0, 1] = y0 - ny;
+                points[2 * i + 1, 0] = x1 + nx;
+                points[2 * i + 1, 1] = y1 + ny;
+            }
+
+            leakFreePoints.Add(lineWidth, points);
+
+            return points;
         }
 
         public void Dispose()
@@ -184,8 +226,8 @@ namespace FamiStudio
         protected bool antialiasing = false;
         protected float windowScaling = 1.0f;
         protected int windowSizeY;
-        protected GLControl control;
         protected Rectangle scissor;
+        protected Rectangle baseScissorRect;
         protected Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
         protected Stack<Rectangle> clipStack = new Stack<Rectangle>();
         protected Stack<Vector4> transformStack = new Stack<Vector4>();
@@ -197,7 +239,7 @@ namespace FamiStudio
             windowScaling = GLTheme.MainWindowScaling;
         }
 
-        public virtual void BeginDraw(GLControl control, int windowSizeY)
+        public virtual void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
         {
 #if FAMISTUDIO_LINUX
             var lineWidths = new float[2];
@@ -206,14 +248,14 @@ namespace FamiStudio
 #endif
 
             this.windowSizeY = windowSizeY;
-            this.control = control;
 
-            var controlRect = FlipRectangleY(new Rectangle(control.Left, control.Top, control.Width, control.Height));
-
+            var controlRect = FlipRectangleY(unflippedControlRect);
+            baseScissorRect = unflippedControlRect;
             GL.Viewport(controlRect.Left, controlRect.Top, controlRect.Width, controlRect.Height);
+
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
-            GL.Ortho(0, control.Width, control.Height, 0, -1, 1);
+            GL.Ortho(0, unflippedControlRect.Width, unflippedControlRect.Height, 0, -1, 1);
             GL.Disable(EnableCap.CullFace);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadIdentity();
@@ -228,7 +270,6 @@ namespace FamiStudio
 
         public virtual void EndDraw()
         {
-            control = null;
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc)
@@ -240,11 +281,11 @@ namespace FamiStudio
                 rc.Height);
         }
 
-        protected void AddHalfPixelOffset()
+        protected void AddHalfPixelOffset(float x = 0.5f, float y = 0.5f)
         {
             GL.GetFloat(GetPName.ModelviewMatrix, out Matrix4 matrix);
-            matrix.Row3.X += 0.5f;
-            matrix.Row3.Y += 0.5f;
+            matrix.Row3.X += x;
+            matrix.Row3.Y += y;
             GL.LoadMatrix(ref matrix);
         }
 
@@ -291,8 +332,8 @@ namespace FamiStudio
             // our purpose, simply intersecting the rects does the job.
             clipStack.Push(scissor);
             scissor = new Rectangle(
-                (int)(transform.Z + control.Left + x0),
-                (int)(transform.W + control.Top + y0),
+                (int)(transform.Z + baseScissorRect.Left + x0),
+                (int)(transform.W + baseScissorRect.Top  + y0),
                 x1 - x0,
                 y1 - y0);
             scissor = FlipRectangleY(scissor);
@@ -328,7 +369,7 @@ namespace FamiStudio
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.Color4(1.0f, 1.0f, 1.0f, opacity);
 
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
             GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
             GL.TexCoord2(1, 0); GL.Vertex2(x1, y0);
             GL.TexCoord2(1, 1); GL.Vertex2(x1, y1);
@@ -345,7 +386,7 @@ namespace FamiStudio
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.Color4(1.0f, 1.0f, 1.0f, 1.0f);
 
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
             GL.TexCoord2(0, 0); GL.Vertex2(x - height, y);
             GL.TexCoord2(1, 0); GL.Vertex2(x - height, y - width);
             GL.TexCoord2(1, 1); GL.Vertex2(x, y - width);
@@ -354,16 +395,11 @@ namespace FamiStudio
 
             GL.Disable(EnableCap.Texture2D);
         }
-
+        
         public void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
         {
             if (string.IsNullOrEmpty(text))
                 return;
-
-            GL.Enable(EnableCap.Texture2D);
-            GL.BindTexture(TextureTarget.Texture2D, font.Texture);
-            GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
-            GL.Begin(BeginMode.Quads);
 
             int alignmentOffsetX = 0;
             if (font.Alignment != 0)
@@ -382,6 +418,9 @@ namespace FamiStudio
                 }
             }
 
+            var vertices  = new float[text.Length * 4, 2];
+            var texCoords = new float[text.Length * 4, 2];
+
             int x = (int)(startX + alignmentOffsetX);
             int y = (int)(startY + font.OffsetY);
 
@@ -395,10 +434,15 @@ namespace FamiStudio
                 int x1 = x0 + info.width;
                 int y1 = y0 + info.height;
 
-                GL.TexCoord2(info.u0, info.v0); GL.Vertex2(x0, y0);
-                GL.TexCoord2(info.u1, info.v0); GL.Vertex2(x1, y0);
-                GL.TexCoord2(info.u1, info.v1); GL.Vertex2(x1, y1);
-                GL.TexCoord2(info.u0, info.v1); GL.Vertex2(x0, y1);
+                vertices[i * 4 + 0, 0] = x0; vertices[i * 4 + 0, 1] = y0;
+                vertices[i * 4 + 1, 0] = x1; vertices[i * 4 + 1, 1] = y0;
+                vertices[i * 4 + 2, 0] = x1; vertices[i * 4 + 2, 1] = y1;
+                vertices[i * 4 + 3, 0] = x0; vertices[i * 4 + 3, 1] = y1;
+
+                texCoords[i * 4 + 0, 0] = info.u0; texCoords[i * 4 + 0, 1] = info.v0;
+                texCoords[i * 4 + 1, 0] = info.u1; texCoords[i * 4 + 1, 1] = info.v0;
+                texCoords[i * 4 + 2, 0] = info.u1; texCoords[i * 4 + 2, 1] = info.v1;
+                texCoords[i * 4 + 3, 0] = info.u0; texCoords[i * 4 + 3, 1] = info.v1;
 
                 x += info.xadvance;
                 if (i != text.Length - 1)
@@ -408,7 +452,16 @@ namespace FamiStudio
                 }
             }
 
-            GL.End();
+            GL.Enable(EnableCap.Texture2D);
+            GL.BindTexture(TextureTarget.Texture2D, font.Texture);
+            GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
+            GL.EnableClientState(ArrayCap.VertexArray);
+            GL.EnableClientState(ArrayCap.TextureCoordArray);
+            GL.VertexPointer(2, VertexPointerType.Float, 0, vertices);
+            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texCoords);
+            GL.DrawArrays(PrimitiveType.Quads, 0, vertices.GetLength(0));
+            GL.DisableClientState(ArrayCap.TextureCoordArray);
+            GL.DisableClientState(ArrayCap.VertexArray);
             GL.Disable(EnableCap.Texture2D);
         }
 
@@ -440,7 +493,7 @@ namespace FamiStudio
                     GL.Enable(EnableCap.Texture2D);
                     GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
                     GL.LineWidth(width);
-                    GL.Begin(BeginMode.Lines);
+                    GL.Begin(PrimitiveType.Lines);
 
                     var size = brush.Bitmap.Size;
                     GL.TexCoord2((x0 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
@@ -454,7 +507,7 @@ namespace FamiStudio
                 else
                 {
                     GL.LineWidth(width);
-                    GL.Begin(BeginMode.Lines);
+                    GL.Begin(PrimitiveType.Lines);
                     GL.Vertex2(x0, y0);
                     GL.Vertex2(x1, y1);
                     GL.End();
@@ -478,10 +531,15 @@ namespace FamiStudio
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool leakFree = false)
         {
             GL.PushMatrix();
+
             AddHalfPixelOffset();
+
+            if (width > 1)
+                GL.Enable(EnableCap.LineSmooth);
+
             GL.Color4(brush.Color0);
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && width > 1)
@@ -501,7 +559,7 @@ namespace FamiStudio
                     GL.Enable(EnableCap.Texture2D);
                     GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
                     GL.LineWidth(width);
-                    GL.Begin(BeginMode.LineLoop);
+                    GL.Begin(PrimitiveType.LineLoop);
 
                     var size = brush.Bitmap.Size;
                     GL.TexCoord2((x0 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
@@ -516,10 +574,22 @@ namespace FamiStudio
                     GL.End();
                     GL.Disable(EnableCap.Texture2D);
                 }
-                else
+                else if (leakFree)
                 {
+                    var pad = 0.5f; // width * 0.5f;
+
                     GL.LineWidth(width);
-                    GL.Begin(BeginMode.LineLoop);
+                    GL.Begin(PrimitiveType.Lines);
+                    GL.Vertex2(x0 - pad, y0); GL.Vertex2(x1 + pad, y0);
+                    GL.Vertex2(x1, y0 - pad); GL.Vertex2(x1, y1 + pad);
+                    GL.Vertex2(x1 + pad, y1); GL.Vertex2(x0 - pad, y1);
+                    GL.Vertex2(x0, y1 + pad); GL.Vertex2(x0, y0 - pad);
+                    GL.End();
+                }
+                else
+                { 
+                    GL.LineWidth(width);
+                    GL.Begin(PrimitiveType.LineLoop);
                     GL.Vertex2(x0, y0);
                     GL.Vertex2(x1, y0);
                     GL.Vertex2(x1, y1);
@@ -527,6 +597,10 @@ namespace FamiStudio
                     GL.End();
                 }
             }
+
+            if (width > 1)
+                GL.Disable(EnableCap.LineSmooth);
+
             GL.PopMatrix();
         }
 
@@ -540,7 +614,7 @@ namespace FamiStudio
             if (!brush.IsGradient)
             {
                 GL.Color4(brush.Color0);
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Vertex2(x0, y0);
                 GL.Vertex2(x1, y0);
                 GL.Vertex2(x1, y1);
@@ -549,7 +623,7 @@ namespace FamiStudio
             }
             else if (brush.GradientSizeX == (x1 - x0))
             {
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(x1, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
@@ -558,7 +632,7 @@ namespace FamiStudio
             }
             else if (brush.GradientSizeY == (y1 - y0))
             {
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
                 GL.Color4(brush.Color0); GL.Vertex2(x1, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
@@ -569,7 +643,7 @@ namespace FamiStudio
             {
                 float xm = x0 + brush.GradientSizeX;
 
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(xm, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(xm, y1);
@@ -584,7 +658,7 @@ namespace FamiStudio
             {
                 float ym = y0 + brush.GradientSizeY;
 
-                GL.Begin(BeginMode.Quads);
+                GL.Begin(PrimitiveType.Quads);
                 GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
                 GL.Color4(brush.Color1); GL.Vertex2(x0, ym);
                 GL.Color4(brush.Color1); GL.Vertex2(x1, ym);
@@ -597,10 +671,10 @@ namespace FamiStudio
             }
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool leakFree = false)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush, width);
+            DrawRectangle(x0, y0, x1, y1, lineBrush, width, leakFree);
         }
 
         public GLGeometry CreateGeometry(float[,] points, bool closed = true)
@@ -617,7 +691,7 @@ namespace FamiStudio
                 GL.Color4(brush.Color0);
                 GL.EnableClientState(ArrayCap.VertexArray);
                 GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                GL.DrawArrays(BeginMode.TriangleFan, 0, geo.Points.GetLength(0));
+                GL.DrawArrays(PrimitiveType.TriangleFan, 0, geo.Points.GetLength(0));
                 GL.DisableClientState(ArrayCap.VertexArray);
                 if (smooth)
                     GL.Disable(EnableCap.PolygonSmooth);
@@ -626,7 +700,7 @@ namespace FamiStudio
             {
                 Debug.Assert(brush.GradientSizeX == 0.0f);
 
-                GL.Begin(BeginMode.TriangleFan);
+                GL.Begin(PrimitiveType.TriangleFan);
                 for (int i = 0; i < geo.Points.GetLength(0); i++)
                 {
                     float lerp = geo.Points[i, 1] / (float)brush.GradientSizeY;
@@ -642,26 +716,22 @@ namespace FamiStudio
             }
         }
 
-        public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f)
+        public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f, bool leakFree = false)
         {
             GL.PushMatrix();
-            if (lineWidth == 1.0f) AddHalfPixelOffset();
+
+            AddHalfPixelOffset();
+
             GL.Enable(EnableCap.LineSmooth);
             GL.Color4(brush.Color0);
 #if FAMISTUDIO_LINUX
             if (!supportsLineWidth && lineWidth > 1)
             {
-                var pts = new float[geo.Points.Length * 2 + (geo.Closed ? 2 : 0)];
+                var pts = new float[geo.Points.Length * 2];
                 for (int i = 0; i < geo.Points.GetLength(0); i++)
                 {
                     pts[i * 2 + 0] = geo.Points[i, 0];
                     pts[i * 2 + 1] = geo.Points[i, 1];
-                }
-
-                if (geo.Closed)
-                {
-                    pts[geo.Points.Length * 2 + 0] = geo.Points[0, 0];
-                    pts[geo.Points.Length * 2 + 1] = geo.Points[0, 1];
                 }
 
                 DrawThickLineAsPolygon(pts, brush, lineWidth);
@@ -671,8 +741,17 @@ namespace FamiStudio
             {
                 GL.LineWidth(lineWidth);
                 GL.EnableClientState(ArrayCap.VertexArray);
-                GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                GL.DrawArrays(geo.Closed ? BeginMode.LineLoop : BeginMode.LineStrip, 0, geo.Points.GetLength(0));
+                if (leakFree)
+                {
+                    var points = geo.GetLeakFreePoints(1.0f /*lineWidth*/);
+                    GL.VertexPointer(2, VertexPointerType.Float, 0, points);
+                    GL.DrawArrays(PrimitiveType.LineStrip, 0, points.GetLength(0));
+                }
+                else
+                {
+                    GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
+                    GL.DrawArrays(PrimitiveType.LineStrip, 0, geo.Points.GetLength(0));
+                }
                 GL.DisableClientState(ArrayCap.VertexArray);
             }
             GL.Disable(EnableCap.LineSmooth);
@@ -681,7 +760,7 @@ namespace FamiStudio
 
         protected void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
         {
-            GL.Begin(BeginMode.Quads);
+            GL.Begin(PrimitiveType.Quads);
             for (int i = 0; i < points.Length / 2 - 1; i++)
             {
                 float x0 = points[(i + 0) * 2 + 0];
@@ -703,10 +782,10 @@ namespace FamiStudio
             GL.End();
         }
 
-        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f)
+        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool leakFree = true)
         {
             FillGeometry(geo, fillBrush);
-            DrawGeometry(geo, lineBrush, lineWidth);
+            DrawGeometry(geo, lineBrush, lineWidth, leakFree);
         }
 
         public unsafe GLBitmap CreateBitmap(int width, int height, uint[] data)
@@ -744,6 +823,28 @@ namespace FamiStudio
             return new GLBrush(color0, color1, 0.0f, y1 - y0);
         }
 
+#if FAMISTUDIO_WINDOWS
+        public int CreateGLTexture(System.Drawing.Bitmap bmp)
+        {
+            var bmpData =
+                bmp.LockBits(
+                    new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
+                    System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                    System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            Debug.Assert(bmpData.Stride == bmp.Width * 4);
+
+            int id = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, id);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, bmp.Width, bmp.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+
+            bmp.UnlockBits(bmpData);
+
+            return id;
+        }
+#else
         public int CreateGLTexture(Gdk.Pixbuf pixbuf)
         {
             Debug.Assert(pixbuf.Rowstride == pixbuf.Width * 4);
@@ -756,7 +857,42 @@ namespace FamiStudio
 
             return id;
         }
+#endif
 
+#if FAMISTUDIO_WINDOWS
+        public GLBitmap CreateBitmapFromResource(string name)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            bool needsScaling = false;
+            System.Drawing.Bitmap bmp;
+
+            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
+            {
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@15x.png")) as System.Drawing.Bitmap;
+            }
+            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
+            {
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@2x.png")) as System.Drawing.Bitmap;
+                needsScaling = windowScaling != 2.0f;
+            }
+            else
+            {
+                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png")) as System.Drawing.Bitmap;
+            }
+
+            // Pre-resize all images so we dont have to deal with scaling later.
+            if (needsScaling)
+            {
+                var newWidth = Math.Max(1, (int)(bmp.Width * (windowScaling / 2.0f)));
+                var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
+
+                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
+            }
+
+            return new GLBitmap(CreateGLTexture(bmp), bmp.Width, bmp.Height);
+        }
+#else
         public GLBitmap CreateBitmapFromResource(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -789,6 +925,7 @@ namespace FamiStudio
 
             return new GLBitmap(CreateGLTexture(pixbuf), pixbuf.Width, pixbuf.Height);
         }
+#endif
 
         public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
         {
@@ -845,7 +982,11 @@ namespace FamiStudio
             return default(T);
         }
 
-        public GLFont CreateFont(Gdk.Pixbuf pixbuf, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+#if FAMISTUDIO_WINDOWS
+        public GLFont CreateFont(System.Drawing.Bitmap bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+#else
+        public GLFont CreateFont(Gdk.Pixbuf bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+#endif
         {
             var font = (GLFont)null;
             var lines = def;
@@ -868,7 +1009,7 @@ namespace FamiStudio
 
                             int glTex = existingTexture;
                             if (glTex == 0)
-                                glTex = CreateGLTexture(pixbuf);
+                                glTex = CreateGLTexture(bmp);
 
                             font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
                             break;
@@ -949,12 +1090,12 @@ namespace FamiStudio
             return new GLOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
         }
 
-        public override void BeginDraw(GLControl control, int windowSizeY)
+        public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
         {
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, fbo);
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
-            base.BeginDraw(control, windowSizeY);
+            base.BeginDraw(unflippedControlRect, windowSizeY);
         }
 
         public override void EndDraw()
