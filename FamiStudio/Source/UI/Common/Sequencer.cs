@@ -346,7 +346,7 @@ namespace FamiStudio
                 { -headerSizeY / 2, 1 },
                 { 0, headerSizeY - 2 },
                 { headerSizeY / 2, 1 }
-            }, true, true);
+            }, true);
         }
 
         protected override void OnRenderTerminated()

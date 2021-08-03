@@ -816,7 +816,7 @@ namespace FamiStudio
                     { 0, 0 },
                     { 0, noteSizeY },
                     { x, noteSizeY / 2 }
-                }, true, true);
+                }, true);
 
                 releaseNoteGeometry[idx, 0] = g.CreateGeometry(new float[,]
                 {
@@ -824,21 +824,21 @@ namespace FamiStudio
                     { 0, noteSizeY },
                     { x + 1, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
                     { x + 1, noteSizeY / 2 - releaseNoteSizeY / 2 }
-                }, true, true);
+                }, true);
 
                 stopReleaseNoteGeometry[idx, 0] = g.CreateGeometry(new float[,]
                 {
                     { 0, noteSizeY / 2 - releaseNoteSizeY / 2 },
                     { 0, noteSizeY / 2 + releaseNoteSizeY / 2 },
                     { x, noteSizeY / 2 }
-                }, true, true);
+                }, true);
 
                 stopNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
                 {
                     { 0, 1 },
                     { 0, noteSizeY },
                     { x, noteSizeY / 2 }
-                }, true, true);
+                }, true);
 
                 releaseNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
                 {
@@ -846,21 +846,21 @@ namespace FamiStudio
                     { 0, noteSizeY },
                     { x + 1, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
                     { x + 1, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 }
-                }, true, true);
+                }, true);
 
                 stopReleaseNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
                 {
                     { 0, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 },
                     { 0, noteSizeY / 2 + releaseNoteSizeY / 2 },
                     { x, noteSizeY / 2 }
-                }, true, true);
+                }, true);
 
                 slideNoteGeometry[idx] = g.CreateGeometry(new float[,]
                 {
                     { 0, 0 },
                     { x + 1, 0 },
                     { x + 1,  noteSizeY }
-                }, true, true);
+                }, true);
             }
 
             seekGeometry = g.CreateGeometry(new float[,]
@@ -868,7 +868,7 @@ namespace FamiStudio
                 { -headerSizeY / 2, 1 },
                 { 0, headerSizeY - 2 },
                 { headerSizeY / 2, 1 }
-            }, true, true);
+            }, true);
 
             sampleGeometry = g.CreateGeometry(new float[,]
             {
@@ -876,7 +876,7 @@ namespace FamiStudio
                 {  waveGeometrySampleSize, -waveGeometrySampleSize },
                 {  waveGeometrySampleSize,  waveGeometrySampleSize },
                 { -waveGeometrySampleSize,  waveGeometrySampleSize }
-            }, true, true);
+            }, true);
         }
 
         protected override void OnRenderTerminated()
@@ -2478,7 +2478,7 @@ namespace FamiStudio
             
             if (!outline)
                 g.FillGeometry(paths[zoomLevel - MinZoomLevel, 0], g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-            g.DrawGeometry(paths[zoomLevel - MinZoomLevel, 0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), outline || selected ? 2 : 1, true);
+            g.DrawGeometry(paths[zoomLevel - MinZoomLevel, 0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), outline || selected ? 2 : 1, false);
 
             if (!outline && note.Arpeggio != null)
             {
