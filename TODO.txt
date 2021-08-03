@@ -1,6 +1,6 @@
 3.2.0
 =====
-- Osc gets stuck when pausing?
+- Osc gets stuck when pausing? (Only in 3.2.0 branch)
 - Process more events during video export, "initializing channels" is slow
 
 DMC counter effect:
