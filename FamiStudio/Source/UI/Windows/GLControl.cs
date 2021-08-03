@@ -16,6 +16,23 @@ namespace FamiStudio
 
         public GLControl()
         {
+            SetStyle(ControlStyles.Opaque, true);
+            SetStyle(ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                const int CS_VREDRAW = 0x1;
+                const int CS_HREDRAW = 0x2;
+                const int CS_OWNDC = 0x20;
+
+                CreateParams cp = base.CreateParams;
+                cp.ClassStyle |= CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
+                return cp;
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -41,9 +58,8 @@ namespace FamiStudio
                 DoubleBuffered = false;
                 ResizeRedraw = true;
 
-                ColorFormat colorBufferColorFormat  = new ColorFormat(8);
-                ColorFormat accumulationColorFormat = new ColorFormat(0);
-                GraphicsMode graphicsMode = new GraphicsMode(colorBufferColorFormat, 0, 0, 1, accumulationColorFormat, 2, false);
+                ColorFormat colorBufferColorFormat = new ColorFormat(24);
+                GraphicsMode graphicsMode = new GraphicsMode(colorBufferColorFormat, 0, 0, 0, ColorFormat.Empty, 2, false);
 
                 windowInfo = Utilities.CreateWindowsWindowInfo(Handle);
 
@@ -51,7 +67,7 @@ namespace FamiStudio
                 graphicsContext.MakeCurrent(windowInfo);
                 graphicsContext.LoadAll();
 
-                glGraphics = new GLGraphics(/*this*/);
+                glGraphics = new GLGraphics();
 
                 OnRenderInitialized(glGraphics);
             }
