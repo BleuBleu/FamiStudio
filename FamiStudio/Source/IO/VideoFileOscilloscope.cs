@@ -165,6 +165,8 @@ namespace FamiStudio
 
                 // Measure the longest text.
                 longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, ThemeBase.FontBigUnscaled));
+
+                Log.ReportProgress(0.0f);
             }
 
             numColumns = Math.Min(numColumns, channelStates.Count);
@@ -283,7 +285,6 @@ namespace FamiStudio
                             videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
                             videoGraphics.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY);
                             videoGraphics.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, theme.LightGreyFillBrush1); 
-
                         }
 
                         // Grid lines

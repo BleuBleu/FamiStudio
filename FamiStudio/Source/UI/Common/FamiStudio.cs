@@ -1030,7 +1030,7 @@ namespace FamiStudio
         {
             Debug.Assert(instrumentPlayer == null);
             instrumentPlayer = new InstrumentPlayer(palPlayback);
-            //instrumentPlayer.Start(project, palPlayback);
+            instrumentPlayer.Start(project, palPlayback);
         }
 
         private void ShutdownSongPlayer()
@@ -1047,7 +1047,7 @@ namespace FamiStudio
         {
             if (instrumentPlayer != null)
             {
-                //instrumentPlayer.Stop(true);
+                instrumentPlayer.Stop(true);
                 instrumentPlayer.Shutdown();
                 instrumentPlayer = null;
                 PianoRoll.HighlightPianoNote(Note.NoteInvalid);

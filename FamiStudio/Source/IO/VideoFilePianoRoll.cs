@@ -346,6 +346,8 @@ namespace FamiStudio
 
                 // Measure the longest text.
                 longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, ThemeBase.FontBigUnscaled));
+
+                Log.ReportProgress(0.0f);
             }
 
             // Tweak some cosmetic stuff that depends on resolution.

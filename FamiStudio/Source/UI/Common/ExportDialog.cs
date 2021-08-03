@@ -189,7 +189,7 @@ namespace FamiStudio
                 case ExportFormat.VideoOscilloscope:
                     if (AddCommonVideoProperties(page, songNames)) // 0-5
                     {
-                        page.AddIntegerRange("Oscilloscope Columns :", 1, 1, 3); // 6
+                        page.AddIntegerRange("Oscilloscope Columns :", 1, 1, 5); // 6
                         page.AddIntegerRange("Oscilloscope Thickness :", 1, 1, 4); // 7
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
                         page.AddCheckBox("Stereo", false); // 9
