@@ -1,7 +1,6 @@
 3.2.0
 =====
-- Make sure sequencer doesnt render when collapsed.
-- Dont use DirectWrite anymore.
+- Osc gets stuck when pausing?
 - Process more events during video export, "initializing channels" is slow
 
 DMC counter effect:
