@@ -47,7 +47,7 @@ namespace FamiStudio
 
                 windowInfo = Utilities.CreateWindowsWindowInfo(Handle);
 
-                graphicsContext = new GraphicsContext(graphicsMode, windowInfo, 1, 0, GraphicsContextFlags.Default);
+                graphicsContext = new GraphicsContext(graphicsMode, windowInfo, 1, 2, GraphicsContextFlags.Default);
                 graphicsContext.MakeCurrent(windowInfo);
                 graphicsContext.LoadAll();
 

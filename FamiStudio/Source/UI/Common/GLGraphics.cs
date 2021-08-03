@@ -400,16 +400,11 @@ namespace FamiStudio
 
             GL.Disable(EnableCap.Texture2D);
         }
-
+        
         public void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
         {
             if (string.IsNullOrEmpty(text))
                 return;
-
-            GL.Enable(EnableCap.Texture2D);
-            GL.BindTexture(TextureTarget.Texture2D, font.Texture);
-            GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
-            GL.Begin(PrimitiveType.Quads);
 
             int alignmentOffsetX = 0;
             if (font.Alignment != 0)
@@ -428,6 +423,9 @@ namespace FamiStudio
                 }
             }
 
+            var vertices  = new float[text.Length * 4, 2];
+            var texCoords = new float[text.Length * 4, 2];
+
             int x = (int)(startX + alignmentOffsetX);
             int y = (int)(startY + font.OffsetY);
 
@@ -441,10 +439,15 @@ namespace FamiStudio
                 int x1 = x0 + info.width;
                 int y1 = y0 + info.height;
 
-                GL.TexCoord2(info.u0, info.v0); GL.Vertex2(x0, y0);
-                GL.TexCoord2(info.u1, info.v0); GL.Vertex2(x1, y0);
-                GL.TexCoord2(info.u1, info.v1); GL.Vertex2(x1, y1);
-                GL.TexCoord2(info.u0, info.v1); GL.Vertex2(x0, y1);
+                vertices[i * 4 + 0, 0] = x0; vertices[i * 4 + 0, 1] = y0;
+                vertices[i * 4 + 1, 0] = x1; vertices[i * 4 + 1, 1] = y0;
+                vertices[i * 4 + 2, 0] = x1; vertices[i * 4 + 2, 1] = y1;
+                vertices[i * 4 + 3, 0] = x0; vertices[i * 4 + 3, 1] = y1;
+
+                texCoords[i * 4 + 0, 0] = info.u0; texCoords[i * 4 + 0, 1] = info.v0;
+                texCoords[i * 4 + 1, 0] = info.u1; texCoords[i * 4 + 1, 1] = info.v0;
+                texCoords[i * 4 + 2, 0] = info.u1; texCoords[i * 4 + 2, 1] = info.v1;
+                texCoords[i * 4 + 3, 0] = info.u0; texCoords[i * 4 + 3, 1] = info.v1;
 
                 x += info.xadvance;
                 if (i != text.Length - 1)
@@ -454,7 +457,16 @@ namespace FamiStudio
                 }
             }
 
-            GL.End();
+            GL.Enable(EnableCap.Texture2D);
+            GL.BindTexture(TextureTarget.Texture2D, font.Texture);
+            GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
+            GL.EnableClientState(ArrayCap.VertexArray);
+            GL.EnableClientState(ArrayCap.TextureCoordArray);
+            GL.VertexPointer(2, VertexPointerType.Float, 0, vertices);
+            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texCoords);
+            GL.DrawArrays(PrimitiveType.Quads, 0, vertices.GetLength(0));
+            GL.DisableClientState(ArrayCap.TextureCoordArray);
+            GL.DisableClientState(ArrayCap.VertexArray);
             GL.Disable(EnableCap.Texture2D);
         }
 
