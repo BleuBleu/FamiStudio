@@ -220,7 +220,6 @@ namespace FamiStudio
         protected bool antialiasing = false;
         protected float windowScaling = 1.0f;
         protected int windowSizeY;
-        protected GLControl control;
         protected Rectangle scissor;
         protected Rectangle baseScissorRect;
         protected Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
@@ -234,7 +233,7 @@ namespace FamiStudio
             windowScaling = GLTheme.MainWindowScaling;
         }
 
-        public virtual void BeginDraw(GLControl control, int windowSizeY)
+        public virtual void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
         {
 #if FAMISTUDIO_LINUX
             var lineWidths = new float[2];
@@ -243,23 +242,20 @@ namespace FamiStudio
 #endif
 
             this.windowSizeY = windowSizeY;
-            this.control = control;
 
 #if FAMISTUDIO_WINDOWS
-            var unflippedControlRect = new Rectangle(0, 0, control.Width, control.Height);
             var controlRect = unflippedControlRect;
             baseScissorRect = FlipRectangleY(controlRect);
             GL.Viewport(0, 0, controlRect.Width, controlRect.Height);
 #else
-            var unflippedControlRect = new Rectangle(control.Left, control.Top, control.Width, control.Height);
-            controlRect = FlipRectangleY(unflippedControlRect);
+            var controlRect = FlipRectangleY(unflippedControlRect);
             baseScissorRect = unflippedControlRect;
             GL.Viewport(controlRect.Left, controlRect.Top, controlRect.Width, controlRect.Height);
 #endif
 
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
-            GL.Ortho(0, control.Width, control.Height, 0, -1, 1);
+            GL.Ortho(0, unflippedControlRect.Width, unflippedControlRect.Height, 0, -1, 1);
             GL.Disable(EnableCap.CullFace);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadIdentity();
@@ -274,7 +270,6 @@ namespace FamiStudio
 
         public virtual void EndDraw()
         {
-            control = null;
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc)
@@ -1081,12 +1076,12 @@ namespace FamiStudio
             return new GLOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
         }
 
-        public override void BeginDraw(GLControl control, int windowSizeY)
+        public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
         {
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, fbo);
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
-            base.BeginDraw(control, windowSizeY);
+            base.BeginDraw(unflippedControlRect, windowSizeY);
         }
 
         public override void EndDraw()

@@ -458,21 +458,13 @@ namespace FamiStudio
                                 }
                             }
 
-//#if TRUE //FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-//                            s.graphics.BeginDraw(pianoRoll, channelResY);
-//#else
-//                            s.graphics.BeginDraw();
-//#endif
+                            s.graphics.BeginDraw(new Rectangle(0, 0, channelResX, channelResY), videoResY);
                             pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
                             s.graphics.EndDraw();
                         }
 
                         // Render the full screen overlay.
-//#if TRUE //FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-//                        videoGraphics.BeginDraw(dummyControl, videoResY);
-//#else
-//                        videoGraphics.BeginDraw();
-//#endif
+                        videoGraphics.BeginDraw(new Rectangle(0, 0, videoResX, videoResY), videoResY);
                         videoGraphics.Clear(Color.Black);
 
                         // Composite the channel renders.

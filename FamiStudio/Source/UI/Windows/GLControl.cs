@@ -103,7 +103,7 @@ namespace FamiStudio
             else
             {
                 graphicsContext.MakeCurrent(windowInfo);
-                glGraphics.BeginDraw(this, ParentForm.ClientSize.Height);
+                glGraphics.BeginDraw(ClientRectangle, ParentForm.ClientSize.Height);
                 OnRender(glGraphics);
                 glGraphics.EndDraw();
                 graphicsContext.SwapBuffers();
