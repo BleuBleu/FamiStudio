@@ -105,12 +105,11 @@ namespace FamiStudio
         public float[,] Points         { get; private set; }
         public float[,] LeakFreePoints { get; private set; }
 
-        public GLGeometry(float[,] points, bool closed)
+        public GLGeometry(float[,] points, bool closed, bool createLeakFree)
         {
             var numPoints = points.GetLength(0);
 
             var closedPoints   = new float[(numPoints + (closed ? 1 : 0)) * 1, points.GetLength(1)];
-            var leakFreePoints = new float[(numPoints + (closed ? 1 : 0)) * 2, points.GetLength(1)];
 
             for (int i = 0; i < closedPoints.GetLength(0); i++)
             {
@@ -118,28 +117,34 @@ namespace FamiStudio
                 closedPoints[i, 1] = points[i % points.GetLength(0), 1];
             }
 
-            for (int i = 0; i < closedPoints.GetLength(0) - 1; i++)
+            if (createLeakFree)
             {
-                var x0 = closedPoints[i + 0, 0];
-                var x1 = closedPoints[i + 1, 0];
-                var y0 = closedPoints[i + 0, 1];
-                var y1 = closedPoints[i + 1, 1];
+                var leakFreePoints = new float[(numPoints + (closed ? 1 : 0)) * 2, points.GetLength(1)];
 
-                var dx = x1 - x0;
-                var dy = y1 - y0;
-                var len = (float)Math.Sqrt(dx * dx + dy + dy);
+                for (int i = 0; i < closedPoints.GetLength(0) - 1; i++)
+                {
+                    var x0 = closedPoints[i + 0, 0];
+                    var x1 = closedPoints[i + 1, 0];
+                    var y0 = closedPoints[i + 0, 1];
+                    var y1 = closedPoints[i + 1, 1];
 
-                var nx = dx / len * 0.5f;
-                var ny = dy / len * 0.5f;
+                    var dx = x1 - x0;
+                    var dy = y1 - y0;
+                    var len = (float)Math.Sqrt(dx * dx + dy + dy);
 
-                leakFreePoints[2 * i + 0, 0] = x0 - nx;
-                leakFreePoints[2 * i + 0, 1] = y0 - ny;
-                leakFreePoints[2 * i + 1, 0] = x1 + nx;
-                leakFreePoints[2 * i + 1, 1] = y1 + ny;
+                    var nx = dx / len * 0.5f;
+                    var ny = dy / len * 0.5f;
+
+                    leakFreePoints[2 * i + 0, 0] = x0 - nx;
+                    leakFreePoints[2 * i + 0, 1] = y0 - ny;
+                    leakFreePoints[2 * i + 1, 0] = x1 + nx;
+                    leakFreePoints[2 * i + 1, 1] = y1 + ny;
+                }
+
+                LeakFreePoints = leakFreePoints;
             }
 
             Points = closedPoints;
-            LeakFreePoints = leakFreePoints;
         }
 
         public void Dispose()
@@ -654,9 +659,9 @@ namespace FamiStudio
             DrawRectangle(x0, y0, x1, y1, lineBrush, width, leakFree);
         }
 
-        public GLGeometry CreateGeometry(float[,] points, bool closed = true)
+        public GLGeometry CreateGeometry(float[,] points, bool closed = true, bool createLeakFree = false)
         {
-            return new GLGeometry(points, closed);
+            return new GLGeometry(points, closed, createLeakFree);
         }
 
         public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)
@@ -716,7 +721,7 @@ namespace FamiStudio
             {
                 GL.LineWidth(lineWidth);
                 GL.EnableClientState(ArrayCap.VertexArray);
-                if (leakFree)
+                if (leakFree && geo.LeakFreePoints != null)
                 {
                     GL.VertexPointer(2, VertexPointerType.Float, 0, geo.LeakFreePoints);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, geo.LeakFreePoints.GetLength(0));
@@ -756,10 +761,10 @@ namespace FamiStudio
             GL.End();
         }
 
-        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f)
+        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool leakFree = true)
         {
             FillGeometry(geo, fillBrush);
-            DrawGeometry(geo, lineBrush, lineWidth);
+            DrawGeometry(geo, lineBrush, lineWidth, leakFree);
         }
 
         public unsafe GLBitmap CreateBitmap(int width, int height, uint[] data)
