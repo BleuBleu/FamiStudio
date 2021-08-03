@@ -109,7 +109,7 @@ namespace FamiStudio
 
                 foreach (var control in controls)
                 {
-                    gfx.BeginDraw(control, height);
+                    gfx.BeginDraw(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
                     control.Render(gfx);
                     control.Validate();
                     gfx.EndDraw();

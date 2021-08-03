@@ -537,7 +537,9 @@ namespace FamiStudio
             // Seek
             g.DrawLine(seekX + trackNameSizeX, 1, seekX + trackNameSizeX, Height, GetSeekBarBrush(), 3);
 
+#if FAMISTUDIO_WINDOWS
             var t0 = PerformanceCounter.TimeSeconds();
+#endif
 
             // Patterns
             for (int t = 0, py = 0; t < Song.Channels.Length; t++, py += trackSizeY)
@@ -569,8 +571,10 @@ namespace FamiStudio
                 }
             }
 
+#if FAMISTUDIO_WINDOWS
             var t1 = PerformanceCounter.TimeSeconds();
             Trace.WriteLine($"{(t1 - t0) * 1000} ms");
+#endif
 
             // Piano roll view rect
             if (Settings.ShowPianoRollViewRange)
