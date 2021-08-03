@@ -119,7 +119,7 @@ namespace FamiStudio
             else
             {
                 graphicsContext.MakeCurrent(windowInfo);
-                glGraphics.BeginDraw(ClientRectangle, ParentForm.ClientSize.Height);
+                glGraphics.BeginDraw(ClientRectangle, ClientRectangle.Height);
                 OnRender(glGraphics);
                 glGraphics.EndDraw();
                 graphicsContext.SwapBuffers();

@@ -243,15 +243,9 @@ namespace FamiStudio
 
             this.windowSizeY = windowSizeY;
 
-#if FAMISTUDIO_WINDOWS
-            var controlRect = unflippedControlRect;
-            baseScissorRect = FlipRectangleY(controlRect);
-            GL.Viewport(0, 0, controlRect.Width, controlRect.Height);
-#else
             var controlRect = FlipRectangleY(unflippedControlRect);
             baseScissorRect = unflippedControlRect;
             GL.Viewport(controlRect.Left, controlRect.Top, controlRect.Width, controlRect.Height);
-#endif
 
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
