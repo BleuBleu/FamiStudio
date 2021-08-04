@@ -2,14 +2,10 @@
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using OpenTK.Graphics;
-using Microsoft.Win32;
 using System.Drawing;
 using OpenTK.Graphics.OpenGL;
 
-using RenderTheme = FamiStudio.GLTheme;
 using System.Diagnostics;
-
-// MATTT : Test horizontal mouse wheel.
 
 namespace FamiStudio
 {
