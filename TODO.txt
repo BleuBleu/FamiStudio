@@ -2,12 +2,6 @@
 =====
 - Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
 - ffmpeg in flatpak
-- Color osc by channel
-
-Low prio:
-- Is the clarinet VRC7 sound patch ok?
-- Instrument changes with no new note?
-- Pxx doesnt match with VRC7?
 
 Videos:
 =======
@@ -16,14 +10,6 @@ Videos:
 	- Descripiton
 	- Link in video
 - Tutorial for FamiTracker
-
-Doc
-===
-- Add replace instrument (with selection) info (GIF)
-* Noise slides
-* Volume slides
-* Minor sequencer selection improvements
-* Sound engine doc update (vol slide, memory, etc).
 
 Youtube corrections:
 ====================
