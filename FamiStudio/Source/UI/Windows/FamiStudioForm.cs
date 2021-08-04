@@ -153,13 +153,11 @@ namespace FamiStudio
         {
             base.OnMouseDown(e);
 
-            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
-
             if (captureControl != null)
                 return;
 
+            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             lastButtonPress = e.Button;
-
             ctrl.MouseDown(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
         }
 
@@ -187,7 +185,18 @@ namespace FamiStudio
 
             if (ctrl != null)
                 ctrl.MouseUp(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+        }
 
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            base.OnMouseDoubleClick(e);
+
+            if (captureControl != null)
+                return;
+
+            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
+            lastButtonPress = e.Button;
+            ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
