@@ -55,13 +55,17 @@ namespace FamiStudio
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
         public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
         public void Validate() { invalid = false; }
-        public void Invalidate() { invalid = true; parentForm.Invalidate(); }
         public int Left => left;
         public int Top => top;
         public int Width => width;
         public int Height => height;
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }
         public bool NeedsRedraw => invalid;
+#if FAMISTUDIO_WINDOWS
+        public void Invalidate() { invalid = true; parentForm.Invalidate(); }
+#else
+        public void Invalidate() { invalid = true; }
+#endif
 
         public void Move(int x, int y, int w, int h)
         {
