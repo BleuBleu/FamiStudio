@@ -190,9 +190,6 @@ namespace FamiStudio
         {
             base.OnMouseDoubleClick(e);
 
-            if (captureControl != null)
-                return;
-
             var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             lastButtonPress = e.Button;
             if (ctrl != null)

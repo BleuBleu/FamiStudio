@@ -373,7 +373,6 @@ namespace FamiStudio
             // Setup piano roll and images.
             var pianoRoll = new PianoRoll();
             pianoRoll.Move(0, 0, channelResX, channelResY);
-
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 
             // Build the scrolling data.
@@ -450,7 +449,8 @@ namespace FamiStudio
                                 }
                             }
 
-                            s.graphics.BeginDraw(new Rectangle(0, 0, channelResX, channelResY), videoResY);
+                            s.graphics.BeginDraw(new Rectangle(0, 0, channelResX, channelResY), channelResY);
+                            //s.graphics.Clear(Color.Pink);
                             pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
                             s.graphics.EndDraw();
                         }
@@ -465,7 +465,7 @@ namespace FamiStudio
                             int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
                             videoGraphics.DrawRotatedFlippedBitmap(s.bitmap, channelPosX1, videoResY, s.bitmap.Size.Width, s.bitmap.Size.Height);
                         }
-
+                        
                         // Gradient
                         videoGraphics.FillRectangle(0, 0, videoResX, gradientSizeY, gradientBrush);
 
