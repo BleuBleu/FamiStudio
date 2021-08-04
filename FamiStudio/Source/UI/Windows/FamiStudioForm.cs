@@ -90,6 +90,8 @@ namespace FamiStudio
                 return;
             }
 
+            timer.Stop();
+
             base.OnFormClosing(e);
         }
 
