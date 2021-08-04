@@ -125,6 +125,7 @@
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Common\Program.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -200,7 +201,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
-    <Compile Include="Source\Utils\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\ThemeBase.cs" />
