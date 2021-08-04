@@ -109,8 +109,7 @@ namespace FamiStudio
         public GLGeometry(float[,] points, bool closed)
         {
             var numPoints = points.GetLength(0);
-
-            var closedPoints   = new float[(numPoints + (closed ? 1 : 0)) * 1, points.GetLength(1)];
+            var closedPoints = new float[(numPoints + (closed ? 1 : 0)) * 1, points.GetLength(1)];
 
             for (int i = 0; i < closedPoints.GetLength(0); i++)
             {
@@ -396,7 +395,7 @@ namespace FamiStudio
             GL.Disable(EnableCap.Texture2D);
         }
         
-        public void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
+        public unsafe void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
         {
             if (string.IsNullOrEmpty(text))
                 return;
@@ -418,8 +417,9 @@ namespace FamiStudio
                 }
             }
 
-            var vertices  = new float[text.Length * 4, 2];
-            var texCoords = new float[text.Length * 4, 2];
+            var numVertices = text.Length * 4;
+            var vertices  = stackalloc float[numVertices * 2];
+            var texCoords = stackalloc float[numVertices * 2];
 
             int x = (int)(startX + alignmentOffsetX);
             int y = (int)(startY + font.OffsetY);
@@ -434,15 +434,15 @@ namespace FamiStudio
                 int x1 = x0 + info.width;
                 int y1 = y0 + info.height;
 
-                vertices[i * 4 + 0, 0] = x0; vertices[i * 4 + 0, 1] = y0;
-                vertices[i * 4 + 1, 0] = x1; vertices[i * 4 + 1, 1] = y0;
-                vertices[i * 4 + 2, 0] = x1; vertices[i * 4 + 2, 1] = y1;
-                vertices[i * 4 + 3, 0] = x0; vertices[i * 4 + 3, 1] = y1;
+                vertices[(i * 4 + 0) * 2 + 0] = x0; vertices[(i * 4 + 0) * 2 + 1] = y0;
+                vertices[(i * 4 + 1) * 2 + 0] = x1; vertices[(i * 4 + 1) * 2 + 1] = y0;
+                vertices[(i * 4 + 2) * 2 + 0] = x1; vertices[(i * 4 + 2) * 2 + 1] = y1;
+                vertices[(i * 4 + 3) * 2 + 0] = x0; vertices[(i * 4 + 3) * 2 + 1] = y1;
 
-                texCoords[i * 4 + 0, 0] = info.u0; texCoords[i * 4 + 0, 1] = info.v0;
-                texCoords[i * 4 + 1, 0] = info.u1; texCoords[i * 4 + 1, 1] = info.v0;
-                texCoords[i * 4 + 2, 0] = info.u1; texCoords[i * 4 + 2, 1] = info.v1;
-                texCoords[i * 4 + 3, 0] = info.u0; texCoords[i * 4 + 3, 1] = info.v1;
+                texCoords[(i * 4 + 0) * 2 + 0] = info.u0; texCoords[(i * 4 + 0) * 2 + 1] = info.v0;
+                texCoords[(i * 4 + 1) * 2 + 0] = info.u1; texCoords[(i * 4 + 1) * 2 + 1] = info.v0;
+                texCoords[(i * 4 + 2) * 2 + 0] = info.u1; texCoords[(i * 4 + 2) * 2 + 1] = info.v1;
+                texCoords[(i * 4 + 3) * 2 + 0] = info.u0; texCoords[(i * 4 + 3) * 2 + 1] = info.v1;
 
                 x += info.xadvance;
                 if (i != text.Length - 1)
@@ -457,9 +457,9 @@ namespace FamiStudio
             GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
             GL.EnableClientState(ArrayCap.VertexArray);
             GL.EnableClientState(ArrayCap.TextureCoordArray);
-            GL.VertexPointer(2, VertexPointerType.Float, 0, vertices);
-            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texCoords);
-            GL.DrawArrays(PrimitiveType.Quads, 0, vertices.GetLength(0));
+            GL.VertexPointer(2, VertexPointerType.Float, 0, new IntPtr(vertices));
+            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, new IntPtr(texCoords));
+            GL.DrawArrays(PrimitiveType.Quads, 0, numVertices);
             GL.DisableClientState(ArrayCap.TextureCoordArray);
             GL.DisableClientState(ArrayCap.VertexArray);
             GL.Disable(EnableCap.Texture2D);
