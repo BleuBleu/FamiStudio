@@ -9,11 +9,6 @@ Videos:
 	- Thumbnail
 	- Descripiton
 	- Link in video
-- Tutorial for FamiTracker
-
-Youtube corrections:
-====================
-- Patterns are one based.
 
 Linux notes 
 =========== 
@@ -88,7 +83,6 @@ Backlog:
 - Left/right pan with +/- (cubase style)?
 - TailWindz : CTRL + Scroll should do "something"
 - Hardware sweep (how to not conflict with smooth vibrato?)
-- Write delta counter (Zxx).
 - Scales
 - Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
