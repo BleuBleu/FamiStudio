@@ -731,7 +731,7 @@ namespace FamiStudio
                 g.PopTransform();
             }
 
-            g.DrawRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.LightGreyFillBrush2, 1.0f, true);
+            g.DrawRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.LightGreyFillBrush2, 1.0f);
         }
 
         private void RenderWarningAndTooltip(RenderGraphics g)
@@ -795,7 +795,7 @@ namespace FamiStudio
                                 posX -= (int)scaling;
 #endif
 
-                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush, 1, true);
+                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush, 1);
                                 g.DrawText(str, messageFontCenter, posX, posY, messageBrush, specialCharacter.Width);
 
 #if !FAMISTUDIO_WINDOWS

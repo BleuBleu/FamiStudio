@@ -104,7 +104,7 @@ namespace FamiStudio
     {
         public float[,] Points { get; private set; }
 
-        public Dictionary<float, float[,]> leakFreePoints = new Dictionary<float, float[,]>();
+        public Dictionary<float, float[,]> miterPoints = new Dictionary<float, float[,]>();
 
         public GLGeometry(float[,] points, bool closed)
         {
@@ -121,9 +121,9 @@ namespace FamiStudio
             Points = closedPoints;
         }
 
-        public float[,] GetLeakFreePoints(float lineWidth)
+        public float[,] GetMiterPoints(float lineWidth)
         {
-            if (leakFreePoints.TryGetValue(lineWidth, out var points))
+            if (miterPoints.TryGetValue(lineWidth, out var points))
                 return points;
 
             points = new float[Points.GetLength(0) * 2, Points.GetLength(1)];
@@ -148,7 +148,7 @@ namespace FamiStudio
                 points[2 * i + 1, 1] = y1 + ny;
             }
 
-            leakFreePoints.Add(lineWidth, points);
+            miterPoints.Add(lineWidth, points);
 
             return points;
         }
@@ -531,7 +531,7 @@ namespace FamiStudio
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool leakFree = false)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool miter = false)
         {
             GL.PushMatrix();
 
@@ -574,9 +574,9 @@ namespace FamiStudio
                     GL.End();
                     GL.Disable(EnableCap.Texture2D);
                 }
-                else if (leakFree)
+                else if (miter)
                 {
-                    var pad = 0.5f; // width * 0.5f;
+                    var pad = width * 0.5f;
 
                     GL.LineWidth(width);
                     GL.Begin(PrimitiveType.Lines);
@@ -671,10 +671,10 @@ namespace FamiStudio
             }
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool leakFree = false)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool miter = false)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush, width, leakFree);
+            DrawRectangle(x0, y0, x1, y1, lineBrush, width, miter);
         }
 
         public GLGeometry CreateGeometry(float[,] points, bool closed = true)
@@ -716,7 +716,7 @@ namespace FamiStudio
             }
         }
 
-        public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f, bool leakFree = false)
+        public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f, bool miter = false)
         {
             GL.PushMatrix();
 
@@ -741,9 +741,9 @@ namespace FamiStudio
             {
                 GL.LineWidth(lineWidth);
                 GL.EnableClientState(ArrayCap.VertexArray);
-                if (leakFree)
+                if (miter)
                 {
-                    var points = geo.GetLeakFreePoints(1.0f /*lineWidth*/);
+                    var points = geo.GetMiterPoints(1.0f /*lineWidth*/);
                     GL.VertexPointer(2, VertexPointerType.Float, 0, points);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, points.GetLength(0));
                 }
@@ -782,10 +782,10 @@ namespace FamiStudio
             GL.End();
         }
 
-        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool leakFree = true)
+        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool miter = true)
         {
             FillGeometry(geo, fillBrush);
-            DrawGeometry(geo, lineBrush, lineWidth, leakFree);
+            DrawGeometry(geo, lineBrush, lineWidth, miter);
         }
 
         public unsafe GLBitmap CreateBitmap(int width, int height, uint[] data)
