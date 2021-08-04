@@ -151,6 +151,12 @@ You can change which arpeggio is associated with a note the same way to can repl
 
 If an instrument uses an arpeggio envelope and also uses an arpeggio chord, the chord will take over and completely override the arpeggio envelope of the instrument. 
 
+## Replacing Instruments
+
+To replace the instrument used by a note, you can simply drag the instrument on the note. To replace multiple notes at a time, simply create a selection and drag the instrument on the selection.
+
+![](images/ReplaceInstrument.gif#center)
+
 ## Copying & pasting notes
 
 Much like the sequencer, selcted notes can be copy (or cut) by pressing CTRL+C (or CTRL+X). You can then move the selection somewhere else and paste the notes with CTRL+V.
@@ -213,6 +219,10 @@ For effects that have huge values (such as FDS Depth), you can hold Shift to fin
 ### Volume track
 
 The volume tracks dictates how loud the current channel should play. This volume is combined with volume envelope by multiplication (50% volume track x 50% envelope volume = 25% total volume). It is much more efficient to use volume envelopes wherever possible and only use volume tracks to control the global volume of the song.
+
+The volume track is allowed to have slides to smoothly raise or lower the volume. They are created exactly like regular slide notes, by holding "S", clicking and dragging up or down. These slides use fixed point arithmetic and have limited precision. They will go up/down by 1 volume unit every 16 frames at most. Very slow/long slides may end earlier than their visual representation.
+
+![](images/VolumeSlide.gif#center)
 
 ### Vibrato depth & speed
 

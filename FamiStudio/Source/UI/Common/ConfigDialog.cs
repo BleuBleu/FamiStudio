@@ -151,7 +151,8 @@ namespace FamiStudio
                     page.AddIntegerRange("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16); // 0
                     page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 1
                     page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 2
-                    page.AddCheckBox("Mute piano roll interactions during playback:", Settings.NoDragSoungWhenPlaying); // 3
+                    page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying); // 3
+                    page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null); // 4
                     break;
                 }
                 case ConfigSection.Mixer:
@@ -448,6 +449,7 @@ namespace FamiStudio
                 Settings.InstrumentStopTime = pageSound.GetPropertyValue<int>(1);
                 Settings.SquareSmoothVibrato = pageSound.GetPropertyValue<bool>(2);
                 Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(3);
+                Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(4);
 
                 // Mixer.
                 Array.Copy(expansionMixer, Settings.ExpansionMixerSettings, Settings.ExpansionMixerSettings.Length);

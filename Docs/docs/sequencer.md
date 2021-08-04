@@ -40,13 +40,15 @@ Clicking a pattern selects it and opens the piano roll for the current channel a
 
 ![](images/EditPattern.png#center)
 
+## Selecting patterns
+
 You can select multiple patterns by right-cliking and dragging in the header bar of the Sequencer or in an empty space in the sequencer. To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited.
 
-![](images/PatternSelection2.png#center)
+![](images/SelectPatternsColumn.gif#center)
 
-You can select multiple patterns in a rectangular grid, first select a pattern and shift-clicking to a second pattern.
+You can select multiple patterns in a rectangular grid by holding SHIFT and right clicking to create a selection.
 
-![](images/SquareSelection.png#center)
+![](images/SelectPatternsRect.gif#center)
 
 ## Moving & copying patterns
 

@@ -17,17 +17,25 @@ For details on Expansion audio instruments please visit the [Expansion Audio sec
 
 ## Editing instrument properties
 
-Double-clicking on an instrument will show its properties.
-
-* **Relative pitch** : By default, FamiStudio's pitch envelope are absolute. Meaning that the envelope values are the pitch you are going to hear, this is especially useful for vibrato where you can draw a simple sine wave. It is sometimes useful to have relative pitch envelope to create pitches that rapidly ascend or decend (useful for bassdrum sounds). This is how FamiTracker handles pitch envelopes.
+Double-clicking on an instrument will show its properties. Like most things in FamiStudio, you can rename the instrument and change its color.
 
 ![](images/EditInstrument.png#center)
 
+Most instruments also have parameters that can be edited in real-time by clicking the little arrow and expanding the button. 
+
+![](images/EditInstrument2.png#center)
+
+Parameter(s) that is available on most instruments:
+
+* **Pitch Envelope** : Defines how FamiStudio will interpret the values in the pitch envelope.
+    * **Absolute** : By default, FamiStudio's pitch envelope are absolute. Meaning that the envelope values are the pitch you are going to hear, this is especially useful for vibrato where you can draw a simple sine wave.
+    * **Relative** : It is sometimes useful to have relative pitch envelope to create pitches that rapidly ascend or decend (useful for bassdrum sounds). This is how FamiTracker handles pitch envelopes.
+     
 ## Adding instruments
 
 You can an instrument by pressing the "+" sign, and you can one by right-clicking on it. Deleting an instrument will delete all notes used by that instrument.
 
-## Replacing instruments
+## Replacing an instrument by another
 
 Clicking on an instrument name and dragging it over another instrument will allow you to replace all notes of the first instrument by the second. This is useful prior to deleting an instrument.
 
@@ -36,6 +44,8 @@ Clicking on an instrument name and dragging it over another instrument will allo
 You can import intruments in your project from any supported input format, as well as FamiTracker instrument files (FTI files, official FamiTracker 0.4.6 only) by clicking the little folder icon. 
 
 When importing instruments from another project or a FamiTracker file, you will be prompted with a list of instruments to import. Simply check the instrument to bring over.
+
+Also, when importing instruments from another FMS file that uses DPCM samples, you will also be able to import the "DPCM Instrument" from that project. This will import all the samples and their assignments to keys of the pianos.
 
 ![](images/ImportInstruments.png#center)
 

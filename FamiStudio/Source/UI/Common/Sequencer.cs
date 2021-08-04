@@ -1618,6 +1618,8 @@ namespace FamiStudio
                 UpdateCursor();
                 ConditionalInvalidate();
             }
+
+            UpdateToolTip(null);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
@@ -1627,6 +1629,8 @@ namespace FamiStudio
                 UpdateCursor();
                 ConditionalInvalidate();
             }
+
+            UpdateToolTip(null);
         }
 
         private void UpdateSeekDrag(int mouseX, bool final)
@@ -1756,6 +1760,12 @@ namespace FamiStudio
 
         private void UpdateToolTip(MouseEventArgs e)
         {
+            if (e == null)
+            {
+                var pt = PointToClient(Cursor.Position);
+                e = new MouseEventArgs(MouseButtons.None, 1, pt.X, pt.Y, 0);
+            }
+
             string tooltip = "";
 
             bool inPatternZone = GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx, out var inPatternHeader);
@@ -1773,7 +1783,12 @@ namespace FamiStudio
                 tooltipList.Add("{MouseWheel} Pan");
 
                 if (pattern == null || !inPatternHeader)
-                    tooltipList.Add("{MouseLeft} Select Column");
+                {
+                    if (ModifierKeys.HasFlag(Keys.Shift))
+                        tooltipList.Add("{MouseLeft} Select Rectangle");
+                    else
+                        tooltipList.Add("{MouseLeft} Select Column");
+                }
 
                 if (pattern != null)
                 {

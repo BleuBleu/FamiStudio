@@ -170,6 +170,7 @@ namespace FamiStudio
         public static int InstrumentStopTime = 2;
         public static bool SquareSmoothVibrato = true;
         public static bool NoDragSoungWhenPlaying = false;
+        public static int MetronomeVolume = 50;
 
         // Mixer section
         public struct ExpansionMix
@@ -244,6 +245,7 @@ namespace FamiStudio
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
+            MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
 
             // MIDI
             MidiDevice = ini.GetString("MIDI", "Device", "");
@@ -371,6 +373,7 @@ namespace FamiStudio
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
+            ini.SetInt("Audio", "MetronomeVolume", MetronomeVolume);
 
             // Mixer
             for (int i = 0; i < ExpansionType.Count; i++)

@@ -17,11 +17,15 @@ namespace FamiStudio
     public class AudioPlayer : BasePlayer
     {
         protected const int DefaultSampleRate = 44100;
+        protected const float MetronomeFirstBeatPitch  = 1.375f;
+        protected const float MetronomeFirstBeatVolume = 1.5f;
 
         public struct SamplePair
         {
             public short[] samples;
-            public int metronomePosition;
+            public int   metronomePosition;
+            public float metronomePitch;
+            public float metronomeVolume;
         };
 
         protected AudioStream audioStream;
@@ -31,6 +35,7 @@ namespace FamiStudio
         protected ConcurrentQueue<SamplePair> sampleQueue = new ConcurrentQueue<SamplePair>();
         protected short[] metronomeSound;
         protected int metronomePlayPosition = -1;
+        protected int metronomeBeat = -1;
         protected int numBufferedFrames = 3;
         protected IOscilloscope oscilloscope;
 
@@ -42,7 +47,7 @@ namespace FamiStudio
             audioStream = new AudioStream(sampleRate, bufferSize, numBufferedFrames, AudioBufferFillCallback);
         }
 
-        protected short[] MixSamples(short[] emulation, short[] metronome, int metronomeIndex)
+        protected short[] MixSamples(short[] emulation, short[] metronome, int metronomeIndex, float pitch, float volume)
         {
             if (metronome != null)
             {
@@ -50,10 +55,10 @@ namespace FamiStudio
                 var metronomeIdx = metronomeIndex;
 
                 var i = 0;
-                var j = metronomeIndex;
+                var j = (float)metronomeIndex;
 
-                for (; i < newSamples.Length && j < metronome.Length; i++, j++)
-                    newSamples[i] = (short)Utils.Clamp(emulation[i] + metronome[j], short.MinValue, short.MaxValue);
+                for (; i < newSamples.Length && (int)j < metronome.Length; i++, j += pitch)
+                    newSamples[i] = (short)Utils.Clamp((int)(emulation[i] + metronome[(int)j] * volume), short.MinValue, short.MaxValue);
 
                 if (i != newSamples.Length)
                     Array.Copy(emulation, i, newSamples, i, newSamples.Length - i);
@@ -79,7 +84,7 @@ namespace FamiStudio
 
                 // Mix in metronome if needed.
                 if (pair.metronomePosition >= 0)
-                    pair.samples = MixSamples(pair.samples, metronomeSound, pair.metronomePosition);
+                    pair.samples = MixSamples(pair.samples, metronomeSound, pair.metronomePosition, pair.metronomePitch, pair.metronomeVolume);
 
                 return pair.samples;
             }
@@ -120,17 +125,19 @@ namespace FamiStudio
             // Update metronome if there is a beat.
             var metronome = metronomeSound;
 
-            if (beat && metronome != null)
+            if (beat && beatIndex >= 0 && metronome != null)
                 metronomePlayPosition = 0;
 
             SamplePair pair = new SamplePair();
 
             pair.samples = base.EndFrame();
             pair.metronomePosition = metronomePlayPosition;
+            pair.metronomePitch  = beatIndex == 0 ? MetronomeFirstBeatPitch  : 1.0f;
+            pair.metronomeVolume = beatIndex == 0 ? MetronomeFirstBeatVolume : 1.0f;
 
             if (metronomePlayPosition >= 0)
             {
-                metronomePlayPosition += pair.samples.Length;
+                metronomePlayPosition += (int)(pair.samples.Length * pair.metronomePitch);
                 if (metronome == null || metronomePlayPosition >= metronome.Length)
                     metronomePlayPosition = -1;
             }

@@ -687,9 +687,9 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, string tooltip = null)
+        private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string tooltip = null)
         {
-            var slider = new Slider(value, min, max, increment, numDecimals);
+            var slider = new Slider(value, min, max, increment, numDecimals, showLabel);
             slider.FormatValueEvent += Slider_FormatValueEvent;
             slider.ValueChangedEvent += Slider_ValueChangedEvent;
             slider.Font = font;
@@ -719,7 +719,7 @@ namespace FamiStudio
                 {
                     type = PropertyType.Slider,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateSlider(value, min, max, increment, numDecimals, tooltip),
+                    control = CreateSlider(value, min, max, increment, numDecimals, format != null, tooltip),
                     sliderFormat = format
                 });
             return properties.Count - 1;

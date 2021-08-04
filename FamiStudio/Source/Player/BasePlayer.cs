@@ -37,6 +37,7 @@ namespace FamiStudio
         protected bool palPlayback = false;
         protected bool seeking = false;
         protected bool beat = false;
+        protected int  beatIndex = -1;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
@@ -292,6 +293,8 @@ namespace FamiStudio
 
         protected bool PlaySongFrameInternal(bool seeking)
         {
+            ClearBeat();
+
             //Debug.WriteLine($"PlaySongFrameInternal {playPosition}!");
             //Debug.WriteLine($"PlaySongFrameInternal {song.GetPatternStartNote(playPattern) + playNote}!");
 
@@ -430,16 +433,24 @@ namespace FamiStudio
             return true;
         }
 
+        private void ClearBeat()
+        {
+            beat = false;
+        }
+
         private void UpdateBeat(bool first)
         {
             if (!seeking)
             {
                 var beatLength = song.GetPatternBeatLength(playLocation.PatternIndex);
+
                 beat = playLocation.NoteIndex % beatLength == 0;
+                beatIndex = playLocation.NoteIndex / beatLength;
             }
             else
             {
                 beat = false;
+                beatIndex = -1;
             }
         }
 

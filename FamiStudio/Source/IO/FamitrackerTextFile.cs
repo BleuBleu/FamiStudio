@@ -402,7 +402,8 @@ namespace FamiStudio
                         for (int j = 1; j <= song.Channels.Length; j++)
                         {
                             var noteData = channels[j].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                            var pattern = song.Channels[j - 1].GetPattern(patternName);
+                            var channel = song.Channels[j - 1];
+                            var pattern = channel.GetPattern(patternName);
 
                             if (pattern == null)
                                 continue;
@@ -440,7 +441,10 @@ namespace FamiStudio
                                     var note = pattern.GetOrCreateNoteAt(n);
                                     instruments.TryGetValue(Convert.ToInt32(noteData[1], 16), out var foundInstrument);
                                     note.Value = (byte)famitoneNote;
-                                    note.Instrument = j == 5 ? null : foundInstrument;
+                                    if (j == 5)
+                                        note.Instrument = null;
+                                    else if (channel.SupportsInstrument(foundInstrument))
+                                        note.Instrument = foundInstrument;
                                 }
                                 else
                                 {
@@ -449,7 +453,7 @@ namespace FamiStudio
                             }
 
                             // Volume
-                            if (noteData[2] != ".")
+                            if (noteData[2] != "." && channel.SupportsEffect(Note.EffectVolume))
                             {
                                 pattern.GetOrCreateNoteAt(n).Volume = Convert.ToByte(noteData[2], 16);
                             }

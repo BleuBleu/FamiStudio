@@ -19,7 +19,7 @@ namespace FamiStudio
 {
     class VideoFileOscilloscope : VideoFileBase
     {
-        private void BuildChannelColors(List<VideoChannelState> channels, VideoFrameMetadata[] meta, int colorMode)
+        private void BuildChannelColors(Song song, List<VideoChannelState> channels, VideoFrameMetadata[] meta, int colorMode)
         {
             Color[,] colors = new Color[meta.Length, meta[0].channelNotes.Length];
 
@@ -36,24 +36,38 @@ namespace FamiStudio
 
                     if (note != null && note.IsMusical)
                     {
-                        var color = Color.Transparent;
+                        var color = ThemeBase.LightGreyFillColor1;
 
-                        if (channels[j].channel.Type == ChannelType.Dpcm)
+                        if (colorMode == OscilloscopeColorType.Channel)
                         {
-                            if (colorMode == OscilloscopeColorType.InstrumentsAndSamples)
+                            var channel = song.Channels[channels[j].songChannelIndex];
+                            for (int p = 0; p < channel.PatternInstances.Length; p++)
                             {
-                                var mapping = channels[j].channel.Song.Project.GetDPCMMapping(note.Value);
-                                if (mapping != null)
-                                    color = mapping.Sample.Color;
+                                if (channel.PatternInstances[p] != null)
+                                {
+                                    color = channel.PatternInstances[p].Color;
+                                    break;
+                                }
+                            }
+                        }
+                        else if (colorMode != OscilloscopeColorType.None)
+                        {
+                            if (channels[j].channel.Type == ChannelType.Dpcm)
+                            {
+                                if (colorMode == OscilloscopeColorType.InstrumentsAndSamples)
+                                {
+                                    var mapping = channels[j].channel.Song.Project.GetDPCMMapping(note.Value);
+                                    if (mapping != null)
+                                        color = mapping.Sample.Color;
+                                }
                             }
                             else
                             {
-                                color = ThemeBase.LightGreyFillColor1;
+                                if (note.Instrument != null && (colorMode == OscilloscopeColorType.Instruments || colorMode == OscilloscopeColorType.InstrumentsAndSamples))
+                                {
+                                    color = note.Instrument.Color;
+                                }
                             }
-                        }
-                        else
-                        {
-                            color = note.Instrument != null && colorMode != OscilloscopeColorType.None ? note.Instrument.Color : ThemeBase.LightGreyFillColor1;
                         }
 
                         colors[i, j] = color;
@@ -201,7 +215,7 @@ namespace FamiStudio
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
             var oscWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
 
-            BuildChannelColors(channelStates, metadata, colorMode);
+            BuildChannelColors(song, channelStates, metadata, colorMode);
 
             var videoImage = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscWindowSize, 2];
@@ -341,12 +355,14 @@ namespace FamiStudio
         public const int None = 0;
         public const int Instruments = 1;
         public const int InstrumentsAndSamples = 2;
+        public const int Channel = 3;
 
         public static readonly string[] Names =
         {
             "None",
             "Instruments",
-            "Instruments and Samples"
+            "Instruments and Samples",
+            "Channel (First pattern color)"
         };
 
         public static int GetIndexForName(string str)
