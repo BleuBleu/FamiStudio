@@ -158,7 +158,8 @@ namespace FamiStudio
 
             var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             lastButtonPress = e.Button;
-            ctrl.MouseDown(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            if (ctrl != null)
+                ctrl.MouseDown(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -196,7 +197,8 @@ namespace FamiStudio
 
             var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             lastButtonPress = e.Button;
-            ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            if (ctrl != null)
+                ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -226,7 +228,8 @@ namespace FamiStudio
         private void FamiStudioForm_MouseWheel(object sender, MouseEventArgs e)
         {
             var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
-            ctrl.MouseWheel(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            if (ctrl != null)
+                ctrl.MouseWheel(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
         }
 
         protected override void WndProc(ref System.Windows.Forms.Message m)
@@ -237,7 +240,8 @@ namespace FamiStudio
                 var e = PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m);
                 var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
 
-                ctrl.MouseHorizontalWheel(e);
+                if (ctrl != null)
+                    ctrl.MouseHorizontalWheel(e);
             }
         }
 
