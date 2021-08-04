@@ -3750,13 +3750,6 @@ namespace FamiStudio
             }
         }
 
-#if FAMISTUDIO_WINDOWS
-        public void UnfocusedKeyDown(KeyEventArgs e)
-        {
-            OnKeyDown(e);
-        }
-#endif
-
         protected override void OnKeyDown(KeyEventArgs e)
         {
             UpdateCursor();
@@ -6007,8 +6000,10 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        public override void DoMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
+            base.OnMouseWheel(e);
+
             if (e.X > whiteKeySizeX)
             {
                 if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
@@ -6037,36 +6032,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
-        {
-            if (!ParentForm.ShouldIgnoreMouseWheel(this, e))
-            {
-                DoMouseWheel(e);
-                base.OnMouseWheel(e);
-            }
-        }
-
-        public bool ShouldIgnoreMouseWheel(MouseEventArgs e)
-        {
-#if FAMISTUDIO_WINDOWS
-            return false;
-#else
-            return false;
-#endif
-        }
-
-#if FAMISTUDIO_WINDOWS
-        protected override void WndProc(ref System.Windows.Forms.Message m)
-        {
-            base.WndProc(ref m);
-            if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
-                OnMouseHorizontalWheel(PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m));
-        }
-
-        protected void OnMouseHorizontalWheel(MouseEventArgs e)
-#else
         protected override void OnMouseHorizontalWheel(MouseEventArgs e)
-#endif
         {
             scrollX += e.Delta;
             ClampScroll();

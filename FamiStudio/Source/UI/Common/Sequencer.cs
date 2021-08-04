@@ -409,6 +409,10 @@ namespace FamiStudio
         {
             g.Clear(ThemeBase.DarkGreyLineColor2);
 
+            // Happens when piano roll is maximized.
+            if (Height <= 1)
+                return;
+
             var seekX = noteSizeX * GetSeekFrameToDraw() - scrollX;
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
             var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
@@ -573,7 +577,7 @@ namespace FamiStudio
 
 #if FAMISTUDIO_WINDOWS
             var t1 = PerformanceCounter.TimeSeconds();
-            Trace.WriteLine($"{(t1 - t0) * 1000} ms");
+            Trace.WriteLine($"Sequencer : {(t1 - t0) * 1000} ms");
 #endif
 
             // Piano roll view rect
@@ -1573,18 +1577,6 @@ namespace FamiStudio
             }
         }
 
-#if FAMISTUDIO_WINDOWS
-        public void UnfocusedKeyDown(KeyEventArgs e)
-        {
-            OnKeyDown(e);
-        }
-
-        public void UnfocusedKeyUp(KeyEventArgs e)
-        {
-            OnKeyUp(e);
-        }
-#endif
-
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Escape)
@@ -2034,6 +2026,12 @@ namespace FamiStudio
 
         public override void DoMouseWheel(MouseEventArgs e)
         {
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+
             if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
             {
                 if (ModifierKeys.HasFlag(Keys.Shift))
@@ -2048,33 +2046,15 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
-        {
-            if (!ParentForm.ShouldIgnoreMouseWheel(this, e))
-            {
-                DoMouseWheel(e);
-                base.OnMouseWheel(e);
-            }
-        }
-
-#if FAMISTUDIO_WINDOWS
+#if FALSE // MATTT FAMISTUDIO_WINDOWS
         protected override void OnMouseCaptureChanged(EventArgs e)
         {
             AbortCaptureOperation();
             base.OnMouseCaptureChanged(e);
         }
-
-        protected override void WndProc(ref System.Windows.Forms.Message m)
-        {
-            base.WndProc(ref m);
-            if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
-                OnMouseHorizontalWheel(PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m));
-        }
-
-        protected void OnMouseHorizontalWheel(MouseEventArgs e)
-#else
-        protected override void OnMouseHorizontalWheel(MouseEventArgs e)
 #endif
+
+        protected override void OnMouseHorizontalWheel(MouseEventArgs e)
         {
             scrollX += e.Delta;
             ClampScroll();

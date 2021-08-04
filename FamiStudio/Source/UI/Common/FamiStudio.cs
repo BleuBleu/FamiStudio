@@ -248,7 +248,7 @@ namespace FamiStudio
 
         private void PianoRoll_ScrollChanged()
         {
-            if (Settings.ShowPianoRollViewRange)
+            if (Settings.ShowPianoRollViewRange && !PianoRoll.IsMaximized)
             {
 #if FAMISTUDIO_WINDOWS
                 pianoRollScrollChanged = true;
@@ -1354,17 +1354,6 @@ namespace FamiStudio
                 }
             }
 #endif
-#if FAMISTUDIO_WINDOWS
-            else if (e.KeyData == Keys.Up    ||
-                     e.KeyData == Keys.Down  ||
-                     e.KeyData == Keys.Left  ||
-                     e.KeyData == Keys.Right ||
-                     e.KeyData == Keys.Escape)
-            {
-                PianoRoll.UnfocusedKeyDown(e);
-                Sequencer.UnfocusedKeyDown(e);
-            }
-#endif
         }
 
         public bool CanCopy  => PianoRoll.CanCopy  || Sequencer.CanCopy;
@@ -1413,7 +1402,7 @@ namespace FamiStudio
                     return;
             }
 
-#if FAMISTUDIO_WINDOWS
+#if FALSE // MATTT FAMISTUDIO_WINDOWS
             if (!Sequencer.Focused) Sequencer.UnfocusedKeyUp(e);
 #endif
         }

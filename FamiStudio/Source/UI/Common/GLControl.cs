@@ -4,7 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FAMISTUDIO_WINDOWS
+using CursorType = System.Windows.Forms.Cursor;
+#else
 using CursorType = Gdk.Cursor;
+#endif
 
 namespace FamiStudio
 {
@@ -51,7 +55,7 @@ namespace FamiStudio
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
         public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
         public void Validate() { invalid = false; }
-        public void Invalidate() { invalid = true; }
+        public void Invalidate() { invalid = true; parentForm.Invalidate(); }
         public int Left => left;
         public int Top => top;
         public int Width => width;

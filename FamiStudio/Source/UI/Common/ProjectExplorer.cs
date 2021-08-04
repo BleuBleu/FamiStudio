@@ -1372,7 +1372,7 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-#if FAMISTUDIO_WINDOWS
+#if FALSE // // MATTT FAMISTUDIO_WINDOWS
         protected override void OnMouseCaptureChanged(EventArgs e)
         {
             AbortCaptureOperation();
@@ -1443,18 +1443,9 @@ namespace FamiStudio
             Capture = false;
         }
 
-        public override void DoMouseWheel(MouseEventArgs e)
-        {
-            DoScroll(e.Delta > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
-        }
-
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (!ParentForm.ShouldIgnoreMouseWheel(this, e))
-            {
-                DoMouseWheel(e);
-                base.OnMouseWheel(e);
-            }
+            DoScroll(e.Delta > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
         }
 
         protected override void OnResize(EventArgs e)

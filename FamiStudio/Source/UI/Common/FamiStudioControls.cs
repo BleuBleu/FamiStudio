@@ -50,7 +50,7 @@ namespace FamiStudio
 
             int toolBarHeight = (int)(40 * GLTheme.MainWindowScaling);
             int projectExplorerWidth = (int)(280 * GLTheme.MainWindowScaling);
-            int sequencerHeight = (int)(sequencer.ComputeDesiredSizeY() * GLTheme.MainWindowScaling);
+            int sequencerHeight = pianoRoll.IsMaximized ? 1 : (int)(sequencer.ComputeDesiredSizeY() * GLTheme.MainWindowScaling);
 
             toolbar.Move(0, 0, width, toolBarHeight);
             projectExplorer.Move(width - projectExplorerWidth, toolBarHeight, projectExplorerWidth, height - toolBarHeight);

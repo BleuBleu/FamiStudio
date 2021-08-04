@@ -116,6 +116,8 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphics.cs" />
     <Compile Include="Source\UI\Common\GLTheme.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
@@ -127,6 +129,9 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
+    <Compile Include="Source\UI\Windows\GLForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Source\UI\Windows\LabelTrackBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -185,35 +190,21 @@
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\Player\XAudio2Stream.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
-    <Compile Include="Source\UI\Windows\GLControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
     <Compile Include="Source\UI\Windows\FamiStudioForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Source\UI\Windows\FamiStudioForm.Designer.cs">
-      <DependentUpon>FamiStudioForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Source\UI\Common\ExportDialog.cs" />
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
-    <Compile Include="Source\UI\Common\ProjectExplorer.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Windows\NoInterpolationPictureBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Source\UI\Common\PianoRoll.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\Utils\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Source\UI\Common\Sequencer.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\ThemeBase.cs" />
-    <Compile Include="Source\UI\Common\Toolbar.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Source\UI\Common\Toolbar.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -223,9 +214,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Source\UI\Windows\MultiPropertyDialog.resx">
       <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\FamiStudioForm.resx">
-      <DependentUpon>FamiStudioForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Source\UI\Windows\PropertyPage.resx">
       <DependentUpon>PropertyPage.cs</DependentUpon>
@@ -683,7 +671,7 @@
     <EmbeddedResource Include="Resources\Add.png" />
     <EmbeddedResource Include="Resources\CollapsedSmall.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall.png" />
-    <None Include="Resources\FamiStudio.ico" />
+    <EmbeddedResource Include="Resources\FamiStudio.ico" />
     <Content Include="NesSndEmu.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

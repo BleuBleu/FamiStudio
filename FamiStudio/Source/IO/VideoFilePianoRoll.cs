@@ -370,19 +370,9 @@ namespace FamiStudio
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-            var dummyControl = new DummyGLControl();
-            dummyControl.Move(0, 0, videoResX, videoResY);
-#endif
-
             // Setup piano roll and images.
             var pianoRoll = new PianoRoll();
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
             pianoRoll.Move(0, 0, channelResX, channelResY);
-#else
-            pianoRoll.Width  = channelResX;
-            pianoRoll.Height = channelResY;
-#endif
 
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 

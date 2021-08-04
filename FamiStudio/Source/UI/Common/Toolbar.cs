@@ -847,8 +847,10 @@ namespace FamiStudio
             SetToolTip("");
         }
 
-        public override void DoMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
+            base.OnMouseWheel(e);
+
             foreach (var btn in buttons)
             {
                 if (btn != null && btn.Visible && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled() != ButtonStatus.Disabled))
@@ -856,15 +858,6 @@ namespace FamiStudio
                     btn.MouseWheel?.Invoke(e.Delta);
                     break;
                 }
-            }
-        }
-
-        protected override void OnMouseWheel(MouseEventArgs e)
-        {
-            if (!ParentForm.ShouldIgnoreMouseWheel(this, e))
-            {
-                DoMouseWheel(e);
-                base.OnMouseWheel(e);
             }
         }
 
