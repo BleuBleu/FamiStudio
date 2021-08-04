@@ -106,6 +106,8 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphics.cs" />
     <Compile Include="Source\UI\Common\GLTheme.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
@@ -149,7 +151,6 @@
     <Compile Include="Source\Project\Project.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
-    <Compile Include="Source\UI\MacLinux\GLControl.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\PerformanceCounter.cs" />
@@ -280,7 +281,6 @@
     <EmbeddedResource Include="Resources\QuickSand56_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
-    <Compile Include="Source\UI\MacLinux\FamiStudioControls.cs" />
     <Compile Include="Source\UI\MacLinux\GtkUtils.cs" />
     <Content Include="librtmidi.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
