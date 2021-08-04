@@ -407,11 +407,14 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            g.Clear(ThemeBase.DarkGreyLineColor2);
-
             // Happens when piano roll is maximized.
             if (Height <= 1)
+            {
+                g.Clear(ThemeBase.BlackColor);
                 return;
+            }
+
+            g.Clear(ThemeBase.DarkGreyLineColor2);
 
             var seekX = noteSizeX * GetSeekFrameToDraw() - scrollX;
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
