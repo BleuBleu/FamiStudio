@@ -645,7 +645,7 @@ namespace FamiStudio
             var timeCodeSizeY = Height - timecodePosY * 2;
             var textColor = App.IsRecording ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
 
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2, 1.0f, true);
+            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2, 1.0f);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {

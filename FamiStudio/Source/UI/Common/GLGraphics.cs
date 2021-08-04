@@ -743,7 +743,7 @@ namespace FamiStudio
                 GL.EnableClientState(ArrayCap.VertexArray);
                 if (miter)
                 {
-                    var points = geo.GetMiterPoints(1.0f /*lineWidth*/);
+                    var points = geo.GetMiterPoints(lineWidth);
                     GL.VertexPointer(2, VertexPointerType.Float, 0, points);
                     GL.DrawArrays(PrimitiveType.LineStrip, 0, points.GetLength(0));
                 }
