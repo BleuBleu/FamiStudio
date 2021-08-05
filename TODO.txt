@@ -3,6 +3,16 @@
 - Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
 - ffmpeg in flatpak
 
+- Github publish
+- Youtube publish
+- Website
+- Flathub
+- Itch.io
+
+- Twitter
+- Discord(s)
+- Reddit
+
 Videos:
 =======
 / Sampling soundfont instruments
