@@ -1,15 +1,19 @@
 3.2.0
 =====
-- Osc gets stuck when pausing? (Only in 3.2.0 branch)
-- Process more events during video export, "initializing channels" is slow
+x Osc gets stuck when pausing? (Only in 3.2.0 branch), instrument player.
+x Process more events during video export, "initializing channels" is slow
 
 DMC counter effect:
 - Sound engine
 - Check if we apply before, after, etc. Compare with FamiTracker.
 
 Diable attack on DPCM
+- Sound engine
 
-Overclocking:
+Improve disable attack?
+- If same envelopes, allow? This would allow VRC7 to not have attack.
+
+Overclocking (maybe not...):
 - Basic support in project + tempo
 - NesSndEmu partial frame update
 - How will it affect video?
