@@ -4,6 +4,7 @@
 - MacOS slow start???
 - GROWING BUTTON MARK!
 - File association in portable.
+- Crash when quitting macos.
 
 Videos:
 =======
