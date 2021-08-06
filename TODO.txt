@@ -1,17 +1,9 @@
 3.1.0
 =====
-- Linux radio color (messes up color on linux mint... ugh, buttons are white on Mint).
-- ffmpeg in flatpak
-
-- Github publish
-- Youtube publish
-- Website
-- Flathub
-- Itch.io
-
-- Twitter
-- Discord(s)
-- Reddit
+- Flatpak build failed
+- MacOS slow start???
+- GROWING BUTTON MARK!
+- File association in portable.
 
 Videos:
 =======
