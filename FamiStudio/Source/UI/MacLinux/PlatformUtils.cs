@@ -161,9 +161,21 @@ namespace FamiStudio
             string[] filenames = null;
             if (filechooser.Run() == (int)ResponseType.Accept)
             {
-                filenames = filechooser.Filenames;
-                if (filenames.Length > 0)
-                    defaultPath = Path.GetDirectoryName(filenames[0]);
+                if (multiselect)
+                {
+                    filenames = filechooser.Filenames;
+                    if (filenames.Length > 0)
+                        defaultPath = Path.GetDirectoryName(filenames[0]);
+                }
+                else
+                {
+                    var filename = filechooser.Filename;
+                    if (!string.IsNullOrEmpty(filename))
+                    {
+                        defaultPath = Path.GetDirectoryName(filename);
+                        filenames = new[] { filename };
+                    }
+                }
             }
 
             filechooser.Destroy();
