@@ -156,3 +156,7 @@ Pitch | Semitones (approximate)
 9 | -19
 8 | -22
 7 | -24
+
+Here is a spreadsheet of which is the best sample (A#, B, C, C# or D) and the best pitch (0-15) to use to cover the entire keyboard while keeping things in tune. Note that this was generated for NTSC only. Please get in touch with me for a PAL version.
+
+![](images/DPCMSpreadsheet.png#center)
