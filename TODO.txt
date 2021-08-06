@@ -13,6 +13,11 @@ Diable attack on DPCM
 Improve disable attack?
 - If same envelopes, allow? This would allow VRC7 to not have attack.
 
+Android prototype:
+- See if can draw with OpenGL
+- See how to call C++ code
+- If can do both, then all good.
+
 Overclocking (maybe not...):
 - Basic support in project + tempo
 - NesSndEmu partial frame update
