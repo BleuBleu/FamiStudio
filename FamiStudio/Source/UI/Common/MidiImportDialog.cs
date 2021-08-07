@@ -8,6 +8,8 @@ namespace FamiStudio
 {
     class MidiImportDialog
     {
+        // DROIDTODO
+        /*
         private PropertyDialog dialog;
         private string[] trackNames;
         private string filename;
@@ -262,5 +264,6 @@ namespace FamiStudio
 
             return null;
         }
+        */
     }
 }

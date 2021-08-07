@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+
+#if FAMISTUDIO_ANDROID
+using OpenTK.Graphics.ES30;
+#else
 using OpenTK.Graphics.OpenGL;
+#endif
 
 namespace FamiStudio
 {

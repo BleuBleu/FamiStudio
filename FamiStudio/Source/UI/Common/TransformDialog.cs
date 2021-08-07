@@ -10,6 +10,9 @@ namespace FamiStudio
 {
     class TransformDialog
     {
+        // DROIDTODO
+
+        /*
         enum TransformOperation
         {
             SongCleanup,
@@ -221,5 +224,6 @@ namespace FamiStudio
 
             return dialogResult;
         }
+        */
     }
 }

@@ -6,11 +6,21 @@ namespace FamiStudio
 {
     class LogDialog : ILogOutput
     {
+        public bool AbortOperation => false;
+        public void LogMessage(string msg)
+        {
+        }
+        public void ReportProgress(float progress)
+        {
+        }
+
+        // DROIDTODO
+        /*
         private PropertyDialog dialog;
         private FamiStudioForm parentForm;
         private List<string>   messages = new List<string>();
 
-        public unsafe LogDialog(FamiStudioForm parentForm)
+        public LogDialog(FamiStudioForm parentForm)
         {
             this.parentForm = parentForm;
 
@@ -43,5 +53,6 @@ namespace FamiStudio
         public bool HasMessages => messages.Count > 0;
         public bool AbortOperation => dialog.DialogResult != DialogResult.None;
         public void ReportProgress(float progress) { }
+        */
     }
 }

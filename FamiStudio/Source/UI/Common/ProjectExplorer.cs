@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Drawing;
 using System.Media;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using FamiStudio.Properties;
 using Color = System.Drawing.Color;
 using System.Diagnostics;
 

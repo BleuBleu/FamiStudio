@@ -1,5 +1,4 @@
-﻿using FamiStudio.Properties;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,6 +10,8 @@ namespace FamiStudio
 {
     public class ExportDialog
     {
+        // DROIDTODO
+        /*
         enum ExportFormat
         {
             WavMp3,
@@ -760,5 +761,6 @@ namespace FamiStudio
                 lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;
             }
         }
+        */
     }
 }

@@ -8,6 +8,8 @@ namespace FamiStudio
 {
     class PasteSpecialDialog
     {
+        // DROIDTODO
+        /*
         private PropertyDialog dialog;
         private bool inPropertyChanged = false;
         private Dictionary<int, int> propToEffect = new Dictionary<int, int>();
@@ -96,5 +98,6 @@ namespace FamiStudio
         }
 
         public int PasteRepeat => dialog.Properties.GetPropertyValue<int>(dialog.Properties.PropertyCount - 1);
+        */
     }
 }

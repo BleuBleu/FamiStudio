@@ -4,7 +4,12 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using OpenTK;
+
+#if FAMISTUDIO_ANDROID
+using OpenTK.Graphics.ES30;
+#else
 using OpenTK.Graphics.OpenGL;
+#endif
 
 namespace FamiStudio
 {
@@ -844,6 +849,11 @@ namespace FamiStudio
 
             return id;
         }
+#elif FAMISTUDIO_ANDROID
+        public int CreateGLTexture(Xamarin.Forms.ImageSource image)
+        {
+            return -1;
+        }
 #else
         public int CreateGLTexture(Gdk.Pixbuf pixbuf)
         {
@@ -984,6 +994,8 @@ namespace FamiStudio
 
 #if FAMISTUDIO_WINDOWS
         public GLFont CreateFont(System.Drawing.Bitmap bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+#elif FAMISTUDIO_ANDROID
+        public GLFont CreateFont(Xamarin.Forms.ImageSource bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
 #else
         public GLFont CreateFont(Gdk.Pixbuf bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
 #endif

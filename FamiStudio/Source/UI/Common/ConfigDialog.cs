@@ -8,6 +8,8 @@ namespace FamiStudio
 {
     class ConfigDialog
     {
+        // DROIDTODO
+        /*
         enum ConfigSection
         {
             General,
@@ -481,5 +483,6 @@ namespace FamiStudio
 
             return dialogResult;
         }
+        */
     }
 }

@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Media;
 using System.Windows.Forms;
-using FamiStudio.Properties;
 
 using RenderBitmap = FamiStudio.GLBitmap;
 using RenderBrush = FamiStudio.GLBrush;

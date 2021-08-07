@@ -14,18 +14,11 @@ Improve disable attack?
 - If same envelopes, allow? This would allow VRC7 to not have attack.
 
 Android prototype:
-- See if can draw with OpenGL
+- Make compile
+- Create OpenGL ES backend.
 - See how to call C++ code
-- If can do both, then all good.
-
-Overclocking (maybe not...):
-- Basic support in project + tempo
-- NesSndEmu partial frame update
-- How will it affect video?
-- ROM export
-- FDS export
-- NSF export
-- FamiTracker import (only certain frequencies)
+- Create audio stream.
+- Then see how it goes.
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.

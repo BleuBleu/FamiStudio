@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 #if FAMISTUDIO_WINDOWS
 using CursorType = System.Windows.Forms.Cursor;
+#elif FAMISTUDIO_ANDROID
+using CursorType = System.Object; // DROIDTODO
 #else
 using CursorType = Gdk.Cursor;
 #endif

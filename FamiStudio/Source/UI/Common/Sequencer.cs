@@ -3,7 +3,6 @@ using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using FamiStudio.Properties;
 using Color = System.Drawing.Color;
 using System.Media;
 using System.Diagnostics;

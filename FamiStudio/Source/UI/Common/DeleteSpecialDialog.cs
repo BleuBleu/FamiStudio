@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
+// using System.Windows.Forms; DROIDTODO
 
 using RenderTheme = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
+    // DROIDTODO
+    /*
     class DeleteSpecialDialog
     {
         private PropertyDialog dialog;
@@ -92,4 +94,5 @@ namespace FamiStudio
             }
         }
     }
+    */
 }

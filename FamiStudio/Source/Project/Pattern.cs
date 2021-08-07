@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace FamiStudio
 {
-    public unsafe class Pattern
+    public class Pattern
     {
         public const int MaxLength = 2048;
 
@@ -363,7 +363,7 @@ namespace FamiStudio
             id = newId;
         }
 
-        public unsafe void SerializeState(ProjectBuffer buffer)
+        public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);

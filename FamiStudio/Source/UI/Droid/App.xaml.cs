@@ -10,7 +10,7 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            MainPage = new MainPage();
+            MainPage = new FamiStudioForm();
         }
 
         protected override void OnStart()

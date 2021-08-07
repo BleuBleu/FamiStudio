@@ -12,8 +12,11 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
+
+#if !FAMISTUDIO_ANDROID
+using System.Web.Script.Serialization;
+#endif
 
 using RenderTheme = FamiStudio.GLTheme;
 
