@@ -238,6 +238,7 @@ namespace FamiStudio
 
         private bool ShowConvertTempoDialog()
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var messageDlg = new PropertyDialog(400, true, false);
             messageDlg.Properties.AddLabel(null, "You changed the BPM enough so that the number of frames in a note has changed.", true); // 0
             messageDlg.Properties.AddRadioButton(null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true); // 1
@@ -246,6 +247,9 @@ namespace FamiStudio
             messageDlg.ShowDialog(null);
 
             return messageDlg.Properties.GetPropertyValue<bool>(1);
+#else
+            return false;
+#endif
         }
 
         public void Apply(bool custom = false)

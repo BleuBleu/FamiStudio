@@ -70,6 +70,8 @@ namespace FamiStudio
 
 #if FAMISTUDIO_WINDOWS
                     var bmp = System.Drawing.Image.FromStream(typeof(GLTheme).Assembly.GetManifestResourceStream(imgfile)) as System.Drawing.Bitmap;
+#elif FAMISTUDIO_ANDROID
+                    var bmp = (Xamarin.Forms.ImageSource)null; // DROIDTODO
 #else
                     var bmp = Gdk.Pixbuf.LoadFromResource(imgfile);
 #endif

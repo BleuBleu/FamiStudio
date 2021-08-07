@@ -4,11 +4,9 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class NsfImportDialog
     {
-        // DROIDTODO
-
-        /*
         private PropertyDialog dialog;
         private string[] songNames;
         private string filename;
@@ -51,6 +49,6 @@ namespace FamiStudio
         public bool RemoveIntroSilence => dialog.Properties.GetPropertyValue<bool>(4);
         public bool ReverseDpcmBits => dialog.Properties.GetPropertyValue<bool>(5);
         public bool PreserveDpcmPadding => dialog.Properties.GetPropertyValue<bool>(6);
-        */
     }
+#endif
 }

@@ -20,6 +20,8 @@ namespace FamiStudio
         static extern bool FcConfigAppFontAddFile1(System.IntPtr config, string fontPath);
 #endif
 
+        public static string ApplicationVersion => Application.ProductVersion;
+
         public static void Initialize()
         {
             // When debugging or when in a app package, our paths are a bit different.

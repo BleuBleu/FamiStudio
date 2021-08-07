@@ -17,6 +17,7 @@ namespace FamiStudio
     public static class PlatformUtils
     {
         public static PrivateFontCollection PrivateFontCollection;
+        public static string ApplicationVersion => Application.ProductVersion;
 
         public static void Initialize()
         {

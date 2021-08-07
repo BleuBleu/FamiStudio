@@ -107,6 +107,9 @@ namespace FamiStudio
             { -1, -1 },
             { -1, -1 }
         };
+#elif FAMISTUDIO_ANDROID
+        // DROIDTODO!
+        public static readonly int[,] DefaultQwertyKeys = new int[37, 2];
 #else
         public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
         {

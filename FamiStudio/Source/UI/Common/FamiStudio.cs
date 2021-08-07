@@ -33,7 +33,9 @@ namespace FamiStudio
         private InstrumentPlayer instrumentPlayer;
         private Oscilloscope oscilloscope;
         private UndoRedoManager undoRedoManager;
+#if !FAMISTUDIO_ANDROID // DROIDTODO
         private ExportDialog exportDialog;
+#endif
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
         private bool palPlayback = false;
@@ -94,7 +96,12 @@ namespace FamiStudio
         public Sequencer Sequencer => mainForm.Sequencer;
         public PianoRoll PianoRoll => mainForm.PianoRoll;
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
+#if FAMISTUDIO_ANDROID
+        // DROIDTODO!
+        public Rectangle MainWindowBounds => new Rectangle((int)mainForm.Bounds.X, (int)mainForm.Bounds.Y, (int)mainForm.Bounds.Width, (int)mainForm.Bounds.Height);
+#else
         public Rectangle MainWindowBounds => mainForm.Bounds;
+#endif
 
         public static Project StaticProject { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
@@ -538,11 +545,13 @@ namespace FamiStudio
 
         private void FreeExportDialog()
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             if (exportDialog != null)
             {
                 exportDialog.Exporting -= ExportDialog_Exporting;
                 exportDialog = null;
             }
+#endif
         }
 
         private void InitProject()
@@ -592,6 +601,7 @@ namespace FamiStudio
                 return;
             }
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlgLog = new LogDialog(mainForm);
             using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
             {
@@ -612,6 +622,7 @@ namespace FamiStudio
                 mainForm.Refresh();
                 dlgLog.ShowDialogIfMessages();
             }
+#endif
         }
 
         public void OpenProject()
@@ -644,17 +655,21 @@ namespace FamiStudio
             }
             else if (allowComplexFormats && filename.ToLower().EndsWith("mid"))
             {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                 var dlg = new MidiImportDialog(filename);
                 project = dlg.ShowDialog(mainForm);
+#endif
             }
             else if (allowComplexFormats && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
             {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                 var dlg = new NsfImportDialog(filename);
 
                 if (dlg.ShowDialog(mainForm) == DialogResult.OK)
                 {
                     project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits, dlg.PreserveDpcmPadding);
                 }
+#endif
             }
 
             return project;
@@ -707,13 +722,16 @@ namespace FamiStudio
         {
             FreeExportDialog();
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             exportDialog = new ExportDialog(project);
             exportDialog.Exporting += ExportDialog_Exporting;
             exportDialog.ShowDialog(mainForm);
+#endif
         }
 
         public void RepeatLastExport()
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             if (exportDialog == null || !exportDialog.HasAnyPreviousExport)
             {
                 DisplayWarning("No last export to repeat");
@@ -727,6 +745,7 @@ namespace FamiStudio
             {
                 exportDialog.Export(mainForm, true);
             }
+#endif
         }
 
         private void ExportDialog_Exporting()
@@ -744,6 +763,7 @@ namespace FamiStudio
 
         public void OpenConfigDialog()
         {
+#if !FAMISTUDIO_ANDROID
             var dlg = new ConfigDialog();
 
             if (dlg.ShowDialog(mainForm) == DialogResult.OK)
@@ -753,6 +773,7 @@ namespace FamiStudio
                 InitializeMidi();
                 InvalidateEverything(true);
             }
+#endif
         }
 
         public bool TryClosing()
@@ -783,6 +804,7 @@ namespace FamiStudio
 
         private void CheckForNewRelease()
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             try
             {
                 using (var client = new HttpClient())
@@ -800,7 +822,7 @@ namespace FamiStudio
                         newReleaseString = release["tag_name"].ToString();
                         newReleaseUrl = release["html_url"].ToString();
 
-                        var versionComparison = string.Compare(newReleaseString, Application.ProductVersion, StringComparison.OrdinalIgnoreCase);
+                        var versionComparison = string.Compare(newReleaseString, PlatformUtils.ApplicationVersion, StringComparison.OrdinalIgnoreCase);
                         var newerVersionAvailable = versionComparison > 0;
 
 #if DEVELOPMENT_VERSION
@@ -839,6 +861,7 @@ namespace FamiStudio
             catch
             {
             }
+#endif
         }
 
         private void InitializeAutoSave()
@@ -905,6 +928,7 @@ namespace FamiStudio
 
         public void OpenTransformDialog()
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new TransformDialog(this);
             dlg.CleaningUp += TransformDialog_CleaningUp;
 
@@ -915,6 +939,7 @@ namespace FamiStudio
                 ProjectExplorer.RefreshButtons();
                 InvalidateEverything(true);
             }
+#endif
         }
 
         private void TransformDialog_CleaningUp()
@@ -939,7 +964,7 @@ namespace FamiStudio
             if (!string.IsNullOrEmpty(project.Filename))
                 projectFile = System.IO.Path.GetFileName(project.Filename);
 
-            var version = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
+            var version = PlatformUtils.ApplicationVersion.Substring(0, PlatformUtils.ApplicationVersion.LastIndexOf('.'));
 
             string title = $"FamiStudio {version} - {projectFile}";
 
@@ -1585,6 +1610,7 @@ namespace FamiStudio
 
         private void ConditionalShowTutorial()
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
 #if FAMISTUDIO_WINDOWS
             // Edge case where we open a NSF from the command line and the open dialog is active.
             if (!mainForm.CanFocus)
@@ -1605,6 +1631,7 @@ namespace FamiStudio
                     }
                 }
             }
+#endif
         }
 
         public void Tick()

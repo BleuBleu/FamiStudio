@@ -1503,6 +1503,7 @@ namespace FamiStudio
 
             if (filename != null)
             {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                 var dlgLog = new LogDialog(ParentForm);
                 using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                 {
@@ -1517,6 +1518,7 @@ namespace FamiStudio
                     foreach (var song in otherProject.Songs)
                         songNames.Add(song.Name);
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                     var dlg = new PropertyDialog(300);
                     dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
                     dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
@@ -1552,7 +1554,9 @@ namespace FamiStudio
                     }
 
                     dlgLog.ShowDialogIfMessages();
+#endif
                 }
+#endif
             }
 
             RefreshButtons();
@@ -1580,6 +1584,7 @@ namespace FamiStudio
 
             if (filename != null)
             {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                 var dlgLog = new LogDialog(ParentForm);
                 using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                 {
@@ -1615,6 +1620,7 @@ namespace FamiStudio
                                 instrumentNames.Add(instrument.NameWithExpansion);
                             }
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                             var dlg = new PropertyDialog(300);
                             dlg.Properties.AddLabel(null, "Select instruments to import:"); // 0
                             dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null); // 1
@@ -1644,6 +1650,7 @@ namespace FamiStudio
 
                                 success = App.Project.MergeProject(instrumentProject);
                             }
+#endif
                         }
                     }
 
@@ -1654,6 +1661,7 @@ namespace FamiStudio
 
                     dlgLog.ShowDialogIfMessages();
                 }
+#endif
             }
 
             RefreshButtons();
@@ -1713,6 +1721,7 @@ namespace FamiStudio
                         foreach (var sample in samplesProject.Samples)
                             samplesNames.Add(sample.Name);
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                         var dlg = new PropertyDialog(300);
                         dlg.Properties.AddLabel(null, "Select samples to import:"); // 0
                         dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null); // 1
@@ -1756,10 +1765,12 @@ namespace FamiStudio
                             RefreshButtons();
                             dlgLog.ShowDialogIfMessages();
                         }
+#endif
                     }
                 }
                 else if (numSamplesFiles > 0)
                 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                     var dlgLog = new LogDialog(ParentForm);
                     using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                     {
@@ -1803,6 +1814,7 @@ namespace FamiStudio
                         RefreshButtons();
                         dlgLog.ShowDialogIfMessages();
                     }
+#endif
                 }
             }
         }
@@ -1921,6 +1933,7 @@ namespace FamiStudio
                                 expNames.Add(ExpansionType.Names[activeExpansions[i]]);
                         }
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                         var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 260, true);
                         dlg.Properties.AddDropDownList("Expansion:", expNames.ToArray(), expNames[0]); // 0
                         dlg.Properties.Build();
@@ -1933,6 +1946,9 @@ namespace FamiStudio
                         {
                             return true;
                         }
+#else
+                        return true;
+#endif
                     }
 
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -2361,6 +2377,7 @@ namespace FamiStudio
         {
             var project = App.Project;
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
             var numExpansions = ExpansionType.End - ExpansionType.Start + 1;
             var expNames = new string[numExpansions];
             var expBools = new bool[numExpansions];
@@ -2461,6 +2478,7 @@ namespace FamiStudio
                 App.UndoRedoManager.EndTransaction();
                 RefreshButtons();
             }
+#endif
         }
 
         private void UpdateProjectPropertiesWarnings(PropertyPage props)
@@ -2517,6 +2535,7 @@ namespace FamiStudio
 
         private void EditSongProperties(Point pt, Song song)
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 320, true); 
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
@@ -2553,10 +2572,12 @@ namespace FamiStudio
 
                 ConditionalInvalidate();
             }
+#endif
         }
 
         private void EditInstrumentProperties(Point pt, Instrument instrument)
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
@@ -2581,10 +2602,12 @@ namespace FamiStudio
                     SystemSounds.Beep.Play();
                 }
             }
+#endif
         }
 
         private void EditArpeggioProperties(Point pt, Arpeggio arpeggio)
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(arpeggio.Name, arpeggio.Color); // 0
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
@@ -2609,10 +2632,12 @@ namespace FamiStudio
                     SystemSounds.Beep.Play();
                 }
             }
+#endif
         }
 
         private void EditDPCMSampleProperties(Point pt, DPCMSample sample)
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredString(sample.Name, sample.Color); // 0
             dlg.Properties.AddColorPicker(sample.Color); // 1
@@ -2637,6 +2662,7 @@ namespace FamiStudio
                     SystemSounds.Beep.Play();
                 }
             }
+#endif
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)

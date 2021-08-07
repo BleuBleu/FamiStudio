@@ -14,9 +14,21 @@ namespace FamiStudio
     {
         OpenGLView  glView;
         StackLayout stackLayout;
+        FamiStudio  famistudio;
 
-        public FamiStudioForm()
+        private FamiStudioControls controls;
+
+        public FamiStudio FamiStudio => famistudio;
+        public Toolbar ToolBar => controls.ToolBar;
+        public Sequencer Sequencer => controls.Sequencer;
+        public PianoRoll PianoRoll => controls.PianoRoll;
+        public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
+        public string Text { get; set; }
+
+        public FamiStudioForm(FamiStudio famistudio) // DROIDTODO
         {
+            this.famistudio = famistudio;
+
             glView = new OpenGLView();
             glView.HasRenderLoop = true;
             glView.WidthRequest  = 300;
@@ -55,12 +67,46 @@ namespace FamiStudio
             return System.Drawing.Point.Empty;
         }
 
-        public bool IsKeyDown(System.Windows.Forms.Keys key)
+        public System.Drawing.Point PointToClient(GLControl ctrl, System.Drawing.Point p)
+        {
+            return System.Drawing.Point.Empty;
+        }
+
+        public System.Drawing.Point PointToScreen(GLControl ctrl, System.Drawing.Point p)
+        {
+            return System.Drawing.Point.Empty;
+        }
+
+        public static bool IsKeyDown(System.Windows.Forms.Keys key)
         {
             return false;
         }
 
+        public void CaptureMouse(GLControl ctrl)
+        {
+        }
+
+        public void ReleaseMouse()
+        {
+        }
+
+        public void RefreshLayout()
+        {
+        }
+
+        public void Refresh()
+        {
+        }
+
+        public void Invalidate()
+        {
+        }
+
         public void RefreshCursor()
+        {
+        }
+
+        public void Run()
         {
         }
     }

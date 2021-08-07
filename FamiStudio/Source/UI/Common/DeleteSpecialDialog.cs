@@ -6,8 +6,7 @@ using RenderTheme = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
-    // DROIDTODO
-    /*
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class DeleteSpecialDialog
     {
         private PropertyDialog dialog;
@@ -94,5 +93,5 @@ namespace FamiStudio
             }
         }
     }
-    */
+#endif
 }

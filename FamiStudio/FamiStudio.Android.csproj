@@ -61,12 +61,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Source\Player\AndroidAudioStream.cs" />
+    <Compile Include="Source\UI\Common\GLGraphicsCommon.cs" />
     <Compile Include="Source\UI\Droid\App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Source\UI\Droid\Cursors.cs" />
+    <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
     <Compile Include="Source\UI\Droid\MainActivity.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
+    <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
     <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -135,7 +138,6 @@
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Common\GLControl.cs" />
-    <Compile Include="Source\UI\Common\GLGraphics.cs" />
     <Compile Include="Source\UI\Common\GLTheme.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
@@ -150,7 +152,6 @@
     <Compile Include="Source\UI\Droid\SystemDrawing.cs" />
     <Compile Include="Source\UI\Droid\SystemMedia.cs" />
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
-    <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />

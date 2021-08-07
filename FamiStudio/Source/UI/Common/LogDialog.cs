@@ -4,6 +4,7 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class LogDialog : ILogOutput
     {
         public bool AbortOperation => false;
@@ -14,8 +15,6 @@ namespace FamiStudio
         {
         }
 
-        // DROIDTODO
-        /*
         private PropertyDialog dialog;
         private FamiStudioForm parentForm;
         private List<string>   messages = new List<string>();
@@ -53,6 +52,6 @@ namespace FamiStudio
         public bool HasMessages => messages.Count > 0;
         public bool AbortOperation => dialog.DialogResult != DialogResult.None;
         public void ReportProgress(float progress) { }
-        */
     }
+#endif
 }

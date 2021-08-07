@@ -6,10 +6,9 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class ConfigDialog
     {
-        // DROIDTODO
-        /*
         enum ConfigSection
         {
             General,
@@ -483,6 +482,6 @@ namespace FamiStudio
 
             return dialogResult;
         }
-        */
     }
+#endif
 }

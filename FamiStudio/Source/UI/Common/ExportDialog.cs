@@ -8,10 +8,9 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     public class ExportDialog
     {
-        // DROIDTODO
-        /*
         enum ExportFormat
         {
             WavMp3,
@@ -761,6 +760,6 @@ namespace FamiStudio
                 lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;
             }
         }
-        */
     }
+#endif
 }

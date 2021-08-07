@@ -6,10 +6,9 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class MidiImportDialog
     {
-        // DROIDTODO
-        /*
         private PropertyDialog dialog;
         private string[] trackNames;
         private string filename;
@@ -264,6 +263,6 @@ namespace FamiStudio
 
             return null;
         }
-        */
     }
+#endif
 }

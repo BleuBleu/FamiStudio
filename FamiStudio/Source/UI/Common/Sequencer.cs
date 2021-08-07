@@ -1329,6 +1329,7 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dialog = new PropertyDialog(200);
             dialog.Properties.AddLabelCheckBox("Insert", false); // 0
             dialog.Properties.AddLabelCheckBox("Extend song", false); // 1
@@ -1343,7 +1344,8 @@ namespace FamiStudio
                     dialog.Properties.GetPropertyValue<bool>(0),
                     dialog.Properties.GetPropertyValue<bool>(1),
                     dialog.Properties.GetPropertyValue<int>(2));
-            }
+            
+#endif
         }
 
         private void PasteSpecialDialog_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -1903,6 +1905,7 @@ namespace FamiStudio
 
         private void EditPatternCustomSettings(Point pt, int patternIdx)
         {
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 240);
             var song = Song;
             var enabled = song.PatternHasCustomSettings(patternIdx);
@@ -1933,6 +1936,7 @@ namespace FamiStudio
                 ConditionalInvalidate();
                 PatternModified?.Invoke();
             }
+#endif
         }
 
         private void PatternCustomSettings_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -1948,6 +1952,7 @@ namespace FamiStudio
         {
             bool multiplePatternSelected = (maxSelectedChannelIdx != minSelectedChannelIdx) || (minSelectedPatternIdx != maxSelectedPatternIdx);
 
+#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 240);
             dlg.Properties.AddColoredString(pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
@@ -1988,6 +1993,7 @@ namespace FamiStudio
                 ConditionalInvalidate();
                 PatternModified?.Invoke();
             }
+#endif
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)

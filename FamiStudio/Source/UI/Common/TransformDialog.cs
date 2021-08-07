@@ -8,11 +8,9 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class TransformDialog
     {
-        // DROIDTODO
-
-        /*
         enum TransformOperation
         {
             SongCleanup,
@@ -224,6 +222,6 @@ namespace FamiStudio
 
             return dialogResult;
         }
-        */
     }
+#endif
 }
