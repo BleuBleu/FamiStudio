@@ -5,6 +5,7 @@
 - GROWING BUTTON MARK!
 - File association in portable.
 - Crash when quitting macos.
+- When deleting an effect, if you click twice it selects the pattern => annoying.
 
 Videos:
 =======
