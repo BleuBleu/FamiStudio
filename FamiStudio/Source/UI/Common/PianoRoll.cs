@@ -2877,6 +2877,10 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
+            //g.DrawRectangle(10, 10, 100, 200, debugBrush);
+
+            //return;
+
             var a = new RenderArea();
 
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / (float)noteSizeX), 0);

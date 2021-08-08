@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Drawing;
 using System.Collections.Generic;
-using OpenTK;
+using System.Diagnostics;
 
 #if FAMISTUDIO_ANDROID
-using OpenTK.Graphics.ES30;
+using Android.Opengl;
 #else
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 #endif
 
@@ -44,7 +45,12 @@ namespace FamiStudio
 
         public void Dispose()
         {
+#if FAMISTUDIO_ANDROID // DROIDTODO
+            int id = Texture;
+            //GL.DeleteTextures(1, ref id);
+#else
             GL.DeleteTexture(Texture);
+#endif
         }
 
         public void AddChar(char c, CharInfo info)
@@ -105,37 +111,37 @@ namespace FamiStudio
 
     public class GLGeometry : IDisposable
     {
-        public float[,] Points { get; private set; }
+        public float[] Points { get; private set; }
 
-        public Dictionary<float, float[,]> miterPoints = new Dictionary<float, float[,]>();
+        public Dictionary<float, float[]> miterPoints = new Dictionary<float, float[]>();
 
         public GLGeometry(float[,] points, bool closed)
         {
             var numPoints = points.GetLength(0);
-            var closedPoints = new float[(numPoints + (closed ? 1 : 0)) * 1, points.GetLength(1)];
+            var closedPoints = new float[(numPoints + (closed ? 1 : 0)) * 2];
 
-            for (int i = 0; i < closedPoints.GetLength(0); i++)
+            for (int i = 0; i < closedPoints.Length / 2; i++)
             {
-                closedPoints[i, 0] = points[i % points.GetLength(0), 0];
-                closedPoints[i, 1] = points[i % points.GetLength(0), 1];
+                closedPoints[i * 2 + 0] = points[i % points.GetLength(0), 0];
+                closedPoints[i * 2 + 1] = points[i % points.GetLength(0), 1];
             }
 
             Points = closedPoints;
         }
 
-        public float[,] GetMiterPoints(float lineWidth)
+        public float[] GetMiterPoints(float lineWidth)
         {
             if (miterPoints.TryGetValue(lineWidth, out var points))
                 return points;
 
-            points = new float[Points.GetLength(0) * 2, Points.GetLength(1)];
+            points = new float[Points.Length * 2];
 
-            for (int i = 0; i < Points.GetLength(0) - 1; i++)
+            for (int i = 0; i < Points.Length / 2 - 1; i++)
             {
-                var x0 = Points[i + 0, 0];
-                var x1 = Points[i + 1, 0];
-                var y0 = Points[i + 0, 1];
-                var y1 = Points[i + 1, 1];
+                var x0 = Points[(i + 0) * 2 + 0];
+                var x1 = Points[(i + 1) * 2 + 0];
+                var y0 = Points[(i + 0) * 2 + 1];
+                var y1 = Points[(i + 1) * 2 + 1];
 
                 var dx = x1 - x0;
                 var dy = y1 - y0;
@@ -144,10 +150,10 @@ namespace FamiStudio
                 var nx = dx / len * lineWidth * 0.5f;
                 var ny = dy / len * lineWidth * 0.5f;
 
-                points[2 * i + 0, 0] = x0 - nx;
-                points[2 * i + 0, 1] = y0 - ny;
-                points[2 * i + 1, 0] = x1 + nx;
-                points[2 * i + 1, 1] = y1 + ny;
+                points[(2 * i + 0) * 2 + 0] = x0 - nx;
+                points[(2 * i + 0) * 2 + 1] = y0 - ny;
+                points[(2 * i + 1) * 2 + 0] = x1 + nx;
+                points[(2 * i + 1) * 2 + 1] = y1 + ny;
             }
 
             miterPoints.Add(lineWidth, points);
@@ -178,9 +184,13 @@ namespace FamiStudio
             Bitmap = bmp;
             Color0 = Color.FromArgb(255, 255, 255, 255);
 
+#if FAMISTUDIO_ANDROID // DROIDTODO
+            Debug.Assert(false);
+#else
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)(tileX ? All.Repeat : All.ClampToEdge));
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)(tileY ? All.Repeat : All.ClampToEdge));
+#endif
         }
 
         public GLBrush(Color color0, Color color1, float sizeX, float sizeY)
@@ -202,21 +212,30 @@ namespace FamiStudio
 
     public class GLBitmap : IDisposable
     {
-        public int Id { get; private set; }
-        public Size Size { get; private set; }
+        int  id;
+        Size size;
+
+        public int Id => id;
+        public Size Size => size;
         private bool dispose = true;
 
         public GLBitmap(int id, int width, int height, bool disp = true)
         {
-            Id = id;
-            Size = new Size(width, height);
-            dispose = disp;
+            this.id = id;
+            this.size = new Size(width, height);
+            this.dispose = disp;
         }
 
         public void Dispose()
         {
+            /*
             if (dispose)
-                GL.DeleteTexture(Id);
+#if FAMISTUDIO_ANDROID // DROIDTODO
+                GL.DeleteTextures(1, ref id);
+#else
+                GL.DeleteTexture(id);
+#endif
+            */
         }
     }
 }

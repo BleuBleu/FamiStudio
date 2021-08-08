@@ -106,11 +106,15 @@ namespace FamiStudio
         public static Project StaticProject { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
 
-        public FamiStudio(string filename)
+        public void Initialize(string filename)
         {
             StaticInstance = this;
 
+#if FAMISTUDIO_ANDROID
+            mainForm = FamiStudioForm.Instance;
+#else
             mainForm = new FamiStudioForm(this);
+#endif
 
             Sequencer.PatternClicked += sequencer_PatternClicked;
             Sequencer.SelectedChannelChanged += sequencer_SelectedChannelChanged;
@@ -1047,32 +1051,39 @@ namespace FamiStudio
 
         private void InitializeSongPlayer()
         {
+#if !FAMISTUDIO_ANDROID // DROID
             Debug.Assert(songPlayer == null);
             Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
             songPlayer = new SongPlayer(palPlayback);
             songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
+#endif
         }
 
         private void InitializeInstrumentPlayer()
         {
+#if !FAMISTUDIO_ANDROID // DROID
             Debug.Assert(instrumentPlayer == null);
             instrumentPlayer = new InstrumentPlayer(palPlayback);
             instrumentPlayer.Start(project, palPlayback);
+#endif
         }
 
         private void ShutdownSongPlayer()
         {
+#if !FAMISTUDIO_ANDROID // DROID
             if (songPlayer != null)
             {
                 songPlayer.Stop();
                 songPlayer.Shutdown();
                 songPlayer = null;
             }
+#endif
         }
 
         private void ShutdownInstrumentPlayer()
         {
+#if !FAMISTUDIO_ANDROID // DROID
             if (instrumentPlayer != null)
             {
                 instrumentPlayer.Stop(true);
@@ -1080,10 +1091,12 @@ namespace FamiStudio
                 instrumentPlayer = null;
                 PianoRoll.HighlightPianoNote(Note.NoteInvalid);
             }
+#endif
         }
 
         public void InitializeOscilloscope()
         {
+#if !FAMISTUDIO_ANDROID // DROID
             Debug.Assert(oscilloscope == null);
 
             if (Settings.ShowOscilloscope)
@@ -1094,10 +1107,12 @@ namespace FamiStudio
                 if (instrumentPlayer != null)
                     instrumentPlayer.ConnectOscilloscope(oscilloscope);
             }
+#endif
         }
 
         public void ShutdownOscilloscope()
         {
+#if !FAMISTUDIO_ANDROID // DROID
             if (songPlayer != null)
                 songPlayer.ConnectOscilloscope(null);
             if (instrumentPlayer != null)
@@ -1108,6 +1123,7 @@ namespace FamiStudio
                 oscilloscope.Stop();
                 oscilloscope = null;
             }
+#endif
         }
 
         public float[,] GetOscilloscopeGeometry(out bool hHasNonZeroSample)

@@ -69,7 +69,8 @@ namespace FamiStudio
             if (!cli.Run())
 #endif
             {
-                var famiStudio = new FamiStudio(args.Length > 0 ? args[0] : null);
+                var famiStudio = new FamiStudio();
+                famiStudio.Initialize(args.Length > 0 ? args[0] : null);
                 famiStudio.Run();
             }
 

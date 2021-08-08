@@ -573,7 +573,7 @@ namespace FamiStudio
             GL.End();
         }
 
-        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool miter = true)
+        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool miter = false)
         {
             FillGeometry(geo, fillBrush);
             DrawGeometry(geo, lineBrush, lineWidth, miter);

@@ -1344,7 +1344,7 @@ namespace FamiStudio
                     dialog.Properties.GetPropertyValue<bool>(0),
                     dialog.Properties.GetPropertyValue<bool>(1),
                     dialog.Properties.GetPropertyValue<int>(2));
-            
+            }
 #endif
         }
 

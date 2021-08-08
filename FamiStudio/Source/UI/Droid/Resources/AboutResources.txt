@@ -8,13 +8,7 @@ an internationalization string table (strings.xml) and some icons (drawable-XXX/
 would keep its resources in the "Resources" directory of the application:
 
 Resources/
-    drawable-hdpi/
-        icon.png
-
-    drawable-ldpi/
-        icon.png
-
-    drawable-mdpi/
+    drawable/
         icon.png
 
     layout/
@@ -26,11 +20,11 @@ Resources/
 In order to get the build system to recognize Android resources, set the build action to
 "AndroidResource".  The native Android APIs do not operate directly with filenames, but 
 instead operate on resource IDs.  When you compile an Android application that uses resources, 
-the build system will package the resources for distribution and generate a class called
-"Resource" that contains the tokens for each one of the resources included. For example, 
-for the above Resources layout, this is what the Resource class would expose:
+the build system will package the resources for distribution and generate a class called "R" 
+(this is an Android convention) that contains the tokens for each one of the resources 
+included. For example, for the above Resources layout, this is what the R class would expose:
 
-public class Resource {
+public class R {
     public class drawable {
         public const int icon = 0x123;
     }
@@ -45,6 +39,6 @@ public class Resource {
     }
 }
 
-You would then use R.drawable.icon to reference the drawable/icon.png file, or Resource.layout.main 
-to reference the layout/main.xml file, or Resource.strings.first_string to reference the first 
+You would then use R.drawable.icon to reference the drawable/icon.png file, or R.layout.main 
+to reference the layout/main.xml file, or R.strings.first_string to reference the first 
 string in the dictionary file values/strings.xml.

@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
-using OpenTK;
-using OpenTK.Graphics.ES30;
+using Android.Opengl;
+using Java.Nio;
+using Javax.Microedition.Khronos.Opengles;
 
 namespace FamiStudio
 {
     public class GLGraphics : IDisposable
     {
+        protected IGL10 gl;
         protected bool antialiasing = false;
         protected float windowScaling = 1.0f;
         protected int windowSizeY;
@@ -21,34 +23,81 @@ namespace FamiStudio
         protected Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
         public float WindowScaling => windowScaling;
 
-        public GLGraphics()
+        protected FloatBuffer vtxBuffer;
+        protected FloatBuffer texBuffer;
+        protected IntBuffer   colBuffer;
+        protected ShortBuffer idxBuffer;
+
+        const int MaxVertexCount   = 4096;
+        const int MaxTexCoordCount = 4096;
+        const int MaxColorCount    = 4096;
+        const int MaxIndexCount    = MaxVertexCount / 4 * 6;
+
+        protected float[] tmpVtxArray = new float[MaxVertexCount * 2];
+        protected float[] tmpTexArray = new float[MaxTexCoordCount * 2];
+        protected int[]   tmpColArray = new int[MaxColorCount * 2];
+
+        // DROIDTODO!
+        static readonly float[] HalfPixelOffsetMatrix = new[]
         {
-            windowScaling = GLTheme.MainWindowScaling;
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.5f, 0.5f, 0.0f, 1.0f,
+        };
+
+        public GLGraphics(IGL10 gl)
+        {
+            this.gl = gl;
+            this.windowScaling = GLTheme.MainWindowScaling;
+
+            vtxBuffer = ByteBuffer.AllocateDirect(sizeof(float) * MaxVertexCount * 2).Order(ByteOrder.NativeOrder()).AsFloatBuffer();
+            texBuffer = ByteBuffer.AllocateDirect(sizeof(float) * MaxTexCoordCount * 2).Order(ByteOrder.NativeOrder()).AsFloatBuffer();
+            colBuffer = ByteBuffer.AllocateDirect(sizeof(int) * MaxColorCount).Order(ByteOrder.NativeOrder()).AsIntBuffer();
+            idxBuffer = ByteBuffer.AllocateDirect(sizeof(short) * MaxIndexCount).Order(ByteOrder.NativeOrder()).AsShortBuffer();
+
+            for (int i = 0; i < MaxVertexCount; i += 4)
+            {
+                var i0 = (short)(i + 0);
+                var i1 = (short)(i + 1);
+                var i2 = (short)(i + 2);
+                var i3 = (short)(i + 3);
+
+                // TODO : Pre-bake this.
+                idxBuffer.Put(i0);
+                idxBuffer.Put(i1);
+                idxBuffer.Put(i2);
+                idxBuffer.Put(i0);
+                idxBuffer.Put(i2);
+                idxBuffer.Put(i3);
+            }
+
+            idxBuffer.Position(0);
         }
 
         public virtual void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
         {
             this.windowSizeY = windowSizeY;
 
-            /*
             var controlRect = FlipRectangleY(unflippedControlRect);
             baseScissorRect = unflippedControlRect;
-            GL.Viewport(controlRect.Left, controlRect.Top, controlRect.Width, controlRect.Height);
+            gl.GlViewport(controlRect.Left, controlRect.Top, controlRect.Width, controlRect.Height);
 
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadIdentity();
-            GL.Ortho(0, unflippedControlRect.Width, unflippedControlRect.Height, 0, -1, 1);
-            GL.Disable(EnableCap.CullFace);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-            GL.Enable(EnableCap.Blend);
+            gl.GlMatrixMode(GLES11.GlProjection);
+            gl.GlLoadIdentity();
+            gl.GlOrthof(0, unflippedControlRect.Width, unflippedControlRect.Height, 0, -1, 1);
+            gl.GlDisable((int)2884); // Cull face?
+            gl.GlDisable(GLES11.GlDepthTest);
+            gl.GlDisable(GLES11.GlStencilTest);
+            gl.GlMatrixMode(GLES11.GlModelview);
+            gl.GlLoadIdentity();
+            gl.GlBlendFunc(GLES11.GlSrcAlpha, GLES11.GlOneMinusSrcAlpha);
+            gl.GlEnable(GLES11.GlBlend);
 
             transform = new Vector4(1, 1, 0, 0);
             scissor = controlRect;
-            GL.Enable(EnableCap.ScissorTest);
-            GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
-            */
+            gl.GlEnable(GLES11.GlScissorTest); 
+            gl.GlScissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
         }
 
         public virtual void EndDraw()
@@ -64,14 +113,10 @@ namespace FamiStudio
                 rc.Height);
         }
 
+
         protected void AddHalfPixelOffset(float x = 0.5f, float y = 0.5f)
         {
-            /*
-            GL.GetFloat(GetPName.ModelviewMatrix, out Matrix4 matrix);
-            matrix.Row3.X += x;
-            matrix.Row3.Y += y;
-            GL.LoadMatrix(ref matrix);
-            */
+            gl.GlTranslatef(x, y, 0.0f);
         }
 
         public bool AntiAliasing
@@ -86,10 +131,8 @@ namespace FamiStudio
             transform.Z += x;
             transform.W += y;
 
-            /*
-            GL.PushMatrix();
-            GL.Translate(x, y, 0);
-            */
+            gl.GlPushMatrix();
+            gl.GlTranslatef(x, y, 0);
         }
 
         public void PushTransform(float tx, float ty, float sx, float sy)
@@ -101,16 +144,14 @@ namespace FamiStudio
             transform.Z += tx;
             transform.W += ty;
 
-            /*
-            GL.PushMatrix();
-            GL.Translate(tx, ty, 0);
-            GL.Scale(sx, sy, 0);
-            */
+            gl.GlPushMatrix();
+            gl.GlTranslatef(tx, ty, 0);
+            gl.GlScalef(sx, sy, 0);
         }
 
         public void PopTransform()
         {
-            //GL.PopMatrix();
+            gl.GlPopMatrix();
 
             transform = transformStack.Pop();
         }
@@ -128,19 +169,19 @@ namespace FamiStudio
             scissor = FlipRectangleY(scissor);
             scissor.Intersect(clipStack.Peek());
 
-            //GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
+            gl.GlScissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
         }
 
         public void PopClip()
         {
             scissor = clipStack.Pop();
-            //GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
+            gl.GlScissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
         }
 
         public void Clear(Color color)
         {
-            //GL.ClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            //GL.Clear(ClearBufferMask.ColorBufferBit);
+            gl.GlClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            gl.GlClear(GLES11.GlColorBufferBit);
         }
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
@@ -148,27 +189,47 @@ namespace FamiStudio
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity)
+        public unsafe void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity)
         {
             int x0 = (int)x;
             int y0 = (int)y;
             int x1 = (int)(x + width);
             int y1 = (int)(y + height);
 
-            /*
-            GL.Enable(EnableCap.Texture2D);
-            GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
-            GL.Color4(1.0f, 1.0f, 1.0f, opacity);
+            tmpVtxArray[0] = x0;
+            tmpVtxArray[1] = y0;
+            tmpVtxArray[2] = x1;
+            tmpVtxArray[3] = y0;
+            tmpVtxArray[4] = x1;
+            tmpVtxArray[5] = y1;
+            tmpVtxArray[6] = x0;
+            tmpVtxArray[7] = y1;
 
-            GL.Begin(PrimitiveType.Quads);
-            GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
-            GL.TexCoord2(1, 0); GL.Vertex2(x1, y0);
-            GL.TexCoord2(1, 1); GL.Vertex2(x1, y1);
-            GL.TexCoord2(0, 1); GL.Vertex2(x0, y1);
-            GL.End();
+            tmpTexArray[0] = 0;
+            tmpTexArray[1] = 0;
+            tmpTexArray[2] = 1;
+            tmpTexArray[3] = 0;
+            tmpTexArray[4] = 1;
+            tmpTexArray[5] = 1;
+            tmpTexArray[6] = 0;
+            tmpTexArray[7] = 1;
 
-            GL.Disable(EnableCap.Texture2D);
-            */
+            vtxBuffer.Put(tmpVtxArray, 0, 4 * 2);
+            texBuffer.Put(tmpTexArray, 0, 4 * 2);
+            vtxBuffer.Position(0);
+            texBuffer.Position(0);
+
+            gl.GlEnable(GLES11.GlTexture2d);
+            gl.GlBindTexture(GLES11.GlTexture2d, bmp.Id);
+            gl.GlColor4f(1, 1, 1, opacity);
+            gl.GlEnableClientState(GLES11.GlVertexArray);
+            gl.GlEnableClientState(GLES11.GlTextureCoordArray);
+            gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+            gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
+            gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 4);
+            gl.GlDisableClientState(GLES11.GlTextureCoordArray);
+            gl.GlDisableClientState(GLES11.GlVertexArray);
+            gl.GlDisable(GLES11.GlTexture2d);
         }
 
         // HACK : Very specific call only used by video rendering, too lazy to do the proper transforms.
@@ -212,10 +273,6 @@ namespace FamiStudio
                 }
             }
 
-            var numVertices = text.Length * 4;
-            var vertices = stackalloc float[numVertices * 2];
-            var texCoords = stackalloc float[numVertices * 2];
-
             int x = (int)(startX + alignmentOffsetX);
             int y = (int)(startY + font.OffsetY);
 
@@ -229,15 +286,20 @@ namespace FamiStudio
                 int x1 = x0 + info.width;
                 int y1 = y0 + info.height;
 
-                vertices[(i * 4 + 0) * 2 + 0] = x0; vertices[(i * 4 + 0) * 2 + 1] = y0;
-                vertices[(i * 4 + 1) * 2 + 0] = x1; vertices[(i * 4 + 1) * 2 + 1] = y0;
-                vertices[(i * 4 + 2) * 2 + 0] = x1; vertices[(i * 4 + 2) * 2 + 1] = y1;
-                vertices[(i * 4 + 3) * 2 + 0] = x0; vertices[(i * 4 + 3) * 2 + 1] = y1;
+                tmpVtxArray[(i * 4 + 0) * 2 + 0] = x0; tmpVtxArray[(i * 4 + 0) * 2 + 1] = y0;
+                tmpVtxArray[(i * 4 + 1) * 2 + 0] = x1; tmpVtxArray[(i * 4 + 1) * 2 + 1] = y0;
+                tmpVtxArray[(i * 4 + 2) * 2 + 0] = x1; tmpVtxArray[(i * 4 + 2) * 2 + 1] = y1;
+                tmpVtxArray[(i * 4 + 3) * 2 + 0] = x0; tmpVtxArray[(i * 4 + 3) * 2 + 1] = y1;
 
-                texCoords[(i * 4 + 0) * 2 + 0] = info.u0; texCoords[(i * 4 + 0) * 2 + 1] = info.v0;
-                texCoords[(i * 4 + 1) * 2 + 0] = info.u1; texCoords[(i * 4 + 1) * 2 + 1] = info.v0;
-                texCoords[(i * 4 + 2) * 2 + 0] = info.u1; texCoords[(i * 4 + 2) * 2 + 1] = info.v1;
-                texCoords[(i * 4 + 3) * 2 + 0] = info.u0; texCoords[(i * 4 + 3) * 2 + 1] = info.v1;
+                tmpTexArray[(i * 4 + 0) * 2 + 0] = info.u0; tmpTexArray[(i * 4 + 0) * 2 + 1] = info.v0;
+                tmpTexArray[(i * 4 + 1) * 2 + 0] = info.u1; tmpTexArray[(i * 4 + 1) * 2 + 1] = info.v0;
+                tmpTexArray[(i * 4 + 2) * 2 + 0] = info.u1; tmpTexArray[(i * 4 + 2) * 2 + 1] = info.v1;
+                tmpTexArray[(i * 4 + 3) * 2 + 0] = info.u0; tmpTexArray[(i * 4 + 3) * 2 + 1] = info.v1;
+
+                var i0 = (short)(i * 4 + 0);
+                var i1 = (short)(i * 4 + 1);
+                var i2 = (short)(i * 4 + 2);
+                var i3 = (short)(i * 4 + 3);
 
                 x += info.xadvance;
                 if (i != text.Length - 1)
@@ -247,19 +309,22 @@ namespace FamiStudio
                 }
             }
 
-            /*
-            GL.Enable(EnableCap.Texture2D);
-            GL.BindTexture(TextureTarget.Texture2D, font.Texture);
-            GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
-            GL.EnableClientState(ArrayCap.VertexArray);
-            GL.EnableClientState(ArrayCap.TextureCoordArray);
-            GL.VertexPointer(2, VertexPointerType.Float, 0, new IntPtr(vertices));
-            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, new IntPtr(texCoords));
-            GL.DrawArrays(PrimitiveType.Quads, 0, numVertices);
-            GL.DisableClientState(ArrayCap.TextureCoordArray);
-            GL.DisableClientState(ArrayCap.VertexArray);
-            GL.Disable(EnableCap.Texture2D);
-            */
+            vtxBuffer.Put(tmpVtxArray, 0, text.Length * 4 * 2);
+            texBuffer.Put(tmpTexArray, 0, text.Length * 4 * 2);
+            vtxBuffer.Position(0);
+            texBuffer.Position(0);
+
+            gl.GlEnable(GLES11.GlTexture2d);
+            gl.GlBindTexture(GLES11.GlTexture2d, font.Texture);
+            gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, 1.0f);
+            gl.GlEnableClientState(GLES11.GlVertexArray);
+            gl.GlEnableClientState(GLES11.GlTextureCoordArray);
+            gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+            gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
+            gl.GlDrawElements(GLES11.GlTriangles, text.Length * 6, GLES11.GlUnsignedShort, idxBuffer);
+            gl.GlDisableClientState(GLES11.GlTextureCoordArray);
+            gl.GlDisableClientState(GLES11.GlVertexArray);
+            gl.GlDisable(GLES11.GlTexture2d);
         }
 
         public float MeasureString(string text, GLFont font)
@@ -268,53 +333,66 @@ namespace FamiStudio
             return maxX - minX;
         }
 
-        public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
+        public unsafe void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
         {
-            /*
-            GL.PushMatrix();
+            gl.GlPushMatrix();
             AddHalfPixelOffset();
-            GL.Color4(brush.Color0);
+            
+            gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, brush.Color0.A / 255.0f);
+
             if (antialiasing)
-                GL.Enable(EnableCap.LineSmooth);
-#if FAMISTUDIO_LINUX
-            if (!supportsLineWidth && width > 1)
-            {
-                DrawThickLineAsPolygon(new[] {
-                    x0, y0,
-                    x1, y1 }, brush, width);
-            }
-            else
-#endif
+                gl.GlEnable(GLES11.GlLineSmooth);
             {
                 if (brush.IsBitmap)
                 {
-                    GL.Enable(EnableCap.Texture2D);
-                    GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
-                    GL.LineWidth(width);
-                    GL.Begin(PrimitiveType.Lines);
-
                     var size = brush.Bitmap.Size;
-                    GL.TexCoord2((x0 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
-                    GL.Vertex2(x0, y0);
-                    GL.TexCoord2((x1 + 0.5f) / size.Width, (y1 + 0.5f) / size.Height);
-                    GL.Vertex2(x1, y1);
 
-                    GL.End();
-                    GL.Disable(EnableCap.Texture2D);
+                    tmpVtxArray[0] = x0;
+                    tmpVtxArray[1] = y0;
+                    tmpVtxArray[2] = x1;
+                    tmpVtxArray[3] = y1;
+
+                    tmpTexArray[0] = (x0 + 0.5f) / size.Width;
+                    tmpTexArray[1] = (y0 + 0.5f) / size.Height;
+                    tmpTexArray[2] = (x1 + 0.5f) / size.Width;
+                    tmpTexArray[3] = (y1 + 0.5f) / size.Height;
+
+                    vtxBuffer.Put(tmpVtxArray, 0, 4);
+                    vtxBuffer.Position(0);
+                    texBuffer.Put(tmpTexArray, 0, 4);
+                    texBuffer.Position(0);
+
+                    gl.GlEnable(GLES11.GlTexture2d);
+                    gl.GlBindTexture(GLES11.GlTexture2d, brush.Bitmap.Id);
+                    gl.GlLineWidth(width);
+                    gl.GlEnableClientState(GLES11.GlVertexArray);
+                    gl.GlEnableClientState(GLES11.GlTextureCoordArray);
+                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                    gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
+                    gl.GlDrawArrays(GLES11.GlLines, 0, 2);
+                    gl.GlDisableClientState(GLES11.GlTextureCoordArray);
+                    gl.GlDisableClientState(GLES11.GlVertexArray);
+                    gl.GlDisable(GLES11.GlTexture2d);
                 }
                 else
                 {
-                    GL.LineWidth(width);
-                    GL.Begin(PrimitiveType.Lines);
-                    GL.Vertex2(x0, y0);
-                    GL.Vertex2(x1, y1);
-                    GL.End();
+                    tmpVtxArray[0] = x0;
+                    tmpVtxArray[1] = y0;
+                    tmpVtxArray[2] = x1;
+                    tmpVtxArray[3] = y1;
+                    vtxBuffer.Put(tmpVtxArray, 0, 4);
+                    vtxBuffer.Position(0);
+
+                    gl.GlLineWidth(width);
+                    gl.GlEnableClientState(GLES11.GlVertexArray);
+                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                    gl.GlDrawArrays(GLES11.GlLines, 0, 2);
+                    gl.GlDisableClientState(GLES11.GlVertexArray);
                 }
             }
             if (antialiasing)
-                GL.Disable(EnableCap.LineSmooth);
-            GL.PopMatrix();
-            */
+                gl.GlDisable(GLES11.GlLineSmooth);
+            gl.GlPopMatrix();
         }
 
         public void DrawLine(float[,] points, GLBrush brush)
@@ -330,30 +408,18 @@ namespace FamiStudio
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool miter = false)
+        public unsafe void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool miter = false)
         {
-            /*
-            GL.PushMatrix();
+            gl.GlPushMatrix();
 
             AddHalfPixelOffset();
 
             if (width > 1)
-                GL.Enable(EnableCap.LineSmooth);
+                gl.GlEnable(GLES11.GlLineSmooth);
 
-            GL.Color4(brush.Color0);
-#if FAMISTUDIO_LINUX
-            if (!supportsLineWidth && width > 1)
+            gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, brush.Color0.A / 255.0f);
             {
-                DrawThickLineAsPolygon(new[] {
-                    x0, y0,
-                    x1, y0,
-                    x1, y1,
-                    x0, y1,
-                    x0, y0 }, brush, width);
-            }
-            else
-#endif
-            {
+                /*
                 if (brush.IsBitmap)
                 {
                     GL.Enable(EnableCap.Texture2D);
@@ -387,22 +453,31 @@ namespace FamiStudio
                     GL.End();
                 }
                 else
+                */
                 {
-                    GL.LineWidth(width);
-                    GL.Begin(PrimitiveType.LineLoop);
-                    GL.Vertex2(x0, y0);
-                    GL.Vertex2(x1, y0);
-                    GL.Vertex2(x1, y1);
-                    GL.Vertex2(x0, y1);
-                    GL.End();
+                    tmpVtxArray[0] = x0;
+                    tmpVtxArray[1] = y0;
+                    tmpVtxArray[2] = x1;
+                    tmpVtxArray[3] = y0;
+                    tmpVtxArray[4] = x1;
+                    tmpVtxArray[5] = y1;
+                    tmpVtxArray[6] = x0;
+                    tmpVtxArray[7] = y1;
+                    vtxBuffer.Put(tmpVtxArray, 0, 4 * 2);
+                    vtxBuffer.Position(0);
+
+                    gl.GlLineWidth(width);
+                    gl.GlEnableClientState(GLES11.GlVertexArray);
+                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                    gl.GlDrawArrays(GLES11.GlLineLoop, 0, 4);
+                    gl.GlDisableClientState(GLES11.GlVertexArray);
                 }
             }
 
             if (width > 1)
-                GL.Disable(EnableCap.LineSmooth);
+                gl.GlDisable(GLES11.GlLineSmooth);
 
-            GL.PopMatrix();
-            */
+            gl.GlPopMatrix();
         }
 
         public void FillRectangle(RectangleF rect, GLBrush brush)
@@ -410,68 +485,181 @@ namespace FamiStudio
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
         }
 
-        public void FillRectangle(float x0, float y0, float x1, float y1, GLBrush brush)
+        protected int PackColor(Color c)
         {
-            /*
+            return (c.A << 24) | (c.B << 16) | (c.G << 8) | c.R;
+        }
+
+        protected int PackColor(int r, int g, int b, int a)
+        {
+            return (a << 24) | (b << 16) | (g << 8) | r;
+        }
+
+        public unsafe void FillRectangle(float x0, float y0, float x1, float y1, GLBrush brush)
+        {
             if (!brush.IsGradient)
             {
-                GL.Color4(brush.Color0);
-                GL.Begin(PrimitiveType.Quads);
-                GL.Vertex2(x0, y0);
-                GL.Vertex2(x1, y0);
-                GL.Vertex2(x1, y1);
-                GL.Vertex2(x0, y1);
-                GL.End();
+                tmpVtxArray[0] = x0;
+                tmpVtxArray[1] = y0;
+                tmpVtxArray[2] = x1;
+                tmpVtxArray[3] = y0;
+                tmpVtxArray[4] = x1;
+                tmpVtxArray[5] = y1;
+                tmpVtxArray[6] = x0;
+                tmpVtxArray[7] = y1;
+                vtxBuffer.Put(tmpVtxArray, 0, 4 * 2);
+                vtxBuffer.Position(0);
+
+                gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, brush.Color0.A / 255.0f);
+                gl.GlEnableClientState(GLES11.GlVertexArray);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 4);
+                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             else if (brush.GradientSizeX == (x1 - x0))
             {
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y1);
-                GL.End();
+                tmpVtxArray[0] = x0;
+                tmpVtxArray[1] = y0;
+                tmpVtxArray[2] = x1;
+                tmpVtxArray[3] = y0;
+                tmpVtxArray[4] = x1;
+                tmpVtxArray[5] = y1;
+                tmpVtxArray[6] = x0;
+                tmpVtxArray[7] = y1;
+
+                tmpColArray[0] = PackColor(brush.Color0);
+                tmpColArray[1] = PackColor(brush.Color1);
+                tmpColArray[2] = PackColor(brush.Color1);
+                tmpColArray[3] = PackColor(brush.Color0);
+
+                vtxBuffer.Put(tmpVtxArray, 0, 8);
+                vtxBuffer.Position(0);
+                colBuffer.Put(tmpColArray, 0, 4);
+                colBuffer.Position(0);
+
+                gl.GlEnableClientState(GLES11.GlVertexArray);
+                gl.GlEnableClientState(GLES11.GlColorArray);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
+                gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 4);
+                gl.GlDisableClientState(GLES11.GlColorArray);
+                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             else if (brush.GradientSizeY == (y1 - y0))
             {
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
-                GL.Color4(brush.Color0); GL.Vertex2(x1, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(x0, y1);
-                GL.End();
+                tmpVtxArray[0] = x0;
+                tmpVtxArray[1] = y0;
+                tmpVtxArray[2] = x1;
+                tmpVtxArray[3] = y0;
+                tmpVtxArray[4] = x1;
+                tmpVtxArray[5] = y1;
+                tmpVtxArray[6] = x0;
+                tmpVtxArray[7] = y1;
+
+                tmpColArray[0] = PackColor(brush.Color0);
+                tmpColArray[1] = PackColor(brush.Color0);
+                tmpColArray[2] = PackColor(brush.Color1);
+                tmpColArray[3] = PackColor(brush.Color1);
+
+                vtxBuffer.Put(tmpVtxArray, 0, 8);
+                vtxBuffer.Position(0);
+                colBuffer.Put(tmpColArray, 0, 4);
+                colBuffer.Position(0);
+
+                gl.GlEnableClientState(GLES11.GlVertexArray);
+                gl.GlEnableClientState(GLES11.GlColorArray);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
+                gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 4);
+                gl.GlDisableClientState(GLES11.GlColorArray);
+                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             else if (brush.GradientSizeY == 0.0f)
             {
                 float xm = x0 + brush.GradientSizeX;
 
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(xm, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(xm, y1);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(xm, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(xm, y1);
-                GL.End();
+                tmpVtxArray[0]  = x0;
+                tmpVtxArray[1]  = y0;
+                tmpVtxArray[2]  = xm;
+                tmpVtxArray[3]  = y0;
+                tmpVtxArray[4]  = xm;
+                tmpVtxArray[5]  = y1;
+                tmpVtxArray[6]  = x0;
+                tmpVtxArray[7]  = y1;
+                tmpVtxArray[8]  = xm;
+                tmpVtxArray[9]  = y0;
+                tmpVtxArray[10] = x1;
+                tmpVtxArray[11] = y0;
+                tmpVtxArray[12] = x1;
+                tmpVtxArray[13] = y1;
+                tmpVtxArray[14] = xm;
+                tmpVtxArray[15] = y1;
+
+                tmpColArray[0] = PackColor(brush.Color0);
+                tmpColArray[1] = PackColor(brush.Color1);
+                tmpColArray[2] = PackColor(brush.Color1);
+                tmpColArray[3] = PackColor(brush.Color0);
+                tmpColArray[4] = PackColor(brush.Color1);
+                tmpColArray[5] = PackColor(brush.Color1);
+                tmpColArray[6] = PackColor(brush.Color1);
+                tmpColArray[7] = PackColor(brush.Color1);
+
+                vtxBuffer.Put(tmpVtxArray, 0, 16);
+                vtxBuffer.Position(0);
+                colBuffer.Put(tmpColArray, 0, 8);
+                colBuffer.Position(0);
+
+                gl.GlEnableClientState(GLES11.GlVertexArray);
+                gl.GlEnableClientState(GLES11.GlColorArray);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
+                gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 8);
+                gl.GlDisableClientState(GLES11.GlColorArray);
+                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             else if (brush.GradientSizeX == 0.0f)
             {
                 float ym = y0 + brush.GradientSizeY;
 
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x0, ym);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, ym);
-                GL.Color4(brush.Color0); GL.Vertex2(x1, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x0, ym);
-                GL.Color4(brush.Color1); GL.Vertex2(x0, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, ym);
-                GL.End();
+                tmpVtxArray[0]  = x0;
+                tmpVtxArray[1]  = y0;
+                tmpVtxArray[2]  = x0;
+                tmpVtxArray[3]  = ym;
+                tmpVtxArray[4]  = x1;
+                tmpVtxArray[5]  = ym;
+                tmpVtxArray[6]  = x1;
+                tmpVtxArray[7]  = y0;
+                tmpVtxArray[8]  = x0;
+                tmpVtxArray[9]  = ym;
+                tmpVtxArray[10] = x0;
+                tmpVtxArray[11] = y1;
+                tmpVtxArray[12] = x1;
+                tmpVtxArray[13] = y1;
+                tmpVtxArray[14] = x1;
+                tmpVtxArray[15] = ym;
+
+                tmpColArray[0] = PackColor(brush.Color0);
+                tmpColArray[1] = PackColor(brush.Color1);
+                tmpColArray[2] = PackColor(brush.Color1);
+                tmpColArray[3] = PackColor(brush.Color0);
+                tmpColArray[4] = PackColor(brush.Color1);
+                tmpColArray[5] = PackColor(brush.Color1);
+                tmpColArray[6] = PackColor(brush.Color1);
+                tmpColArray[7] = PackColor(brush.Color1);
+
+                vtxBuffer.Put(tmpVtxArray, 0, 16);
+                vtxBuffer.Position(0);
+                colBuffer.Put(tmpColArray, 0, 8);
+                colBuffer.Position(0);
+
+                gl.GlEnableClientState(GLES11.GlVertexArray);
+                gl.GlEnableClientState(GLES11.GlColorArray);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
+                gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 8);
+                gl.GlDisableClientState(GLES11.GlColorArray);
+                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
-            */
         }
 
         public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool miter = false)
@@ -487,111 +675,96 @@ namespace FamiStudio
 
         public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)
         {
-            /*
             if (!brush.IsGradient)
             {
                 if (smooth)
-                    GL.Enable(EnableCap.PolygonSmooth);
-                GL.Color4(brush.Color0);
-                GL.EnableClientState(ArrayCap.VertexArray);
-                GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                GL.DrawArrays(PrimitiveType.TriangleFan, 0, geo.Points.GetLength(0));
-                GL.DisableClientState(ArrayCap.VertexArray);
+                    gl.GlEnable(GLES11.GlPolygonSmoothHint);
+
+                vtxBuffer.Put(geo.Points, 0, geo.Points.Length);
+                vtxBuffer.Position(0);
+
+                gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, brush.Color0.A / 255.0f);
+                gl.GlEnableClientState(GLES11.GlVertexArray);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlDrawArrays(GLES11.GlTriangleFan, 0, geo.Points.Length / 2);
+                gl.GlDisableClientState(GLES11.GlVertexArray);
+
                 if (smooth)
-                    GL.Disable(EnableCap.PolygonSmooth);
+                    gl.GlDisable(GLES11.GlPolygonSmoothHint);
             }
             else
             {
                 Debug.Assert(brush.GradientSizeX == 0.0f);
 
-                GL.Begin(PrimitiveType.TriangleFan);
-                for (int i = 0; i < geo.Points.GetLength(0); i++)
-                {
-                    float lerp = geo.Points[i, 1] / (float)brush.GradientSizeY;
-                    byte r = (byte)(brush.Color0.R * (1.0f - lerp) + (brush.Color1.R * lerp));
-                    byte g = (byte)(brush.Color0.G * (1.0f - lerp) + (brush.Color1.G * lerp));
-                    byte b = (byte)(brush.Color0.B * (1.0f - lerp) + (brush.Color1.B * lerp));
-                    byte a = (byte)(brush.Color0.A * (1.0f - lerp) + (brush.Color1.A * lerp));
+                var vi = 0;
+                var ci = 0;
 
-                    GL.Color4(r, g, b, a);
-                    GL.Vertex2(geo.Points[i, 0], geo.Points[i, 1]);
+                for (int i = 0; i < geo.Points.Length / 2; i++)
+                {
+                    var lerp = geo.Points[i * 2 + 1] / (float)brush.GradientSizeY;
+                    var r = (int)(brush.Color0.R * (1.0f - lerp) + (brush.Color1.R * lerp));
+                    var g = (int)(brush.Color0.G * (1.0f - lerp) + (brush.Color1.G * lerp));
+                    var b = (int)(brush.Color0.B * (1.0f - lerp) + (brush.Color1.B * lerp));
+                    var a = (int)(brush.Color0.A * (1.0f - lerp) + (brush.Color1.A * lerp));
+
+                    tmpVtxArray[vi++] = geo.Points[i * 2 + 0];
+                    tmpVtxArray[vi++] = geo.Points[i * 2 + 1];
+                    tmpTexArray[ci++] = PackColor(r, g, b, a);
                 }
-                GL.End();
+
+                vtxBuffer.Put(tmpVtxArray, 0, vi);
+                vtxBuffer.Position(0);
+                colBuffer.Put(tmpColArray, 0, ci);
+                colBuffer.Position(0);
+
+                gl.GlEnableClientState(GLES11.GlVertexArray);
+                gl.GlEnableClientState(GLES11.GlColorArray);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
+                gl.GlDrawArrays(GLES11.GlTriangleFan, 0, geo.Points.Length);
+                gl.GlDisableClientState(GLES11.GlColorArray);
+                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
-            */
         }
 
         public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f, bool miter = false)
         {
-            /*
-            GL.PushMatrix();
+            gl.GlPushMatrix();
 
             AddHalfPixelOffset();
 
-            GL.Enable(EnableCap.LineSmooth);
-            GL.Color4(brush.Color0);
-#if FAMISTUDIO_LINUX
-            if (!supportsLineWidth && lineWidth > 1)
-            {
-                var pts = new float[geo.Points.Length * 2];
-                for (int i = 0; i < geo.Points.GetLength(0); i++)
-                {
-                    pts[i * 2 + 0] = geo.Points[i, 0];
-                    pts[i * 2 + 1] = geo.Points[i, 1];
-                }
+            gl.GlEnable(GLES11.GlLineSmooth);
+            gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, brush.Color0.A / 255.0f);
 
-                DrawThickLineAsPolygon(pts, brush, lineWidth);
-            }
-            else
-#endif
             {
-                GL.LineWidth(lineWidth);
-                GL.EnableClientState(ArrayCap.VertexArray);
+                gl.GlLineWidth(lineWidth);
+                gl.GlEnableClientState(GLES11.GlVertexArray);
+                
                 if (miter)
                 {
                     var points = geo.GetMiterPoints(lineWidth);
-                    GL.VertexPointer(2, VertexPointerType.Float, 0, points);
-                    GL.DrawArrays(PrimitiveType.LineStrip, 0, points.GetLength(0));
+
+                    vtxBuffer.Put(points, 0, points.Length);
+                    vtxBuffer.Position(0);
+
+                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                    gl.GlDrawArrays(GLES11.GlLineStrip, 0, points.Length / 2);
                 }
                 else
                 {
-                    GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                    GL.DrawArrays(PrimitiveType.LineStrip, 0, geo.Points.GetLength(0));
+                    vtxBuffer.Put(geo.Points, 0, geo.Points.Length);
+                    vtxBuffer.Position(0);
+
+                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                    gl.GlDrawArrays(GLES11.GlLineStrip, 0, geo.Points.Length / 2);
                 }
-                GL.DisableClientState(ArrayCap.VertexArray);
+                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
-            GL.Disable(EnableCap.LineSmooth);
-            GL.PopMatrix();
-            */
+            gl.GlDisable(GLES11.GlLineSmooth);
+            gl.GlPopMatrix();
         }
 
-        protected void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
-        {
-            /*
-            GL.Begin(PrimitiveType.Quads);
-            for (int i = 0; i < points.Length / 2 - 1; i++)
-            {
-                float x0 = points[(i + 0) * 2 + 0];
-                float y0 = points[(i + 0) * 2 + 1];
-                float x1 = points[(i + 1) * 2 + 0];
-                float y1 = points[(i + 1) * 2 + 1];
-
-                float dx = x1 - x0;
-                float dy = y1 - y0;
-                float invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
-                dx *= invHalfWidth;
-                dy *= invHalfWidth;
-
-                GL.Vertex2(x0 + dy, y0 + dx);
-                GL.Vertex2(x1 + dy, y1 + dx);
-                GL.Vertex2(x1 - dy, y1 - dx);
-                GL.Vertex2(x0 - dy, y0 - dx);
-            }
-            GL.End();
-            */
-        }
-
-        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool miter = true)
+        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool miter = false)
         {
             FillGeometry(geo, fillBrush);
             DrawGeometry(geo, lineBrush, lineWidth, miter);
@@ -635,26 +808,26 @@ namespace FamiStudio
             return new GLBrush(color0, color1, 0.0f, y1 - y0);
         }
 
-        public int CreateGLTexture(Xamarin.Forms.ImageSource image)
+        public int CreateGLTexture(Android.Graphics.Bitmap bmp)
         {
-            /*
-            Debug.Assert(pixbuf.Rowstride == pixbuf.Width * 4);
+            var id = new int[1];
+            gl.GlGenTextures(1, id, 0);
+            gl.GlBindTexture(GLES11.GlTexture2d, id[0]);
+            GLUtils.TexImage2D(GLES11.GlTexture2d, 0, bmp, 0);
+            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, GLES11.GlNearest);
+            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, GLES11.GlNearest);
+            bmp.Recycle();
 
-            int id = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, id);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, pixbuf.Width, pixbuf.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixbuf.Pixels);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
-
-            return id;
-            */
-            return -1;
+            return id[0];
         }
 
         public GLBitmap CreateBitmapFromResource(string name)
         {
+            Debug.WriteLine(name);
+
             var assembly = Assembly.GetExecutingAssembly();
 
+            // DROIDTODO
             /*
             bool needsScaling = false;
             System.Drawing.Bitmap bmp;
@@ -681,11 +854,13 @@ namespace FamiStudio
 
                 bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
             }
-
-            return new GLBitmap(CreateGLTexture(bmp), bmp.Width, bmp.Height);
             */
 
-            return null;
+            var bmp = Android.Graphics.BitmapFactory.DecodeStream(
+                typeof(GLTheme).Assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png"), null,
+                new Android.Graphics.BitmapFactory.Options() { InPremultiplied = false });
+
+            return new GLBitmap(CreateGLTexture(bmp), bmp.Width, bmp.Height);
         }
 
         public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
@@ -744,7 +919,7 @@ namespace FamiStudio
         }
 
         // TODO: Put this code in common somewhere.
-        public GLFont CreateFont(Xamarin.Forms.ImageSource bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+        public GLFont CreateFont(Android.Graphics.Bitmap bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
         {
             var font = (GLFont)null;
             var lines = def;
@@ -824,7 +999,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private GLOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback)
+        private GLOffscreenGraphics(IGL10 gl, int imageSizeX, int imageSizeY, bool allowReadback) : base(gl)
         {
             resX = imageSizeX;
             resY = imageSizeY;
@@ -845,9 +1020,9 @@ namespace FamiStudio
             */
         }
 
-        public static GLOffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
+        public static GLOffscreenGraphics Create(/*IGL10 gl,*/ int imageSizeX, int imageSizeY, bool allowReadback)
         {
-            return new GLOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
+            return new GLOffscreenGraphics(null /*gl*/, imageSizeX, imageSizeY, allowReadback);
         }
 
         public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
@@ -909,4 +1084,20 @@ namespace FamiStudio
             base.Dispose();
         }
     };
+
+    public struct Vector4
+    {
+        public Vector4(float x, float y, float z, float w)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
+        }
+
+        public float X;
+        public float Y;
+        public float Z;
+        public float W;
+    }
 }

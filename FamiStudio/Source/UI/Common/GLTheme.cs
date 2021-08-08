@@ -68,10 +68,12 @@ namespace FamiStudio
                         str = reader.ReadToEnd();
                     }
 
-#if FAMISTUDIO_WINDOWS
+#if FAMISTUDIO_WINDOWS 
                     var bmp = System.Drawing.Image.FromStream(typeof(GLTheme).Assembly.GetManifestResourceStream(imgfile)) as System.Drawing.Bitmap;
 #elif FAMISTUDIO_ANDROID
-                    var bmp = (Xamarin.Forms.ImageSource)null; // DROIDTODO
+                    var bmp = Android.Graphics.BitmapFactory.DecodeStream(
+                        typeof(GLTheme).Assembly.GetManifestResourceStream(imgfile), null,
+                        new Android.Graphics.BitmapFactory.Options() { InPremultiplied = false });
 #else
                     var bmp = Gdk.Pixbuf.LoadFromResource(imgfile);
 #endif

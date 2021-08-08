@@ -3,26 +3,29 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{B6032B13-111C-45DA-B627-AA9A711AB76B}</ProjectGuid>
     <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TemplateGuid>{c9e5eea5-ca05-42a1-839b-61506e0a37df}</TemplateGuid>
+    <TemplateGuid>{84dd83c5-0fe3-4294-9419-09e7c8ba324f}</TemplateGuid>
     <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FamiStudio</RootNamespace>
     <AssemblyName>FamiStudio.Android</AssemblyName>
+    <FileAlignment>512</FileAlignment>
     <Deterministic>True</Deterministic>
     <AndroidApplication>True</AndroidApplication>
-    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidResgenFile>Source\UI\Droid\Resources\Resource.designer.cs</AndroidResgenFile>
     <AndroidResgenClass>Resource</AndroidResgenClass>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
+    <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-    <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
     <AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
     <AndroidUseAapt2>true</AndroidUseAapt2>
     <AndroidHttpClientHandlerType>Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,7 +35,9 @@
     <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
     <AndroidLinkMode>None</AndroidLinkMode>
+    <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -44,30 +49,24 @@
     <WarningLevel>4</WarningLevel>
     <AndroidManagedSymbols>true</AndroidManagedSymbols>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
+    <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mono.Android" />
-    <Reference Include="OpenTK-1.0" />
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2012" />
-    <PackageReference Include="Xamarin.Essentials" Version="1.6.1" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Source\Player\AndroidAudioStream.cs" />
     <Compile Include="Source\UI\Common\GLGraphicsCommon.cs" />
-    <Compile Include="Source\UI\Droid\App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Source\UI\Droid\Cursors.cs" />
     <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
-    <Compile Include="Source\UI\Droid\MainActivity.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
@@ -80,23 +79,43 @@
     <None Include="Properties\AndroidManifest.xml" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Source\UI\Droid\Resources\values\styles.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\layout\activity_main.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
+    <AndroidResource Include="Source\UI\Droid\Resources\layout\content_main.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
     <AndroidResource Include="Source\UI\Droid\Resources\values\colors.xml" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\icon.xml" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\icon_round.xml" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\icon.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\launcher_foreground.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-mdpi\icon.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-mdpi\launcher_foreground.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xhdpi\icon.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xhdpi\launcher_foreground.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxhdpi\icon.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxhdpi\launcher_foreground.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\icon.png" />
-    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\dimens.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\ic_launcher_background.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\strings.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\styles.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\menu\menu_main.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\ic_launcher.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\ic_launcher_round.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-mdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-mdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-mdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xhdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xhdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xhdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxhdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxhdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxhdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher_round.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Source\UI\Droid\Resources\drawable\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.2.0.5" />
+    <PackageReference Include="Xamarin.Google.Android.Material" Version="1.0.0.1" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.6.1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
@@ -152,8 +171,8 @@
     <Compile Include="Source\UI\Droid\SystemDrawing.cs" />
     <Compile Include="Source\UI\Droid\SystemMedia.cs" />
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
+    <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\Log.cs" />
-    <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
@@ -193,9 +212,6 @@
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\ThemeBase.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
-    <EmbeddedResource Include="Source\UI\Droid\App.xaml">
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </EmbeddedResource>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc.bin" />

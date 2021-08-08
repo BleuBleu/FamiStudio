@@ -2,7 +2,8 @@
 using System.Diagnostics;
 
 #if FAMISTUDIO_ANDROID
-using OpenTK.Graphics.ES30;
+using Android.Opengl;
+using Javax.Microedition.Khronos.Opengles;
 #else
 using OpenTK.Graphics.OpenGL;
 #endif
@@ -91,23 +92,43 @@ namespace FamiStudio
         }
 
         Random rnd = new Random();
+        GLBitmap bmp;
+        GLBrush brush;
 
-        public bool Redraw()
+        public unsafe bool Redraw()
         {
+
+            if (bmp == null)
+            {
+                bmp = gfx.CreateBitmapFromResource("Noise@2x");
+                brush = new GLBrush(System.Drawing.Color.Blue);
+            }
+
+#if FALSE //FAMISTUDIO_ANDROID
+
+            gfx.BeginDraw(new System.Drawing.Rectangle(sequencer.Left, sequencer.Top, sequencer.Width, sequencer.Height), height);
+            sequencer.Render(gfx);
+            sequencer.Validate();
+            gfx.Clear(System.Drawing.Color.DarkGray);
+            gfx.DrawRectangle(10, 10, 200, 200, brush);
+            gfx.FillRectangle(250, 250, 500, 500, brush);
+            gfx.DrawText("Hello World!", ThemeBase.FontHuge, 100, 800, brush);
+            gfx.DrawBitmap(bmp, 100, 850, 100, 100, 1.0f);
+            gfx.EndDraw();
+
+            return true;
+#else
+
             bool anyNeedsRedraw = false;
             foreach (var control in controls)
             {
                 anyNeedsRedraw |= control.NeedsRedraw;
             }
 
+            anyNeedsRedraw = true; // MATTT DROIDTODO!
+
             if (anyNeedsRedraw)
             {
-                //Debug.WriteLine($"REDRAW! {width} {height}");
-
-                GL.Viewport(0, 0, width, height);
-                //GL.ClearColor(1.0f, (float)rnd.NextDouble(), 1.0f, 1.0f);
-                //GL.Clear(ClearBufferMask.ColorBufferBit);
-
                 // Tentative fix for a bug when NSF dialog is open that I can no longer repro.
                 if (controls[0].App.Project == null)
                     return true;
@@ -115,8 +136,16 @@ namespace FamiStudio
                 foreach (var control in controls)
                 {
                     gfx.BeginDraw(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
+
+                    var t0 = DateTime.Now;
+                    for (int i = 0; i < 100; i++)
+                        gfx.DrawText("The brown fox jumps over the lazy dog", ThemeBase.FontSmall, 0, 0, brush);
+                    var t1 = DateTime.Now;
+                    var str = $"Render time : {(t1 - t0).TotalMilliseconds} ms";
+
                     control.Render(gfx);
                     control.Validate();
+                    gfx.DrawText(str, ThemeBase.FontHuge, 50, 50, brush);
                     gfx.EndDraw();
                 }
 
@@ -124,14 +153,23 @@ namespace FamiStudio
             }
 
             return false;
+#endif
         }
 
-
-        public void InitializeGL(FamiStudioForm form)
+#if FAMISTUDIO_ANDROID
+        public void InitializeGL(IGL10 gl)
+        {
+            gfx = new GLGraphics(gl);
+            foreach (var ctrl in controls)
+                ctrl.RenderInitialized(gfx);
+        }
+#else
+        public void InitializeGL()
         {
             gfx = new GLGraphics();
             foreach (var ctrl in controls)
                 ctrl.RenderInitialized(gfx);
         }
+#endif
     }
 }
