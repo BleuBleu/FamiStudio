@@ -93,6 +93,7 @@ namespace FamiStudio
             gl.GlLoadIdentity();
             gl.GlBlendFunc(GLES11.GlSrcAlpha, GLES11.GlOneMinusSrcAlpha);
             gl.GlEnable(GLES11.GlBlend);
+            gl.GlEnableClientState(GLES11.GlVertexArray);
 
             transform = new Vector4(1, 1, 0, 0);
             scissor = controlRect;
@@ -222,13 +223,11 @@ namespace FamiStudio
             gl.GlEnable(GLES11.GlTexture2d);
             gl.GlBindTexture(GLES11.GlTexture2d, bmp.Id);
             gl.GlColor4f(1, 1, 1, opacity);
-            gl.GlEnableClientState(GLES11.GlVertexArray);
             gl.GlEnableClientState(GLES11.GlTextureCoordArray);
             gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
             gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
             gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 4);
             gl.GlDisableClientState(GLES11.GlTextureCoordArray);
-            gl.GlDisableClientState(GLES11.GlVertexArray);
             gl.GlDisable(GLES11.GlTexture2d);
         }
 
@@ -317,13 +316,11 @@ namespace FamiStudio
             gl.GlEnable(GLES11.GlTexture2d);
             gl.GlBindTexture(GLES11.GlTexture2d, font.Texture);
             gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, 1.0f);
-            gl.GlEnableClientState(GLES11.GlVertexArray);
             gl.GlEnableClientState(GLES11.GlTextureCoordArray);
             gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
             gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
             gl.GlDrawElements(GLES11.GlTriangles, text.Length * 6, GLES11.GlUnsignedShort, idxBuffer);
             gl.GlDisableClientState(GLES11.GlTextureCoordArray);
-            gl.GlDisableClientState(GLES11.GlVertexArray);
             gl.GlDisable(GLES11.GlTexture2d);
         }
 
@@ -365,13 +362,11 @@ namespace FamiStudio
                     gl.GlEnable(GLES11.GlTexture2d);
                     gl.GlBindTexture(GLES11.GlTexture2d, brush.Bitmap.Id);
                     gl.GlLineWidth(width);
-                    gl.GlEnableClientState(GLES11.GlVertexArray);
                     gl.GlEnableClientState(GLES11.GlTextureCoordArray);
                     gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                     gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
                     gl.GlDrawArrays(GLES11.GlLines, 0, 2);
                     gl.GlDisableClientState(GLES11.GlTextureCoordArray);
-                    gl.GlDisableClientState(GLES11.GlVertexArray);
                     gl.GlDisable(GLES11.GlTexture2d);
                 }
                 else
@@ -384,10 +379,8 @@ namespace FamiStudio
                     vtxBuffer.Position(0);
 
                     gl.GlLineWidth(width);
-                    gl.GlEnableClientState(GLES11.GlVertexArray);
                     gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                     gl.GlDrawArrays(GLES11.GlLines, 0, 2);
-                    gl.GlDisableClientState(GLES11.GlVertexArray);
                 }
             }
             if (antialiasing)
@@ -467,10 +460,8 @@ namespace FamiStudio
                     vtxBuffer.Position(0);
 
                     gl.GlLineWidth(width);
-                    gl.GlEnableClientState(GLES11.GlVertexArray);
                     gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                     gl.GlDrawArrays(GLES11.GlLineLoop, 0, 4);
-                    gl.GlDisableClientState(GLES11.GlVertexArray);
                 }
             }
 
@@ -511,10 +502,8 @@ namespace FamiStudio
                 vtxBuffer.Position(0);
 
                 gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, brush.Color0.A / 255.0f);
-                gl.GlEnableClientState(GLES11.GlVertexArray);
                 gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                 gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 4);
-                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             else if (brush.GradientSizeX == (x1 - x0))
             {
@@ -537,13 +526,11 @@ namespace FamiStudio
                 colBuffer.Put(tmpColArray, 0, 4);
                 colBuffer.Position(0);
 
-                gl.GlEnableClientState(GLES11.GlVertexArray);
                 gl.GlEnableClientState(GLES11.GlColorArray);
                 gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                 gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
                 gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 4);
                 gl.GlDisableClientState(GLES11.GlColorArray);
-                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             else if (brush.GradientSizeY == (y1 - y0))
             {
@@ -566,13 +553,11 @@ namespace FamiStudio
                 colBuffer.Put(tmpColArray, 0, 4);
                 colBuffer.Position(0);
 
-                gl.GlEnableClientState(GLES11.GlVertexArray);
                 gl.GlEnableClientState(GLES11.GlColorArray);
                 gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                 gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
                 gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 4);
                 gl.GlDisableClientState(GLES11.GlColorArray);
-                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             else if (brush.GradientSizeY == 0.0f)
             {
@@ -609,13 +594,11 @@ namespace FamiStudio
                 colBuffer.Put(tmpColArray, 0, 8);
                 colBuffer.Position(0);
 
-                gl.GlEnableClientState(GLES11.GlVertexArray);
                 gl.GlEnableClientState(GLES11.GlColorArray);
                 gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                 gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
                 gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 8);
                 gl.GlDisableClientState(GLES11.GlColorArray);
-                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             else if (brush.GradientSizeX == 0.0f)
             {
@@ -652,13 +635,11 @@ namespace FamiStudio
                 colBuffer.Put(tmpColArray, 0, 8);
                 colBuffer.Position(0);
 
-                gl.GlEnableClientState(GLES11.GlVertexArray);
                 gl.GlEnableClientState(GLES11.GlColorArray);
                 gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                 gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
                 gl.GlDrawArrays(GLES11.GlTriangleFan, 0, 8);
                 gl.GlDisableClientState(GLES11.GlColorArray);
-                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
         }
 
@@ -684,10 +665,8 @@ namespace FamiStudio
                 vtxBuffer.Position(0);
 
                 gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, brush.Color0.A / 255.0f);
-                gl.GlEnableClientState(GLES11.GlVertexArray);
                 gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                 gl.GlDrawArrays(GLES11.GlTriangleFan, 0, geo.Points.Length / 2);
-                gl.GlDisableClientState(GLES11.GlVertexArray);
 
                 if (smooth)
                     gl.GlDisable(GLES11.GlPolygonSmoothHint);
@@ -717,13 +696,11 @@ namespace FamiStudio
                 colBuffer.Put(tmpColArray, 0, ci);
                 colBuffer.Position(0);
 
-                gl.GlEnableClientState(GLES11.GlVertexArray);
                 gl.GlEnableClientState(GLES11.GlColorArray);
                 gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                 gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
                 gl.GlDrawArrays(GLES11.GlTriangleFan, 0, geo.Points.Length);
                 gl.GlDisableClientState(GLES11.GlColorArray);
-                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
         }
 
@@ -738,7 +715,6 @@ namespace FamiStudio
 
             {
                 gl.GlLineWidth(lineWidth);
-                gl.GlEnableClientState(GLES11.GlVertexArray);
                 
                 if (miter)
                 {
@@ -758,7 +734,6 @@ namespace FamiStudio
                     gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
                     gl.GlDrawArrays(GLES11.GlLineStrip, 0, geo.Points.Length / 2);
                 }
-                gl.GlDisableClientState(GLES11.GlVertexArray);
             }
             gl.GlDisable(GLES11.GlLineSmooth);
             gl.GlPopMatrix();

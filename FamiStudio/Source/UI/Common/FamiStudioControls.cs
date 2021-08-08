@@ -91,33 +91,16 @@ namespace FamiStudio
                 ctrl.Invalidate();
         }
 
-        Random rnd = new Random();
-        GLBitmap bmp;
+#if FAMISTUDIO_ANDROID
         GLBrush brush;
+#endif
 
         public unsafe bool Redraw()
         {
-
-            if (bmp == null)
-            {
-                bmp = gfx.CreateBitmapFromResource("Noise@2x");
-                brush = new GLBrush(System.Drawing.Color.Blue);
-            }
-
-#if FALSE //FAMISTUDIO_ANDROID
-
-            gfx.BeginDraw(new System.Drawing.Rectangle(sequencer.Left, sequencer.Top, sequencer.Width, sequencer.Height), height);
-            sequencer.Render(gfx);
-            sequencer.Validate();
-            gfx.Clear(System.Drawing.Color.DarkGray);
-            gfx.DrawRectangle(10, 10, 200, 200, brush);
-            gfx.FillRectangle(250, 250, 500, 500, brush);
-            gfx.DrawText("Hello World!", ThemeBase.FontHuge, 100, 800, brush);
-            gfx.DrawBitmap(bmp, 100, 850, 100, 100, 1.0f);
-            gfx.EndDraw();
-
-            return true;
-#else
+#if FAMISTUDIO_ANDROID
+            if (brush == null)
+                brush = new GLBrush(System.Drawing.Color.Red);
+#endif
 
             bool anyNeedsRedraw = false;
             foreach (var control in controls)
@@ -133,19 +116,19 @@ namespace FamiStudio
                 if (controls[0].App.Project == null)
                     return true;
 
+
                 foreach (var control in controls)
                 {
-                    gfx.BeginDraw(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
-
+#if FAMISTUDIO_ANDROID
                     var t0 = DateTime.Now;
-                    for (int i = 0; i < 100; i++)
-                        gfx.DrawText("The brown fox jumps over the lazy dog", ThemeBase.FontSmall, 0, 0, brush);
-                    var t1 = DateTime.Now;
-                    var str = $"Render time : {(t1 - t0).TotalMilliseconds} ms";
-
+#endif
+                    gfx.BeginDraw(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
                     control.Render(gfx);
                     control.Validate();
-                    gfx.DrawText(str, ThemeBase.FontHuge, 50, 50, brush);
+#if FAMISTUDIO_ANDROID
+                    var t1 = DateTime.Now;
+                    gfx.DrawText($"Render time : {(t1 - t0).TotalMilliseconds} ms", ThemeBase.FontMedium, 10, 10, brush);
+#endif
                     gfx.EndDraw();
                 }
 
@@ -153,7 +136,6 @@ namespace FamiStudio
             }
 
             return false;
-#endif
         }
 
 #if FAMISTUDIO_ANDROID
