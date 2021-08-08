@@ -5,6 +5,7 @@ using System.Diagnostics;
 
 #if FAMISTUDIO_ANDROID
 using Android.Opengl;
+using Javax.Microedition.Khronos.Opengles;
 #else
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -185,7 +186,7 @@ namespace FamiStudio
             Color0 = Color.FromArgb(255, 255, 255, 255);
 
 #if FAMISTUDIO_ANDROID // DROIDTODO
-            Debug.Assert(false);
+            
 #else
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)(tileX ? All.Repeat : All.ClampToEdge));

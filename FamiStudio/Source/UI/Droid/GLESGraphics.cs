@@ -295,11 +295,6 @@ namespace FamiStudio
                 tmpTexArray[(i * 4 + 2) * 2 + 0] = info.u1; tmpTexArray[(i * 4 + 2) * 2 + 1] = info.v1;
                 tmpTexArray[(i * 4 + 3) * 2 + 0] = info.u0; tmpTexArray[(i * 4 + 3) * 2 + 1] = info.v1;
 
-                var i0 = (short)(i * 4 + 0);
-                var i1 = (short)(i * 4 + 1);
-                var i2 = (short)(i * 4 + 2);
-                var i3 = (short)(i * 4 + 3);
-
                 x += info.xadvance;
                 if (i != text.Length - 1)
                 {
@@ -339,50 +334,50 @@ namespace FamiStudio
 
             if (antialiasing)
                 gl.GlEnable(GLES11.GlLineSmooth);
+
+            if (brush.IsBitmap)
             {
-                if (brush.IsBitmap)
-                {
-                    var size = brush.Bitmap.Size;
+                var size = brush.Bitmap.Size;
 
-                    tmpVtxArray[0] = x0;
-                    tmpVtxArray[1] = y0;
-                    tmpVtxArray[2] = x1;
-                    tmpVtxArray[3] = y1;
+                tmpVtxArray[0] = x0;
+                tmpVtxArray[1] = y0;
+                tmpVtxArray[2] = x1;
+                tmpVtxArray[3] = y1;
 
-                    tmpTexArray[0] = (x0 + 0.5f) / size.Width;
-                    tmpTexArray[1] = (y0 + 0.5f) / size.Height;
-                    tmpTexArray[2] = (x1 + 0.5f) / size.Width;
-                    tmpTexArray[3] = (y1 + 0.5f) / size.Height;
+                tmpTexArray[0] = (x0 + 0.5f) / size.Width;
+                tmpTexArray[1] = (y0 + 0.5f) / size.Height;
+                tmpTexArray[2] = (x1 + 0.5f) / size.Width;
+                tmpTexArray[3] = (y1 + 0.5f) / size.Height;
 
-                    vtxBuffer.Put(tmpVtxArray, 0, 4);
-                    vtxBuffer.Position(0);
-                    texBuffer.Put(tmpTexArray, 0, 4);
-                    texBuffer.Position(0);
+                vtxBuffer.Put(tmpVtxArray, 0, 4);
+                vtxBuffer.Position(0);
+                texBuffer.Put(tmpTexArray, 0, 4);
+                texBuffer.Position(0);
 
-                    gl.GlEnable(GLES11.GlTexture2d);
-                    gl.GlBindTexture(GLES11.GlTexture2d, brush.Bitmap.Id);
-                    gl.GlLineWidth(width);
-                    gl.GlEnableClientState(GLES11.GlTextureCoordArray);
-                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
-                    gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
-                    gl.GlDrawArrays(GLES11.GlLines, 0, 2);
-                    gl.GlDisableClientState(GLES11.GlTextureCoordArray);
-                    gl.GlDisable(GLES11.GlTexture2d);
-                }
-                else
-                {
-                    tmpVtxArray[0] = x0;
-                    tmpVtxArray[1] = y0;
-                    tmpVtxArray[2] = x1;
-                    tmpVtxArray[3] = y1;
-                    vtxBuffer.Put(tmpVtxArray, 0, 4);
-                    vtxBuffer.Position(0);
-
-                    gl.GlLineWidth(width);
-                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
-                    gl.GlDrawArrays(GLES11.GlLines, 0, 2);
-                }
+                gl.GlEnable(GLES11.GlTexture2d);
+                gl.GlBindTexture(GLES11.GlTexture2d, brush.Bitmap.Id);
+                gl.GlLineWidth(width);
+                gl.GlEnableClientState(GLES11.GlTextureCoordArray);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
+                gl.GlDrawArrays(GLES11.GlLines, 0, 2);
+                gl.GlDisableClientState(GLES11.GlTextureCoordArray);
+                gl.GlDisable(GLES11.GlTexture2d);
             }
+            else
+            {
+                tmpVtxArray[0] = x0;
+                tmpVtxArray[1] = y0;
+                tmpVtxArray[2] = x1;
+                tmpVtxArray[3] = y1;
+                vtxBuffer.Put(tmpVtxArray, 0, 4);
+                vtxBuffer.Position(0);
+
+                gl.GlLineWidth(width);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlDrawArrays(GLES11.GlLines, 0, 2);
+            }
+
             if (antialiasing)
                 gl.GlDisable(GLES11.GlLineSmooth);
             gl.GlPopMatrix();
@@ -412,9 +407,11 @@ namespace FamiStudio
 
             gl.GlColor4f(brush.Color0.R / 255.0f, brush.Color0.G / 255.0f, brush.Color0.B / 255.0f, brush.Color0.A / 255.0f);
             {
-                /*
                 if (brush.IsBitmap)
                 {
+                    Debug.Assert(false);
+
+                    /*
                     GL.Enable(EnableCap.Texture2D);
                     GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
                     GL.LineWidth(width);
@@ -431,22 +428,24 @@ namespace FamiStudio
                     GL.Vertex2(x0, y1);
 
                     GL.End();
-                    GL.Disable(EnableCap.Texture2D);
+                    GL.Disable(EnableCap.Texture2D);*/
                 }
                 else if (miter)
                 {
+                    Debug.Assert(false);
+
                     var pad = width * 0.5f;
 
+                    /*
                     GL.LineWidth(width);
                     GL.Begin(PrimitiveType.Lines);
                     GL.Vertex2(x0 - pad, y0); GL.Vertex2(x1 + pad, y0);
                     GL.Vertex2(x1, y0 - pad); GL.Vertex2(x1, y1 + pad);
                     GL.Vertex2(x1 + pad, y1); GL.Vertex2(x0 - pad, y1);
                     GL.Vertex2(x0, y1 + pad); GL.Vertex2(x0, y0 - pad);
-                    GL.End();
+                    GL.End();*/
                 }
                 else
-                */
                 {
                     tmpVtxArray[0] = x0;
                     tmpVtxArray[1] = y0;
