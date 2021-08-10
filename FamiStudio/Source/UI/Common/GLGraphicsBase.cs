@@ -1018,10 +1018,10 @@ namespace FamiStudio
                 var i1 = (short)(batch.vtxIdx / 2 + 1);
                 var i2 = (short)(batch.vtxIdx / 2 + 2);
                 var i3 = (short)(batch.vtxIdx / 2 + 3);
-                var i4 = (short)(batch.vtxIdx / 2 + 0);
-                var i5 = (short)(batch.vtxIdx / 2 + 1);
-                var i6 = (short)(batch.vtxIdx / 2 + 2);
-                var i7 = (short)(batch.vtxIdx / 2 + 3);
+                var i4 = (short)(batch.vtxIdx / 2 + 4);
+                var i5 = (short)(batch.vtxIdx / 2 + 5);
+                var i6 = (short)(batch.vtxIdx / 2 + 6);
+                var i7 = (short)(batch.vtxIdx / 2 + 7);
 
                 batch.idxArray[batch.idxIdx++] = i0;
                 batch.idxArray[batch.idxIdx++] = i1;
