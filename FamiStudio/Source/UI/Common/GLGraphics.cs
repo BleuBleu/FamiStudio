@@ -6,43 +6,28 @@ using System.Reflection;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
+#if FAMISTUDIO_WINDOWS
+using Bitmap = System.Drawing.Bitmap;
+#else
+using Bitmap = Gdk.Pixbuf;
+#endif
+
 namespace FamiStudio
 {
-    public class GLGraphics : IDisposable
+    public class GLGraphics : GLGraphicsBase
     {
-#if FAMISTUDIO_LINUX
-        protected bool supportsLineWidth = false;
-#endif
-        protected bool antialiasing = false;
-        protected float windowScaling = 1.0f;
-        protected int windowSizeY;
-        protected Rectangle scissor;
-        protected Rectangle baseScissorRect;
-        protected Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
-        protected Stack<Rectangle> clipStack = new Stack<Rectangle>();
-        protected Stack<Vector4> transformStack = new Stack<Vector4>();
-        protected Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
-        public float WindowScaling => windowScaling;
-
         public GLGraphics()
         {
-            windowScaling = GLTheme.MainWindowScaling;
+            dashedBitmap = CreateBitmapFromResource("Dash");
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.Repeat);
         }
 
-        public virtual void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
+        public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
         {
-#if FAMISTUDIO_LINUX
-            var lineWidths = new float[2];
-            GL.GetFloat(GetPName.LineWidthRange, lineWidths);
-            supportsLineWidth = lineWidths[1] > 1.0f;
-#endif
+            base.BeginDraw(unflippedControlRect, windowSizeY);
 
-            this.windowSizeY = windowSizeY;
-
-            var controlRect = FlipRectangleY(unflippedControlRect);
-            baseScissorRect = unflippedControlRect;
-            GL.Viewport(controlRect.Left, controlRect.Top, controlRect.Width, controlRect.Height);
-
+            GL.Viewport(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
             GL.Ortho(0, unflippedControlRect.Width, unflippedControlRect.Height, 0, -1, 1);
@@ -51,90 +36,23 @@ namespace FamiStudio
             GL.LoadIdentity();
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.Enable(EnableCap.Blend);
-
-            transform = new Vector4(1, 1, 0, 0);
-            scissor = controlRect;
+            GL.Disable(EnableCap.DepthTest);
+            GL.Disable(EnableCap.StencilTest);
             GL.Enable(EnableCap.ScissorTest);
-            GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
+            GL.Scissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
+            GL.EnableClientState(ArrayCap.VertexArray);
         }
 
-        public virtual void EndDraw()
+        private void SetScissorRect(int x0, int y0, int x1, int y1)
         {
-        }
-
-        protected Rectangle FlipRectangleY(Rectangle rc)
-        {
-            return new Rectangle(
-                rc.Left,
-                windowSizeY - rc.Top - rc.Height,
-                rc.Width,
-                rc.Height);
-        }
-
-        protected void AddHalfPixelOffset(float x = 0.5f, float y = 0.5f)
-        {
-            GL.GetFloat(GetPName.ModelviewMatrix, out Matrix4 matrix);
-            matrix.Row3.X += x;
-            matrix.Row3.Y += y;
-            GL.LoadMatrix(ref matrix);
-        }
-
-        public bool AntiAliasing
-        {
-            get { return antialiasing; }
-            set { antialiasing = value; }
-        }
-
-        public void PushTranslation(float x, float y)
-        {
-            transformStack.Push(transform);
-            transform.Z += x;
-            transform.W += y;
-
-            GL.PushMatrix();
-            GL.Translate(x, y, 0);
-        }
- 
-        public void PushTransform(float tx, float ty, float sx, float sy)
-        {
-            transformStack.Push(transform);
-
-            transform.X *= sx;
-            transform.Y *= sy;
-            transform.Z += tx;
-            transform.W += ty;
-
-            GL.PushMatrix();
-            GL.Translate(tx, ty, 0);
-            GL.Scale(sx, sy, 0);
-        }
-
-        public void PopTransform()
-        {
-            GL.PopMatrix();
-
-            transform = transformStack.Pop();
-        }
-
-        public void PushClip(int x0, int y0, int x1, int y1)
-        {
-            // OpenGL 1.1 doesnt support multiple scissor rects, but for
-            // our purpose, simply intersecting the rects does the job.
-            clipStack.Push(scissor);
-            scissor = new Rectangle(
-                (int)(transform.Z + baseScissorRect.Left + x0),
-                (int)(transform.W + baseScissorRect.Top  + y0),
-                x1 - x0,
-                y1 - y0);
+            var scissor = new Rectangle(controlRect.X + x0, controlRect.Y + y0, x1 - x0, y1 - y0);
             scissor = FlipRectangleY(scissor);
-            scissor.Intersect(clipStack.Peek());
             GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
         }
 
-        public void PopClip()
+        private void ClearScissorRect()
         {
-            scissor = clipStack.Pop();
-            GL.Scissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
+            GL.Scissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
         }
 
         public void Clear(Color color)
@@ -143,515 +61,57 @@ namespace FamiStudio
             GL.Clear(ClearBufferMask.ColorBufferBit);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
+        public void UpdateBitmap(GLBitmap bmp, int x, int y, int width, int height, int[] data)
         {
-            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
-        }
-
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity)
-        {
-            int x0 = (int)x;
-            int y0 = (int)y;
-            int x1 = (int)(x + width);
-            int y1 = (int)(y + height);
-
-            GL.Enable(EnableCap.Texture2D);
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
-            GL.Color4(1.0f, 1.0f, 1.0f, opacity);
-
-            GL.Begin(PrimitiveType.Quads);
-            GL.TexCoord2(0, 0); GL.Vertex2(x0, y0);
-            GL.TexCoord2(1, 0); GL.Vertex2(x1, y0);
-            GL.TexCoord2(1, 1); GL.Vertex2(x1, y1);
-            GL.TexCoord2(0, 1); GL.Vertex2(x0, y1);
-            GL.End();
-
-            GL.Disable(EnableCap.Texture2D);
+            GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, data);
         }
 
-        // HACK : Very specific call only used by video rendering, too lazy to do the proper transforms.
-        public void DrawRotatedFlippedBitmap(GLBitmap bmp, float x, float y, float width, float height)
+        protected override int CreateEmptyTexture(int width, int height)
         {
-            GL.Enable(EnableCap.Texture2D);
-            GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
-            GL.Color4(1.0f, 1.0f, 1.0f, 1.0f);
+            int id = GL.GenTexture();
 
-            GL.Begin(PrimitiveType.Quads);
-            GL.TexCoord2(0, 0); GL.Vertex2(x - height, y);
-            GL.TexCoord2(1, 0); GL.Vertex2(x - height, y - width);
-            GL.TexCoord2(1, 1); GL.Vertex2(x, y - width);
-            GL.TexCoord2(0, 1); GL.Vertex2(x, y );
-            GL.End();
+            GL.BindTexture(TextureTarget.Texture2D, id);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.ClampToEdge);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, width, height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, new uint[width * height]);
 
-            GL.Disable(EnableCap.Texture2D);
+            return id;
         }
-        
-        public unsafe void DrawText(string text, GLFont font, float startX, float startY, GLBrush brush, float width = 1000)
+
+        protected override int CreateTexture(Bitmap bmp)
         {
-            if (string.IsNullOrEmpty(text))
-                return;
-
-            int alignmentOffsetX = 0;
-            if (font.Alignment != 0)
-            {
-                font.MeasureString(text, out int minX, out int maxX);
-
-                if (font.Alignment == 1)
-                {
-                    alignmentOffsetX -= minX;
-                    alignmentOffsetX += ((int)width - maxX - minX) / 2;
-                }
-                else
-                {
-                    alignmentOffsetX -= minX;
-                    alignmentOffsetX += ((int)width - maxX - minX);
-                }
-            }
-
-            var numVertices = text.Length * 4;
-            var vertices  = stackalloc float[numVertices * 2];
-            var texCoords = stackalloc float[numVertices * 2];
-
-            int x = (int)(startX + alignmentOffsetX);
-            int y = (int)(startY + font.OffsetY);
-
-            for (int i = 0; i < text.Length; i++)
-            {
-                var c0 = text[i];
-                var info = font.GetCharInfo(c0);
-
-                int x0 = x + info.xoffset;
-                int y0 = y + info.yoffset;
-                int x1 = x0 + info.width;
-                int y1 = y0 + info.height;
-
-                vertices[(i * 4 + 0) * 2 + 0] = x0; vertices[(i * 4 + 0) * 2 + 1] = y0;
-                vertices[(i * 4 + 1) * 2 + 0] = x1; vertices[(i * 4 + 1) * 2 + 1] = y0;
-                vertices[(i * 4 + 2) * 2 + 0] = x1; vertices[(i * 4 + 2) * 2 + 1] = y1;
-                vertices[(i * 4 + 3) * 2 + 0] = x0; vertices[(i * 4 + 3) * 2 + 1] = y1;
-
-                texCoords[(i * 4 + 0) * 2 + 0] = info.u0; texCoords[(i * 4 + 0) * 2 + 1] = info.v0;
-                texCoords[(i * 4 + 1) * 2 + 0] = info.u1; texCoords[(i * 4 + 1) * 2 + 1] = info.v0;
-                texCoords[(i * 4 + 2) * 2 + 0] = info.u1; texCoords[(i * 4 + 2) * 2 + 1] = info.v1;
-                texCoords[(i * 4 + 3) * 2 + 0] = info.u0; texCoords[(i * 4 + 3) * 2 + 1] = info.v1;
-
-                x += info.xadvance;
-                if (i != text.Length - 1)
-                {
-                    char c1 = text[i + 1];
-                    x += font.GetKerning(c0, c1);
-                }
-            }
-
-            GL.Enable(EnableCap.Texture2D);
-            GL.BindTexture(TextureTarget.Texture2D, font.Texture);
-            GL.Color4(brush.Color0.R, brush.Color0.G, brush.Color0.B, (byte)255);
-            GL.EnableClientState(ArrayCap.VertexArray);
-            GL.EnableClientState(ArrayCap.TextureCoordArray);
-            GL.VertexPointer(2, VertexPointerType.Float, 0, new IntPtr(vertices));
-            GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, new IntPtr(texCoords));
-            GL.DrawArrays(PrimitiveType.Quads, 0, numVertices);
-            GL.DisableClientState(ArrayCap.TextureCoordArray);
-            GL.DisableClientState(ArrayCap.VertexArray);
-            GL.Disable(EnableCap.Texture2D);
-        }
-
-        public float MeasureString(string text, GLFont font)
-        {
-            font.MeasureString(text, out int minX, out int maxX);
-            return maxX - minX;
-        }
-
-        public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
-        {
-            GL.PushMatrix();
-            AddHalfPixelOffset();
-            GL.Color4(brush.Color0);
-            if (antialiasing)
-                GL.Enable(EnableCap.LineSmooth);
-#if FAMISTUDIO_LINUX
-            if (!supportsLineWidth && width > 1)
-            {
-                DrawThickLineAsPolygon(new[] {
-                    x0, y0,
-                    x1, y1 }, brush, width);
-            }
-            else
-#endif
-            {
-                if (brush.IsBitmap)
-                {
-                    GL.Enable(EnableCap.Texture2D);
-                    GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
-                    GL.LineWidth(width);
-                    GL.Begin(PrimitiveType.Lines);
-
-                    var size = brush.Bitmap.Size;
-                    GL.TexCoord2((x0 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
-                    GL.Vertex2(x0, y0);
-                    GL.TexCoord2((x1 + 0.5f) / size.Width, (y1 + 0.5f) / size.Height);
-                    GL.Vertex2(x1, y1);
-
-                    GL.End();
-                    GL.Disable(EnableCap.Texture2D);
-                }
-                else
-                {
-                    GL.LineWidth(width);
-                    GL.Begin(PrimitiveType.Lines);
-                    GL.Vertex2(x0, y0);
-                    GL.Vertex2(x1, y1);
-                    GL.End();
-                }
-            }
-            if (antialiasing)
-                GL.Disable(EnableCap.LineSmooth);
-            GL.PopMatrix();
-        }
-
-        public void DrawLine(float[,] points, GLBrush brush)
-        {
-            for (int i = 0; i < points.GetLength(0) - 1; i++)
-            {
-                DrawLine(points[i + 0, 0], points[i + 0, 1], points[i + 1, 0], points[i + 1, 1], brush);
-            }
-        }
-
-        public void DrawRectangle(RectangleF rect, GLBrush brush, float width = 1.0f)
-        {
-            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width);
-        }
-
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool miter = false)
-        {
-            GL.PushMatrix();
-
-            AddHalfPixelOffset();
-
-            if (width > 1)
-                GL.Enable(EnableCap.LineSmooth);
-
-            GL.Color4(brush.Color0);
-#if FAMISTUDIO_LINUX
-            if (!supportsLineWidth && width > 1)
-            {
-                DrawThickLineAsPolygon(new[] {
-                    x0, y0,
-                    x1, y0,
-                    x1, y1,
-                    x0, y1,
-                    x0, y0 }, brush, width);
-            }
-            else
-#endif
-            {
-                if (brush.IsBitmap)
-                {
-                    GL.Enable(EnableCap.Texture2D);
-                    GL.BindTexture(TextureTarget.Texture2D, brush.Bitmap.Id);
-                    GL.LineWidth(width);
-                    GL.Begin(PrimitiveType.LineLoop);
-
-                    var size = brush.Bitmap.Size;
-                    GL.TexCoord2((x0 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
-                    GL.Vertex2(x0, y0);
-                    GL.TexCoord2((x1 + 0.5f) / size.Width, (y0 + 0.5f) / size.Height);
-                    GL.Vertex2(x1, y0);
-                    GL.TexCoord2((x1 + 0.5f) / size.Width, (y1 + 0.5f) / size.Height);
-                    GL.Vertex2(x1, y1);
-                    GL.TexCoord2((x0 + 0.5f) / size.Width, (y1 + 0.5f) / size.Height);
-                    GL.Vertex2(x0, y1);
-
-                    GL.End();
-                    GL.Disable(EnableCap.Texture2D);
-                }
-                else if (miter)
-                {
-                    var pad = width * 0.5f;
-
-                    GL.LineWidth(width);
-                    GL.Begin(PrimitiveType.Lines);
-                    GL.Vertex2(x0 - pad, y0); GL.Vertex2(x1 + pad, y0);
-                    GL.Vertex2(x1, y0 - pad); GL.Vertex2(x1, y1 + pad);
-                    GL.Vertex2(x1 + pad, y1); GL.Vertex2(x0 - pad, y1);
-                    GL.Vertex2(x0, y1 + pad); GL.Vertex2(x0, y0 - pad);
-                    GL.End();
-                }
-                else
-                { 
-                    GL.LineWidth(width);
-                    GL.Begin(PrimitiveType.LineLoop);
-                    GL.Vertex2(x0, y0);
-                    GL.Vertex2(x1, y0);
-                    GL.Vertex2(x1, y1);
-                    GL.Vertex2(x0, y1);
-                    GL.End();
-                }
-            }
-
-            if (width > 1)
-                GL.Disable(EnableCap.LineSmooth);
-
-            GL.PopMatrix();
-        }
-
-        public void FillRectangle(RectangleF rect, GLBrush brush)
-        {
-            FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
-        }
-
-        public void FillRectangle(float x0, float y0, float x1, float y1, GLBrush brush)
-        {
-            if (!brush.IsGradient)
-            {
-                GL.Color4(brush.Color0);
-                GL.Begin(PrimitiveType.Quads);
-                GL.Vertex2(x0, y0);
-                GL.Vertex2(x1, y0);
-                GL.Vertex2(x1, y1);
-                GL.Vertex2(x0, y1);
-                GL.End();
-            }
-            else if (brush.GradientSizeX == (x1 - x0))
-            {
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y1);
-                GL.End();
-            }
-            else if (brush.GradientSizeY == (y1 - y0))
-            {
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
-                GL.Color4(brush.Color0); GL.Vertex2(x1, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(x0, y1);
-                GL.End();
-            }
-            else if (brush.GradientSizeY == 0.0f)
-            {
-                float xm = x0 + brush.GradientSizeX;
-
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(xm, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(xm, y1);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(xm, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(xm, y1);
-                GL.End();
-            }
-            else if (brush.GradientSizeX == 0.0f)
-            {
-                float ym = y0 + brush.GradientSizeY;
-
-                GL.Begin(PrimitiveType.Quads);
-                GL.Color4(brush.Color0); GL.Vertex2(x0, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x0, ym);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, ym);
-                GL.Color4(brush.Color0); GL.Vertex2(x1, y0);
-                GL.Color4(brush.Color1); GL.Vertex2(x0, ym);
-                GL.Color4(brush.Color1); GL.Vertex2(x0, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, y1);
-                GL.Color4(brush.Color1); GL.Vertex2(x1, ym);
-                GL.End();
-            }
-        }
-
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool miter = false)
-        {
-            FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush, width, miter);
-        }
-
-        public GLGeometry CreateGeometry(float[,] points, bool closed = true)
-        {
-            return new GLGeometry(points, closed);
-        }
-
-        public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)
-        {
-            if (!brush.IsGradient)
-            {
-                if (smooth)
-                    GL.Enable(EnableCap.PolygonSmooth);
-                GL.Color4(brush.Color0);
-                GL.EnableClientState(ArrayCap.VertexArray);
-                GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                GL.DrawArrays(PrimitiveType.TriangleFan, 0, geo.Points.GetLength(0));
-                GL.DisableClientState(ArrayCap.VertexArray);
-                if (smooth)
-                    GL.Disable(EnableCap.PolygonSmooth);
-            }
-            else
-            {
-                Debug.Assert(brush.GradientSizeX == 0.0f);
-
-                GL.Begin(PrimitiveType.TriangleFan);
-                for (int i = 0; i < geo.Points.GetLength(0); i++)
-                {
-                    float lerp = geo.Points[i, 1] / (float)brush.GradientSizeY;
-                    byte r = (byte)(brush.Color0.R * (1.0f - lerp) + (brush.Color1.R * lerp));
-                    byte g = (byte)(brush.Color0.G * (1.0f - lerp) + (brush.Color1.G * lerp));
-                    byte b = (byte)(brush.Color0.B * (1.0f - lerp) + (brush.Color1.B * lerp));
-                    byte a = (byte)(brush.Color0.A * (1.0f - lerp) + (brush.Color1.A * lerp));
-
-                    GL.Color4(r, g, b, a);
-                    GL.Vertex2(geo.Points[i, 0], geo.Points[i, 1]);
-                }
-                GL.End();
-            }
-        }
-
-        public void DrawGeometry(GLGeometry geo, GLBrush brush, float lineWidth = 1.0f, bool miter = false)
-        {
-            GL.PushMatrix();
-
-            AddHalfPixelOffset();
-
-            GL.Enable(EnableCap.LineSmooth);
-            GL.Color4(brush.Color0);
-#if FAMISTUDIO_LINUX
-            if (!supportsLineWidth && lineWidth > 1)
-            {
-                var pts = new float[geo.Points.Length * 2];
-                for (int i = 0; i < geo.Points.GetLength(0); i++)
-                {
-                    pts[i * 2 + 0] = geo.Points[i, 0];
-                    pts[i * 2 + 1] = geo.Points[i, 1];
-                }
-
-                DrawThickLineAsPolygon(pts, brush, lineWidth);
-            }
-            else
-#endif
-            {
-                GL.LineWidth(lineWidth);
-                GL.EnableClientState(ArrayCap.VertexArray);
-                if (miter)
-                {
-                    var points = geo.GetMiterPoints(lineWidth);
-                    GL.VertexPointer(2, VertexPointerType.Float, 0, points);
-                    GL.DrawArrays(PrimitiveType.LineStrip, 0, points.GetLength(0));
-                }
-                else
-                {
-                    GL.VertexPointer(2, VertexPointerType.Float, 0, geo.Points);
-                    GL.DrawArrays(PrimitiveType.LineStrip, 0, geo.Points.GetLength(0));
-                }
-                GL.DisableClientState(ArrayCap.VertexArray);
-            }
-            GL.Disable(EnableCap.LineSmooth);
-            GL.PopMatrix();
-        }
-
-        protected void DrawThickLineAsPolygon(float[] points, GLBrush brush, float width)
-        {
-            GL.Begin(PrimitiveType.Quads);
-            for (int i = 0; i < points.Length / 2 - 1; i++)
-            {
-                float x0 = points[(i + 0) * 2 + 0];
-                float y0 = points[(i + 0) * 2 + 1];
-                float x1 = points[(i + 1) * 2 + 0];
-                float y1 = points[(i + 1) * 2 + 1];
-
-                float dx = x1 - x0;
-                float dy = y1 - y0;
-                float invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
-                dx *= invHalfWidth;
-                dy *= invHalfWidth;
-
-                GL.Vertex2(x0 + dy, y0 + dx);
-                GL.Vertex2(x1 + dy, y1 + dx);
-                GL.Vertex2(x1 - dy, y1 - dx);
-                GL.Vertex2(x0 - dy, y0 - dx);
-            }
-            GL.End();
-        }
-
-        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool miter = false)
-        {
-            FillGeometry(geo, fillBrush);
-            DrawGeometry(geo, lineBrush, lineWidth, miter);
-        }
-
-        public unsafe GLBitmap CreateBitmap(int width, int height, uint[] data)
-        {
-            fixed (uint* ptr = &data[0])
-            {
-                int id = GL.GenTexture();
-                GL.BindTexture(TextureTarget.Texture2D, id);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, width, height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, new IntPtr(ptr));
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
-                return new GLBitmap(id, width, height);
-            }
-        }
-
-        public GLBrush CreateSolidBrush(Color color)
-        {
-            return new GLBrush(color);
-        }
-
-        public GLBrush CreateBitmapBrush(GLBitmap bmp, bool tileX, bool tileY)
-        {
-            return new GLBrush(bmp, tileX, tileY);
-        }
-
-        public GLBrush CreateHorizontalGradientBrush(float x0, float x1, Color color0, Color color1)
-        {
-            Debug.Assert(x0 == 0.0f);
-            return new GLBrush(color0, color1, x1 - x0, 0.0f);
-        }
-
-        public GLBrush CreateVerticalGradientBrush(float y0, float y1, Color color0, Color color1)
-        {
-            Debug.Assert(y0 == 0.0f);
-            return new GLBrush(color0, color1, 0.0f, y1 - y0);
-        }
-
 #if FAMISTUDIO_WINDOWS
-        public int CreateGLTexture(System.Drawing.Bitmap bmp)
-        {
             var bmpData =
                 bmp.LockBits(
                     new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
                     System.Drawing.Imaging.ImageLockMode.ReadOnly,
                     System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
             Debug.Assert(bmpData.Stride == bmp.Width * 4);
-
-            int id = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, id);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, bmp.Width, bmp.Height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
-
-            bmp.UnlockBits(bmpData);
-
-            return id;
-        }
+            var ptr = bmpData.Scan0;
+            var format = PixelFormat.Bgra;
 #else
-        public int CreateGLTexture(Gdk.Pixbuf pixbuf)
-        {
             Debug.Assert(pixbuf.Rowstride == pixbuf.Width * 4);
-
-            int id = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, id);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, pixbuf.Width, pixbuf.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixbuf.Pixels);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
-
-            return id;
-        }
+            var ptr = bmpData.Pixels;
+            var format = PixelFormat.Rgba;
 #endif
 
+            int id = GL.GenTexture();
+            GL.BindTexture(TextureTarget.Texture2D, id);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, bmp.Width, bmp.Height, 0, format, PixelType.UnsignedByte, ptr);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+
 #if FAMISTUDIO_WINDOWS
-        public GLBitmap CreateBitmapFromResource(string name)
+            bmp.UnlockBits(bmpData);
+#endif
+
+            return id;
+        }
+
+        protected Bitmap LoadBitmapFromResourceWithScaling(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
 
@@ -660,63 +120,123 @@ namespace FamiStudio
 
             if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
             {
-                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@15x.png")) as System.Drawing.Bitmap;
+                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@15x.png");
             }
             else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
             {
-                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}@2x.png")) as System.Drawing.Bitmap;
+                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@2x.png");
                 needsScaling = windowScaling != 2.0f;
             }
             else
             {
-                bmp = System.Drawing.Image.FromStream(assembly.GetManifestResourceStream($"FamiStudio.Resources.{name}.png")) as System.Drawing.Bitmap;
+                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png");
             }
 
             // Pre-resize all images so we dont have to deal with scaling later.
             if (needsScaling)
             {
-                var newWidth = Math.Max(1, (int)(bmp.Width * (windowScaling / 2.0f)));
+                var newWidth  = Math.Max(1, (int)(bmp.Width  * (windowScaling / 2.0f)));
                 var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
 
+#if FAMISTUDIO_WINDOWS
                 bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
+#else
+                bmp = bmp.ScaleSimple(newWidth, newHeight, Gdk.InterpType.Bilinear);
+#endif
             }
 
-            return new GLBitmap(CreateGLTexture(bmp), bmp.Width, bmp.Height);
+            return bmp;
         }
-#else
+
         public GLBitmap CreateBitmapFromResource(string name)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-
-            bool needsScaling = false;
-            Gdk.Pixbuf pixbuf = null;
-
-            if (GLTheme.MainWindowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
-            {
-                pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}@15x.png");
-            }
-            else if (GLTheme.MainWindowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
-            {
-                pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}@2x.png");
-                needsScaling = GLTheme.MainWindowScaling != 2.0f;
-            }
-            else
-            {
-                pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
-            }
-
-            // Pre-resize all images so we dont have to deal with scaling later.
-            if (needsScaling)
-            {
-                var newWidth  = Math.Max(1, (int)(pixbuf.Width  * (windowScaling / 2.0f)));
-                var newHeight = Math.Max(1, (int)(pixbuf.Height * (windowScaling / 2.0f)));
-
-                pixbuf = pixbuf.ScaleSimple(newWidth, newHeight, Gdk.InterpType.Bilinear);
-            }
-
-            return new GLBitmap(CreateGLTexture(pixbuf), pixbuf.Width, pixbuf.Height);
+            var bmp = LoadBitmapFromResourceWithScaling(name);
+            return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height);
         }
+
+        private void ChangeBitmapBackground(Bitmap bmp, Color color)
+        {
+            for (int y = 0; y < bmp.Height; y++)
+            {
+                for (int x = 0; x < bmp.Width; x++)
+                {
+                    var pixel = bmp.GetPixel(x, y);
+
+                    var r = (byte)Utils.Lerp(color.R, pixel.R, pixel.A / 255.0f);
+                    var g = (byte)Utils.Lerp(color.G, pixel.G, pixel.A / 255.0f);
+                    var b = (byte)Utils.Lerp(color.B, pixel.B, pixel.A / 255.0f);
+
+                    bmp.SetPixel(x, y, Color.FromArgb(r, g, b));
+                }
+            }
+        }
+
+        public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
+        {
+            return CreateBitmapAtlasFromResources(names, Color.Empty);
+        }
+
+        public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names, Color backgroundOverride)
+        {
+            var bitmaps = new Bitmap[names.Length];
+            var elementSizeX = 0;
+            var elementSizeY = 0;
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                var bmp = LoadBitmapFromResourceWithScaling(names[i]);
+
+                if (backgroundOverride != Color.Empty)
+                    ChangeBitmapBackground(bmp, backgroundOverride);
+
+                elementSizeX = Math.Max(elementSizeX, bmp.Width);
+                elementSizeY = Math.Max(elementSizeY, bmp.Height);
+
+                bitmaps[i] = bmp;
+            }
+            
+            var numRows = Utils.DivideAndRoundUp(elementSizeX * names.Length, MaxAtlasResolution);
+            var elementsPerRow = names.Length / numRows;
+            var atlasSizeX = elementsPerRow * elementSizeX;
+            var atlasSizeY = numRows * elementSizeY;
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
+            var elementRects = new Rectangle[names.Length];
+
+            GL.BindTexture(TextureTarget.Texture2D, textureId);
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                var bmp = bitmaps[i];
+
+                var row = i / elementsPerRow;
+                var col = i % elementsPerRow;
+
+                elementRects[i] = new Rectangle(
+                    col * elementSizeX,
+                    row * elementSizeY,
+                    bmp.Width,
+                    bmp.Height);
+
+#if FAMISTUDIO_WINDOWS
+                var bmpData =
+                    bmp.LockBits(
+                        new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
+                        System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                        System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                var ptr = bmpData.Scan0;
+                var format = PixelFormat.Bgra;
+#else
+                var ptr = bmpData.Pixels;
+                var format = PixelFormat.Rgba;
 #endif
+
+                GL.TexSubImage2D(TextureTarget.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, format, PixelType.UnsignedByte, ptr);
+                bmp.UnlockBits(bmpData);
+                bmp.Dispose();
+            }
+
+            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, elementRects);
+        }
 
         public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
         {
@@ -728,121 +248,121 @@ namespace FamiStudio
             return bmp.Size.Width;
         }
 
-        public GLBrush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
+        public GLCommandList CreateCommandList()
         {
-            Color color2 = Color.FromArgb(
-                Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
-                Utils.Clamp((int)(color.R * dimming), 0, 255),
-                Utils.Clamp((int)(color.G * dimming), 0, 255),
-                Utils.Clamp((int)(color.B * dimming), 0, 255));
-
-            return new GLBrush(color2);
+            return new GLCommandList(this, dashedBitmap.Size.Width);
         }
 
-        public GLBrush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)
+        public void DrawCommandList(GLCommandList list)
         {
-            var key = new Tuple<Color, int>(color1, sizeY);
-
-            GLBrush brush;
-            if (verticalGradientCache.TryGetValue(key, out brush))
-                return brush;
-
-            Color color2 = Color.FromArgb(
-                Utils.Clamp((int)(color1.A), 0, 255),
-                Utils.Clamp((int)(color1.R * dimming), 0, 255),
-                Utils.Clamp((int)(color1.G * dimming), 0, 255),
-                Utils.Clamp((int)(color1.B * dimming), 0, 255));
-
-            brush = CreateVerticalGradientBrush(0, sizeY, color1, color2);
-            verticalGradientCache[key] = brush;
-
-            return brush;
+            DrawCommandList(list, Rectangle.Empty);
         }
 
-        protected T ReadFontParam<T>(string[] values, string key)
+        public unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
         {
-            for (int i = 1; i < values.Length; i += 2)
+            if (!scissor.IsEmpty)
+                SetScissorRect(scissor.Left, scissor.Top, scissor.Right, scissor.Bottom);
+
+            if (list.HasAnyMeshes)
             {
-                if (values[i] == key)
+                var drawData = list.GetMeshDrawData();
+
+                GL.EnableClientState(ArrayCap.ColorArray);
+
+                foreach (var draw in drawData)
                 {
-                    return (T)Convert.ChangeType(values[i + 1], typeof(T));
+                    if (draw.smooth) GL.Enable(EnableCap.PolygonSmooth);
+                    GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
+                    GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
+                    GL.DrawElements(PrimitiveType.Triangles, draw.numIndices, DrawElementsType.UnsignedShort, draw.idxArray);
+                    if (draw.smooth) GL.Disable(EnableCap.PolygonSmooth);
                 }
+
+                GL.DisableClientState(ArrayCap.ColorArray);
             }
 
-            Debug.Assert(false);
-            return default(T);
-        }
-
-#if FAMISTUDIO_WINDOWS
-        public GLFont CreateFont(System.Drawing.Bitmap bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
-#else
-        public GLFont CreateFont(Gdk.Pixbuf bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
-#endif
-        {
-            var font = (GLFont)null;
-            var lines = def;
-
-            int baseValue = 0;
-            int texSizeX = 256;
-            int texSizeY = 256;
-
-            foreach (var line in lines)
+            if (list.HasAnyLines)
             {
-                var splits = line.Split(new[] { ' ', '=', '\"' }, StringSplitOptions.RemoveEmptyEntries);
+                var drawData = list.GetLineDrawData();
 
-                switch (splits[0])
+                GL.PushMatrix();
+                GL.Translate(0.5f, 0.5f, 0.0f);
+                GL.Enable(EnableCap.Texture2D);
+                GL.BindTexture(TextureTarget.Texture2D, dashedBitmap.Id);
+                GL.EnableClientState(ArrayCap.ColorArray);
+                GL.EnableClientState(ArrayCap.TextureCoordArray);
+
+                foreach (var draw in drawData)
                 {
-                    case "common":
-                        {
-                            baseValue = ReadFontParam<int>(splits, "base");
-                            texSizeX = ReadFontParam<int>(splits, "scaleW");
-                            texSizeY = ReadFontParam<int>(splits, "scaleH");
-
-                            int glTex = existingTexture;
-                            if (glTex == 0)
-                                glTex = CreateGLTexture(bmp);
-
-                            font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
-                            break;
-                        }
-                    case "char":
-                        {
-                            var charInfo = new GLFont.CharInfo();
-
-                            int c = ReadFontParam<int>(splits, "id");
-                            int x = ReadFontParam<int>(splits, "x");
-                            int y = ReadFontParam<int>(splits, "y");
-
-                            charInfo.width = ReadFontParam<int>(splits, "width");
-                            charInfo.height = ReadFontParam<int>(splits, "height");
-                            charInfo.xoffset = ReadFontParam<int>(splits, "xoffset");
-                            charInfo.yoffset = ReadFontParam<int>(splits, "yoffset");
-                            charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
-                            charInfo.u0 = (x + 0.0f) / (float)texSizeX;
-                            charInfo.v0 = (y + 0.0f) / (float)texSizeY;
-                            charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
-                            charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
-
-                            font.AddChar((char)c, charInfo);
-
-                            break;
-                        }
-                    case "kerning":
-                        {
-                            int c0 = ReadFontParam<int>(splits, "first");
-                            int c1 = ReadFontParam<int>(splits, "second");
-                            int amount = ReadFontParam<int>(splits, "amount");
-                            font.AddKerningPair(c0, c1, amount);
-                            break;
-                        }
+                    if (draw.smooth) GL.Enable(EnableCap.LineSmooth);
+                    GL.LineWidth(draw.lineWidth);
+                    GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, draw.texArray);
+                    GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
+                    GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
+                    GL.DrawArrays(PrimitiveType.Lines, 0, draw.numVertices);
+                    if (draw.smooth) GL.Disable(EnableCap.LineSmooth);
                 }
+
+                GL.DisableClientState(ArrayCap.ColorArray);
+                GL.DisableClientState(ArrayCap.TextureCoordArray);
+                GL.Disable(EnableCap.Texture2D);
+                GL.PopMatrix();
             }
 
-            return font;
-        }
+            if (list.HasAnyBitmaps)
+            {
+                var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out _, out _, out _);
 
-        public virtual void Dispose()
-        {
+                GL.Enable(EnableCap.Texture2D);
+                GL.EnableClientState(ArrayCap.ColorArray);
+                GL.EnableClientState(ArrayCap.TextureCoordArray);
+                GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texArray);
+                GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, colArray);
+                GL.VertexPointer(2, VertexPointerType.Float, 0, vtxArray);
+
+                fixed (short* ptr = idxArray)
+                {
+                    foreach (var draw in drawData)
+                    {
+                        GL.BindTexture(TextureTarget.Texture2D, draw.textureId);
+                        GL.DrawElements(PrimitiveType.Triangles, draw.count, DrawElementsType.UnsignedShort, new IntPtr(ptr + draw.start));
+                    }
+                }
+
+                GL.DisableClientState(ArrayCap.ColorArray);
+                GL.DisableClientState(ArrayCap.TextureCoordArray);
+                GL.Disable(EnableCap.Texture2D);
+            }
+
+            if (list.HasAnyTexts)
+            {
+                var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out _, out _, out _);
+
+                GL.Enable(EnableCap.Texture2D);
+                GL.EnableClientState(ArrayCap.ColorArray);
+                GL.EnableClientState(ArrayCap.TextureCoordArray);
+                GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texArray);
+                GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, colArray);
+                GL.VertexPointer(2, VertexPointerType.Float, 0, vtxArray);
+
+                fixed (short* ptr = idxArray)
+                {
+                    foreach (var draw in drawData)
+                    {
+                        GL.BindTexture(TextureTarget.Texture2D, draw.textureId);
+                        GL.DrawElements(PrimitiveType.Triangles, draw.count, DrawElementsType.UnsignedShort, new IntPtr(ptr + draw.start));
+                    }
+                }
+
+                GL.DisableClientState(ArrayCap.ColorArray);
+                GL.DisableClientState(ArrayCap.TextureCoordArray);
+                GL.Disable(EnableCap.Texture2D);
+            }
+
+            if (!scissor.IsEmpty)
+                ClearScissorRect();
+
+            list.Release();
         }
     };
 

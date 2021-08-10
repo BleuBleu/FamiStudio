@@ -91,16 +91,12 @@ namespace FamiStudio
                 ctrl.Invalidate();
         }
 
-#if FAMISTUDIO_ANDROID
         GLBrush brush;
-#endif
 
         public unsafe bool Redraw()
         {
-#if FAMISTUDIO_ANDROID
             if (brush == null)
-                brush = new GLBrush(System.Drawing.Color.Red);
-#endif
+                brush = new GLBrush(System.Drawing.Color.SpringGreen);
 
             bool anyNeedsRedraw = false;
             foreach (var control in controls)
@@ -119,16 +115,25 @@ namespace FamiStudio
 
                 foreach (var control in controls)
                 {
-#if FAMISTUDIO_ANDROID
+#if FAMISTUDIO_WINDOWS
+                    var t0 = PerformanceCounter.TimeSeconds();
+#else
                     var t0 = DateTime.Now;
 #endif
                     gfx.BeginDraw(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
                     control.Render(gfx);
                     control.Validate();
-#if FAMISTUDIO_ANDROID
+
+                    var cmd = gfx.CreateCommandList();
+#if FAMISTUDIO_WINDOWS
+                    var t1 = PerformanceCounter.TimeSeconds();
+                    cmd.DrawText($"Render time : {(t1 - t0) * 1000} ms", ThemeBase.FontBigBold, 10, 10, brush);
+#else
                     var t1 = DateTime.Now;
-                    gfx.DrawText($"Render time : {(t1 - t0).TotalMilliseconds} ms", ThemeBase.FontMedium, 10, 10, brush);
+                    cmd.DrawText($"Render time : {(t1 - t0).TotalMilliseconds} ms", ThemeBase.FontBigBold, 10, 10, brush);
+                    Console.WriteLine((t1 - t0).TotalMilliseconds.ToString());
 #endif
+                    gfx.DrawCommandList(cmd);
                     gfx.EndDraw();
                 }
 

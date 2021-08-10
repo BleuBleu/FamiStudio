@@ -68,15 +68,7 @@ namespace FamiStudio
                         str = reader.ReadToEnd();
                     }
 
-#if FAMISTUDIO_WINDOWS 
-                    var bmp = System.Drawing.Image.FromStream(typeof(GLTheme).Assembly.GetManifestResourceStream(imgfile)) as System.Drawing.Bitmap;
-#elif FAMISTUDIO_ANDROID
-                    var bmp = Android.Graphics.BitmapFactory.DecodeStream(
-                        typeof(GLTheme).Assembly.GetManifestResourceStream(imgfile), null,
-                        new Android.Graphics.BitmapFactory.Options() { InPremultiplied = false });
-#else
-                    var bmp = Gdk.Pixbuf.LoadFromResource(imgfile);
-#endif
+                    var bmp = PlatformUtils.LoadBitmapFromResource(imgfile);
                     var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                     fontTextureMap.TryGetValue(imgfile, out int texture);

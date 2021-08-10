@@ -68,7 +68,6 @@ namespace FamiStudio
         private string newReleaseUrl = null;
 
         public bool RealTimeUpdate => songPlayer != null && songPlayer.IsPlaying || instrumentPlayer != null && instrumentPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || PianoRoll.IsEditingDPCMSample || pianoRollScrollChanged;
-        public bool RealTimeUpdateUpdatesProjectExplorer => PianoRoll.IsEditingDPCMSample;
         public bool IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool IsRecording => recordingMode;
         public bool IsQwertyPianoEnabled => qwertyPiano;
@@ -464,12 +463,12 @@ namespace FamiStudio
                 InitializeInstrumentPlayer();
                 InitializeSongPlayer();
                 InitializeOscilloscope();
-                InvalidateEverything(true);
+                InvalidateEverything();
             }
 
             if (flags.HasFlag(TransactionFlags.StopAudio))
             {
-                InvalidateEverything(true);
+                InvalidateEverything();
             }
 
             if (scope == TransactionScope.Instrument && songPlayer != null)
@@ -758,10 +757,10 @@ namespace FamiStudio
 
             // Make sure we arent in real-time mode, on Linux/MacOS, this mean we will 
             // be constantly rendering frames as we export.
-            if (RealTimeUpdate || RealTimeUpdateUpdatesProjectExplorer)
+            if (RealTimeUpdate)
             {
                 PianoRoll.Reset();
-                Debug.Assert(!(RealTimeUpdate || RealTimeUpdateUpdatesProjectExplorer));
+                Debug.Assert(!RealTimeUpdate);
             }
         }
 
@@ -775,7 +774,7 @@ namespace FamiStudio
                 RecreateAudioPlayers();
                 RefreshLayout();
                 InitializeMidi();
-                InvalidateEverything(true);
+                InvalidateEverything();
             }
 #endif
         }
@@ -941,7 +940,7 @@ namespace FamiStudio
                 Sequencer.Reset();
                 PianoRoll.Reset();
                 ProjectExplorer.RefreshButtons();
-                InvalidateEverything(true);
+                InvalidateEverything();
             }
 #endif
         }
@@ -1201,7 +1200,7 @@ namespace FamiStudio
                     InitializeOscilloscope();
                 }
 
-                InvalidateEverything(true);
+                InvalidateEverything();
             }
         }
         
@@ -1604,13 +1603,12 @@ namespace FamiStudio
             return PianoRoll.GetViewRange(ref minNoteIdx, ref maxNoteIdx, ref channelIndex);
         }
 
-        private void InvalidateEverything(bool projectExplorer = false)
+        private void InvalidateEverything()
         {
             ToolBar.Invalidate();
             Sequencer.Invalidate();
             PianoRoll.Invalidate();
-            if (projectExplorer)
-                ProjectExplorer.Invalidate();
+            ProjectExplorer.Invalidate();
         }
 
         private void RecreateAudioPlayers()
@@ -1667,7 +1665,7 @@ namespace FamiStudio
             Sequencer.Tick();
 
             if (RealTimeUpdate)
-                InvalidateEverything(RealTimeUpdateUpdatesProjectExplorer);
+                InvalidateEverything();
             else if (oscilloscope != null && ToolBar.ShouldRefreshOscilloscope(oscilloscope.HasNonZeroSample))
                 ToolBar.Invalidate();
 

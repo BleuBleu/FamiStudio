@@ -7,6 +7,7 @@ using Android.Widget;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace FamiStudio
@@ -42,6 +43,13 @@ namespace FamiStudio
         public static string KeyCodeToString(int keyval)
         {
             return string.Empty;
+        }
+
+        public static Android.Graphics.Bitmap LoadBitmapFromResource(string name)
+        {
+            return Android.Graphics.BitmapFactory.DecodeStream(
+                Assembly.GetExecutingAssembly().GetManifestResourceStream(name), null,
+                new Android.Graphics.BitmapFactory.Options() { InPremultiplied = false });
         }
     }
 }

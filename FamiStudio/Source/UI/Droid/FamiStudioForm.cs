@@ -92,38 +92,6 @@ namespace FamiStudio
 
         public void OnDrawFrame(IGL10 gl)
         {
-            /*
-            gl.GlViewport(0, 0, glSurfaceView.Width, glSurfaceView.Height);
-            gl.GlClearColor(0.5f, 0.0f, 0.5f, 1.0f);
-            gl.GlClear(GLES11.GlColorBufferBit);
-            gl.GlDisable((int)2884); // Cull face?
-            gl.GlDisable(GLES11.GlDepthTest);
-            gl.GlDisable(GLES11.GlStencilTest);
-            gl.GlMatrixMode(GLES11.GlProjection);
-            gl.GlLoadIdentity();
-            gl.GlOrthof(0, glSurfaceView.Width, glSurfaceView.Height, 0, -1, 1);
-            gl.GlMatrixMode(GLES11.GlModelview);
-            gl.GlLoadIdentity();
-            gl.GlColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-
-            var buffer = Java.Nio.ByteBuffer.AllocateDirect(sizeof(float) * 6);
-            buffer.Order(ByteOrder.NativeOrder());
-            var vertices = buffer.AsFloatBuffer();
-
-            vertices.Put(10.0f);
-            vertices.Put(10.0f);
-            vertices.Put(500.0f);
-            vertices.Put(250.0f);
-            vertices.Put(10.0f);
-            vertices.Put(200.0f);
-            vertices.Position(0);
-
-            gl.GlEnableClientState(GLES11.GlVertexArray);
-            gl.GlVertexPointer(2, GLES11.GlFloat, 0, vertices);
-            gl.GlDrawArrays(GLES11.GlTriangles, 0, 3);
-            gl.GlDisableClientState(GLES11.GlVertexArray);
-            */
-
             controls.Redraw();
         }
 
@@ -136,7 +104,30 @@ namespace FamiStudio
         {
             controls.InitializeGL(gl);
             controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
-            
+
+            var i0 = famistudio.Project.CreateInstrument(0, "i0");
+            var i1 = famistudio.Project.CreateInstrument(0, "i1");
+            var p0 = famistudio.Song.Channels[0].CreatePatternAndInstance(0, "toto1");
+
+            p0.GetOrCreateNoteAt(10).Value = 52;
+            p0.GetOrCreateNoteAt(10).Instrument = i0;
+            p0.GetOrCreateNoteAt(10).Duration = 20;
+            p0.GetOrCreateNoteAt(50).Value = 20;
+            p0.GetOrCreateNoteAt(50).Instrument = i1;
+            p0.GetOrCreateNoteAt(50).Duration = 20;
+            p0.GetOrCreateNoteAt(70).Value = 60;
+            p0.GetOrCreateNoteAt(70).Instrument = i0;
+            p0.GetOrCreateNoteAt(70).Duration = 20;
+            p0.GetOrCreateNoteAt(90).Value = 30;
+            p0.GetOrCreateNoteAt(90).Instrument = i1;
+            p0.GetOrCreateNoteAt(90).Duration = 10;
+            p0.GetOrCreateNoteAt(110).Value = 40;
+            p0.GetOrCreateNoteAt(110).Instrument = i1;
+            p0.GetOrCreateNoteAt(110).Duration = 40;
+
+            famistudio.Song.Channels[0].PatternInstances[3] = p0;
+            famistudio.Song.Channels[0].PatternInstances[5] = p0;
+
             controls.PianoRoll.StartEditPattern(0, 0); // MATTT
         }
 

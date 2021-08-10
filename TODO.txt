@@ -13,9 +13,19 @@ Diable attack on DPCM
 Improve disable attack?
 - If same envelopes, allow? This would allow VRC7 to not have attack.
 
+Optimize GL renderer
+====================
+    - Pattern cache crash.
+	- Ugly pattern texture filtering? Missing 0.5 offset?
+	/ Create GLGraphicsBase, common to both ES and regular.
+	- ES texture dispose, figure that out...
+	- Piano roll missing filling of effect icons. => they are transparent. Will need opaque version?
+	
 Android prototype:
-- Make compile
+x Make compile
 - Create OpenGL ES backend.
+	x Load textures / fonts
+
 - See how to call C++ code
 - Create audio stream.
 - Then see how it goes.

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
-// using System.Windows.Forms; DROIDTODO
 
 using RenderTheme = FamiStudio.GLTheme;
 
@@ -68,7 +67,7 @@ namespace FamiStudio
             inPropertyChanged = false;
         }
 
-        public DialogResult ShowDialog(FamiStudioForm parent)
+        public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent)
         {
             return dialog.ShowDialog(parent);
         }

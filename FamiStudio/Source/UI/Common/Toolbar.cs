@@ -2,53 +2,57 @@ using System;
 using System.Collections.Generic;
 using System.Media;
 using System.Windows.Forms;
+using System.Diagnostics;
 
-using RenderBitmap = FamiStudio.GLBitmap;
-using RenderBrush = FamiStudio.GLBrush;
-using RenderGeometry = FamiStudio.GLGeometry;
-using RenderControl = FamiStudio.GLControl;
-using RenderGraphics = FamiStudio.GLGraphics;
-using RenderTheme = FamiStudio.GLTheme;
+using RenderBitmap      = FamiStudio.GLBitmap;
+using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
+using RenderBrush       = FamiStudio.GLBrush;
+using RenderGeometry    = FamiStudio.GLGeometry;
+using RenderControl     = FamiStudio.GLControl;
+using RenderGraphics    = FamiStudio.GLGraphics;
+using RenderTheme       = FamiStudio.GLTheme;
+using RenderCommandList = FamiStudio.GLCommandList;
+using RenderTransform   = FamiStudio.GLTransform;
 
 namespace FamiStudio
 {
     public class Toolbar : RenderControl
     {
-        const int ButtonNew       = 0;
-        const int ButtonOpen      = 1;
-        const int ButtonSave      = 2;
-        const int ButtonExport    = 3;
-        const int ButtonCopy      = 4;
-        const int ButtonCut       = 5;
-        const int ButtonPaste     = 6;
-        const int ButtonUndo      = 7;
-        const int ButtonRedo      = 8;
+        const int ButtonNew = 0;
+        const int ButtonOpen = 1;
+        const int ButtonSave = 2;
+        const int ButtonExport = 3;
+        const int ButtonCopy = 4;
+        const int ButtonCut = 5;
+        const int ButtonPaste = 6;
+        const int ButtonUndo = 7;
+        const int ButtonRedo = 8;
         const int ButtonTransform = 9;
-        const int ButtonConfig    = 10;
-        const int ButtonPlay      = 11;
-        const int ButtonRec       = 12;
-        const int ButtonRewind    = 13;
-        const int ButtonLoop      = 14;
-        const int ButtonQwerty    = 15;
+        const int ButtonConfig = 10;
+        const int ButtonPlay = 11;
+        const int ButtonRec = 12;
+        const int ButtonRewind = 13;
+        const int ButtonLoop = 14;
+        const int ButtonQwerty = 15;
         const int ButtonMetronome = 16;
-        const int ButtonMachine   = 17;
-        const int ButtonFollow    = 18;
-        const int ButtonHelp      = 19;
-        const int ButtonCount     = 20;
+        const int ButtonMachine = 17;
+        const int ButtonFollow = 18;
+        const int ButtonHelp = 19;
+        const int ButtonCount = 20;
 
-        const int DefaultTimecodeOffsetX         = 38; // Offset from config button.
-        const int DefaultTimecodePosY            = 4;
-        const int DefaultTimecodeSizeX           = 140;
-        const int DefaultTooltipSingleLinePosY   = 12;
-        const int DefaultTooltipMultiLinePosY    = 4;
-        const int DefaultTooltipLineSizeY        = 17;
+        const int DefaultTimecodeOffsetX = 38; // Offset from config button.
+        const int DefaultTimecodePosY = 4;
+        const int DefaultTimecodeSizeX = 140;
+        const int DefaultTooltipSingleLinePosY = 12;
+        const int DefaultTooltipMultiLinePosY = 4;
+        const int DefaultTooltipLineSizeY = 17;
         const int DefaultTooltipSpecialCharSizeX = 16;
         const int DefaultTooltipSpecialCharSizeY = 14;
-        const int DefaultButtonPosX              = 4;
-        const int DefaultButtonPosY              = 4;
-        const int DefaultButtonSizeX             = 32;
-        const int DefaultButtonSpacingX          = 34;
-        const int DefaultButtonTimecodeSpacingX  = 4; // Spacing before/after timecode.
+        const int DefaultButtonPosX = 4;
+        const int DefaultButtonPosY = 4;
+        const int DefaultButtonSizeX = 32;
+        const int DefaultButtonSpacingX = 34;
+        const int DefaultButtonTimecodeSpacingX = 4; // Spacing before/after timecode.
 
         int timecodeOffsetX;
         int timecodePosX;
@@ -76,7 +80,7 @@ namespace FamiStudio
         private delegate void MouseWheelDelegate(int delta);
         private delegate void EmptyDelegate();
         private delegate ButtonStatus ButtonStatusDelegate();
-        private delegate RenderBitmap BitmapDelegate();
+        private delegate ButtonImageIndices BitmapDelegate();
 
         class Button
         {
@@ -86,7 +90,7 @@ namespace FamiStudio
             public bool Visible = true;
             public int Size;
             public string ToolTip;
-            public RenderBitmap Bmp;
+            public ButtonImageIndices BmpAtlasIndex;
             public ButtonStatusDelegate Enabled;
             public EmptyDelegate Click;
             public EmptyDelegate RightClick;
@@ -101,7 +105,7 @@ namespace FamiStudio
 
         class TooltipSpecialCharacter
         {
-            public RenderBitmap Bmp;
+            public SpecialCharImageIndices BmpIndex = SpecialCharImageIndices.Count;
             public int Width;
             public int Height;
             public float OffsetY;
@@ -119,68 +123,133 @@ namespace FamiStudio
         RenderBrush toolbarBrush;
         RenderBrush warningBrush;
         RenderBrush seekBarBrush;
-        RenderBitmap bmpLoopNone;
-        RenderBitmap bmpLoopSong;
-        RenderBitmap bmpLoopPattern;
-        RenderBitmap bmpLoopSelection;
-        RenderBitmap bmpPlay;
-        RenderBitmap bmpPlayHalf;
-        RenderBitmap bmpPlayQuarter;
-        RenderBitmap bmpPause;
-        RenderBitmap bmpNtsc;
-        RenderBitmap bmpPal;
-        RenderBitmap bmpNtscToPal;
-        RenderBitmap bmpPalToNtsc;
-        RenderBitmap bmpRec;
-        RenderBitmap bmpRecRed;
-        RenderBitmap bmpMetronome;
+        RenderBitmapAtlas bmpButtonAtlas;
+        RenderBitmapAtlas bmpSpecialCharAtlas;
         Button[] buttons = new Button[ButtonCount];
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
+        enum ButtonImageIndices
+        { 
+            LoopNone,
+            Loop,
+            LoopPattern,
+            LoopSelection,
+            Play,
+            PlayHalf,
+            PlayQuarter,
+            Pause,
+            NTSC,
+            PAL,
+            NTSCToPAL,
+            PALToNTSC,
+            Rec,
+            RecRed,
+            Metronome,
+            File,
+            Open,
+            Save,
+            Export,
+            Copy,
+            Cut,
+            Paste,
+            Undo,
+            Redo,
+            Transform,
+            Config,
+            Rewind,
+            QwertyPiano,
+            Follow,
+            Help,
+            Count
+        };
+
+        readonly string[] ButtonImageNames = new string[]
+        {
+            "LoopNone",
+            "Loop",
+            "LoopPattern",
+            "LoopSelection",
+            "Play",
+            "PlayHalf",
+            "PlayQuarter",
+            "Pause",
+            "NTSC",
+            "PAL",
+            "NTSCToPAL",
+            "PALToNTSC",
+            "Rec",
+            "RecRed",
+            "Metronome",
+            "File",
+            "Open",
+            "Save",
+            "Export",
+            "Copy",
+            "Cut",
+            "Paste",
+            "Undo",
+            "Redo",
+            "Transform",
+            "Config",
+            "Rewind",
+            "QwertyPiano",
+            "Follow",
+            "Help"
+        };
+
+        enum SpecialCharImageIndices
+        {
+            Drag,
+            MouseLeft,
+            MouseRight,
+            MouseWheel,
+            Warning,
+            Count
+        };
+
+        readonly string[] SpecialCharImageNames = new string[]
+        {
+            "Drag",
+            "MouseLeft",
+            "MouseRight",
+            "MouseWheel",
+            "Warning"
+        };
+
         protected override void OnRenderInitialized(RenderGraphics g)
         {
+            Debug.Assert((int)ButtonImageIndices.Count      == ButtonImageNames.Length);
+            Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
+
             theme = RenderTheme.CreateResourcesForGraphics(g);
 
             toolbarBrush = g.CreateVerticalGradientBrush(0, Height, ThemeBase.DarkGreyFillColor2, ThemeBase.DarkGreyFillColor1);
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
             seekBarBrush = g.CreateSolidBrush(ThemeBase.SeekBarColor);
 
-            bmpLoopNone      = g.CreateBitmapFromResource("LoopNone");
-            bmpLoopSong      = g.CreateBitmapFromResource("Loop");
-            bmpLoopPattern   = g.CreateBitmapFromResource("LoopPattern");
-            bmpLoopSelection = g.CreateBitmapFromResource("LoopSelection");
-            bmpPlay          = g.CreateBitmapFromResource("Play");
-            bmpPlayHalf      = g.CreateBitmapFromResource("PlayHalf");
-            bmpPlayQuarter   = g.CreateBitmapFromResource("PlayQuarter");
-            bmpPause         = g.CreateBitmapFromResource("Pause");
-            bmpNtsc          = g.CreateBitmapFromResource("NTSC");
-            bmpPal           = g.CreateBitmapFromResource("PAL");
-            bmpNtscToPal     = g.CreateBitmapFromResource("NTSCToPAL");
-            bmpPalToNtsc     = g.CreateBitmapFromResource("PALToNTSC");
-            bmpRec           = g.CreateBitmapFromResource("Rec");
-            bmpRecRed        = g.CreateBitmapFromResource("RecRed");
-            bmpMetronome     = g.CreateBitmapFromResource("Metronome");
+            bmpButtonAtlas      = g.CreateBitmapAtlasFromResources(ButtonImageNames);
+            bmpSpecialCharAtlas = g.CreateBitmapAtlasFromResources(SpecialCharImageNames);
 
-            buttons[ButtonNew]       = new Button { Bmp = g.CreateBitmapFromResource("File"), Click = OnNew };
-            buttons[ButtonOpen]      = new Button { Bmp = g.CreateBitmapFromResource("Open"), Click = OnOpen };
-            buttons[ButtonSave]      = new Button { Bmp = g.CreateBitmapFromResource("Save"), Click = OnSave, RightClick = OnSaveAs };
-            buttons[ButtonExport]    = new Button { Bmp = g.CreateBitmapFromResource("Export"), Click = OnExport, RightClick = OnRepeatLastExport };
-            buttons[ButtonCopy]      = new Button { Bmp = g.CreateBitmapFromResource("Copy"), Click = OnCopy, Enabled = OnCopyEnabled };
-            buttons[ButtonCut]       = new Button { Bmp = g.CreateBitmapFromResource("Cut"), Click = OnCut, Enabled = OnCutEnabled };
-            buttons[ButtonPaste]     = new Button { Bmp = g.CreateBitmapFromResource("Paste"), Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
-            buttons[ButtonUndo]      = new Button { Bmp = g.CreateBitmapFromResource("Undo"), Click = OnUndo, Enabled = OnUndoEnabled };
-            buttons[ButtonRedo]      = new Button { Bmp = g.CreateBitmapFromResource("Redo"), Click = OnRedo, Enabled = OnRedoEnabled };
-            buttons[ButtonTransform] = new Button { Bmp = g.CreateBitmapFromResource("Transform"), Click = OnTransform };
-            buttons[ButtonConfig]    = new Button { Bmp = g.CreateBitmapFromResource("Config"), Click = OnConfig };
+            buttons[ButtonNew]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
+            buttons[ButtonOpen]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen };
+            buttons[ButtonSave]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
+            buttons[ButtonExport]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = OnRepeatLastExport };
+            buttons[ButtonCopy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
+            buttons[ButtonCut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
+            buttons[ButtonPaste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
+            buttons[ButtonUndo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Undo, Click = OnUndo, Enabled = OnUndoEnabled };
+            buttons[ButtonRedo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled };
+            buttons[ButtonTransform] = new Button { BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
+            buttons[ButtonConfig]    = new Button { BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig };
             buttons[ButtonPlay]      = new Button { Click = OnPlay, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap };
             buttons[ButtonRec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
-            buttons[ButtonRewind]    = new Button { Bmp = g.CreateBitmapFromResource("Rewind"), Click = OnRewind };
+            buttons[ButtonRewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
             buttons[ButtonLoop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
-            buttons[ButtonQwerty]    = new Button { Bmp = g.CreateBitmapFromResource("QwertyPiano"), Click = OnQwerty, Enabled = OnQwertyEnabled };
-            buttons[ButtonMetronome] = new Button { Bmp = g.CreateBitmapFromResource("Metronome"), Click = OnMetronome, Enabled = OnMetronomeEnabled };
+            buttons[ButtonQwerty]    = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
+            buttons[ButtonMetronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled };
             buttons[ButtonMachine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
-            buttons[ButtonFollow]    = new Button { Bmp = g.CreateBitmapFromResource("Follow"), Click = OnFollow, Enabled = OnFollowEnabled };
-            buttons[ButtonHelp]      = new Button { Bmp = g.CreateBitmapFromResource("Help"), RightAligned = true, Click = OnHelp };
+            buttons[ButtonFollow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled };
+            buttons[ButtonHelp]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, RightAligned = true, Click = OnHelp };
 
             buttons[ButtonNew].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[ButtonOpen].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
@@ -229,11 +298,11 @@ namespace FamiStudio
             specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
             specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
             specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
-            specialCharacters["Drag"]       = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("Drag"),       OffsetY = 2 * scaling };
-            specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseLeft"),  OffsetY = 2 * scaling };
-            specialCharacters["MouseRight"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseRight"), OffsetY = 2 * scaling };
-            specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("MouseWheel"), OffsetY = 2 * scaling };
-            specialCharacters["Warning"]    = new TooltipSpecialCharacter { Bmp = g.CreateBitmapFromResource("Warning") };
+            specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = 2 * scaling };
+            specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = 2 * scaling };
+            specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = 2 * scaling };
+            specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = 2 * scaling };
+            specialCharacters["Warning"]    = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Warning };
 
             for (char i = 'A'; i <= 'Z'; i++)
                 specialCharacters[i.ToString()] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
@@ -242,11 +311,11 @@ namespace FamiStudio
 
             specialCharacters["~"] = new TooltipSpecialCharacter { Width = tooltipSpecialCharSizeX };
 
-            foreach (var specialChar in specialCharacters.Values)
+            foreach (var c in specialCharacters.Values)
             {
-                if (specialChar.Bmp != null)
-                    specialChar.Width = (int)g.GetBitmapWidth(specialChar.Bmp);
-                specialChar.Height = tooltipSpecialCharSizeY;
+                if (c.BmpIndex != SpecialCharImageIndices.Count)
+                    c.Width = bmpSpecialCharAtlas.GetElementSize((int)c.BmpIndex).Width;
+                c.Height = tooltipSpecialCharSizeY;
             }
         }
 
@@ -257,26 +326,8 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref toolbarBrush);
             Utils.DisposeAndNullify(ref warningBrush);
             Utils.DisposeAndNullify(ref seekBarBrush);
-            Utils.DisposeAndNullify(ref bmpLoopNone);
-            Utils.DisposeAndNullify(ref bmpLoopSong);
-            Utils.DisposeAndNullify(ref bmpLoopPattern);
-            Utils.DisposeAndNullify(ref bmpLoopSelection);
-            Utils.DisposeAndNullify(ref bmpPlay);
-            Utils.DisposeAndNullify(ref bmpPlayHalf);
-            Utils.DisposeAndNullify(ref bmpPlayQuarter);
-            Utils.DisposeAndNullify(ref bmpPause);
-            Utils.DisposeAndNullify(ref bmpNtsc);
-            Utils.DisposeAndNullify(ref bmpPal);
-            Utils.DisposeAndNullify(ref bmpNtscToPal);
-            Utils.DisposeAndNullify(ref bmpPalToNtsc);
-            Utils.DisposeAndNullify(ref bmpRec);
-            Utils.DisposeAndNullify(ref bmpRecRed);
-            Utils.DisposeAndNullify(ref bmpMetronome);
-
-            foreach (var b in buttons)
-                Utils.DisposeAndNullify(ref b.Bmp);
-            foreach (var c in specialCharacters.Values)
-                Utils.DisposeAndNullify(ref c.Bmp);
+            Utils.DisposeAndNullify(ref bmpButtonAtlas);
+            Utils.DisposeAndNullify(ref bmpSpecialCharAtlas);
 
             specialCharacters.Clear();
         }
@@ -491,19 +542,19 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private RenderBitmap OnPlayGetBitmap()
+        private ButtonImageIndices OnPlayGetBitmap()
         {
             if (App.IsPlaying)
             {
-                return bmpPause;
+                return ButtonImageIndices.Pause;
             }
             else
             {
                 switch (App.PlayRate)
                 {
-                    case 2:  return bmpPlayHalf;
-                    case 4:  return bmpPlayQuarter;
-                    default: return bmpPlay;
+                    case 2:  return ButtonImageIndices.PlayHalf;
+                    case 4:  return ButtonImageIndices.PlayQuarter;
+                    default: return ButtonImageIndices.Play;
                 }
             }
         }
@@ -514,9 +565,9 @@ namespace FamiStudio
             App.SeekSong(0);
         }
 
-        private RenderBitmap OnRecordGetBitmap()
+        private ButtonImageIndices OnRecordGetBitmap()
         {
-            return App.IsRecording ? bmpRecRed : bmpRec; 
+            return App.IsRecording ? ButtonImageIndices.RecRed : ButtonImageIndices.Rec; 
         }
 
         private void OnRecord()
@@ -549,14 +600,14 @@ namespace FamiStudio
             return App.IsMetronomeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
-        private RenderBitmap OnLoopGetBitmap()
+        private ButtonImageIndices OnLoopGetBitmap()
         {
             switch (App.LoopMode)
             {
                 case LoopMode.Pattern:
-                    return App.SequencerHasSelection ? bmpLoopSelection : bmpLoopPattern;
+                    return App.SequencerHasSelection ? ButtonImageIndices.LoopSelection : ButtonImageIndices.LoopPattern;
                 default:
-                    return App.Song.LoopPoint < 0 ? bmpLoopNone : bmpLoopSong;
+                    return App.Song.LoopPoint < 0 ? ButtonImageIndices.LoopNone : ButtonImageIndices.Loop;
             }
         }
 
@@ -580,22 +631,22 @@ namespace FamiStudio
             return App.Project != null && !App.Project.UsesAnyExpansionAudio ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private RenderBitmap OnMachineGetBitmap()
+        private ButtonImageIndices OnMachineGetBitmap()
         {
             if (App.Project == null)
             {
-                return bmpNtsc;
+                return ButtonImageIndices.NTSC;
             }
             else if (App.Project.UsesFamiTrackerTempo)
             {
-                return App.PalPlayback ? bmpPal : bmpNtsc;
+                return App.PalPlayback ? ButtonImageIndices.PAL : ButtonImageIndices.NTSC;
             }
             else
             {
                 if (App.Project.PalMode)
-                    return App.PalPlayback ? bmpPal : bmpPalToNtsc;
+                    return App.PalPlayback ? ButtonImageIndices.PAL : ButtonImageIndices.PALToNTSC;
                 else
-                    return App.PalPlayback ? bmpNtscToPal : bmpNtsc;
+                    return App.PalPlayback ? ButtonImageIndices.NTSCToPAL : ButtonImageIndices.NTSC;
             }
         }
 
@@ -604,11 +655,12 @@ namespace FamiStudio
             App.ShowHelp();
         }
 
-        private void RenderButtons(RenderGraphics g)
+        private void RenderButtons(RenderGraphics g, RenderCommandList c)
         {
-            g.FillRectangle(0, 0, Width, Height, toolbarBrush);
+            var pt = PointToClient(Cursor.Position);
 
-            var pt = this.PointToClient(Cursor.Position);
+            // Clear
+            c.FillRectangle(0, 0, Width, Height, toolbarBrush);
 
             // Buttons
             foreach (var btn in buttons)
@@ -616,11 +668,8 @@ namespace FamiStudio
                 if (!btn.Visible)
                     continue;
 
-                bool hover = btn.IsPointIn(pt.X, pt.Y, Width);
-                var bmp = btn.GetBitmap != null ? btn.GetBitmap() : btn.Bmp;
-                if (bmp == null)
-                    bmp = btn.Bmp;
-
+                var hover = btn.IsPointIn(pt.X, pt.Y, Width);
+                var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap() : btn.BmpAtlasIndex;
                 var status  = btn.Enabled == null ? ButtonStatus.Enabled : btn.Enabled();
                 var opacity = status == ButtonStatus.Enabled ? 1.0f : 0.25f;
 
@@ -628,11 +677,11 @@ namespace FamiStudio
                     opacity *= 0.75f;
 
                 int x = btn.RightAligned ? Width - btn.X : btn.X;
-                g.DrawBitmap(bmp, x, btn.Y, opacity);
+                c.DrawBitmapAtlas(bmpButtonAtlas, (int)bmpIndex, x, btn.Y, opacity);
             } 
         }
 
-        private void RenderTimecode(RenderGraphics g)
+        private void RenderTimecode(RenderGraphics g, RenderCommandList c)
         {
             var frame = App.CurrentFrame;
             var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
@@ -643,7 +692,7 @@ namespace FamiStudio
             var timeCodeSizeY = Height - timecodePosY * 2;
             var textColor = App.IsRecording ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
 
-            g.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2, 1.0f);
+            c.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -658,13 +707,13 @@ namespace FamiStudio
                 var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
                 for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
-                    g.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                    c.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
 
-                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
+                c.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
                 charPosX += colonSizeX;
 
                 for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
-                    g.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                    c.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
             }
             else
             {
@@ -678,15 +727,15 @@ namespace FamiStudio
                 var charPosX = timecodePosX + timecodeSizeX / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
 
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    g.DrawText(minutesString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
-                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
+                    c.DrawText(minutesString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                c.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    g.DrawText(secondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
-                g.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
+                    c.DrawText(secondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                c.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
-                    g.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                    c.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
             }
         }
 
@@ -695,7 +744,7 @@ namespace FamiStudio
             return oscilloscopeVisible && lastOscilloscopeHadNonZeroSample != hasNonZeroSample;
         }
 
-        private void RenderOscilloscope(RenderGraphics g)
+        private void RenderOscilloscope(RenderGraphics g, RenderCommandList c)
         {
             if (!oscilloscopeVisible)
                 return;
@@ -703,7 +752,7 @@ namespace FamiStudio
             var oscilloscopeSizeX = timecodeSizeX;
             var oscilloscopeSizeY = Height - timecodePosY * 2;
 
-            g.FillRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.BlackBrush);
+            c.FillRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.BlackBrush);
 
             var oscilloscopeGeometry = App.GetOscilloscopeGeometry(out lastOscilloscopeHadNonZeroSample);
 
@@ -712,35 +761,27 @@ namespace FamiStudio
                 float scaleX = oscilloscopeSizeX;
                 float scaleY = oscilloscopeSizeY / -2; // D3D is upside down compared to how we display waves typically.
 
-                RenderGeometry geo = g.CreateGeometry(oscilloscopeGeometry, false);
-                g.PushTransform(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2, scaleX, scaleY);
-                g.AntiAliasing = true;
-                g.DrawGeometry(geo, theme.LightGreyFillBrush2);
-                g.AntiAliasing = false;
-                g.PopTransform();
-                geo.Dispose();
+                c.PushTransform(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2, scaleX, scaleY);
+                c.DrawGeometry(oscilloscopeGeometry, theme.LightGreyFillBrush2, 1.0f, true);
+                c.PopTransform();
             }
             else
             {
-                g.PushTranslation(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2);
-                g.AntiAliasing = true;
-                g.DrawLine(0, 0, oscilloscopeSizeX, 0, theme.LightGreyFillBrush2);
-                g.AntiAliasing = false;
-                g.PopTransform();
+                c.PushTranslation(oscilloscopePosX, timecodePosY + oscilloscopeSizeY / 2);
+                c.DrawLine(0, 0, oscilloscopeSizeX, 0, theme.LightGreyFillBrush2);
+                c.PopTransform();
             }
 
-            g.DrawRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.LightGreyFillBrush2, 1.0f);
+            c.DrawRectangle(oscilloscopePosX, timecodePosY, oscilloscopePosX + oscilloscopeSizeX, Height - timecodePosY, theme.LightGreyFillBrush2);
         }
 
-        private void RenderWarningAndTooltip(RenderGraphics g)
+        private void RenderWarningAndTooltip(RenderGraphics g, RenderCommandList c)
         {
             var scaling = RenderTheme.MainWindowScaling;
             var message = tooltip;
             var messageBrush = redTooltip ? warningBrush : theme.LightGreyFillBrush2;
             var messageFont = ThemeBase.FontMedium;
             var messageFontCenter = ThemeBase.FontMediumCenter;
-
-            g.PushClip(lastButtonX, 0, Width, Height);
 
             if (!string.IsNullOrEmpty(warning))
             {
@@ -778,9 +819,9 @@ namespace FamiStudio
                         {
                             posX -= specialCharacter.Width;
 
-                            if (specialCharacter.Bmp != null)
+                            if (specialCharacter.BmpIndex != SpecialCharImageIndices.Count)
                             {
-                                g.DrawBitmap(specialCharacter.Bmp, posX, posY + specialCharacter.OffsetY);
+                                c.DrawBitmapAtlas(bmpSpecialCharAtlas, (int)specialCharacter.BmpIndex, posX, posY + specialCharacter.OffsetY);
                             }
                             else
                             {
@@ -793,8 +834,8 @@ namespace FamiStudio
                                 posX -= (int)scaling;
 #endif
 
-                                g.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush, 1);
-                                g.DrawText(str, messageFontCenter, posX, posY, messageBrush, specialCharacter.Width);
+                                c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush);
+                                c.DrawText(str, messageFontCenter, posX, posY, messageBrush, specialCharacter.Width);
 
 #if !FAMISTUDIO_WINDOWS
                                 // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
@@ -805,23 +846,29 @@ namespace FamiStudio
                         else
                         {
                             posX -= g.MeasureString(splits[i], messageFont);
-                            g.DrawText(str, messageFont, posX, posY, messageBrush);
+                            c.DrawText(str, messageFont, posX, posY, messageBrush);
                         }
                     }
 
                     posY += tooltipLineSizeY;
                 }
             }
-
-            g.PopClip();
         }
 
         protected override void OnRender(RenderGraphics g)
         {
-            RenderButtons(g);
-            RenderTimecode(g);
-            RenderOscilloscope(g);
-            RenderWarningAndTooltip(g);
+            var cm = g.CreateCommandList(); // Main
+            var ct = g.CreateCommandList(); // Tooltip (clipped)
+
+            // Prepare the batches.
+            RenderButtons(g, cm);
+            RenderTimecode(g, cm);
+            RenderOscilloscope(g, cm);
+            RenderWarningAndTooltip(g, ct);
+
+            // Draw everything.
+            g.DrawCommandList(cm);
+            g.DrawCommandList(ct, new System.Drawing.Rectangle(lastButtonX, 0, Width, Height));
         }
 
         protected override void OnMouseLeave(EventArgs e)
