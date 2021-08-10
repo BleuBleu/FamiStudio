@@ -320,7 +320,7 @@ namespace FamiStudio
                 GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, colArray);
                 GL.VertexPointer(2, VertexPointerType.Float, 0, vtxArray);
 
-                fixed (short* ptr = idxArray)
+                fixed (short* ptr = quadIdxArray)
                 {
                     foreach (var draw in drawData)
                     {
@@ -345,7 +345,7 @@ namespace FamiStudio
                 GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, colArray);
                 GL.VertexPointer(2, VertexPointerType.Float, 0, vtxArray);
 
-                fixed (short* ptr = idxArray)
+                fixed (short* ptr = quadIdxArray)
                 {
                     foreach (var draw in drawData)
                     {
