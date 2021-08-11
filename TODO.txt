@@ -15,11 +15,10 @@ Improve disable attack?
 
 Optimize GL renderer
 ====================
-    - Pattern cache crash.
-	- Ugly pattern texture filtering? Missing 0.5 offset?
-	/ Create GLGraphicsBase, common to both ES and regular.
-	- ES texture dispose, figure that out...
-	- Piano roll missing filling of effect icons. => they are transparent. Will need opaque version?
+- Pattern cache crash.
+- Ugly pattern texture filtering? Missing 0.5 offset?
+/ Create GLGraphicsBase, common to both ES and regular.
+- ES texture dispose, figure that out...
 	
 Android prototype:
 x Make compile

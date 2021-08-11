@@ -11,10 +11,11 @@ using Android.Opengl;
 using Javax.Microedition.Khronos.Opengles;
 using static Android.Views.View;
 using Java.Nio;
+using Android.Content.Res;
 
 namespace FamiStudio
 {
-    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | Android.Content.PM.ConfigChanges.ScreenSize)]
     public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, IOnTouchListener
     {
         public static FamiStudioForm Instance { get; private set; }
@@ -64,6 +65,11 @@ namespace FamiStudio
             Instance = this;
             famistudio = new FamiStudio();
             famistudio.Initialize(null);
+        }
+
+        public override void OnConfigurationChanged(Configuration newConfig)
+        {
+            base.OnConfigurationChanged(newConfig);
         }
 
         public override bool OnCreateOptionsMenu(IMenu menu)

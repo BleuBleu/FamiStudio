@@ -720,6 +720,7 @@ namespace FamiStudio
         public bool HasAnyLines   => lineBatches.Count > 0;
         public bool HasAnyTexts   => texts.Count > 0;
         public bool HasAnyBitmaps => bitmaps.Count > 0;
+        public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps;
 
         public GLCommandList(GLGraphics g, int dashTextureSize)
         {
@@ -1489,7 +1490,6 @@ namespace FamiStudio
                             var y0 = y + info.yoffset;
                             var x1 = x0 + info.width;
                             var y1 = y0 + info.height;
-
 
                             vtxArray[vtxIdx++] = x0;
                             vtxArray[vtxIdx++] = y0;

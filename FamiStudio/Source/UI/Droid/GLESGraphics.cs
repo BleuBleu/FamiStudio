@@ -14,6 +14,7 @@ namespace FamiStudio
     {
         protected IGL10 gl;
 
+        // Must be powers of two.
         const int MinBufferSize = 16;
         const int MaxBufferSize = 128 * 1024;
 
@@ -21,12 +22,16 @@ namespace FamiStudio
         const int MaxBufferSizeLog2 = 17;
         const int NumBufferSizes    = MaxBufferSizeLog2 - MinBufferSizeLog2 + 1;
 
+        // Index [0] is MaxBufferSize
+        // Index [1] is MaxBufferSize / 2
+        // Index [2] is MaxBufferSize / 4
+        // ...
         List<FloatBuffer>[] freeVtxBuffers = new List<FloatBuffer>[NumBufferSizes];
         List<IntBuffer>[]   freeColBuffers = new List<IntBuffer>  [NumBufferSizes];
         List<ShortBuffer>[] freeIdxBuffers = new List<ShortBuffer>[NumBufferSizes];
 
         List<FloatBuffer>[] usedVtxBuffers = new List<FloatBuffer>[NumBufferSizes];
-        List<IntBuffer>[]   usedColBuffers = new List<IntBuffer>[NumBufferSizes];
+        List<IntBuffer>[]   usedColBuffers = new List<IntBuffer>  [NumBufferSizes];
         List<ShortBuffer>[] usedIdxBuffers = new List<ShortBuffer>[NumBufferSizes];
 
         public GLGraphics(IGL10 g)
@@ -386,6 +391,9 @@ namespace FamiStudio
 
         public unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
         {
+            if (!list.HasAnything)
+                return;
+
             if (!scissor.IsEmpty)
                 SetScissorRect(scissor.Left, scissor.Top, scissor.Right, scissor.Bottom);
 

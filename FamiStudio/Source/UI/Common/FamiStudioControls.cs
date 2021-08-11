@@ -121,6 +121,7 @@ namespace FamiStudio
 #else
                     var t0 = DateTime.Now;
 #endif
+
                     gfx.BeginDrawControl(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
                     control.Render(gfx);
                     control.Validate();
