@@ -10,7 +10,7 @@ namespace FamiStudio
         private const int MaxPatternCacheSizeX = 64;
         private const int MaxPatternCacheSizeY = 32;
 
-        private const int   PatterCacheTextureSize    = 1024;
+        private const int   PatterCacheTextureSize    = 512;
         private const float InvPatterCacheTextureSize = 1.0f / PatterCacheTextureSize;
 
         class CacheEntry
