@@ -112,6 +112,7 @@ namespace FamiStudio
                 if (controls[0].App.Project == null)
                     return true;
 
+                gfx.BeginDrawFrame();
 
                 foreach (var control in controls)
                 {
@@ -120,7 +121,7 @@ namespace FamiStudio
 #else
                     var t0 = DateTime.Now;
 #endif
-                    gfx.BeginDraw(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
+                    gfx.BeginDrawControl(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
                     control.Render(gfx);
                     control.Validate();
 
@@ -134,8 +135,10 @@ namespace FamiStudio
                     //Console.WriteLine((t1 - t0).TotalMilliseconds.ToString());
 #endif
                     gfx.DrawCommandList(cmd);
-                    gfx.EndDraw();
+                    gfx.EndDrawControl();
                 }
+
+                gfx.EndDrawFrame();
 
                 return true;
             }

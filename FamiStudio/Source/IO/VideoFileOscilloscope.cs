@@ -258,7 +258,7 @@ namespace FamiStudio
 
                         var frame = metadata[f];
 
-                        videoGraphics.BeginDraw(new Rectangle(0, 0, videoResX, videoResY), videoResY);
+                        videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
                         videoGraphics.Clear(ThemeBase.DarkGreyLineColor2);
 
                         var cmd = videoGraphics.CreateCommandList();
@@ -308,7 +308,7 @@ namespace FamiStudio
                         // Watermark.
                         cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
                         videoGraphics.DrawCommandList(cmd);
-                        videoGraphics.EndDraw();
+                        videoGraphics.EndDrawControl();
 
                         // Readback + send to ffmpeg.
                         videoGraphics.GetBitmap(videoImage);

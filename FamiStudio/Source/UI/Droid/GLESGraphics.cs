@@ -14,17 +14,57 @@ namespace FamiStudio
     {
         protected IGL10 gl;
 
+        const int MinBufferSize = 16;
+        const int MaxBufferSize = 128 * 1024;
+
+        const int MinBufferSizeLog2 = 4;
+        const int MaxBufferSizeLog2 = 17;
+        const int NumBufferSizes    = MaxBufferSizeLog2 - MinBufferSizeLog2 + 1;
+
+        List<FloatBuffer>[] freeVtxBuffers = new List<FloatBuffer>[NumBufferSizes];
+        List<IntBuffer>[]   freeColBuffers = new List<IntBuffer>  [NumBufferSizes];
+        List<ShortBuffer>[] freeIdxBuffers = new List<ShortBuffer>[NumBufferSizes];
+
+        List<FloatBuffer>[] usedVtxBuffers = new List<FloatBuffer>[NumBufferSizes];
+        List<IntBuffer>[]   usedColBuffers = new List<IntBuffer>[NumBufferSizes];
+        List<ShortBuffer>[] usedIdxBuffers = new List<ShortBuffer>[NumBufferSizes];
+
         public GLGraphics(IGL10 g)
         {
             gl = g;
             dashedBitmap = CreateBitmapFromResource("Dash");
             gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlRepeat);
             gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlRepeat);
+
+            for (int i = 0; i < NumBufferSizes; i++)
+            {
+                freeVtxBuffers[i] = new List<FloatBuffer>();
+                freeColBuffers[i] = new List<IntBuffer>();
+                freeIdxBuffers[i] = new List<ShortBuffer>();
+                usedVtxBuffers[i] = new List<FloatBuffer>();
+                usedColBuffers[i] = new List<IntBuffer>();
+                usedIdxBuffers[i] = new List<ShortBuffer>();
+            }
         }
 
-        public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
+        public override void BeginDrawFrame()
         {
-            base.BeginDraw(unflippedControlRect, windowSizeY);
+            base.BeginDrawFrame();
+
+            for (int i = 0; i < NumBufferSizes; i++)
+            {
+                freeVtxBuffers[i].AddRange(usedVtxBuffers[i]);
+                freeColBuffers[i].AddRange(usedColBuffers[i]);
+                freeIdxBuffers[i].AddRange(usedIdxBuffers[i]);
+                usedVtxBuffers[i].Clear();
+                usedColBuffers[i].Clear();
+                usedIdxBuffers[i].Clear();
+            }
+        }
+
+        public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
+        {
+            base.BeginDrawControl(unflippedControlRect, windowSizeY);
 
             gl.GlHint(GLES11.GlLineSmoothHint, GLES11.GlNicest);
             gl.GlViewport(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
@@ -248,31 +288,97 @@ namespace FamiStudio
             return newArray;
         }
 
-        private FloatBuffer CopyCreateVtxBuffer(float[] array, int size)
+        private FloatBuffer GetVtxBuffer(int size)
+        {
+            var roundedSize = Math.Max(MinBufferSize, Utils.NextPowerOfTwo(size));
+            var idx = MaxBufferSizeLog2 - Utils.Log2Int(roundedSize);
+            var buffer = (FloatBuffer)null;
+
+            if (freeVtxBuffers[idx].Count == 0)
+            {
+                buffer = ByteBuffer.AllocateDirect(sizeof(float) * roundedSize).Order(ByteOrder.NativeOrder()).AsFloatBuffer();
+            }
+            else
+            {
+                var lastIdx = freeVtxBuffers[idx].Count - 1;
+                buffer = freeVtxBuffers[idx][lastIdx];
+                freeVtxBuffers[idx].RemoveAt(lastIdx);
+            }
+
+            usedVtxBuffers[idx].Add(buffer);
+            buffer.Position(0);
+            return buffer;
+        }
+
+        private IntBuffer GetColBuffer(int size)
+        {
+            var roundedSize = Math.Max(MinBufferSize, Utils.NextPowerOfTwo(size));
+            var idx = MaxBufferSizeLog2 - Utils.Log2Int(roundedSize);
+            var buffer = (IntBuffer)null;
+
+            if (freeColBuffers[idx].Count == 0)
+            {
+                buffer = ByteBuffer.AllocateDirect(sizeof(int) * roundedSize).Order(ByteOrder.NativeOrder()).AsIntBuffer();
+            }
+            else
+            {
+                var lastIdx = freeColBuffers[idx].Count - 1;
+                buffer = freeColBuffers[idx][lastIdx];
+                freeColBuffers[idx].RemoveAt(lastIdx);
+            }
+
+            usedColBuffers[idx].Add(buffer);
+            buffer.Position(0);
+            return buffer;
+        }
+
+        private ShortBuffer GetIdxBuffer(int size)
+        {
+            var roundedSize = Math.Max(MinBufferSize, Utils.NextPowerOfTwo(size));
+            var idx = MaxBufferSizeLog2 - Utils.Log2Int(roundedSize);
+            var buffer = (ShortBuffer)null;
+
+            if (freeIdxBuffers[idx].Count == 0)
+            {
+                buffer = ByteBuffer.AllocateDirect(sizeof(short) * roundedSize).Order(ByteOrder.NativeOrder()).AsShortBuffer();
+            }
+            else
+            {
+                var lastIdx = freeIdxBuffers[idx].Count - 1;
+                buffer = freeIdxBuffers[idx][lastIdx];
+                freeIdxBuffers[idx].RemoveAt(lastIdx);
+            }
+
+            usedIdxBuffers[idx].Add(buffer);
+            buffer.Position(0);
+            return buffer;
+        }
+
+        private FloatBuffer CopyGetVtxBuffer(float[] array, int size)
         {
             var newArray = new float[size];
             Array.Copy(array, newArray, size);
-            var buffer = ByteBuffer.AllocateDirect(sizeof(float) * size).Order(ByteOrder.NativeOrder()).AsFloatBuffer();
+            var buffer = GetVtxBuffer(size);
             buffer.Put(newArray);
             buffer.Position(0);
             return buffer;
         }
 
-        private IntBuffer CopyCreateColBuffer(int[] array, int size)
+        private IntBuffer CopyGetColBuffer(int[] array, int size)
         {
             var newArray = new int[size];
             Array.Copy(array, newArray, size);
-            var buffer = ByteBuffer.AllocateDirect(sizeof(int) * size).Order(ByteOrder.NativeOrder()).AsIntBuffer();
+            var buffer = GetColBuffer(size);
             buffer.Put(newArray);
             buffer.Position(0);
             return buffer;
         }
 
-        private ShortBuffer CopyCreateIdxBuffer(short[] array, int size)
+        private ShortBuffer CopyGetIdxBuffer(short[] array, int size)
         {
             var newArray = new short[size];
             Array.Copy(array, newArray, size);
-            var buffer = ByteBuffer.AllocateDirect(sizeof(short) * size).Order(ByteOrder.NativeOrder()).AsShortBuffer();
+            var buffer = GetIdxBuffer(size);
             buffer.Put(newArray);
             buffer.Position(0);
             return buffer;
@@ -291,9 +397,9 @@ namespace FamiStudio
 
                 foreach (var draw in drawData)
                 {
-                    var vb = CopyCreateVtxBuffer(draw.vtxArray, draw.vtxArraySize);
-                    var cb = CopyCreateColBuffer(draw.colArray, draw.colArraySize);
-                    var ib = CopyCreateIdxBuffer(draw.idxArray, draw.idxArraySize);
+                    var vb = CopyGetVtxBuffer(draw.vtxArray, draw.vtxArraySize);
+                    var cb = CopyGetColBuffer(draw.colArray, draw.colArraySize);
+                    var ib = CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize);
 
                     //if (draw.smooth) gl.GlEnable(GLES11.GlPolygonSmooth);
                     gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
@@ -318,9 +424,9 @@ namespace FamiStudio
 
                 foreach (var draw in drawData)
                 {
-                    var vb = CopyCreateVtxBuffer(draw.vtxArray, draw.vtxArraySize);
-                    var cb = CopyCreateColBuffer(draw.colArray, draw.colArraySize);
-                    var tb = CopyCreateVtxBuffer(draw.texArray, draw.texArraySize);
+                    var vb = CopyGetVtxBuffer(draw.vtxArray, draw.vtxArraySize);
+                    var cb = CopyGetColBuffer(draw.colArray, draw.colArraySize);
+                    var tb = CopyGetVtxBuffer(draw.texArray, draw.texArraySize);
 
                     if (draw.smooth) gl.GlEnable(GLES11.GlLineSmooth);
                     gl.GlLineWidth(draw.lineWidth);
@@ -341,10 +447,10 @@ namespace FamiStudio
             {
                 var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize, out var idxSize);
 
-                var vb = CopyCreateVtxBuffer(vtxArray, vtxSize);
-                var cb = CopyCreateColBuffer(colArray, colSize);
-                var tb = CopyCreateVtxBuffer(texArray, texSize);
-                var ib = CopyCreateIdxBuffer(quadIdxArray, idxSize);
+                var vb = CopyGetVtxBuffer(vtxArray, vtxSize);
+                var cb = CopyGetColBuffer(colArray, colSize);
+                var tb = CopyGetVtxBuffer(texArray, texSize);
+                var ib = CopyGetIdxBuffer(quadIdxArray, idxSize);
 
                 gl.GlEnable(GLES11.GlTexture2d);
                 gl.GlEnableClientState(GLES11.GlColorArray);
@@ -369,10 +475,10 @@ namespace FamiStudio
             {
                 var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize, out var idxSize);
 
-                var vb = CopyCreateVtxBuffer(vtxArray, vtxSize);
-                var cb = CopyCreateColBuffer(colArray, colSize);
-                var tb = CopyCreateVtxBuffer(texArray, texSize);
-                var ib = CopyCreateIdxBuffer(quadIdxArray, idxSize);
+                var vb = CopyGetVtxBuffer(vtxArray, vtxSize);
+                var cb = CopyGetColBuffer(colArray, colSize);
+                var tb = CopyGetVtxBuffer(texArray, texSize);
+                var ib = CopyGetIdxBuffer(quadIdxArray, idxSize);
 
                 gl.GlEnable(GLES11.GlTexture2d);
                 gl.GlEnableClientState(GLES11.GlColorArray);
@@ -398,8 +504,7 @@ namespace FamiStudio
 
             list.Release();
         }
-    };
-
+    }
     public class GLOffscreenGraphics : GLGraphics
     {
         protected int fbo;
@@ -437,19 +542,19 @@ namespace FamiStudio
             return new GLOffscreenGraphics(null /*gl*/, imageSizeX, imageSizeY, allowReadback);
         }
 
-        public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
+        public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
         {
             /*
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, fbo);
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
             */
 
-            base.BeginDraw(unflippedControlRect, windowSizeY);
+            base.BeginDrawControl(unflippedControlRect, windowSizeY);
         }
 
-        public override void EndDraw()
+        public override void EndDrawControl()
         {
-            base.EndDraw();
+            base.EndDrawControl();
 
             // GL.Ext.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
         }

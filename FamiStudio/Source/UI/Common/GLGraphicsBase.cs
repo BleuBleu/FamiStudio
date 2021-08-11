@@ -73,7 +73,15 @@ namespace FamiStudio
         protected abstract int CreateEmptyTexture(int width, int height);
         protected abstract int CreateTexture(Bitmap bmp);
 
-        public virtual void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
+        public virtual void BeginDrawFrame()
+        {
+        }
+
+        public virtual void EndDrawFrame()
+        {
+        }
+
+        public virtual void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
         {
             this.windowSizeY = windowSizeY;
 
@@ -82,7 +90,7 @@ namespace FamiStudio
             transform.SetIdentity();
         }
 
-        public virtual void EndDraw()
+        public virtual void EndDrawControl()
         {
         }
 
