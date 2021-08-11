@@ -7,7 +7,11 @@ namespace FamiStudio
 {
     public class PatternBitmapCache
     {
-        const int PatterCacheTextureSize = 1024;
+        private const int MaxPatternCacheSizeX = 128;
+        private const int MaxPatternCacheSizeY = 64;
+
+        private const int   PatterCacheTextureSize    = 1024;
+        private const float InvPatterCacheTextureSize = 1.0f / PatterCacheTextureSize;
 
         class CacheEntry
         {
@@ -35,7 +39,9 @@ namespace FamiStudio
             public Rectangle rect;
         }
 
-        private int patternCacheSizeY;
+        private int clampedPatternCacheSizeY;
+        private int desiredPatternCacheSizeY;
+        private float scaleFactorV;
         private GLGraphics graphics;
         private List<CacheTexture> cacheTextures = new List<CacheTexture>();
         private Dictionary<int, List<PatternCacheData>> patternCache = new Dictionary<int, List<PatternCacheData>>();
@@ -56,6 +62,14 @@ namespace FamiStudio
             }
         }
 
+        private void ComputeUVs(Rectangle rect, out float u0, out float v0, out float u1, out float v1)
+        {
+            u0 = rect.Left   * InvPatterCacheTextureSize;
+            v0 = rect.Top    * InvPatterCacheTextureSize;
+            u1 = u0 + rect.Width  * InvPatterCacheTextureSize;
+            v1 = v0 + rect.Height * InvPatterCacheTextureSize * scaleFactorV;
+        }
+
         public GLBitmap GetOrAddPattern(Pattern pattern, int patternLen, int framesPerNote, out float u0, out float v0, out float u1, out float v1)
         {
             // Look in cache first.
@@ -65,21 +79,18 @@ namespace FamiStudio
                 {
                     if (d.patternLen == patternLen && d.framesPerNote == framesPerNote)
                     {
-                        u0 = (d.rect.Left   + 0.5f) / PatterCacheTextureSize;
-                        v0 = (d.rect.Top    + 0.5f) / PatterCacheTextureSize;
-                        u1 = (d.rect.Right  + 0.5f) / PatterCacheTextureSize;
-                        v1 = (d.rect.Bottom + 0.5f) / PatterCacheTextureSize;
+                        ComputeUVs(d.rect, out u0, out v0, out u1, out v1);
                         return cacheTextures[d.textureIdx].bmp;
                     }
                 }
             }
 
             // Rasterize pattern and add to cache.
-            var noteSizeY = (int)Math.Max(Math.Ceiling(patternCacheSizeY * 0.1f), 2);
+            var noteSizeY = (int)Math.Max(Math.Ceiling(clampedPatternCacheSizeY * 0.1f), 2);
             var patternCacheSizeX = ComputePatternSizeX(patternLen, framesPerNote);
             var scaleX = patternCacheSizeX / (float)patternLen;
-            var scaleY = (patternCacheSizeY - noteSizeY) / (float)patternCacheSizeY;
-            var data = new int[patternCacheSizeX * patternCacheSizeY];
+            var scaleY = (clampedPatternCacheSizeY - noteSizeY) / (float)clampedPatternCacheSizeY;
+            var data = new int[patternCacheSizeX * clampedPatternCacheSizeY];
             var project = pattern.Song.Project;
 
             if (pattern.GetMinMaxNote(out var minNote, out var maxNote))
@@ -115,16 +126,16 @@ namespace FamiStudio
                     var time2 = i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : (int)ushort.MaxValue;
 
                     var scaledTime1 = (int)(time1 * scaleX);
-                    var scaledTime2 = Math.Min((int)(time2 * scaleX), patternCacheSizeX - 1);
+                    var scaledTime2 = Math.Min((int)(time2 * scaleX), patternCacheSizeX);
 
-                    DrawPatternBitmapNote(project, scaledTime1, scaledTime2, note, patternCacheSizeX, patternCacheSizeY, noteSizeY, minNote, maxNote, scaleY, pattern.ChannelType == ChannelType.Dpcm, data);
+                    DrawPatternBitmapNote(project, scaledTime1, scaledTime2, note, patternCacheSizeX, clampedPatternCacheSizeY, noteSizeY, minNote, maxNote, scaleY, pattern.ChannelType == ChannelType.Dpcm, data);
                 }
             }
 
             // Update texture.
             Allocate(patternCacheSizeX, out var textureIdx, out var x, out var y);
             var texture = cacheTextures[textureIdx];
-            graphics.UpdateBitmap(texture.bmp, x, y, patternCacheSizeX, patternCacheSizeY, data);
+            graphics.UpdateBitmap(texture.bmp, x, y, patternCacheSizeX, clampedPatternCacheSizeY, data);
 
             if (!patternCache.TryGetValue(pattern.Id, out list))
             {
@@ -136,23 +147,30 @@ namespace FamiStudio
             cacheData.patternLen = patternLen;
             cacheData.framesPerNote = framesPerNote;
             cacheData.textureIdx = textureIdx;
-            cacheData.rect = new Rectangle(x, y, patternCacheSizeX, patternCacheSizeY);
+            cacheData.rect = new Rectangle(x, y, patternCacheSizeX, clampedPatternCacheSizeY);
 
             list.Add(cacheData);
 
-            u0 = (cacheData.rect.X + 0.5f) / PatterCacheTextureSize;
-            v0 = (cacheData.rect.Y + 0.5f) / PatterCacheTextureSize;
-            u1 = (cacheData.rect.Right + 0.5f)  / PatterCacheTextureSize;
-            v1 = (cacheData.rect.Bottom + 0.5f) / PatterCacheTextureSize;
+            ComputeUVs(cacheData.rect, out u0, out v0, out u1, out v1);
 
             return texture.bmp;
         }
 
         public void Update(int patternSizeY)
         {
-            if (patternCacheSizeY != patternSizeY)
+            if (desiredPatternCacheSizeY != patternSizeY)
             {
-                patternCacheSizeY = patternSizeY;
+                desiredPatternCacheSizeY = patternSizeY;
+                clampedPatternCacheSizeY = patternSizeY;
+
+                var factor = 1;
+                while (clampedPatternCacheSizeY > MaxPatternCacheSizeY)
+                {
+                    clampedPatternCacheSizeY = Utils.DivideAndRoundUp(clampedPatternCacheSizeY, 2);
+                    factor *= 2;
+                }
+
+                scaleFactorV = (clampedPatternCacheSizeY * factor) / (float)desiredPatternCacheSizeY;
                 Clear();
             }
         }
@@ -188,7 +206,7 @@ namespace FamiStudio
 
         private int ComputePatternSizeX(int patternLen, int framesPerNote)
         {
-            return Math.Min(patternLen / framesPerNote, 64);
+            return Math.Min(patternLen / framesPerNote, MaxPatternCacheSizeX);
         }
 
         private void Allocate(int sizeX, out int textureIdx, out int x, out int y)
@@ -217,7 +235,7 @@ namespace FamiStudio
 
         private void InitCacheRows(CacheTexture texture)
         {
-            var numRows = PatterCacheTextureSize / patternCacheSizeY;
+            var numRows = PatterCacheTextureSize / clampedPatternCacheSizeY;
             
             texture.rows = new CacheRow[numRows];
 
@@ -230,7 +248,7 @@ namespace FamiStudio
 
         private bool TryAllocateFromTexture(CacheTexture texture, int sizeX, out int x, out int y)
         {
-            Debug.Assert(texture.rows.Length == PatterCacheTextureSize / patternCacheSizeY);
+            Debug.Assert(texture.rows.Length == PatterCacheTextureSize / clampedPatternCacheSizeY);
 
             for (int j = 0; j < texture.rows.Length; j++)
             {
@@ -262,7 +280,7 @@ namespace FamiStudio
                             }
 
                             x = node.startX;
-                            y = j * patternCacheSizeY;
+                            y = j * clampedPatternCacheSizeY;
 
                             InsertAndMerge(row.usedEntries, node);
 
@@ -328,19 +346,40 @@ namespace FamiStudio
             }
         }
 
-        private void Free(int textureIdx, int x, int y, int sizeX)
+        private void Free(int textureIdx, int x, int y, int sx)
         {
-            var rowIdx = y / patternCacheSizeY;
+            var rowIdx = y / clampedPatternCacheSizeY;
             var row = cacheTextures[textureIdx].rows[rowIdx];
 
             for (int k = 0; k < row.usedEntries.Count; k++)
             {
                 var used = row.usedEntries[k];
-                if (used.startX == x)
+
+                if (x >= used.startX && x + sx <= used.startX + used.sizeX)
                 {
-                    Debug.Assert(used.sizeX == sizeX);
-                    row.usedEntries.RemoveAt(k);
-                    InsertAndMerge(row.freeEntries, used);
+                    if (x == used.startX && x + sx == used.startX + used.sizeX)
+                    {
+                        row.usedEntries.RemoveAt(k);
+                        InsertAndMerge(row.freeEntries, used);
+                    }
+                    else if (x == used.startX)
+                    {
+                        InsertAndMerge(row.freeEntries, new CacheEntry() { startX = x, sizeX = sx });
+                        used.startX += sx;
+                        used.sizeX  -= sx;
+                    }
+                    else if (x + sx == used.startX + used.sizeX)
+                    {
+                        used.sizeX -= sx;
+                        InsertAndMerge(row.freeEntries, new CacheEntry() { startX = used.startX + used.sizeX, sizeX = sx });
+                    }
+                    else
+                    {
+                        var oldSizeX = used.sizeX;
+                        used.sizeX = x - used.startX;
+                        InsertAndMerge(row.freeEntries, new CacheEntry() { startX = used.startX + used.sizeX, sizeX = sx });
+                        InsertAndMerge(row.usedEntries, new CacheEntry() { startX = used.startX + used.sizeX + sx, sizeX = oldSizeX - used.sizeX - sx });
+                    }
                     return;
                 }
             }
@@ -350,7 +389,23 @@ namespace FamiStudio
 
         public void ValidateIntegrity()
         {
+            for (int i = 0; i < cacheTextures.Count; i++)
+            {
+                var texture = cacheTextures[i];
 
+                for (int j = 0; j < texture.rows.Length; j++)
+                {
+                    var row = texture.rows[j];
+                    var pixels = 0;
+
+                    for (int k = 0; k < row.freeEntries.Count; k++)
+                        pixels += row.freeEntries[k].sizeX;
+                    for (int k = 0; k < row.usedEntries.Count; k++)
+                        pixels += row.usedEntries[k].sizeX;
+
+                    Debug.Assert(pixels == PatterCacheTextureSize);
+                }
+            }
         }
     }
 }

@@ -12,7 +12,8 @@ namespace FamiStudio
 {
     public class GLGraphics : GLGraphicsBase
     {
-        protected IGL10 gl;
+        protected static IGL10 gl;
+        public static IGL10 GL => gl;
 
         // Must be powers of two.
         const int MinBufferSize = 16;

@@ -23,9 +23,9 @@ namespace FamiStudio
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.Repeat);
         }
 
-        public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
+        public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
         {
-            base.BeginDraw(unflippedControlRect, windowSizeY);
+            base.BeginDrawControl(unflippedControlRect, windowSizeY);
 
             GL.Viewport(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
             GL.MatrixMode(MatrixMode.Projection);
@@ -311,7 +311,7 @@ namespace FamiStudio
 
             if (list.HasAnyBitmaps)
             {
-                var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out _, out _, out _);
+                var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);
 
                 GL.Enable(EnableCap.Texture2D);
                 GL.EnableClientState(ArrayCap.ColorArray);
@@ -336,7 +336,7 @@ namespace FamiStudio
 
             if (list.HasAnyTexts)
             {
-                var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out _, out _, out _);
+                var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);
 
                 GL.Enable(EnableCap.Texture2D);
                 GL.EnableClientState(ArrayCap.ColorArray);
@@ -401,17 +401,17 @@ namespace FamiStudio
             return new GLOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
         }
 
-        public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
+        public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
         {
+            base.BeginDrawControl(unflippedControlRect, windowSizeY);
+
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, fbo);
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
-
-            base.BeginDraw(unflippedControlRect, windowSizeY);
         }
 
-        public override void EndDraw()
+        public override void EndDrawControl()
         {
-            base.EndDraw();
+            base.EndDrawControl();
 
             GL.Ext.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
         }

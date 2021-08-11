@@ -492,6 +492,8 @@ namespace FamiStudio
                 project.SongExists(song);
                 Debug.Assert(song == ProjectExplorer.SelectedSong);
             }
+
+            Sequencer.ValidateIntegrity();
 #endif
         }
 

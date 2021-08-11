@@ -339,12 +339,13 @@ namespace FamiStudio
 
         public void Dispose()
         {
-#if FAMISTUDIO_ANDROID // DROIDTODO
-            int id = Texture;
-            //GL.DeleteTextures(1, ref id);
+#if FAMISTUDIO_ANDROID
+            var id = new[] { Texture };
+            GLGraphics.GL.GlDeleteTextures(1, id, 0);
 #else
             GL.DeleteTexture(Texture);
 #endif
+            Texture = -1;
         }
 
         public void AddChar(char c, CharInfo info)
@@ -510,14 +511,16 @@ namespace FamiStudio
 
         public void Dispose()
         {
-            /*
             if (dispose)
-#if FAMISTUDIO_ANDROID // DROIDTODO
-                GL.DeleteTextures(1, ref id);
+            {
+#if FAMISTUDIO_ANDROID
+                var idArray = new[] { id };
+                GLGraphics.GL.GlDeleteTextures(1, idArray, 0);
 #else
                 GL.DeleteTexture(id);
 #endif
-            */
+            }
+            id = -1;
         }
 
         public override int GetHashCode()

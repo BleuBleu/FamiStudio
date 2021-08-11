@@ -518,8 +518,7 @@ namespace FamiStudio
                 cb.DrawLine(0, y, Width, y, theme.BlackBrush);
 
             // Patterns
-            // MATTT : Adjust UVs if not perfectly divisible.
-            int patternCacheSizeY = (int)Math.Round((trackSizeY - patternHeaderSizeY - 1) / g.WindowScaling);
+            int patternCacheSizeY = trackSizeY - patternHeaderSizeY - 1;
             patternCache.Update(patternCacheSizeY);
 
             for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
@@ -549,6 +548,8 @@ namespace FamiStudio
                     if (pattern != null)
                     {
                         var bmp = patternCache.GetOrAddPattern(pattern, patternLen, noteLen, out var u0, out var v0, out var u1, out var v1);
+
+                        Debug.WriteLine($"CACHE {pattern.Name} {u0} {v0} {u1} {v1}");
 
                         cf.PushTranslation(0, py);
 
@@ -742,6 +743,16 @@ namespace FamiStudio
                 patternCache.Remove(pattern);
             }
         }
+
+#if DEBUG
+        public void ValidateIntegrity()
+        {
+            if (patternCache != null)
+            {
+                patternCache.ValidateIntegrity();
+            }
+        }
+#endif
 
         private void GetMinMaxScroll(out int minScrollX, out int maxScrollX)
         {
@@ -1039,6 +1050,7 @@ namespace FamiStudio
                 else if (right && inPatternHeader && pattern != null)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                    patternCache.Remove(pattern);
                     channel.PatternInstances[patternIdx] = null;
                     channel.InvalidateCumulativePatternCache();
                     App.UndoRedoManager.EndTransaction();
@@ -1499,6 +1511,9 @@ namespace FamiStudio
             {
                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                 {
+                    var pattern = Song.Channels[i].PatternInstances[j];
+                    if (pattern != null)
+                        patternCache.Remove(pattern);
                     Song.Channels[i].PatternInstances[j] = null;
                 }
             }
