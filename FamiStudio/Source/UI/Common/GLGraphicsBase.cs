@@ -1345,7 +1345,7 @@ namespace FamiStudio
             return drawData;
         }
 
-        public List<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, out int vtxArraySize, out int texArraySize, out int colArraySize)
+        public List<DrawData> GetTextDrawData(float[] vtxArray, float[] texArray, int[] colArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int idxArraySize)
         {
             var drawData = new List<DrawData>();
 
@@ -1525,11 +1525,12 @@ namespace FamiStudio
             vtxArraySize = vtxIdx;
             texArraySize = texIdx;
             colArraySize = colIdx;
+            idxArraySize = idxIdx;
 
             return drawData;
         }
 
-        public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, out int vtxArraySize, out int texArraySize, out int colArraySize)
+        public List<DrawData> GetBitmapDrawData(float[] vtxArray, float[] texArray, int[] colArray, out int vtxArraySize, out int texArraySize, out int colArraySize, out int idxArraySize)
         {
             var drawData = new List<DrawData>();
 
@@ -1588,6 +1589,7 @@ namespace FamiStudio
             vtxArraySize = vtxIdx;
             texArraySize = texIdx;
             colArraySize = colIdx;
+            idxArraySize = idxIdx;
 
             return drawData;
         }

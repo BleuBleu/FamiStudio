@@ -14,27 +14,12 @@ namespace FamiStudio
     {
         protected IGL10 gl;
 
-        protected FloatBuffer vtxBuffer;
-        protected FloatBuffer texBuffer;
-        protected IntBuffer   colBuffer;
-        protected ShortBuffer idxBuffer;
-        protected ShortBuffer quadIdxBuffer;
-
         public GLGraphics(IGL10 g)
         {
             gl = g;
             dashedBitmap = CreateBitmapFromResource("Dash");
             gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlRepeat);
             gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlRepeat);
-
-            vtxBuffer = ByteBuffer.AllocateDirect(sizeof(float) * MaxVertexCount * 2).Order(ByteOrder.NativeOrder()).AsFloatBuffer();
-            texBuffer = ByteBuffer.AllocateDirect(sizeof(float) * MaxTexCoordCount * 2).Order(ByteOrder.NativeOrder()).AsFloatBuffer();
-            colBuffer = ByteBuffer.AllocateDirect(sizeof(int)   * MaxColorCount).Order(ByteOrder.NativeOrder()).AsIntBuffer();
-            idxBuffer = ByteBuffer.AllocateDirect(sizeof(short) * MaxIndexCount).Order(ByteOrder.NativeOrder()).AsShortBuffer();
-
-            quadIdxBuffer = ByteBuffer.AllocateDirect(sizeof(short) * MaxIndexCount).Order(ByteOrder.NativeOrder()).AsShortBuffer();
-            quadIdxBuffer.Put(quadIdxArray);
-            quadIdxBuffer.Position(0);
         }
 
         public override void BeginDraw(Rectangle unflippedControlRect, int windowSizeY)
@@ -256,6 +241,43 @@ namespace FamiStudio
             DrawCommandList(list, Rectangle.Empty);
         }
 
+        private T[] CopyResizeArray<T>(T[] array, int size)
+        {
+            var newArray = new T[size];
+            Array.Copy(array, newArray, size);
+            return newArray;
+        }
+
+        private FloatBuffer CopyCreateVtxBuffer(float[] array, int size)
+        {
+            var newArray = new float[size];
+            Array.Copy(array, newArray, size);
+            var buffer = ByteBuffer.AllocateDirect(sizeof(float) * size).Order(ByteOrder.NativeOrder()).AsFloatBuffer();
+            buffer.Put(newArray);
+            buffer.Position(0);
+            return buffer;
+        }
+
+        private IntBuffer CopyCreateColBuffer(int[] array, int size)
+        {
+            var newArray = new int[size];
+            Array.Copy(array, newArray, size);
+            var buffer = ByteBuffer.AllocateDirect(sizeof(int) * size).Order(ByteOrder.NativeOrder()).AsIntBuffer();
+            buffer.Put(newArray);
+            buffer.Position(0);
+            return buffer;
+        }
+
+        private ShortBuffer CopyCreateIdxBuffer(short[] array, int size)
+        {
+            var newArray = new short[size];
+            Array.Copy(array, newArray, size);
+            var buffer = ByteBuffer.AllocateDirect(sizeof(short) * size).Order(ByteOrder.NativeOrder()).AsShortBuffer();
+            buffer.Put(newArray);
+            buffer.Position(0);
+            return buffer;
+        }
+
         public unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
         {
             if (!scissor.IsEmpty)
@@ -269,17 +291,14 @@ namespace FamiStudio
 
                 foreach (var draw in drawData)
                 {
-                    vtxBuffer.Put(draw.vtxArray, 0, draw.vtxArraySize);
-                    colBuffer.Put(draw.colArray, 0, draw.colArraySize);
-                    idxBuffer.Put(draw.idxArray, 0, draw.idxArraySize);
-                    vtxBuffer.Position(0);
-                    colBuffer.Position(0);
-                    idxBuffer.Position(0);
+                    var vb = CopyCreateVtxBuffer(draw.vtxArray, draw.vtxArraySize);
+                    var cb = CopyCreateColBuffer(draw.colArray, draw.colArraySize);
+                    var ib = CopyCreateIdxBuffer(draw.idxArray, draw.idxArraySize);
 
                     //if (draw.smooth) gl.GlEnable(GLES11.GlPolygonSmooth);
-                    gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
-                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
-                    gl.GlDrawElements(GLES11.GlTriangles, draw.numIndices, GLES11.GlUnsignedShort, idxBuffer);
+                    gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
+                    gl.GlDrawElements(GLES11.GlTriangles, draw.numIndices, GLES11.GlUnsignedShort, ib);
                     //if (draw.smooth) gl.GlDisable(GLES11.GlPolygonSmooth);
                 }
 
@@ -299,18 +318,15 @@ namespace FamiStudio
 
                 foreach (var draw in drawData)
                 {
-                    vtxBuffer.Put(draw.vtxArray, 0, draw.vtxArraySize);
-                    texBuffer.Put(draw.texArray, 0, draw.texArraySize);
-                    colBuffer.Put(draw.colArray, 0, draw.colArraySize);
-                    vtxBuffer.Position(0);
-                    texBuffer.Position(0);
-                    colBuffer.Position(0);
+                    var vb = CopyCreateVtxBuffer(draw.vtxArray, draw.vtxArraySize);
+                    var cb = CopyCreateColBuffer(draw.colArray, draw.colArraySize);
+                    var tb = CopyCreateVtxBuffer(draw.texArray, draw.texArraySize);
 
                     if (draw.smooth) gl.GlEnable(GLES11.GlLineSmooth);
                     gl.GlLineWidth(draw.lineWidth);
-                    gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
-                    gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
-                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                    gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
+                    gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
                     gl.GlDrawArrays(GLES11.GlLines, 0, draw.numVertices);
                     if (draw.smooth) gl.GlDisable(GLES11.GlLineSmooth);
                 }
@@ -323,27 +339,25 @@ namespace FamiStudio
 
             if (list.HasAnyBitmaps)
             {
-                var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize);
+                var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize, out var idxSize);
 
-                vtxBuffer.Put(vtxArray, 0, vtxSize);
-                texBuffer.Put(texArray, 0, texSize);
-                colBuffer.Put(colArray, 0, colSize);
-                vtxBuffer.Position(0);
-                texBuffer.Position(0);
-                colBuffer.Position(0);
+                var vb = CopyCreateVtxBuffer(vtxArray, vtxSize);
+                var cb = CopyCreateColBuffer(colArray, colSize);
+                var tb = CopyCreateVtxBuffer(texArray, texSize);
+                var ib = CopyCreateIdxBuffer(quadIdxArray, idxSize);
 
                 gl.GlEnable(GLES11.GlTexture2d);
                 gl.GlEnableClientState(GLES11.GlColorArray);
                 gl.GlEnableClientState(GLES11.GlTextureCoordArray);
-                gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
-                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
-                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
+                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
 
                 foreach (var draw in drawData)
                 {
-                    quadIdxBuffer.Position(draw.start);
+                    ib.Position(draw.start);
                     gl.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
-                    gl.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, quadIdxBuffer);
+                    gl.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
                 }
 
                 gl.GlDisableClientState(GLES11.GlColorArray);
@@ -353,27 +367,25 @@ namespace FamiStudio
 
             if (list.HasAnyTexts)
             {
-                var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize);
+                var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize, out var idxSize);
 
-                vtxBuffer.Put(vtxArray, 0, vtxSize);
-                texBuffer.Put(texArray, 0, texSize);
-                colBuffer.Put(colArray, 0, colSize);
-                vtxBuffer.Position(0);
-                texBuffer.Position(0);
-                colBuffer.Position(0);
+                var vb = CopyCreateVtxBuffer(vtxArray, vtxSize);
+                var cb = CopyCreateColBuffer(colArray, colSize);
+                var tb = CopyCreateVtxBuffer(texArray, texSize);
+                var ib = CopyCreateIdxBuffer(quadIdxArray, idxSize);
 
                 gl.GlEnable(GLES11.GlTexture2d);
                 gl.GlEnableClientState(GLES11.GlColorArray);
                 gl.GlEnableClientState(GLES11.GlTextureCoordArray);
-                gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, texBuffer);
-                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, colBuffer);
-                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vtxBuffer);
+                gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
+                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
 
                 foreach (var draw in drawData)
                 {
-                    quadIdxBuffer.Position(draw.start);
+                    ib.Position(draw.start);
                     gl.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
-                    gl.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, quadIdxBuffer);
+                    gl.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
                 }
 
                 gl.GlDisableClientState(GLES11.GlColorArray);

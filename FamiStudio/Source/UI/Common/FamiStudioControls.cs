@@ -131,6 +131,7 @@ namespace FamiStudio
 #else
                     var t1 = DateTime.Now;
                     cmd.DrawText($"Render time : {(t1 - t0).TotalMilliseconds} ms", ThemeBase.FontBigBold, 10, 10, brush);
+                    //Console.WriteLine((t1 - t0).TotalMilliseconds.ToString());
 #endif
                     gfx.DrawCommandList(cmd);
                     gfx.EndDraw();
