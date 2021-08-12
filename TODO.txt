@@ -14,13 +14,7 @@ Improve disable attack?
 - If same envelopes, allow? This would allow VRC7 to not have attack.
 
 Android prototype:
-x Make compile
-- Create OpenGL ES backend.
-	x Load textures / fonts
-
-- See how to call C++ code
-- Create audio stream.
-- Then see how it goes.
+/ Create audio stream.
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.

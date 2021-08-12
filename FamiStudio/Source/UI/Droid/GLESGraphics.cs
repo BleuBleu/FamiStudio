@@ -109,9 +109,12 @@ namespace FamiStudio
 
         public void UpdateBitmap(GLBitmap bmp, int x, int y, int width, int height, int[] data)
         {
-            // DROIDTODO!
-            //GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
-            //GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, data);
+            var buffer = ByteBuffer.AllocateDirect(width * height * sizeof(int)).Order(ByteOrder.NativeOrder()).AsIntBuffer();
+            buffer.Put(data);
+            buffer.Position(0);
+
+            gl.GlBindTexture(GLES11.GlTexture2d, bmp.Id);
+            gl.GlTexSubImage2D(GLES11.GlTexture2d, 0, x, y, width, height, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
         }
 
         protected override int CreateEmptyTexture(int width, int height)

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#ifdef LINUX
+#if defined(LINUX) || defined(__clang__)
 #define __stdcall
 #define __cdecl
 #endif

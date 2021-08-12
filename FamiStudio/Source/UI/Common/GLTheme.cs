@@ -29,6 +29,10 @@ namespace FamiStudio
                 mainWindowScaling = Settings.DpiScaling / 100.0f;
             else
                 mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
+#elif FAMISTUDIO_ANDROID
+            // DROIDTODO : Autodetect.
+            mainWindowScaling = 2;
+            dialogScaling = 1;
 #endif
         }
 

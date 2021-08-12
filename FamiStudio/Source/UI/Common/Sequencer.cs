@@ -549,8 +549,6 @@ namespace FamiStudio
                     {
                         var bmp = patternCache.GetOrAddPattern(pattern, patternLen, noteLen, out var u0, out var v0, out var u1, out var v1);
 
-                        Debug.WriteLine($"CACHE {pattern.Name} {u0} {v0} {u1} {v1}");
-
                         cf.PushTranslation(0, py);
 
                         cf.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY, 0.8f));

@@ -610,6 +610,7 @@ namespace FamiStudio
             var dlgLog = new LogDialog(mainForm);
             using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
             {
+#endif
                 project = OpenProjectFile(filename);
 
                 if (project != null)
@@ -625,6 +626,7 @@ namespace FamiStudio
                 }
 
                 mainForm.Refresh();
+#if !FAMISTUDIO_ANDROID // DROIDTODO
                 dlgLog.ShowDialogIfMessages();
             }
 #endif
@@ -1052,18 +1054,16 @@ namespace FamiStudio
 
         private void InitializeSongPlayer()
         {
-#if !FAMISTUDIO_ANDROID // DROID
             Debug.Assert(songPlayer == null);
             Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
             songPlayer = new SongPlayer(palPlayback);
             songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
-#endif
         }
 
         private void InitializeInstrumentPlayer()
         {
-#if !FAMISTUDIO_ANDROID // DROID
+#if !FAMISTUDIO_ANDROID
             Debug.Assert(instrumentPlayer == null);
             instrumentPlayer = new InstrumentPlayer(palPlayback);
             instrumentPlayer.Start(project, palPlayback);
@@ -1072,19 +1072,17 @@ namespace FamiStudio
 
         private void ShutdownSongPlayer()
         {
-#if !FAMISTUDIO_ANDROID // DROID
             if (songPlayer != null)
             {
                 songPlayer.Stop();
                 songPlayer.Shutdown();
                 songPlayer = null;
             }
-#endif
         }
 
         private void ShutdownInstrumentPlayer()
         {
-#if !FAMISTUDIO_ANDROID // DROID
+#if !FAMISTUDIO_ANDROID
             if (instrumentPlayer != null)
             {
                 instrumentPlayer.Stop(true);
@@ -1097,7 +1095,6 @@ namespace FamiStudio
 
         public void InitializeOscilloscope()
         {
-#if !FAMISTUDIO_ANDROID // DROID
             Debug.Assert(oscilloscope == null);
 
             if (Settings.ShowOscilloscope)
@@ -1108,12 +1105,10 @@ namespace FamiStudio
                 if (instrumentPlayer != null)
                     instrumentPlayer.ConnectOscilloscope(oscilloscope);
             }
-#endif
         }
 
         public void ShutdownOscilloscope()
         {
-#if !FAMISTUDIO_ANDROID // DROID
             if (songPlayer != null)
                 songPlayer.ConnectOscilloscope(null);
             if (instrumentPlayer != null)
@@ -1124,7 +1119,6 @@ namespace FamiStudio
                 oscilloscope.Stop();
                 oscilloscope = null;
             }
-#endif
         }
 
         public float[,] GetOscilloscopeGeometry(out bool hHasNonZeroSample)
@@ -1483,7 +1477,9 @@ namespace FamiStudio
 
             if (!songPlayer.IsPlaying)
             {
+#if !FAMISTUDIO_ANDROID
                 instrumentPlayer.ConnectOscilloscope(null);
+#endif
                 songPlayer.ConnectOscilloscope(oscilloscope);
                 songPlayer.Play(song, songPlayer.PlayPosition, palPlayback);
             }
@@ -1494,7 +1490,9 @@ namespace FamiStudio
             if (songPlayer != null && songPlayer.IsPlaying)
             {
                 songPlayer.Stop();
+#if !FAMISTUDIO_ANDROID
                 instrumentPlayer.ConnectOscilloscope(oscilloscope);
+#endif
                 songPlayer.ConnectOscilloscope(null);
 
                 // HACK: Update continuous follow mode only last time so it catches up to the 
@@ -1650,8 +1648,18 @@ namespace FamiStudio
 #endif
         }
 
+        int playDelay = 100; // MATTT
+
         public void Tick()
         {
+            if (playDelay > 0)
+            {
+                if (--playDelay == 0)
+                {
+                    PlaySong();
+                }
+            }
+
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
 
             if (audioDeviceChanged)

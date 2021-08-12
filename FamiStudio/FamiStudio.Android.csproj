@@ -74,6 +74,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Silius.fms" />
     <None Include="Source\UI\Droid\Resources\AboutResources.txt" />
     <None Include="Source\UI\Droid\Assets\AboutAssets.txt" />
     <None Include="Properties\AndroidManifest.xml" />
@@ -611,6 +612,14 @@
     <EmbeddedResource Include="Resources\SpeedSmall.png" />
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libSndEmu_Android.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libSndEmu_Android.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

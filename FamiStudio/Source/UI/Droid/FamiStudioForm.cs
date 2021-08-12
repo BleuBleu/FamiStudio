@@ -1,17 +1,17 @@
-﻿using System;
-using Android.App;
+﻿using Android.App;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
-using AndroidX.AppCompat.Widget;
 using AndroidX.AppCompat.App;
-using Google.Android.Material.FloatingActionButton;
-using Google.Android.Material.Snackbar;
 using Android.Opengl;
 using Javax.Microedition.Khronos.Opengles;
 using static Android.Views.View;
-using Java.Nio;
 using Android.Content.Res;
+
+using RenderTheme = FamiStudio.GLTheme;
+using static Android.Views.Choreographer;
+using System.IO;
+using System.Reflection;
 
 namespace FamiStudio
 {
@@ -50,6 +50,12 @@ namespace FamiStudio
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
 
+            //Settings.Load(); // DROIDTODO : Settings.
+            Utils.Initialize();
+            PlatformUtils.Initialize();
+            RenderTheme.Initialize();
+            NesApu.InitializeNoteTables();
+
             glSurfaceView = FindViewById<GLSurfaceView>(Resource.Id.surfaceview);
             glSurfaceView.PreserveEGLContextOnPause = true;
 #if DEBUG
@@ -62,9 +68,18 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
+            var filename = Path.Combine(Path.GetTempPath(), "Silius.fms");
+
+            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Silius.fms"))
+            {
+                var buffer = new byte[(int)s.Length];
+                s.Read(buffer, 0, (int)s.Length);
+                File.WriteAllBytes(filename, buffer);
+            }
+
             Instance = this;
             famistudio = new FamiStudio();
-            famistudio.Initialize(null);
+            famistudio.Initialize(filename);
         }
 
         public override void OnConfigurationChanged(Configuration newConfig)
@@ -96,8 +111,14 @@ namespace FamiStudio
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
+        private void Test()
+        {
+            famistudio.Tick();
+        }
+
         public void OnDrawFrame(IGL10 gl)
         {
+            RunOnUiThread(Test);
             controls.Redraw();
         }
 
@@ -110,29 +131,6 @@ namespace FamiStudio
         {
             controls.InitializeGL(gl);
             controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
-
-            var i0 = famistudio.Project.CreateInstrument(0, "i0");
-            var i1 = famistudio.Project.CreateInstrument(0, "i1");
-            var p0 = famistudio.Song.Channels[0].CreatePatternAndInstance(0, "toto1");
-
-            p0.GetOrCreateNoteAt(10).Value = 52;
-            p0.GetOrCreateNoteAt(10).Instrument = i0;
-            p0.GetOrCreateNoteAt(10).Duration = 20;
-            p0.GetOrCreateNoteAt(50).Value = 20;
-            p0.GetOrCreateNoteAt(50).Instrument = i1;
-            p0.GetOrCreateNoteAt(50).Duration = 20;
-            p0.GetOrCreateNoteAt(70).Value = 60;
-            p0.GetOrCreateNoteAt(70).Instrument = i0;
-            p0.GetOrCreateNoteAt(70).Duration = 20;
-            p0.GetOrCreateNoteAt(90).Value = 30;
-            p0.GetOrCreateNoteAt(90).Instrument = i1;
-            p0.GetOrCreateNoteAt(90).Duration = 10;
-            p0.GetOrCreateNoteAt(110).Value = 40;
-            p0.GetOrCreateNoteAt(110).Instrument = i1;
-            p0.GetOrCreateNoteAt(110).Duration = 40;
-
-            famistudio.Song.Channels[0].PatternInstances[3] = p0;
-            famistudio.Song.Channels[0].PatternInstances[5] = p0;
 
             controls.PianoRoll.StartEditPattern(0, 0); // MATTT
         }
