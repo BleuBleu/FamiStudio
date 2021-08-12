@@ -12,7 +12,7 @@ namespace FamiStudio
 #elif FAMISTUDIO_MACOS
         private const string NesSndEmuDll = "NesSndEmu.dylib";
 #elif FAMISTUDIO_ANDROID
-        private const string NesSndEmuDll = "libSndEmu_Android.so";
+        private const string NesSndEmuDll = "libNesSndEmu.so";
 #else
         private const string NesSndEmuDll = "NesSndEmu.so";
 #endif

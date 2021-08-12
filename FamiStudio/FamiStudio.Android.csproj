@@ -614,10 +614,10 @@
     <EmbeddedResource Include="Resources\GhostSmall.png" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidNativeLibrary Include="libs\armeabi-v7a\libSndEmu_Android.so">
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\arm64-v8a\libSndEmu_Android.so">
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
   </ItemGroup>

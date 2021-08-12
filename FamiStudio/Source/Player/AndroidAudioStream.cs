@@ -26,11 +26,9 @@ namespace FamiStudio
         private AudioTrack audioTrack;
         private Task playingTask;
 
-        // DROIDTODO
         public AndroidAudioStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             bufferFill = bufferFillCallback;
-            //audioTrack = new AudioTrack(Stream.Music, rate, ChannelOut.Mono, Android.Media.Encoding.Pcm16bit, bufferSize, AudioTrackMode.Stream);
 
             audioTrack = new AudioTrack.Builder()
                 .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).Build())
@@ -42,12 +40,6 @@ namespace FamiStudio
         {
             audioTrack.Play();
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
-            playingTask.ContinueWith(ExceptionHandler, TaskContinuationOptions.OnlyOnFaulted);
-        }
-
-        private void ExceptionHandler(Task obj)
-        {
-            throw new NotImplementedException();
         }
 
         public void Stop()
@@ -85,6 +77,7 @@ namespace FamiStudio
             audioTrack = null;
         }
 
+        // DROIDTODO
         public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
         {
         }
