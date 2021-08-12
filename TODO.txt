@@ -1,3 +1,13 @@
+Android prototype
+=================
+- Absolute minimum button size is 64px, 80px - 100px is much more comfortable.
+- Piano roll note height, minimum 60
+- Project explorer, scale 4 would be good. Each button would be 84px
+- Sequencer is pretty good at scaling of 2, at least with 5 channels.
+
+- Sequencer will probably need to scroll vertically.
+- Create ToolbarBase + MobileToolbar.
+
 3.2.0
 =====
 x Osc gets stuck when pausing? (Only in 3.2.0 branch), instrument player.
@@ -12,9 +22,6 @@ Diable attack on DPCM
 
 Improve disable attack?
 - If same envelopes, allow? This would allow VRC7 to not have attack.
-
-Android prototype:
-/ Create audio stream.
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.
