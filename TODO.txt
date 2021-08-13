@@ -1,12 +1,8 @@
 3.2.0
 =====
 OpenGL Optims
-- Merge from Android branch
-- Call begin frame in video export.
 - Add cleanup to pattern cache
-- Fix smooth lines, etc.
 - Port background bitmap function to mac/linux.
-- Some DROIDTODO, dash lines, etc.
 
 DMC counter effect:
 - Sound engine

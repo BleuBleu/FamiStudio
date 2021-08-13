@@ -527,7 +527,6 @@ namespace FamiStudio
         {
             var rect = elementRects[elementIndex];
 
-            // DROIDTODO : +0.5?
             u0 = rect.Left   / (float)size.Width;
             u1 = rect.Right  / (float)size.Width;
             v0 = rect.Top    / (float)size.Height;
@@ -908,15 +907,15 @@ namespace FamiStudio
             }
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool smooth = false)
         {
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            DrawLineInternal(x0, y0, x1, y0, brush, width, false, false);
-            DrawLineInternal(x1, y0, x1, y1, brush, width, false, false);
-            DrawLineInternal(x1, y1, x0, y1, brush, width, false, false);
-            DrawLineInternal(x0, y1, x0, y0, brush, width, false, false);
+            DrawLineInternal(x0, y0, x1, y0, brush, width, smooth, false);
+            DrawLineInternal(x1, y0, x1, y1, brush, width, smooth, false);
+            DrawLineInternal(x1, y1, x0, y1, brush, width, smooth, false);
+            DrawLineInternal(x0, y1, x0, y0, brush, width, smooth, false);
         }
 
         public void DrawGeometry(GLGeometry geo, GLBrush brush, float width, bool smooth = false, bool miter = false)
@@ -1091,10 +1090,10 @@ namespace FamiStudio
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool miter = false)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool smooth = false)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush, width);
+            DrawRectangle(x0, y0, x1, y1, lineBrush, width, smooth);
         }
 
         public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)

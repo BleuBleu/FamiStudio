@@ -557,7 +557,7 @@ namespace FamiStudio
                         cf.DrawText(pattern.Name, ThemeBase.FontSmall, patternNamePosX, patternNamePosY, theme.BlackBrush, sx - patternNamePosX, true);
 
                         if (IsPatternSelected(t, i))
-                            cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2);
+                            cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2, true);
 
                         cf.PopTransform();
                     }
@@ -682,9 +682,6 @@ namespace FamiStudio
             g.DrawCommandList(cf, rect);
         }
 
-        //int clip = 100;
-        //int inc = 1;
-
         protected override void OnRender(RenderGraphics g)
         {
             // Happens when piano roll is maximized.
@@ -695,23 +692,9 @@ namespace FamiStudio
             }
 
             g.Clear(ThemeBase.DarkGreyLineColor2);
-            /*
-            var list = g.CreateCommandList();
-
-            list.DrawLine(20, 0, 20, Height, theme.BlackBrush);
-            list.DrawText("Hello this is a long text", ThemeBase.FontMediumCenter, 20, 50, theme.LightRedFillBrush, clip, true);
-            list.DrawLine(20 + clip, 0, clip + 20, Height, theme.BlackBrush);
-
-            clip += inc;
-            if (clip > 150) inc = -1;
-            if (clip < 50) inc = 1;
-
-            g.DrawCommandList(list);*/
-
-            
+           
             RenderChannelNames(g);
             RenderPatternArea(g);
-            
         }
 
         private bool GetScrollBarParams(out int posX, out int sizeX)
