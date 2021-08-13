@@ -16,11 +16,19 @@ namespace FamiStudio
 {
     public class GLGraphics : GLGraphicsBase
     {
+        bool supportsLineWidth = true;
+
         public GLGraphics()
         {
             dashedBitmap = CreateBitmapFromResource("Dash");
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.Repeat);
+
+#if FAMISTUDIO_LINUX
+            var lineWidths = new float[2];
+            GL.GetFloat(GetPName.LineWidthRange, lineWidths);
+            supportsLineWidth = lineWidths[1] > 1.0f;
+#endif
         }
 
         public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
@@ -154,9 +162,8 @@ namespace FamiStudio
             return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height);
         }
 
-        private void ChangeBitmapBackground(Bitmap bmp, Color color)
+        private unsafe void ChangeBitmapBackground(Bitmap bmp, Color color)
         {
-            // MATTT : Optimize + port to other platforms.
 #if FAMISTUDIO_WINDOWS
             for (int y = 0; y < bmp.Height; y++)
             {
@@ -170,6 +177,24 @@ namespace FamiStudio
 
                     bmp.SetPixel(x, y, Color.FromArgb(r, g, b));
                 }
+            }
+#else
+            var p = (int*)bmp.Pixels.ToPointer();
+
+            for (int y = 0; y < bmp.Height; y++)
+            {
+                for (int x = 0; x < bmp.Width; x++)
+                {
+                    var pixel = Color.FromArgb(p[x]);
+
+                    var r = (byte)Utils.Lerp(color.R, pixel.B, pixel.A / 255.0f);
+                    var g = (byte)Utils.Lerp(color.G, pixel.G, pixel.A / 255.0f);
+                    var b = (byte)Utils.Lerp(color.B, pixel.R, pixel.A / 255.0f);
+
+                    p[x] = Color.FromArgb(b, g, r).ToArgb();
+                }
+
+                p += bmp.Rowstride / 4;
             }
 #endif
         }
@@ -255,7 +280,7 @@ namespace FamiStudio
 
         public GLCommandList CreateCommandList()
         {
-            return new GLCommandList(this, dashedBitmap.Size.Width);
+            return new GLCommandList(this, dashedBitmap.Size.Width, supportsLineWidth);
         }
 
         public void DrawCommandList(GLCommandList list)

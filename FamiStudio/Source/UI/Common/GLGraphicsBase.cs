@@ -707,6 +707,7 @@ namespace FamiStudio
             public int count;
         };
 
+        private bool drawThickLineAsPolygon;
         private float invDashTextureSize;
         private MeshBatch meshBatch;
         private MeshBatch meshSmoothBatch;
@@ -725,10 +726,11 @@ namespace FamiStudio
         public bool HasAnyBitmaps => bitmaps.Count > 0;
         public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps;
 
-        public GLCommandList(GLGraphics g, int dashTextureSize)
+        public GLCommandList(GLGraphics g, int dashTextureSize, bool supportsLineWidth = true)
         {
             graphics = g;
             xform = g.Transform;
+            drawThickLineAsPolygon = !supportsLineWidth;
             invDashTextureSize = 1.0f / dashTextureSize;
         }
 
@@ -842,6 +844,14 @@ namespace FamiStudio
 
         private void DrawLineInternal(float x0, float y0, float x1, float y1, GLBrush brush, float width, bool smooth, bool dash)
         {
+#if FAMISTUDIO_LINUX
+            if (width > 1.0f && drawThickLineAsPolygon)
+            {
+                DrawThickLineAsPolygonInternal(x0, y0, x1, y1, brush, width);
+                return;
+            }
+#endif
+
             var batch = GetLineBatch(width, smooth);
 
             batch.vtxArray[batch.vtxIdx++] = x0;
@@ -877,6 +887,45 @@ namespace FamiStudio
             batch.colArray[batch.colIdx++] = brush.PackedColor0;
             batch.colArray[batch.colIdx++] = brush.PackedColor0;
         }
+
+#if FAMISTUDIO_LINUX
+        private void DrawThickLineAsPolygonInternal(float x0, float y0, float x1, float y1, GLBrush brush, float width)
+        {
+            var batch = GetMeshBatch(false);
+
+            var dx = x1 - x0;
+            var dy = y1 - y0;
+            var invHalfWidth = (width * 0.5f) / (float)Math.Sqrt(dx * dx + dy * dy);
+            dx *= invHalfWidth;
+            dy *= invHalfWidth;
+
+            var i0 = (short)(batch.vtxIdx / 2 + 0);
+            var i1 = (short)(batch.vtxIdx / 2 + 1);
+            var i2 = (short)(batch.vtxIdx / 2 + 2);
+            var i3 = (short)(batch.vtxIdx / 2 + 3);
+
+            batch.idxArray[batch.idxIdx++] = i0;
+            batch.idxArray[batch.idxIdx++] = i1;
+            batch.idxArray[batch.idxIdx++] = i2;
+            batch.idxArray[batch.idxIdx++] = i0;
+            batch.idxArray[batch.idxIdx++] = i2;
+            batch.idxArray[batch.idxIdx++] = i3;
+
+            batch.vtxArray[batch.vtxIdx++] = x0 + dy;
+            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
+            batch.vtxArray[batch.vtxIdx++] = x1 + dy;
+            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
+            batch.vtxArray[batch.vtxIdx++] = x1 - dy;
+            batch.vtxArray[batch.vtxIdx++] = y1 - dx;
+            batch.vtxArray[batch.vtxIdx++] = x0 - dy;
+            batch.vtxArray[batch.vtxIdx++] = y0 - dx;
+
+            batch.colArray[batch.colIdx++] = brush.PackedColor0;
+            batch.colArray[batch.colIdx++] = brush.PackedColor0;
+            batch.colArray[batch.colIdx++] = brush.PackedColor0;
+            batch.colArray[batch.colIdx++] = brush.PackedColor0;
+        }
+#endif
 
         public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool smooth = false, bool dash = false)
         {
@@ -926,15 +975,15 @@ namespace FamiStudio
             }
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool smooth = false)
         {
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            DrawLineInternal(x0, y0, x1, y0, brush, width, false, false);
-            DrawLineInternal(x1, y0, x1, y1, brush, width, false, false);
-            DrawLineInternal(x1, y1, x0, y1, brush, width, false, false);
-            DrawLineInternal(x0, y1, x0, y0, brush, width, false, false);
+            DrawLineInternal(x0, y0, x1, y0, brush, width, smooth, false);
+            DrawLineInternal(x1, y0, x1, y1, brush, width, smooth, false);
+            DrawLineInternal(x1, y1, x0, y1, brush, width, smooth, false);
+            DrawLineInternal(x0, y1, x0, y0, brush, width, smooth, false);
         }
 
         public void DrawGeometry(GLGeometry geo, GLBrush brush, float width, bool smooth = false, bool miter = false)
@@ -1109,10 +1158,10 @@ namespace FamiStudio
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool miter = false)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool smooth = false)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
-            DrawRectangle(x0, y0, x1, y1, lineBrush, width);
+            DrawRectangle(x0, y0, x1, y1, lineBrush, width, smooth);
         }
 
         public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)

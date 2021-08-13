@@ -449,13 +449,16 @@ namespace FamiStudio
                                 }
                             }
 
+                            s.graphics.BeginDrawFrame();
                             s.graphics.BeginDrawControl(new Rectangle(0, 0, channelResX, channelResY), channelResY);
                             //s.graphics.Clear(Color.Pink);
                             pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
                             s.graphics.EndDrawControl();
+                            s.graphics.EndDrawFrame();
                         }
 
                         // Render the full screen overlay.
+                        videoGraphics.BeginDrawFrame();
                         videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
                         videoGraphics.Clear(Color.Black);
 
@@ -501,6 +504,7 @@ namespace FamiStudio
                         
                         videoGraphics.DrawCommandList(cmd);
                         videoGraphics.EndDrawControl();
+                        videoGraphics.EndDrawFrame();
 
                         // Readback + send to ffmpeg.
                         videoGraphics.GetBitmap(videoImage);

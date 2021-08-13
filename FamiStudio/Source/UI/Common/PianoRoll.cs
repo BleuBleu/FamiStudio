@@ -1537,11 +1537,12 @@ namespace FamiStudio
                                 r.ch.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, theme.DarkGreyFillBrush2);
 
                             var hover = location == hoverLocation;
+                            var selected = IsNoteSelected(location);
 
                             r.ch.FillAndDrawRectangle(
                                 0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY,
                                 singleFrameSlides.Contains(location) ? volumeSlideBarFillBrush : theme.LightGreyFillBrush1,
-                                hover ? theme.WhiteBrush : theme.BlackBrush, hover || IsNoteSelected(location) ? 2 : 1);
+                                hover ? theme.WhiteBrush : theme.BlackBrush, hover || selected ? 2 : 1, hover || selected);
 
                             var text = effectValue.ToString();
                             if ((text.Length <= 2 && zoomLevel >= 0) || zoomLevel > 0)
@@ -1606,8 +1607,8 @@ namespace FamiStudio
                     // Top/bottom dash lines (limits);
                     var topY    = waveDisplayPaddingY;
                     var bottomY = effectPanelSizeY - waveDisplayPaddingY;
-                    //r.ch.DrawLine(0, topY,    Width, topY); // DROIDTODO! Dash!
-                    //r.ch.DrawLine(0, bottomY, Width, bottomY); // DROIDTODO! Dash!
+                    r.ch.DrawLine(0, topY,    Width, topY, theme.DarkGreyLineBrush1, 1, false, true); 
+                    r.ch.DrawLine(0, bottomY, Width, bottomY, theme.DarkGreyLineBrush1, 1, false, true);
 
                     // Envelope line
                     for (int i = 0; i < 3; i++)
@@ -2429,7 +2430,7 @@ namespace FamiStudio
             if (!outline)
                 r.cf.FillRectangle(0, 0, sx, sy, r.g.GetVerticalGradientBrush(color, sy, 0.8f));
 
-            r.cf.DrawRectangle(0, 0, sx, sy, outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || outline ? 2 : 1);
+            r.cf.DrawRectangle(0, 0, sx, sy, outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || outline ? 2 : 1, selected);
 
             if (!outline)
             {
@@ -2472,7 +2473,7 @@ namespace FamiStudio
             r.cf.PushTranslation(x, y);
             if (!outline)
                 r.cf.FillGeometry(paths[zoomLevel - MinZoomLevel, 0], r.g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-            r.cf.DrawGeometry(paths[zoomLevel - MinZoomLevel, 0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), outline || selected ? 2 : 1);
+            r.cf.DrawGeometry(paths[zoomLevel - MinZoomLevel, 0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), outline || selected ? 2 : 1, true);
 
             if (!outline && note.Arpeggio != null)
             {
@@ -2727,8 +2728,8 @@ namespace FamiStudio
             // Top/bottom dash lines (limits);
             var topY    = waveDisplayPaddingY;
             var bottomY = (Height - headerAndEffectSizeY) - waveDisplayPaddingY;
-            r.cb.DrawLine(0, topY,    Width, topY,    debugBrush); // DROIDTODO Dash
-            r.cb.DrawLine(0, bottomY, Width, bottomY, debugBrush); // DROIDTODO Dask
+            r.cb.DrawLine(0, topY,    Width, topY,    theme.DarkGreyLineBrush1, 1, false, true);
+            r.cb.DrawLine(0, bottomY, Width, bottomY, theme.DarkGreyLineBrush1, 1, false, true);
 
             // Vertical lines (1.0, 0.1, 0.01 seconds)
             ForEachWaveTimecode(r, (time, x, level, idx) =>
@@ -2736,14 +2737,21 @@ namespace FamiStudio
                 var modSeconds = Utils.IntegerPow(10, level + 1);
                 var modTenths  = Utils.IntegerPow(10, level);
 
-                var brush = debugBrush; // dashedLineBrush; DROIDTODO!
+                var brush = theme.DarkGreyLineBrush1;
+                var dash = true;
 
                 if ((idx % modSeconds) == 0)
+                {
+                    dash = false;
                     brush = theme.BlackBrush;
+                }
                 else if ((idx % modTenths) == 0)
+                {
+                    dash = false;
                     brush = theme.DarkGreyLineBrush1;
+                }
 
-                r.cb.DrawLine(x, 0, x, Height, brush, 1.0f);
+                r.cb.DrawLine(x, 0, x, Height, brush, 1.0f, false, dash);
             });
 
             // Selection rectangle
