@@ -10,6 +10,9 @@ namespace FamiStudio
         private const int MaxPatternCacheSizeX = 64;
         private const int MaxPatternCacheSizeY = 32;
 
+        private const int CleanupFrameInterval = 100;
+        private const int StaleEntryFrameCount = 500;
+
         private const int   PatterCacheTextureSize    = 512;
         private const float InvPatterCacheTextureSize = 1.0f / PatterCacheTextureSize;
 
@@ -36,9 +39,11 @@ namespace FamiStudio
             public int patternLen;
             public int framesPerNote;
             public int textureIdx;
+            public int lastUsedFrame;
             public Rectangle rect;
         }
 
+        private int frameIndex;
         private int clampedPatternCacheSizeY;
         private int desiredPatternCacheSizeY;
         private float scaleFactorV;
@@ -80,6 +85,7 @@ namespace FamiStudio
                     if (d.patternLen == patternLen && d.framesPerNote == framesPerNote)
                     {
                         ComputeUVs(d.rect, out u0, out v0, out u1, out v1);
+                        d.lastUsedFrame = frameIndex;
                         return cacheTextures[d.textureIdx].bmp;
                     }
                 }
@@ -148,6 +154,7 @@ namespace FamiStudio
             cacheData.framesPerNote = framesPerNote;
             cacheData.textureIdx = textureIdx;
             cacheData.rect = new Rectangle(x, y, patternCacheSizeX, clampedPatternCacheSizeY);
+            cacheData.lastUsedFrame = frameIndex;
 
             list.Add(cacheData);
 
@@ -156,8 +163,44 @@ namespace FamiStudio
             return texture.bmp;
         }
 
-        public void Update(int patternSizeY)
+        private void CleanupStaleEntries()
         {
+            if ((frameIndex % CleanupFrameInterval) == 0)
+            {
+                var hasEmptyList = false;
+
+                foreach (var list in patternCache.Values)
+                {
+                    for (int i = list.Count - 1; i >= 0; i--)
+                    {
+                        var data = list[i];
+                        if ((frameIndex - data.lastUsedFrame) > StaleEntryFrameCount)
+                            list.RemoveAt(i);
+                    }
+
+                    if (list.Count == 0)
+                        hasEmptyList = true;
+                }
+
+                if (hasEmptyList)
+                {
+                    var newPatternCache = new Dictionary<int, List<PatternCacheData>>(patternCache.Count);
+
+                    foreach (var kv in patternCache)
+                    {
+                        if (kv.Value.Count > 0)
+                            newPatternCache.Add(kv.Key, kv.Value);
+                    }
+
+                    patternCache = newPatternCache;
+                }
+            }
+        }
+
+        public void Update(int patternSizeY)
+        { 
+            frameIndex++;
+
             if (desiredPatternCacheSizeY != patternSizeY)
             {
                 desiredPatternCacheSizeY = patternSizeY;
@@ -172,6 +215,10 @@ namespace FamiStudio
 
                 scaleFactorV = (clampedPatternCacheSizeY * factor) / (float)desiredPatternCacheSizeY;
                 Clear();
+            }
+            else
+            {
+                CleanupStaleEntries();
             }
         }
 
