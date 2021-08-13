@@ -93,8 +93,8 @@ namespace FamiStudio
             var ptr = bmpData.Scan0;
             var format = PixelFormat.Bgra;
 #else
-            Debug.Assert(pixbuf.Rowstride == pixbuf.Width * 4);
-            var ptr = bmpData.Pixels;
+            Debug.Assert(bmp.Rowstride == bmp.Width * 4);
+            var ptr = bmp.Pixels;
             var format = PixelFormat.Rgba;
 #endif
 
@@ -116,7 +116,7 @@ namespace FamiStudio
             var assembly = Assembly.GetExecutingAssembly();
 
             bool needsScaling = false;
-            System.Drawing.Bitmap bmp;
+            Bitmap bmp;
 
             if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
             {
@@ -156,6 +156,8 @@ namespace FamiStudio
 
         private void ChangeBitmapBackground(Bitmap bmp, Color color)
         {
+            // MATTT : Optimize + port to other platforms.
+#if FAMISTUDIO_WINDOWS
             for (int y = 0; y < bmp.Height; y++)
             {
                 for (int x = 0; x < bmp.Width; x++)
@@ -169,6 +171,7 @@ namespace FamiStudio
                     bmp.SetPixel(x, y, Color.FromArgb(r, g, b));
                 }
             }
+#endif
         }
 
         public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
@@ -226,12 +229,14 @@ namespace FamiStudio
                 var ptr = bmpData.Scan0;
                 var format = PixelFormat.Bgra;
 #else
-                var ptr = bmpData.Pixels;
+                var ptr = bmp.Pixels;
                 var format = PixelFormat.Rgba;
 #endif
 
                 GL.TexSubImage2D(TextureTarget.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, format, PixelType.UnsignedByte, ptr);
+#if FAMISTUDIO_WINDOWS
                 bmp.UnlockBits(bmpData);
+#endif
                 bmp.Dispose();
             }
 

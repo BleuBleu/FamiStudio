@@ -20,7 +20,7 @@ namespace FamiStudio
         static extern bool FcConfigAppFontAddFile1(System.IntPtr config, string fontPath);
 #endif
 
-        public static string ApplicationVersion => Application.ProductVersion;
+        public static string ApplicationVersion => System.Windows.Forms.Application.ProductVersion;
 
         public static void Initialize()
         {
@@ -324,7 +324,7 @@ namespace FamiStudio
 
         public static Gdk.Pixbuf LoadBitmapFromResource(string name)
         {
-            return Assembly.GetExecutingAssembly().LoadFromResource(name);
+            return Gdk.Pixbuf.LoadFromResource(name);
         }
     }
 }
