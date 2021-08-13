@@ -605,7 +605,7 @@ namespace FamiStudio
                         else
                             bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstanciate : null);
 
-                        cf.PushTranslation(pt.X, y + headerSizeY);
+                        cf.PushTranslation(pt.X - trackNameSizeX, y + headerSizeY);
                         cf.FillAndDrawRectangle(- anchorOffsetLeftX, 0, - anchorOffsetLeftX + patternSizeX, trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
 
                         if (bmpCopy != null)
