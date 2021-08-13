@@ -445,14 +445,22 @@ namespace FamiStudio
             return Path.Combine(Settings.GetConfigFilePath(), "AutoSaves");
         }
 
+        public static bool IsPortableMode
+        {
+            get
+            {
+                var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var portableFile = Path.Combine(appPath, "portable.txt");
+
+                return File.Exists(portableFile);
+            }
+        }
+
         private static string GetConfigFilePath()
         {
-            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var portableFile = Path.Combine(appPath, "portable.txt");
-
-            if (File.Exists(portableFile))
+            if (IsPortableMode)
             {
-                return appPath;
+                return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             }
             else
             {

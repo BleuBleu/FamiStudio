@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -63,6 +64,10 @@ namespace FamiStudio
             PerformanceCounter.Initialize();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+#if !DEBUG
+            if (Settings.IsPortableMode)
+                WinUtils.AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
+#endif
 #elif FAMISTUDIO_LINUX
             LinuxUtils.SetProcessName("FamiStudio");
 #endif
