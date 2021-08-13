@@ -2834,7 +2834,7 @@ namespace FamiStudio
             editChannel = channel;
             scrollX = (int)Math.Round((Song.GetPatternStartAbsoluteNoteIndex(patternIndex) + noteIndex) * noteSizeX);
             scrollY = noteY - (Height - headerAndEffectSizeY) / 2;
-            playingNote = highlightKey;
+            highlightNote = highlightKey;
             videoKeyColor = highlightColor;
 
             Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
