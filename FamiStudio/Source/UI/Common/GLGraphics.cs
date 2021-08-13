@@ -339,6 +339,21 @@ namespace FamiStudio
                 GL.PopMatrix();
             }
 
+#if FAMISTUDIO_LINUX
+            if (list.HasAnyTickLineMeshes)
+            {
+                var draw = list.GetThickLineAsPolygonDrawData();
+
+                /*if (draw.smooth)*/ GL.Enable(EnableCap.PolygonSmooth);
+                GL.EnableClientState(ArrayCap.ColorArray);
+                GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
+                GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
+                GL.DrawElements(PrimitiveType.Triangles, draw.numIndices, DrawElementsType.UnsignedShort, draw.idxArray);
+                GL.DisableClientState(ArrayCap.ColorArray);
+                /*if (draw.smooth)*/ GL.Disable(EnableCap.PolygonSmooth);
+            }
+#endif
+
             if (list.HasAnyBitmaps)
             {
                 var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);

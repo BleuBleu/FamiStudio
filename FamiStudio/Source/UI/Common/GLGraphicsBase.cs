@@ -650,6 +650,7 @@ namespace FamiStudio
             public float u1;
             public float v1;
             public float opacity;
+            public bool rotated;
         }
 
         public class MeshDrawData
@@ -688,7 +689,14 @@ namespace FamiStudio
             public int count;
         };
 
+#if FAMISTUDIO_LINUX
         private bool drawThickLineAsPolygon;
+        private MeshBatch thickLineBatch; // Linux only
+        public bool HasAnyTickLineMeshes => thickLineBatch != null;
+#else
+        public bool HasAnyTickLineMeshes => false;
+#endif
+
         private float invDashTextureSize;
         private MeshBatch meshBatch;
         private MeshBatch meshSmoothBatch;
@@ -705,14 +713,16 @@ namespace FamiStudio
         public bool HasAnyLines   => lineBatches.Count > 0;
         public bool HasAnyTexts   => texts.Count > 0;
         public bool HasAnyBitmaps => bitmaps.Count > 0;
-        public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps;
+        public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps || HasAnyTickLineMeshes;
 
         public GLCommandList(GLGraphics g, int dashTextureSize, bool supportsLineWidth = true)
         {
             graphics = g;
             xform = g.Transform;
-            drawThickLineAsPolygon = !supportsLineWidth;
             invDashTextureSize = 1.0f / dashTextureSize;
+#if FAMISTUDIO_LINUX
+            drawThickLineAsPolygon = !supportsLineWidth;
+#endif
         }
 
         public void PushTranslation(float x, float y)
@@ -872,7 +882,15 @@ namespace FamiStudio
 #if FAMISTUDIO_LINUX
         private void DrawThickLineAsPolygonInternal(float x0, float y0, float x1, float y1, GLBrush brush, float width)
         {
-            var batch = GetMeshBatch(false);
+            if (thickLineBatch == null)
+            {
+                thickLineBatch = new MeshBatch();
+                thickLineBatch.vtxArray = graphics.GetVertexArray();
+                thickLineBatch.colArray = graphics.GetColorArray();
+                thickLineBatch.idxArray = graphics.GetIndexArray();
+            }
+
+            var batch = thickLineBatch;
 
             var dx = x1 - x0;
             var dy = y1 - y0;
@@ -895,7 +913,7 @@ namespace FamiStudio
             batch.vtxArray[batch.vtxIdx++] = x0 + dy;
             batch.vtxArray[batch.vtxIdx++] = y0 + dx;
             batch.vtxArray[batch.vtxIdx++] = x1 + dy;
-            batch.vtxArray[batch.vtxIdx++] = y0 + dx;
+            batch.vtxArray[batch.vtxIdx++] = y1 + dx;
             batch.vtxArray[batch.vtxIdx++] = x1 - dy;
             batch.vtxArray[batch.vtxIdx++] = y1 - dx;
             batch.vtxArray[batch.vtxIdx++] = x0 - dy;
@@ -1286,7 +1304,7 @@ namespace FamiStudio
             DrawBitmap(atlas, x, y, elementSize.Width, elementSize.Height, opacity, u0, v0, u1, v1);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1)
+        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false)
         {
             if (!bitmaps.TryGetValue(bmp, out var list))
             {
@@ -1307,27 +1325,9 @@ namespace FamiStudio
             inst.u1 = u1;
             inst.v1 = v1;
             inst.opacity = opacity;
+            inst.rotated = rotated;
 
             list.Add(inst);
-        }
-
-        // HACK : Very specific call only used by video rendering, too lazy to do the proper transforms.
-        public void DrawRotatedFlippedBitmap(GLBitmap bmp, float x, float y, float width, float height)
-        {
-            Debug.Assert(false);
-
-            //GL.Enable(EnableCap.Texture2D);
-            //GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
-            //GL.Color4(1.0f, 1.0f, 1.0f, 1.0f);
-
-            //GL.Begin(PrimitiveType.Quads);
-            //GL.TexCoord2(0, 0); GL.Vertex2(x - height, y);
-            //GL.TexCoord2(1, 0); GL.Vertex2(x - height, y - width);
-            //GL.TexCoord2(1, 1); GL.Vertex2(x, y - width);
-            //GL.TexCoord2(0, 1); GL.Vertex2(x, y);
-            //GL.End();
-
-            //GL.Disable(EnableCap.Texture2D);
         }
 
         public List<MeshDrawData> GetMeshDrawData()
@@ -1354,14 +1354,35 @@ namespace FamiStudio
                 draw.colArray = meshSmoothBatch.colArray;
                 draw.idxArray = meshSmoothBatch.idxArray;
                 draw.numIndices = meshSmoothBatch.idxIdx;
-                draw.vtxArraySize = meshBatch.vtxIdx;
-                draw.colArraySize = meshBatch.colIdx;
-                draw.idxArraySize = meshBatch.idxIdx;
+                draw.vtxArraySize = meshSmoothBatch.vtxIdx;
+                draw.colArraySize = meshSmoothBatch.colIdx;
+                draw.idxArraySize = meshSmoothBatch.idxIdx;
                 drawData.Add(draw);
             }
 
             return drawData;
         }
+
+#if FAMISTUDIO_LINUX
+        public MeshDrawData GetThickLineAsPolygonDrawData()
+        {
+            var draw = (MeshDrawData)null;
+
+            if (thickLineBatch != null)
+            {
+                draw = new MeshDrawData();
+                draw.vtxArray = thickLineBatch.vtxArray;
+                draw.colArray = thickLineBatch.colArray;
+                draw.idxArray = thickLineBatch.idxArray;
+                draw.numIndices = thickLineBatch.idxIdx;
+                draw.vtxArraySize = thickLineBatch.vtxIdx;
+                draw.colArraySize = thickLineBatch.colIdx;
+                draw.idxArraySize = thickLineBatch.idxIdx;
+            }
+
+            return draw;
+        }
+#endif
 
         public List<LineDrawData> GetLineDrawData()
         {
@@ -1405,40 +1426,40 @@ namespace FamiStudio
                 draw.textureId = font.Texture;
                 draw.start = idxIdx;
 
-                foreach (var sub in list)
+                foreach (var inst in list)
                 {
                     int alignmentOffsetX = 0;
                     if (font.Alignment != 0)
                     {
-                        font.MeasureString(sub.text, out int minX, out int maxX);
+                        font.MeasureString(inst.text, out int minX, out int maxX);
 
                         if (font.Alignment == 1)
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)sub.width - maxX - minX) / 2;
+                            alignmentOffsetX += ((int)inst.width - maxX - minX) / 2;
                         }
                         else
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)sub.width - maxX - minX);
+                            alignmentOffsetX += ((int)inst.width - maxX - minX);
                         }
                     }
 
-                    var packedColor = sub.brush.PackedColor0;
-                    var numVertices = sub.text.Length * 4;
+                    var packedColor = inst.brush.PackedColor0;
+                    var numVertices = inst.text.Length * 4;
 
-                    int x = (int)(sub.x + alignmentOffsetX);
-                    int y = (int)(sub.y + font.OffsetY);
+                    int x = (int)(inst.x + alignmentOffsetX);
+                    int y = (int)(inst.y + font.OffsetY);
 
                     // Slow path when there is clipping.
-                    if (sub.clip)
+                    if (inst.clip)
                     {
-                        var clipMinX = (int)(sub.x);
-                        var clipMaxX = (int)(sub.x + sub.width);
+                        var clipMinX = (int)(inst.x);
+                        var clipMaxX = (int)(inst.x + inst.width);
 
-                        for (int i = 0; i < sub.text.Length; i++)
+                        for (int i = 0; i < inst.text.Length; i++)
                         {
-                            var c0 = sub.text[i];
+                            var c0 = inst.text[i];
                             var info = font.GetCharInfo(c0);
 
                             var x0 = x + info.xoffset;
@@ -1505,18 +1526,18 @@ namespace FamiStudio
                             }
 
                             x += info.xadvance;
-                            if (i != sub.text.Length - 1)
+                            if (i != inst.text.Length - 1)
                             {
-                                char c1 = sub.text[i + 1];
+                                char c1 = inst.text[i + 1];
                                 x += font.GetKerning(c0, c1);
                             }
                         }
                     }
                     else
                     {
-                        for (int i = 0; i < sub.text.Length; i++)
+                        for (int i = 0; i < inst.text.Length; i++)
                         {
-                            var c0 = sub.text[i];
+                            var c0 = inst.text[i];
                             var info = font.GetCharInfo(c0);
 
                             var x0 = x + info.xoffset;
@@ -1548,15 +1569,15 @@ namespace FamiStudio
                             colArray[colIdx++] = packedColor;
 
                             x += info.xadvance;
-                            if (i != sub.text.Length - 1)
+                            if (i != inst.text.Length - 1)
                             {
-                                char c1 = sub.text[i + 1];
+                                char c1 = inst.text[i + 1];
                                 x += font.GetKerning(c0, c1);
                             }
                         }
 
-                        idxIdx += sub.text.Length * 6;
-                        draw.count += sub.text.Length * 6;
+                        idxIdx += inst.text.Length * 6;
+                        draw.count += inst.text.Length * 6;
                     }
                 }
 
@@ -1589,12 +1610,12 @@ namespace FamiStudio
                 draw.textureId = bmp.Id;
                 draw.start = idxIdx;
 
-                foreach (var sub in list)
+                foreach (var inst in list)
                 {
-                    float x0 = sub.x;
-                    float y0 = sub.y;
-                    float x1 = sub.x + sub.sx;
-                    float y1 = sub.y + sub.sy;
+                    float x0 = inst.x;
+                    float y0 = inst.y;
+                    float x1 = inst.x + inst.sx;
+                    float y1 = inst.y + inst.sy;
 
                     vtxArray[vtxIdx++] = x0;
                     vtxArray[vtxIdx++] = y0;
@@ -1605,16 +1626,30 @@ namespace FamiStudio
                     vtxArray[vtxIdx++] = x0;
                     vtxArray[vtxIdx++] = y1;
 
-                    texArray[texIdx++] = sub.u0;
-                    texArray[texIdx++] = sub.v0;
-                    texArray[texIdx++] = sub.u1;
-                    texArray[texIdx++] = sub.v0;
-                    texArray[texIdx++] = sub.u1;
-                    texArray[texIdx++] = sub.v1;
-                    texArray[texIdx++] = sub.u0;
-                    texArray[texIdx++] = sub.v1;
+                    if (inst.rotated)
+                    {
+                        texArray[texIdx++] = inst.u1;
+                        texArray[texIdx++] = inst.v0;
+                        texArray[texIdx++] = inst.u1;
+                        texArray[texIdx++] = inst.v1;
+                        texArray[texIdx++] = inst.u0;
+                        texArray[texIdx++] = inst.v1;
+                        texArray[texIdx++] = inst.u0;
+                        texArray[texIdx++] = inst.v0;
+                    }
+                    else
+                    {
+                        texArray[texIdx++] = inst.u0;
+                        texArray[texIdx++] = inst.v0;
+                        texArray[texIdx++] = inst.u1;
+                        texArray[texIdx++] = inst.v0;
+                        texArray[texIdx++] = inst.u1;
+                        texArray[texIdx++] = inst.v1;
+                        texArray[texIdx++] = inst.u0;
+                        texArray[texIdx++] = inst.v1;
+                    }
 
-                    var packedOpacity = GLColorUtils.PackColor(255, 255, 255, (int)(sub.opacity * 255));
+                    var packedOpacity = GLColorUtils.PackColor(255, 255, 255, (int)(inst.opacity * 255));
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;
