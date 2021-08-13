@@ -1,8 +1,6 @@
 3.1.0
 =====
-- Flatpak build failed
-- File association in portable.
-- When deleting an effect, if you click twice it selects the pattern => annoying.
+- Flatpak ffmpeg thing.
 
 Linux notes 
 =========== 

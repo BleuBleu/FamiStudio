@@ -1311,12 +1311,26 @@ namespace FamiStudio
 
         private void WriteTimeSignatureAndTempo(int[] groove, int patternLength, int notesPerBeat, int noteLength)
         {
+            const int MaxFactor = 1024;
+
             var factor = 1;
-            while (((patternLength * factor) % notesPerBeat) != 0)
+            while (((patternLength * factor) % notesPerBeat) != 0 && factor <= MaxFactor)
                 factor *= 2;
 
-            var numer = patternLength * factor / notesPerBeat;
-            var denom = 4 * factor;
+            var foundValidFactor = ((patternLength * factor) % notesPerBeat) == 0;
+
+            var numer = 4;
+            var denom = 4;
+
+            if (foundValidFactor)
+            {
+                numer = patternLength * factor / notesPerBeat;
+                denom = 4 * factor;
+            }
+            else
+            {
+                Log.LogMessage(LogSeverity.Warning, "Error computing valid time signature, defaulting to 4/4. Check your tempo settings!");
+            }
 
             WriteTimeSignatureEvent(numer, denom);
 
