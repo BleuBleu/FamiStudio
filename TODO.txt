@@ -1,9 +1,5 @@
 3.2.0
 =====
-OpenGL Optims
-- Add cleanup to pattern cache
-- Port background bitmap function to mac/linux.
-
 DMC counter effect:
 - Sound engine
 - Check if we apply before, after, etc. Compare with FamiTracker.

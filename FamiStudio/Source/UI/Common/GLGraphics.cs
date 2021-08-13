@@ -16,11 +16,19 @@ namespace FamiStudio
 {
     public class GLGraphics : GLGraphicsBase
     {
+        bool supportsLineWidth = true;
+
         public GLGraphics()
         {
             dashedBitmap = CreateBitmapFromResource("Dash");
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.Repeat);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.Repeat);
+
+#if FAMISTUDIO_LINUX
+            var lineWidths = new float[2];
+            GL.GetFloat(GetPName.LineWidthRange, lineWidths);
+            supportsLineWidth = lineWidths[1] > 1.0f;
+#endif
         }
 
         public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
@@ -272,7 +280,7 @@ namespace FamiStudio
 
         public GLCommandList CreateCommandList()
         {
-            return new GLCommandList(this, dashedBitmap.Size.Width);
+            return new GLCommandList(this, dashedBitmap.Size.Width, supportsLineWidth);
         }
 
         public void DrawCommandList(GLCommandList list)
