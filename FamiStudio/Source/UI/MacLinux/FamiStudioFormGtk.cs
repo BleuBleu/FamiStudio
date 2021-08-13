@@ -639,7 +639,7 @@ namespace FamiStudio
             if (!famistudio.TryClosing())
                 return true;
 
-            Application.Quit();
+            Quit();
 
             return base.OnDeleteEvent(evnt);
         }
@@ -648,6 +648,16 @@ namespace FamiStudio
         {
             Show();
             Application.Run();
+        }
+
+        public void Quit()
+        {
+            // HACK : RtMidi still has a thread running and it seems
+            // to prevent the app from quitting. Will investigate more
+            // later.
+
+            //Gtk.Application.Quit();
+            Process.GetCurrentProcess().Kill();
         }
     }
 }
