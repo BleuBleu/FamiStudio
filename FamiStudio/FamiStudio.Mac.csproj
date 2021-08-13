@@ -497,8 +497,6 @@
     <EmbeddedResource Include="Resources\Wave.png" />
     <EmbeddedResource Include="Resources\InstrumentFds%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentFds.png" />
-    <EmbeddedResource Include="Resources\InstrumentKonami%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentKonami.png" />
     <EmbeddedResource Include="Resources\InstrumentNamco%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentNamco.png" />
     <EmbeddedResource Include="Resources\InstrumentSunsoft%402x.png" />
