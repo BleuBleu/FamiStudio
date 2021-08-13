@@ -10,8 +10,6 @@ Android prototype
 
 3.2.0
 =====
-x Osc gets stuck when pausing? (Only in 3.2.0 branch), instrument player.
-x Process more events during video export, "initializing channels" is slow
 
 DMC counter effect:
 - Sound engine

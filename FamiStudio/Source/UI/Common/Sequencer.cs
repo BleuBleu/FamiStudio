@@ -566,7 +566,6 @@ namespace FamiStudio
                 cf.PopTransform();
             }
 
-            /*
             // Dragging selection
             // MATTT : This doesnt work with the new rendering code.
             if (captureOperation == CaptureOperation.DragSelection)
@@ -606,14 +605,11 @@ namespace FamiStudio
                         else
                             bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstanciate : null);
 
-                        xf.PushTranslation(0, y);
-                        xf.PushTranslation(pt.X - anchorOffsetLeftX, 0);
-
-                        fillBg.AddRectangle(0, 0, patternSizeX, trackSizeY, selectedPatternVisibleBrush);
-                        lines.AddRectangle(0, 0, patternSizeX, trackSizeY, theme.BlackBrush);
+                        cf.PushTranslation(pt.X - trackNameSizeX, y + headerSizeY);
+                        cf.FillAndDrawRectangle(- anchorOffsetLeftX, 0, - anchorOffsetLeftX + patternSizeX, trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
 
                         if (bmpCopy != null)
-                            bitmaps.AddBitmap(bmpCopy, patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
+                            cf.DrawBitmap(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
 
                         // Left side
                         for (int p = patternIdx - 1; p >= minSelectedPatternIdx + patternIdxDelta && p >= 0; p--)
@@ -621,35 +617,29 @@ namespace FamiStudio
                             patternSizeX = Song.GetPatternLength(p) * noteSizeX;
                             anchorOffsetLeftX += patternSizeX;
 
-                            fillBg.AddRectangle(0, 0, patternSizeX, trackSizeY, selectedPatternVisibleBrush);
-                            lines.AddRectangle(0, 0, patternSizeX, trackSizeY, theme.BlackBrush);
+                            cf.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
 
                             if (bmpCopy != null)
-                                bitmaps.AddBitmap(bmpCopy, patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
+                                cf.DrawBitmap(bmpCopy, -anchorOffsetLeftX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
                         }
-                        
-                        xf.PopTransform();
-                        xf.PushTranslation(pt.X + anchorOffsetRightX, 0);
 
                         // Right side
                         for (int p = patternIdx + 1; p <= maxSelectedPatternIdx + patternIdxDelta && p < Song.Length; p++)
                         {
                             patternSizeX = Song.GetPatternLength(p) * noteSizeX;
-                            
-                            fillBg.AddRectangle(0, 0, patternSizeX, trackSizeY, selectedPatternVisibleBrush);
-                            lines.AddRectangle(0, 0, patternSizeX, trackSizeY, theme.BlackBrush);
+
+                            cf.FillAndDrawRectangle(anchorOffsetRightX, 0, anchorOffsetRightX + patternSizeX, trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
 
                             if (bmpCopy != null)
-                                bitmaps.AddBitmap(bmpCopy, patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
+                                cf.DrawBitmap(bmpCopy, anchorOffsetRightX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
 
                             anchorOffsetRightX += patternSizeX;
                         }
 
-                        xf.PopTransform();
+                        cf.PopTransform();
                     }
                 }
             }
-            */
 
             // Piano roll view rect
             if (Settings.ShowPianoRollViewRange)

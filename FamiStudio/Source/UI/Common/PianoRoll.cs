@@ -2261,7 +2261,7 @@ namespace FamiStudio
                         {
                             var y = virtualSizeY - noteValue * noteSizeY - scrollY;
                             r.cf.PushTranslation(0, y);
-                            r.cf.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, r.g.GetVerticalGradientBrush(dragSample.Color, noteSizeY, 0.8f), theme.WhiteBrush, 2);
+                            r.cf.FillAndDrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, r.g.GetVerticalGradientBrush(dragSample.Color, noteSizeY, 0.8f), theme.WhiteBrush, 2, true);
                             r.cf.PopTransform();
                         }
                     }
@@ -2276,7 +2276,7 @@ namespace FamiStudio
                                 var y = virtualSizeY - hoverNoteValue * noteSizeY - scrollY;
 
                                 r.cf.PushTranslation(0, y);
-                                r.cf.DrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, theme.WhiteBrush, 2);
+                                r.cf.DrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, theme.WhiteBrush, 2, true);
                                 r.cf.PopTransform();
                             }
                         }
@@ -2336,7 +2336,7 @@ namespace FamiStudio
                         var x = i * noteSizeX - scrollX;
                         var y = (virtualSizeY - envelopeSizeY * (env.Values[i] + midValue)) - scrollY;
                         var selected = IsEnvelopeValueSelected(i);
-                        r.cf.FillAndDrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, r.g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, (int)envelopeSizeY, 0.8f), theme.BlackBrush, selected ? 2 : 1);
+                        r.cf.FillAndDrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, r.g.GetVerticalGradientBrush(ThemeBase.LightGreyFillColor1, (int)envelopeSizeY, 0.8f), theme.BlackBrush, selected ? 2 : 1, selected);
                         if (zoomLevel >= 1)
                             r.cf.DrawText(env.Values[i].ToString("+#;-#;0"), ThemeBase.FontSmallCenter, x, y - envelopeSizeY - effectValuePosTextOffsetY, theme.LightGreyFillBrush1, noteSizeX);
                     }
@@ -2365,7 +2365,7 @@ namespace FamiStudio
                         var x = i * noteSizeX - scrollX;
                         var selected = IsEnvelopeValueSelected(i);
 
-                        r.cf.FillAndDrawRectangle(x, y0, x + noteSizeX, y1, theme.LightGreyFillBrush1, theme.BlackBrush, selected ? 2 : 1);
+                        r.cf.FillAndDrawRectangle(x, y0, x + noteSizeX, y1, theme.LightGreyFillBrush1, theme.BlackBrush, selected ? 2 : 1, selected);
 
                         if (zoomLevel >= 1)
                         {
@@ -2430,7 +2430,7 @@ namespace FamiStudio
             if (!outline)
                 r.cf.FillRectangle(0, 0, sx, sy, r.g.GetVerticalGradientBrush(color, sy, 0.8f));
 
-            r.cf.DrawRectangle(0, 0, sx, sy, outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || outline ? 2 : 1, selected);
+            r.cf.DrawRectangle(0, 0, sx, sy, outline ? hoverNoteBrush : (selected ? selectionNoteBrush : theme.BlackBrush), selected || outline ? 2 : 1, selected || outline);
 
             if (!outline)
             {

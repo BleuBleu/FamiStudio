@@ -451,7 +451,6 @@ namespace FamiStudio
 
                             s.graphics.BeginDrawFrame();
                             s.graphics.BeginDrawControl(new Rectangle(0, 0, channelResX, channelResY), channelResY);
-                            //s.graphics.Clear(Color.Pink);
                             pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
                             s.graphics.EndDrawControl();
                             s.graphics.EndDrawFrame();
@@ -462,17 +461,18 @@ namespace FamiStudio
                         videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
                         videoGraphics.Clear(Color.Black);
 
-                        var cmd = videoGraphics.CreateCommandList();
+                        var bg = videoGraphics.CreateCommandList();
+                        var fg = videoGraphics.CreateCommandList();
 
                         // Composite the channel renders.
                         foreach (var s in channelStates)
                         {
-                            int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
-                            cmd.DrawRotatedFlippedBitmap(s.bitmap, channelPosX1, videoResY, s.bitmap.Size.Width, s.bitmap.Size.Height); 
+                            int channelPosX0 = (int)Math.Round(s.videoChannelIndex * channelResXFloat);
+                            bg.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
                         }
 
                         // Gradient
-                        cmd.FillRectangle(0, 0, videoResX, gradientSizeY, gradientBrush);
+                        fg.FillRectangle(0, 0, videoResX, gradientSizeY, gradientBrush);
 
                         // Channel names + oscilloscope
                         foreach (var s in channelStates)
@@ -483,12 +483,12 @@ namespace FamiStudio
                             var channelNameSizeX = videoGraphics.MeasureString(s.channelText, font);
                             var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmpIcon.Size.Width + ChannelIconTextSpacing) / 2;
 
-                            cmd.FillRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, ChannelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
-                            cmd.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY);
-                            cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, theme.LightGreyFillBrush1);
+                            fg.FillRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, ChannelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
+                            fg.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY);
+                            fg.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, theme.LightGreyFillBrush1);
 
                             if (s.videoChannelIndex > 0)
-                                cmd.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, channelLineWidth);
+                                fg.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, channelLineWidth);
 
                             var oscMinY = (int)(ChannelIconPosY + s.bmpIcon.Size.Height + 10);
                             var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
@@ -496,13 +496,14 @@ namespace FamiStudio
                             // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
                             GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0 + 10, oscMaxY, channelPosX1 - 10, oscMinY, oscilloscope);
 
-                            cmd.DrawGeometry(oscilloscope, theme.LightGreyFillBrush1);
+                            fg.DrawGeometry(oscilloscope, theme.LightGreyFillBrush1, 1, true);
                         }
 
                         // Watermark.
-                        cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
+                        fg.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
                         
-                        videoGraphics.DrawCommandList(cmd);
+                        videoGraphics.DrawCommandList(bg);
+                        videoGraphics.DrawCommandList(fg);
                         videoGraphics.EndDrawControl();
                         videoGraphics.EndDrawFrame();
 
