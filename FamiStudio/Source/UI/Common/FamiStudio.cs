@@ -757,6 +757,7 @@ namespace FamiStudio
             StopEverything();
             ShutdownInstrumentPlayer();
             ShutdownSongPlayer();
+            ShutdownOscilloscope();
 
             return true;
         }
@@ -1330,7 +1331,7 @@ namespace FamiStudio
             {
                 if (TryClosing())
                 {
-                    Gtk.Application.Quit();
+                    mainForm.Quit();
                 }
             }
 #endif
