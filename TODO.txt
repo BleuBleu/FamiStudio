@@ -1,18 +1,8 @@
 3.1.0
 =====
 - Flatpak build failed
-- MacOS slow start???
-- GROWING BUTTON MARK!
 - File association in portable.
-- Crash when quitting macos.
 - When deleting an effect, if you click twice it selects the pattern => annoying.
-
-Videos:
-=======
-/ Sampling soundfont instruments
-	- Thumbnail
-	- Descripiton
-	- Link in video
 
 Linux notes 
 =========== 

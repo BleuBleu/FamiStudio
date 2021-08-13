@@ -76,7 +76,7 @@ namespace FamiStudio
 
         protected override void OnLoad(EventArgs e)
         {
-            UpdateLayout();
+            UpdateLayout(true);
 
             if (top)
                 Location = new Point(Location.X, Location.Y - Height);
@@ -85,12 +85,15 @@ namespace FamiStudio
                 CenterToParent();
         }
 
-        private void UpdateLayout()
+        private void UpdateLayout(bool init)
         {
-            buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);
-            buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);
-            buttonNo.Width   = (int)(buttonNo.Width   * Direct2DTheme.DialogScaling);
-            buttonNo.Height  = (int)(buttonNo.Height  * Direct2DTheme.DialogScaling);
+            if (init)
+            {
+                buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);
+                buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);
+                buttonNo.Width   = (int)(buttonNo.Width   * Direct2DTheme.DialogScaling);
+                buttonNo.Height  = (int)(buttonNo.Height  * Direct2DTheme.DialogScaling);
+            }
 
             Height = propertyPage.Height + buttonNo.Height + 7;
 
@@ -109,11 +112,15 @@ namespace FamiStudio
 
             if (propertyPage.HasAdvancedProperties)
             {
-                buttonAdvanced.Visible = true;
-                buttonAdvanced.Width   = (int)(buttonAdvanced.Width  * Direct2DTheme.DialogScaling);
-                buttonAdvanced.Height  = (int)(buttonAdvanced.Height * Direct2DTheme.DialogScaling);
+                if (init)
+                {
+                    buttonAdvanced.Width  = (int)(buttonAdvanced.Width * Direct2DTheme.DialogScaling);
+                    buttonAdvanced.Height = (int)(buttonAdvanced.Height * Direct2DTheme.DialogScaling);
+                }
+
                 buttonAdvanced.Left    = 5;
                 buttonAdvanced.Top     = propertyPage.Bottom + 0;
+                buttonAdvanced.Visible = true;
             }
         }
 
@@ -158,7 +165,7 @@ namespace FamiStudio
 
             advancedPropertiesVisible = !advancedPropertiesVisible;
             propertyPage.Build(advancedPropertiesVisible);
-            UpdateLayout();
+            UpdateLayout(false);
 
             var iconName = advancedPropertiesVisible ? "Minus" : "Plus";
             var suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
