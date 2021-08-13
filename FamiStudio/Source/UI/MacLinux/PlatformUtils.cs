@@ -319,6 +319,11 @@ namespace FamiStudio
 
             return str.ToUpper();
         }
+
+        public static Gdk.Pixbuf LoadBitmapFromResource(string name)
+        {
+            return Gdk.Pixbuf.LoadFromResource(name);
+        }
     }
 }
 

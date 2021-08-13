@@ -522,7 +522,7 @@ namespace FamiStudio
             GL.Clear(ClearBufferMask.ColorBufferBit);
             GraphicsContext.CurrentContext.SwapBuffers();
 
-            controls.InitializeGL(this);
+            controls.InitializeGL();
             glInit = true;
             GLib.Idle.Add(new GLib.IdleHandler(OnIdleProcessMain));
         }

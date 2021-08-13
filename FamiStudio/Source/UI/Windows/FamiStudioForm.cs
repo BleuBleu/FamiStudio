@@ -79,7 +79,7 @@ namespace FamiStudio
             GL.Clear(ClearBufferMask.ColorBufferBit);
             GraphicsContext.CurrentContext.SwapBuffers();
 
-            controls.InitializeGL(this);
+            controls.InitializeGL();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

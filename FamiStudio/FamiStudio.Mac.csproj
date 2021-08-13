@@ -109,12 +109,14 @@
     <Compile Include="Source\UI\Common\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphics.cs" />
+    <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
     <Compile Include="Source\UI\Common\GLTheme.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
     <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Common\Program.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
@@ -376,8 +378,6 @@
     <EmbeddedResource Include="Resources\WaveEdit.png" />
     <EmbeddedResource Include="Resources\SaveSmall%402x.png" />
     <EmbeddedResource Include="Resources\SaveSmall.png" />
-    <EmbeddedResource Include="Resources\DashHorizontal%402x.png" />
-    <EmbeddedResource Include="Resources\DashHorizontal.png" />
     <EmbeddedResource Include="Resources\ConfigQWERTY%402x.png" />
     <EmbeddedResource Include="Resources\ConfigQWERTY.png" />
     <EmbeddedResource Include="Resources\ConfigMixer%402x.png" />

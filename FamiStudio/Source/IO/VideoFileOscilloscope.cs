@@ -258,15 +258,18 @@ namespace FamiStudio
 
                         var frame = metadata[f];
 
-                        videoGraphics.BeginDraw(new Rectangle(0, 0, videoResX, videoResY), videoResY);
+                        videoGraphics.BeginDrawFrame();
+                        videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
                         videoGraphics.Clear(ThemeBase.DarkGreyLineColor2);
+
+                        var cmd = videoGraphics.CreateCommandList();
 
                         // Draw gradients.
                         for (int i = 0; i < numRows; i++)
                         {
-                            videoGraphics.PushTranslation(0, i * channelResY);
-                            videoGraphics.FillRectangle(0, 0, videoResX, channelResY, gradientBrush);
-                            videoGraphics.PopTransform();
+                            cmd.PushTranslation(0, i * channelResY);
+                            cmd.FillRectangle(0, 0, videoResX, channelResY, gradientBrush);
+                            cmd.PopTransform();
                         }
 
                         // Channel names + oscilloscope
@@ -285,31 +288,29 @@ namespace FamiStudio
                             // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
                             GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0, channelPosY1, channelPosX1, channelPosY0, oscilloscope);
 
-                            var geo = videoGraphics.CreateGeometry(oscilloscope, false);
                             var brush = videoGraphics.GetSolidBrush(frame.channelColors[i]);
 
-                            videoGraphics.AntiAliasing = true;
-                            videoGraphics.DrawGeometry(geo, brush, lineThickness);
-                            videoGraphics.AntiAliasing = false;
-                            geo.Dispose();
+                            cmd.DrawGeometry(oscilloscope, brush, lineThickness, true);
 
                             var channelIconPosX = channelPosX0 + s.bmpIcon.Size.Width  / 2;
                             var channelIconPosY = channelPosY0 + s.bmpIcon.Size.Height / 2;
 
-                            videoGraphics.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
-                            videoGraphics.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY);
-                            videoGraphics.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, theme.LightGreyFillBrush1); 
+                            cmd.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
+                            cmd.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY);
+                            cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, theme.LightGreyFillBrush1); 
                         }
 
                         // Grid lines
                         for (int i = 1; i < numRows; i++)
-                            videoGraphics.DrawLine(0, i * channelResY, videoResX, i * channelResY, theme.BlackBrush, channelLineWidth); 
+                            cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, theme.BlackBrush, channelLineWidth); 
                         for (int i = 1; i < numColumns; i++)
-                            videoGraphics.DrawLine(i * channelResX, 0, i * channelResX, videoResY, theme.BlackBrush, channelLineWidth);
+                            cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, theme.BlackBrush, channelLineWidth);
 
                         // Watermark.
-                        videoGraphics.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
-                        videoGraphics.EndDraw();
+                        cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
+                        videoGraphics.DrawCommandList(cmd);
+                        videoGraphics.EndDrawControl();
+                        videoGraphics.EndDrawFrame();
 
                         // Readback + send to ffmpeg.
                         videoGraphics.GetBitmap(videoImage);

@@ -213,5 +213,10 @@ namespace FamiStudio
 
             return str;
         }
+
+        public static Bitmap LoadBitmapFromResource(string name)
+        {
+            return System.Drawing.Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(name)) as System.Drawing.Bitmap;
+        }
     }
 }

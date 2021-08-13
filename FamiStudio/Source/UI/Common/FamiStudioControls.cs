@@ -107,13 +107,17 @@ namespace FamiStudio
                 if (controls[0].App.Project == null)
                     return true;
 
+                gfx.BeginDrawFrame();
+
                 foreach (var control in controls)
                 {
-                    gfx.BeginDraw(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
+                    gfx.BeginDrawControl(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
                     control.Render(gfx);
                     control.Validate();
-                    gfx.EndDraw();
+                    gfx.EndDrawControl();
                 }
+
+                gfx.EndDrawFrame();
 
                 return true;
             }
@@ -122,7 +126,7 @@ namespace FamiStudio
         }
 
 
-        public void InitializeGL(FamiStudioForm form)
+        public void InitializeGL()
         {
             gfx = new GLGraphics();
             foreach (var ctrl in controls)

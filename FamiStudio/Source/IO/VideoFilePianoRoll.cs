@@ -449,25 +449,30 @@ namespace FamiStudio
                                 }
                             }
 
-                            s.graphics.BeginDraw(new Rectangle(0, 0, channelResX, channelResY), channelResY);
+                            s.graphics.BeginDrawFrame();
+                            s.graphics.BeginDrawControl(new Rectangle(0, 0, channelResX, channelResY), channelResY);
                             //s.graphics.Clear(Color.Pink);
                             pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
-                            s.graphics.EndDraw();
+                            s.graphics.EndDrawControl();
+                            s.graphics.EndDrawFrame();
                         }
 
                         // Render the full screen overlay.
-                        videoGraphics.BeginDraw(new Rectangle(0, 0, videoResX, videoResY), videoResY);
+                        videoGraphics.BeginDrawFrame();
+                        videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
                         videoGraphics.Clear(Color.Black);
+
+                        var cmd = videoGraphics.CreateCommandList();
 
                         // Composite the channel renders.
                         foreach (var s in channelStates)
                         {
                             int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
-                            videoGraphics.DrawRotatedFlippedBitmap(s.bitmap, channelPosX1, videoResY, s.bitmap.Size.Width, s.bitmap.Size.Height);
+                            cmd.DrawRotatedFlippedBitmap(s.bitmap, channelPosX1, videoResY, s.bitmap.Size.Width, s.bitmap.Size.Height); 
                         }
-                        
+
                         // Gradient
-                        videoGraphics.FillRectangle(0, 0, videoResX, gradientSizeY, gradientBrush);
+                        cmd.FillRectangle(0, 0, videoResX, gradientSizeY, gradientBrush);
 
                         // Channel names + oscilloscope
                         foreach (var s in channelStates)
@@ -478,12 +483,12 @@ namespace FamiStudio
                             var channelNameSizeX = videoGraphics.MeasureString(s.channelText, font);
                             var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmpIcon.Size.Width + ChannelIconTextSpacing) / 2;
 
-                            videoGraphics.FillRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, ChannelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
-                            videoGraphics.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY);
-                            videoGraphics.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, theme.LightGreyFillBrush1);
+                            cmd.FillRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, ChannelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
+                            cmd.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY);
+                            cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, theme.LightGreyFillBrush1);
 
                             if (s.videoChannelIndex > 0)
-                                videoGraphics.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, channelLineWidth);
+                                cmd.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, channelLineWidth);
 
                             var oscMinY = (int)(ChannelIconPosY + s.bmpIcon.Size.Height + 10);
                             var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
@@ -491,17 +496,15 @@ namespace FamiStudio
                             // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
                             GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0 + 10, oscMaxY, channelPosX1 - 10, oscMinY, oscilloscope);
 
-                            var geo = videoGraphics.CreateGeometry(oscilloscope, false);
-
-                            videoGraphics.AntiAliasing = true;
-                            videoGraphics.DrawGeometry(geo, theme.LightGreyFillBrush1);
-                            videoGraphics.AntiAliasing = false;
-                            geo.Dispose();
+                            cmd.DrawGeometry(oscilloscope, theme.LightGreyFillBrush1);
                         }
 
                         // Watermark.
-                        videoGraphics.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
-                        videoGraphics.EndDraw();
+                        cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
+                        
+                        videoGraphics.DrawCommandList(cmd);
+                        videoGraphics.EndDrawControl();
+                        videoGraphics.EndDrawFrame();
 
                         // Readback + send to ffmpeg.
                         videoGraphics.GetBitmap(videoImage);

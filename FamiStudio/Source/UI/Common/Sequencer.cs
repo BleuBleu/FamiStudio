@@ -3,17 +3,17 @@ using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using FamiStudio.Properties;
 using Color = System.Drawing.Color;
 using System.Media;
 using System.Diagnostics;
 
-using RenderBitmap   = FamiStudio.GLBitmap;
-using RenderBrush    = FamiStudio.GLBrush;
-using RenderPath     = FamiStudio.GLGeometry;
-using RenderControl  = FamiStudio.GLControl;
-using RenderGraphics = FamiStudio.GLGraphics;
-using RenderTheme    = FamiStudio.GLTheme;
+using RenderBitmap      = FamiStudio.GLBitmap;
+using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
+using RenderBrush       = FamiStudio.GLBrush;
+using RenderPath        = FamiStudio.GLGeometry;
+using RenderControl     = FamiStudio.GLControl;
+using RenderGraphics    = FamiStudio.GLGraphics;
+using RenderTheme       = FamiStudio.GLTheme;
 
 namespace FamiStudio
 {
@@ -123,7 +123,7 @@ namespace FamiStudio
             return actualZoom < 0 ? value / (1 << (-actualZoom)) : value * (1 << actualZoom);
         }
 
-        Dictionary<int, List<RenderBitmap>> patternBitmapCache = new Dictionary<int, List<RenderBitmap>>();
+        PatternBitmapCache patternCache;
 
         RenderTheme theme;
         RenderBrush seekBarBrush;
@@ -132,12 +132,11 @@ namespace FamiStudio
         RenderBrush patternHeaderBrush;
         RenderBrush selectedPatternVisibleBrush;
         RenderBrush selectedPatternInvisibleBrush;
-        RenderBrush dashedLineVerticalBrush;
         RenderBrush selectionPatternBrush;
         RenderPath seekGeometry;
 
-        RenderBitmap[] bmpExpansions = new RenderBitmap[ExpansionType.Count];
-        RenderBitmap[] bmpTracks = new RenderBitmap[ChannelType.Count];
+        RenderBitmapAtlas bmpAtlasExpansions;
+        RenderBitmapAtlas bmpAtlasTracks;
         RenderBitmap bmpGhostNote;
         RenderBitmap bmpLoopPoint;
         RenderBitmap bmpCustomLength;
@@ -319,11 +318,14 @@ namespace FamiStudio
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             theme = RenderTheme.CreateResourcesForGraphics(g);
+            patternCache = new PatternBitmapCache(g);
 
+            var expansionBitmapNames = new string[ExpansionType.Count];
             for (int i = 0; i < ExpansionType.Count; i++)
-                bmpExpansions[i] = g.CreateBitmapFromResource(ExpansionType.Icons[i] + "Light");
-            for (int i = 0; i < ChannelType.Count; i++)
-                bmpTracks[i] = g.CreateBitmapFromResource(ChannelType.Icons[i]);
+                expansionBitmapNames[i] = ExpansionType.Icons[i] + "Light";
+
+            bmpAtlasExpansions = g.CreateBitmapAtlasFromResources(expansionBitmapNames);
+            bmpAtlasTracks     = g.CreateBitmapAtlasFromResources(ChannelType.Icons);
 
             bmpGhostNote = g.CreateBitmapFromResource("GhostSmall");
             bmpLoopPoint = g.CreateBitmapFromResource("LoopSmallFill");
@@ -338,7 +340,6 @@ namespace FamiStudio
             patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, ThemeBase.LightGreyFillColor1, ThemeBase.LightGreyFillColor2);
             selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, ThemeBase.LightGreyFillColor1));
             selectedPatternInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(32, ThemeBase.LightGreyFillColor1));
-            dashedLineVerticalBrush = g.CreateBitmapBrush(g.CreateBitmapFromResource("Dash"), false, true);
             selectionPatternBrush = g.CreateSolidBrush(ThemeBase.LightGreyFillColor1);
 
             seekGeometry = g.CreateGeometry(new float[,]
@@ -353,11 +354,8 @@ namespace FamiStudio
         {
             theme.Terminate();
 
-            for (int i = 0; i < ExpansionType.Count; i++)
-                Utils.DisposeAndNullify(ref bmpExpansions[i]);
-            for (int i = 0; i < ChannelType.Count; i++)
-                Utils.DisposeAndNullify(ref bmpTracks[i]);
-
+            Utils.DisposeAndNullify(ref bmpAtlasExpansions);
+            Utils.DisposeAndNullify(ref bmpAtlasTracks);
             Utils.DisposeAndNullify(ref bmpGhostNote);
             Utils.DisposeAndNullify(ref bmpLoopPoint);
             Utils.DisposeAndNullify(ref bmpCustomLength);
@@ -369,7 +367,6 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref patternHeaderBrush);
             Utils.DisposeAndNullify(ref selectedPatternVisibleBrush);
             Utils.DisposeAndNullify(ref selectedPatternInvisibleBrush);
-            Utils.DisposeAndNullify(ref dashedLineVerticalBrush);
             Utils.DisposeAndNullify(ref selectionPatternBrush);
             Utils.DisposeAndNullify(ref seekGeometry);
 
@@ -405,186 +402,173 @@ namespace FamiStudio
             return captureOperation == CaptureOperation.DragSeekBar ? dragSeekPosition : App.CurrentFrame;
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected void RenderChannelNames(RenderGraphics g)
         {
-            // Happens when piano roll is maximized.
-            if (Height <= 1)
+            var c = g.CreateCommandList();
+
+            // Track name background
+            c.DrawRectangle(0, 0, trackNameSizeX, Height, theme.DarkGreyFillBrush1);
+
+            // Horizontal lines
+            c.DrawLine(0, 0, trackNameSizeX, 0, theme.BlackBrush);
+            c.DrawLine(0, Height - 1, trackNameSizeX, Height - 1, theme.BlackBrush);
+
+            for (int i = 0, y = headerSizeY; i < Song.Channels.Length; i++, y += trackSizeY)
+                c.DrawLine(0, y, Width, y, theme.BlackBrush);
+
+            // Vertical line seperating the track labels.
+            c.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, theme.BlackBrush);
+
+            c.PushTranslation(0, headerSizeY);
+
+            // Icons
+            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
-                g.Clear(ThemeBase.BlackColor);
-                return;
+                RenderBitmapAtlas atlas;
+                int bitmapIndex;
+
+                if (showExpansionIcons && Song.Project.UsesAnyExpansionAudio)
+                {
+                    atlas = bmpAtlasExpansions;
+                    bitmapIndex = Song.Channels[i].Expansion;
+                }
+                else
+                {
+                    atlas = bmpAtlasTracks;
+                    bitmapIndex = Song.Channels[i].Type;
+                }
+
+                c.DrawBitmapAtlas(atlas, bitmapIndex, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
             }
 
-            g.Clear(ThemeBase.DarkGreyLineColor2);
+            // Track names
+            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
+            {
+                var font = i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium;
+                c.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackNamePosY, theme.LightGreyFillBrush2);
+            }
+
+            // Ghost note icons
+            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
+            {
+                c.DrawBitmap(bmpGhostNote, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
+            }
+
+            c.PopTransform();
+            g.DrawCommandList(c, new Rectangle(0, 0, trackNameSizeX, Height));
+        }
+
+        protected void RenderPatternArea(RenderGraphics g)
+        {
+            var cb = g.CreateCommandList(); // Background stuff
+            var cf = g.CreateCommandList(); // Foreground stuff
 
             var seekX = noteSizeX * GetSeekFrameToDraw() - scrollX;
             var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
             var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
             var minVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(minVisibleNoteIdx) + 0, 0, Song.Length);
             var maxVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(maxVisibleNoteIdx) + 1, 0, Song.Length);
-
-            // Track name background
-            g.FillRectangle(0, 0, trackNameSizeX, Height, theme.DarkGreyFillBrush1); 
-
-            if (IsValidTimeOnlySelection())
-            {
-                g.PushClip(trackNameSizeX, 0, Width, headerSizeY);
-                g.PushTranslation(trackNameSizeX, 0);
-                g.FillRectangle(
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length)) * noteSizeX) - scrollX, 0,
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length)) * noteSizeX) - scrollX, headerSizeY,
-                    showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
-                g.PopTransform();
-                g.PopClip();
-            }
-
-            // Header
-            g.DrawLine(0, 0, Width, 0, theme.BlackBrush);
-            g.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, headerSizeY, theme.BlackBrush);
-            g.PushTranslation(trackNameSizeX, 0);
-            g.PushClip(0, 0, Width, Height);
-
-            for (int i = minVisiblePattern; i <= maxVisiblePattern; i++)
-            {
-                if (i != 0)
-                {
-                    var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) - scrollX;
-                    g.DrawLine(px, 0, px, Height, theme.BlackBrush);
-                }
-            }
-
-            for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
-            {
-                var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) - scrollX;
-                var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
-
-                g.PushTranslation(px, 0);
-
-                g.PushClip(1, 0, sx, Height);
-                var text = (i + 1).ToString();
-                if (Song.PatternHasCustomSettings(i))
-                    text += "*";
-                g.DrawText(text, ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx);
-                g.PopClip();
-
-                if (i == Song.LoopPoint)
-                {
-                    g.FillRectangle(headerIconPosX, headerIconPosY, headerIconPosX + bmpLoopPoint.Size.Width, headerIconPosY + bmpLoopPoint.Size.Height, theme.DarkGreyLineBrush2);
-                    g.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
-                }
-
-                g.PopTransform();
-            }
-
-            g.PushTranslation(seekX, 0);
-            g.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), theme.BlackBrush);
-            g.PopTransform();
-
-            g.PopClip();
-            g.PopTransform();
-
-            g.PushTranslation(0, headerSizeY);
-
-            // Icons
-            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-            {
-                var bmp = showExpansionIcons && Song.Project.UsesAnyExpansionAudio ? bmpExpansions[Song.Channels[i].Expansion] : bmpTracks[Song.Channels[i].Type];
-                g.DrawBitmap(bmp, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
-            }
-
-            // Track names
-            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-                g.DrawText(Song.Channels[i].Name, i == selectedChannel ? ThemeBase.FontMediumBold : ThemeBase.FontMedium, trackNamePosX, y + trackNamePosY, theme.LightGreyFillBrush2);
-
-            // Ghost note icons
-            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-                g.DrawBitmap(bmpGhostNote, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f);
-
-            // Vertical line seperating the track labels.
-            g.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, theme.BlackBrush);
+            var actualSizeY = Height - scrollBarThickness;
 
             // Grey background rectangles ever other pattern + vertical lines 
-            g.PushClip(trackNameSizeX, 0, Width, Height);
-            g.PushTranslation(trackNameSizeX, 0);
+            cb.PushTranslation(trackNameSizeX, 0);
+
             for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
             {
                 if ((i & 1) == 0)
                 {
                     var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) - scrollX;
                     var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
-                    g.FillRectangle(px, 0, px + sx, Height, theme.DarkGreyFillBrush1);
+                    cb.FillRectangle(px, 0, px + sx, Height, theme.DarkGreyFillBrush1);
                 }
             }
 
             if (IsSelectionValid())
             {
-                g.FillRectangle(
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length)) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0),
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length)) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1),
+                cb.FillRectangle(
+                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length)) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0) + headerSizeY,
+                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length)) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1) + headerSizeY,
                     showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
+
+                if (IsValidTimeOnlySelection())
+                {
+                    cb.FillRectangle(
+                        (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length)) * noteSizeX) - scrollX, 0,
+                        (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length)) * noteSizeX) - scrollX, headerSizeY,
+                        showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
+                }
             }
 
+            // Header
+            cb.DrawLine(0, 0, Width, 0, theme.BlackBrush);
+            cb.DrawLine(0, Height - 1, Width, Height - 1, theme.BlackBrush);
+
+            // Vertical lines
             for (int i = minVisiblePattern; i <= maxVisiblePattern; i++)
             {
                 if (i != 0)
                 {
                     var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) - scrollX;
-                    g.DrawLine(px, 0, px, Height, theme.BlackBrush);
+                    cb.DrawLine(px, 0, px, actualSizeY, theme.BlackBrush);
                 }
             }
 
-            g.PopTransform();
-            g.PopClip();
-
             // Horizontal lines
-            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
-                g.DrawLine(0, y, Width, y, theme.BlackBrush);
-
-            g.PushClip(trackNameSizeX, 0, Width, Height);
-
-            // Seek
-            g.DrawLine(seekX + trackNameSizeX, 1, seekX + trackNameSizeX, Height, GetSeekBarBrush(), 3);
+            for (int i = 0, y = headerSizeY; i < Song.Channels.Length; i++, y += trackSizeY)
+                cb.DrawLine(0, y, Width, y, theme.BlackBrush);
 
             // Patterns
-            for (int t = 0, py = 0; t < Song.Channels.Length; t++, py += trackSizeY)
+            int patternCacheSizeY = trackSizeY - patternHeaderSizeY - 1;
+            patternCache.Update(patternCacheSizeY);
+
+            for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
             {
-                for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
+                var patternLen = Song.GetPatternLength(i);
+                var noteLen = Song.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(i);
+                var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) - scrollX;
+                var sx = (int)(patternLen * noteSizeX);
+
+                cf.PushTranslation(px, 0);
+
+                var text = (i + 1).ToString();
+                if (Song.PatternHasCustomSettings(i))
+                    text += "*";
+                cf.DrawText(text, ThemeBase.FontMediumCenter, 0, barTextPosY, theme.LightGreyFillBrush1, sx, true);
+
+                if (i == Song.LoopPoint)
                 {
-                    var patternLen = Song.GetPatternLength(i);
-                    var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) + trackNameSizeX - scrollX;
-                    var sx = (int)(patternLen * noteSizeX);
+                    cf.FillRectangle(headerIconPosX, headerIconPosY, headerIconPosX + bmpLoopPoint.Size.Width, headerIconPosY + bmpLoopPoint.Size.Height, theme.DarkGreyLineBrush2);
+                    cf.DrawBitmap(bmpLoopPoint, headerIconPosX, headerIconPosY);
+                }
+
+                for (int t = 0, py = headerSizeY; t < Song.Channels.Length; t++, py += trackSizeY)
+                {
                     var pattern = Song.Channels[t].PatternInstances[i];
 
                     if (pattern != null)
                     {
-                        var bmp = GetPatternBitmapFromCache(g, pattern, patternLen);
+                        var bmp = patternCache.GetOrAddPattern(pattern, patternLen, noteLen, out var u0, out var v0, out var u1, out var v1);
 
-                        g.PushTranslation(px, py);
-                        g.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY - 1, 0.9f));
-                        g.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, theme.BlackBrush);
-                        g.PushClip(0, 0, sx, trackSizeY);
-                        g.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, bmp.Size.Height, 1.0f);
-                        g.DrawText(pattern.Name, ThemeBase.FontSmall, patternNamePosX, patternNamePosY, theme.BlackBrush);
-                        g.PopClip();
+                        cf.PushTranslation(0, py);
+
+                        cf.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY, 0.8f));
+                        cf.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, theme.BlackBrush);
+                        cf.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1); // MATTT : We use the bitmap size here.
+                        cf.DrawText(pattern.Name, ThemeBase.FontSmall, patternNamePosX, patternNamePosY, theme.BlackBrush, sx - patternNamePosX, true);
 
                         if (IsPatternSelected(t, i))
-                            g.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2);
+                            cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2);
 
-                        g.PopTransform();
+                        cf.PopTransform();
                     }
                 }
+
+                cf.PopTransform();
             }
 
-            // Piano roll view rect
-            if (Settings.ShowPianoRollViewRange)
-            {
-                App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
-
-                g.PushTranslation(pianoRollMinNoteIdx * noteSizeX - scrollX + trackNameSizeX, pianoRollChannelIndex * trackSizeY);
-                g.DrawRectangle(1, patternHeaderSizeY + 1, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX - 1, trackSizeY - 2, theme.LightGreyFillBrush2, 1);
-                g.PopTransform();
-            }
-
+            /*
             // Dragging selection
+            // MATTT : This doesnt work with the new rendering code.
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 var pt = this.PointToClient(Cursor.Position);
@@ -622,51 +606,112 @@ namespace FamiStudio
                         else
                             bmpCopy = duplicate ? bmpDuplicate : (instance ? bmpInstanciate : null);
 
-                        g.FillAndDrawRectangle(pt.X - anchorOffsetLeftX, y, pt.X - anchorOffsetLeftX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
+                        xf.PushTranslation(0, y);
+                        xf.PushTranslation(pt.X - anchorOffsetLeftX, 0);
+
+                        fillBg.AddRectangle(0, 0, patternSizeX, trackSizeY, selectedPatternVisibleBrush);
+                        lines.AddRectangle(0, 0, patternSizeX, trackSizeY, theme.BlackBrush);
+
                         if (bmpCopy != null)
-                            g.DrawBitmap(bmpCopy, pt.X - anchorOffsetLeftX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, y + trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
+                            bitmaps.AddBitmap(bmpCopy, patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
 
                         // Left side
                         for (int p = patternIdx - 1; p >= minSelectedPatternIdx + patternIdxDelta && p >= 0; p--)
                         {
                             patternSizeX = Song.GetPatternLength(p) * noteSizeX;
                             anchorOffsetLeftX += patternSizeX;
-                            g.FillAndDrawRectangle(pt.X - anchorOffsetLeftX, y, pt.X - anchorOffsetLeftX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
+
+                            fillBg.AddRectangle(0, 0, patternSizeX, trackSizeY, selectedPatternVisibleBrush);
+                            lines.AddRectangle(0, 0, patternSizeX, trackSizeY, theme.BlackBrush);
+
                             if (bmpCopy != null)
-                                g.DrawBitmap(bmpCopy, pt.X - anchorOffsetLeftX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, y + trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
+                                bitmaps.AddBitmap(bmpCopy, patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
                         }
+                        
+                        xf.PopTransform();
+                        xf.PushTranslation(pt.X + anchorOffsetRightX, 0);
 
                         // Right side
                         for (int p = patternIdx + 1; p <= maxSelectedPatternIdx + patternIdxDelta && p < Song.Length; p++)
                         {
                             patternSizeX = Song.GetPatternLength(p) * noteSizeX;
-                            g.FillAndDrawRectangle(pt.X + anchorOffsetRightX, y, pt.X + anchorOffsetRightX + patternSizeX, y + trackSizeY, selectedPatternVisibleBrush, theme.BlackBrush);
+                            
+                            fillBg.AddRectangle(0, 0, patternSizeX, trackSizeY, selectedPatternVisibleBrush);
+                            lines.AddRectangle(0, 0, patternSizeX, trackSizeY, theme.BlackBrush);
+
                             if (bmpCopy != null)
-                                g.DrawBitmap(bmpCopy, pt.X + anchorOffsetRightX + patternSizeX / 2 - bmpInstanciate.Size.Width / 2, y + trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
+                                bitmaps.AddBitmap(bmpCopy, patternSizeX / 2 - bmpInstanciate.Size.Width / 2, trackSizeY / 2 - bmpInstanciate.Size.Height / 2);
+
                             anchorOffsetRightX += patternSizeX;
                         }
+
+                        xf.PopTransform();
                     }
                 }
             }
+            */
 
-            g.PopClip();
-            g.PopTransform();
+            // Piano roll view rect
+            if (Settings.ShowPianoRollViewRange)
+            {
+                App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
+
+                cf.PushTranslation(pianoRollMinNoteIdx * noteSizeX - scrollX + trackNameSizeX, pianoRollChannelIndex * trackSizeY + headerSizeY);
+                cf.DrawRectangle(1, patternHeaderSizeY + 1, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX - 1, trackSizeY - 1, theme.LightGreyFillBrush2);
+                cf.PopTransform();
+            }
 
             // Scroll bar (optional)
             if (GetScrollBarParams(out var scrollBarPosX, out var scrollBarSizeX))
             {
-                int actualSizeY = Height - scrollBarThickness;
-
-                g.PushTranslation(trackNameSizeX - 1, 0);
-                g.PushClip(0, 0, Width, Height);
-                g.FillAndDrawRectangle(0, actualSizeY, Width + 1, Height, theme.DarkGreyFillBrush1, theme.BlackBrush);
-                g.FillAndDrawRectangle(scrollBarPosX, actualSizeY, scrollBarPosX + scrollBarSizeX + 1, Height, theme.MediumGreyFillBrush1, theme.BlackBrush);
-                g.PopClip();
-                g.PopTransform();
-                g.DrawLine(0, actualSizeY, Width, actualSizeY, theme.BlackBrush);
+                cb.FillAndDrawRectangle(-1, actualSizeY, Width, Height, theme.DarkGreyFillBrush1, theme.BlackBrush);
+                cb.FillAndDrawRectangle(scrollBarPosX - 1, actualSizeY, scrollBarPosX + scrollBarSizeX, Height, theme.MediumGreyFillBrush1, theme.BlackBrush);
             }
 
-            g.DrawLine(0, Height - 1, Width, Height - 1, theme.BlackBrush);
+            // Seek bar
+            cb.PushTranslation(seekX, 0);
+            cf.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), theme.BlackBrush);
+            cb.DrawLine(0, headerSizeY, 0, actualSizeY, GetSeekBarBrush(), 3);
+            cb.PopTransform();
+
+            cb.PopTransform();
+
+            var rect = new Rectangle(trackNameSizeX, 0, Width, Height);
+
+            g.DrawCommandList(cb, rect);
+            g.DrawCommandList(cf, rect);
+        }
+
+        //int clip = 100;
+        //int inc = 1;
+
+        protected override void OnRender(RenderGraphics g)
+        {
+            // Happens when piano roll is maximized.
+            if (Height <= 1)
+            {
+                g.Clear(ThemeBase.BlackColor);
+                return;
+            }
+
+            g.Clear(ThemeBase.DarkGreyLineColor2);
+            /*
+            var list = g.CreateCommandList();
+
+            list.DrawLine(20, 0, 20, Height, theme.BlackBrush);
+            list.DrawText("Hello this is a long text", ThemeBase.FontMediumCenter, 20, 50, theme.LightRedFillBrush, clip, true);
+            list.DrawLine(20 + clip, 0, clip + 20, Height, theme.BlackBrush);
+
+            clip += inc;
+            if (clip > 150) inc = -1;
+            if (clip < 50) inc = 1;
+
+            g.DrawCommandList(list);*/
+
+            
+            RenderChannelNames(g);
+            RenderPatternArea(g);
+            
         }
 
         private bool GetScrollBarParams(out int posX, out int sizeX)
@@ -693,108 +738,19 @@ namespace FamiStudio
         {
             if (pattern != null)
             {
-                if (patternBitmapCache.TryGetValue(pattern.Id, out var list))
-                {
-                    foreach (var bmp in list)
-                        bmp.Dispose();
-
-                    patternBitmapCache.Remove(pattern.Id);
-                }
+                patternCache.Remove(pattern);
             }
         }
 
-        private void DrawPatternBitmapNote(int t0, int t1, Note note, int patternSizeX, int patternSizeY, int noteSizeY, int minNote, int maxNote, float scaleY, bool dpcm, uint[] data)
+#if DEBUG
+        public void ValidateIntegrity()
         {
-            var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
-            var instrument = note.Instrument;
-
-            var color = ThemeBase.LightGreyFillColor1;
-            if (dpcm)
+            if (patternCache != null)
             {
-                var mapping = App.Project.GetDPCMMapping(note.Value);
-                if (mapping != null)
-                    color = mapping.Sample.Color;
+                patternCache.ValidateIntegrity();
             }
-            else if (instrument != null)
-            {
-                color = instrument.Color;
-            }
-
-            for (int j = 0; j < noteSizeY; j++)
-                for (int x = t0; x < t1; x++)
-                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = (uint)color.ToArgb();
         }
-
-        private RenderBitmap GetPatternBitmapFromCache(RenderGraphics g, Pattern p, int patternLen)
-        { 
-            var patternSizeX = Math.Max(1, patternLen);
-            var patternSizeY = trackSizeY - patternHeaderSizeY - 1;
-
-            RenderBitmap bmp;
-
-            if (patternBitmapCache.TryGetValue(p.Id, out var list))
-            {
-                bmp = list.FirstOrDefault(b => b.Size.Width == patternSizeX);
-
-                if (bmp != null)
-                    return bmp;
-            }
-
-            var noteSizeY = (int)Math.Max(Math.Ceiling(patternSizeY * 0.1f), 2 * g.WindowScaling);
-            var scaleY = (patternSizeY - noteSizeY) / (float)patternSizeY;
-
-            uint[] data = new uint[patternSizeX * patternSizeY];
-
-            int minNote;
-            int maxNote;
-
-            if (p.GetMinMaxNote(out minNote, out maxNote))
-            {
-                if (maxNote == minNote)
-                {
-                    minNote = (byte)(minNote - 5);
-                    maxNote = (byte)(maxNote + 5);
-                }
-                else
-                {
-                    minNote = (byte)(minNote - 2);
-                    maxNote = (byte)(maxNote + 2);
-                }
-
-                var musicalNotes = new List<Tuple<int, Note>>();
-
-                foreach (var kv in p.Notes)
-                {
-                    var time = kv.Key;
-                    if (time >= patternLen)
-                        break;
-
-                    var note = kv.Value;
-                    if (note.IsMusical)
-                        musicalNotes.Add(new Tuple<int, Note>(time, note));
-                }
-
-                for (int i = 0; i < musicalNotes.Count; i++)
-                {
-                    var note  = musicalNotes[i].Item2;
-                    var time1 = musicalNotes[i].Item1;
-                    var time2 = i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : (int)ushort.MaxValue;
-                    DrawPatternBitmapNote(time1, Math.Min(time2, Math.Min(patternLen - 1, time1 + note.Duration)), note, patternSizeX, patternSizeY, noteSizeY, minNote, maxNote, scaleY, p.ChannelType == ChannelType.Dpcm, data);
-                }
-            }
-
-            bmp = g.CreateBitmap(patternSizeX, patternSizeY, data);
-
-            if (!patternBitmapCache.TryGetValue(p.Id, out list))
-            {
-                list = new List<RenderBitmap>();
-                patternBitmapCache[p.Id] = list;
-            }
-
-            list.Add(bmp);
-
-            return bmp;
-        }
+#endif
 
         private void GetMinMaxScroll(out int minScrollX, out int maxScrollX)
         {
@@ -1092,6 +1048,7 @@ namespace FamiStudio
                 else if (right && inPatternHeader && pattern != null)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                    patternCache.Remove(pattern);
                     channel.PatternInstances[patternIdx] = null;
                     channel.InvalidateCumulativePatternCache();
                     App.UndoRedoManager.EndTransaction();
@@ -1550,6 +1507,9 @@ namespace FamiStudio
             {
                 for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
                 {
+                    var pattern = Song.Channels[i].PatternInstances[j];
+                    if (pattern != null)
+                        patternCache.Remove(pattern);
                     Song.Channels[i].PatternInstances[j] = null;
                 }
             }
@@ -1776,9 +1736,9 @@ namespace FamiStudio
                 if (pattern == null || !inPatternHeader)
                 {
                     if (ModifierKeys.HasFlag(Keys.Shift))
-                        tooltipList.Add("{MouseLeft} Select Rectangle");
+                        tooltipList.Add("{MouseRight} Select Rectangle");
                     else
-                        tooltipList.Add("{MouseLeft} Select Column");
+                        tooltipList.Add("{MouseRight} Select Column");
                 }
 
                 if (pattern != null)
@@ -2137,16 +2097,8 @@ namespace FamiStudio
 
         public void InvalidatePatternCache()
         {
-            foreach (var list in patternBitmapCache)
-            {
-                foreach (var bmp in list.Value)
-                {
-                    if (bmp != null)
-                        bmp.Dispose();
-                }
-            }
-
-            patternBitmapCache.Clear();
+            if (patternCache != null)
+                patternCache.Clear();
             ConditionalInvalidate();
         }
 
