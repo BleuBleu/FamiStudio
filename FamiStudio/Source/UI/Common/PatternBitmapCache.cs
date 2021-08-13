@@ -355,17 +355,8 @@ namespace FamiStudio
             }
             else
             {
-                for (int i = list.Count - 1; i >= 0; i--)
-                {
-                    if (entry.startX < list[i].startX)
-                    {
-                        idx = i;
-                        list.Insert(i, entry);
-                        break;
-                    }
-                }
-
-                Debug.Assert(idx >= 0);
+                list.Add(entry);
+                list.Sort((e1, e2) => e1.startX.CompareTo(e2.startX));
             }
 
             // Look left for potential merge.
