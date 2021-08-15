@@ -113,9 +113,10 @@ namespace FamiStudio
                 var output = process.StandardOutput.ReadToEnd();
 
                 var ret = true;
-                if (!output.Contains("--enable-libx264"))
+                if (!output.Contains("--enable-libx264") && 
+                    !output.Contains("--enable-libopenh264"))
                 {
-                    Log.LogMessage(LogSeverity.Error, "ffmpeg does not seem to be compiled with x264 support. Make sure you have the GPL version.");
+                    Log.LogMessage(LogSeverity.Error, "ffmpeg does not seem to be compiled with x264 or OpenH264 support. Make sure you have the GPL version if you want x264.");
                     ret = false;
                 }
 
