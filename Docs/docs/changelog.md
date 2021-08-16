@@ -2,6 +2,17 @@
 
 Version history / release notes for each release.
 
+## Version 3.1.1 (Hotfix)
+
+Fixes:
+
+* Fixed piano roll piano keys not highlighting when exporting video
+* Fixed application stalling when closing on MacOS
+* Fixed "advanced properties" buttons growing when using >100% scaling on Windows
+* Adding failsafe when time signature cannot be computed when exporting MIDI
+* Associating FMS files with FamiStudio on startup in portable mode
+* Experimental support for OpenH264 in video export
+
 ## Version 3.1.0
 
 Changes:
