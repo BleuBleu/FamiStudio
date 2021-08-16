@@ -1,12 +1,15 @@
 Android prototype
 =================
-- Absolute minimum button size is 64px, 80px - 100px is much more comfortable.
-- Piano roll note height, minimum 60
-- Project explorer, scale 4 would be good. Each button would be 84px
-- Sequencer is pretty good at scaling of 2, at least with 5 channels.
+1) Prototype layout
+- FamiStudioControls for mobile, 1 control active, swap with animations.
+	- Piano is always the main control
+- Create mobile toolbar
+- Test navigation, switch between PR, Seq, PE
+- Rotation
+- Create PR/Seq buttons
 
-- Sequencer will probably need to scroll vertically.
-- Create ToolbarBase + MobileToolbar.
+- Cleanup projects, make them more similar.
+- 
 
 3.2.0
 =====

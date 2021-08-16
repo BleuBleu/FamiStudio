@@ -116,7 +116,7 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
-    <Compile Include="Source\UI\Common\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphics.cs" />
     <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
@@ -206,7 +206,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\ThemeBase.cs" />
-    <Compile Include="Source\UI\Common\Toolbar.cs" />
+    <Compile Include="Source\UI\Common\ToolbarCommon.cs" />
+    <Compile Include="Source\UI\Desktop\Toolbar.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

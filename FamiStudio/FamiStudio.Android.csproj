@@ -156,7 +156,6 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
-    <Compile Include="Source\UI\Common\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
     <Compile Include="Source\UI\Common\GLTheme.cs" />
@@ -213,7 +212,9 @@
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\ThemeBase.cs" />
-    <Compile Include="Source\UI\Common\Toolbar.cs" />
+    <Compile Include="Source\UI\Common\ToolbarCommon.cs" />
+    <Compile Include="Source\UI\Mobile\Toolbar.cs" />
+    <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc.bin" />
@@ -620,6 +621,30 @@
     <AndroidNativeLibrary Include="libs\arm64-v8a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ProjectExplorer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ProjectExplorer%402x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Sequencer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Sequencer%402x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ExpandToolbar.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ExpandToolbar%402x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\PianoRoll.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\PianoRoll%402x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

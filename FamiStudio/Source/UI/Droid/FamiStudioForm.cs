@@ -30,7 +30,8 @@ namespace FamiStudio
         public Sequencer Sequencer => controls.Sequencer;
         public PianoRoll PianoRoll => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
-
+        public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
+        public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
         public string Text { get; set; }
 
         public System.Drawing.Rectangle Bounds
@@ -44,11 +45,28 @@ namespace FamiStudio
             }
         }
 
+        private void EnableFullscreenMode()
+        {
+            // Fullscreen mode.
+            Window.AddFlags(WindowManagerFlags.Fullscreen);
+
+            int uiOptions = (int)Window.DecorView.SystemUiVisibility;
+
+            uiOptions |= (int)SystemUiFlags.LowProfile;
+            uiOptions |= (int)SystemUiFlags.Fullscreen;
+            uiOptions |= (int)SystemUiFlags.HideNavigation;
+            uiOptions |= (int)SystemUiFlags.ImmersiveSticky;
+
+            Window.DecorView.SystemUiVisibility = (StatusBarVisibility)uiOptions;
+        }
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
+
+            EnableFullscreenMode();
 
             //Settings.Load(); // DROIDTODO : Settings.
             Utils.Initialize();

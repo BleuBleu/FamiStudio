@@ -19,6 +19,7 @@ using Bitmap = Gdk.Pixbuf;
 
 namespace FamiStudio
 {
+    // DROIDTODO : Use a partial class, move to Desktop.
     public abstract class GLGraphicsBase : IDisposable
     {
         protected float windowScaling = 1.0f;
@@ -33,7 +34,7 @@ namespace FamiStudio
         public int DashTextureSize => dashedBitmap.Size.Width;
         public GLTransform Transform => transform;
 
-        protected const int MaxAtlasResolution = 1024;
+        protected const int MaxAtlasResolution = 512;
         protected const int MaxVertexCount = 64 * 1024;
         protected const int MaxTexCoordCount = 64 * 1024;
         protected const int MaxColorCount = 64 * 1024;
@@ -1316,11 +1317,11 @@ namespace FamiStudio
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
         }
 
-        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f)
+        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f)
         {
             atlas.GetElementUVs(bitmapIndex, out var u0, out var v0, out var u1, out var v1);
             var elementSize = atlas.GetElementSize(bitmapIndex);
-            DrawBitmap(atlas, x, y, elementSize.Width, elementSize.Height, opacity, u0, v0, u1, v1);
+            DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1);
         }
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false)

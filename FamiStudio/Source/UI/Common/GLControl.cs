@@ -56,6 +56,8 @@ namespace FamiStudio
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
         public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
+        public System.Drawing.Size ParentFormSize => parentForm.Size;
+        public bool IsLandscape => parentForm.IsLandscape;
         public void Validate() { invalid = false; }
         public int Left => left;
         public int Top => top;
@@ -63,11 +65,7 @@ namespace FamiStudio
         public int Height => height;
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }
         public bool NeedsRedraw => invalid;
-#if FAMISTUDIO_WINDOWS
         public void Invalidate() { invalid = true; parentForm.Invalidate(); }
-#else
-        public void Invalidate() { invalid = true; }
-#endif
 
         public void Move(int x, int y, int w, int h)
         {

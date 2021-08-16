@@ -222,9 +222,9 @@ namespace FamiStudio
 
                 bitmaps[i] = bmp;
             }
-            
-            var numRows = Utils.DivideAndRoundUp(elementSizeX * names.Length, MaxAtlasResolution);
-            var elementsPerRow = names.Length / numRows;
+
+            var elementsPerRow = MaxAtlasResolution / elementSizeX;
+            var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
             var atlasSizeX = elementsPerRow * elementSizeX;
             var atlasSizeY = numRows * elementSizeY;
             var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);

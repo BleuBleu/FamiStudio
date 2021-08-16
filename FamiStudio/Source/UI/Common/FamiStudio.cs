@@ -95,12 +95,6 @@ namespace FamiStudio
         public Sequencer Sequencer => mainForm.Sequencer;
         public PianoRoll PianoRoll => mainForm.PianoRoll;
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
-#if FAMISTUDIO_ANDROID
-        // DROIDTODO!
-        public Rectangle MainWindowBounds => new Rectangle((int)mainForm.Bounds.X, (int)mainForm.Bounds.Y, (int)mainForm.Bounds.Width, (int)mainForm.Bounds.Height);
-#else
-        public Rectangle MainWindowBounds => mainForm.Bounds;
-#endif
 
         public static Project StaticProject { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
@@ -1656,7 +1650,7 @@ namespace FamiStudio
             {
                 if (--playDelay == 0)
                 {
-                    PlaySong();
+                    //PlaySong();
                 }
             }
 

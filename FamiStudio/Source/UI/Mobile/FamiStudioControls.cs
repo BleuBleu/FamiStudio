@@ -1,26 +1,17 @@
 ﻿using System;
 using System.Diagnostics;
-
-#if FAMISTUDIO_ANDROID
 using Android.Opengl;
 using Javax.Microedition.Khronos.Opengles;
-#else
-using OpenTK.Graphics.OpenGL;
-#endif
 
 namespace FamiStudio
 {
     public class FamiStudioControls
     {
-        const int ControlToolbar = 0;
-        const int ControlSequencer = 1;
-        const int ControlPianoRoll = 2;
-        const int ControlProjectExplorer = 3;
-
         private int width;
         private int height;
         private GLGraphics gfx;
         private GLControl[] controls = new GLControl[4];
+        private GLControl activeControl;
 
         private Toolbar toolbar;
         private Sequencer sequencer;
@@ -40,10 +31,12 @@ namespace FamiStudio
             pianoRoll = new PianoRoll();
             projectExplorer = new ProjectExplorer();
 
-            controls[ControlToolbar] = toolbar;
-            controls[ControlSequencer] = sequencer;
-            controls[ControlPianoRoll] = pianoRoll;
-            controls[ControlProjectExplorer] = projectExplorer;
+            controls[0] = toolbar;
+            controls[1] = sequencer;
+            controls[2] = pianoRoll;
+            controls[3] = projectExplorer;
+
+            activeControl = pianoRoll;
 
             foreach (var ctrl in controls)
                 ctrl.ParentForm = parent;
@@ -54,6 +47,20 @@ namespace FamiStudio
             width  = w;
             height = h;
 
+            var landscape = w > h;
+
+            if (landscape)
+            {
+                activeControl.Move(0, 0, width - 539, height);
+                toolbar.Move(width - 539, 0, 539, height);
+            }
+            else
+            {
+                activeControl.Move(0, 0, width, height - 539);
+                toolbar.Move(0, height - 539, width, 539);
+            }
+
+            /*
             int toolBarHeight = (int)(40 * GLTheme.MainWindowScaling);
             int projectExplorerWidth = (int)(280 * GLTheme.MainWindowScaling);
             int sequencerHeight = pianoRoll.IsMaximized ? 1 : (int)(sequencer.ComputeDesiredSizeY() * GLTheme.MainWindowScaling);
@@ -62,10 +69,12 @@ namespace FamiStudio
             projectExplorer.Move(width - projectExplorerWidth, toolBarHeight, projectExplorerWidth, height - toolBarHeight);
             sequencer.Move(0, toolBarHeight, width - projectExplorerWidth, sequencerHeight);
             pianoRoll.Move(0, toolBarHeight + sequencerHeight, width - projectExplorerWidth, height - toolBarHeight - sequencerHeight);
+            */
         }
 
         public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
+            // DROIDTODO : Only allow picking active control for piano roll / seq / project explorer.
             foreach (var ctrl in controls)
             {
                 ctrlX = formX - ctrl.Left;
@@ -91,13 +100,29 @@ namespace FamiStudio
                 ctrl.Invalidate();
         }
 
-        GLBrush brush;
+        GLBrush debugBrush;
 
-        public unsafe bool Redraw()
+        private void RedrawControl(GLControl ctrl)
         {
-            if (brush == null)
-                brush = new GLBrush(System.Drawing.Color.SpringGreen);
+            if (debugBrush == null)
+                debugBrush = new GLBrush(System.Drawing.Color.SpringGreen);
 
+            gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.Left, ctrl.Top, ctrl.Width, ctrl.Height), height);
+
+            var t0 = DateTime.Now;
+            ctrl.Render(gfx);
+            ctrl.Validate();
+
+            var cmd = gfx.CreateCommandList();
+            var t1 = DateTime.Now;
+            cmd.DrawText($"Render time : {(t1 - t0).TotalMilliseconds} ms", ThemeBase.FontBigBold, 10, 10, debugBrush);
+            gfx.DrawCommandList(cmd);
+
+            gfx.EndDrawControl();
+        }
+
+        public bool Redraw()
+        {
             bool anyNeedsRedraw = false;
             foreach (var control in controls)
             {
@@ -113,32 +138,8 @@ namespace FamiStudio
                     return true;
 
                 gfx.BeginDrawFrame();
-
-                foreach (var control in controls)
-                {
-#if FAMISTUDIO_WINDOWS
-                    var t0 = PerformanceCounter.TimeSeconds();
-#else
-                    var t0 = DateTime.Now;
-#endif
-
-                    gfx.BeginDrawControl(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
-                    control.Render(gfx);
-                    control.Validate();
-
-                    var cmd = gfx.CreateCommandList();
-#if FAMISTUDIO_WINDOWS
-                    var t1 = PerformanceCounter.TimeSeconds();
-                    cmd.DrawText($"Render time : {(t1 - t0) * 1000} ms", ThemeBase.FontBigBold, 10, 10, brush);
-#else
-                    var t1 = DateTime.Now;
-                    cmd.DrawText($"Render time : {(t1 - t0).TotalMilliseconds} ms", ThemeBase.FontBigBold, 10, 10, brush);
-                    //Console.WriteLine((t1 - t0).TotalMilliseconds.ToString());
-#endif
-                    gfx.DrawCommandList(cmd);
-                    gfx.EndDrawControl();
-                }
-
+                RedrawControl(activeControl);
+                RedrawControl(toolbar);
                 gfx.EndDrawFrame();
 
                 return true;
@@ -147,20 +148,11 @@ namespace FamiStudio
             return false;
         }
 
-#if FAMISTUDIO_ANDROID
         public void InitializeGL(IGL10 gl)
         {
             gfx = new GLGraphics(gl);
             foreach (var ctrl in controls)
                 ctrl.RenderInitialized(gfx);
         }
-#else
-        public void InitializeGL()
-        {
-            gfx = new GLGraphics();
-            foreach (var ctrl in controls)
-                ctrl.RenderInitialized(gfx);
-        }
-#endif
     }
 }

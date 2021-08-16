@@ -119,11 +119,13 @@ namespace FamiStudio
 
         protected override int CreateEmptyTexture(int width, int height)
         {
+            bool filter = true; // DROIDTODO : No filter on pattern cache or text.
+
             var id = new int[1];
             gl.GlGenTextures(1, id, 0);
             gl.GlBindTexture(GLES11.GlTexture2d, id[0]);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, GLES11.GlNearest);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, GLES11.GlNearest);
+            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
+            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
             gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlClampToEdge);
             gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlClampToEdge);
 
@@ -138,12 +140,14 @@ namespace FamiStudio
 
         protected override int CreateTexture(Bitmap bmp)
         {
+            bool filter = true; // DROIDTODO : No filter on pattern cache or text.
+
             var id = new int[1];
             gl.GlGenTextures(1, id, 0);
             gl.GlBindTexture(GLES11.GlTexture2d, id[0]);
             GLUtils.TexImage2D(GLES11.GlTexture2d, 0, bmp, 0);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, GLES11.GlNearest);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, GLES11.GlNearest);
+            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
+            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
             gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlClampToEdge);
             gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlClampToEdge);
             bmp.Recycle();
@@ -241,8 +245,8 @@ namespace FamiStudio
                 bitmaps[i] = bmp;
             }
 
-            var numRows = Utils.DivideAndRoundUp(elementSizeX * names.Length, MaxAtlasResolution);
-            var elementsPerRow = names.Length / numRows;
+            var elementsPerRow = MaxAtlasResolution / elementSizeX;
+            var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
             var atlasSizeX = elementsPerRow * elementSizeX;
             var atlasSizeY = numRows * elementSizeY;
             var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
