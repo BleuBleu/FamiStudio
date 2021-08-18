@@ -18,7 +18,7 @@ using System.Windows.Forms;
 using System.Web.Script.Serialization;
 #endif
 
-using RenderTheme = FamiStudio.GLTheme;
+using RenderTheme = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -1093,7 +1093,7 @@ namespace FamiStudio
 
             if (Settings.ShowOscilloscope)
             {
-                oscilloscope = new Oscilloscope((int)RenderTheme.MainWindowScaling);
+                oscilloscope = new Oscilloscope((int)DpiScaling.MainWindow);
                 oscilloscope.Start();
 
                 if (instrumentPlayer != null)

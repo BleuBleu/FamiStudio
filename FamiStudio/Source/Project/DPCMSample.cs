@@ -87,7 +87,7 @@ namespace FamiStudio
         {
             this.id = id;
             this.name = name;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
         }
 
         public float GetPlaybackSampleRate(bool palPlayback)
@@ -392,7 +392,7 @@ namespace FamiStudio
                 buffer.Serialize(ref reverseBits);
             }
 
-            color = ThemeBase.RandomCustomColor();
+            color = Theme.RandomCustomColor();
             paddingMode = DPCMPaddingType.Unpadded;
 
             ResetVolumeEnvelope();

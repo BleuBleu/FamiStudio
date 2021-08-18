@@ -19,6 +19,7 @@ namespace FamiStudio
         public Sequencer Sequencer => controls.Sequencer;
         public PianoRoll PianoRoll => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
+        public bool IsLandscape => true;
 
         private GLControl captureControl = null;
         private MouseButtons captureButton   = MouseButtons.None;
@@ -72,9 +73,9 @@ namespace FamiStudio
             GL.Disable(EnableCap.DepthTest);
             GL.Viewport(0, 0, Width, Height);
             GL.ClearColor(
-                ThemeBase.DarkGreyFillColor2.R / 255.0f,
-                ThemeBase.DarkGreyFillColor2.G / 255.0f,
-                ThemeBase.DarkGreyFillColor2.B / 255.0f,
+                Theme.DarkGreyFillColor2.R / 255.0f,
+                Theme.DarkGreyFillColor2.G / 255.0f,
+                Theme.DarkGreyFillColor2.B / 255.0f,
                 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             GraphicsContext.CurrentContext.SwapBuffers();

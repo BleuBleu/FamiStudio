@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-using RenderTheme = FamiStudio.GLTheme;
+using RenderTheme = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -49,9 +49,10 @@ namespace FamiStudio
 #endif
 
             Settings.Load();
+            DpiScaling.Initialize();
             Utils.Initialize();
             PlatformUtils.Initialize();
-            RenderTheme.Initialize();
+            Theme.Initialize();
             NesApu.InitializeNoteTables();
 
 #if FAMISTUDIO_WINDOWS

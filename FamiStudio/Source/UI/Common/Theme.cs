@@ -12,90 +12,8 @@ using RenderGraphics = FamiStudio.GLGraphics;
 
 namespace FamiStudio
 {
-    public class ThemeBase
+    public class Theme
     {
-        protected enum RenderFontStyle
-        {
-            VerySmallCenter,
-            Small,
-            SmallCenter,
-            SmallRight,
-            SmallBold,
-            Medium,
-            MediumCenter,
-            MediumRight,
-            MediumUnscaled,
-            MediumBold,
-            MediumBoldUnscaled,
-            MediumBoldCenter,
-            MediumBoldCenterEllipsis,
-            MediumBigRight,
-            Big,
-            BigBold,
-            BigBoldUnscaled,
-            BigCenter,
-            BigUnscaled,
-            Huge,
-            Max
-        };
-
-        protected struct RenderFontDefinition
-        {
-            public string Name;
-            public bool   Bold;
-            public bool   Ellipsis;
-            public bool   NoScaling;
-            public int    Alignment; // TODO: Create an enum.
-            public int    Size;
-        };
-
-        protected static RenderFontDefinition[] FontDefinitions = new RenderFontDefinition[(int)RenderFontStyle.Max]
-        {
-            new RenderFontDefinition() { Name = "QuickSand", Size =  8, Alignment = 1 }, // VerySmallCenter
-            new RenderFontDefinition() { Name = "QuickSand", Size = 10 }, // Small
-            new RenderFontDefinition() { Name = "QuickSand", Size = 10, Alignment = 1 }, // SmallCenter
-            new RenderFontDefinition() { Name = "QuickSand", Size = 10, Alignment = 2 }, // SmallRight
-            new RenderFontDefinition() { Name = "QuickSand", Size = 10, Bold = true }, // SmallBold
-            new RenderFontDefinition() { Name = "QuickSand", Size = 12 }, // Medium
-            new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1 }, // MediumCenter
-            new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 2 }, // MediumRight
-            new RenderFontDefinition() { Name = "QuickSand", Size = 12, NoScaling = true }, // MediumUnscaled
-            new RenderFontDefinition() { Name = "QuickSand", Size = 12, Bold = true }, // MediumBold
-            new RenderFontDefinition() { Name = "QuickSand", Size = 12, Bold = true, NoScaling = true }, // MediumBoldUnscaled
-            new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1, Bold = true }, // MediumBoldCenter
-            new RenderFontDefinition() { Name = "QuickSand", Size = 12, Alignment = 1, Bold = true, Ellipsis = true }, // MediumBoldCenterEllipsis
-            new RenderFontDefinition() { Name = "QuickSand", Size = 16, Alignment = 2 }, // MediumBigRight
-            new RenderFontDefinition() { Name = "QuickSand", Size = 20 }, // Big
-            new RenderFontDefinition() { Name = "QuickSand", Size = 20, Bold = true }, // BigBold
-            new RenderFontDefinition() { Name = "QuickSand", Size = 20, Bold = true, NoScaling = true }, // BigBoldUnscaled
-            new RenderFontDefinition() { Name = "QuickSand", Size = 20, Alignment = 1 }, // BigCenter
-            new RenderFontDefinition() { Name = "QuickSand", Size = 20, NoScaling = true }, // BigUnscaled
-            new RenderFontDefinition() { Name = "QuickSand", Size = 28, Alignment = 1 } // Huge
-        };
-
-        protected static RenderFont[] Fonts = new RenderFont[(int)RenderFontStyle.Max];
-
-        public static RenderFont FontVerySmallCenter          => Fonts[(int)RenderFontStyle.VerySmallCenter];
-        public static RenderFont FontSmall                    => Fonts[(int)RenderFontStyle.Small];
-        public static RenderFont FontSmallCenter              => Fonts[(int)RenderFontStyle.SmallCenter];
-        public static RenderFont FontSmallRight               => Fonts[(int)RenderFontStyle.SmallRight];
-        public static RenderFont FontSmallBold                => Fonts[(int)RenderFontStyle.SmallBold];
-        public static RenderFont FontMedium                   => Fonts[(int)RenderFontStyle.Medium];
-        public static RenderFont FontMediumCenter             => Fonts[(int)RenderFontStyle.MediumCenter];
-        public static RenderFont FontMediumRight              => Fonts[(int)RenderFontStyle.MediumRight];
-        public static RenderFont FontMediumUnscaled           => Fonts[(int)RenderFontStyle.MediumUnscaled];
-        public static RenderFont FontMediumBold               => Fonts[(int)RenderFontStyle.MediumBold];
-        public static RenderFont FontMediumBoldUnscaled       => Fonts[(int)RenderFontStyle.MediumBoldUnscaled];
-        public static RenderFont FontMediumBoldCenter         => Fonts[(int)RenderFontStyle.MediumBoldCenter];
-        public static RenderFont FontMediumBoldCenterEllipsis => Fonts[(int)RenderFontStyle.MediumBoldCenterEllipsis];
-        public static RenderFont FontMediumBigRight           => Fonts[(int)RenderFontStyle.MediumBigRight];
-        public static RenderFont FontBig                      => Fonts[(int)RenderFontStyle.Big];
-        public static RenderFont FontBigBold                  => Fonts[(int)RenderFontStyle.BigBold];
-        public static RenderFont FontBigBoldUnscaled          => Fonts[(int)RenderFontStyle.BigBoldUnscaled];
-        public static RenderFont FontBigCenter                => Fonts[(int)RenderFontStyle.BigCenter];
-        public static RenderFont FontBigUnscaled              => Fonts[(int)RenderFontStyle.BigUnscaled];
-        public static RenderFont FontHuge                     => Fonts[(int)RenderFontStyle.Huge];
-
         public static Color DarkGreyLineColor1    = Color.FromArgb( 25,  28,  31);
         public static Color DarkGreyLineColor2    = Color.FromArgb( 33,  37,  41);
         public static Color DarkGreyLineColor3    = Color.FromArgb( 38,  42,  46);
@@ -111,32 +29,6 @@ namespace FamiStudio
         public static Color BlackColor = Color.FromArgb(  0,   0,   0);
         public static Color GreenColor = Color.FromArgb(  0,   0, 255);
         public static Color WhiteColor = Color.FromArgb(255, 255, 255);
-
-        private RenderBrush whiteBrush;
-        private RenderBrush blackBrush;
-        private RenderBrush lightGreyFillBrush1;
-        private RenderBrush lightGreyFillBrush2;
-        private RenderBrush mediumGreyFillBrush1;
-        private RenderBrush darkGreyLineBrush1;
-        private RenderBrush darkGreyLineBrush2;
-        private RenderBrush darkGreyLineBrush3;
-        private RenderBrush darkGreyFillBrush1;
-        private RenderBrush darkGreyFillBrush2;
-        private RenderBrush lightRedFillBrush;
-        private RenderBrush darkRedFillBrush;
-
-        public RenderBrush WhiteBrush           { get => whiteBrush;           protected set => whiteBrush           = value; }
-        public RenderBrush BlackBrush           { get => blackBrush;           protected set => blackBrush           = value; }
-        public RenderBrush LightGreyFillBrush1  { get => lightGreyFillBrush1;  protected set => lightGreyFillBrush1  = value; }
-        public RenderBrush LightGreyFillBrush2  { get => lightGreyFillBrush2;  protected set => lightGreyFillBrush2  = value; }
-        public RenderBrush MediumGreyFillBrush1 { get => mediumGreyFillBrush1; protected set => mediumGreyFillBrush1 = value; }
-        public RenderBrush DarkGreyLineBrush1   { get => darkGreyLineBrush1;   protected set => darkGreyLineBrush1   = value; }
-        public RenderBrush DarkGreyLineBrush2   { get => darkGreyLineBrush2;   protected set => darkGreyLineBrush2   = value; }
-        public RenderBrush DarkGreyLineBrush3   { get => darkGreyLineBrush3;   protected set => darkGreyLineBrush3   = value; }
-        public RenderBrush DarkGreyFillBrush1   { get => darkGreyFillBrush1;   protected set => darkGreyFillBrush1   = value; }
-        public RenderBrush DarkGreyFillBrush2   { get => darkGreyFillBrush2;   protected set => darkGreyFillBrush2   = value; }
-        public RenderBrush LightRedFillBrush    { get => lightRedFillBrush;    protected set => lightRedFillBrush    = value; }
-        public RenderBrush DarkRedFillBrush     { get => darkRedFillBrush;     protected set => darkRedFillBrush     = value; }
 
         private static int nextColorIdx = 39;
 
@@ -288,10 +180,7 @@ namespace FamiStudio
 
         };
 
-        private Dictionary<Color, RenderBrush> customColorBrushes = new Dictionary<Color, RenderBrush>();
-        public  Dictionary<Color, RenderBrush> CustomColorBrushes => customColorBrushes;
-
-        public static void InitializeBase()
+        public static void Initialize()
         {
             for (int j = 0; j < CustomColors.GetLength(1); j++)
             {
@@ -339,56 +228,6 @@ namespace FamiStudio
             }
 
             color = closestColor;
-        }
-
-        public virtual void InitializeForGraphics(RenderGraphics g)
-        {
-            whiteBrush = g.CreateSolidBrush(WhiteColor);
-            blackBrush = g.CreateSolidBrush(BlackColor);
-            lightGreyFillBrush1 = g.CreateSolidBrush(LightGreyFillColor1);
-            lightGreyFillBrush2 = g.CreateSolidBrush(LightGreyFillColor2);
-            mediumGreyFillBrush1 = g.CreateSolidBrush(MediumGreyFillColor1);
-            darkGreyLineBrush1 = g.CreateSolidBrush(DarkGreyLineColor1);
-            darkGreyLineBrush2 = g.CreateSolidBrush(DarkGreyLineColor2);
-            darkGreyLineBrush3 = g.CreateSolidBrush(DarkGreyLineColor3);
-            darkGreyFillBrush1 = g.CreateSolidBrush(DarkGreyFillColor1);
-            darkGreyFillBrush2 = g.CreateSolidBrush(DarkGreyFillColor2);
-            lightRedFillBrush = g.CreateSolidBrush(LightRedFillColor);
-            darkRedFillBrush = g.CreateSolidBrush(DarkRedFillColor);
-
-            for (int j = 0; j < CustomColors.GetLength(1); j++)
-            {
-                for (int i = 0; i < CustomColors.GetLength(0); i++)
-                {
-                    customColorBrushes[CustomColors[i, j]] = g.CreateSolidBrush(CustomColors[i, j]);
-                }
-            }
-        }
-
-        public void Terminate()
-        {
-            Utils.DisposeAndNullify(ref whiteBrush);
-            Utils.DisposeAndNullify(ref blackBrush);
-            Utils.DisposeAndNullify(ref lightGreyFillBrush1);
-            Utils.DisposeAndNullify(ref lightGreyFillBrush2);
-            Utils.DisposeAndNullify(ref mediumGreyFillBrush1);
-            Utils.DisposeAndNullify(ref darkGreyLineBrush1);
-            Utils.DisposeAndNullify(ref darkGreyLineBrush2);
-            Utils.DisposeAndNullify(ref darkGreyLineBrush3);
-            Utils.DisposeAndNullify(ref darkGreyFillBrush1);
-            Utils.DisposeAndNullify(ref darkGreyFillBrush2);
-            Utils.DisposeAndNullify(ref lightRedFillBrush);
-            Utils.DisposeAndNullify(ref darkRedFillBrush);
-
-            for (int j = 0; j < CustomColors.GetLength(1); j++)
-            {
-                for (int i = 0; i < CustomColors.GetLength(0); i++)
-                {
-                    customColorBrushes[CustomColors[i, j]].Dispose();
-                }
-            }
-
-            customColorBrushes.Clear();
         }
 
         public static System.Drawing.Color RandomCustomColor()

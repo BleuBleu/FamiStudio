@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-using RenderTheme = FamiStudio.GLTheme;
-
 namespace FamiStudio
 {
     public partial class MultiPropertyDialog : Form
@@ -26,28 +24,28 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            string suffix = RenderTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             this.buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             this.buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
-            this.Width    = (int)(width  * RenderTheme.DialogScaling);
+            this.Width    = DpiScaling.ScaleForDialog(width);
             this.font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
             this.fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
 
             toolTip.SetToolTip(buttonYes, "Accept");
             toolTip.SetToolTip(buttonNo, "Cancel");
 
-            tableLayout.ColumnStyles[0].Width = tabsWidth * RenderTheme.DialogScaling;
+            tableLayout.ColumnStyles[0].Width = tabsWidth * DpiScaling.Dialog;
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var suffix = RenderTheme.DialogScaling > 1.0f ? "@2x" : "";
+            var suffix = DpiScaling.Dialog > 1.0f ? "@2x" : "";
             var bmp = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}{suffix}.png")) as Bitmap;
 
-            if ((RenderTheme.DialogScaling % 1.0f) != 0.0f)
+            if ((DpiScaling.Dialog % 1.0f) != 0.0f)
             {
-                var newWidth  = (int)(bmp.Width  * (RenderTheme.DialogScaling / 2.0f));
-                var newHeight = (int)(bmp.Height * (RenderTheme.DialogScaling / 2.0f));
+                var newWidth  = (int)(bmp.Width  * (DpiScaling.Dialog / 2.0f));
+                var newHeight = (int)(bmp.Height * (DpiScaling.Dialog / 2.0f));
 
                 bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
             }
@@ -81,7 +79,7 @@ namespace FamiStudio
         {
             SuspendLayout();
 
-            int maxHeight = Math.Max((int)(32 * RenderTheme.DialogScaling * tabs.Count), Width / 2);
+            int maxHeight = Math.Max((int)(32 * DpiScaling.Dialog * tabs.Count), Width / 2);
             for (int i = 0; i < tabs.Count; i++)
             {
                 maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
@@ -89,10 +87,10 @@ namespace FamiStudio
 
             tableLayout.Height = maxHeight;
 
-            buttonYes.Width  = (int)(buttonYes.Width  * RenderTheme.DialogScaling);
-            buttonYes.Height = (int)(buttonYes.Height * RenderTheme.DialogScaling);
-            buttonNo.Width   = (int)(buttonNo.Width   * RenderTheme.DialogScaling);
-            buttonNo.Height  = (int)(buttonNo.Height  * RenderTheme.DialogScaling);
+            buttonYes.Width  = DpiScaling.ScaleForDialog(buttonYes.Width);
+            buttonYes.Height = DpiScaling.ScaleForDialog(buttonYes.Height);
+            buttonNo.Width   = DpiScaling.ScaleForDialog(buttonNo.Width);
+            buttonNo.Height  = DpiScaling.ScaleForDialog(buttonNo.Height);
 
             Height = maxHeight + buttonNo.Height + 20;
 
@@ -139,16 +137,16 @@ namespace FamiStudio
         private Button AddButton(string text, Bitmap image)
         {
             var btn = new NoFocusButton();
-            var sizeY = (int)(32 * RenderTheme.DialogScaling);
+            var sizeY = DpiScaling.ScaleForDialog(32);
 
             btn.BackColor = BackColor;
-            btn.ForeColor = ThemeBase.LightGreyFillColor2;
+            btn.ForeColor = Theme.LightGreyFillColor2;
             btn.ImageAlign = ContentAlignment.MiddleLeft;
             btn.TextAlign = ContentAlignment.MiddleLeft;
             btn.FlatStyle = FlatStyle.Flat;
             btn.FlatAppearance.BorderSize = 0;
-            btn.FlatAppearance.MouseOverBackColor = ThemeBase.DarkGreyFillColor2;
-            btn.FlatAppearance.MouseDownBackColor = ThemeBase.DarkGreyFillColor2;
+            btn.FlatAppearance.MouseOverBackColor = Theme.DarkGreyFillColor2;
+            btn.FlatAppearance.MouseDownBackColor = Theme.DarkGreyFillColor2;
             btn.Image = image;
             btn.Top = tabs.Count * sizeY;
             btn.Left = 0;

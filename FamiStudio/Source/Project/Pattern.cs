@@ -35,7 +35,7 @@ namespace FamiStudio
             this.song = song;
             this.channelType = channelType;
             this.name = n;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
         }
         
         public string Name

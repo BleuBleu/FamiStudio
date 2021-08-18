@@ -18,10 +18,13 @@ namespace FamiStudio
     {
         private CursorInfo cursorInfo;
         private FamiStudioForm parentForm;
+        private ThemeRenderResources themeRes;
         private int left = 0;
         private int top = 0;
         private int width = 100;
         private int height = 100;
+        private float mainWindowScaling = 1.0f;
+        private float fontScaling = 1.0f;
         private bool invalid = true;
 
         protected GLControl() { cursorInfo = new CursorInfo(this); }
@@ -67,7 +70,12 @@ namespace FamiStudio
         public int Height => height;
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }
         public bool NeedsRedraw => invalid;
+        public float MainWindowScaling => mainWindowScaling;
+        public float FontScaling => fontScaling;
+        public ThemeRenderResources ThemeResources => themeRes;
         public void Invalidate() { invalid = true; parentForm.Invalidate(); }
+        public void SetDpiScales(float main, float font) { mainWindowScaling = main; fontScaling = font; }
+        public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
 
         public void Move(int x, int y, int w, int h, bool fireResizeEvent = true)
         {
@@ -84,6 +92,11 @@ namespace FamiStudio
         public FamiStudio App => parentForm?.FamiStudio; 
         public CursorInfo Cursor => cursorInfo; 
         public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
+
+        public int   ScaleForMainWindow     (float val) { return (int)(val * mainWindowScaling); }
+        public float ScaleForMainWindowFloat(float val) { return      (val * mainWindowScaling); }
+        public int   ScaleForFont           (float val) { return (int)(val * fontScaling); }
+        public float ScaleForFontFloat      (float val) { return      (val * fontScaling); }
     }
 
     public class CursorInfo

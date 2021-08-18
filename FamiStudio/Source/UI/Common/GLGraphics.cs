@@ -18,7 +18,7 @@ namespace FamiStudio
     {
         bool supportsLineWidth = true;
 
-        public GLGraphics()
+        public GLGraphics(float mainScale, float fontScale) : base(mainScale, fontScale)
         {
             dashedBitmap = CreateBitmapFromResource("Dash");
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.Repeat);
@@ -278,12 +278,12 @@ namespace FamiStudio
             return bmp.Size.Width;
         }
 
-        public GLCommandList override CreateCommandList()
+        public override GLCommandList CreateCommandList()
         {
             return new GLCommandList(this, dashedBitmap.Size.Width, supportsLineWidth);
         }
 
-        public unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
+        public unsafe override void DrawCommandList(GLCommandList list, Rectangle scissor)
         {
             if (!scissor.IsEmpty)
                 SetScissorRect(scissor.Left, scissor.Top, scissor.Right, scissor.Bottom);
@@ -417,7 +417,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private GLOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback)
+        private GLOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(1.0f, 1.0f) 
         {
             resX = imageSizeX;
             resY = imageSizeY;

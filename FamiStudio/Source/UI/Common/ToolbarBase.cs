@@ -10,7 +10,7 @@ using RenderBrush       = FamiStudio.GLBrush;
 using RenderGeometry    = FamiStudio.GLGeometry;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.GLTheme;
+using RenderTheme       = FamiStudio.ThemeRenderResources;
 using RenderCommandList = FamiStudio.GLCommandList;
 using RenderTransform   = FamiStudio.GLTransform;
 
@@ -156,7 +156,6 @@ namespace FamiStudio
         protected int timecodeOscSizeX;
         protected int timecodeOscSizeY;
 
-        protected RenderTheme theme;
         protected RenderBrush toolbarBrush;
         protected RenderBrush warningBrush;
         protected RenderBitmapAtlas bmpButtonAtlas;
@@ -171,10 +170,8 @@ namespace FamiStudio
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
 
-            theme = RenderTheme.CreateResourcesForGraphics(g);
-            toolbarBrush = g.CreateVerticalGradientBrush(0, Height, ThemeBase.DarkGreyFillColor2, ThemeBase.DarkGreyFillColor1); // DROIDTODO : Makes no sense on mobile.
+            toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1); // DROIDTODO : Makes no sense on mobile.
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
-
             bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
@@ -196,13 +193,12 @@ namespace FamiStudio
             buttons[(int)ButtonType.Metronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled };
             buttons[(int)ButtonType.Machine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
             buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled };
-            buttons[(int)ButtonType.Help]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, RightAligned = true, Click = OnHelp };
+            buttons[(int)ButtonType.Help]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, Click = OnHelp };
             buttons[(int)ButtonType.More]      = new Button { BmpAtlasIndex = ButtonImageIndices.More, Click = OnMore, Visible = false };
         }
 
         protected override void OnRenderTerminated()
         {
-            theme.Terminate();
             Utils.DisposeAndNullify(ref bmpButtonAtlas);
         }
 
@@ -476,7 +472,7 @@ namespace FamiStudio
             // Buttons
             foreach (var btn in buttons)
             {
-                if (!btn.Visible)
+                if (btn == null || !btn.Visible)
                     continue;
 
                 var hover = btn.IsPointIn(pt.X, pt.Y, Width);
@@ -497,13 +493,13 @@ namespace FamiStudio
             var frame = App.CurrentFrame;
             var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
 
-            var zeroSizeX  = g.MeasureString("0", ThemeBase.FontHuge);
-            var colonSizeX = g.MeasureString(":", ThemeBase.FontHuge);
+            var zeroSizeX  = g.MeasureString("0", ThemeResources.FontHuge);
+            var colonSizeX = g.MeasureString(":", ThemeResources.FontHuge);
 
             var timeCodeSizeY = Height - timecodePosY * 2;
-            var textColor = App.IsRecording ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
+            var textColor = App.IsRecording ? ThemeResources.DarkRedFillBrush : ThemeResources.LightGreyFillBrush2;
 
-            c.FillAndDrawRectangle(x, y, x + sx, y + sy, theme.BlackBrush, theme.LightGreyFillBrush2);
+            c.FillAndDrawRectangle(x, y, x + sx, y + sy, ThemeResources.BlackBrush, ThemeResources.LightGreyFillBrush2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -518,13 +514,13 @@ namespace FamiStudio
                 var charPosX = x + sx / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
                 for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
-                    c.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                    c.DrawText(patternString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
 
-                c.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
+                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor);
                 charPosX += colonSizeX;
 
                 for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
-                    c.DrawText(noteString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                    c.DrawText(noteString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
             }
             else
             {
@@ -538,15 +534,15 @@ namespace FamiStudio
                 var charPosX = x + sx / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
 
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    c.DrawText(minutesString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
-                c.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
+                    c.DrawText(minutesString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
+                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    c.DrawText(secondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
-                c.DrawText(":", ThemeBase.FontHuge, charPosX, 2, textColor, colonSizeX);
+                    c.DrawText(secondsString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
+                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
-                    c.DrawText(millisecondsString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
+                    c.DrawText(millisecondsString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
             }
         }
 
@@ -574,7 +570,7 @@ namespace FamiStudio
             if (!oscilloscopeVisible)
                 return;
 
-            c.FillRectangle(x, y, x + sx, y + sy, theme.BlackBrush);
+            c.FillRectangle(x, y, x + sx, y + sy, ThemeResources.BlackBrush);
 
             var oscilloscopeGeometry = App.GetOscilloscopeGeometry(out lastOscilloscopeHadNonZeroSample);
 
@@ -584,17 +580,17 @@ namespace FamiStudio
                 float scaleY = sy / -2; // D3D is upside down compared to how we display waves typically.
 
                 c.PushTransform(x, y + sy / 2, scaleX, scaleY);
-                c.DrawGeometry(oscilloscopeGeometry, theme.LightGreyFillBrush2, 1.0f, true);
+                c.DrawGeometry(oscilloscopeGeometry, ThemeResources.LightGreyFillBrush2, 1.0f, true);
                 c.PopTransform();
             }
             else
             {
                 c.PushTranslation(x, y + sy / 2);
-                c.DrawLine(0, 0, sx, 0, theme.LightGreyFillBrush2);
+                c.DrawLine(0, 0, sx, 0, ThemeResources.LightGreyFillBrush2);
                 c.PopTransform();
             }
 
-            c.DrawRectangle(x, y, x + sx, y + sy, theme.LightGreyFillBrush2);
+            c.DrawRectangle(x, y, x + sx, y + sy, ThemeResources.LightGreyFillBrush2);
         }
     }
 }

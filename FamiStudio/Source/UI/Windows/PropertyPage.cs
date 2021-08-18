@@ -7,8 +7,6 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Reflection;
 
-using RenderTheme = FamiStudio.GLTheme;
-
 namespace FamiStudio
 {
     public partial class PropertyPage : UserControl
@@ -51,7 +49,7 @@ namespace FamiStudio
 
             if (warningIcons ==  null)
             {
-                string suffix = RenderTheme.DialogScaling > 1 ? "@2x" : "";
+                string suffix = DpiScaling.Dialog > 1 ? "@2x" : "";
                 
                 warningIcons = new Bitmap[3];
                 warningIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
@@ -77,7 +75,7 @@ namespace FamiStudio
         {
             if (colorBitmap == null)
             {
-                colorBitmap = new Bitmap(ThemeBase.CustomColors.GetLength(0), ThemeBase.CustomColors.GetLength(1));
+                colorBitmap = new Bitmap(Theme.CustomColors.GetLength(0), Theme.CustomColors.GetLength(1));
                 var data = colorBitmap.LockBits(new Rectangle(0, 0, colorBitmap.Width, colorBitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
                 byte* ptr = (byte*)data.Scan0.ToPointer();
 
@@ -85,7 +83,7 @@ namespace FamiStudio
                 {
                     for (int i = 0; i < colorBitmap.Width; i++)
                     {
-                        var color = ThemeBase.CustomColors[i, j];
+                        var color = Theme.CustomColors[i, j];
 
                         ptr[i * 4 + 0] = color.B;
                         ptr[i * 4 + 1] = color.G;
@@ -111,7 +109,7 @@ namespace FamiStudio
             label.Text = str;
             label.Font = font;
             label.AutoSize = true;
-            label.ForeColor = ThemeBase.LightGreyFillColor2;
+            label.ForeColor = Theme.LightGreyFillColor2;
             label.BackColor = BackColor;
             if (multiline)
                 label.MaximumSize = new Size(1000, 0);
@@ -126,12 +124,12 @@ namespace FamiStudio
 
             label.Text = str;
             label.Font = font;
-            label.LinkColor = ThemeBase.LightGreyFillColor1;
+            label.LinkColor = Theme.LightGreyFillColor1;
             label.Links.Add(0, str.Length, url);
             label.LinkClicked += Label_LinkClicked;
             label.TextAlign = ContentAlignment.BottomCenter;
             //label.AutoSize = true;
-            label.ForeColor = ThemeBase.LightGreyFillColor2;
+            label.ForeColor = Theme.LightGreyFillColor2;
             label.BackColor = BackColor;
             toolTip.SetToolTip(label, tooltip);
 
@@ -198,13 +196,13 @@ namespace FamiStudio
 
             textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 8.0f, FontStyle.Regular);
             textBox.Text = txt;
-            textBox.BackColor = ThemeBase.DarkGreyFillColor1;
+            textBox.BackColor = Theme.DarkGreyFillColor1;
             textBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            textBox.ForeColor = ThemeBase.LightGreyFillColor2;
+            textBox.ForeColor = Theme.LightGreyFillColor2;
             textBox.Location = new System.Drawing.Point(5, 5);
             textBox.Multiline = true;
             textBox.ReadOnly = true;
-            textBox.Height = (int)(300 * RenderTheme.DialogScaling);
+            textBox.Height = DpiScaling.ScaleForDialog(300);
             textBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             textBox.Select(0, 0);
             textBox.GotFocus += TextBox_GotFocus;
@@ -239,8 +237,8 @@ namespace FamiStudio
             var pictureBox = new PictureBox();
 
             pictureBox.Image = bmp;
-            pictureBox.Width  = (int)(bmp.Width  * RenderTheme.DialogScaling);
-            pictureBox.Height = (int)(bmp.Height * RenderTheme.DialogScaling);
+            pictureBox.Width  = DpiScaling.ScaleForDialog(bmp.Width);
+            pictureBox.Height = DpiScaling.ScaleForDialog(bmp.Height);
             pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox.BorderStyle = BorderStyle.None;
 
@@ -249,18 +247,18 @@ namespace FamiStudio
 
         private void ChangeColor(PictureBox pictureBox, int x, int y)
         {
-            int i = Math.Min(ThemeBase.CustomColors.GetLength(0) - 1, Math.Max(0, (int)(x / (float)pictureBox.Width  * ThemeBase.CustomColors.GetLength(0))));
-            int j = Math.Min(ThemeBase.CustomColors.GetLength(1) - 1, Math.Max(0, (int)(y / (float)pictureBox.Height * ThemeBase.CustomColors.GetLength(1))));
+            int i = Math.Min(Theme.CustomColors.GetLength(0) - 1, Math.Max(0, (int)(x / (float)pictureBox.Width  * Theme.CustomColors.GetLength(0))));
+            int j = Math.Min(Theme.CustomColors.GetLength(1) - 1, Math.Max(0, (int)(y / (float)pictureBox.Height * Theme.CustomColors.GetLength(1))));
 
             foreach (var prop in properties)
             {
                 if (prop.type == PropertyType.ColoredString)
                 {
-                    prop.control.BackColor = ThemeBase.CustomColors[i, j];
+                    prop.control.BackColor = Theme.CustomColors[i, j];
                 }
             }
 
-            pictureBox.BackColor = ThemeBase.CustomColors[i, j];
+            pictureBox.BackColor = Theme.CustomColors[i, j];
         }
 
         private void PictureBox_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -314,7 +312,7 @@ namespace FamiStudio
             var radio = new RadioButton();
 
             radio.Font = font;
-            radio.ForeColor = ThemeBase.LightGreyFillColor2;
+            radio.ForeColor = Theme.LightGreyFillColor2;
             radio.Text = text;
             radio.AutoSize = false;
             radio.Checked = check;
@@ -346,7 +344,7 @@ namespace FamiStudio
             cb.Text = text;
             cb.Checked = value;
             cb.Font = font;
-            cb.ForeColor = ThemeBase.LightGreyFillColor2;
+            cb.ForeColor = Theme.LightGreyFillColor2;
             cb.CheckedChanged += Cb_CheckedChanged;
             toolTip.SetToolTip(cb, tooltip);
 
@@ -400,7 +398,7 @@ namespace FamiStudio
             list.UpdateData(data);
 
             list.Font = font;
-            list.Height = (int)(height * RenderTheme.DialogScaling);
+            list.Height = DpiScaling.ScaleForDialog(height);
             list.HeaderStyle = ColumnHeaderStyle.None;
             list.ValueChanged += CheckedListBox_ValueChanged;
             toolTip.SetToolTip(list, tooltip);
@@ -421,8 +419,8 @@ namespace FamiStudio
             button.Click += Button_Click;
             button.FlatStyle = FlatStyle.Flat;
             button.Font = font;
-            button.ForeColor = ThemeBase.LightGreyFillColor2;
-            button.Height = (int)(32 * RenderTheme.DialogScaling);
+            button.ForeColor = Theme.LightGreyFillColor2;
+            button.Height = DpiScaling.ScaleForDialog(32);
             toolTip.SetToolTip(button, tooltip);
             return button;
         }
@@ -733,7 +731,7 @@ namespace FamiStudio
                 list.UpdateData(data);
 
             list.Font = font;
-            list.Height = (int)(height * RenderTheme.DialogScaling);
+            list.Height = DpiScaling.ScaleForDialog(height);
             list.MouseDoubleClick += ListView_MouseDoubleClick;
             list.MouseDown += ListView_MouseDown;
             list.ButtonPressed += ListView_ButtonPressed;
@@ -827,7 +825,7 @@ namespace FamiStudio
 
             if (label != null)
             {
-                label.ForeColor = enabled ? ThemeBase.LightGreyFillColor2 : ThemeBase.MediumGreyFillColor1;
+                label.ForeColor = enabled ? Theme.LightGreyFillColor2 : Theme.MediumGreyFillColor1;
             }
             else
             {
@@ -859,8 +857,8 @@ namespace FamiStudio
             else
                 prop.warningIcon.Image = warningIcons[(int)type];
 
-            prop.warningIcon.Width  = (int)(16 * RenderTheme.DialogScaling);
-            prop.warningIcon.Height = (int)(16 * RenderTheme.DialogScaling);
+            prop.warningIcon.Width   = DpiScaling.ScaleForDialog(16);
+            prop.warningIcon.Height  = DpiScaling.ScaleForDialog(16);
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
             toolTip.SetToolTip(prop.warningIcon, comment);
         }
@@ -959,9 +957,9 @@ namespace FamiStudio
         {
             var testLabel = CreateLabel(text, null, true);
 
-            testLabel.MaximumSize = new Size(width - (int)(16 * RenderTheme.DialogScaling), 0);
+            testLabel.MaximumSize = new Size(width - DpiScaling.ScaleForDialog(16), 0);
             Controls.Add(testLabel);
-            var height = testLabel.Height + (int)(8 * RenderTheme.DialogScaling);
+            var height = testLabel.Height + DpiScaling.ScaleForDialog(8);
             Controls.Remove(testLabel);
 
             return height;
@@ -971,13 +969,13 @@ namespace FamiStudio
         {
             SuspendLayout();
 
-            int margin = (int)(5 * RenderTheme.DialogScaling);
+            int margin = DpiScaling.ScaleForDialog(5);
             int maxLabelWidth = 0;
             int defaultLabelHeight = 24;
 
             // Workaround scaling issue with checkboxes. 
             // Measure a label and well use this for checkbox.
-            if (RenderTheme.DialogScaling > 1.0f)
+            if (DpiScaling.Dialog > 1.0f)
             {
                 Label testLabel = CreateLabel("888");
                 Controls.Add(testLabel);
@@ -1002,7 +1000,7 @@ namespace FamiStudio
 
             int widthNoMargin = Width - (margin * 2);
             int totalHeight = margin;
-            int warningWidth = showWarnings ? (int)(16 * RenderTheme.DialogScaling) + margin : 0;
+            int warningWidth = showWarnings ? DpiScaling.ScaleForDialog(16) + margin : 0;
 
             for (int i = 0; i < propertyCount; i++)
             {
@@ -1010,7 +1008,7 @@ namespace FamiStudio
                 var height = 0;
 
                 // Hack for checkbox that dont scale with Hi-DPI. 
-                if (RenderTheme.DialogScaling > 1.0f && prop.control is CheckBox)
+                if (DpiScaling.Dialog > 1.0f && prop.control is CheckBox)
                 {
                     prop.control.Height = defaultLabelHeight;
                     if (prop.label != null)

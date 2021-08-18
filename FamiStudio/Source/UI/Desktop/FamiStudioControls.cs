@@ -10,6 +10,7 @@ namespace FamiStudio
         private int height;
         private GLGraphics gfx;
         private GLControl[] controls = new GLControl[4];
+        private ThemeRenderResources res;
 
         private Toolbar toolbar;
         private Sequencer sequencer;
@@ -43,9 +44,9 @@ namespace FamiStudio
             width  = w;
             height = h;
 
-            int toolBarHeight = (int)(40 * GLTheme.MainWindowScaling);
-            int projectExplorerWidth = (int)(280 * GLTheme.MainWindowScaling);
-            int sequencerHeight = pianoRoll.IsMaximized ? 1 : (int)(sequencer.ComputeDesiredSizeY() * GLTheme.MainWindowScaling);
+            int toolBarHeight        = DpiScaling.ScaleForMainWindow(40);
+            int projectExplorerWidth = DpiScaling.ScaleForMainWindow(280);
+            int sequencerHeight      = pianoRoll.IsMaximized ? 1 : DpiScaling.ScaleForMainWindow(sequencer.ComputeDesiredSizeY());
 
             toolbar.Move(0, 0, width, toolBarHeight);
             projectExplorer.Move(width - projectExplorerWidth, toolBarHeight, projectExplorerWidth, height - toolBarHeight);
@@ -111,9 +112,15 @@ namespace FamiStudio
 
         public void InitializeGL()
         {
-            gfx = new GLGraphics();
+            gfx = new GLGraphics(DpiScaling.MainWindow, DpiScaling.Font);
+            res = new ThemeRenderResources(gfx);
+
             foreach (var ctrl in controls)
+            {
+                ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+                ctrl.SetThemeRenderResource(res);
                 ctrl.RenderInitialized(gfx);
+            }
         }
     }
 }

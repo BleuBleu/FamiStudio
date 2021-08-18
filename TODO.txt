@@ -1,20 +1,12 @@
 Android prototype
 =================
-1) Toolbar
-	- Create navigation bar.
-	- Create simpler toolbar, unify as much as possible with desktop.
-	- 
-1) Prototype layout
-- FamiStudioControls for mobile, 1 control active, swap with animations.
-	- Piano is always the main control
-- Create mobile toolbar
-
-- Test navigation, switch between PR, Seq, PE
-- Rotation
-- Create PR/Seq buttons
-
-- Cleanup projects, make them more similar.
- 
+Theme + font refactor:
+- Theme is a singleton, creates resource from RenderGraphics (brush, fonts, etc.)
+- GLControl has an accessor (Theme)
+- Fonts are created + cached on graphics device.
+- Add alignemnt, ellipsis params on drawtext
+- Add a scaling factor on font (android branch for now)
+- Move scaling params somewhere else.
 
 3.2.0
 =====

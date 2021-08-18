@@ -7,13 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-    using RenderFont     = FamiStudio.GLFont;
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderBrush    = FamiStudio.GLBrush;
-    using RenderGeometry = FamiStudio.GLGeometry;
-    using RenderControl  = FamiStudio.GLControl;
-    using RenderGraphics = FamiStudio.GLOffscreenGraphics;
-    using RenderTheme    = FamiStudio.GLTheme;
+using RenderFont     = FamiStudio.GLFont;
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderBrush    = FamiStudio.GLBrush;
+using RenderGeometry = FamiStudio.GLGeometry;
+using RenderControl  = FamiStudio.GLControl;
+using RenderGraphics = FamiStudio.GLOffscreenGraphics;
+using RenderTheme    = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -36,7 +36,7 @@ namespace FamiStudio
 
                     if (note != null && note.IsMusical)
                     {
-                        var color = ThemeBase.LightGreyFillColor1;
+                        var color = Theme.LightGreyFillColor1;
 
                         if (colorMode == OscilloscopeColorType.Channel)
                         {
@@ -87,7 +87,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        colors[i, j] = ThemeBase.LightGreyFillColor1;
+                        colors[i, j] = Theme.LightGreyFillColor1;
                     }
                 }
             }
@@ -149,7 +149,7 @@ namespace FamiStudio
                 return false;
             }
 
-            var theme = RenderTheme.CreateResourcesForGraphics(videoGraphics);
+            var themeResources = new ThemeRenderResources(videoGraphics);
             var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
             // Generate WAV data for each individual channel for the oscilloscope.
@@ -178,7 +178,7 @@ namespace FamiStudio
                     maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
 
                 // Measure the longest text.
-                longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, ThemeBase.FontBigUnscaled));
+                longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, themeResources.FontBig));
 
                 Log.ReportProgress(0.0f);
             }
@@ -197,8 +197,8 @@ namespace FamiStudio
             var smallChannelText = channelResY < 128;
             var bmpSuffix = smallChannelText ? "" : "@2x";
             var font = lineThickness > 1 ?
-                (smallChannelText ? ThemeBase.FontMediumBoldUnscaled : ThemeBase.FontBigBoldUnscaled) : 
-                (smallChannelText ? ThemeBase.FontMediumUnscaled     : ThemeBase.FontBigUnscaled);
+                (smallChannelText ? themeResources.FontMediumBold : themeResources.FontBigBold) : 
+                (smallChannelText ? themeResources.FontMedium     : themeResources.FontBig);
             var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = resY >= 720 ? 5 : 3;
 
@@ -260,7 +260,7 @@ namespace FamiStudio
 
                         videoGraphics.BeginDrawFrame();
                         videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
-                        videoGraphics.Clear(ThemeBase.DarkGreyLineColor2);
+                        videoGraphics.Clear(Theme.DarkGreyLineColor2);
 
                         var cmd = videoGraphics.CreateCommandList();
 
@@ -295,16 +295,16 @@ namespace FamiStudio
                             var channelIconPosX = channelPosX0 + s.bmpIcon.Size.Width  / 2;
                             var channelIconPosY = channelPosY0 + s.bmpIcon.Size.Height / 2;
 
-                            cmd.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
+                            cmd.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, themeResources.DarkGreyLineBrush2);
                             cmd.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY);
-                            cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, theme.LightGreyFillBrush1); 
+                            cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, themeResources.LightGreyFillBrush1); 
                         }
 
                         // Grid lines
                         for (int i = 1; i < numRows; i++)
-                            cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, theme.BlackBrush, channelLineWidth); 
+                            cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, themeResources.BlackBrush, channelLineWidth); 
                         for (int i = 1; i < numColumns; i++)
-                            cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, theme.BlackBrush, channelLineWidth);
+                            cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, themeResources.BlackBrush, channelLineWidth);
 
                         // Watermark.
                         cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
@@ -341,7 +341,7 @@ namespace FamiStudio
                 foreach (var c in channelStates)
                     c.bmpIcon.Dispose();
 
-                theme.Terminate();
+                themeResources.Dispose();
                 bmpWatermark.Dispose();
                 gradientBrush.Dispose();
                 videoGraphics.Dispose();

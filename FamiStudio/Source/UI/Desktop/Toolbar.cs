@@ -10,7 +10,6 @@ using RenderBrush       = FamiStudio.GLBrush;
 using RenderGeometry    = FamiStudio.GLGeometry;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.GLTheme;
 using RenderCommandList = FamiStudio.GLCommandList;
 using RenderTransform   = FamiStudio.GLTransform;
 
@@ -83,7 +82,10 @@ namespace FamiStudio
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             base.OnRenderInitialized(g);
-            
+
+            buttons[(int)ButtonType.Help].RightAligned = true;
+            buttons[(int)ButtonType.More] = null;
+
             buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
             buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
             buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S}\n{MouseRight} Save As...";
@@ -109,36 +111,35 @@ namespace FamiStudio
 
             bmpSpecialCharAtlas = g.CreateBitmapAtlasFromResources(SpecialCharImageNames);
 
-            var scaling = RenderTheme.MainWindowScaling;
-
-            timecodeOffsetX         = (int)(DefaultTimecodeOffsetX * scaling);
-            timecodePosY            = (int)(DefaultTimecodePosY * scaling);
-            timecodeOscSizeX        = (int)(DefaultTimecodeSizeX * scaling);
-            tooltipSingleLinePosY   = (int)(DefaultTooltipSingleLinePosY * scaling);
-            tooltipMultiLinePosY    = (int)(DefaultTooltipMultiLinePosY * scaling);
-            tooltipLineSizeY        = (int)(DefaultTooltipLineSizeY * scaling);
-            tooltipSpecialCharSizeX = (int)(DefaultTooltipSpecialCharSizeX * scaling);
-            tooltipSpecialCharSizeY = (int)(DefaultTooltipSpecialCharSizeY * scaling);
-            buttonPosX              = (int)(DefaultButtonPosX * scaling);
-            buttonPosY              = (int)(DefaultButtonPosY * scaling);
-            buttonSizeX             = (int)(DefaultButtonSizeX * scaling);
-            buttonSpacingX          = (int)(DefaultButtonSpacingX * scaling);
-            buttonTimecodeSpacingX  = (int)(DefaultButtonTimecodeSpacingX * scaling);
+            timecodeOffsetX         = ScaleForMainWindow(DefaultTimecodeOffsetX);
+            timecodePosY            = ScaleForMainWindow(DefaultTimecodePosY);
+            oscilloscopePosY        = ScaleForMainWindow(DefaultTimecodePosY);
+            timecodeOscSizeX        = ScaleForMainWindow(DefaultTimecodeSizeX);
+            tooltipSingleLinePosY   = ScaleForMainWindow(DefaultTooltipSingleLinePosY);
+            tooltipMultiLinePosY    = ScaleForMainWindow(DefaultTooltipMultiLinePosY);
+            tooltipLineSizeY        = ScaleForMainWindow(DefaultTooltipLineSizeY);
+            tooltipSpecialCharSizeX = ScaleForMainWindow(DefaultTooltipSpecialCharSizeX);
+            tooltipSpecialCharSizeY = ScaleForMainWindow(DefaultTooltipSpecialCharSizeY);
+            buttonPosX              = ScaleForMainWindow(DefaultButtonPosX);
+            buttonPosY              = ScaleForMainWindow(DefaultButtonPosY);
+            buttonSizeX             = ScaleForMainWindow(DefaultButtonSizeX);
+            buttonSpacingX          = ScaleForMainWindow(DefaultButtonSpacingX);
+            buttonTimecodeSpacingX  = ScaleForMainWindow(DefaultButtonTimecodeSpacingX);
 
             UpdateButtonLayout();
 
-            specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = (int)(32 * scaling) };
-            specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
-            specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
-            specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = (int)(28 * scaling) };
-            specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
-            specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = (int)(38 * scaling) };
-            specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
-            specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = (int)(24 * scaling) };
-            specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag, OffsetY = 2 * scaling };
-            specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft, OffsetY = 2 * scaling };
-            specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = 2 * scaling };
-            specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = 2 * scaling };
+            specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(32) };
+            specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
+            specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
+            specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = ScaleForMainWindow(28) };
+            specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
+            specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
+            specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
+            specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
+            specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = ScaleForMainWindow(2) };
+            specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = ScaleForMainWindow(2) };
+            specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = ScaleForMainWindow(2) };
+            specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = ScaleForMainWindow(2) };
             specialCharacters["Warning"]    = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Warning };
 
             for (char i = 'A'; i <= 'Z'; i++)
@@ -158,8 +159,6 @@ namespace FamiStudio
 
         protected override void OnRenderTerminated()
         {
-            theme.Terminate();
-
             Utils.DisposeAndNullify(ref toolbarBrush);
             Utils.DisposeAndNullify(ref warningBrush);
             Utils.DisposeAndNullify(ref bmpButtonAtlas);
@@ -168,20 +167,23 @@ namespace FamiStudio
             specialCharacters.Clear();
         }
 
-        private void UpdateButtonLayout()
+        protected override void UpdateButtonLayout()
         {
-            if (theme == null)
+            if (ThemeResources == null)
                 return;
 
             // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
-            bool hideLessImportantButtons = Width < 1420 * RenderTheme.MainWindowScaling;
-            bool hideOscilloscope = Width < 1250 * RenderTheme.MainWindowScaling;
+            bool hideLessImportantButtons = Width < 1420 * MainWindowScaling;
+            bool hideOscilloscope         = Width < 1250 * MainWindowScaling;
 
             var posX = buttonPosX;
 
             for (int i = 0; i < (int)ButtonType.Count; i++)
             {
                 var btn = buttons[i];
+
+                if (btn == null)
+                    continue;
 
                 if (i == (int)ButtonType.Help)
                 {
@@ -199,11 +201,11 @@ namespace FamiStudio
 
                 if (i == (int)ButtonType.Config)
                 {
-                    posX += buttonSpacingX + timecodeSizeX + buttonTimecodeSpacingX * 2;
+                    posX += buttonSpacingX + timecodeOscSizeX + buttonTimecodeSpacingX * 2;
 
                     oscilloscopeVisible = Settings.ShowOscilloscope && !hideOscilloscope;
                     if (oscilloscopeVisible)
-                        posX += timecodeSizeX + buttonTimecodeSpacingX * 2;
+                        posX += timecodeOscSizeX + buttonTimecodeSpacingX * 2;
                 }
                 else if (btn.Visible)
                 {
@@ -212,7 +214,7 @@ namespace FamiStudio
             }
 
             timecodePosX = buttons[(int)ButtonType.Config].X + timecodeOffsetX;
-            oscilloscopePosX = timecodePosX + timecodeSizeX + buttonTimecodeSpacingX * 2;
+            oscilloscopePosX = timecodePosX + timecodeOscSizeX + buttonTimecodeSpacingX * 2;
             timecodeOscSizeY = Height - timecodePosY * 2;
         }
 
@@ -234,7 +236,7 @@ namespace FamiStudio
                 SystemSounds.Beep.Play();
         }
 
-        public void Tick()
+        public void Tick(float delta)
         {
             if (!string.IsNullOrEmpty(warning))
                 ConditionalInvalidate();
@@ -248,11 +250,10 @@ namespace FamiStudio
 
         private void RenderWarningAndTooltip(RenderGraphics g, RenderCommandList c)
         {
-            var scaling = RenderTheme.MainWindowScaling;
+            var scaling = MainWindowScaling;
             var message = tooltip;
-            var messageBrush = redTooltip ? warningBrush : theme.LightGreyFillBrush2;
-            var messageFont = ThemeBase.FontMedium;
-            var messageFontCenter = ThemeBase.FontMediumCenter;
+            var messageBrush = redTooltip ? warningBrush : ThemeResources.LightGreyFillBrush2;
+            var messageFont = ThemeResources.FontMedium;
 
             if (!string.IsNullOrEmpty(warning))
             {
@@ -266,8 +267,7 @@ namespace FamiStudio
                 {
                     message = (((((long)span.TotalMilliseconds) / 250) & 1) != 0) ? warning : "";
                     messageBrush = warningBrush;
-                    messageFont = ThemeBase.FontMediumBold;
-                    messageFontCenter = ThemeBase.FontMediumBoldCenter;
+                    messageFont = ThemeResources.FontMediumBold;
                 }
             }
 
@@ -299,19 +299,11 @@ namespace FamiStudio
 #if FAMISTUDIO_MACOS
                                 if (str == "Ctrl") str = "Cmd";
 #endif
-
-#if !FAMISTUDIO_WINDOWS
-                                // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
-                                posX -= (int)scaling;
-#endif
-
+                                
+                                posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                                 c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush);
-                                c.DrawText(str, messageFontCenter, posX, posY, messageBrush, specialCharacter.Width);
-
-#if !FAMISTUDIO_WINDOWS
-                                // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
-                                posX -= (int)scaling;
-#endif
+                                c.DrawText(str, messageFont, posX, posY, messageBrush, RenderTextAlignment.Center, specialCharacter.Width);
+                                posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                             }
                         }
                         else
@@ -346,7 +338,7 @@ namespace FamiStudio
 
             foreach (var btn in buttons)
             {
-                if (btn.Visible && btn.IsPointIn(e.X, e.Y, Width))
+                if (btn != null && btn.Visible && btn.IsPointIn(e.X, e.Y, Width))
                 {
                     SetToolTip(btn.ToolTip);
                     return;
@@ -377,7 +369,7 @@ namespace FamiStudio
 
             if (left || right)
             {
-                if (e.X > timecodePosX && e.X < timecodePosX + timecodeSizeX &&
+                if (e.X > timecodePosX && e.X < timecodePosX + timecodeOscSizeX &&
                     e.Y > timecodePosY && e.Y < Height - timecodePosY)
                 {
                     Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;

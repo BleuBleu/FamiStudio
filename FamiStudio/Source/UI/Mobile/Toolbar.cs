@@ -10,7 +10,7 @@ using RenderBrush       = FamiStudio.GLBrush;
 using RenderGeometry    = FamiStudio.GLGeometry;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.GLTheme;
+using RenderTheme       = FamiStudio.ThemeRenderResources;
 using RenderCommandList = FamiStudio.GLCommandList;
 using RenderTransform   = FamiStudio.GLTransform;
 
@@ -170,9 +170,6 @@ namespace FamiStudio
         {
             if (theme == null)
                 return;
-
-            // DROIDTODO : Actually move this to desktop.
-            buttons[(int)ButtonType.Help].RightAligned = false;
 
             var landscape = IsLandscape;
             var layout = ButtonLayout[landscape ? 1 : 0, expanded ? 1 : 0];

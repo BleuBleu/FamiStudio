@@ -17,7 +17,7 @@ namespace FamiStudio
         private GLControl[] controls = new GLControl[5];
         private GLControl   transitionControl;
         private GLControl   activeControl;
-        private GLTheme     theme;
+        private ThemeRenderResources     theme;
         private float       transitionTimer;
 
         private Toolbar         toolbar;
@@ -166,7 +166,7 @@ namespace FamiStudio
             var t1 = DateTime.Now;
 
             var cmd = gfx.CreateCommandList();
-            cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", ThemeBase.FontBigBold, 10, 10, debugBrush);
+            cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", Theme.FontBigBold, 10, 10, debugBrush);
             gfx.DrawCommandList(cmd);
 
             gfx.EndDrawControl();
@@ -192,7 +192,7 @@ namespace FamiStudio
             if (transitionTimer > 0.0f)
             {
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
-                var brush = gfx.CreateSolidBrush(System.Drawing.Color.FromArgb(alpha, ThemeBase.DarkGreyFillColor1));
+                var brush = gfx.CreateSolidBrush(System.Drawing.Color.FromArgb(alpha, Theme.DarkGreyFillColor1));
 
                 cmd.FillRectangle(activeControl.Left, activeControl.Top, activeControl.Right, activeControl.Bottom, brush);
             }
@@ -256,7 +256,7 @@ namespace FamiStudio
         public void InitializeGL(IGL10 gl)
         {
             gfx = new GLGraphics(gl);
-            theme = GLTheme.CreateResourcesForGraphics(gfx);
+            theme = ThemeRenderResources.CreateResourcesForGraphics(gfx);
             foreach (var ctrl in controls)
                 ctrl.RenderInitialized(gfx);
         }

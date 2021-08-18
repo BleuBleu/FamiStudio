@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 
-using RenderTheme = FamiStudio.GLTheme;
+using RenderTheme = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -23,7 +23,7 @@ namespace FamiStudio
                 if (channel.ShouldDisplayEffect(i))
                 {
                     propToEffect[dialog.Properties.PropertyCount] = i;
-                    dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
+                    dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, DpiScaling.ScaleForDialog(24));
                 }
             }
 

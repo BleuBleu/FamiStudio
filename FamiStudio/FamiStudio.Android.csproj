@@ -66,6 +66,7 @@
     <Compile Include="Source\Player\AndroidAudioStream.cs" />
     <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Droid\Cursors.cs" />
+    <Compile Include="Source\UI\Droid\DpiScaling.cs" />
     <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
@@ -158,7 +159,7 @@
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
-    <Compile Include="Source\UI\Common\GLTheme.cs" />
+    <Compile Include="Source\UI\Common\ThemeRenderResources.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
@@ -213,7 +214,7 @@
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
-    <Compile Include="Source\UI\Common\ThemeBase.cs" />
+    <Compile Include="Source\UI\Common\Theme.cs" />
     <Compile Include="Source\UI\Common\ToolbarBase.cs" />
     <Compile Include="Source\UI\Mobile\Toolbar.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />

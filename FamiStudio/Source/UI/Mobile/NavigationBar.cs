@@ -4,7 +4,7 @@ using System.Windows.Forms;
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.GLTheme;
+using RenderTheme       = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {

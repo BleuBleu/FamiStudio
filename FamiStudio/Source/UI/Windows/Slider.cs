@@ -23,8 +23,8 @@ namespace FamiStudio
         private double increment   = 10;
         private int    numDecimals = 0;
 
-        private Pen   darkGrayPen    = new Pen(ThemeBase.MediumGreyFillColor1, 2);
-        private Brush lightGrayBrush = new SolidBrush(ThemeBase.LightGreyFillColor2);
+        private Pen   darkGrayPen    = new Pen(Theme.MediumGreyFillColor1, 2);
+        private Brush lightGrayBrush = new SolidBrush(Theme.LightGreyFillColor2);
         private StringFormat format;
 
         public delegate string FormatValueDelegate(Slider slider, double value);

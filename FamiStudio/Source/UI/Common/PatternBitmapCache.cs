@@ -234,7 +234,7 @@ namespace FamiStudio
             var y = Math.Min((int)Math.Round((note.Value - minNote) / (float)(maxNote - minNote) * scaleY * patternSizeY), patternSizeY - noteSizeY);
             var instrument = note.Instrument;
 
-            var color = ThemeBase.LightGreyFillColor1;
+            var color = Theme.LightGreyFillColor1;
             if (dpcm)
             {
                 var mapping = project.GetDPCMMapping(note.Value);

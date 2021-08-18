@@ -10,6 +10,7 @@ using Bitmap = Android.Graphics.Bitmap;
 #else
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using System.IO;
 #if FAMISTUDIO_WINDOWS
 using Bitmap = System.Drawing.Bitmap;
 #else
@@ -23,6 +24,7 @@ namespace FamiStudio
     public abstract class GLGraphicsBase : IDisposable
     {
         protected float windowScaling = 1.0f;
+        protected float fontScaling   = 1.0f;
         protected int windowSizeY;
         protected Rectangle controlRect;
         protected Rectangle controlRectFlip;
@@ -30,7 +32,8 @@ namespace FamiStudio
         protected Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
         protected GLBitmap dashedBitmap;
 
-        public float WindowScaling => windowScaling;
+        //public float WindowScaling => windowScaling;
+
         public int DashTextureSize => dashedBitmap.Size.Width;
         public GLTransform Transform => transform;
 
@@ -53,9 +56,10 @@ namespace FamiStudio
         protected abstract int CreateTexture(Bitmap bmp);
         public abstract void DrawCommandList(GLCommandList list, Rectangle scissor);
 
-        protected GLGraphicsBase()
+        protected GLGraphicsBase(float mainScale, float fontScale)
         {
-            windowScaling = GLTheme.MainWindowScaling;
+            windowScaling = mainScale;
+            fontScaling   = fontScale;
 
             // Quad index buffer.
             // TODO : On PC, we have GL_QUADS, we could get rid of this.
@@ -113,7 +117,7 @@ namespace FamiStudio
 
         public float MeasureString(string text, GLFont font)
         {
-            font.MeasureString(text, out int minX, out int maxX);
+            font.MeasureString(text, out int minX, out int maxX, out _, out _);
             return maxX - minX;
         }
 
@@ -189,10 +193,24 @@ namespace FamiStudio
             return default(T);
         }
 
-        public GLFont CreateFont(Bitmap bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+        public GLFont CreateFontFromResource(string name, bool bold, int size)
         {
+            var suffix   = bold ? "Bold" : "";
+            var basename = $"{name}{size}{suffix}";
+            var fntfile  = $"FamiStudio.Resources.{basename}.fnt";
+            var imgfile  = $"FamiStudio.Resources.{basename}_0.png";
+
+            var str = "";
+            using (Stream stream = typeof(GLGraphicsBase).Assembly.GetManifestResourceStream(fntfile))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                str = reader.ReadToEnd();
+            }
+
+            var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var bmp = PlatformUtils.LoadBitmapFromResource(imgfile);
+
             var font = (GLFont)null;
-            var lines = def;
 
             int baseValue = 0;
             int texSizeX = 256;
@@ -209,12 +227,7 @@ namespace FamiStudio
                             baseValue = ReadFontParam<int>(splits, "base");
                             texSizeX = ReadFontParam<int>(splits, "scaleW");
                             texSizeY = ReadFontParam<int>(splits, "scaleH");
-
-                            int glTex = existingTexture;
-                            if (glTex == 0)
-                                glTex = CreateTexture(bmp);
-
-                            font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
+                            font = new GLFont(CreateTexture(bmp), size - baseValue);
                             break;
                         }
                     case "char":
@@ -338,15 +351,13 @@ namespace FamiStudio
 
         public int Texture { get; private set; }
         public int OffsetY { get; private set; }
-        public int Alignment { get; private set; }
-        public bool Ellipsis { get; private set; }
+        //public int Alignment { get; private set; }
+        //public bool Ellipsis { get; private set; }
 
-        public GLFont(int tex, int offsetY, int alignment, bool ellipsis)
+        public GLFont(int tex, int offsetY)
         {
             Texture = tex;
             OffsetY = offsetY;
-            Alignment = alignment;
-            Ellipsis = ellipsis;
         }
 
         public void Dispose()
@@ -388,11 +399,8 @@ namespace FamiStudio
             return kerningPairs.TryGetValue(key, out int amount) ? amount : 0;
         }
 
-        public void MeasureString(string text, out int minX, out int maxX)
+        public bool TruncateString(ref string text, int maxSizeX)
         {
-            minX = 0;
-            maxX = 0;
-
             int x = 0;
 
             for (int i = 0; i < text.Length; i++)
@@ -403,8 +411,47 @@ namespace FamiStudio
                 int x0 = x + info.xoffset;
                 int x1 = x0 + info.width;
 
+                if (x1 >= maxSizeX)
+                {
+                    text = text.Substring(0, i + 1);
+                    return true;
+                }
+
+                x += info.xadvance;
+                if (i != text.Length - 1)
+                {
+                    char c1 = text[i + 1];
+                    x += GetKerning(c0, c1);
+                }
+            }
+
+            return false;
+        }
+
+        public void MeasureString(string text, out int minX, out int maxX, out int minY, out int maxY)
+        {
+            minX = 0;
+            maxX = 0;
+            minY = 0;
+            maxY = 0;
+
+            int x = 0;
+            int y = OffsetY;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c0 = text[i];
+                var info = GetCharInfo(c0);
+
+                int x0 = x + info.xoffset;
+                var y0 = y + info.yoffset;
+                int x1 = x0 + info.width;
+                var y1 = y0 + info.height;
+
                 minX = Math.Min(minX, x0);
                 maxX = Math.Max(maxX, x1);
+                minY = Math.Min(minY, y0);
+                maxY = Math.Max(maxY, y1);
 
                 x += info.xadvance;
                 if (i != text.Length - 1)
@@ -632,6 +679,31 @@ namespace FamiStudio
         }
     }
 
+    [Flags]
+    public enum RenderTextAlignment
+    {
+        HorizontalAlignMask = 0x3,
+        VerticalAlignMask   = 0xc,
+
+        Left   = 0 << 0,
+        Center = 1 << 0,
+        Right  = 2 << 0,
+
+        Top    = 0 << 2,
+        Middle = 1 << 2,
+        Bottom = 2 << 2,
+
+        TopLeft      = Top    | Left,
+        TopCenter    = Top    | Center,
+        TopRight     = Top    | Right,
+        MiddleLeft   = Middle | Left,
+        MiddleCenter = Middle | Center,
+        MiddleRight  = Middle | Right,
+        BottomLeft   = Bottom | Left,
+        BottomCenter = Bottom | Center,
+        BottomRight  = Bottom | Right,
+    }
+
     // This is common to both OGL, it only does data packing, no GL calls.
     public class GLCommandList
     {
@@ -662,10 +734,10 @@ namespace FamiStudio
 
         private class TextInstance
         {
-            public float x;
-            public float y;
-            public float width;
+            public RectangleF rect;
+            public RenderTextAlignment align;
             public string text;
+            public bool ellipsis;
             public bool clip;
             public GLBrush brush;
         };
@@ -1302,8 +1374,13 @@ namespace FamiStudio
             }
         }
 
-        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, float width = 1000, bool clip = false)
+        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, RenderTextAlignment align, float width, float height = 0, bool clip = false, bool ellipsis = false)
         {
+            Debug.Assert(!clip || !ellipsis);
+            Debug.Assert(!ellipsis || width > 0);
+            Debug.Assert((align & RenderTextAlignment.HorizontalAlignMask) == RenderTextAlignment.Left || width  > 0);
+            Debug.Assert((align & RenderTextAlignment.VerticalAlignMask)   == RenderTextAlignment.Top  || height > 0);
+
             if (!texts.TryGetValue(font, out var list))
             {
                 list = new List<TextInstance>();
@@ -1313,14 +1390,19 @@ namespace FamiStudio
             xform.TransformPoint(ref x, ref y);
 
             var inst = new TextInstance();
-            inst.x = x;
-            inst.y = y;
+            inst.rect = new RectangleF(x, y, width, height);
+            inst.align = align;
             inst.text = text;
             inst.brush = brush;
-            inst.width = width;
             inst.clip = clip;
+            inst.ellipsis = ellipsis;
 
             list.Add(inst);
+        }
+
+        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush)
+        {
+            DrawText(text, font, x, y, brush, RenderTextAlignment.TopLeft, 0);
         }
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
@@ -1459,34 +1541,58 @@ namespace FamiStudio
 
                 foreach (var inst in list)
                 {
-                    int alignmentOffsetX = 0;
-                    if (font.Alignment != 0)
-                    {
-                        font.MeasureString(inst.text, out int minX, out int maxX);
+                    var alignmentOffsetX = 0;
+                    var alignmentOffsetY = 0;
 
-                        if (font.Alignment == 1)
+                    if (inst.ellipsis)
+                    {
+                        font.MeasureString("...", out var dotsMinX, out var dotsMaxX, out _, out _);
+                        var ellipsisSizeX = dotsMaxX - dotsMinX;
+                        if (font.TruncateString(ref inst.text, (int)(inst.rect.Width - ellipsisSizeX)))
+                            inst.text += "...";
+                    }
+
+                    if (inst.align != RenderTextAlignment.TopLeft)
+                    {
+                        font.MeasureString(inst.text, out var minX, out var maxX, out var minY, out var maxY);
+
+                        var halign = inst.align & RenderTextAlignment.HorizontalAlignMask;
+                        var valign = inst.align & RenderTextAlignment.VerticalAlignMask;
+
+                        if (halign == RenderTextAlignment.Center)
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.width - maxX - minX) / 2;
+                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX) / 2;
                         }
-                        else
+                        else if (halign == RenderTextAlignment.Right)
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.width - maxX - minX);
+                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX);
+                        }
+
+                        if (valign == RenderTextAlignment.Middle)
+                        {
+                            alignmentOffsetY -= minY;
+                            alignmentOffsetY += ((int)inst.rect.Height - maxY - minY) / 2;
+                        }
+                        else if (valign == RenderTextAlignment.Bottom)
+                        {
+                            alignmentOffsetY -= minY;
+                            alignmentOffsetY += ((int)inst.rect.Height - maxY - minY);
                         }
                     }
 
                     var packedColor = inst.brush.PackedColor0;
                     var numVertices = inst.text.Length * 4;
 
-                    int x = (int)(inst.x + alignmentOffsetX);
-                    int y = (int)(inst.y + font.OffsetY);
+                    int x = (int)(inst.rect.X + alignmentOffsetX);
+                    int y = (int)(inst.rect.Y + alignmentOffsetY + font.OffsetY);
 
                     // Slow path when there is clipping.
                     if (inst.clip)
                     {
-                        var clipMinX = (int)(inst.x);
-                        var clipMaxX = (int)(inst.x + inst.width);
+                        var clipMinX = (int)(inst.rect.X);
+                        var clipMaxX = (int)(inst.rect.X + inst.rect.Width);
 
                         for (int i = 0; i < inst.text.Length; i++)
                         {

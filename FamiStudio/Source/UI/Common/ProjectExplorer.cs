@@ -13,7 +13,7 @@ using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderFont        = FamiStudio.GLFont;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.GLTheme;
+using RenderTheme       = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -123,8 +123,7 @@ namespace FamiStudio
         class Button
         {
             public string text;
-            public Color color = ThemeBase.DarkGreyFillColor2;
-            public RenderFont font = ThemeBase.FontMedium;
+            public Color color = Theme.DarkGreyFillColor2;
             public RenderBrush textBrush;
             public RenderBrush textDisabledBrush;
             public RenderBitmapAtlas atlas;
@@ -149,10 +148,7 @@ namespace FamiStudio
             public Button(ProjectExplorer pe)
             {
                 projectExplorer = pe;
-
-                if (pe.theme != null)
-                    textBrush = pe.theme.LightGreyFillBrush2;
-
+                textBrush = pe.ThemeResources.LightGreyFillBrush2;
                 textDisabledBrush = pe.disabledBrush;
             }
 
@@ -284,14 +280,44 @@ namespace FamiStudio
                         (type == ButtonType.Instrument && instrument == projectExplorer.selectedInstrument) ||
                         (type == ButtonType.Arpeggio   && arpeggio   == projectExplorer.selectedArpeggio))
                     {
-                        return ThemeBase.FontMediumBold;
+                        return projectExplorer.ThemeResources.FontMediumBold;
+                    }
+                    else if (
+                        type == ButtonType.ProjectSettings  ||
+                        type == ButtonType.SongHeader       ||
+                        type == ButtonType.InstrumentHeader ||
+                        type == ButtonType.DpcmHeader       ||
+                        type == ButtonType.ArpeggioHeader)
+                    {
+                        return projectExplorer.ThemeResources.FontMediumBold;
                     }
                     else
                     {
-                        return font;
+                        return projectExplorer.ThemeResources.FontMedium;
                     }
                 }
             }
+
+            public RenderTextAlignment TextAlignment
+            {
+                get
+                {
+                    if (type == ButtonType.ProjectSettings ||
+                        type == ButtonType.SongHeader ||
+                        type == ButtonType.InstrumentHeader ||
+                        type == ButtonType.DpcmHeader ||
+                        type == ButtonType.ArpeggioHeader)
+                    {
+                        return RenderTextAlignment.Center;
+                    }
+                    else
+                    {
+                        return RenderTextAlignment.Left;
+                    }
+                }
+            }
+
+            public bool TextEllipsis => type == ButtonType.ProjectSettings;
             
             public RenderBitmapAtlas GetIcon(SubButtonType sub, out int atlasIdx)
             {
@@ -383,7 +409,6 @@ namespace FamiStudio
         Song draggedSong = null;
         List<Button> buttons = new List<Button>();
 
-        RenderTheme theme;
         RenderBrush sliderFillBrush;
         RenderBrush disabledBrush;
         RenderBitmapAtlas bmpMiscAtlas;
@@ -521,31 +546,31 @@ namespace FamiStudio
 
         private void UpdateRenderCoords()
         {
-            var scaling = RenderTheme.MainWindowScaling;
+            var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
 
-            expandButtonSizeX    = (int)(DefaultExpandButtonSizeX * scaling);
-            buttonIconPosX       = (int)(DefaultButtonIconPosX * scaling);      
-            buttonIconPosY       = (int)(DefaultButtonIconPosY * scaling);      
-            buttonTextPosX       = (int)(DefaultButtonTextPosX * scaling);      
-            buttonTextPosY       = (int)(DefaultButtonTextPosY * scaling);
-            buttonTextNoIconPosX = (int)(DefaultButtonTextNoIconPosX * scaling);
-            expandButtonPosX     = (int)(DefaultExpandButtonPosX * scaling);
-            expandButtonPosY     = (int)(DefaultExpandButtonPosY * scaling);
-            subButtonSpacingX    = (int)(DefaultSubButtonSpacingX * scaling);   
-            subButtonPosY        = (int)(DefaultSubButtonPosY * scaling);       
-            buttonSizeY          = (int)(DefaultButtonSizeY * scaling);
-            sliderPosX           = (int)(DefaultSliderPosX * scaling);
-            sliderPosY           = (int)(DefaultSliderPosY * scaling);
-            sliderSizeX          = (int)(DefaultSliderSizeX * scaling);
-            sliderSizeY          = (int)(DefaultSliderSizeY * scaling);
-            sliderThumbSizeX     = (int)(DefaultSliderThumbSizeX * scaling);
-            sliderTextPosX       = (int)(DefaultSliderTextPosX * scaling);
-            checkBoxPosX         = (int)(DefaultCheckBoxPosX * scaling);
-            checkBoxPosY         = (int)(DefaultCheckBoxPosY * scaling);
-            draggedLineSizeY     = (int)(DefaultDraggedLineSizeY * scaling);
+            expandButtonSizeX    = ScaleForMainWindow(DefaultExpandButtonSizeX);
+            buttonIconPosX       = ScaleForMainWindow(DefaultButtonIconPosX);      
+            buttonIconPosY       = ScaleForMainWindow(DefaultButtonIconPosY);      
+            buttonTextPosX       = ScaleForMainWindow(DefaultButtonTextPosX);      
+            buttonTextPosY       = ScaleForMainWindow(DefaultButtonTextPosY);
+            buttonTextNoIconPosX = ScaleForMainWindow(DefaultButtonTextNoIconPosX);
+            expandButtonPosX     = ScaleForMainWindow(DefaultExpandButtonPosX);
+            expandButtonPosY     = ScaleForMainWindow(DefaultExpandButtonPosY);
+            subButtonSpacingX    = ScaleForMainWindow(DefaultSubButtonSpacingX);   
+            subButtonPosY        = ScaleForMainWindow(DefaultSubButtonPosY);       
+            buttonSizeY          = ScaleForMainWindow(DefaultButtonSizeY);
+            sliderPosX           = ScaleForMainWindow(DefaultSliderPosX);
+            sliderPosY           = ScaleForMainWindow(DefaultSliderPosY);
+            sliderSizeX          = ScaleForMainWindow(DefaultSliderSizeX);
+            sliderSizeY          = ScaleForMainWindow(DefaultSliderSizeY);
+            sliderThumbSizeX     = ScaleForMainWindow(DefaultSliderThumbSizeX);
+            sliderTextPosX       = ScaleForMainWindow(DefaultSliderTextPosX);
+            checkBoxPosX         = ScaleForMainWindow(DefaultCheckBoxPosX);
+            checkBoxPosY         = ScaleForMainWindow(DefaultCheckBoxPosY);
+            draggedLineSizeY     = ScaleForMainWindow(DefaultDraggedLineSizeY);
+            scrollBarThickness   = ScaleForMainWindow(scrollBarSize);
             virtualSizeY         = App?.Project == null ? Height : buttons.Count * buttonSizeY;
             needsScrollBar       = virtualSizeY > Height;
-            scrollBarThickness   = needsScrollBar ? (int)((Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : DefaultScrollBarThickness1) * scaling) : 0;
         }
 
         public void Reset()
@@ -587,23 +612,23 @@ namespace FamiStudio
             buttons.Clear();
             var project = App.Project;
 
-            if (theme == null || project == null)
+            if (ThemeResources == null || project == null)
                 return;
 
             var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
 
-            buttons.Add(new Button(this) { type = ButtonType.ProjectSettings, text = projectText, font = ThemeBase.FontMediumBoldCenterEllipsis });
-            buttons.Add(new Button(this) { type = ButtonType.SongHeader, text = "Songs", font = ThemeBase.FontMediumBoldCenter });
+            buttons.Add(new Button(this) { type = ButtonType.ProjectSettings, text = projectText });
+            buttons.Add(new Button(this) { type = ButtonType.SongHeader, text = "Songs" });
 
             foreach (var song in project.Songs)
-                buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.Song, textBrush = theme.BlackBrush });
+                buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.Song, textBrush = ThemeResources.BlackBrush });
 
-            buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments", font = ThemeBase.FontMediumBoldCenter });
-            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = ThemeBase.LightGreyFillColor1, textBrush = theme.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = ExpansionType.None });
+            buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments" });
+            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = ExpansionType.None });
 
             foreach (var instrument in project.Instruments)
             {
-                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = theme.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = instrument.Expansion });
+                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = instrument.Expansion });
 
                 if (instrument != null && instrument == expandedInstrument)
                 {
@@ -613,16 +638,16 @@ namespace FamiStudio
                     {
                         foreach (var param in instrumentParams)
                         {
-                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id });
+                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = ThemeResources.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id });
                         }
                     }
                 }
             }
 
-            buttons.Add(new Button(this) { type = ButtonType.DpcmHeader, font = ThemeBase.FontMediumBoldCenter });
+            buttons.Add(new Button(this) { type = ButtonType.DpcmHeader });
             foreach (var sample in project.Samples)
             {
-                buttons.Add(new Button(this) { type = ButtonType.Dpcm, sample = sample, color = sample.Color, textBrush = theme.BlackBrush, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.DPCM });
+                buttons.Add(new Button(this) { type = ButtonType.Dpcm, sample = sample, color = sample.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.DPCM });
 
                 if (sample == expandedSample)
                 {
@@ -630,17 +655,17 @@ namespace FamiStudio
 
                     foreach (var param in sampleParams)
                     {
-                        buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, sample = sample, color = sample.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.DPCMSample, paramObjectId = sample.Id });
+                        buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, sample = sample, color = sample.Color, text = param.Name, textBrush = ThemeResources.BlackBrush, paramScope = TransactionScope.DPCMSample, paramObjectId = sample.Id });
                     }
                 }
             }
 
-            buttons.Add(new Button(this) { type = ButtonType.ArpeggioHeader, text = "Arpeggios", font = ThemeBase.FontMediumBoldCenter });
-            buttons.Add(new Button(this) { type = ButtonType.Arpeggio, text = "None", color = ThemeBase.LightGreyFillColor1, textBrush = theme.BlackBrush });
+            buttons.Add(new Button(this) { type = ButtonType.ArpeggioHeader, text = "Arpeggios" });
+            buttons.Add(new Button(this) { type = ButtonType.Arpeggio, text = "None", color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush });
 
             foreach (var arpeggio in project.Arpeggios)
             {
-                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textBrush = theme.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = EnvelopeType.Arpeggio });
+                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = EnvelopeType.Arpeggio });
             }
 
             UpdateRenderCoords();
@@ -655,7 +680,6 @@ namespace FamiStudio
             Debug.Assert(MiscImageNames.Length      == (int)MiscImageIndices.Count);
             Debug.Assert(EnvelopesImageNames.Length == (int)EnvelopesImageIndices.Count);
 
-            theme = RenderTheme.CreateResourcesForGraphics(g);
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
             disabledBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
             bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
@@ -667,8 +691,6 @@ namespace FamiStudio
 
         protected override void OnRenderTerminated()
         {
-            theme.Terminate();
-
             Utils.DisposeAndNullify(ref sliderFillBrush);
             Utils.DisposeAndNullify(ref disabledBrush);
             Utils.DisposeAndNullify(ref bmpMiscAtlas);
@@ -700,7 +722,7 @@ namespace FamiStudio
         {
             var c = g.CreateCommandList();
 
-            c.DrawLine(0, 0, 0, Height, theme.BlackBrush);
+            c.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
 
             var showExpandButton = ShowExpandButtons();
             var actualWidth = Width - scrollBarThickness;
@@ -738,13 +760,13 @@ namespace FamiStudio
                             }
                         }
 
-                        c.FillAndDrawRectangle(0, 0, actualWidth, numParamButtons * buttonSizeY, g.GetVerticalGradientBrush(button.color, numParamButtons * buttonSizeY, 0.8f), theme.BlackBrush);
+                        c.FillAndDrawRectangle(0, 0, actualWidth, numParamButtons * buttonSizeY, g.GetVerticalGradientBrush(button.color, numParamButtons * buttonSizeY, 0.8f), ThemeResources.BlackBrush);
                         firstParam = false;
                     }
                 }
                 else
                 {
-                    c.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.color, buttonSizeY, 0.8f), theme.BlackBrush);
+                    c.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.color, buttonSizeY, 0.8f), ThemeResources.BlackBrush);
                 }
 
                 if (button.type == ButtonType.Instrument)
@@ -775,7 +797,7 @@ namespace FamiStudio
 
                 var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
 
-                c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, actualWidth - buttonTextNoIconPosX * 2);
+                c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, button.TextAlignment, actualWidth - buttonTextNoIconPosX * 2, 0, false, button.TextEllipsis);
 
                 if (atlas != null)
                     c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY);
@@ -794,8 +816,8 @@ namespace FamiStudio
 
                         c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
-                        c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? theme.BlackBrush : disabledBrush, 1.0f);
-                        c.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
+                        c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1.0f);
+                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, buttonTextPosY - sliderPosY, ThemeResources.BlackBrush, RenderTextAlignment.Center, sliderSizeX);
                         c.PopTransform();
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
@@ -811,7 +833,7 @@ namespace FamiStudio
                         c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f);
                         c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f);
-                        c.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
+                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, buttonTextPosY - sliderPosY, ThemeResources.BlackBrush, RenderTextAlignment.Center, sliderSizeX);
                         c.PopTransform();
                     }
                 }
@@ -882,11 +904,11 @@ namespace FamiStudio
                 int scrollBarSizeY = (int)Math.Round(Height * (Height  / (float)virtualSizeY));
                 int scrollBarPosY  = (int)Math.Round(Height * (scrollY / (float)virtualSizeY));
 
-                c.FillAndDrawRectangle(actualWidth, 0, Width - 1, Height, theme.DarkGreyFillBrush1, theme.BlackBrush);
-                c.FillAndDrawRectangle(actualWidth, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, theme.MediumGreyFillBrush1, theme.BlackBrush);
+                c.FillAndDrawRectangle(actualWidth, 0, Width - 1, Height, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
+                c.FillAndDrawRectangle(actualWidth, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
             }
 
-            g.Clear(ThemeBase.DarkGreyFillColor1);
+            g.Clear(Theme.DarkGreyFillColor1);
             g.DrawCommandList(c);
         }
 
@@ -974,8 +996,8 @@ namespace FamiStudio
                         int dx = x - sx;
                         int dy = y - sy;
 
-                        if (dx >= 0 && dx < 16 * RenderTheme.MainWindowScaling &&
-                            dy >= 0 && dy < 16 * RenderTheme.MainWindowScaling)
+                        if (dx >= 0 && dx < 16 * DpiScaling.MainWindow &&
+                            dy >= 0 && dy < 16 * DpiScaling.MainWindow)
                         {
                             buttonRelX = dx;
                             buttonRelY = dy;

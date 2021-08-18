@@ -120,7 +120,7 @@
     <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphics.cs" />
     <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
-    <Compile Include="Source\UI\Common\GLTheme.cs" />
+    <Compile Include="Source\UI\Common\ThemeRenderResources.cs" />
     <Compile Include="Source\UI\Common\LogDialog.cs" />
     <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
@@ -132,6 +132,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
+    <Compile Include="Source\UI\Windows\WinDpiScaling.cs" />
     <Compile Include="Source\UI\Windows\GLForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -150,7 +151,6 @@
     <Compile Include="Source\UI\Windows\Slider.Designer.cs">
       <DependentUpon>Slider.cs</DependentUpon>
     </Compile>
-    <Compile Include="Source\Utils\CommandLineInterface.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
@@ -164,11 +164,12 @@
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
-    <Compile Include="Source\Utils\WinUtils.cs" />
+    <Compile Include="Source\UI\Common\CommandLineInterface.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\PasteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Windows\WinUtils.cs" />
     <Compile Include="Source\UI\Windows\AutoScrollTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -186,7 +187,7 @@
     <Compile Include="Source\Project\Project.cs" />
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\Channel.cs" />
-    <Compile Include="Source\UI\Windows\Cursors.cs" />
+    <Compile Include="Source\UI\Windows\WinCursors.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\PerformanceCounter.cs" />
@@ -205,8 +206,8 @@
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
-    <Compile Include="Source\UI\Common\ThemeBase.cs" />
-    <Compile Include="Source\UI\Common\ToolbarCommon.cs" />
+    <Compile Include="Source\UI\Common\Theme.cs" />
+    <Compile Include="Source\UI\Common\ToolbarBase.cs" />
     <Compile Include="Source\UI\Desktop\Toolbar.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -301,7 +302,7 @@
     </Compile>
     <EmbeddedResource Include="Resources\gtk_mac.rc" />
     <EmbeddedResource Include="Resources\gtk_linux.rc" />
-    <Compile Include="Source\UI\Windows\PlatformUtils.cs" />
+    <Compile Include="Source\UI\Windows\WinPlatformUtils.cs" />
     <Compile Include="Source\UI\Windows\PropertyPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -431,6 +432,8 @@
     <EmbeddedResource Include="Resources\InstrumentVRC6Light.png" />
     <EmbeddedResource Include="Resources\InstrumentVRC7Light%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentVRC7Light.png" />
+    <EmbeddedResource Include="Resources\More%402x.png" />
+    <EmbeddedResource Include="Resources\More.png" />
     <Content Include="Vorbis.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

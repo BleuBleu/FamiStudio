@@ -8,7 +8,7 @@ using Javax.Microedition.Khronos.Opengles;
 using static Android.Views.View;
 using Android.Content.Res;
 
-using RenderTheme = FamiStudio.GLTheme;
+using RenderTheme = FamiStudio.ThemeRenderResources;
 using static Android.Views.Choreographer;
 using System.IO;
 using System.Reflection;
@@ -72,7 +72,7 @@ namespace FamiStudio
             //Settings.Load(); // DROIDTODO : Settings.
             Utils.Initialize();
             PlatformUtils.Initialize();
-            RenderTheme.Initialize();
+            Theme.Initialize();
             NesApu.InitializeNoteTables();
 
             glSurfaceView = FindViewById<GLSurfaceView>(Resource.Id.surfaceview);
