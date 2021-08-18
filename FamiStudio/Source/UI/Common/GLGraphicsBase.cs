@@ -1562,7 +1562,7 @@ namespace FamiStudio
                         if (halign == RenderTextAlignment.Center)
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX) / 2;
+                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX + 1) / 2;
                         }
                         else if (halign == RenderTextAlignment.Right)
                         {
@@ -1573,7 +1573,7 @@ namespace FamiStudio
                         if (valign == RenderTextAlignment.Middle)
                         {
                             alignmentOffsetY -= minY;
-                            alignmentOffsetY += ((int)inst.rect.Height - maxY - minY) / 2;
+                            alignmentOffsetY += ((int)inst.rect.Height - maxY - minY + 1) / 2;
                         }
                         else if (valign == RenderTextAlignment.Bottom)
                         {
