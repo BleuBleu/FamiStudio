@@ -16,9 +16,9 @@ using RenderTransform   = FamiStudio.GLTransform;
 
 namespace FamiStudio
 {
-    public partial class Toolbar : RenderControl
+    public abstract class ToolbarBase : RenderControl
     {
-        enum ButtonType
+        protected enum ButtonType
         {
             New,
             Open,
@@ -40,31 +40,18 @@ namespace FamiStudio
             Machine,
             Follow,
             Help,
-            Sequencer, // Mobile only
-            PianoRoll, // Mobile only
-            Project, // Mobile only
+            More,
             Count
         }
 
-        enum ButtonStatus
+        protected enum ButtonStatus
         {
             Enabled,
             Disabled,
             Dimmed
         }
 
-        enum ButtonCategory
-        {
-            Files,
-            UndoRedo,
-            CopyPaste,
-            Playback,
-            Misc,
-            RowCount,
-            Navigation
-        }
-
-        enum ButtonImageIndices
+        protected enum ButtonImageIndices
         { 
             LoopNone,
             Loop,
@@ -96,14 +83,11 @@ namespace FamiStudio
             QwertyPiano,
             Follow,
             Help,
-            Sequencer,
-            PianoRoll,
-            ProjectExplorer,
-            ExpandToolbar,
+            More,
             Count
         };
 
-        readonly string[] ButtonImageNames = new string[]
+        protected readonly string[] ButtonImageNames = new string[]
         {
             "LoopNone",
             "Loop",
@@ -135,27 +119,22 @@ namespace FamiStudio
             "QwertyPiano",
             "Follow",
             "Help",
-            "Sequencer",
-            "PianoRoll",
-            "ProjectExplorer",
-            "ExpandToolbar"
+            "More"
         };
 
-        private delegate void MouseWheelDelegate(int delta);
-        private delegate void EmptyDelegate();
-        private delegate ButtonStatus ButtonStatusDelegate();
-        private delegate ButtonImageIndices BitmapDelegate();
+        protected delegate void MouseWheelDelegate(int delta);
+        protected delegate void EmptyDelegate();
+        protected delegate ButtonStatus ButtonStatusDelegate();
+        protected delegate ButtonImageIndices BitmapDelegate();
 
         // DROIDTODO : Have a separate position + hitbox.
-        class Button
+        protected class Button
         {
             public int X;
             public int Y;
             public bool RightAligned;
             public bool Visible = true;
-            public bool Important = false; // For mobile, visible when toolbar is compact.
             public int Size;
-            public ButtonCategory Category;
             public string ToolTip;
             public ButtonImageIndices BmpAtlasIndex;
             public ButtonStatusDelegate Enabled;
@@ -170,18 +149,25 @@ namespace FamiStudio
             }
         };
 
-        RenderTheme theme;
-        RenderBrush toolbarBrush;
-        RenderBrush warningBrush;
-        RenderBitmapAtlas bmpButtonAtlas;
-        Button[] buttons = new Button[(int)ButtonType.Count];
+        protected int timecodePosX;
+        protected int timecodePosY;
+        protected int oscilloscopePosX;
+        protected int oscilloscopePosY;
+        protected int timecodeOscSizeX;
+        protected int timecodeOscSizeY;
 
-        bool oscilloscopeVisible = true;
-        bool lastOscilloscopeHadNonZeroSample = false;
+        protected RenderTheme theme;
+        protected RenderBrush toolbarBrush;
+        protected RenderBrush warningBrush;
+        protected RenderBitmapAtlas bmpButtonAtlas;
+        protected Button[] buttons = new Button[(int)ButtonType.Count];
 
-        float buttonBitmapScaleFloat = 1.0f;
+        protected bool oscilloscopeVisible = true;
+        protected bool lastOscilloscopeHadNonZeroSample = false;
 
-        protected void OnRenderInitializedCommon(RenderGraphics g)
+        protected float buttonBitmapScaleFloat = 1.0f;
+
+        protected override void OnRenderInitialized(RenderGraphics g)
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
 
@@ -191,64 +177,43 @@ namespace FamiStudio
 
             bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
 
-            buttons[(int)ButtonType.New]       = new Button { Category = ButtonCategory.Files, BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
-            buttons[(int)ButtonType.Open]      = new Button { Category = ButtonCategory.Files, BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, Important = true };
-            buttons[(int)ButtonType.Save]      = new Button { Category = ButtonCategory.Files, BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs, Important = true };
-            buttons[(int)ButtonType.Export]    = new Button { Category = ButtonCategory.Files, BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = OnRepeatLastExport };
-            buttons[(int)ButtonType.Copy]      = new Button { Category = ButtonCategory.CopyPaste, BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled, Important = true };
-            buttons[(int)ButtonType.Cut]       = new Button { Category = ButtonCategory.CopyPaste, BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
-            buttons[(int)ButtonType.Paste]     = new Button { Category = ButtonCategory.CopyPaste, BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled, Important = true };
-            buttons[(int)ButtonType.Undo]      = new Button { Category = ButtonCategory.UndoRedo, BmpAtlasIndex = ButtonImageIndices.Undo, Click = OnUndo, Enabled = OnUndoEnabled, Important = true };
-            buttons[(int)ButtonType.Redo]      = new Button { Category = ButtonCategory.UndoRedo, BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled, Important = true };
-            buttons[(int)ButtonType.Transform] = new Button { Category = ButtonCategory.Misc, BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
-            buttons[(int)ButtonType.Config]    = new Button { Category = ButtonCategory.Misc, BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig, Important = true };
-            buttons[(int)ButtonType.Play]      = new Button { Category = ButtonCategory.Playback, Click = OnPlay, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap, Important = true };
-            buttons[(int)ButtonType.Rec]       = new Button { Category = ButtonCategory.Playback, GetBitmap = OnRecordGetBitmap, Click = OnRecord };
-            buttons[(int)ButtonType.Rewind]    = new Button { Category = ButtonCategory.Playback, BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind, Important = true };
-            buttons[(int)ButtonType.Loop]      = new Button { Category = ButtonCategory.Playback, Click = OnLoop, GetBitmap = OnLoopGetBitmap };
-            buttons[(int)ButtonType.Qwerty]    = new Button { Category = ButtonCategory.Playback, BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
-            buttons[(int)ButtonType.Metronome] = new Button { Category = ButtonCategory.Playback, BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled };
-            buttons[(int)ButtonType.Machine]   = new Button { Category = ButtonCategory.Playback, Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
-            buttons[(int)ButtonType.Follow]    = new Button { Category = ButtonCategory.Playback, BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled };
-            buttons[(int)ButtonType.Help]      = new Button { Category = ButtonCategory.Misc, BmpAtlasIndex = ButtonImageIndices.Help, RightAligned = true, Click = OnHelp, Important = true };
-            buttons[(int)ButtonType.Sequencer] = new Button { Category = ButtonCategory.Navigation, BmpAtlasIndex = ButtonImageIndices.Sequencer, /*Click = OnHelp, Important = true*/ };
-            buttons[(int)ButtonType.PianoRoll] = new Button { Category = ButtonCategory.Navigation, BmpAtlasIndex = ButtonImageIndices.PianoRoll, /*Click = OnHelp, Important = true*/ };
-            buttons[(int)ButtonType.Project]   = new Button { Category = ButtonCategory.Navigation, BmpAtlasIndex = ButtonImageIndices.ProjectExplorer, /*Click = OnHelp, Important = true*/ };
-
-            buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
-            buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
-            buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S}\n{MouseRight} Save As...";
-            buttons[(int)ButtonType.Export].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export {Ctrl} {Shift} {E}";
-            buttons[(int)ButtonType.Copy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
-            buttons[(int)ButtonType.Cut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
-            buttons[(int)ButtonType.Paste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
-            buttons[(int)ButtonType.Undo].ToolTip      = "{MouseLeft} Undo {Ctrl} {Z}";
-            buttons[(int)ButtonType.Redo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
-            buttons[(int)ButtonType.Transform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
-            buttons[(int)ButtonType.Config].ToolTip    = "{MouseLeft} Edit Application Settings";
-            buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
-            buttons[(int)ButtonType.Rewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
-            buttons[(int)ButtonType.Rec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
-            buttons[(int)ButtonType.Loop].ToolTip      = "{MouseLeft} Toggle Loop Mode (Song, Pattern/Selection)";
-            buttons[(int)ButtonType.Qwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift} {Q}";
-            buttons[(int)ButtonType.Metronome].ToolTip = "{MouseLeft} Toggle metronome while song is playing";
-            buttons[(int)ButtonType.Machine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
-            buttons[(int)ButtonType.Follow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
-            buttons[(int)ButtonType.Help].ToolTip      = "{MouseLeft} Online documentation";
+            buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
+            buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen };
+            buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
+            buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = OnRepeatLastExport };
+            buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
+            buttons[(int)ButtonType.Cut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
+            buttons[(int)ButtonType.Paste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
+            buttons[(int)ButtonType.Undo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Undo, Click = OnUndo, Enabled = OnUndoEnabled };
+            buttons[(int)ButtonType.Redo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled };
+            buttons[(int)ButtonType.Transform] = new Button { BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
+            buttons[(int)ButtonType.Config]    = new Button { BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig };
+            buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap };
+            buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
+            buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
+            buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[(int)ButtonType.Qwerty]    = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
+            buttons[(int)ButtonType.Metronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled };
+            buttons[(int)ButtonType.Machine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
+            buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled };
+            buttons[(int)ButtonType.Help]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, RightAligned = true, Click = OnHelp };
+            buttons[(int)ButtonType.More]      = new Button { BmpAtlasIndex = ButtonImageIndices.More, Click = OnMore, Visible = false };
         }
 
-        protected void OnRenderTerminatedCommon()
+        protected override void OnRenderTerminated()
         {
             theme.Terminate();
             Utils.DisposeAndNullify(ref bmpButtonAtlas);
         }
 
+        protected abstract void UpdateButtonLayout();
+
         protected override void OnResize(EventArgs e)
         {
             UpdateButtonLayout();
-            base.OnResize(e);
         }
 
+        // DROIDTODO : This makes no sense on mobile, move elsewhere.
         public void LayoutChanged()
         {
             UpdateButtonLayout();
@@ -261,102 +226,110 @@ namespace FamiStudio
                 Invalidate();
         }
 
-        private void OnNew()
+        public virtual void SetToolTip(string msg, bool red = false)
+        {
+        }
+
+        public virtual void DisplayWarning(string msg, bool beep)
+        {
+        }
+
+        protected void OnNew()
         {
             App.NewProject();
         }
 
-        private void OnOpen()
+        protected void OnOpen()
         {
             App.OpenProject();
         }
 
-        private void OnSave()
+        protected void OnSave()
         {
             App.SaveProject();
         }
 
-        private void OnSaveAs()
+        protected void OnSaveAs()
         {
             App.SaveProject(true);
         }
 
-        private void OnExport()
+        protected void OnExport()
         {
             App.Export();
         }
 
-        private void OnRepeatLastExport()
+        protected void OnRepeatLastExport()
         {
             App.RepeatLastExport();
         }
 
-        private void OnCut()
+        protected void OnCut()
         {
             App.Cut();
         }
 
-        private ButtonStatus OnCutEnabled()
+        protected ButtonStatus OnCutEnabled()
         {
             return App.CanCopy ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnCopy()
+        protected void OnCopy()
         {
             App.Copy();
         }
 
-        private ButtonStatus OnCopyEnabled()
+        protected ButtonStatus OnCopyEnabled()
         {
             return App.CanCopy ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnPaste()
+        protected void OnPaste()
         {
             App.Paste();
         }
 
-        private void OnPasteSpecial()
+        protected void OnPasteSpecial()
         {
             App.PasteSpecial();
         }
 
-        private ButtonStatus OnPasteEnabled()
+        protected ButtonStatus OnPasteEnabled()
         {
             return App.CanPaste ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnUndo()
+        protected void OnUndo()
         {
             App.UndoRedoManager.Undo();
         }
 
-        private ButtonStatus OnUndoEnabled()
+        protected ButtonStatus OnUndoEnabled()
         {
             return App.UndoRedoManager != null && App.UndoRedoManager.UndoScope != TransactionScope.Max ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnRedo()
+        protected void OnRedo()
         {
             App.UndoRedoManager.Redo();
         }
 
-        private ButtonStatus OnRedoEnabled()
+        protected ButtonStatus OnRedoEnabled()
         {
             return App.UndoRedoManager != null && App.UndoRedoManager.RedoScope != TransactionScope.Max ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnTransform()
+        protected void OnTransform()
         {
             App.OpenTransformDialog();
         }
 
-        private void OnConfig()
+        protected void OnConfig()
         {
             App.OpenConfigDialog();
         }
 
-        private void OnPlay()
+        protected void OnPlay()
         {
             if (App.IsPlaying)
                 App.StopSong();
@@ -364,7 +337,7 @@ namespace FamiStudio
                 App.PlaySong();
         }
 
-        private void OnPlayMouseWheel(int delta)
+        protected void OnPlayMouseWheel(int delta)
         {
             int rate = App.PlayRate;
 
@@ -376,7 +349,7 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private ButtonImageIndices OnPlayGetBitmap()
+        protected ButtonImageIndices OnPlayGetBitmap()
         {
             if (App.IsPlaying)
             {
@@ -393,48 +366,48 @@ namespace FamiStudio
             }
         }
 
-        private void OnRewind()
+        protected void OnRewind()
         {
             App.StopSong();
             App.SeekSong(0);
         }
 
-        private ButtonImageIndices OnRecordGetBitmap()
+        protected ButtonImageIndices OnRecordGetBitmap()
         {
             return App.IsRecording ? ButtonImageIndices.RecRed : ButtonImageIndices.Rec; 
         }
 
-        private void OnRecord()
+        protected void OnRecord()
         {
             App.ToggleRecording();
         }
 
-        private void OnLoop()
+        protected void OnLoop()
         {
             App.LoopMode = App.LoopMode == LoopMode.LoopPoint ? LoopMode.Pattern : LoopMode.LoopPoint;
         }
 
-        private void OnQwerty()
+        protected void OnQwerty()
         {
             App.ToggleQwertyPiano();
         }
 
-        private ButtonStatus OnQwertyEnabled()
+        protected ButtonStatus OnQwertyEnabled()
         {
             return App.IsQwertyPianoEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
-        private void OnMetronome()
+        protected void OnMetronome()
         {
             App.ToggleMetronome();
         }
 
-        private ButtonStatus OnMetronomeEnabled()
+        protected ButtonStatus OnMetronomeEnabled()
         {
             return App.IsMetronomeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
-        private ButtonImageIndices OnLoopGetBitmap()
+        protected ButtonImageIndices OnLoopGetBitmap()
         {
             switch (App.LoopMode)
             {
@@ -445,27 +418,27 @@ namespace FamiStudio
             }
         }
 
-        private void OnMachine()
+        protected void OnMachine()
         {
             App.PalPlayback = !App.PalPlayback;
         }
 
-        private void OnFollow()
+        protected void OnFollow()
         {
             App.FollowModeEnabled = !App.FollowModeEnabled;
         }
 
-        private ButtonStatus OnFollowEnabled()
+        protected ButtonStatus OnFollowEnabled()
         {
             return App.FollowModeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
-        private ButtonStatus OnMachineEnabled()
+        protected ButtonStatus OnMachineEnabled()
         {
             return App.Project != null && !App.Project.UsesAnyExpansionAudio ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private ButtonImageIndices OnMachineGetBitmap()
+        protected ButtonImageIndices OnMachineGetBitmap()
         {
             if (App.Project == null)
             {
@@ -484,12 +457,16 @@ namespace FamiStudio
             }
         }
 
-        private void OnHelp()
+        protected void OnHelp()
         {
             App.ShowHelp();
         }
 
-        private void RenderButtons(RenderGraphics g, RenderCommandList c)
+        protected virtual void OnMore()
+        {
+        }
+
+        protected void RenderButtons(RenderGraphics g, RenderCommandList c)
         {
             var pt = PointToClient(Cursor.Position);
 
@@ -515,7 +492,7 @@ namespace FamiStudio
             }
         }
 
-        private void RenderTimecode(RenderGraphics g, RenderCommandList c)
+        protected void RenderTimecode(RenderGraphics g, RenderCommandList c, int x, int y, int sx, int sy)
         {
             var frame = App.CurrentFrame;
             var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
@@ -526,7 +503,7 @@ namespace FamiStudio
             var timeCodeSizeY = Height - timecodePosY * 2;
             var textColor = App.IsRecording ? theme.DarkRedFillBrush : theme.LightGreyFillBrush2;
 
-            c.FillAndDrawRectangle(timecodePosX, timecodePosY, timecodePosX + timecodeSizeX, Height - timecodePosY, theme.BlackBrush, theme.LightGreyFillBrush2);
+            c.FillAndDrawRectangle(x, y, x + sx, y + sy, theme.BlackBrush, theme.LightGreyFillBrush2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -538,7 +515,7 @@ namespace FamiStudio
                 var patternString = (location.PatternIndex + 1).ToString("D" + numPatternDigits);
                 var noteString = location.NoteIndex.ToString("D" + numNoteDigits);
 
-                var charPosX = timecodePosX + timecodeSizeX / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
+                var charPosX = x + sx / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
                 for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
                     c.DrawText(patternString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
@@ -553,12 +530,12 @@ namespace FamiStudio
             {
                 TimeSpan time = App.CurrentTime;
 
-                var minutesString      = time.Minutes.ToString("D2");
-                var secondsString      = time.Seconds.ToString("D2");
+                var minutesString = time.Minutes.ToString("D2");
+                var secondsString = time.Seconds.ToString("D2");
                 var millisecondsString = time.Milliseconds.ToString("D3");
 
                 // 00:00:000
-                var charPosX = timecodePosX + timecodeSizeX / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
+                var charPosX = x + sx / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
 
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
                     c.DrawText(minutesString[i].ToString(), ThemeBase.FontHuge, charPosX, 2, textColor, zeroSizeX);
@@ -573,12 +550,26 @@ namespace FamiStudio
             }
         }
 
+        // DROIDTODO : We can use the default command list on mobile here.
+        protected override void OnRender(RenderGraphics g)
+        {
+            var cm = g.CreateCommandList(); // Main
+
+            // Prepare the batches.
+            RenderButtons(g, cm);
+            RenderTimecode(g, cm, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);
+            RenderOscilloscope(g, cm, oscilloscopePosX, oscilloscopePosY, timecodeOscSizeX, timecodeOscSizeY);
+
+            // Draw everything.
+            g.DrawCommandList(cm);
+        }
+
         public bool ShouldRefreshOscilloscope(bool hasNonZeroSample)
         {
             return oscilloscopeVisible && lastOscilloscopeHadNonZeroSample != hasNonZeroSample;
         }
 
-        private void RenderOscilloscope(RenderGraphics g, RenderCommandList c, int x, int y, int sx, int sy)
+        protected void RenderOscilloscope(RenderGraphics g, RenderCommandList c, int x, int y, int sx, int sy)
         {
             if (!oscilloscopeVisible)
                 return;

@@ -16,7 +16,7 @@ using RenderTransform   = FamiStudio.GLTransform;
 
 namespace FamiStudio
 {
-    public partial class Toolbar : RenderControl
+    public class Toolbar : ToolbarBase
     {
         const int DefaultTimecodeOffsetX = 38; // Offset from config button.
         const int DefaultTimecodePosY = 4;
@@ -33,10 +33,6 @@ namespace FamiStudio
         const int DefaultButtonTimecodeSpacingX = 4; // Spacing before/after timecode.
 
         int timecodeOffsetX;
-        int timecodePosX;
-        int timecodePosY;
-        int timecodeSizeX;
-        int oscilloscopePosX;
         int tooltipSingleLinePosY;
         int tooltipMultiLinePosY;
         int tooltipLineSizeY;
@@ -86,7 +82,28 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
-            OnRenderInitializedCommon(g);
+            base.OnRenderInitialized(g);
+            
+            buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
+            buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
+            buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S}\n{MouseRight} Save As...";
+            buttons[(int)ButtonType.Export].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export {Ctrl} {Shift} {E}";
+            buttons[(int)ButtonType.Copy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
+            buttons[(int)ButtonType.Cut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
+            buttons[(int)ButtonType.Paste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
+            buttons[(int)ButtonType.Undo].ToolTip      = "{MouseLeft} Undo {Ctrl} {Z}";
+            buttons[(int)ButtonType.Redo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
+            buttons[(int)ButtonType.Transform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
+            buttons[(int)ButtonType.Config].ToolTip    = "{MouseLeft} Edit Application Settings";
+            buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
+            buttons[(int)ButtonType.Rewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
+            buttons[(int)ButtonType.Rec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
+            buttons[(int)ButtonType.Loop].ToolTip      = "{MouseLeft} Toggle Loop Mode (Song, Pattern/Selection)";
+            buttons[(int)ButtonType.Qwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift} {Q}";
+            buttons[(int)ButtonType.Metronome].ToolTip = "{MouseLeft} Toggle metronome while song is playing";
+            buttons[(int)ButtonType.Machine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
+            buttons[(int)ButtonType.Follow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
+            buttons[(int)ButtonType.Help].ToolTip      = "{MouseLeft} Online documentation";
 
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
@@ -96,7 +113,7 @@ namespace FamiStudio
 
             timecodeOffsetX         = (int)(DefaultTimecodeOffsetX * scaling);
             timecodePosY            = (int)(DefaultTimecodePosY * scaling);
-            timecodeSizeX           = (int)(DefaultTimecodeSizeX * scaling);
+            timecodeOscSizeX        = (int)(DefaultTimecodeSizeX * scaling);
             tooltipSingleLinePosY   = (int)(DefaultTooltipSingleLinePosY * scaling);
             tooltipMultiLinePosY    = (int)(DefaultTooltipMultiLinePosY * scaling);
             tooltipLineSizeY        = (int)(DefaultTooltipLineSizeY * scaling);
@@ -151,7 +168,6 @@ namespace FamiStudio
             specialCharacters.Clear();
         }
 
-
         private void UpdateButtonLayout()
         {
             if (theme == null)
@@ -197,9 +213,10 @@ namespace FamiStudio
 
             timecodePosX = buttons[(int)ButtonType.Config].X + timecodeOffsetX;
             oscilloscopePosX = timecodePosX + timecodeSizeX + buttonTimecodeSpacingX * 2;
+            timecodeOscSizeY = Height - timecodePosY * 2;
         }
 
-        public void SetToolTip(string msg, bool red = false)
+        public override void SetToolTip(string msg, bool red = false)
         {
             if (tooltip != msg || red != redTooltip)
             {
@@ -209,7 +226,7 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayWarning(string msg, bool beep)
+        public override void DisplayWarning(string msg, bool beep)
         {
             warningTime = DateTime.Now;
             warning = "{Warning} " + msg;
@@ -227,32 +244,6 @@ namespace FamiStudio
         {
             tooltip = "";
             redTooltip = false;
-        }
-
-        private void RenderButtons(RenderGraphics g, RenderCommandList c)
-        {
-            var pt = PointToClient(Cursor.Position);
-
-            // Clear
-            c.FillRectangle(0, 0, Width, Height, toolbarBrush);
-
-            // Buttons
-            foreach (var btn in buttons)
-            {
-                if (!btn.Visible)
-                    continue;
-
-                var hover = btn.IsPointIn(pt.X, pt.Y, Width);
-                var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap() : btn.BmpAtlasIndex;
-                var status = btn.Enabled == null ? ButtonStatus.Enabled : btn.Enabled();
-                var opacity = status == ButtonStatus.Enabled ? 1.0f : 0.25f;
-
-                if (status != ButtonStatus.Disabled && hover)
-                    opacity *= 0.75f;
-
-                int x = btn.RightAligned ? Width - btn.X : btn.X;
-                c.DrawBitmapAtlas(bmpButtonAtlas, (int)bmpIndex, x, btn.Y, opacity);
-            }
         }
 
         private void RenderWarningAndTooltip(RenderGraphics g, RenderCommandList c)
@@ -337,17 +328,10 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var cm = g.CreateCommandList(); // Main
+            base.OnRender(g);
+
             var ct = g.CreateCommandList(); // Tooltip (clipped)
-
-            // Prepare the batches.
-            RenderButtons(g, cm);
-            RenderTimecode(g, cm);
-            RenderOscilloscope(g, cm, oscilloscopePosX, timecodePosY, timecodeSizeX, Height - timecodePosY * 2);
             RenderWarningAndTooltip(g, ct);
-
-            // Draw everything.
-            g.DrawCommandList(cm);
             g.DrawCommandList(ct, new System.Drawing.Rectangle(lastButtonX, 0, Width, Height));
         }
 

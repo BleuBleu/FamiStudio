@@ -172,6 +172,8 @@
     <Compile Include="Source\UI\Droid\SystemDrawing.cs" />
     <Compile Include="Source\UI\Droid\SystemMedia.cs" />
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
+    <Compile Include="Source\UI\Mobile\MobileUtils.cs" />
+    <Compile Include="Source\UI\Mobile\NavigationBar.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
@@ -212,7 +214,7 @@
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\ThemeBase.cs" />
-    <Compile Include="Source\UI\Common\ToolbarCommon.cs" />
+    <Compile Include="Source\UI\Common\ToolbarBase.cs" />
     <Compile Include="Source\UI\Mobile\Toolbar.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -635,16 +637,16 @@
     <EmbeddedResource Include="Resources\Sequencer%402x.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\ExpandToolbar.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\ExpandToolbar%402x.png" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Resources\PianoRoll.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\PianoRoll%402x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\More.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\More%402x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

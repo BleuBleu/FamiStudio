@@ -278,14 +278,9 @@ namespace FamiStudio
             return bmp.Size.Width;
         }
 
-        public GLCommandList CreateCommandList()
+        public GLCommandList override CreateCommandList()
         {
             return new GLCommandList(this, dashedBitmap.Size.Width, supportsLineWidth);
-        }
-
-        public void DrawCommandList(GLCommandList list)
-        {
-            DrawCommandList(list, Rectangle.Empty);
         }
 
         public unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)

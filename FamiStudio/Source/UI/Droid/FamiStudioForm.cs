@@ -12,6 +12,7 @@ using RenderTheme = FamiStudio.GLTheme;
 using static Android.Views.Choreographer;
 using System.IO;
 using System.Reflection;
+using System;
 
 namespace FamiStudio
 {
@@ -129,33 +130,48 @@ namespace FamiStudio
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
-        private void Test()
+        // Main thread.
+        public bool OnTouch(View v, MotionEvent e)
         {
-            famistudio.Tick();
+            // The GL thread is our "main" thread.
+            glSurfaceView.QueueEvent(() => OnTouchGLThread(e));
+            return true;
         }
 
+        // GL thread
+        private void OnTouchGLThread(MotionEvent e)
+        {
+            System.Diagnostics.Debug.WriteLine($"PointerCount = {e.PointerCount}, Action = {e.Action}");
+
+            if (e.Action == MotionEventActions.Down)
+            {
+                // TEMPORARY!
+                var ctrl = controls.GetControlAtCoord((int)e.RawX, (int)e.RawY, out var x, out var y);
+                if (ctrl != null)
+                    ctrl.MouseDown(new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, x, y, 0));
+            }
+        }
+
+        // GL thread.
         public void OnDrawFrame(IGL10 gl)
         {
-            RunOnUiThread(Test);
+            famistudio.Tick();
             controls.Redraw();
         }
 
+        // GL thread.
         public void OnSurfaceChanged(IGL10 gl, int width, int height)
         {
             controls.Resize(width, height);
         }
 
+        // GL thread.
         public void OnSurfaceCreated(IGL10 gl, Javax.Microedition.Khronos.Egl.EGLConfig config)
         {
-            controls.InitializeGL(gl);
             controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
+            controls.InitializeGL(gl);
 
-            controls.PianoRoll.StartEditPattern(0, 0); // MATTT
-        }
-
-        public bool OnTouch(View v, MotionEvent e)
-        {
-            return false;
+            controls.PianoRoll.StartEditPattern(0, 0);
         }
 
         public System.Windows.Forms.Keys GetModifierKeys()

@@ -61,20 +61,23 @@ namespace FamiStudio
         public void Validate() { invalid = false; }
         public int Left => left;
         public int Top => top;
+        public int Right => left + width;
+        public int Bottom => top + height;
         public int Width => width;
         public int Height => height;
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }
         public bool NeedsRedraw => invalid;
         public void Invalidate() { invalid = true; parentForm.Invalidate(); }
 
-        public void Move(int x, int y, int w, int h)
+        public void Move(int x, int y, int w, int h, bool fireResizeEvent = true)
         {
             left = x;
             top = y;
             width = w;
             height = h;
 
-            OnResize(EventArgs.Empty);
+            if (fireResizeEvent)
+                OnResize(EventArgs.Empty);
         }
 
         public System.Windows.Forms.Keys ModifierKeys => parentForm.GetModifierKeys(); 

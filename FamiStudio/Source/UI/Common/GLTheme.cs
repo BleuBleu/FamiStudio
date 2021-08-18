@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace FamiStudio
 {
-    class GLTheme : ThemeBase
+    public class GLTheme : ThemeBase
     {
         public static void Initialize()
         {
@@ -19,6 +19,8 @@ namespace FamiStudio
                 mainWindowScaling = Utils.Clamp(Settings.DpiScaling / 100.0f, 1, 2);
             else
                 mainWindowScaling = Utils.Clamp((int)(dialogScaling * 2.0f) / 2.0f, 1.0f, 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
+
+            fontScaling = mainWindowScaling;
 #elif FAMISTUDIO_WINDOWS
             var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
 
@@ -29,22 +31,28 @@ namespace FamiStudio
                 mainWindowScaling = Settings.DpiScaling / 100.0f;
             else
                 mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
+
+            fontScaling = mainWindowScaling;
 #elif FAMISTUDIO_ANDROID
             // DROIDTODO : Autodetect.
-            mainWindowScaling = 2;
+            mainWindowScaling = 4;
+            fontScaling = 2;
             dialogScaling = 1;
 #endif
         }
 
 #if FAMISTUDIO_MACOS
         public static float MainWindowScaling => MacUtils.MainWindowScaling;
+        public static float FontScaling       => MacUtils.MainWindowScaling;
         public static float DialogScaling     => MacUtils.DialogScaling;
 #else
         private static float dialogScaling     = 1;
         private static float mainWindowScaling = 1;
+        private static float fontScaling       = 1;
 
         public static float MainWindowScaling => mainWindowScaling;
         public static float DialogScaling     => dialogScaling;
+        public static float FontScaling       => fontScaling;
 #endif
 
         private void InitializeFonts(GLGraphics g)
@@ -58,7 +66,7 @@ namespace FamiStudio
                     var def = FontDefinitions[i];
 
                     if (!def.NoScaling)
-                        def.Size = (int)(def.Size * MainWindowScaling);
+                        def.Size = (int)(def.Size * FontScaling);
 
                     var suffix   = def.Bold ? "Bold" : "";
                     var basename = $"{def.Name}{def.Size}{suffix}";

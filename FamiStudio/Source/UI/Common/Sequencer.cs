@@ -2051,7 +2051,7 @@ namespace FamiStudio
             }
         }
 
-        public void Tick()
+        public void Tick(float delta)
         {
             if (App == null)
                 return;

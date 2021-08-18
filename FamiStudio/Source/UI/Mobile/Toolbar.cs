@@ -16,217 +16,240 @@ using RenderTransform   = FamiStudio.GLTransform;
 
 namespace FamiStudio
 {
-    public partial class Toolbar : RenderControl
+    public class Toolbar : ToolbarBase
     {
-        // DROIDTODO : Review once we have figure out scale.
-        const int DefaultButtonMargin = 16;
+        // DROIDTODO : Review once we have figure out scale. Use float.
+        const float DefaultButtonMargin = 0.1f;
+
+        private struct ButtonLayoutItem
+        {
+            public ButtonLayoutItem(int r, int c, ButtonType b)
+            {
+                row = r;
+                col = c;
+                btn = b;
+            }
+            public int row;
+            public int col;
+            public ButtonType btn;
+        };
+
+        private struct OscTimeLayoutItem
+        {
+            public OscTimeLayoutItem(int r, int c, int nc)
+            {
+                row = r;
+                col = c;
+                numCols = nc;
+            }
+            public int row;
+            public int col;
+            public int numCols;
+        };
+
+        // [portrait/landscape, collapsed/expanded ]
+        private readonly ButtonLayoutItem[,][] ButtonLayout = new ButtonLayoutItem[2, 2][]
+        { 
+            {
+                new ButtonLayoutItem[] 
+                {
+                    new ButtonLayoutItem(0,  0, ButtonType.Open),
+                    new ButtonLayoutItem(0,  1, ButtonType.Copy),
+                    new ButtonLayoutItem(0,  2, ButtonType.Undo),
+                    new ButtonLayoutItem(0,  3, ButtonType.Config),
+                    new ButtonLayoutItem(0,  6, ButtonType.Play),
+                    new ButtonLayoutItem(0,  7, ButtonType.Help),
+
+                    new ButtonLayoutItem(1,  0, ButtonType.Save),
+                    new ButtonLayoutItem(1,  1, ButtonType.Paste),
+                    new ButtonLayoutItem(1,  2, ButtonType.Redo),
+                    new ButtonLayoutItem(1,  3, ButtonType.Transform),
+                    new ButtonLayoutItem(1,  6, ButtonType.Rewind),
+                    new ButtonLayoutItem(1,  7, ButtonType.More),
+                },
+                new ButtonLayoutItem[] 
+                {
+                },
+            }, 
+            {
+                new ButtonLayoutItem[] 
+                {
+                    new ButtonLayoutItem(0,  0, ButtonType.Open),
+                    new ButtonLayoutItem(0,  1, ButtonType.Save),
+                    new ButtonLayoutItem(0,  2, ButtonType.Copy),
+                    new ButtonLayoutItem(0,  3, ButtonType.Paste),
+                    new ButtonLayoutItem(0,  4, ButtonType.Undo),
+                    new ButtonLayoutItem(0,  5, ButtonType.Redo),
+                    new ButtonLayoutItem(0,  6, ButtonType.Config),
+                    new ButtonLayoutItem(0, 11, ButtonType.Play),
+                    new ButtonLayoutItem(0, 12, ButtonType.Rewind),
+                    new ButtonLayoutItem(0, 13, ButtonType.Help),
+                    new ButtonLayoutItem(0, 14, ButtonType.More)
+
+                },
+                new ButtonLayoutItem[] 
+                {
+                    new ButtonLayoutItem(0,  0, ButtonType.New),
+                    new ButtonLayoutItem(0,  1, ButtonType.Open),
+                    new ButtonLayoutItem(0,  2, ButtonType.Copy),
+                    new ButtonLayoutItem(0,  3, ButtonType.Paste),
+                    new ButtonLayoutItem(0,  4, ButtonType.Undo),
+                    new ButtonLayoutItem(0,  5, ButtonType.Config),
+                    new ButtonLayoutItem(0, 10, ButtonType.Play),
+                    new ButtonLayoutItem(0, 11, ButtonType.Rewind),
+                    new ButtonLayoutItem(0, 12, ButtonType.Metronome),
+                    new ButtonLayoutItem(0, 13, ButtonType.Follow),
+                    new ButtonLayoutItem(0, 14, ButtonType.Help),
+
+                    new ButtonLayoutItem(1,  0, ButtonType.Save),
+                    new ButtonLayoutItem(1,  1, ButtonType.Export),
+                    new ButtonLayoutItem(1,  2, ButtonType.Cut),
+                    new ButtonLayoutItem(1,  3, ButtonType.Cut), // DROIDTODO : Delete!
+                    new ButtonLayoutItem(1,  4, ButtonType.Redo),
+                    new ButtonLayoutItem(1,  5, ButtonType.Transform),
+                    new ButtonLayoutItem(1, 10, ButtonType.Rec),
+                    new ButtonLayoutItem(1, 11, ButtonType.Loop),
+                    new ButtonLayoutItem(1, 12, ButtonType.Machine),
+                    new ButtonLayoutItem(1, 14, ButtonType.More),
+                },
+            }, 
+        };
+
+        // [portrait/landscape, collapsed/expanded, timecode/oscilloscope ]
+        private readonly OscTimeLayoutItem[,,] OscTimeLayout = new OscTimeLayoutItem[2, 2, 2]
+        {
+            {
+                {
+                    new OscTimeLayoutItem(0, 4, 2),
+                    new OscTimeLayoutItem(1, 4, 2),
+                },
+                {
+                    new OscTimeLayoutItem(0, 0, 2),
+                    new OscTimeLayoutItem(0, 0, 2),
+                },
+            },
+            {
+                {
+                    new OscTimeLayoutItem(0, 7, 2),
+                    new OscTimeLayoutItem(0, 9, 2),
+                },
+                {
+                    new OscTimeLayoutItem(0, 6, 2),
+                    new OscTimeLayoutItem(0, 8, 2),
+                },
+            },
+        };
 
         // These are calculated on render init.
-        int buttonMargin;
-        int buttonFullSize;
-        int buttonSize;
-        int buttonInnerSize;
-        int expandButtonSize;
-        int timecodeSizeX;
-        float buttonSizeFloat;
+        private int buttonMargin;
+        private int buttonSizeFull;
+        private int buttonSize;
 
-        // These are calculated when the orientation changes.
-        int timecodePosX;
-        int timecodePosY;
-        int oscilloscopePosX;
-        int oscilloscopePosY;
+        private float expandRatio = 0.0f;
+        private bool  expanded = false; // MATTT : Testing.
+
+        public int   LayoutSize  => buttonSizeFull * (IsLandscape ? 1 : 2);
+        public int   DesiredSize => (int)Math.Round(LayoutSize * (1.0f + expandRatio));
+        public float ExpandRatio => expandRatio;
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
-            OnRenderInitializedCommon(g);
+            base.OnRenderInitialized(g);
 
-            var scaling = RenderTheme.MainWindowScaling;
-
-            var screenSize = ParentFormSize;
-            var minSize = Math.Min(screenSize.Width, screenSize.Height);
-            var numRows = (int)ButtonCategory.RowCount + 2; // 2 = timecode + oscilloscope.
             var bitmapSize = bmpButtonAtlas.GetElementSize(0);
 
-            buttonSizeFloat = minSize / (float)numRows;
-            buttonMargin = DefaultButtonMargin;  // DROIDTODO : Apply some form of scaling.
-            buttonFullSize = (int)buttonSizeFloat;
-            buttonSize = buttonFullSize - (buttonMargin * 2);
-            expandButtonSize = buttonFullSize / 2;
+            buttonSizeFull = MobileUtils.ComputeIdealButtonSize(ParentFormSize.Width, ParentFormSize.Height);
+            buttonMargin = (int)Math.Round(buttonSizeFull * 0.1f);  // DROIDTODO : Apply some form of scaling.
+            buttonSize = buttonSizeFull - (buttonMargin * 2);
             buttonBitmapScaleFloat = buttonSize / (float)(bitmapSize.Width);
-            timecodeSizeX = buttonFullSize * 2 - buttonMargin * 2;
-
-            // HACK : Disable right-alignment.
-            buttons[(int)ButtonType.Help].RightAligned = false;
 
             UpdateButtonLayout();
         }
 
-        protected override void OnRenderTerminated()
-        {
-            OnRenderTerminatedCommon();
-        }
-
-        private void UpdateButtonLayout()
+        protected override void UpdateButtonLayout()
         {
             if (theme == null)
                 return;
 
+            // DROIDTODO : Actually move this to desktop.
+            buttons[(int)ButtonType.Help].RightAligned = false;
+
             var landscape = IsLandscape;
+            var layout = ButtonLayout[landscape ? 1 : 0, expanded ? 1 : 0];
 
-            // Main buttons.
-            for (int j = 0; j < (int)ButtonCategory.RowCount; j++)
+            foreach (var btn in buttons)
             {
-                var x = buttonMargin + expandButtonSize;
-                var y = buttonMargin + (j * buttonFullSize);
-
-                for (int i = 0; i < (int)ButtonType.Count; i++)
-                {
-                    var btn = buttons[i];
-
-                    if ((int)btn.Category == j)
-                    {
-                        if (btn.Important)
-                        {
-                            btn.X = x;
-                            btn.Y = y;
-                            btn.Size = buttonSize;
-
-                            if (!landscape)
-                                Utils.Swap(ref btn.X, ref btn.Y);
-
-                            btn.Visible = true;
-                            x += buttonFullSize;
-                        }
-                        else
-                        {
-                            btn.Visible = false;
-                        }
-                    }
-                }
+                btn.Visible = false;
             }
 
-            // Special case for the 3 navigation buttons.
-            for (int i = 0; i < 3; i++)
+            foreach (var bl in layout)
             {
-                var x = buttonMargin + expandButtonSize + buttonFullSize * 2;
-                var y = Height / 4 * (i + 1) - buttonSize / 2; // DROIDTODO : Height here.
-                var btn = buttons[(int)ButtonType.Sequencer + i];
+                var btn = buttons[(int)bl.btn];
 
-                btn.X = x;
-                btn.Y = y;
-                btn.Size = buttonSize;
+                btn.X = buttonSizeFull * bl.col + buttonMargin;
+                btn.Y = buttonSizeFull * bl.row + buttonMargin;
+                btn.Size = buttonSize; // DROIDTODO : Hitbox.
                 btn.Visible = true;
-
-                if (!landscape)
-                    Utils.Swap(ref btn.X, ref btn.Y);
             }
 
-            // Expand button.
+            var timeLayout = OscTimeLayout[landscape ? 1 : 0, expanded ? 1 : 0, 0];
+            var oscLayout  = OscTimeLayout[landscape ? 1 : 0, expanded ? 1 : 0, 1];
 
-            timecodePosX = buttonMargin + expandButtonSize;
-            timecodePosY = buttonMargin + (((int)ButtonCategory.RowCount + 0) * buttonFullSize);
-            oscilloscopePosX = buttonMargin + expandButtonSize;
-            oscilloscopePosY = buttonMargin + (((int)ButtonCategory.RowCount + 1) * buttonFullSize);
+            Debug.Assert(timeLayout.numCols == oscLayout.numCols);
 
-            if (!landscape)
+            timecodeOscSizeX = timeLayout.numCols * buttonSizeFull - buttonMargin * 2;
+            timecodeOscSizeY = buttonSize;
+            timecodePosX = buttonMargin + timeLayout.col * buttonSizeFull;
+            timecodePosY = buttonMargin + timeLayout.row * buttonSizeFull;
+            oscilloscopePosX = buttonMargin + oscLayout.col * buttonSizeFull;
+            oscilloscopePosY = buttonMargin + oscLayout.row * buttonSizeFull;
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            expandRatio = expanded ? 1.0f : 0.0f;
+        }
+
+        protected override void OnMore()
+        {
+            expanded = !expanded;
+            ConditionalInvalidate();
+        }
+
+        public void Tick(float delta)
+        {
+            delta *= 6.0f;
+
+            var prevRatio = expandRatio;
+
+            if (expanded && expandRatio < 1.0f)
             {
-                Utils.Swap(ref timecodePosX, ref timecodePosY);
-                Utils.Swap(ref oscilloscopePosX, ref oscilloscopePosY);
+                expandRatio = Math.Min(1.0f, expandRatio + delta);
+                if (prevRatio < 0.5f && expandRatio >= 0.5f)
+                    UpdateButtonLayout();
             }
-        }
-
-        public void SetToolTip(string msg, bool red = false)
-        {
-        }
-
-        public void DisplayWarning(string msg, bool beep)
-        {
-            // DROIDTODO : Use a toast here!
-            // SystemSounds.Beep.Play();
-        }
-
-        public void Tick()
-        {
+            else if (!expanded && expandRatio > 0.0f)
+            {
+                expandRatio = Math.Max(0.0f, expandRatio - delta);
+                if (prevRatio > 0.5f && expandRatio <= 0.5f)
+                    UpdateButtonLayout();
+            }
         }
 
         public void Reset()
         {
         }
 
-        private void RenderNavigationBackground(RenderGraphics g, RenderCommandList c)
-        {
-            c.FillRectangle(Width - buttonFullSize, 0, Width, Height, theme.DarkGreyLineBrush1);
-        }
-
-        private void RenderExpandButton(RenderGraphics g, RenderCommandList c)
-        {
-            // Manually fetching UVs to be able to flip them.
-            bmpButtonAtlas.GetElementUVs((int)ButtonImageIndices.ExpandToolbar, out var u0, out var v0, out var u1, out var v1);
-            c.DrawBitmap(bmpButtonAtlas, 0, Height / 2 - buttonFullSize / 4, buttonFullSize / 2, buttonFullSize / 2, 1.0f, u0, v0, u1, v1); // DROIDTODO : Height
-            c.DrawLine(0, 0, 0, Height, theme.BlackBrush, 5.0f); // DROIDTODO : Height + line size.
-        }
-
-        protected override void OnRender(RenderGraphics g)
-        {
-            var c = g.CreateCommandList(); // Main
-            //var ct = g.CreateCommandList(); // Tooltip (clipped)
-
-            // Prepare the batches.
-            RenderButtons(g, c);
-            RenderNavigationBackground(g, c);
-            RenderExpandButton(g, c);
-            //RenderTimecode(g, cm);
-            RenderOscilloscope(g, c, timecodePosX, timecodePosY, timecodeSizeX, buttonSize); // MATTT
-            RenderOscilloscope(g, c, oscilloscopePosX, oscilloscopePosY, timecodeSizeX, buttonSize);
-
-            // Draw everything.
-            g.DrawCommandList(c);
-            //g.DrawCommandList(ct, new System.Drawing.Rectangle(lastButtonX, 0, Width, Height));
-        }
-
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            ConditionalInvalidate();
-        }
-
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            ConditionalInvalidate();
-
-            foreach (var btn in buttons)
-            {
-                if (btn.Visible && btn.IsPointIn(e.X, e.Y, Width))
-                {
-                    SetToolTip(btn.ToolTip);
-                    return;
-                }
-            }
-
-            SetToolTip("");
-        }
-
-        protected override void OnMouseWheel(MouseEventArgs e)
-        {
-            base.OnMouseWheel(e);
-
-            foreach (var btn in buttons)
-            {
-                if (btn != null && btn.Visible && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled() != ButtonStatus.Disabled))
-                {
-                    btn.MouseWheel?.Invoke(e.Delta);
-                    break;
-                }
-            }
-        }
-
+        // TEMPORARY!
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (left || right)
             {
-                if (e.X > timecodePosX && e.X < timecodePosX + timecodeSizeX &&
+                if (e.X > timecodePosX && e.X < timecodePosX + timecodeOscSizeX &&
                     e.Y > timecodePosY && e.Y < Height - timecodePosY)
                 {
                     Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;

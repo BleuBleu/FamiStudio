@@ -49,6 +49,10 @@ namespace FamiStudio
         protected List<int[]>   freeColArrays = new List<int[]>();
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
+        protected abstract int CreateEmptyTexture(int width, int height);
+        protected abstract int CreateTexture(Bitmap bmp);
+        public abstract void DrawCommandList(GLCommandList list, Rectangle scissor);
+
         protected GLGraphicsBase()
         {
             windowScaling = GLTheme.MainWindowScaling;
@@ -71,9 +75,6 @@ namespace FamiStudio
             }
         }
 
-        protected abstract int CreateEmptyTexture(int width, int height);
-        protected abstract int CreateTexture(Bitmap bmp);
-
         public virtual void BeginDrawFrame()
         {
         }
@@ -93,6 +94,16 @@ namespace FamiStudio
 
         public virtual void EndDrawControl()
         {
+        }
+
+        public void DrawCommandList(GLCommandList list)
+        {
+            DrawCommandList(list, Rectangle.Empty);
+        }
+
+        public virtual GLCommandList CreateCommandList()
+        {
+            return new GLCommandList(this, dashedBitmap.Size.Width);
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc)
@@ -725,7 +736,7 @@ namespace FamiStudio
         private Dictionary<GLFont,   List<TextInstance>>   texts   = new Dictionary<GLFont,   List<TextInstance>>();
         private Dictionary<GLBitmap, List<BitmapInstance>> bitmaps = new Dictionary<GLBitmap, List<BitmapInstance>>();
 
-        private GLGraphics  graphics;
+        private GLGraphicsBase graphics;
         private GLTransform xform;
         public  GLTransform Transform => xform;
 
@@ -735,7 +746,7 @@ namespace FamiStudio
         public bool HasAnyBitmaps => bitmaps.Count > 0;
         public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps || HasAnyTickLineMeshes;
 
-        public GLCommandList(GLGraphics g, int dashTextureSize, bool supportsLineWidth = true)
+        public GLCommandList(GLGraphicsBase g, int dashTextureSize, bool supportsLineWidth = true)
         {
             graphics = g;
             xform = g.Transform;

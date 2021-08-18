@@ -1,15 +1,20 @@
 Android prototype
 =================
+1) Toolbar
+	- Create navigation bar.
+	- Create simpler toolbar, unify as much as possible with desktop.
+	- 
 1) Prototype layout
 - FamiStudioControls for mobile, 1 control active, swap with animations.
 	- Piano is always the main control
 - Create mobile toolbar
+
 - Test navigation, switch between PR, Seq, PE
 - Rotation
 - Create PR/Seq buttons
 
 - Cleanup projects, make them more similar.
-- 
+ 
 
 3.2.0
 =====

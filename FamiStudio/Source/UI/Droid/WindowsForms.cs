@@ -36,19 +36,23 @@ namespace System.Windows.Forms
         XButton2 = 16777216
     }
 
+    // DROIDTODO
+    // TEMPORARY!
     public class MouseEventArgs : EventArgs
     {
         public MouseEventArgs(MouseButtons button, int clicks, int x, int y, int delta)
         {
-            // DROIDTODO
+            Button = button;
+            X = x;
+            Y = y;
         }
 
-        public MouseButtons Button { get; }
+        public MouseButtons Button { get; private set; }
         public int Clicks { get; }
-        public int X { get; }
-        public int Y { get; }
+        public int X { get; private set; }
+        public int Y { get; private set; }
         public int Delta { get; }
-        public Point Location { get; }
+        public Point Location => new Point(X, Y);
     }
 
     public enum MessageBoxButtons

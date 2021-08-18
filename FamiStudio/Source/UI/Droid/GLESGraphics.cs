@@ -155,43 +155,16 @@ namespace FamiStudio
             return id[0];
         }
 
-        // DROIDTODO : Move to base class?
         protected Bitmap LoadBitmapFromResourceWithScaling(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            bool needsScaling = false;
             Bitmap bmp;
 
-            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
-            {
-                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@15x.png");
-            }
-            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
-            {
+            if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
                 bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@2x.png");
-                needsScaling = windowScaling != 2.0f;
-            }
             else
-            {
                 bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png");
-            }
-
-            // DROIDTODO
-            /*
-            // Pre-resize all images so we dont have to deal with scaling later.
-            if (needsScaling)
-            {
-                var newWidth  = Math.Max(1, (int)(bmp.Width  * (windowScaling / 2.0f)));
-                var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
-
-#if FAMISTUDIO_WINDOWS
-                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
-#else
-                bmp = bmp.ScaleSimple(newWidth, newHeight, Gdk.InterpType.Bilinear);
-#endif
-            }
-            */
 
             return bmp;
         }
@@ -282,16 +255,6 @@ namespace FamiStudio
         public float GetBitmapWidth(GLBitmap bmp)
         {
             return bmp.Size.Width;
-        }
-
-        public GLCommandList CreateCommandList()
-        {
-            return new GLCommandList(this, dashedBitmap.Size.Width);
-        }
-
-        public void DrawCommandList(GLCommandList list)
-        {
-            DrawCommandList(list, Rectangle.Empty);
         }
 
         private T[] CopyResizeArray<T>(T[] array, int size)
@@ -397,7 +360,7 @@ namespace FamiStudio
             return buffer;
         }
 
-        public unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
+        public override unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
         {
             if (!list.HasAnything)
                 return;

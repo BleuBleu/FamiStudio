@@ -12,7 +12,7 @@ using RenderGraphics = FamiStudio.GLGraphics;
 
 namespace FamiStudio
 {
-    class ThemeBase
+    public class ThemeBase
     {
         protected enum RenderFontStyle
         {
