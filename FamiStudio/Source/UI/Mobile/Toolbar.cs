@@ -168,7 +168,7 @@ namespace FamiStudio
 
         protected override void UpdateButtonLayout()
         {
-            if (theme == null)
+            if (!IsRenderInitialized)
                 return;
 
             var landscape = IsLandscape;

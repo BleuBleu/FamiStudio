@@ -326,6 +326,11 @@ namespace FamiStudio
         {
             return Gdk.Pixbuf.LoadFromResource(name);
         }
+
+        public static float GetDesktopScaling()
+        {
+            return (float)Gdk.Display.Default.DefaultScreen.Resolution / 96.0f;
+        }
     }
 }
 

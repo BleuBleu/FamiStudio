@@ -1,18 +1,15 @@
-﻿using Android.App;
+﻿using System;
+using System.IO;
+using System.Reflection;
+using Android.App;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using AndroidX.AppCompat.App;
 using Android.Opengl;
 using Javax.Microedition.Khronos.Opengles;
-using static Android.Views.View;
 using Android.Content.Res;
-
-using RenderTheme = FamiStudio.ThemeRenderResources;
-using static Android.Views.Choreographer;
-using System.IO;
-using System.Reflection;
-using System;
+using static Android.Views.View;
 
 namespace FamiStudio
 {
@@ -69,10 +66,12 @@ namespace FamiStudio
 
             EnableFullscreenMode();
 
+            // DROIDTODO : Move this to a function!
             //Settings.Load(); // DROIDTODO : Settings.
+            DpiScaling.Initialize();
             Utils.Initialize();
             PlatformUtils.Initialize();
-            Theme.Initialize();
+            global::FamiStudio.Theme.Initialize();
             NesApu.InitializeNoteTables();
 
             glSurfaceView = FindViewById<GLSurfaceView>(Resource.Id.surfaceview);

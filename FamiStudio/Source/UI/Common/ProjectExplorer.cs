@@ -612,7 +612,7 @@ namespace FamiStudio
             buttons.Clear();
             var project = App.Project;
 
-            if (ThemeResources == null || project == null)
+            if (!IsRenderInitialized || project == null)
                 return;
 
             var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";

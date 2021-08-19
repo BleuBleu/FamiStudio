@@ -132,7 +132,7 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
-    <Compile Include="Source\UI\Windows\WinDpiScaling.cs" />
+    <Compile Include="Source\UI\Common\DpiScaling.cs" />
     <Compile Include="Source\UI\Windows\GLForm.cs">
       <SubType>Form</SubType>
     </Compile>

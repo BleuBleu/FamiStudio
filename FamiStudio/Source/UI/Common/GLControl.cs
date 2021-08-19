@@ -70,6 +70,7 @@ namespace FamiStudio
         public int Height => height;
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }
         public bool NeedsRedraw => invalid;
+        public bool IsRenderInitialized => themeRes != null;
         public float MainWindowScaling => mainWindowScaling;
         public float FontScaling => fontScaling;
         public ThemeRenderResources ThemeResources => themeRes;

@@ -219,5 +219,11 @@ namespace FamiStudio
         {
             return System.Drawing.Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(name)) as System.Drawing.Bitmap;
         }
+
+        public static float GetDesktopScaling()
+        {
+            var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+            return graphics.DpiX / 96.0f;
+        }
     }
 }

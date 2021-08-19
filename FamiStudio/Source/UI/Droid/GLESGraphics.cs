@@ -35,7 +35,7 @@ namespace FamiStudio
         List<IntBuffer>[]   usedColBuffers = new List<IntBuffer>  [NumBufferSizes];
         List<ShortBuffer>[] usedIdxBuffers = new List<ShortBuffer>[NumBufferSizes];
 
-        public GLGraphics(IGL10 g)
+        public GLGraphics(IGL10 g, float mainScale, float baseScale) : base(mainScale, baseScale)
         {
             gl = g;
             dashedBitmap = CreateBitmapFromResource("Dash");
@@ -495,7 +495,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private GLOffscreenGraphics(IGL10 gl, int imageSizeX, int imageSizeY, bool allowReadback) : base(gl)
+        private GLOffscreenGraphics(IGL10 gl, int imageSizeX, int imageSizeY, bool allowReadback) : base(gl, 1.0f, 1.0f)
         {
             resX = imageSizeX;
             resY = imageSizeY;

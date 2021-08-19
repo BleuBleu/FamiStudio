@@ -64,9 +64,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Source\Player\AndroidAudioStream.cs" />
+    <Compile Include="Source\UI\Common\DpiScaling.cs" />
     <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Droid\Cursors.cs" />
-    <Compile Include="Source\UI\Droid\DpiScaling.cs" />
     <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
@@ -188,7 +188,6 @@
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
-    <Compile Include="Source\Utils\WinUtils.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\PasteSpecialDialog.cs" />

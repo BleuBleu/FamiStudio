@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 #if FAMISTUDIO_ANDROID
 using Android.Opengl;

@@ -14,10 +14,11 @@ namespace FamiStudio
         private DateTime lastTime = DateTime.MinValue;
 
         private GLGraphics  gfx;
+        private ThemeRenderResources res;
+
         private GLControl[] controls = new GLControl[5];
         private GLControl   transitionControl;
         private GLControl   activeControl;
-        private ThemeRenderResources     theme;
         private float       transitionTimer;
 
         private Toolbar         toolbar;
@@ -166,7 +167,7 @@ namespace FamiStudio
             var t1 = DateTime.Now;
 
             var cmd = gfx.CreateCommandList();
-            cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", Theme.FontBigBold, 10, 10, debugBrush);
+            cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontBigBold, 10, 10, debugBrush);
             gfx.DrawCommandList(cmd);
 
             gfx.EndDrawControl();
@@ -197,12 +198,12 @@ namespace FamiStudio
                 cmd.FillRectangle(activeControl.Left, activeControl.Top, activeControl.Right, activeControl.Bottom, brush);
             }
 
-            cmd.DrawLine(toolbar.Left, toolbar.Bottom, toolbar.Right, toolbar.Bottom, theme.BlackBrush, 3.0f);
+            cmd.DrawLine(toolbar.Left, toolbar.Bottom, toolbar.Right, toolbar.Bottom, res.BlackBrush, 3.0f);
 
             if (IsLandscape)
-                cmd.DrawLine(navigationBar.Right, navigationBar.Top, navigationBar.Right, navigationBar.Bottom, theme.BlackBrush, 3.0f);
+                cmd.DrawLine(navigationBar.Right, navigationBar.Top, navigationBar.Right, navigationBar.Bottom, res.BlackBrush, 3.0f);
             else
-                cmd.DrawLine(navigationBar.Right, navigationBar.Top, navigationBar.Left, navigationBar.Top, theme.BlackBrush, 3.0f);
+                cmd.DrawLine(navigationBar.Right, navigationBar.Top, navigationBar.Left, navigationBar.Top, res.BlackBrush, 3.0f);
 
             gfx.DrawCommandList(cmd);
             gfx.EndDrawControl();
@@ -255,10 +256,15 @@ namespace FamiStudio
 
         public void InitializeGL(IGL10 gl)
         {
-            gfx = new GLGraphics(gl);
-            theme = ThemeRenderResources.CreateResourcesForGraphics(gfx);
+            gfx = new GLGraphics(gl, DpiScaling.MainWindow, DpiScaling.Font);
+            res = new ThemeRenderResources(gfx);
+            
             foreach (var ctrl in controls)
+            {
+                ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+                ctrl.SetThemeRenderResource(res);
                 ctrl.RenderInitialized(gfx);
+            }
         }
     }
 }

@@ -48,7 +48,6 @@ namespace FamiStudio
         public event EmptyDelegate PianoRollClicked;
         public event EmptyDelegate ProjectExplorerClicked;
 
-        RenderTheme theme;
         RenderBitmapAtlas bmpButtonAtlas;
         Button[] buttons = new Button[(int)ButtonType.Count];
 
@@ -63,7 +62,6 @@ namespace FamiStudio
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
 
-            theme = RenderTheme.CreateResourcesForGraphics(g);
             bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
 
             buttons[(int)ButtonType.Sequencer] = new Button { Click = OnSequencer };
@@ -80,7 +78,6 @@ namespace FamiStudio
 
         protected override void OnRenderTerminated()
         {
-            theme.Terminate();
             Utils.DisposeAndNullify(ref bmpButtonAtlas);
         }
 
@@ -92,7 +89,7 @@ namespace FamiStudio
 
         private void UpdateButtonLayout()
         {
-            if (theme == null)
+            if (!IsRenderInitialized)
                 return;
 
             var landscape = IsLandscape;
@@ -140,7 +137,7 @@ namespace FamiStudio
         {
             var c = g.CreateCommandList(); 
 
-            c.FillRectangle(0, 0, Width, Height, theme.DarkGreyLineBrush1);
+            c.FillRectangle(0, 0, Width, Height, ThemeResources.DarkGreyLineBrush1);
 
             // Buttons
             for (int i = 0; i < (int)ButtonType.Count; i++)
@@ -153,7 +150,7 @@ namespace FamiStudio
                 c.DrawBitmapAtlas(bmpButtonAtlas, i, btn.x, btn.y, 1.0f, buttonBitmapScaleFloat);
             }
 
-            c.DrawLine(Width, 0, Width, Height, theme.BlackBrush, 5.0f); // DROIDTODO : Line width!
+            c.DrawLine(Width, 0, Width, Height, ThemeResources.BlackBrush, 5.0f); // DROIDTODO : Line width!
             g.DrawCommandList(c);
         }
 

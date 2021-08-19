@@ -169,7 +169,7 @@ namespace FamiStudio
 
         protected override void UpdateButtonLayout()
         {
-            if (ThemeResources == null)
+            if (!IsRenderInitialized)
                 return;
 
             // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
