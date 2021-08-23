@@ -28,6 +28,7 @@ namespace FamiStudio
     {
         public static FamiStudioForm Instance { get; private set; }
         public object DialogUserData => dialogUserData;
+        public bool IsAsyncDialogInProgress => dialogRequestCode >= 0;
 
         LinearLayout linearLayout;
         GLSurfaceView glSurfaceView;
@@ -181,6 +182,7 @@ namespace FamiStudio
         {
             if (e.Action == MotionEventActions.Down)
             {
+#if FALSE
                 var dlg = new PropertyDialog();
 
                 dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
@@ -190,6 +192,25 @@ namespace FamiStudio
                 dlg.Properties.AddColorPicker(System.Drawing.Color.Pink);
                 dlg.Properties.AddCheckBox("CheckBox1", true);
                 dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX");
+
+                dlg.ShowDialog((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        Debug.WriteLine("Hello!");
+                    }
+                });
+#endif
+
+                var dlg = new MultiPropertyDialog(0, 0);
+                var page1 = dlg.AddPropertyPage("Wav", "ExportWav");
+                page1.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
+                page1.AddButton("Hey", "This is a button");
+                page1.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
+                var page2 = dlg.AddPropertyPage("Video", "ExportVideo");
+                page2.AddColorPicker(System.Drawing.Color.Pink);
+                page2.AddCheckBox("CheckBox1", true);
+                page2.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX");
 
                 dlg.ShowDialog((r) =>
                 {
@@ -214,6 +235,10 @@ namespace FamiStudio
         protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
         {
             Debug.Assert(dialogRequestCode == requestCode);
+            Debug.Assert(
+                (dialogRequestCode == PropertyDialog.RequestCode      && dialogUserData is PropertyDialog) ||
+                (dialogRequestCode == MultiPropertyDialog.RequestCode && dialogUserData is MultiPropertyDialog));
+
             var callback = dialogCallback;
 
             dialogRequestCode = -1;
@@ -240,11 +265,14 @@ namespace FamiStudio
             RunOnUiThread(() => { Tick(); });
 
             lock (renderLock)
+            {
+                Debug.Assert(!IsAsyncDialogInProgress);
                 controls.Redraw();
+            }
         }
 
-        // GL thread.
-        public void OnSurfaceChanged(IGL10 gl, int width, int height)
+            // GL thread.
+            public void OnSurfaceChanged(IGL10 gl, int width, int height)
         {
             controls.Resize(width, height);
         }

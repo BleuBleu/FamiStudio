@@ -1,5 +1,6 @@
 ﻿using Android.Content;
 using Android.Util;
+using Xamarin.Essentials;
 
 namespace FamiStudio
 {
@@ -18,6 +19,11 @@ namespace FamiStudio
             var dimension = att.GetDimensionPixelSize(0, 0);
             att.Recycle();
             return dimension;
+        }
+
+        public static int DpToPixels(int dp)
+        {
+            return (int)(dp * Platform.AppContext.Resources.DisplayMetrics.Density);
         }
     }
 }

@@ -97,7 +97,7 @@ namespace FamiStudio
         private SeekBar CreateSeekBar(double value, double min, double max, double increment, int numDecimals, bool showLabel, string tooltip = null)
         {
             var seek = new SeekBar(context);
-            var padding = DpToPixels(20);
+            var padding = DroidUtils.DpToPixels(20);
 
             seek.SetPadding(padding, padding, padding, padding);
             seek.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
@@ -162,17 +162,12 @@ namespace FamiStudio
             return AddTextBox(null, ""); // MATTT : We need a label here on android.
         }
 
-        private int DpToPixels(int dp)
-        {
-            return (int)(dp * context.Resources.DisplayMetrics.Density);
-        }
-
         private LinearLayout CreateLinearLayout(bool vertical, bool matchParentWidth, bool matchParentHeight, int margin)
         {
             var layout = new LinearLayout.LayoutParams(
-                    matchParentWidth ? ViewGroup.LayoutParams.MatchParent : ViewGroup.LayoutParams.WrapContent,
+                    matchParentWidth  ? ViewGroup.LayoutParams.MatchParent : ViewGroup.LayoutParams.WrapContent,
                     matchParentHeight ? ViewGroup.LayoutParams.MatchParent : ViewGroup.LayoutParams.WrapContent);
-            margin = DpToPixels(margin);
+            margin = DroidUtils.DpToPixels(margin);
             layout.SetMargins(margin, margin, margin, margin);
 
             var lin = new LinearLayout(context);
@@ -566,7 +561,7 @@ namespace FamiStudio
         {
             context = container.Context;
 
-            var margin = DpToPixels(2);
+            var margin = DroidUtils.DpToPixels(2);
             var coordLayoutParameters = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
             coordLayoutParameters.SetMargins(margin, margin, margin, margin);
 

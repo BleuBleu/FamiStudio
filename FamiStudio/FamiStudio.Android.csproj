@@ -74,6 +74,7 @@
     <Compile Include="Source\UI\Droid\DroidUtils.cs" />
     <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
+    <Compile Include="Source\UI\Droid\MultiPropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
     <Compile Include="Source\UI\Droid\PropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
@@ -657,6 +658,12 @@
     <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand.xml">
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
     </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Source\UI\Droid\Resources\anim\slide_in_right.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Source\UI\Droid\Resources\anim\fade_out.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

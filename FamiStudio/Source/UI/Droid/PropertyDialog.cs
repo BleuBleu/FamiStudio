@@ -23,14 +23,14 @@ namespace FamiStudio
 {
     public class PropertyDialog
     {
-        const int PropertyDialogCode = 1001;
+        public const int RequestCode = 1001;
 
         private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
         public PropertyPage Properties => propertyPage;
 
         public void ShowDialog(Action<DialogResult> callback)
         {
-            FamiStudioForm.Instance.StartDialogActivity(typeof(PropertyDialogActivity), PropertyDialogCode, callback, this);
+            FamiStudioForm.Instance.StartDialogActivity(typeof(PropertyDialogActivity), RequestCode, callback, this);
         }
     }
 
@@ -92,7 +92,7 @@ namespace FamiStudio
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             menu.Clear();
-            var item = menu.Add(IMenu.None, 123, IMenu.None, "Apply");
+            var item = menu.Add(IMenu.None, 123, IMenu.None, "Apply"); // MATTT : Label + ID.
             item.SetShowAsAction(ShowAsAction.Always);
 
             return true;
@@ -100,6 +100,7 @@ namespace FamiStudio
 
         public override bool OnTouchEvent(MotionEvent e)
         {
+            // MATTT : This is temporary.
             if (e.Action == MotionEventActions.Down)
             {
                 SetResult(Result.Ok);

@@ -45,11 +45,11 @@ namespace FamiStudio
             return string.Empty;
         }
 
-        public static Android.Graphics.Bitmap LoadBitmapFromResource(string name)
+        public static Android.Graphics.Bitmap LoadBitmapFromResource(string name, bool premultiplied = false)
         {
             return Android.Graphics.BitmapFactory.DecodeStream(
                 Assembly.GetExecutingAssembly().GetManifestResourceStream(name), null,
-                new Android.Graphics.BitmapFactory.Options() { InPremultiplied = false });
+                new Android.Graphics.BitmapFactory.Options() { InPremultiplied = premultiplied });
         }
     }
 }
