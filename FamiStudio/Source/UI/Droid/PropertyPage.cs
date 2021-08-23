@@ -559,6 +559,9 @@ namespace FamiStudio
 
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
+            if (pageLayout != null)
+                return pageLayout;
+
             context = container.Context;
 
             var margin = DroidUtils.DpToPixels(2);

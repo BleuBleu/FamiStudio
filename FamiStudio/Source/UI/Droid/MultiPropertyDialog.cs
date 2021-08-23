@@ -85,7 +85,7 @@ namespace FamiStudio
         private IMenuItem applyMenuItem;
         private UpdateToolbarRunnable updateToolbarRunnable;
 
-        private int tab = -1; // -1 means in the tab page.
+        private int selectedTabIndex = -1; // -1 means in the tab page.
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -132,7 +132,9 @@ namespace FamiStudio
 
             SetContentView(coordLayout);
 
-            SupportFragmentManager.BeginTransaction().SetReorderingAllowed(true).Add(fragmentView.Id, tabsFragment, "MultiPropertyDialogTabs").Commit();
+            SupportFragmentManager.BeginTransaction()
+                .Add(fragmentView.Id, tabsFragment, "MultiPropertyDialogTabs")
+                .Commit();
         }
 
         // MATTT : WHy does this cause problem when changing fragment.
@@ -161,19 +163,40 @@ namespace FamiStudio
 
         public void OnClick(View v)
         {
-            if (tab == -1)
+            if (selectedTabIndex == -1)
             {
                 for (int i = 0; i < dialog.PageCount; i++)
                 {
                     var tab = dialog.GetPropertyPageTab(i);
                     if (tab.button == v)
                     {
+                        selectedTabIndex = i;
                         UpdateToolbar(false);
-                        //SupportFragmentManager.BeginTransaction().SetReorderingAllowed(true).SetCustomAnimations(Android.Resource.Animation.SlideInLeft, Android.Resource.Animation.SlideOutRight).Replace(fragmentView.Id, tab.properties, "MultiPropertyDialog").RunOnCommit(updateToolbarRunnable).Commit();
-                        SupportFragmentManager.BeginTransaction().SetReorderingAllowed(true).SetCustomAnimations(Resource.Animation.slide_in_right, Resource.Animation.fade_out).Replace(fragmentView.Id, tab.properties, "MultiPropertyDialog").RunOnCommit(updateToolbarRunnable).Commit();
+                        SupportFragmentManager.BeginTransaction()
+                            .SetCustomAnimations(Resource.Animation.slide_in_right, Resource.Animation.fade_out)
+                            .Replace(fragmentView.Id, tab.properties, "MultiPropertyDialog")
+                            .RunOnCommit(updateToolbarRunnable)
+                            .Commit();
                         break;
                     }
                 }
+            }
+        }
+
+        public override void OnBackPressed()
+        {
+            if (selectedTabIndex >= 0)
+            {
+                selectedTabIndex = -1;
+                UpdateToolbar(false);
+                SupportFragmentManager.BeginTransaction()
+                    .SetCustomAnimations(Resource.Animation.fade_in, Resource.Animation.slide_out_right)
+                    .Replace(fragmentView.Id, tabsFragment, "MultiPropertyDialogTabs")
+                    .Commit();
+            }
+            else
+            {
+                base.OnBackPressed();
             }
         }
 
