@@ -27,8 +27,8 @@ namespace FamiStudio
 
     public enum PropertyType
     {
-        String,
-        ColoredString,
+        TextBox,
+        ColoredTextBox,
         NumericUpDown,
         DomainUpDown,
         Slider,
@@ -39,7 +39,7 @@ namespace FamiStudio
         ColorPicker,
         Label,
         Button,
-        MultilineString,
+        MultilineTextBox,
         ProgressBar,
         Radio
     };

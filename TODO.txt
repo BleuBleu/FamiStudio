@@ -1,15 +1,22 @@
 Android prototype
 =================
 Theme + font refactor:
-- Theme is a singleton, creates resource from RenderGraphics (brush, fonts, etc.)
-- GLControl has an accessor (Theme)
-- Fonts are created + cached on graphics device.
-- Add alignemnt, ellipsis params on drawtext
 - Add a scaling factor on font (android branch for now)
-- Move scaling params somewhere else.
+
+Prop page:
+/ PropertyDialog/MultiPropertyDialog activity.
+- Mobile-look prototype:
+	- Multi-properties.
+	- Dropdown/integerrange.
+	- Tooltips on all.
+
+- Try to get the theme right too.
+- 
 
 3.2.0
 =====
+
+- NSF bug tempo from Discord!
 
 DMC counter effect:
 - Sound engine

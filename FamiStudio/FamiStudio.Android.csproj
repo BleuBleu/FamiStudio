@@ -39,6 +39,10 @@
     <AndroidLinkMode>None</AndroidLinkMode>
     <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AotAssemblies>false</AotAssemblies>
+    <EnableLLVM>false</EnableLLVM>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <BundleAssemblies>false</BundleAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -67,9 +71,11 @@
     <Compile Include="Source\UI\Common\DpiScaling.cs" />
     <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Droid\Cursors.cs" />
+    <Compile Include="Source\UI\Droid\DroidUtils.cs" />
     <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
+    <Compile Include="Source\UI\Droid\PropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
     <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -79,20 +85,19 @@
     <None Include="Source\UI\Droid\Resources\AboutResources.txt" />
     <None Include="Source\UI\Droid\Assets\AboutAssets.txt" />
     <None Include="Properties\AndroidManifest.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand_bold.ttf">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand_regular.ttf">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Source\UI\Droid\Resources\layout\activity_main.xml">
-      <SubType>Designer</SubType>
-    </AndroidResource>
-    <AndroidResource Include="Source\UI\Droid\Resources\layout\content_main.xml">
-      <SubType>Designer</SubType>
-    </AndroidResource>
     <AndroidResource Include="Source\UI\Droid\Resources\values\colors.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\dimens.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\ic_launcher_background.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\strings.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\styles.xml" />
-    <AndroidResource Include="Source\UI\Droid\Resources\menu\menu_main.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\ic_launcher.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\ic_launcher_round.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\ic_launcher.png" />
@@ -647,6 +652,11 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\More%402x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand.xml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

@@ -10,6 +10,16 @@ using Android.Opengl;
 using Javax.Microedition.Khronos.Opengles;
 using Android.Content.Res;
 using static Android.Views.View;
+using Android.Content;
+using System.Threading;
+using System.Collections;
+using System.Collections.Generic;
+
+using Debug = System.Diagnostics.Debug;
+using DialogResult = System.Windows.Forms.DialogResult;
+using System.Threading.Tasks;
+using Xamarin.Essentials;
+using Android.Widget;
 
 namespace FamiStudio
 {
@@ -17,10 +27,17 @@ namespace FamiStudio
     public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, IOnTouchListener
     {
         public static FamiStudioForm Instance { get; private set; }
+        public object DialogUserData => dialogUserData;
 
+        LinearLayout linearLayout;
         GLSurfaceView glSurfaceView;
         FamiStudio famistudio;
 
+        private bool glThreadIsRunning;
+        private int dialogRequestCode = -1;
+        private object dialogUserData = null;
+        private Action<DialogResult> dialogCallback;
+        private object renderLock = new object();
         private FamiStudioControls controls;
 
         public FamiStudio FamiStudio => famistudio;
@@ -62,7 +79,6 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
-            SetContentView(Resource.Layout.activity_main);
 
             EnableFullscreenMode();
 
@@ -74,7 +90,7 @@ namespace FamiStudio
             global::FamiStudio.Theme.Initialize();
             NesApu.InitializeNoteTables();
 
-            glSurfaceView = FindViewById<GLSurfaceView>(Resource.Id.surfaceview);
+            glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.PreserveEGLContextOnPause = true;
 #if DEBUG
             glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
@@ -83,6 +99,13 @@ namespace FamiStudio
             glSurfaceView.SetEGLConfigChooser(8, 8, 8, 8, 0, 0);
             glSurfaceView.SetOnTouchListener(this);
             glSurfaceView.SetRenderer(this);
+            glThreadIsRunning = true;
+
+            linearLayout = new LinearLayout(this);
+            linearLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
+            linearLayout.AddView(glSurfaceView);
+
+            SetContentView(linearLayout);
 
             controls = new FamiStudioControls(this);
 
@@ -100,28 +123,6 @@ namespace FamiStudio
             famistudio.Initialize(filename);
         }
 
-        public override void OnConfigurationChanged(Configuration newConfig)
-        {
-            base.OnConfigurationChanged(newConfig);
-        }
-
-        public override bool OnCreateOptionsMenu(IMenu menu)
-        {
-            MenuInflater.Inflate(Resource.Menu.menu_main, menu);
-            return true;
-        }
-
-        public override bool OnOptionsItemSelected(IMenuItem item)
-        {
-            int id = item.ItemId;
-            if (id == Resource.Id.action_settings)
-            {
-                return true;
-            }
-
-            return base.OnOptionsItemSelected(item);
-        }
-
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -129,33 +130,117 @@ namespace FamiStudio
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
+        private void StartFileActivity(Action<DialogResult> callback)
+        {
+            //dialogRequestCode = FILE_RESULT_CODE;
+            //dialogCallback = FileActivityCallback;
+
+            //Intent chooseFile = new Intent(Intent.ActionGetContent);
+            //chooseFile.AddCategory(Intent.CategoryOpenable);
+            //chooseFile.SetType("text/plain");
+            //StartActivityForResult(Intent.CreateChooser(chooseFile, "Choose a file"), FILE_RESULT_CODE);
+        }
+
+        public void StartDialogActivity(Type type, int resultCode, Action<DialogResult> callback, object userData)
+        {
+            // No support for nested dialog at the moment.
+            Debug.Assert(dialogCallback == null && dialogRequestCode == -1 && dialogUserData == null);
+
+            dialogRequestCode = resultCode;
+            dialogCallback = callback;
+            dialogUserData = userData;
+
+            StopGLThread();
+            StartActivityForResult(new Intent(this, type), resultCode);
+        }
+
+        private void StartGLThread()
+        {
+            if (!glThreadIsRunning)
+            {
+                glSurfaceView.OnResume();
+                lock (renderLock) { }; // Extra safety.
+                glThreadIsRunning = true;
+            }
+        }
+
+        private void StopGLThread()
+        {
+            if (glThreadIsRunning)
+            {
+                glSurfaceView.OnPause();
+                lock (renderLock) { }; // Extra safety.
+                glThreadIsRunning = false;
+            }
+        }
+
+        int idx = 0;
+
         // Main thread.
         public bool OnTouch(View v, MotionEvent e)
         {
-            // The GL thread is our "main" thread.
-            glSurfaceView.QueueEvent(() => OnTouchGLThread(e));
-            return true;
-        }
-
-        // GL thread
-        private void OnTouchGLThread(MotionEvent e)
-        {
-            System.Diagnostics.Debug.WriteLine($"PointerCount = {e.PointerCount}, Action = {e.Action}");
-
             if (e.Action == MotionEventActions.Down)
             {
-                // TEMPORARY!
-                var ctrl = controls.GetControlAtCoord((int)e.RawX, (int)e.RawY, out var x, out var y);
-                if (ctrl != null)
-                    ctrl.MouseDown(new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.Left, 1, x, y, 0));
+                var dlg = new PropertyDialog();
+
+                dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
+                dlg.Properties.AddButton("Hey", "This is a button");
+                dlg.Properties.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
+                dlg.Properties.BeginAdvancedProperties();
+                dlg.Properties.AddColorPicker(System.Drawing.Color.Pink);
+                dlg.Properties.AddCheckBox("CheckBox1", true);
+                dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX");
+
+                dlg.ShowDialog((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        Debug.WriteLine("Hello!");
+                    }
+                });
             }
+
+            return false;
+        }
+
+        private DialogResult ToWinFormsResult([GeneratedEnum] Result resultCode)
+        {
+            if (resultCode == Result.Ok)
+                return DialogResult.OK;
+            else
+                return DialogResult.Cancel;
+        }
+
+        protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
+        {
+            Debug.Assert(dialogRequestCode == requestCode);
+            var callback = dialogCallback;
+
+            dialogRequestCode = -1;
+            dialogCallback = null;
+            dialogUserData = null;
+
+            callback(ToWinFormsResult(resultCode));
+
+            // If not more dialog are needed, restart GL thread.
+            if (dialogCallback == null)
+                StartGLThread();
+
+            base.OnActivityResult(requestCode, resultCode, data);
+        }
+
+        private void Tick()
+        {
+            famistudio.Tick();
         }
 
         // GL thread.
         public void OnDrawFrame(IGL10 gl)
         {
-            famistudio.Tick();
-            controls.Redraw();
+            RunOnUiThread(() => { Tick(); });
+
+            lock (renderLock)
+                controls.Redraw();
         }
 
         // GL thread.

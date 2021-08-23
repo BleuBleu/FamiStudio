@@ -458,35 +458,35 @@ namespace FamiStudio
             list.Invalidate();
         }
 
-        public int AddColoredString(string value, Color color)
+        public int AddColoredTextBox(string value, Color color)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.ColoredString,
+                    type = PropertyType.ColoredTextBox,
                     control = CreateColoredTextBox(value, color)
                 });
             return properties.Count - 1;
         }
 
-        public int AddString(string label, string value, int maxLength = 0, string tooltip = null)
+        public int AddTextBox(string label, string value, int maxLength = 0, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.String,
+                    type = PropertyType.TextBox,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateTextBox(value, maxLength, tooltip)
                 });
             return properties.Count - 1;
         }
 
-        public int AddMultilineString(string label, string value)
+        public int AddMultilineTextBox(string label, string value)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.MultilineString,
+                    type = PropertyType.MultilineTextBox,
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateMultilineTextBox(value)
                 });
@@ -638,7 +638,7 @@ namespace FamiStudio
                 cb.SelectedIndex = 0;
         }
 
-        public void AddCheckBox(string label, bool value, string tooltip = null)
+        public int AddCheckBox(string label, bool value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -647,6 +647,7 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateCheckBox(value, "", tooltip)
                 });
+            return properties.Count - 1;
         }
 
         public int AddLabelCheckBox(string label, bool value, int margin = 0)
@@ -869,9 +870,9 @@ namespace FamiStudio
 
             switch (prop.type)
             {
-                case PropertyType.String:
-                case PropertyType.ColoredString:
-                case PropertyType.MultilineString:
+                case PropertyType.TextBox:
+                case PropertyType.ColoredTextBox:
+                case PropertyType.MultilineTextBox:
                     ForceTextBoxASCII(prop.control as TextBox);
                     return (prop.control as TextBox).Text;
                 case PropertyType.NumericUpDown:
@@ -941,7 +942,7 @@ namespace FamiStudio
                 case PropertyType.Button:
                     (prop.control as Button).Text = (string)value;
                     break;
-                case PropertyType.MultilineString:
+                case PropertyType.MultilineTextBox:
                     (prop.control as TextBox).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:
