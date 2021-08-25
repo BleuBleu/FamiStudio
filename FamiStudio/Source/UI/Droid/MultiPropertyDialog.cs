@@ -32,6 +32,7 @@ namespace FamiStudio
             public string image;
             public LinearLayout button;
             public PropertyPage properties;
+            public bool visible = true;
         }
 
         private int selectedIndex = 0;
@@ -56,6 +57,11 @@ namespace FamiStudio
             return tab.properties;
         }
 
+        public void SetPageVisible(int idx, bool visible)
+        {
+            tabs[idx].visible = visible;
+        }
+
         public PropertyPage GetPropertyPage(int idx)
         {
             return tabs[idx].properties;
@@ -66,7 +72,7 @@ namespace FamiStudio
             return tabs[idx];
         }
 
-        public void ShowDialog(Action<DialogResult> callback)
+        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
         {
             FamiStudioForm.Instance.StartDialogActivity(typeof(MultiPropertyDialogActivity), RequestCode, callback, this);
         }
@@ -121,7 +127,7 @@ namespace FamiStudio
             var scrollViewLayoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
             scrollViewLayoutParams.Behavior = new AppBarLayout.ScrollingViewBehavior(this, null);
 
-            scrollView = new NestedScrollView(this);
+            scrollView = new NestedScrollView(new ContextThemeWrapper(this, Resource.Style.DarkBackgroundStyle));
             scrollView.LayoutParameters = scrollViewLayoutParams;
             scrollView.AddView(fragmentView);
 
@@ -243,6 +249,9 @@ namespace FamiStudio
                 {
                     var tab = dialog.GetPropertyPageTab(i);
 
+                    if (!tab.visible)
+                        continue;
+
                     if (i > 0)
                     {
                         var spacer = new View(container.Context);
@@ -258,9 +267,8 @@ namespace FamiStudio
                     var textViewLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
                     textViewLayoutParams.Gravity = GravityFlags.Left | GravityFlags.CenterVertical;
 
-                    var textView = new TextView(container.Context);
+                    var textView = new TextView(new ContextThemeWrapper(container.Context, Resource.Style.LightGrayLargeBold));
                     textView.Text = tab.text;
-                    textView.SetTextSize(Android.Util.ComplexUnitType.Dip, 16);
                     textView.LayoutParameters = textViewLayoutParams;
                     textView.SetPadding(dp10, 0, 0, 0);
 

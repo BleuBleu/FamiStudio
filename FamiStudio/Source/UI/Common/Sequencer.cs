@@ -1256,7 +1256,6 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dialog = new PropertyDialog(200);
             dialog.Properties.AddLabelCheckBox("Insert", false); // 0
             dialog.Properties.AddLabelCheckBox("Extend song", false); // 1
@@ -1265,14 +1264,16 @@ namespace FamiStudio
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();
 
-            if (dialog.ShowDialog(ParentForm) == DialogResult.OK)
+            dialog.ShowDialog(ParentForm, (r) =>
             {
-                PasteInternal(
-                    dialog.Properties.GetPropertyValue<bool>(0),
-                    dialog.Properties.GetPropertyValue<bool>(1),
-                    dialog.Properties.GetPropertyValue<int>(2));
-            }
-#endif
+                if (r == DialogResult.OK)
+                {
+                    PasteInternal(
+                        dialog.Properties.GetPropertyValue<bool>(0),
+                        dialog.Properties.GetPropertyValue<bool>(1),
+                        dialog.Properties.GetPropertyValue<int> (2));
+                }
+            });
         }
 
         private void PasteSpecialDialog_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -1835,7 +1836,6 @@ namespace FamiStudio
 
         private void EditPatternCustomSettings(Point pt, int patternIdx)
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 240);
             var song = Song;
             var enabled = song.PatternHasCustomSettings(patternIdx);
@@ -1858,15 +1858,17 @@ namespace FamiStudio
             dlg.Properties.PropertiesUserData = tempoProperties;
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+            dlg.ShowDialog(ParentForm, (r) =>
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
-                tempoProperties.Apply(dlg.Properties.GetPropertyValue<bool>(0));
-                App.UndoRedoManager.EndTransaction();
-                ConditionalInvalidate();
-                PatternModified?.Invoke();
-            }
-#endif
+                if (r == DialogResult.OK)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
+                    tempoProperties.Apply(dlg.Properties.GetPropertyValue<bool>(0));
+                    App.UndoRedoManager.EndTransaction();
+                    ConditionalInvalidate();
+                    PatternModified?.Invoke();
+                }
+            });
         }
 
         private void PatternCustomSettings_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -1882,48 +1884,49 @@ namespace FamiStudio
         {
             bool multiplePatternSelected = (maxSelectedChannelIdx != minSelectedChannelIdx) || (minSelectedPatternIdx != maxSelectedPatternIdx);
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 240);
-            dlg.Properties.AddColoredString(pattern.Name, pattern.Color);
+            dlg.Properties.AddColoredTextBox(pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
             dlg.Properties.AddColorPicker(pattern.Color);
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+            dlg.ShowDialog(ParentForm, (r) =>
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-
-                var newName = dlg.Properties.GetPropertyValue<string>(0);
-                var newColor = dlg.Properties.GetPropertyValue<Color>(1);
-
-                if (multiplePatternSelected)
+                if (r == DialogResult.OK)
                 {
-                    for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+
+                    var newName = dlg.Properties.GetPropertyValue<string>(0);
+                    var newColor = dlg.Properties.GetPropertyValue<Color>(1);
+
+                    if (multiplePatternSelected)
                     {
-                        for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                        for (int i = minSelectedChannelIdx; i <= maxSelectedChannelIdx; i++)
                         {
-                            var pat = Song.Channels[i].PatternInstances[j];
-                            if (pat != null)
-                                pat.Color = newColor;
+                            for (int j = minSelectedPatternIdx; j <= maxSelectedPatternIdx; j++)
+                            {
+                                var pat = Song.Channels[i].PatternInstances[j];
+                                if (pat != null)
+                                    pat.Color = newColor;
+                            }
                         }
+                        App.UndoRedoManager.EndTransaction();
                     }
-                    App.UndoRedoManager.EndTransaction();
-                }
-                else if (Song.Channels[selectedChannel].RenamePattern(pattern, newName))
-                {
-                    pattern.Color = newColor;
-                    App.UndoRedoManager.EndTransaction();
-                }
-                else
-                {
-                    App.UndoRedoManager.AbortTransaction();
-                    SystemSounds.Beep.Play();
-                }
+                    else if (Song.Channels[selectedChannel].RenamePattern(pattern, newName))
+                    {
+                        pattern.Color = newColor;
+                        App.UndoRedoManager.EndTransaction();
+                    }
+                    else
+                    {
+                        App.UndoRedoManager.AbortTransaction();
+                        SystemSounds.Beep.Play();
+                    }
 
-                ConditionalInvalidate();
-                PatternModified?.Invoke();
-            }
-#endif
+                    ConditionalInvalidate();
+                    PatternModified?.Invoke();
+                }
+            });
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)

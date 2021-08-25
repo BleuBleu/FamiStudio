@@ -1,5 +1,6 @@
 ﻿using Android.Content;
 using Android.Util;
+using AndroidX.Core.Content;
 using Xamarin.Essentials;
 
 namespace FamiStudio
@@ -24,6 +25,12 @@ namespace FamiStudio
         public static int DpToPixels(int dp)
         {
             return (int)(dp * Platform.AppContext.Resources.DisplayMetrics.Density);
+        }
+
+        public static Android.Graphics.Color GetColorFromResources(Context context, int resId)
+        {
+            // Seriously google?
+            return new Android.Graphics.Color(ContextCompat.GetColor(context, resId));
         }
     }
 }

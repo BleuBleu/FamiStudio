@@ -4,7 +4,29 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
+#if FAMISTUDIO_ANDROID
+    class LogProgressDialog : ILogOutput
+    {
+        public unsafe LogProgressDialog(FamiStudioForm parentForm)
+        {
+        }
+
+        public void LogMessage(string msg)
+        {
+        }
+
+        public void ReportProgress(float progress)
+        {
+        }
+
+        public void StayModalUntilClosed()
+        {
+        }
+
+        public bool HasMessages => false;
+        public bool AbortOperation => false;
+    }
+#else
     class LogProgressDialog : ILogOutput
     {
         private PropertyDialog dialog;

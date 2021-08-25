@@ -2426,11 +2426,11 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        private void EditProjectProperties(Point pt)
+        
+        public /*MATTT private*/ void EditProjectProperties(Point pt)
         {
             var project = App.Project;
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
             var numExpansions = ExpansionType.End - ExpansionType.Start + 1;
             var expNames = new string[numExpansions];
             var expBools = new bool[numExpansions];
@@ -2442,9 +2442,9 @@ namespace FamiStudio
 
             var dlg = new PropertyDialog(PointToScreen(pt), 360, true);
             dlg.Properties.ShowWarnings = true;
-            dlg.Properties.AddString("Title :", project.Name, 31); // 0
-            dlg.Properties.AddString("Author :", project.Author, 31); // 1
-            dlg.Properties.AddString("Copyright :", project.Copyright, 31); // 2
+            dlg.Properties.AddTextBox("Title :", project.Name, 31); // 0
+            dlg.Properties.AddTextBox("Author :", project.Author, 31); // 1
+            dlg.Properties.AddTextBox("Copyright :", project.Copyright, 31); // 2
             dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 3
             dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 4
             dlg.Properties.AddIntegerRange("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, CommonTooltips.ExpansionNumChannels); // 5 (Namco)
@@ -2455,87 +2455,90 @@ namespace FamiStudio
             UpdateProjectPropertiesWarnings(dlg.Properties);
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+            dlg.ShowDialog(ParentForm, (r) =>
             {
-                var selectedExpansions = dlg.Properties.GetPropertyValue<bool[]>(6);
-                var expansionMask = 0;
-                var expansionRemoved = false;
-
-                for (int i = 0; i < selectedExpansions.Length; i++)
+                if (r == DialogResult.OK)
                 {
-                    var selected = selectedExpansions[i];
-                    expansionMask |= (selected ? 1 : 0) << i;
+                    var selectedExpansions = dlg.Properties.GetPropertyValue<bool[]>(6);
+                    var expansionMask = 0;
+                    var expansionRemoved = false;
 
-                    if (project.UsesExpansionAudio(i + ExpansionType.Start) && !selected)
-                        expansionRemoved = true;
-                }
-
-                var tempoMode    = TempoType.GetValueForName    (dlg.Properties.GetPropertyValue<string>(3));
-                var palAuthoring = MachineType.GetValueForName  (dlg.Properties.GetPropertyValue<string>(4)) == 1;
-                var numChannels  = dlg.Properties.GetPropertyValue<int>(5);
-
-                var changedTempoMode        = tempoMode     != project.TempoMode;
-                var changedExpansion        = expansionMask != project.ExpansionAudioMask;
-                var changedNumChannels      = numChannels   != project.ExpansionNumN163Channels;
-                var changedAuthoringMachine = palAuthoring  != project.PalMode;
-
-                var transFlags = TransactionFlags.None;
-
-                if (changedAuthoringMachine || changedExpansion || changedNumChannels)
-                    transFlags = TransactionFlags.ReinitializeAudio;
-                else if (changedTempoMode)
-                    transFlags = TransactionFlags.StopAudio;
-
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, transFlags);
-
-                project.Name      = dlg.Properties.GetPropertyValue<string>(0);
-                project.Author    = dlg.Properties.GetPropertyValue<string>(1);
-                project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
-
-                if (changedExpansion || changedNumChannels)
-                {
-                    if (!expansionRemoved || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    for (int i = 0; i < selectedExpansions.Length; i++)
                     {
-                        selectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
-                        project.SetExpansionAudioMask(expansionMask, numChannels);
+                        var selected = selectedExpansions[i];
+                        expansionMask |= (selected ? 1 : 0) << i;
+
+                        if (project.UsesExpansionAudio(i + ExpansionType.Start) && !selected)
+                            expansionRemoved = true;
+                    }
+
+                    var tempoMode = TempoType.GetValueForName(dlg.Properties.GetPropertyValue<string>(3));
+                    var palAuthoring = MachineType.GetValueForName(dlg.Properties.GetPropertyValue<string>(4)) == 1;
+                    var numChannels = dlg.Properties.GetPropertyValue<int>(5);
+
+                    var changedTempoMode = tempoMode != project.TempoMode;
+                    var changedExpansion = expansionMask != project.ExpansionAudioMask;
+                    var changedNumChannels = numChannels != project.ExpansionNumN163Channels;
+                    var changedAuthoringMachine = palAuthoring != project.PalMode;
+
+                    var transFlags = TransactionFlags.None;
+
+                    if (changedAuthoringMachine || changedExpansion || changedNumChannels)
+                        transFlags = TransactionFlags.ReinitializeAudio;
+                    else if (changedTempoMode)
+                        transFlags = TransactionFlags.StopAudio;
+
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, transFlags);
+
+                    project.Name = dlg.Properties.GetPropertyValue<string>(0);
+                    project.Author = dlg.Properties.GetPropertyValue<string>(1);
+                    project.Copyright = dlg.Properties.GetPropertyValue<string>(2);
+
+                    if (changedExpansion || changedNumChannels)
+                    {
+                        if (!expansionRemoved || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        {
+                            selectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
+                            project.SetExpansionAudioMask(expansionMask, numChannels);
+                            ProjectModified?.Invoke();
+                            Reset();
+                        }
+                    }
+
+                    if (changedTempoMode)
+                    {
+                        if (tempoMode == TempoType.FamiStudio)
+                        {
+                            if (!project.AreSongsEmpty)
+                                PlatformUtils.MessageBox($"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
+                            project.ConvertToFamiStudioTempo();
+                        }
+                        else if (tempoMode == TempoType.FamiTracker)
+                        {
+                            if (!project.AreSongsEmpty)
+                                PlatformUtils.MessageBox($"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
+                            project.ConvertToFamiTrackerTempo(project.AreSongsEmpty);
+                        }
+
                         ProjectModified?.Invoke();
                         Reset();
                     }
-                }
 
-                if (changedTempoMode)
-                {
-                    if (tempoMode == TempoType.FamiStudio)
+                    if (changedAuthoringMachine && project.UsesFamiStudioTempo)
                     {
-                        if (!project.AreSongsEmpty)
-                            PlatformUtils.MessageBox($"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
-                        project.ConvertToFamiStudioTempo();
-                    }
-                    else if (tempoMode == TempoType.FamiTracker)
-                    {
-                        if (!project.AreSongsEmpty)
-                            PlatformUtils.MessageBox($"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
-                        project.ConvertToFamiTrackerTempo(project.AreSongsEmpty);
+                        project.PalMode = palAuthoring;
+                        App.PalPlayback = palAuthoring;
                     }
 
-                    ProjectModified?.Invoke();
-                    Reset();
+                    App.UndoRedoManager.EndTransaction();
+                    RefreshButtons();
                 }
-
-                if (changedAuthoringMachine && project.UsesFamiStudioTempo)
-                {
-                    project.PalMode = palAuthoring;
-                    App.PalPlayback = palAuthoring;
-                }
-
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
-#endif
+            });
         }
 
         private void UpdateProjectPropertiesWarnings(PropertyPage props)
         {
+#if !FAMISTUDIO_ANDROID
             var famiStudioTempo = props.GetPropertyValue<string>(3) == "FamiStudio";
             var selectedExpansions = props.GetPropertyValue<bool[]>(6);
             var numExpansionsSelected = 0;
@@ -2550,6 +2553,7 @@ namespace FamiStudio
                 props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to the FamiStudio Sound Engine or FamiTracker.");
             else
                 props.SetPropertyWarning(6, CommentType.Good, "");
+#endif
         }
 
         private void ProjectProperties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)

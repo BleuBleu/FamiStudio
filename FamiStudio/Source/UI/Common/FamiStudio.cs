@@ -33,9 +33,7 @@ namespace FamiStudio
         private InstrumentPlayer instrumentPlayer;
         private Oscilloscope oscilloscope;
         private UndoRedoManager undoRedoManager;
-#if !FAMISTUDIO_ANDROID // DROIDTODO
         private ExportDialog exportDialog;
-#endif
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
         private bool palPlayback = false;
@@ -544,13 +542,11 @@ namespace FamiStudio
 
         private void FreeExportDialog()
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             if (exportDialog != null)
             {
                 exportDialog.Exporting -= ExportDialog_Exporting;
                 exportDialog = null;
             }
-#endif
         }
 
         private void InitProject()
@@ -723,16 +719,13 @@ namespace FamiStudio
         {
             FreeExportDialog();
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             exportDialog = new ExportDialog(project);
             exportDialog.Exporting += ExportDialog_Exporting;
             exportDialog.ShowDialog(mainForm);
-#endif
         }
 
         public void RepeatLastExport()
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             if (exportDialog == null || !exportDialog.HasAnyPreviousExport)
             {
                 DisplayWarning("No last export to repeat");
@@ -746,7 +739,6 @@ namespace FamiStudio
             {
                 exportDialog.Export(mainForm, true);
             }
-#endif
         }
 
         private void ExportDialog_Exporting()
@@ -764,17 +756,18 @@ namespace FamiStudio
 
         public void OpenConfigDialog()
         {
-#if !FAMISTUDIO_ANDROID
             var dlg = new ConfigDialog();
 
-            if (dlg.ShowDialog(mainForm) == DialogResult.OK)
+            dlg.ShowDialog(mainForm, (r) =>
             {
-                RecreateAudioPlayers();
-                RefreshLayout();
-                InitializeMidi();
-                InvalidateEverything();
-            }
-#endif
+                if (r == DialogResult.OK)
+                {
+                    RecreateAudioPlayers();
+                    RefreshLayout();
+                    InitializeMidi();
+                    InvalidateEverything();
+                }
+            });
         }
 
         public bool TryClosing()

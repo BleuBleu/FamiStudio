@@ -6,7 +6,6 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class MidiImportDialog
     {
         private PropertyDialog dialog;
@@ -264,5 +263,4 @@ namespace FamiStudio
             return null;
         }
     }
-#endif
 }

@@ -182,43 +182,53 @@ namespace FamiStudio
         {
             if (e.Action == MotionEventActions.Down)
             {
-#if FALSE
-                var dlg = new PropertyDialog();
+#if TRUE
+                var dlg = new PropertyDialog(200);
 
                 dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
                 dlg.Properties.AddButton("Hey", "This is a button");
+                dlg.Properties.AddIntegerRange("Integer", 10, 2, 50, "Tooltip");
+                dlg.Properties.AddDropDownList("Hey", new [] { "Option1 QQQ", "Option2 QQQ", "Option3 QQQ", "Option4 QQQ" }, "Option3 QQQ");
                 dlg.Properties.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
                 dlg.Properties.BeginAdvancedProperties();
                 dlg.Properties.AddColorPicker(System.Drawing.Color.Pink);
                 dlg.Properties.AddCheckBox("CheckBox1", true);
                 dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX");
 
-                dlg.ShowDialog((r) =>
+                dlg.ShowDialog(this, (r) =>
                 {
                     if (r == DialogResult.OK)
                     {
                         Debug.WriteLine("Hello!");
                     }
                 });
-#endif
-
+#elif FALSE
                 var dlg = new MultiPropertyDialog(0, 0);
                 var page1 = dlg.AddPropertyPage("Wav", "ExportWav");
                 page1.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
                 page1.AddButton("Hey", "This is a button");
                 page1.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
-                var page2 = dlg.AddPropertyPage("Video", "ExportVideo");
+                var page2 = dlg.AddPropertyPage("Video Quicksand", "ExportVideo");
                 page2.AddColorPicker(System.Drawing.Color.Pink);
                 page2.AddCheckBox("CheckBox1", true);
                 page2.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX");
 
-                dlg.ShowDialog((r) =>
+                dlg.ShowDialog(this, (r) =>
                 {
                     if (r == DialogResult.OK)
                     {
                         Debug.WriteLine("Hello!");
                     }
                 });
+#elif FALSE
+                var dlg = new ExportDialog(famistudio.Project);
+                dlg.ShowDialog(this);
+#elif FALSE
+                var dlg = new ConfigDialog();
+                dlg.ShowDialog(this, (r) => {});
+#elif FALSE
+                ProjectExplorer.EditProjectProperties(new System.Drawing.Point());
+#endif
             }
 
             return false;

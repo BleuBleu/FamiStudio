@@ -3,4 +3,22 @@
     <color name="colorPrimary">#2c3e50</color>
     <color name="colorPrimaryDark">#1B3147</color>
     <color name="colorAccent">#3498db</color>
+
+    <color name="DarkGreyLineColor1">#191c1f</color>
+    <color name="DarkGreyLineColor2">#212529</color>
+    <color name="DarkGreyLineColor3">#262a2e</color>
+    <color name="DarkGreyFillColor1">#2a3033</color>
+    <color name="DarkGreyFillColor2">#31373d</color>
+    <color name="MediumGreyFillColor1">#565b69</color>
+    <color name="LightGreyFillColor1">#b2b9c6</color>
+    <color name="LightGreyFillColor2">#c6cdda</color>
 </resources>
+
+
+
+
+
+
+
+
+

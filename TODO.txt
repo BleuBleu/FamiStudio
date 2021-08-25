@@ -4,13 +4,12 @@ Theme + font refactor:
 - Add a scaling factor on font (android branch for now)
 
 Prop page:
-/ PropertyDialog/MultiPropertyDialog activity.
-- Mobile-look prototype:
-	- Multi-properties.
-	- Dropdown/integerrange.
-	- Tooltips on all.
-
-- Try to get the theme right too.
+/ Make theme work.
+/ Reactivate dialogs in code, test
+- Dropdown/integerrange/tooltip
+- Review text color light gray 1 or 2?
+- Add ability to hide pages + properties. 
+- Change insturment dialog for a combo
 - 
 
 3.2.0

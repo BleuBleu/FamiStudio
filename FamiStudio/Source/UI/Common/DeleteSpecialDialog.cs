@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
 
-using RenderTheme = FamiStudio.ThemeRenderResources;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace FamiStudio
 {
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class DeleteSpecialDialog
     {
         private PropertyDialog dialog;
@@ -29,7 +28,6 @@ namespace FamiStudio
 
             dialog.Properties.Build();
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
-            dialog.Name = "DeleteSpecialDialog";
         }
 
         private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -67,9 +65,9 @@ namespace FamiStudio
             inPropertyChanged = false;
         }
 
-        public System.Windows.Forms.DialogResult ShowDialog(FamiStudioForm parent)
+        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            return dialog.ShowDialog(parent);
+            dialog.ShowDialog(parent, callback);
         }
 
         public bool DeleteNotes => dialog.Properties.GetPropertyValue<bool>(0);
@@ -92,5 +90,4 @@ namespace FamiStudio
             }
         }
     }
-#endif
 }

@@ -1899,12 +1899,13 @@ namespace FamiStudio
             {
                 AbortCaptureOperation();
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
                 var dlg = new DeleteSpecialDialog(Song.Channels[editChannel]);
 
-                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
-                    DeleteSelectedNotes(true, dlg.DeleteNotes, dlg.DeleteEffectMask);
-#endif
+                dlg.ShowDialog(ParentForm, (r) =>
+                {
+                    if (r == DialogResult.OK)
+                        DeleteSelectedNotes(true, dlg.DeleteNotes, dlg.DeleteEffectMask);
+                });
             }
         }
 

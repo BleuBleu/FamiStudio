@@ -28,7 +28,15 @@ namespace FamiStudio
         private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
         public PropertyPage Properties => propertyPage;
 
-        public void ShowDialog(Action<DialogResult> callback)
+        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, object parent = null)
+        {
+        }
+
+        public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        {
+        }
+
+        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
         {
             FamiStudioForm.Instance.StartDialogActivity(typeof(PropertyDialogActivity), RequestCode, callback, this);
         }
@@ -75,7 +83,7 @@ namespace FamiStudio
             var scrollViewLayoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
             scrollViewLayoutParams.Behavior = new AppBarLayout.ScrollingViewBehavior(this, null);
 
-            scrollView = new NestedScrollView(this);
+            scrollView = new NestedScrollView(new ContextThemeWrapper(this, Resource.Style.DarkBackgroundStyle));
             scrollView.LayoutParameters = scrollViewLayoutParams;
             scrollView.AddView(fragmentView);
 

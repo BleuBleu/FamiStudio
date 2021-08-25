@@ -19,6 +19,8 @@ using AlertDialog = AndroidX.AppCompat.App.AlertDialog;
 
 using Android.Util;
 using Google.Android.Material.Button;
+using AndroidX.Core.Widget;
+using AndroidX.Core.Graphics.Drawable;
 
 namespace FamiStudio
 {
@@ -40,13 +42,12 @@ namespace FamiStudio
             public View view;
             public OnTouchDelegate onTouch;
             public string sliderFormat;
+            public bool visible = true;
         };
 
         private int firstAdvancedProperty = -1;
         private string lastLabel;
         private Context context;
-        private static Typeface quicksand;
-        private static Typeface quicksandBold;
         private List<Property> properties = new List<Property>();
         private LinearLayout pageLayout;
 
@@ -57,11 +58,6 @@ namespace FamiStudio
         public PropertyPage(Android.Content.Context ctx)
         {
             context = ctx;
-            if (quicksand == null)
-            {
-                quicksand = context.Resources.GetFont(Resource.Font.quicksand_regular);
-                quicksandBold = context.Resources.GetFont(Resource.Font.quicksand_bold);
-            }
         }
 
         //private TextView CreateTextView(string str, string tooltip = null, bool multiline = false)
@@ -78,7 +74,7 @@ namespace FamiStudio
             var edit = new EditText(context);
             edit.Text = txt; // MATTT maxLength
             //edit.SetTextSize(Android.Util.ComplexUnitType.Sp, 14);
-            edit.Typeface = quicksand;
+            //edit.Typeface = quicksand;
             return edit;
         }
 
@@ -96,7 +92,7 @@ namespace FamiStudio
 
         private SeekBar CreateSeekBar(double value, double min, double max, double increment, int numDecimals, bool showLabel, string tooltip = null)
         {
-            var seek = new SeekBar(context);
+            var seek = new SeekBar(new ContextThemeWrapper(context, Resource.Style.LightGraySeekBar));
             var padding = DroidUtils.DpToPixels(20);
 
             seek.SetPadding(padding, padding, padding, padding);
@@ -112,39 +108,29 @@ namespace FamiStudio
         private void Seek_ProgressChanged(object sender, SeekBar.ProgressChangedEventArgs e)
         {
             var prop = GetPropertyForView(e.SeekBar);
-            if (prop != null)
+            if (prop != null && prop.textValue != null)
                 prop.textValue.Text = string.Format(prop.sliderFormat, e.Progress);
         }
 
         private Spinner CreateSpinner(string[] values, string value, string tooltip = null)
         {
-            var spinner = new Spinner(context);
-
-#if FALSE
-            ArrayAdapter<string> stringAdapter = new ArrayAdapter<string>(context, Android.Resource.Layout.SimpleSpinnerItem, values);
-            stringAdapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
-            spinner.Adapter = stringAdapter;
-#else
-            // MATTT : Selected item.
-            // MATTT : Item spacing here.
-            var adapter = new CustomFontArrayAdapter(context, Android.Resource.Layout.SimpleSpinnerItem, quicksand, values);
+            var spinner = new Spinner(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
+            var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
             adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
             spinner.Adapter = adapter;
-
-#endif
-
+            spinner.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2), BlendMode.SrcAtop));
             return spinner;
         }
 
-        private NumberPicker CreateNumberPicker(int value, int min, int max, string tooltip = null)
+        private HorizontalNumberPicker CreateNumberPicker(int value, int min, int max)
         {
             // MATTT this sucks, maybe do something like this, but with a long press mode that goes fast.
             // https://stackoverflow.com/questions/6796243/is-it-possible-to-make-a-horizontal-numberpicker
-            var picker = new NumberPicker(context);
+            var picker = new HorizontalNumberPicker(context);
 
-            picker.MinValue = min;
-            picker.MaxValue = max;
-            picker.Value = value;
+            //picker.MinValue = min;
+            //picker.MaxValue = max;
+            //picker.Value = value;
 
             return picker;
         }
@@ -176,12 +162,10 @@ namespace FamiStudio
             return lin;
         }
 
-        private TextView CreateTextView(string str, int size, bool bold = true)
+        private TextView CreateTextView(string str, int style)
         {
-            var text = new TextView(context);
+            var text = new TextView(new ContextThemeWrapper(context, style));
             text.Text = str;
-            text.SetTextSize(Android.Util.ComplexUnitType.Dip, size);
-            text.Typeface = bold ? quicksandBold : quicksand; // MATTT bold?
             return text;
         }
 
@@ -264,9 +248,9 @@ namespace FamiStudio
 
             var prop = new Property();
             prop.type = PropertyType.TextBox;
-            prop.textLabel = CreateTextView(label, 16);
-            prop.textValue = CreateTextView(value, 12);
-            prop.textTooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, 12, false) : null;
+            prop.textLabel = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.textValue = CreateTextView(value, Resource.Style.LightGrayTextSmall);
+            prop.textTooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.layout = CreateLinearLayout(false, true, false, 10);
             prop.layout.SetOnTouchListener(this);
             prop.onTouch = OnTextBoxTouch;
@@ -328,7 +312,7 @@ namespace FamiStudio
         {
             var prop = new Property();
             prop.type = PropertyType.TextBox;
-            prop.textLabel = CreateTextView("Color", 16);
+            prop.textLabel = CreateTextView("Color", Resource.Style.LightGrayTextMedium);
             prop.textValue = null; // CreateTextView(value, 12);
             prop.control = CreateColorPicker();
             prop.layout = CreateLinearLayout(false, true, false, 10);
@@ -345,16 +329,20 @@ namespace FamiStudio
 
         public int AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.NumericUpDown,
-            //        textLabel = label != null ? CreateTextView(label, tooltip) : null,
-            //        view = CreateNumberPicker(value, min, max, tooltip)
-            //    });
-            //return properties.Count - 1;
+            var prop = new Property();
+            prop.type = PropertyType.CheckBox;
+            prop.textLabel = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.layout = CreateLinearLayout(false, true, false, 10);
+            prop.control = CreateNumberPicker(value, min, max);
+            properties.Add(prop);
 
-            return -1;
+            var inner = CreateLinearLayout(true, false, false, 0);
+
+            prop.layout.AddView(inner);
+            inner.AddView(prop.textLabel);
+            inner.AddView(prop.control);
+
+            return properties.Count - 1;
         }
 
         public int AddProgressBar(string label, float value)
@@ -395,11 +383,17 @@ namespace FamiStudio
         {
         }
 
+        public void SetPropertyVisible(int idx, bool visible)
+        {
+            Debug.Assert(pageLayout == null);
+            properties[idx].visible = visible;
+        }
+
         public int AddCheckBox(string label, bool value, string tooltip = null)
         {
             var prop = new Property();
             prop.type = PropertyType.CheckBox;
-            prop.textLabel = CreateTextView(label, 16);
+            prop.textLabel = CreateTextView(label, Resource.Style.LightGrayTextMedium);
             prop.textValue = CreateSwitch(value);
             prop.layout = CreateLinearLayout(false, true, false, 10);
             properties.Add(prop);
@@ -420,23 +414,27 @@ namespace FamiStudio
 
         public int AddDropDownList(string label, string[] values, string value, string tooltip = null)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.DropDownList,
-            //        textLabel = label != null ? CreateTextView(label, tooltip) : null,
-            //        view = CreateSpinner(values, value, tooltip)
-            //    });
-            //return properties.Count - 1;
+            var prop = new Property();
+            prop.type = PropertyType.CheckBox;
+            prop.textLabel = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.layout = CreateLinearLayout(false, true, false, 10);
+            prop.control = CreateSpinner(values, value, tooltip);
+            properties.Add(prop);
 
-            return 0;
+            var inner = CreateLinearLayout(true, false, false, 0);
+
+            prop.layout.AddView(inner);
+            inner.AddView(prop.textLabel);
+            inner.AddView(prop.control);
+
+            return properties.Count - 1;
         }
 
         public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int height = 200)
         {
             var prop = new Property();
             prop.type = PropertyType.Slider;
-            prop.textLabel = CreateTextView(label, 16);
+            prop.textLabel = CreateTextView(label, Resource.Style.LightGrayTextMedium);
             prop.layout = CreateLinearLayout(false, true, false, 10);
             properties.Add(prop);
 
@@ -449,11 +447,11 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
             {
                 // MATTT : Function to create checkbox.
-                var checkBox = new CheckBox(context);
+                var checkBox = new CheckBox(new ContextThemeWrapper(context, Resource.Style.LightGrayCheckBox));
                 checkBox.Text = values[i];
-                checkBox.Typeface = quicksandBold;
-                checkBox.SetTextSize(ComplexUnitType.Dip, 12);
-                checkBox.Checked = selected[i];
+                //checkBox.Typeface = quicksandBold;
+                //checkBox.SetTextSize(ComplexUnitType.Dip, 12);
+                checkBox.Checked = selected == null ? true : selected[i];
                 inner.AddView(checkBox);
             }
 
@@ -464,8 +462,9 @@ namespace FamiStudio
         {
             var prop = new Property();
             prop.type = PropertyType.Slider;
-            prop.textLabel = CreateTextView(label, 16);
-            prop.textValue = CreateTextView(string.Format(format, value), 12);
+            prop.textLabel = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            if (format != null)
+                prop.textValue = CreateTextView(string.Format(format, value), Resource.Style.LightGrayTextSmall);
             prop.layout = CreateLinearLayout(false, true, false, 10);
             prop.control = CreateSeekBar(value, min, max, 0, 0, false);
             prop.sliderFormat = format;
@@ -475,7 +474,8 @@ namespace FamiStudio
 
             prop.layout.AddView(inner);
             inner.AddView(prop.textLabel);
-            inner.AddView(prop.textValue);
+            if (prop.textValue != null)
+                inner.AddView(prop.textValue);
             inner.AddView(prop.control);
 
             return properties.Count - 1;
@@ -544,8 +544,8 @@ namespace FamiStudio
 
         private LinearLayout CreateAdvancedPropertiesBanner()
         {
-            var text = CreateTextView("Advanced Properties", 16);
-            var tooltip = CreateTextView("These properties are meant for more advanced users", 12, false);
+            var text = CreateTextView("Advanced Properties", Resource.Style.LightGrayTextMedium);
+            var tooltip = CreateTextView("These properties are meant for more advanced users", Resource.Style.LightGrayTextSmallTooltip);
 
             var outer = CreateLinearLayout(false, true, false, 10);
             var inner = CreateLinearLayout(true, false, false, 0);
@@ -571,7 +571,6 @@ namespace FamiStudio
             pageLayout = new LinearLayout(container.Context);
             pageLayout.LayoutParameters = coordLayoutParameters;
             pageLayout.Orientation = Orientation.Vertical;
-            //pageLayout.SetBackgroundColor(Android.Graphics.Color.Argb(255, 25, 28, 31));
 
             for (int i = 0; i < properties.Count; i++)
             {
@@ -767,28 +766,93 @@ namespace FamiStudio
 
     public class CustomFontArrayAdapter : ArrayAdapter
     {
-        Typeface typeface;
+        Spinner spinner;
 
-        public CustomFontArrayAdapter(Context context, int textViewResourceId, Typeface tf, string[] values) : base(context, textViewResourceId, values)
+        public CustomFontArrayAdapter(Spinner spin, Context context, int textViewResourceId, string[] values) : base(context, textViewResourceId, values)
         {
-            typeface = tf;
+            spinner = spin;
         }
 
-        private View GetViewInternal(int position, View convertView, ViewGroup parent)
-        {
-            TextView v = base.GetView(position, convertView, parent) as TextView;
-            v.Typeface = typeface;
-            return v;
-        }
+        //private View GetViewInternal(int position, ViewGroup parent)
+        //{
+        //    var text = new TextView(new ContextThemeWrapper(parent.Context, style));
+        //    text.Text = GetItem(position).ToString();
+        //    //text.SetPadding(70, 20, 20, 20);
+        //    return text;
+
+        //    //TextView v = base.GetView(position, convertView, parent) as TextView;
+        //    //v.Typeface = typeface;
+        //    //return v;
+        //}
 
         public override View GetView(int position, View convertView, ViewGroup parent)
         {
-            return GetViewInternal(position, convertView, parent);
+            var baseView = base.GetView(position, convertView, parent);
+
+            if (baseView is TextView tv)
+                TextViewCompat.SetTextAppearance(tv, Resource.Style.LightGrayTextMedium);
+
+            return baseView;
+
         }
 
         public override View GetDropDownView(int position, View convertView, ViewGroup parent)
         {
-            return GetViewInternal(position, convertView, parent);
+            var baseView = base.GetDropDownView(position, convertView, parent);
+
+            if (baseView is TextView tv)
+            {
+                var style = position == spinner.SelectedItemPosition ? Resource.Style.SpinnerItemSelected : Resource.Style.SpinnerItem;
+                TextViewCompat.SetTextAppearance(tv, style);
+                tv.SetBackgroundResource(Resource.Color.LightGreyFillColor2);
+            }
+
+            return baseView;
+        }
+    }
+
+    // Loosely based off https://stackoverflow.com/questions/6796243/is-it-possible-to-make-a-horizontal-numberpicker
+    public class HorizontalNumberPicker : LinearLayout
+    {
+        ImageButton buttonLess;
+        ImageButton buttonMore;
+        TextView textView;
+
+        public HorizontalNumberPicker(Context context) : base(context)
+        {
+            var lp = new LinearLayout.LayoutParams(DroidUtils.DpToPixels(64), DroidUtils.DpToPixels(48));
+            lp.Weight = 1;
+            lp.Gravity = GravityFlags.CenterHorizontal | GravityFlags.CenterVertical;
+
+            buttonLess = new ImageButton(new ContextThemeWrapper(context, Resource.Style.BlackTextLargeBold));
+            buttonLess.SetImageResource(Android.Resource.Drawable.IcMenuCloseClearCancel); // DROIDTODO : Proper icons.
+            buttonLess.SetBackgroundColor(Android.Graphics.Color.Transparent);
+            buttonLess.LayoutParameters = lp;
+            
+            buttonMore = new ImageButton(new ContextThemeWrapper(context, Resource.Style.BlackTextLargeBold));
+            buttonMore.SetImageResource(Android.Resource.Drawable.IcMenuCloseClearCancel); // DROIDTODO : Proper icons.
+            buttonMore.LayoutParameters = lp;
+            buttonMore.SetBackgroundColor(Android.Graphics.Color.Transparent);
+            
+            textView = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
+            textView.Text = "123";
+            textView.LayoutParameters = lp;
+            textView.Gravity = GravityFlags.Center;
+
+            AddView(buttonLess);
+            AddView(textView);
+            AddView(buttonMore);
+
+            buttonLess.Click += ButtonLess_Click;
+            buttonMore.Click += ButtonMore_Click;
+        }
+
+        private void ButtonLess_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void ButtonMore_Click(object sender, EventArgs e)
+        {
         }
     }
 

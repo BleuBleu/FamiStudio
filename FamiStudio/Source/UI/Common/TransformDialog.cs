@@ -8,7 +8,6 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class TransformDialog
     {
         enum TransformOperation
@@ -201,27 +200,25 @@ namespace FamiStudio
             }
         }
 
-        public DialogResult ShowDialog(FamiStudioForm parent)
+        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            var dialogResult = dialog.ShowDialog(parent);
-
-            if (dialogResult == DialogResult.OK)
+            dialog.ShowDialog(parent, (r) =>
             {
-                var operation = (TransformOperation)dialog.SelectedIndex;
-
-                switch (operation)
+                if (r == DialogResult.OK)
                 {
-                    case TransformOperation.SongCleanup:
-                        SongCleanup();
-                        break;
-                    case TransformOperation.ProjectCleanup:
-                        ProjectCleanup();
-                        break;
-                }
-            }
+                    var operation = (TransformOperation)dialog.SelectedIndex;
 
-            return dialogResult;
+                    switch (operation)
+                    {
+                        case TransformOperation.SongCleanup:
+                            SongCleanup();
+                            break;
+                        case TransformOperation.ProjectCleanup:
+                            ProjectCleanup();
+                            break;
+                    }
+                }
+            });
         }
     }
-#endif
 }

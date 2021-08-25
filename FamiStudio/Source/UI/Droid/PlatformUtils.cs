@@ -28,12 +28,17 @@ namespace FamiStudio
             return null;
         }
 
-        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, Window parentWindow = null)
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindow = null)
         {
             return null;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, Window parentWindow = null)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, object parentWindow = null)
+        {
+            return null;
+        }
+
+        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
             return null;
         }
