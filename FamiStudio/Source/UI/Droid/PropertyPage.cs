@@ -1,26 +1,22 @@
-﻿using Android.App;
+﻿using System;
+using System.Collections.Generic;
+using Android.Util;
+using Android.Content.Res;
 using Android.Content;
 using Android.Graphics;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
+using AndroidX.Core.Widget;
 using AndroidX.AppCompat.Widget;
 using AndroidX.CoordinatorLayout.Widget;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Java.Interop;
+using Google.Android.Material.Button;
 
 using Debug = System.Diagnostics.Debug;
 using Color = System.Drawing.Color;
 using AlertDialog = AndroidX.AppCompat.App.AlertDialog;
-
-using Android.Util;
-using Google.Android.Material.Button;
-using AndroidX.Core.Widget;
-using AndroidX.Core.Graphics.Drawable;
+using Orientation = Android.Widget.Orientation;
 
 namespace FamiStudio
 {
@@ -814,8 +810,8 @@ namespace FamiStudio
     // Loosely based off https://stackoverflow.com/questions/6796243/is-it-possible-to-make-a-horizontal-numberpicker
     public class HorizontalNumberPicker : LinearLayout
     {
-        ImageButton buttonLess;
-        ImageButton buttonMore;
+        MaterialButton buttonLess;
+        MaterialButton buttonMore;
         TextView textView;
 
         public HorizontalNumberPicker(Context context) : base(context)
@@ -824,15 +820,17 @@ namespace FamiStudio
             lp.Weight = 1;
             lp.Gravity = GravityFlags.CenterHorizontal | GravityFlags.CenterVertical;
 
-            buttonLess = new ImageButton(new ContextThemeWrapper(context, Resource.Style.BlackTextLargeBold));
-            buttonLess.SetImageResource(Android.Resource.Drawable.IcMenuCloseClearCancel); // DROIDTODO : Proper icons.
-            buttonLess.SetBackgroundColor(Android.Graphics.Color.Transparent);
+            buttonLess = new MaterialButton(context); //new MaterialButton(new ContextThemeWrapper(context, Resource.Style.BlackTextLargeBold));
+            buttonLess.Text = "-";
+            buttonLess.SetTextColor(Android.Graphics.Color.Black);
+            buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2));
             buttonLess.LayoutParameters = lp;
             
-            buttonMore = new ImageButton(new ContextThemeWrapper(context, Resource.Style.BlackTextLargeBold));
-            buttonMore.SetImageResource(Android.Resource.Drawable.IcMenuCloseClearCancel); // DROIDTODO : Proper icons.
+            buttonMore = new MaterialButton(context); //new MaterialButton(new ContextThemeWrapper(context, Resource.Style.BlackTextLargeBold));
+            buttonMore.Text = "+";
+            buttonMore.SetTextColor(Android.Graphics.Color.Black);
+            buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2));
             buttonMore.LayoutParameters = lp;
-            buttonMore.SetBackgroundColor(Android.Graphics.Color.Transparent);
             
             textView = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
             textView.Text = "123";
