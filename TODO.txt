@@ -4,11 +4,12 @@ Theme + font refactor:
 - Add a scaling factor on font (android branch for now)
 
 Prop page:
-/ Make theme work.
 / Reactivate dialogs in code, test
-- Dropdown/integerrange/tooltip
 - Review text color light gray 1 or 2?
-- Add ability to hide pages + properties. 
+- Toolbar font.
+- Button font.
+- Store unknown property values.
+
 - Change insturment dialog for a combo
 - 
 

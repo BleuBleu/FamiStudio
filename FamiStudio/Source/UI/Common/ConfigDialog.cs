@@ -97,6 +97,16 @@ namespace FamiStudio
                 var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Config" + section.ToString());
                 CreatePropertyPage(page, section);
             }
+
+#if !FAMISTUDIO_MACOS
+            dialog.SetPageVisible((int)ConfigSection.MacOS, false);
+#endif
+#if FAMISTUDIO_ANDROID
+            // DROIDTODO: Hide a bunch of options that makes no sense.
+            dialog.SetPageVisible((int)ConfigSection.MIDI, false);
+            dialog.SetPageVisible((int)ConfigSection.FFmpeg, false);
+            dialog.SetPageVisible((int)ConfigSection.QWERTY, false);
+#endif
         }
 
         private PropertyPage CreatePropertyPage(PropertyPage page, ConfigSection section)
@@ -144,8 +154,8 @@ namespace FamiStudio
                     }
                 case ConfigSection.Sound:
                 {
-                    page.AddIntegerRange("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16); // 0
-                    page.AddIntegerRange("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 1
+                    page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16); // 0
+                    page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 1
                     page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 2
                     page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying); // 3
                     page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null); // 4
@@ -206,24 +216,14 @@ namespace FamiStudio
                 case ConfigSection.MacOS:
                 { 
                     page.AddCheckBox("Reverse trackpad direction:", Settings.ReverseTrackPad); // 0
-                    page.AddIntegerRange("Trackpad movement sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 1
-                    page.AddIntegerRange("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 32); // 2
+                    page.AddNumericUpDown("Trackpad movement sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 1
+                    page.AddNumericUpDown("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 32); // 2
                     page.SetPropertyEnabled(0, Settings.TrackPadControls);
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
                     page.SetPropertyEnabled(2, Settings.TrackPadControls);
                     break;
                 }
             }
-
-#if !FAMISTUDIO_MACOS
-            dialog.SetPageVisible((int)ConfigSection.MacOS, false);
-#endif
-#if FAMISTUDIO_ANDROID
-            // DROIDTODO: Hide a bunch of options that makes no sense.
-            dialog.SetPageVisible((int)ConfigSection.MIDI, false);
-            dialog.SetPageVisible((int)ConfigSection.FFmpeg, false);
-            dialog.SetPageVisible((int)ConfigSection.QWERTY, false);
-#endif
 
             page.Build();
             pages[(int)section] = page;

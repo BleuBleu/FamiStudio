@@ -2447,7 +2447,7 @@ namespace FamiStudio
             dlg.Properties.AddTextBox("Copyright :", project.Copyright, 31); // 2
             dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 3
             dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 4
-            dlg.Properties.AddIntegerRange("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, CommonTooltips.ExpansionNumChannels); // 5 (Namco)
+            dlg.Properties.AddNumericUpDown("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, CommonTooltips.ExpansionNumChannels); // 5 (Namco)
             dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, CommonTooltips.ExpansionAudio, 150); // 6
             dlg.Properties.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
             dlg.Properties.SetPropertyEnabled(5, project.UsesExpansionAudio(ExpansionType.N163));

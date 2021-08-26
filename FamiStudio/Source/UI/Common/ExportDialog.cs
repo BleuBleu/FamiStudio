@@ -153,7 +153,7 @@ namespace FamiStudio
                 page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 2
                 page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
                 page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000"); // 4
-                page.AddIntegerRange("Loop Count :", 1, 1, 8); // 5
+                page.AddNumericUpDown("Loop Count :", 1, 1, 8); // 5
                 return true;
             }
             else
@@ -179,8 +179,8 @@ namespace FamiStudio
                     page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
                     page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
                     page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
-                    page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
-                    page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
+                    page.AddNumericUpDown("Loop count:", 1, 1, 10); // 5
+                    page.AddNumericUpDown("Duration (sec):", 120, 1, 1000); // 6
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
                     page.AddCheckBox("Stereo", false); // 9
@@ -204,8 +204,8 @@ namespace FamiStudio
                 case ExportFormat.VideoOscilloscope:
                     if (AddCommonVideoProperties(page, songNames)) // 0-5
                     {
-                        page.AddIntegerRange("Oscilloscope Columns :", 1, 1, 5); // 6
-                        page.AddIntegerRange("Oscilloscope Thickness :", 1, 1, 4); // 7
+                        page.AddNumericUpDown("Oscilloscope Columns :", 1, 1, 5); // 6
+                        page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 4); // 7
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
                         page.AddCheckBox("Stereo", false); // 9
                         page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 10
@@ -239,7 +239,7 @@ namespace FamiStudio
                     page.AddDropDownList("Song :", songNames, songNames[0]); // 0
                     page.AddCheckBox("Export volume as velocity :", true); // 1
                     page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
-                    page.AddIntegerRange("Pitch wheel range :", 24, 1, 24); // 3
+                    page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24); // 3
                     page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
                     page.AddMultiColumnList(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null); // 5
                     page.PropertyChanged += Midi_PropertyChanged;

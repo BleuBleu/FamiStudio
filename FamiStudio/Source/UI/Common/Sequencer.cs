@@ -1259,7 +1259,7 @@ namespace FamiStudio
             var dialog = new PropertyDialog(200);
             dialog.Properties.AddLabelCheckBox("Insert", false); // 0
             dialog.Properties.AddLabelCheckBox("Extend song", false); // 1
-            dialog.Properties.AddIntegerRange("Repeat :", 1, 1, 32); // 2
+            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32); // 2
             dialog.Properties.SetPropertyEnabled(1, false);
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();

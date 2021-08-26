@@ -60,7 +60,7 @@ namespace FamiStudio
             var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, Android.Resource.Attribute.ActionBarSize));
             appBarLayoutParams.ScrollFlags = 0;
 
-            toolbar = new AndroidX.AppCompat.Widget.Toolbar(this);
+            toolbar = new AndroidX.AppCompat.Widget.Toolbar(new ContextThemeWrapper(this, Resource.Style.ToolbarTheme));
             toolbar.LayoutParameters = appBarLayoutParams;
             SetSupportActionBar(toolbar);
 
