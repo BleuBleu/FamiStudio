@@ -151,6 +151,7 @@ namespace FamiStudio
 
         public GLBrush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
         {
+            // MATTT : Cache!
             Color color2 = Color.FromArgb(
                 Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
                 Utils.Clamp((int)(color.R * dimming), 0, 255),

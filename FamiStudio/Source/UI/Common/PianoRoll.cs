@@ -232,18 +232,18 @@ namespace FamiStudio
 
         readonly string[] EffectImageNames = new string[]
         {
-            "VolumeSmall",
-            "VibratoSmall",
-            "VibratoSmall",
-            "PitchSmall",
-            "SpeedSmall",
-            "ModSmall",
-            "ModSmall",
-            "DutyCycleSmall",
-            "NoteDelaySmall",
-            "CutDelaySmall",
-            "VolumeSmall",
-            "DutyCycleSmall" // MATTT : Wrong
+            "EffectVolume",
+            "EffectVibrato",
+            "EffectVibrato",
+            "EffectPitch",
+            "EffectSpeed",
+            "EffectMod",
+            "EffectMod",
+            "EffectDutyCycle",
+            "EffectNoteDelay",
+            "EffectCutDelay",
+            "EffectVolume",
+            "EffectDutyCycle" // MATTT : Wrong
         };
 
         enum CaptureOperation
@@ -417,6 +417,11 @@ namespace FamiStudio
         Song videoSong;
         Color videoKeyColor;
 
+#if FAMISTUDIO_ANDROID
+        // Mobile specific
+        PianoRollFloatingToolbar floatingToolbar;
+#endif
+
         private bool IsSnappingAllowed => editMode == EditionMode.Channel;
         private bool IsSnappingEnabled => IsSnappingAllowed && snap;
 
@@ -452,6 +457,9 @@ namespace FamiStudio
 
         public PianoRoll()
         {
+#if FAMISTUDIO_ANDROID
+            floatingToolbar = new PianoRollFloatingToolbar(this);
+#endif
             UpdateRenderCoords();
         }
 
@@ -514,6 +522,12 @@ namespace FamiStudio
             headerAndEffectSizeY      = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
             noteTextPosY              = MainWindowScaling > 1 ? 0 : 1; // Pretty hacky.
             virtualSizeY              = numNotes * noteSizeY;
+
+#if FAMISTUDIO_ANDROID
+            floatingToolbar.Move(
+                Width  - floatingToolbar.Width  - floatingToolbar.ButtonSize / 2,
+                Height - floatingToolbar.Height - floatingToolbar.ButtonSize / 2);
+#endif
         }
 
         public void StartEditPattern(int trackIdx, int patternIdx)
@@ -896,6 +910,10 @@ namespace FamiStudio
                 {  waveGeometrySampleSize,  waveGeometrySampleSize },
                 { -waveGeometrySampleSize,  waveGeometrySampleSize }
             }, true);
+
+#if FAMISTUDIO_ANDROID
+            floatingToolbar.InitializeGraphics(g);
+#endif
         }
 
         protected override void OnRenderTerminated()
@@ -936,6 +954,10 @@ namespace FamiStudio
 
             Utils.DisposeAndNullify(ref seekGeometry);
             Utils.DisposeAndNullify(ref sampleGeometry);
+
+#if FAMISTUDIO_ANDROID
+            floatingToolbar.TerminateGraphics();
+#endif
         }
 
         private bool IsBlackKey(int key)
@@ -2907,6 +2929,10 @@ namespace FamiStudio
             g.DrawCommandList(r.cb, notesRect);
             g.DrawCommandList(r.cf, notesRect);
             g.DrawCommandList(r.cs, notesRect);
+
+#if FAMISTUDIO_ANDROID
+            floatingToolbar.Render(g);
+#endif
         }
 
         private bool GetScrollBarParams(bool horizontal, out int pos, out int size)

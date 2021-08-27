@@ -6,11 +6,15 @@ Theme + font refactor:
 Prop page:
 / Reactivate dialogs in code, test
 - Review text color light gray 1 or 2?
+- Add a title to dialogs
 - Toolbar font.
 - Button font.
 - Store unknown property values.
-
+- Cleanup where we use GLGraphics, always use render.
 - Change insturment dialog for a combo
+
+Floating toolbars:
+- Tool/Snap/Arp/Inst/Channel
 - 
 
 3.2.0
