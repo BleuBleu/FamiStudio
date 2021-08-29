@@ -417,11 +417,6 @@ namespace FamiStudio
         Song videoSong;
         Color videoKeyColor;
 
-#if FAMISTUDIO_ANDROID
-        // Mobile specific
-        PianoRollFloatingToolbar floatingToolbar;
-#endif
-
         private bool IsSnappingAllowed => editMode == EditionMode.Channel;
         private bool IsSnappingEnabled => IsSnappingAllowed && snap;
 
@@ -457,9 +452,6 @@ namespace FamiStudio
 
         public PianoRoll()
         {
-#if FAMISTUDIO_ANDROID
-            floatingToolbar = new PianoRollFloatingToolbar(this);
-#endif
             UpdateRenderCoords();
         }
 
@@ -522,12 +514,6 @@ namespace FamiStudio
             headerAndEffectSizeY      = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
             noteTextPosY              = MainWindowScaling > 1 ? 0 : 1; // Pretty hacky.
             virtualSizeY              = numNotes * noteSizeY;
-
-#if FAMISTUDIO_ANDROID
-            floatingToolbar.Move(
-                Width  - floatingToolbar.Width  - floatingToolbar.ButtonSize / 2,
-                Height - floatingToolbar.Height - floatingToolbar.ButtonSize / 2);
-#endif
         }
 
         public void StartEditPattern(int trackIdx, int patternIdx)
@@ -910,10 +896,6 @@ namespace FamiStudio
                 {  waveGeometrySampleSize,  waveGeometrySampleSize },
                 { -waveGeometrySampleSize,  waveGeometrySampleSize }
             }, true);
-
-#if FAMISTUDIO_ANDROID
-            floatingToolbar.InitializeGraphics(g);
-#endif
         }
 
         protected override void OnRenderTerminated()
@@ -954,10 +936,6 @@ namespace FamiStudio
 
             Utils.DisposeAndNullify(ref seekGeometry);
             Utils.DisposeAndNullify(ref sampleGeometry);
-
-#if FAMISTUDIO_ANDROID
-            floatingToolbar.TerminateGraphics();
-#endif
         }
 
         private bool IsBlackKey(int key)
@@ -2233,7 +2211,7 @@ namespace FamiStudio
                         var channelType = song.Channels[editChannel].Type;
                         var channelName = song.Channels[editChannel].NameWithExpansion;
 
-                        r.cb.DrawText($"Editing {channelName} Channel", ThemeResources.FontBig, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
+                        r.cb.DrawText($"Editing {channelName} Channel", ThemeResources.FontVeryLarge, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
                     }
                 }
                 else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.
@@ -2302,7 +2280,7 @@ namespace FamiStudio
                         }
                     }
 
-                    r.cb.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", ThemeResources.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                    r.cb.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
                 }
             }
             else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
@@ -2405,11 +2383,11 @@ namespace FamiStudio
                     if (editEnvelope == EnvelopeType.Pitch)
                         envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? "Relative " : "Absolute ") + envelopeString;
 
-                    r.cb.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeResources.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                    r.cb.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
                 }
                 else
                 {
-                    r.cb.DrawText($"Editing Arpeggio {editArpeggio.Name}", ThemeResources.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                    r.cb.DrawText($"Editing Arpeggio {editArpeggio.Name}", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
                 }
             }
 
@@ -2417,7 +2395,7 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
-                r.cb.DrawText(noteTooltip,  ThemeResources.FontMediumBig, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextAlignment.Center, Width - tooltipTextPosX);
+                r.cb.DrawText(noteTooltip,  ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextAlignment.Center, Width - tooltipTextPosX);
             }
         }
 
@@ -2812,7 +2790,7 @@ namespace FamiStudio
             }
 
             // Title + source/processed info.
-            r.cb.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeResources.FontBig, bigTextPosX, bigTextPosY, whiteKeyBrush);
+            r.cb.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
             r.cb.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, dpcmSourceDataPosY, whiteKeyBrush);
             r.cb.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY, whiteKeyBrush);
             r.cb.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY * 2, whiteKeyBrush);
@@ -2821,7 +2799,7 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip))
             {
-                r.cb.DrawText(noteTooltip, ThemeResources.FontMediumBig, 0, Height - tooltipTextPosY, whiteKeyBrush, RenderTextAlignment.Right, Width - tooltipTextPosX);
+                r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY, whiteKeyBrush, RenderTextAlignment.Right, Width - tooltipTextPosX);
             }
         }
 
@@ -2929,10 +2907,6 @@ namespace FamiStudio
             g.DrawCommandList(r.cb, notesRect);
             g.DrawCommandList(r.cf, notesRect);
             g.DrawCommandList(r.cs, notesRect);
-
-#if FAMISTUDIO_ANDROID
-            floatingToolbar.Render(g);
-#endif
         }
 
         private bool GetScrollBarParams(bool horizontal, out int pos, out int size)
@@ -4562,6 +4536,10 @@ namespace FamiStudio
 
         Handled: // Yes, i use a goto, sue me.
             ConditionalInvalidate();
+        }
+
+        protected override void OnTouch(int x, int y) 
+        {
         }
 
         public void LayoutChanged()

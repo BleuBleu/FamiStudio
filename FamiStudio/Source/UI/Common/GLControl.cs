@@ -41,6 +41,7 @@ namespace FamiStudio
         protected virtual void OnMouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnKeyDown(System.Windows.Forms.KeyEventArgs e) { }
         protected virtual void OnKeyUp(System.Windows.Forms.KeyEventArgs e) { }
+        protected virtual void OnTouch(int x, int y) { } // DROIDTODO : Temporary, figure out interface / data structure
         public virtual void DoMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
@@ -54,6 +55,7 @@ namespace FamiStudio
         public void MouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(System.Windows.Forms.KeyEventArgs e) { OnKeyDown(e); }
         public void KeyUp(System.Windows.Forms.KeyEventArgs e) { OnKeyUp(e); }
+        public void Touch(int x, int y) { OnTouch(x, y); } // DROIDTODO : Temporary, figure out interface / data structure
         public void Focus() { }
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }

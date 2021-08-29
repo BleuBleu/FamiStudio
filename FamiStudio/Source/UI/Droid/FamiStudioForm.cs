@@ -175,13 +175,17 @@ namespace FamiStudio
             }
         }
 
-        int idx = 0;
-
         // Main thread.
         public bool OnTouch(View v, MotionEvent e)
         {
             if (e.Action == MotionEventActions.Down)
             {
+                var coord = new MotionEvent.PointerCoords();
+                e.GetPointerCoords(0, coord);
+                var ctrl = controls.GetControlAtCoord((int)coord.X, (int)coord.Y, out var x, out var y);
+                if (ctrl != null)
+                    ctrl.Touch(x, y);
+
 #if FALSE
                 var dlg = new PropertyDialog(200);
 
@@ -223,7 +227,7 @@ namespace FamiStudio
 #elif FALSE
                 var dlg = new ExportDialog(famistudio.Project);
                 dlg.ShowDialog(this);
-#elif TRUE
+#elif FALSE
                 var dlg = new ConfigDialog();
                 dlg.ShowDialog(this, (r) => {});
 #elif FALSE
@@ -281,8 +285,8 @@ namespace FamiStudio
             }
         }
 
-            // GL thread.
-            public void OnSurfaceChanged(IGL10 gl, int width, int height)
+        // GL thread.
+        public void OnSurfaceChanged(IGL10 gl, int width, int height)
         {
             controls.Resize(width, height);
         }

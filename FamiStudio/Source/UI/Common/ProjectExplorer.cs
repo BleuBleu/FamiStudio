@@ -798,7 +798,7 @@ namespace FamiStudio
                 var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
 
                 c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, button.TextAlignment, actualWidth - buttonTextNoIconPosX * 2, 0, false, button.TextEllipsis);
-
+                
                 if (atlas != null)
                     c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY);
 

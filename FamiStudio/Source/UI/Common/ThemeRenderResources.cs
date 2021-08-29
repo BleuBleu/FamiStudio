@@ -42,13 +42,14 @@ namespace FamiStudio
         protected enum RenderFontStyle
         {
             VerySmall,
+            VerySmallBold,
             Small,
             SmallBold,
             Medium,
             MediumBold,
-            MediumBig,
-            Big,
-            BigBold,
+            Large,
+            VeryLarge,
+            VeryLargeBold,
             Huge,
             Max
         };
@@ -63,28 +64,30 @@ namespace FamiStudio
         // These are the bitmap fonts we have available in the resources, we also have 2x and 4x sizes.
         protected static readonly FontDefinition[] FontDefinitions = new FontDefinition[]
         {
-            new FontDefinition() { Name = "QuickSand", Size =  8 },
-            new FontDefinition() { Name = "QuickSand", Size = 10 },
+            new FontDefinition() { Name = "QuickSand", Size =  8 }, // VerySmall
+            new FontDefinition() { Name = "QuickSand", Size =  8, Bold = true },
+            new FontDefinition() { Name = "QuickSand", Size = 10 }, // Small
             new FontDefinition() { Name = "QuickSand", Size = 10, Bold = true },
-            new FontDefinition() { Name = "QuickSand", Size = 12 },
+            new FontDefinition() { Name = "QuickSand", Size = 12 }, // Medium
             new FontDefinition() { Name = "QuickSand", Size = 12, Bold = true },
-            new FontDefinition() { Name = "QuickSand", Size = 16 },
-            new FontDefinition() { Name = "QuickSand", Size = 20 },
+            new FontDefinition() { Name = "QuickSand", Size = 16 }, // Large
+            new FontDefinition() { Name = "QuickSand", Size = 20 }, // VeryLarge
             new FontDefinition() { Name = "QuickSand", Size = 20, Bold = true },
-            new FontDefinition() { Name = "QuickSand", Size = 28 } 
+            new FontDefinition() { Name = "QuickSand", Size = 28 }  // Huge
         };
 
         protected RenderFont[] fonts = new RenderFont[(int)RenderFontStyle.Max];
 
-        public RenderFont FontVerySmall  => fonts[0];
-        public RenderFont FontSmall      => fonts[1];
-        public RenderFont FontSmallBold  => fonts[2];
-        public RenderFont FontMedium     => fonts[3];
-        public RenderFont FontMediumBold => fonts[4];
-        public RenderFont FontMediumBig  => fonts[5];
-        public RenderFont FontBig        => fonts[6];
-        public RenderFont FontBigBold    => fonts[7];
-        public RenderFont FontHuge       => fonts[8];
+        public RenderFont FontVerySmall     => fonts[0];
+        public RenderFont FontVerySmallBold => fonts[1];
+        public RenderFont FontSmall         => fonts[2];
+        public RenderFont FontSmallBold     => fonts[3];
+        public RenderFont FontMedium        => fonts[4];
+        public RenderFont FontMediumBold    => fonts[5];
+        public RenderFont FontLarge         => fonts[6];
+        public RenderFont FontVeryLarge     => fonts[7];
+        public RenderFont FontVeryLargeBold => fonts[8];
+        public RenderFont FontHuge          => fonts[9];
 
         public ThemeRenderResources(RenderGraphics g)
         {
@@ -114,7 +117,7 @@ namespace FamiStudio
                 fonts[i] = g.CreateFontFromResource(
                     FontDefinitions[i].Name,
                     FontDefinitions[i].Bold,
-                    FontDefinitions[i].Size);
+                    (int)(FontDefinitions[i].Size * g.FontScaling));
             }
         }
 
@@ -139,6 +142,24 @@ namespace FamiStudio
                 font.Dispose();
 
             customColorBrushes.Clear();
+        }
+
+        public RenderFont GetBestMatchingFont(RenderGraphics g, int desiredHeight, bool bold)
+        {
+            var foundIdx = 0;
+            for (int i = 0; i < FontDefinitions.Length; i++)
+            {
+                var def = FontDefinitions[i];
+
+                if (def.Bold == bold && 
+                    def.Size * DpiScaling.Font >= desiredHeight)
+                {
+                    foundIdx = i;
+                    break;
+                }
+            }
+
+            return fonts[foundIdx];
         }
 
         /*

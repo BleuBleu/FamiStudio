@@ -13,8 +13,23 @@ Prop page:
 - Cleanup where we use GLGraphics, always use render.
 - Change insturment dialog for a combo
 
-Floating toolbars:
-- Tool/Snap/Arp/Inst/Channel
+Scaling issue:
+- Support 3 font sizes:
+	- 2x
+	- 3x (Default, medium)
+	- 4x
+- Support 3 scalings (Will not affect toolbars)? 
+	- 4x
+	- 5x (Default)
+	- 6x 
+
+UI:
+x Make toolbar always 2 rows.
+- Merge nav + floating toolbar.
+		- Funciton for viewport.
+		- Move code.
+		- 
+- Create 2nd piano.
 - 
 
 3.2.0

@@ -45,8 +45,8 @@ namespace FamiStudio
         {
 #if FAMISTUDIO_ANDROID
             // DROIDTODO!
-            mainWindowScaling = 4;
-            fontScaling = 2;
+            mainWindowScaling = 5;
+            fontScaling = 3;
             dialogScaling = 1;
 #else
             dialogScaling = PlatformUtils.GetDesktopScaling();

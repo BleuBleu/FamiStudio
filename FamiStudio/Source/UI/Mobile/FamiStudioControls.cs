@@ -25,13 +25,13 @@ namespace FamiStudio
         private Sequencer       sequencer;
         private PianoRoll       pianoRoll;
         private ProjectExplorer projectExplorer;
-        private NavigationBar   navigationBar;
+        private QuickAcessBar   quickAccessBar;
 
         public Toolbar         ToolBar         => toolbar;
         public Sequencer       Sequencer       => sequencer;
         public PianoRoll       PianoRoll       => pianoRoll;
         public ProjectExplorer ProjectExplorer => projectExplorer;
-        public NavigationBar   NavigationBar   => navigationBar;
+        //public NavigationBar   NavigationBar   => quickAccessBar;
 
         public GLControl[] Controls => controls;
         public bool IsLandscape => width > height;
@@ -42,17 +42,17 @@ namespace FamiStudio
             sequencer       = new Sequencer();
             pianoRoll       = new PianoRoll();
             projectExplorer = new ProjectExplorer();
-            navigationBar   = new NavigationBar();
+            quickAccessBar  = new QuickAcessBar();
 
             controls[0] = toolbar;
             controls[1] = sequencer;
             controls[2] = pianoRoll;
             controls[3] = projectExplorer;
-            controls[4] = navigationBar;
+            controls[4] = quickAccessBar;
 
-            navigationBar.PianoRollClicked += NavigationBar_PianoRollClicked;
-            navigationBar.SequencerClicked += NavigationBar_SequencerClicked;
-            navigationBar.ProjectExplorerClicked += NavigationBar_ProjectExplorerClicked;
+            quickAccessBar.PianoRollClicked += NavigationBar_PianoRollClicked;
+            quickAccessBar.SequencerClicked += NavigationBar_SequencerClicked;
+            quickAccessBar.ProjectExplorerClicked += NavigationBar_ProjectExplorerClicked;
 
             activeControl = pianoRoll;
 
@@ -90,36 +90,36 @@ namespace FamiStudio
             height = h;
 
             UpdateLayout();
+            UpdateToolbar(true);
         }
 
         private void UpdateLayout()
         {
             var landscape = IsLandscape;
-            var navSize = navigationBar.DesiredSize;
+            var quickAccessBarSize = quickAccessBar.LayoutSize;
             var toolLayoutSize = toolbar.LayoutSize;
 
             // Toolbar will be resized every frame anyway.
             if (landscape)
             {
-                activeControl.Move(navSize, toolLayoutSize, width - navSize, height - toolLayoutSize);
-                navigationBar.Move(0, 0, navSize, height);
+                activeControl.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height);
+                quickAccessBar.Move(width - quickAccessBarSize, 0, quickAccessBarSize, height);
             }
             else
             {
-                activeControl.Move(0, toolLayoutSize, width, height - navSize - toolLayoutSize);
-                navigationBar.Move(0, height - navSize, width, navSize);
+                activeControl.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize);
+                quickAccessBar.Move(0, height - quickAccessBarSize, width, quickAccessBarSize);
             }
         }
 
-        private void UpdateToolbar()
+        private void UpdateToolbar(bool fireEvent = false)
         {
-            var navSize = navigationBar.DesiredSize;
             var toolActualSize = toolbar.DesiredSize;
 
             if (IsLandscape)
-                toolbar.Move(navSize, 0, width - navSize, toolActualSize, false);
+                toolbar.Move(0, 0, toolActualSize, height, fireEvent);
             else
-                toolbar.Move(0, 0, width, toolActualSize, false);
+                toolbar.Move(0, 0, width, toolActualSize, fireEvent);
         }
 
         public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
@@ -167,7 +167,7 @@ namespace FamiStudio
             var t1 = DateTime.Now;
 
             var cmd = gfx.CreateCommandList();
-            cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontBigBold, 10, 10, debugBrush);
+            cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontVeryLargeBold, 10, 10, debugBrush);
             gfx.DrawCommandList(cmd);
 
             gfx.EndDrawControl();
@@ -198,12 +198,12 @@ namespace FamiStudio
                 cmd.FillRectangle(activeControl.Left, activeControl.Top, activeControl.Right, activeControl.Bottom, brush);
             }
 
-            cmd.DrawLine(toolbar.Left, toolbar.Bottom, toolbar.Right, toolbar.Bottom, res.BlackBrush, 3.0f);
+            //cmd.DrawLine(toolbar.Left, toolbar.Bottom, toolbar.Right, toolbar.Bottom, res.BlackBrush, 3.0f);
 
-            if (IsLandscape)
-                cmd.DrawLine(navigationBar.Right, navigationBar.Top, navigationBar.Right, navigationBar.Bottom, res.BlackBrush, 3.0f);
-            else
-                cmd.DrawLine(navigationBar.Right, navigationBar.Top, navigationBar.Left, navigationBar.Top, res.BlackBrush, 3.0f);
+            //if (IsLandscape)
+            //    cmd.DrawLine(quickAccessBar.Right, quickAccessBar.Top, quickAccessBar.Right, quickAccessBar.Bottom, res.BlackBrush, 3.0f);
+            //else
+            //    cmd.DrawLine(quickAccessBar.Right, quickAccessBar.Top, quickAccessBar.Left, quickAccessBar.Top, res.BlackBrush, 3.0f);
 
             gfx.DrawCommandList(cmd);
             gfx.EndDrawControl();
@@ -245,7 +245,7 @@ namespace FamiStudio
             gfx.BeginDrawFrame();
             {
                 RedrawControl(activeControl);
-                RedrawControl(navigationBar);
+                RedrawControl(quickAccessBar);
                 RedrawControl(toolbar);
                 RenderOverlay();
             }

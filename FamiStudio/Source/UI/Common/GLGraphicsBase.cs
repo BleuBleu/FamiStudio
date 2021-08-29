@@ -33,8 +33,8 @@ namespace FamiStudio
         protected Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
         protected GLBitmap dashedBitmap;
 
-        //public float WindowScaling => windowScaling;
-
+        public float FontScaling   => fontScaling;
+        public float WindowScaling => windowScaling;
         public int DashTextureSize => dashedBitmap.Size.Width;
         public GLTransform Transform => transform;
 
@@ -193,6 +193,11 @@ namespace FamiStudio
 
             Debug.Assert(false);
             return default(T);
+        }
+
+        public GLFont CreateScaledFont(GLFont source, int desiredHeight)
+        {
+            return null;
         }
 
         public GLFont CreateFontFromResource(string name, bool bold, int size)
@@ -415,7 +420,7 @@ namespace FamiStudio
 
                 if (x1 >= maxSizeX)
                 {
-                    text = text.Substring(0, i + 1);
+                    text = text.Substring(0, i);
                     return true;
                 }
 
@@ -1549,7 +1554,7 @@ namespace FamiStudio
                     if (inst.ellipsis)
                     {
                         font.MeasureString("...", out var dotsMinX, out var dotsMaxX, out _, out _);
-                        var ellipsisSizeX = dotsMaxX - dotsMinX;
+                        var ellipsisSizeX = (dotsMaxX - dotsMinX) * 2; // Leave some padding.
                         if (font.TruncateString(ref inst.text, (int)(inst.rect.Width - ellipsisSizeX)))
                             inst.text += "...";
                     }

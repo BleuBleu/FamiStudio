@@ -47,97 +47,38 @@ namespace FamiStudio
             public int numCols;
         };
 
-        // [portrait/landscape, collapsed/expanded ]
-        private readonly ButtonLayoutItem[,][] ButtonLayout = new ButtonLayoutItem[2, 2][]
+        // [collapsed/expanded]
+        private readonly ButtonLayoutItem[][] ButtonLayout = new ButtonLayoutItem[][]
         { 
+            new ButtonLayoutItem[] 
             {
-                new ButtonLayoutItem[] 
-                {
-                    new ButtonLayoutItem(0,  0, ButtonType.Open),
-                    new ButtonLayoutItem(0,  1, ButtonType.Copy),
-                    new ButtonLayoutItem(0,  2, ButtonType.Undo),
-                    new ButtonLayoutItem(0,  3, ButtonType.Config),
-                    new ButtonLayoutItem(0,  6, ButtonType.Play),
-                    new ButtonLayoutItem(0,  7, ButtonType.Help),
+                new ButtonLayoutItem(0,  0, ButtonType.Open),
+                new ButtonLayoutItem(0,  1, ButtonType.Copy),
+                new ButtonLayoutItem(0,  2, ButtonType.Undo),
+                new ButtonLayoutItem(0,  3, ButtonType.Config),
+                new ButtonLayoutItem(0,  6, ButtonType.Play),
+                new ButtonLayoutItem(0,  7, ButtonType.Help),
 
-                    new ButtonLayoutItem(1,  0, ButtonType.Save),
-                    new ButtonLayoutItem(1,  1, ButtonType.Paste),
-                    new ButtonLayoutItem(1,  2, ButtonType.Redo),
-                    new ButtonLayoutItem(1,  3, ButtonType.Transform),
-                    new ButtonLayoutItem(1,  6, ButtonType.Rewind),
-                    new ButtonLayoutItem(1,  7, ButtonType.More),
-                },
-                new ButtonLayoutItem[] 
-                {
-                },
-            }, 
-            {
-                new ButtonLayoutItem[] 
-                {
-                    new ButtonLayoutItem(0,  0, ButtonType.Open),
-                    new ButtonLayoutItem(0,  1, ButtonType.Save),
-                    new ButtonLayoutItem(0,  2, ButtonType.Copy),
-                    new ButtonLayoutItem(0,  3, ButtonType.Paste),
-                    new ButtonLayoutItem(0,  4, ButtonType.Undo),
-                    new ButtonLayoutItem(0,  5, ButtonType.Redo),
-                    new ButtonLayoutItem(0,  6, ButtonType.Config),
-                    new ButtonLayoutItem(0, 11, ButtonType.Play),
-                    new ButtonLayoutItem(0, 12, ButtonType.Rewind),
-                    new ButtonLayoutItem(0, 13, ButtonType.Help),
-                    new ButtonLayoutItem(0, 14, ButtonType.More)
-
-                },
-                new ButtonLayoutItem[] 
-                {
-                    new ButtonLayoutItem(0,  0, ButtonType.New),
-                    new ButtonLayoutItem(0,  1, ButtonType.Open),
-                    new ButtonLayoutItem(0,  2, ButtonType.Copy),
-                    new ButtonLayoutItem(0,  3, ButtonType.Paste),
-                    new ButtonLayoutItem(0,  4, ButtonType.Undo),
-                    new ButtonLayoutItem(0,  5, ButtonType.Config),
-                    new ButtonLayoutItem(0, 10, ButtonType.Play),
-                    new ButtonLayoutItem(0, 11, ButtonType.Rewind),
-                    new ButtonLayoutItem(0, 12, ButtonType.Metronome),
-                    new ButtonLayoutItem(0, 13, ButtonType.Follow),
-                    new ButtonLayoutItem(0, 14, ButtonType.Help),
-
-                    new ButtonLayoutItem(1,  0, ButtonType.Save),
-                    new ButtonLayoutItem(1,  1, ButtonType.Export),
-                    new ButtonLayoutItem(1,  2, ButtonType.Cut),
-                    new ButtonLayoutItem(1,  3, ButtonType.Cut), // DROIDTODO : Delete!
-                    new ButtonLayoutItem(1,  4, ButtonType.Redo),
-                    new ButtonLayoutItem(1,  5, ButtonType.Transform),
-                    new ButtonLayoutItem(1, 10, ButtonType.Rec),
-                    new ButtonLayoutItem(1, 11, ButtonType.Loop),
-                    new ButtonLayoutItem(1, 12, ButtonType.Machine),
-                    new ButtonLayoutItem(1, 14, ButtonType.More),
-                },
-            }, 
+                new ButtonLayoutItem(1,  0, ButtonType.Save),
+                new ButtonLayoutItem(1,  1, ButtonType.Paste),
+                new ButtonLayoutItem(1,  2, ButtonType.Redo),
+                new ButtonLayoutItem(1,  3, ButtonType.Transform),
+                new ButtonLayoutItem(1,  6, ButtonType.Rewind),
+                new ButtonLayoutItem(1,  7, ButtonType.More),
+            }
         };
 
-        // [portrait/landscape, collapsed/expanded, timecode/oscilloscope ]
-        private readonly OscTimeLayoutItem[,,] OscTimeLayout = new OscTimeLayoutItem[2, 2, 2]
+        // [collapsed/expanded, timecode/oscilloscope ]
+        private readonly OscTimeLayoutItem[,] OscTimeLayout = new OscTimeLayoutItem[,]
         {
             {
-                {
-                    new OscTimeLayoutItem(0, 4, 2),
-                    new OscTimeLayoutItem(1, 4, 2),
-                },
-                {
-                    new OscTimeLayoutItem(0, 0, 2),
-                    new OscTimeLayoutItem(0, 0, 2),
-                },
+                new OscTimeLayoutItem(0, 4, 2),
+                new OscTimeLayoutItem(0, 5, 2),
             },
             {
-                {
-                    new OscTimeLayoutItem(0, 7, 2),
-                    new OscTimeLayoutItem(0, 9, 2),
-                },
-                {
-                    new OscTimeLayoutItem(0, 6, 2),
-                    new OscTimeLayoutItem(0, 8, 2),
-                },
-            },
+                new OscTimeLayoutItem(0, 4, 2),
+                new OscTimeLayoutItem(0, 5, 2),
+            }
         };
 
         // These are calculated on render init.
@@ -148,8 +89,8 @@ namespace FamiStudio
         private float expandRatio = 0.0f;
         private bool  expanded = false; // MATTT : Testing.
 
-        public int   LayoutSize  => buttonSizeFull * (IsLandscape ? 1 : 2);
-        public int   DesiredSize => (int)Math.Round(LayoutSize * (1.0f + expandRatio));
+        public int   LayoutSize  => buttonSizeFull * 2;
+        public int   DesiredSize => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio)));
         public float ExpandRatio => expandRatio;
 
         protected override void OnRenderInitialized(RenderGraphics g)
@@ -158,7 +99,7 @@ namespace FamiStudio
 
             var bitmapSize = bmpButtonAtlas.GetElementSize(0);
 
-            buttonSizeFull = MobileUtils.ComputeIdealButtonSize(ParentFormSize.Width, ParentFormSize.Height);
+            buttonSizeFull = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 9;
             buttonMargin = (int)Math.Round(buttonSizeFull * 0.1f);  // DROIDTODO : Apply some form of scaling.
             buttonSize = buttonSizeFull - (buttonMargin * 2);
             buttonBitmapScaleFloat = buttonSize / (float)(bitmapSize.Width);
@@ -172,7 +113,7 @@ namespace FamiStudio
                 return;
 
             var landscape = IsLandscape;
-            var layout = ButtonLayout[landscape ? 1 : 0, expanded ? 1 : 0];
+            var layout = ButtonLayout[/*expanded ? 1 :*/ 0]; // MATTT
 
             foreach (var btn in buttons)
             {
@@ -182,24 +123,41 @@ namespace FamiStudio
             foreach (var bl in layout)
             {
                 var btn = buttons[(int)bl.btn];
+                
+                var col = bl.col;
+                var row = bl.row;
 
-                btn.X = buttonSizeFull * bl.col + buttonMargin;
-                btn.Y = buttonSizeFull * bl.row + buttonMargin;
+                if (landscape)
+                    Utils.Swap(ref col, ref row);
+
+                btn.X = buttonSizeFull * col + buttonMargin;
+                btn.Y = buttonSizeFull * row + buttonMargin;
                 btn.Size = buttonSize; // DROIDTODO : Hitbox.
                 btn.Visible = true;
             }
 
-            var timeLayout = OscTimeLayout[landscape ? 1 : 0, expanded ? 1 : 0, 0];
-            var oscLayout  = OscTimeLayout[landscape ? 1 : 0, expanded ? 1 : 0, 1];
+            var timeLayout = OscTimeLayout[expanded ? 1 : 0, 0];
+            var oscLayout  = OscTimeLayout[expanded ? 1 : 0, 1];
 
             Debug.Assert(timeLayout.numCols == oscLayout.numCols);
 
+            var timeCol = timeLayout.col;
+            var timeRow = timeLayout.row;
+            var oscCol = oscLayout.col;
+            var oscRow = oscLayout.row;
+
+            if (landscape)
+            {
+                Utils.Swap(ref timeCol, ref timeRow);
+                Utils.Swap(ref oscCol, ref oscRow);
+            }
+
             timecodeOscSizeX = timeLayout.numCols * buttonSizeFull - buttonMargin * 2;
             timecodeOscSizeY = buttonSize;
-            timecodePosX = buttonMargin + timeLayout.col * buttonSizeFull;
-            timecodePosY = buttonMargin + timeLayout.row * buttonSizeFull;
-            oscilloscopePosX = buttonMargin + oscLayout.col * buttonSizeFull;
-            oscilloscopePosY = buttonMargin + oscLayout.row * buttonSizeFull;
+            timecodePosX = buttonMargin + timeCol * buttonSizeFull;
+            timecodePosY = buttonMargin + timeRow * buttonSizeFull;
+            oscilloscopePosX = buttonMargin + oscCol * buttonSizeFull;
+            oscilloscopePosY = buttonMargin + oscRow * buttonSizeFull;
         }
 
         protected override void OnResize(EventArgs e)
@@ -239,29 +197,31 @@ namespace FamiStudio
         }
 
         // TEMPORARY!
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnTouch(int x, int y)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            //bool left  = e.Button.HasFlag(MouseButtons.Left);
+            //bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if (left || right)
+            //if (left || right)
             {
-                if (e.X > timecodePosX && e.X < timecodePosX + timecodeOscSizeX &&
-                    e.Y > timecodePosY && e.Y < Height - timecodePosY)
+                /*
+                if (x > timecodePosX && x < timecodePosX + timecodeOscSizeX &&
+                    y > timecodePosY && y < Height - timecodePosY)
                 {
                     Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
                     ConditionalInvalidate();
                 }
                 else
+                */
                 {
                     foreach (var btn in buttons)
                     {
-                        if (btn != null && btn.Visible && btn.IsPointIn(e.X, e.Y, Width) && (btn.Enabled == null || btn.Enabled() != ButtonStatus.Disabled))
+                        if (btn != null && btn.Visible && btn.IsPointIn(x, y, Width) && (btn.Enabled == null || btn.Enabled() != ButtonStatus.Disabled))
                         {
-                            if (left)
+                            //if (left)
                                 btn.Click?.Invoke();
-                            else
-                                btn.RightClick?.Invoke();
+                            //else
+                            //    btn.RightClick?.Invoke();
                             break;
                         }
                     }

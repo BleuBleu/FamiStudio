@@ -70,15 +70,21 @@
     <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.2.0.5" />
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.0.0.1" />
     <PackageReference Include="Xamarin.Essentials" Version="1.6.1" />
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Source\UI\Droid\Resources\anim\fade_in.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\anim\fade_out.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\anim\slide_in_right.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\anim\slide_out_right.xml" />
-    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand.xml"> <Generator>MSBuild:UpdateGeneratedFiles</Generator> </AndroidResource>
-    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand_bold.ttf"> <Generator>MSBuild:UpdateGeneratedFiles</Generator> </AndroidResource>
-    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand_regular.ttf"> <Generator>MSBuild:UpdateGeneratedFiles</Generator> </AndroidResource>
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand.xml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand_bold.ttf">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand_regular.ttf">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\ic_launcher.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\ic_launcher_round.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\ic_launcher.png" />
@@ -101,14 +107,17 @@
     <AndroidResource Include="Source\UI\Droid\Resources\values\ic_launcher_background.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\strings.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\styles.xml" />
-    <Folder Include="Source\UI\Droid\Resources\drawable\" />
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Source\UI\Droid\Assets\AboutAssets.txt" />
     <None Include="Source\UI\Droid\Resources\AboutResources.txt" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidNativeLibrary Include="libs\arm64-v8a\libNesSndEmu.so"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libNesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -185,7 +194,9 @@
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\Program.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
-    <Compile Include="Source\UI\Common\PropertyPageCommon.cs"> <SubType>UserControl</SubType> </Compile>
+    <Compile Include="Source\UI\Common\PropertyPageCommon.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Common\Theme.cs" />
@@ -200,13 +211,13 @@
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
     <Compile Include="Source\UI\Droid\PropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
-    <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />    
+    <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />
     <Compile Include="Source\UI\Droid\SystemMedia.cs" />
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Mobile\FloatingToolbar.cs" />
     <Compile Include="Source\UI\Mobile\MobileUtils.cs" />
-    <Compile Include="Source\UI\Mobile\NavigationBar.cs" />
+    <Compile Include="Source\UI\Mobile\QuickAcessBar.cs" />
     <Compile Include="Source\UI\Mobile\Toolbar.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
@@ -219,7 +230,7 @@
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
   </ItemGroup>
-  <ItemGroup>   
+  <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_fds_ntsc.bin" />
@@ -500,52 +511,26 @@
     <EmbeddedResource Include="Resources\ProjectExplorer.png" />
     <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
     <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
-    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand10_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand15.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand15_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand15Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand15Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand16.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand16_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand18.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand18_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand18Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand18Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand24.fnt" />
     <EmbeddedResource Include="Resources\QuickSand24_0.png" />
     <EmbeddedResource Include="Resources\QuickSand24Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand24Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand28_0.png" />
     <EmbeddedResource Include="Resources\QuickSand30.fnt" />
     <EmbeddedResource Include="Resources\QuickSand30_0.png" />
     <EmbeddedResource Include="Resources\QuickSand30Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand30Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand32.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand32_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand40.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand40_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand40Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand42.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand42_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand56.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand56_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand8.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand8_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand36.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand36_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand36Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand36Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand48.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand48_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand60.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand60_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand60Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand60Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand84.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand84_0.png" />
     <EmbeddedResource Include="Resources\QwertyPiano%402x.png" />
     <EmbeddedResource Include="Resources\QwertyPiano.png" />
     <EmbeddedResource Include="Resources\Rec%402x.png" />
@@ -625,6 +610,9 @@
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
     <EmbeddedResource Include="Silius.fms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Source\UI\Droid\Resources\drawable\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

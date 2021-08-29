@@ -101,6 +101,11 @@ namespace FamiStudio
             gl.GlScissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
         }
 
+        public void SetViewport(int x, int y, int width, int height)
+        {
+            gl.GlViewport(x, y, width, height);
+        }
+
         public void Clear(Color color)
         {
             gl.GlClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);

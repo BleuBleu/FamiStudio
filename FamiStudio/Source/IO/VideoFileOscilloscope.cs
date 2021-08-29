@@ -178,7 +178,7 @@ namespace FamiStudio
                     maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
 
                 // Measure the longest text.
-                longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, themeResources.FontBig));
+                longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, themeResources.FontVeryLarge));
 
                 Log.ReportProgress(0.0f);
             }
@@ -197,8 +197,8 @@ namespace FamiStudio
             var smallChannelText = channelResY < 128;
             var bmpSuffix = smallChannelText ? "" : "@2x";
             var font = lineThickness > 1 ?
-                (smallChannelText ? themeResources.FontMediumBold : themeResources.FontBigBold) : 
-                (smallChannelText ? themeResources.FontMedium     : themeResources.FontBig);
+                (smallChannelText ? themeResources.FontMediumBold : themeResources.FontVeryLargeBold) : 
+                (smallChannelText ? themeResources.FontMedium     : themeResources.FontVeryLarge);
             var textOffsetY = smallChannelText ? 1 : 4;
             var channelLineWidth = resY >= 720 ? 5 : 3;
 
