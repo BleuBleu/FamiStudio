@@ -47,33 +47,47 @@ namespace FamiStudio
             public int numCols;
         };
 
-        // [collapsed/expanded]
-        private readonly ButtonLayoutItem[][] ButtonLayout = new ButtonLayoutItem[][]
+        private readonly ButtonLayoutItem[] ButtonLayout = new ButtonLayoutItem[]
         { 
-            new ButtonLayoutItem[] 
-            {
-                new ButtonLayoutItem(0,  0, ButtonType.Open),
-                new ButtonLayoutItem(0,  1, ButtonType.Copy),
-                new ButtonLayoutItem(0,  2, ButtonType.Undo),
-                new ButtonLayoutItem(0,  3, ButtonType.Config),
-                new ButtonLayoutItem(0,  6, ButtonType.Play),
-                new ButtonLayoutItem(0,  7, ButtonType.Help),
+            new ButtonLayoutItem(0,  0, ButtonType.Open),
+            new ButtonLayoutItem(0,  1, ButtonType.Copy),
+            new ButtonLayoutItem(0,  2, ButtonType.Undo),
+            new ButtonLayoutItem(0,  3, ButtonType.Config),
+            new ButtonLayoutItem(0,  6, ButtonType.Play),
+            new ButtonLayoutItem(0,  7, ButtonType.Rec),
+            new ButtonLayoutItem(0,  8, ButtonType.Help),
 
-                new ButtonLayoutItem(1,  0, ButtonType.Save),
-                new ButtonLayoutItem(1,  1, ButtonType.Paste),
-                new ButtonLayoutItem(1,  2, ButtonType.Redo),
-                new ButtonLayoutItem(1,  3, ButtonType.Transform),
-                new ButtonLayoutItem(1,  6, ButtonType.Rewind),
-                new ButtonLayoutItem(1,  7, ButtonType.More),
-            }
+            new ButtonLayoutItem(1,  0, ButtonType.Save),
+            new ButtonLayoutItem(1,  1, ButtonType.Paste),
+            new ButtonLayoutItem(1,  2, ButtonType.Redo),
+            new ButtonLayoutItem(1,  3, ButtonType.Transform),
+            new ButtonLayoutItem(1,  6, ButtonType.Rewind),
+            new ButtonLayoutItem(1,  7, ButtonType.Qwerty),
+            new ButtonLayoutItem(1,  8, ButtonType.More),
+
+            new ButtonLayoutItem(2,  0, ButtonType.New),
+            new ButtonLayoutItem(2,  1, ButtonType.Cut),
+            new ButtonLayoutItem(2,  2, ButtonType.Count),
+            new ButtonLayoutItem(2,  3, ButtonType.Count),
+            new ButtonLayoutItem(2,  6, ButtonType.Loop),
+            new ButtonLayoutItem(2,  7, ButtonType.Metronome),
+            new ButtonLayoutItem(2,  8, ButtonType.Count),
+
+            new ButtonLayoutItem(3,  0, ButtonType.Export),
+            new ButtonLayoutItem(3,  1, ButtonType.Count), // MATTT : Delete
+            new ButtonLayoutItem(3,  2, ButtonType.Count),
+            new ButtonLayoutItem(3,  3, ButtonType.Count),
+            new ButtonLayoutItem(3,  6, ButtonType.Machine),
+            new ButtonLayoutItem(3,  7, ButtonType.Follow),
+            new ButtonLayoutItem(3,  8, ButtonType.Count),
         };
 
-        // [collapsed/expanded, timecode/oscilloscope ]
+        // [portrait/landscape, timecode/oscilloscope]
         private readonly OscTimeLayoutItem[,] OscTimeLayout = new OscTimeLayoutItem[,]
         {
             {
                 new OscTimeLayoutItem(0, 4, 2),
-                new OscTimeLayoutItem(0, 5, 2),
+                new OscTimeLayoutItem(1, 4, 2),
             },
             {
                 new OscTimeLayoutItem(0, 4, 2),
@@ -113,19 +127,24 @@ namespace FamiStudio
                 return;
 
             var landscape = IsLandscape;
-            var layout = ButtonLayout[/*expanded ? 1 :*/ 0]; // MATTT
 
             foreach (var btn in buttons)
-            {
                 btn.Visible = false;
-            }
 
-            foreach (var bl in layout)
+            var numRows = expanded ? 4 : 2;
+
+            foreach (var bl in ButtonLayout)
             {
+                if (bl.btn == ButtonType.Count)
+                    continue;
+
                 var btn = buttons[(int)bl.btn];
                 
                 var col = bl.col;
                 var row = bl.row;
+
+                if (row >= numRows)
+                    continue;
 
                 if (landscape)
                     Utils.Swap(ref col, ref row);
@@ -136,8 +155,8 @@ namespace FamiStudio
                 btn.Visible = true;
             }
 
-            var timeLayout = OscTimeLayout[expanded ? 1 : 0, 0];
-            var oscLayout  = OscTimeLayout[expanded ? 1 : 0, 1];
+            var timeLayout = OscTimeLayout[landscape ? 1 : 0, 0];
+            var oscLayout  = OscTimeLayout[landscape ? 1 : 0, 1];
 
             Debug.Assert(timeLayout.numCols == oscLayout.numCols);
 
@@ -190,6 +209,16 @@ namespace FamiStudio
                 if (prevRatio > 0.5f && expandRatio <= 0.5f)
                     UpdateButtonLayout();
             }
+        }
+
+        protected override void RenderInternal(RenderGraphics g, RenderCommandList c)
+        {
+            base.RenderInternal(g, c);
+
+            if (IsLandscape)
+                c.DrawLine(Width - 1, 0, Width - 1, Height, ThemeResources.BlackBrush);
+            else
+                c.DrawLine(0, Height - 1, Width, Height - 1, ThemeResources.BlackBrush);
         }
 
         public void Reset()

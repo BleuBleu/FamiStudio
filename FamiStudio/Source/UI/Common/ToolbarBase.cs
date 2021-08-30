@@ -546,18 +546,19 @@ namespace FamiStudio
             }
         }
 
-        // DROIDTODO : We can use the default command list on mobile here.
+        protected virtual void RenderInternal(RenderGraphics g, RenderCommandList c)
+        {
+            // Prepare the batches.
+            RenderButtons(g, c);
+            RenderTimecode(g, c, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);
+            RenderOscilloscope(g, c, oscilloscopePosX, oscilloscopePosY, timecodeOscSizeX, timecodeOscSizeY);
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
-            var cm = g.CreateCommandList(); // Main
-
-            // Prepare the batches.
-            RenderButtons(g, cm);
-            RenderTimecode(g, cm, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);
-            RenderOscilloscope(g, cm, oscilloscopePosX, oscilloscopePosY, timecodeOscSizeX, timecodeOscSizeY);
-
-            // Draw everything.
-            g.DrawCommandList(cm);
+            var c = g.CreateCommandList(); // Main
+            RenderInternal(g, c);
+            g.DrawCommandList(c);
         }
 
         public bool ShouldRefreshOscilloscope(bool hasNonZeroSample)

@@ -173,6 +173,7 @@ namespace FamiStudio
             gfx.EndDrawControl();
         }
 
+        // MATTT : Move this to a RenderOverlay function on toolbar
         private void RenderOverlay()
         {
             gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
