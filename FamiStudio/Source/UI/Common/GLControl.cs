@@ -96,10 +96,12 @@ namespace FamiStudio
         public CursorInfo Cursor => cursorInfo; 
         public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
 
-        public int   ScaleForMainWindow     (float val) { return (int)(val * mainWindowScaling); }
-        public float ScaleForMainWindowFloat(float val) { return      (val * mainWindowScaling); }
-        public int   ScaleForFont           (float val) { return (int)(val * fontScaling); }
-        public float ScaleForFontFloat      (float val) { return      (val * fontScaling); }
+        public int   ScaleForMainWindow     (float val) { return (int)Math.Round(val * mainWindowScaling); }
+        public float ScaleForMainWindowFloat(float val) { return (val * mainWindowScaling); }
+        public int   ScaleForFont           (float val) { return (int)Math.Round(val * fontScaling); }
+        public float ScaleForFontFloat      (float val) { return (val * fontScaling); }
+        public int   ScaleCustom            (float val, float scale) { return (int)Math.Round(val * scale); }
+        public float ScaleCustomFloat       (float val, float scale) { return (val * scale); }
     }
 
     public class CursorInfo

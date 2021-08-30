@@ -18,7 +18,7 @@ namespace FamiStudio
 
         public static int ScaleCustom(float val, float scale)
         {
-            return (int)(scale * mainWindowScaling);
+            return (int)Math.Round(scale * mainWindowScaling);
         }
 
         public static float ScaleCustomFloat(float val, float scale)
@@ -28,7 +28,7 @@ namespace FamiStudio
 
         public static int ScaleForMainWindow(float val)
         {
-            return (int)(val * mainWindowScaling);
+            return (int)Math.Round(val * mainWindowScaling);
         }
 
         public static float ScaleForMainWindowFloat(float val)
@@ -38,7 +38,7 @@ namespace FamiStudio
 
         public static int ScaleForDialog(float val)
         {
-            return (int)(val * dialogScaling);
+            return (int)Math.Round(val * dialogScaling);
         }
 
         public static void Initialize()

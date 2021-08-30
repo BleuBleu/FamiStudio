@@ -15,7 +15,17 @@ namespace FamiStudio
 {
     public partial class QuickAcessBar : RenderControl
     {
-        const float ButtonMargin = 0.1f;
+        // All of these were calibrated at 1080p and will scale up/down from there.
+        const int DefaultNavButtonSize     = 120;
+        const int DefaultButtonSize        = 144;
+        const int DefaultIconSize          = 96;
+        const int DefaultIconPos1          = 12;
+        const int DefaultIconPos2          = 24;
+        const int DefaultTextSize          = 24;
+        const int DefaultTextPosTop        = 108;
+        const int DefaultExpandIconPosTop  = 0;
+        const int DefaultExpandIconPosLeft = 56;
+        const int DefaultExpandIconSize    = 32;
 
         private delegate ButtonImageIndices RenderInfoDelegate(RenderGraphics g, out string text, out RenderBrush background);
         private delegate bool EnabledDelegate();
@@ -25,7 +35,11 @@ namespace FamiStudio
             public Rectangle Hitbox;
             public int IconX;
             public int IconY;
+            public int ExpandIconX;
+            public int ExpandIconY;
+            public int TextX;
             public int TextY;
+            public int TextWidth;
             public bool IsNavButton = false;
             public RenderBrush BackgroundBrush;
             public RenderInfoDelegate GetRenderInfo;
@@ -66,6 +80,10 @@ namespace FamiStudio
             MobileInstrumentVRC6,
             MobileInstrumentVRC7,
             MobileArpeggio,
+            ExpandUp,
+            ExpandDown,
+            ExpandLeft,
+            ExpandRight,
             Count
         };
 
@@ -90,6 +108,10 @@ namespace FamiStudio
             "MobileInstrumentVRC6",
             "MobileInstrumentVRC7",
             "MobileArpeggio",
+            "ExpandUp",
+            "ExpandDown",
+            "ExpandLeft",
+            "ExpandRight",
         };
 
         public delegate void EmptyDelegate();
@@ -102,14 +124,19 @@ namespace FamiStudio
         RenderBitmapAtlas bmpButtonAtlas;
         Button[] buttons = new Button[(int)ButtonType.Count];
 
-        int   buttonSizeNav;
-        int   buttonSizeExpand;
-        int   buttonMargin;
-        int   buttonBitmapSize;
-        float buttonBitmapScaleFloat = 1.0f;
-        int   textOffset;
+        int buttonSize;
+        int buttonSizeNav;
+        int buttonIconSize;
+        int buttonIconPos1;
+        int buttonIconPos2;
+        int textPosTop;
+        int expandIconPosTop;
+        int expandIconPosLeft;
 
-        public int LayoutSize => buttonSizeExpand;
+        float iconScaleFloat = 1.0f;
+        float iconScaleExpFloat = 1.0f;
+
+        public int LayoutSize => buttonSize;
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
@@ -126,18 +153,22 @@ namespace FamiStudio
             buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnProjectExplorer };
             buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnProjectExplorer };
 
-            var minSize = Math.Min(ParentFormSize.Width, ParentFormSize.Height);
+            // MATTT : Font scaling?
+            var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
 
-            buttonSizeNav = minSize / 9;
-            buttonSizeExpand = (minSize - (buttonSizeNav * 3)) / 5;
-            buttonBitmapSize = bmpButtonAtlas.GetElementSize(0).Width;
-            buttonMargin = (int)(buttonSizeNav * ButtonMargin);
-            buttonBitmapScaleFloat = (buttonSizeNav - buttonMargin * 2) / (float)buttonBitmapSize; // MATTT : Bitmap scaling.
+            font = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultTextSize, scale), true);
 
-            // MATTT : Font scaling.
-            var fontSize = (buttonSizeExpand - buttonMargin * 2) - (int)(buttonBitmapSize * buttonBitmapScaleFloat);
-            font = ThemeResources.GetBestMatchingFont(g, fontSize, true);
-            textOffset = buttonSizeExpand - buttonMargin - fontSize;
+            buttonSize        = ScaleCustom(DefaultButtonSize, scale);
+            buttonSizeNav     = ScaleCustom(DefaultNavButtonSize, scale);
+            buttonIconSize    = ScaleCustom(DefaultIconSize, scale);
+            buttonIconPos1    = ScaleCustom(DefaultIconPos1, scale);
+            buttonIconPos2    = ScaleCustom(DefaultIconPos2, scale);
+            textPosTop        = ScaleCustom(DefaultTextPosTop, scale);
+            expandIconPosTop  = ScaleCustom(DefaultExpandIconPosTop, scale);
+            expandIconPosLeft = ScaleCustom(DefaultExpandIconPosLeft, scale);
+
+            iconScaleFloat = ScaleCustomFloat(DefaultIconSize / (float)bmpButtonAtlas.GetElementSize(0).Width, scale);
+            iconScaleExpFloat = ScaleCustomFloat(DefaultExpandIconSize / (float)bmpButtonAtlas.GetElementSize((int)ButtonImageIndices.ExpandUp).Width, scale);
         }
 
         protected override void OnRenderTerminated()
@@ -167,21 +198,29 @@ namespace FamiStudio
             for (int i = 0; i < (int)ButtonType.Count; i++)
             {
                 var btn = buttons[i];
-                var size = btn.IsNavButton ? buttonSizeNav : buttonSizeExpand;
+                var size = btn.IsNavButton ? buttonSizeNav : buttonSize;
 
                 if (landscape)
                 {
-                    btn.Hitbox = new Rectangle(0, x, buttonSizeExpand, size);
-                    btn.IconX = (int)(buttonSizeExpand / 2 - buttonBitmapSize * buttonBitmapScaleFloat / 2);
-                    btn.IconY = x + buttonMargin;
-                    btn.TextY = x + textOffset;
+                    btn.Hitbox = new Rectangle(0, x, buttonSize, size);
+                    btn.IconX = buttonIconPos2;
+                    btn.IconY = x + buttonIconPos1;
+                    btn.ExpandIconX = 0;
+                    btn.ExpandIconY = x + expandIconPosLeft;
+                    btn.TextX = 0;
+                    btn.TextY = x + textPosTop;
+                    btn.TextWidth = buttonSize;
                 }
                 else
                 {
-                    btn.Hitbox = new Rectangle(x, 0, size, buttonSizeExpand);
-                    btn.IconX = x + (int)(buttonSizeExpand / 2 - buttonBitmapSize * buttonBitmapScaleFloat / 2);
-                    btn.IconY = buttonMargin;
-                    btn.TextY = textOffset;
+                    btn.Hitbox = new Rectangle(x, 0, size, buttonSize);
+                    btn.IconX = x + buttonIconPos2;
+                    btn.IconY = buttonIconPos2;
+                    btn.ExpandIconX = x + expandIconPosLeft;
+                    btn.ExpandIconY = expandIconPosTop;
+                    btn.TextX = x;
+                    btn.TextY = textPosTop;
+                    btn.TextWidth = buttonSize;
                 }
 
                 x += size;
@@ -278,16 +317,19 @@ namespace FamiStudio
                 //var opacity = status == ButtonStatus.Enabled ? 1.0f : 0.25f;
 
                 var image = btn.GetRenderInfo(g, out var text, out var brush);
+                //var expImage = (int)ButtonImageIndices.ExpandLeft;
+                var expImage = IsLandscape ? (int)ButtonImageIndices.ExpandLeft : (int)ButtonImageIndices.ExpandUp;
 
                 c.FillRectangle(btn.Hitbox.Left, btn.Hitbox.Top, btn.Hitbox.Right, btn.Hitbox.Bottom, brush);
 
                 if (!btn.IsNavButton)
                     c.DrawRectangle(btn.Hitbox.Left, btn.Hitbox.Top, btn.Hitbox.Right, btn.Hitbox.Bottom, ThemeResources.BlackBrush);
 
-                c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, buttonBitmapScaleFloat);
+                c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, iconScaleFloat);
+                c.DrawBitmapAtlas(bmpButtonAtlas, (int)expImage, btn.ExpandIconX, btn.ExpandIconY, 1.0f, iconScaleExpFloat);
 
                 if (!string.IsNullOrEmpty(text))
-                    c.DrawText(text, font, btn.Hitbox.Left, btn.TextY, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSizeExpand, 0);
+                    c.DrawText(text, font, btn.TextX, btn.TextY, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Ellipsis, btn.TextWidth, 0);
             }
 
             //c.DrawLine(Width, 0, Width, Height, ThemeResources.BlackBrush, 5.0f); // DROIDTODO : Line width!
