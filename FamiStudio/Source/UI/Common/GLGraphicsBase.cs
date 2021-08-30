@@ -687,8 +687,10 @@ namespace FamiStudio
     }
 
     [Flags]
-    public enum RenderTextAlignment
+    public enum RenderTextFlags
     {
+        None = 0,
+
         HorizontalAlignMask = 0x3,
         VerticalAlignMask   = 0xc,
 
@@ -709,6 +711,9 @@ namespace FamiStudio
         BottomLeft   = Bottom | Left,
         BottomCenter = Bottom | Center,
         BottomRight  = Bottom | Right,
+
+        Clip     = 1 << 7,
+        Ellipsis = 1 << 8
     }
 
     // This is common to both OGL, it only does data packing, no GL calls.
@@ -742,10 +747,8 @@ namespace FamiStudio
         private class TextInstance
         {
             public RectangleF rect;
-            public RenderTextAlignment align;
+            public RenderTextFlags flags;
             public string text;
-            public bool ellipsis;
-            public bool clip;
             public GLBrush brush;
         };
 
@@ -1381,12 +1384,12 @@ namespace FamiStudio
             }
         }
 
-        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, RenderTextAlignment align, float width, float height = 0, bool clip = false, bool ellipsis = false)
+        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, RenderTextFlags flags = RenderTextFlags.None, float width = 0, float height = 0)
         {
-            Debug.Assert(!clip || !ellipsis);
-            Debug.Assert(!ellipsis || width > 0);
-            Debug.Assert((align & RenderTextAlignment.HorizontalAlignMask) == RenderTextAlignment.Left || width  > 0);
-            Debug.Assert((align & RenderTextAlignment.VerticalAlignMask)   == RenderTextAlignment.Top  || height > 0);
+            Debug.Assert(!flags.HasFlag(RenderTextFlags.Clip) || !flags.HasFlag(RenderTextFlags.Ellipsis));
+            Debug.Assert(!flags.HasFlag(RenderTextFlags.Ellipsis) || width > 0);
+            Debug.Assert((flags & RenderTextFlags.HorizontalAlignMask) == RenderTextFlags.Left || width  > 0);
+            Debug.Assert((flags & RenderTextFlags.VerticalAlignMask)   == RenderTextFlags.Top  || height > 0);
 
             if (!texts.TryGetValue(font, out var list))
             {
@@ -1398,18 +1401,11 @@ namespace FamiStudio
 
             var inst = new TextInstance();
             inst.rect = new RectangleF(x, y, width, height);
-            inst.align = align;
+            inst.flags = flags;
             inst.text = text;
             inst.brush = brush;
-            inst.clip = clip;
-            inst.ellipsis = ellipsis;
 
             list.Add(inst);
-        }
-
-        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush)
-        {
-            DrawText(text, font, x, y, brush, RenderTextAlignment.TopLeft, 0);
         }
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
@@ -1551,7 +1547,7 @@ namespace FamiStudio
                     var alignmentOffsetX = 0;
                     var alignmentOffsetY = 0;
 
-                    if (inst.ellipsis)
+                    if (inst.flags.HasFlag(RenderTextFlags.Ellipsis))
                     {
                         font.MeasureString("...", out var dotsMinX, out var dotsMaxX, out _, out _);
                         var ellipsisSizeX = (dotsMaxX - dotsMinX) * 2; // Leave some padding.
@@ -1559,30 +1555,30 @@ namespace FamiStudio
                             inst.text += "...";
                     }
 
-                    if (inst.align != RenderTextAlignment.TopLeft)
+                    if (inst.flags != RenderTextFlags.TopLeft)
                     {
                         font.MeasureString(inst.text, out var minX, out var maxX, out var minY, out var maxY);
 
-                        var halign = inst.align & RenderTextAlignment.HorizontalAlignMask;
-                        var valign = inst.align & RenderTextAlignment.VerticalAlignMask;
+                        var halign = inst.flags & RenderTextFlags.HorizontalAlignMask;
+                        var valign = inst.flags & RenderTextFlags.VerticalAlignMask;
 
-                        if (halign == RenderTextAlignment.Center)
+                        if (halign == RenderTextFlags.Center)
                         {
                             alignmentOffsetX -= minX;
                             alignmentOffsetX += ((int)inst.rect.Width - maxX - minX + 1) / 2;
                         }
-                        else if (halign == RenderTextAlignment.Right)
+                        else if (halign == RenderTextFlags.Right)
                         {
                             alignmentOffsetX -= minX;
                             alignmentOffsetX += ((int)inst.rect.Width - maxX - minX);
                         }
 
-                        if (valign == RenderTextAlignment.Middle)
+                        if (valign == RenderTextFlags.Middle)
                         {
                             alignmentOffsetY -= minY;
                             alignmentOffsetY += ((int)inst.rect.Height - maxY - minY + 1) / 2;
                         }
-                        else if (valign == RenderTextAlignment.Bottom)
+                        else if (valign == RenderTextFlags.Bottom)
                         {
                             alignmentOffsetY -= minY;
                             alignmentOffsetY += ((int)inst.rect.Height - maxY - minY);
@@ -1596,7 +1592,7 @@ namespace FamiStudio
                     int y = (int)(inst.rect.Y + alignmentOffsetY + font.OffsetY);
 
                     // Slow path when there is clipping.
-                    if (inst.clip)
+                    if (inst.flags.HasFlag(RenderTextFlags.Clip))
                     {
                         var clipMinX = (int)(inst.rect.X);
                         var clipMaxX = (int)(inst.rect.X + inst.rect.Width);

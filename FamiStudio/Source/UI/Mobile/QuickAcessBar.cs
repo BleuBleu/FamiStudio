@@ -287,7 +287,7 @@ namespace FamiStudio
                 c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, buttonBitmapScaleFloat);
 
                 if (!string.IsNullOrEmpty(text))
-                    c.DrawText(text, font, btn.Hitbox.Left, btn.TextY, ThemeResources.BlackBrush, RenderTextAlignment.Center, buttonSizeExpand, 0, false, true);
+                    c.DrawText(text, font, btn.Hitbox.Left, btn.TextY, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSizeExpand, 0);
             }
 
             //c.DrawLine(Width, 0, Width, Height, ThemeResources.BlackBrush, 5.0f); // DROIDTODO : Line width!

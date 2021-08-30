@@ -237,8 +237,6 @@ namespace FamiStudio
             }
             else
             {
-                patternNamePosY    = ScaleForMainWindow(DefaultPatternNamePosY);
-                patternHeaderSizeY = ScaleForMainWindow(DefaultPatternHeaderSizeY);
             }
         }
 
@@ -529,7 +527,7 @@ namespace FamiStudio
                 var text = (i + 1).ToString();
                 if (Song.PatternHasCustomSettings(i))
                     text += "*";
-                cf.DrawText(text, ThemeResources.FontMedium, 0, barTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextAlignment.Center, sx, 0, true);
+                cf.DrawText(text, ThemeResources.FontMedium, 0, barTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center | RenderTextFlags.Clip, sx);
 
                 if (i == Song.LoopPoint)
                 {
@@ -550,7 +548,7 @@ namespace FamiStudio
                         cf.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY, 0.8f));
                         cf.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, ThemeResources.BlackBrush);
                         cf.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1); // MATTT : We use the bitmap size here.
-                        cf.DrawText(pattern.Name, ThemeResources.FontSmall, patternNamePosX, patternNamePosY, ThemeResources.BlackBrush, RenderTextAlignment.Left, sx - patternNamePosX, 0, true);
+                        cf.DrawText(pattern.Name, ThemeResources.FontSmall, patternNamePosX, patternNamePosY, ThemeResources.BlackBrush, RenderTextFlags.Left | RenderTextFlags.Clip, sx - patternNamePosX);
 
                         if (IsPatternSelected(t, i))
                             cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2, true);

@@ -1085,7 +1085,7 @@ namespace FamiStudio
                     if (x != 0)
                         r.ch.DrawLine(x, 0, x, headerSizeY / 2, ThemeResources.BlackBrush, 1.0f);
                     if (zoomLevel >= 1 && n != env.Length)
-                        r.ch.DrawText(n.ToString(), ThemeResources.FontMedium, x, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextAlignment.Center, noteSizeX);
+                        r.ch.DrawText(n.ToString(), ThemeResources.FontMedium, x, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
                 }
 
                 r.ch.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, ThemeResources.BlackBrush);
@@ -1131,11 +1131,11 @@ namespace FamiStudio
                     }
                     else
                     {
-                        r.ch.DrawText(p.ToString(), ThemeResources.FontMedium, px, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextAlignment.Center, sx);
+                        r.ch.DrawText(p.ToString(), ThemeResources.FontMedium, px, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, sx);
                     }
 
                     if (pattern != null)
-                        r.ch.DrawText(pattern.Name, ThemeResources.FontMedium, px, headerTextPosY + headerSizeY / 2, ThemeResources.BlackBrush, RenderTextAlignment.Center, sx);
+                        r.ch.DrawText(pattern.Name, ThemeResources.FontMedium, px, headerTextPosY + headerSizeY / 2, ThemeResources.BlackBrush, RenderTextFlags.Center, sx);
                 }
 
                 int maxX = Song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern) * noteSizeX - scrollX;
@@ -1155,7 +1155,7 @@ namespace FamiStudio
                 ForEachWaveTimecode(r, (time, x, level, idx) =>
                 {
                     if (time != 0.0f)
-                        r.ch.DrawText(time.ToString($"F{level + 1}"), ThemeResources.FontMedium, x - 100, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextAlignment.Center, 200);
+                        r.ch.DrawText(time.ToString($"F{level + 1}"), ThemeResources.FontMedium, x - 100, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, 200);
                 });
 
                 // Processed Range
@@ -1333,7 +1333,7 @@ namespace FamiStudio
                     else
                         brush = IsBlackKey(i % 12) ? ThemeResources.LightGreyFillBrush2 : ThemeResources.BlackBrush;
 
-                    r.cp.DrawText(keyStrings[i], ThemeResources.FontVerySmall, 0, y - recordingKeyOffsetY + MainWindowScaling * 2, brush, RenderTextAlignment.Center, blackKeySizeX);
+                    r.cp.DrawText(keyStrings[i], ThemeResources.FontVerySmall, 0, y - recordingKeyOffsetY + MainWindowScaling * 2, brush, RenderTextFlags.Center, blackKeySizeX);
                 }
             }
 
@@ -1545,9 +1545,9 @@ namespace FamiStudio
                             if ((text.Length <= 2 && zoomLevel >= 0) || zoomLevel > 0)
                             {
                                 if (sizeY < effectPanelSizeY / 2)
-                                    r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextAlignment.Center, noteSizeX);
+                                    r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
                                 else
-                                    r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, ThemeResources.BlackBrush, RenderTextAlignment.Center, noteSizeX);
+                                    r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, ThemeResources.BlackBrush, RenderTextFlags.Center, noteSizeX);
                             }
 
                             r.ch.PopTransform();
@@ -2336,7 +2336,7 @@ namespace FamiStudio
                         var selected = IsEnvelopeValueSelected(i);
                         r.cf.FillAndDrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, r.g.GetVerticalGradientBrush(Theme.LightGreyFillColor1, (int)envelopeSizeY, 0.8f), ThemeResources.BlackBrush, selected ? 2 : 1, selected);
                         if (zoomLevel >= 1)
-                            r.cf.DrawText(env.Values[i].ToString("+#;-#;0"), ThemeResources.FontSmall, x, y - envelopeSizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextAlignment.Center, noteSizeX);
+                            r.cf.DrawText(env.Values[i].ToString("+#;-#;0"), ThemeResources.FontSmall, x, y - envelopeSizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
                     }
                 }
                 else
@@ -2371,7 +2371,7 @@ namespace FamiStudio
                             var brush = drawOutside ? ThemeResources.LightGreyFillBrush1 : ThemeResources.BlackBrush;
                             var offset = drawOutside != val < center ? -effectValuePosTextOffsetY : effectValueNegTextOffsetY;
 
-                            r.cf.DrawText(val.ToString(), ThemeResources.FontSmall, x, ty + offset, brush, RenderTextAlignment.Center, noteSizeX);
+                            r.cf.DrawText(val.ToString(), ThemeResources.FontSmall, x, ty + offset, brush, RenderTextFlags.Center, noteSizeX);
                         }
                     }
                 }
@@ -2395,7 +2395,7 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
-                r.cb.DrawText(noteTooltip,  ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextAlignment.Center, Width - tooltipTextPosX);
+                r.cb.DrawText(noteTooltip,  ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Center, Width - tooltipTextPosX);
             }
         }
 
@@ -2799,7 +2799,7 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip))
             {
-                r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY, whiteKeyBrush, RenderTextAlignment.Right, Width - tooltipTextPosX);
+                r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
             }
         }
 

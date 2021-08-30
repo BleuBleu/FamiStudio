@@ -298,7 +298,7 @@ namespace FamiStudio
                 }
             }
 
-            public RenderTextAlignment TextAlignment
+            public RenderTextFlags TextAlignment
             {
                 get
                 {
@@ -308,11 +308,11 @@ namespace FamiStudio
                         type == ButtonType.DpcmHeader ||
                         type == ButtonType.ArpeggioHeader)
                     {
-                        return RenderTextAlignment.Center;
+                        return RenderTextFlags.Center;
                     }
                     else
                     {
-                        return RenderTextAlignment.Left;
+                        return RenderTextFlags.Left;
                     }
                 }
             }
@@ -796,8 +796,9 @@ namespace FamiStudio
                 }
 
                 var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
+                var ellipsisFlag = button.TextEllipsis ? RenderTextFlags.Ellipsis : RenderTextFlags.None;
 
-                c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, button.TextAlignment, actualWidth - buttonTextNoIconPosX * 2, 0, false, button.TextEllipsis);
+                c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag, actualWidth - buttonTextNoIconPosX * 2);
                 
                 if (atlas != null)
                     c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY);
@@ -817,7 +818,7 @@ namespace FamiStudio
                         c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
                         c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1.0f);
-                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, buttonTextPosY - sliderPosY, ThemeResources.BlackBrush, RenderTextAlignment.Center, sliderSizeX);
+                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, buttonTextPosY - sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.Center, sliderSizeX);
                         c.PopTransform();
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
@@ -833,7 +834,7 @@ namespace FamiStudio
                         c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f);
                         c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f);
-                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, buttonTextPosY - sliderPosY, ThemeResources.BlackBrush, RenderTextAlignment.Center, sliderSizeX);
+                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, buttonTextPosY - sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.Center, sliderSizeX);
                         c.PopTransform();
                     }
                 }
