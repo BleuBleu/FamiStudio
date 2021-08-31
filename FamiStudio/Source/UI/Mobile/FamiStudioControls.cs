@@ -44,11 +44,11 @@ namespace FamiStudio
             projectExplorer = new ProjectExplorer();
             quickAccessBar  = new QuickAcessBar();
 
-            controls[0] = toolbar;
-            controls[1] = sequencer;
-            controls[2] = pianoRoll;
-            controls[3] = projectExplorer;
-            controls[4] = quickAccessBar;
+            controls[0] = sequencer;
+            controls[1] = pianoRoll;
+            controls[2] = projectExplorer;
+            controls[3] = quickAccessBar;
+            controls[4] = toolbar;
 
             quickAccessBar.PianoRollClicked += NavigationBar_PianoRollClicked;
             quickAccessBar.SequencerClicked += NavigationBar_SequencerClicked;
@@ -112,6 +112,7 @@ namespace FamiStudio
             }
         }
 
+        // MATTT : Use a fullscreen viewport instead.
         private void UpdateToolbar(bool fireEvent = false)
         {
             var toolActualSize = toolbar.DesiredSize;
@@ -152,16 +153,26 @@ namespace FamiStudio
 
         GLBrush debugBrush;
 
-        private void RedrawControl(GLControl ctrl)
+        private void RedrawControl(GLControl ctrl, bool fullscreenViewport = false)
         {
             if (debugBrush == null)
                 debugBrush = new GLBrush(System.Drawing.Color.SpringGreen);
 
-            gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.Left, ctrl.Top, ctrl.Width, ctrl.Height), height);
+            if (fullscreenViewport)
+                gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
+            else
+                gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.Left, ctrl.Top, ctrl.Width, ctrl.Height), height);
 
             var t0 = DateTime.Now;
             {
+                if (fullscreenViewport)
+                    gfx.Transform.PushTranslation(ctrl.Left, ctrl.Top);
+
                 ctrl.Render(gfx);
+
+                if (fullscreenViewport)
+                    gfx.Transform.PopTransform();
+
                 ctrl.Validate();
             }
             var t1 = DateTime.Now;
@@ -221,6 +232,11 @@ namespace FamiStudio
             lastTime = currTime;
         }
 
+        private void UpdateQuickAccess()
+        {
+            quickAccessBar.Tick(timeDelta);
+        }
+
         private void UpdateTransition()
         {
             if (transitionTimer > 0.0f)
@@ -242,11 +258,12 @@ namespace FamiStudio
             UpdateTimeDelta();
             UpdateTransition();
             UpdateToolbar();
+            UpdateQuickAccess(); // MATTT : Should we tick with the other controls?
 
             gfx.BeginDrawFrame();
             {
                 RedrawControl(activeControl);
-                RedrawControl(quickAccessBar);
+                RedrawControl(quickAccessBar, true);
                 RedrawControl(toolbar);
                 RenderOverlay();
             }

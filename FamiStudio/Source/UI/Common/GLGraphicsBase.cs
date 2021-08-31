@@ -684,6 +684,13 @@ namespace FamiStudio
             width  *= transform.X;
             height *= transform.Y;
         }
+
+        public void GetOrigin(out float x, out float y)
+        {
+            x = 0;
+            y = 0;
+            TransformPoint(ref x, ref y);
+        }
     }
 
     [Flags]

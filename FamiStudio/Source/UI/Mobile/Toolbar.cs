@@ -18,7 +18,7 @@ namespace FamiStudio
 {
     public class Toolbar : ToolbarBase
     {
-        // DROIDTODO : Review once we have figure out scale. Use float.
+        // DROIDTODO : Migrate this to like the quick access bar.
         const float DefaultButtonMargin = 0.1f;
 
         private struct ButtonLayoutItem
@@ -114,7 +114,7 @@ namespace FamiStudio
             var bitmapSize = bmpButtonAtlas.GetElementSize(0);
 
             buttonSizeFull = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 9;
-            buttonMargin = (int)Math.Round(buttonSizeFull * 0.1f);  // DROIDTODO : Apply some form of scaling.
+            buttonMargin = (int)Math.Round(buttonSizeFull * 0.1f);
             buttonSize = buttonSizeFull - (buttonMargin * 2);
             buttonBitmapScaleFloat = buttonSize / (float)(bitmapSize.Width);
 
