@@ -104,8 +104,9 @@ namespace FamiStudio
         private bool  expanded = false; // MATTT : Testing.
 
         public int   LayoutSize  => buttonSizeFull * 2;
-        public int   DesiredSize => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio)));
+        public int   RenderSize  => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio)));
         public float ExpandRatio => expandRatio;
+        public bool  IsExpanded  => expandRatio > 0.001f;
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
@@ -211,10 +212,17 @@ namespace FamiStudio
             }
         }
 
-        protected override void RenderInternal(RenderGraphics g, RenderCommandList c)
+        protected override void Clear(RenderCommandList c)
         {
-            base.RenderInternal(g, c);
+            // MATTT : Toolbar brush.
+            if (IsLandscape)
+                c.FillRectangle(0, 0, RenderSize, Height, toolbarBrush);
+            else
+                c.FillRectangle(0, 0, Width, RenderSize, toolbarBrush);
+        }
 
+        protected override void PostRender(RenderCommandList c)
+        {
             if (IsLandscape)
                 c.DrawLine(Width - 1, 0, Width - 1, Height, ThemeResources.BlackBrush);
             else

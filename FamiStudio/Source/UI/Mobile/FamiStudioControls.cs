@@ -31,7 +31,6 @@ namespace FamiStudio
         public Sequencer       Sequencer       => sequencer;
         public PianoRoll       PianoRoll       => pianoRoll;
         public ProjectExplorer ProjectExplorer => projectExplorer;
-        //public NavigationBar   NavigationBar   => quickAccessBar;
 
         public GLControl[] Controls => controls;
         public bool IsLandscape => width > height;
@@ -90,7 +89,6 @@ namespace FamiStudio
             height = h;
 
             UpdateLayout();
-            UpdateToolbar(true);
         }
 
         private void UpdateLayout()
@@ -102,46 +100,44 @@ namespace FamiStudio
             // Toolbar will be resized every frame anyway.
             if (landscape)
             {
+                toolbar.Move(0, 0, toolLayoutSize, height);
                 activeControl.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height);
                 quickAccessBar.Move(width - quickAccessBarSize, 0, quickAccessBarSize, height);
             }
             else
             {
+                toolbar.Move(0, 0, width, toolLayoutSize);
                 activeControl.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize);
                 quickAccessBar.Move(0, height - quickAccessBarSize, width, quickAccessBarSize);
             }
         }
 
-        // MATTT : Use a fullscreen viewport instead.
-        private void UpdateToolbar(bool fireEvent = false)
+        private bool IsPointInControl(GLControl ctrl, int x, int y, out int ctrlX, out int ctrlY)
         {
-            var toolActualSize = toolbar.DesiredSize;
+            ctrlX = x - ctrl.Left;
+            ctrlY = y - ctrl.Top;
 
-            if (IsLandscape)
-                toolbar.Move(0, 0, toolActualSize, height, fireEvent);
-            else
-                toolbar.Move(0, 0, width, toolActualSize, fireEvent);
+            if (ctrlX >= 0 &&
+                ctrlY >= 0 &&
+                ctrlX < ctrl.Width &&
+                ctrlY < ctrl.Height)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
-            // DROIDTODO : Only allow picking active control for piano roll / seq / project explorer.
-            foreach (var ctrl in controls)
-            {
-                ctrlX = formX - ctrl.Left;
-                ctrlY = formY - ctrl.Top;
+            // These 2 are allowed to steal the input when they are expanded.
+            if (IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY) || toolbar.IsExpanded)
+                return toolbar;
+            if (IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY) || quickAccessBar.IsExpanded)
+                return quickAccessBar;
+            if (IsPointInControl(activeControl, formX, formY, out ctrlX, out ctrlY))
+                return activeControl;
 
-                if (ctrlX >= 0 &&
-                    ctrlY >= 0 &&
-                    ctrlX <  ctrl.Width &&
-                    ctrlY <  ctrl.Height)
-                {
-                    return ctrl;
-                }
-            }
-
-            ctrlX = 0;
-            ctrlY = 0;
             return null;
         }
 
@@ -184,38 +180,68 @@ namespace FamiStudio
             gfx.EndDrawControl();
         }
 
-        // MATTT : Move this to a RenderOverlay function on toolbar
+        private GLBrush GetShadowBrush(float alpha, bool horizontal, int sign)
+        {
+            const int GradientSize = 100; // MATTT
+
+            var color0 = System.Drawing.Color.FromArgb((byte)(224 * alpha), 0, 0, 0);
+            var color1 = System.Drawing.Color.FromArgb((byte)(128 * alpha), 0, 0, 0);
+
+            if (horizontal)
+                return gfx.GetHorizontalGradientBrush(color0, color1, GradientSize * sign);
+            else
+                return gfx.GetVerticalGradientBrush(color0, color1, GradientSize * sign);
+        }
+
+        private void DrawVerticalDropShadow(GLCommandList c, int pos, bool up, float alpha)
+        {
+            var brush = GetShadowBrush(alpha, false, up ? -1 : 1);
+
+            if (up)
+                c.FillRectangle(0, pos, width, 0, brush);
+            else
+                c.FillRectangle(0, pos, width, height, brush);
+        }
+
+        private void DrawHorizontalDropShadow(GLCommandList c, int pos, bool left, float alpha)
+        {
+            var brush = GetShadowBrush(alpha, true, left ? -1 : 1);
+
+            if (left)
+                c.FillRectangle(pos, 0, 0, height, brush);
+            else
+                c.FillRectangle(pos, 0, width, height, brush);
+        }
+
         private void RenderOverlay()
         {
             gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
 
             var cmd = gfx.CreateCommandList();
 
-            if (toolbar.ExpandRatio > 0.001f)
-            {
-                var size = MobileUtils.ComputeIdealButtonSize(width, height);
-                var brush = gfx.CreateVerticalGradientBrush(
-                    0, size,
-                    System.Drawing.Color.FromArgb((byte)(224 * toolbar.ExpandRatio), 0, 0, 0),
-                    System.Drawing.Color.FromArgb((byte)(128 * toolbar.ExpandRatio), 0, 0, 0));
-
-                cmd.FillRectangle(toolbar.Left, toolbar.Bottom, toolbar.Right, height, brush);
-            }
-
             if (transitionTimer > 0.0f)
             {
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
-                var brush = gfx.CreateSolidBrush(System.Drawing.Color.FromArgb(alpha, Theme.DarkGreyFillColor1));
+                var brush = gfx.GetSolidBrush(System.Drawing.Color.FromArgb(alpha, Theme.DarkGreyFillColor1));
 
                 cmd.FillRectangle(activeControl.Left, activeControl.Top, activeControl.Right, activeControl.Bottom, brush);
             }
 
-            //cmd.DrawLine(toolbar.Left, toolbar.Bottom, toolbar.Right, toolbar.Bottom, res.BlackBrush, 3.0f);
+            if (toolbar.IsExpanded)
+            {
+                if (IsLandscape)
+                    DrawHorizontalDropShadow(cmd, toolbar.RenderSize, false, toolbar.ExpandRatio);
+                else
+                    DrawVerticalDropShadow(cmd, toolbar.RenderSize, false, toolbar.ExpandRatio);
+            }
 
-            //if (IsLandscape)
-            //    cmd.DrawLine(quickAccessBar.Right, quickAccessBar.Top, quickAccessBar.Right, quickAccessBar.Bottom, res.BlackBrush, 3.0f);
-            //else
-            //    cmd.DrawLine(quickAccessBar.Right, quickAccessBar.Top, quickAccessBar.Left, quickAccessBar.Top, res.BlackBrush, 3.0f);
+            if (quickAccessBar.IsExpanded)
+            {
+                if (IsLandscape)
+                    DrawHorizontalDropShadow(cmd, width - quickAccessBar.RenderSize, true, quickAccessBar.ExpandRatio);
+                else
+                    DrawVerticalDropShadow(cmd, height - quickAccessBar.RenderSize, true, quickAccessBar.ExpandRatio);
+            }
 
             gfx.DrawCommandList(cmd);
             gfx.EndDrawControl();
@@ -257,14 +283,13 @@ namespace FamiStudio
         {
             UpdateTimeDelta();
             UpdateTransition();
-            UpdateToolbar();
             UpdateQuickAccess(); // MATTT : Should we tick with the other controls?
 
             gfx.BeginDrawFrame();
             {
                 RedrawControl(activeControl);
                 RedrawControl(quickAccessBar, true);
-                RedrawControl(toolbar);
+                RedrawControl(toolbar, true);
                 RenderOverlay();
             }
             gfx.EndDrawFrame();

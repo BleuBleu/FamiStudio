@@ -462,12 +462,9 @@ namespace FamiStudio
         {
         }
 
-        protected void RenderButtons(RenderGraphics g, RenderCommandList c)
+        protected void RenderButtons(RenderCommandList c)
         {
             var pt = PointToClient(Cursor.Position);
-
-            // Clear
-            c.FillRectangle(0, 0, Width, Height, toolbarBrush);
 
             // Buttons
             foreach (var btn in buttons)
@@ -488,13 +485,13 @@ namespace FamiStudio
             }
         }
 
-        protected void RenderTimecode(RenderGraphics g, RenderCommandList c, int x, int y, int sx, int sy)
+        protected void RenderTimecode(RenderCommandList c, int x, int y, int sx, int sy)
         {
             var frame = App.CurrentFrame;
             var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
 
-            var zeroSizeX  = g.MeasureString("0", ThemeResources.FontHuge);
-            var colonSizeX = g.MeasureString(":", ThemeResources.FontHuge);
+            var zeroSizeX  = c.Graphics.MeasureString("0", ThemeResources.FontHuge);
+            var colonSizeX = c.Graphics.MeasureString(":", ThemeResources.FontHuge);
 
             var timeCodeSizeY = Height - timecodePosY * 2;
             var textColor = App.IsRecording ? ThemeResources.DarkRedFillBrush : ThemeResources.LightGreyFillBrush2;
@@ -546,18 +543,25 @@ namespace FamiStudio
             }
         }
 
-        protected virtual void RenderInternal(RenderGraphics g, RenderCommandList c)
+        protected virtual void Clear(RenderCommandList c)
         {
-            // Prepare the batches.
-            RenderButtons(g, c);
-            RenderTimecode(g, c, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);
-            RenderOscilloscope(g, c, oscilloscopePosX, oscilloscopePosY, timecodeOscSizeX, timecodeOscSizeY);
+            c.FillRectangle(0, 0, Width, Height, toolbarBrush);
+        }
+
+        protected virtual void PostRender(RenderCommandList c)
+        {
         }
 
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList(); // Main
-            RenderInternal(g, c);
+            
+            Clear(c);
+            RenderButtons(c);
+            RenderTimecode(c, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);
+            RenderOscilloscope(c, oscilloscopePosX, oscilloscopePosY, timecodeOscSizeX, timecodeOscSizeY);
+            PostRender(c);
+
             g.DrawCommandList(c);
         }
 
@@ -566,7 +570,7 @@ namespace FamiStudio
             return oscilloscopeVisible && lastOscilloscopeHadNonZeroSample != hasNonZeroSample;
         }
 
-        protected void RenderOscilloscope(RenderGraphics g, RenderCommandList c, int x, int y, int sx, int sy)
+        protected void RenderOscilloscope(RenderCommandList c, int x, int y, int sx, int sy)
         {
             if (!oscilloscopeVisible)
                 return;

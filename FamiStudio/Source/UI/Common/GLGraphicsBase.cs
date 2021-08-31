@@ -24,14 +24,29 @@ namespace FamiStudio
     // DROIDTODO : Use a partial class, move to Desktop.
     public abstract class GLGraphicsBase : IDisposable
     {
+        protected struct GradientCacheKey
+        {
+            public Color color0;
+            public Color color1;
+            public int size;
+
+            public override int GetHashCode()
+            {
+                return Utils.HashCombine(Utils.HashCombine(color0.ToArgb(), color1.ToArgb()), size);
+            }
+        }
+
         protected float windowScaling = 1.0f;
         protected float fontScaling   = 1.0f;
         protected int windowSizeY;
         protected Rectangle controlRect;
         protected Rectangle controlRectFlip;
         protected GLTransform transform = new GLTransform();
-        protected Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
         protected GLBitmap dashedBitmap;
+
+        protected Dictionary<GradientCacheKey, GLBrush> verticalGradientCache   = new Dictionary<GradientCacheKey, GLBrush>();
+        protected Dictionary<GradientCacheKey, GLBrush> horizontalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
+        protected Dictionary<Color, GLBrush>            solidGradientCache      = new Dictionary<Color, GLBrush>();
 
         public float FontScaling   => fontScaling;
         public float WindowScaling => windowScaling;
@@ -151,32 +166,68 @@ namespace FamiStudio
 
         public GLBrush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
         {
-            // MATTT : Cache!
-            Color color2 = Color.FromArgb(
-                Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
-                Utils.Clamp((int)(color.R * dimming), 0, 255),
-                Utils.Clamp((int)(color.G * dimming), 0, 255),
-                Utils.Clamp((int)(color.B * dimming), 0, 255));
+            if (dimming != 1.0f || alphaDimming != 1.0f)
+            {
+                color = Color.FromArgb(
+                    (int)(color.A * alphaDimming),
+                    (int)(color.R * dimming),
+                    (int)(color.G * dimming),
+                    (int)(color.B * dimming));
+            }
 
-            return new GLBrush(color2);
-        }
-
-        public GLBrush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)
-        {
-            var key = new Tuple<Color, int>(color1, sizeY);
-
-            GLBrush brush;
-            if (verticalGradientCache.TryGetValue(key, out brush))
+            if (solidGradientCache.TryGetValue(color, out var brush))
                 return brush;
 
-            Color color2 = Color.FromArgb(
-                Utils.Clamp((int)(color1.A), 0, 255),
-                Utils.Clamp((int)(color1.R * dimming), 0, 255),
-                Utils.Clamp((int)(color1.G * dimming), 0, 255),
-                Utils.Clamp((int)(color1.B * dimming), 0, 255));
+            brush = new GLBrush(color);
+            solidGradientCache[color] = brush;
 
-            brush = CreateVerticalGradientBrush(0, sizeY, color1, color2);
+            return brush;
+        }
+
+        public GLBrush GetVerticalGradientBrush(Color color0, int sizeY, float dimming)
+        {
+            Color color1 = Color.FromArgb(
+                (int)(color0.A),
+                (int)(color0.R * dimming),
+                (int)(color0.G * dimming),
+                (int)(color0.B * dimming));
+
+            return GetVerticalGradientBrush(color0, color1, sizeY);
+        }
+
+        public GLBrush GetVerticalGradientBrush(Color color0, Color color1, int sizeY)
+        {
+            var key = new GradientCacheKey() { color0 = color0, color1 = color1, size = sizeY };
+
+            if (verticalGradientCache.TryGetValue(key, out var brush))
+                return brush;
+
+            brush = CreateVerticalGradientBrush(0, sizeY, color0, color1);
             verticalGradientCache[key] = brush;
+
+            return brush;
+        }
+
+        public GLBrush GetHorizontalGradientBrush(Color color0, int sizeY, float dimming)
+        {
+            Color color1 = Color.FromArgb(
+                (int)(color0.A),
+                (int)(color0.R * dimming),
+                (int)(color0.G * dimming),
+                (int)(color0.B * dimming));
+
+            return GetHorizontalGradientBrush(color0, color1, sizeY);
+        }
+
+        public GLBrush GetHorizontalGradientBrush(Color color0, Color color1, int sizeY)
+        {
+            var key = new GradientCacheKey() { color0 = color0, color1 = color1, size = sizeY };
+
+            if (horizontalGradientCache.TryGetValue(key, out var brush))
+                return brush;
+
+            brush = CreateHorizontalGradientBrush(0, sizeY, color0, color1);
+            horizontalGradientCache[key] = brush;
 
             return brush;
         }
@@ -552,7 +603,7 @@ namespace FamiStudio
             GradientSizeY = sizeY;
         }
 
-        public bool IsGradient => GradientSizeX > 0 || GradientSizeY > 0;
+        public bool IsGradient => GradientSizeX != 0 || GradientSizeY != 0;
 
         public void Dispose()
         {
@@ -827,7 +878,9 @@ namespace FamiStudio
 
         private GLGraphicsBase graphics;
         private GLTransform xform;
-        public  GLTransform Transform => xform;
+
+        public GLTransform Transform => xform;
+        public GLGraphicsBase Graphics => graphics;
 
         public bool HasAnyMeshes  => meshBatch != null || meshSmoothBatch != null;
         public bool HasAnyLines   => lineBatches.Count > 0;
@@ -1094,6 +1147,11 @@ namespace FamiStudio
             }
         }
 
+        public void DrawRectangle(Rectangle rect, GLBrush brush, float width = 1.0f, bool smooth = false)
+        {
+            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
+        }
+
         public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool smooth = false)
         {
             xform.TransformPoint(ref x0, ref y0);
@@ -1272,6 +1330,11 @@ namespace FamiStudio
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
+        public void FillRectangle(Rectangle rect, GLBrush brush)
+        {
+            FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
+        }
+
         public void FillRectangle(RectangleF rect, GLBrush brush)
         {
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
@@ -1281,6 +1344,12 @@ namespace FamiStudio
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
             DrawRectangle(x0, y0, x1, y1, lineBrush, width, smooth);
+        }
+
+        public void FillAndDrawRectangle(Rectangle rect, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool smooth = false)
+        {
+            FillRectangle(rect, fillBrush);
+            DrawRectangle(rect, lineBrush, width, smooth);
         }
 
         public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)
@@ -1569,26 +1638,29 @@ namespace FamiStudio
                         var halign = inst.flags & RenderTextFlags.HorizontalAlignMask;
                         var valign = inst.flags & RenderTextFlags.VerticalAlignMask;
 
+                        // MATTT : Review these, i dont trust my calculations. For vertical alignment, 
+                        // we shouldnt try to compute the bounds, we know the font height + offset Y, that's
+                        // enough.
                         if (halign == RenderTextFlags.Center)
                         {
-                            alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX + 1) / 2;
+                            //alignmentOffsetX -= minX;
+                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX) / 2;
                         }
                         else if (halign == RenderTextFlags.Right)
                         {
-                            alignmentOffsetX -= minX;
+                            //alignmentOffsetX -= minX;
                             alignmentOffsetX += ((int)inst.rect.Width - maxX - minX);
                         }
 
                         if (valign == RenderTextFlags.Middle)
                         {
-                            alignmentOffsetY -= minY;
-                            alignmentOffsetY += ((int)inst.rect.Height - maxY - minY + 1) / 2;
+                            //alignmentOffsetY -= minY;
+                            alignmentOffsetY += ((int)inst.rect.Height - (maxY - minY - font.OffsetY)) / 2;
                         }
                         else if (valign == RenderTextFlags.Bottom)
                         {
-                            alignmentOffsetY -= minY;
-                            alignmentOffsetY += ((int)inst.rect.Height - maxY - minY);
+                            //alignmentOffsetY -= minY;
+                            alignmentOffsetY += ((int)inst.rect.Height - (maxY - minY - font.OffsetY));
                         }
                     }
 

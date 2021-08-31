@@ -28,6 +28,10 @@ namespace FamiStudio
         const int DefaultExpandIconPosLeft = 56;
         const int DefaultExpandIconSize    = 32;
 
+        const int DefaultListItemTextSize  = 36;
+        const int DefaultListItemSize      = 120;
+        const int DefaultListIconPos       = 12;
+
         private delegate ButtonImageIndices RenderInfoDelegate(RenderGraphics g, out string text, out RenderBrush background);
         private delegate bool EnabledDelegate();
 
@@ -47,9 +51,9 @@ namespace FamiStudio
             public EmptyDelegate Click;
         }
 
-        private class ExpandButton
+        private class ListItem
         {
-            public Rectangle Hitbox;
+            public Rectangle Rect;
             public int IconX;
             public int IconY;
             public int TextX;
@@ -133,18 +137,19 @@ namespace FamiStudio
         public event EmptyDelegate PianoRollClicked;
         public event EmptyDelegate ProjectExplorerClicked;
 
-        RenderFont font;
+        RenderFont buttonFont;
+        RenderFont listFont;
         RenderBitmapAtlas bmpButtonAtlas;
         Button[] buttons = new Button[(int)ButtonType.Count];
 
         // These are only use for expandable button.
-        private int            expandedButtonIdx = -1;
-        private float          expandedRatio = 0.0f;
-        private bool           expanding;
-        private bool           closing;
-        private ExpandButton[] expandButtons;
+        private int        expandButtonIdx = -1;
+        private float      expandRatio = 0.0f;
+        private bool       expanding;
+        private bool       closing;
+        private ListItem[] listItems;
         
-        private int   maxExpandSize = 1500;
+        private int expandSize;
 
         // Scaled layout variables.
         private int buttonSize;
@@ -155,11 +160,16 @@ namespace FamiStudio
         private int textPosTop;
         private int expandIconPosTop;
         private int expandIconPosLeft;
+        private int listItemSize;
+        private int listIconPos;
 
         private float iconScaleFloat = 1.0f;
         private float iconScaleExpFloat = 1.0f;
 
-        public int LayoutSize => buttonSize;
+        public int   LayoutSize  => buttonSize;
+        public int   RenderSize  => (int)Math.Round(Utils.Lerp(buttonSize, expandSize, Utils.SmootherStep(expandRatio)));
+        public float ExpandRatio => expandRatio;
+        public bool  IsExpanded  => expandRatio > 0.001f;
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
@@ -176,10 +186,13 @@ namespace FamiStudio
             buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument };
             buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnProjectExplorer };
 
+            expandSize = Math.Min(ParentFormSize.Width, ParentFormSize.Height);
+
             // MATTT : Font scaling?
             var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
 
-            font = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultTextSize, scale), true);
+            buttonFont = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultTextSize, scale), true);
+            listFont   = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultListItemTextSize, scale), false);
 
             buttonSize        = ScaleCustom(DefaultButtonSize, scale);
             buttonSizeNav     = ScaleCustom(DefaultNavButtonSize, scale);
@@ -189,6 +202,8 @@ namespace FamiStudio
             textPosTop        = ScaleCustom(DefaultTextPosTop, scale);
             expandIconPosTop  = ScaleCustom(DefaultExpandIconPosTop, scale);
             expandIconPosLeft = ScaleCustom(DefaultExpandIconPosLeft, scale);
+            listItemSize      = ScaleCustom(DefaultListItemSize, scale);
+            listIconPos       = ScaleCustom(DefaultListIconPos, scale);
 
             iconScaleFloat = ScaleCustomFloat(DefaultIconSize / (float)bmpButtonAtlas.GetElementSize(0).Width, scale);
             iconScaleExpFloat = ScaleCustomFloat(DefaultExpandIconSize / (float)bmpButtonAtlas.GetElementSize((int)ButtonImageIndices.ExpandUp).Width, scale);
@@ -214,42 +229,40 @@ namespace FamiStudio
         {
             delta *= 6.0f;
 
-            if (expandedButtonIdx >= 0)
+            if (expandButtonIdx >= 0)
             {
-                if (expanding && expandedRatio != 1.0f)
+                if (expanding && expandRatio != 1.0f)
                 {
-                    expandedRatio = Math.Min(expandedRatio + delta, 1.0f);
-                    if (expandedRatio == 1.0f)
+                    expandRatio = Math.Min(expandRatio + delta, 1.0f);
+                    if (expandRatio == 1.0f)
                     {
                         expanding = false;
                     }
                 }
-                else if (closing && expandedRatio != 0.0f)
+                else if (closing && expandRatio != 0.0f)
                 {
-                    expandedRatio = Math.Max(expandedRatio - delta, 0.0f);
-                    if (expandedRatio == 0.0f)
+                    expandRatio = Math.Max(expandRatio - delta, 0.0f);
+                    if (expandRatio == 0.0f)
                     {
-                        expandButtons = null;
-                        expandedButtonIdx = -1;
+                        listItems = null;
+                        expandButtonIdx = -1;
                         closing = false;
                     }
                 }
             }
         }
 
-        private Rectangle GetExpandableButtonRectangle()
+        private Rectangle GetExpandedListRect()
         {
-            var totalSize = Math.Min(expandButtons.Length * buttonSize, 1500); // MATTT
-            var interpSize = (int)Math.Round(totalSize * expandedRatio);
+            var renderSize = RenderSize - buttonSize;
 
             if (IsLandscape)
             {
-                var rect = buttons[expandedButtonIdx].Rect;
-                return new Rectangle(-interpSize, rect.Y, interpSize, rect.Height);
+                return new Rectangle(-renderSize, 0, renderSize, Height);
             }
             else
             {
-                return new Rectangle();
+                return new Rectangle(0, -renderSize, Width, renderSize);
             }
         }
 
@@ -297,41 +310,45 @@ namespace FamiStudio
                 Invalidate();
         }
 
-        private void StartExpandButton(int idx, ExpandButton[] buttons)
+        private void StartExpandingList(int idx, ListItem[] items)
         {
             var landscape = IsLandscape;
-            var x = 0;
+            var y = 0;
 
-            for (int i = 0; i < buttons.Length; i++)
+            for (int i = 0; i < items.Length; i++)
             {
-                var btn = buttons[i];
+                var item = items[i];
 
                 if (landscape)
                 {
-                    btn.Hitbox = new Rectangle(x, 0, buttonSize, buttonSize);
-                    btn.IconX = x + buttonIconPos2;
-                    btn.IconY = buttonIconPos1;
-                    btn.TextX = x;
-                    btn.TextY = textPosTop;
+                    item.Rect = new Rectangle(0, y, expandSize - buttonSize, listItemSize);
+                    item.IconX = listIconPos;
+                    item.IconY = y + listIconPos;
+                    item.TextX = textPosTop;
+                    item.TextY = y;
                 }
                 else
                 {
-
+                    item.Rect = new Rectangle(0, y, Width, expandSize - buttonSize);
+                    item.IconX = listIconPos;
+                    item.IconY = y + listIconPos;
+                    item.TextX = textPosTop;
+                    item.TextY = y;
                 }
 
-                x += buttonSize;
+                y += listItemSize;
             }
 
-            expandedButtonIdx = idx;
-            expandedRatio = 0.0f;
+            expandButtonIdx = idx;
+            expandRatio = 0.0f;
             expanding = true;
             closing = false;
-            expandButtons = buttons;
+            listItems = items;
         }
         
-        private void StartClosingButton(int idx)
+        private void StartClosingList(int idx)
         {
-            expandedButtonIdx = idx;
+            expandButtonIdx = idx;
             expanding = false;
             closing = true;
         }
@@ -353,49 +370,49 @@ namespace FamiStudio
 
         private void OnChannel()
         {
-            if (expandedButtonIdx == (int)ButtonType.Channel)
+            if (expandButtonIdx == (int)ButtonType.Channel)
             {
-                StartClosingButton(expandedButtonIdx);
+                StartClosingList(expandButtonIdx);
                 return;
             }
 
             var channelTypes = App.Project.GetActiveChannelList();
-            var buttons = new ExpandButton[channelTypes.Length];
+            var items = new ListItem[channelTypes.Length];
 
             for (int i = 0; i < channelTypes.Length; i++)
             {
-                var btn = new ExpandButton();
-                btn.Color = Theme.LightGreyFillColor1;
-                btn.imageIndex = Array.IndexOf(ButtonImageNames, "Mobile" + ChannelType.Icons[i]);
-                btn.text = ChannelType.GetNameWithExpansion(i);
-                buttons[i] = btn;
+                var item = new ListItem();
+                item.Color = Theme.LightGreyFillColor1;
+                item.imageIndex = Array.IndexOf(ButtonImageNames, "Mobile" + ChannelType.Icons[i]);
+                item.text = ChannelType.GetNameWithExpansion(i);
+                items[i] = item;
             }
 
-            StartExpandButton((int)ButtonType.Channel, buttons);
+            StartExpandingList((int)ButtonType.Channel, items);
         }
 
         private void OnInstrument()
         {
-            if (expandedButtonIdx == (int)ButtonType.Instrument)
+            if (expandButtonIdx == (int)ButtonType.Instrument)
             {
-                StartClosingButton(expandedButtonIdx);
+                StartClosingList(expandButtonIdx);
                 return;
             }
 
             var project = App.Project;
-            var buttons = new ExpandButton[project.Instruments.Count];
+            var items = new ListItem[project.Instruments.Count];
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
                 var inst = project.Instruments[i];
-                var btn = new ExpandButton();
-                btn.Color = inst.Color;
-                btn.imageIndex = Array.IndexOf(ButtonImageNames, "Mobile" + ExpansionType.Icons[inst.Expansion]);
-                btn.text = inst.Name;
-                buttons[i] = btn;
+                var item = new ListItem();
+                item.Color = inst.Color;
+                item.imageIndex = Array.IndexOf(ButtonImageNames, "Mobile" + ExpansionType.Icons[inst.Expansion]);
+                item.text = inst.Name;
+                items[i] = item;
             }
 
-            StartExpandButton((int)ButtonType.Instrument, buttons);
+            StartExpandingList((int)ButtonType.Instrument, items);
         }
 
         private ButtonImageIndices GetSequencerRenderInfo(RenderGraphics g, out string text, out RenderBrush background)
@@ -470,33 +487,35 @@ namespace FamiStudio
                 //var expImage = (int)ButtonImageIndices.ExpandLeft;
                 var expImage = IsLandscape ? (int)ButtonImageIndices.ExpandLeft : (int)ButtonImageIndices.ExpandUp;
 
-                c.FillRectangle(btn.Rect.Left, btn.Rect.Top, btn.Rect.Right, btn.Rect.Bottom, brush); // MATTT Color + gradient.
+                c.FillRectangle(btn.Rect, brush); // MATTT Color + gradient.
 
                 if (!btn.IsNavButton)
-                    c.DrawRectangle(btn.Rect.Left, btn.Rect.Top, btn.Rect.Right, btn.Rect.Bottom, ThemeResources.BlackBrush);
+                    c.DrawRectangle(btn.Rect, ThemeResources.BlackBrush);
 
                 c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, iconScaleFloat);
                 c.DrawBitmapAtlas(bmpButtonAtlas, (int)expImage, btn.ExpandIconX, btn.ExpandIconY, 1.0f, iconScaleExpFloat);
 
                 if (!string.IsNullOrEmpty(text))
-                    c.DrawText(text, font, btn.TextX, btn.TextY, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);
+                    c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);
             }
 
             g.DrawCommandList(c);
 
-            if (expandedButtonIdx >= 0)
+            // List items.
+            if (expandButtonIdx >= 0)
             {
                 c = g.CreateCommandList();
 
-                var rect = GetExpandableButtonRectangle();
-                c.FillAndDrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, ThemeResources.LightRedFillBrush, ThemeResources.BlackBrush); // MATTT Color + gradient.
+                var rect = GetExpandedListRect();
+                c.FillAndDrawRectangle(rect, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush); // MATTT Color + gradient.
                 c.PushTranslation(rect.Left, rect.Top);
 
-                for (int i = 0; i < expandButtons.Length; i++)
+                for (int i = 0; i < listItems.Length; i++)
                 {
-                    var btn = expandButtons[i];
-                    c.DrawBitmapAtlas(bmpButtonAtlas, btn.imageIndex, btn.IconX, btn.IconY, 1.0f, iconScaleFloat);
-                    c.DrawText(btn.text, font, btn.TextX, btn.TextY, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);
+                    var item = listItems[i];
+                    c.FillAndDrawRectangle(item.Rect, ThemeResources.LightRedFillBrush, ThemeResources.BlackBrush); // MATTT Color + gradient.
+                    c.DrawBitmapAtlas(bmpButtonAtlas, item.imageIndex, item.IconX, item.IconY, 1.0f, iconScaleFloat);
+                    c.DrawText(item.text, listFont, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();
