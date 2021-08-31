@@ -1,8 +1,5 @@
-Android prototype
-=================
-Theme + font refactor:
-- Add a scaling factor on font (android branch for now)
-
+Android
+=======
 Prop page:
 / Reactivate dialogs in code, test
 - Review text color light gray 1 or 2?
@@ -25,17 +22,18 @@ Scaling issue:
 
 UI:
 x Make toolbar always 2 rows.
-- Merge nav + floating toolbar.
-		- Funciton for viewport.
-		- Move code.
-		- 
+- Quick access:
+		- Remove expand arrows
+		- Make list work
+		- Add scroll bar
 - Create 2nd piano.
-- 
 
 3.2.0
 =====
 
 - NSF bug tempo from Discord!
+- Weird osc behavior low frequency
+- Export intro-only is broken?
 
 DMC counter effect:
 - Sound engine

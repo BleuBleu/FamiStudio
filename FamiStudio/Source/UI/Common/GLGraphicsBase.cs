@@ -1199,10 +1199,9 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            bool fullHorizontalGradient = brush.IsGradient && brush.GradientSizeX == (x1 - x0);
-            bool fullVerticalGradient   = brush.IsGradient && brush.GradientSizeY == (y1 - y0);
+            bool fullHorizontalGradient = brush.IsGradient && brush.GradientSizeX >= (x1 - x0);
+            bool fullVerticalGradient   = brush.IsGradient && brush.GradientSizeY >= (y1 - y0);
 
-            // MATTT : Make sure this doesnt add any overhead!
             if (!brush.IsGradient || fullHorizontalGradient || fullVerticalGradient)
             {
                 var i0 = (short)(batch.vtxIdx / 2 + 0);

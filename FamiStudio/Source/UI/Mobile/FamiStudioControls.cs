@@ -131,12 +131,24 @@ namespace FamiStudio
         public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
             // These 2 are allowed to steal the input when they are expanded.
-            if (IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY) || toolbar.IsExpanded)
-                return toolbar;
-            if (IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY) || quickAccessBar.IsExpanded)
+            if (quickAccessBar.IsExpanded)
+            {
+                IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY);
                 return quickAccessBar;
+            }
+
+            if (toolbar.IsExpanded)
+            {
+                IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY);
+                return toolbar;
+            }
+
             if (IsPointInControl(activeControl, formX, formY, out ctrlX, out ctrlY))
                 return activeControl;
+            if (IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY))
+                return quickAccessBar;
+            if (IsPointInControl(toolbar, formX, formY, out ctrlX, out ctrlY))
+                return toolbar;
 
             return null;
         }

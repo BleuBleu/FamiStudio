@@ -215,10 +215,12 @@ namespace FamiStudio
         protected override void Clear(RenderCommandList c)
         {
             // MATTT : Toolbar brush.
+            var brush = c.Graphics.GetSolidBrush(Theme.DarkGreyFillColor1);
+
             if (IsLandscape)
-                c.FillRectangle(0, 0, RenderSize, Height, toolbarBrush);
+                c.FillRectangle(0, 0, RenderSize, Height, brush);
             else
-                c.FillRectangle(0, 0, Width, RenderSize, toolbarBrush);
+                c.FillRectangle(0, 0, Width, RenderSize, brush);
         }
 
         protected override void PostRender(RenderCommandList c)

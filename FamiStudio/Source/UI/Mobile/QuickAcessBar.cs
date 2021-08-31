@@ -220,11 +220,6 @@ namespace FamiStudio
             base.OnResize(e);
         }
 
-        //private Rectangle FlipRectangle(Rectangle rect)
-        //{
-        //    return new Rectangle(rect.Y, rect.X, rect.Height, rect.Width);
-        //}
-
         public void Tick(float delta)
         {
             delta *= 6.0f;
@@ -351,6 +346,15 @@ namespace FamiStudio
             expandButtonIdx = idx;
             expanding = false;
             closing = true;
+        }
+
+        private void AbortList()
+        {
+            expandButtonIdx = -1;
+            expandRatio = 0.0f;
+            expanding = false;
+            closing = false;
+            listItems = null;
         }
 
         private void OnSequencer()
