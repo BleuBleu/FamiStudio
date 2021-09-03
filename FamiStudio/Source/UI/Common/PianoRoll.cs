@@ -134,7 +134,12 @@ namespace FamiStudio
         {
             return zoomLevel < 0 ? value / (1 << (-zoomLevel)) : value * (1 << zoomLevel);
         }
-        
+
+        float ScaleForZoomFloat(float value)
+        {
+            return value * (float)Math.Pow(2.0f, zoomLevel);
+        }
+
         enum EditionMode
         {
             None,
@@ -189,12 +194,12 @@ namespace FamiStudio
         RenderBitmapAtlas bmpSnapResolutionAtlas;
         RenderBitmapAtlas bmpEffectAtlas;
         RenderBitmapAtlas bmpEffectFillAtlas;
-        RenderGeometry[,] stopNoteGeometry = new RenderGeometry[MaxZoomLevel - MinZoomLevel + 1, 2];
-        RenderGeometry[,] stopReleaseNoteGeometry = new RenderGeometry[MaxZoomLevel - MinZoomLevel + 1, 2];
-        RenderGeometry[,] releaseNoteGeometry = new RenderGeometry[MaxZoomLevel - MinZoomLevel + 1, 2];
-        RenderGeometry[] slideNoteGeometry = new RenderGeometry[MaxZoomLevel - MinZoomLevel + 1];
-        RenderGeometry seekGeometry;
-        RenderGeometry sampleGeometry;
+        RenderGeometry[] stopNoteGeometry        = new RenderGeometry[2]; // [1] is used to draw arps.
+        RenderGeometry[] stopReleaseNoteGeometry = new RenderGeometry[2]; // [1] is used to draw arps.
+        RenderGeometry[] releaseNoteGeometry     = new RenderGeometry[2]; // [1] is used to draw arps.
+        RenderGeometry   slideNoteGeometry;
+        RenderGeometry   seekGeometry;
+        RenderGeometry   sampleGeometry;
 
         enum MiscImageIndices
         {
@@ -825,63 +830,57 @@ namespace FamiStudio
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
             bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
 
-            for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
+            stopNoteGeometry[0] = g.CreateGeometry(new float[,]
             {
-                int idx = z - MinZoomLevel;
-                int x = (int)(DefaultNoteSizeX * MainWindowScaling * (float)Math.Pow(2.0, z) - 1);
+                { 0.0f, 0 },
+                { 0.0f, noteSizeY },
+                { 1.0f, noteSizeY / 2 }
+            }, true);
 
-                stopNoteGeometry[idx, 0] = g.CreateGeometry(new float[,]
-                {
-                    { 0, 0 },
-                    { 0, noteSizeY },
-                    { x, noteSizeY / 2 }
-                }, true);
+            stopNoteGeometry[1] = g.CreateGeometry(new float[,]
+            {
+                { 0.0f, 1 },
+                { 0.0f, noteSizeY },
+                { 1.0f, noteSizeY / 2 }
+            }, true);
 
-                releaseNoteGeometry[idx, 0] = g.CreateGeometry(new float[,]
-                {
-                    { 0, 0 },
-                    { 0, noteSizeY },
-                    { x + 1, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
-                    { x + 1, noteSizeY / 2 - releaseNoteSizeY / 2 }
-                }, true);
+            releaseNoteGeometry[0] = g.CreateGeometry(new float[,]
+            {
+                { 0.0f, 0 },
+                { 0.0f, noteSizeY },
+                { 1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
+                { 1.0f, noteSizeY / 2 - releaseNoteSizeY / 2 }
+            }, true);
 
-                stopReleaseNoteGeometry[idx, 0] = g.CreateGeometry(new float[,]
-                {
-                    { 0, noteSizeY / 2 - releaseNoteSizeY / 2 },
-                    { 0, noteSizeY / 2 + releaseNoteSizeY / 2 },
-                    { x, noteSizeY / 2 }
-                }, true);
+            releaseNoteGeometry[1] = g.CreateGeometry(new float[,]
+            {
+                { 0.0f, 1 },
+                { 0.0f, noteSizeY },
+                { 1.0f, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
+                { 1.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 }
+            }, true);
 
-                stopNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
-                {
-                    { 0, 1 },
-                    { 0, noteSizeY },
-                    { x, noteSizeY / 2 }
-                }, true);
+            stopReleaseNoteGeometry[0] = g.CreateGeometry(new float[,]
+            {
+                { 0.0f, noteSizeY / 2 - releaseNoteSizeY / 2 },
+                { 0.0f, noteSizeY / 2 + releaseNoteSizeY / 2 },
+                { 1.0f, noteSizeY / 2 }
+            }, true);
 
-                releaseNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
-                {
-                    { 0, 1 },
-                    { 0, noteSizeY },
-                    { x + 1, noteSizeY - noteSizeY / 2 + releaseNoteSizeY / 2 },
-                    { x + 1, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 }
-                }, true);
+            stopReleaseNoteGeometry[1] = g.CreateGeometry(new float[,]
+            {
+                { 0.0f, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 },
+                { 0.0f, noteSizeY / 2 + releaseNoteSizeY / 2 },
+                { 1.0f, noteSizeY / 2 }
+            }, true);
 
-                stopReleaseNoteGeometry[idx, 1] = g.CreateGeometry(new float[,]
-                {
-                    { 0, noteSizeY / 2 - releaseNoteSizeY / 2 + 1 },
-                    { 0, noteSizeY / 2 + releaseNoteSizeY / 2 },
-                    { x, noteSizeY / 2 }
-                }, true);
-
-                slideNoteGeometry[idx] = g.CreateGeometry(new float[,]
-                {
-                    { 0, 0 },
-                    { x + 1, 0 },
-                    { x + 1,  noteSizeY }
-                }, true);
-            }
-
+            slideNoteGeometry = g.CreateGeometry(new float[,]
+            {
+                { 0.0f, 0 },
+                { 1.0f, 0 },
+                { 1.0f, noteSizeY }
+            }, true);
+       
             seekGeometry = g.CreateGeometry(new float[,]
             {
                 { -headerSizeY / 2, 1 },
@@ -920,20 +919,13 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpSnapResolutionAtlas);
             Utils.DisposeAndNullify(ref bmpEffectAtlas);
             Utils.DisposeAndNullify(ref bmpEffectFillAtlas);
-
-            for (int z = MinZoomLevel; z <= MaxZoomLevel; z++)
-            {
-                int idx = z - MinZoomLevel;
-
-                Utils.DisposeAndNullify(ref stopNoteGeometry[idx, 0]);
-                Utils.DisposeAndNullify(ref releaseNoteGeometry[idx, 0]);
-                Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[idx, 0]);
-                Utils.DisposeAndNullify(ref stopNoteGeometry[idx, 1]);
-                Utils.DisposeAndNullify(ref releaseNoteGeometry[idx, 1]);
-                Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[idx, 1]);
-                Utils.DisposeAndNullify(ref slideNoteGeometry[idx]);
-            }
-
+            Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref releaseNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref slideNoteGeometry);
             Utils.DisposeAndNullify(ref seekGeometry);
             Utils.DisposeAndNullify(ref sampleGeometry);
         }
@@ -2396,7 +2388,8 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
-                r.cb.DrawText(noteTooltip,  ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Center, Width - tooltipTextPosX);
+                // MATTT : The position of the text is wrong here.
+                r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
             }
         }
 
@@ -2413,8 +2406,8 @@ namespace FamiStudio
                 int slideSizeX = duration;
                 int slideSizeY = note.SlideNoteTarget - note.Value;
 
-                r.cf.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), slideSizeX, -slideSizeY);
-                r.cf.FillGeometry(slideNoteGeometry[zoomLevel - MinZoomLevel], r.g.GetSolidBrush(color, 1.0f, 0.2f), true);
+                r.cf.PushTransform(x, y + (slideSizeY > 0 ? 0 : noteSizeY), slideSizeX * noteSizeX, -slideSizeY);
+                r.cf.FillGeometry(slideNoteGeometry, r.g.GetSolidBrush(color, 1.0f, 0.2f), true);
                 r.cf.PopTransform();
             }
 
@@ -2467,24 +2460,25 @@ namespace FamiStudio
             int x = time * noteSizeX - scrollX;
             int y = virtualSizeY - value * noteSizeY - scrollY;
 
-            var paths = stop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
+            var geo = stop ? (released ? stopReleaseNoteGeometry : stopNoteGeometry) : releaseNoteGeometry;
+
+            r.cf.PushTransform(x, y, noteSizeX, 1);
+            if (!outline)
+                r.cf.FillGeometry(geo[0], r.g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
+            r.cf.DrawGeometry(geo[0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), outline || selected ? 2 : 1, true);
+            r.cf.PopTransform();
 
             r.cf.PushTranslation(x, y);
-            if (!outline)
-                r.cf.FillGeometry(paths[zoomLevel - MinZoomLevel, 0], r.g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-            r.cf.DrawGeometry(paths[zoomLevel - MinZoomLevel, 0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), outline || selected ? 2 : 1, true);
-
             if (!outline && note.Arpeggio != null)
             {
                 var offsets = note.Arpeggio.GetChordOffsets();
                 foreach (var offset in offsets)
                 {
-                    r.cf.PushTranslation(0, offset * -noteSizeY);
-                    r.cf.FillGeometry(paths[zoomLevel - MinZoomLevel, 1], r.g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f), true);
+                    r.cf.PushTransform(0, offset * -noteSizeY, ScaleForZoomFloat(1.0f), 1);
+                    r.cf.FillGeometry(geo[1], r.g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f), true);
                     r.cf.PopTransform();
                 }
             }
-
             r.cf.PopTransform();
         }
 
