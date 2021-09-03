@@ -72,6 +72,7 @@ Controls:
 - NSF bug tempo from Discord!
 - Weird osc behavior low frequency
 - Export intro-only is broken?
+- Crash when adding note to last note of pattern #256
 
 Misc:
 - Remove as much .resx, Designer shit as possible.
