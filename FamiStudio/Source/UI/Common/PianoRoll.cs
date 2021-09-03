@@ -2474,7 +2474,7 @@ namespace FamiStudio
                 var offsets = note.Arpeggio.GetChordOffsets();
                 foreach (var offset in offsets)
                 {
-                    r.cf.PushTransform(0, offset * -noteSizeY, ScaleForZoomFloat(1.0f), 1);
+                    r.cf.PushTransform(0, offset * -noteSizeY, noteSizeX, 1);
                     r.cf.FillGeometry(geo[1], r.g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f), true);
                     r.cf.PopTransform();
                 }
