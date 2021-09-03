@@ -18,7 +18,8 @@ namespace FamiStudio
 {
     public class PianoRoll : RenderControl
     {
-        const float MinZoom = 1.0f / 8.0f;
+        const float MinZoomFamiStudio = 1.0f / 32.0f;
+        const float MinZoomOther      = 1.0f / 8.0f;
         const float MaxZoom = 16.0f;
         const float MaxWaveZoom = 256.0f;
         const float DefaultEnvelopeZoom = 4.0f;
@@ -30,7 +31,6 @@ namespace FamiStudio
         const int NumNotes = NumOctaves * 12;
 
         const int DefaultHeaderSizeY = 17;
-        const int DefaultDPCMHeaderSizeY = 17;
         const int DefaultEffectPanelSizeY = 176;
         const int DefaultEffectButtonSizeY = 18;
         const int DefaultNoteSizeX = 16;
@@ -38,13 +38,10 @@ namespace FamiStudio
         const int DefaultNoteAttackSizeX = 3;
         const int DefaultReleaseNoteSizeY = 8;
         const int DefaultEnvelopeSizeY = 9;
-        const int DefaultEnvelopeMax = 127;
         const int DefaultWhiteKeySizeX = IsMobile ? 60 : 94;
         const int DefaultWhiteKeySizeY = 20;
         const int DefaultBlackKeySizeX = IsMobile ? 30 : 56;
         const int DefaultBlackKeySizeY = 14;
-        const int DefaultEffectExpandIconPosX = 4;
-        const int DefaultEffectExpandIconPosY = 3;
         const int DefaultSnapIconPosX = 3;
         const int DefaultSnapIconPosY = 3;
         const int DefaultEffectIconPosX = 2;
@@ -66,7 +63,6 @@ namespace FamiStudio
         const int DefaultOctaveNameOffsetY = 11;
         const int DefaultRecordingKeyOffsetY = 12;
         const int DefaultAttackIconPosX = 2;
-        const int DefaultNoteTextPosY = 1;
         const int DefaultMinNoteSizeForText = 24;
         const int DefaultWaveGeometrySampleSize = 2;
         const int DefaultWaveDisplayPaddingY = 8;
@@ -86,10 +82,8 @@ namespace FamiStudio
         int noteSizeY;
         int noteAttackSizeX;
         int releaseNoteSizeY;
-        int envelopeMax;
         int whiteKeySizeY;
         int whiteKeySizeX;
-        int recordKeyPosX;
         int blackKeySizeY;
         int blackKeySizeX;
         int effectIconPosX;
@@ -107,7 +101,6 @@ namespace FamiStudio
         int tooltipTextPosY;
         int dpcmTextPosX;
         int dpcmTextPosY;
-        int dpcmSourceDataPosX;
         int dpcmSourceDataPosY;
         int dpcmInfoSpacingY;
         int octaveNameOffsetY;
@@ -116,7 +109,6 @@ namespace FamiStudio
         int virtualSizeY;
         int scrollBarThickness;
         int minScrollBarLength;
-        int barSizeX;
         int attackIconPosX;
         int noteTextPosY;
         int minNoteSizeForText;
@@ -269,7 +261,8 @@ namespace FamiStudio
             ResizeSelectionNoteStart,
             ResizeNoteEnd,
             ResizeSelectionNoteEnd,
-            MoveNoteRelease
+            MoveNoteRelease,
+            MobileZoom
         }
 
         static readonly bool[] captureNeedsThreshold = new[]
@@ -301,6 +294,7 @@ namespace FamiStudio
             false, // ResizeNoteEnd
             false, // ResizeSelectionNoteEnd
             false, // MoveNoteRelease
+            false, // MobileZoom
         };
 
         static readonly bool[] captureWantsRealTimeUpdate = new[]
@@ -332,6 +326,7 @@ namespace FamiStudio
             true,  // ResizeNoteEnd
             true,  // ResizeSelectionNoteEnd
             false, // MoveNoteRelease
+            false, // MobileZoom
         };
 
         NoteLocation hoverNoteLocation = NoteLocation.Invalid;
@@ -455,7 +450,7 @@ namespace FamiStudio
             var headerScale = editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM || editMode == EditionMode.None ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2);
             var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
 
-            minZoom = MinZoom;
+            minZoom = MinZoomOther; // editMode == EditionMode.Channel && Song != null && Song.UsesFamiStudioTempo ? MinZoomFamiStudio : MinZoomOther;
             maxZoom = editMode == EditionMode.DPCM ? MaxWaveZoom : MaxZoom;
             zoom    = Utils.Clamp(zoom, minZoom, maxZoom);
 
@@ -466,10 +461,8 @@ namespace FamiStudio
             noteSizeY                 = ScaleForMainWindow(DefaultNoteSizeY * videoScaleY);
             noteAttackSizeX           = ScaleForMainWindow(DefaultNoteAttackSizeX);
             releaseNoteSizeY          = ScaleForMainWindow(DefaultReleaseNoteSizeY * videoScaleY) & 0xfe; // Keep even
-            envelopeMax               = ScaleForMainWindow(DefaultEnvelopeMax);
             whiteKeySizeY             = ScaleForMainWindow(DefaultWhiteKeySizeY * videoScaleY);
             whiteKeySizeX             = ScaleForMainWindow(DefaultWhiteKeySizeX * videoScaleX);
-            recordKeyPosX             = ScaleForMainWindow((DefaultWhiteKeySizeX - 10));
             blackKeySizeY             = ScaleForMainWindow(DefaultBlackKeySizeY * videoScaleY);
             blackKeySizeX             = ScaleForMainWindow(DefaultBlackKeySizeX * videoScaleX);
             effectIconPosX            = ScaleForMainWindow(DefaultEffectIconPosX);
@@ -489,7 +482,6 @@ namespace FamiStudio
             tooltipTextPosY           = ScaleForMainWindow(DefaultTooltipTextPosY);
             dpcmTextPosX              = ScaleForMainWindow(DefaultDPCMTextPosX);
             dpcmTextPosY              = ScaleForMainWindow(DefaultDPCMTextPosY);
-            dpcmSourceDataPosX        = ScaleForMainWindow(DefaultDPCMSourceDataPosX);
             dpcmSourceDataPosY        = ScaleForMainWindow(DefaultDPCMSourceDataPosY);
             dpcmInfoSpacingY          = ScaleForMainWindow(DefaultDPCMInfoSpacingY);
             octaveNameOffsetY         = ScaleForMainWindow(DefaultOctaveNameOffsetY);
@@ -505,7 +497,6 @@ namespace FamiStudio
             envelopeSizeY             = ScaleForMainWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
 
             octaveSizeY               = 12 * noteSizeY;
-            barSizeX                  = noteSizeX * (Song == null ? 16 : Song.BeatLength);
             headerAndEffectSizeY      = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
             noteTextPosY              = MainWindowScaling > 1 ? 0 : 1; // Pretty hacky.
             virtualSizeY              = NumNotes * noteSizeY;
@@ -2418,7 +2409,7 @@ namespace FamiStudio
             {
                 if (activeChannel)
                 {
-                    if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + 4)
+                    if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + attackIconPosX * 2)
                     {
                         r.cf.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
                         noteTextPosX += noteAttackSizeX + attackIconPosX;
@@ -4588,14 +4579,26 @@ namespace FamiStudio
             EndCaptureOperation(new MouseEventArgs(MouseButtons.None, 0, x, y, 0));
         }
 
-        protected override void OnTouchScale(int x, int y, float scale)
+        protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
         {
             if (captureOperation != CaptureOperation.None)
             {
                 Debug.WriteLine("Oops");
             }
 
-            ZoomAtLocation(x, scale);
+            switch (phase)
+            {
+                case TouchScalePhase.Begin:
+                    panning = false;
+                    StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
+                    break;
+                case TouchScalePhase.Scale:
+                    ZoomAtLocation(x, scale);
+                    break;
+                case TouchScalePhase.End:
+                    EndCaptureOperation(new MouseEventArgs(MouseButtons.None, 0, x, y, 0)); // MATTT
+                    break;
+            }
         }
 
         protected override void OnTouchClick(int x, int y, bool isLong)

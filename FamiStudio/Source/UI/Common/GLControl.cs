@@ -45,7 +45,7 @@ namespace FamiStudio
         protected virtual void OnTouchUp(int x, int y) { }
         protected virtual void OnTouchMove(int x, int y) { }
         protected virtual void OnTouchClick(int x, int y, bool isLong) { }
-        protected virtual void OnTouchScale(int x, int y, float scale) { }
+        protected virtual void OnTouchScale(int x, int y, float scale, TouchScalePhase phase) { }
         public virtual void DoMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
@@ -63,7 +63,7 @@ namespace FamiStudio
         public void TouchUp(int x, int y) { OnTouchUp(x, y); }
         public void TouchMove(int x, int y) { OnTouchMove(x, y); }
         public void TouchClick(int x, int y, bool isLong) { OnTouchClick(x, y, isLong); }
-        public void TouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }
+        public void TouchScale(int x, int y, float scale, TouchScalePhase phase) { OnTouchScale(x, y, scale, phase); }
         public void Focus() { }
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
@@ -130,5 +130,12 @@ namespace FamiStudio
             get { return cursor; }
             set { cursor = value; parentControl.ParentForm.RefreshCursor(); }
         }
+    }
+
+    public enum TouchScalePhase
+    {
+        Begin,
+        Scale,
+        End
     }
 }
