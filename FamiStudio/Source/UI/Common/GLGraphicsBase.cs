@@ -1484,11 +1484,13 @@ namespace FamiStudio
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
         {
+            Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
         }
 
         public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f)
         {
+            Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             atlas.GetElementUVs(bitmapIndex, out var u0, out var v0, out var u1, out var v1);
             var elementSize = atlas.GetElementSize(bitmapIndex);
             DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1);
@@ -1496,6 +1498,7 @@ namespace FamiStudio
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false)
         {
+            Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             if (!bitmaps.TryGetValue(bmp, out var list))
             {
                 list = new List<BitmapInstance>();
