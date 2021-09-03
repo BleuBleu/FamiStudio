@@ -40,8 +40,8 @@ namespace FamiStudio
         const int DefaultMinScrollBarLength  = 128;
         const float ContinuousFollowPercent  = 0.75f;
 
-        const int MinZoomLevel = -2;
-        const int MaxZoomLevel =  4;
+        const float MinZoom = -0.25f;
+        const float MaxZoom =  16.0f;
 
         int trackNameSizeX;
         int headerSizeY;
@@ -65,11 +65,10 @@ namespace FamiStudio
         float noteSizeX;
 
         int scrollX = 0;
-        int zoomBias = 0;
-        int zoomLevel = 1;
         int mouseLastX = 0;
         int mouseLastY = 0;
         int selectedChannel = 0;
+        float zoom = 1.0f;
 
         enum CaptureOperation
         {
@@ -110,18 +109,6 @@ namespace FamiStudio
         bool panning = false; // TODO: Make this a capture operation.
         bool continuouslyFollowing = false;
         bool captureThresholdMet = false;
-
-        int ScaleForZoom(int value)
-        {
-            var actualZoom = zoomLevel + zoomBias;
-            return actualZoom < 0 ? value / (1 << (-actualZoom)) : value * (1 << actualZoom);
-        }
-
-        float ScaleForZoom(float value)
-        {
-            var actualZoom = zoomLevel + zoomBias;
-            return actualZoom < 0 ? value / (1 << (-actualZoom)) : value * (1 << actualZoom);
-        }
 
         PatternBitmapCache patternCache;
 
@@ -205,9 +192,8 @@ namespace FamiStudio
 
         private void UpdateRenderCoords()
         {
-            var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
-
-            zoomBias = Song != null ? 6 - (int)Math.Log(Song.PatternLength, 2.0) : 0;
+            var scrollBarSize  = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
+            var patternZoom    = Song != null ? 128.0f / (float)Utils.NextPowerOfTwo(Song.PatternLength) : 1.0f;
 
             trackNameSizeX     = ScaleForMainWindow(DefaultTrackNameSizeX);
             headerSizeY        = ScaleForMainWindow(DefaultHeaderSizeY);
@@ -227,18 +213,18 @@ namespace FamiStudio
             headerIconSizeX    = ScaleForMainWindow(DefaultHeaderIconSizeX);
             scrollBarThickness = ScaleForMainWindow(scrollBarSize);
             minScrollBarLength = ScaleForMainWindow(DefaultMinScrollBarLength);
-            noteSizeX          = ScaleForMainWindowFloat(ScaleForZoom(1.0f));
+            noteSizeX          = ScaleForMainWindowFloat(zoom * patternZoom);
 
             // Shave a couple pixels when the size is getting too small.
             if (TrackSizeIsSmall())
             {
-                patternNamePosY    = ScaleForFont(DefaultPatternNamePosY - 1);
-                patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY - 2);
+                patternNamePosY    = ScaleForMainWindow(DefaultPatternNamePosY - 1);
+                patternHeaderSizeY = ScaleForMainWindow(DefaultPatternHeaderSizeY - 2);
             }
             else
             {
-                patternNamePosY    = ScaleForFont(DefaultPatternNamePosY);
-                patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY);
+                patternNamePosY    = ScaleForMainWindow(DefaultPatternNamePosY);
+                patternHeaderSizeY = ScaleForMainWindow(DefaultPatternHeaderSizeY);
             }
         }
 
@@ -276,7 +262,7 @@ namespace FamiStudio
         public void Reset()
         {
             scrollX = 0;
-            zoomLevel = 1;
+            zoom = 2.0f;
             selectedChannel = 0;
             ClearSelection();
             UpdateRenderCoords();
@@ -1639,7 +1625,7 @@ namespace FamiStudio
 
             if (Math.Abs(deltaY) > 50)
             {
-                ZoomAtLocation(e.X, Math.Sign(-deltaY));
+                ZoomAtLocation(e.X, deltaY < 0.0f ? 2.0f : 0.5f);
                 captureMouseY = e.Y;
             }
         }
@@ -1954,19 +1940,30 @@ namespace FamiStudio
             }
         }
 
-        private void ZoomAtLocation(int x, int delta)
+        private void ZoomAtLocation(int x, float scale)
         {
+            if (scale == 1.0f)
+                return;
+
             // When continuously following, zoom at the seek bar location.
             if (continuouslyFollowing)
                 x = (int)(Width * ContinuousFollowPercent);
 
-            int pixelX = x - trackNameSizeX;
-            int absoluteX = pixelX + scrollX;
-            if (delta < 0 && zoomLevel > MinZoomLevel) { zoomLevel--; absoluteX /= 2; }
-            if (delta > 0 && zoomLevel < MaxZoomLevel) { zoomLevel++; absoluteX *= 2; }
+            Debug.Assert(IsMobile || scale == 0.5f || scale == 2.0f);
+
+            var pixelX = x - trackNameSizeX;
+            var absoluteX = pixelX + scrollX;
+            var prevNoteSizeX = noteSizeX;
+
+            zoom *= scale;
+            zoom = Utils.Clamp(zoom, MinZoom, MaxZoom);
+
+            // This will update the noteSizeX.
+            UpdateRenderCoords();
+
+            absoluteX = (int)Math.Round(absoluteX * (noteSizeX / (double)prevNoteSizeX));
             scrollX = absoluteX - pixelX;
 
-            UpdateRenderCoords();
             ClampScroll();
             ConditionalInvalidate();
         }
@@ -1989,7 +1986,7 @@ namespace FamiStudio
             }
             else
             {
-                ZoomAtLocation(e.X, e.Delta);
+                ZoomAtLocation(e.X, e.Delta < 0.0f ? 0.5f : 2.0f);
             }
         }
 
@@ -2084,7 +2081,7 @@ namespace FamiStudio
         {
             buffer.Serialize(ref selectedChannel);
             buffer.Serialize(ref scrollX);
-            buffer.Serialize(ref zoomLevel);
+            buffer.Serialize(ref zoom);
             buffer.Serialize(ref minSelectedChannelIdx);
             buffer.Serialize(ref maxSelectedChannelIdx);
             buffer.Serialize(ref minSelectedPatternIdx);

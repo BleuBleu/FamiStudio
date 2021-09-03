@@ -77,6 +77,11 @@ namespace FamiStudio
             return x - (int)x;
         }
 
+        public static double Frac(double x)
+        {
+            return x - (int)x;
+        }
+
         public static int IntegerPow(int x, int y)
         {
             int result = 1;
