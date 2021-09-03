@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -41,9 +42,14 @@ namespace FamiStudio
         public PropertyPage AddPropertyPage(string text, string image)
         {
             var suffix = DpiScaling.Dialog > 1.0f ? "@2x" : "";
-            var bmp = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}{suffix}.png")) as Bitmap;
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}{suffix}.png");
+            
+            if (stream == null)
+                Debug.WriteLine($"Error loading bitmap {image }.");
 
-            if ((DpiScaling.Dialog % 1.0f) != 0.0f)
+            var bmp = stream != null ? Image.FromStream(stream) as Bitmap : null;
+
+            if ((DpiScaling.Dialog % 1.0f) != 0.0f && bmp != null)
             {
                 var newWidth  = (int)(bmp.Width  * (DpiScaling.Dialog / 2.0f));
                 var newHeight = (int)(bmp.Height * (DpiScaling.Dialog / 2.0f));
@@ -81,6 +87,7 @@ namespace FamiStudio
             SuspendLayout();
 
             var y = 0;
+            var maxHeight = 0;
             for (int i = 0; i < tabs.Count; i++)
             {
                 var tab = tabs[i];
@@ -89,10 +96,11 @@ namespace FamiStudio
                 {
                     tab.button.Top = y;
                     y += tab.button.Height;
+                    maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
                 }
             }
 
-            var maxHeight = Math.Max(y, Width / 2);
+            maxHeight = Math.Max(maxHeight, Width / 2);
 
             tableLayout.Height = maxHeight;
 
