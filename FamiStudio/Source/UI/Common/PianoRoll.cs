@@ -2369,7 +2369,7 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
-                // MATTT : The position of the text is wrong here.
+                // MATTT : The position of the text is wrong here. Creates asserts and shit when minimizing (or resizing?) the window
                 r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
             }
         }
