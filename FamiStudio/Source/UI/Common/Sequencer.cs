@@ -232,11 +232,13 @@ namespace FamiStudio
             // Shave a couple pixels when the size is getting too small.
             if (TrackSizeIsSmall())
             {
-                patternNamePosY    = ScaleForMainWindow(DefaultPatternNamePosY - 1);
-                patternHeaderSizeY = ScaleForMainWindow(DefaultPatternHeaderSizeY - 2);
+                patternNamePosY    = ScaleForFont(DefaultPatternNamePosY - 1);
+                patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY - 2);
             }
             else
             {
+                patternNamePosY    = ScaleForFont(DefaultPatternNamePosY);
+                patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY);
             }
         }
 

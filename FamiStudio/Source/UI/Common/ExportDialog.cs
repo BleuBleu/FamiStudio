@@ -99,10 +99,7 @@ namespace FamiStudio
             dialog.SetPageVisible((int)ExportFormat.FamiTone2Music, false);
             dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx, false);
 #else
-            if (format == ExportFormat.Midi)
-            {
-                UpdateMidiInstrumentMapping();
-            }
+            UpdateMidiInstrumentMapping();
 #endif
         }
 

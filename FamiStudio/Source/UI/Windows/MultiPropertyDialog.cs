@@ -12,6 +12,7 @@ namespace FamiStudio
         {
             public Button button;
             public PropertyPage properties;
+            public bool visible = true;
         }
 
         int selectedIndex = 0;
@@ -79,11 +80,19 @@ namespace FamiStudio
         {
             SuspendLayout();
 
-            int maxHeight = Math.Max((int)(32 * DpiScaling.Dialog * tabs.Count), Width / 2);
+            var y = 0;
             for (int i = 0; i < tabs.Count; i++)
             {
-                maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
+                var tab = tabs[i];
+                tab.button.Visible = tab.visible;
+                if (tab.visible)
+                {
+                    tab.button.Top = y;
+                    y += tab.button.Height;
+                }
             }
+
+            var maxHeight = Math.Max(y, Width / 2);
 
             tableLayout.Height = maxHeight;
 
@@ -108,6 +117,11 @@ namespace FamiStudio
         public PropertyPage GetPropertyPage(int idx)
         {
             return tabs[idx].properties;
+        }
+
+        public void SetPageVisible(int idx, bool visible)
+        {
+            tabs[idx].visible = visible;
         }
 
         public int SelectedIndex => selectedIndex;
@@ -184,6 +198,11 @@ namespace FamiStudio
                 DialogResult = DialogResult.Cancel;
                 Close();
             }
+        }
+
+        public void ShowDialog(IWin32Window parent, Action<DialogResult> callback)
+        {
+            callback(ShowDialog());
         }
 
         private void buttonYes_Click(object sender, EventArgs e)

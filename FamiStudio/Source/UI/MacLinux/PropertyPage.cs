@@ -531,7 +531,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
+        public int AddNumericUpDown(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()

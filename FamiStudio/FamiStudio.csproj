@@ -75,12 +75,23 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Properties\Settings.settings"> <Generator>SettingsSingleFileGenerator</Generator> <LastGenOutput>Settings.Designer.cs</LastGenOutput> </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs"> <AutoGen>True</AutoGen> <DesignTime>True</DesignTime> <DependentUpon>Resources.resx</DependentUpon> </Compile>
-    <Compile Include="Properties\Settings.Designer.cs"> <AutoGen>True</AutoGen> <DependentUpon>Settings.settings</DependentUpon> <DesignTimeSharedInput>True</DesignTimeSharedInput> </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateFds.cs" />
@@ -157,7 +168,9 @@
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
     <Compile Include="Source\UI\Common\Program.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
-    <Compile Include="Source\UI\Common\PropertyPageCommon.cs"> <SubType>UserControl</SubType> </Compile>
+    <Compile Include="Source\UI\Common\PropertyPageCommon.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Source\UI\Common\Sequencer.cs" />
     <Compile Include="Source\UI\Common\TempoProperties.cs" />
     <Compile Include="Source\UI\Common\Theme.cs" />
@@ -166,24 +179,60 @@
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\Toolbar.cs" />
-    <Compile Include="Source\UI\Windows\AutoScrollTextBox.cs"> <SubType>Component</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\FamiStudioForm.cs"> <SubType>Form</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\GLForm.cs"> <SubType>Form</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\LabelTrackBar.cs"> <SubType>UserControl</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\LabelTrackBar.Designer.cs"> <DependentUpon>LabelTrackBar.cs</DependentUpon> </Compile>
-    <Compile Include="Source\UI\Windows\MultiPropertyDialog.cs"> <SubType>Form</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\MultiPropertyDialog.Designer.cs"> <DependentUpon>MultiPropertyDialog.cs</DependentUpon> </Compile>
-    <Compile Include="Source\UI\Windows\NoFocusButton.cs"> <SubType>Component</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\NoInterpolationPictureBox.cs"> <SubType>Component</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\PropertyDialog.cs"> <SubType>Form</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\PropertyDialog.Designer.cs"> <DependentUpon>PropertyDialog.cs</DependentUpon> </Compile>
-    <Compile Include="Source\UI\Windows\PropertyPage.cs"> <SubType>UserControl</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\PropertyPage.Designer.cs"> <DependentUpon>PropertyPage.cs</DependentUpon> </Compile>
-    <Compile Include="Source\UI\Windows\PropertyPageListView.cs"> <SubType>Component</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\Slider.cs"> <SubType>UserControl</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\Slider.Designer.cs"> <DependentUpon>Slider.cs</DependentUpon> </Compile>
-    <Compile Include="Source\UI\Windows\TutorialDialog.cs"> <SubType>Form</SubType> </Compile>
-    <Compile Include="Source\UI\Windows\TutorialDialog.Designer.cs"> <DependentUpon>TutorialDialog.cs</DependentUpon> </Compile>
+    <Compile Include="Source\UI\Windows\AutoScrollTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\FamiStudioForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\GLForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\LabelTrackBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\LabelTrackBar.Designer.cs">
+      <DependentUpon>LabelTrackBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Source\UI\Windows\MultiPropertyDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\MultiPropertyDialog.Designer.cs">
+      <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Source\UI\Windows\NoFocusButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\NoInterpolationPictureBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\PropertyDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\PropertyDialog.Designer.cs">
+      <DependentUpon>PropertyDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Source\UI\Windows\PropertyPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\PropertyPage.Designer.cs">
+      <DependentUpon>PropertyPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Source\UI\Windows\PropertyPageListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\Slider.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\Slider.Designer.cs">
+      <DependentUpon>Slider.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Source\UI\Windows\TutorialDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Source\UI\Windows\TutorialDialog.Designer.cs">
+      <DependentUpon>TutorialDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Source\UI\Windows\WinCursors.cs" />
     <Compile Include="Source\UI\Windows\WinPlatformUtils.cs" />
     <Compile Include="Source\UI\Windows\WinUtils.cs" />
@@ -250,7 +299,10 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
-    <EmbeddedResource Include="Properties\Resources.resx"> <Generator>ResXFileCodeGenerator</Generator> <LastGenOutput>Resources.Designer.cs</LastGenOutput> </EmbeddedResource> 
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Add%402x.png" />
     <EmbeddedResource Include="Resources\Add.png" />
     <EmbeddedResource Include="Resources\Arpeggio%402x.png" />
@@ -422,6 +474,8 @@
     <EmbeddedResource Include="Resources\MinusSmall.png" />
     <EmbeddedResource Include="Resources\Mod%402x.png" />
     <EmbeddedResource Include="Resources\Mod.png" />
+    <EmbeddedResource Include="Resources\More%402x.png" />
+    <EmbeddedResource Include="Resources\More.png" />
     <EmbeddedResource Include="Resources\MouseLeft%402x.png" />
     <EmbeddedResource Include="Resources\MouseLeft.png" />
     <EmbeddedResource Include="Resources\MouseRight%402x.png" />
@@ -468,16 +522,8 @@
     <EmbeddedResource Include="Resources\QuickSand12_0.png" />
     <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand15.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand15_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand15Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand15Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand16.fnt" />
     <EmbeddedResource Include="Resources\QuickSand16_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand18.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand18_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand18Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand18Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand20.fnt" />
     <EmbeddedResource Include="Resources\QuickSand20_0.png" />
     <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
@@ -498,14 +544,14 @@
     <EmbeddedResource Include="Resources\QuickSand40_0.png" />
     <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand40Bold_0.png" />
-    <EmbeddedResource Include="Resources\QuickSand42.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand42_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand8.fnt" />
     <EmbeddedResource Include="Resources\QuickSand8_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand8Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand8Bold_0.png" />
     <EmbeddedResource Include="Resources\QwertyPiano%402x.png" />
     <EmbeddedResource Include="Resources\QwertyPiano.png" />
     <EmbeddedResource Include="Resources\Rec%402x.png" />
@@ -582,18 +628,38 @@
     <EmbeddedResource Include="Rom\rom_famitracker_pal.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
-    <EmbeddedResource Include="Source\UI\Windows\LabelTrackBar.resx"> <DependentUpon>LabelTrackBar.cs</DependentUpon> </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\MultiPropertyDialog.resx"> <DependentUpon>MultiPropertyDialog.cs</DependentUpon> </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\PropertyDialog.resx"> <DependentUpon>PropertyDialog.cs</DependentUpon> </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\PropertyPage.resx"> <DependentUpon>PropertyPage.cs</DependentUpon> </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\Slider.resx"> <DependentUpon>Slider.cs</DependentUpon> </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\TutorialDialog.resx"> <DependentUpon>TutorialDialog.cs</DependentUpon> </EmbeddedResource>
+    <EmbeddedResource Include="Source\UI\Windows\LabelTrackBar.resx">
+      <DependentUpon>LabelTrackBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Source\UI\Windows\MultiPropertyDialog.resx">
+      <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Source\UI\Windows\PropertyDialog.resx">
+      <DependentUpon>PropertyDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Source\UI\Windows\PropertyPage.resx">
+      <DependentUpon>PropertyPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Source\UI\Windows\Slider.resx">
+      <DependentUpon>Slider.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Source\UI\Windows\TutorialDialog.resx">
+      <DependentUpon>TutorialDialog.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NesSndEmu.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
-    <Content Include="NotSoFatso.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
-    <Content Include="ShineMp3.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
-    <Content Include="Vorbis.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
+    <Content Include="NesSndEmu.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="NotSoFatso.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ShineMp3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Vorbis.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

@@ -20,11 +20,12 @@ using DialogResult = System.Windows.Forms.DialogResult;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
 using Android.Widget;
+using AndroidX.Core.View;
 
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | Android.Content.PM.ConfigChanges.ScreenSize)]
-    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, IOnTouchListener
+    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, /*IOnTouchListener,*/ GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener
     {
         public static FamiStudioForm Instance { get; private set; }
         public object DialogUserData => dialogUserData;
@@ -40,6 +41,7 @@ namespace FamiStudio
         private Action<DialogResult> dialogCallback;
         private object renderLock = new object();
         private FamiStudioControls controls;
+        private GLControl captureControl;
 
         public FamiStudio FamiStudio => famistudio;
         public Toolbar ToolBar => controls.ToolBar;
@@ -49,6 +51,9 @@ namespace FamiStudio
         public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
         public string Text { get; set; }
+
+        private GestureDetectorCompat detector;
+        private ScaleGestureDetector scaleDetector;
 
         public System.Drawing.Rectangle Bounds
         {
@@ -98,7 +103,7 @@ namespace FamiStudio
 #endif
             glSurfaceView.SetEGLContextClientVersion(1);
             glSurfaceView.SetEGLConfigChooser(8, 8, 8, 8, 0, 0);
-            glSurfaceView.SetOnTouchListener(this);
+            //glSurfaceView.SetOnTouchListener(this);
             glSurfaceView.SetRenderer(this);
             glThreadIsRunning = true;
 
@@ -122,6 +127,11 @@ namespace FamiStudio
             Instance = this;
             famistudio = new FamiStudio();
             famistudio.Initialize(filename);
+
+            detector = new GestureDetectorCompat(this, this);
+            detector.IsLongpressEnabled = true; // MATTT
+            scaleDetector = new ScaleGestureDetector(this, this);
+            scaleDetector.QuickScaleEnabled = true;
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
@@ -175,6 +185,8 @@ namespace FamiStudio
             }
         }
 
+
+        /*
         // Main thread.
         public bool OnTouch(View v, MotionEvent e)
         {
@@ -237,6 +249,7 @@ namespace FamiStudio
 
             return false;
         }
+        */
 
         private DialogResult ToWinFormsResult([GeneratedEnum] Result resultCode)
         {
@@ -337,10 +350,13 @@ namespace FamiStudio
 
         public void CaptureMouse(GLControl ctrl)
         {
+            Debug.Assert(captureControl == null);
+            captureControl = ctrl;
         }
 
         public void ReleaseMouse()
         {
+            captureControl = null;
         }
 
         public void RefreshLayout()
@@ -361,6 +377,111 @@ namespace FamiStudio
 
         public void Run()
         {
+        }
+
+        int c = 0;
+
+        private GLControl GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
+        {
+            if (captureControl != null)
+            {
+                ctrlX = formX - captureControl.Left;
+                ctrlY = formY - captureControl.Top;
+                return captureControl;
+            }
+            else
+            {
+                return controls.GetControlAtCoord(formX, formY, out ctrlX, out ctrlY);
+            }
+        }
+
+        public override bool OnTouchEvent(MotionEvent e)
+        {
+            //if (detector.OnTouchEvent(e))
+            //    return true;
+            //if (scaleDetector.OnTouchEvent(e))
+            //    return true;
+
+            if (e.Action == MotionEventActions.Up)
+            {
+                Debug.WriteLine($"{c++} Up {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchUp(x, y);
+            }
+            else if (e.Action == MotionEventActions.Move && !scaleDetector.IsInProgress)
+            {
+                Debug.WriteLine($"{c++} Move {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchMove(x, y);
+            }
+
+            detector.OnTouchEvent(e);
+            scaleDetector.OnTouchEvent(e);
+
+            return base.OnTouchEvent(e);
+        }
+
+        public bool OnDown(MotionEvent e)
+        {
+            Debug.WriteLine($"{c++} OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+            GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchDown(x, y);
+            return false;
+        }
+
+        public bool OnFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
+        {
+            Debug.WriteLine($"{c++} OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({e2.GetX()}, {e2.GetY()})");
+            return false;
+        }
+
+        public void OnLongPress(MotionEvent e)
+        {
+            Debug.WriteLine($"{c++} OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+            GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y, true);
+        }
+
+        public bool OnScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
+        {
+            //if (scaleDetector.IsInProgress)
+            //    return false;
+
+            //Debug.WriteLine($"{c++} OnScroll {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({e2.GetX()}, {e2.GetY()})");
+            //var ctrl = controls.GetControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y);
+            //if (ctrl != null)
+            //{
+            //    ctrl.TouchMove(x, y);
+            //    return true;
+            //}
+            return false;
+        }
+
+        public void OnShowPress(MotionEvent e)
+        {
+            Debug.WriteLine($"{c++} {e.PointerCount} OnShowPress ({e.GetX()}, {e.GetY()})");
+        }
+
+        public bool OnSingleTapUp(MotionEvent e)
+        {
+            Debug.WriteLine($"{c++} {e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
+            GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y, false);
+            return false;
+        }
+
+        public bool OnScale(ScaleGestureDetector detector)
+        {
+            Debug.WriteLine($"{c++} OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
+            // MATTT : Not right, must "capture" the pointer when scale begins and keep feeding to the captured control.
+            GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor);
+            return true;
+        }
+
+        public bool OnScaleBegin(ScaleGestureDetector detector)
+        {
+            Debug.WriteLine($"{c++} OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
+            return true;
+        }
+
+        public void OnScaleEnd(ScaleGestureDetector detector)
+        {
+            Debug.WriteLine($"{c++} OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
         }
     }
 }

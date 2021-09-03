@@ -97,6 +97,13 @@ namespace FamiStudio
         public static Project StaticProject { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
 
+#if FAMISTUDIO_ANDROID
+        // MATTT : Where to put this?
+        public bool IsMobile => true;
+#else
+        public bool IsMobile => false;
+#endif
+
         public void Initialize(string filename)
         {
             StaticInstance = this;
@@ -925,14 +932,16 @@ namespace FamiStudio
 #if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new TransformDialog(this);
             dlg.CleaningUp += TransformDialog_CleaningUp;
-
-            if (dlg.ShowDialog(mainForm) == DialogResult.OK)
+            dlg.ShowDialog(mainForm, (r) =>
             {
-                Sequencer.Reset();
-                PianoRoll.Reset();
-                ProjectExplorer.RefreshButtons();
-                InvalidateEverything();
-            }
+                if (r == DialogResult.OK)
+                {
+                    Sequencer.Reset();
+                    PianoRoll.Reset();
+                    ProjectExplorer.RefreshButtons();
+                    InvalidateEverything();
+                }
+            });
 #endif
         }
 
@@ -1050,11 +1059,9 @@ namespace FamiStudio
 
         private void InitializeInstrumentPlayer()
         {
-#if !FAMISTUDIO_ANDROID
             Debug.Assert(instrumentPlayer == null);
             instrumentPlayer = new InstrumentPlayer(palPlayback);
             instrumentPlayer.Start(project, palPlayback);
-#endif
         }
 
         private void ShutdownSongPlayer()
@@ -1069,7 +1076,6 @@ namespace FamiStudio
 
         private void ShutdownInstrumentPlayer()
         {
-#if !FAMISTUDIO_ANDROID
             if (instrumentPlayer != null)
             {
                 instrumentPlayer.Stop(true);
@@ -1077,7 +1083,6 @@ namespace FamiStudio
                 instrumentPlayer = null;
                 PianoRoll.HighlightPianoNote(Note.NoteInvalid);
             }
-#endif
         }
 
         public void InitializeOscilloscope()
@@ -1464,9 +1469,7 @@ namespace FamiStudio
 
             if (!songPlayer.IsPlaying)
             {
-#if !FAMISTUDIO_ANDROID
                 instrumentPlayer.ConnectOscilloscope(null);
-#endif
                 songPlayer.ConnectOscilloscope(oscilloscope);
                 songPlayer.Play(song, songPlayer.PlayPosition, palPlayback);
             }
@@ -1477,9 +1480,7 @@ namespace FamiStudio
             if (songPlayer != null && songPlayer.IsPlaying)
             {
                 songPlayer.Stop();
-#if !FAMISTUDIO_ANDROID
                 instrumentPlayer.ConnectOscilloscope(oscilloscope);
-#endif
                 songPlayer.ConnectOscilloscope(null);
 
                 // HACK: Update continuous follow mode only last time so it catches up to the 

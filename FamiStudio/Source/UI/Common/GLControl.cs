@@ -41,7 +41,11 @@ namespace FamiStudio
         protected virtual void OnMouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnKeyDown(System.Windows.Forms.KeyEventArgs e) { }
         protected virtual void OnKeyUp(System.Windows.Forms.KeyEventArgs e) { }
-        protected virtual void OnTouch(int x, int y) { } // DROIDTODO : Temporary, figure out interface / data structure
+        protected virtual void OnTouchDown(int x, int y) { }
+        protected virtual void OnTouchUp(int x, int y) { }
+        protected virtual void OnTouchMove(int x, int y) { }
+        protected virtual void OnTouchClick(int x, int y, bool isLong) { }
+        protected virtual void OnTouchScale(int x, int y, float scale) { }
         public virtual void DoMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
@@ -55,7 +59,11 @@ namespace FamiStudio
         public void MouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(System.Windows.Forms.KeyEventArgs e) { OnKeyDown(e); }
         public void KeyUp(System.Windows.Forms.KeyEventArgs e) { OnKeyUp(e); }
-        public void Touch(int x, int y) { OnTouch(x, y); } // DROIDTODO : Temporary, figure out interface / data structure
+        public void TouchDown(int x, int y) { OnTouchDown(x, y); }
+        public void TouchUp(int x, int y) { OnTouchUp(x, y); }
+        public void TouchMove(int x, int y) { OnTouchMove(x, y); }
+        public void TouchClick(int x, int y, bool isLong) { OnTouchClick(x, y, isLong); }
+        public void TouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }
         public void Focus() { }
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
@@ -102,6 +110,12 @@ namespace FamiStudio
         public float ScaleForFontFloat      (float val) { return (val * fontScaling); }
         public int   ScaleCustom            (float val, float scale) { return (int)Math.Round(val * scale); }
         public float ScaleCustomFloat       (float val, float scale) { return (val * scale); }
+
+#if FAMISTUDIO_ANDROID
+        protected const bool IsMobile = true;
+#else
+        protected const bool IsMobile = false;
+#endif
     }
 
     public class CursorInfo

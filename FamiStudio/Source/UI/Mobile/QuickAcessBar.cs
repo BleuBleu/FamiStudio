@@ -22,13 +22,13 @@ namespace FamiStudio
         const int DefaultIconSize          = 96;
         const int DefaultIconPos1          = 12;
         const int DefaultIconPos2          = 24;
-        const int DefaultTextSize          = 24;
+        const int DefaultTextSize          = 24; // MATTT : Implement same font size solution everywhere.
         const int DefaultTextPosTop        = 108;
         const int DefaultExpandIconPosTop  = 0;
         const int DefaultExpandIconPosLeft = 56;
         const int DefaultExpandIconSize    = 32;
 
-        const int DefaultListItemTextSize  = 36;
+        const int DefaultListItemTextSize  = 36; // MATTT : Implement same font size solution everywhere.
         const int DefaultListItemSize      = 120;
         const int DefaultListIconPos       = 12;
 
@@ -530,8 +530,7 @@ namespace FamiStudio
             }
         }
 
-        // MATTT Temporary
-        protected override void OnTouch(int x, int y)
+        protected override void OnTouchDown(int x, int y)
         {
             foreach (var btn in buttons)
             {

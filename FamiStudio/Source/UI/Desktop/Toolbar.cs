@@ -302,7 +302,7 @@ namespace FamiStudio
                                 
                                 posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                                 c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush);
-                                c.DrawText(str, messageFont, posX, posY, messageBrush, RenderTextAlignment.Center, specialCharacter.Width);
+                                c.DrawText(str, messageFont, posX, posY, messageBrush, RenderTextFlags.Center, specialCharacter.Width);
                                 posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                             }
                         }

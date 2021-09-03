@@ -37,9 +37,9 @@ namespace FamiStudio
         const int DefaultReleaseNoteSizeY = 8;
         const int DefaultEnvelopeSizeY = 9;
         const int DefaultEnvelopeMax = 127;
-        const int DefaultWhiteKeySizeX = 94;
+        const int DefaultWhiteKeySizeX = IsMobile ? 60 : 94;
         const int DefaultWhiteKeySizeY = 20;
-        const int DefaultBlackKeySizeX = 56;
+        const int DefaultBlackKeySizeX = IsMobile ? 30 : 56;
         const int DefaultBlackKeySizeY = 14;
         const int DefaultEffectExpandIconPosX = 4;
         const int DefaultEffectExpandIconPosY = 3;
@@ -1193,9 +1193,10 @@ namespace FamiStudio
                 var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
 
                 r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, effectIconPosX, effectIconPosY);
-                r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1, headerIconsPosY, maximized ? 1.0f : 0.3f);
+                if (!IsMobile)
+                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1, headerIconsPosY, maximized ? 1.0f : 0.3f);
 
-                if (IsSnappingAllowed)
+                if (IsSnappingAllowed && !IsMobile)
                 {
                     r.cc.DrawBitmapAtlas(bmpMiscAtlas, App.IsRecording ? (int)MiscImageIndices.SnapRed : (int)MiscImageIndices.Snap, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1, headerIconsPosY, IsSnappingEnabled || App.IsRecording ? 1.0f : 0.3f);
                     r.cc.DrawBitmapAtlas(bmpSnapResolutionAtlas, (int)snapResolution, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 3 - 1, headerIconsPosY, IsSnappingEnabled ? 1.0f : 0.3f);
@@ -2982,7 +2983,7 @@ namespace FamiStudio
             var note      = channel.GetNoteAt(location);
             var selection = IsSelectionValid() && IsNoteSelected(location) && note != null && note.HasValidEffectValue(selectedEffectIdx);
 
-            StartCaptureOperation(e, selection ? CaptureOperation.ChangeSelectionEffectValue : CaptureOperation.ChangeEffectValue, false, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(e.X, e.Y, selection ? CaptureOperation.ChangeSelectionEffectValue : CaptureOperation.ChangeEffectValue, false, location.ToAbsoluteNoteIndex(Song));
 
             var minPatternIdx = Song.PatternIndexFromAbsoluteNoteIndex(selectionMin);
             var maxPatternIdx = Song.PatternIndexFromAbsoluteNoteIndex(selectionMax);
@@ -3062,9 +3063,9 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        void StartDragVolumeSlide(MouseEventArgs e, NoteLocation location)
+        void StartDragVolumeSlide(int x, int y, NoteLocation location)
         {
-            StartCaptureOperation(e, CaptureOperation.DragVolumeSlideTarget, false, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTarget, false, location.ToAbsoluteNoteIndex(Song));
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
@@ -3081,7 +3082,7 @@ namespace FamiStudio
 
             var note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
 
-            var ratio = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
+            var ratio = Utils.Clamp(1.0f - (y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
             var volume = (byte)Math.Round(ratio * Note.VolumeMax);
 
             if (!note.HasVolume)
@@ -3263,13 +3264,13 @@ namespace FamiStudio
             {
                 if (right)
                 {
-                    if (IsMouseInHeader(e.X, e.Y))
+                    if (IsPointInHeader(e.X, e.Y))
                     {
                         int patIdx = Song.PatternIndexFromAbsoluteNoteIndex((int)Math.Floor((e.X - whiteKeySizeX + scrollX) / (float)noteSizeX));
                         if (patIdx >= 0 && patIdx < Song.Length)
                             SetSelection(Song.GetPatternStartAbsoluteNoteIndex(patIdx), Song.GetPatternStartAbsoluteNoteIndex(patIdx + 1) - 1);
                     }
-                    else if (IsMouseInEffectPanel(e.X, e.Y))
+                    else if (IsPointInEffectPanel(e.X, e.Y))
                     {
                         if (GetEffectNoteForCoord(e.X, e.Y, out var location))
                             SetSelection(Song.GetPatternStartAbsoluteNoteIndex(location.PatternIndex), Song.GetPatternStartAbsoluteNoteIndex(location.PatternIndex + 1) - 1);
@@ -3290,18 +3291,18 @@ namespace FamiStudio
             }
         }
 
-        private void CaptureMouse(MouseEventArgs e)
+        private void CaptureMouse(int x, int y)
         {
-            mouseLastX = e.X;
-            mouseLastY = e.Y;
-            captureMouseX = e.X;
-            captureMouseY = e.Y;
+            mouseLastX = x;
+            mouseLastY = y;
+            captureMouseX = x;
+            captureMouseY = y;
             captureScrollX = scrollX;
             captureScrollY = scrollY;
             Capture = true;
         }
 
-        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op, bool allowSnap = false, int noteIdx = -1)
+        private void StartCaptureOperation(int x, int y, CaptureOperation op, bool allowSnap = false, int noteIdx = -1)
         {
 #if DEBUG
             Debug.Assert(captureOperation == CaptureOperation.None);
@@ -3310,16 +3311,16 @@ namespace FamiStudio
                 AbortCaptureOperation();
 #endif
 
-            CaptureMouse(e);
+            CaptureMouse(x, y);
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
             captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
-            captureWaveTime = editMode == EditionMode.DPCM ? GetWaveTimeForPixel(e.X - whiteKeySizeX) : 0.0f;
-            captureNoteValue = numNotes - Utils.Clamp((e.Y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, numNotes);
+            captureWaveTime = editMode == EditionMode.DPCM ? GetWaveTimeForPixel(x - whiteKeySizeX) : 0.0f;
+            captureNoteValue = numNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, numNotes);
             captureSelectionMin = selectionMin;
             captureSelectionMax = selectionMax;
 
-            captureMouseAbsoluteIdx = (e.X - whiteKeySizeX + scrollX) / noteSizeX;
+            captureMouseAbsoluteIdx = (x - whiteKeySizeX + scrollX) / noteSizeX;
             if (allowSnap)
                 captureMouseAbsoluteIdx = SnapNote(captureMouseAbsoluteIdx);
             captureMouseLocation = Song.AbsoluteNoteIndexToNoteLocation(captureMouseAbsoluteIdx);
@@ -4016,7 +4017,7 @@ namespace FamiStudio
             if (middle && e.Y > headerSizeY && e.X > whiteKeySizeX)
             {
                 panning = true;
-                CaptureMouse(e);
+                CaptureMouse(e.X, e.Y);
                 return true;
             }
 
@@ -4044,7 +4045,7 @@ namespace FamiStudio
                     }
                     else if (x >= scrollBarPosX && x <= (scrollBarPosX + scrollBarSizeX))
                     {
-                        StartCaptureOperation(e, CaptureOperation.ScrollBarX);
+                        StartCaptureOperation(e.X, e.Y, CaptureOperation.ScrollBarX);
                     }
                     return true;
                 }
@@ -4065,7 +4066,7 @@ namespace FamiStudio
                     }
                     else if (y >= scrollBarPosY && y <= (scrollBarPosY + scrollBarSizeY))
                     {
-                        StartCaptureOperation(e, CaptureOperation.ScrollBarY);
+                        StartCaptureOperation(e.X, e.Y, CaptureOperation.ScrollBarY);
                     }
                     return true;
                 }
@@ -4076,9 +4077,9 @@ namespace FamiStudio
 
         private bool HandleMouseDownPiano(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInPiano(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInPiano(e.X, e.Y))
             {
-                StartPlayPiano(e);
+                StartPlayPiano(e.X, e.Y);
                 return true;
             }
 
@@ -4087,9 +4088,9 @@ namespace FamiStudio
 
         private bool HandleMouseDownSeekBar(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeader(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInHeader(e.X, e.Y))
             {
-                StartCaptureOperation(e, CaptureOperation.DragSeekBar);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSeekBar);
                 UpdateSeekDrag(e, false);
                 return true;
             }
@@ -4099,9 +4100,9 @@ namespace FamiStudio
 
         private bool HandleMouseDownHeaderSelection(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInHeader(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Right) && IsPointInHeader(e.X, e.Y))
             {
-                StartCaptureOperation(e, CaptureOperation.Select, false);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.Select, false);
                 UpdateSelection(e);
                 return true;
             }
@@ -4111,9 +4112,9 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeSelection(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && (IsMouseInHeaderTopPart(e.X, e.Y) || IsMouseInNoteArea(e.X, e.Y)))
+            if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
-                StartCaptureOperation(e, CaptureOperation.Select);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.Select);
                 UpdateSelection(e);
                 return true;
             }
@@ -4123,7 +4124,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEffectList(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInEffectList(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInEffectList(e.X, e.Y))
             {
                 int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY;
                 if (effectIdx >= 0 && effectIdx < supportedEffects.Length)
@@ -4141,7 +4142,7 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Right) && ModifierKeys.HasFlag(Keys.Alt))
             {
-                StartCaptureOperation(e, CaptureOperation.AltZoom);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;
             }
 
@@ -4150,9 +4151,9 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeResize(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInHeaderTopPart(e.X, e.Y) && EditEnvelope.CanResize)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInHeaderTopPart(e.X, e.Y) && EditEnvelope.CanResize)
             {
-                StartCaptureOperation(e, CaptureOperation.ResizeEnvelope);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.ResizeEnvelope);
 
                 if (editMode == EditionMode.Enveloppe)
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
@@ -4171,10 +4172,10 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if (((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsMouseInHeaderBottomPart(e.X, e.Y))
+            if (((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsPointInHeaderBottomPart(e.X, e.Y))
             {
                 CaptureOperation op = left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
-                StartCaptureOperation(e, op);
+                StartCaptureOperation(e.X, e.Y, op);
 
                 if (editMode == EditionMode.Enveloppe)
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
@@ -4190,9 +4191,9 @@ namespace FamiStudio
 
         private bool HandleMouseDownDrawEnvelope(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInNoteArea(e.X, e.Y) && EditEnvelope.Length > 0)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInNoteArea(e.X, e.Y) && EditEnvelope.Length > 0)
             {
-                StartCaptureOperation(e, CaptureOperation.DrawEnvelope);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.DrawEnvelope);
 
                 if (editMode == EditionMode.Enveloppe)
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
@@ -4208,7 +4209,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownChangeEffectValue(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInEffectPanel(e.X, e.Y) && selectedEffectIdx >= 0)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInEffectPanel(e.X, e.Y) && selectedEffectIdx >= 0)
             {
                 if (GetEffectNoteForCoord(e.X, e.Y, out var location))
                 {
@@ -4216,7 +4217,7 @@ namespace FamiStudio
 
                     if (slide && selectedEffectIdx == Note.EffectVolume)
                     {
-                        StartDragVolumeSlide(e, location);
+                        StartDragVolumeSlide(e.X, e.Y, location);
                     }
                     else
                     {
@@ -4233,7 +4234,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((left || right) && IsMouseInEffectPanel(e.X, e.Y))
+            if ((left || right) && IsPointInEffectPanel(e.X, e.Y))
             {
                 var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e);
                 if (vertexIdx >= 0)
@@ -4242,7 +4243,7 @@ namespace FamiStudio
                     {
                         volumeEnvelopeDragVertex = vertexIdx;
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
-                        StartCaptureOperation(e, CaptureOperation.DragWaveVolumeEnvelope);
+                        StartCaptureOperation(e.X, e.Y, CaptureOperation.DragWaveVolumeEnvelope);
                     }
                     else
                     {
@@ -4264,7 +4265,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((left || right) && IsMouseOnSnapResolutionButton(e.X, e.Y))
+            if ((left || right) && IsPointOnSnapResolutionButton(e.X, e.Y))
             {
                 if (left)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
@@ -4280,7 +4281,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSnapButton(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseOnSnapButton(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointOnSnapButton(e.X, e.Y))
             {
                 snap = !snap;
                 ConditionalInvalidate();
@@ -4292,7 +4293,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownMaximizeButton(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseOnMaximizeButton(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointOnMaximizeButton(e.X, e.Y))
             {
                 ToggleMaximize();
                 ConditionalInvalidate();
@@ -4304,7 +4305,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsMouseInTopLeftCorner(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInTopLeftCorner(e.X, e.Y))
             {
                 ToggleEffectPannel();
                 return true;
@@ -4318,9 +4319,9 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((left || right) && (IsMouseInNoteArea(e.X, e.Y) || IsMouseInHeader(e.X, e.Y)))
+            if ((left || right) && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
             {
-                StartCaptureOperation(e, CaptureOperation.SelectWave);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.SelectWave);
                 UpdateWaveSelection(e);
                 return true;
             }
@@ -4538,9 +4539,89 @@ namespace FamiStudio
             ConditionalInvalidate();
         }
 
-        protected override void OnTouch(int x, int y) 
+        //==============================================================================================================
+        //==============================================================================================================
+        //==============================================================================================================
+        //==============================================================================================================
+        //==============================================================================================================
+
+        private bool HandleTouchDownPan(int x, int y)
         {
+            if (y > headerSizeY && x > whiteKeySizeX)
+            {
+                panning = true; 
+                CaptureMouse(x, y);
+                return true;
+            }
+
+            return false;
         }
+
+        private bool HandleTouchDownPiano(int x, int y)
+        {
+            if (IsPointInPiano(x, y))
+            {
+                StartPlayPiano(x, y);
+                return true;
+            }
+
+            return false;
+        }
+
+
+        protected override void OnTouchDown(int x, int y)
+        {
+            if (HandleTouchDownPan(x, y)) goto Handled;
+            if (HandleTouchDownPiano(x, y)) goto Handled;
+
+            return;
+
+        Handled: // Yes, i use a goto, sue me.
+            ConditionalInvalidate();
+        }
+
+        protected override void OnTouchMove(int x, int y)
+        {
+            if (captureOperation == CaptureOperation.PlayPiano)
+                PlayPiano(x, y);
+
+            //UpdateCaptureOperation(e, false);
+            ConditionalInvalidate();
+            //UpdateCaptureOperation(e, false);
+
+            if (panning)
+            {
+                DoScroll(x - mouseLastX, y - mouseLastY);
+            }
+
+            mouseLastX = x;
+            mouseLastY = y;
+        }
+
+        protected override void OnTouchUp(int x, int y)
+        {
+            panning = false;
+            EndCaptureOperation(new MouseEventArgs(MouseButtons.None, 0, x, y, 0));
+        }
+
+        protected override void OnTouchScale(int x, int y, float scale)
+        {
+            if (captureOperation != CaptureOperation.None)
+            {
+                Debug.WriteLine("Oops");
+            }
+        }
+
+        protected override void OnTouchClick(int x, int y, bool isLong)
+        {
+            base.OnTouchClick(x, y, isLong);
+        }
+
+        //==============================================================================================================
+        //==============================================================================================================
+        //==============================================================================================================
+        //==============================================================================================================
+        //==============================================================================================================
 
         public void LayoutChanged()
         {
@@ -4678,10 +4759,10 @@ namespace FamiStudio
             PatternChanged?.Invoke(pattern);
         }
 
-        private void StartPlayPiano(MouseEventArgs e)
+        private void StartPlayPiano(int x, int y)
         {
-            StartCaptureOperation(e, CaptureOperation.PlayPiano);
-            PlayPiano(e.X, e.Y);
+            StartCaptureOperation(x, y, CaptureOperation.PlayPiano);
+            PlayPiano(x, y);
         }
 
         private void EndPlayPiano()
@@ -4692,7 +4773,7 @@ namespace FamiStudio
 
         private void StartSelection(MouseEventArgs e)
         {
-            StartCaptureOperation(e, CaptureOperation.Select, false);
+            StartCaptureOperation(e.X, e.Y, CaptureOperation.Select, false);
             UpdateSelection(e);
         }
 
@@ -4779,7 +4860,7 @@ namespace FamiStudio
                 if (note != null)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                    StartCaptureOperation(e, CaptureOperation.DragSlideNoteTarget, false, location.ToAbsoluteNoteIndex(Song));
+                    StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSlideNoteTarget, false, location.ToAbsoluteNoteIndex(Song));
                 }
                 else
                 {
@@ -4802,7 +4883,7 @@ namespace FamiStudio
                         note.Duration = (ushort)Song.BeatLength;
                         note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
 
-                        StartCaptureOperation(e, CaptureOperation.CreateSlideNote, true);
+                        StartCaptureOperation(e.X, e.Y, CaptureOperation.CreateSlideNote, true);
                     }
                     else
                     {
@@ -4895,7 +4976,7 @@ namespace FamiStudio
 
         private void StartDragDPCMSampleMapping(MouseEventArgs e, byte noteValue)
         {
-            StartCaptureOperation(e, CaptureOperation.DragSample);
+            StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSample);
             draggedSample = null;
         }
 
@@ -5075,37 +5156,37 @@ namespace FamiStudio
             return -1;
         }
 
-        private bool IsMouseInHeader(int x, int y)
+        private bool IsPointInHeader(int x, int y)
         {
             return x > whiteKeySizeX && y < headerSizeY;
         }
 
-        private bool IsMouseInHeaderTopPart(int x, int y)
+        private bool IsPointInHeaderTopPart(int x, int y)
         {
             return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && x > whiteKeySizeX && y > 0 && y < headerSizeY / 2;
         }
 
-        private bool IsMouseInHeaderBottomPart(int x, int y)
+        private bool IsPointInHeaderBottomPart(int x, int y)
         {
             return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && x > whiteKeySizeX && y >= headerSizeY / 2 && y < headerSizeY;
         }
 
-        private bool IsMouseInPiano(int x, int y)
+        private bool IsPointInPiano(int x, int y)
         {
             return x < whiteKeySizeX && y > headerAndEffectSizeY;
         }
 
-        private bool IsMouseInEffectList(int x, int y)
+        private bool IsPointInEffectList(int x, int y)
         {
             return showEffectsPanel && editMode == EditionMode.Channel && x < whiteKeySizeX && y > headerSizeY && y < headerAndEffectSizeY;
         }
 
-        private bool IsMouseInEffectPanel(int x, int y)
+        private bool IsPointInEffectPanel(int x, int y)
         {
             return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && x > whiteKeySizeX && y > headerSizeY && y < headerAndEffectSizeY;
         }
 
-        private bool IsMouseOnSnapResolutionButton(int x, int y)
+        private bool IsPointOnSnapResolutionButton(int x, int y)
         {
             var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
             var posX = whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 3 - 1;
@@ -5114,7 +5195,7 @@ namespace FamiStudio
                 y > headerIconsPosY && y < headerIconsPosY + snapButtonSize;
         }
 
-        private bool IsMouseOnSnapButton(int x, int y)
+        private bool IsPointOnSnapButton(int x, int y)
         {
             var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
             var posX = whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1;
@@ -5123,7 +5204,7 @@ namespace FamiStudio
                 y > headerIconsPosY && y < headerIconsPosY + snapButtonSize;
         }
 
-        private bool IsMouseOnMaximizeButton(int x, int y)
+        private bool IsPointOnMaximizeButton(int x, int y)
         {
             var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
             var posX = whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1;
@@ -5132,12 +5213,12 @@ namespace FamiStudio
                 y > headerIconsPosY && y < headerIconsPosY + snapButtonSize;
         }
 
-        private bool IsMouseInNoteArea(int x, int y)
+        private bool IsPointInNoteArea(int x, int y)
         {
             return y > headerSizeY && x > whiteKeySizeX;
         }
 
-        private bool IsMouseInTopLeftCorner(int x, int y)
+        private bool IsPointInTopLeftCorner(int x, int y)
         {
             return (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && y < headerSizeY && x < whiteKeySizeX;
         }
@@ -5147,43 +5228,43 @@ namespace FamiStudio
             var tooltip = "";
             var newNoteTooltip = "";
 
-            if (IsMouseInHeader(e.X, e.Y) && editMode == EditionMode.Channel)
+            if (IsPointInHeader(e.X, e.Y) && editMode == EditionMode.Channel)
             {
                 tooltip = "{MouseLeft} Seek - {MouseRight} Select - {MouseRight}{MouseRight} Select entire pattern";
             }
-            else if (IsMouseInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
+            else if (IsPointInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
                 tooltip = "{MouseRight} Select - {MouseLeft} Resize envelope";
             }
-            else if (IsMouseInHeaderBottomPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
+            else if (IsPointInHeaderBottomPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
                 tooltip = "{MouseLeft} Set loop point - {MouseRight} Set release point (volume only, must have loop point)";
             }
-            else if (IsMouseInPiano(e.X, e.Y))
+            else if (IsPointInPiano(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan\n{MouseLeft} {MouseLeft} Configure scales";
             }
-            else if (IsMouseOnSnapResolutionButton(e.X, e.Y))
+            else if (IsPointOnSnapResolutionButton(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Next snap precision {MouseRight} Previous snap precision {MouseWheel} Change snap precision";
             }
-            else if (IsMouseOnSnapButton(e.X, e.Y))
+            else if (IsPointOnSnapButton(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Toggle snapping {Shift} {S} {MouseWheel} Change snap precision";
             }
-            else if (IsMouseOnMaximizeButton(e.X, e.Y))
+            else if (IsPointOnMaximizeButton(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Maximize/Minimize piano roll {~}";
             }
-            else if (IsMouseInTopLeftCorner(e.X, e.Y))
+            else if (IsPointInTopLeftCorner(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Show/hide effect panel {Ctrl} {~}";
             }
-            else if (IsMouseInEffectList(e.X, e.Y))
+            else if (IsPointInEffectList(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Select effect track to edit";
             }
-            else if (IsMouseInEffectPanel(e.X, e.Y))
+            else if (IsPointInEffectPanel(e.X, e.Y))
             {
                 if (editMode == EditionMode.Channel)
                 {
@@ -5199,7 +5280,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if ((IsMouseInNoteArea(e.X, e.Y) || IsMouseInHeader(e.X, e.Y)) && editMode == EditionMode.DPCM)
+            else if ((IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)) && editMode == EditionMode.DPCM)
             {
                 tooltip = "{MouseLeft} {Drag} or {MouseRight} {Drag} Select samples from source data";
 
@@ -5209,7 +5290,7 @@ namespace FamiStudio
                     newNoteTooltip = $"{(selectionMax - selectionMin + 1)} samples selected";
                 }
             }
-            else if (IsMouseInNoteArea(e.X, e.Y))
+            else if (IsPointInNoteArea(e.X, e.Y))
             {
                 if (editMode == EditionMode.Channel)
                 {
@@ -5414,7 +5495,7 @@ namespace FamiStudio
             if (Song.Channels[editChannel].SupportsInstrument(currentInstrument))
             {
                 App.PlayInstrumentNote(noteValue, false, false);
-                StartCaptureOperation(e, CaptureOperation.CreateNote, true);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.CreateNote, true);
                 UpdateNoteCreation(e, true, false);
             }
             else
@@ -5488,7 +5569,7 @@ namespace FamiStudio
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
 
-            StartCaptureOperation(e, captureOp, true, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(e.X, e.Y, captureOp, true, location.ToAbsoluteNoteIndex(Song));
 
             if (dragSelection)
             {
@@ -5751,7 +5832,7 @@ namespace FamiStudio
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
 
-            StartCaptureOperation(e, captureOp, true, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(e.X, e.Y, captureOp, true, location.ToAbsoluteNoteIndex(Song));
         }
 
         private void UpdateNoteResizeEnd(MouseEventArgs e, bool final)
@@ -5805,7 +5886,7 @@ namespace FamiStudio
         {
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-            StartCaptureOperation(e, CaptureOperation.MoveNoteRelease, false, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(e.X, e.Y, CaptureOperation.MoveNoteRelease, false, location.ToAbsoluteNoteIndex(Song));
         }
 
         private void UpdateMoveNoteRelease(MouseEventArgs e)
@@ -5920,7 +6001,7 @@ namespace FamiStudio
             {
                 if (editMode == EditionMode.Channel && captureOperation == CaptureOperation.None)
                 {
-                    if (IsMouseInEffectPanel(pt.X, pt.Y))
+                    if (IsPointInEffectPanel(pt.X, pt.Y))
                     {
                         var captureOp = GetHoverEffectCaptureOperationForCoord(pt.X, pt.Y);
 
@@ -5934,7 +6015,7 @@ namespace FamiStudio
                                 break;
                         }
                     }
-                    else if (IsMouseInNoteArea(pt.X, pt.Y))
+                    else if (IsPointInNoteArea(pt.X, pt.Y))
                     {
                         var captureOp = GetHoverNoteCaptureOperationForCoord(pt.X, pt.Y);
 
@@ -6038,7 +6119,7 @@ namespace FamiStudio
                     ZoomAtLocation(e.X, e.Delta);
                 }
             }
-            else if (IsMouseOnSnapResolutionButton(e.X, e.Y) || IsMouseOnSnapButton(e.X, e.Y))
+            else if (IsPointOnSnapResolutionButton(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
                 if (e.Delta > 0)
                     snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);

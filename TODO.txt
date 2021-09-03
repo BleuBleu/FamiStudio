@@ -1,5 +1,8 @@
 Android
 =======
+- Create a "Platform.IsLinux, IsMac, IsMobile, etc."
+- Remove as much #ifdef as possible.
+
 Prop page:
 / Reactivate dialogs in code, test
 - Review text color light gray 1 or 2?
@@ -28,12 +31,50 @@ x Make toolbar always 2 rows.
 		- Add scroll bar
 - Create 2nd piano.
 
+Controls:
+- Can we have floating zoom
+- If yes, can we get rid of pre-zoomed geometries.
+- Define possible interactions
+	- Click:
+			- Down
+			- Up
+			- SingleTapUp
+	- Long click: 
+			- Down
+			- (Optinal moves)
+			- LongPress
+			- Up (must ignore)
+	- Scroll:  
+			- Down 
+			- (Optional Move ...)
+			- (Optional LongPress)
+			- Move ...
+			- Up 
+			- (optional Fling)
+	- Pinch to zoom: 
+			- Down
+			- (Optional Move ...)
+			- (Optional LongPress)
+			- Move ...
+			- ScaleBegin
+			- Scale ...
+			- ScaleEnd
+			- Up
+
+	* If you disable long press, scroll still works on slow 
+
+- Define interface in GLControl
+	- 
+
 3.2.0
 =====
-
+- Pattern index 0/1 bug from github.
 - NSF bug tempo from Discord!
 - Weird osc behavior low frequency
 - Export intro-only is broken?
+
+Misc:
+- Remove as much .resx, Designer shit as possible.
 
 DMC counter effect:
 - Sound engine

@@ -29,7 +29,7 @@ namespace FamiStudio
                 }
             }
 
-            dialog.Properties.AddIntegerRange("Repeat :", 1, 1, 32);
+            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32);
             dialog.Properties.Build();
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
             dialog.Name = "PasteSpecialDialog";

@@ -252,7 +252,7 @@ namespace FamiStudio
 
             foreach (var prop in properties)
             {
-                if (prop.type == PropertyType.ColoredString)
+                if (prop.type == PropertyType.ColoredTextBox)
                 {
                     prop.control.BackColor = Theme.CustomColors[i, j];
                 }
@@ -540,7 +540,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
+        public int AddNumericUpDown(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()

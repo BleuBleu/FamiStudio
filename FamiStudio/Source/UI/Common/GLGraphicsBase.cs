@@ -11,7 +11,6 @@ using Bitmap = Android.Graphics.Bitmap;
 #else
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
-using System.IO;
 #if FAMISTUDIO_WINDOWS
 using Bitmap = System.Drawing.Bitmap;
 #else

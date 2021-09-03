@@ -236,7 +236,7 @@ namespace FamiStudio
         }
 
         // TEMPORARY!
-        protected override void OnTouch(int x, int y)
+        protected override void OnTouchDown(int x, int y)
         {
             //bool left  = e.Button.HasFlag(MouseButtons.Left);
             //bool right = e.Button.HasFlag(MouseButtons.Right);

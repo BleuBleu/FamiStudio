@@ -172,6 +172,11 @@ namespace FamiStudio
                 Application.DoEvents();
         }
 
+        public void ShowDialog(IWin32Window parent, Action<DialogResult> callback)
+        {
+            callback(ShowDialog());
+        }
+
         public void ShowModal(FamiStudioForm form)
         {
             form.Enabled = false;

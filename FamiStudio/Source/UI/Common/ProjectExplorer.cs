@@ -2598,9 +2598,9 @@ namespace FamiStudio
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 
-            dlg.Properties.AddColoredString(song.Name, song.Color); // 0
+            dlg.Properties.AddColoredTextBox(song.Name, song.Color); // 0
             dlg.Properties.AddColorPicker(song.Color); // 1
-            dlg.Properties.AddIntegerRange("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2
+            dlg.Properties.AddNumericUpDown("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2
             tempoProperties.AddProperties();
             dlg.Properties.Build();
 
@@ -2637,7 +2637,7 @@ namespace FamiStudio
         {
 #if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
-            dlg.Properties.AddColoredString(instrument.Name, instrument.Color); // 0
+            dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();
 
@@ -2667,7 +2667,7 @@ namespace FamiStudio
         {
 #if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
-            dlg.Properties.AddColoredString(arpeggio.Name, arpeggio.Color); // 0
+            dlg.Properties.AddColoredTextBox(arpeggio.Name, arpeggio.Color); // 0
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
 
@@ -2697,7 +2697,7 @@ namespace FamiStudio
         {
 #if !FAMISTUDIO_ANDROID // DROIDTODO!
             var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
-            dlg.Properties.AddColoredString(sample.Name, sample.Color); // 0
+            dlg.Properties.AddColoredTextBox(sample.Name, sample.Color); // 0
             dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();
 
