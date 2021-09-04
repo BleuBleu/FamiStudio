@@ -132,7 +132,7 @@ namespace FamiStudio
 
         public float MeasureString(string text, GLFont font)
         {
-            font.MeasureString(text, out int minX, out int maxX, out _, out _);
+            font.MeasureString(text, out int minX, out int maxX);
             return maxX - minX;
         }
 
@@ -284,7 +284,7 @@ namespace FamiStudio
                             baseValue = ReadFontParam<int>(splits, "base");
                             texSizeX = ReadFontParam<int>(splits, "scaleW");
                             texSizeY = ReadFontParam<int>(splits, "scaleH");
-                            font = new GLFont(CreateTexture(bmp), size - baseValue);
+                            font = new GLFont(CreateTexture(bmp), size, baseValue);
                             break;
                         }
                     case "char":
@@ -406,15 +406,19 @@ namespace FamiStudio
         Dictionary<char, CharInfo> charMap = new Dictionary<char, CharInfo>();
         Dictionary<int, int> kerningPairs = new Dictionary<int, int>();
 
-        public int Texture { get; private set; }
-        public int OffsetY { get; private set; }
-        //public int Alignment { get; private set; }
-        //public bool Ellipsis { get; private set; }
+        private int texture;
+        private int size;
+        private int baseValue;
 
-        public GLFont(int tex, int offsetY)
+        public int Texture => texture;
+        public int Size    => size;
+        public int OffsetY => size - baseValue;
+
+        public GLFont(int tex, int sz, int b)
         {
-            Texture = tex;
-            OffsetY = offsetY;
+            texture = tex;
+            size = sz;
+            baseValue = b;
         }
 
         public void Dispose()
@@ -425,7 +429,7 @@ namespace FamiStudio
 #else
             GL.DeleteTexture(Texture);
 #endif
-            Texture = -1;
+            texture = -1;
         }
 
         public void AddChar(char c, CharInfo info)
@@ -485,15 +489,12 @@ namespace FamiStudio
             return false;
         }
 
-        public void MeasureString(string text, out int minX, out int maxX, out int minY, out int maxY)
+        public void MeasureString(string text, out int minX, out int maxX)
         {
             minX = 0;
             maxX = 0;
-            minY = 0;
-            maxY = 0;
 
             int x = 0;
-            int y = OffsetY;
 
             for (int i = 0; i < text.Length; i++)
             {
@@ -501,14 +502,10 @@ namespace FamiStudio
                 var info = GetCharInfo(c0);
 
                 int x0 = x + info.xoffset;
-                var y0 = y + info.yoffset;
                 int x1 = x0 + info.width;
-                var y1 = y0 + info.height;
 
                 minX = Math.Min(minX, x0);
                 maxX = Math.Max(maxX, x1);
-                minY = Math.Min(minY, y0);
-                maxY = Math.Max(maxY, y1);
 
                 x += info.xadvance;
                 if (i != text.Length - 1)
@@ -1622,11 +1619,11 @@ namespace FamiStudio
                 foreach (var inst in list)
                 {
                     var alignmentOffsetX = 0;
-                    var alignmentOffsetY = 0;
+                    var alignmentOffsetY = font.OffsetY;
 
                     if (inst.flags.HasFlag(RenderTextFlags.Ellipsis))
                     {
-                        font.MeasureString("...", out var dotsMinX, out var dotsMaxX, out _, out _);
+                        font.MeasureString("...", out var dotsMinX, out var dotsMaxX);
                         var ellipsisSizeX = (dotsMaxX - dotsMinX) * 2; // Leave some padding.
                         if (font.TruncateString(ref inst.text, (int)(inst.rect.Width - ellipsisSizeX)))
                             inst.text += "...";
@@ -1634,34 +1631,39 @@ namespace FamiStudio
 
                     if (inst.flags != RenderTextFlags.TopLeft)
                     {
-                        font.MeasureString(inst.text, out var minX, out var maxX, out var minY, out var maxY);
+                        font.MeasureString(inst.text, out var minX, out var maxX);
 
                         var halign = inst.flags & RenderTextFlags.HorizontalAlignMask;
                         var valign = inst.flags & RenderTextFlags.VerticalAlignMask;
 
-                        // MATTT : Review these, i dont trust my calculations. For vertical alignment, 
-                        // we shouldnt try to compute the bounds, we know the font height + offset Y, that's
-                        // enough.
                         if (halign == RenderTextFlags.Center)
                         {
-                            //alignmentOffsetX -= minX;
+                            alignmentOffsetX -= minX;
                             alignmentOffsetX += ((int)inst.rect.Width - maxX - minX) / 2;
                         }
                         else if (halign == RenderTextFlags.Right)
                         {
-                            //alignmentOffsetX -= minX;
+                            alignmentOffsetX -= minX;
                             alignmentOffsetX += ((int)inst.rect.Width - maxX - minX);
                         }
 
-                        if (valign == RenderTextFlags.Middle)
+                        if (valign != RenderTextFlags.Top)
                         {
-                            //alignmentOffsetY -= minY;
-                            alignmentOffsetY += ((int)inst.rect.Height - (maxY - minY - font.OffsetY)) / 2;
-                        }
-                        else if (valign == RenderTextFlags.Bottom)
-                        {
-                            //alignmentOffsetY -= minY;
-                            alignmentOffsetY += ((int)inst.rect.Height - (maxY - minY - font.OffsetY));
+                            // Use a tall character with no descender as reference.
+                            var charA = font.GetCharInfo('A');
+
+                            // When aligning middle or center, ignore the y offset since it just
+                            // adds extra padding and messes up calculations.
+                            alignmentOffsetY = -charA.yoffset;
+
+                            if (valign == RenderTextFlags.Middle)
+                            {
+                                alignmentOffsetY += ((int)inst.rect.Height - charA.height + 1) / 2;
+                            }
+                            else if (valign == RenderTextFlags.Bottom)
+                            {
+                                alignmentOffsetY += ((int)inst.rect.Height - charA.height);
+                            }
                         }
                     }
 
@@ -1669,7 +1671,7 @@ namespace FamiStudio
                     var numVertices = inst.text.Length * 4;
 
                     int x = (int)(inst.rect.X + alignmentOffsetX);
-                    int y = (int)(inst.rect.Y + alignmentOffsetY + font.OffsetY);
+                    int y = (int)(inst.rect.Y + alignmentOffsetY);
 
                     // Slow path when there is clipping.
                     if (inst.flags.HasFlag(RenderTextFlags.Clip))

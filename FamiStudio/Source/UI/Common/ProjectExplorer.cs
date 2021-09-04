@@ -25,7 +25,6 @@ namespace FamiStudio
         const int DefaultButtonIconPosX       = 3;
         const int DefaultButtonIconPosY       = 3;
         const int DefaultButtonTextPosX       = 21;
-        const int DefaultButtonTextPosY       = 3;
         const int DefaultButtonTextNoIconPosX = 4;
         const int DefaultSubButtonSpacingX    = 18;
         const int DefaultSubButtonPosY        = 3;
@@ -46,7 +45,6 @@ namespace FamiStudio
         int buttonIconPosX;
         int buttonIconPosY;
         int buttonTextPosX;
-        int buttonTextPosY;
         int buttonTextNoIconPosX;
         int expandButtonPosX;
         int expandButtonPosY;
@@ -57,8 +55,6 @@ namespace FamiStudio
         int sliderPosY;
         int sliderSizeX;
         int sliderSizeY;
-        int sliderThumbSizeX;
-        int sliderTextPosX;
         int checkBoxPosX;
         int checkBoxPosY;
         int virtualSizeY;
@@ -118,6 +114,121 @@ namespace FamiStudio
             EnvelopeType.FdsModulation,
             EnvelopeType.FdsWaveform,
             EnvelopeType.N163Waveform
+        };
+
+        enum CaptureOperation
+        {
+            None,
+            DragInstrument,
+            DragArpeggio,
+            DragSample,
+            DragSong,
+            MoveSlider,
+            ScrollBar
+        };
+
+        static readonly bool[] captureNeedsThreshold = new[]
+        {
+            false,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false
+        };
+
+        int scrollY = 0;
+        int mouseLastX = 0;
+        int mouseLastY = 0;
+        int captureMouseX = -1;
+        int captureMouseY = -1;
+        int captureButtonRelX = -1;
+        int captureButtonRelY = -1;
+        int captureButtonIdx = -1;
+        int captureScrollY = -1;
+        int envelopeDragIdx = -1;
+        float bitmapScale = 1.0f;
+        bool captureThresholdMet = false;
+        Button sliderDragButton = null;
+        CaptureOperation captureOperation = CaptureOperation.None;
+        Song selectedSong = null;
+        Instrument draggedInstrument = null;
+        Instrument selectedInstrument = null; // null = DPCM
+        Instrument expandedInstrument = null;
+        DPCMSample expandedSample = null;
+        Arpeggio draggedArpeggio = null;
+        Arpeggio selectedArpeggio = null;
+        DPCMSample draggedSample = null;
+        Song draggedSong = null;
+        List<Button> buttons = new List<Button>();
+
+        RenderBrush sliderFillBrush;
+        RenderBrush disabledBrush;
+        RenderBitmapAtlas bmpMiscAtlas;
+        RenderBitmapAtlas bmpExpansionsAtlas;
+        RenderBitmapAtlas bmpEnvelopesAtlas;
+
+        enum MiscImageIndices
+        {
+            Expand,
+            Expanded,
+            Overflow,
+            CheckBoxYes,
+            CheckBoxNo,
+            ButtonLeft,
+            ButtonRight,
+            Song,
+            Add,
+            Play,
+            DPCM,
+            Load,
+            WaveEdit,
+            Reload,
+            Save,
+            Count
+        };
+
+        readonly string[] MiscImageNames = new string[]
+        {
+            "InstrumentExpand",
+            "InstrumentExpanded",
+            "Warning",
+            "CheckBoxYes",
+            "CheckBoxNo",
+            "ButtonLeft",
+            "ButtonRight",
+            "Music",
+            "Add",
+            "PlaySource",
+            "DPCMBlack",
+            "InstrumentOpen",
+            "WaveEdit",
+            "Reload",
+            "SaveSmall"
+        };
+
+        enum EnvelopesImageIndices
+        {
+            Volume,
+            Arpeggio,
+            Pitch,
+            Duty,
+            FdsWave,
+            Mod,
+            N163Wave,
+            Count
+        };
+
+        readonly string[] EnvelopesImageNames = new string[]
+        {
+            "Volume",
+            "Arpeggio",
+            "Pitch",
+            "Duty",
+            "Wave",
+            "Mod",
+            "Wave",
         };
 
         class Button
@@ -363,120 +474,6 @@ namespace FamiStudio
             }
         }
 
-        enum CaptureOperation
-        {
-            None,
-            DragInstrument,
-            DragArpeggio,
-            DragSample,
-            DragSong,
-            MoveSlider,
-            ScrollBar
-        };
-
-        static readonly bool[] captureNeedsThreshold = new[]
-        {
-            false,
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
-        };
-
-        int scrollY = 0;
-        int mouseLastX = 0;
-        int mouseLastY = 0;
-        int captureMouseX = -1;
-        int captureMouseY = -1;
-        int captureButtonRelX = -1;
-        int captureButtonRelY = -1;
-        int captureButtonIdx = -1;
-        int captureScrollY = -1;
-        int envelopeDragIdx = -1;
-        bool captureThresholdMet = false;
-        Button sliderDragButton = null;
-        CaptureOperation captureOperation = CaptureOperation.None;
-        Song selectedSong = null;
-        Instrument draggedInstrument = null;
-        Instrument selectedInstrument = null; // null = DPCM
-        Instrument expandedInstrument = null;
-        DPCMSample expandedSample = null;
-        Arpeggio draggedArpeggio = null;
-        Arpeggio selectedArpeggio = null;
-        DPCMSample draggedSample = null;
-        Song draggedSong = null;
-        List<Button> buttons = new List<Button>();
-
-        RenderBrush sliderFillBrush;
-        RenderBrush disabledBrush;
-        RenderBitmapAtlas bmpMiscAtlas;
-        RenderBitmapAtlas bmpExpansionsAtlas;
-        RenderBitmapAtlas bmpEnvelopesAtlas;
-
-        enum MiscImageIndices
-        {
-            Expand,
-            Expanded,
-            Overflow,
-            CheckBoxYes,
-            CheckBoxNo,
-            ButtonLeft,
-            ButtonRight,
-            Song,
-            Add,
-            Play,
-            DPCM,
-            Load,
-            WaveEdit,
-            Reload,
-            Save,
-            Count
-        };
-
-        readonly string[] MiscImageNames = new string[]
-        {
-            "InstrumentExpand",
-            "InstrumentExpanded",
-            "Warning",
-            "CheckBoxYes",
-            "CheckBoxNo",
-            "ButtonLeft",
-            "ButtonRight",
-            "Music",
-            "Add",
-            "PlaySource",
-            "DPCMBlack",
-            "InstrumentOpen",
-            "WaveEdit",
-            "Reload",
-            "SaveSmall"
-        };
-
-        enum EnvelopesImageIndices 
-        {
-            Volume,
-            Arpeggio,
-            Pitch,
-            Duty,
-            FdsWave,
-            Mod,
-            N163Wave,
-            Count
-        };
-
-        readonly string[] EnvelopesImageNames = new string[]
-        {
-            "Volume",
-            "Arpeggio",
-            "Pitch",
-            "Duty",
-            "Wave",
-            "Mod",
-            "Wave",
-        };
-
         public Song SelectedSong => selectedSong;
         public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null;
 
@@ -552,7 +549,6 @@ namespace FamiStudio
             buttonIconPosX       = ScaleForMainWindow(DefaultButtonIconPosX);      
             buttonIconPosY       = ScaleForMainWindow(DefaultButtonIconPosY);      
             buttonTextPosX       = ScaleForMainWindow(DefaultButtonTextPosX);      
-            buttonTextPosY       = ScaleForMainWindow(DefaultButtonTextPosY);
             buttonTextNoIconPosX = ScaleForMainWindow(DefaultButtonTextNoIconPosX);
             expandButtonPosX     = ScaleForMainWindow(DefaultExpandButtonPosX);
             expandButtonPosY     = ScaleForMainWindow(DefaultExpandButtonPosY);
@@ -563,8 +559,6 @@ namespace FamiStudio
             sliderPosY           = ScaleForMainWindow(DefaultSliderPosY);
             sliderSizeX          = ScaleForMainWindow(DefaultSliderSizeX);
             sliderSizeY          = ScaleForMainWindow(DefaultSliderSizeY);
-            sliderThumbSizeX     = ScaleForMainWindow(DefaultSliderThumbSizeX);
-            sliderTextPosX       = ScaleForMainWindow(DefaultSliderTextPosX);
             checkBoxPosX         = ScaleForMainWindow(DefaultCheckBoxPosX);
             checkBoxPosY         = ScaleForMainWindow(DefaultCheckBoxPosY);
             draggedLineSizeY     = ScaleForMainWindow(DefaultDraggedLineSizeY);
@@ -686,6 +680,9 @@ namespace FamiStudio
             bmpExpansionsAtlas = g.CreateBitmapAtlasFromResources(ExpansionType.Icons);
             bmpEnvelopesAtlas = g.CreateBitmapAtlasFromResources(EnvelopesImageNames);
 
+            if (PlatformUtils.IsMobile)
+                bitmapScale = g.WindowScaling * 0.5f;
+
             RefreshButtons();
         }
 
@@ -721,6 +718,20 @@ namespace FamiStudio
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList();
+
+            //c.DrawRectangle(10, 20, 100, 40, ThemeResources.BlackBrush);
+            //c.DrawText("Text jgi,!pqA", ThemeResources.FontMedium, 10, 20, ThemeResources.BlackBrush, RenderTextFlags.Center, 90, 20);
+            //c.DrawRectangle(10, 60, 100, 80, ThemeResources.BlackBrush);
+            //c.DrawText("Text jgi,!pqA", ThemeResources.FontMedium, 10, 60, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Middle, 90, 20);
+            //c.DrawRectangle(10, 100, 100, 120, ThemeResources.BlackBrush);
+            //c.DrawText("Text jgi,!pqA", ThemeResources.FontMedium, 10, 100, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Bottom, 90, 20);
+            //c.DrawRectangle(10, 140, 100, 180, ThemeResources.BlackBrush);
+            //c.DrawText("Text jgi,!pqA", ThemeResources.FontMedium, 10, 140, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Middle, 90, 40);
+
+            //g.Clear(Theme.LightRedFillColor);
+            //g.DrawCommandList(c);
+
+            //return;
 
             c.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
 
@@ -798,10 +809,10 @@ namespace FamiStudio
                 var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
                 var ellipsisFlag = button.TextEllipsis ? RenderTextFlags.Ellipsis : RenderTextFlags.None;
 
-                c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag, actualWidth - buttonTextNoIconPosX * 2);
+                c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextNoIconPosX * 2, buttonSizeY);
                 
                 if (atlas != null)
-                    c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY);
+                    c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale);
 
                 if (leftPadding != 0)
                     c.PopTransform();
@@ -818,12 +829,12 @@ namespace FamiStudio
                         c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                         c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
                         c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1.0f);
-                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, buttonTextPosY - sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.Center, sliderSizeX);
+                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
                         c.PopTransform();
                     }
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
-                        c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f);
+                        c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale);
                     }
                     else if (button.type == ButtonType.ParamList)
                     {
@@ -832,9 +843,9 @@ namespace FamiStudio
                         var buttonWidth = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width;
 
                         c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
-                        c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f);
-                        c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f);
-                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, buttonTextPosY - sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.Center, sliderSizeX);
+                        c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale);
+                        c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale);
+                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
                         c.PopTransform();
                     }
                 }
@@ -848,9 +859,9 @@ namespace FamiStudio
                             atlas = button.GetIcon(subButtons[j], out atlasIdx);
 
                             if (subButtons[j] == SubButtonType.Expand)
-                                c.DrawBitmapAtlas(atlas, atlasIdx, expandButtonPosX, expandButtonPosY);
+                                c.DrawBitmapAtlas(atlas, atlasIdx, expandButtonPosX, expandButtonPosY, 1.0f, bitmapScale);
                             else
-                                c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, active[j] ? 1.0f : 0.2f);
+                                c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, active[j] ? 1.0f : 0.2f, bitmapScale);
                         }
                     }
                 }
@@ -885,7 +896,7 @@ namespace FamiStudio
                     {
                         if (envelopeDragIdx >= 0)
                         {
-                            c.DrawBitmapAtlas(bmpEnvelopesAtlas, envelopeDragIdx, pt.X - captureButtonRelX, pt.Y - captureButtonRelY, 0.5f);
+                            c.DrawBitmapAtlas(bmpEnvelopesAtlas, envelopeDragIdx, pt.X - captureButtonRelX, pt.Y - captureButtonRelY, 0.5f, bitmapScale);
                         }
                         else
                         {

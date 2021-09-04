@@ -45,7 +45,7 @@ namespace FamiStudio
         {
 #if FAMISTUDIO_ANDROID
             // DROIDTODO!
-            mainWindowScaling = 5;
+            mainWindowScaling = 6;
             fontScaling = 3;
             dialogScaling = 1;
 #else

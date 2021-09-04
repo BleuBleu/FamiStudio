@@ -379,7 +379,7 @@ namespace FamiStudio
         int scrollX = 0;
         int scrollY = 0;
         float zoom = 1.0f;
-        float zoomY = 1.0f;
+        float zoomY = PlatformUtils.IsMobile ? 0.75f : 1.0f;
         float pianoScaleX = 1.0f; // Only used by video export.
         int selectedEffectIdx = 0;
         string noteTooltip = "";

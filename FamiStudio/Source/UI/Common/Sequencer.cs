@@ -19,7 +19,7 @@ namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int DefaultTrackNameSizeX      = 94;
+        const int DefaultTrackNameSizeX      = PlatformUtils.IsMobile ? 60 : 94;
         const int DefaultHeaderSizeY         = 17;
         const int DefaultPatternHeaderSizeY  = 13;
         const int DefaultScrollMargin        = 128;
@@ -218,13 +218,13 @@ namespace FamiStudio
             // Shave a couple pixels when the size is getting too small.
             if (TrackSizeIsSmall())
             {
-                patternNamePosY    = ScaleForMainWindow(DefaultPatternNamePosY - 1);
-                patternHeaderSizeY = ScaleForMainWindow(DefaultPatternHeaderSizeY - 2);
+                patternNamePosY    = ScaleForFont(DefaultPatternNamePosY - 1);
+                patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY - 2);
             }
             else
             {
-                patternNamePosY    = ScaleForMainWindow(DefaultPatternNamePosY);
-                patternHeaderSizeY = ScaleForMainWindow(DefaultPatternHeaderSizeY);
+                patternNamePosY    = ScaleForFont(DefaultPatternNamePosY);
+                patternHeaderSizeY = ScaleForFont(DefaultPatternHeaderSizeY);
             }
         }
 
@@ -258,7 +258,10 @@ namespace FamiStudio
 
         private int ComputeDesiredTrackSizeY()
         {
-            return Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
+            if (PlatformUtils.IsMobile)
+                return 32; // MATTT Constant or something.
+            else
+                return Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
         }
 
         public int ComputeDesiredSizeY()

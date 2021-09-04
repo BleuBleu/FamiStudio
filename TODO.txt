@@ -14,14 +14,11 @@ Prop page:
 - Change insturment dialog for a combo
 
 Scaling issue:
-- Support 3 font sizes:
-	- 2x
-	- 3x (Default, medium)
-	- 4x
 - Support 3 scalings (Will not affect toolbars)? 
-	- 4x
-	- 5x (Default)
-	- 6x 
+	- 4x (with 2x font) (Default for <  1080p, xhdpi and below)
+	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
+	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
+- This mean fonts will always look 1/2 the size of desktop. Which is OK.
 
 UI:
 x Make toolbar always 2 rows.
