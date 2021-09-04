@@ -524,6 +524,8 @@
     <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand16.fnt" />
     <EmbeddedResource Include="Resources\QuickSand16_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand16Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand16Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand20.fnt" />
     <EmbeddedResource Include="Resources\QuickSand20_0.png" />
     <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />

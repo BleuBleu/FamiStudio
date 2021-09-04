@@ -786,6 +786,8 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
+            UpdateRenderCoords();
+
             Debug.Assert(MiscImageNames.Length == (int)MiscImageIndices.Count);
             Debug.Assert(SnapResolutionImageNames.Length == (int)SnapResolution.Max);
             Debug.Assert(EffectImageNames.Length == Note.EffectCount);

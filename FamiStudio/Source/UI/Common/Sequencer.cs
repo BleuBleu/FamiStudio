@@ -302,6 +302,8 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
+            UpdateRenderCoords();
+
             patternCache = new PatternBitmapCache(g);
 
             var expansionBitmapNames = new string[ExpansionType.Count];
