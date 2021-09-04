@@ -110,12 +110,6 @@ namespace FamiStudio
         public float ScaleForFontFloat      (float val) { return (val * fontScaling); }
         public int   ScaleCustom            (float val, float scale) { return (int)Math.Round(val * scale); }
         public float ScaleCustomFloat       (float val, float scale) { return (val * scale); }
-
-#if FAMISTUDIO_ANDROID
-        protected const bool IsMobile = true;
-#else
-        protected const bool IsMobile = false;
-#endif
     }
 
     public class CursorInfo

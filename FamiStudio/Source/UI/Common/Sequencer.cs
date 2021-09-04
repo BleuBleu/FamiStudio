@@ -1969,7 +1969,7 @@ namespace FamiStudio
             if (continuouslyFollowing)
                 x = (int)(Width * ContinuousFollowPercent);
 
-            Debug.Assert(IsMobile || scale == 0.5f || scale == 2.0f);
+            Debug.Assert(PlatformUtils.IsMobile || scale == 0.5f || scale == 2.0f);
 
             var pixelX = x - trackNameSizeX;
             var absoluteX = pixelX + scrollX;

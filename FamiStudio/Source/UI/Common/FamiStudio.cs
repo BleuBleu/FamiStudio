@@ -97,13 +97,6 @@ namespace FamiStudio
         public static Project StaticProject { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
 
-#if FAMISTUDIO_ANDROID
-        // MATTT : Where to put this?
-        public bool IsMobile => true;
-#else
-        public bool IsMobile => false;
-#endif
-
         public void Initialize(string filename)
         {
             StaticInstance = this;

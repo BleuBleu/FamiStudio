@@ -225,5 +225,12 @@ namespace FamiStudio
             var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
             return graphics.DpiX / 96.0f;
         }
+
+        public const bool IsMobile  = false;
+        public const bool IsAndroid = false;
+        public const bool IsDesktop = true;
+        public const bool IsWindows = true;
+        public const bool IsLinux   = false;
+        public const bool IsMacOS   = false;
     }
 }

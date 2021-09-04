@@ -56,5 +56,12 @@ namespace FamiStudio
                 Assembly.GetExecutingAssembly().GetManifestResourceStream(name), null,
                 new Android.Graphics.BitmapFactory.Options() { InPremultiplied = premultiplied });
         }
+
+        public const bool IsMobile  = true;
+        public const bool IsAndroid = true;
+        public const bool IsDesktop = false;
+        public const bool IsWindows = false;
+        public const bool IsLinux   = false;
+        public const bool IsMacOS   = false;
     }
 }

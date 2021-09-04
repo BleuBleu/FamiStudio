@@ -18,67 +18,68 @@ namespace FamiStudio
 {
     public class PianoRoll : RenderControl
     {
-        const float MinZoomFamiStudio = 1.0f / 32.0f;
-        const float MinZoomOther      = 1.0f / 8.0f;
-        const float MaxZoom = 512.0f; // MATTT 16.0f
-        const float MaxWaveZoom = 256.0f;
-        const float DefaultEnvelopeZoom = 4.0f;
-        const float DrawFrameZoom = 0.5f;
+        const float MinZoomFamiStudio       = 1.0f / 32.0f;
+        const float MinZoomOther            = 1.0f / 8.0f;
+        const float MaxZoom                 = 16.0f;
+        const float MinZoomY                = 0.25f;
+        const float MaxZoomY                = 4.0f;
+        const float MaxWaveZoom             = 256.0f;
+        const float DefaultEnvelopeZoom     = 4.0f;
+        const float DrawFrameZoom           = 0.5f;
         const float ContinuousFollowPercent = 0.75f;
-        const float DefaultZoomWaveTime = 0.25f;
+        const float DefaultZoomWaveTime     = 0.25f;
 
         const int NumOctaves = 8;
-        const int NumNotes = NumOctaves * 12;
+        const int NumNotes   = NumOctaves * 12;
 
-        const int DefaultHeaderSizeY = 17;
-        const int DefaultEffectPanelSizeY = 176;
-        const int DefaultEffectButtonSizeY = 18;
-        const int DefaultNoteSizeX = 16;
-        const int DefaultNoteSizeY = 12;
-        const int DefaultNoteAttackSizeX = 3;
-        const int DefaultReleaseNoteSizeY = 8;
-        const int DefaultEnvelopeSizeY = 9;
-        const int DefaultWhiteKeySizeX = IsMobile ? 60 : 94;
-        const int DefaultWhiteKeySizeY = 20;
-        const int DefaultBlackKeySizeX = IsMobile ? 30 : 56;
-        const int DefaultBlackKeySizeY = 14;
-        const int DefaultSnapIconPosX = 3;
-        const int DefaultSnapIconPosY = 3;
-        const int DefaultEffectIconPosX = 2;
-        const int DefaultEffectIconPosY = 2;
-        const int DefaultEffectNamePosX = 17;
-        const int DefaultEffectNamePosY = 2;
-        const int DefaultEffectIconSizeX = 12;
+        const int DefaultHeaderSizeY               = 17;
+        const int DefaultEffectPanelSizeY          = 176;
+        const int DefaultEffectButtonSizeY         = 18;
+        const int DefaultNoteSizeX                 = 16;
+        const int DefaultNoteSizeY                 = 12;
+        const int DefaultNoteAttackSizeX           = 3;
+        const int DefaultReleaseNoteSizeY          = 8;
+        const int DefaultEnvelopeSizeY             = 9;
+        const int DefaultWhiteKeySizeX             = PlatformUtils.IsMobile ? 60 : 94;
+        const int DefaultWhiteKeySizeY             = 20;
+        const int DefaultBlackKeySizeX             = PlatformUtils.IsMobile ? 30 : 56;
+        const int DefaultBlackKeySizeY             = 14;
+        const int DefaultSnapIconPosX              = 3;
+        const int DefaultSnapIconPosY              = 3;
+        const int DefaultEffectIconPosX            = 2;
+        const int DefaultEffectIconPosY            = 2;
+        const int DefaultEffectNamePosX            = 17;
+        const int DefaultEffectNamePosY            = 2;
+        const int DefaultEffectIconSizeX           = 12;
         const int DefaultEffectValuePosTextOffsetY = 12;
         const int DefaultEffectValueNegTextOffsetY = 3;
-        const int DefaultBigTextPosX = 10;
-        const int DefaultBigTextPosY = 10;
-        const int DefaultTooltipTextPosX = 10;
-        const int DefaultTooltipTextPosY = 30;
-        const int DefaultDPCMTextPosX = 2;
-        const int DefaultDPCMTextPosY = 0;
-        const int DefaultDPCMSourceDataPosX = 10;
-        const int DefaultDPCMSourceDataPosY = 38;
-        const int DefaultDPCMInfoSpacingY = 16;
-        const int DefaultOctaveNameOffsetY = 11;
-        const int DefaultRecordingKeyOffsetY = 12;
-        const int DefaultAttackIconPosX = 2;
-        const int DefaultMinNoteSizeForText = 24;
-        const int DefaultWaveGeometrySampleSize = 2;
-        const int DefaultWaveDisplayPaddingY = 8;
-        const int DefaultScrollBarThickness1 = 10;
-        const int DefaultScrollBarThickness2 = 16;
-        const int DefaultMinScrollBarLength = 128;
-        const int DefaultScrollMargin = 128;
-        const int DefaultNoteResizeMargin = 8;
-        const int DefaultHeaderTextPosY = 1;
-        const int DefaultBeatTextPosX = 3;
+        const int DefaultBigTextPosX               = 10;
+        const int DefaultBigTextPosY               = 10;
+        const int DefaultTooltipTextPosX           = 10;
+        const int DefaultTooltipTextPosY           = 30;
+        const int DefaultDPCMTextPosX              = 2;
+        const int DefaultDPCMTextPosY              = 0;
+        const int DefaultDPCMSourceDataPosX        = 10;
+        const int DefaultDPCMSourceDataPosY        = 38;
+        const int DefaultDPCMInfoSpacingY          = 16;
+        const int DefaultOctaveNameOffsetY         = 11;
+        const int DefaultRecordingKeyOffsetY       = 12;
+        const int DefaultAttackIconPosX            = 2;
+        const int DefaultMinNoteSizeForText        = 24;
+        const int DefaultWaveGeometrySampleSize    = 2;
+        const int DefaultWaveDisplayPaddingY       = 8;
+        const int DefaultScrollBarThickness1       = 10;
+        const int DefaultScrollBarThickness2       = 16;
+        const int DefaultMinScrollBarLength        = 128;
+        const int DefaultScrollMargin              = 128;
+        const int DefaultNoteResizeMargin          = 8;
+        const int DefaultHeaderTextPosY            = 1;
+        const int DefaultBeatTextPosX              = 3;
 
         int headerSizeY;
         int headerAndEffectSizeY;
         int effectPanelSizeY;
         int effectButtonSizeY;
-        int noteSizeY;
         int noteAttackSizeX;
         int releaseNoteSizeY;
         int whiteKeySizeY;
@@ -117,10 +118,12 @@ namespace FamiStudio
         int noteResizeMargin;
         int headerTextPosY;
         int beatTextPosX;
+        int geometryNoteSizeY;
         float minZoom;
         float maxZoom;
         float envelopeSizeY;
         float noteSizeX;
+        int noteSizeY;
 
         enum EditionMode
         {
@@ -262,7 +265,9 @@ namespace FamiStudio
             ResizeNoteEnd,
             ResizeSelectionNoteEnd,
             MoveNoteRelease,
-            MobileZoom
+            MobileZoom,
+            MobileZoomVertical,
+            MobilePan
         }
 
         static readonly bool[] captureNeedsThreshold = new[]
@@ -295,6 +300,8 @@ namespace FamiStudio
             false, // ResizeSelectionNoteEnd
             false, // MoveNoteRelease
             false, // MobileZoom
+            false, // MobileZoomVertical
+            false, // MobilePan
         };
 
         static readonly bool[] captureWantsRealTimeUpdate = new[]
@@ -327,6 +334,8 @@ namespace FamiStudio
             true,  // ResizeSelectionNoteEnd
             false, // MoveNoteRelease
             false, // MobileZoom
+            false, // MobileZoomVertical
+            false, // MobilePan
         };
 
         NoteLocation hoverNoteLocation = NoteLocation.Invalid;
@@ -370,9 +379,9 @@ namespace FamiStudio
         int scrollX = 0;
         int scrollY = 0;
         float zoom = 1.0f;
+        float zoomY = 1.0f;
+        float pianoScaleX = 1.0f; // Only used by video export.
         int selectedEffectIdx = 0;
-        float videoScaleX = 1.0f;
-        float videoScaleY = 1.0f;
         string noteTooltip = "";
 
         EditionMode editMode = EditionMode.None;
@@ -450,7 +459,7 @@ namespace FamiStudio
             var headerScale = editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM || editMode == EditionMode.None ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2);
             var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
 
-            minZoom = MinZoomFamiStudio; // MATTT MinZoomOther; // editMode == EditionMode.Channel && Song != null && Song.UsesFamiStudioTempo ? MinZoomFamiStudio : MinZoomOther;
+            minZoom = MinZoomOther; // editMode == EditionMode.Channel && Song != null && Song.UsesFamiStudioTempo ? MinZoomFamiStudio : MinZoomOther;
             maxZoom = editMode == EditionMode.DPCM ? MaxWaveZoom : MaxZoom;
             zoom    = Utils.Clamp(zoom, minZoom, maxZoom);
 
@@ -458,13 +467,13 @@ namespace FamiStudio
             effectPanelSizeY          = ScaleForMainWindow(DefaultEffectPanelSizeY);
             effectButtonSizeY         = ScaleForMainWindow(DefaultEffectButtonSizeY);
             noteSizeX                 = ScaleForMainWindowFloat(DefaultNoteSizeX * zoom);
-            noteSizeY                 = ScaleForMainWindow(DefaultNoteSizeY * videoScaleY);
+            noteSizeY                 = ScaleForMainWindow(DefaultNoteSizeY * zoomY);
             noteAttackSizeX           = ScaleForMainWindow(DefaultNoteAttackSizeX);
-            releaseNoteSizeY          = ScaleForMainWindow(DefaultReleaseNoteSizeY * videoScaleY) & 0xfe; // Keep even
-            whiteKeySizeY             = ScaleForMainWindow(DefaultWhiteKeySizeY * videoScaleY);
-            whiteKeySizeX             = ScaleForMainWindow(DefaultWhiteKeySizeX * videoScaleX);
-            blackKeySizeY             = ScaleForMainWindow(DefaultBlackKeySizeY * videoScaleY);
-            blackKeySizeX             = ScaleForMainWindow(DefaultBlackKeySizeX * videoScaleX);
+            releaseNoteSizeY          = ScaleForMainWindow(DefaultReleaseNoteSizeY * zoomY) & 0xfe; // Keep even
+            whiteKeySizeY             = ScaleForMainWindow(DefaultWhiteKeySizeY * zoomY);
+            whiteKeySizeX             = ScaleForMainWindow(DefaultWhiteKeySizeX * pianoScaleX);
+            blackKeySizeY             = ScaleForMainWindow(DefaultBlackKeySizeY * zoomY);
+            blackKeySizeX             = ScaleForMainWindow(DefaultBlackKeySizeX * pianoScaleX);
             effectIconPosX            = ScaleForMainWindow(DefaultEffectIconPosX);
             effectIconPosY            = ScaleForMainWindow(DefaultEffectIconPosY);
             headerIconsPosX           = ScaleForMainWindow(DefaultSnapIconPosX);
@@ -603,8 +612,8 @@ namespace FamiStudio
             editMode = EditionMode.VideoRecording;
             videoSong = song;
             zoom = videoZoom;
-            videoScaleX = pianoRollScaleX;
-            videoScaleY = pianoRollScaleY;
+            pianoScaleX = pianoRollScaleX;
+            zoomY = pianoRollScaleY;
 
             UpdateRenderCoords();
             OnRenderInitialized(g);
@@ -831,6 +840,72 @@ namespace FamiStudio
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
             bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
 
+            seekGeometry = g.CreateGeometry(new float[,]
+            {
+                { -headerSizeY / 2, 1 },
+                { 0, headerSizeY - 2 },
+                { headerSizeY / 2, 1 }
+            }, true);
+
+            sampleGeometry = g.CreateGeometry(new float[,]
+            {
+                { -waveGeometrySampleSize, -waveGeometrySampleSize },
+                {  waveGeometrySampleSize, -waveGeometrySampleSize },
+                {  waveGeometrySampleSize,  waveGeometrySampleSize },
+                { -waveGeometrySampleSize,  waveGeometrySampleSize }
+            }, true);
+
+            ConditionalUpdateNoteGeometries(g);
+        }
+
+        protected override void OnRenderTerminated()
+        {
+            Utils.DisposeAndNullify(ref whiteKeyBrush);
+            Utils.DisposeAndNullify(ref blackKeyBrush);
+            Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
+            Utils.DisposeAndNullify(ref blackKeyPressedBrush);
+            Utils.DisposeAndNullify(ref frameLineBrush);
+            Utils.DisposeAndNullify(ref debugBrush);
+            Utils.DisposeAndNullify(ref seekBarBrush);
+            Utils.DisposeAndNullify(ref seekBarRecBrush);
+            Utils.DisposeAndNullify(ref selectionBgVisibleBrush);
+            Utils.DisposeAndNullify(ref selectionBgInvisibleBrush);
+            Utils.DisposeAndNullify(ref selectionNoteBrush);
+            Utils.DisposeAndNullify(ref hoverNoteBrush);
+            Utils.DisposeAndNullify(ref attackBrush);
+            Utils.DisposeAndNullify(ref iconTransparentBrush);
+            Utils.DisposeAndNullify(ref invalidDpcmMappingBrush);
+            Utils.DisposeAndNullify(ref volumeSlideBarFillBrush);
+            Utils.DisposeAndNullify(ref bmpMiscAtlas);
+            Utils.DisposeAndNullify(ref bmpSnapResolutionAtlas);
+            Utils.DisposeAndNullify(ref bmpEffectAtlas);
+            Utils.DisposeAndNullify(ref bmpEffectFillAtlas);
+            Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref releaseNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref slideNoteGeometry);
+            Utils.DisposeAndNullify(ref seekGeometry);
+            Utils.DisposeAndNullify(ref sampleGeometry);
+        }
+
+        private void ConditionalUpdateNoteGeometries(RenderGraphics g)
+        {
+            if (geometryNoteSizeY == noteSizeY)
+                return;
+
+            geometryNoteSizeY = noteSizeY;
+
+            Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref releaseNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[0]);
+            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[1]);
+            Utils.DisposeAndNullify(ref slideNoteGeometry);
+            
             stopNoteGeometry[0] = g.CreateGeometry(new float[,]
             {
                 { 0.0f, 0 },
@@ -881,54 +956,6 @@ namespace FamiStudio
                 { 1.0f, 0 },
                 { 1.0f, noteSizeY }
             }, true);
-       
-            seekGeometry = g.CreateGeometry(new float[,]
-            {
-                { -headerSizeY / 2, 1 },
-                { 0, headerSizeY - 2 },
-                { headerSizeY / 2, 1 }
-            }, true);
-
-            sampleGeometry = g.CreateGeometry(new float[,]
-            {
-                { -waveGeometrySampleSize, -waveGeometrySampleSize },
-                {  waveGeometrySampleSize, -waveGeometrySampleSize },
-                {  waveGeometrySampleSize,  waveGeometrySampleSize },
-                { -waveGeometrySampleSize,  waveGeometrySampleSize }
-            }, true);
-        }
-
-        protected override void OnRenderTerminated()
-        {
-            Utils.DisposeAndNullify(ref whiteKeyBrush);
-            Utils.DisposeAndNullify(ref blackKeyBrush);
-            Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
-            Utils.DisposeAndNullify(ref blackKeyPressedBrush);
-            Utils.DisposeAndNullify(ref frameLineBrush);
-            Utils.DisposeAndNullify(ref debugBrush);
-            Utils.DisposeAndNullify(ref seekBarBrush);
-            Utils.DisposeAndNullify(ref seekBarRecBrush);
-            Utils.DisposeAndNullify(ref selectionBgVisibleBrush);
-            Utils.DisposeAndNullify(ref selectionBgInvisibleBrush);
-            Utils.DisposeAndNullify(ref selectionNoteBrush);
-            Utils.DisposeAndNullify(ref hoverNoteBrush);
-            Utils.DisposeAndNullify(ref attackBrush);
-            Utils.DisposeAndNullify(ref iconTransparentBrush);
-            Utils.DisposeAndNullify(ref invalidDpcmMappingBrush);
-            Utils.DisposeAndNullify(ref volumeSlideBarFillBrush);
-            Utils.DisposeAndNullify(ref bmpMiscAtlas);
-            Utils.DisposeAndNullify(ref bmpSnapResolutionAtlas);
-            Utils.DisposeAndNullify(ref bmpEffectAtlas);
-            Utils.DisposeAndNullify(ref bmpEffectFillAtlas);
-            Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref releaseNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[0]);
-            Utils.DisposeAndNullify(ref stopReleaseNoteGeometry[1]);
-            Utils.DisposeAndNullify(ref slideNoteGeometry);
-            Utils.DisposeAndNullify(ref seekGeometry);
-            Utils.DisposeAndNullify(ref sampleGeometry);
         }
 
         private bool IsBlackKey(int key)
@@ -1186,10 +1213,10 @@ namespace FamiStudio
                 var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
 
                 r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, effectIconPosX, effectIconPosY);
-                if (!IsMobile)
+                if (!PlatformUtils.IsMobile)
                     r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1, headerIconsPosY, maximized ? 1.0f : 0.3f);
 
-                if (IsSnappingAllowed && !IsMobile)
+                if (IsSnappingAllowed && !PlatformUtils.IsMobile)
                 {
                     r.cc.DrawBitmapAtlas(bmpMiscAtlas, App.IsRecording ? (int)MiscImageIndices.SnapRed : (int)MiscImageIndices.Snap, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1, headerIconsPosY, IsSnappingEnabled || App.IsRecording ? 1.0f : 0.3f);
                     r.cc.DrawBitmapAtlas(bmpSnapResolutionAtlas, (int)snapResolution, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 3 - 1, headerIconsPosY, IsSnappingEnabled ? 1.0f : 0.3f);
@@ -2881,6 +2908,8 @@ namespace FamiStudio
                 r.maxVisibleWaveTime = GetWaveTimeForPixel(Width - whiteKeySizeX);
             }
 
+            ConditionalUpdateNoteGeometries(g);
+
             // Prepare command list.
             RenderHeader(r);
             RenderEffectList(r);
@@ -4544,8 +4573,7 @@ namespace FamiStudio
         {
             if (y > headerSizeY && x > whiteKeySizeX)
             {
-                panning = true; 
-                CaptureMouse(x, y);
+                StartCaptureOperation(x, y, CaptureOperation.MobilePan);
                 return true;
             }
 
@@ -4584,7 +4612,8 @@ namespace FamiStudio
             ConditionalInvalidate();
             //UpdateCaptureOperation(e, false);
 
-            if (panning)
+            // MATTT : Move to "UpdateCaptureOperation".
+            if (captureOperation == CaptureOperation.MobilePan)
             {
                 DoScroll(x - mouseLastX, y - mouseLastY);
             }
@@ -4606,14 +4635,18 @@ namespace FamiStudio
                 Debug.WriteLine("Oops");
             }
 
+            // TODO : Capture operation.
             switch (phase)
             {
                 case TouchScalePhase.Begin:
-                    panning = false;
-                    StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
+                    panning = false; // MATTT This will not be used on mobile.
+                    StartCaptureOperation(x, y, IsPointInPiano(x, y) ? CaptureOperation.MobileZoomVertical : CaptureOperation.MobileZoom);
                     break;
                 case TouchScalePhase.Scale:
-                    ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
+                    if (captureOperation == CaptureOperation.MobileZoomVertical)
+                        ZoomVerticallyAtLocation(y, scale); // MATTT : Center is stuck at the initial position.
+                    else
+                        ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
                     break;
                 case TouchScalePhase.End:
                     EndCaptureOperation(new MouseEventArgs(MouseButtons.None, 0, x, y, 0)); // MATTT
@@ -6099,7 +6132,7 @@ namespace FamiStudio
             if (continuouslyFollowing)
                 x = (int)(Width * ContinuousFollowPercent);
 
-            Debug.Assert(IsMobile || scale == 0.5f || scale == 2.0f);
+            Debug.Assert(PlatformUtils.IsMobile || scale == 0.5f || scale == 2.0f);
 
             var pixelX = x - whiteKeySizeX;
             var absoluteX = pixelX + scrollX;
@@ -6108,13 +6141,37 @@ namespace FamiStudio
             zoom *= scale;
             zoom = Utils.Clamp(zoom, minZoom, maxZoom);
 
-            Debug.Assert(IsMobile || Utils.Frac(Math.Log(zoom, 2.0)) == 0.0);
+            Debug.Assert(PlatformUtils.IsMobile || Utils.Frac(Math.Log(zoom, 2.0)) == 0.0);
 
             // This will update the noteSizeX.
             UpdateRenderCoords();
 
-            absoluteX = (int)Math.Round(absoluteX * (noteSizeX / prevNoteSizeX));
+            absoluteX = (int)Math.Round(absoluteX * (noteSizeX / (double)prevNoteSizeX));
             scrollX = absoluteX - pixelX;
+
+            ClampScroll();
+            ConditionalInvalidate();
+        }
+
+        private void ZoomVerticallyAtLocation(int y, float scale)
+        {
+            if (scale == 1.0f)
+                return;
+
+            Debug.Assert(PlatformUtils.IsMobile);
+
+            var pixelY = y - headerAndEffectSizeY;
+            var absoluteY = pixelY + scrollY;
+            var prevNoteSizeY = noteSizeY;
+
+            zoomY *= scale;
+            zoomY = Utils.Clamp(zoomY, MinZoomY, MaxZoomY);
+
+            // This will update the noteSizeX.
+            UpdateRenderCoords();
+
+            absoluteY = (int)Math.Round(absoluteY * (noteSizeY / (double)prevNoteSizeY));
+            scrollY = absoluteY - pixelY;
 
             ClampScroll();
             ConditionalInvalidate();

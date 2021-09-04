@@ -331,6 +331,18 @@ namespace FamiStudio
         {
             return (float)Gdk.Display.Default.DefaultScreen.Resolution / 96.0f;
         }
+
+        public const bool IsMobile  = false;
+        public const bool IsAndroid = false;
+        public const bool IsDesktop = true;
+        public const bool IsWindows = false;
+#if FAMISTUDIO_LINUX
+        public const bool IsLinux   = true;
+        public const bool IsMacOS   = false;
+#else
+        public const bool IsLinux   = false;
+        public const bool IsMacOS   = true;
+#endif
     }
 }
 

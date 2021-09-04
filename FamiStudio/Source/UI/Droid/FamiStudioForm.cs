@@ -468,7 +468,6 @@ namespace FamiStudio
         public bool OnScale(ScaleGestureDetector detector)
         {
             Debug.WriteLine($"{c++} OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
-            // MATTT : Not right, must "capture" the pointer when scale begins and keep feeding to the captured control.
             GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.Scale);
             return true;
         }
