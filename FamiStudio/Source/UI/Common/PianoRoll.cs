@@ -64,7 +64,7 @@ namespace FamiStudio
         const int DefaultDPCMInfoSpacingY          = 16;
         const int DefaultOctaveNameOffsetY         = 11;
         const int DefaultRecordingKeyOffsetY       = 12;
-        const int DefaultAttackIconPosX            = 2;
+        const int DefaultAttackIconPosX            = 1;
         const int DefaultMinNoteSizeForText        = 24;
         const int DefaultWaveGeometrySampleSize    = 2;
         const int DefaultWaveDisplayPaddingY       = 8;
@@ -2445,7 +2445,7 @@ namespace FamiStudio
             r.cf.PushTranslation(x, y);
 
             int sx = GetPixelForNote(noteLen, false);
-            int noteTextPosX = attackIconPosX;
+            int noteTextPosX = attackIconPosX + 1;
 
             if (!outline)
                 r.cf.FillRectangle(0, 0, sx, sy, r.g.GetVerticalGradientBrush(color, sy, 0.8f));
@@ -2456,15 +2456,15 @@ namespace FamiStudio
             {
                 if (activeChannel)
                 {
-                    if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + attackIconPosX * 2)
+                    if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + attackIconPosX * 2 + 2)
                     {
-                        r.cf.FillRectangle(attackIconPosX, attackIconPosX, attackIconPosX + noteAttackSizeX, sy - attackIconPosX + 1, attackBrush);
-                        noteTextPosX += noteAttackSizeX + attackIconPosX;
+                        r.cf.FillRectangle(attackIconPosX + 1, attackIconPosX + 1, attackIconPosX + noteAttackSizeX + 1, sy - attackIconPosX, attackBrush);
+                        noteTextPosX += noteAttackSizeX + attackIconPosX + 2;
                     }
 
-                    if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && sx > minNoteSizeForText)
+                    if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && sx > minNoteSizeForText && ThemeResources.FontSmall.Size < noteSizeY)
                     {
-                        r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, noteTextPosY, ThemeResources.BlackBrush);
+                        r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, noteSizeY - 1);
                     }
                 }
 

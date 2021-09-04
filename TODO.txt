@@ -70,6 +70,7 @@ Controls:
 - Weird osc behavior low frequency
 - Export intro-only is broken?
 - Crash when adding note to last note of pattern #256
+- Bring back fonts for 150%...
 
 Misc:
 - Remove as much .resx, Designer shit as possible.
