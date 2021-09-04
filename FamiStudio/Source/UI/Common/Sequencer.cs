@@ -228,6 +228,24 @@ namespace FamiStudio
             }
         }
 
+        private int GetPixelForNote(int n, bool scroll = true)
+        {
+            // On PC, all math noteSizeX are always integer, but on mobile, they 
+            // can be float. We need to cast into double since at the maximum zoom,
+            // in a *very* long song, we are hitting the precision limit of floats.
+            var x = (int)(n * (double)noteSizeX);
+            if (scroll)
+                x -= scrollX;
+            return x;
+        }
+
+        private int GetNoteForPixel(int x, bool scroll = true)
+        {
+            if (scroll)
+                x += scrollX;
+            return (int)(x / (double)noteSizeX);
+        }
+
         private int GetChannelCount()
         {
             return App?.Project != null ? App.Project.Songs[0].Channels.Length : 5;
@@ -447,9 +465,9 @@ namespace FamiStudio
             var cb = g.CreateCommandList(); // Background stuff
             var cf = g.CreateCommandList(); // Foreground stuff
 
-            var seekX = noteSizeX * GetSeekFrameToDraw() - scrollX;
-            var minVisibleNoteIdx = Math.Max((int)Math.Floor(scrollX / noteSizeX), 0);
-            var maxVisibleNoteIdx = Math.Min((int)Math.Ceiling((scrollX + Width) / noteSizeX), Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
+            var seekX = GetPixelForNote(GetSeekFrameToDraw());
+            var minVisibleNoteIdx = Math.Max(GetNoteForPixel(0), 0);
+            var maxVisibleNoteIdx = Math.Min(GetNoteForPixel(Width) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
             var minVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(minVisibleNoteIdx) + 0, 0, Song.Length);
             var maxVisiblePattern = Utils.Clamp(Song.PatternIndexFromAbsoluteNoteIndex(maxVisibleNoteIdx) + 1, 0, Song.Length);
             var actualSizeY = Height - scrollBarThickness;
@@ -461,8 +479,8 @@ namespace FamiStudio
             {
                 if ((i & 1) == 0)
                 {
-                    var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) - scrollX;
-                    var sx = (int)(Song.GetPatternLength(i) * noteSizeX);
+                    var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
+                    var sx = GetPixelForNote(Song.GetPatternLength(i), false);
                     cb.FillRectangle(px, 0, px + sx, Height, ThemeResources.DarkGreyFillBrush1);
                 }
             }
@@ -470,15 +488,15 @@ namespace FamiStudio
             if (IsSelectionValid())
             {
                 cb.FillRectangle(
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length)) * noteSizeX) - scrollX, trackSizeY * (minSelectedChannelIdx + 0) + headerSizeY,
-                    (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length)) * noteSizeX) - scrollX, trackSizeY * (maxSelectedChannelIdx + 1) + headerSizeY,
+                    GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length))), trackSizeY * (minSelectedChannelIdx + 0) + headerSizeY,
+                    GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length))), trackSizeY * (maxSelectedChannelIdx + 1) + headerSizeY,
                     showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
 
                 if (IsValidTimeOnlySelection())
                 {
                     cb.FillRectangle(
-                        (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length)) * noteSizeX) - scrollX, 0,
-                        (int)(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length)) * noteSizeX) - scrollX, headerSizeY,
+                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(minSelectedPatternIdx + 0, Song.Length))), 0,
+                        GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(maxSelectedPatternIdx + 1, Song.Length))), headerSizeY,
                         showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
                 }
             }
@@ -492,7 +510,7 @@ namespace FamiStudio
             {
                 if (i != 0)
                 {
-                    var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) - scrollX;
+                    var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
                     cb.DrawLine(px, 0, px, actualSizeY, ThemeResources.BlackBrush);
                 }
             }
@@ -509,8 +527,8 @@ namespace FamiStudio
             {
                 var patternLen = Song.GetPatternLength(i);
                 var noteLen = Song.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(i);
-                var px = (int)(Song.GetPatternStartAbsoluteNoteIndex(i) * noteSizeX) - scrollX;
-                var sx = (int)(patternLen * noteSizeX);
+                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
+                var sx = GetPixelForNote(patternLen, false);
 
                 cf.PushTranslation(px, 0);
 
@@ -554,8 +572,8 @@ namespace FamiStudio
             // MATTT : This doesnt work with the new rendering code.
             if (captureOperation == CaptureOperation.DragSelection)
             {
-                var pt = this.PointToClient(Cursor.Position);
-                var noteIdx = (int)((pt.X - trackNameSizeX + scrollX) / noteSizeX);
+                var pt = PointToClient(Cursor.Position);
+                var noteIdx = GetNoteForPixel(pt.X - trackNameSizeX);
 
                 if (noteIdx >= 0 && noteIdx < Song.GetPatternStartAbsoluteNoteIndex(Song.Length))
                 {
@@ -576,7 +594,7 @@ namespace FamiStudio
                         var y = j * trackSizeY;
 
                         // Center.
-                        var patternSizeX = Song.GetPatternLength(patternIdx) * noteSizeX;
+                        var patternSizeX = GetPixelForNote(Song.GetPatternLength(patternIdx), false);
                         var anchorOffsetLeftX = patternSizeX * selectionDragAnchorPatternXFraction;
                         var anchorOffsetRightX = patternSizeX * (1.0f - selectionDragAnchorPatternXFraction);
 
@@ -598,7 +616,7 @@ namespace FamiStudio
                         // Left side
                         for (int p = patternIdx - 1; p >= minSelectedPatternIdx + patternIdxDelta && p >= 0; p--)
                         {
-                            patternSizeX = Song.GetPatternLength(p) * noteSizeX;
+                            patternSizeX = GetPixelForNote(Song.GetPatternLength(p), false);
                             anchorOffsetLeftX += patternSizeX;
 
                             cf.FillAndDrawRectangle(-anchorOffsetLeftX, 0, -anchorOffsetLeftX + patternSizeX, trackSizeY, selectedPatternVisibleBrush, ThemeResources.BlackBrush);
@@ -610,7 +628,7 @@ namespace FamiStudio
                         // Right side
                         for (int p = patternIdx + 1; p <= maxSelectedPatternIdx + patternIdxDelta && p < Song.Length; p++)
                         {
-                            patternSizeX = Song.GetPatternLength(p) * noteSizeX;
+                            patternSizeX = GetPixelForNote(Song.GetPatternLength(p), false);
 
                             cf.FillAndDrawRectangle(anchorOffsetRightX, 0, anchorOffsetRightX + patternSizeX, trackSizeY, selectedPatternVisibleBrush, ThemeResources.BlackBrush);
 
@@ -630,8 +648,8 @@ namespace FamiStudio
             {
                 App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
 
-                cf.PushTranslation(pianoRollMinNoteIdx * noteSizeX - scrollX + trackNameSizeX, pianoRollChannelIndex * trackSizeY + headerSizeY);
-                cf.DrawRectangle(1, patternHeaderSizeY + 1, (pianoRollMaxNoteIdx - pianoRollMinNoteIdx) * noteSizeX - 1, trackSizeY - 1, ThemeResources.LightGreyFillBrush2);
+                cf.PushTranslation(GetPixelForNote(pianoRollMinNoteIdx) + trackNameSizeX, pianoRollChannelIndex * trackSizeY + headerSizeY);
+                cf.DrawRectangle(1, patternHeaderSizeY + 1, GetPixelForNote(pianoRollMaxNoteIdx - pianoRollMinNoteIdx, false) - 1, trackSizeY - 1, ThemeResources.LightGreyFillBrush2);
                 cf.PopTransform();
             }
 
@@ -712,7 +730,7 @@ namespace FamiStudio
         private void GetMinMaxScroll(out int minScrollX, out int maxScrollX)
         {
             minScrollX = 0;
-            maxScrollX = Math.Max((int)(Song.GetPatternStartAbsoluteNoteIndex(Song.Length) * noteSizeX) - scrollMargin, 0);
+            maxScrollX = Math.Max(GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Song.Length), false) - scrollMargin, 0);
         }
 
         private void ClampScroll()
@@ -733,7 +751,7 @@ namespace FamiStudio
 
         private bool GetPatternForCoord(int x, int y, out int channelIdx, out int patternIdx, out bool inPatternHeader)
         {
-            var noteIdx = (int)((x - trackNameSizeX + scrollX) / noteSizeX);
+            var noteIdx = GetNoteForPixel(x - trackNameSizeX);
 
             if (noteIdx < 0 || noteIdx >= Song.GetPatternStartAbsoluteNoteIndex(Song.Length))
             {
@@ -752,7 +770,7 @@ namespace FamiStudio
 
         private void GetClampedPatternForCoord(int x, int y, out int channelIdx, out int patternIdx)
         {
-            patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(Utils.Clamp((int)((x - trackNameSizeX + scrollX) / noteSizeX), 0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1));
+            patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(Utils.Clamp(GetNoteForPixel(x - trackNameSizeX), 0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1));
             channelIdx = Utils.Clamp((y - headerSizeY) / trackSizeY, 0, Song.Channels.Length - 1);
         }
 
@@ -994,7 +1012,7 @@ namespace FamiStudio
                         }
 
                         selectionDragAnchorPatternIdx = patternIdx;
-                        selectionDragAnchorPatternXFraction = (e.X - trackNameSizeX + scrollX - (int)(Song.GetPatternStartAbsoluteNoteIndex(patternIdx) * noteSizeX)) / (Song.GetPatternLength(patternIdx) * noteSizeX);
+                        selectionDragAnchorPatternXFraction = (e.X - trackNameSizeX + scrollX - GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(patternIdx), false)) / (float)GetPixelForNote(Song.GetPatternLength(patternIdx), false);
                         StartCaptureOperation(e, CaptureOperation.DragSelection);
 
                         ConditionalInvalidate();
@@ -1292,11 +1310,11 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var noteIdx = (int)((e.X - trackNameSizeX + scrollX) / noteSizeX);
+                    var noteIdx = GetNoteForPixel(e.X - trackNameSizeX);
 
                     if (noteIdx >= 0 && noteIdx < Song.GetPatternStartAbsoluteNoteIndex(Song.Length))
                     {
-                        var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex((int)((e.X - trackNameSizeX + scrollX) / noteSizeX));
+                        var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(GetNoteForPixel(e.X - trackNameSizeX));
                         var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
                         var tmpPatterns = GetSelectedPatterns(out var customSettings);
 
@@ -1546,7 +1564,7 @@ namespace FamiStudio
 
         private void UpdateSeekDrag(int mouseX, bool final)
         {
-            dragSeekPosition = (int)Math.Round((mouseX - trackNameSizeX + scrollX) / (float)noteSizeX);
+            dragSeekPosition = GetNoteForPixel(mouseX - trackNameSizeX);
 
             if (final)
                 App.SeekSong(dragSeekPosition);
@@ -2009,7 +2027,7 @@ namespace FamiStudio
 
         protected bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
         {
-            var seekX = (int)Math.Round(noteSizeX * App.CurrentFrame - scrollX);
+            var seekX = GetPixelForNote(App.CurrentFrame);
             var minX = 0;
             var maxX = (int)((Width * percent) - trackNameSizeX);
 
@@ -2021,7 +2039,7 @@ namespace FamiStudio
 
             ClampScroll();
 
-            seekX = (int)Math.Round(noteSizeX * App.CurrentFrame - scrollX);
+            seekX = GetPixelForNote(App.CurrentFrame);
             return seekX == maxX;
         }
 
@@ -2032,13 +2050,13 @@ namespace FamiStudio
             if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncPianoRoll && !panning && captureOperation == CaptureOperation.None)
             {
                 var frame = App.CurrentFrame;
-                var seekX = (int)Math.Round(noteSizeX * App.CurrentFrame - scrollX);
+                var seekX = GetPixelForNote(App.CurrentFrame);
 
                 if (Settings.FollowMode == Settings.FollowModeJump)
                 {
                     var maxX = Width - trackNameSizeX;
                     if (seekX < 0 || seekX > maxX)
-                        scrollX = (int)Math.Round(frame * noteSizeX);
+                        scrollX = GetPixelForNote(frame, false);
                 }
                 else
                 {
