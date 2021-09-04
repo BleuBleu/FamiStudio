@@ -1317,8 +1317,8 @@ namespace FamiStudio
                         r.cp.DrawLine(0, y, whiteKeySizeX, y, ThemeResources.BlackBrush);
                 }
 
-                if (editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping)
-                    r.cp.DrawText("C" + i, ThemeResources.FontSmall, 1, octaveBaseY - octaveNameOffsetY, ThemeResources.BlackBrush);
+                if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping) && ThemeResources.FontSmall.Size < noteSizeY)
+                    r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseY - noteSizeY + 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, whiteKeySizeX - r.g.WindowScaling * 2, noteSizeY - 1);
             }
 
             if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled))
@@ -1354,7 +1354,7 @@ namespace FamiStudio
                     else
                         brush = IsBlackKey(i % 12) ? ThemeResources.LightGreyFillBrush2 : ThemeResources.BlackBrush;
 
-                    r.cp.DrawText(keyStrings[i], ThemeResources.FontVerySmall, 0, y - recordingKeyOffsetY + MainWindowScaling * 2, brush, RenderTextFlags.Center, blackKeySizeX);
+                    r.cp.DrawText(keyStrings[i], ThemeResources.FontVerySmall, 0, y - recordingKeyOffsetY + 1, brush, RenderTextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
                 }
             }
 
