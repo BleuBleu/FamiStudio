@@ -122,10 +122,8 @@ namespace FamiStudio
             gl.GlTexSubImage2D(GLES11.GlTexture2d, 0, x, y, width, height, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
         }
 
-        protected override int CreateEmptyTexture(int width, int height)
+        protected override int CreateEmptyTexture(int width, int height, bool filter = false)
         {
-            bool filter = true; // DROIDTODO : No filter on pattern cache or text.
-
             var id = new int[1];
             gl.GlGenTextures(1, id, 0);
             gl.GlBindTexture(GLES11.GlTexture2d, id[0]);
@@ -227,7 +225,7 @@ namespace FamiStudio
             var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
             var atlasSizeX = elementsPerRow * elementSizeX;
             var atlasSizeY = numRows * elementSizeY;
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true);
             var elementRects = new Rectangle[names.Length];
 
             gl.GlBindTexture(GLES11.GlTexture2d, textureId);

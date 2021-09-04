@@ -75,7 +75,7 @@ namespace FamiStudio
             GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, data);
         }
 
-        protected override int CreateEmptyTexture(int width, int height)
+        protected override int CreateEmptyTexture(int width, int height, bool filter = false)
         {
             int id = GL.GenTexture();
 

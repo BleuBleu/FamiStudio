@@ -67,7 +67,7 @@ namespace FamiStudio
         protected List<int[]>   freeColArrays = new List<int[]>();
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
-        protected abstract int CreateEmptyTexture(int width, int height);
+        protected abstract int CreateEmptyTexture(int width, int height, bool filter = false);
         protected abstract int CreateTexture(Bitmap bmp);
         public abstract void DrawCommandList(GLCommandList list, Rectangle scissor);
 
