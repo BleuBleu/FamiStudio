@@ -49,7 +49,6 @@ namespace FamiStudio
         const int DefaultEffectIconPosX            = 2;
         const int DefaultEffectIconPosY            = 2;
         const int DefaultEffectNamePosX            = 17;
-        const int DefaultEffectNamePosY            = 2;
         const int DefaultEffectIconSizeX           = 12;
         const int DefaultEffectValuePosTextOffsetY = 12;
         const int DefaultEffectValueNegTextOffsetY = 3;
@@ -59,10 +58,8 @@ namespace FamiStudio
         const int DefaultTooltipTextPosY           = 30;
         const int DefaultDPCMTextPosX              = 2;
         const int DefaultDPCMTextPosY              = 0;
-        const int DefaultDPCMSourceDataPosX        = 10;
         const int DefaultDPCMSourceDataPosY        = 38;
         const int DefaultDPCMInfoSpacingY          = 16;
-        const int DefaultOctaveNameOffsetY         = 11;
         const int DefaultRecordingKeyOffsetY       = 12;
         const int DefaultAttackIconPosX            = 1;
         const int DefaultMinNoteSizeForText        = 24;
@@ -73,7 +70,6 @@ namespace FamiStudio
         const int DefaultMinScrollBarLength        = 128;
         const int DefaultScrollMargin              = 128;
         const int DefaultNoteResizeMargin          = 8;
-        const int DefaultHeaderTextPosY            = 1;
         const int DefaultBeatTextPosX              = 3;
 
         int headerSizeY;
@@ -91,7 +87,6 @@ namespace FamiStudio
         int headerIconsPosX;
         int headerIconsPosY;
         int effectNamePosX;
-        int effectNamePosY;
         int effectIconSizeX;
         int effectValuePosTextOffsetY;
         int effectValueNegTextOffsetY;
@@ -103,20 +98,17 @@ namespace FamiStudio
         int dpcmTextPosY;
         int dpcmSourceDataPosY;
         int dpcmInfoSpacingY;
-        int octaveNameOffsetY;
         int recordingKeyOffsetY;
         int octaveSizeY;
         int virtualSizeY;
         int scrollBarThickness;
         int minScrollBarLength;
         int attackIconPosX;
-        int noteTextPosY;
         int minNoteSizeForText;
         int waveGeometrySampleSize;
         int waveDisplayPaddingY;
         int scrollMargin;
         int noteResizeMargin;
-        int headerTextPosY;
         int beatTextPosX;
         int geometryNoteSizeY;
         float minZoom;
@@ -124,6 +116,9 @@ namespace FamiStudio
         float envelopeSizeY;
         float noteSizeX;
         int noteSizeY;
+
+        float effectBitmapScale = 1.0f;
+        float bitmapScale = 1.0f;
 
         enum EditionMode
         {
@@ -458,14 +453,14 @@ namespace FamiStudio
         {
             var headerScale = editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM || editMode == EditionMode.None ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2);
             var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
+            var effectIconsScale = PlatformUtils.IsMobile ? 0.5f : 1.0f;
 
             minZoom = editMode == EditionMode.Channel && Song != null && Song.UsesFamiStudioTempo ? MinZoomFamiStudio : MinZoomOther;
             maxZoom = editMode == EditionMode.DPCM ? MaxWaveZoom : MaxZoom;
             zoom    = Utils.Clamp(zoom, minZoom, maxZoom);
 
             headerSizeY               = ScaleForMainWindow(DefaultHeaderSizeY * headerScale);
-            effectPanelSizeY          = ScaleForMainWindow(DefaultEffectPanelSizeY);
-            effectButtonSizeY         = ScaleForMainWindow(DefaultEffectButtonSizeY);
+            effectButtonSizeY         = ScaleForMainWindow(DefaultEffectButtonSizeY * effectIconsScale);
             noteSizeX                 = ScaleForMainWindowFloat(DefaultNoteSizeX * zoom);
             noteSizeY                 = ScaleForMainWindow(DefaultNoteSizeY * zoomY);
             noteAttackSizeX           = ScaleForMainWindow(DefaultNoteAttackSizeX);
@@ -474,13 +469,11 @@ namespace FamiStudio
             whiteKeySizeX             = ScaleForMainWindow(DefaultWhiteKeySizeX * pianoScaleX);
             blackKeySizeY             = ScaleForMainWindow(DefaultBlackKeySizeY * zoomY);
             blackKeySizeX             = ScaleForMainWindow(DefaultBlackKeySizeX * pianoScaleX);
-            effectIconPosX            = ScaleForMainWindow(DefaultEffectIconPosX);
-            effectIconPosY            = ScaleForMainWindow(DefaultEffectIconPosY);
+            effectIconPosX            = ScaleForMainWindow(DefaultEffectIconPosX * effectIconsScale);
+            effectIconPosY            = ScaleForMainWindow(DefaultEffectIconPosY * effectIconsScale);
             headerIconsPosX           = ScaleForMainWindow(DefaultSnapIconPosX);
             headerIconsPosY           = ScaleForMainWindow(DefaultSnapIconPosY);
-            effectNamePosX            = ScaleForMainWindow(DefaultEffectNamePosX);
-            effectNamePosY            = ScaleForMainWindow(DefaultEffectNamePosY);
-            headerTextPosY            = ScaleForMainWindow(DefaultHeaderTextPosY);
+            effectNamePosX            = ScaleForMainWindow(DefaultEffectNamePosX * effectIconsScale);
             beatTextPosX              = ScaleForMainWindow(DefaultBeatTextPosX);
             effectIconSizeX           = ScaleForMainWindow(DefaultEffectIconSizeX);
             effectValuePosTextOffsetY = ScaleForMainWindow(DefaultEffectValuePosTextOffsetY);
@@ -493,7 +486,6 @@ namespace FamiStudio
             dpcmTextPosY              = ScaleForMainWindow(DefaultDPCMTextPosY);
             dpcmSourceDataPosY        = ScaleForMainWindow(DefaultDPCMSourceDataPosY);
             dpcmInfoSpacingY          = ScaleForMainWindow(DefaultDPCMInfoSpacingY);
-            octaveNameOffsetY         = ScaleForMainWindow(DefaultOctaveNameOffsetY);
             recordingKeyOffsetY       = ScaleForMainWindow(DefaultRecordingKeyOffsetY);
             attackIconPosX            = ScaleForMainWindow(DefaultAttackIconPosX);
             minNoteSizeForText        = ScaleForMainWindow(DefaultMinNoteSizeForText);
@@ -505,9 +497,14 @@ namespace FamiStudio
             noteResizeMargin          = ScaleForMainWindow(DefaultNoteResizeMargin);
             envelopeSizeY             = ScaleForMainWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
 
+            //// Make sure the effect panel actually fit on screen on mobile.
+            if (PlatformUtils.IsMobile && ParentForm != null)
+                effectPanelSizeY = Math.Min(ParentFormSize.Height / 2, ScaleForMainWindow(DefaultEffectPanelSizeY));
+            else
+                effectPanelSizeY = ScaleForMainWindow(DefaultEffectPanelSizeY);
+
             octaveSizeY               = 12 * noteSizeY;
             headerAndEffectSizeY      = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
-            noteTextPosY              = MainWindowScaling > 1 ? 0 : 1; // Pretty hacky.
             virtualSizeY              = NumNotes * noteSizeY;
         }
 
@@ -840,6 +837,12 @@ namespace FamiStudio
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
             bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
 
+            if (PlatformUtils.IsMobile)
+            {
+                bitmapScale = g.WindowScaling * 0.5f;
+                effectBitmapScale = g.WindowScaling * 0.25f;
+            }
+
             seekGeometry = g.CreateGeometry(new float[,]
             {
                 { -headerSizeY / 2, 1 },
@@ -1105,7 +1108,7 @@ namespace FamiStudio
                     if (x != 0)
                         r.ch.DrawLine(x, 0, x, headerSizeY / 2, ThemeResources.BlackBrush, 1.0f);
                     if (zoom >= 2.0f && n != env.Length)
-                        r.ch.DrawText(n.ToString(), ThemeResources.FontMedium, x, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
+                        r.ch.DrawText(n.ToString(), ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
                 }
 
                 r.ch.DrawLine(0, headerSizeY / 2 - 1, Width, headerSizeY / 2 - 1, ThemeResources.BlackBrush);
@@ -1147,15 +1150,15 @@ namespace FamiStudio
                     {
                         var numBeats = (int)Math.Ceiling(patternLen / (float)beatLen);
                         for (int i = 0; i < numBeats; i++)
-                            r.ch.DrawText($"{p + 1}.{i + 1}", ThemeResources.FontMedium, px + beatTextPosX + beatSizeX * i, headerTextPosY, ThemeResources.LightGreyFillBrush1);
+                            r.ch.DrawText($"{p + 1}.{i + 1}", ThemeResources.FontMedium, px + beatTextPosX + beatSizeX * i, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Middle, 0, headerSizeY / 2 - 1);
                     }
                     else
                     {
-                        r.ch.DrawText(p.ToString(), ThemeResources.FontMedium, px, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, sx);
+                        r.ch.DrawText((p + 1).ToString(), ThemeResources.FontMedium, px, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, sx, headerSizeY / 2 - 1);
                     }
 
                     if (pattern != null)
-                        r.ch.DrawText(pattern.Name, ThemeResources.FontMedium, px, headerTextPosY + headerSizeY / 2, ThemeResources.BlackBrush, RenderTextFlags.Center, sx);
+                        r.ch.DrawText(pattern.Name, ThemeResources.FontMedium, px, headerSizeY / 2, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sx, headerSizeY / 2 - 1);
                 }
 
                 int maxX = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern));
@@ -1175,7 +1178,7 @@ namespace FamiStudio
                 ForEachWaveTimecode(r, (time, x, level, idx) =>
                 {
                     if (time != 0.0f)
-                        r.ch.DrawText(time.ToString($"F{level + 1}"), ThemeResources.FontMedium, x - 100, headerTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, 200);
+                        r.ch.DrawText(time.ToString($"F{level + 1}"), ThemeResources.FontMedium, x - 100, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, 200, headerSizeY - 1);
                 });
 
                 // Processed Range
@@ -1212,7 +1215,7 @@ namespace FamiStudio
             {
                 var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
 
-                r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, effectIconPosX, effectIconPosY);
+                r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, effectIconPosX, effectIconPosY, 1.0f, bitmapScale);
                 if (!PlatformUtils.IsMobile)
                     r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1, headerIconsPosY, maximized ? 1.0f : 0.3f);
 
@@ -1234,8 +1237,8 @@ namespace FamiStudio
 
                         r.cc.PushTranslation(0, effectButtonY);
                         r.cc.DrawLine(0, -1, whiteKeySizeX, -1, ThemeResources.BlackBrush);
-                        r.cc.DrawBitmapAtlas(bmpEffectAtlas, effectIdx, effectIconPosX, effectIconPosY);
-                        r.cc.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeResources.FontSmallBold : ThemeResources.FontSmall, effectNamePosX, effectNamePosY, ThemeResources.LightGreyFillBrush2);
+                        r.cc.DrawBitmapAtlas(bmpEffectAtlas, effectIdx, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale);
+                        r.cc.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeResources.FontSmallBold : ThemeResources.FontSmall, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, effectButtonSizeY);
                         r.cc.PopTransform();
                     }
 
@@ -1254,7 +1257,7 @@ namespace FamiStudio
                     r.cc.PushTranslation(0, headerSizeY);
                     r.cc.DrawLine(0, -1, whiteKeySizeX, -1, ThemeResources.BlackBrush);
                     r.cc.DrawBitmapAtlas(bmpEffectAtlas, Note.EffectVolume, effectIconPosX, effectIconPosY);
-                    r.cc.DrawText(Note.EffectNames[Note.EffectVolume], ThemeResources.FontSmallBold, effectNamePosX, effectNamePosY, ThemeResources.LightGreyFillBrush2);
+                    r.cc.DrawText(Note.EffectNames[Note.EffectVolume], ThemeResources.FontSmallBold, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, effectButtonSizeY);
                     r.cc.PopTransform();
 
                     r.cc.PushTranslation(0, effectButtonSizeY);
@@ -4591,7 +4594,16 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchClickToggleEffectPanelButton(int x, int y)
+        {
+            if (IsPointInTopLeftCorner(x, y))
+            {
+                ToggleEffectPannel();
+                return true;
+            }
 
+            return false;
+        }
         protected override void OnTouchDown(int x, int y)
         {
             if (HandleTouchDownPan(x, y)) goto Handled;
@@ -4656,7 +4668,13 @@ namespace FamiStudio
 
         protected override void OnTouchClick(int x, int y, bool isLong)
         {
-            base.OnTouchClick(x, y, isLong);
+            if (!isLong)
+            {
+                if (HandleTouchClickToggleEffectPanelButton(x, y)) goto Handled;
+            }
+
+        Handled: // Yes, i use a goto, sue me.
+            ConditionalInvalidate();
         }
 
         //==============================================================================================================

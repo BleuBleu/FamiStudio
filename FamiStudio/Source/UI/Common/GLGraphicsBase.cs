@@ -1510,10 +1510,25 @@ namespace FamiStudio
             inst.y = y;
             inst.sx = width;
             inst.sy = height;
-            inst.u0 = u0;
-            inst.v0 = v0;
-            inst.u1 = u1;
-            inst.v1 = v1;
+
+            // We do bilinear on mobile and scale icons, need to be careful with filtering.
+            if (PlatformUtils.IsMobile)
+            {
+                var halfPixelX = 0.5f / bmp.Size.Width;
+                var halfPixelY = 0.5f / bmp.Size.Height;
+
+                inst.u0 = u0 + halfPixelX;
+                inst.v0 = v0 + halfPixelY;
+                inst.u1 = u1 - halfPixelX;
+                inst.v1 = v1 - halfPixelY;
+            }
+            else
+            {
+                inst.u0 = u0;
+                inst.v0 = v0;
+                inst.u1 = u1;
+                inst.v1 = v1;
+            }
             inst.opacity = opacity;
             inst.rotated = rotated;
 
