@@ -40,9 +40,9 @@ namespace FamiStudio
         const int DefaultNoteAttackSizeX           = 3;
         const int DefaultReleaseNoteSizeY          = 8;
         const int DefaultEnvelopeSizeY             = 9;
-        const int DefaultWhiteKeySizeX             = PlatformUtils.IsMobile ? 60 : 94;
+        const int DefaultWhiteKeySizeX             = PlatformUtils.IsMobile ? 50 : 94;
         const int DefaultWhiteKeySizeY             = 20;
-        const int DefaultBlackKeySizeX             = PlatformUtils.IsMobile ? 30 : 56;
+        const int DefaultBlackKeySizeX             = PlatformUtils.IsMobile ? 25 : 56;
         const int DefaultBlackKeySizeY             = 14;
         const int DefaultSnapIconPosX              = 3;
         const int DefaultSnapIconPosY              = 3;
@@ -459,7 +459,7 @@ namespace FamiStudio
             var headerScale = editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM || editMode == EditionMode.None ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2);
             var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
 
-            minZoom = MinZoomOther; // editMode == EditionMode.Channel && Song != null && Song.UsesFamiStudioTempo ? MinZoomFamiStudio : MinZoomOther;
+            minZoom = editMode == EditionMode.Channel && Song != null && Song.UsesFamiStudioTempo ? MinZoomFamiStudio : MinZoomOther;
             maxZoom = editMode == EditionMode.DPCM ? MaxWaveZoom : MaxZoom;
             zoom    = Utils.Clamp(zoom, minZoom, maxZoom);
 
