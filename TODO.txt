@@ -75,7 +75,6 @@ Controls:
 - Bring back fonts for 150%...
 
 Misc:
-- Remove as much .resx, Designer shit as possible.
 
 DMC counter effect:
 - Sound engine

@@ -22,21 +22,101 @@ namespace FamiStudio
         Font font;
         Font fontBold;
 
+        private NoFocusButton buttonYes;
+        private NoFocusButton buttonNo;
+        private TableLayoutPanel tableLayout;
+        private Panel panelProps;
+        private Panel panelTabs;
+        private ToolTip toolTip;
+
         public MultiPropertyDialog(int width, int height, int tabsWidth = 150)
         {
             InitializeComponent();
 
             string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
-            this.buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
-            this.buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
-            this.Width    = DpiScaling.ScaleForDialog(width);
-            this.font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
-            this.fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
+
+            buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
+            buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
+            Width    = DpiScaling.ScaleForDialog(width);
+            font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+            fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
 
             toolTip.SetToolTip(buttonYes, "Accept");
             toolTip.SetToolTip(buttonNo, "Cancel");
 
             tableLayout.ColumnStyles[0].Width = tabsWidth * DpiScaling.Dialog;
+        }
+
+        private void InitializeComponent()
+        {
+            buttonYes = new NoFocusButton();
+            buttonNo = new NoFocusButton();
+            tableLayout = new TableLayoutPanel();
+            panelProps = new Panel();
+            panelTabs = new Panel();
+            toolTip = new ToolTip();
+
+            buttonYes.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonYes.FlatAppearance.BorderSize = 0;
+            buttonYes.FlatStyle = FlatStyle.Flat;
+            buttonYes.Location = new Point(374, 337);
+            buttonYes.Size = new Size(32, 32);
+            buttonYes.UseVisualStyleBackColor = true;
+            buttonYes.Click += new EventHandler(buttonYes_Click);
+
+            buttonNo.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonNo.FlatAppearance.BorderSize = 0;
+            buttonNo.FlatStyle = FlatStyle.Flat;
+            buttonNo.Location = new Point(411, 337);
+            buttonNo.Size = new Size(32, 32);
+            buttonNo.UseVisualStyleBackColor = true;
+            buttonNo.Click += new EventHandler(buttonNo_Click);
+
+            tableLayout.SuspendLayout();
+            tableLayout.Anchor = AnchorStyles.Top | AnchorStyles.Left| AnchorStyles.Right;
+            tableLayout.ColumnCount = 2;
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
+            tableLayout.ColumnStyles.Add(new ColumnStyle());
+            tableLayout.Location = new Point(5, 5);
+            tableLayout.Margin = new Padding(0);
+            tableLayout.RowCount = 1;
+            tableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayout.Size = new Size(438, 327);
+            tableLayout.Controls.Add(panelProps, 1, 0);
+            tableLayout.Controls.Add(panelTabs, 0, 0);
+            tableLayout.ResumeLayout(false);
+
+            panelProps.Dock = DockStyle.Fill;
+            panelProps.Location = new Point(150, 0);
+            panelProps.Margin = new Padding(0);
+            panelProps.Size = new Size(307, 327);
+
+            panelTabs.BackColor = Theme.DarkGreyFillColor1;
+            panelTabs.Dock = DockStyle.Fill;
+            panelTabs.Location = new Point(0, 0);
+            panelTabs.Margin = new Padding(0);
+            panelTabs.Name = "panelTabs";
+            panelTabs.Size = new Size(150, 327);
+            panelTabs.TabIndex = 21;
+
+            AutoScaleMode = AutoScaleMode.None;
+            BackColor = Theme.DarkGreyFillColor1;
+            ClientSize = new Size(448, 373);
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            ControlBox = false;
+            KeyPreview = true;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ShowIcon = false;
+            ShowInTaskbar = false;
+            StartPosition = FormStartPosition.CenterParent;
+            KeyDown += new KeyEventHandler(MultiPropertyDialog_KeyDown);
+
+            SuspendLayout();
+            Controls.Add(tableLayout);
+            Controls.Add(buttonYes);
+            Controls.Add(buttonNo);
+            ResumeLayout(true);
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
@@ -54,7 +134,7 @@ namespace FamiStudio
                 var newWidth  = (int)(bmp.Width  * (DpiScaling.Dialog / 2.0f));
                 var newHeight = (int)(bmp.Height * (DpiScaling.Dialog / 2.0f));
 
-                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
+                bmp = new Bitmap(bmp, newWidth, newHeight);
             }
 
             var page = new PropertyPage();

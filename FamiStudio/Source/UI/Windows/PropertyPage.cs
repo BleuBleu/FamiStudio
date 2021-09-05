@@ -27,6 +27,7 @@ namespace FamiStudio
         private Font font;
         private Bitmap colorBitmap;
         private List<Property> properties = new List<Property>();
+        private ToolTip toolTip;
 
         public int LayoutHeight => layoutHeight;
         public int PropertyCount => properties.Count;
@@ -56,6 +57,14 @@ namespace FamiStudio
                 warningIcons[1] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningYellow{suffix}.png")) as Bitmap;
                 warningIcons[2] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Warning{suffix}.png"))       as Bitmap;
             }
+        }
+
+        private void InitializeComponent()
+        {
+            toolTip = new ToolTip();
+            AutoScaleMode = AutoScaleMode.None;
+            BackColor = Theme.DarkGreyFillColor1;
+            Padding = new Padding(3);
         }
 
         private int GetPropertyIndexForControl(Control ctrl)
@@ -197,13 +206,13 @@ namespace FamiStudio
             textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 8.0f, FontStyle.Regular);
             textBox.Text = txt;
             textBox.BackColor = Theme.DarkGreyFillColor1;
-            textBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            textBox.BorderStyle = BorderStyle.FixedSingle;
             textBox.ForeColor = Theme.LightGreyFillColor2;
-            textBox.Location = new System.Drawing.Point(5, 5);
+            textBox.Location = new Point(5, 5);
             textBox.Multiline = true;
             textBox.ReadOnly = true;
             textBox.Height = DpiScaling.ScaleForDialog(300);
-            textBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            textBox.ScrollBars = ScrollBars.Vertical;
             textBox.Select(0, 0);
             textBox.GotFocus += TextBox_GotFocus;
 

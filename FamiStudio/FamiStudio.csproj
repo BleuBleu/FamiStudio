@@ -188,14 +188,8 @@
     <Compile Include="Source\UI\Windows\LabelTrackBar.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Source\UI\Windows\LabelTrackBar.Designer.cs">
-      <DependentUpon>LabelTrackBar.cs</DependentUpon>
-    </Compile>
     <Compile Include="Source\UI\Windows\MultiPropertyDialog.cs">
       <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\MultiPropertyDialog.Designer.cs">
-      <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Source\UI\Windows\NoFocusButton.cs">
       <SubType>Component</SubType>
@@ -206,14 +200,8 @@
     <Compile Include="Source\UI\Windows\PropertyDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Source\UI\Windows\PropertyDialog.Designer.cs">
-      <DependentUpon>PropertyDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="Source\UI\Windows\PropertyPage.cs">
       <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\PropertyPage.Designer.cs">
-      <DependentUpon>PropertyPage.cs</DependentUpon>
     </Compile>
     <Compile Include="Source\UI\Windows\PropertyPageListView.cs">
       <SubType>Component</SubType>
@@ -221,14 +209,8 @@
     <Compile Include="Source\UI\Windows\Slider.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Source\UI\Windows\Slider.Designer.cs">
-      <DependentUpon>Slider.cs</DependentUpon>
-    </Compile>
     <Compile Include="Source\UI\Windows\TutorialDialog.cs">
       <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\TutorialDialog.Designer.cs">
-      <DependentUpon>TutorialDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Source\UI\Windows\WinCursors.cs" />
     <Compile Include="Source\UI\Windows\WinPlatformUtils.cs" />
@@ -627,24 +609,6 @@
     <EmbeddedResource Include="Rom\rom_famitracker_pal.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
-    <EmbeddedResource Include="Source\UI\Windows\LabelTrackBar.resx">
-      <DependentUpon>LabelTrackBar.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\MultiPropertyDialog.resx">
-      <DependentUpon>MultiPropertyDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\PropertyDialog.resx">
-      <DependentUpon>PropertyDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\PropertyPage.resx">
-      <DependentUpon>PropertyPage.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\Slider.resx">
-      <DependentUpon>Slider.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Source\UI\Windows\TutorialDialog.resx">
-      <DependentUpon>TutorialDialog.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Content Include="NesSndEmu.dll">

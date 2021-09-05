@@ -65,6 +65,14 @@ namespace FamiStudio
                 labelWidth = 0;
         }
 
+        private void InitializeComponent()
+        {
+            AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            Margin = new System.Windows.Forms.Padding(0);
+            Size = new System.Drawing.Size(300, 16);
+        }
+
         private Rectangle GetThumbRect()
         {
             var ratio = (value - minValue) / (float)(maxValue - minValue);

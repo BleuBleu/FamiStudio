@@ -15,6 +15,12 @@ namespace FamiStudio
         private bool top = false;
         private bool advancedPropertiesVisible = false;
 
+        private NoFocusButton buttonNo;
+        private NoFocusButton buttonYes;
+        private NoFocusButton buttonAdvanced;
+        private PropertyPage propertyPage;
+        private ToolTip toolTip;
+
         public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, Form parent = null)
         {
             StartPosition = FormStartPosition.CenterParent;
@@ -63,6 +69,64 @@ namespace FamiStudio
             toolTip.SetToolTip(buttonYes, "Accept");
             toolTip.SetToolTip(buttonNo, "Cancel");
             toolTip.SetToolTip(buttonAdvanced, "Toggle Advanced Options");
+        }
+
+        private void InitializeComponent()
+        {
+            propertyPage = new PropertyPage();
+            buttonYes = new NoFocusButton();
+            buttonNo = new NoFocusButton();
+            buttonAdvanced = new NoFocusButton();
+            toolTip = new ToolTip();
+
+            propertyPage.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            propertyPage.BackColor = Theme.DarkGreyFillColor1;
+            propertyPage.Dock = DockStyle.Top;
+            propertyPage.Location = new Point(0, 0);
+            propertyPage.Padding = new Padding(3);
+            propertyPage.Size = new Size(298, 200);
+            propertyPage.PropertyWantsClose += new PropertyPage.PropertyWantsCloseDelegate(propertyPage_PropertyWantsClose);
+
+            buttonYes.FlatAppearance.BorderSize = 0;
+            buttonYes.FlatStyle = FlatStyle.Flat;
+            buttonYes.Location = new Point(224, 361);
+            buttonYes.Size = new Size(32, 32);
+            buttonYes.UseVisualStyleBackColor = true;
+            buttonYes.Click += new EventHandler(buttonYes_Click);
+
+            buttonNo.FlatAppearance.BorderSize = 0;
+            buttonNo.FlatStyle = FlatStyle.Flat;
+            buttonNo.Location = new Point(261, 361);
+            buttonNo.Size = new Size(32, 32);
+            buttonNo.UseVisualStyleBackColor = true;
+            buttonNo.Click += new EventHandler(buttonNo_Click);
+
+            buttonAdvanced.FlatAppearance.BorderSize = 0;
+            buttonAdvanced.FlatStyle = FlatStyle.Flat;
+            buttonAdvanced.Location = new Point(5, 361);
+            buttonAdvanced.Size = new Size(32, 32);
+            buttonAdvanced.UseVisualStyleBackColor = true;
+            buttonAdvanced.Visible = false;
+            buttonAdvanced.Click += new EventHandler(buttonAdvanced_Click);
+
+            AutoScaleMode = AutoScaleMode.None;
+            BackColor = Theme.DarkGreyFillColor1;
+            ClientSize = new Size(298, 398);
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            ControlBox = false;
+            KeyPreview = true;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ShowInTaskbar = false;
+            SizeGripStyle = SizeGripStyle.Hide;
+            KeyDown += new KeyEventHandler(PropertyDialog_KeyDown);
+
+            SuspendLayout();
+            Controls.Add(buttonAdvanced);
+            Controls.Add(propertyPage);
+            Controls.Add(buttonYes);
+            Controls.Add(buttonNo);
+            ResumeLayout(true);
         }
 
         protected override CreateParams CreateParams

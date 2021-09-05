@@ -9,6 +9,13 @@ namespace FamiStudio
     {
         int pageIndex = 0;
 
+        private NoFocusButton buttonRight;
+        private NoFocusButton buttonLeft;
+        private PictureBox pictureBox1;
+        private Label label1;
+        private CheckBox checkBoxDontShow;
+        private ToolTip toolTip;
+
         public TutorialDialog()
         {
             Init();
@@ -54,6 +61,70 @@ namespace FamiStudio
             catch {}
 
             SetPage(0);
+        }
+
+        private void InitializeComponent()
+        {
+            pictureBox1 = new PictureBox();
+            label1 = new Label();
+            checkBoxDontShow = new CheckBox();
+            buttonLeft = new NoFocusButton();
+            buttonRight = new NoFocusButton();
+            toolTip = new ToolTip();
+
+            pictureBox1.Location = new Point(10, 88);
+            pictureBox1.Size = new Size(736, 414);
+            pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            pictureBox1.TabStop = false;
+
+            label1.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            label1.Location = new Point(10, 10);
+            label1.Size = new Size(736, 64);
+            label1.Text = "Welcome To FamiStudio!";
+
+            checkBoxDontShow.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            checkBoxDontShow.AutoSize = true;
+            checkBoxDontShow.Location = new Point(10, 513);
+            checkBoxDontShow.Size = new Size(115, 17);
+            checkBoxDontShow.Text = "Do not show again";
+            checkBoxDontShow.UseVisualStyleBackColor = true;
+
+            buttonLeft.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            buttonLeft.FlatAppearance.BorderSize = 0;
+            buttonLeft.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonLeft.Location = new Point(676, 504);
+            buttonLeft.Size = new Size(32, 32);
+            buttonLeft.UseVisualStyleBackColor = true;
+            buttonLeft.Click += new EventHandler(buttonLeft_Click);
+
+            buttonRight.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            buttonRight.FlatAppearance.BorderSize = 0;
+            buttonRight.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            buttonRight.Location = new Point(714, 504);
+            buttonRight.Size = new Size(32, 32);
+            buttonRight.UseVisualStyleBackColor = true;
+            buttonRight.Click += new EventHandler(buttonRight_Click);
+
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+            BackColor = Theme.DarkGreyFillColor1;
+            ClientSize = new Size(754, 548);
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            ControlBox = false;
+            KeyPreview = true;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ShowInTaskbar = false;
+            SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            KeyDown += new KeyEventHandler(TutorialDialog_KeyDown);
+
+            SuspendLayout();
+            Controls.Add(checkBoxDontShow);
+            Controls.Add(label1);
+            Controls.Add(pictureBox1);
+            Controls.Add(buttonLeft);
+            Controls.Add(buttonRight);
+            ResumeLayout(true);
         }
 
         private void SetPage(int idx)
