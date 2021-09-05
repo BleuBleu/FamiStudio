@@ -62,7 +62,6 @@ namespace FamiStudio
         const int DefaultDPCMInfoSpacingY          = 16;
         const int DefaultRecordingKeyOffsetY       = 12;
         const int DefaultAttackIconPosX            = 1;
-        const int DefaultMinNoteSizeForText        = 24;
         const int DefaultWaveGeometrySampleSize    = 2;
         const int DefaultWaveDisplayPaddingY       = 8;
         const int DefaultScrollBarThickness1       = 10;
@@ -104,7 +103,7 @@ namespace FamiStudio
         int scrollBarThickness;
         int minScrollBarLength;
         int attackIconPosX;
-        int minNoteSizeForText;
+        int minNoteSizeForLabel;
         int waveGeometrySampleSize;
         int waveDisplayPaddingY;
         int scrollMargin;
@@ -488,7 +487,6 @@ namespace FamiStudio
             dpcmInfoSpacingY          = ScaleForMainWindow(DefaultDPCMInfoSpacingY);
             recordingKeyOffsetY       = ScaleForMainWindow(DefaultRecordingKeyOffsetY);
             attackIconPosX            = ScaleForMainWindow(DefaultAttackIconPosX);
-            minNoteSizeForText        = ScaleForMainWindow(DefaultMinNoteSizeForText);
             waveGeometrySampleSize    = ScaleForMainWindow(DefaultWaveGeometrySampleSize);
             waveDisplayPaddingY       = ScaleForMainWindow(DefaultWaveDisplayPaddingY);
             scrollBarThickness        = ScaleForMainWindow(scrollBarSize);
@@ -836,6 +834,7 @@ namespace FamiStudio
             bmpSnapResolutionAtlas = g.CreateBitmapAtlasFromResources(SnapResolutionImageNames);
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
             bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
+            minNoteSizeForLabel = (int)g.MeasureString(" 0#0 ", ThemeResources.FontSmall);
 
             if (PlatformUtils.IsMobile)
             {
@@ -2465,7 +2464,7 @@ namespace FamiStudio
                         noteTextPosX += noteAttackSizeX + attackIconPosX + 2;
                     }
 
-                    if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && sx > minNoteSizeForText && ThemeResources.FontSmall.Size < noteSizeY)
+                    if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && (sx - noteTextPosX) > minNoteSizeForLabel && ThemeResources.FontSmall.Size < noteSizeY)
                     {
                         r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, noteSizeY - 1);
                     }
