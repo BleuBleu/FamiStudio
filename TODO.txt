@@ -1,12 +1,12 @@
 Android
 =======
 - Today
-	/ P.E. icons
+	x P.E. icons
 	x Add support for @4x resources.
-	- Remove all lines around icons
-	- Unify instrument icons with MovileInstrumentXXX
+	x Unify instrument icons with MovileInstrumentXXX
 	x Remove low-res icons from project.
 	x Warning icons 2x wrong size???
+	- Remove all lines around icons? Would be cool.
 	- Toolbar refactor/cleanup (time at correct place, osc working)
 	- Line widths
 	- Replace inheritance by partial

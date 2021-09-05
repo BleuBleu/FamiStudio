@@ -118,12 +118,12 @@ namespace FamiStudio
             "MobileChannelSquare",
             "MobileChannelTriangle",
             "MobileChannelWaveTable",
-            "MobileInstrument",
-            "MobileInstrumentFds",
-            "MobileInstrumentNamco",
-            "MobileInstrumentSunsoft",
-            "MobileInstrumentVRC6",
-            "MobileInstrumentVRC7",
+            "Instrument",
+            "InstrumentFds",
+            "InstrumentNamco",
+            "InstrumentSunsoft",
+            "InstrumentVRC6",
+            "InstrumentVRC7",
             "MobileArpeggio",
             "ExpandUp",
             "ExpandDown",
@@ -411,7 +411,7 @@ namespace FamiStudio
                 var inst = project.Instruments[i];
                 var item = new ListItem();
                 item.Color = inst.Color;
-                item.imageIndex = Array.IndexOf(ButtonImageNames, "Mobile" + ExpansionType.Icons[inst.Expansion]);
+                item.imageIndex = Array.IndexOf(ButtonImageNames, ExpansionType.Icons[inst.Expansion]);
                 item.text = inst.Name;
                 items[i] = item;
             }
