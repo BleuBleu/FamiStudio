@@ -325,18 +325,19 @@ namespace FamiStudio
             // Clamp to something reasonable.
             NumBufferedAudioFrames = Utils.Clamp(NumBufferedAudioFrames, 2, 16);
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
             // Linux or Mac is more likely to have standard path for ffmpeg.
-            if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
+            if (PlatformUtils.IsLinux || PlatformUtils.IsMacOS)
             {
-                if (File.Exists("/usr/bin/ffmpeg"))
-                    FFmpegExecutablePath = "/usr/bin/ffmpeg";
-                else if (File.Exists("/usr/local/bin/ffmpeg"))
-                    FFmpegExecutablePath = "/usr/local/bin/ffmpeg";
-                else
-                    FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
+                if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
+                {
+                    if (File.Exists("/usr/bin/ffmpeg"))
+                        FFmpegExecutablePath = "/usr/bin/ffmpeg";
+                    else if (File.Exists("/usr/local/bin/ffmpeg"))
+                        FFmpegExecutablePath = "/usr/local/bin/ffmpeg";
+                    else
+                        FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
+                }
             }
-#endif
 
             // No deprecation at the moment.
             Version = SettingsVersion;

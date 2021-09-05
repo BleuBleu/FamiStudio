@@ -71,13 +71,7 @@ namespace FamiStudio
         public unsafe ExportDialog(Project project)
         {
             int width  = 600;
-            int height = 550;
-
-#if FAMISTUDIO_LINUX
-            height += 100;
-#elif FAMISTUDIO_MACOS
-            height += 80;
-#endif
+            int height = PlatformUtils.IsLinux ? 650 : (PlatformUtils.IsMacOS ? 630 : 550);
 
             this.dialog = new MultiPropertyDialog(width, height, 200);
             this.project = project;
@@ -89,18 +83,17 @@ namespace FamiStudio
                 CreatePropertyPage(page, format);
             }
 
-#if FAMISTUDIO_ANDROID
             // Hide a few formats we don't care about on mobile.
-            dialog.SetPageVisible((int)ExportFormat.Midi, false);
-            dialog.SetPageVisible((int)ExportFormat.Text, false);
-            dialog.SetPageVisible((int)ExportFormat.FamiTracker, false);
-            dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, false);
-            dialog.SetPageVisible((int)ExportFormat.FamiStudioSfx, false);
-            dialog.SetPageVisible((int)ExportFormat.FamiTone2Music, false);
-            dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx, false);
-#else
-            UpdateMidiInstrumentMapping();
-#endif
+            dialog.SetPageVisible((int)ExportFormat.Midi,            PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.Text,            PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTracker,     PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiStudioSfx,   PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTone2Music,  PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx,    PlatformUtils.IsDesktop);
+
+            if (PlatformUtils.IsDesktop)
+                UpdateMidiInstrumentMapping();
         }
 
         private string[] GetSongNames()
@@ -156,10 +149,9 @@ namespace FamiStudio
             else
             {
                 page.AddLabel(null, "Video export requires FFmpeg. Please go in the application settings and look for the 'FFmpeg' section.", true);
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
                 // HACK : Last minute hack, too lazy to debug GTK layouting issues right now.
-                page.AddLabel(null, " ");
-#endif
+                if (PlatformUtils.IsGTK)
+                    page.AddLabel(null, " ");
                 return false;
             }
         }

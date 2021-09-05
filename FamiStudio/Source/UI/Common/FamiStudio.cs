@@ -1299,11 +1299,8 @@ namespace FamiStudio
                         SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
                     else if (shift)
                         SeekSong(0);
-#if !FAMISTUDIO_MACOS
-                    // CMD + Space is spotlight search on MacOS :(
-                    else if (ctrl)
+                    else if (ctrl && !PlatformUtils.IsMacOS) // CMD + Space is spotlight search on MacOS :(
                         SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition)));
-#endif
 
                     PlaySong();
                 }
@@ -1369,15 +1366,16 @@ namespace FamiStudio
                     PianoRoll.ToggleMaximize();
                 }
             }
-#if FAMISTUDIO_MACOS
-            else if (ctrl && e.KeyCode == Keys.Q)
+            else if (PlatformUtils.IsMacOS && ctrl && e.KeyCode == Keys.Q)
             {
                 if (TryClosing())
                 {
+#if FAMISTUDIO_MACOS
+                    // MATTT : When merging fixes from main branch, will be able to remove the #ifdef
                     Gtk.Application.Quit();
+#endif
                 }
             }
-#endif
         }
 
         public bool CanCopy  => PianoRoll.CanCopy  || Sequencer.CanCopy;

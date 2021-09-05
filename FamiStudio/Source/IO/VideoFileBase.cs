@@ -284,10 +284,4 @@ namespace FamiStudio
             return Array.IndexOf(Names, str);
         }
     }
-
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-    class DummyGLControl : GLControl
-    {
-    };
-#endif
 }

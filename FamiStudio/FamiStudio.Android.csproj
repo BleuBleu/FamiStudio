@@ -366,7 +366,7 @@
     <EmbeddedResource Include="Resources\Copy%402x.png" />
     <EmbeddedResource Include="Resources\CustomPattern%402x.png" />
     <EmbeddedResource Include="Resources\Cut%402x.png" />
-    <EmbeddedResource Include="Resources\Dash%402x.png" />
+    <EmbeddedResource Include="Resources\Dash%404x.png" />
     <EmbeddedResource Include="Resources\DPCMBlack%404x.png" />
     <EmbeddedResource Include="Resources\Drag%402x.png" />
     <EmbeddedResource Include="Resources\Duplicate%402x.png" />

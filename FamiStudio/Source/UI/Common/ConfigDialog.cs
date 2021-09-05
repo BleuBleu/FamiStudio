@@ -74,13 +74,8 @@ namespace FamiStudio
 
         public unsafe ConfigDialog()
         {
-#if FAMISTUDIO_WINDOWS
-            int width  = 550;
-            int height = 350;
-#else
-            int width  = 570;
-            int height = 450;
-#endif
+            int width  = PlatformUtils.IsWindows ? 550 : 570;
+            int height = PlatformUtils.IsWindows ? 350 : 450;
 
             this.dialog = new MultiPropertyDialog(width, height);
 
@@ -98,15 +93,10 @@ namespace FamiStudio
                 CreatePropertyPage(page, section);
             }
 
-#if !FAMISTUDIO_MACOS
-            dialog.SetPageVisible((int)ConfigSection.MacOS, false);
-#endif
-#if FAMISTUDIO_ANDROID
-            // DROIDTODO: Hide a bunch of options that makes no sense.
-            dialog.SetPageVisible((int)ConfigSection.MIDI, false);
-            dialog.SetPageVisible((int)ConfigSection.FFmpeg, false);
-            dialog.SetPageVisible((int)ConfigSection.QWERTY, false);
-#endif
+            dialog.SetPageVisible((int)ConfigSection.MacOS,  PlatformUtils.IsMacOS);
+            dialog.SetPageVisible((int)ConfigSection.MIDI,   PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.FFmpeg, PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.QWERTY, PlatformUtils.IsDesktop);
         }
 
         private PropertyPage CreatePropertyPage(PropertyPage page, ConfigSection section)
@@ -128,6 +118,7 @@ namespace FamiStudio
 
                 case ConfigSection.UserInterface:
                 {
+                    // DROIDTODO: Make this cleaner, maybe move to DpiScaling?
 #if FAMISTUDIO_WINDOWS || FAMISTUDIO_LINUX
                     var scalingValues = new[] { "System", "100%", "150%", "200%" };
 #elif FAMISTUDIO_MACOS
@@ -197,12 +188,11 @@ namespace FamiStudio
                 case ConfigSection.FFmpeg:
                     page.AddLabel(null, "Video export requires FFmpeg. If you already have it, set the path to the ffmpeg executable by clicking the button below, otherwise follow the download link.", true); // 0
                     page.AddButton(null, Settings.FFmpegExecutablePath, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 1
-#if FAMISTUDIO_MACOS
                     // GTK LinkButtons dont work on MacOS, use a button (https://github.com/quodlibet/quodlibet/issues/2306)
-                    page.AddButton(" ", "Download FFmpeg here"); // 2
-#else
-                    page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
-#endif
+                    if (PlatformUtils.IsMacOS)
+                        page.AddButton(" ", "Download FFmpeg here"); // 2
+                    else
+                        page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;
                 case ConfigSection.QWERTY:
@@ -245,12 +235,7 @@ namespace FamiStudio
             {
                 if (propIdx == 1)
                 {
-#if FAMISTUDIO_WINDOWS
-                    var ffmpegExeFilter = "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe";
-#else
-                    var ffmpegExeFilter = "FFmpeg Executable (ffmpeg)|*.*";
-#endif
-
+                    var ffmpegExeFilter = PlatformUtils.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
                     var dummy = "";
                     var filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
 
@@ -268,7 +253,6 @@ namespace FamiStudio
 
         private void QwertyPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-#if !FAMISTUDIO_ANDROID
             if (propIdx == 1 && colIdx >= 2)
             {
                 if (click == ClickType.Double)
@@ -288,7 +272,7 @@ namespace FamiStudio
                             dlg.Close();
                         }
                     };
-#else
+#elif FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
                     dlg.KeyPressEvent += (o, args) =>
                     {
                         // These 2 keys are used by the QWERTY input.
@@ -302,7 +286,7 @@ namespace FamiStudio
                         }
                     };
 #endif
-                    dlg.ShowDialog(null);
+                    dlg.ShowDialog(null, (r) => { });
 
                     pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
                 }
@@ -317,7 +301,6 @@ namespace FamiStudio
                 Array.Copy(Settings.DefaultQwertyKeys, qwertyKeys, Settings.DefaultQwertyKeys.Length);
                 pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
             }
-#endif
         }
 
         private string[,] GetQwertyMappingStrings()

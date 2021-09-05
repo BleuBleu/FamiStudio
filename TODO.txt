@@ -8,7 +8,7 @@ Android
 	x Warning icons 2x wrong size???
 	- Remove all lines around icons? Would be cool.
 	- Toolbar refactor/cleanup (time at correct place, osc working)
-	- Line widths
+	/ Line widths (yes, 1->3, 3->5 looks great, wait until more stuff works)
 	- Replace inheritance by partial
 	- Remove as much #ifdef as possible.
 
