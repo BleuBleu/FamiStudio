@@ -303,8 +303,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Add%402x.png" />
     <EmbeddedResource Include="Resources\Add.png" />
-    <EmbeddedResource Include="Resources\Arpeggio%402x.png" />
-    <EmbeddedResource Include="Resources\Arpeggio.png" />
     <EmbeddedResource Include="Resources\ArrowLeft%402x.png" />
     <EmbeddedResource Include="Resources\ArrowLeft.png" />
     <EmbeddedResource Include="Resources\ArrowRight%402x.png" />
@@ -369,8 +367,6 @@
     <EmbeddedResource Include="Resources\Duplicate.png" />
     <EmbeddedResource Include="Resources\DuplicateMove%402x.png" />
     <EmbeddedResource Include="Resources\DuplicateMove.png" />
-    <EmbeddedResource Include="Resources\Duty%402x.png" />
-    <EmbeddedResource Include="Resources\Duty.png" />
     <EmbeddedResource Include="Resources\EffectCutDelay%402x.png" />
     <EmbeddedResource Include="Resources\EffectCutDelay.png" />
     <EmbeddedResource Include="Resources\EffectDutyCycle%402x.png" />
@@ -387,6 +383,18 @@
     <EmbeddedResource Include="Resources\EffectVibrato.png" />
     <EmbeddedResource Include="Resources\EffectVolume%402x.png" />
     <EmbeddedResource Include="Resources\EffectVolume.png" />
+    <EmbeddedResource Include="Resources\EnvelopeArpeggio%402x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeArpeggio.png" />
+    <EmbeddedResource Include="Resources\EnvelopeDuty%402x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeDuty.png" />
+    <EmbeddedResource Include="Resources\EnvelopeMod%402x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeMod.png" />
+    <EmbeddedResource Include="Resources\EnvelopePitch%402x.png" />
+    <EmbeddedResource Include="Resources\EnvelopePitch.png" />
+    <EmbeddedResource Include="Resources\EnvelopeVolume%402x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeVolume.png" />
+    <EmbeddedResource Include="Resources\EnvelopeWave%402x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeWave.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall.png" />
     <EmbeddedResource Include="Resources\Export%402x.png" />
@@ -470,8 +478,6 @@
     <EmbeddedResource Include="Resources\Metronome.wav" />
     <EmbeddedResource Include="Resources\MinusSmall%402x.png" />
     <EmbeddedResource Include="Resources\MinusSmall.png" />
-    <EmbeddedResource Include="Resources\Mod%402x.png" />
-    <EmbeddedResource Include="Resources\Mod.png" />
     <EmbeddedResource Include="Resources\More%402x.png" />
     <EmbeddedResource Include="Resources\More.png" />
     <EmbeddedResource Include="Resources\MouseLeft%402x.png" />
@@ -498,8 +504,6 @@
     <EmbeddedResource Include="Resources\Paste.png" />
     <EmbeddedResource Include="Resources\Pause%402x.png" />
     <EmbeddedResource Include="Resources\Pause.png" />
-    <EmbeddedResource Include="Resources\Pitch%402x.png" />
-    <EmbeddedResource Include="Resources\Pitch.png" />
     <EmbeddedResource Include="Resources\Play%402x.png" />
     <EmbeddedResource Include="Resources\Play.png" />
     <EmbeddedResource Include="Resources\PlayHalf%402x.png" />
@@ -607,16 +611,12 @@
     <EmbeddedResource Include="Resources\Undo%402x.png" />
     <EmbeddedResource Include="Resources\Undo.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />
-    <EmbeddedResource Include="Resources\Volume%402x.png" />
-    <EmbeddedResource Include="Resources\Volume.png" />
     <EmbeddedResource Include="Resources\Warning%402x.png" />
     <EmbeddedResource Include="Resources\Warning.png" />
     <EmbeddedResource Include="Resources\WarningGood%402x.png" />
     <EmbeddedResource Include="Resources\WarningGood.png" />
     <EmbeddedResource Include="Resources\WarningYellow%402x.png" />
     <EmbeddedResource Include="Resources\WarningYellow.png" />
-    <EmbeddedResource Include="Resources\Wave%402x.png" />
-    <EmbeddedResource Include="Resources\Wave.png" />
     <EmbeddedResource Include="Resources\WaveEdit%402x.png" />
     <EmbeddedResource Include="Resources\WaveEdit.png" />
     <EmbeddedResource Include="Resources\YellowChecker.png" />

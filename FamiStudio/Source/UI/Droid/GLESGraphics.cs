@@ -160,11 +160,15 @@ namespace FamiStudio
 
         protected Bitmap LoadBitmapFromResourceWithScaling(string name)
         {
+            Debug.Assert(windowScaling >= 4.0f);
+
             var assembly = Assembly.GetExecutingAssembly();
 
             Bitmap bmp;
 
-            if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
+            if (assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@4x.png") != null)
+                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@4x.png");
+            else if (assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
                 bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@2x.png");
             else
                 bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png");

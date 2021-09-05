@@ -40,9 +40,9 @@ namespace FamiStudio
         const int DefaultNoteAttackSizeX           = 3;
         const int DefaultReleaseNoteSizeY          = 8;
         const int DefaultEnvelopeSizeY             = 9;
-        const int DefaultWhiteKeySizeX             = PlatformUtils.IsMobile ? 50 : 94;
+        const int DefaultWhiteKeySizeX             = PlatformUtils.IsMobile ? 40 : 94;
         const int DefaultWhiteKeySizeY             = 20;
-        const int DefaultBlackKeySizeX             = PlatformUtils.IsMobile ? 25 : 56;
+        const int DefaultBlackKeySizeX             = PlatformUtils.IsMobile ? 20 : 56;
         const int DefaultBlackKeySizeY             = 14;
         const int DefaultSnapIconPosX              = 3;
         const int DefaultSnapIconPosY              = 3;

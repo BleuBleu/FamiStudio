@@ -222,13 +222,13 @@ namespace FamiStudio
 
         readonly string[] EnvelopesImageNames = new string[]
         {
-            "Volume",
-            "Arpeggio",
-            "Pitch",
-            "Duty",
-            "Wave",
-            "Mod",
-            "Wave",
+            "EnvelopeVolume",
+            "EnvelopeArpeggio",
+            "EnvelopePitch",
+            "EnvelopeDuty",
+            "EnvelopeWave",
+            "EnvelopeMod",
+            "EnvelopeWave",
         };
 
         class Button
@@ -681,7 +681,7 @@ namespace FamiStudio
             bmpEnvelopesAtlas = g.CreateBitmapAtlasFromResources(EnvelopesImageNames);
 
             if (PlatformUtils.IsMobile)
-                bitmapScale = g.WindowScaling * 0.5f;
+                bitmapScale = g.WindowScaling * 0.25f;
 
             RefreshButtons();
         }

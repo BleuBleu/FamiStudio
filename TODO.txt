@@ -1,7 +1,16 @@
 Android
 =======
-- Create a "Platform.IsLinux, IsMac, IsMobile, etc."
-- Remove as much #ifdef as possible.
+- Today
+	/ P.E. icons
+	x Add support for @4x resources.
+	- Remove all lines around icons
+	- Unify instrument icons with MovileInstrumentXXX
+	x Remove low-res icons from project.
+	x Warning icons 2x wrong size???
+	- Toolbar refactor/cleanup (time at correct place, osc working)
+	- Line widths
+	- Replace inheritance by partial
+	- Remove as much #ifdef as possible.
 
 Prop page:
 / Reactivate dialogs in code, test
