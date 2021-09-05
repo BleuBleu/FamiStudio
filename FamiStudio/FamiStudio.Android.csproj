@@ -267,7 +267,6 @@
     <Compile Include="Source\UI\Droid\SystemMedia.cs" />
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
-    <Compile Include="Source\UI\Mobile\MobileUtils.cs" />
     <Compile Include="Source\UI\Mobile\QuickAcessBar.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
