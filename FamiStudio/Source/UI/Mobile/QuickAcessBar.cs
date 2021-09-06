@@ -172,6 +172,8 @@ namespace FamiStudio
         public float ExpandRatio => expandRatio;
         public bool  IsExpanded  => expandRatio > 0.001f;
 
+        public override bool WantsFullScreenViewport => true;
+
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);

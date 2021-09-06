@@ -48,6 +48,7 @@ namespace FamiStudio
         protected virtual void OnTouchScale(int x, int y, float scale, TouchScalePhase phase) { }
         protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
         public virtual void DoMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
+        public virtual bool WantsFullScreenViewport => false;
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
         public void Render(GLGraphics g) { OnRender(g); }

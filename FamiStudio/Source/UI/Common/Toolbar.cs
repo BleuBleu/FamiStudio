@@ -299,6 +299,8 @@ namespace FamiStudio
         public float ExpandRatio => expandRatio;
         public bool  IsExpanded  => expandRatio > 0.001f;
 
+        public override bool WantsFullScreenViewport => PlatformUtils.IsMobile;
+
         private float iconScaleFloat = 1.0f;
 
         protected override void OnRenderInitialized(RenderGraphics g)

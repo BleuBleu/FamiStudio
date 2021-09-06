@@ -172,12 +172,13 @@ namespace FamiStudio
 
         GLBrush debugBrush;
 
-        private void RenderControl(GLControl ctrl, bool fullscreenViewport = false)
+        private void RenderControl(GLControl ctrl)
         {
             if (debugBrush == null)
                 debugBrush = new GLBrush(System.Drawing.Color.SpringGreen);
 
-            // MATTT : Make this a flag on the control.
+            var fullscreenViewport = ctrl.WantsFullScreenViewport;
+
             if (fullscreenViewport)
                 gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
             else
@@ -313,8 +314,8 @@ namespace FamiStudio
             gfx.BeginDrawFrame();
             {
                 RenderControl(activeControl);
-                RenderControl(quickAccessBar, true);
-                RenderControl(toolbar, true);
+                RenderControl(quickAccessBar);
+                RenderControl(toolbar);
                 RenderOverlay();
             }
             gfx.EndDrawFrame();
