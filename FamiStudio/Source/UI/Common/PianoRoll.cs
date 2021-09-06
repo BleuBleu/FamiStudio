@@ -518,7 +518,7 @@ namespace FamiStudio
             CenterScroll(patternIdx);
             ClampScroll();
             ClampMinSnap();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void ChangeChannel(int trackIdx)
@@ -529,7 +529,7 @@ namespace FamiStudio
                 editChannel = trackIdx;
                 noteTooltip = "";
                 BuildSupportEffectList();
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -548,7 +548,7 @@ namespace FamiStudio
             UpdateRenderCoords();
             CenterEnvelopeScroll(editInstrument.Envelopes[editEnvelope], editEnvelope, editInstrument);
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void StartEditArpeggio(Arpeggio arpeggio)
@@ -566,7 +566,7 @@ namespace FamiStudio
             UpdateRenderCoords();
             CenterEnvelopeScroll(arpeggio.Envelope, EnvelopeType.Arpeggio);
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void StartEditDPCMSample(DPCMSample sample)
@@ -582,7 +582,7 @@ namespace FamiStudio
             UpdateRenderCoords();
             CenterWaveScroll();
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void StartEditDPCMMapping()
@@ -598,7 +598,7 @@ namespace FamiStudio
             UpdateRenderCoords();
             CenterDPCMMappingScroll();
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void StartVideoRecording(RenderGraphics g, Song song, int videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
@@ -747,7 +747,7 @@ namespace FamiStudio
         public bool ShowSelection
         {
             get { return showSelection; }
-            set { showSelection = value; ConditionalInvalidate(); }
+            set { showSelection = value; MarkDirty(); }
         }
 
         public void HighlightPianoNote(int note)
@@ -755,14 +755,8 @@ namespace FamiStudio
             if (note != highlightNote)
             {
                 highlightNote = note;
-                ConditionalInvalidate();
+                MarkDirty();
             }
-        }
-
-        public void ConditionalInvalidate()
-        {
-            if (!App.RealTimeUpdate)
-                Invalidate();
         }
 
         public void Reset()
@@ -789,7 +783,7 @@ namespace FamiStudio
         {
             ClearSelection();
             UpdateRenderCoords();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void SongChanged()
@@ -2999,7 +2993,7 @@ namespace FamiStudio
             }
 
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         void StartChangeEffectValue(MouseEventArgs e, NoteLocation location)
@@ -3086,7 +3080,7 @@ namespace FamiStudio
                 channel.InvalidateCumulativePatternCache(pattern);
             }
 
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         void StartDragVolumeSlide(int x, int y, NoteLocation location)
@@ -3180,7 +3174,7 @@ namespace FamiStudio
                     env.Values[idx0] = (sbyte)Utils.Clamp(val0, min, max);
                 }
 
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -3244,7 +3238,7 @@ namespace FamiStudio
                 {
                     playingNote = note;
                     App.PlayInstrumentNote(playingNote, true, true);
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
         }
@@ -3280,7 +3274,7 @@ namespace FamiStudio
                             mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
                             mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
                             App.UndoRedoManager.EndTransaction();
-                            ConditionalInvalidate();
+                            MarkDirty();
                         }
 #endif
                     }
@@ -3312,7 +3306,7 @@ namespace FamiStudio
                         }
                     }
 
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
         }
@@ -3367,7 +3361,7 @@ namespace FamiStudio
             scrollX = (int)Math.Round(captureScrollX + ((e.X - captureMouseX) / (float)(scrollAreaSizeX - scrollBarSizeX) * maxScrollX));
 
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void UpdateScrollBarY(MouseEventArgs e)
@@ -3379,7 +3373,7 @@ namespace FamiStudio
             scrollY = (int)Math.Round(captureScrollY + ((e.Y - captureMouseY) / (float)(scrollAreaSizeY - scrollBarSizeY) * maxScrollY));
 
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void UpdateCaptureOperation(MouseEventArgs e, bool realTime)
@@ -3574,7 +3568,7 @@ namespace FamiStudio
                 Capture = false;
                 panning = false;
 
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -3585,7 +3579,7 @@ namespace FamiStudio
                 if (App.UndoRedoManager.HasTransactionInProgress)
                     App.UndoRedoManager.AbortTransaction();
 
-                ConditionalInvalidate();
+                MarkDirty();
                 App.StopInstrument();
 
                 captureOperation = CaptureOperation.None;
@@ -3665,7 +3659,7 @@ namespace FamiStudio
             if (doTransaction)
                 App.UndoRedoManager.EndTransaction();
 
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void TransformEnvelopeValues(int startFrameIdx, int endFrameIdx, Func<sbyte, int, sbyte> function)
@@ -3685,7 +3679,7 @@ namespace FamiStudio
 
             UpdateWavePreset(false);
             App.UndoRedoManager.EndTransaction();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void TransposeNotes(int amount)
@@ -3781,7 +3775,7 @@ namespace FamiStudio
 
                 ClearSelection();
                 ClampScroll();
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -3798,14 +3792,14 @@ namespace FamiStudio
             if (e.KeyCode == Keys.Escape)
             {
                 ClearSelection();
-                ConditionalInvalidate();
+                MarkDirty();
             }
             else if (e.KeyCode == Keys.S && shift)
             {
                 if (IsSnappingAllowed)
                 {
                     snap = !snap;
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
             else if (showSelection && IsSelectionValid())
@@ -3952,7 +3946,7 @@ namespace FamiStudio
                 for (int i = startPatternIdx; i <= endPatternIdx; i++)
                     PatternChanged?.Invoke(channel.PatternInstances[startPatternIdx]);
 
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -3969,7 +3963,7 @@ namespace FamiStudio
                 if (doTransaction)
                     App.UndoRedoManager.EndTransaction();
 
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -4007,7 +4001,7 @@ namespace FamiStudio
 
                 App.UndoRedoManager.EndTransaction();
 
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -4023,7 +4017,7 @@ namespace FamiStudio
                 showEffectsPanel = !showEffectsPanel;
                 UpdateRenderCoords();
                 ClampScroll();
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -4033,7 +4027,7 @@ namespace FamiStudio
             MaximizedChanged?.Invoke();
             UpdateRenderCoords();
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private bool HandleMouseDownPan(MouseEventArgs e)
@@ -4061,13 +4055,13 @@ namespace FamiStudio
                     {
                         scrollX -= (Width - whiteKeySizeX);
                         ClampScroll();
-                        ConditionalInvalidate();
+                        MarkDirty();
                     }
                     else if (x > (scrollBarPosX + scrollBarSizeX))
                     {
                         scrollX += (Width - whiteKeySizeX);
                         ClampScroll();
-                        ConditionalInvalidate();
+                        MarkDirty();
                     }
                     else if (x >= scrollBarPosX && x <= (scrollBarPosX + scrollBarSizeX))
                     {
@@ -4082,13 +4076,13 @@ namespace FamiStudio
                     {
                         scrollY -= (Height - headerAndEffectSizeY);
                         ClampScroll();
-                        ConditionalInvalidate();
+                        MarkDirty();
                     }
                     else if (y > (scrollBarPosY + scrollBarSizeY))
                     {
                         scrollX += (Height - headerAndEffectSizeY);
                         ClampScroll();
-                        ConditionalInvalidate();
+                        MarkDirty();
                     }
                     else if (y >= scrollBarPosY && y <= (scrollBarPosY + scrollBarSizeY))
                     {
@@ -4156,7 +4150,7 @@ namespace FamiStudio
                 if (effectIdx >= 0 && effectIdx < supportedEffects.Length)
                 {
                     selectedEffectIdx = supportedEffects[effectIdx];
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 return true;
             }
@@ -4277,7 +4271,7 @@ namespace FamiStudio
                         editSample.VolumeEnvelope[vertexIdx].volume = 1.0f;
                         editSample.Process();
                         App.UndoRedoManager.EndTransaction();
-                        ConditionalInvalidate();
+                        MarkDirty();
                     }
                 }
                 return true;
@@ -4298,7 +4292,7 @@ namespace FamiStudio
                 else
                     snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
 
-                ConditionalInvalidate();
+                MarkDirty();
                 return true;
             }
 
@@ -4310,7 +4304,7 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Left) && IsPointOnSnapButton(e.X, e.Y))
             {
                 snap = !snap;
-                ConditionalInvalidate();
+                MarkDirty();
                 return true;
             }
 
@@ -4322,7 +4316,7 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Left) && IsPointOnMaximizeButton(e.X, e.Y))
             {
                 ToggleMaximize();
-                ConditionalInvalidate();
+                MarkDirty();
                 return true;
             }
 
@@ -4438,7 +4432,7 @@ namespace FamiStudio
                     }
                 }
 
-                ConditionalInvalidate();
+                MarkDirty();
                 return true;
             }
 
@@ -4562,7 +4556,7 @@ namespace FamiStudio
             return;
 
         Handled: // Yes, i use a goto, sue me.
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         //==============================================================================================================
@@ -4611,7 +4605,7 @@ namespace FamiStudio
             return;
 
         Handled: // Yes, i use a goto, sue me.
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         protected override void OnTouchMove(int x, int y)
@@ -4620,7 +4614,7 @@ namespace FamiStudio
                 PlayPiano(x, y);
 
             //UpdateCaptureOperation(e, false);
-            ConditionalInvalidate();
+            MarkDirty();
             //UpdateCaptureOperation(e, false);
 
             // MATTT : Move to "UpdateCaptureOperation".
@@ -4673,7 +4667,7 @@ namespace FamiStudio
             }
 
         Handled: // Yes, i use a goto, sue me.
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         //==============================================================================================================
@@ -4686,7 +4680,7 @@ namespace FamiStudio
         {
             UpdateRenderCoords();
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         protected override void OnResize(EventArgs e)
@@ -4741,7 +4735,7 @@ namespace FamiStudio
             scrollY -= deltaY;
 
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void SetSelection(int min, int max)
@@ -4847,7 +4841,7 @@ namespace FamiStudio
             int pad = IsSnappingEnabled ? -1 : 0;
 
             SetSelection(SnapNote(minSelectionIdx), SnapNote(maxSelectionIdx, true) + pad);
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void UpdateWaveSelection(MouseEventArgs e)
@@ -4870,7 +4864,7 @@ namespace FamiStudio
             }
 
             SetSelection(minSample, maxSample);
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void UpdateSeekDrag(MouseEventArgs e, bool final)
@@ -4881,7 +4875,7 @@ namespace FamiStudio
             if (final)
                 App.SeekSong(dragSeekPosition);
 
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void UpdateVolumeEnvelopeDrag(MouseEventArgs e, bool final)
@@ -4906,7 +4900,7 @@ namespace FamiStudio
             if (final)
                 App.UndoRedoManager.EndTransaction();
 
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void StartSlideNoteCreation(MouseEventArgs e, NoteLocation location, Note note, byte noteValue)
@@ -4970,7 +4964,7 @@ namespace FamiStudio
                 else
                     note.SlideNoteTarget = noteValue;
 
-                ConditionalInvalidate();
+                MarkDirty();
             }
 
             if (final)
@@ -5875,7 +5869,7 @@ namespace FamiStudio
                 App.StopInstrument();
             }
 
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void StartNoteResizeEnd(MouseEventArgs e, CaptureOperation captureOp, NoteLocation location)
@@ -5957,7 +5951,7 @@ namespace FamiStudio
             var note = pattern.Notes[captureNoteLocation.NoteIndex];
             note.Release = (ushort)Utils.Clamp(Song.CountNotesBetween(captureNoteLocation, location), 1, note.Duration - 1);
             channel.InvalidateCumulativePatternCache(pattern);
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void UpdateAltZoom(MouseEventArgs e)
@@ -6120,7 +6114,7 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
-            ConditionalInvalidate();
+            MarkDirty();
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
@@ -6167,7 +6161,7 @@ namespace FamiStudio
             scrollX = absoluteX - pixelX;
 
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void ZoomVerticallyAtLocation(int y, float scale)
@@ -6191,7 +6185,7 @@ namespace FamiStudio
             scrollY = absoluteY - pixelY;
 
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -6208,7 +6202,7 @@ namespace FamiStudio
                         scrollY -= e.Delta;
 
                     ClampScroll();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 else if (editMode != EditionMode.DPCMMapping)
                 {
@@ -6222,7 +6216,7 @@ namespace FamiStudio
                 else
                     snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
 
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -6230,7 +6224,7 @@ namespace FamiStudio
         {
             scrollX += e.Delta;
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void UpdateFollowMode(bool force = false)
@@ -6373,7 +6367,7 @@ namespace FamiStudio
                 UpdateRenderCoords();
                 ClampScroll();
                 ClampMinSnap();
-                ConditionalInvalidate();
+                MarkDirty();
 
                 captureOperation = CaptureOperation.None;
                 Capture = false;

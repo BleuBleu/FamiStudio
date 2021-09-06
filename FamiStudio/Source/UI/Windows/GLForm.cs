@@ -99,11 +99,15 @@ namespace FamiStudio
             }
             else if (graphicsContext != null)
             {
-                graphicsContext.MakeCurrent(windowInfo);
-                RenderFrame(false);
-                graphicsContext.SwapBuffers();
+                RenderFrameAndSwapBuffers(true);
             }
         }
 
+        public void RenderFrameAndSwapBuffers(bool force = false)
+        {
+            graphicsContext.MakeCurrent(windowInfo);
+            RenderFrame(force);
+            graphicsContext.SwapBuffers();
+        }
     }
 }

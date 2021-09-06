@@ -65,7 +65,6 @@ namespace FamiStudio
         private string newReleaseString = null;
         private string newReleaseUrl = null;
 
-        public bool RealTimeUpdate => songPlayer != null && songPlayer.IsPlaying || instrumentPlayer != null && instrumentPlayer.IsPlaying || PianoRoll.IsEditingInstrument || PianoRoll.IsEditingArpeggio || PianoRoll.IsEditingDPCMSample || pianoRollScrollChanged;
         public bool IsPlaying => songPlayer != null && songPlayer.IsPlaying;
         public bool IsRecording => recordingMode;
         public bool IsQwertyPianoEnabled => qwertyPiano;
@@ -185,7 +184,7 @@ namespace FamiStudio
 
         private void Sequencer_SelectionChanged()
         {
-            ToolBar.ConditionalInvalidate();
+            ToolBar.MarkDirty();
 
             if (songPlayer != null)
             {
@@ -220,7 +219,7 @@ namespace FamiStudio
         private void PianoRoll_DPCMSampleMapped(int note)
         {
             Sequencer.InvalidatePatternCache();
-            ProjectExplorer.ConditionalInvalidate();
+            ProjectExplorer.MarkDirty();
         }
 
         public int GetDPCMSampleMappingNoteAtPos(Point pos)
@@ -231,13 +230,13 @@ namespace FamiStudio
         private void ProjectExplorer_DPCMSampleMapped(DPCMSample instrument, Point pos)
         {
             Sequencer.InvalidatePatternCache();
-            PianoRoll.ConditionalInvalidate();
+            PianoRoll.MarkDirty();
         }
 
         private void ProjectExplorer_DPCMSampleDraggedOutside(DPCMSample instrument, Point pos)
         {
             if (PianoRoll.ClientRectangle.Contains(PianoRoll.PointToClient(pos)))
-                PianoRoll.ConditionalInvalidate();
+                PianoRoll.MarkDirty();
         }
 
         private void PianoRoll_NoteEyedropped(Note note)
@@ -258,7 +257,7 @@ namespace FamiStudio
 #if FAMISTUDIO_WINDOWS
                 pianoRollScrollChanged = true;
 #else
-                Sequencer.ConditionalInvalidate();
+                Sequencer.MarkDirty();
 #endif
             }
         }
@@ -294,7 +293,7 @@ namespace FamiStudio
         private void PianoRoll_NotesPasted()
         {
             ProjectExplorer.RefreshButtons();
-            ProjectExplorer.ConditionalInvalidate();
+            ProjectExplorer.MarkDirty();
         }
 
         private void ProjectExplorer_InstrumentDroppedOutside(Instrument instrument, Point pos)
@@ -319,21 +318,21 @@ namespace FamiStudio
 
         private void Sequencer_PatternModified()
         {
-            PianoRoll.ConditionalInvalidate();
+            PianoRoll.MarkDirty();
         }
 
         private void Sequencer_ControlActivated()
         {
             PianoRoll.ShowSelection = false;
             Sequencer.ShowSelection = true;
-            ToolBar.Invalidate();
+            ToolBar.MarkDirty();
         }
 
         private void PianoRoll_ControlActivated()
         {
             PianoRoll.ShowSelection = true;
             Sequencer.ShowSelection = false;
-            ToolBar.Invalidate();
+            ToolBar.MarkDirty();
         }
 
         private void sequencer_SelectedChannelChanged(int channelIdx)
@@ -455,12 +454,12 @@ namespace FamiStudio
                 InitializeInstrumentPlayer();
                 InitializeSongPlayer();
                 InitializeOscilloscope();
-                InvalidateEverything();
+                MarkEverythingDirty();
             }
 
             if (flags.HasFlag(TransactionFlags.StopAudio))
             {
-                InvalidateEverything();
+                MarkEverythingDirty();
             }
 
             if (scope == TransactionScope.Instrument && songPlayer != null)
@@ -473,7 +472,7 @@ namespace FamiStudio
 
         private void UndoRedoManager_Updated()
         {
-            ToolBar.ConditionalInvalidate();
+            ToolBar.MarkDirty();
         }
 
         private void ValidateIntegrity()
@@ -582,7 +581,7 @@ namespace FamiStudio
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
             PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
 
-            InvalidateEverything();
+            MarkEverythingDirty();
             UpdateTitle();
             RefreshLayout();
         }
@@ -710,7 +709,7 @@ namespace FamiStudio
                 PlatformUtils.MessageBox("An error happened while saving.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            InvalidateEverything();
+            MarkEverythingDirty();
 
             return true;
         }
@@ -747,10 +746,10 @@ namespace FamiStudio
 
             // Make sure we arent in real-time mode, on Linux/MacOS, this mean we will 
             // be constantly rendering frames as we export.
-            if (RealTimeUpdate)
+            if (AppNeedsRealTimeUpdate())
             {
                 PianoRoll.Reset();
-                Debug.Assert(!RealTimeUpdate);
+                Debug.Assert(!AppNeedsRealTimeUpdate());
             }
         }
 
@@ -765,7 +764,7 @@ namespace FamiStudio
                     RecreateAudioPlayers();
                     RefreshLayout();
                     InitializeMidi();
-                    InvalidateEverything();
+                    MarkEverythingDirty();
                 }
             });
         }
@@ -932,7 +931,7 @@ namespace FamiStudio
                     Sequencer.Reset();
                     PianoRoll.Reset();
                     ProjectExplorer.RefreshButtons();
-                    InvalidateEverything();
+                    MarkEverythingDirty();
                 }
             });
 #endif
@@ -1181,7 +1180,7 @@ namespace FamiStudio
                     InitializeOscilloscope();
                 }
 
-                InvalidateEverything();
+                MarkEverythingDirty();
             }
         }
         
@@ -1271,12 +1270,12 @@ namespace FamiStudio
             else if (e.KeyCode == Keys.PageUp)
             {
                 baseRecordingOctave = Math.Min(7, baseRecordingOctave + 1);
-                PianoRoll.ConditionalInvalidate();
+                PianoRoll.MarkDirty();
             }
             else if (e.KeyCode == Keys.PageDown)
             {
                 baseRecordingOctave = Math.Max(0, baseRecordingOctave - 1);
-                PianoRoll.ConditionalInvalidate();
+                PianoRoll.MarkDirty();
             }
             else if (e.KeyCode == Keys.Enter)
             {
@@ -1285,7 +1284,7 @@ namespace FamiStudio
             else if (shift && e.KeyCode == Keys.F)
             {
                 followMode = !followMode;
-                ToolBar.Invalidate();
+                ToolBar.MarkDirty();
             }
             else if (e.KeyCode == Keys.Space)
             {
@@ -1322,7 +1321,7 @@ namespace FamiStudio
                     GhostChannelMask ^= (1 << (e.KeyCode - Keys.F1));
                 else
                     Sequencer.SelectedChannel = (e.KeyCode - Keys.F1);
-                Sequencer.ConditionalInvalidate();
+                Sequencer.MarkDirty();
             }
             else if ((ctrl && e.KeyCode == Keys.Y) || (ctrl && shift && e.KeyCode == Keys.Z))
             {
@@ -1434,7 +1433,7 @@ namespace FamiStudio
             midiNoteQueue.Enqueue(new Tuple<int, bool>(n, on));
         }
 
-        private void ProcessedQueuedMidiNotes()
+        private void ProcessQueuedMidiNotes()
         {
             while (midiNoteQueue.TryDequeue(out var t))
             {
@@ -1481,7 +1480,7 @@ namespace FamiStudio
                 PianoRoll.UpdateFollowMode(true);
                 lastTickCurrentFrame = -1;
 
-                InvalidateEverything();
+                MarkEverythingDirty();
             }
         }
 
@@ -1491,7 +1490,7 @@ namespace FamiStudio
             StopSong();
             recordingMode = true;
             qwertyPiano = true;
-            InvalidateEverything();
+            MarkEverythingDirty();
         }
 
         public void StopRecording()
@@ -1501,7 +1500,7 @@ namespace FamiStudio
                 recordingMode = false;
                 lastRecordingKeyDown = -1;
                 StopInstrument();
-                InvalidateEverything();
+                MarkEverythingDirty();
             }
         }
 
@@ -1518,8 +1517,8 @@ namespace FamiStudio
             if (!recordingMode)
             {
                 qwertyPiano = !qwertyPiano;
-                ToolBar.Invalidate();
-                PianoRoll.Invalidate();
+                ToolBar.MarkDirty();
+                PianoRoll.MarkDirty();
             }
         }
 
@@ -1538,7 +1537,7 @@ namespace FamiStudio
                 if (wasPlaying) StopSong();
                 songPlayer.PlayPosition = Utils.Clamp(frame, 0, song.GetPatternStartAbsoluteNoteIndex(song.Length) - 1);
                 if (wasPlaying) PlaySong();
-                InvalidateEverything();
+                MarkEverythingDirty();
             }
         }
 
@@ -1550,7 +1549,7 @@ namespace FamiStudio
                 if (wasPlaying) StopSong();
                 songPlayer.PlayPosition = song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition));
                 if (wasPlaying) PlaySong();
-                InvalidateEverything();
+                MarkEverythingDirty();
             }
         }
 
@@ -1560,8 +1559,8 @@ namespace FamiStudio
             set
             {
                 ghostChannelMask = value;
-                Sequencer.ConditionalInvalidate();
-                PianoRoll.ConditionalInvalidate();
+                Sequencer.MarkDirty();
+                PianoRoll.MarkDirty();
             }
         }
 
@@ -1582,12 +1581,12 @@ namespace FamiStudio
             return PianoRoll.GetViewRange(ref minNoteIdx, ref maxNoteIdx, ref channelIndex);
         }
 
-        private void InvalidateEverything()
+        private void MarkEverythingDirty()
         {
-            ToolBar.Invalidate();
-            Sequencer.Invalidate();
-            PianoRoll.Invalidate();
-            ProjectExplorer.Invalidate();
+            ToolBar.MarkDirty();
+            Sequencer.MarkDirty();
+            PianoRoll.MarkDirty();
+            ProjectExplorer.MarkDirty();
         }
 
         private void RecreateAudioPlayers()
@@ -1627,53 +1626,72 @@ namespace FamiStudio
 #endif
         }
 
-        int playDelay = 100; // MATTT
-
-        public void Tick()
+        private bool AppNeedsRealTimeUpdate()
         {
-            if (playDelay > 0)
-            {
-                if (--playDelay == 0)
-                {
-                    //PlaySong();
-                }
-            }
+            return songPlayer       != null && songPlayer.IsPlaying       || 
+                   instrumentPlayer != null && instrumentPlayer.IsPlaying || 
+                   PianoRoll.IsEditingInstrument || 
+                   PianoRoll.IsEditingArpeggio   || 
+                   PianoRoll.IsEditingDPCMSample || 
+                   pianoRollScrollChanged;
+        }
 
-            lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
-
+        private void ProcessAudioDeviceChanges()
+        {
             if (audioDeviceChanged)
             {
                 RecreateAudioPlayers();
                 audioDeviceChanged = false;
             }
+        }
 
-            ProcessedQueuedMidiNotes();
-            TickControls();
-
-            if (RealTimeUpdate)
-                InvalidateEverything();
+        private void ConditionalMarkControlsDirty()
+        {
+            if (AppNeedsRealTimeUpdate())
+            {
+                MarkEverythingDirty();
+            }
             else if (oscilloscope != null && ToolBar.ShouldRefreshOscilloscope(oscilloscope.HasNonZeroSample))
-                ToolBar.Invalidate();
+            {
+                ToolBar.MarkDirty();
+            }
 
             pianoRollScrollChanged = false;
+        }
 
-            ConditionalShowTutorial();
-            CheckNewReleaseDone();
-
+        private void HighlightPlayingInstrumentNote()
+        {
             if (instrumentPlayer != null)
                 PianoRoll.HighlightPianoNote(instrumentPlayer.PlayingNote);
         }
 
-        private void TickControls()
+        public void Tick(float deltaTime = -1.0f)
+        {
+            lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
+
+            ProcessAudioDeviceChanges();
+            ProcessQueuedMidiNotes();
+            TickControls(deltaTime);
+            ConditionalMarkControlsDirty();
+            ConditionalShowTutorial();
+            CheckNewReleaseDone();
+            HighlightPlayingInstrumentNote();
+        }
+
+        private void TickControls(float deltaTime)
         {
             var tickTime = DateTime.Now;
-            var deltaTime = (float)Math.Min(0.25f, (tickTime - lastTickTime).TotalSeconds); 
 
+            if (deltaTime < 0.0f)
+                deltaTime = (float)(tickTime - lastTickTime).TotalSeconds;
+
+            deltaTime = (float)Math.Min(0.25f, deltaTime);
             averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
 
             ToolBar.Tick(deltaTime);
             PianoRoll.Tick(deltaTime);
             Sequencer.Tick(deltaTime);
+            ProjectExplorer.Tick(deltaTime);
 
             lastTickTime = tickTime;
         }
@@ -1686,18 +1704,18 @@ namespace FamiStudio
         private void pianoRoll_PatternChanged(Pattern pattern)
         {
             Sequencer.NotifyPatternChange(pattern);
-            Sequencer.Invalidate();
+            Sequencer.MarkDirty();
         }
 
         private void PianoRoll_ManyPatternChanged()
         {
             Sequencer.InvalidatePatternCache();
-            Sequencer.Invalidate();
+            Sequencer.MarkDirty();
         }
 
         private void PianoRoll_DPCMSampleChanged()
         {
-            ProjectExplorer.ConditionalInvalidate();
+            ProjectExplorer.MarkDirty();
         }
 
         private void projectExplorer_InstrumentEdited(Instrument instrument, int envelope)
@@ -1732,7 +1750,7 @@ namespace FamiStudio
 
         private void pianoRoll_EnvelopeChanged()
         {
-            ProjectExplorer.Invalidate();
+            ProjectExplorer.MarkDirty();
         }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -1755,7 +1773,7 @@ namespace FamiStudio
                     SeekSong(currentFrame);
 
                 RefreshLayout();
-                mainForm.Invalidate();
+                mainForm.MarkDirty();
 
                 // When the song changes between undo/redos, must stop the audio.
                 if (oldSong.Id != song.Id)
@@ -1779,25 +1797,25 @@ namespace FamiStudio
         private void projectExplorer_InstrumentColorChanged(Instrument instrument)
         {
             Sequencer.InvalidatePatternCache();
-            PianoRoll.ConditionalInvalidate();
+            PianoRoll.MarkDirty();
         }
 
         private void ProjectExplorer_ArpeggioColorChanged(Arpeggio arpeggio)
         {
-            PianoRoll.ConditionalInvalidate();
+            PianoRoll.MarkDirty();
         }
 
         private void ProjectExplorer_DPCMSampleColorChanged(DPCMSample sample)
         {
             Sequencer.InvalidatePatternCache();
-            PianoRoll.ConditionalInvalidate();
+            PianoRoll.MarkDirty();
         }
 
         private void projectExplorer_SongModified(Song song)
         {
             Sequencer.SongModified();
             PianoRoll.SongModified();
-            InvalidateEverything();
+            MarkEverythingDirty();
         }
 
         private void projectExplorer_SongSelected(Song song)
@@ -1810,13 +1828,13 @@ namespace FamiStudio
             Sequencer.Reset();
             ToolBar.Reset();
 
-            InvalidateEverything();
+            MarkEverythingDirty();
         }
 
         private void projectExplorer_InstrumentReplaced(Instrument instrument)
         {
             Sequencer.InvalidatePatternCache();
-            InvalidateEverything();
+            MarkEverythingDirty();
         }
     }
 }

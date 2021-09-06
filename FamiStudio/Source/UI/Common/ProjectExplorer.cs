@@ -124,18 +124,20 @@ namespace FamiStudio
             DragSample,
             DragSong,
             MoveSlider,
-            ScrollBar
+            ScrollBar,
+            MobilePan
         };
 
         static readonly bool[] captureNeedsThreshold = new[]
         {
-            false,
-            true,
-            true,
-            false,
-            true,
-            false,
-            false
+            false, // None,
+            true,  // DragInstrument,
+            true,  // DragArpeggio,
+            false, // DragSample,
+            true,  // DragSong,
+            false, // MoveSlider,
+            false, // ScrollBar
+            false  // MobilePan
         };
 
         int scrollY = 0;
@@ -148,6 +150,7 @@ namespace FamiStudio
         int captureButtonIdx = -1;
         int captureScrollY = -1;
         int envelopeDragIdx = -1;
+        float flingVelY = 0.0f;
         float bitmapScale = 1.0f;
         bool captureThresholdMet = false;
         Button sliderDragButton = null;
@@ -486,7 +489,7 @@ namespace FamiStudio
             set
             {
                 selectedArpeggio = value;
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -499,7 +502,7 @@ namespace FamiStudio
             set
             {
                 selectedInstrument = value;
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -543,8 +546,6 @@ namespace FamiStudio
 
         private void UpdateRenderCoords()
         {
-            var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
-
             expandButtonSizeX    = ScaleForMainWindow(DefaultExpandButtonSizeX);
             buttonIconPosX       = ScaleForMainWindow(DefaultButtonIconPosX);      
             buttonIconPosY       = ScaleForMainWindow(DefaultButtonIconPosY);      
@@ -562,9 +563,14 @@ namespace FamiStudio
             checkBoxPosX         = ScaleForMainWindow(DefaultCheckBoxPosX);
             checkBoxPosY         = ScaleForMainWindow(DefaultCheckBoxPosY);
             draggedLineSizeY     = ScaleForMainWindow(DefaultDraggedLineSizeY);
-            scrollBarThickness   = ScaleForMainWindow(scrollBarSize);
+            
             virtualSizeY         = App?.Project == null ? Height : buttons.Count * buttonSizeY;
             needsScrollBar       = virtualSizeY > Height;
+
+            if (needsScrollBar)
+                scrollBarThickness = ScaleForMainWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
+            else
+                scrollBarThickness = 0;
         }
 
         public void Reset()
@@ -577,14 +583,14 @@ namespace FamiStudio
             selectedArpeggio = null;
             SongSelected?.Invoke(selectedSong);
             RefreshButtons();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void LayoutChanged()
         {
             UpdateRenderCoords();
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private ButtonType GetButtonTypeForParam(ParamInfo param)
@@ -662,11 +668,13 @@ namespace FamiStudio
                 buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = EnvelopeType.Arpeggio });
             }
 
+            flingVelY = 0.0f;
+
             UpdateRenderCoords();
             ClampScroll();
 
             if (invalidate)
-                ConditionalInvalidate();
+                MarkDirty();
         }
 
         protected override void OnRenderInitialized(RenderGraphics g)
@@ -695,12 +703,6 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpEnvelopesAtlas);
         }
 
-        public void ConditionalInvalidate()
-        {
-            if (!App.RealTimeUpdate)
-                Invalidate();
-        }
-
         protected bool ShowExpandButtons()
         {
             if (App.Project != null)
@@ -718,20 +720,6 @@ namespace FamiStudio
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList();
-
-            //c.DrawRectangle(10, 20, 100, 40, ThemeResources.BlackBrush);
-            //c.DrawText("Text jgi,!pqA", ThemeResources.FontMedium, 10, 20, ThemeResources.BlackBrush, RenderTextFlags.Center, 90, 20);
-            //c.DrawRectangle(10, 60, 100, 80, ThemeResources.BlackBrush);
-            //c.DrawText("Text jgi,!pqA", ThemeResources.FontMedium, 10, 60, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Middle, 90, 20);
-            //c.DrawRectangle(10, 100, 100, 120, ThemeResources.BlackBrush);
-            //c.DrawText("Text jgi,!pqA", ThemeResources.FontMedium, 10, 100, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Bottom, 90, 20);
-            //c.DrawRectangle(10, 140, 100, 180, ThemeResources.BlackBrush);
-            //c.DrawText("Text jgi,!pqA", ThemeResources.FontMedium, 10, 140, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Middle, 90, 40);
-
-            //g.Clear(Theme.LightRedFillColor);
-            //g.DrawCommandList(c);
-
-            //return;
 
             c.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
 
@@ -940,20 +928,22 @@ namespace FamiStudio
             }
         }
 
-        private void ClampScroll()
+        private bool ClampScroll()
         {
             int minScrollY = 0;
             int maxScrollY = Math.Max(virtualSizeY - Height, 0);
 
-            if (scrollY < minScrollY) scrollY = minScrollY;
-            if (scrollY > maxScrollY) scrollY = maxScrollY;
+            var scrolled = true;
+            if (scrollY < minScrollY) { scrollY = minScrollY; scrolled = false; }
+            if (scrollY > maxScrollY) { scrollY = maxScrollY; scrolled = false; }
+            return scrolled;
         }
 
-        private void DoScroll(int deltaY)
+        private bool DoScroll(int deltaY)
         {
             scrollY -= deltaY;
-            ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
+            return ClampScroll();
         }
 
         protected void UpdateCursor()
@@ -1032,11 +1022,11 @@ namespace FamiStudio
             return GetButtonAtCoord(x, y, out sub, out _, out _);
         }
 
-        private void UpdateToolTip(MouseEventArgs e)
+        private void UpdateToolTip(int x, int y)
         {
             var redTooltip = false;
             var tooltip = "";
-            var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
 
             // TODO: Store this in the button itself... this is stupid.
             if (buttonIdx >= 0)
@@ -1083,7 +1073,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamCheckbox)
                 {
-                    if (e.X >= Width - scrollBarThickness - checkBoxPosX)
+                    if (x >= Width - scrollBarThickness - checkBoxPosX)
                     {
                         tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
                     }
@@ -1094,7 +1084,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamSlider)
                 {
-                    if (e.X >= Width - scrollBarThickness - sliderPosX)
+                    if (x >= Width - scrollBarThickness - sliderPosX)
                     {
                         tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
                     }
@@ -1105,7 +1095,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamList)
                 {
-                    if (e.X >= Width - scrollBarThickness - sliderPosX)
+                    if (x >= Width - scrollBarThickness - sliderPosX)
                     {
                         tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
                     }
@@ -1171,7 +1161,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (needsScrollBar && e.X > Width - scrollBarThickness)
+            else if (needsScrollBar && x > Width - scrollBarThickness)
             {
                 tooltip = "{MouseLeft} {Drag} Scroll";
             }
@@ -1179,12 +1169,12 @@ namespace FamiStudio
             App.SetToolTip(tooltip, redTooltip);
         }
 
-        private void UpdateSlider(MouseEventArgs e, bool final)
+        private void UpdateSlider(int x, int y, bool final)
         {
             if (!final)
             {
-                UpdateSliderValue(sliderDragButton, e, false);
-                ConditionalInvalidate();
+                UpdateSliderValue(sliderDragButton, x, y, false);
+                MarkDirty();
             }
             else
             {
@@ -1192,20 +1182,20 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateScrollBar(MouseEventArgs e)
+        private void UpdateScrollBar(int x, int y)
         {
-            scrollY = captureScrollY + ((e.Y - captureMouseY) * virtualSizeY / Height);
+            scrollY = captureScrollY + ((y - captureMouseY) * virtualSizeY / Height);
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
-        private void UpdateDragSample(MouseEventArgs e, bool final)
+        private void UpdateDragSample(int x, int y, bool final)
         {
-            if (!ClientRectangle.Contains(e.X, e.Y))
+            if (!ClientRectangle.Contains(x, y))
             {
                 if (final)
                 {
-                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(PointToScreen(new Point(e.X, e.Y)));
+                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(PointToScreen(new Point(x, y)));
                     if (App.Project.NoteSupportsDPCM(mappingNote))
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
@@ -1213,21 +1203,21 @@ namespace FamiStudio
                         App.Project.MapDPCMSample(mappingNote, draggedSample);
                         App.UndoRedoManager.EndTransaction();
 
-                        DPCMSampleMapped?.Invoke(draggedSample, PointToScreen(new Point(e.X, e.Y)));
+                        DPCMSampleMapped?.Invoke(draggedSample, PointToScreen(new Point(x, y)));
                     }
                 }
                 else
                 {
-                    DPCMSampleDraggedOutside?.Invoke(draggedSample, PointToScreen(new Point(e.X, e.Y)));
+                    DPCMSampleDraggedOutside?.Invoke(draggedSample, PointToScreen(new Point(x, y)));
                 }
             }
         }
 
-        private void UpdateDragSong(MouseEventArgs e, bool final)
+        private void UpdateDragSong(int x, int y, bool final)
         {
             if (final)
             {
-                var buttonIdx = GetButtonAtCoord(e.X, e.Y - buttonSizeY / 2, out _);
+                var buttonIdx = GetButtonAtCoord(x, y - buttonSizeY / 2, out _);
 
                 if (buttonIdx >= 0)
                 {
@@ -1250,13 +1240,13 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateDragInstrument(MouseEventArgs e, bool final)
+        private void UpdateDragInstrument(int x, int y, bool final)
         {
             if (final)
             {
-                if (ClientRectangle.Contains(e.X, e.Y))
+                if (ClientRectangle.Contains(x, y))
                 {
-                    var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
+                    var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
 
                     var instrumentSrc = draggedInstrument;
                     var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
@@ -1313,17 +1303,17 @@ namespace FamiStudio
                 }
                 else
                 {
-                    InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(e.X, e.Y)));
+                    InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(x, y)));
                 }
             }
         }
-        private void UpdateDragArpeggio(MouseEventArgs e, bool final)
+        private void UpdateDragArpeggio(int x, int y, bool final)
         {
             if (final)
             {
-                if (ClientRectangle.Contains(e.X, e.Y))
+                if (ClientRectangle.Contains(x, y))
                 {
-                    var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
+                    var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
 
                     var arpeggioSrc = draggedArpeggio;
                     var arpeggioDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Arpeggio ? buttons[buttonIdx].arpeggio : null;
@@ -1356,17 +1346,18 @@ namespace FamiStudio
                 }
                 else
                 {
-                    ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(e.X, e.Y)));
+                    ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(x, y)));
                 }
             }
         }
 
-        private void UpdateCaptureOperation(MouseEventArgs e)
+        private void UpdateCaptureOperation(int x, int y)
         {
+            // DROIDTODO : DO we need this?
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
-                if (Math.Abs(e.X - captureMouseX) > 4 ||
-                    Math.Abs(e.Y - captureMouseY) > 4)
+                if (Math.Abs(x - captureMouseX) > 4 ||
+                    Math.Abs(y - captureMouseY) > 4)
                 {
                     captureThresholdMet = true;
                 }
@@ -1377,24 +1368,27 @@ namespace FamiStudio
                 switch (captureOperation)
                 {
                     case CaptureOperation.MoveSlider:
-                        UpdateSlider(e, false);
+                        UpdateSlider(x, y, false);
                         break;
                     case CaptureOperation.ScrollBar:
-                        UpdateScrollBar(e);
+                        UpdateScrollBar(x, y);
                         break;
                     case CaptureOperation.DragSample:
-                        UpdateDragSample(e, false);
+                        UpdateDragSample(x, y, false);
+                        break;
+                    case CaptureOperation.MobilePan:
+                        DoScroll(y - mouseLastY);
                         break;
                     default:
-                        ConditionalInvalidate();
+                        MarkDirty();
                         break;
                 }
             }
         }
 
-        protected void EmitInstrumentHoverEvent(MouseEventArgs e)
+        protected void EmitInstrumentHoverEvent(int x, int y)
         {
-            var buttonIdx = GetButtonAtCoord(e.X, e.Y, out _);
+            var buttonIdx = GetButtonAtCoord(x, y, out _);
             var showExpansions = buttonIdx >= 0 && (buttons[buttonIdx].type == ButtonType.Instrument || buttons[buttonIdx].type == ButtonType.InstrumentHeader);
             InstrumentsHovered?.Invoke(showExpansions);
         }
@@ -1406,15 +1400,15 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
-            UpdateCaptureOperation(e);
+            UpdateCaptureOperation(e.X, e.Y);
 
             if (middle)
             {
                 DoScroll(e.Y - mouseLastY);
             }
 
-            UpdateToolTip(e);
-            EmitInstrumentHoverEvent(e);
+            UpdateToolTip(e.X, e.Y);
+            EmitInstrumentHoverEvent(e.X, e.Y);
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
@@ -1429,9 +1423,9 @@ namespace FamiStudio
         {
             base.OnMouseUp(e);
 
-            EndCaptureOperation(e);
+            EndCaptureOperation(e.X, e.Y);
             UpdateCursor();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
 #if FALSE // // MATTT FAMISTUDIO_WINDOWS
@@ -1442,11 +1436,13 @@ namespace FamiStudio
         }
 #endif
 
-        private void StartCaptureOperation(MouseEventArgs e, CaptureOperation op, int buttonIdx = -1, int buttonRelX = 0, int buttonRelY = 0)
+        private void StartCaptureOperation(int x, int y, CaptureOperation op, int buttonIdx = -1, int buttonRelX = 0, int buttonRelY = 0)
         {
             Debug.Assert(captureOperation == CaptureOperation.None);
-            captureMouseX = e.X;
-            captureMouseY = e.Y;
+            mouseLastX = x;
+            mouseLastY = y;
+            captureMouseX = x;
+            captureMouseY = y;
             captureButtonIdx = buttonIdx;
             captureButtonRelX = buttonRelX;
             captureButtonRelY = buttonRelY;
@@ -1456,26 +1452,26 @@ namespace FamiStudio
             captureThresholdMet = !captureNeedsThreshold[(int)op];
         }
 
-        private void EndCaptureOperation(MouseEventArgs e)
+        private void EndCaptureOperation(int x, int y)
         {
             if (captureOperation != CaptureOperation.None && captureThresholdMet)
             {
                 switch (captureOperation)
                 {
                     case CaptureOperation.DragInstrument:
-                        UpdateDragInstrument(e, true);
+                        UpdateDragInstrument(x, y, true);
                         break;
                     case CaptureOperation.DragArpeggio:
-                        UpdateDragArpeggio(e, true);
+                        UpdateDragArpeggio(x, y, true);
                         break;
                     case CaptureOperation.DragSample:
-                        UpdateDragSample(e, true);
+                        UpdateDragSample(x, y, true);
                         break;
                     case CaptureOperation.MoveSlider:
-                        UpdateSlider(e, true);
+                        UpdateSlider(x, y, true);
                         break;
                     case CaptureOperation.DragSong:
-                        UpdateDragSong(e, true);
+                        UpdateDragSong(x, y, true);
                         break;
                 }
             }
@@ -1494,7 +1490,7 @@ namespace FamiStudio
             if (App.UndoRedoManager.HasTransactionInProgress)
                 App.UndoRedoManager.AbortTransaction();
 
-            ConditionalInvalidate();
+            MarkDirty();
 
             draggedArpeggio = null;
             draggedInstrument = null;
@@ -1517,7 +1513,7 @@ namespace FamiStudio
             base.OnResize(e);
         }
 
-        bool UpdateSliderValue(Button button, MouseEventArgs e, bool mustBeInside)
+        bool UpdateSliderValue(Button button, int x, int y, bool mustBeInside)
         {
             var buttonIdx = buttons.IndexOf(button);
             Debug.Assert(buttonIdx >= 0);
@@ -1525,8 +1521,8 @@ namespace FamiStudio
             bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
             var actualWidth = Width - scrollBarThickness;
-            var buttonX = e.X;
-            var buttonY = e.Y + scrollY - buttonIdx * buttonSizeY;
+            var buttonX = x;
+            var buttonY = y + scrollY - buttonIdx * buttonSizeY;
 
             bool insideSlider = (buttonX > (actualWidth - sliderPosX) &&
                                  buttonX < (actualWidth - sliderPosX + sliderSizeX) &&
@@ -1540,17 +1536,17 @@ namespace FamiStudio
 
             if (shift)
             {
-                var delta = (e.X - captureMouseX) / 4;
+                var delta = (x - captureMouseX) / 4;
                 if (delta != 0)
                 {
                     paramVal = Utils.Clamp(paramVal + delta * button.param.SnapValue, button.param.MinValue, button.param.MaxValue);
-                    captureMouseX = e.X;
+                    captureMouseX = x;
                 }
             }
             else
             {
                 paramVal = (int)Math.Round(Utils.Lerp(button.param.MinValue, button.param.MaxValue, Utils.Clamp((buttonX - (actualWidth - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
-                captureMouseX = e.X;
+                captureMouseX = x;
             }
 
             paramVal = button.param.SnapAndClampValue(paramVal);
@@ -1904,17 +1900,17 @@ namespace FamiStudio
                 {
                     scrollY -= Height;
                     ClampScroll();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 else if (e.Y > (scrollBarPosY + scrollBarSizeY))
                 {
                     scrollY += Height;
                     ClampScroll();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 else
                 {
-                    StartCaptureOperation(e, CaptureOperation.ScrollBar);
+                    StartCaptureOperation(e.X, e.Y, CaptureOperation.ScrollBar);
                 }
 
                 return true;
@@ -1952,10 +1948,10 @@ namespace FamiStudio
                 {
                     selectedSong = button.song;
                     SongSelected?.Invoke(selectedSong);
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
 
-                StartCaptureOperation(e, CaptureOperation.DragSong, buttonIdx);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSong, buttonIdx);
                 draggedSong = button.song;
             }
             else if (e.Button.HasFlag(MouseButtons.Right) && App.Project.Songs.Count > 1)
@@ -2040,7 +2036,7 @@ namespace FamiStudio
                 {
                     envelopeDragIdx = -1;
                     draggedInstrument = selectedInstrument;
-                    StartCaptureOperation(e, CaptureOperation.DragInstrument, buttonIdx, buttonRelX, buttonRelY);
+                    StartCaptureOperation(e.X, e.Y, CaptureOperation.DragInstrument, buttonIdx, buttonRelX, buttonRelY);
                 }
 
                 if (subButtonType == SubButtonType.Expand)
@@ -2060,7 +2056,7 @@ namespace FamiStudio
                 }
 
                 InstrumentSelected?.Invoke(selectedInstrument);
-                ConditionalInvalidate();
+                MarkDirty();
             }
             else if (e.Button.HasFlag(MouseButtons.Right) && button.instrument != null)
             {
@@ -2071,7 +2067,7 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id);
                     instrument.Envelopes[(int)subButtonType].ClearToDefault((int)subButtonType);
                     App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 else if (subButtonType == SubButtonType.Max)
                 {
@@ -2106,11 +2102,11 @@ namespace FamiStudio
                 {
                     captureMouseX = e.X; // Hack, UpdateSliderValue relies on this.
 
-                    if (UpdateSliderValue(button, e, true))
+                    if (UpdateSliderValue(button, e.X, e.Y, true))
                     {
                         sliderDragButton = button;
-                        StartCaptureOperation(e, CaptureOperation.MoveSlider, buttonIdx);
-                        ConditionalInvalidate();
+                        StartCaptureOperation(e.X, e.Y, CaptureOperation.MoveSlider, buttonIdx);
+                        MarkDirty();
                     }
                     else
                     {
@@ -2121,7 +2117,7 @@ namespace FamiStudio
                 {
                     button.param.SetValue(button.param.DefaultValue);
                     App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
 
@@ -2151,7 +2147,7 @@ namespace FamiStudio
                         button.param.SetValue(button.param.DefaultValue);
                     }
                     App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
 
@@ -2186,14 +2182,14 @@ namespace FamiStudio
                     button.param.SetValue(val);
 
                     App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 else if (right && buttonX > (actualWidth - sliderPosX))
                 {
                     App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
                     button.param.SetValue(button.param.DefaultValue);
                     App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
 
@@ -2225,7 +2221,7 @@ namespace FamiStudio
 
                 envelopeDragIdx = -1;
                 draggedArpeggio = selectedArpeggio;
-                StartCaptureOperation(e, CaptureOperation.DragArpeggio, buttonIdx, buttonRelX, buttonRelY);
+                StartCaptureOperation(e.X, e.Y, CaptureOperation.DragArpeggio, buttonIdx, buttonRelX, buttonRelY);
 
                 if (subButtonType < SubButtonType.EnvelopeMax)
                 {
@@ -2234,7 +2230,7 @@ namespace FamiStudio
                 }
 
                 ArpeggioSelected?.Invoke(selectedArpeggio);
-                ConditionalInvalidate();
+                MarkDirty();
             }
             else if (e.Button.HasFlag(MouseButtons.Right) && button.arpeggio != null) 
             {
@@ -2335,8 +2331,8 @@ namespace FamiStudio
                 else if (subButtonType == SubButtonType.Max)
                 {
                     draggedSample = button.sample;
-                    StartCaptureOperation(e, CaptureOperation.DragSample, buttonIdx);
-                    ConditionalInvalidate();
+                    StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSample, buttonIdx);
+                    MarkDirty();
                 }
             }
             else if (e.Button.HasFlag(MouseButtons.Right))
@@ -2435,11 +2431,59 @@ namespace FamiStudio
             return;
 
         Handled: // Yes, i use a goto, sue me.
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
-        
-        public /*MATTT private*/ void EditProjectProperties(Point pt)
+        protected override void OnTouchDown(int x, int y)
+        {
+            flingVelY = 0;
+
+            if (captureOperation != CaptureOperation.None)
+                return;
+
+            StartCaptureOperation(x, y, CaptureOperation.MobilePan);
+        }
+
+        protected override void OnTouchMove(int x, int y)
+        {
+            UpdateCursor();
+            UpdateCaptureOperation(x, y);
+            UpdateToolTip(x, y);
+            EmitInstrumentHoverEvent(x, y);
+
+            mouseLastX = x;
+            mouseLastY = y;
+        }
+
+        protected override void OnTouchUp(int x, int y)
+        {
+            EndCaptureOperation(x, y);
+        }
+
+        protected override void OnTouchFling(int x, int y, float velX, float velY)
+        {
+            EndCaptureOperation(x, y);
+            flingVelY = velY;
+        }
+
+        private void TickFling(float delta)
+        {
+            if (flingVelY != 0.0f)
+            {
+                var deltaPixel = (int)Math.Round(flingVelY * delta);
+                if (deltaPixel != 0 && DoScroll(deltaPixel))
+                    flingVelY *= (float)Math.Exp(delta * -4.5f);
+                else
+                    flingVelY = 0.0f;
+            }
+        }
+
+        public void Tick(float delta)
+        {
+            TickFling(delta);
+        }
+
+        private void EditProjectProperties(Point pt)
         {
             var project = App.Project;
 
@@ -2639,7 +2683,7 @@ namespace FamiStudio
                     SystemSounds.Beep.Play();
                 }
 
-                ConditionalInvalidate();
+                MarkDirty();
             }
 #endif
         }
@@ -2807,6 +2851,7 @@ namespace FamiStudio
             {
                 captureOperation = CaptureOperation.None;
                 Capture = false;
+                flingVelY = 0.0f;
 
                 ClampScroll();
                 RefreshButtons();

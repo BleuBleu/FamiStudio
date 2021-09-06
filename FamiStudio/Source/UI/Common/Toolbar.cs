@@ -540,7 +540,7 @@ namespace FamiStudio
         public void LayoutChanged()
         {
             UpdateButtonLayout();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void SetToolTip(string msg, bool red = false)
@@ -549,7 +549,7 @@ namespace FamiStudio
             {
                 tooltip = msg;
                 redTooltip = red;
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
 
@@ -566,7 +566,7 @@ namespace FamiStudio
             if (PlatformUtils.IsDesktop)
             {
                 if (!string.IsNullOrEmpty(warning))
-                    ConditionalInvalidate();
+                    MarkDirty();
             }
             else
             {
@@ -593,12 +593,6 @@ namespace FamiStudio
         {
             tooltip = "";
             redTooltip = false;
-        }
-
-        public void ConditionalInvalidate()
-        {
-            if (App != null && !App.RealTimeUpdate)
-                Invalidate();
         }
 
         private void OnNew()
@@ -713,7 +707,7 @@ namespace FamiStudio
             else
                 App.PlayRate = Utils.Clamp(rate / 2, 1, 4);
 
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private ButtonImageIndices OnPlayGetBitmap()
@@ -832,7 +826,7 @@ namespace FamiStudio
         private void OnMore()
         {
             expanded = !expanded;
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void RenderButtons(RenderCommandList c)
@@ -1061,13 +1055,13 @@ namespace FamiStudio
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            ConditionalInvalidate();
+            MarkDirty();
             base.OnMouseLeave(e);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            ConditionalInvalidate();
+            MarkDirty();
 
             foreach (var btn in buttons)
             {
@@ -1110,7 +1104,7 @@ namespace FamiStudio
                     e.Y > timecodePosY && e.Y < Height - timecodePosY)
                 {
                     Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 else
                 {
@@ -1142,7 +1136,7 @@ namespace FamiStudio
                     y > timecodePosY && y < Height - timecodePosY)
                 {
                     Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
-                    ConditionalInvalidate();
+                    Invalidate();
                 }
                 else
                 */

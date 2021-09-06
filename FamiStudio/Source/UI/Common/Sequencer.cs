@@ -154,7 +154,7 @@ namespace FamiStudio
         public bool ShowSelection
         {
             get { return showSelection; }
-            set { showSelection = value; ConditionalInvalidate(); }
+            set { showSelection = value; MarkDirty(); }
         }
 
         public int SelectedChannel
@@ -166,7 +166,7 @@ namespace FamiStudio
                 {
                     selectedChannel = value;
                     SelectedChannelChanged?.Invoke(selectedChannel);
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
         }
@@ -179,15 +179,9 @@ namespace FamiStudio
                 if (showExpansionIcons != value)
                 {
                     showExpansionIcons = value;
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
-        }
-
-        public void ConditionalInvalidate()
-        {
-            if (!App.RealTimeUpdate)
-                Invalidate();
         }
 
         private void UpdateRenderCoords()
@@ -277,7 +271,7 @@ namespace FamiStudio
             UpdateRenderCoords();
             ClampScroll();
             InvalidatePatternCache();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void Reset()
@@ -749,7 +743,7 @@ namespace FamiStudio
         {
             scrollX -= deltaX;
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private bool GetPatternForCoord(int x, int y, out int channelIdx, out int patternIdx, out bool inPatternHeader)
@@ -837,13 +831,13 @@ namespace FamiStudio
                 {
                     scrollX -= (Width - trackNameSizeX);
                     ClampScroll();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 else if (x > (scrollBarPosX + scrollBarSizeX))
                 {
                     scrollX += (Width - trackNameSizeX);
                     ClampScroll();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 else if (x >= scrollBarPosX && x <= (scrollBarPosX + scrollBarSizeX))
                 {
@@ -883,13 +877,13 @@ namespace FamiStudio
                             App.ChannelMask = bit;
                     }
 
-                    ConditionalInvalidate();
+                    MarkDirty();
                     return true;
                 }
                 else if (ghostIcon >= 0)
                 {
                     App.GhostChannelMask ^= (1 << ghostIcon);
-                    ConditionalInvalidate();
+                    MarkDirty();
                     return true;
                 }
             }
@@ -910,7 +904,7 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
                     Song.SetLoopPoint(Song.LoopPoint == patternIdx ? -1 : patternIdx);
                     App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
                 return true;
             }
@@ -951,7 +945,7 @@ namespace FamiStudio
                 {
                     selectedChannel = newChannel;
                     SelectedChannelChanged?.Invoke(selectedChannel);
-                    ConditionalInvalidate();
+                    MarkDirty();
                 }
             }
 
@@ -995,7 +989,7 @@ namespace FamiStudio
                         PatternClicked?.Invoke(channelIdx, patternIdx);
                         App.UndoRedoManager.EndTransaction();
                         ClearSelection();
-                        ConditionalInvalidate();
+                        MarkDirty();
                     }
                     else
                     {
@@ -1018,7 +1012,7 @@ namespace FamiStudio
                         selectionDragAnchorPatternXFraction = (e.X - trackNameSizeX + scrollX - GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(patternIdx), false)) / (float)GetPixelForNote(Song.GetPatternLength(patternIdx), false);
                         StartCaptureOperation(e, CaptureOperation.DragSelection);
 
-                        ConditionalInvalidate();
+                        MarkDirty();
                     }
 
                     return true;
@@ -1031,7 +1025,7 @@ namespace FamiStudio
                     channel.InvalidateCumulativePatternCache();
                     App.UndoRedoManager.EndTransaction();
                     ClearSelection();
-                    ConditionalInvalidate();
+                    MarkDirty();
                     PatternModified?.Invoke();
 
                     return true;
@@ -1073,7 +1067,7 @@ namespace FamiStudio
             return;
 
         Handled: // Yes, i use a goto, sue me.
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private Pattern[,] GetSelectedPatterns(out Song.PatternCustomSetting[] customSettings)
@@ -1249,7 +1243,7 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
             PatternsPasted?.Invoke();
             SelectionChanged?.Invoke();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void Paste()
@@ -1410,7 +1404,7 @@ namespace FamiStudio
                         minSelectedPatternIdx = Utils.Clamp(minSelectedPatternIdx + patternIdxDelta, 0, Song.Length - 1);
                         maxSelectedPatternIdx = Utils.Clamp(maxSelectedPatternIdx + patternIdxDelta, 0, Song.Length - 1);
 
-                        ConditionalInvalidate();
+                        MarkDirty();
                         PatternModified?.Invoke();
                         SelectionChanged?.Invoke();
                     }
@@ -1461,7 +1455,7 @@ namespace FamiStudio
             panning = false;
             captureOperation = CaptureOperation.None;
 
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         protected void CancelDragSelection()
@@ -1507,7 +1501,7 @@ namespace FamiStudio
             {
                 ClearSelection();
                 App.UndoRedoManager.EndTransaction();
-                ConditionalInvalidate();
+                MarkDirty();
                 PatternModified?.Invoke();
             }
         }
@@ -1519,7 +1513,7 @@ namespace FamiStudio
                 CancelDragSelection();
                 UpdateCursor();
                 ClearSelection();
-                ConditionalInvalidate();
+                MarkDirty();
             }
             else if (showSelection)
             {
@@ -1548,7 +1542,7 @@ namespace FamiStudio
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();
-                ConditionalInvalidate();
+                MarkDirty();
             }
 
             UpdateToolTip(null);
@@ -1559,7 +1553,7 @@ namespace FamiStudio
             if (captureOperation == CaptureOperation.DragSelection)
             {
                 UpdateCursor();
-                ConditionalInvalidate();
+                MarkDirty();
             }
 
             UpdateToolTip(null);
@@ -1572,7 +1566,7 @@ namespace FamiStudio
             if (final)
                 App.SeekSong(dragSeekPosition);
 
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void ScrollIfSelectionNearEdge(int mouseX)
@@ -1638,7 +1632,7 @@ namespace FamiStudio
                 }
             }
 
-            ConditionalInvalidate();
+            MarkDirty();
             SelectionChanged?.Invoke();
         }
 
@@ -1783,7 +1777,7 @@ namespace FamiStudio
             int scrollAreaSizeX = Width - trackNameSizeX;
             scrollX = (int)Math.Round(captureScrollX + ((e.X - captureMouseX) / (float)(scrollAreaSizeX - scrollBarSizeX) * maxScrollX));
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         private void UpdateCaptureOperation(MouseEventArgs e)
@@ -1816,7 +1810,7 @@ namespace FamiStudio
                         UpdateScrollBarX(e);
                         break;
                     default:
-                        ConditionalInvalidate();
+                        MarkDirty();
                         break;
                 }
             }
@@ -1874,7 +1868,7 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
                     tempoProperties.Apply(dlg.Properties.GetPropertyValue<bool>(0));
                     App.UndoRedoManager.EndTransaction();
-                    ConditionalInvalidate();
+                    MarkDirty();
                     PatternModified?.Invoke();
                 }
             });
@@ -1932,7 +1926,7 @@ namespace FamiStudio
                         SystemSounds.Beep.Play();
                     }
 
-                    ConditionalInvalidate();
+                    MarkDirty();
                     PatternModified?.Invoke();
                 }
             });
@@ -1988,7 +1982,7 @@ namespace FamiStudio
             scrollX = absoluteX - pixelX;
 
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public override void DoMouseWheel(MouseEventArgs e)
@@ -2005,7 +1999,7 @@ namespace FamiStudio
                     scrollX -= e.Delta;
 
                 ClampScroll();
-                ConditionalInvalidate();
+                MarkDirty();
             }
             else
             {
@@ -2025,7 +2019,7 @@ namespace FamiStudio
         {
             scrollX += e.Delta;
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         protected bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
@@ -2090,14 +2084,14 @@ namespace FamiStudio
             InvalidatePatternCache();
             ClearSelection();
             ClampScroll();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void InvalidatePatternCache()
         {
             if (patternCache != null)
                 patternCache.Clear();
-            ConditionalInvalidate();
+            MarkDirty();
         }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -2118,7 +2112,7 @@ namespace FamiStudio
                 InvalidatePatternCache();
                 UpdateRenderCoords();
                 CancelDragSelection();
-                ConditionalInvalidate();
+                MarkDirty();
             }
         }
     }

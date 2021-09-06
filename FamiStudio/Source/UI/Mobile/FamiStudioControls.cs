@@ -153,15 +153,26 @@ namespace FamiStudio
             return null;
         }
 
-        public void Invalidate()
+        public void MarkDirty()
         {
             foreach (var ctrl in controls)
-                ctrl.Invalidate();
+                ctrl.MarkDirty();
+        }
+
+        public bool NeedsRedraw()
+        {
+            bool anyNeedsRedraw = transitionTimer > 0.0f;
+
+            anyNeedsRedraw |= activeControl.NeedsRedraw;
+            anyNeedsRedraw |= quickAccessBar.NeedsRedraw;
+            anyNeedsRedraw |= toolbar.NeedsRedraw;
+
+            return anyNeedsRedraw;
         }
 
         GLBrush debugBrush;
 
-        private void RedrawControl(GLControl ctrl, bool fullscreenViewport = false)
+        private void RenderControl(GLControl ctrl, bool fullscreenViewport = false)
         {
             if (debugBrush == null)
                 debugBrush = new GLBrush(System.Drawing.Color.SpringGreen);
@@ -181,7 +192,7 @@ namespace FamiStudio
                 if (fullscreenViewport)
                     gfx.Transform.PopTransform();
 
-                ctrl.Validate();
+                ctrl.ClearDirtyFlag();
             }
             var t1 = DateTime.Now;
 
@@ -285,6 +296,7 @@ namespace FamiStudio
                 if (prevTimer > 0.5f && transitionTimer <= 0.5f)
                 {
                     activeControl = transitionControl;
+                    activeControl.MarkDirty();
                     transitionControl = null;
                     UpdateLayout();
                 }
@@ -299,9 +311,9 @@ namespace FamiStudio
 
             gfx.BeginDrawFrame();
             {
-                RedrawControl(activeControl);
-                RedrawControl(quickAccessBar, true);
-                RedrawControl(toolbar, true);
+                RenderControl(activeControl);
+                RenderControl(quickAccessBar, true);
+                RenderControl(toolbar, true);
                 RenderOverlay();
             }
             gfx.EndDrawFrame();

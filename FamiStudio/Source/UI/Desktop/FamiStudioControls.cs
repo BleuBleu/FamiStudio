@@ -75,19 +75,23 @@ namespace FamiStudio
             return null;
         }
 
-        public void Invalidate()
+        public void MarkDirty()
         {
             foreach (var ctrl in controls)
-                ctrl.Invalidate();
+                ctrl.MarkDirty();
         }
 
-        public unsafe bool Redraw()
+        public bool AnyControlNeedsRedraw()
         {
             bool anyNeedsRedraw = false;
             foreach (var control in controls)
                 anyNeedsRedraw |= control.NeedsRedraw;
+            return anyNeedsRedraw;
+        }
 
-            if (anyNeedsRedraw)
+        public unsafe bool Redraw()
+        {
+            if (AnyControlNeedsRedraw())
             {
                 // Tentative fix for a bug when NSF dialog is open that I can no longer repro.
                 if (controls[0].App.Project == null)
@@ -99,7 +103,7 @@ namespace FamiStudio
                 {
                     gfx.BeginDrawControl(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
                     control.Render(gfx);
-                    control.Validate();
+                    control.ClearDirtyFlag();
                 }
 
                 gfx.EndDrawFrame();

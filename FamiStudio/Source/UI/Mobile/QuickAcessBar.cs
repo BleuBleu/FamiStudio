@@ -300,12 +300,6 @@ namespace FamiStudio
             }
         }
 
-        public void ConditionalInvalidate()
-        {
-            if (App != null && !App.RealTimeUpdate)
-                Invalidate();
-        }
-
         private void StartExpandingList(int idx, ListItem[] items)
         {
             var landscape = IsLandscape;

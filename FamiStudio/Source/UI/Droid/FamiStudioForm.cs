@@ -25,7 +25,7 @@ using AndroidX.Core.View;
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | Android.Content.PM.ConfigChanges.ScreenSize)]
-    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, /*IOnTouchListener,*/ GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener
+    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, /*IOnTouchListener,*/ GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
     {
         public static FamiStudioForm Instance { get; private set; }
         public object DialogUserData => dialogUserData;
@@ -51,6 +51,7 @@ namespace FamiStudio
         public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
         public string Text { get; set; }
+        public long lastFrameTime = -1;
 
         private GestureDetectorCompat detector;
         private ScaleGestureDetector scaleDetector;
@@ -105,6 +106,7 @@ namespace FamiStudio
             glSurfaceView.SetEGLConfigChooser(8, 8, 8, 8, 0, 0);
             //glSurfaceView.SetOnTouchListener(this);
             glSurfaceView.SetRenderer(this);
+            glSurfaceView.RenderMode = Rendermode.WhenDirty;
             glThreadIsRunning = true;
 
             linearLayout = new LinearLayout(this);
@@ -132,6 +134,8 @@ namespace FamiStudio
             detector.IsLongpressEnabled = true; // MATTT
             scaleDetector = new ScaleGestureDetector(this, this);
             scaleDetector.QuickScaleEnabled = true;
+
+            Choreographer.Instance.PostFrameCallback(this);
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
@@ -169,6 +173,7 @@ namespace FamiStudio
         {
             if (!glThreadIsRunning)
             {
+                Choreographer.Instance.PostFrameCallback(this);
                 glSurfaceView.OnResume();
                 lock (renderLock) { }; // Extra safety.
                 glThreadIsRunning = true;
@@ -179,6 +184,7 @@ namespace FamiStudio
         {
             if (glThreadIsRunning)
             {
+                Choreographer.Instance.RemoveFrameCallback(this);
                 glSurfaceView.OnPause();
                 lock (renderLock) { }; // Extra safety.
                 glThreadIsRunning = false;
@@ -281,21 +287,38 @@ namespace FamiStudio
             base.OnActivityResult(requestCode, resultCode, data);
         }
 
-        private void Tick()
+        public void DoFrame(long frameTimeNanos)
         {
-            famistudio.Tick();
+            if (lastFrameTime < 0)
+                lastFrameTime = frameTimeNanos;
+
+            float deltaTime = (float)((frameTimeNanos - lastFrameTime) / 1000000000.0);
+
+            if (deltaTime > 0.03)
+                Console.WriteLine($"FRAME SKIP!!!!!!!!!!!!!!!!!!!!!! {deltaTime}");
+
+            lock (renderLock)
+                famistudio.Tick(deltaTime);
+
+            if (controls.NeedsRedraw())
+                glSurfaceView.RequestRender();
+
+            Choreographer.Instance.PostFrameCallback(this);
+            lastFrameTime = frameTimeNanos;
         }
 
         // GL thread.
         public void OnDrawFrame(IGL10 gl)
         {
-            RunOnUiThread(() => { Tick(); });
-
+            var t1 = DateTime.Now;
             lock (renderLock)
             {
                 Debug.Assert(!IsAsyncDialogInProgress);
                 controls.Redraw();
+                gl.GlFlush();
             }
+            var t2 = DateTime.Now;
+            Console.WriteLine($"Render time {(t2 - t1).TotalMilliseconds} ms");
         }
 
         // GL thread.
@@ -363,11 +386,12 @@ namespace FamiStudio
         {
         }
 
-        public void Refresh()
+        public void MarkDirty()
         {
+            controls.MarkDirty();
         }
 
-        public void Invalidate()
+        public void Refresh()
         {
         }
 
@@ -432,6 +456,8 @@ namespace FamiStudio
         public bool OnFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
         {
             Debug.WriteLine($"{c++} OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({e2.GetX()}, {e2.GetY()})");
+            lock (renderLock)
+                GetCapturedControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y)?.TouchFling(x, y, velocityX, velocityY);
             return false;
         }
 

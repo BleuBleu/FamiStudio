@@ -1,9 +1,5 @@
 Android
 =======
-- Today
-	- Remove all lines around icons? Would be cool.
-	/ Line widths (yes, 1->3, 3->5 looks great, wait until more stuff works)
-	- Replace inheritance by partial
 
 Prop page:
 / Reactivate dialogs in code, test
@@ -20,10 +16,8 @@ Scaling issue:
 	- 4x (with 2x font) (Default for <  1080p, xhdpi and below)
 	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
-- This mean fonts will always look 1/2 the size of desktop. Which is OK.
 
 UI:
-x Make toolbar always 2 rows.
 - Quick access:
 		- Remove expand arrows
 		- Make list work
@@ -62,8 +56,11 @@ Controls:
 
 	* If you disable long press, scroll still works on slow 
 
-- Define interface in GLControl
-	- 
+- Remove all lines around icons? Would be cool.
+/ Line widths (yes, 1->3, 3->5 looks great, wait until more stuff works)
+- Replace inheritance by partial
+- Project explorer space on right side on desktop?
+
 
 3.2.0
 =====
@@ -73,6 +70,8 @@ Controls:
 - Export intro-only is broken?
 - Crash when adding note to last note of pattern #256
 - Bring back fonts for 150%...
+- Timecode alignment looks like ass now
+- Figure out the whole tick/invalidate thing on windows. Seems more choppy than with D2D.
 
 Misc:
 

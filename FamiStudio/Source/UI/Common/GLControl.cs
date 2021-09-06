@@ -25,7 +25,7 @@ namespace FamiStudio
         private int height = 100;
         private float mainWindowScaling = 1.0f;
         private float fontScaling = 1.0f;
-        private bool invalid = true;
+        private bool dirty = true;
 
         protected GLControl() { cursorInfo = new CursorInfo(this); }
         protected virtual void OnRenderInitialized(GLGraphics g) { }
@@ -46,6 +46,7 @@ namespace FamiStudio
         protected virtual void OnTouchMove(int x, int y) { }
         protected virtual void OnTouchClick(int x, int y, bool isLong) { }
         protected virtual void OnTouchScale(int x, int y, float scale, TouchScalePhase phase) { }
+        protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
         public virtual void DoMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
@@ -64,6 +65,7 @@ namespace FamiStudio
         public void TouchMove(int x, int y) { OnTouchMove(x, y); }
         public void TouchClick(int x, int y, bool isLong) { OnTouchClick(x, y, isLong); }
         public void TouchScale(int x, int y, float scale, TouchScalePhase phase) { OnTouchScale(x, y, scale, phase); }
+        public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void Focus() { }
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
@@ -71,7 +73,6 @@ namespace FamiStudio
         public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
         public System.Drawing.Size ParentFormSize => parentForm.Size;
         public bool IsLandscape => parentForm.IsLandscape;
-        public void Validate() { invalid = false; }
         public int Left => left;
         public int Top => top;
         public int Right => left + width;
@@ -79,12 +80,13 @@ namespace FamiStudio
         public int Width => width;
         public int Height => height;
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }
-        public bool NeedsRedraw => invalid;
+        public bool NeedsRedraw => dirty;
         public bool IsRenderInitialized => themeRes != null;
         public float MainWindowScaling => mainWindowScaling;
         public float FontScaling => fontScaling;
         public ThemeRenderResources ThemeResources => themeRes;
-        public void Invalidate() { invalid = true; parentForm.Invalidate(); }
+        public void MarkDirty() { dirty = true; }
+        public void ClearDirtyFlag() { dirty = false; }
         public void SetDpiScales(float main, float font) { mainWindowScaling = main; fontScaling = font; }
         public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
 
