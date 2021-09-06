@@ -1,6 +1,17 @@
 Android
 =======
 
+Project explorer:
+/ Pan
+- Song/project/inst properties
+/ Current song/instrument/arp
+/ Expand 
+- Widgets
+- Env edition
+- Env replace? Instrument replace?
+- Song reorder?
+- Import instrument, etc. Dialogs.
+
 Prop page:
 / Reactivate dialogs in code, test
 - Review text color light gray 1 or 2?
@@ -24,43 +35,9 @@ UI:
 		- Add scroll bar
 - Create 2nd piano.
 
-Controls:
-- Can we have floating zoom
-- If yes, can we get rid of pre-zoomed geometries.
-- Define possible interactions
-	- Click:
-			- Down
-			- Up
-			- SingleTapUp
-	- Long click: 
-			- Down
-			- (Optinal moves)
-			- LongPress
-			- Up (must ignore)
-	- Scroll:  
-			- Down 
-			- (Optional Move ...)
-			- (Optional LongPress)
-			- Move ...
-			- Up 
-			- (optional Fling)
-	- Pinch to zoom: 
-			- Down
-			- (Optional Move ...)
-			- (Optional LongPress)
-			- Move ...
-			- ScaleBegin
-			- Scale ...
-			- ScaleEnd
-			- Up
-
-	* If you disable long press, scroll still works on slow 
-
 - Remove all lines around icons? Would be cool.
 / Line widths (yes, 1->3, 3->5 looks great, wait until more stuff works)
 - Replace inheritance by partial
-- Project explorer space on right side on desktop?
-
 
 3.2.0
 =====
@@ -70,19 +47,21 @@ Controls:
 - Export intro-only is broken?
 - Crash when adding note to last note of pattern #256
 - Bring back fonts for 150%...
-- Timecode alignment looks like ass now
-- Figure out the whole tick/invalidate thing on windows. Seems more choppy than with D2D.
+- Timecode alignment looks like ass now, create a special mode for texture that uses fixed width + center align.
 
 Misc:
 
 DMC counter effect:
+- *** CUT ***
 - Sound engine
 - Check if we apply before, after, etc. Compare with FamiTracker.
 
 Diable attack on DPCM
+- *** CUT ***
 - Sound engine
 
 Improve disable attack?
+- *** CUT ***
 - If same envelopes, allow? This would allow VRC7 to not have attack.
 
 DPCM/Tri volume thing (from tromino)

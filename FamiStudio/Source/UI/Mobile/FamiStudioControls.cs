@@ -177,6 +177,7 @@ namespace FamiStudio
             if (debugBrush == null)
                 debugBrush = new GLBrush(System.Drawing.Color.SpringGreen);
 
+            // MATTT : Make this a flag on the control.
             if (fullscreenViewport)
                 gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
             else

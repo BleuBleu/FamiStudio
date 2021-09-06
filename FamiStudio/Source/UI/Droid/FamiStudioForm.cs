@@ -310,15 +310,11 @@ namespace FamiStudio
         // GL thread.
         public void OnDrawFrame(IGL10 gl)
         {
-            var t1 = DateTime.Now;
             lock (renderLock)
             {
                 Debug.Assert(!IsAsyncDialogInProgress);
                 controls.Redraw();
-                gl.GlFlush();
             }
-            var t2 = DateTime.Now;
-            Console.WriteLine($"Render time {(t2 - t1).TotalMilliseconds} ms");
         }
 
         // GL thread.
