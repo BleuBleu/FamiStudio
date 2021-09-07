@@ -11,17 +11,15 @@ namespace FamiStudio
     // Based off https://bigflake.com/mediacodec/. Thanks!!!
     class VideoEncoderAndroid
     {
-        private string MIME_TYPE = "video/avc";    // H.264 Advanced Video Coding
-
-        // DROIDTODO : Real frame rate.
-        private int FRAME_RATE = 15;               // 15fps
-        private int IFRAME_INTERVAL = 10;          // 10 seconds between I-frames
+        private string MimeType = "video/avc";    // H.264 Advanced Video Coding
 
         private Surface mSurface;
         private MediaCodec encoder;
         private MediaMuxer muxer;
         private int trackIndex;
         private int frameIndex;
+        private int frameRateNumer;
+        private int frameRateDenom;
         private bool muxerStarted;
 
         private MediaCodec.BufferInfo bufferInfo;
@@ -47,19 +45,24 @@ namespace FamiStudio
             return new VideoEncoderAndroid();
         }
 
-        public bool BeginEncoding(int resX, int resY, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, string audioFile, string outputFile)
+        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, string audioFile, string outputFile)
         {
             bufferInfo = new MediaCodec.BufferInfo();
 
-            MediaFormat format = MediaFormat.CreateVideoFormat(MIME_TYPE, resX, resY);
+            frameRateNumer = rateNumer;
+            frameRateDenom = rateDenom;
+
+            MediaFormat format = MediaFormat.CreateVideoFormat(MimeType, resX, resY);
 
             format.SetInteger(MediaFormat.KeyColorFormat, (int)MediaCodecCapabilities.Formatsurface);
             format.SetInteger(MediaFormat.KeyBitRate, videoBitRate * 1000);
-            format.SetInteger(MediaFormat.KeyFrameRate, FRAME_RATE);
-            format.SetInteger(MediaFormat.KeyIFrameInterval, IFRAME_INTERVAL);
+            format.SetFloat(MediaFormat.KeyFrameRate, rateNumer / (float)rateDenom);
+            format.SetInteger(MediaFormat.KeyIFrameInterval, 4);
+            format.SetInteger(MediaFormat.KeyProfile, (int)MediaCodecProfileType.Avcprofilehigh);
+            format.SetInteger(MediaFormat.KeyLevel, (int)MediaCodecProfileLevel.Avclevel31);
             Debug.WriteLine($"Media format : {format}");
 
-            encoder = MediaCodec.CreateEncoderByType(MIME_TYPE);
+            encoder = MediaCodec.CreateEncoderByType(MimeType);
             encoder.Configure(format, null, null, MediaCodecConfigFlags.Encode);
             mSurface = encoder.CreateInputSurface();
             encoder.Start();
@@ -293,11 +296,10 @@ namespace FamiStudio
             }
         }
 
-        private static long ComputePresentationTimeNsec(int frameIndex)
+        private long ComputePresentationTimeNsec(int frameIndex)
         {
-            const int FRAME_RATE = 60;
-            const long ONE_BILLION = 1000000000;
-            return frameIndex * ONE_BILLION / FRAME_RATE;
+            const long OneBillion = 1000000000;
+            return frameIndex * OneBillion * frameRateDenom / frameRateNumer;
         }
     }
 }
