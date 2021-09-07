@@ -4,17 +4,16 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using Android.Opengl;
+using Android.Runtime;
 using Java.Nio;
 using Javax.Microedition.Khronos.Opengles;
+
 using Bitmap = Android.Graphics.Bitmap;
 
 namespace FamiStudio
 {
     public class GLGraphics : GLGraphicsBase
     {
-        protected static IGL10 gl;
-        public static IGL10 GL => gl;
-
         // Must be powers of two.
         const int MinBufferSize = 16;
         const int MaxBufferSize = 128 * 1024;
@@ -35,12 +34,11 @@ namespace FamiStudio
         List<IntBuffer>[]   usedColBuffers = new List<IntBuffer>  [NumBufferSizes];
         List<ShortBuffer>[] usedIdxBuffers = new List<ShortBuffer>[NumBufferSizes];
 
-        public GLGraphics(IGL10 g, float mainScale, float baseScale) : base(mainScale, baseScale)
+        public GLGraphics(float mainScale, float baseScale) : base(mainScale, baseScale)
         {
-            gl = g;
             dashedBitmap = CreateBitmapFromResource("Dash");
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlRepeat);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlRepeat);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlRepeat);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlRepeat);
 
             for (int i = 0; i < NumBufferSizes; i++)
             {
@@ -72,44 +70,44 @@ namespace FamiStudio
         {
             base.BeginDrawControl(unflippedControlRect, windowSizeY);
 
-            gl.GlHint(GLES11.GlLineSmoothHint, GLES11.GlNicest);
-            gl.GlViewport(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
-            gl.GlMatrixMode(GLES11.GlProjection);
-            gl.GlLoadIdentity();
-            gl.GlOrthof(0, unflippedControlRect.Width, unflippedControlRect.Height, 0, -1, 1);
-            gl.GlDisable((int)2884); // Cull face?
-            gl.GlMatrixMode(GLES11.GlModelview);
-            gl.GlLoadIdentity();
-            gl.GlBlendFunc(GLES11.GlSrcAlpha, GLES11.GlOneMinusSrcAlpha);
-            gl.GlEnable(GLES11.GlBlend);
-            gl.GlDisable(GLES11.GlDepthTest);
-            gl.GlDisable(GLES11.GlStencilTest);
-            gl.GlEnable(GLES11.GlScissorTest);
-            gl.GlScissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
-            gl.GlEnableClientState(GLES11.GlVertexArray);
+            GLES11.GlHint(GLES11.GlLineSmoothHint, GLES11.GlNicest);
+            GLES11.GlViewport(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
+            GLES11.GlMatrixMode(GLES11.GlProjection);
+            GLES11.GlLoadIdentity();
+            GLES11.GlOrthof(0, unflippedControlRect.Width, unflippedControlRect.Height, 0, -1, 1);
+            GLES11.GlDisable((int)2884); // Cull face?
+            GLES11.GlMatrixMode(GLES11.GlModelview);
+            GLES11.GlLoadIdentity();
+            GLES11.GlBlendFunc(GLES11.GlSrcAlpha, GLES11.GlOneMinusSrcAlpha);
+            GLES11.GlEnable(GLES11.GlBlend);
+            GLES11.GlDisable(GLES11.GlDepthTest);
+            GLES11.GlDisable(GLES11.GlStencilTest);
+            GLES11.GlEnable(GLES11.GlScissorTest);
+            GLES11.GlScissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
+            GLES11.GlEnableClientState(GLES11.GlVertexArray);
         }
 
         private void SetScissorRect(int x0, int y0, int x1, int y1)
         {
             var scissor = new Rectangle(controlRect.X + x0, controlRect.Y + y0, x1 - x0, y1 - y0);
             scissor = FlipRectangleY(scissor);
-            gl.GlScissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
+            GLES11.GlScissor(scissor.Left, scissor.Top, scissor.Width, scissor.Height);
         }
 
         private void ClearScissorRect()
         {
-            gl.GlScissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
+            GLES11.GlScissor(controlRectFlip.Left, controlRectFlip.Top, controlRectFlip.Width, controlRectFlip.Height);
         }
 
         public void SetViewport(int x, int y, int width, int height)
         {
-            gl.GlViewport(x, y, width, height);
+            GLES11.GlViewport(x, y, width, height);
         }
 
         public void Clear(Color color)
         {
-            gl.GlClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-            gl.GlClear(GLES11.GlColorBufferBit);
+            GLES11.GlClearColor(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+            GLES11.GlClear(GLES11.GlColorBufferBit);
         }
 
         public void UpdateBitmap(GLBitmap bmp, int x, int y, int width, int height, int[] data)
@@ -118,25 +116,25 @@ namespace FamiStudio
             buffer.Put(data);
             buffer.Position(0);
 
-            gl.GlBindTexture(GLES11.GlTexture2d, bmp.Id);
-            gl.GlTexSubImage2D(GLES11.GlTexture2d, 0, x, y, width, height, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
+            GLES11.GlBindTexture(GLES11.GlTexture2d, bmp.Id);
+            GLES11.GlTexSubImage2D(GLES11.GlTexture2d, 0, x, y, width, height, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
         }
 
         protected override int CreateEmptyTexture(int width, int height, bool filter = false)
         {
             var id = new int[1];
-            gl.GlGenTextures(1, id, 0);
-            gl.GlBindTexture(GLES11.GlTexture2d, id[0]);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlClampToEdge);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlClampToEdge);
+            GLES11.GlGenTextures(1, id, 0);
+            GLES11.GlBindTexture(GLES11.GlTexture2d, id[0]);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlClampToEdge);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlClampToEdge);
 
             var buffer = ByteBuffer.AllocateDirect(width * height * sizeof(int)).Order(ByteOrder.NativeOrder()).AsIntBuffer();
             buffer.Put(new int[width * height]);
             buffer.Position(0);
 
-            gl.GlTexImage2D(GLES11.GlTexture2d, 0, GLES11.GlRgba, width, height, 0, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
+            GLES11.GlTexImage2D(GLES11.GlTexture2d, 0, GLES11.GlRgba, width, height, 0, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
 
             return id[0];
         }
@@ -146,13 +144,13 @@ namespace FamiStudio
             bool filter = true; // DROIDTODO : No filter on pattern cache or text.
 
             var id = new int[1];
-            gl.GlGenTextures(1, id, 0);
-            gl.GlBindTexture(GLES11.GlTexture2d, id[0]);
+            GLES11.GlGenTextures(1, id, 0);
+            GLES11.GlBindTexture(GLES11.GlTexture2d, id[0]);
             GLUtils.TexImage2D(GLES11.GlTexture2d, 0, bmp, 0);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlClampToEdge);
-            gl.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlClampToEdge);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlClampToEdge);
+            GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlClampToEdge);
             bmp.Recycle();
 
             return id[0];
@@ -232,7 +230,7 @@ namespace FamiStudio
             var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true);
             var elementRects = new Rectangle[names.Length];
 
-            gl.GlBindTexture(GLES11.GlTexture2d, textureId);
+            GLES11.GlBindTexture(GLES11.GlTexture2d, textureId);
 
             for (int i = 0; i < names.Length; i++)
             {
@@ -379,7 +377,7 @@ namespace FamiStudio
             {
                 var drawData = list.GetMeshDrawData();
 
-                gl.GlEnableClientState(GLES11.GlColorArray);
+                GLES11.GlEnableClientState(GLES11.GlColorArray);
 
                 foreach (var draw in drawData)
                 {
@@ -387,26 +385,26 @@ namespace FamiStudio
                     var cb = CopyGetColBuffer(draw.colArray, draw.colArraySize);
                     var ib = CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize);
 
-                    //if (draw.smooth) gl.GlEnable(GLES11.GlPolygonSmooth);
-                    gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
-                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
-                    gl.GlDrawElements(GLES11.GlTriangles, draw.numIndices, GLES11.GlUnsignedShort, ib);
-                    //if (draw.smooth) gl.GlDisable(GLES11.GlPolygonSmooth);
+                    //if (draw.smooth) GLES11.GlEnable(GLES11.GlPolygonSmooth);
+                    GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                    GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
+                    GLES11.GlDrawElements(GLES11.GlTriangles, draw.numIndices, GLES11.GlUnsignedShort, ib);
+                    //if (draw.smooth) GLES11.GlDisable(GLES11.GlPolygonSmooth);
                 }
 
-                gl.GlDisableClientState(GLES11.GlColorArray);
+                GLES11.GlDisableClientState(GLES11.GlColorArray);
             }
 
             if (list.HasAnyLines)
             {
                 var drawData = list.GetLineDrawData();
 
-                gl.GlPushMatrix();
-                gl.GlTranslatef(0.5f, 0.5f, 0.0f);
-                gl.GlEnable(GLES11.GlTexture2d);
-                gl.GlBindTexture(GLES11.GlTexture2d, dashedBitmap.Id);
-                gl.GlEnableClientState(GLES11.GlColorArray);
-                gl.GlEnableClientState(GLES11.GlTextureCoordArray);
+                GLES11.GlPushMatrix();
+                GLES11.GlTranslatef(0.5f, 0.5f, 0.0f);
+                GLES11.GlEnable(GLES11.GlTexture2d);
+                GLES11.GlBindTexture(GLES11.GlTexture2d, dashedBitmap.Id);
+                GLES11.GlEnableClientState(GLES11.GlColorArray);
+                GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
 
                 foreach (var draw in drawData)
                 {
@@ -414,19 +412,19 @@ namespace FamiStudio
                     var cb = CopyGetColBuffer(draw.colArray, draw.colArraySize);
                     var tb = CopyGetVtxBuffer(draw.texArray, draw.texArraySize);
 
-                    if (draw.smooth) gl.GlEnable(GLES11.GlLineSmooth);
-                    gl.GlLineWidth(draw.lineWidth);
-                    gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
-                    gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
-                    gl.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
-                    gl.GlDrawArrays(GLES11.GlLines, 0, draw.numVertices);
-                    if (draw.smooth) gl.GlDisable(GLES11.GlLineSmooth);
+                    if (draw.smooth) GLES11.GlEnable(GLES11.GlLineSmooth);
+                    GLES11.GlLineWidth(draw.lineWidth);
+                    GLES11.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
+                    GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                    GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
+                    GLES11.GlDrawArrays(GLES11.GlLines, 0, draw.numVertices);
+                    if (draw.smooth) GLES11.GlDisable(GLES11.GlLineSmooth);
                 }
 
-                gl.GlDisableClientState(GLES11.GlColorArray);
-                gl.GlDisableClientState(GLES11.GlTextureCoordArray);
-                gl.GlDisable(GLES11.GlTexture2d);
-                gl.GlPopMatrix();
+                GLES11.GlDisableClientState(GLES11.GlColorArray);
+                GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
+                GLES11.GlDisable(GLES11.GlTexture2d);
+                GLES11.GlPopMatrix();
             }
 
             if (list.HasAnyBitmaps)
@@ -438,23 +436,23 @@ namespace FamiStudio
                 var tb = CopyGetVtxBuffer(texArray, texSize);
                 var ib = CopyGetIdxBuffer(quadIdxArray, idxSize);
 
-                gl.GlEnable(GLES11.GlTexture2d);
-                gl.GlEnableClientState(GLES11.GlColorArray);
-                gl.GlEnableClientState(GLES11.GlTextureCoordArray);
-                gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
-                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
-                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
+                GLES11.GlEnable(GLES11.GlTexture2d);
+                GLES11.GlEnableClientState(GLES11.GlColorArray);
+                GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
+                GLES11.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
+                GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
 
                 foreach (var draw in drawData)
                 {
                     ib.Position(draw.start);
-                    gl.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
-                    gl.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
+                    GLES11.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
+                    GLES11.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
                 }
 
-                gl.GlDisableClientState(GLES11.GlColorArray);
-                gl.GlDisableClientState(GLES11.GlTextureCoordArray);
-                gl.GlDisable(GLES11.GlTexture2d);
+                GLES11.GlDisableClientState(GLES11.GlColorArray);
+                GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
+                GLES11.GlDisable(GLES11.GlTexture2d);
             }
 
             if (list.HasAnyTexts)
@@ -466,23 +464,23 @@ namespace FamiStudio
                 var tb = CopyGetVtxBuffer(texArray, texSize);
                 var ib = CopyGetIdxBuffer(quadIdxArray, idxSize);
 
-                gl.GlEnable(GLES11.GlTexture2d);
-                gl.GlEnableClientState(GLES11.GlColorArray);
-                gl.GlEnableClientState(GLES11.GlTextureCoordArray);
-                gl.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
-                gl.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
-                gl.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
+                GLES11.GlEnable(GLES11.GlTexture2d);
+                GLES11.GlEnableClientState(GLES11.GlColorArray);
+                GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
+                GLES11.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
+                GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
 
                 foreach (var draw in drawData)
                 {
                     ib.Position(draw.start);
-                    gl.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
-                    gl.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
+                    GLES11.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
+                    GLES11.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
                 }
 
-                gl.GlDisableClientState(GLES11.GlColorArray);
-                gl.GlDisableClientState(GLES11.GlTextureCoordArray);
-                gl.GlDisable(GLES11.GlTexture2d);
+                GLES11.GlDisableClientState(GLES11.GlColorArray);
+                GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
+                GLES11.GlDisable(GLES11.GlTexture2d);
             }
 
             if (!scissor.IsEmpty)
@@ -497,43 +495,46 @@ namespace FamiStudio
         protected int texture;
         protected int resX;
         protected int resY;
+        protected IGL11ExtensionPack gl11Ext;
 
         public int Texture => texture;
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private GLOffscreenGraphics(IGL10 gl, int imageSizeX, int imageSizeY, bool allowReadback) : base(gl, 1.0f, 1.0f)
+        private GLOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(1.0f, 1.0f)
         {
             resX = imageSizeX;
             resY = imageSizeY;
+            texture = CreateEmptyTexture(imageSizeX, imageSizeY, false);
 
-            /*
-            texture = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, texture);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, imageSizeX, imageSizeY, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
-
-            fbo = GL.Ext.GenFramebuffer();
-            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
-            GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, texture, 0);
-            GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, 0);
-            */
+            var fbos = new int[1];
+            GLES11Ext.GlGenFramebuffersOES(1, fbos, 0);
+            GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, fbos[0]);
+            GLES11Ext.GlFramebufferTexture2DOES(GLES11Ext.GlFramebufferOes, GLES11Ext.GlColorAttachment0Oes, GLES11.GlTexture2d, texture, 0);
+            GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, 0);
+            fbo = fbos[0];
         }
 
-        public static GLOffscreenGraphics Create(/*IGL10 gl,*/ int imageSizeX, int imageSizeY, bool allowReadback)
+        public static GLOffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
         {
-            return new GLOffscreenGraphics(null /*gl*/, imageSizeX, imageSizeY, allowReadback);
+            try
+            {
+                var extentions = GLES11.GlGetString(GLES11.GlExtensions);
+
+                if (extentions.ToUpper().Contains("GL_OES_FRAMEBUFFER_OBJECT"))
+                    return new GLOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
+            }
+            catch
+            {
+            }
+
+            return null;
         }
 
         public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
         {
-            /*
-            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, fbo);
-            GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
-            */
+            GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, fbo);
+            //GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
             base.BeginDrawControl(unflippedControlRect, windowSizeY);
         }
@@ -541,20 +542,19 @@ namespace FamiStudio
         public override void EndDrawControl()
         {
             base.EndDrawControl();
-
-            // GL.Ext.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+            GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, 0);
         }
 
         public unsafe void GetBitmap(byte[] data)
         {
             byte[] tmp = new byte[data.Length];
 
-            /*
-            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fbo);
+            GLES11.GlBindTexture(GLES11.GlTexture2d, texture);
             fixed (byte* tmpPtr = &tmp[0])
             {
-                GL.ReadPixels(0, 0, resX, resY, PixelFormat.Bgra, PixelType.UnsignedByte, new IntPtr(tmpPtr));
-                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+                var buffer = ByteBuffer.AllocateDirect(resX * resY * sizeof(int)).Order(ByteOrder.NativeOrder());
+                GLES11.GlReadPixels(0, 0, resX, resY, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
+                buffer.Get(data);
 
                 // Flip image vertically to match D3D. 
                 for (int y = 0; y < resY; y++)
@@ -576,13 +576,12 @@ namespace FamiStudio
                     }
                 }
             }
-            */
         }
 
         public override void Dispose()
         {
-            //if (texture != 0) GL.DeleteTextures(1, ref texture);
-            //if (fbo != 0) GL.Ext.DeleteFramebuffers(1, ref fbo);
+            if (texture != 0) GLES11.GlDeleteTextures(1, new[] { texture }, 0);
+            if (fbo != 0) gl11Ext.GlDeleteFramebuffersOES(1, new[] { fbo }, 0);
 
             base.Dispose();
         }

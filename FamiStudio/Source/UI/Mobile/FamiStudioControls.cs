@@ -323,9 +323,9 @@ namespace FamiStudio
             return false;
         }
 
-        public void InitializeGL(IGL10 gl)
+        public void InitializeGL()
         {
-            gfx = new GLGraphics(gl, DpiScaling.MainWindow, DpiScaling.Font);
+            gfx = new GLGraphics(DpiScaling.MainWindow, DpiScaling.Font);
             res = new ThemeRenderResources(gfx);
             
             foreach (var ctrl in controls)

@@ -6,7 +6,6 @@ using System.IO;
 
 #if FAMISTUDIO_ANDROID
 using Android.Opengl;
-using Javax.Microedition.Khronos.Opengles;
 using Bitmap = Android.Graphics.Bitmap;
 #else
 using OpenTK;
@@ -425,7 +424,7 @@ namespace FamiStudio
         {
 #if FAMISTUDIO_ANDROID
             var id = new[] { Texture };
-            GLGraphics.GL.GlDeleteTextures(1, id, 0);
+            GLES11.GlDeleteTextures(1, id, 0);
 #else
             GL.DeleteTexture(Texture);
 #endif
@@ -628,7 +627,7 @@ namespace FamiStudio
             {
 #if FAMISTUDIO_ANDROID
                 var idArray = new[] { id };
-                GLGraphics.GL.GlDeleteTextures(1, idArray, 0);
+                GLES11.GlDeleteTextures(1, idArray, 0);
 #else
                 GL.DeleteTexture(id);
 #endif

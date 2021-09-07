@@ -100,7 +100,7 @@ namespace FamiStudio
             glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.PreserveEGLContextOnPause = true;
 #if DEBUG
-            glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
+            //glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
 #endif
             glSurfaceView.SetEGLContextClientVersion(1);
             glSurfaceView.SetEGLConfigChooser(8, 8, 8, 8, 0, 0);
@@ -327,7 +327,7 @@ namespace FamiStudio
         public void OnSurfaceCreated(IGL10 gl, Javax.Microedition.Khronos.Egl.EGLConfig config)
         {
             controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
-            controls.InitializeGL(gl);
+            controls.InitializeGL();
 
             controls.PianoRoll.StartEditPattern(0, 0);
         }

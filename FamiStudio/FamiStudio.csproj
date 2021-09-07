@@ -119,6 +119,7 @@
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\RomFileBase.cs" />
+    <Compile Include="Source\IO\VideoEncoderFFmpeg.cs" />
     <Compile Include="Source\IO\VideoFileBase.cs" />
     <Compile Include="Source\IO\VideoFileOscilloscope.cs" />
     <Compile Include="Source\IO\VideoFilePianoRoll.cs" />

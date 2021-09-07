@@ -134,10 +134,10 @@ namespace FamiStudio
 
             Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
-            var frameRateNumerator = song.Project.PalMode ? 5000773 : 6009883;
+            var frameRateNumer = song.Project.PalMode ? 5000773 : 6009883;
             if (halfFrameRate)
-                frameRateNumerator /= 2;
-            var frameRate = frameRateNumerator.ToString() + "/100000";
+                frameRateNumer /= 2;
+            var frameRateDenom = 100000;
 
             var numChannels = Utils.NumberOfSetBits(channelMask);
             var longestChannelName = 0.0f;
@@ -233,94 +233,86 @@ namespace FamiStudio
                 // Save audio to temporary file.
                 AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
 
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
-
-#if FAMISTUDIO_WINDOWS
-                // Cant raise the process priority without being admin on Linux/MacOS.
-                Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
-#endif
+                videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, tempAudioFile, filename);
 
                 // Generate each of the video frames.
-                using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
+                for (int f = 0; f < metadata.Length; f++)
                 {
-                    for (int f = 0; f < metadata.Length; f++)
+                    if (Log.ShouldAbortOperation)
+                        break;
+
+                    if ((f % 100) == 0)
+                        Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
+
+                    Log.ReportProgress(f / (float)(metadata.Length - 1));
+
+                    if (halfFrameRate && (f & 1) != 0)
+                        continue;
+
+                    var frame = metadata[f];
+
+                    videoGraphics.BeginDrawFrame();
+                    videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
+                    videoGraphics.Clear(Theme.DarkGreyLineColor2);
+
+                    var cmd = videoGraphics.CreateCommandList();
+
+                    // Draw gradients.
+                    for (int i = 0; i < numRows; i++)
                     {
-                        if (Log.ShouldAbortOperation)
-                            break;
-
-                        if ((f % 100) == 0)
-                            Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
-
-                        Log.ReportProgress(f / (float)(metadata.Length - 1));
-
-                        if (halfFrameRate && (f & 1) != 0)
-                            continue;
-
-                        var frame = metadata[f];
-
-                        videoGraphics.BeginDrawFrame();
-                        videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
-                        videoGraphics.Clear(Theme.DarkGreyLineColor2);
-
-                        var cmd = videoGraphics.CreateCommandList();
-
-                        // Draw gradients.
-                        for (int i = 0; i < numRows; i++)
-                        {
-                            cmd.PushTranslation(0, i * channelResY);
-                            cmd.FillRectangle(0, 0, videoResX, channelResY, gradientBrush);
-                            cmd.PopTransform();
-                        }
-
-                        // Channel names + oscilloscope
-                        for (int i = 0; i < channelStates.Count; i++)
-                        {
-                            var s = channelStates[i];
-
-                            var channelX = i % numColumns;
-                            var channelY = i / numColumns;
-
-                            var channelPosX0 = (channelX + 0) * channelResX;
-                            var channelPosX1 = (channelX + 1) * channelResX;
-                            var channelPosY0 = (channelY + 0) * channelResY;
-                            var channelPosY1 = (channelY + 1) * channelResY;
-
-                            // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
-                            GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0, channelPosY1, channelPosX1, channelPosY0, oscilloscope);
-
-                            var brush = videoGraphics.GetSolidBrush(frame.channelColors[i]);
-
-                            cmd.DrawGeometry(oscilloscope, brush, lineThickness, true);
-
-                            var channelIconPosX = channelPosX0 + s.bmpIcon.Size.Width  / 2;
-                            var channelIconPosY = channelPosY0 + s.bmpIcon.Size.Height / 2;
-
-                            cmd.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, themeResources.DarkGreyLineBrush2);
-                            cmd.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY);
-                            cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, themeResources.LightGreyFillBrush1); 
-                        }
-
-                        // Grid lines
-                        for (int i = 1; i < numRows; i++)
-                            cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, themeResources.BlackBrush, channelLineWidth); 
-                        for (int i = 1; i < numColumns; i++)
-                            cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, themeResources.BlackBrush, channelLineWidth);
-
-                        // Watermark.
-                        cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
-                        videoGraphics.DrawCommandList(cmd);
-                        videoGraphics.EndDrawControl();
-                        videoGraphics.EndDrawFrame();
-
-                        // Readback + send to ffmpeg.
-                        videoGraphics.GetBitmap(videoImage);
-                        stream.Write(videoImage);
+                        cmd.PushTranslation(0, i * channelResY);
+                        cmd.FillRectangle(0, 0, videoResX, channelResY, gradientBrush);
+                        cmd.PopTransform();
                     }
+
+                    // Channel names + oscilloscope
+                    for (int i = 0; i < channelStates.Count; i++)
+                    {
+                        var s = channelStates[i];
+
+                        var channelX = i % numColumns;
+                        var channelY = i / numColumns;
+
+                        var channelPosX0 = (channelX + 0) * channelResX;
+                        var channelPosX1 = (channelX + 1) * channelResX;
+                        var channelPosY0 = (channelY + 0) * channelResY;
+                        var channelPosY1 = (channelY + 1) * channelResY;
+
+                        // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
+                        GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0, channelPosY1, channelPosX1, channelPosY0, oscilloscope);
+
+                        var brush = videoGraphics.GetSolidBrush(frame.channelColors[i]);
+
+                        cmd.DrawGeometry(oscilloscope, brush, lineThickness, true);
+
+                        var channelIconPosX = channelPosX0 + s.bmpIcon.Size.Width  / 2;
+                        var channelIconPosY = channelPosY0 + s.bmpIcon.Size.Height / 2;
+
+                        cmd.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, themeResources.DarkGreyLineBrush2);
+                        cmd.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY);
+                        cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, themeResources.LightGreyFillBrush1); 
+                    }
+
+                    // Grid lines
+                    for (int i = 1; i < numRows; i++)
+                        cmd.DrawLine(0, i * channelResY, videoResX, i * channelResY, themeResources.BlackBrush, channelLineWidth); 
+                    for (int i = 1; i < numColumns; i++)
+                        cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, themeResources.BlackBrush, channelLineWidth);
+
+                    // Watermark.
+                    cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
+                    videoGraphics.DrawCommandList(cmd);
+                    videoGraphics.EndDrawControl();
+                    videoGraphics.EndDrawFrame();
+
+                    // Readback
+                    videoGraphics.GetBitmap(videoImage);
+                    
+                    // Send to encoder.
+                    videoEncoder.AddFrame(videoImage);
                 }
 
-                process.WaitForExit();
-                process.Dispose();
-                process = null;
+                videoEncoder.EndEncoding();
 
                 File.Delete(tempAudioFile);
             }
