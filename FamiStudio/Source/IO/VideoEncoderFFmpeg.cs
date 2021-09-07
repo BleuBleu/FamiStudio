@@ -29,7 +29,7 @@ namespace FamiStudio
             }
         }
 
-        public void BeginEncoding(int resX, int resY, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, string audioFile, string outputFile)
+        public bool BeginEncoding(int resX, int resY, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, string audioFile, string outputFile)
         {
             process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
@@ -39,6 +39,8 @@ namespace FamiStudio
                 // Cant raise the process priority without being admin on Linux/MacOS.
                 Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
             }
+
+            return true;
         }
 
         public void AddFrame(byte[] image)

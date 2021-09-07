@@ -158,15 +158,13 @@ namespace FamiStudio
 
         protected Bitmap LoadBitmapFromResourceWithScaling(string name)
         {
-            Debug.Assert(windowScaling >= 4.0f);
-
             var assembly = Assembly.GetExecutingAssembly();
 
             Bitmap bmp;
 
-            if (assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@4x.png") != null)
+            if (windowScaling >= 4.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@4x.png") != null)
                 bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@4x.png");
-            else if (assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
+            else if (windowScaling >= 2.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
                 bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@2x.png");
             else
                 bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png");
@@ -489,6 +487,7 @@ namespace FamiStudio
             list.Release();
         }
     }
+
     public class GLOffscreenGraphics : GLGraphics
     {
         protected int fbo;
@@ -505,36 +504,44 @@ namespace FamiStudio
         {
             resX = imageSizeX;
             resY = imageSizeY;
-            texture = CreateEmptyTexture(imageSizeX, imageSizeY, false);
 
-            var fbos = new int[1];
-            GLES11Ext.GlGenFramebuffersOES(1, fbos, 0);
-            GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, fbos[0]);
-            GLES11Ext.GlFramebufferTexture2DOES(GLES11Ext.GlFramebufferOes, GLES11Ext.GlColorAttachment0Oes, GLES11.GlTexture2d, texture, 0);
-            GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, 0);
-            fbo = fbos[0];
+            if (allowReadback)
+            {
+                texture = CreateEmptyTexture(imageSizeX, imageSizeY, false);
+
+                var fbos = new int[1];
+                GLES11Ext.GlGenFramebuffersOES(1, fbos, 0);
+                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, fbos[0]);
+                GLES11Ext.GlFramebufferTexture2DOES(GLES11Ext.GlFramebufferOes, GLES11Ext.GlColorAttachment0Oes, GLES11.GlTexture2d, texture, 0);
+                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, 0);
+                fbo = fbos[0];
+            }
         }
 
         public static GLOffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
         {
+#if !DEBUG
             try
+#endif
             {
                 var extentions = GLES11.GlGetString(GLES11.GlExtensions);
 
                 if (extentions.ToUpper().Contains("GL_OES_FRAMEBUFFER_OBJECT"))
                     return new GLOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
             }
+#if !DEBUG
             catch
             {
             }
+#endif
 
             return null;
         }
 
         public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
         {
-            GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, fbo);
-            //GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+            if (fbo > 0)
+                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, fbo);
 
             base.BeginDrawControl(unflippedControlRect, windowSizeY);
         }
@@ -542,37 +549,42 @@ namespace FamiStudio
         public override void EndDrawControl()
         {
             base.EndDrawControl();
-            GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, 0);
+
+            if (fbo > 0)
+                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, 0);
         }
 
         public unsafe void GetBitmap(byte[] data)
         {
-            byte[] tmp = new byte[data.Length];
-
-            GLES11.GlBindTexture(GLES11.GlTexture2d, texture);
-            fixed (byte* tmpPtr = &tmp[0])
+            if (texture > 0)
             {
-                var buffer = ByteBuffer.AllocateDirect(resX * resY * sizeof(int)).Order(ByteOrder.NativeOrder());
-                GLES11.GlReadPixels(0, 0, resX, resY, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
-                buffer.Get(data);
+                byte[] tmp = new byte[data.Length];
 
-                // Flip image vertically to match D3D. 
-                for (int y = 0; y < resY; y++)
+                GLES11.GlBindTexture(GLES11.GlTexture2d, texture);
+                fixed (byte* tmpPtr = &tmp[0])
                 {
-                    int y0 = y;
-                    int y1 = resY - y - 1;
+                    var buffer = ByteBuffer.AllocateDirect(resX * resY * sizeof(int)).Order(ByteOrder.NativeOrder());
+                    GLES11.GlReadPixels(0, 0, resX, resY, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
+                    buffer.Get(data);
 
-                    y0 *= resX * 4;
-                    y1 *= resX * 4;
-
-                    // ABGR -> RGBA
-                    byte* p = tmpPtr + y0;
-                    for (int x = 0; x < resX * 4; x += 4)
+                    // Flip image vertically to match D3D. 
+                    for (int y = 0; y < resY; y++)
                     {
-                        data[y1 + x + 3] = *p++;
-                        data[y1 + x + 2] = *p++;
-                        data[y1 + x + 1] = *p++;
-                        data[y1 + x + 0] = *p++;
+                        int y0 = y;
+                        int y1 = resY - y - 1;
+
+                        y0 *= resX * 4;
+                        y1 *= resX * 4;
+
+                        // ABGR -> RGBA
+                        byte* p = tmpPtr + y0;
+                        for (int x = 0; x < resX * 4; x += 4)
+                        {
+                            data[y1 + x + 3] = *p++;
+                            data[y1 + x + 2] = *p++;
+                            data[y1 + x + 1] = *p++;
+                            data[y1 + x + 0] = *p++;
+                        }
                     }
                 }
             }
@@ -581,7 +593,7 @@ namespace FamiStudio
         public override void Dispose()
         {
             if (texture != 0) GLES11.GlDeleteTextures(1, new[] { texture }, 0);
-            if (fbo != 0) gl11Ext.GlDeleteFramebuffersOES(1, new[] { fbo }, 0);
+            if (fbo     != 0) GLES11Ext.GlDeleteFramebuffersOES(1, new[] { fbo }, 0);
 
             base.Dispose();
         }

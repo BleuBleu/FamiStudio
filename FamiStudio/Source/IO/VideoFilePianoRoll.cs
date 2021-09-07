@@ -280,9 +280,9 @@ namespace FamiStudio
 #endif
         }
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool stereo, float[] pan)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool stereo, float[] pan)
         {
-            if (!Initialize(ffmpegExecutable, channelMask, loopCount))
+            if (!Initialize(channelMask, loopCount))
                 return false;
             
             videoResX = resX;
@@ -293,12 +293,24 @@ namespace FamiStudio
 
             ExtendSongForLooping(song, loopCount);
 
-            Log.LogMessage(LogSeverity.Info, "Initializing channels...");
+            // Save audio to temporary file.
+            Log.LogMessage(LogSeverity.Info, "Exporting audio...");
 
-            var frameRateNumer = song.Project.PalMode ? 5000773 : 6009883;
-            if (halfFrameRate)
-                frameRateNumer /= 2;
-            var frameRateDenom = 100000;
+            var tempFolder = Utils.GetTemporaryDiretory();
+            var tempAudioFile = Path.Combine(tempFolder, "temp.wav");
+
+            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+
+            // Start encoder, must be done before any GL calls on Android.
+            GetFrameRateInfo(song.Project, halfFrameRate, out var frameRateNumer, out var frameRateDenom);
+
+            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, tempAudioFile, filename))
+            {
+                Log.LogMessage(LogSeverity.Error, "Error starting video encoder, aborting.");
+                return false;
+            }
+
+            Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
             var numChannels = Utils.NumberOfSetBits(channelMask);
             var channelResXFloat = videoResX / (float)numChannels;
@@ -389,21 +401,10 @@ namespace FamiStudio
             var videoImage   = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscWindowSize, 2];
 
-            // Start ffmpeg with pipe input.
-            var tempFolder = Utils.GetTemporaryDiretory();
-            var tempAudioFile = Path.Combine(tempFolder, "temp.wav");
-
 #if !DEBUG
             try
 #endif
             {
-                Log.LogMessage(LogSeverity.Info, "Exporting audio...");
-
-                // Save audio to temporary file.
-                AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
-
-                videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, tempAudioFile, filename);
-
                 // Generate each of the video frames.
                 for (int f = 0; f < metadata.Length; f++)
                 {

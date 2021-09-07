@@ -425,7 +425,7 @@ namespace FamiStudio
                 {
                     var pianoRollZoom = props.GetSelectedIndex(6) - 3;
 
-                    new VideoFilePianoRoll().Save(project, song.Id, loopCount, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                    new VideoFilePianoRoll().Save(project, song.Id, loopCount, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
                 }
                 else
                 {
@@ -433,7 +433,7 @@ namespace FamiStudio
                     var oscLineThickness = props.GetPropertyValue<int>(7);
                     var oscColorMode = props.GetSelectedIndex(8);
 
-                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
                 }
 
                 lastExportFilename = filename;

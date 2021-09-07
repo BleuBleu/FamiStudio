@@ -84,7 +84,7 @@ namespace FamiStudio
             }
         }
 
-        protected bool Initialize(string ffmpegExecutable, int channelMask, int loopCount)
+        protected bool Initialize(int channelMask, int loopCount)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -127,6 +127,13 @@ namespace FamiStudio
             }
         }
 
+        protected void GetFrameRateInfo(Project project, bool half, out int numer, out int denom)
+        {
+            numer = project.PalMode ? 5000773 : 6009883;
+            if (half)
+                numer /= 2;
+            denom = 100000;
+        }
     }
 
     class VideoChannelState
