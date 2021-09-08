@@ -148,7 +148,7 @@ namespace FamiStudio
         {
             var idx = GetPropertyIndexForView(sender as View);
             if (idx >= 0)
-                PropertyChanged?.Invoke(this, idx, -1, -1, e.Position);
+                PropertyChanged?.Invoke(this, idx, -1, -1, e.Position); // MATTT : This is wrong, send text of item here.
         }
 
         private HorizontalNumberPicker CreateNumberPicker(int value, int min, int max)
@@ -272,7 +272,8 @@ namespace FamiStudio
             prop.layout = CreateLinearLayout(true, true, false, 10);
             prop.layout.SetOnTouchListener(this);
             prop.layout.AddView(prop.label);
-            prop.layout.AddView(prop.tooltip);
+            if (prop.tooltip != null)
+                prop.layout.AddView(prop.tooltip);
             prop.layout.AddView(editText);
 
             properties.Add(prop);

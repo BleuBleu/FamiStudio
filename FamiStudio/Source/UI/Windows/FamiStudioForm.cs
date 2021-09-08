@@ -54,7 +54,6 @@ namespace FamiStudio
 
             timer.Tick += timer_Tick;
             timer.Interval = 4;
-            timer.Start();
 
             InitForm();
 

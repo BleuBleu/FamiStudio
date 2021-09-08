@@ -269,6 +269,7 @@ namespace FamiStudio
             var font = (GLFont)null;
 
             int baseValue = 0;
+            int lineHeight = 0;
             int texSizeX = 256;
             int texSizeY = 256;
 
@@ -281,9 +282,10 @@ namespace FamiStudio
                     case "common":
                         {
                             baseValue = ReadFontParam<int>(splits, "base");
+                            lineHeight = ReadFontParam<int>(splits, "lineHeight");
                             texSizeX = ReadFontParam<int>(splits, "scaleW");
                             texSizeY = ReadFontParam<int>(splits, "scaleH");
-                            font = new GLFont(CreateTexture(bmp), size, baseValue);
+                            font = new GLFont(CreateTexture(bmp), size, baseValue, lineHeight);
                             break;
                         }
                     case "char":
@@ -408,16 +410,19 @@ namespace FamiStudio
         private int texture;
         private int size;
         private int baseValue;
+        private int lineHeight;
 
-        public int Texture => texture;
-        public int Size    => size;
-        public int OffsetY => size - baseValue;
+        public int Texture    => texture;
+        public int Size       => size;
+        public int LineHeight => lineHeight;
+        public int OffsetY    => size - baseValue;
 
-        public GLFont(int tex, int sz, int b)
+        public GLFont(int tex, int sz, int b, int l)
         {
             texture = tex;
             size = sz;
             baseValue = b;
+            lineHeight = l;
         }
 
         public void Dispose()
@@ -513,6 +518,12 @@ namespace FamiStudio
                     x += GetKerning(c0, c1);
                 }
             }
+        }
+
+        public int MeasureString(string text)
+        {
+            MeasureString(text, out var minX, out var maxX);
+            return maxX - minX;
         }
     }
 

@@ -58,8 +58,6 @@ namespace FamiStudio
         const int DefaultTooltipTextPosY           = 30;
         const int DefaultDPCMTextPosX              = 2;
         const int DefaultDPCMTextPosY              = 0;
-        const int DefaultDPCMSourceDataPosY        = 38;
-        const int DefaultDPCMInfoSpacingY          = 16;
         const int DefaultRecordingKeyOffsetY       = 12;
         const int DefaultAttackIconPosX            = 1;
         const int DefaultWaveGeometrySampleSize    = 2;
@@ -95,21 +93,19 @@ namespace FamiStudio
         int tooltipTextPosY;
         int dpcmTextPosX;
         int dpcmTextPosY;
-        int dpcmSourceDataPosY;
-        int dpcmInfoSpacingY;
         int recordingKeyOffsetY;
         int octaveSizeY;
         int virtualSizeY;
         int scrollBarThickness;
         int minScrollBarLength;
         int attackIconPosX;
-        int minNoteSizeForLabel;
         int waveGeometrySampleSize;
         int waveDisplayPaddingY;
         int scrollMargin;
         int noteResizeMargin;
         int beatTextPosX;
         int geometryNoteSizeY;
+        int fontSmallCharSizeX;
         float minZoom;
         float maxZoom;
         float envelopeSizeY;
@@ -477,14 +473,12 @@ namespace FamiStudio
             effectIconSizeX           = ScaleForMainWindow(DefaultEffectIconSizeX);
             effectValuePosTextOffsetY = ScaleForMainWindow(DefaultEffectValuePosTextOffsetY);
             effectValueNegTextOffsetY = ScaleForMainWindow(DefaultEffectValueNegTextOffsetY);
-            bigTextPosX               = ScaleForMainWindow(DefaultBigTextPosX);
-            bigTextPosY               = ScaleForMainWindow(DefaultBigTextPosY);
-            tooltipTextPosX           = ScaleForMainWindow(DefaultTooltipTextPosX);
-            tooltipTextPosY           = ScaleForMainWindow(DefaultTooltipTextPosY);
-            dpcmTextPosX              = ScaleForMainWindow(DefaultDPCMTextPosX);
-            dpcmTextPosY              = ScaleForMainWindow(DefaultDPCMTextPosY);
-            dpcmSourceDataPosY        = ScaleForMainWindow(DefaultDPCMSourceDataPosY);
-            dpcmInfoSpacingY          = ScaleForMainWindow(DefaultDPCMInfoSpacingY);
+            bigTextPosX               = ScaleForFont(DefaultBigTextPosX);
+            bigTextPosY               = ScaleForFont(DefaultBigTextPosY);
+            tooltipTextPosX           = ScaleForFont(DefaultTooltipTextPosX);
+            tooltipTextPosY           = ScaleForFont(DefaultTooltipTextPosY);
+            dpcmTextPosX              = ScaleForFont(DefaultDPCMTextPosX);
+            dpcmTextPosY              = ScaleForFont(DefaultDPCMTextPosY);
             recordingKeyOffsetY       = ScaleForMainWindow(DefaultRecordingKeyOffsetY);
             attackIconPosX            = ScaleForMainWindow(DefaultAttackIconPosX);
             waveGeometrySampleSize    = ScaleForMainWindow(DefaultWaveGeometrySampleSize);
@@ -501,9 +495,9 @@ namespace FamiStudio
             else
                 effectPanelSizeY = ScaleForMainWindow(DefaultEffectPanelSizeY);
 
-            octaveSizeY               = 12 * noteSizeY;
-            headerAndEffectSizeY      = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
-            virtualSizeY              = NumNotes * noteSizeY;
+            octaveSizeY          = 12 * noteSizeY;
+            headerAndEffectSizeY = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
+            virtualSizeY         = NumNotes * noteSizeY;
         }
 
         public void StartEditPattern(int trackIdx, int patternIdx)
@@ -828,7 +822,7 @@ namespace FamiStudio
             bmpSnapResolutionAtlas = g.CreateBitmapAtlasFromResources(SnapResolutionImageNames);
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
             bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
-            minNoteSizeForLabel = (int)g.MeasureString(" 0#0 ", ThemeResources.FontSmall);
+            fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
 
             if (PlatformUtils.IsMobile)
             {
@@ -1243,7 +1237,7 @@ namespace FamiStudio
             }
             else if (editMode == EditionMode.DPCM)
             {
-                r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded  : (int)MiscImageIndices.EffectCollapsed, 0, 0);
+                r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded  : (int)MiscImageIndices.EffectCollapsed, 0, 0, 1.0f, bitmapScale);
 
                 if (showEffectsPanel)
                 {
@@ -1559,7 +1553,7 @@ namespace FamiStudio
                                 hover ? ThemeResources.WhiteBrush : ThemeResources.BlackBrush, hover || selected ? 2 : 1, hover || selected);
 
                             var text = effectValue.ToString();
-                            if ((text.Length <= 2 && zoom >= 1.0f) || zoom > 1.0f)
+                            if (text.Length * fontSmallCharSizeX + 2 < noteSizeX)
                             {
                                 if (sizeY < effectPanelSizeY / 2)
                                     r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
@@ -2352,8 +2346,9 @@ namespace FamiStudio
                         var y = (virtualSizeY - envelopeSizeY * (env.Values[i] + midValue)) - scrollY;
                         var selected = IsEnvelopeValueSelected(i);
                         r.cf.FillAndDrawRectangle(x, y - envelopeSizeY, x + noteSizeX, y, r.g.GetVerticalGradientBrush(Theme.LightGreyFillColor1, (int)envelopeSizeY, 0.8f), ThemeResources.BlackBrush, selected ? 2 : 1, selected);
-                        if (zoom >= 2.0f)
-                            r.cf.DrawText(env.Values[i].ToString("+#;-#;0"), ThemeResources.FontSmall, x, y - envelopeSizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
+                        var label = env.Values[i].ToString("+#;-#;0");
+                        if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
+                            r.cf.DrawText(label, ThemeResources.FontSmall, x, y - envelopeSizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
                     }
                 }
                 else
@@ -2382,14 +2377,13 @@ namespace FamiStudio
 
                         r.cf.FillAndDrawRectangle(x, y0, x + noteSizeX, y1, ThemeResources.LightGreyFillBrush1, ThemeResources.BlackBrush, selected ? 2 : 1, selected);
 
-                        if (zoom >= 2.0f)
-                        {
-                            bool drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * MainWindowScaling * 2);
-                            var brush = drawOutside ? ThemeResources.LightGreyFillBrush1 : ThemeResources.BlackBrush;
-                            var offset = drawOutside != val < center ? -effectValuePosTextOffsetY : effectValueNegTextOffsetY;
+                        bool drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * MainWindowScaling * 2);
+                        var brush = drawOutside ? ThemeResources.LightGreyFillBrush1 : ThemeResources.BlackBrush;
+                        var offset = drawOutside != val < center ? -effectValuePosTextOffsetY : effectValueNegTextOffsetY;
 
-                            r.cf.DrawText(val.ToString(), ThemeResources.FontSmall, x, ty + offset, brush, RenderTextFlags.Center, noteSizeX);
-                        }
+                        var label = val.ToString();
+                        if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
+                            r.cf.DrawText(label, ThemeResources.FontSmall, x, ty + offset, brush, RenderTextFlags.Center, noteSizeX);
                     }
                 }
 
@@ -2413,7 +2407,7 @@ namespace FamiStudio
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
                 // MATTT : The position of the text is wrong here. Creates asserts and shit when minimizing (or resizing?) the window
-                r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
+                //r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
             }
         }
 
@@ -2458,9 +2452,11 @@ namespace FamiStudio
                         noteTextPosX += noteAttackSizeX + attackIconPosX + 2;
                     }
 
-                    if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && (sx - noteTextPosX) > minNoteSizeForLabel && ThemeResources.FontSmall.Size < noteSizeY)
+                    if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && ThemeResources.FontSmall.Size < noteSizeY)
                     {
-                        r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, noteSizeY - 1);
+                        var label = note.FriendlyName;
+                        if ((sx - noteTextPosX) > label.Length * fontSmallCharSizeX)
+                            r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, noteSizeY - 1);
                     }
                 }
 
@@ -2809,10 +2805,14 @@ namespace FamiStudio
             }
 
             // Title + source/processed info.
-            r.cb.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
-            r.cb.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, dpcmSourceDataPosY, whiteKeyBrush);
-            r.cb.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY, whiteKeyBrush);
-            r.cb.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, dpcmSourceDataPosY + dpcmInfoSpacingY * 2, whiteKeyBrush);
+            var textY = bigTextPosY;
+            r.cb.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeResources.FontVeryLarge, bigTextPosX, textY, whiteKeyBrush);
+            textY += ThemeResources.FontVeryLarge.LineHeight;
+            r.cb.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
+            textY += ThemeResources.FontMedium.LineHeight;
+            r.cb.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
+            textY += ThemeResources.FontMedium.LineHeight;
+            r.cb.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
 
             r.cb.PopTransform();
 
