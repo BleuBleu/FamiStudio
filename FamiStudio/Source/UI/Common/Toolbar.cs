@@ -524,7 +524,7 @@ namespace FamiStudio
                 }
 
                 timecodeOscSizeX = timeLayout.numCols * buttonSize - buttonIconPosX * 2;
-                timecodeOscSizeY = buttonSize;
+                timecodeOscSizeY = buttonSize - buttonIconPosX * 2;
                 timecodePosX = buttonIconPosX + timeCol * buttonSize;
                 timecodePosY = buttonIconPosX + timeRow * buttonSize;
                 oscilloscopePosX = buttonIconPosX + oscCol * buttonSize;
@@ -879,13 +879,13 @@ namespace FamiStudio
                 var charPosX = x + sx / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
                 for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
-                    c.DrawText(patternString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
+                    c.DrawText(patternString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor, RenderTextFlags.Center, zeroSizeX);
 
-                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor);
+                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor, RenderTextFlags.Center, colonSizeX);
                 charPosX += colonSizeX;
 
                 for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
-                    c.DrawText(noteString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
+                    c.DrawText(noteString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor, RenderTextFlags.Center, zeroSizeX);
             }
             else
             {
@@ -899,15 +899,15 @@ namespace FamiStudio
                 var charPosX = x + sx / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
 
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    c.DrawText(minutesString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
-                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor);
+                    c.DrawText(minutesString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor, RenderTextFlags.Center, zeroSizeX);
+                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor, RenderTextFlags.Center, colonSizeX);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    c.DrawText(secondsString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
-                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor);
+                    c.DrawText(secondsString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor, RenderTextFlags.Center, zeroSizeX);
+                c.DrawText(":", ThemeResources.FontHuge, charPosX, 2, textColor, RenderTextFlags.Center, colonSizeX);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
-                    c.DrawText(millisecondsString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor);
+                    c.DrawText(millisecondsString[i].ToString(), ThemeResources.FontHuge, charPosX, 2, textColor, RenderTextFlags.Center, zeroSizeX);
             }
         }
 
