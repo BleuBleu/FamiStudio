@@ -737,123 +737,132 @@ namespace FamiStudio
                 var atlas = button.atlas;
                 var atlasIdx = button.atlasIdx;
 
-                c.PushTranslation(0, y);
-
-                if (button.type == ButtonType.ParamCheckbox || 
-                    button.type == ButtonType.ParamSlider   || 
-                    button.type == ButtonType.ParamList)
+                if (y + buttonSizeY >= 0)
                 {
-                    if (firstParam)
-                    {
-                        var numParamButtons = 1;
+                    c.PushTranslation(0, y);
 
-                        for (int j = i + 1; j < buttons.Count; j++, numParamButtons++)
+                    if (button.type == ButtonType.ParamCheckbox ||
+                        button.type == ButtonType.ParamSlider ||
+                        button.type == ButtonType.ParamList)
+                    {
+                        if (firstParam)
                         {
-                            if (buttons[j].type != ButtonType.ParamCheckbox &&
-                                buttons[j].type != ButtonType.ParamSlider &&
-                                buttons[j].type != ButtonType.ParamList)
-                            { 
-                                break;
+                            var numParamButtons = 1;
+
+                            for (int j = i + 1; j < buttons.Count; j++, numParamButtons++)
+                            {
+                                if (buttons[j].type != ButtonType.ParamCheckbox &&
+                                    buttons[j].type != ButtonType.ParamSlider &&
+                                    buttons[j].type != ButtonType.ParamList)
+                                {
+                                    break;
+                                }
+                            }
+
+                            c.FillAndDrawRectangle(0, 0, actualWidth, numParamButtons * buttonSizeY, g.GetVerticalGradientBrush(button.color, numParamButtons * buttonSizeY, 0.8f), ThemeResources.BlackBrush);
+                            firstParam = false;
+                        }
+                    }
+                    else
+                    {
+                        c.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.color, buttonSizeY, 0.8f), ThemeResources.BlackBrush);
+                    }
+
+                    if (button.type == ButtonType.Instrument)
+                    {
+                        if (button.instrument != null)
+                        {
+                            minInstIdx = Math.Min(minInstIdx, i);
+                            maxInstIdx = Math.Max(maxInstIdx, i);
+                        }
+                    }
+                    else if (button.type == ButtonType.Arpeggio)
+                    {
+                        if (button.arpeggio != null)
+                        {
+                            minArpIdx = Math.Min(minArpIdx, i);
+                            maxArpIdx = Math.Max(maxArpIdx, i);
+                        }
+                    }
+
+                    var leftPadding = 0;
+                    var leftAligned = button.type == ButtonType.Instrument || button.type == ButtonType.Song || button.type == ButtonType.ParamSlider || button.type == ButtonType.ParamCheckbox || button.type == ButtonType.ParamList || button.type == ButtonType.Arpeggio || button.type == ButtonType.Dpcm;
+
+                    if (showExpandButton && leftAligned)
+                    {
+                        c.PushTranslation(1 + expandButtonSizeX, 0);
+                        leftPadding = expandButtonSizeX;
+                    }
+
+                    var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
+                    var ellipsisFlag = button.TextEllipsis ? RenderTextFlags.Ellipsis : RenderTextFlags.None;
+
+                    c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextNoIconPosX * 2, buttonSizeY);
+
+                    if (atlas != null)
+                        c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale);
+
+                    if (leftPadding != 0)
+                        c.PopTransform();
+
+                    if (button.param != null)
+                    {
+                        var paramVal = button.param.GetValue();
+                        var paramStr = button.param.GetValueString();
+
+                        if (button.type == ButtonType.ParamSlider)
+                        {
+                            var valSizeX = (int)Math.Round((paramVal - button.param.MinValue) / (float)(button.param.MaxValue - button.param.MinValue) * sliderSizeX);
+
+                            c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
+                            c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
+                            c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1.0f);
+                            c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
+                            c.PopTransform();
+                        }
+                        else if (button.type == ButtonType.ParamCheckbox)
+                        {
+                            c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale);
+                        }
+                        else if (button.type == ButtonType.ParamList)
+                        {
+                            var paramPrev = button.param.SnapAndClampValue(paramVal - 1);
+                            var paramNext = button.param.SnapAndClampValue(paramVal + 1);
+                            var buttonWidth = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width;
+
+                            c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
+                            c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale);
+                            c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale);
+                            c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
+                            c.PopTransform();
+                        }
+                    }
+                    else
+                    {
+                        var subButtons = button.GetSubButtons(out var active);
+                        if (subButtons != null)
+                        {
+                            for (int j = 0, x = actualWidth - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
+                            {
+                                atlas = button.GetIcon(subButtons[j], out atlasIdx);
+
+                                if (subButtons[j] == SubButtonType.Expand)
+                                    c.DrawBitmapAtlas(atlas, atlasIdx, expandButtonPosX, expandButtonPosY, 1.0f, bitmapScale);
+                                else
+                                    c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, active[j] ? 1.0f : 0.2f, bitmapScale);
                             }
                         }
-
-                        c.FillAndDrawRectangle(0, 0, actualWidth, numParamButtons * buttonSizeY, g.GetVerticalGradientBrush(button.color, numParamButtons * buttonSizeY, 0.8f), ThemeResources.BlackBrush);
-                        firstParam = false;
                     }
-                }
-                else
-                {
-                    c.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.color, buttonSizeY, 0.8f), ThemeResources.BlackBrush);
-                }
 
-                if (button.type == ButtonType.Instrument)
-                {
-                    if (button.instrument != null)
-                    {
-                        minInstIdx = Math.Min(minInstIdx, i);
-                        maxInstIdx = Math.Max(maxInstIdx, i);
-                    }
-                }
-                else if (button.type == ButtonType.Arpeggio)
-                {
-                    if (button.arpeggio != null)
-                    {
-                        minArpIdx = Math.Min(minArpIdx, i);
-                        maxArpIdx = Math.Max(maxArpIdx, i);
-                    }
-                }
-
-                var leftPadding = 0;
-                var leftAligned = button.type == ButtonType.Instrument || button.type == ButtonType.Song || button.type == ButtonType.ParamSlider || button.type == ButtonType.ParamCheckbox || button.type == ButtonType.ParamList || button.type == ButtonType.Arpeggio || button.type == ButtonType.Dpcm;
-
-                if (showExpandButton && leftAligned)
-                {
-                    c.PushTranslation(1 + expandButtonSizeX, 0);
-                    leftPadding = expandButtonSizeX;
-                }
-
-                var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
-                var ellipsisFlag = button.TextEllipsis ? RenderTextFlags.Ellipsis : RenderTextFlags.None;
-
-                c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextNoIconPosX * 2, buttonSizeY);
-                
-                if (atlas != null)
-                    c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale);
-
-                if (leftPadding != 0)
                     c.PopTransform();
-
-                if (button.param != null)
-                {
-                    var paramVal = button.param.GetValue();
-                    var paramStr = button.param.GetValueString();
-
-                    if (button.type == ButtonType.ParamSlider)
-                    {
-                        var valSizeX = (int)Math.Round((paramVal - button.param.MinValue) / (float)(button.param.MaxValue - button.param.MinValue) * sliderSizeX);
-
-                        c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
-                        c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
-                        c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1.0f);
-                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
-                        c.PopTransform();
-                    }
-                    else if (button.type == ButtonType.ParamCheckbox)
-                    {
-                        c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale);
-                    }
-                    else if (button.type == ButtonType.ParamList)
-                    {
-                        var paramPrev = button.param.SnapAndClampValue(paramVal - 1);
-                        var paramNext = button.param.SnapAndClampValue(paramVal + 1);
-                        var buttonWidth = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width;
-
-                        c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
-                        c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale);
-                        c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale);
-                        c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
-                        c.PopTransform();
-                    }
-                }
-                else
-                {
-                    var subButtons = button.GetSubButtons(out var active);
-                    if (subButtons != null)
-                    {
-                        for (int j = 0, x = actualWidth - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
-                        {
-                            atlas = button.GetIcon(subButtons[j], out atlasIdx);
-
-                            if (subButtons[j] == SubButtonType.Expand)
-                                c.DrawBitmapAtlas(atlas, atlasIdx, expandButtonPosX, expandButtonPosY, 1.0f, bitmapScale);
-                            else
-                                c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, active[j] ? 1.0f : 0.2f, bitmapScale);
-                        }
-                    }
                 }
 
-                c.PopTransform();
                 y += buttonSizeY;
+
+                if (y > Height)
+                {
+                    break;
+                }
             }
 
             if (captureOperation != CaptureOperation.None && captureThresholdMet)
