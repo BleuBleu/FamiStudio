@@ -236,6 +236,7 @@ namespace FamiStudio
                     {
                         expanding = false;
                     }
+                    MarkDirty();
                 }
                 else if (closing && expandRatio != 0.0f)
                 {
@@ -246,6 +247,7 @@ namespace FamiStudio
                         expandButtonIdx = -1;
                         closing = false;
                     }
+                    MarkDirty();
                 }
             }
         }

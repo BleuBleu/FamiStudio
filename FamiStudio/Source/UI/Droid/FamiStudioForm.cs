@@ -298,7 +298,10 @@ namespace FamiStudio
                 Console.WriteLine($"FRAME SKIP!!!!!!!!!!!!!!!!!!!!!! {deltaTime}");
 
             lock (renderLock)
+            {
                 famistudio.Tick(deltaTime);
+                controls.Tick(deltaTime);
+            }
 
             if (controls.NeedsRedraw())
                 glSurfaceView.RequestRender();

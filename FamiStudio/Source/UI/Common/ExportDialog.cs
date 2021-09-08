@@ -136,7 +136,10 @@ namespace FamiStudio
 
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {
-            if (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath))
+            // TODO : Make this part of the VideoEncoder.
+            var canExportVideo = (!PlatformUtils.IsDesktop || (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath)));
+
+            if (canExportVideo)
             {
                 page.AddDropDownList("Song :", songNames, songNames[0]); // 0
                 page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 1

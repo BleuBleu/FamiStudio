@@ -10,9 +10,6 @@ namespace FamiStudio
         private int width;
         private int height;
 
-        private float timeDelta = 0.0f;
-        private DateTime lastTime = DateTime.MinValue;
-
         private GLGraphics  gfx;
         private ThemeRenderResources res;
 
@@ -272,24 +269,10 @@ namespace FamiStudio
             gfx.EndDrawControl();
         }
 
-        private void UpdateTimeDelta()
-        {
-            if (lastTime == DateTime.MinValue)
-                lastTime = DateTime.Now;
-
-            var currTime = DateTime.Now;
-
-            timeDelta = Math.Min(0.25f, (float)(currTime - lastTime).TotalSeconds);
-            lastTime = currTime;
-        }
-
-        private void UpdateQuickAccess()
+        public void Tick(float timeDelta)
         {
             quickAccessBar.Tick(timeDelta);
-        }
 
-        private void UpdateTransition()
-        {
             if (transitionTimer > 0.0f)
             {
                 var prevTimer = transitionTimer;
@@ -307,10 +290,6 @@ namespace FamiStudio
 
         public bool Redraw()
         {
-            UpdateTimeDelta();
-            UpdateTransition();
-            UpdateQuickAccess(); // MATTT : Should we tick with the other controls?
-
             gfx.BeginDrawFrame();
             {
                 RenderControl(activeControl);
