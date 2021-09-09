@@ -681,7 +681,7 @@ namespace FamiStudio
             {
                 App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex);
 
-                cf.PushTranslation(GetPixelForNote(pianoRollMinNoteIdx) + trackNameSizeX, pianoRollChannelIndex * trackSizeY + headerSizeY);
+                cf.PushTranslation(GetPixelForNote(pianoRollMinNoteIdx), pianoRollChannelIndex * trackSizeY + headerSizeY);
                 cf.DrawRectangle(1, patternHeaderSizeY + 1, GetPixelForNote(pianoRollMaxNoteIdx - pianoRollMinNoteIdx, false) - 1, trackSizeY - 1, ThemeResources.LightGreyFillBrush2);
                 cf.PopTransform();
             }
