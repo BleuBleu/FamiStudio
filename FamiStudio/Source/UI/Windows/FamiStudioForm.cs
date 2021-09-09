@@ -263,12 +263,6 @@ namespace FamiStudio
             }
         }
 
-        public override bool PreProcessMessage(ref Message msg)
-        {
-            Trace.WriteLine($"Pre {msg.Msg}");
-            return base.PreProcessMessage(ref msg);
-        }
-
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);

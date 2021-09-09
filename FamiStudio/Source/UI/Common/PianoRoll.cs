@@ -4597,6 +4597,7 @@ namespace FamiStudio
 
             return false;
         }
+
         protected override void OnTouchDown(int x, int y)
         {
             if (HandleTouchDownPan(x, y)) goto Handled;
@@ -4610,6 +4611,7 @@ namespace FamiStudio
 
         protected override void OnTouchMove(int x, int y)
         {
+            // MATTT : Move to "UpdateCaptureOperation".
             if (captureOperation == CaptureOperation.PlayPiano)
                 PlayPiano(x, y);
 
@@ -4629,7 +4631,6 @@ namespace FamiStudio
 
         protected override void OnTouchUp(int x, int y)
         {
-            panning = false;
             EndCaptureOperation(new MouseEventArgs(MouseButtons.None, 0, x, y, 0));
         }
 

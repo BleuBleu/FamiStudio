@@ -1521,8 +1521,8 @@ namespace FamiStudio
             inst.sx = width;
             inst.sy = height;
 
-            // We do bilinear on mobile and scale icons, need to be careful with filtering.
-            if (PlatformUtils.IsMobile)
+            // We dont have borders on icons anymore, no need for half pixel offset.
+            if (false && PlatformUtils.IsMobile) 
             {
                 var halfPixelX = 0.5f / bmp.Size.Width;
                 var halfPixelY = 0.5f / bmp.Size.Height;
