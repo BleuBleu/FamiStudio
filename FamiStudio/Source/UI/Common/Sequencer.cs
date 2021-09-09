@@ -26,7 +26,7 @@ namespace FamiStudio
         const int DefaultBarTextPosY         = 2;
         const int DefaultTrackIconPosX       = 2;
         const int DefaultTrackIconPosY       = 3;
-        const int DefaultTrackNamePosX       = 23;
+        const int DefaultTrackNamePosX       = 21;
         const int DefaultTrackNamePosY       = 4;
         const int DefaultGhostNoteOffsetX    = 16;
         const int DefaultGhostNoteOffsetY    = 15;
