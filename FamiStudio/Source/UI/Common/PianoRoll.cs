@@ -2455,7 +2455,7 @@ namespace FamiStudio
                     if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && ThemeResources.FontSmall.Size < noteSizeY)
                     {
                         var label = note.FriendlyName;
-                        if ((sx - noteTextPosX) > label.Length * fontSmallCharSizeX)
+                        if ((sx - noteTextPosX) > (label.Length + 1) * fontSmallCharSizeX)
                             r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, noteSizeY - 1);
                     }
                 }
