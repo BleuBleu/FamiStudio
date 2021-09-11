@@ -487,12 +487,6 @@ namespace FamiStudio
         {
         }
 
-        public override void Fail(string message)
-        {
-            base.Fail(message);
-            System.Diagnostics.Debugger.Break();
-        }
-
         public override void Fail(string message, string detailMessage)
         {
             base.Fail(message, detailMessage);
