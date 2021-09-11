@@ -479,6 +479,8 @@ namespace FamiStudio
     // By default Debug.Assert() doesnt break in the debugger on Android. This does that.
     public class DebuggerBreakListener : System.Diagnostics.TraceListener
     {
+        bool breakOnFail = true;
+
         public override void Write(string message)
         {
         }
@@ -490,7 +492,9 @@ namespace FamiStudio
         public override void Fail(string message, string detailMessage)
         {
             base.Fail(message, detailMessage);
-            System.Diagnostics.Debugger.Break();
+            
+            if (breakOnFail)
+                System.Diagnostics.Debugger.Break();
         }
     }
 #endif
