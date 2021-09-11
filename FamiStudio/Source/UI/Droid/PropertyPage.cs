@@ -59,6 +59,11 @@ namespace FamiStudio
             context = ctx;
         }
 
+        private string SanitizeLabel(string label)
+        {
+            return label != null ? label.TrimEnd(new[] { ' ', ':' }) : null;
+        }
+
         private EditText CreateEditText(string txt, int maxLength)
         {
             var editText = new EditText(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
@@ -140,15 +145,20 @@ namespace FamiStudio
             adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
             spinner.Adapter = adapter;
             spinner.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2), BlendMode.SrcAtop));
+            spinner.SetSelection(adapter.GetPosition(value));
             spinner.ItemSelected += Spinner_ItemSelected;
             return spinner;
         }
 
         private void Spinner_ItemSelected(object sender, AdapterView.ItemSelectedEventArgs e)
         {
-            var idx = GetPropertyIndexForView(sender as View);
+            var spinner = sender as Spinner;
+            var idx = GetPropertyIndexForView(spinner);
             if (idx >= 0)
-                PropertyChanged?.Invoke(this, idx, -1, -1, e.Position); // MATTT : This is wrong, send text of item here.
+            {
+                var item = (spinner.Adapter as ArrayAdapter).GetItem(e.Position);
+                PropertyChanged?.Invoke(this, idx, -1, -1, item.ToString());
+            }
         }
 
         private HorizontalNumberPicker CreateNumberPicker(int value, int min, int max)
@@ -266,7 +276,7 @@ namespace FamiStudio
             var editText = CreateEditText(value, maxLength);
 
             prop.type = PropertyType.TextBox;
-            prop.label = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
             prop.controls.Add(editText);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.layout = CreateLinearLayout(true, true, false, 10);
@@ -313,7 +323,7 @@ namespace FamiStudio
             var button = CreateButton(value);
 
             prop.type = PropertyType.Button;
-            prop.label = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.controls.Add(button);
             prop.layout = CreateLinearLayout(true, true, false, 10);
@@ -368,7 +378,7 @@ namespace FamiStudio
 
             prop.type = PropertyType.NumericUpDown;
             prop.controls.Add(picker);
-            prop.label = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.layout = CreateLinearLayout(true, true, false, 10);
             prop.layout.AddView(prop.label);
@@ -421,7 +431,16 @@ namespace FamiStudio
         public void SetPropertyVisible(int idx, bool visible)
         {
             Debug.Assert(pageLayout == null);
-            properties[idx].visible = visible;
+
+            var prop = properties[idx];
+
+            prop.visible = visible;
+            if (prop.label   != null) prop.label.Visibility   = visible ? ViewStates.Visible : ViewStates.Gone;
+            if (prop.layout  != null) prop.layout.Visibility  = visible ? ViewStates.Visible : ViewStates.Gone;
+            if (prop.tooltip != null) prop.tooltip.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
+
+            foreach (var ctrl in prop.controls)
+                ctrl.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
         }
 
         public int AddCheckBox(string label, bool value, string tooltip = null)
@@ -430,7 +449,7 @@ namespace FamiStudio
             var sw = CreateSwitch(value);
 
             prop.type = PropertyType.CheckBox;
-            prop.label = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.controls.Add(sw);
             prop.layout = CreateLinearLayout(false, true, false, 10);
@@ -455,10 +474,10 @@ namespace FamiStudio
         public int AddDropDownList(string label, string[] values, string value, string tooltip = null)
         {
             var prop = new Property();
-            var spinner = CreateSpinner(values, value, tooltip); ;
+            var spinner = CreateSpinner(values, value, tooltip);
 
             prop.type = PropertyType.DropDownList;
-            prop.label = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.controls.Add(spinner);
             prop.layout = CreateLinearLayout(true, true, false, 10);
@@ -491,7 +510,7 @@ namespace FamiStudio
         {
             var prop = new Property();
             prop.type = PropertyType.CheckBoxList;
-            prop.label = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             prop.layout = CreateLinearLayout(true, true, false, 10);
             prop.layout.AddView(prop.label);
@@ -528,7 +547,7 @@ namespace FamiStudio
             var seekBar = CreateSeekBar(value, min, max, 0, 0, false);
 
             prop.type = PropertyType.Slider;
-            prop.label = CreateTextView(label, Resource.Style.LightGrayTextMedium);
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
             if (format != null)
                 prop.value = CreateTextView(string.Format(format, value), Resource.Style.LightGrayTextSmall);
@@ -559,27 +578,27 @@ namespace FamiStudio
 
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
-            Debug.Assert(false); // Will not be supported initially.
         }
 
         public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int height = 300)
         {
-            Debug.Assert(false); // Will not be supported initially.
+            properties.Add(new Property());
         }
 
         public void UpdateMultiColumnList(int idx, object[,] data, string[] columnNames = null)
         {
-            Debug.Assert(false); // Will not be supported initially.
         }
 
         public void UpdateMultiColumnList(int idx, int rowIdx, int colIdx, object value)
         {
-            Debug.Assert(false); // Will not be supported initially.
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)
         {
-            Debug.Assert(false);
+            var prop = properties[idx];
+
+            foreach (var ctrl in prop.controls)
+                ctrl.Enabled = enabled;
         }
 
         public void BeginAdvancedProperties()

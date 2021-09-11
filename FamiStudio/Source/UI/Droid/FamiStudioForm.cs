@@ -84,6 +84,10 @@ namespace FamiStudio
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
+#if DEBUG
+            Debug.Listeners.Add(new DebuggerBreakListener());
+#endif
+
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
 
@@ -518,4 +522,30 @@ namespace FamiStudio
                 GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.End);
         }
     }
+
+#if DEBUG
+    // By default Debug.Assert() doesnt break in the debugger on Android. This does that.
+    public class DebuggerBreakListener : System.Diagnostics.TraceListener
+    {
+        public override void Write(string message)
+        {
+        }
+
+        public override void WriteLine(string message)
+        {
+        }
+
+        public override void Fail(string message)
+        {
+            base.Fail(message);
+            System.Diagnostics.Debugger.Break();
+        }
+
+        public override void Fail(string message, string detailMessage)
+        {
+            base.Fail(message, detailMessage);
+            System.Diagnostics.Debugger.Break();
+        }
+    }
+#endif
 }

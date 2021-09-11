@@ -104,7 +104,44 @@ namespace FamiStudio
             return names;
         }
 
-        private object[,] GetDefaultChannelsData()
+        private string[] GetChannelNames()
+        {   
+            var channelTypes = project.GetActiveChannelList();
+            var channelNames = new string[channelTypes.Length];
+            for (int i = 0; i < channelTypes.Length; i++)
+            {
+                channelNames[i] = ChannelType.GetNameWithExpansion(channelTypes[i]);
+            }
+
+            return channelNames;
+        }
+
+        private bool[] GetDefaultActiveChannels()
+        {
+            // Find all channels used by the project.
+            var anyChannelActive = false;
+            var channelActives = new bool[project.GetActiveChannelCount()];
+
+            foreach (var song in project.Songs)
+            {
+                for (int i = 0; i < song.Channels.Length; i++)
+                {
+                    var channel = song.Channels[i];
+                    if (channel.Patterns.Count > 0)
+                    {
+                        anyChannelActive = true;
+                        channelActives[i] = true;
+                    }
+                }
+            }
+
+            if (!anyChannelActive)
+                return null;
+
+            return channelActives;
+        }
+
+        private object[,] GetDefaultChannelsGridData()
         {
             // Find all channels used by the project.
             var anyChannelActive = false;
@@ -176,9 +213,15 @@ namespace FamiStudio
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
                     page.AddCheckBox("Stereo", false); // 9
-                    page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 10
+                    if (PlatformUtils.IsDesktop)
+                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
+                    else
+                        page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
+                    page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // No separate files on mobile.
+                    page.SetPropertyVisible(8, PlatformUtils.IsDesktop); // No separate files on mobile.
+                    page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // No stereo on mobile.
                     page.SetColumnEnabled(10, 2, false);
                     page.PropertyChanged += WavMp3_PropertyChanged;
                     page.PropertyClicked += WavMp3_PropertyClicked;
@@ -188,8 +231,12 @@ namespace FamiStudio
                     {
                         page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
                         page.AddCheckBox("Stereo", false); // 7
-                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 8
+                        if (PlatformUtils.IsDesktop)
+                            page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 8
+                        else
+                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 8
                         page.SetColumnEnabled(8, 2, false);
+                        page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // Stereo on mobile.
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
@@ -200,8 +247,12 @@ namespace FamiStudio
                         page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 4); // 7
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
                         page.AddCheckBox("Stereo", false); // 9
-                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 10
+                        if (PlatformUtils.IsDesktop)
+                            page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
+                        else
+                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
                         page.SetColumnEnabled(10, 2, false);
+                        page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // Stereo on mobile.
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
@@ -360,13 +411,28 @@ namespace FamiStudio
 
                 var channelCount = project.GetActiveChannelCount();
                 var channelMask = 0;
-                var pan = new float[channelCount];
-                for (int i = 0; i < channelCount; i++)
-                {
-                    if (props.GetPropertyValue<bool>(10, i, 0))
-                        channelMask |= (1 << i);
+                var pan = (float[])null;
 
-                    pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
+                if (PlatformUtils.IsDesktop)
+                {
+                    pan = new float[channelCount]; 
+
+                    for (int i = 0; i < channelCount; i++)
+                    {
+                        if (props.GetPropertyValue<bool>(10, i, 0))
+                            channelMask |= (1 << i);
+
+                        pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
+                    }
+                }
+                else
+                {
+                    var selectedChannels = props.GetPropertyValue<bool[]>(10);
+                    for (int i = 0; i < channelCount; i++)
+                    {
+                        if (selectedChannels[i])
+                            channelMask |= (1 << i);
+                    }
                 }
 
                 AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
@@ -410,18 +476,31 @@ namespace FamiStudio
                 var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
                 var loopCount = props.GetPropertyValue<int>(5);
                 var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
-                var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
                 var song = project.GetSong(songName);
                 var channelCount = project.GetActiveChannelCount();
                 var channelMask = 0;
+                var pan = (float[])null;
 
-                var pan = new float[channelCount];
-                for (int i = 0; i < channelCount; i++)
+                if (PlatformUtils.IsDesktop)
                 {
-                    if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
-                        channelMask |= (1 << i);
+                    pan = new float[channelCount];
 
-                    pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
+                    for (int i = 0; i < channelCount; i++)
+                    {
+                        if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
+                            channelMask |= (1 << i);
+
+                        pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
+                    }
+                }
+                else
+                {
+                    var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
+                    for (int i = 0; i < channelCount; i++)
+                    {
+                        if (selectedChannels[i])
+                            channelMask |= (1 << i);
+                    }
                 }
 
                 if (pianoRoll)
