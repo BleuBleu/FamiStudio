@@ -747,146 +747,6 @@ namespace FamiStudio
             return pageLayout;
         }
 
-        public static Color[,] CustomColors = new Color[17, 6]
-        {
-        {
-            Color.FromArgb(unchecked((int)0xffe57373)),
-            Color.FromArgb(unchecked((int)0xffef5350)),
-            Color.FromArgb(unchecked((int)0xfff44336)),
-            Color.FromArgb(unchecked((int)0xffe53935)),
-            Color.FromArgb(unchecked((int)0xffd32f2f)),
-            Color.FromArgb(unchecked((int)0xffc62828)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xfff06292)),
-            Color.FromArgb(unchecked((int)0xffec407a)),
-            Color.FromArgb(unchecked((int)0xffe91e63)),
-            Color.FromArgb(unchecked((int)0xffd81b60)),
-            Color.FromArgb(unchecked((int)0xffc2185b)),
-            Color.FromArgb(unchecked((int)0xffad1457)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xffba68c8)),
-            Color.FromArgb(unchecked((int)0xffab47bc)),
-            Color.FromArgb(unchecked((int)0xff9c27b0)),
-            Color.FromArgb(unchecked((int)0xff8e24aa)),
-            Color.FromArgb(unchecked((int)0xff7b1fa2)),
-            Color.FromArgb(unchecked((int)0xff6a1b9a)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xff9575cd)),
-            Color.FromArgb(unchecked((int)0xff7e57c2)),
-            Color.FromArgb(unchecked((int)0xff673ab7)),
-            Color.FromArgb(unchecked((int)0xff5e35b1)),
-            Color.FromArgb(unchecked((int)0xff512da8)),
-            Color.FromArgb(unchecked((int)0xff4527a0)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xff7986cb)),
-            Color.FromArgb(unchecked((int)0xff5c6bc0)),
-            Color.FromArgb(unchecked((int)0xff3f51b5)),
-            Color.FromArgb(unchecked((int)0xff3949ab)),
-            Color.FromArgb(unchecked((int)0xff303f9f)),
-            Color.FromArgb(unchecked((int)0xff283593)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xff64b5f6)),
-            Color.FromArgb(unchecked((int)0xff42a5f5)),
-            Color.FromArgb(unchecked((int)0xff2196f3)),
-            Color.FromArgb(unchecked((int)0xff1e88e5)),
-            Color.FromArgb(unchecked((int)0xff1976d2)),
-            Color.FromArgb(unchecked((int)0xff1565c0)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xff4fc3f7)),
-            Color.FromArgb(unchecked((int)0xff29b6f6)),
-            Color.FromArgb(unchecked((int)0xff03a9f4)),
-            Color.FromArgb(unchecked((int)0xff039be5)),
-            Color.FromArgb(unchecked((int)0xff0288d1)),
-            Color.FromArgb(unchecked((int)0xff0277bd)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xff4dd0e1)),
-            Color.FromArgb(unchecked((int)0xff26c6da)),
-            Color.FromArgb(unchecked((int)0xff00bcd4)),
-            Color.FromArgb(unchecked((int)0xff00acc1)),
-            Color.FromArgb(unchecked((int)0xff0097a7)),
-            Color.FromArgb(unchecked((int)0xff00838f)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xff4db6ac)),
-            Color.FromArgb(unchecked((int)0xff26a69a)),
-            Color.FromArgb(unchecked((int)0xff009688)),
-            Color.FromArgb(unchecked((int)0xff00897b)),
-            Color.FromArgb(unchecked((int)0xff00796b)),
-            Color.FromArgb(unchecked((int)0xff00695c)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xff81c784)),
-            Color.FromArgb(unchecked((int)0xff66bb6a)),
-            Color.FromArgb(unchecked((int)0xff4caf50)),
-            Color.FromArgb(unchecked((int)0xff43a047)),
-            Color.FromArgb(unchecked((int)0xff388e3c)),
-            Color.FromArgb(unchecked((int)0xff2e7d32)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xffaed581)),
-            Color.FromArgb(unchecked((int)0xff9ccc65)),
-            Color.FromArgb(unchecked((int)0xff8bc34a)),
-            Color.FromArgb(unchecked((int)0xff7cb342)),
-            Color.FromArgb(unchecked((int)0xff689f38)),
-            Color.FromArgb(unchecked((int)0xff558b2f)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xffdce775)),
-            Color.FromArgb(unchecked((int)0xffd4e157)),
-            Color.FromArgb(unchecked((int)0xffcddc39)),
-            Color.FromArgb(unchecked((int)0xffc0ca33)),
-            Color.FromArgb(unchecked((int)0xffafb42b)),
-            Color.FromArgb(unchecked((int)0xff9e9d24)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xfffff176)),
-            Color.FromArgb(unchecked((int)0xffffee58)),
-            Color.FromArgb(unchecked((int)0xffffeb3b)),
-            Color.FromArgb(unchecked((int)0xfffdd835)),
-            Color.FromArgb(unchecked((int)0xfffbc02d)),
-            Color.FromArgb(unchecked((int)0xfff9a825)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xffffd54f)),
-            Color.FromArgb(unchecked((int)0xffffca28)),
-            Color.FromArgb(unchecked((int)0xffffc107)),
-            Color.FromArgb(unchecked((int)0xffffb300)),
-            Color.FromArgb(unchecked((int)0xffffa000)),
-            Color.FromArgb(unchecked((int)0xffff8f00)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xffffb74d)),
-            Color.FromArgb(unchecked((int)0xffffa726)),
-            Color.FromArgb(unchecked((int)0xffff9800)),
-            Color.FromArgb(unchecked((int)0xfffb8c00)),
-            Color.FromArgb(unchecked((int)0xfff57c00)),
-            Color.FromArgb(unchecked((int)0xffef6c00)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xffff8a65)),
-            Color.FromArgb(unchecked((int)0xffff7043)),
-            Color.FromArgb(unchecked((int)0xffff5722)),
-            Color.FromArgb(unchecked((int)0xfff4511e)),
-            Color.FromArgb(unchecked((int)0xffe64a19)),
-            Color.FromArgb(unchecked((int)0xffd84315)),
-        },
-        {
-            Color.FromArgb(unchecked((int)0xffa1887f)),
-            Color.FromArgb(unchecked((int)0xff8d6e63)),
-            Color.FromArgb(unchecked((int)0xff795548)),
-            Color.FromArgb(unchecked((int)0xff6d4c41)),
-            Color.FromArgb(unchecked((int)0xff5d4037)),
-            Color.FromArgb(unchecked((int)0xff4e342e)),
-        }
-        };
-
         private class PropertyTag : Java.Lang.Object
         {
             public Property prop;
@@ -1067,7 +927,7 @@ namespace FamiStudio
         const int BorderWidth = 5;
         const float MaxHeightScreen = 0.4f;
 
-        public System.Drawing.Color SelectedColor => PropertyPage.CustomColors[selectedColorX, selectedColorY];
+        public System.Drawing.Color SelectedColor => Theme.CustomColors[selectedColorX, selectedColorY];
 
         public ColorPickerView(Context context) : base(context)
         {
@@ -1090,7 +950,7 @@ namespace FamiStudio
             borderPaint.StrokeWidth = BorderWidth;
             borderPaint.Color = Android.Graphics.Color.Black;
 
-            fillPaints = new Paint[PropertyPage.CustomColors.GetLength(0), PropertyPage.CustomColors.GetLength(1)];
+            fillPaints = new Paint[Theme.CustomColors.GetLength(0), Theme.CustomColors.GetLength(1)];
 
             for (int i = 0; i < fillPaints.GetLength(0); i++)
             {
@@ -1098,7 +958,7 @@ namespace FamiStudio
                 {
                     var fillPaint = new Paint();
                     fillPaint.SetStyle(Paint.Style.Fill);
-                    fillPaint.Color = new Android.Graphics.Color(PropertyPage.CustomColors[i, j].ToArgb());
+                    fillPaint.Color = new Android.Graphics.Color(Theme.CustomColors[i, j].ToArgb());
                     fillPaints[i, j] = fillPaint;
                 }
             }
@@ -1106,8 +966,8 @@ namespace FamiStudio
 
         private void SelectColorAt(float x, float y)
         {
-            var buttonSizeX = Width / (float)PropertyPage.CustomColors.GetLength(0);
-            var buttonSizeY = Height / (float)PropertyPage.CustomColors.GetLength(1);
+            var buttonSizeX = Width / (float)Theme.CustomColors.GetLength(0);
+            var buttonSizeY = Height / (float)Theme.CustomColors.GetLength(1);
 
             var newSelectedColorX = (int)(x / buttonSizeX);
             var newSelectedColorY = (int)(y / buttonSizeY);
@@ -1186,7 +1046,7 @@ namespace FamiStudio
 
             //if (modeHeight != MeasureSpecMode.Exactly)
             {
-                var ratio = PropertyPage.CustomColors.GetLength(1) / (float)PropertyPage.CustomColors.GetLength(0);
+                var ratio = Theme.CustomColors.GetLength(1) / (float)Theme.CustomColors.GetLength(0);
                 height = (int)(width * ratio);
 
                 // Dont allow it to be more than 50% of the height of the screen. This prevent

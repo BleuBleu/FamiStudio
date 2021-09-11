@@ -195,71 +195,31 @@ namespace FamiStudio
             }
         }
 
-
-        /*
-        // Main thread.
-        public bool OnTouch(View v, MotionEvent e)
+        // For debugging property pages.
+        private void DialogTest()
         {
-            if (e.Action == MotionEventActions.Down)
+#if DEBUG
+            var dlg = new PropertyDialog(200);
+
+            dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
+            dlg.Properties.AddColorPicker(System.Drawing.Color.Pink);
+            dlg.Properties.AddButton("Hey", "This is a button", "Button tooltip");
+            dlg.Properties.AddNumericUpDown("Integer", 10, 2, 50, "Integer Tooltip");
+            dlg.Properties.AddDropDownList("Hey", new[] { "Option1 QQQ", "Option2 QQQ", "Option3 QQQ", "Option4 QQQ" }, "Option3 QQQ", "Dropdown tooltip");
+            dlg.Properties.BeginAdvancedProperties();
+            dlg.Properties.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
+            dlg.Properties.AddCheckBox("CheckBox1", true, "Checkbox tooltip!");
+            dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX", "Tooltip for slider");
+
+            dlg.ShowDialog(this, (r) =>
             {
-                var coord = new MotionEvent.PointerCoords();
-                e.GetPointerCoords(0, coord);
-                var ctrl = controls.GetControlAtCoord((int)coord.X, (int)coord.Y, out var x, out var y);
-                if (ctrl != null)
-                    ctrl.Touch(x, y);
-
-#if FALSE
-                var dlg = new PropertyDialog(200);
-
-                dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
-                dlg.Properties.AddColorPicker(System.Drawing.Color.Pink);
-                dlg.Properties.AddButton("Hey", "This is a button", "Button tooltip");
-                dlg.Properties.AddIntegerRange("Integer", 10, 2, 50, "Integer Tooltip");
-                dlg.Properties.AddDropDownList("Hey", new [] { "Option1 QQQ", "Option2 QQQ", "Option3 QQQ", "Option4 QQQ" }, "Option3 QQQ", "Dropdown tooltip");
-                dlg.Properties.BeginAdvancedProperties();
-                dlg.Properties.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
-                dlg.Properties.AddCheckBox("CheckBox1", true, "Checkbox tooltip!");
-                dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX", "Tooltip for slider");
-
-                dlg.ShowDialog(this, (r) =>
+                if (r == DialogResult.OK)
                 {
-                    if (r == DialogResult.OK)
-                    {
-                        Debug.WriteLine("Hello!");
-                    }
-                });
-#elif FALSE
-                var dlg = new MultiPropertyDialog(0, 0);
-                var page1 = dlg.AddPropertyPage("Wav", "ExportWav");
-                page1.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
-                page1.AddButton("Hey", "This is a button");
-                page1.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
-                var page2 = dlg.AddPropertyPage("Video Quicksand", "ExportVideo");
-                page2.AddColorPicker(System.Drawing.Color.Pink);
-                page2.AddCheckBox("CheckBox1", true);
-                page2.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX");
-
-                dlg.ShowDialog(this, (r) =>
-                {
-                    if (r == DialogResult.OK)
-                    {
-                        Debug.WriteLine("Hello!");
-                    }
-                });
-#elif FALSE
-                var dlg = new ExportDialog(famistudio.Project);
-                dlg.ShowDialog(this);
-#elif FALSE
-                var dlg = new ConfigDialog();
-                dlg.ShowDialog(this, (r) => {});
-#elif FALSE
-                ProjectExplorer.EditProjectProperties(new System.Drawing.Point());
+                    Debug.WriteLine("Hello!");
+                }
+            });
 #endif
-            }
-
-            return false;
         }
-        */
 
         private DialogResult ToWinFormsResult([GeneratedEnum] Result resultCode)
         {
@@ -450,6 +410,8 @@ namespace FamiStudio
 
         public bool OnDown(MotionEvent e)
         {
+            // DialogTest();
+
             Debug.WriteLine($"{c++} OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
             lock (renderLock)
                 GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchDown(x, y);
@@ -473,16 +435,6 @@ namespace FamiStudio
 
         public bool OnScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
         {
-            //if (scaleDetector.IsInProgress)
-            //    return false;
-
-            //Debug.WriteLine($"{c++} OnScroll {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({e2.GetX()}, {e2.GetY()})");
-            //var ctrl = controls.GetControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y);
-            //if (ctrl != null)
-            //{
-            //    ctrl.TouchMove(x, y);
-            //    return true;
-            //}
             return false;
         }
 
