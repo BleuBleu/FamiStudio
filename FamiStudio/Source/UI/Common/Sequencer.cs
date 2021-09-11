@@ -1142,6 +1142,7 @@ namespace FamiStudio
         protected override void OnTouchDown(int x, int y)
         {
             flingVelX = 0;
+            flingVelY = 0;
 
             if (HandleTouchDownPan(x, y)) goto Handled;
 
