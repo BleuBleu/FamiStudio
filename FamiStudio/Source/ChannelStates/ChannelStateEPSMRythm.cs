@@ -2,17 +2,19 @@
 
 namespace FamiStudio
 {
-    public class ChannelStateEPSM : ChannelState
+    public class ChannelStateEPSMRythm : ChannelState
     {
         int channelIdx = 0;
 
-        public ChannelStateEPSM(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
+        public ChannelStateEPSMRythm(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
-            channelIdx = channelType - ChannelType.EPSMSquare1;
+            channelIdx = channelType - ChannelType.EPSMrythm1;
+            
         }
 
         public override void UpdateAPU()
         {
+            Console.WriteLine("Rythm" + channelIdx);
             if (note.IsStop)
             {
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);

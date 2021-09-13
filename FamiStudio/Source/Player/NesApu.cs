@@ -220,6 +220,7 @@ namespace FamiStudio
         public static readonly ushort[]   NoteTableVrc6Saw = new ushort[97];
         public static readonly ushort[]   NoteTableVrc7    = new ushort[97];
         public static readonly ushort[]   NoteTableFds     = new ushort[97];
+        public static readonly ushort[]   NoteTableEPSM    = new ushort[97];
         public static readonly ushort[][] NoteTableN163    = new ushort[8][]
         {
             new ushort[97], 
@@ -254,6 +255,7 @@ namespace FamiStudio
 
             double clockNtsc = 1789773 / 16.0;
             double clockPal  = 1662607 / 16.0;
+            double clockEPSM = 8000000 / 32.0;
 
             for (int i = 1; i < NoteTableNTSC.Length; ++i)
             {
@@ -262,6 +264,7 @@ namespace FamiStudio
 
                 NoteTableNTSC[i]    = (ushort)(clockNtsc / freq - 0.5);
                 NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
+                NoteTableEPSM[i] = (ushort)(clockEPSM / freq - 0.5);
                 NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
                 NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
                 NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(NoteTableVrc7[(i - 1) % 12 + 1] << octave);
@@ -311,6 +314,16 @@ namespace FamiStudio
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
                     return NoteTableVrc7;
+                case ChannelType.EPSMSquare1:
+                case ChannelType.EPSMSquare2:
+                case ChannelType.EPSMSquare3:
+                case ChannelType.EPSMFm1:
+                case ChannelType.EPSMFm2:
+                case ChannelType.EPSMFm3:
+                case ChannelType.EPSMFm4:
+                case ChannelType.EPSMFm5:
+                case ChannelType.EPSMFm6:
+                    return NoteTableEPSM;
                 default:
                     return pal ? NoteTablePAL : NoteTableNTSC;
             }

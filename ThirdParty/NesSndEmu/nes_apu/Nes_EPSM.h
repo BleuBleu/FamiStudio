@@ -21,7 +21,7 @@ public:
 	void mix_samples(blip_sample_t* sample_buffer, long sample_cnt);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	
-	enum { psg_clock  = 1789773 };
+	enum { psg_clock  = 4000000 };
 	enum { reg_select = 0xc000  };
 	enum { reg_write  = 0xe000 };
 	enum { reg_range  = 0x2000 };

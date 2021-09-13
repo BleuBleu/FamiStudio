@@ -82,7 +82,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Source\ChannelStates\ChannelStateEPSM.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMRythm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMSquare.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
     <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />
     <Compile Include="Source\IO\FamitrackerBaseFile.cs" />
