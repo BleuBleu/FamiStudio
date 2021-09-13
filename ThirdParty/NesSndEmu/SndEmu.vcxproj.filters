@@ -72,6 +72,15 @@
     <ClInclude Include="nes_apu\Nes_Fme7.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="nes_apu\ym3438.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nes_apu\Nes_EPSM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nes_apu\fmopn_2608rom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nes_apu\apu_snapshot.cpp">
@@ -123,6 +132,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nes_apu\Nes_Fme7.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nes_apu\ym3438.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nes_apu\Nes_EPSM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -81,6 +81,9 @@ namespace FamiStudio
             if (instrument.ExpansionType == ExpansionType.S5B && type >= ChannelType.S5BSquare1 && type <= ChannelType.S5BSquare3)
                 return true;
 
+            if (instrument.ExpansionType == ExpansionType.EPSM && type >= ChannelType.EPSMSquare1 && type <= ChannelType.EPSMrythm6)
+                return true;
+
             return false;
         }
 
@@ -131,6 +134,23 @@ namespace FamiStudio
                     channels.Add(ChannelType.S5BSquare2);
                     channels.Add(ChannelType.S5BSquare3);
                     break;
+                case ExpansionType.EPSM:
+                    channels.Add(ChannelType.EPSMSquare1);
+                    channels.Add(ChannelType.EPSMSquare2);
+                    channels.Add(ChannelType.EPSMSquare3);
+                    channels.Add(ChannelType.EPSMFm1);
+                    channels.Add(ChannelType.EPSMFm2);
+                    channels.Add(ChannelType.EPSMFm3);
+                    channels.Add(ChannelType.EPSMFm4);
+                    channels.Add(ChannelType.EPSMFm5);
+                    channels.Add(ChannelType.EPSMFm6);
+                    channels.Add(ChannelType.EPSMrythm1);
+                    channels.Add(ChannelType.EPSMrythm2);
+                    channels.Add(ChannelType.EPSMrythm3);
+                    channels.Add(ChannelType.EPSMrythm4);
+                    channels.Add(ChannelType.EPSMrythm5);
+                    channels.Add(ChannelType.EPSMrythm6);
+                    break;
             }
 
             return channels.ToArray();
@@ -159,6 +179,9 @@ namespace FamiStudio
                     break;
                 case ExpansionType.S5B:
                     count += 3;
+                    break;
+                case ExpansionType.EPSM:
+                    count += 15;
                     break;
             }
 
@@ -1060,6 +1083,8 @@ namespace FamiStudio
                 return ChannelType.ExpansionAudioStart + type - ChannelType.N163Wave1;
             if (type >= ChannelType.S5BSquare1 && type <= ChannelType.S5BSquare3)
                 return ChannelType.ExpansionAudioStart + type - ChannelType.S5BSquare1;
+            if (type >= ChannelType.EPSMSquare1 && type <= ChannelType.EPSMrythm6)
+                return ChannelType.ExpansionAudioStart + type - ChannelType.EPSMSquare1;
             Debug.Assert(false);
             return -1;
         }
@@ -1565,7 +1590,22 @@ namespace FamiStudio
         public const int S5BSquare1 = 26;
         public const int S5BSquare2 = 27;
         public const int S5BSquare3 = 28;
-        public const int Count = 29;
+        public const int EPSMSquare1 = 29;
+        public const int EPSMSquare2 = 30;
+        public const int EPSMSquare3 = 31;
+        public const int EPSMFm1 = 32;
+        public const int EPSMFm2 = 33;
+        public const int EPSMFm3 = 34;
+        public const int EPSMFm4 = 35;
+        public const int EPSMFm5 = 36;
+        public const int EPSMFm6 = 37;
+        public const int EPSMrythm1 = 38;
+        public const int EPSMrythm2 = 39;
+        public const int EPSMrythm3 = 40;
+        public const int EPSMrythm4 = 41;
+        public const int EPSMrythm5 = 42;
+        public const int EPSMrythm6 = 43;
+        public const int Count = 44;
 
         public static readonly string[] Names =
         {
@@ -1598,6 +1638,21 @@ namespace FamiStudio
             "Square 1", // S5B
             "Square 2", // S5B
             "Square 3", // S5B
+            "Square 1", // EPSM
+            "Square 2", // EPSM
+            "Square 3", // EPSM
+            "FM 1", // EPSM
+            "FM 2", // EPSM
+            "FM 3", // EPSM
+            "FM 4", // EPSM
+            "FM 5", // EPSM
+            "FM 6", // EPSM
+            "Rythm 1", // EPSM
+            "Rythm 2", // EPSM
+            "Rythm 3", // EPSM
+            "Rythm 4", // EPSM
+            "Rythm 5", // EPSM
+            "Rythm 6", // EPSM
         };
 
         public static readonly string[] ShortNames =
@@ -1631,6 +1686,21 @@ namespace FamiStudio
             "S5BSquare1", // S5B
             "S5BSquare2", // S5B
             "S5BSquare3", // S5B
+            "EPSMSquare1", // EPSM
+            "EPSMSquare2", // EPSM
+            "EPSMSquare3", // EPSM
+            "EPSMFM1", // EPSM
+            "EPSMFM2", // EPSM
+            "EPSMFM3", // EPSM
+            "EPSMFM4", // EPSM
+            "EPSMFM5", // EPSM
+            "EPSMFM6", // EPSM
+            "EPSMRythm1", // EPSM
+            "EPSMRythm2", // EPSM
+            "EPSMRythm3", // EPSM
+            "EPSMRythm4", // EPSM
+            "EPSMRythm5", // EPSM
+            "EPSMRythm6", // EPSM
         };
 
         // TODO: This is really UI specific, move somewhere else...
@@ -1664,7 +1734,22 @@ namespace FamiStudio
             "WaveTable",
             "Square",
             "Square",
-            "Square"
+            "Square",
+            "Square",
+            "Square",
+            "Square",
+            "FM",
+            "FM",
+            "FM",
+            "FM",
+            "FM",
+            "FM",
+            "Rythm",
+            "Rythm",
+            "Rythm",
+            "Rythm",
+            "Rythm",
+            "Rythm",
         };
 
         public static int GetValueForName(string str)

@@ -293,6 +293,7 @@ namespace FamiStudio
         const int EXTSOUND_MMC5  = 0x08;
         const int EXTSOUND_N163  = 0x10;
         const int EXTSOUND_S5B   = 0x20;
+        const int EXTSOUND_EPSM  = 0x80;
 
         const int STATE_VOLUME             = 0;
         const int STATE_PERIOD             = 1;
@@ -507,7 +508,18 @@ namespace FamiStudio
 
             return project.CreateInstrument(ExpansionType.S5B, "S5B");
         }
-        
+
+        private Instrument GetEPSMInstrument()
+        {
+            foreach (var inst in project.Instruments)
+            {
+                if (inst.ExpansionType == ExpansionType.EPSM)
+                    return inst;
+            }
+
+            return project.CreateInstrument(ExpansionType.EPSM, "EPSM");
+        }
+
         private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
@@ -708,6 +720,10 @@ namespace FamiStudio
                 {
                     instrument = GetS5BInstrument();
                 }
+                else if (channel.Type >= ChannelType.EPSMSquare1 && channel.Type <= ChannelType.EPSMrythm6)
+                {
+                    instrument = GetEPSMInstrument();
+                }
                 else 
                 {
                     instrument = GetDutyInstrument(channel, 0);
@@ -860,6 +876,7 @@ namespace FamiStudio
                 case EXTSOUND_MMC5: project.SetExpansionAudio(ExpansionType.Mmc5); break;
                 case EXTSOUND_N163: project.SetExpansionAudio(ExpansionType.N163, GetNumNamcoChannels(filename, songIndex, numFrames)); break;
                 case EXTSOUND_S5B:  project.SetExpansionAudio(ExpansionType.S5B);  break;
+                case EXTSOUND_EPSM: project.SetExpansionAudio(ExpansionType.EPSM); break;
                 case 0: break;
                 default:
                     Log.LogMessage(LogSeverity.Error, "NSF uses multiple expansion chips at the same time. This is not supported.");

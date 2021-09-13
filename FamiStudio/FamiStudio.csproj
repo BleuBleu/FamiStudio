@@ -82,6 +82,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Source\ChannelStates\ChannelStateEPSM.cs" />
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
     <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />
     <Compile Include="Source\IO\FamitrackerBaseFile.cs" />
@@ -364,6 +365,10 @@
     <EmbeddedResource Include="Resources\LoopSelection.png" />
     <EmbeddedResource Include="Resources\ConfigFFmpeg%402x.png" />
     <EmbeddedResource Include="Resources\ConfigFFmpeg.png" />
+    <EmbeddedResource Include="Resources\Rythm.png" />
+    <EmbeddedResource Include="Resources\Rythm%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM.png" />
     <Content Include="Vorbis.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

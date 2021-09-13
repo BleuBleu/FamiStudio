@@ -50,6 +50,7 @@ blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 	mmc5.output(&buf);
 	namco.output(&buf);
 	sunsoft.output(&buf);
+	epsm.output(&buf);
 	buf.clock_rate( pal ? 1662607 : 1789773 );
 	return buf.sample_rate( rate );
 }
@@ -72,6 +73,7 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
 			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
 			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_epsm: epsm.enable_channel(idx, enable ? &buf : NULL); break;
 		}
 	}
 }
@@ -89,6 +91,7 @@ void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
 		case expansion_mmc5: mmc5.treble_eq(eq); break;
 		case expansion_namco: namco.treble_eq(eq); break;
 		case expansion_sunsoft: sunsoft.treble_eq(eq); break;
+		case expansion_epsm: epsm.treble_eq(eq); break;
 	}
 }
 
@@ -103,6 +106,7 @@ void Simple_Apu::set_expansion_volume(int exp, double volume)
 		case expansion_mmc5: mmc5.volume(volume); break;
 		case expansion_namco: namco.volume(volume); break;
 		case expansion_sunsoft: sunsoft.volume(volume); break;
+		case expansion_epsm: epsm.volume(volume); break;
 	}
 }
 
@@ -124,6 +128,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 				case expansion_mmc5: mmc5.write_shadow_register(addr, data); break;
 				case expansion_namco: namco.write_shadow_register(addr, data); break;
 				case expansion_sunsoft: sunsoft.write_shadow_register(addr, data); break;
+				case expansion_epsm: epsm.write_shadow_register(addr, data); break;
 
 			}
 		}
@@ -144,6 +149,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 				case expansion_mmc5: mmc5.write_register(clock(), addr, data); break;
 				case expansion_namco: namco.write_register(clock(), addr, data); break;
 				case expansion_sunsoft: sunsoft.write_register(clock(), addr, data); break;
+				case expansion_epsm: epsm.write_register(clock(), addr, data); break;
 			}
 		}
 	}
@@ -162,6 +168,7 @@ void Simple_Apu::start_seeking()
 		case expansion_mmc5: mmc5.start_seeking(); break;
 		case expansion_namco: namco.start_seeking(); break;
 		case expansion_sunsoft: sunsoft.start_seeking(); break;
+		case expansion_epsm: epsm.start_seeking(); break;
 	}
 }
 
@@ -177,6 +184,7 @@ void Simple_Apu::stop_seeking()
 		case expansion_mmc5: mmc5.stop_seeking(time); break;
 		case expansion_namco: namco.stop_seeking(time); break;
 		case expansion_sunsoft: sunsoft.stop_seeking(time); break;
+		case expansion_epsm: epsm.stop_seeking(time); break;
 	}
 
 	seeking = false;
@@ -211,6 +219,7 @@ void Simple_Apu::end_frame()
 		case expansion_mmc5: mmc5.end_frame(frame_length); break;
 		case expansion_namco: namco.end_frame(frame_length); break;
 		case expansion_sunsoft: sunsoft.end_frame(frame_length); break;
+		case expansion_epsm: epsm.end_frame(frame_length); break;
 	}
 
 	buf.end_frame( frame_length );

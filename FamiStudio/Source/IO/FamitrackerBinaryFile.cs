@@ -285,6 +285,11 @@ namespace FamiStudio
             ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopesExp);
         }
 
+        private void ReadInstrumentEPSM(Instrument instrument, int instIdx, ref int idx)
+        {
+            ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopesExp);
+        }
+
         private bool ReadInstruments(int idx)
         {
             var instrumentCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
@@ -309,6 +314,7 @@ namespace FamiStudio
                     case ExpansionType.Fds:  ReadInstrumentFds(instrument,  index, ref idx); break;
                     case ExpansionType.N163: ReadInstrumentN163(instrument, index, ref idx); break;
                     case ExpansionType.S5B:  ReadInstrumentS5B(instrument,  index, ref idx); break;
+                    case ExpansionType.EPSM: ReadInstrumentEPSM(instrument, index, ref idx); break;
                     default:
                         return false;
                 }

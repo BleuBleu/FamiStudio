@@ -62,6 +62,7 @@ namespace FamiStudio
         public const int APU_EXPANSION_MMC5    = 4;
         public const int APU_EXPANSION_NAMCO   = 5;
         public const int APU_EXPANSION_SUNSOFT = 6;
+        public const int APU_EXPANSION_EPSM    = 7;
 
         public const int APU_PL1_VOL        = 0x4000;
         public const int APU_PL1_SWEEP      = 0x4001;
@@ -152,7 +153,7 @@ namespace FamiStudio
         public const int N163_REG_PHASE_HI  = 0x7d;
         public const int N163_REG_WAVE      = 0x7e;
         public const int N163_REG_VOLUME    = 0x7f;
-
+        
         public const int S5B_ADDR           = 0xc000;
         public const int S5B_DATA           = 0xe000;
                                             
@@ -172,6 +173,28 @@ namespace FamiStudio
         public const int S5B_REG_SHAPE      = 0x0d;
         public const int S5B_REG_IO_A       = 0x0e;
         public const int S5B_REG_IO_B       = 0x0f;
+
+        public const int EPSM_ADDR0         = 0xc000;
+        public const int EPSM_DATA0         = 0xe000;
+        public const int EPSM_ADDR1         = 0x401e;
+        public const int EPSM_DATA1         = 0x401f;
+
+        public const int EPSM_REG_LO_A = 0x00;
+        public const int EPSM_REG_HI_A = 0x01;
+        public const int EPSM_REG_LO_B = 0x02;
+        public const int EPSM_REG_HI_B = 0x03;
+        public const int EPSM_REG_LO_C = 0x04;
+        public const int EPSM_REG_HI_C = 0x05;
+        public const int EPSM_REG_NOISE = 0x06;
+        public const int EPSM_REG_TONE = 0x07;
+        public const int EPSM_REG_VOL_A = 0x08;
+        public const int EPSM_REG_VOL_B = 0x09;
+        public const int EPSM_REG_VOL_C = 0x0a;
+        public const int EPSM_REG_ENV_LO = 0x0b;
+        public const int EPSM_REG_ENV_HI = 0x0c;
+        public const int EPSM_REG_SHAPE = 0x0d;
+        public const int EPSM_REG_IO_A = 0x0e;
+        public const int EPSM_REG_IO_B = 0x0f;
 
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;
@@ -376,6 +399,10 @@ namespace FamiStudio
                 case APU_EXPANSION_SUNSOFT:
                     WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
                     WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
+                    break;
+                case APU_EXPANSION_EPSM:
+                    WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x38); // No noise, just 3 tones for now.
                     break;
             }
         }

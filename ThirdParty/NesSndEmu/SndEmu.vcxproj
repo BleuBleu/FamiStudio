@@ -22,33 +22,33 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{CE0D60E2-1356-4531-825F-A159850FB9D5}</ProjectGuid>
     <RootNamespace>SndEmu</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>NesSndEmu</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -136,8 +136,10 @@
     <ClInclude Include="nes_apu\Blip_Synth.h" />
     <ClInclude Include="nes_apu\emu2149.h" />
     <ClInclude Include="nes_apu\emu2413.h" />
+    <ClInclude Include="nes_apu\fmopn_2608rom.h" />
     <ClInclude Include="nes_apu\Multi_Buffer.h" />
     <ClInclude Include="nes_apu\Nes_Apu.h" />
+    <ClInclude Include="nes_apu\Nes_EPSM.h" />
     <ClInclude Include="nes_apu\Nes_Fds.h" />
     <ClInclude Include="nes_apu\Nes_Fme7.h" />
     <ClInclude Include="nes_apu\Nes_Mmc5.h" />
@@ -147,6 +149,7 @@
     <ClInclude Include="nes_apu\Nes_Vrc6.h" />
     <ClInclude Include="nes_apu\Nes_Vrc7.h" />
     <ClInclude Include="nes_apu\Nonlinear_Buffer.h" />
+    <ClInclude Include="nes_apu\ym3438.h" />
     <ClInclude Include="Simple_Apu.h" />
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +160,7 @@
     <ClCompile Include="nes_apu\emu2413.c" />
     <ClCompile Include="nes_apu\Multi_Buffer.cpp" />
     <ClCompile Include="nes_apu\Nes_Apu.cpp" />
+    <ClCompile Include="nes_apu\Nes_EPSM.cpp" />
     <ClCompile Include="nes_apu\Nes_Fds.cpp" />
     <ClCompile Include="nes_apu\Nes_Fme7.cpp" />
     <ClCompile Include="nes_apu\Nes_Mmc5.cpp" />
@@ -166,6 +170,7 @@
     <ClCompile Include="nes_apu\Nes_Vrc6.cpp" />
     <ClCompile Include="nes_apu\Nes_Vrc7.cpp" />
     <ClCompile Include="nes_apu\Nonlinear_Buffer.cpp" />
+    <ClCompile Include="nes_apu\ym3438.cpp" />
     <ClCompile Include="Simple_Apu.cpp" />
   </ItemGroup>
   <ItemGroup>

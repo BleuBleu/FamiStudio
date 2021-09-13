@@ -19,6 +19,7 @@ namespace FamiStudio
         protected const byte SndChip_MMC5 = 8;  // Nintendo MMC5
         protected const byte SndChip_N163 = 16; // Namco N-106
         protected const byte SndChip_S5B  = 32; // Sunsoft 5B
+        protected const byte SndChip_EPSM = 64; // EPSM
 
         protected const byte Effect_None = 0;
         protected const byte Effect_Speed = 1;
@@ -149,7 +150,22 @@ namespace FamiStudio
             ChannelType.Vrc7Fm6,        // CHANID_VRC7_CH6
             ChannelType.S5BSquare1,     // CHANID_S5B_CH1
             ChannelType.S5BSquare2,     // CHANID_S5B_CH2
-            ChannelType.S5BSquare3      // CHANID_S5B_CH3
+            ChannelType.S5BSquare3,      // CHANID_S5B_CH3
+            ChannelType.EPSMSquare1,     // CHANID_EPSM_CH1
+            ChannelType.EPSMSquare2,     // CHANID_EPSM_CH2
+            ChannelType.EPSMSquare3,      // CHANID_EPSM_CH3
+            ChannelType.EPSMFm1,        // CHANID_EPSM_CH1
+            ChannelType.EPSMFm2,        // CHANID_EPSM_CH2
+            ChannelType.EPSMFm3,        // CHANID_EPSM_CH3
+            ChannelType.EPSMFm4,        // CHANID_EPSM_CH4
+            ChannelType.EPSMFm5,        // CHANID_EPSM_CH5
+            ChannelType.EPSMFm6,        // CHANID_EPSM_CH6
+            ChannelType.EPSMrythm1,        // CHANID_EPSM_CH1
+            ChannelType.EPSMrythm2,        // CHANID_EPSM_CH2
+            ChannelType.EPSMrythm3,        // CHANID_EPSM_CH3
+            ChannelType.EPSMrythm4,        // CHANID_EPSM_CH4
+            ChannelType.EPSMrythm5,        // CHANID_EPSM_CH5
+            ChannelType.EPSMrythm6,        // CHANID_EPSM_CH6
         };
 
         protected static int[] InstrumentTypeLookup =
@@ -160,7 +176,8 @@ namespace FamiStudio
             ExpansionType.Vrc7,   // INST_VRC7
             ExpansionType.Fds,    // INST_FDS
             ExpansionType.N163,   // INST_N163
-            ExpansionType.S5B     // INST_S5B
+            ExpansionType.S5B,     // INST_S5B
+            ExpansionType.EPSM     // INST_EPSM
         };
 
         // FamiTracker -> FamiStudio
@@ -204,6 +221,7 @@ namespace FamiStudio
                 case SndChip_MMC5 : return ExpansionType.Mmc5;
                 case SndChip_N163 : return ExpansionType.N163;
                 case SndChip_S5B  : return ExpansionType.S5B;
+                case SndChip_EPSM : return ExpansionType.EPSM;
             }
 
             Log.LogMessage(LogSeverity.Error, "Unsupported audio expansion.");

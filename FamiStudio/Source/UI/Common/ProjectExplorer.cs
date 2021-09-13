@@ -610,7 +610,8 @@ namespace FamiStudio
             bmpInstrument[ExpansionType.Mmc5] = g.CreateBitmapFromResource("Instrument");
             bmpInstrument[ExpansionType.N163] = g.CreateBitmapFromResource("InstrumentNamco");
             bmpInstrument[ExpansionType.S5B]  = g.CreateBitmapFromResource("InstrumentSunsoft");
-            
+            bmpInstrument[ExpansionType.EPSM] = g.CreateBitmapFromResource("InstrumentEPSM");
+
             bmpEnvelopes[EnvelopeType.Volume]        = g.CreateBitmapFromResource("Volume");
             bmpEnvelopes[EnvelopeType.Arpeggio]      = g.CreateBitmapFromResource("Arpeggio");
             bmpEnvelopes[EnvelopeType.Pitch]         = g.CreateBitmapFromResource("Pitch");

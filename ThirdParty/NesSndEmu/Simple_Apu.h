@@ -13,6 +13,7 @@
 #include "nes_apu/Nes_Mmc5.h"
 #include "nes_apu/Nes_Namco.h"
 #include "nes_apu/Nes_Sunsoft.h"
+#include "nes_apu/Nes_EPSM.h"
 #include "nes_apu/Nes_Fme7.h"
 #include "nes_apu/Blip_Buffer.h"
 
@@ -26,6 +27,7 @@ public:
 	enum { expansion_mmc5       = 4 };
 	enum { expansion_namco      = 5 };
 	enum { expansion_sunsoft    = 6 };
+	enum { expansion_epsm		= 7 };
 
 	enum { channel_square1      = 0 };
 	enum { channel_square2      = 1 };
@@ -53,9 +55,22 @@ public:
 	enum { channel_n163_wave6   = 23 };
 	enum { channel_n163_wave7   = 24 };
 	enum { channel_n163_wave8   = 25 };
-	enum { channel_s5b_square1  = 26 };
-	enum { channel_s5b_square2  = 27 };
-	enum { channel_s5b_square3  = 28 };
+	enum { channel_epsm_square1  = 26 };
+	enum { channel_epsm_square2  = 27 };
+	enum { channel_epsm_square3  = 28 };
+	enum { channel_epsm_fm1 = 29 };
+	enum { channel_epsm_fm2 = 30 };
+	enum { channel_epsm_fm3 = 31 };
+	enum { channel_epsm_fm4 = 32 };
+	enum { channel_epsm_fm5 = 33 };
+	enum { channel_epsm_fm6 = 34 };
+	enum { channel_epsm_rythm1 = 35 };
+	enum { channel_epsm_rythm2 = 36 };
+	enum { channel_epsm_rythm3 = 37 };
+	enum { channel_epsm_rythm4 = 38 };
+	enum { channel_epsm_rythm5 = 39 };
+	enum { channel_epsm_rythm6 = 40 };
+
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -121,6 +136,7 @@ private:
 	Nes_Namco namco;
 	//Nes_Sunsoft sunsoft; // My version, based on emu2149
 	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
+	Nes_EPSM epsm;
 	Blip_Buffer buf;
 	blip_time_t time;
 	blip_time_t frame_length;

@@ -194,7 +194,8 @@ namespace FamiStudio
             new ExpansionMix(0.0f, -15.0f), // Fds
             new ExpansionMix(0.0f,  -5.0f), // Mmc5
             new ExpansionMix(0.0f, -15.0f), // N163
-            new ExpansionMix(0.0f,  -5.0f)  // S5B
+            new ExpansionMix(0.0f,  -5.0f),  // S5B
+            new ExpansionMix(0.0f,  -5.0f)  // EPSM
         };
 
         // MIDI section

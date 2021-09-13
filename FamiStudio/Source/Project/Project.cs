@@ -761,6 +761,9 @@ namespace FamiStudio
             if (channelType >= ChannelType.S5BSquare1 && channelType <= ChannelType.S5BSquare3)
                 return expansionAudio == ExpansionType.S5B;
 
+            if (channelType >= ChannelType.EPSMSquare1 && channelType <= ChannelType.EPSMrythm6)
+                return expansionAudio == ExpansionType.EPSM;
+
             Debug.Assert(false);
 
             return false;
@@ -1761,7 +1764,8 @@ namespace FamiStudio
         public const int Mmc5  = 4;
         public const int N163  = 5;
         public const int S5B   = 6;
-        public const int Count = 7;
+        public const int EPSM  = 7;
+        public const int Count = 8;
 
         public static readonly string[] Names =
         {
@@ -1771,7 +1775,8 @@ namespace FamiStudio
             "Famicom Disk System",
             "Nintendo MMC5",
             "Namco 163",
-            "Sunsoft 5B"
+            "Sunsoft 5B",
+            "EPSM"
         };
 
         public static readonly string[] ShortNames =
@@ -1782,7 +1787,8 @@ namespace FamiStudio
             "FDS",
             "MMC5",
             "N163",
-            "S5B"
+            "S5B",
+            "EPSM"
         };
 
         public static int GetValueForName(string str)
