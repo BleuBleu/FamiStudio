@@ -534,6 +534,9 @@
     <EmbeddedResource Include="Resources\Snap4%402x.png" />
     <EmbeddedResource Include="Resources\SnapRed%402x.png" />
     <EmbeddedResource Include="Resources\Stop%402x.png" />
+    <EmbeddedResource Include="Resources\ToolAdd%404x.png" />
+    <EmbeddedResource Include="Resources\ToolDelete%404x.png" />
+    <EmbeddedResource Include="Resources\ToolSelect%404x.png" />
     <EmbeddedResource Include="Resources\Transform%402x.png" />
     <EmbeddedResource Include="Resources\Tutorial0.jpg" />
     <EmbeddedResource Include="Resources\Tutorial1.jpg" />

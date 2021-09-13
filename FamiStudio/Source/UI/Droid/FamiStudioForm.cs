@@ -105,10 +105,10 @@ namespace FamiStudio
             glSurfaceView.PreserveEGLContextOnPause = true;
 #if DEBUG
             //glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
+            glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
 #endif
             glSurfaceView.SetEGLContextClientVersion(1);
             glSurfaceView.SetEGLConfigChooser(8, 8, 8, 8, 0, 0);
-            //glSurfaceView.SetOnTouchListener(this);
             glSurfaceView.SetRenderer(this);
             glSurfaceView.RenderMode = Rendermode.WhenDirty;
             glThreadIsRunning = true;

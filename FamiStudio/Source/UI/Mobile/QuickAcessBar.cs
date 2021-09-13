@@ -82,6 +82,9 @@ namespace FamiStudio
             Sequencer,
             PianoRoll,
             ProjectExplorer,
+            ToolAdd,
+            ToolDelete,
+            ToolSelect,
             MobileSnapOn,
             MobileSnapOff,
             MobileChannelDPCM,
@@ -110,6 +113,9 @@ namespace FamiStudio
             "Sequencer",
             "PianoRoll",
             "ProjectExplorer",
+            "ToolAdd",
+            "ToolDelete",
+            "ToolSelect",
             "MobileSnapOn",
             "MobileSnapOff",
             "MobileChannelDPCM",
@@ -443,7 +449,7 @@ namespace FamiStudio
         {
             text = "Edit";
             background = g.GetSolidBrush(Theme.CustomColors[0, 0]);
-            return ButtonImageIndices.MobileSnapOff;
+            return ButtonImageIndices.ToolAdd;
         }
 
         private ButtonImageIndices GetSnapRenderInfo(RenderGraphics g, out string text, out RenderBrush background)
