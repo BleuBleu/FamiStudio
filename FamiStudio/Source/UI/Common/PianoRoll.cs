@@ -126,29 +126,6 @@ namespace FamiStudio
             VideoRecording
         };
 
-        enum SnapResolution
-        {
-            OneQuarter,
-            OneThird,
-            OneHalf,
-            OneNote,
-            TwoNote,
-            ThreeNote,
-            FourNote,
-            Max
-        };
-
-        readonly double[] SnapResolutionFactors = new[]
-        {
-            1.0 / 4.0,
-            1.0 / 3.0,
-            1.0 / 2.0,
-            1.0,
-            2.0,
-            3.0,
-            4.0
-        };
-
         RenderBrush whiteKeyBrush;
         RenderBrush blackKeyBrush;
         RenderBrush whiteKeyPressedBrush;
@@ -199,16 +176,6 @@ namespace FamiStudio
             "SnapRed",
         };
 
-        readonly string[] SnapResolutionImageNames = new string[]
-        {    
-            "Snap1_4",
-            "Snap1_3",
-            "Snap1_2",
-            "Snap1",
-            "Snap2",
-            "Snap3",
-            "Snap4"
-        };
 
         readonly string[] EffectImageNames = new string[]
         {
@@ -365,7 +332,7 @@ namespace FamiStudio
         bool showSelection = false;
         bool showEffectsPanel = false;
         bool snap = false;
-        SnapResolution snapResolution = SnapResolution.OneNote;
+        int snapResolution = SnapResolution.OneNote;
         int scrollX = 0;
         int scrollY = 0;
         float zoom = 1.0f;
@@ -716,8 +683,7 @@ namespace FamiStudio
 
         private void ClampMinSnap()
         {
-            if (App.Project.UsesFamiTrackerTempo)
-                snapResolution = (SnapResolution)Math.Max((int)snapResolution, (int)SnapResolution.OneNote);
+            snapResolution = SnapResolution.Clamp(snapResolution, App.Project.UsesFamiTrackerTempo);
         }
 
         private Song Song
@@ -799,7 +765,7 @@ namespace FamiStudio
             UpdateRenderCoords();
 
             Debug.Assert(MiscImageNames.Length == (int)MiscImageIndices.Count);
-            Debug.Assert(SnapResolutionImageNames.Length == (int)SnapResolution.Max);
+            Debug.Assert(SnapResolution.ImageNames.Length == (int)SnapResolution.Max);
             Debug.Assert(EffectImageNames.Length == Note.EffectCount);
 
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, whiteKeySizeX, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
@@ -819,7 +785,7 @@ namespace FamiStudio
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
             bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
-            bmpSnapResolutionAtlas = g.CreateBitmapAtlasFromResources(SnapResolutionImageNames);
+            bmpSnapResolutionAtlas = g.CreateBitmapAtlasFromResources(SnapResolution.ImageNames);
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
             bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
             fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
@@ -4288,9 +4254,9 @@ namespace FamiStudio
             if ((left || right) && IsPointOnSnapResolutionButton(e.X, e.Y))
             {
                 if (left)
-                    snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
+                    snapResolution = SnapResolution.Clamp(snapResolution + 1, App.Project.UsesFamiTrackerTempo);
                 else
-                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
+                    snapResolution = SnapResolution.Clamp(snapResolution - 1, App.Project.UsesFamiTrackerTempo);
 
                 MarkDirty();
                 return true;
@@ -5479,7 +5445,7 @@ namespace FamiStudio
             {
                 var location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
                 var noteLength = Song.Project.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(location.PatternIndex);
-                var snapFactor = SnapResolutionFactors[(int)snapResolution];
+                var snapFactor = SnapResolution.Factors[snapResolution];
 
                 Debug.Assert(snapFactor >= 1.0); // Fractional snapping is no longer supported.
 
@@ -6213,9 +6179,9 @@ namespace FamiStudio
             else if (IsPointOnSnapResolutionButton(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
                 if (e.Delta > 0)
-                    snapResolution = (SnapResolution)Math.Min((int)snapResolution + 1, (int)SnapResolution.Max - 1);
+                    snapResolution = SnapResolution.Clamp(snapResolution + 1, App.Project.UsesFamiTrackerTempo);
                 else
-                    snapResolution = (SnapResolution)Math.Max((int)snapResolution - 1, (int)(App.Project.UsesFamiTrackerTempo ? SnapResolution.OneNote : SnapResolution.OneQuarter));
+                    snapResolution = SnapResolution.Clamp(snapResolution - 1, App.Project.UsesFamiTrackerTempo);
 
                 MarkDirty();
             }
@@ -6374,6 +6340,66 @@ namespace FamiStudio
                 Capture = false;
                 panning = false;
             }
+        }
+    }
+
+    public class SnapResolution
+    {
+        public const int OneQuarter = 0;
+        public const int OneThird   = 1;
+        public const int OneHalf    = 2;
+        public const int OneNote    = 3;
+        public const int TwoNote    = 4;
+        public const int ThreeNote  = 5;
+        public const int FourNote   = 6;
+        public const int Max        = 7;
+
+        public static readonly double[] Factors = new[]
+        {
+            1.0 / 4.0,
+            1.0 / 3.0,
+            1.0 / 2.0,
+            1.0,
+            2.0,
+            3.0,
+            4.0
+        };
+
+        public static readonly string[] Names = new string[]
+        {
+            "1/4",
+            "1/3",
+            "1/2",
+            "1",
+            "2",
+            "3",
+            "4"
+        };
+
+        public static readonly string[] ImageNames = new string[]
+        {
+            "Snap1_4",
+            "Snap1_3",
+            "Snap1_2",
+            "Snap1",
+            "Snap2",
+            "Snap3",
+            "Snap4"
+        };
+
+        public static int GetMinSnapValue(bool famitrackerTempo)
+        {
+            return famitrackerTempo ? OneNote : OneQuarter;
+        }
+
+        public static int GetMaxSnapValue()
+        {
+            return FourNote;
+        }
+
+        public static int Clamp(int value, bool famitrackerTempo)
+        {
+            return Utils.Clamp(value, famitrackerTempo ? OneNote : OneQuarter, FourNote);
         }
     }
 }

@@ -1,39 +1,33 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using Android.Widget;
 using Android.App;
+using Android.Content;
 using Android.OS;
+using Android.Opengl;
 using Android.Runtime;
 using Android.Views;
-using AndroidX.AppCompat.App;
-using Android.Opengl;
-using Javax.Microedition.Khronos.Opengles;
-using Android.Content.Res;
-using static Android.Views.View;
-using Android.Content;
-using System.Threading;
-using System.Collections;
-using System.Collections.Generic;
-
-using Debug = System.Diagnostics.Debug;
-using DialogResult = System.Windows.Forms.DialogResult;
-using System.Threading.Tasks;
-using Xamarin.Essentials;
-using Android.Widget;
 using AndroidX.Core.View;
+using AndroidX.AppCompat.App;
+using Javax.Microedition.Khronos.Opengles;
+
+using Debug        = System.Diagnostics.Debug;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | Android.Content.PM.ConfigChanges.ScreenSize)]
-    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, /*IOnTouchListener,*/ GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
+    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
     {
         public static FamiStudioForm Instance { get; private set; }
         public object DialogUserData => dialogUserData;
-        public bool IsAsyncDialogInProgress => dialogRequestCode >= 0;
+        public bool   IsAsyncDialogInProgress => dialogRequestCode >= 0;
 
-        LinearLayout linearLayout;
+        LinearLayout  linearLayout;
         GLSurfaceView glSurfaceView;
-        FamiStudio famistudio;
+
+        FamiStudio    famistudio;
 
         private bool glThreadIsRunning;
         private int dialogRequestCode = -1;
@@ -44,17 +38,21 @@ namespace FamiStudio
         private GLControl captureControl;
 
         public FamiStudio FamiStudio => famistudio;
-        public Toolbar ToolBar => controls.ToolBar;
-        public Sequencer Sequencer => controls.Sequencer;
-        public PianoRoll PianoRoll => controls.PianoRoll;
+
+        public Toolbar         ToolBar         => controls.ToolBar;
+        public Sequencer       Sequencer       => controls.Sequencer;
+        public PianoRoll       PianoRoll       => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
+        public QuickAccessBar  QuickAccessBar  => controls.QuickAccessBar;
+        public GLControl       ActiveControl   => controls.ActiveControl;
+
         public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
         public string Text { get; set; }
         public long lastFrameTime = -1;
 
         private GestureDetectorCompat detector;
-        private ScaleGestureDetector scaleDetector;
+        private ScaleGestureDetector  scaleDetector;
 
         public System.Drawing.Rectangle Bounds
         {
@@ -65,6 +63,11 @@ namespace FamiStudio
                 glSurfaceView.GetDrawingRect(rect);
                 return new System.Drawing.Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
             }
+        }
+
+        public void SetActiveControl(GLControl ctrl, bool animate = true)
+        {
+            controls.SetActiveControl(ctrl, animate);
         }
 
         private void EnableFullscreenMode()
@@ -104,7 +107,6 @@ namespace FamiStudio
             glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.PreserveEGLContextOnPause = true;
 #if DEBUG
-            //glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
             glSurfaceView.DebugFlags = DebugFlags.CheckGlError;
 #endif
             glSurfaceView.SetEGLContextClientVersion(1);
@@ -372,13 +374,21 @@ namespace FamiStudio
         {
             if (captureControl != null)
             {
+                Debug.Assert(controls.CanAcceptInput);
+
                 ctrlX = formX - captureControl.Left;
                 ctrlY = formY - captureControl.Top;
                 return captureControl;
             }
-            else
+            else if (controls.CanAcceptInput)
             {
                 return controls.GetControlAtCoord(formX, formY, out ctrlX, out ctrlY);
+            }
+            else
+            {
+                ctrlX = 0;
+                ctrlY = 0;
+                return null;
             }
         }
 

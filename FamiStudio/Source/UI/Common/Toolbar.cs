@@ -4,6 +4,7 @@ using System.Media;
 using System.Windows.Forms;
 using System.Diagnostics;
 
+using Color     = System.Drawing.Color;
 using Point     = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -981,6 +982,17 @@ namespace FamiStudio
             }
         }
 
+        private void RenderShadow(RenderCommandList c)
+        {
+            if (PlatformUtils.IsMobile && IsExpanded)
+            {
+                c.Transform.GetOrigin(out var ox, out var oy);
+                var fullscreenRect = new Rectangle(0, 0, ParentFormSize.Width, ParentFormSize.Height);
+                fullscreenRect.Offset(-(int)ox, -(int)oy);
+                c.FillRectangle(fullscreenRect, c.Graphics.GetSolidBrush(Color.Black, 1.0f, expandRatio * 0.5f));
+            }
+        }
+
         private void RenderBackground(RenderCommandList c)
         {
             if (PlatformUtils.IsDesktop)
@@ -1002,7 +1014,8 @@ namespace FamiStudio
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList(); // Main
-            
+
+            RenderShadow(c);
             RenderBackground(c);
             RenderButtons(c);
             RenderTimecode(c, timecodePosX, timecodePosY, timecodeOscSizeX, timecodeOscSizeY);

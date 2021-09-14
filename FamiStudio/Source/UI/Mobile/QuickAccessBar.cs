@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Windows.Forms;
 
 using Color     = System.Drawing.Color;
-using Point     = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
@@ -11,11 +9,10 @@ using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
 using RenderBrush       = FamiStudio.GLBrush;
 using RenderFont        = FamiStudio.GLFont;
-using RenderTheme       = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
-    public partial class QuickAcessBar : RenderControl
+    public class QuickAccessBar : RenderControl
     {
         // All of these were calibrated at 1080p and will scale up/down from there.
         const int DefaultNavButtonSize     = 120;
@@ -39,7 +36,6 @@ namespace FamiStudio
         private class Button
         {
             public Rectangle Rect;
-            public Rectangle ExpandedRect;
             public int IconX;
             public int IconY;
             public int ExpandIconX;
@@ -62,6 +58,12 @@ namespace FamiStudio
             public Color Color;
             public int imageIndex;
             public string text;
+        }
+
+        enum CaptureOperation
+        {
+            None,
+            MobilePan
         }
 
         private enum ButtonType
@@ -151,17 +153,27 @@ namespace FamiStudio
 
         // These are only use for expandable button.
         private int        expandButtonIdx = -1;
+        private int        expandVirtualSizeY = 0;
+        private int        expandScrollY = 0;
+        private int        expandMinScrollY = 0;
+        private int        expandMaxScrollY = 0;
         private float      expandRatio = 0.0f;
         private bool       expanding;
+        private Rectangle  expandRect;
         private bool       closing;
         private ListItem[] listItems;
-        
-        private int expandSize;
+
+        private int lastX;
+        private int lastY;
+        private int captureX;
+        private int captureY;
+        private CaptureOperation captureOperation = CaptureOperation.None;
+
+        //private int maxExpandedSize;
 
         // Scaled layout variables.
         private int buttonSize;
         private int buttonSizeNav;
-        private int buttonIconSize;
         private int buttonIconPos1;
         private int buttonIconPos2;
         private int textPosTop;
@@ -170,11 +182,11 @@ namespace FamiStudio
         private int listItemSize;
         private int listIconPos;
 
-        private float iconScaleFloat = 1.0f;
+        private float iconScaleFloat    = 1.0f;
         private float iconScaleExpFloat = 1.0f;
 
         public int   LayoutSize  => buttonSize;
-        public int   RenderSize  => (int)Math.Round(Utils.Lerp(buttonSize, expandSize, Utils.SmootherStep(expandRatio)));
+        //public int   RenderSize  => buttonSize + (int)Math.Round(expandedSize * Utils.SmootherStep(expandRatio));
         public float ExpandRatio => expandRatio;
         public bool  IsExpanded  => expandRatio > 0.001f;
 
@@ -189,13 +201,11 @@ namespace FamiStudio
             buttons[(int)ButtonType.Sequencer]  = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
             buttons[(int)ButtonType.PianoRoll]  = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
             buttons[(int)ButtonType.Project]    = new Button { GetRenderInfo = GetProjectExplorerInfo, Click = OnProjectExplorer, IsNavButton = true };
-            buttons[(int)ButtonType.Tool]       = new Button { GetRenderInfo = GetToolRenderInfo, Click = OnProjectExplorer };
-            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnProjectExplorer };
+            buttons[(int)ButtonType.Tool]       = new Button { GetRenderInfo = GetToolRenderInfo, Click = OnTool };
+            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap };
             buttons[(int)ButtonType.Channel]    = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel };
             buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument };
             buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnProjectExplorer };
-
-            expandSize = Math.Min(ParentFormSize.Width, ParentFormSize.Height);
 
             // MATTT : Font scaling?
             var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
@@ -205,7 +215,6 @@ namespace FamiStudio
 
             buttonSize        = ScaleCustom(DefaultButtonSize, scale);
             buttonSizeNav     = ScaleCustom(DefaultNavButtonSize, scale);
-            buttonIconSize    = ScaleCustom(DefaultIconSize, scale);
             buttonIconPos1    = ScaleCustom(DefaultIconPos1, scale);
             buttonIconPos2    = ScaleCustom(DefaultIconPos2, scale);
             textPosTop        = ScaleCustom(DefaultTextPosTop, scale);
@@ -214,7 +223,7 @@ namespace FamiStudio
             listItemSize      = ScaleCustom(DefaultListItemSize, scale);
             listIconPos       = ScaleCustom(DefaultListIconPos, scale);
 
-            iconScaleFloat = ScaleCustomFloat(DefaultIconSize / (float)bmpButtonAtlas.GetElementSize(0).Width, scale);
+            iconScaleFloat    = ScaleCustomFloat(DefaultIconSize / (float)bmpButtonAtlas.GetElementSize(0).Width, scale);
             iconScaleExpFloat = ScaleCustomFloat(DefaultExpandIconSize / (float)bmpButtonAtlas.GetElementSize((int)ButtonImageIndices.ExpandUp).Width, scale);
         }
 
@@ -226,6 +235,10 @@ namespace FamiStudio
         protected override void OnResize(EventArgs e)
         {
             UpdateButtonLayout();
+
+            if (expandButtonIdx >= 0)
+                StartExpandingList(expandButtonIdx, listItems);
+
             base.OnResize(e);
         }
 
@@ -260,16 +273,14 @@ namespace FamiStudio
 
         private Rectangle GetExpandedListRect()
         {
-            var renderSize = RenderSize - buttonSize;
+            var rect = expandRect;
 
             if (IsLandscape)
-            {
-                return new Rectangle(-renderSize, 0, renderSize, Height);
-            }
+                rect.X = -(int)Math.Round(rect.Width * Utils.SmootherStep(expandRatio));
             else
-            {
-                return new Rectangle(0, -renderSize, Width, renderSize);
-            }
+                rect.Y = -(int)Math.Round(rect.Height * Utils.SmootherStep(expandRatio));
+
+            return rect;
         }
 
         private void UpdateButtonLayout()
@@ -313,37 +324,108 @@ namespace FamiStudio
         private void StartExpandingList(int idx, ListItem[] items)
         {
             var landscape = IsLandscape;
+
+            var maxWidth  = landscape ? Math.Min(ParentFormSize.Width, ParentFormSize.Height) - buttonSize : Width;
+            var maxHeight = landscape ? Height : listItemSize * 8;
+
+            expandRect.X = 0;
+            expandRect.Y = 0;
+            expandRect.Width  = 0;
+            expandRect.Height = items.Length * listItemSize + 1;
+
+            for (int i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                var size = textPosTop + listFont.MeasureString(item.text) * 5 / 4;
+
+                expandRect.Width = Math.Max(expandRect.Width, size);
+            }
+
+            expandRect.Width  = Math.Min(expandRect.Width,  maxWidth);
+            expandRect.Height = Math.Min(expandRect.Height, maxHeight);
+
+            if (landscape)
+            {
+                if (expandRect.Height != Height)
+                {
+                    expandRect.Y = (buttons[idx].Rect.Top + buttons[idx].Rect.Bottom) / 2 - expandRect.Height / 2;
+
+                    // DROIDTODO : Test this (with arpeggios)
+                    if (expandRect.Top < 0)
+                        expandRect.Y -= expandRect.Top;
+                    else if (expandRect.Bottom > Height)
+                        expandRect.Y -= (expandRect.Bottom - Height);
+                }
+            }
+            else
+            {
+                if (expandRect.Width != Width)
+                {
+                    expandRect.X = (buttons[idx].Rect.Left + buttons[idx].Rect.Right) / 2 - expandRect.Width / 2;
+
+                    if (expandRect.Left < 0)
+                        expandRect.X -= expandRect.Left;
+                    else if (expandRect.Right > Width)
+                        expandRect.X -= (expandRect.Right - Width);
+                }
+            }
+
             var y = 0;
 
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
 
-                if (landscape)
-                {
-                    item.Rect = new Rectangle(0, y, expandSize - buttonSize, listItemSize);
-                    item.IconX = listIconPos;
-                    item.IconY = y + listIconPos;
-                    item.TextX = textPosTop;
-                    item.TextY = y;
-                }
-                else
-                {
-                    item.Rect = new Rectangle(0, y, Width, expandSize - buttonSize);
-                    item.IconX = listIconPos;
-                    item.IconY = y + listIconPos;
-                    item.TextX = textPosTop;
-                    item.TextY = y;
-                }
+                item.Rect = new Rectangle(0, y, expandRect.Width - 1, listItemSize);
+                item.IconX = listIconPos;
+                item.IconY = y + listIconPos;
+                item.TextX = textPosTop;
+                item.TextY = y;
 
                 y += listItemSize;
             }
 
+            // TODO : Scroll.
+
+            //if (landscape)
+            //{
+            //    if (y <= Height)
+            //    {
+            //        expandMinScrollY = -(Height - y) / 2;
+            //        expandMaxScrollY = expandMinScrollY;
+            //    }
+            //    else
+            //    {
+            //        expandMinScrollY = 0;
+            //        expandMaxScrollY = y - Height;
+            //    }
+            //}
+            //else
+            //{
+            //    if (y <= maxHeight)
+            //    {
+            //        expandMinScrollY = 0;
+            //        expandMaxScrollY = 0;
+            //    }
+            //    else
+            //    {
+            //        expandMinScrollY = 0;
+            //        expandMaxScrollY = y - maxHeight;
+            //    }
+            //}
+
+            expandMinScrollY = 0;
+            expandMaxScrollY = 0;
+
+            expandScrollY = 0;
+            expandVirtualSizeY = y;
             expandButtonIdx = idx;
             expandRatio = 0.0f;
             expanding = true;
             closing = false;
             listItems = items;
+            
+            ClampScroll();
         }
         
         private void StartClosingList(int idx)
@@ -375,6 +457,65 @@ namespace FamiStudio
         private void OnProjectExplorer()
         {
             ProjectExplorerClicked?.Invoke();
+        }
+
+        private void OnTool()
+        {
+            if (expandButtonIdx == (int)ButtonType.Tool)
+            {
+                StartClosingList(expandButtonIdx);
+                return;
+            }
+
+            var items = new ListItem[]
+            {
+                new ListItem(),
+                new ListItem(),
+                new ListItem()
+            };
+
+            items[0].Color = Theme.LightGreyFillColor1;
+            items[0].imageIndex = (int)ButtonImageIndices.ToolAdd;
+            items[0].text = "Edit";
+            items[1].Color = Theme.LightGreyFillColor1;
+            items[1].imageIndex = (int)ButtonImageIndices.ToolDelete;
+            items[1].text = "Delete";
+            items[2].Color = Theme.LightGreyFillColor1;
+            items[2].imageIndex = (int)ButtonImageIndices.ToolSelect;
+            items[2].text = "Select";
+
+            StartExpandingList((int)ButtonType.Tool, items);
+        }
+
+        private void OnSnap()
+        {
+            if (expandButtonIdx == (int)ButtonType.Snap)
+            {
+                StartClosingList(expandButtonIdx);
+                return;
+            }
+
+            int minVal = SnapResolution.GetMinSnapValue(App.Project.UsesFamiTrackerTempo);
+            int maxVal = SnapResolution.GetMaxSnapValue();
+
+            var items = new ListItem[maxVal - minVal + 2];
+
+            for (int i = 0; i < items.Length - 1; i++)
+            {
+                var item = new ListItem();
+                item.Color = Theme.LightGreyFillColor1;
+                item.imageIndex = (int)ButtonImageIndices.MobileSnapOn;
+                item.text = $"Snap to {SnapResolution.Names[minVal + i]} notes";
+                items[i] = item;
+            }
+
+            var turnOffItem = new ListItem();
+            turnOffItem.Color = Theme.LightGreyFillColor1;
+            turnOffItem.imageIndex = (int)ButtonImageIndices.MobileSnapOff;
+            turnOffItem.text = $"Snap off";
+            items[items.Length - 1] = turnOffItem;
+
+            StartExpandingList((int)ButtonType.Snap, items);
         }
 
         private void OnChannel()
@@ -482,7 +623,16 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(); 
+            var c = g.CreateCommandList();
+
+            c.Transform.GetOrigin(out var ox, out var oy);
+
+            if (IsExpanded)
+            {
+                var fullscreenRect = new Rectangle(0, 0, ParentFormSize.Width, ParentFormSize.Height);
+                fullscreenRect.Offset(-(int)ox, -(int)oy);
+                c.FillRectangle(fullscreenRect, g.GetSolidBrush(Color.Black, 1.0f, expandRatio * 0.5f));
+            }
 
             // Buttons
             for (int i = 0; i < (int)ButtonType.Count; i++)
@@ -517,7 +667,7 @@ namespace FamiStudio
 
                 var rect = GetExpandedListRect();
                 c.FillAndDrawRectangle(rect, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush); // MATTT Color + gradient.
-                c.PushTranslation(rect.Left, rect.Top);
+                c.PushTranslation(rect.Left, rect.Top - expandScrollY);
 
                 for (int i = 0; i < listItems.Length; i++)
                 {
@@ -529,13 +679,39 @@ namespace FamiStudio
 
                 c.PopTransform();
 
-                c.Transform.GetOrigin(out var ox, out var oy);
+                if (IsLandscape)
+                    rect.Width  = -rect.X;
+                else
+                    rect.Height = -rect.Y;
+
+                //c.Transform.GetOrigin(out var ox, out var oy);
                 rect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
                 g.DrawCommandList(c, rect);
             }
         }
 
-        protected override void OnTouchDown(int x, int y)
+        private void StartCaptureOperation(int x, int y, CaptureOperation op)
+        {
+            lastX = x;
+            lastY = y;
+            captureX = x;
+            captureY = y;
+            captureOperation = op;
+        }
+
+        private void DoScroll(int deltaY)
+        {
+            expandScrollY += deltaY;
+            ClampScroll();
+            MarkDirty();
+        }
+
+        private void ClampScroll()
+        {
+            expandScrollY = Utils.Clamp(expandScrollY, expandMinScrollY, expandMaxScrollY);
+        }
+
+        protected override void OnTouchClick(int x, int y, bool isLong)
         {
             foreach (var btn in buttons)
             {
@@ -545,6 +721,35 @@ namespace FamiStudio
                     break;
                 }
             }
+        }
+
+        private void UpdateCaptureOperation(int x, int y)
+        {
+            if (captureOperation == CaptureOperation.MobilePan)
+                DoScroll(lastY - y);
+        }
+
+        protected override void OnTouchUp(int x, int y)
+        {
+            UpdateCaptureOperation(x, y);
+            captureOperation = CaptureOperation.None;
+        }
+
+        protected override void OnTouchDown(int x, int y)
+        {
+            if (expandRatio == 1.0f)
+            {
+                var rect = GetExpandedListRect();
+                if (rect.Contains(x, y))
+                    StartCaptureOperation(x, y, CaptureOperation.MobilePan);
+            }
+        }
+
+        protected override void OnTouchMove(int x, int y)
+        {
+            UpdateCaptureOperation(x, y);
+            lastX = x;
+            lastY = y;
         }
     }
 }

@@ -1,24 +1,107 @@
 Android
 =======
 
+Plan:
+- Tool-less + longpress
+- But, most note operation (move, resize, move release) can be done without it.
+- Square selection in sequencer will be a bit tricky, but ok.
+
+1) Figure out how quick access connects to everything
+2) Hook up FamiStudio/controls/forms in the right way
+3) Start with sequencer to prototype controls
+4) 
+
+Quick access 100% done:
+- Colors
+- Bold for selected option
+- Scrolling / fling
+- Arps
+- Highlight selected control
+- Ensure visible.
+
 Project explorer:
-/ Pan
-- Song/project/inst properties
-/ Current song/instrument/arp
-/ Expand 
-- Widgets
-- Env edition
-- Env replace? Instrument replace?
-- Song reorder?
-- Import instrument, etc. Dialogs.
+- Possible actions: 
+	/ Pan
+	- Edit song/project/inst properties
+	/ Chane current song/instrument/arp
+	/ Expand 
+	- Widgets
+	- Env edition
+	- Import instrument, etc. Dialogs.
+Long press:
+	- Properties, etc.
+TDB:
+	- Env replace? Instrument replace?
+	- Song reorder?
+
+Piano roll:
+- Possible actions: 
+	- Pan/zoom
+	- Create notes
+	- Drag note/selection
+	- Slide notes
+	- Toggle attack
+	- Eyedrop 
+	- Toggle release note 
+	- Stop note 
+	- Resize from start/end 
+	- Delete note 
+	- Create/Change effect value 
+	- Clear effect value  ====> HOW
+	- Select 
+	- Seek 
+	- DPCM vol envelope 
+	- Move env loop/release point ====> HOW
+	- Resize enveloper ====> HOW
+	- Play piano 
+	- Map/clear DPCM sample
+	- Move DPCM mapping 
+Controls:
+	Longpress : 
+		- Toggle attack
+		- Toggle release
+		- Toggle stop note
+		- Toggle slide 
+		- Eyedropper
+		- Replace instrument/arp?
+		- Anything else?
+	Tap:
+		- Add/drag note/selection
+- Hide the vertical piano when editing DPCM samples, envelopes, etc. Clamp the scroll to what makes sense.
+
+Sequencer:
+- Possible actions:
+	- Change active channel
+	- Channel solo/mute
+	- Force display
+	- Set loop point
+	- Seek
+	- Select
+	- Select rectangle
+	- Create/delete pattern
+	- Drag patterns
+	- Edit pattern properties
+	- Edit custom pattern settings
+Tools:
+	- Pencil
+	- Eraser
+	- Select (better way to make square selection?)
+Controls:
+	- long-press = custom settings, pattern properties, solo/unsolo.
+	- Swipe = select (unless dragging seek bar itself)
+	- tap = seek
 
 Prop page:
 / Reactivate dialogs in code, test
+- Numeric updown await issue.
+- "Apply" should be "Export" in export dialog.
+- Ugly when no label, empty space (exemple: list of channels)
+- Fix transitions, ugly.
 - Review text color light gray 1 or 2?
 - Add a title to dialogs
 - Toolbar font.
 - Button font.
-- Store unknown property values.
+- Store unknown property values, is it needed?
 - Cleanup where we use GLGraphics, always use render.
 - Change insturment dialog for a combo
 
@@ -35,7 +118,7 @@ UI:
 		- Add scroll bar
 - Create 2nd piano.
 
-- Remove all lines around icons? Would be cool.
+x Remove all lines around icons? Would be cool.
 / Line widths (yes, 1->3, 3->5 looks great, wait until more stuff works)
 - Replace inheritance by partial
 
@@ -48,6 +131,7 @@ UI:
 - Crash when adding note to last note of pattern #256
 - Bring back fonts for 150%...
 - Timecode alignment looks like ass now, create a special mode for texture that uses fixed width + center align.
+- Hide lines in piano roll when snapping is enabled.
 
 Misc:
 

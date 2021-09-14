@@ -18,7 +18,8 @@ using System.Windows.Forms;
 using System.Web.Script.Serialization;
 #endif
 
-using RenderTheme = FamiStudio.ThemeRenderResources;
+using RenderControl = FamiStudio.GLControl;
+using RenderTheme   = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -83,17 +84,19 @@ namespace FamiStudio
         public LoopMode LoopMode { get => songPlayer != null ? songPlayer.Loop : LoopMode.LoopPoint; set => songPlayer.Loop = value; }
         public DPCMSample DraggedSample => ProjectExplorer.DraggedSample;
 
-        public int PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
-        public int PreviewDPCMSampleId => previewDPCMSampleId;
-        public bool PreviewDPCMIsSource => previewDPCMIsSource;
-        public int PreviewDPCMSampleRate => previewDPCMSampleRate;
+        public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
+        public int  PreviewDPCMSampleId    => previewDPCMSampleId;
+        public int  PreviewDPCMSampleRate  => previewDPCMSampleRate;
+        public bool PreviewDPCMIsSource    => previewDPCMIsSource;
 
-        public Toolbar ToolBar => mainForm.ToolBar;
-        public Sequencer Sequencer => mainForm.Sequencer;
-        public PianoRoll PianoRoll => mainForm.PianoRoll;
+        public Toolbar         ToolBar         => mainForm.ToolBar;
+        public Sequencer       Sequencer       => mainForm.Sequencer;
+        public PianoRoll       PianoRoll       => mainForm.PianoRoll;
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
+        public QuickAccessBar  QuickAccessBar  => mainForm.QuickAccessBar;
+        public RenderControl   ActiveControl   => mainForm.ActiveControl;
 
-        public static Project StaticProject { get; set; }
+        public static Project    StaticProject  { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
 
         public void Initialize(string filename)
@@ -106,44 +109,52 @@ namespace FamiStudio
             mainForm = new FamiStudioForm(this);
 #endif
 
-            Sequencer.PatternClicked += sequencer_PatternClicked;
-            Sequencer.SelectedChannelChanged += sequencer_SelectedChannelChanged;
-            Sequencer.ControlActivated += Sequencer_ControlActivated;
-            Sequencer.PatternModified += Sequencer_PatternModified;
-            Sequencer.PatternsPasted += PianoRoll_NotesPasted;
-            Sequencer.SelectionChanged += Sequencer_SelectionChanged;
-            PianoRoll.PatternChanged += pianoRoll_PatternChanged;
+            mainForm.SetActiveControl(PianoRoll, false);
+
+            Sequencer.PatternClicked         += Sequencer_PatternClicked;
+            Sequencer.SelectedChannelChanged += Sequencer_SelectedChannelChanged;
+            Sequencer.ControlActivated       += Sequencer_ControlActivated;
+            Sequencer.PatternModified        += Sequencer_PatternModified;
+            Sequencer.SelectionChanged       += Sequencer_SelectionChanged;
+            Sequencer.PatternsPasted         += PianoRoll_NotesPasted;
+
+            PianoRoll.PatternChanged     += PianoRoll_PatternChanged;
             PianoRoll.ManyPatternChanged += PianoRoll_ManyPatternChanged;
-            PianoRoll.DPCMSampleChanged += PianoRoll_DPCMSampleChanged;
-            PianoRoll.EnvelopeChanged += pianoRoll_EnvelopeChanged;
-            PianoRoll.ControlActivated += PianoRoll_ControlActivated;
-            PianoRoll.NotesPasted += PianoRoll_NotesPasted;
-            PianoRoll.ScrollChanged += PianoRoll_ScrollChanged;
-            PianoRoll.NoteEyedropped += PianoRoll_NoteEyedropped;
-            PianoRoll.DPCMSampleMapped += PianoRoll_DPCMSampleMapped;
+            PianoRoll.DPCMSampleChanged  += PianoRoll_DPCMSampleChanged;
+            PianoRoll.EnvelopeChanged    += PianoRoll_EnvelopeChanged;
+            PianoRoll.ControlActivated   += PianoRoll_ControlActivated;
+            PianoRoll.NotesPasted        += PianoRoll_NotesPasted;
+            PianoRoll.ScrollChanged      += PianoRoll_ScrollChanged;
+            PianoRoll.NoteEyedropped     += PianoRoll_NoteEyedropped;
+            PianoRoll.DPCMSampleMapped   += PianoRoll_DPCMSampleMapped;
             PianoRoll.DPCMSampleUnmapped += PianoRoll_DPCMSampleMapped;
-            PianoRoll.MaximizedChanged += PianoRoll_MaximizedChanged;
-            ProjectExplorer.InstrumentEdited += projectExplorer_InstrumentEdited;
-            ProjectExplorer.InstrumentSelected += projectExplorer_InstrumentSelected;
-            ProjectExplorer.InstrumentColorChanged += projectExplorer_InstrumentColorChanged;
-            ProjectExplorer.InstrumentReplaced += projectExplorer_InstrumentReplaced;
-            ProjectExplorer.InstrumentDeleted += ProjectExplorer_InstrumentDeleted;
+            PianoRoll.MaximizedChanged   += PianoRoll_MaximizedChanged;
+
+            ProjectExplorer.InstrumentEdited         += ProjectExplorer_InstrumentEdited;
+            ProjectExplorer.InstrumentSelected       += ProjectExplorer_InstrumentSelected;
+            ProjectExplorer.InstrumentColorChanged   += ProjectExplorer_InstrumentColorChanged;
+            ProjectExplorer.InstrumentReplaced       += ProjectExplorer_InstrumentReplaced;
+            ProjectExplorer.InstrumentDeleted        += ProjectExplorer_InstrumentDeleted;
             ProjectExplorer.InstrumentDroppedOutside += ProjectExplorer_InstrumentDroppedOutside;
-            ProjectExplorer.SongModified += projectExplorer_SongModified;
-            ProjectExplorer.SongSelected += projectExplorer_SongSelected;
-            ProjectExplorer.ProjectModified += ProjectExplorer_ProjectModified;
-            ProjectExplorer.ArpeggioSelected += ProjectExplorer_ArpeggioSelected;
-            ProjectExplorer.ArpeggioEdited += ProjectExplorer_ArpeggioEdited;
-            ProjectExplorer.ArpeggioColorChanged += ProjectExplorer_ArpeggioColorChanged;
-            ProjectExplorer.ArpeggioDeleted += ProjectExplorer_ArpeggioDeleted;
-            ProjectExplorer.ArpeggioDroppedOutside += ProjectExplorer_ArpeggioDroppedOutside;
-            ProjectExplorer.DPCMSampleReloaded += ProjectExplorer_DPCMSampleReloaded;
-            ProjectExplorer.DPCMSampleEdited += ProjectExplorer_DPCMSampleEdited;
-            ProjectExplorer.DPCMSampleColorChanged += ProjectExplorer_DPCMSampleColorChanged;
-            ProjectExplorer.DPCMSampleDeleted += ProjectExplorer_DPCMSampleDeleted;
+            ProjectExplorer.SongModified             += ProjectExplorer_SongModified;
+            ProjectExplorer.SongSelected             += ProjectExplorer_SongSelected;
+            ProjectExplorer.ProjectModified          += ProjectExplorer_ProjectModified;
+            ProjectExplorer.ArpeggioSelected         += ProjectExplorer_ArpeggioSelected;
+            ProjectExplorer.ArpeggioEdited           += ProjectExplorer_ArpeggioEdited;
+            ProjectExplorer.ArpeggioColorChanged     += ProjectExplorer_ArpeggioColorChanged;
+            ProjectExplorer.ArpeggioDeleted          += ProjectExplorer_ArpeggioDeleted;
+            ProjectExplorer.ArpeggioDroppedOutside   += ProjectExplorer_ArpeggioDroppedOutside;
+            ProjectExplorer.DPCMSampleReloaded       += ProjectExplorer_DPCMSampleReloaded;
+            ProjectExplorer.DPCMSampleEdited         += ProjectExplorer_DPCMSampleEdited;
+            ProjectExplorer.DPCMSampleColorChanged   += ProjectExplorer_DPCMSampleColorChanged;
+            ProjectExplorer.DPCMSampleDeleted        += ProjectExplorer_DPCMSampleDeleted;
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
-            ProjectExplorer.DPCMSampleMapped += ProjectExplorer_DPCMSampleMapped;
-            ProjectExplorer.InstrumentsHovered += ProjectExplorer_InstrumentsHovered;
+            ProjectExplorer.DPCMSampleMapped         += ProjectExplorer_DPCMSampleMapped;
+            ProjectExplorer.InstrumentsHovered       += ProjectExplorer_InstrumentsHovered;
+
+            QuickAccessBar.SequencerClicked       += QuickAccessBar_SequencerClicked;
+            QuickAccessBar.PianoRollClicked       += QuickAccessBar_PianoRollClicked;
+            QuickAccessBar.ProjectExplorerClicked += QuickAccessBar_ProjectExplorerClicked;
 
             InitializeMetronome();
             InitializeSongPlayer();
@@ -170,6 +181,21 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        private void QuickAccessBar_SequencerClicked()
+        {
+            mainForm.SetActiveControl(Sequencer);
+        }
+
+        private void QuickAccessBar_PianoRollClicked()
+        {
+            mainForm.SetActiveControl(PianoRoll);
+        }
+
+        private void QuickAccessBar_ProjectExplorerClicked()
+        {
+            mainForm.SetActiveControl(ProjectExplorer);
         }
 
         private void ProjectExplorer_InstrumentsHovered(bool showExpansions)
@@ -335,7 +361,7 @@ namespace FamiStudio
             ToolBar.MarkDirty();
         }
 
-        private void sequencer_SelectedChannelChanged(int channelIdx)
+        private void Sequencer_SelectedChannelChanged(int channelIdx)
         {
             StopInstrument();
             PianoRoll.ChangeChannel(channelIdx);
@@ -1696,12 +1722,12 @@ namespace FamiStudio
             lastTickTime = tickTime;
         }
 
-        private void sequencer_PatternClicked(int trackIndex, int patternIndex)
+        private void Sequencer_PatternClicked(int trackIndex, int patternIndex)
         {
             PianoRoll.StartEditPattern(trackIndex, patternIndex);
         }
 
-        private void pianoRoll_PatternChanged(Pattern pattern)
+        private void PianoRoll_PatternChanged(Pattern pattern)
         {
             Sequencer.NotifyPatternChange(pattern);
             Sequencer.MarkDirty();
@@ -1718,7 +1744,7 @@ namespace FamiStudio
             ProjectExplorer.MarkDirty();
         }
 
-        private void projectExplorer_InstrumentEdited(Instrument instrument, int envelope)
+        private void ProjectExplorer_InstrumentEdited(Instrument instrument, int envelope)
         {
             if (instrument == null)
             {
@@ -1748,9 +1774,40 @@ namespace FamiStudio
             PianoRoll.StartEditDPCMSample(sample);
         }
 
-        private void pianoRoll_EnvelopeChanged()
+        private void PianoRoll_EnvelopeChanged()
         {
             ProjectExplorer.MarkDirty();
+        }
+
+        private void SerializeActiveControl(ProjectBuffer buffer)
+        {
+            Debug.Assert(
+                PlatformUtils.IsDesktop && ActiveControl == null ||
+                PlatformUtils.IsMobile  && ActiveControl != null);
+
+            if (buffer.IsWriting)
+            {
+                int controlIdx = 0;
+
+                if (ActiveControl == PianoRoll) 
+                    controlIdx = 1;
+                else if (ActiveControl == ProjectExplorer) 
+                    controlIdx = 2;
+
+                buffer.Serialize(ref controlIdx);
+            }
+            else
+            {
+                int controlIdx = 0;
+                buffer.Serialize(ref controlIdx);
+
+                switch (controlIdx)
+                {
+                    case 0: mainForm.SetActiveControl(Sequencer, false); break;
+                    case 1: mainForm.SetActiveControl(PianoRoll, false); break;
+                    case 2: mainForm.SetActiveControl(ProjectExplorer, false); break;
+                }
+            }
         }
 
         public void SerializeState(ProjectBuffer buffer)
@@ -1766,6 +1823,8 @@ namespace FamiStudio
             Sequencer.SerializeState(buffer);
             PianoRoll.SerializeState(buffer);
 
+            SerializeActiveControl(buffer);
+
             if (buffer.IsReading)
             {
                 // Move seek bar on undo/redo when recording.
@@ -1779,12 +1838,12 @@ namespace FamiStudio
                 if (oldSong.Id != song.Id)
                 {
                     Debug.Assert(ProjectExplorer.SelectedSong == song);
-                    projectExplorer_SongSelected(song);
+                    ProjectExplorer_SongSelected(song);
                 }
             }
         }
 
-        private void projectExplorer_InstrumentSelected(Instrument instrument)
+        private void ProjectExplorer_InstrumentSelected(Instrument instrument)
         {
             PianoRoll.CurrentInstrument = instrument;
         }
@@ -1794,7 +1853,7 @@ namespace FamiStudio
             PianoRoll.CurrentArpeggio = arpeggio;
         }
 
-        private void projectExplorer_InstrumentColorChanged(Instrument instrument)
+        private void ProjectExplorer_InstrumentColorChanged(Instrument instrument)
         {
             Sequencer.InvalidatePatternCache();
             PianoRoll.MarkDirty();
@@ -1811,14 +1870,14 @@ namespace FamiStudio
             PianoRoll.MarkDirty();
         }
 
-        private void projectExplorer_SongModified(Song song)
+        private void ProjectExplorer_SongModified(Song song)
         {
             Sequencer.SongModified();
             PianoRoll.SongModified();
             MarkEverythingDirty();
         }
 
-        private void projectExplorer_SongSelected(Song song)
+        private void ProjectExplorer_SongSelected(Song song)
         {
             StopSong();
             SeekSong(0);
@@ -1831,7 +1890,7 @@ namespace FamiStudio
             MarkEverythingDirty();
         }
 
-        private void projectExplorer_InstrumentReplaced(Instrument instrument)
+        private void ProjectExplorer_InstrumentReplaced(Instrument instrument)
         {
             Sequencer.InvalidatePatternCache();
             MarkEverythingDirty();

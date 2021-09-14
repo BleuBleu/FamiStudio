@@ -22,12 +22,14 @@ namespace FamiStudio
         private Sequencer       sequencer;
         private PianoRoll       pianoRoll;
         private ProjectExplorer projectExplorer;
-        private QuickAcessBar   quickAccessBar;
+        private QuickAccessBar  quickAccessBar;
 
         public Toolbar         ToolBar         => toolbar;
         public Sequencer       Sequencer       => sequencer;
         public PianoRoll       PianoRoll       => pianoRoll;
         public ProjectExplorer ProjectExplorer => projectExplorer;
+        public QuickAccessBar  QuickAccessBar  => quickAccessBar;
+        public GLControl       ActiveControl   => activeControl;
 
         public GLControl[] Controls => controls;
         public bool IsLandscape => width > height;
@@ -38,7 +40,7 @@ namespace FamiStudio
             sequencer       = new Sequencer();
             pianoRoll       = new PianoRoll();
             projectExplorer = new ProjectExplorer();
-            quickAccessBar  = new QuickAcessBar();
+            quickAccessBar  = new QuickAccessBar();
 
             controls[0] = sequencer;
             controls[1] = pianoRoll;
@@ -46,37 +48,29 @@ namespace FamiStudio
             controls[3] = quickAccessBar;
             controls[4] = toolbar;
 
-            quickAccessBar.PianoRollClicked += NavigationBar_PianoRollClicked;
-            quickAccessBar.SequencerClicked += NavigationBar_SequencerClicked;
-            quickAccessBar.ProjectExplorerClicked += NavigationBar_ProjectExplorerClicked;
-
             activeControl = pianoRoll;
 
             foreach (var ctrl in controls)
                 ctrl.ParentForm = parent;
         }
 
-        private void NavigationBar_SequencerClicked()
+       public void SetActiveControl(GLControl ctrl, bool animate = true)
         {
-            TransitionToControl(sequencer);
-        }
+            // DROIDTODO : Test mashing nav buttons quick.
+            Debug.Assert(transitionTimer == 0.0f && transitionControl == null);
 
-        private void NavigationBar_PianoRollClicked()
-        {
-            TransitionToControl(pianoRoll);
-        }
-
-        private void NavigationBar_ProjectExplorerClicked()
-        {
-            TransitionToControl(projectExplorer);
-        }
-
-        private void TransitionToControl(GLControl ctrl)
-        {
             if (activeControl != ctrl)
             {
-                transitionControl = ctrl;
-                transitionTimer = 1.0f;
+                if (animate)
+                {
+                    transitionControl = ctrl;
+                    transitionTimer   = 1.0f;
+                }
+                else
+                {
+                    activeControl   = ctrl;
+                    transitionTimer = 0.0f;
+                }
             }
         }
 
@@ -125,8 +119,23 @@ namespace FamiStudio
             return false;
         }
 
+        public bool CanAcceptInput
+        {
+            get
+            {
+                return transitionTimer == 0.0f && transitionControl == null;
+            }
+        }
+
         public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
+            if (!CanAcceptInput)
+            {
+                ctrlX = 0;
+                ctrlY = 0;
+                return null;
+            }
+
             // These 2 are allowed to steal the input when they are expanded.
             if (quickAccessBar.IsExpanded)
             {
@@ -202,71 +211,54 @@ namespace FamiStudio
             gfx.EndDrawControl();
         }
 
-        private GLBrush GetShadowBrush(float alpha, bool horizontal, int sign)
+        //private GLBrush GetShadowBrush(float alpha, bool horizontal, int sign)
+        //{
+        //    const int GradientSize = 100; // MATTT
+
+        //    var color0 = System.Drawing.Color.FromArgb((byte)(224 * alpha), 0, 0, 0);
+        //    var color1 = System.Drawing.Color.FromArgb((byte)(128 * alpha), 0, 0, 0);
+
+        //    if (horizontal)
+        //        return gfx.GetHorizontalGradientBrush(color0, color1, GradientSize * sign);
+        //    else
+        //        return gfx.GetVerticalGradientBrush(color0, color1, GradientSize * sign);
+        //}
+
+        //private void DrawVerticalDropShadow(GLCommandList c, int pos, bool up, float alpha)
+        //{
+        //    var brush = GetShadowBrush(alpha, false, up ? -1 : 1);
+
+        //    if (up)
+        //        c.FillRectangle(0, pos, width, 0, brush);
+        //    else
+        //        c.FillRectangle(0, pos, width, height, brush);
+        //}
+
+        //private void DrawHorizontalDropShadow(GLCommandList c, int pos, bool left, float alpha)
+        //{
+        //    var brush = GetShadowBrush(alpha, true, left ? -1 : 1);
+
+        //    if (left)
+        //        c.FillRectangle(pos, 0, 0, height, brush);
+        //    else
+        //        c.FillRectangle(pos, 0, width, height, brush);
+        //}
+
+        private void RenderTransitionOverlay()
         {
-            const int GradientSize = 100; // MATTT
-
-            var color0 = System.Drawing.Color.FromArgb((byte)(224 * alpha), 0, 0, 0);
-            var color1 = System.Drawing.Color.FromArgb((byte)(128 * alpha), 0, 0, 0);
-
-            if (horizontal)
-                return gfx.GetHorizontalGradientBrush(color0, color1, GradientSize * sign);
-            else
-                return gfx.GetVerticalGradientBrush(color0, color1, GradientSize * sign);
-        }
-
-        private void DrawVerticalDropShadow(GLCommandList c, int pos, bool up, float alpha)
-        {
-            var brush = GetShadowBrush(alpha, false, up ? -1 : 1);
-
-            if (up)
-                c.FillRectangle(0, pos, width, 0, brush);
-            else
-                c.FillRectangle(0, pos, width, height, brush);
-        }
-
-        private void DrawHorizontalDropShadow(GLCommandList c, int pos, bool left, float alpha)
-        {
-            var brush = GetShadowBrush(alpha, true, left ? -1 : 1);
-
-            if (left)
-                c.FillRectangle(pos, 0, 0, height, brush);
-            else
-                c.FillRectangle(pos, 0, width, height, brush);
-        }
-
-        private void RenderOverlay()
-        {
-            gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
-
-            var cmd = gfx.CreateCommandList();
-
             if (transitionTimer > 0.0f)
             {
+                gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
+
+                var cmd = gfx.CreateCommandList();
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
                 var brush = gfx.GetSolidBrush(System.Drawing.Color.FromArgb(alpha, Theme.DarkGreyFillColor1));
 
                 cmd.FillRectangle(activeControl.Left, activeControl.Top, activeControl.Right, activeControl.Bottom, brush);
-            }
 
-            if (toolbar.IsExpanded)
-            {
-                if (IsLandscape)
-                    DrawHorizontalDropShadow(cmd, toolbar.RenderSize, false, toolbar.ExpandRatio);
-                else
-                    DrawVerticalDropShadow(cmd, toolbar.RenderSize, false, toolbar.ExpandRatio);
+                gfx.DrawCommandList(cmd);
+                gfx.EndDrawControl();
             }
-
-            if (quickAccessBar.IsExpanded)
-            {
-                if (IsLandscape)
-                    DrawHorizontalDropShadow(cmd, width - quickAccessBar.RenderSize, true, quickAccessBar.ExpandRatio);
-                else
-                    DrawVerticalDropShadow(cmd, height - quickAccessBar.RenderSize, true, quickAccessBar.ExpandRatio);
-            }
-
-            gfx.DrawCommandList(cmd);
-            gfx.EndDrawControl();
         }
 
         public void Tick(float timeDelta)
@@ -293,9 +285,18 @@ namespace FamiStudio
             gfx.BeginDrawFrame();
             {
                 RenderControl(activeControl);
-                RenderControl(quickAccessBar);
-                RenderControl(toolbar);
-                RenderOverlay();
+                RenderTransitionOverlay();
+
+                if (toolbar.IsExpanded)
+                {
+                    RenderControl(quickAccessBar);
+                    RenderControl(toolbar);
+                }
+                else
+                {
+                    RenderControl(toolbar);
+                    RenderControl(quickAccessBar);
+                }
             }
             gfx.EndDrawFrame();
 
