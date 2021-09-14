@@ -173,7 +173,7 @@ namespace FamiStudio
 
         private Song Song
         {
-            get { return App?.Song; }
+            get { return App?.SelectedSong; }
         }
 
         public bool ShowSelection

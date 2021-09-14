@@ -688,7 +688,7 @@ namespace FamiStudio
 
         private Song Song
         {
-            get { return videoSong != null ? videoSong : App?.Song; }
+            get { return videoSong != null ? videoSong : App?.SelectedSong; }
         }
 
         private Envelope EditEnvelope

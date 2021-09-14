@@ -30,7 +30,7 @@ namespace FamiStudio
         const int DefaultListItemSize      = 120;
         const int DefaultListIconPos       = 12;
 
-        private delegate ButtonImageIndices RenderInfoDelegate(RenderGraphics g, out string text, out RenderBrush background);
+        private delegate ButtonImageIndices RenderInfoDelegate(out string text, out Color color, out float opacity);
         private delegate bool EnabledDelegate();
 
         private class Button
@@ -56,8 +56,9 @@ namespace FamiStudio
             public int TextX;
             public int TextY;
             public Color Color;
-            public int imageIndex;
-            public string text;
+            public int ImageIndex;
+            public string Text;
+            public object Data;
         }
 
         enum CaptureOperation
@@ -205,7 +206,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap };
             buttons[(int)ButtonType.Channel]    = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel };
             buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument };
-            buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnProjectExplorer };
+            buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio };
 
             // MATTT : Font scaling?
             var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
@@ -336,7 +337,7 @@ namespace FamiStudio
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                var size = textPosTop + listFont.MeasureString(item.text) * 5 / 4;
+                var size = textPosTop + listFont.MeasureString(item.Text) * 5 / 4;
 
                 expandRect.Width = Math.Max(expandRect.Width, size);
             }
@@ -475,14 +476,14 @@ namespace FamiStudio
             };
 
             items[0].Color = Theme.LightGreyFillColor1;
-            items[0].imageIndex = (int)ButtonImageIndices.ToolAdd;
-            items[0].text = "Edit";
+            items[0].ImageIndex = (int)ButtonImageIndices.ToolAdd;
+            items[0].Text = "Edit";
             items[1].Color = Theme.LightGreyFillColor1;
-            items[1].imageIndex = (int)ButtonImageIndices.ToolDelete;
-            items[1].text = "Delete";
+            items[1].ImageIndex = (int)ButtonImageIndices.ToolDelete;
+            items[1].Text = "Delete";
             items[2].Color = Theme.LightGreyFillColor1;
-            items[2].imageIndex = (int)ButtonImageIndices.ToolSelect;
-            items[2].text = "Select";
+            items[2].ImageIndex = (int)ButtonImageIndices.ToolSelect;
+            items[2].Text = "Select";
 
             StartExpandingList((int)ButtonType.Tool, items);
         }
@@ -504,15 +505,15 @@ namespace FamiStudio
             {
                 var item = new ListItem();
                 item.Color = Theme.LightGreyFillColor1;
-                item.imageIndex = (int)ButtonImageIndices.MobileSnapOn;
-                item.text = $"Snap to {SnapResolution.Names[minVal + i]} notes";
+                item.ImageIndex = (int)ButtonImageIndices.MobileSnapOn;
+                item.Text = $"Snap to {SnapResolution.Names[minVal + i]} notes";
                 items[i] = item;
             }
 
             var turnOffItem = new ListItem();
             turnOffItem.Color = Theme.LightGreyFillColor1;
-            turnOffItem.imageIndex = (int)ButtonImageIndices.MobileSnapOff;
-            turnOffItem.text = $"Snap off";
+            turnOffItem.ImageIndex = (int)ButtonImageIndices.MobileSnapOff;
+            turnOffItem.Text = $"Snap off";
             items[items.Length - 1] = turnOffItem;
 
             StartExpandingList((int)ButtonType.Snap, items);
@@ -533,8 +534,8 @@ namespace FamiStudio
             {
                 var item = new ListItem();
                 item.Color = Theme.LightGreyFillColor1;
-                item.imageIndex = Array.IndexOf(ButtonImageNames, "Mobile" + ChannelType.Icons[i]);
-                item.text = ChannelType.GetNameWithExpansion(i);
+                item.ImageIndex = Array.IndexOf(ButtonImageNames, "Mobile" + ChannelType.Icons[i]);
+                item.Text = ChannelType.GetNameWithExpansion(i);
                 items[i] = item;
             }
 
@@ -549,75 +550,124 @@ namespace FamiStudio
                 return;
             }
 
+            // DROIDTODO : Add "DPCM" (null) instrument.
             var project = App.Project;
-            var items = new ListItem[project.Instruments.Count];
+            var items = new ListItem[project.Instruments.Count + 1];
+
+            var dpcmItem = new ListItem();
+            dpcmItem.Color = Theme.LightGreyFillColor1;
+            dpcmItem.ImageIndex = (int)ButtonImageIndices.MobileInstrument;
+            dpcmItem.Text = "DPCM";
+            items[0] = dpcmItem;
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
                 var inst = project.Instruments[i];
                 var item = new ListItem();
                 item.Color = inst.Color;
-                item.imageIndex = Array.IndexOf(ButtonImageNames, ExpansionType.Icons[inst.Expansion]);
-                item.text = inst.Name;
-                items[i] = item;
+                item.ImageIndex = Array.IndexOf(ButtonImageNames, ExpansionType.Icons[inst.Expansion]);
+                item.Text = inst.Name;
+                item.Data = inst;
+                items[i + 1] = item;
             }
 
             StartExpandingList((int)ButtonType.Instrument, items);
         }
 
-        private ButtonImageIndices GetSequencerRenderInfo(RenderGraphics g, out string text, out RenderBrush background)
+        private void OnArpeggio()
+        {
+            if (expandButtonIdx == (int)ButtonType.Arpeggio)
+            {
+                StartClosingList(expandButtonIdx);
+                return;
+            }
+
+            var project = App.Project;
+            var items = new ListItem[project.Arpeggios.Count + 1];
+
+            var arpNoneItem = new ListItem();
+            arpNoneItem.Color = Theme.LightGreyFillColor1;
+            arpNoneItem.ImageIndex = (int)ButtonImageIndices.MobileArpeggio;
+            arpNoneItem.Text = "None";
+            items[0] = arpNoneItem;
+
+            for (int i = 0; i < project.Arpeggios.Count; i++)
+            {
+                var arp = project.Arpeggios[i];
+                var item = new ListItem();
+                item.Color = arp.Color;
+                item.ImageIndex = (int)ButtonImageIndices.MobileArpeggio;
+                item.Text = arp.Name;
+                item.Data = arp;
+                items[i + 1] = item;
+            }
+
+            StartExpandingList((int)ButtonType.Arpeggio, items);
+        }
+
+        private ButtonImageIndices GetSequencerRenderInfo(out string text, out Color color, out float opacity)
         {
             text = null;
-            background = ThemeResources.DarkGreyLineBrush1;
+            color = Theme.DarkGreyLineColor1;
+            opacity = App.ActiveControl == App.Sequencer ? 1.0f : 0.5f;
             return ButtonImageIndices.Sequencer;
         }
 
-        private ButtonImageIndices GetPianoRollRenderInfo(RenderGraphics g, out string text, out RenderBrush background)
+        private ButtonImageIndices GetPianoRollRenderInfo(out string text, out Color color, out float opacity)
         {
             text = null;
-            background = ThemeResources.DarkGreyLineBrush1;
+            color = Theme.DarkGreyLineColor1;
+            opacity = App.ActiveControl == App.PianoRoll ? 1.0f : 0.5f;
             return ButtonImageIndices.PianoRoll;
         }
 
-        private ButtonImageIndices GetProjectExplorerInfo(RenderGraphics g, out string text, out RenderBrush background)
+        private ButtonImageIndices GetProjectExplorerInfo(out string text, out Color color, out float opacity)
         {
             text = null;
-            background = ThemeResources.DarkGreyLineBrush1;
+            color = Theme.DarkGreyLineColor1;
+            opacity = App.ActiveControl == App.ProjectExplorer ? 1.0f : 0.5f;
             return ButtonImageIndices.ProjectExplorer;
         }
 
-        private ButtonImageIndices GetToolRenderInfo(RenderGraphics g, out string text, out RenderBrush background)
+        private ButtonImageIndices GetToolRenderInfo(out string text, out Color color, out float opacity)
         {
-            text = "Edit";
-            background = g.GetSolidBrush(Theme.CustomColors[0, 0]);
+            text = "Edit"; // DROIDTODO : Tool!
+            color = Theme.LightGreyFillColor1;
+            opacity = 1.0f;
             return ButtonImageIndices.ToolAdd;
         }
 
-        private ButtonImageIndices GetSnapRenderInfo(RenderGraphics g, out string text, out RenderBrush background)
+        private ButtonImageIndices GetSnapRenderInfo(out string text, out Color color, out float opacity)
         {
             text = "1/2";
-            background = g.GetSolidBrush(Theme.CustomColors[1, 0]);
+            color = Theme.LightGreyFillColor1;
+            opacity = 1.0f;
             return ButtonImageIndices.MobileSnapOn;
         }
 
-        private ButtonImageIndices GetChannelRenderInfo(RenderGraphics g, out string text, out RenderBrush background)
+        private ButtonImageIndices GetChannelRenderInfo(out string text, out Color color, out float opacity)
         {
-            text = "Square 1";
-            background = g.GetSolidBrush(Theme.CustomColors[2, 0]);
-            return ButtonImageIndices.MobileChannelNoise;
+            text = App.SelectedChannel.NameWithExpansion;
+            color = Theme.LightGreyFillColor1;
+            opacity = 1.0f;
+            return (ButtonImageIndices)Array.IndexOf(ButtonImageNames, "Mobile" + ChannelType.Icons[App.SelectedChannelIndex]);
         }
 
-        private ButtonImageIndices GetInstrumentRenderingInfo(RenderGraphics g, out string text, out RenderBrush background)
+        private ButtonImageIndices GetInstrumentRenderingInfo(out string text, out Color color, out float opacity)
         {
-            text = "Instrument1";
-            background = g.GetSolidBrush(Theme.CustomColors[3, 0]);
+            var inst = App.SelectedInstrument;
+            text  = inst != null ? inst.Name  : "DPCM";
+            color = inst != null ? inst.Color : Theme.LightGreyFillColor1;
+            opacity = 1.0f;
             return ButtonImageIndices.MobileInstrumentNamco;
         }
 
-        private ButtonImageIndices GetArpeggioRenderInfo(RenderGraphics g, out string text, out RenderBrush background)
+        private ButtonImageIndices GetArpeggioRenderInfo(out string text, out Color color, out float opacity)
         {
-            text = "1/2";
-            background = g.GetSolidBrush(Theme.CustomColors[4, 0]);
+            var arp = App.SelectedArpeggio;
+            text  = arp != null ? arp.Name  : "None";
+            color = arp != null ? arp.Color : Theme.LightGreyFillColor1;
+            opacity = 1.0f;
             return ButtonImageIndices.MobileArpeggio;
         }
 
@@ -642,17 +692,21 @@ namespace FamiStudio
                 // DROIDTODO : Make the active control slightly brighter.
                 //var opacity = status == ButtonStatus.Enabled ? 1.0f : 0.25f;
 
-                var image = btn.GetRenderInfo(g, out var text, out var brush); // MATTT Return a color here, not brush.
-                //var expImage = (int)ButtonImageIndices.ExpandLeft;
-                var expImage = IsLandscape ? (int)ButtonImageIndices.ExpandLeft : (int)ButtonImageIndices.ExpandUp;
+                var image = btn.GetRenderInfo(out var text, out var color, out var opacity); // MATTT Return a color here, not brush.
+                var brush = btn.IsNavButton ? g.GetSolidBrush(color) : g.GetVerticalGradientBrush(color, buttonSize, 0.9f);
 
-                c.FillRectangle(btn.Rect, brush); // MATTT Color + gradient.
+                //var expImage = (int)ButtonImageIndices.ExpandLeft;
+                //var expImage = IsLandscape ? (int)ButtonImageIndices.ExpandLeft : (int)ButtonImageIndices.ExpandUp;
+
+                c.FillRectangle(btn.Rect, brush);
 
                 if (!btn.IsNavButton)
+                {
                     c.DrawRectangle(btn.Rect, ThemeResources.BlackBrush);
+                    //c.DrawBitmapAtlas(bmpButtonAtlas, (int)expImage, btn.ExpandIconX, btn.ExpandIconY, opacity, iconScaleExpFloat);
+                }
 
-                c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, iconScaleFloat);
-                c.DrawBitmapAtlas(bmpButtonAtlas, (int)expImage, btn.ExpandIconX, btn.ExpandIconY, 1.0f, iconScaleExpFloat);
+                c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, opacity, iconScaleFloat);
 
                 if (!string.IsNullOrEmpty(text))
                     c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.BlackBrush, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);
@@ -666,15 +720,15 @@ namespace FamiStudio
                 c = g.CreateCommandList();
 
                 var rect = GetExpandedListRect();
-                c.FillAndDrawRectangle(rect, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush); // MATTT Color + gradient.
                 c.PushTranslation(rect.Left, rect.Top - expandScrollY);
 
                 for (int i = 0; i < listItems.Length; i++)
                 {
                     var item = listItems[i];
-                    c.FillAndDrawRectangle(item.Rect, ThemeResources.LightRedFillBrush, ThemeResources.BlackBrush); // MATTT Color + gradient.
-                    c.DrawBitmapAtlas(bmpButtonAtlas, item.imageIndex, item.IconX, item.IconY, 1.0f, iconScaleFloat);
-                    c.DrawText(item.text, listFont, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
+                    var brush = g.GetVerticalGradientBrush(item.Color, listItemSize, 0.9f);
+                    c.FillAndDrawRectangle(item.Rect, brush, ThemeResources.BlackBrush);
+                    c.DrawBitmapAtlas(bmpButtonAtlas, item.ImageIndex, item.IconX, item.IconY, 1.0f, iconScaleFloat);
+                    c.DrawText(item.Text, listFont, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();

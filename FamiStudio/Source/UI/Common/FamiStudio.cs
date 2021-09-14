@@ -78,11 +78,16 @@ namespace FamiStudio
         public int PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { if (!IsPlaying) songPlayer.PlayRate = value; } }
         public float AverageTickRate => averageTickRateMs;
 
-        public Project Project => project;
-        public Song Song => song;
         public UndoRedoManager UndoRedoManager => undoRedoManager;
         public LoopMode LoopMode { get => songPlayer != null ? songPlayer.Loop : LoopMode.LoopPoint; set => songPlayer.Loop = value; }
         public DPCMSample DraggedSample => ProjectExplorer.DraggedSample;
+
+        public Project    Project              => project;
+        public Song       SelectedSong         => song;
+        public Instrument SelectedInstrument   => ProjectExplorer.SelectedInstrument;       // TODO : Centralize all in here?
+        public Arpeggio   SelectedArpeggio     => ProjectExplorer.SelectedArpeggio;         // TODO : Centralize all in here?
+        public Channel    SelectedChannel      => song.Channels[Sequencer.SelectedChannel]; // TODO : Centralize all in here?
+        public int        SelectedChannelIndex => Sequencer.SelectedChannel;                // TODO : Centralize all in here?
 
         public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
         public int  PreviewDPCMSampleId    => previewDPCMSampleId;

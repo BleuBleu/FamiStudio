@@ -18,6 +18,7 @@ Quick access 100% done:
 - Arps
 - Highlight selected control
 - Ensure visible.
+- Close drawer when click outside
 
 Project explorer:
 - Possible actions: 

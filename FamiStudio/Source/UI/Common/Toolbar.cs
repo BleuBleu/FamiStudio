@@ -780,7 +780,7 @@ namespace FamiStudio
                 case LoopMode.Pattern:
                     return App.SequencerHasSelection ? ButtonImageIndices.LoopSelection : ButtonImageIndices.LoopPattern;
                 default:
-                    return App.Song.LoopPoint < 0 ? ButtonImageIndices.LoopNone : ButtonImageIndices.Loop;
+                    return App.SelectedSong.LoopPoint < 0 ? ButtonImageIndices.LoopNone : ButtonImageIndices.Loop;
             }
         }
 
@@ -872,10 +872,10 @@ namespace FamiStudio
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
-                var location = NoteLocation.FromAbsoluteNoteIndex(App.Song, frame);
+                var location = NoteLocation.FromAbsoluteNoteIndex(App.SelectedSong, frame);
 
-                var numPatternDigits = Utils.NumDecimalDigits(App.Song.Length - 1);
-                var numNoteDigits = Utils.NumDecimalDigits(App.Song.GetPatternLength(location.PatternIndex) - 1);
+                var numPatternDigits = Utils.NumDecimalDigits(App.SelectedSong.Length - 1);
+                var numNoteDigits = Utils.NumDecimalDigits(App.SelectedSong.GetPatternLength(location.PatternIndex) - 1);
 
                 var patternString = (location.PatternIndex + 1).ToString("D" + numPatternDigits);
                 var noteString = location.NoteIndex.ToString("D" + numNoteDigits);
