@@ -30,7 +30,7 @@ namespace FamiStudio
         const int DefaultListItemSize      = 120;
         const int DefaultListIconPos       = 12;
 
-        private delegate ButtonImageIndices RenderInfoDelegate(out string text, out Color background, out Color color, out float opacity);
+        private delegate ButtonImageIndices RenderInfoDelegate(out string text, out Color tint);
         private delegate bool EnabledDelegate();
 
         private class Button
@@ -605,77 +605,61 @@ namespace FamiStudio
             StartExpandingList((int)ButtonType.Arpeggio, items);
         }
 
-        private ButtonImageIndices GetSequencerRenderInfo(out string text, out Color back, out Color tint, out float opacity)
+        private ButtonImageIndices GetSequencerRenderInfo(out string text, out Color tint)
         {
             text = null;
-            back = Theme.DarkGreyLineColor1;
-            tint = Theme.WhiteColor;
-            opacity = App.ActiveControl == App.Sequencer ? 1.0f : 0.5f;
+            tint = App.ActiveControl == App.Sequencer ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
             return ButtonImageIndices.Sequencer;
         }
 
-        private ButtonImageIndices GetPianoRollRenderInfo(out string text, out Color back, out Color tint, out float opacity)
+        private ButtonImageIndices GetPianoRollRenderInfo(out string text, out Color tint)
         {
             text = null;
-            back = Theme.DarkGreyLineColor1;
-            tint = Color.Empty;
-            opacity = App.ActiveControl == App.PianoRoll ? 1.0f : 0.5f;
+            tint = App.ActiveControl == App.PianoRoll ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
             return ButtonImageIndices.PianoRoll;
         }
 
-        private ButtonImageIndices GetProjectExplorerInfo(out string text, out Color back, out Color tint, out float opacity)
+        private ButtonImageIndices GetProjectExplorerInfo(out string text, out Color tint)
         {
             text = null;
-            back = Theme.DarkGreyLineColor1;
-            tint = Color.Empty;
-            opacity = App.ActiveControl == App.ProjectExplorer ? 1.0f : 0.5f;
+            tint = App.ActiveControl == App.ProjectExplorer ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
             return ButtonImageIndices.ProjectExplorer;
         }
 
-        private ButtonImageIndices GetToolRenderInfo(out string text, out Color back, out Color tint, out float opacity)
+        private ButtonImageIndices GetToolRenderInfo(out string text, out Color tint)
         {
             text = "Edit"; // DROIDTODO : Tool!
-            back = Theme.DarkGreyFillColor1;
-            tint = Color.Empty;
-            opacity = 1.0f;
+            tint = Theme.LightGreyFillColor1;
             return ButtonImageIndices.ToolAdd;
         }
 
-        private ButtonImageIndices GetSnapRenderInfo(out string text, out Color back, out Color tint, out float opacity)
+        private ButtonImageIndices GetSnapRenderInfo(out string text, out Color tint)
         {
             text = "1/2";
-            back = Theme.DarkGreyFillColor1;
-            tint = Color.Empty;
-            opacity = 1.0f;
+            tint = Theme.LightGreyFillColor1;
             return ButtonImageIndices.MobileSnapOn;
         }
 
-        private ButtonImageIndices GetChannelRenderInfo(out string text, out Color back, out Color tint, out float opacity)
+        private ButtonImageIndices GetChannelRenderInfo(out string text, out Color tint)
         {
             text = App.SelectedChannel.NameWithExpansion;
-            back = Theme.DarkGreyFillColor1;
-            tint = Color.Empty;
-            opacity = 1.0f;
+            tint = Theme.LightGreyFillColor1;
             return (ButtonImageIndices)Array.IndexOf(ButtonImageNames, ChannelType.Icons[App.SelectedChannelIndex]);
         }
 
-        private ButtonImageIndices GetInstrumentRenderingInfo(out string text, out Color back, out Color tint, out float opacity)
+        private ButtonImageIndices GetInstrumentRenderingInfo(out string text, out Color tint)
         {
             var inst = App.SelectedInstrument;
             text = inst != null ? inst.Name  : "DPCM";
             tint = inst != null ? inst.Color : Theme.LightGreyFillColor1;
-            back = Theme.DarkGreyFillColor1;
-            opacity = 1.0f;
             return ButtonImageIndices.MobileInstrumentNamco;
         }
 
-        private ButtonImageIndices GetArpeggioRenderInfo(out string text, out Color back, out Color tint, out float opacity)
+        private ButtonImageIndices GetArpeggioRenderInfo(out string text, out Color tint)
         {
             var arp = App.SelectedArpeggio;
             text = arp != null ? arp.Name  : "None";
-            back = arp != null ? arp.Color : Theme.DarkGreyFillColor1;
-            tint = Color.Empty;
-            opacity = 1.0f;
+            tint = arp != null ? arp.Color : Theme.LightGreyFillColor1;
             return ButtonImageIndices.MobileArpeggio;
         }
 
@@ -692,21 +676,40 @@ namespace FamiStudio
                 c.FillRectangle(fullscreenRect, g.GetSolidBrush(Color.Black, 1.0f, expandRatio * 0.5f));
             }
 
+            // Clear BG.
+            var navBgRect = Rectangle.Empty;
+            var bgRect = Rectangle.Empty;
+            
+            for (int i = 0; i < (int)ButtonType.Count; i++)
+            {
+                var btn = buttons[i];
+
+                if (btn.IsNavButton)
+                    navBgRect = navBgRect.IsEmpty ? btn.Rect : Rectangle.Union(navBgRect, btn.Rect);
+                else
+                    bgRect = bgRect.IsEmpty ? btn.Rect : Rectangle.Union(bgRect, btn.Rect);
+            }
+
+            var navBgBrush = IsLandscape ?
+                g.GetHorizontalGradientBrush(Theme.DarkGreyLineColor1, buttonSize, 0.8f) :
+                g.GetVerticalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f);
+            var bgBrush = IsLandscape ?
+                g.GetHorizontalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f) :
+                g.GetVerticalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f);
+
+            c.FillRectangle(navBgRect, navBgBrush);
+            c.FillRectangle(bgRect, bgBrush);
+
             // Buttons
             for (int i = 0; i < (int)ButtonType.Count; i++)
             {
                 var btn = buttons[i];
 
-                // DROIDTODO : Make the active control slightly brighter.
-                //var opacity = status == ButtonStatus.Enabled ? 1.0f : 0.25f;
-
-                var image = btn.GetRenderInfo(out var text, out var bg, out var tint, out var opacity); // MATTT Return a color here, not brush.
-                var brush = btn.IsNavButton ? g.GetSolidBrush(bg) : g.GetVerticalGradientBrush(bg, buttonSize, 0.9f);
+                var image = btn.GetRenderInfo(out var text, out var tint); // MATTT Return a color here, not brush.
 
                 //var expImage = (int)ButtonImageIndices.ExpandLeft;
                 //var expImage = IsLandscape ? (int)ButtonImageIndices.ExpandLeft : (int)ButtonImageIndices.ExpandUp;
 
-                c.FillRectangle(btn.Rect, brush);
 
                 if (!btn.IsNavButton)
                 {
@@ -714,7 +717,7 @@ namespace FamiStudio
                     //c.DrawBitmapAtlas(bmpButtonAtlas, (int)expImage, btn.ExpandIconX, btn.ExpandIconY, opacity, iconScaleExpFloat);
                 }
 
-                c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, opacity, iconScaleFloat, tint);
+                c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
 
                 if (!string.IsNullOrEmpty(text))
                     c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);

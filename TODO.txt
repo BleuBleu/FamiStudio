@@ -12,11 +12,11 @@ Plan:
 4) 
 
 Quick access 100% done:
-- Colors
+/ Colors
 - Bold for selected option
 - Scrolling / fling
-- Arps
-- Highlight selected control
+/ Arps
+/ Highlight selected control
 - Ensure visible.
 - Close drawer when click outside
 

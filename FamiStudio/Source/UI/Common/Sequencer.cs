@@ -72,6 +72,7 @@ namespace FamiStudio
         int selectedChannel = 0;
         float zoom = 1.0f;
         float bitmapScale = 1.0f;
+        float channelBitmapScale = 1.0f;
         float flingVelX;
         float flingVelY;
 
@@ -363,7 +364,10 @@ namespace FamiStudio
             selectionPatternBrush = g.CreateSolidBrush(Theme.LightGreyFillColor1);
 
             if (PlatformUtils.IsMobile)
+            {
                 bitmapScale = g.WindowScaling * 0.5f;
+                channelBitmapScale = g.WindowScaling * 0.25f;
+            }
             
             seekGeometry = g.CreateGeometry(new float[,]
             {
@@ -445,7 +449,7 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
                 var bitmapIndex = showExpIcons ? Song.Channels[i].Expansion : Song.Channels[i].Type;
-                c.DrawBitmapAtlas(atlas, bitmapIndex, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, bitmapScale, Theme.LightGreyFillColor1);
+                c.DrawBitmapAtlas(atlas, bitmapIndex, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, channelBitmapScale, Theme.LightGreyFillColor1);
             }
 
             // Track names
