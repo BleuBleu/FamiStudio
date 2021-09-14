@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
+using Color = System.Drawing.Color;
+
 #if FAMISTUDIO_ANDROID
 using Android.Opengl;
 using Bitmap = Android.Graphics.Bitmap;
@@ -827,6 +829,7 @@ namespace FamiStudio
             public float u1;
             public float v1;
             public float opacity;
+            public Color tint;
             public bool rotated;
         }
 
@@ -1495,15 +1498,15 @@ namespace FamiStudio
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
         }
 
-        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f)
+        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = default)
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             atlas.GetElementUVs(bitmapIndex, out var u0, out var v0, out var u1, out var v1);
             var elementSize = atlas.GetElementSize(bitmapIndex);
-            DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1);
+            DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, false, tint);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false)
+        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = default)
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             if (!bitmaps.TryGetValue(bmp, out var list))
@@ -1520,6 +1523,7 @@ namespace FamiStudio
             inst.y = y;
             inst.sx = width;
             inst.sy = height;
+            inst.tint = tint;
 
             // We dont have borders on icons anymore, no need for half pixel offset.
             if (false && PlatformUtils.IsMobile) 
@@ -1539,6 +1543,7 @@ namespace FamiStudio
                 inst.u1 = u1;
                 inst.v1 = v1;
             }
+
             inst.opacity = opacity;
             inst.rotated = rotated;
 
@@ -1859,10 +1864,11 @@ namespace FamiStudio
 
                 foreach (var inst in list)
                 {
-                    float x0 = inst.x;
-                    float y0 = inst.y;
-                    float x1 = inst.x + inst.sx;
-                    float y1 = inst.y + inst.sy;
+                    var x0 = inst.x;
+                    var y0 = inst.y;
+                    var x1 = inst.x + inst.sx;
+                    var y1 = inst.y + inst.sy;
+                    var tint = inst.tint != default(Color) ? inst.tint : Color.White;
 
                     vtxArray[vtxIdx++] = x0;
                     vtxArray[vtxIdx++] = y0;
@@ -1896,7 +1902,7 @@ namespace FamiStudio
                         texArray[texIdx++] = inst.v1;
                     }
 
-                    var packedOpacity = GLColorUtils.PackColor(255, 255, 255, (int)(inst.opacity * 255));
+                    var packedOpacity = GLColorUtils.PackColor(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)); 
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;

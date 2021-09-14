@@ -161,7 +161,6 @@ namespace FamiStudio
             EffectCollapsed,
             Maximize,
             Snap,
-            SnapRed,
             Count
         };
 
@@ -173,7 +172,6 @@ namespace FamiStudio
             "CollapsedSmall",
             "Maximize",
             "Snap",
-            "SnapRed",
         };
 
 
@@ -1174,7 +1172,7 @@ namespace FamiStudio
 
                 if (IsSnappingAllowed && !PlatformUtils.IsMobile)
                 {
-                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, App.IsRecording ? (int)MiscImageIndices.SnapRed : (int)MiscImageIndices.Snap, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1, headerIconsPosY, IsSnappingEnabled || App.IsRecording ? 1.0f : 0.3f);
+                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Snap, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1, headerIconsPosY, IsSnappingEnabled || App.IsRecording ? 1.0f : 0.3f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1);
                     r.cc.DrawBitmapAtlas(bmpSnapResolutionAtlas, (int)snapResolution, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 3 - 1, headerIconsPosY, IsSnappingEnabled ? 1.0f : 0.3f);
                 }
 

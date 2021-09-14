@@ -202,7 +202,7 @@ namespace FamiStudio
             "Music",
             "Add",
             "PlaySource",
-            "DPCMBlack",
+            "ChannelDPCM",
             "InstrumentOpen",
             "WaveEdit",
             "Reload",
@@ -428,6 +428,8 @@ namespace FamiStudio
                     }
                 }
             }
+
+            public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader ? Theme.LightGreyFillColor1 : Color.Black;
 
             public bool TextEllipsis => type == ButtonType.ProjectSettings;
             
@@ -800,7 +802,7 @@ namespace FamiStudio
                     c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextNoIconPosX * 2, buttonSizeY);
 
                     if (atlas != null)
-                        c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale);
+                        c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, Color.Black);
 
                     if (leftPadding != 0)
                         c.PopTransform();
@@ -822,7 +824,7 @@ namespace FamiStudio
                         }
                         else if (button.type == ButtonType.ParamCheckbox)
                         {
-                            c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale);
+                            c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale, Color.Black);
                         }
                         else if (button.type == ButtonType.ParamList)
                         {
@@ -831,8 +833,8 @@ namespace FamiStudio
                             var buttonWidth = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width;
 
                             c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
-                            c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale);
-                            c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale);
+                            c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
                             c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
                             c.PopTransform();
                         }
@@ -840,6 +842,8 @@ namespace FamiStudio
                     else
                     {
                         var subButtons = button.GetSubButtons(out var active);
+                        var tint = button.SubButtonTint;
+
                         if (subButtons != null)
                         {
                             for (int j = 0, x = actualWidth - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
@@ -847,9 +851,9 @@ namespace FamiStudio
                                 atlas = button.GetIcon(subButtons[j], out atlasIdx);
 
                                 if (subButtons[j] == SubButtonType.Expand)
-                                    c.DrawBitmapAtlas(atlas, atlasIdx, expandButtonPosX, expandButtonPosY, 1.0f, bitmapScale);
+                                    c.DrawBitmapAtlas(atlas, atlasIdx, expandButtonPosX, expandButtonPosY, 1.0f, bitmapScale, tint);
                                 else
-                                    c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, active[j] ? 1.0f : 0.2f, bitmapScale);
+                                    c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, active[j] ? 1.0f : 0.2f, bitmapScale, tint);
                             }
                         }
                     }

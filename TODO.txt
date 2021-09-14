@@ -34,6 +34,7 @@ Long press:
 TDB:
 	- Env replace? Instrument replace?
 	- Song reorder?
+- Checkbox has no border.
 
 Piano roll:
 - Possible actions: 
@@ -105,6 +106,9 @@ Prop page:
 - Store unknown property values, is it needed?
 - Cleanup where we use GLGraphics, always use render.
 - Change insturment dialog for a combo
+- Some icons still have borders.
+- Red = 216	16 48
+- 
 
 Scaling issue:
 - Support 3 scalings (Will not affect toolbars)? 
@@ -133,6 +137,7 @@ x Remove all lines around icons? Would be cool.
 - Bring back fonts for 150%...
 - Timecode alignment looks like ass now, create a special mode for texture that uses fixed width + center align.
 - Hide lines in piano roll when snapping is enabled.
+- Convert more icons to white. 
 
 Misc:
 

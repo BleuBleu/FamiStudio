@@ -350,11 +350,7 @@ namespace FamiStudio
 
             patternCache = new PatternBitmapCache(g);
 
-            var expansionBitmapNames = new string[ExpansionType.Count];
-            for (int i = 0; i < ExpansionType.Count; i++)
-                expansionBitmapNames[i] = ExpansionType.Icons[i] + "Light";
-
-            bmpAtlasExpansions = g.CreateBitmapAtlasFromResources(expansionBitmapNames);
+            bmpAtlasExpansions = g.CreateBitmapAtlasFromResources(ExpansionType.Icons);
             bmpAtlasTracks     = g.CreateBitmapAtlasFromResources(ChannelType.Icons);
             bmpAtlasMisc       = g.CreateBitmapAtlasFromResources(MiscImageNames);
 
@@ -443,23 +439,13 @@ namespace FamiStudio
             c.PushTranslation(0, headerSizeY);
 
             // Icons
+            var showExpIcons = showExpansionIcons && Song.Project.UsesAnyExpansionAudio;
+            var atlas = showExpIcons ? bmpAtlasExpansions : bmpAtlasTracks;
+
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
-                RenderBitmapAtlas atlas;
-                int bitmapIndex;
-
-                if (showExpansionIcons && Song.Project.UsesAnyExpansionAudio)
-                {
-                    atlas = bmpAtlasExpansions;
-                    bitmapIndex = Song.Channels[i].Expansion;
-                }
-                else
-                {
-                    atlas = bmpAtlasTracks;
-                    bitmapIndex = Song.Channels[i].Type;
-                }
-
-                c.DrawBitmapAtlas(atlas, bitmapIndex, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, bitmapScale);
+                var bitmapIndex = showExpIcons ? Song.Channels[i].Expansion : Song.Channels[i].Type;
+                c.DrawBitmapAtlas(atlas, bitmapIndex, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, bitmapScale, Theme.LightGreyFillColor1);
             }
 
             // Track names

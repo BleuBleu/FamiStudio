@@ -66,7 +66,6 @@ namespace FamiStudio
             NTSCToPAL,
             PALToNTSC,
             Rec,
-            RecRed,
             Metronome,
             File,
             Open,
@@ -102,7 +101,6 @@ namespace FamiStudio
             "NTSCToPAL",
             "PALToNTSC",
             "Rec",
-            "RecRed",
             "Metronome",
             "File",
             "Open",
@@ -259,7 +257,7 @@ namespace FamiStudio
         private delegate void MouseWheelDelegate(int delta);
         private delegate void EmptyDelegate();
         private delegate ButtonStatus ButtonStatusDelegate();
-        private delegate ButtonImageIndices BitmapDelegate();
+        private delegate ButtonImageIndices BitmapDelegate(ref Color tint);
 
         // DROIDTODO : Have a separate position + hitbox.
         private class Button
@@ -715,7 +713,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private ButtonImageIndices OnPlayGetBitmap()
+        private ButtonImageIndices OnPlayGetBitmap(ref Color tint)
         {
             if (App.IsPlaying)
             {
@@ -738,9 +736,11 @@ namespace FamiStudio
             App.SeekSong(0);
         }
 
-        private ButtonImageIndices OnRecordGetBitmap()
+        private ButtonImageIndices OnRecordGetBitmap(ref Color tint)
         {
-            return App.IsRecording ? ButtonImageIndices.RecRed : ButtonImageIndices.Rec; 
+            if (App.IsRecording)
+                tint = Theme.DarkRedFillColor;
+            return ButtonImageIndices.Rec; 
         }
 
         private void OnRecord()
@@ -773,7 +773,7 @@ namespace FamiStudio
             return App.IsMetronomeEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
-        private ButtonImageIndices OnLoopGetBitmap()
+        private ButtonImageIndices OnLoopGetBitmap(ref Color tint)
         {
             switch (App.LoopMode)
             {
@@ -804,7 +804,7 @@ namespace FamiStudio
             return App.Project != null && !App.Project.UsesAnyExpansionAudio ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private ButtonImageIndices OnMachineGetBitmap()
+        private ButtonImageIndices OnMachineGetBitmap(ref Color tint)
         {
             if (App.Project == null)
             {
@@ -845,14 +845,15 @@ namespace FamiStudio
                     continue;
 
                 var hover = btn.Rect.Contains(pt);
-                var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap() : btn.BmpAtlasIndex;
+                var tint = Theme.LightGreyFillColor1;
+                var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap(ref tint) : btn.BmpAtlasIndex;
                 var status = btn.Enabled == null ? ButtonStatus.Enabled : btn.Enabled();
                 var opacity = status == ButtonStatus.Enabled ? 1.0f : 0.25f;
 
                 if (status != ButtonStatus.Disabled && hover)
                     opacity *= 0.75f;
 
-                c.DrawBitmapAtlas(bmpButtonAtlas, (int)bmpIndex, btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat);
+                c.DrawBitmapAtlas(bmpButtonAtlas, (int)bmpIndex, btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat, tint);
             }
         }
 
