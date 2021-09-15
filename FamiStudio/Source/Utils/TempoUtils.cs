@@ -43,18 +43,23 @@ namespace FamiStudio
                     for (int i = 0; i < groove.Length; i++)
                         groove[i] += noteLen;
 
-                    // Compute BPM with 4 notes per beat so we get the same grooves for all note lengths.
-                    float bpm = ComputeBpmForGroove(pal, groove, 4);
-
                     // See if this new groove is different enough from the other we added so far.
                     var foundSimilar = false;
-                    foreach (var tempo in tempos)
+
+                    // Force include the simplest grooves (length 1 and 2)
+                    if (groove.Length > 2)
                     {
-                        var delta = Math.Abs(tempo.bpm - bpm);
-                        if (delta < BpmThreshold)
+                        // Compute BPM with 4 notes per beat so we get the same grooves for all note lengths.
+                        float bpm = ComputeBpmForGroove(pal, groove, 4);
+
+                        foreach (var tempo in tempos)
                         {
-                            foundSimilar = true;
-                            break;
+                            var delta = Math.Abs(tempo.bpm - bpm);
+                            if (delta < BpmThreshold)
+                            {
+                                foundSimilar = true;
+                                break;
+                            }
                         }
                     }
 
@@ -72,10 +77,6 @@ namespace FamiStudio
             // Sort.
             tempos.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
 
-            //foreach (var tempo in tempos)
-            //{
-            //    Debug.WriteLine($"{tempo.bpm.ToString("n1")} = {string.Join("-", tempo.groove)}");
-            //}
 
             return tempos.ToArray();
         }
