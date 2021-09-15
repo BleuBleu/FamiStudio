@@ -163,6 +163,11 @@ namespace FamiStudio
             return instruments.Contains(inst);
         }
 
+        public bool ArpeggioExists(Arpeggio arp)
+        {
+            return arpeggios.Contains(arp);
+        }
+
         public DPCMSample GetSample(int id)
         {
             return samples.Find(s => s.Id == id);

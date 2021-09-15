@@ -32,6 +32,8 @@ namespace FamiStudio
         private Project project;
         private Song song;
         private int selectedChannelIndex;
+        private Instrument selectedInstrument = null; // null = DPCM
+        private Arpeggio selectedArpeggio = null;
 
         private SongPlayer songPlayer;
         private InstrumentPlayer instrumentPlayer;
@@ -86,9 +88,6 @@ namespace FamiStudio
         public DPCMSample DraggedSample => ProjectExplorer.DraggedSample;
 
         public Project    Project              => project;
-        public Song       SelectedSong         => song;
-        public Instrument SelectedInstrument   => ProjectExplorer.SelectedInstrument;       // TODO : Centralize all in here?
-        public Arpeggio   SelectedArpeggio     => ProjectExplorer.SelectedArpeggio;         // TODO : Centralize all in here?
         public Channel    SelectedChannel      => song.Channels[SelectedChannelIndex];
 
         public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
@@ -137,15 +136,12 @@ namespace FamiStudio
             PianoRoll.MaximizedChanged   += PianoRoll_MaximizedChanged;
 
             ProjectExplorer.InstrumentEdited         += ProjectExplorer_InstrumentEdited;
-            ProjectExplorer.InstrumentSelected       += ProjectExplorer_InstrumentSelected;
             ProjectExplorer.InstrumentColorChanged   += ProjectExplorer_InstrumentColorChanged;
             ProjectExplorer.InstrumentReplaced       += ProjectExplorer_InstrumentReplaced;
             ProjectExplorer.InstrumentDeleted        += ProjectExplorer_InstrumentDeleted;
             ProjectExplorer.InstrumentDroppedOutside += ProjectExplorer_InstrumentDroppedOutside;
             ProjectExplorer.SongModified             += ProjectExplorer_SongModified;
-            ProjectExplorer.SongSelected             += ProjectExplorer_SongSelected;
             ProjectExplorer.ProjectModified          += ProjectExplorer_ProjectModified;
-            ProjectExplorer.ArpeggioSelected         += ProjectExplorer_ArpeggioSelected;
             ProjectExplorer.ArpeggioEdited           += ProjectExplorer_ArpeggioEdited;
             ProjectExplorer.ArpeggioColorChanged     += ProjectExplorer_ArpeggioColorChanged;
             ProjectExplorer.ArpeggioDeleted          += ProjectExplorer_ArpeggioDeleted;
@@ -185,6 +181,28 @@ namespace FamiStudio
 #endif
         }
 
+        public Song SelectedSong
+        {
+            get { return song; }
+            set
+            {
+                if (song != value)
+                {
+                    StopSong();
+                    SeekSong(0);
+
+                    song = value;
+
+                    ResetSelectedChannel();
+                    PianoRoll.SongChanged();
+                    Sequencer.Reset();
+                    ToolBar.Reset();
+
+                    MarkEverythingDirty();
+                }
+            }
+        }
+
         public int SelectedChannelIndex
         {
             get { return selectedChannelIndex; }
@@ -197,6 +215,28 @@ namespace FamiStudio
                     Sequencer.MarkDirty();
                     PianoRoll.ChangeChannel(selectedChannelIndex);
                 }
+            }
+        }
+
+        public Instrument SelectedInstrument
+        {
+            get { return selectedInstrument; }
+            set
+            {
+                selectedInstrument = value;
+                ProjectExplorer.MarkDirty();
+                // MATTT
+            }
+        }
+
+        public Arpeggio SelectedArpeggio
+        {
+            get { return selectedArpeggio; }
+            set
+            {
+                selectedArpeggio = value;
+                ProjectExplorer.MarkDirty();
+                // MATTT
             }
         }
 
@@ -277,10 +317,8 @@ namespace FamiStudio
         {
             if (note != null)
             {
-                ProjectExplorer.SelectedInstrument = note.Instrument;
-                ProjectExplorer.SelectedArpeggio = note.Arpeggio;
-                PianoRoll.CurrentInstrument = note.Instrument;
-                PianoRoll.CurrentArpeggio = note.Arpeggio;
+                selectedInstrument = note.Instrument;
+                selectedArpeggio   = note.Arpeggio;
             }
         }
 
@@ -296,28 +334,45 @@ namespace FamiStudio
             }
         }
 
+        private void ResetSelectedChannel()
+        {
+            selectedChannelIndex = 0;
+        }
+
+        private void ResetSelectedSong()
+        {
+            if (!project.SongExists(song))
+                song = project.Songs[0];
+        }
+
+        private void ResetSelectedInstrumentArpeggio()
+        {
+            if (!project.InstrumentExists(selectedInstrument))
+                selectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
+            if (!project.ArpeggioExists(selectedArpeggio))
+                selectedArpeggio = null;
+        }
+
         private void ProjectExplorer_ProjectModified()
         {
             RefreshLayout();
-            selectedChannelIndex = 0;
+            ResetSelectedChannel();
+            ResetSelectedInstrumentArpeggio();
+            ResetSelectedInstrumentArpeggio();
             Sequencer.Reset();
             PianoRoll.Reset();
-            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
-            PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
         }
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
         {
+            ResetSelectedInstrumentArpeggio();
             PianoRoll.Reset();
-            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
-            PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
         }
 
         private void ProjectExplorer_ArpeggioDeleted(Arpeggio arpeggio)
         {
+            ResetSelectedInstrumentArpeggio();
             PianoRoll.Reset();
-            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
-            PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
         }
 
         private void ProjectExplorer_DPCMSampleDeleted(DPCMSample sample)
@@ -508,10 +563,11 @@ namespace FamiStudio
         {
 #if DEBUG
             if (song != null)
-            {
-                project.SongExists(song);
-                Debug.Assert(song == ProjectExplorer.SelectedSong);
-            }
+                Debug.Assert(project.SongExists(song));
+            if (selectedInstrument != null)
+                Debug.Assert(project.InstrumentExists(selectedInstrument));
+            if (selectedArpeggio != null)
+                Debug.Assert(project.ArpeggioExists(selectedArpeggio));
 
             Sequencer.ValidateIntegrity();
 #endif
@@ -588,7 +644,10 @@ namespace FamiStudio
             song = project.Songs[0];
             palPlayback = project.PalMode;
 
-            selectedChannelIndex = 0;
+            ResetSelectedChannel();
+            ResetSelectedInstrumentArpeggio();
+            ResetSelectedSong();
+
             ToolBar.Reset();
             ProjectExplorer.Reset();
             PianoRoll.Reset();
@@ -607,9 +666,6 @@ namespace FamiStudio
             undoRedoManager.TransactionBegan += UndoRedoManager_PreUndoRedo;
             undoRedoManager.TransactionEnded += UndoRedoManager_PostUndoRedo;
             undoRedoManager.Updated += UndoRedoManager_Updated;
-
-            PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
-            PianoRoll.CurrentArpeggio = ProjectExplorer.SelectedArpeggio;
 
             MarkEverythingDirty();
             UpdateTitle();
@@ -958,6 +1014,8 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
+                    ResetSelectedSong();
+                    ResetSelectedInstrumentArpeggio();
                     Sequencer.Reset();
                     PianoRoll.Reset();
                     ProjectExplorer.RefreshButtons();
@@ -973,6 +1031,8 @@ namespace FamiStudio
 
             // We might be deleting data like entire songs/envelopes/samples that
             // are being edited right now.
+            ResetSelectedSong();
+            ResetSelectedInstrumentArpeggio();
             Sequencer.Reset();
             PianoRoll.Reset();
         }
@@ -1005,8 +1065,8 @@ namespace FamiStudio
             Note note = new Note(n);
             note.Volume = Note.VolumeMax;
 
-            var instrument = custom ? customInstrument : ProjectExplorer.SelectedInstrument;
-            var arpeggio = custom ? customArpeggio : ProjectExplorer.SelectedArpeggio;
+            var instrument = custom ? customInstrument : selectedInstrument;
+            var arpeggio   = custom ? customArpeggio   : selectedArpeggio;
 
             int channel = selectedChannelIndex;
 
@@ -1033,10 +1093,11 @@ namespace FamiStudio
                 }
             }
 
+            // HACK : These should simply be pass as parameters.
+            if (PianoRoll.IsEditingInstrument && PianoRoll.EditInstrument != null && song.Channels[channel].SupportsInstrument(PianoRoll.EditInstrument))
+                note.Instrument = PianoRoll.EditInstrument;
             if (PianoRoll.IsEditingArpeggio && song.Channels[channel].SupportsArpeggios)
-            {
-                note.Arpeggio = PianoRoll.CurrentArpeggio;
-            }
+                note.Arpeggio = PianoRoll.EditArpeggio;
 
             instrumentPlayer.PlayNote(channel, note);
 
@@ -1046,9 +1107,9 @@ namespace FamiStudio
 
         public void StopOrReleaseIntrumentNote(bool allowRecording = false)
         {
-            if (ProjectExplorer.SelectedInstrument != null &&
-                (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.IsVrc7Instrument) &&
-                song.Channels[selectedChannelIndex].SupportsInstrument(ProjectExplorer.SelectedInstrument))
+            if (selectedInstrument != null &&
+                (selectedInstrument.HasReleaseEnvelope || selectedInstrument.IsVrc7Instrument) &&
+                song.Channels[selectedChannelIndex].SupportsInstrument(selectedInstrument))
             {
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);
             }
@@ -1596,7 +1657,7 @@ namespace FamiStudio
 
         public int GetEnvelopeFrame(Instrument instrument, int envelopeIdx, bool force = false)
         {
-            if (instrumentPlayer != null && (ProjectExplorer.SelectedInstrument == instrument || force))
+            if (instrumentPlayer != null && (selectedInstrument == instrument || force))
                 return instrumentPlayer.GetEnvelopeFrame(envelopeIdx);
             else
                 return -1;
@@ -1821,6 +1882,8 @@ namespace FamiStudio
             var currentFrame = CurrentFrame;
 
             buffer.Serialize(ref selectedChannelIndex);
+            buffer.Serialize(ref selectedInstrument);
+            buffer.Serialize(ref selectedArpeggio);
             buffer.Serialize(ref ghostChannelMask);
             buffer.Serialize(ref song);
             buffer.Serialize(ref currentFrame);
@@ -1843,21 +1906,20 @@ namespace FamiStudio
                 // When the song changes between undo/redos, must stop the audio.
                 if (oldSong.Id != song.Id)
                 {
-                    Debug.Assert(ProjectExplorer.SelectedSong == song);
-                    ProjectExplorer_SongSelected(song);
+                    ResetSelectedSong();
                 }
             }
         }
 
-        private void ProjectExplorer_InstrumentSelected(Instrument instrument)
-        {
-            PianoRoll.CurrentInstrument = instrument;
-        }
+        //private void ProjectExplorer_InstrumentSelected(Instrument instrument)
+        //{
+        //    selectedInstrument = instrument;
+        //}
 
-        private void ProjectExplorer_ArpeggioSelected(Arpeggio arpeggio)
-        {
-            PianoRoll.CurrentArpeggio = arpeggio;
-        }
+        //private void ProjectExplorer_ArpeggioSelected(Arpeggio arpeggio)
+        //{
+        //    selectedArpeggio = arpeggio;
+        //}
 
         private void ProjectExplorer_InstrumentColorChanged(Instrument instrument)
         {
@@ -1880,20 +1942,6 @@ namespace FamiStudio
         {
             Sequencer.SongModified();
             PianoRoll.SongModified();
-            MarkEverythingDirty();
-        }
-
-        private void ProjectExplorer_SongSelected(Song song)
-        {
-            StopSong();
-            SeekSong(0);
-            this.song = song;
-            selectedChannelIndex = 0;
-
-            PianoRoll.SongChanged();
-            Sequencer.Reset();
-            ToolBar.Reset();
-
             MarkEverythingDirty();
         }
 

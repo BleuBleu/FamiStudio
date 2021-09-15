@@ -343,8 +343,6 @@ namespace FamiStudio
 
         // Pattern edit mode.
         int editChannel = -1;
-        Instrument currentInstrument = null;
-        Arpeggio currentArpeggio = null;
 
         // Envelope edit mode.
         Instrument editInstrument = null;
@@ -383,8 +381,9 @@ namespace FamiStudio
         public bool CanCopy  => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
         public bool CanPaste => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ConstainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ConstainsEnvelope);
 
-        public Instrument CurrentInstrument { get => currentInstrument; set => currentInstrument = value; }
-        public Arpeggio   CurrentArpeggio { get => currentArpeggio; set => currentArpeggio = value; }
+        public Instrument EditInstrument => editInstrument;
+        public Arpeggio   EditArpeggio   => editArpeggio;
+
         public DPCMSample CurrentEditSample { get => editSample; }
 
         public delegate void EmptyDelegate();
@@ -726,8 +725,6 @@ namespace FamiStudio
             zoom = 0;
             editMode = EditionMode.None;
             editChannel = -1;
-            currentInstrument = null;
-            currentArpeggio = null;
             editInstrument = null;
             editArpeggio = null;
             noteTooltip = "";
@@ -4882,7 +4879,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (channel.SupportsInstrument(currentInstrument))
+                    if (channel.SupportsInstrument(App.SelectedInstrument))
                     {
                         if (pattern != null)
                         {
@@ -4899,7 +4896,7 @@ namespace FamiStudio
                         note = pattern.GetOrCreateNoteAt(location.NoteIndex);
                         note.Value = noteValue;
                         note.Duration = (ushort)Song.BeatLength;
-                        note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
+                        note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
 
                         StartCaptureOperation(e.X, e.Y, CaptureOperation.CreateSlideNote, true);
                     }
@@ -5510,7 +5507,7 @@ namespace FamiStudio
 
         private void StartNoteCreation(MouseEventArgs e, NoteLocation location, byte noteValue)
         {
-            if (Song.Channels[editChannel].SupportsInstrument(currentInstrument))
+            if (Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument))
             {
                 App.PlayInstrumentNote(noteValue, false, false);
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.CreateNote, true);
@@ -5557,8 +5554,8 @@ namespace FamiStudio
             var note = pattern.GetOrCreateNoteAt(minLocation.NoteIndex);
 
             note.Value = (byte)captureNoteValue;
-            note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
-            note.Arpeggio = Song.Channels[editChannel].SupportsArpeggios ? currentArpeggio : null;
+            note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
+            note.Arpeggio = Song.Channels[editChannel].SupportsArpeggios ? App.SelectedArpeggio : null;
             note.Duration = (ushort)Math.Max(1, SnapNote(maxAbsoluteNoteIndex, true, false) - minAbsoluteNoteIndex);
 
             if (last)
@@ -5773,7 +5770,7 @@ namespace FamiStudio
 
                 var pattern = channel.PatternInstances[location.PatternIndex];
 
-                if (channel.SupportsInstrument(currentInstrument))
+                if (channel.SupportsInstrument(App.SelectedInstrument))
                 {
                     var dragNoteLocation = NoteLocation.FromAbsoluteNoteIndex(Song, dragFrameMin);
 
@@ -5799,8 +5796,8 @@ namespace FamiStudio
                     var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
 
                     note.Value = noteValue;
-                    note.Instrument = editChannel == ChannelType.Dpcm ? null : currentInstrument;
-                    note.Arpeggio = channel.SupportsArpeggios ? currentArpeggio : null;
+                    note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
+                    note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
                     note.Duration = (ushort)(dragNoteOldDuration - dragNote.Duration);
 
                     channel.InvalidateCumulativePatternCache(pattern);
@@ -6309,8 +6306,6 @@ namespace FamiStudio
             editMode = (EditionMode)editModeInt;
 
             buffer.Serialize(ref editChannel);
-            buffer.Serialize(ref currentInstrument);
-            buffer.Serialize(ref currentArpeggio);
             buffer.Serialize(ref editInstrument);
             buffer.Serialize(ref editEnvelope);
             buffer.Serialize(ref editArpeggio);

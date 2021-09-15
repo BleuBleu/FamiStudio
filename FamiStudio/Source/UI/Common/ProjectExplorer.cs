@@ -153,13 +153,10 @@ namespace FamiStudio
         bool captureThresholdMet = false;
         Button sliderDragButton = null;
         CaptureOperation captureOperation = CaptureOperation.None;
-        Song selectedSong = null;
         Instrument draggedInstrument = null;
-        Instrument selectedInstrument = null; // null = DPCM
         Instrument expandedInstrument = null;
         DPCMSample expandedSample = null;
         Arpeggio draggedArpeggio = null;
-        Arpeggio selectedArpeggio = null;
         DPCMSample draggedSample = null;
         Song draggedSong = null;
         List<Button> buttons = new List<Button>();
@@ -388,9 +385,9 @@ namespace FamiStudio
             {
                 get
                 {
-                    if ((type == ButtonType.Song       && song       == projectExplorer.selectedSong)       ||
-                        (type == ButtonType.Instrument && instrument == projectExplorer.selectedInstrument) ||
-                        (type == ButtonType.Arpeggio   && arpeggio   == projectExplorer.selectedArpeggio))
+                    if ((type == ButtonType.Song       && song       == projectExplorer.App.SelectedSong)       ||
+                        (type == ButtonType.Instrument && instrument == projectExplorer.App.SelectedInstrument) ||
+                        (type == ButtonType.Arpeggio   && arpeggio   == projectExplorer.App.SelectedArpeggio))
                     {
                         return projectExplorer.ThemeResources.FontMediumBold;
                     }
@@ -477,34 +474,7 @@ namespace FamiStudio
             }
         }
 
-        public Song SelectedSong => selectedSong;
         public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null;
-
-        public Arpeggio SelectedArpeggio
-        {
-            get
-            {
-                return selectedArpeggio;
-            }
-            set
-            {
-                selectedArpeggio = value;
-                MarkDirty();
-            }
-        }
-
-        public Instrument SelectedInstrument
-        {
-            get
-            {
-                return selectedInstrument;
-            }
-            set
-            {
-                selectedInstrument = value;
-                MarkDirty();
-            }
-        }
 
         public delegate void EmptyDelegate();
         public delegate void BoolDelegate(bool val);
@@ -518,14 +488,11 @@ namespace FamiStudio
         public delegate void DPCMSampleDelegate(DPCMSample sample);
 
         public event InstrumentEnvelopeDelegate InstrumentEdited;
-        public event InstrumentDelegate InstrumentSelected;
         public event InstrumentDelegate InstrumentColorChanged;
         public event InstrumentDelegate InstrumentReplaced;
         public event InstrumentDelegate InstrumentDeleted;
         public event InstrumentPointDelegate InstrumentDroppedOutside;
         public event SongDelegate SongModified;
-        public event SongDelegate SongSelected;
-        public event ArpeggioDelegate ArpeggioSelected;
         public event ArpeggioDelegate ArpeggioEdited;
         public event ArpeggioDelegate ArpeggioColorChanged;
         public event ArpeggioDelegate ArpeggioDeleted;
@@ -576,12 +543,8 @@ namespace FamiStudio
         public void Reset()
         {
             scrollY = 0;
-            selectedSong = App.Project.Songs[0];
-            selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
             expandedInstrument = null;
             expandedSample = null;
-            selectedArpeggio = null;
-            SongSelected?.Invoke(selectedSong);
             RefreshButtons();
             MarkDirty();
         }
@@ -1893,34 +1856,22 @@ namespace FamiStudio
         private void AddSong()
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-            selectedSong = App.Project.CreateSong();
-            SongSelected?.Invoke(selectedSong);
+            App.SelectedSong = App.Project.CreateSong();
             App.UndoRedoManager.EndTransaction();
             RefreshButtons();
 
             // DROIDTODO : Scroll to the new song.
         }
 
-        private void SetSelectedSong(Song song)
-        {
-            if (song != selectedSong)
-            {
-                selectedSong = song;
-                SongSelected?.Invoke(selectedSong);
-                MarkDirty();
-            }
-        }
-
         private void AskAndDeleteSong(Song song)
         {
             if (PlatformUtils.MessageBox($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                bool selectNewSong = song == selectedSong;
+                bool selectNewSong = song == App.SelectedSong;
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
                 App.Project.DeleteSong(song);
                 if (selectNewSong)
-                    selectedSong = App.Project.Songs[0];
-                SongSelected?.Invoke(selectedSong);
+                    App.SelectedSong = App.Project.Songs[0];
                 App.UndoRedoManager.EndTransaction();
                 RefreshButtons();
             }
@@ -1929,8 +1880,7 @@ namespace FamiStudio
         private void AddInstrument(int expansionType)
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-            selectedInstrument = App.Project.CreateInstrument(expansionType);
-            InstrumentSelected?.Invoke(selectedInstrument);
+            App.SelectedInstrument = App.Project.CreateInstrument(expansionType);
             App.UndoRedoManager.EndTransaction();
             RefreshButtons();
         }
@@ -1970,13 +1920,6 @@ namespace FamiStudio
             }
         }
 
-        private void SetSelectedInstrument(Instrument inst)
-        {
-            selectedInstrument = inst;
-            MarkDirty();
-            InstrumentSelected?.Invoke(selectedInstrument);
-        }
-
         private void ToggleExpandInstrument(Instrument inst)
         {
             expandedInstrument = expandedInstrument == inst ? null : inst;
@@ -1988,12 +1931,11 @@ namespace FamiStudio
         {
             if (PlatformUtils.MessageBox($"Are you sure you want to delete '{inst.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                bool selectNewInstrument = inst == selectedInstrument;
+                bool selectNewInstrument = inst == App.SelectedInstrument;
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
                 App.Project.DeleteInstrument(inst);
                 if (selectNewInstrument)
-                    selectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
-                SongSelected?.Invoke(selectedSong);
+                    App.SelectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
                 InstrumentDeleted?.Invoke(inst);
                 App.UndoRedoManager.EndTransaction();
                 RefreshButtons();
@@ -2011,8 +1953,7 @@ namespace FamiStudio
         private void AddArpeggio()
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-            selectedArpeggio = App.Project.CreateArpeggio();
-            ArpeggioSelected?.Invoke(selectedArpeggio);
+            App.SelectedArpeggio = App.Project.CreateArpeggio();
             App.UndoRedoManager.EndTransaction();
             RefreshButtons();
         }
@@ -2021,23 +1962,15 @@ namespace FamiStudio
         {
             if (PlatformUtils.MessageBox($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                bool selectNewArpeggio = arpeggio == selectedArpeggio;
+                bool selectNewArpeggio = arpeggio == App.SelectedArpeggio;
                 App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
                 App.Project.DeleteArpeggio(arpeggio);
                 if (selectNewArpeggio)
-                    selectedArpeggio = App.Project.Arpeggios.Count > 0 ? App.Project.Arpeggios[0] : null;
-                SongSelected?.Invoke(selectedSong);
+                    App.SelectedArpeggio = App.Project.Arpeggios.Count > 0 ? App.Project.Arpeggios[0] : null;
                 ArpeggioDeleted?.Invoke(arpeggio);
                 App.UndoRedoManager.EndTransaction();
                 RefreshButtons();
             }
-        }
-
-        private void SetSelectedArpeggio(Arpeggio arpeggio)
-        {
-            selectedArpeggio = arpeggio;
-            ArpeggioSelected?.Invoke(selectedArpeggio);
-            MarkDirty();
         }
 
         private void ReloadDPCMSampleSourceData(DPCMSample sample)
@@ -2181,7 +2114,7 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left))
             {
-                SetSelectedSong(button.song);
+                App.SelectedSong = button.song;
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSong, buttonIdx);
                 draggedSong = button.song;
             }
@@ -2210,26 +2143,26 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left))
             {
-                SetSelectedInstrument(button.instrument);
+                App.SelectedInstrument = button.instrument;
 
-                if (selectedInstrument != null)
+                if (button.instrument != null)
                 {
                     envelopeDragIdx = -1;
-                    draggedInstrument = selectedInstrument;
+                    draggedInstrument = button.instrument;
                     StartCaptureOperation(e.X, e.Y, CaptureOperation.DragInstrument, buttonIdx, buttonRelX, buttonRelY);
                 }
 
                 if (subButtonType == SubButtonType.Expand)
                 {
-                    ToggleExpandInstrument(selectedInstrument);
+                    ToggleExpandInstrument(button.instrument);
                 }
                 else if (subButtonType == SubButtonType.DPCM)
                 {
-                    InstrumentEdited?.Invoke(selectedInstrument, EnvelopeType.Count);
+                    InstrumentEdited?.Invoke(button.instrument, EnvelopeType.Count);
                 }
                 else if (subButtonType < SubButtonType.EnvelopeMax)
                 {
-                    InstrumentEdited?.Invoke(selectedInstrument, (int)subButtonType);
+                    InstrumentEdited?.Invoke(button.instrument, (int)subButtonType);
                     envelopeDragIdx = (int)subButtonType;
                 }
             }
@@ -2366,16 +2299,16 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left))
             {
-                SetSelectedArpeggio(button.arpeggio);
+                App.SelectedArpeggio = button.arpeggio;
 
                 envelopeDragIdx = -1;
-                draggedArpeggio = selectedArpeggio;
+                draggedArpeggio = button.arpeggio;
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragArpeggio, buttonIdx, buttonRelX, buttonRelY);
 
                 if (subButtonType < SubButtonType.EnvelopeMax)
                 {
                     envelopeDragIdx = (int)subButtonType;
-                    ArpeggioEdited?.Invoke(selectedArpeggio);
+                    ArpeggioEdited?.Invoke(button.arpeggio);
                 }
             }
             else if (e.Button.HasFlag(MouseButtons.Right) && button.arpeggio != null) 
@@ -2530,7 +2463,7 @@ namespace FamiStudio
 
         private bool HandleTouchClickSongButton(int x, int y, Button button)
         {
-            SetSelectedSong(button.song);
+            App.SelectedSong = button.song;
             return true;
         }
 
@@ -2538,19 +2471,19 @@ namespace FamiStudio
         {
             //if (e.Button.HasFlag(MouseButtons.Left))
             //{
-                SetSelectedInstrument(button.instrument);
+                App.SelectedInstrument = button.instrument;
 
                 if (subButtonType == SubButtonType.Expand)
                 {
-                    ToggleExpandInstrument(selectedInstrument);
+                    ToggleExpandInstrument(button.instrument);
                 }
                 else if (subButtonType == SubButtonType.DPCM)
                 {
-                    InstrumentEdited?.Invoke(selectedInstrument, EnvelopeType.Count);
+                    InstrumentEdited?.Invoke(button.instrument, EnvelopeType.Count);
                 }
                 else if (subButtonType < SubButtonType.EnvelopeMax)
                 {
-                    InstrumentEdited?.Invoke(selectedInstrument, (int)subButtonType);
+                    InstrumentEdited?.Invoke(button.instrument, (int)subButtonType);
                     envelopeDragIdx = (int)subButtonType;
                 }
             //}
@@ -2576,10 +2509,10 @@ namespace FamiStudio
         {
             //if (e.Button.HasFlag(MouseButtons.Left))
             //{
-                SetSelectedArpeggio(button.arpeggio);
+                App.SelectedArpeggio = button.arpeggio;
 
                 if (subButtonType < SubButtonType.EnvelopeMax)
-                    ArpeggioEdited?.Invoke(selectedArpeggio);
+                    ArpeggioEdited?.Invoke(button.arpeggio);
             //}
             //else if (e.Button.HasFlag(MouseButtons.Right) && button.arpeggio != null)
             //{
@@ -2818,7 +2751,7 @@ namespace FamiStudio
                     {
                         if (!expansionRemoved || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
-                            selectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
+                            App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
                             project.SetExpansionAudioMask(expansionMask, numChannels);
                             ProjectModified?.Invoke();
                             Reset();
@@ -3089,24 +3022,10 @@ namespace FamiStudio
 
         public void ValidateIntegrity()
         {
-#if DEBUG
-            if (App.Project != null)
-            {
-                Debug.Assert(App.Project.SongExists(selectedSong));
-
-                if (selectedInstrument != null)
-                    Debug.Assert(App.Project.InstrumentExists(selectedInstrument));
-            }
-#endif
         }
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            var oldSelectedSong = selectedSong;
-
-            buffer.Serialize(ref selectedSong);
-            buffer.Serialize(ref selectedInstrument);
-            buffer.Serialize(ref selectedArpeggio);
             buffer.Serialize(ref expandedInstrument);
             buffer.Serialize(ref expandedSample);
             buffer.Serialize(ref scrollY);
