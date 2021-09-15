@@ -79,27 +79,32 @@ namespace FamiStudio
             width  = w;
             height = h;
 
-            UpdateLayout();
+            UpdateLayout(false);
         }
 
-        private void UpdateLayout()
+        private void UpdateLayout(bool activeControlOnly)
         {
             var landscape = IsLandscape;
             var quickAccessBarSize = quickAccessBar.LayoutSize;
             var toolLayoutSize = toolbar.LayoutSize;
 
-            // Toolbar will be resized every frame anyway.
             if (landscape)
             {
-                toolbar.Move(0, 0, toolLayoutSize, height);
+                if (!activeControlOnly)
+                {
+                    toolbar.Move(0, 0, toolLayoutSize, height);
+                    quickAccessBar.Move(width - quickAccessBarSize, 0, quickAccessBarSize, height);
+                }
                 activeControl.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height);
-                quickAccessBar.Move(width - quickAccessBarSize, 0, quickAccessBarSize, height);
             }
             else
             {
-                toolbar.Move(0, 0, width, toolLayoutSize);
+                if (!activeControlOnly)
+                {
+                    toolbar.Move(0, 0, width, toolLayoutSize);
+                    quickAccessBar.Move(0, height - quickAccessBarSize, width, quickAccessBarSize);
+                }
                 activeControl.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize);
-                quickAccessBar.Move(0, height - quickAccessBarSize, width, quickAccessBarSize);
             }
         }
 
@@ -263,8 +268,6 @@ namespace FamiStudio
 
         public void Tick(float timeDelta)
         {
-            quickAccessBar.Tick(timeDelta);
-
             if (transitionTimer > 0.0f)
             {
                 var prevTimer = transitionTimer;
@@ -275,7 +278,7 @@ namespace FamiStudio
                     activeControl = transitionControl;
                     activeControl.MarkDirty();
                     transitionControl = null;
-                    UpdateLayout();
+                    UpdateLayout(true);
                 }
             }
         }

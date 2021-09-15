@@ -1723,6 +1723,7 @@ namespace FamiStudio
             PianoRoll.Tick(deltaTime);
             Sequencer.Tick(deltaTime);
             ProjectExplorer.Tick(deltaTime);
+            QuickAccessBar.Tick(deltaTime);
 
             lastTickTime = tickTime;
         }

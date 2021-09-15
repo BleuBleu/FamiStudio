@@ -12,13 +12,11 @@ Plan:
 4) 
 
 Quick access 100% done:
-/ Colors
-- Bold for selected option
-- Scrolling / fling
-/ Arps
-/ Highlight selected control
+- Hookup with FamiStudio, then start working on real shit.
+- Show some kind of scroll bar.
 - Ensure visible.
-- Close drawer when click outside
+- Align icons better when protrait
+- Delete expand icon
 
 Project explorer:
 - Possible actions: 

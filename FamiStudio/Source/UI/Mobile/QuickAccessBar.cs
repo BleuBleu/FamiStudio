@@ -31,6 +31,7 @@ namespace FamiStudio
         const int DefaultListIconPos       = 12;
 
         private delegate ButtonImageIndices RenderInfoDelegate(out string text, out Color tint);
+        private delegate void ListItemClickDelegate(int idx);
         private delegate bool EnabledDelegate();
 
         private class Button
@@ -46,6 +47,7 @@ namespace FamiStudio
             public Color Color;
             public RenderInfoDelegate GetRenderInfo;
             public EmptyDelegate Click;
+            public ListItemClickDelegate ListItemClick;
         }
 
         private class ListItem
@@ -149,28 +151,32 @@ namespace FamiStudio
 
         RenderFont buttonFont;
         RenderFont listFont;
+        RenderFont listFontBold;
         RenderBitmapAtlas bmpButtonAtlas;
         Button[] buttons = new Button[(int)ButtonType.Count];
 
-        // These are only use for expandable button.
-        private int        expandButtonIdx = -1;
-        private int        expandVirtualSizeY = 0;
-        private int        expandScrollY = 0;
-        private int        expandMinScrollY = 0;
-        private int        expandMaxScrollY = 0;
-        private float      expandRatio = 0.0f;
-        private bool       expanding;
-        private Rectangle  expandRect;
-        private bool       closing;
+        // These are only use for popup menu.
+        private int        popupButtonIdx = -1;
+        private int        popupButtonNextIdx = -1;
+        private int        popupSelectedIdx = -1;
+        private Rectangle  popupRect;
+        private float      popupRatio = 0.0f;
+        private bool       popupOpening;
+        private bool       popupClosing;
         private ListItem[] listItems;
 
+        // Popup-list scrollong.
+        private int scrollY = 0;
+        private int minScrollY = 0;
+        private int maxScrollY = 0;
+
+        // Mouse tracking.
         private int lastX;
         private int lastY;
         private int captureX;
         private int captureY;
+        private float flingVelY;
         private CaptureOperation captureOperation = CaptureOperation.None;
-
-        //private int maxExpandedSize;
 
         // Scaled layout variables.
         private int buttonSize;
@@ -187,9 +193,8 @@ namespace FamiStudio
         private float iconScaleExpFloat = 1.0f;
 
         public int   LayoutSize  => buttonSize;
-        //public int   RenderSize  => buttonSize + (int)Math.Round(expandedSize * Utils.SmootherStep(expandRatio));
-        public float ExpandRatio => expandRatio;
-        public bool  IsExpanded  => expandRatio > 0.001f;
+        public float ExpandRatio => popupRatio;
+        public bool  IsExpanded  => popupRatio > 0.001f;
 
         public override bool WantsFullScreenViewport => true;
 
@@ -202,17 +207,18 @@ namespace FamiStudio
             buttons[(int)ButtonType.Sequencer]  = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
             buttons[(int)ButtonType.PianoRoll]  = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
             buttons[(int)ButtonType.Project]    = new Button { GetRenderInfo = GetProjectExplorerInfo, Click = OnProjectExplorer, IsNavButton = true };
-            buttons[(int)ButtonType.Tool]       = new Button { GetRenderInfo = GetToolRenderInfo, Click = OnTool };
-            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap };
-            buttons[(int)ButtonType.Channel]    = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel };
-            buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument };
-            buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio };
+            buttons[(int)ButtonType.Tool]       = new Button { GetRenderInfo = GetToolRenderInfo, Click = OnTool, ListItemClick = OnToolChange };
+            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapChange };
+            buttons[(int)ButtonType.Channel]    = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel, ListItemClick = OnChannelChange };
+            buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, ListItemClick = OnInstrumentChange };
+            buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, ListItemClick = OnArpeggioChange };
 
             // MATTT : Font scaling?
             var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
 
-            buttonFont = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultTextSize, scale), false);
-            listFont   = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultListItemTextSize, scale), false);
+            buttonFont   = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultTextSize, scale), false);
+            listFont     = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultListItemTextSize, scale), false);
+            listFontBold = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultListItemTextSize, scale), true);
 
             buttonSize        = ScaleCustom(DefaultButtonSize, scale);
             buttonSizeNav     = ScaleCustom(DefaultNavButtonSize, scale);
@@ -237,35 +243,56 @@ namespace FamiStudio
         {
             UpdateButtonLayout();
 
-            if (expandButtonIdx >= 0)
-                StartExpandingList(expandButtonIdx, listItems);
+            if (popupButtonIdx >= 0)
+                StartExpandingList(popupButtonIdx, listItems);
 
             base.OnResize(e);
         }
 
+        private void TickFling(float delta)
+        {
+            if (flingVelY != 0.0f)
+            {
+                var deltaPixel = (int)Math.Round(flingVelY * delta);
+                if (deltaPixel != 0 && DoScroll(-deltaPixel))
+                    flingVelY *= (float)Math.Exp(delta * -4.5f);
+                else
+                    flingVelY = 0.0f;
+            }
+        }
+
         public void Tick(float delta)
         {
-            delta *= 6.0f;
+            TickFling(delta);
 
-            if (expandButtonIdx >= 0)
+            if (popupButtonIdx >= 0)
             {
-                if (expanding && expandRatio != 1.0f)
+                if (popupOpening && popupRatio != 1.0f)
                 {
-                    expandRatio = Math.Min(expandRatio + delta, 1.0f);
-                    if (expandRatio == 1.0f)
+                    delta *= 6.0f;
+                    popupRatio = Math.Min(popupRatio + delta, 1.0f);
+                    if (popupRatio == 1.0f)
                     {
-                        expanding = false;
+                        popupOpening = false;
                     }
                     MarkDirty();
                 }
-                else if (closing && expandRatio != 0.0f)
+                else if (popupClosing && popupRatio != 0.0f)
                 {
-                    expandRatio = Math.Max(expandRatio - delta, 0.0f);
-                    if (expandRatio == 0.0f)
+                    delta *= 10.0f;
+                    popupRatio = Math.Max(popupRatio - delta, 0.0f);
+                    if (popupRatio == 0.0f)
                     {
                         listItems = null;
-                        expandButtonIdx = -1;
-                        closing = false;
+                        popupButtonIdx = -1;
+                        popupClosing = false;
+
+                        if (popupButtonNextIdx >= 0)
+                        {
+                            var btn = buttons[popupButtonNextIdx];
+                            popupButtonNextIdx = -1;
+                            btn.Click();
+                        }
                     }
                     MarkDirty();
                 }
@@ -274,12 +301,12 @@ namespace FamiStudio
 
         private Rectangle GetExpandedListRect()
         {
-            var rect = expandRect;
+            var rect = popupRect;
 
             if (IsLandscape)
-                rect.X = -(int)Math.Round(rect.Width * Utils.SmootherStep(expandRatio));
+                rect.X = -(int)Math.Round(rect.Width * Utils.SmootherStep(popupRatio));
             else
-                rect.Y = -(int)Math.Round(rect.Height * Utils.SmootherStep(expandRatio));
+                rect.Y = -(int)Math.Round(rect.Height * Utils.SmootherStep(popupRatio));
 
             return rect;
         }
@@ -329,45 +356,45 @@ namespace FamiStudio
             var maxWidth  = landscape ? Math.Min(ParentFormSize.Width, ParentFormSize.Height) - buttonSize : Width;
             var maxHeight = landscape ? Height : listItemSize * 8;
 
-            expandRect.X = 0;
-            expandRect.Y = 0;
-            expandRect.Width  = 0;
-            expandRect.Height = items.Length * listItemSize + 1;
+            popupRect.X = 0;
+            popupRect.Y = 0;
+            popupRect.Width  = 0;
+            popupRect.Height = items.Length * listItemSize + 1;
 
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                var size = textPosTop + listFont.MeasureString(item.Text) * 5 / 4;
+                var size = textPosTop + listFontBold.MeasureString(item.Text) * 5 / 4;
 
-                expandRect.Width = Math.Max(expandRect.Width, size);
+                popupRect.Width = Math.Max(popupRect.Width, size);
             }
 
-            expandRect.Width  = Math.Min(expandRect.Width,  maxWidth);
-            expandRect.Height = Math.Min(expandRect.Height, maxHeight);
+            popupRect.Width  = Math.Min(popupRect.Width,  maxWidth);
+            popupRect.Height = Math.Min(popupRect.Height, maxHeight);
 
             if (landscape)
             {
-                if (expandRect.Height != Height)
+                if (popupRect.Height != Height)
                 {
-                    expandRect.Y = (buttons[idx].Rect.Top + buttons[idx].Rect.Bottom) / 2 - expandRect.Height / 2;
+                    popupRect.Y = (buttons[idx].Rect.Top + buttons[idx].Rect.Bottom) / 2 - popupRect.Height / 2;
 
                     // DROIDTODO : Test this (with arpeggios)
-                    if (expandRect.Top < 0)
-                        expandRect.Y -= expandRect.Top;
-                    else if (expandRect.Bottom > Height)
-                        expandRect.Y -= (expandRect.Bottom - Height);
+                    if (popupRect.Top < 0)
+                        popupRect.Y -= popupRect.Top;
+                    else if (popupRect.Bottom > Height)
+                        popupRect.Y -= (popupRect.Bottom - Height);
                 }
             }
             else
             {
-                if (expandRect.Width != Width)
+                if (popupRect.Width != Width)
                 {
-                    expandRect.X = (buttons[idx].Rect.Left + buttons[idx].Rect.Right) / 2 - expandRect.Width / 2;
+                    popupRect.X = (buttons[idx].Rect.Left + buttons[idx].Rect.Right) / 2 - popupRect.Width / 2;
 
-                    if (expandRect.Left < 0)
-                        expandRect.X -= expandRect.Left;
-                    else if (expandRect.Right > Width)
-                        expandRect.X -= (expandRect.Right - Width);
+                    if (popupRect.Left < 0)
+                        popupRect.X -= popupRect.Left;
+                    else if (popupRect.Right > Width)
+                        popupRect.X -= (popupRect.Right - Width);
                 }
             }
 
@@ -377,7 +404,7 @@ namespace FamiStudio
             {
                 var item = items[i];
 
-                item.Rect = new Rectangle(0, y, expandRect.Width - 1, listItemSize);
+                item.Rect = new Rectangle(0, y, popupRect.Width - 1, listItemSize);
                 item.IconX = listIconPos;
                 item.IconY = y + listIconPos;
                 item.TextX = textPosTop;
@@ -386,87 +413,79 @@ namespace FamiStudio
                 y += listItemSize;
             }
 
-            // TODO : Scroll.
+            minScrollY = 0;
+            maxScrollY = y - popupRect.Height;
+            scrollY = 0;
 
-            //if (landscape)
-            //{
-            //    if (y <= Height)
-            //    {
-            //        expandMinScrollY = -(Height - y) / 2;
-            //        expandMaxScrollY = expandMinScrollY;
-            //    }
-            //    else
-            //    {
-            //        expandMinScrollY = 0;
-            //        expandMaxScrollY = y - Height;
-            //    }
-            //}
-            //else
-            //{
-            //    if (y <= maxHeight)
-            //    {
-            //        expandMinScrollY = 0;
-            //        expandMaxScrollY = 0;
-            //    }
-            //    else
-            //    {
-            //        expandMinScrollY = 0;
-            //        expandMaxScrollY = y - maxHeight;
-            //    }
-            //}
-
-            expandMinScrollY = 0;
-            expandMaxScrollY = 0;
-
-            expandScrollY = 0;
-            expandVirtualSizeY = y;
-            expandButtonIdx = idx;
-            expandRatio = 0.0f;
-            expanding = true;
-            closing = false;
+            popupButtonIdx = idx;
+            popupRatio = 0.0f;
+            popupOpening = true;
+            popupClosing = false;
             listItems = items;
-            
+            flingVelY = 0.0f;
+
             ClampScroll();
         }
         
-        private void StartClosingList(int idx)
+        private void StartClosingList()
         {
-            expandButtonIdx = idx;
-            expanding = false;
-            closing = true;
+            if (popupButtonIdx >= 0)
+            {
+                popupOpening = false;
+                popupClosing = popupRatio > 0.0f ? true : false;
+                flingVelY = 0.0f;
+            }
         }
 
         private void AbortList()
         {
-            expandButtonIdx = -1;
-            expandRatio = 0.0f;
-            expanding = false;
-            closing = false;
+            popupButtonIdx = -1;
+            popupButtonNextIdx = -1;
+            popupRatio = 0.0f;
+            popupOpening = false;
+            popupClosing = false;
             listItems = null;
+            flingVelY = 0.0f;
         }
 
         private void OnSequencer()
         {
+            StartClosingList();
             SequencerClicked?.Invoke();
         }
 
         private void OnPianoRoll()
         {
+            StartClosingList();
             PianoRollClicked?.Invoke();
         }
 
         private void OnProjectExplorer()
         {
+            StartClosingList();
             ProjectExplorerClicked?.Invoke();
+        }
+
+        private bool CheckNeedsClosing(int idx)
+        {
+            if (popupButtonIdx >= 0)
+            {
+                StartClosingList();
+                if (popupButtonIdx != idx)
+                {
+                    Debug.Assert(popupRatio > 0.0f);
+                    popupButtonNextIdx = idx;
+                }
+                return true;
+            }
+
+            return false;
         }
 
         private void OnTool()
         {
-            if (expandButtonIdx == (int)ButtonType.Tool)
-            {
-                StartClosingList(expandButtonIdx);
+            if (CheckNeedsClosing((int)ButtonType.Tool))
                 return;
-            }
 
             var items = new ListItem[]
             {
@@ -485,16 +504,15 @@ namespace FamiStudio
             items[2].ImageIndex = (int)ButtonImageIndices.ToolSelect;
             items[2].Text = "Select";
 
+            popupSelectedIdx = 0; // MATTT
+
             StartExpandingList((int)ButtonType.Tool, items);
         }
 
         private void OnSnap()
         {
-            if (expandButtonIdx == (int)ButtonType.Snap)
-            {
-                StartClosingList(expandButtonIdx);
+            if (CheckNeedsClosing((int)ButtonType.Snap))
                 return;
-            }
 
             int minVal = SnapResolution.GetMinSnapValue(App.Project.UsesFamiTrackerTempo);
             int maxVal = SnapResolution.GetMaxSnapValue();
@@ -516,16 +534,15 @@ namespace FamiStudio
             turnOffItem.Text = $"Snap off";
             items[items.Length - 1] = turnOffItem;
 
+            popupSelectedIdx = 0; // MATTT
+
             StartExpandingList((int)ButtonType.Snap, items);
         }
 
         private void OnChannel()
         {
-            if (expandButtonIdx == (int)ButtonType.Channel)
-            {
-                StartClosingList(expandButtonIdx);
+            if (CheckNeedsClosing((int)ButtonType.Channel))
                 return;
-            }
 
             var channelTypes = App.Project.GetActiveChannelList();
             var items = new ListItem[channelTypes.Length];
@@ -539,16 +556,15 @@ namespace FamiStudio
                 items[i] = item;
             }
 
+            popupSelectedIdx = App.SelectedChannelIndex;
+
             StartExpandingList((int)ButtonType.Channel, items);
         }
 
         private void OnInstrument()
         {
-            if (expandButtonIdx == (int)ButtonType.Instrument)
-            {
-                StartClosingList(expandButtonIdx);
+            if (CheckNeedsClosing((int)ButtonType.Instrument))
                 return;
-            }
 
             // DROIDTODO : Add "DPCM" (null) instrument.
             var project = App.Project;
@@ -571,16 +587,15 @@ namespace FamiStudio
                 items[i + 1] = item;
             }
 
+            popupSelectedIdx = Array.FindIndex(items, i => i.Data == App.SelectedInstrument);
+
             StartExpandingList((int)ButtonType.Instrument, items);
         }
 
         private void OnArpeggio()
         {
-            if (expandButtonIdx == (int)ButtonType.Arpeggio)
-            {
-                StartClosingList(expandButtonIdx);
+            if (CheckNeedsClosing((int)ButtonType.Arpeggio))
                 return;
-            }
 
             var project = App.Project;
             var items = new ListItem[project.Arpeggios.Count + 1];
@@ -601,6 +616,8 @@ namespace FamiStudio
                 item.Data = arp;
                 items[i + 1] = item;
             }
+
+            popupSelectedIdx = Array.FindIndex(items, i => i.Data == App.SelectedArpeggio);
 
             StartExpandingList((int)ButtonType.Arpeggio, items);
         }
@@ -663,17 +680,45 @@ namespace FamiStudio
             return ButtonImageIndices.MobileArpeggio;
         }
 
+        private void OnToolChange(int idx)
+        {
+
+        }
+
+        private void OnSnapChange(int idx)
+        {
+
+        }
+
+        private void OnChannelChange(int idx)
+        {
+            // App.SelectedChannelIndex = idx;
+        }
+
+        private void OnInstrumentChange(int idx)
+        {
+            var instrument = listItems[idx].Data as Instrument;
+            // App.SelectedInstrument = instrument;
+        }
+
+        private void OnArpeggioChange(int idx)
+        {
+            var arpeggio = listItems[idx].Data as Arpeggio;
+            // App.SelectedArpeggio = arpeggio;
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList();
 
             c.Transform.GetOrigin(out var ox, out var oy);
 
+            // Background shadow.
             if (IsExpanded)
             {
                 var fullscreenRect = new Rectangle(0, 0, ParentFormSize.Width, ParentFormSize.Height);
                 fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, g.GetSolidBrush(Color.Black, 1.0f, expandRatio * 0.5f));
+                c.FillRectangle(fullscreenRect, g.GetSolidBrush(Color.Black, 1.0f, popupRatio * 0.5f));
             }
 
             // Clear BG.
@@ -704,18 +749,7 @@ namespace FamiStudio
             for (int i = 0; i < (int)ButtonType.Count; i++)
             {
                 var btn = buttons[i];
-
-                var image = btn.GetRenderInfo(out var text, out var tint); // MATTT Return a color here, not brush.
-
-                //var expImage = (int)ButtonImageIndices.ExpandLeft;
-                //var expImage = IsLandscape ? (int)ButtonImageIndices.ExpandLeft : (int)ButtonImageIndices.ExpandUp;
-
-
-                if (!btn.IsNavButton)
-                {
-                    c.DrawRectangle(btn.Rect, ThemeResources.BlackBrush);
-                    //c.DrawBitmapAtlas(bmpButtonAtlas, (int)expImage, btn.ExpandIconX, btn.ExpandIconY, opacity, iconScaleExpFloat);
-                }
+                var image = btn.GetRenderInfo(out var text, out var tint);
 
                 c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
 
@@ -723,23 +757,30 @@ namespace FamiStudio
                     c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);
             }
 
+            // Dividing line.
+            if (IsLandscape)
+                c.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
+            else
+                c.DrawLine(0, 0, Width, 0, ThemeResources.BlackBrush);
+
             g.DrawCommandList(c);
 
             // List items.
-            if (expandButtonIdx >= 0)
+            if (popupButtonIdx >= 0)
             {
                 c = g.CreateCommandList();
 
                 var rect = GetExpandedListRect();
-                c.PushTranslation(rect.Left, rect.Top - expandScrollY);
+                c.PushTranslation(rect.Left, rect.Top - scrollY);
 
                 for (int i = 0; i < listItems.Length; i++)
                 {
                     var item = listItems[i];
                     var brush = g.GetVerticalGradientBrush(item.Color, listItemSize, 0.8f);
+
                     c.FillAndDrawRectangle(item.Rect, brush, ThemeResources.BlackBrush);
                     c.DrawBitmapAtlas(bmpButtonAtlas, item.ImageIndex, item.IconX, item.IconY, 1.0f, iconScaleFloat, Color.Black);
-                    c.DrawText(item.Text, listFont, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
+                    c.DrawText(item.Text, i == popupSelectedIdx ? listFontBold : listFont, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();
@@ -749,7 +790,6 @@ namespace FamiStudio
                 else
                     rect.Height = -rect.Y;
 
-                //c.Transform.GetOrigin(out var ox, out var oy);
                 rect.Offset((int)Math.Round(ox), (int)Math.Round(oy));
                 g.DrawCommandList(c, rect);
             }
@@ -764,16 +804,30 @@ namespace FamiStudio
             captureOperation = op;
         }
 
-        private void DoScroll(int deltaY)
+        private bool ClampScroll()
         {
-            expandScrollY += deltaY;
-            ClampScroll();
-            MarkDirty();
+            var scrolled = true;
+            if (scrollY < minScrollY) { scrollY = minScrollY; scrolled = false; }
+            if (scrollY > maxScrollY) { scrollY = maxScrollY; scrolled = false; }
+            return scrolled;
         }
 
-        private void ClampScroll()
+        private bool DoScroll(int deltaY)
         {
-            expandScrollY = Utils.Clamp(expandScrollY, expandMinScrollY, expandMaxScrollY);
+            scrollY += deltaY;
+            MarkDirty();
+            return ClampScroll();
+        }
+
+        private void UpdateCaptureOperation(int x, int y)
+        {
+            if (captureOperation == CaptureOperation.MobilePan)
+                DoScroll(lastY - y);
+        }
+
+        private void EndCaptureOperation(int x, int y)
+        {
+            captureOperation = CaptureOperation.None;
         }
 
         protected override void OnTouchClick(int x, int y, bool isLong)
@@ -783,31 +837,45 @@ namespace FamiStudio
                 if (btn.Rect.Contains(x, y))
                 {
                     btn.Click();
-                    break;
+                    return;
                 }
             }
-        }
 
-        private void UpdateCaptureOperation(int x, int y)
-        {
-            if (captureOperation == CaptureOperation.MobilePan)
-                DoScroll(lastY - y);
+            if (popupRatio > 0.5f)
+            {
+                var idx = (y - popupRect.Top + scrollY) / listItemSize;
+
+                if (idx >= 0 && idx < listItems.Length)
+                {
+                    buttons[popupButtonIdx].ListItemClick?.Invoke(idx);
+                    popupSelectedIdx = idx;
+                }
+
+                StartClosingList();
+            }
         }
 
         protected override void OnTouchUp(int x, int y)
         {
-            UpdateCaptureOperation(x, y);
-            captureOperation = CaptureOperation.None;
+            EndCaptureOperation(x, y);
         }
 
         protected override void OnTouchDown(int x, int y)
         {
-            if (expandRatio == 1.0f)
+            flingVelY = 0;
+
+            if (popupRatio == 1.0f)
             {
                 var rect = GetExpandedListRect();
                 if (rect.Contains(x, y))
                     StartCaptureOperation(x, y, CaptureOperation.MobilePan);
             }
+        }
+
+        protected override void OnTouchFling(int x, int y, float velX, float velY)
+        {
+            EndCaptureOperation(x, y);
+            flingVelY = velY;
         }
 
         protected override void OnTouchMove(int x, int y)
