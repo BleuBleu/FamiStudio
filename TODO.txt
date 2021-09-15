@@ -6,10 +6,9 @@ Plan:
 - But, most note operation (move, resize, move release) can be done without it.
 - Square selection in sequencer will be a bit tricky, but ok.
 
-1) Figure out how quick access connects to everything
-2) Hook up FamiStudio/controls/forms in the right way
-3) Start with sequencer to prototype controls
-4) 
+1) Migrate SelectedInstrument/SelectedArpeggio.
+2) Start with sequencer to prototype controls
+3) 
 
 Quick access 100% done:
 - Hookup with FamiStudio, then start working on real shit.
@@ -17,6 +16,7 @@ Quick access 100% done:
 - Ensure visible.
 - Align icons better when protrait
 - Delete expand icon
+- Advanced stuff like longpress, etc.
 
 Project explorer:
 - Possible actions: 

@@ -33,6 +33,7 @@ namespace FamiStudio
         private delegate ButtonImageIndices RenderInfoDelegate(out string text, out Color tint);
         private delegate void ListItemClickDelegate(int idx);
         private delegate bool EnabledDelegate();
+        private delegate void EmptyDelegate();
 
         private class Button
         {
@@ -142,12 +143,6 @@ namespace FamiStudio
             "ExpandLeft",
             "ExpandRight",
         };
-
-        public delegate void EmptyDelegate();
-
-        public event EmptyDelegate SequencerClicked;
-        public event EmptyDelegate PianoRollClicked;
-        public event EmptyDelegate ProjectExplorerClicked;
 
         RenderFont buttonFont;
         RenderFont listFont;
@@ -451,19 +446,19 @@ namespace FamiStudio
         private void OnSequencer()
         {
             StartClosingList();
-            SequencerClicked?.Invoke();
+            App.SetActiveControl(App.Sequencer);
         }
 
         private void OnPianoRoll()
         {
             StartClosingList();
-            PianoRollClicked?.Invoke();
+            App.SetActiveControl(App.PianoRoll);
         }
 
         private void OnProjectExplorer()
         {
             StartClosingList();
-            ProjectExplorerClicked?.Invoke();
+            App.SetActiveControl(App.ProjectExplorer);
         }
 
         private bool CheckNeedsClosing(int idx)
@@ -692,7 +687,7 @@ namespace FamiStudio
 
         private void OnChannelChange(int idx)
         {
-            // App.SelectedChannelIndex = idx;
+            App.SelectedChannelIndex = idx;
         }
 
         private void OnInstrumentChange(int idx)
