@@ -1498,7 +1498,7 @@ namespace FamiStudio
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
         }
 
-        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = default)
+        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             atlas.GetElementUVs(bitmapIndex, out var u0, out var v0, out var u1, out var v1);
@@ -1506,7 +1506,7 @@ namespace FamiStudio
             DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, false, tint);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = default)
+        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             if (!bitmaps.TryGetValue(bmp, out var list))
@@ -1868,7 +1868,7 @@ namespace FamiStudio
                     var y0 = inst.y;
                     var x1 = inst.x + inst.sx;
                     var y1 = inst.y + inst.sy;
-                    var tint = inst.tint != default(Color) ? inst.tint : Color.White;
+                    var tint = inst.tint != Color.Empty ? inst.tint : Color.White;
 
                     vtxArray[vtxIdx++] = x0;
                     vtxArray[vtxIdx++] = y0;

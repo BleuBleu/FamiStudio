@@ -16,11 +16,14 @@ namespace FamiStudio
         private Sequencer sequencer;
         private PianoRoll pianoRoll;
         private ProjectExplorer projectExplorer;
+        private QuickAccessBar quickAccessBar;
 
         public Toolbar ToolBar => toolbar;
         public Sequencer Sequencer => sequencer;
         public PianoRoll PianoRoll => pianoRoll;
         public ProjectExplorer ProjectExplorer => projectExplorer;
+        public QuickAccessBar QuickAccessBar => quickAccessBar;
+
         public GLControl[] Controls => controls;
 
         public FamiStudioControls(FamiStudioForm parent)
@@ -29,6 +32,7 @@ namespace FamiStudio
             sequencer = new Sequencer();
             pianoRoll = new PianoRoll();
             projectExplorer = new ProjectExplorer();
+            quickAccessBar = new QuickAccessBar();
 
             controls[0] = toolbar;
             controls[1] = sequencer;

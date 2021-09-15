@@ -20,6 +20,9 @@ namespace FamiStudio
         public Sequencer Sequencer => controls.Sequencer;
         public PianoRoll PianoRoll => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
+        public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
+        public new GLControl ActiveControl => null;
+
         public bool IsLandscape => true;
 
         private GLControl captureControl = null;
@@ -338,6 +341,10 @@ namespace FamiStudio
 
             if (ctrl != null)
                 Cursor = ctrl.Cursor.Current;
+        }
+
+        public void SetActiveControl(GLControl ctrl, bool animate = true)
+        {
         }
     
         public static bool IsKeyDown(Keys k)

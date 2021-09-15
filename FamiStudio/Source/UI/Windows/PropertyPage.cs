@@ -21,6 +21,7 @@ namespace FamiStudio
             public int leftMarging;
             public string sliderFormat;
             public PictureBox warningIcon;
+            public bool visible = true;
         };
 
         private int layoutHeight;
@@ -843,6 +844,11 @@ namespace FamiStudio
             }
         }
 
+        public void SetPropertyVisible(int idx, bool visible)
+        {
+            properties[idx].visible = visible;
+        }
+
         public void AppendText(int idx, string line)
         {
             var textBox = properties[idx].control as TextBox;
@@ -999,7 +1005,7 @@ namespace FamiStudio
             {
                 var prop = properties[i];
 
-                if (prop.label != null)
+                if (prop.visible && prop.label != null)
                 {
                     // This is really ugly. We cant measure the labels unless they are added.
                     Controls.Add(prop.label);
@@ -1016,6 +1022,9 @@ namespace FamiStudio
             {
                 var prop = properties[i];
                 var height = 0;
+
+                if (!prop.visible)
+                    continue;
 
                 // Hack for checkbox that dont scale with Hi-DPI. 
                 if (DpiScaling.Dialog > 1.0f && prop.control is CheckBox)

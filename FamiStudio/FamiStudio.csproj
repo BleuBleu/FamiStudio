@@ -177,6 +177,7 @@
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Desktop\QuickAccessBar.cs" />
     <Compile Include="Source\UI\Windows\AutoScrollTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -341,8 +342,6 @@
     <EmbeddedResource Include="Resources\Cut.png" />
     <EmbeddedResource Include="Resources\Dash%402x.png" />
     <EmbeddedResource Include="Resources\Dash.png" />
-    <EmbeddedResource Include="Resources\DPCMBlack%402x.png" />
-    <EmbeddedResource Include="Resources\DPCMBlack.png" />
     <EmbeddedResource Include="Resources\Drag%402x.png" />
     <EmbeddedResource Include="Resources\Drag.png" />
     <EmbeddedResource Include="Resources\Duplicate%402x.png" />
@@ -421,28 +420,16 @@
     <EmbeddedResource Include="Resources\InstrumentExpanded.png" />
     <EmbeddedResource Include="Resources\InstrumentFds%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentFds.png" />
-    <EmbeddedResource Include="Resources\InstrumentFdsLight%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentFdsLight.png" />
-    <EmbeddedResource Include="Resources\InstrumentLight%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentLight.png" />
     <EmbeddedResource Include="Resources\InstrumentNamco%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentNamco.png" />
-    <EmbeddedResource Include="Resources\InstrumentNamcoLight%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentNamcoLight.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentOpen.png" />
     <EmbeddedResource Include="Resources\InstrumentSunsoft%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentSunsoft.png" />
-    <EmbeddedResource Include="Resources\InstrumentSunsoftLight%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentSunsoftLight.png" />
     <EmbeddedResource Include="Resources\InstrumentVRC6%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentVRC6.png" />
-    <EmbeddedResource Include="Resources\InstrumentVRC6Light%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentVRC6Light.png" />
     <EmbeddedResource Include="Resources\InstrumentVRC7%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentVRC7.png" />
-    <EmbeddedResource Include="Resources\InstrumentVRC7Light%402x.png" />
-    <EmbeddedResource Include="Resources\InstrumentVRC7Light.png" />
     <EmbeddedResource Include="Resources\Loop%402x.png" />
     <EmbeddedResource Include="Resources\Loop.png" />
     <EmbeddedResource Include="Resources\LoopNone%402x.png" />
@@ -542,8 +529,6 @@
     <EmbeddedResource Include="Resources\QwertyPiano.png" />
     <EmbeddedResource Include="Resources\Rec%402x.png" />
     <EmbeddedResource Include="Resources\Rec.png" />
-    <EmbeddedResource Include="Resources\RecRed%402x.png" />
-    <EmbeddedResource Include="Resources\RecRed.png" />
     <EmbeddedResource Include="Resources\Redo%402x.png" />
     <EmbeddedResource Include="Resources\Redo.png" />
     <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
@@ -577,8 +562,6 @@
     <EmbeddedResource Include="Resources\Snap3.png" />
     <EmbeddedResource Include="Resources\Snap4%402x.png" />
     <EmbeddedResource Include="Resources\Snap4.png" />
-    <EmbeddedResource Include="Resources\SnapRed%402x.png" />
-    <EmbeddedResource Include="Resources\SnapRed.png" />
     <EmbeddedResource Include="Resources\Stop%402x.png" />
     <EmbeddedResource Include="Resources\Stop.png" />
     <EmbeddedResource Include="Resources\Transform%402x.png" />

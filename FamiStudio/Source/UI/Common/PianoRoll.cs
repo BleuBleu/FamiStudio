@@ -518,7 +518,7 @@ namespace FamiStudio
             editArpeggio = arpeggio;
             showEffectsPanel = false;
             noteTooltip = "";
-            envelopeValueZoom = 1;
+            envelopeValueZoom = 1;  
             envelopeValueOffset = 0;
 
             ClearSelection();

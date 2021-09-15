@@ -69,7 +69,6 @@ namespace FamiStudio
         int scrollY = 0;
         int mouseLastX = 0;
         int mouseLastY = 0;
-        int selectedChannel = 0;
         float zoom = 1.0f;
         float bitmapScale = 1.0f;
         float channelBitmapScale = 1.0f;
@@ -161,7 +160,6 @@ namespace FamiStudio
         public delegate void EmptyDelegate();
 
         public event TrackBarDelegate PatternClicked;
-        public event ChannelDelegate SelectedChannelChanged;
         public event EmptyDelegate ControlActivated;
         public event EmptyDelegate PatternModified;
         public event EmptyDelegate PatternsPasted;
@@ -181,20 +179,6 @@ namespace FamiStudio
         {
             get { return showSelection; }
             set { showSelection = value; MarkDirty(); }
-        }
-
-        public int SelectedChannel
-        {
-            get { return selectedChannel; }
-            set
-            {
-                if (value >= 0 && value < Song.Channels.Length)
-                {
-                    selectedChannel = value;
-                    SelectedChannelChanged?.Invoke(selectedChannel);
-                    MarkDirty();
-                }
-            }
         }
 
         public bool ShowExpansionIcons
@@ -306,7 +290,6 @@ namespace FamiStudio
             scrollX = 0;
             scrollY = 0;
             zoom = 2.0f;
-            selectedChannel = 0;
             ClearSelection();
             UpdateRenderCoords();
             InvalidatePatternCache();
@@ -453,9 +436,10 @@ namespace FamiStudio
             }
 
             // Track names
+            var selectedChannelIndex = App.SelectedChannelIndex;
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
-                var font = i == selectedChannel ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
+                var font = i == selectedChannelIndex ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
                 c.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackNamePosY, ThemeResources.LightGreyFillBrush2);
             }
 
@@ -988,13 +972,9 @@ namespace FamiStudio
         {
             if (e.Y > headerSizeY && e.Y < Height - scrollBarThickness && e.Button.HasFlag(MouseButtons.Left))
             {
-                var newChannel = Utils.Clamp((e.Y - headerSizeY) / trackSizeY, 0, Song.Channels.Length - 1);
-                if (newChannel != selectedChannel)
-                {
-                    selectedChannel = newChannel;
-                    SelectedChannelChanged?.Invoke(selectedChannel);
-                    MarkDirty();
-                }
+                var newChannelIndex = Utils.Clamp((e.Y - headerSizeY) / trackSizeY, 0, Song.Channels.Length - 1);
+                if (newChannelIndex != App.SelectedChannelIndex)
+                    App.SelectedChannelIndex = newChannelIndex;
             }
 
             // Does not prevent from processing other events.
@@ -2038,7 +2018,7 @@ namespace FamiStudio
                         }
                         App.UndoRedoManager.EndTransaction();
                     }
-                    else if (Song.Channels[selectedChannel].RenamePattern(pattern, newName))
+                    else if (App.SelectedChannel.RenamePattern(pattern, newName))
                     {
                         pattern.Color = newColor;
                         App.UndoRedoManager.EndTransaction();
@@ -2241,7 +2221,6 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            buffer.Serialize(ref selectedChannel);
             buffer.Serialize(ref scrollX);
             buffer.Serialize(ref zoom);
             buffer.Serialize(ref minSelectedChannelIdx);

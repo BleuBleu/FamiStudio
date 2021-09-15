@@ -571,12 +571,11 @@ namespace FamiStudio
             }
             else
             {
-                delta *= 6.0f;
-
                 var prevRatio = expandRatio;
 
                 if (expanded && expandRatio < 1.0f)
                 {
+                    delta *= 6.0f;
                     expandRatio = Math.Min(1.0f, expandRatio + delta);
                     if (prevRatio < 0.5f && expandRatio >= 0.5f)
                         UpdateButtonLayout();
@@ -584,6 +583,7 @@ namespace FamiStudio
                 }
                 else if (!expanded && expandRatio > 0.0f)
                 {
+                    delta *= 10.0f;
                     expandRatio = Math.Max(0.0f, expandRatio - delta);
                     if (prevRatio > 0.5f && expandRatio <= 0.5f)
                         UpdateButtonLayout();

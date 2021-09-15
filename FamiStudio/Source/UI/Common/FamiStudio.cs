@@ -28,8 +28,11 @@ namespace FamiStudio
         private const int MaxAutosaves = 30;
 
         private FamiStudioForm mainForm;
+        
         private Project project;
         private Song song;
+        private int selectedChannelIndex;
+
         private SongPlayer songPlayer;
         private InstrumentPlayer instrumentPlayer;
         private Oscilloscope oscilloscope;
@@ -86,8 +89,7 @@ namespace FamiStudio
         public Song       SelectedSong         => song;
         public Instrument SelectedInstrument   => ProjectExplorer.SelectedInstrument;       // TODO : Centralize all in here?
         public Arpeggio   SelectedArpeggio     => ProjectExplorer.SelectedArpeggio;         // TODO : Centralize all in here?
-        public Channel    SelectedChannel      => song.Channels[Sequencer.SelectedChannel]; // TODO : Centralize all in here?
-        public int        SelectedChannelIndex => Sequencer.SelectedChannel;                // TODO : Centralize all in here?
+        public Channel    SelectedChannel      => song.Channels[SelectedChannelIndex];
 
         public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
         public int  PreviewDPCMSampleId    => previewDPCMSampleId;
@@ -117,7 +119,6 @@ namespace FamiStudio
             mainForm.SetActiveControl(PianoRoll, false);
 
             Sequencer.PatternClicked         += Sequencer_PatternClicked;
-            Sequencer.SelectedChannelChanged += Sequencer_SelectedChannelChanged;
             Sequencer.ControlActivated       += Sequencer_ControlActivated;
             Sequencer.PatternModified        += Sequencer_PatternModified;
             Sequencer.SelectionChanged       += Sequencer_SelectionChanged;
@@ -157,10 +158,6 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleMapped         += ProjectExplorer_DPCMSampleMapped;
             ProjectExplorer.InstrumentsHovered       += ProjectExplorer_InstrumentsHovered;
 
-            QuickAccessBar.SequencerClicked       += QuickAccessBar_SequencerClicked;
-            QuickAccessBar.PianoRollClicked       += QuickAccessBar_PianoRollClicked;
-            QuickAccessBar.ProjectExplorerClicked += QuickAccessBar_ProjectExplorerClicked;
-
             InitializeMetronome();
             InitializeSongPlayer();
             InitializeMidi();
@@ -188,19 +185,25 @@ namespace FamiStudio
 #endif
         }
 
-        private void QuickAccessBar_SequencerClicked()
+        public int SelectedChannelIndex
         {
-            mainForm.SetActiveControl(Sequencer);
+            get { return selectedChannelIndex; }
+            set
+            {
+                if (value >= 0 && value < song.Channels.Length)
+                {
+                    StopInstrument();
+                    selectedChannelIndex = value;
+                    Sequencer.MarkDirty();
+                    PianoRoll.ChangeChannel(selectedChannelIndex);
+                }
+            }
         }
 
-        private void QuickAccessBar_PianoRollClicked()
+        public void SetActiveControl(RenderControl ctrl)
         {
-            mainForm.SetActiveControl(PianoRoll);
-        }
-
-        private void QuickAccessBar_ProjectExplorerClicked()
-        {
-            mainForm.SetActiveControl(ProjectExplorer);
+            Debug.Assert(ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer);
+            mainForm.SetActiveControl(ctrl);
         }
 
         private void ProjectExplorer_InstrumentsHovered(bool showExpansions)
@@ -296,6 +299,7 @@ namespace FamiStudio
         private void ProjectExplorer_ProjectModified()
         {
             RefreshLayout();
+            selectedChannelIndex = 0;
             Sequencer.Reset();
             PianoRoll.Reset();
             PianoRoll.CurrentInstrument = ProjectExplorer.SelectedInstrument;
@@ -364,12 +368,6 @@ namespace FamiStudio
             PianoRoll.ShowSelection = true;
             Sequencer.ShowSelection = false;
             ToolBar.MarkDirty();
-        }
-
-        private void Sequencer_SelectedChannelChanged(int channelIdx)
-        {
-            StopInstrument();
-            PianoRoll.ChangeChannel(channelIdx);
         }
 
         public void Run()
@@ -590,6 +588,7 @@ namespace FamiStudio
             song = project.Songs[0];
             palPlayback = project.PalMode;
 
+            selectedChannelIndex = 0;
             ToolBar.Reset();
             ProjectExplorer.Reset();
             PianoRoll.Reset();
@@ -1009,7 +1008,7 @@ namespace FamiStudio
             var instrument = custom ? customInstrument : ProjectExplorer.SelectedInstrument;
             var arpeggio = custom ? customArpeggio : ProjectExplorer.SelectedArpeggio;
 
-            int channel = Sequencer.SelectedChannel;
+            int channel = selectedChannelIndex;
 
             // Non-recorded notes are the ones that are playing when creating/dragging notes.
             // We dont want to assume DPCM channel when getting a null intrument.
@@ -1049,9 +1048,9 @@ namespace FamiStudio
         {
             if (ProjectExplorer.SelectedInstrument != null &&
                 (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || ProjectExplorer.SelectedInstrument.IsVrc7Instrument) &&
-                song.Channels[Sequencer.SelectedChannel].SupportsInstrument(ProjectExplorer.SelectedInstrument))
+                song.Channels[selectedChannelIndex].SupportsInstrument(ProjectExplorer.SelectedInstrument))
             {
-                instrumentPlayer.ReleaseNote(Sequencer.SelectedChannel);
+                instrumentPlayer.ReleaseNote(selectedChannelIndex);
             }
             else
             {
@@ -1351,7 +1350,7 @@ namespace FamiStudio
                 if (ctrl)
                     GhostChannelMask ^= (1 << (e.KeyCode - Keys.F1));
                 else
-                    Sequencer.SelectedChannel = (e.KeyCode - Keys.F1);
+                    SelectedChannelIndex = (e.KeyCode - Keys.F1);
                 Sequencer.MarkDirty();
             }
             else if ((ctrl && e.KeyCode == Keys.Y) || (ctrl && shift && e.KeyCode == Keys.Z))
@@ -1821,6 +1820,7 @@ namespace FamiStudio
             var oldSong = song;
             var currentFrame = CurrentFrame;
 
+            buffer.Serialize(ref selectedChannelIndex);
             buffer.Serialize(ref ghostChannelMask);
             buffer.Serialize(ref song);
             buffer.Serialize(ref currentFrame);
@@ -1888,6 +1888,7 @@ namespace FamiStudio
             StopSong();
             SeekSong(0);
             this.song = song;
+            selectedChannelIndex = 0;
 
             PianoRoll.SongChanged();
             Sequencer.Reset();
