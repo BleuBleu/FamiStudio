@@ -72,7 +72,8 @@ void Simple_Apu::enable_channel(int idx, bool enable)
 			case expansion_fds: fds.output(enable ? &buf : NULL); break;
 			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
 			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+			//case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_sunsoft: sunsoft.enable_channel(idx, enable ? &buf : NULL); break;
 			case expansion_epsm: epsm.enable_channel(idx, enable ? &buf : NULL); break;
 		}
 	}
@@ -235,6 +236,7 @@ void Simple_Apu::reset()
 	mmc5.reset();
 	namco.reset();
 	sunsoft.reset();
+	epsm.reset();
 }
 
 void Simple_Apu::set_audio_expansion(long exp)

@@ -126,6 +126,9 @@ struct NSF_ADVANCEDOPTIONS
 #define S5B_SQUARE1              26
 #define S5B_SQUARE2              27
 #define S5B_SQUARE3              28
+#define EPSM_SQUARE1             29
+#define EPSM_SQUARE2             30
+#define EPSM_SQUARE3             31
 							     
 #define STATE_VOLUME             0
 #define STATE_PERIOD             1

@@ -41,7 +41,7 @@ namespace FamiStudio
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
-        protected int channelMask = 0xffff;
+        protected int channelMask = 0xfffff;
         protected int playPosition = 0;
         protected NoteLocation playLocation = new NoteLocation(0, 0);
 

@@ -137,8 +137,8 @@ private:
 	Nes_Fds fds;
 	Nes_Mmc5 mmc5;
 	Nes_Namco namco;
-	//Nes_Sunsoft sunsoft; // My version, based on emu2149
-	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
+	Nes_Sunsoft sunsoft; // My version, based on emu2149
+	//Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
 	Nes_EPSM epsm;
 	Blip_Buffer buf;
 	blip_time_t time;

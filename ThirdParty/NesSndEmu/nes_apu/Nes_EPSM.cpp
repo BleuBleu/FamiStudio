@@ -3,7 +3,6 @@
 
 #include "Nes_EPSM.h"
 #include "emu2149.h"
-
 #include BLARGG_SOURCE_BEGIN
 
 Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL)
@@ -55,12 +54,17 @@ void Nes_EPSM::treble_eq(blip_eq_t const& eq)
 
 void Nes_EPSM::enable_channel(int idx, bool enabled)
 {
-	if (psg)
+	if (idx < 3)
 	{
-		if (enabled)
-			PSG_setMask(psg, psg->mask & ~(1 << idx));
-		else
-			PSG_setMask(psg, psg->mask | (1 << idx));
+		//Console.WriteLine("enable idx " + idx);
+	//idx = idx - 3;
+		if (psg)
+		{
+			if (enabled)
+				PSG_setMask(psg, psg->mask & ~(1 << idx));
+			else
+				PSG_setMask(psg, psg->mask | (1 << idx));
+		}
 	}
 }
 

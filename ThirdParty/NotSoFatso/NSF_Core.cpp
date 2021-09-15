@@ -2509,6 +2509,18 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			}
 			break;
 		}
+		case EPSM_SQUARE1:
+		case EPSM_SQUARE2:
+		case EPSM_SQUARE3:
+		{
+			int idx = channel - EPSM_SQUARE1;
+			switch (state)
+			{
+			case STATE_PERIOD: return mWave_FME07[idx].nFreqTimer.W;
+			case STATE_VOLUME: return mWave_FME07[idx].bChannelEnabled ? mWave_FME07[idx].nVolume : 0;
+			}
+			break;
+		}
 	}
 
 	return 0;

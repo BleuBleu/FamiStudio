@@ -914,7 +914,7 @@ namespace FamiStudio
                     {
                         // Toggle Solo
                         if (App.ChannelMask == bit)
-                            App.ChannelMask = 0xffff;
+                            App.ChannelMask = 0xfffff;
                         else
                             App.ChannelMask = bit;
                     }

@@ -195,6 +195,8 @@ namespace FamiStudio
         public const int EPSM_REG_SHAPE = 0x0d;
         public const int EPSM_REG_IO_A = 0x0e;
         public const int EPSM_REG_IO_B = 0x0f;
+        public const int EPSM_REG_RYTHM = 0x10;
+        public const int EPSM_REG_RYTHM_LEVEL = 0x18;
 
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;

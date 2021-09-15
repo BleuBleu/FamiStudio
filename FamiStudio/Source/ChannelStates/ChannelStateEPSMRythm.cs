@@ -14,7 +14,6 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-            Console.WriteLine("Rythm" + channelIdx);
             if (note.IsStop)
             {
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);
@@ -22,17 +21,11 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                var period = GetPeriod();
                 var volume = GetVolume();
 
-                var periodHi = (period >> 8) & 0x0f;
-                var periodLo = (period >> 0) & 0xff;
-
-                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_LO_A + channelIdx * 2);
-                WriteRegister(NesApu.EPSM_DATA0, periodLo);
-                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_HI_A + channelIdx * 2);
-                WriteRegister(NesApu.EPSM_DATA0, periodHi);
-                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);
+                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM);
+                WriteRegister(NesApu.EPSM_DATA0, (1 << channelIdx));
+                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx);
                 WriteRegister(NesApu.EPSM_DATA0, volume);
             }
 
