@@ -1,5 +1,8 @@
-3.1.0
+3.1.2
 =====
+- Test the ASM parsing thing a bit more
+- Square 2 volume issue.
+
 - Flatpak ffmpeg thing.
 
 Linux notes 
