@@ -77,6 +77,10 @@ namespace FamiStudio
             // Sort.
             tempos.Sort((t1, t2) => t1.bpm.CompareTo(t2.bpm));
 
+            //foreach (var tempo in tempos)
+            //{
+            //    Debug.WriteLine($"{tempo.bpm.ToString("n1")} = {string.Join("-", tempo.groove)}");
+            //}
 
             return tempos.ToArray();
         }
