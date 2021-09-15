@@ -13,7 +13,7 @@ namespace FamiStudio
 
         public override void UpdateAPU()
         {
-            if (note.IsStop)
+         /*   if (note.IsStop)
             {
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);
                 WriteRegister(NesApu.EPSM_DATA0, 0);
@@ -33,7 +33,7 @@ namespace FamiStudio
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);
                 WriteRegister(NesApu.EPSM_DATA0, volume);
             }
-
+         */
             base.UpdateAPU();
         }
     };

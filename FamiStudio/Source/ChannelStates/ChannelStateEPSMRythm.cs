@@ -16,8 +16,8 @@ namespace FamiStudio
         {
             if (note.IsStop)
             {
-                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);
-                WriteRegister(NesApu.EPSM_DATA0, 0);
+                //WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_VOL_A + channelIdx);
+                //WriteRegister(NesApu.EPSM_DATA0, 0);
             }
             else if (note.IsMusical)
             {
