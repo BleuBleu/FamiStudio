@@ -33,6 +33,7 @@ TDB:
 	- Env replace? Instrument replace?
 	- Song reorder?
 - Checkbox has no border.
+- Wrong icon for arpeggio
 
 Piano roll:
 - Possible actions: 
@@ -87,6 +88,7 @@ Tools:
 	- Eraser
 	- Select (better way to make square selection?)
 Controls:
+	- HOW TO DUPLICATE? COPY? ****
 	- long-press = custom settings, pattern properties, solo/unsolo.
 	- Swipe = select (unless dragging seek bar itself)
 	- tap = seek

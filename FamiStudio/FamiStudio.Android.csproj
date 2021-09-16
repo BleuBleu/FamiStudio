@@ -398,11 +398,7 @@
     <EmbeddedResource Include="Resources\EnvelopePitch%404x.png" />
     <EmbeddedResource Include="Resources\EnvelopeVolume%404x.png" />
     <EmbeddedResource Include="Resources\EnvelopeWave%404x.png" />
-    <EmbeddedResource Include="Resources\ExpandDown.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
-    <EmbeddedResource Include="Resources\ExpandLeft.png" />
-    <EmbeddedResource Include="Resources\ExpandRight.png" />
-    <EmbeddedResource Include="Resources\ExpandUp.png" />
     <EmbeddedResource Include="Resources\Export%402x.png" />
     <EmbeddedResource Include="Resources\ExportFamiStudioEngine%402x.png" />
     <EmbeddedResource Include="Resources\ExportFamiTone2%402x.png" />

@@ -107,10 +107,6 @@ namespace FamiStudio
             MobileInstrumentVRC6,
             MobileInstrumentVRC7,
             MobileArpeggio,
-            ExpandUp,
-            ExpandDown,
-            ExpandLeft,
-            ExpandRight,
             Count
         };
 
@@ -137,11 +133,7 @@ namespace FamiStudio
             "InstrumentSunsoft",
             "InstrumentVRC6",
             "InstrumentVRC7",
-            "MobileArpeggio",
-            "ExpandUp",
-            "ExpandDown",
-            "ExpandLeft",
-            "ExpandRight",
+            "MobileArpeggio"
         };
 
         RenderFont buttonFont;
@@ -185,7 +177,6 @@ namespace FamiStudio
         private int listIconPos;
 
         private float iconScaleFloat    = 1.0f;
-        private float iconScaleExpFloat = 1.0f;
 
         public int   LayoutSize  => buttonSize;
         public float ExpandRatio => popupRatio;
@@ -224,9 +215,7 @@ namespace FamiStudio
             expandIconPosLeft = ScaleCustom(DefaultExpandIconPosLeft, scale);
             listItemSize      = ScaleCustom(DefaultListItemSize, scale);
             listIconPos       = ScaleCustom(DefaultListIconPos, scale);
-
             iconScaleFloat    = ScaleCustomFloat(DefaultIconSize / (float)bmpButtonAtlas.GetElementSize(0).Width, scale);
-            iconScaleExpFloat = ScaleCustomFloat(DefaultExpandIconSize / (float)bmpButtonAtlas.GetElementSize((int)ButtonImageIndices.ExpandUp).Width, scale);
         }
 
         protected override void OnRenderTerminated()
@@ -693,13 +682,13 @@ namespace FamiStudio
         private void OnInstrumentChange(int idx)
         {
             var instrument = listItems[idx].Data as Instrument;
-            // App.SelectedInstrument = instrument;
+            App.SelectedInstrument = instrument;
         }
 
         private void OnArpeggioChange(int idx)
         {
             var arpeggio = listItems[idx].Data as Arpeggio;
-            // App.SelectedArpeggio = arpeggio;
+            App.SelectedArpeggio = arpeggio;
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -838,12 +827,17 @@ namespace FamiStudio
 
             if (popupRatio > 0.5f)
             {
-                var idx = (y - popupRect.Top + scrollY) / listItemSize;
+                var rect = GetExpandedListRect();
 
-                if (idx >= 0 && idx < listItems.Length)
+                if (rect.Contains(x, y))
                 {
-                    buttons[popupButtonIdx].ListItemClick?.Invoke(idx);
-                    popupSelectedIdx = idx;
+                    var idx = (y - rect.Top + scrollY) / listItemSize;
+
+                    if (idx >= 0 && idx < listItems.Length)
+                    {
+                        buttons[popupButtonIdx].ListItemClick?.Invoke(idx);
+                        popupSelectedIdx = idx;
+                    }
                 }
 
                 StartClosingList();
