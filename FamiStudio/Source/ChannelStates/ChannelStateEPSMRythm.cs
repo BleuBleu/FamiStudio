@@ -25,8 +25,8 @@ namespace FamiStudio
 
                 WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM);
                 WriteRegister(NesApu.EPSM_DATA0, (1 << channelIdx));
-                //WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx);
-                //WriteRegister(NesApu.EPSM_DATA0, volume);
+                WriteRegister(NesApu.EPSM_ADDR0, NesApu.EPSM_REG_RYTHM_LEVEL + channelIdx);
+                WriteRegister(NesApu.EPSM_DATA0, 0xc0 | volume << 1);
             }
 
             base.UpdateAPU();
