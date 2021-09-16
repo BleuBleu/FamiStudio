@@ -385,6 +385,7 @@
     <EmbeddedResource Include="Resources\DuplicateMove%402x.png" />
     <EmbeddedResource Include="Resources\EffectCutDelay%402x.png" />
     <EmbeddedResource Include="Resources\EffectDutyCycle%402x.png" />
+    <EmbeddedResource Include="Resources\EffectFrame%402x.png" />
     <EmbeddedResource Include="Resources\EffectMod%402x.png" />
     <EmbeddedResource Include="Resources\EffectNoteDelay%402x.png" />
     <EmbeddedResource Include="Resources\EffectPitch%402x.png" />
