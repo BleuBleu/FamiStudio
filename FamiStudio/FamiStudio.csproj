@@ -336,8 +336,6 @@
     <EmbeddedResource Include="Resources\ConfigUserInterface.png" />
     <EmbeddedResource Include="Resources\Copy%402x.png" />
     <EmbeddedResource Include="Resources\Copy.png" />
-    <EmbeddedResource Include="Resources\CustomPattern%402x.png" />
-    <EmbeddedResource Include="Resources\CustomPattern.png" />
     <EmbeddedResource Include="Resources\Cut%402x.png" />
     <EmbeddedResource Include="Resources\Cut.png" />
     <EmbeddedResource Include="Resources\Dash%402x.png" />

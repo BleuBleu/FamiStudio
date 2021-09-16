@@ -138,7 +138,6 @@ namespace FamiStudio
         {
             ForceDisplay,
             LoopPoint,
-            CustomLength,
             Instanciate,
             Duplicate,
             DuplicateMove,
@@ -149,7 +148,6 @@ namespace FamiStudio
         {
             "GhostSmall",
             "LoopSmallFill",
-            "CustomPattern",
             "Instance",
             "Duplicate",
             "DuplicateMove"
