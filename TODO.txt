@@ -14,8 +14,6 @@ Quick access 100% done:
 - Hookup with FamiStudio, then start working on real shit.
 - Show some kind of scroll bar.
 - Ensure visible.
-- Align icons better when protrait
-- Delete expand icon
 - Advanced stuff like longpress, etc.
 
 Project explorer:

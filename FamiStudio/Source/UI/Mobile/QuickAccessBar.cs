@@ -22,9 +22,6 @@ namespace FamiStudio
         const int DefaultIconPos2          = 24;
         const int DefaultTextSize          = 24; // MATTT : Implement same font size solution everywhere.
         const int DefaultTextPosTop        = 108;
-        const int DefaultExpandIconPosTop  = 0;
-        const int DefaultExpandIconPosLeft = 56;
-        const int DefaultExpandIconSize    = 32;
 
         const int DefaultListItemTextSize  = 36; // MATTT : Implement same font size solution everywhere.
         const int DefaultListItemSize      = 120;
@@ -40,8 +37,6 @@ namespace FamiStudio
             public Rectangle Rect;
             public int IconX;
             public int IconY;
-            public int ExpandIconX;
-            public int ExpandIconY;
             public int TextX;
             public int TextY;
             public bool IsNavButton = false;
@@ -171,12 +166,10 @@ namespace FamiStudio
         private int buttonIconPos1;
         private int buttonIconPos2;
         private int textPosTop;
-        private int expandIconPosTop;
-        private int expandIconPosLeft;
         private int listItemSize;
         private int listIconPos;
 
-        private float iconScaleFloat    = 1.0f;
+        private float iconScaleFloat = 1.0f;
 
         public int   LayoutSize  => buttonSize;
         public float ExpandRatio => popupRatio;
@@ -211,8 +204,6 @@ namespace FamiStudio
             buttonIconPos1    = ScaleCustom(DefaultIconPos1, scale);
             buttonIconPos2    = ScaleCustom(DefaultIconPos2, scale);
             textPosTop        = ScaleCustom(DefaultTextPosTop, scale);
-            expandIconPosTop  = ScaleCustom(DefaultExpandIconPosTop, scale);
-            expandIconPosLeft = ScaleCustom(DefaultExpandIconPosLeft, scale);
             listItemSize      = ScaleCustom(DefaultListItemSize, scale);
             listIconPos       = ScaleCustom(DefaultListIconPos, scale);
             iconScaleFloat    = ScaleCustomFloat(DefaultIconSize / (float)bmpButtonAtlas.GetElementSize(0).Width, scale);
@@ -313,8 +304,6 @@ namespace FamiStudio
                     btn.Rect = new Rectangle(0, x, buttonSize, size);
                     btn.IconX = buttonIconPos2;
                     btn.IconY = x + buttonIconPos1;
-                    btn.ExpandIconX = 0;
-                    btn.ExpandIconY = x + expandIconPosLeft;
                     btn.TextX = 0;
                     btn.TextY = x + textPosTop;
                 }
@@ -322,9 +311,7 @@ namespace FamiStudio
                 {
                     btn.Rect = new Rectangle(x, 0, size, buttonSize);
                     btn.IconX = x + buttonIconPos2;
-                    btn.IconY = buttonIconPos2;
-                    btn.ExpandIconX = x + expandIconPosLeft;
-                    btn.ExpandIconY = expandIconPosTop;
+                    btn.IconY = buttonIconPos1;
                     btn.TextX = x;
                     btn.TextY = textPosTop;
                 }
