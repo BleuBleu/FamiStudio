@@ -195,25 +195,23 @@ namespace FamiStudio
             else
                 gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.Left, ctrl.Top, ctrl.Width, ctrl.Height), height);
 
+            if (fullscreenViewport)
+                gfx.Transform.PushTranslation(ctrl.Left, ctrl.Top);
+
             var t0 = DateTime.Now;
-            {
-                if (fullscreenViewport)
-                    gfx.Transform.PushTranslation(ctrl.Left, ctrl.Top);
-
-                ctrl.Render(gfx);
-
-                if (fullscreenViewport)
-                    gfx.Transform.PopTransform();
-
-                ctrl.ClearDirtyFlag();
-            }
+            ctrl.Render(gfx);
             var t1 = DateTime.Now;
 
             var cmd = gfx.CreateCommandList();
             cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontVeryLargeBold, 10, 10, debugBrush);
             gfx.DrawCommandList(cmd);
 
+            if (fullscreenViewport)
+                gfx.Transform.PopTransform();
+
             gfx.EndDrawControl();
+
+            ctrl.ClearDirtyFlag();
         }
 
         //private GLBrush GetShadowBrush(float alpha, bool horizontal, int sign)
