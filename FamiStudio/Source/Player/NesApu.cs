@@ -176,8 +176,8 @@ namespace FamiStudio
 
         public const int EPSM_ADDR0         = 0xc000;
         public const int EPSM_DATA0         = 0xe000;
-        public const int EPSM_ADDR1         = 0x401e;
-        public const int EPSM_DATA1         = 0x401f;
+        public const int EPSM_ADDR1         = 0xc002;
+        public const int EPSM_DATA1         = 0xe002;
 
         public const int EPSM_REG_LO_A = 0x00;
         public const int EPSM_REG_HI_A = 0x01;
@@ -416,8 +416,190 @@ namespace FamiStudio
                     WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
                     break;
                 case APU_EXPANSION_EPSM:
+                    int waitcycles = 400;
                     WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
                     WriteRegister(apuIdx, EPSM_DATA0, 0x38); // No noise, just 3 tones for now.
+
+                    /*WriteRegister(apuIdx, EPSM_ADDR0, 0x29);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x80);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x27);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x00);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0xB4);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xC0);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0xB5);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xC0);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0xB6);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xC0);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0xB4);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xC0);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0xB5);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xC0);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0xB6);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xC0);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x07);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xFF);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x11);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x3F);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x18);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x19);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x1A);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x1B);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x1C);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x1D);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x00);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xA1);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x0C);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xFF);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x0D);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x1F);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x80);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x88);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x84);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x8C);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x81);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x89);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x85);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x8D);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x82);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x8A);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x86);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x8E);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x80);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x88);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x84);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x8C);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x81);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x89);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x85);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x8D);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x82);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x8A);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x86);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+                    SkipCycles(apuIdx, waitcycles);
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x8E);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x10);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x01);
+                    WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x38); // No noise, just 3 tones for now.*/
+
+
                     break;
             }
         }

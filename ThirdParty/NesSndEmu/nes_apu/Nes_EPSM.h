@@ -5,26 +5,29 @@
 #define NES_EPSM_H
 
 #include "Nes_Apu.h"
+#include "ym3438.h"
+#include <array>
 
 class Nes_EPSM {
 public:
 	Nes_EPSM();
 	~Nes_EPSM();
-	
+
 	// See Nes_Apu.h for reference
 	void reset();
-	void volume( double );
-	void output( Blip_Buffer* );
+	void volume(double);
+	void output(Blip_Buffer*);
 	void treble_eq(blip_eq_t const& eq);
 	void enable_channel(int idx, bool enabled);
-	void end_frame( cpu_time_t );
+	void end_frame(cpu_time_t);
 	void mix_samples(blip_sample_t* sample_buffer, long sample_cnt);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
-	
-	enum { psg_clock  = 4000000 };
-	enum { reg_select = 0xc000  };
-	enum { reg_write  = 0xe000 };
-	enum { reg_range  = 0x2000 };
+	void WriteToChip(uint8_t a, uint8_t d, cpu_time_t time);
+
+	enum { psg_clock = 4000000 };
+	enum { reg_select = 0xc000 };
+	enum { reg_write = 0xe000 };
+	enum { reg_range = 0x2000 };
 
 	enum { shadow_internal_regs_count = 16 };
 	void start_seeking();
@@ -33,14 +36,31 @@ public:
 
 private:
 	// noncopyable
-	Nes_EPSM( const Nes_EPSM& );
-	Nes_EPSM& operator = ( const Nes_EPSM& );
-	
+	Nes_EPSM(const Nes_EPSM&);
+	Nes_EPSM& operator = (const Nes_EPSM&);
+
 	void reset_psg();
+	void reset_opn2();
 
 	int reg;
+	uint8_t a0;
+	uint8_t a1;
 	double vol;
 	struct __PSG* psg;
+	ym3438_t opn2;
+
+
+	struct InputEntry
+	{
+		uint8_t addr = 0;
+		uint8_t data = 0;
+		uint8_t time = 0;
+		uint8_t wrote = 0;
+	};
+	static constexpr uint8_t INPUT_BUFFER_SIZE = 24;
+	using InputBuffer = std::array<InputEntry, INPUT_BUFFER_SIZE>;
+	InputBuffer _inputBuffer;
+
 	Blip_Buffer* output_buffer;
 	cpu_time_t last_time;
 	int last_amp;
@@ -50,4 +70,3 @@ private:
 };
 
 #endif
-

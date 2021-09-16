@@ -30,6 +30,8 @@
 //#include "stdafx.h"
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "ym3438.h"
 #include "fmopn_2608rom.h"
 
@@ -1429,6 +1431,19 @@ void OPN2_Reset(ym3438_t *chip)
 		 OPNmod_RhythmUpdateVolume(chip, i);
 	 }
 }
+
+ym3438_t* OPN_New()
+{
+    ym3438_t* opn2;
+
+    opn2 = (ym3438_t*)malloc(sizeof(ym3438_t));
+    if (opn2 == NULL)
+        return NULL;
+
+    return opn2;
+}
+
+
 
 void OPN2_SetChipType(Bit32u type)
 {

@@ -51,7 +51,7 @@ typedef int16_t         Bit16s;
 typedef uint8_t         Bit8u;
 typedef int8_t          Bit8s;
 
-typedef struct
+typedef struct __ym3438_t
 {
     Bit32u cycles;
     Bit32u channel;
@@ -216,6 +216,7 @@ void OPN2_SetChipType(Bit32u type);
 void OPN2_Clock(ym3438_t *chip, Bit16s *buffer);
 void OPN2_Write(ym3438_t *chip, Bit32u port, Bit8u data);
 void OPN2_SetTestPin(ym3438_t *chip, Bit32u value);
+ym3438_t *OPN_New();
 Bit32u OPN2_ReadTestPin(ym3438_t *chip);
 Bit32u OPN2_ReadIRQPin(ym3438_t *chip);
 Bit8u OPN2_Read(ym3438_t *chip, Bit32u port);
