@@ -178,31 +178,7 @@ namespace FamiStudio
             return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height);
         }
 
-        private void ChangeBitmapBackground(Bitmap bmp, Color color)
-        {
-            // DROIDTODO.
-
-            //for (int y = 0; y < bmp.Height; y++)
-            //{
-            //    for (int x = 0; x < bmp.Width; x++)
-            //    {
-            //        var pixel = bmp.GetPixel(x, y);
-
-            //        var r = (byte)Utils.Lerp(color.R, pixel.R, pixel.A / 255.0f);
-            //        var g = (byte)Utils.Lerp(color.G, pixel.G, pixel.A / 255.0f);
-            //        var b = (byte)Utils.Lerp(color.B, pixel.B, pixel.A / 255.0f);
-
-            //        bmp.SetPixel(x, y, new Android.Graphics.Color(r, g, b));
-            //    }
-            //}
-        }
-
         public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
-        {
-            return CreateBitmapAtlasFromResources(names, Color.Empty);
-        }
-
-        public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names, Color backgroundOverride)
         {
             var bitmaps = new Bitmap[names.Length];
             var elementSizeX = 0;
@@ -211,9 +187,6 @@ namespace FamiStudio
             for (int i = 0; i < names.Length; i++)
             {
                 var bmp = LoadBitmapFromResourceWithScaling(names[i]);
-
-                if (backgroundOverride != Color.Empty)
-                    ChangeBitmapBackground(bmp, backgroundOverride);
 
                 elementSizeX = Math.Max(elementSizeX, bmp.Width);
                 elementSizeY = Math.Max(elementSizeY, bmp.Height);

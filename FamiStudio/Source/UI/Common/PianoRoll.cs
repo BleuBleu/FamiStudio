@@ -145,7 +145,7 @@ namespace FamiStudio
         RenderBitmapAtlas bmpMiscAtlas;
         RenderBitmapAtlas bmpSnapResolutionAtlas;
         RenderBitmapAtlas bmpEffectAtlas;
-        RenderBitmapAtlas bmpEffectFillAtlas;
+        //RenderBitmapAtlas bmpEffectFillAtlas;
         RenderGeometry[] stopNoteGeometry        = new RenderGeometry[2]; // [1] is used to draw arps.
         RenderGeometry[] stopReleaseNoteGeometry = new RenderGeometry[2]; // [1] is used to draw arps.
         RenderGeometry[] releaseNoteGeometry     = new RenderGeometry[2]; // [1] is used to draw arps.
@@ -188,7 +188,8 @@ namespace FamiStudio
             "EffectNoteDelay",
             "EffectCutDelay",
             "EffectVolume",
-            "EffectDutyCycle" // MATTT : Wrong
+            "EffectDutyCycle", // MATTT : Wrong
+            "EffectFrame" // Special background rectangle image.
         };
 
         enum CaptureOperation
@@ -761,7 +762,7 @@ namespace FamiStudio
 
             Debug.Assert(MiscImageNames.Length == (int)MiscImageIndices.Count);
             Debug.Assert(SnapResolution.ImageNames.Length == (int)SnapResolution.Max);
-            Debug.Assert(EffectImageNames.Length == Note.EffectCount);
+            Debug.Assert(EffectImageNames.Length == Note.EffectCount + 1);
 
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, whiteKeySizeX, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
             blackKeyBrush = g.CreateHorizontalGradientBrush(0, blackKeySizeX, Theme.DarkGreyFillColor1, Theme.DarkGreyFillColor2);
@@ -782,7 +783,7 @@ namespace FamiStudio
             bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
             bmpSnapResolutionAtlas = g.CreateBitmapAtlasFromResources(SnapResolution.ImageNames);
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
-            bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
+            //bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
             fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
 
             if (PlatformUtils.IsMobile)
@@ -830,7 +831,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref bmpMiscAtlas);
             Utils.DisposeAndNullify(ref bmpSnapResolutionAtlas);
             Utils.DisposeAndNullify(ref bmpEffectAtlas);
-            Utils.DisposeAndNullify(ref bmpEffectFillAtlas);
+            //Utils.DisposeAndNullify(ref bmpEffectFillAtlas);
             Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
             Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
             Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
@@ -1163,14 +1164,14 @@ namespace FamiStudio
             {
                 var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
 
-                r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, effectIconPosX, effectIconPosY, 1.0f, bitmapScale);
+                r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, effectIconPosX, effectIconPosY, 1.0f, bitmapScale, Theme.LightGreyFillColor1);
                 if (!PlatformUtils.IsMobile)
-                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1, headerIconsPosY, maximized ? 1.0f : 0.3f);
+                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1, headerIconsPosY, maximized ? 1.0f : 0.3f, 1.0f, Theme.LightGreyFillColor1);
 
                 if (IsSnappingAllowed && !PlatformUtils.IsMobile)
                 {
                     r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Snap, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1, headerIconsPosY, IsSnappingEnabled || App.IsRecording ? 1.0f : 0.3f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1);
-                    r.cc.DrawBitmapAtlas(bmpSnapResolutionAtlas, (int)snapResolution, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 3 - 1, headerIconsPosY, IsSnappingEnabled ? 1.0f : 0.3f);
+                    r.cc.DrawBitmapAtlas(bmpSnapResolutionAtlas, (int)snapResolution, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 3 - 1, headerIconsPosY, IsSnappingEnabled ? 1.0f : 0.3f, 1.0f, Theme.LightGreyFillColor1);
                 }
 
                 if (showEffectsPanel)
@@ -1185,7 +1186,7 @@ namespace FamiStudio
 
                         r.cc.PushTranslation(0, effectButtonY);
                         r.cc.DrawLine(0, -1, whiteKeySizeX, -1, ThemeResources.BlackBrush);
-                        r.cc.DrawBitmapAtlas(bmpEffectAtlas, effectIdx, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale);
+                        r.cc.DrawBitmapAtlas(bmpEffectAtlas, effectIdx, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyFillColor1);
                         r.cc.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeResources.FontSmallBold : ThemeResources.FontSmall, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, effectButtonSizeY);
                         r.cc.PopTransform();
                     }
@@ -1204,7 +1205,7 @@ namespace FamiStudio
                 {
                     r.cc.PushTranslation(0, headerSizeY);
                     r.cc.DrawLine(0, -1, whiteKeySizeX, -1, ThemeResources.BlackBrush);
-                    r.cc.DrawBitmapAtlas(bmpEffectAtlas, Note.EffectVolume, effectIconPosX, effectIconPosY);
+                    r.cc.DrawBitmapAtlas(bmpEffectAtlas, Note.EffectVolume, effectIconPosX, effectIconPosY, 1.0f, 1.0f, Theme.LightGreyFillColor1);
                     r.cc.DrawText(Note.EffectNames[Note.EffectVolume], ThemeResources.FontSmallBold, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, effectButtonSizeY);
                     r.cc.PopTransform();
 
@@ -2164,11 +2165,13 @@ namespace FamiStudio
                                             if (fx == Note.EffectVolumeSlide)
                                                 continue;
 
-                                            bool drawOpaque = !showEffectsPanel || fx == selectedEffectIdx || fx == Note.EffectVibratoDepth && selectedEffectIdx == Note.EffectVibratoSpeed || fx == Note.EffectVibratoSpeed && selectedEffectIdx == Note.EffectVibratoDepth;
+                                            var drawOpaque = !showEffectsPanel || fx == selectedEffectIdx || fx == Note.EffectVibratoDepth && selectedEffectIdx == Note.EffectVibratoSpeed || fx == Note.EffectVibratoSpeed && selectedEffectIdx == Note.EffectVibratoDepth;
 
-                                            int iconX = GetPixelForNote(channel.Song.GetPatternStartAbsoluteNoteIndex(p, time)) + (int)(noteSizeX / 2) - effectIconSizeX / 2;
-                                            int iconY = effectPosY + effectIconPosY;
-                                            r.cf.DrawBitmapAtlas(bmpEffectFillAtlas, fx, iconX, iconY, drawOpaque ? 1.0f : 0.4f);
+                                            var iconX = GetPixelForNote(channel.Song.GetPatternStartAbsoluteNoteIndex(p, time)) + (int)(noteSizeX / 2) - effectIconSizeX / 2;
+                                            var iconY = effectPosY + effectIconPosY;
+
+                                            r.cf.DrawBitmapAtlas(bmpEffectAtlas, EffectImageNames.Length - 1, iconX, iconY, 1.0f, 1.0f, drawOpaque ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1);
+                                            r.cf.DrawBitmapAtlas(bmpEffectAtlas, fx, iconX, iconY, drawOpaque ? 1.0f : 0.4f, 1.0f, Theme.LightGreyFillColor1);
                                             effectPosY += effectIconSizeX + effectIconPosY + 1;
                                         }
                                     }

@@ -162,49 +162,7 @@ namespace FamiStudio
             return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height);
         }
 
-        private unsafe void ChangeBitmapBackground(Bitmap bmp, Color color)
-        {
-#if FAMISTUDIO_WINDOWS
-            for (int y = 0; y < bmp.Height; y++)
-            {
-                for (int x = 0; x < bmp.Width; x++)
-                {
-                    var pixel = bmp.GetPixel(x, y);
-
-                    var r = (byte)Utils.Lerp(color.R, pixel.R, pixel.A / 255.0f);
-                    var g = (byte)Utils.Lerp(color.G, pixel.G, pixel.A / 255.0f);
-                    var b = (byte)Utils.Lerp(color.B, pixel.B, pixel.A / 255.0f);
-
-                    bmp.SetPixel(x, y, Color.FromArgb(r, g, b));
-                }
-            }
-#else
-            var p = (int*)bmp.Pixels.ToPointer();
-
-            for (int y = 0; y < bmp.Height; y++)
-            {
-                for (int x = 0; x < bmp.Width; x++)
-                {
-                    var pixel = Color.FromArgb(p[x]);
-
-                    var r = (byte)Utils.Lerp(color.R, pixel.B, pixel.A / 255.0f);
-                    var g = (byte)Utils.Lerp(color.G, pixel.G, pixel.A / 255.0f);
-                    var b = (byte)Utils.Lerp(color.B, pixel.R, pixel.A / 255.0f);
-
-                    p[x] = Color.FromArgb(b, g, r).ToArgb();
-                }
-
-                p += bmp.Rowstride / 4;
-            }
-#endif
-        }
-
         public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
-        {
-            return CreateBitmapAtlasFromResources(names, Color.Empty);
-        }
-
-        public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names, Color backgroundOverride)
         {
             var bitmaps = new Bitmap[names.Length];
             var elementSizeX = 0;
@@ -213,9 +171,6 @@ namespace FamiStudio
             for (int i = 0; i < names.Length; i++)
             {
                 var bmp = LoadBitmapFromResourceWithScaling(names[i]);
-
-                if (backgroundOverride != Color.Empty)
-                    ChangeBitmapBackground(bmp, backgroundOverride);
 
                 elementSizeX = Math.Max(elementSizeX, bmp.Width);
                 elementSizeY = Math.Max(elementSizeY, bmp.Height);

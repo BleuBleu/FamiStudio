@@ -350,6 +350,8 @@
     <EmbeddedResource Include="Resources\EffectCutDelay.png" />
     <EmbeddedResource Include="Resources\EffectDutyCycle%402x.png" />
     <EmbeddedResource Include="Resources\EffectDutyCycle.png" />
+    <EmbeddedResource Include="Resources\EffectFrame%402x.png" />
+    <EmbeddedResource Include="Resources\EffectFrame.png" />
     <EmbeddedResource Include="Resources\EffectMod%402x.png" />
     <EmbeddedResource Include="Resources\EffectMod.png" />
     <EmbeddedResource Include="Resources\EffectNoteDelay%402x.png" />

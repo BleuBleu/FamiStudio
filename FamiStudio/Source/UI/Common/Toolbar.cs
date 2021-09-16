@@ -960,7 +960,7 @@ namespace FamiStudio
 
                             if (specialCharacter.BmpIndex != SpecialCharImageIndices.Count)
                             {
-                                c.DrawBitmapAtlas(bmpSpecialCharAtlas, (int)specialCharacter.BmpIndex, posX, posY + specialCharacter.OffsetY);
+                                c.DrawBitmapAtlas(bmpSpecialCharAtlas, (int)specialCharacter.BmpIndex, posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyFillColor1);
                             }
                             else
                             {
