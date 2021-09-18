@@ -338,13 +338,26 @@ namespace FamiStudio
 
         public int AddLabel(string label, string value, bool multiline = false, string tooltip = null)
         {
-            Debug.Assert(false); // TODO : Store the label and apply it to the next control.
-            return 0;
+            var prop = new Property();
+            var textView = CreateTextView(value, Resource.Style.LightGrayTextMedium);
+
+            prop.type = PropertyType.TextBox;
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
+            prop.controls.Add(textView);
+            prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
+            prop.layout = CreateLinearLayout(true, true, false, 10);
+            prop.layout.SetOnTouchListener(this);
+            prop.layout.AddView(prop.label);
+            if (prop.tooltip != null)
+                prop.layout.AddView(prop.tooltip);
+            prop.layout.AddView(textView);
+            properties.Add(prop);
+
+            return properties.Count - 1;
         }
 
         public int AddLinkLabel(string label, string value, string url, string tooltip = null)
         {
-            Debug.Assert(false); // TODO : Store the label and apply it to the next control.
             return 0;
         }
 
@@ -598,9 +611,9 @@ namespace FamiStudio
             var prop = properties[idx];
 
             if (prop.label != null)
-                prop.label.Enabled = !prop.label.Enabled;
+                prop.label.Enabled = enabled;
             if (prop.tooltip != null)
-                prop.tooltip.Enabled = !prop.tooltip.Enabled;
+                prop.tooltip.Enabled = enabled;
 
             foreach (var ctrl in prop.controls)
                 ctrl.Enabled = enabled;
@@ -702,6 +715,9 @@ namespace FamiStudio
                     break;
                 case PropertyType.Slider:
                     (prop.controls[0] as SeekBar).Progress = (int)(double)value;
+                    break;
+                case PropertyType.Label:
+                    (prop.controls[0] as TextView).Text = (string)value;
                     break;
             }
         }

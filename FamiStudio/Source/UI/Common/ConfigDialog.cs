@@ -158,8 +158,8 @@ namespace FamiStudio
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
                     page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB"); // 1
                     page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB"); // 2
-                    page.AddButton(null, "Reset to default", "Resets this expansion to the default settings."); // 3
-                    page.AddLabel(null, "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4
+                    page.AddButton(PlatformUtils.IsDesktop ? null : "Reset", "Reset to default", "Resets this expansion to the default settings."); // 3
+                    page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4
                     page.PropertyChanged += MixerPage_PropertyChanged;
                     page.PropertyClicked += MixerPage_PropertyClicked;
                     break;
