@@ -4,9 +4,11 @@ using System.Reflection;
 using Android.Widget;
 using Android.App;
 using Android.Content;
+using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Opengl;
 using Android.Runtime;
+using Android.Util;
 using Android.Views;
 using AndroidX.Core.View;
 using AndroidX.AppCompat.App;
@@ -15,10 +17,6 @@ using Google.Android.Material.BottomSheet;
 
 using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
-using Android.Graphics.Drawables;
-using AndroidX.CoordinatorLayout.Widget;
-using Android.Util;
-using System.Collections.Generic;
 
 namespace FamiStudio
 {
