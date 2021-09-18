@@ -11,34 +11,44 @@ using Android.Views;
 using AndroidX.Core.View;
 using AndroidX.AppCompat.App;
 using Javax.Microedition.Khronos.Opengles;
+using Google.Android.Material.BottomSheet;
 
 using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
+using Android.Graphics.Drawables;
+using AndroidX.CoordinatorLayout.Widget;
+using Android.Util;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | Android.Content.PM.ConfigChanges.ScreenSize)]
     public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
     {
-        public static FamiStudioForm Instance { get; private set; }
-        public object DialogUserData => dialogUserData;
-        public bool   IsAsyncDialogInProgress => dialogRequestCode >= 0;
+        private LinearLayout linearLayout;
+        private GLSurfaceView glSurfaceView;
 
-        LinearLayout  linearLayout;
-        GLSurfaceView glSurfaceView;
-
-        FamiStudio    famistudio;
-
-        private bool glThreadIsRunning;
-        private int dialogRequestCode = -1;
-        private object dialogUserData = null;
-        private Action<DialogResult> dialogCallback;
-        private object renderLock = new object();
+        private FamiStudio famistudio;
         private FamiStudioControls controls;
+
+        // For context menus.
+        BottomSheetDialog contextMenuDialog;
+        Action<int> contextMenuCallback;
+
+        // For property or multi-property dialogs.
+        private int dialogRequestCode = -1;
+        private bool glThreadIsRunning;
+        private long lastFrameTime = -1;
+        private object dialogUserData = null;
+        private object renderLock = new object();
+        private Action<DialogResult> dialogCallback;
         private GLControl captureControl;
 
-        public FamiStudio FamiStudio => famistudio;
+        public static FamiStudioForm Instance { get; private set; }
+        public object DialogUserData => dialogUserData;
+        public bool IsAsyncDialogInProgress => dialogCallback != null || contextMenuCallback != null; // DROIDTODO : Add lots of validation with that.
 
+        public FamiStudio      FamiStudio      => famistudio;
         public Toolbar         ToolBar         => controls.ToolBar;
         public Sequencer       Sequencer       => controls.Sequencer;
         public PianoRoll       PianoRoll       => controls.PianoRoll;
@@ -49,10 +59,11 @@ namespace FamiStudio
         public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
         public string Text { get; set; }
-        public long lastFrameTime = -1;
 
         private GestureDetectorCompat detector;
         private ScaleGestureDetector  scaleDetector;
+
+        private BottomSheetDialog bottomSheetDialog;
 
         public System.Drawing.Rectangle Bounds
         {
@@ -70,19 +81,19 @@ namespace FamiStudio
             controls.SetActiveControl(ctrl, animate);
         }
 
-        private void EnableFullscreenMode()
+        private void EnableFullscreenMode(Window win)
         {
             // Fullscreen mode.
-            Window.AddFlags(WindowManagerFlags.Fullscreen);
+            win.AddFlags(WindowManagerFlags.Fullscreen);
 
-            int uiOptions = (int)Window.DecorView.SystemUiVisibility;
+            int uiOptions = (int)win.DecorView.SystemUiVisibility;
 
             uiOptions |= (int)SystemUiFlags.LowProfile;
             uiOptions |= (int)SystemUiFlags.Fullscreen;
             uiOptions |= (int)SystemUiFlags.HideNavigation;
             uiOptions |= (int)SystemUiFlags.ImmersiveSticky;
 
-            Window.DecorView.SystemUiVisibility = (StatusBarVisibility)uiOptions;
+            win.DecorView.SystemUiVisibility = (StatusBarVisibility)uiOptions;
         }
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -94,7 +105,7 @@ namespace FamiStudio
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
 
-            EnableFullscreenMode();
+            EnableFullscreenMode(Window);
 
             // DROIDTODO : Move this to a function!
             //Settings.Load(); // DROIDTODO : Settings.
@@ -368,6 +379,105 @@ namespace FamiStudio
         {
         }
 
+        // See if slow.
+        //Dictionary<string, Android.Graphics.Bitmap> bitmapCache = new Dictionary<string, Android.Graphics.Bitmap>();
+
+        //private Android.Graphics.Bitmap GetBitmapFromCache(string name)
+        //{
+        //    if (bitmapCache.TryGetValue(name, out var bmp))
+        //        return bmp;
+
+        //    bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png", true)); // $"FamiStudio.Resources.{opt.Image}.png"
+        //    bitmapCache.Add(bmp);
+        //    return bmp;
+        //}
+
+        public void ShowContextMenu(ContextMenuOption[] options, Action<int> callback)
+        {
+            Debug.Assert(contextMenuDialog == null && contextMenuCallback == null);
+
+            var bgColor = DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyFillColor1);
+
+            var linearLayout = new LinearLayout(this);
+            linearLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            linearLayout.Orientation = Orientation.Vertical;
+            linearLayout.SetBackgroundColor(bgColor);
+
+            var imagePad  = DroidUtils.DpToPixels(4);
+            var imageSize = DroidUtils.DpToPixels(36);
+
+            for (int i = 0; i < options.Length; i++)
+            {
+                var opt = options[i];
+                Debug.Assert(opt.Result >= 0);
+
+                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.ConfigGeneral@2x.png", true)); // $"FamiStudio.Resources.{opt.Image}.png"
+                bmp.SetBounds(0, 0, imageSize, imageSize);
+
+                var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
+                textView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+                textView.SetCompoundDrawables(bmp, null, null, null);
+                textView.CompoundDrawablePadding = imagePad;
+                textView.SetPadding(imagePad, imagePad, imagePad, imagePad);
+                textView.Gravity = GravityFlags.CenterVertical;
+                textView.Text = opt.Text;
+                textView.Tag = new ContextMenuResult(opt.Result);
+                textView.Click += ContextMenuDialog_Click;
+
+                linearLayout.AddView(textView);
+            }
+
+            DisplayMetrics metrics = new DisplayMetrics();
+            Window.WindowManager.DefaultDisplay.GetMetrics(metrics);
+
+            contextMenuDialog = new BottomSheetDialog(this);
+            contextMenuDialog.Window.AddFlags(WindowManagerFlags.NotFocusable); // Prevents nav bar from appearing.
+            contextMenuDialog.SetContentView(linearLayout);
+            contextMenuDialog.Behavior.MaxWidth = Math.Min(metrics.HeightPixels, metrics.WidthPixels);
+            contextMenuDialog.Behavior.State = BottomSheetBehavior.StateExpanded;
+            contextMenuDialog.DismissEvent += ContextMenuDialog_DismissEvent;
+
+            // In portrait mode, add a bit of padding to cover the navigation bar.
+            if (metrics.HeightPixels != glSurfaceView.Height)
+            {
+                GradientDrawable invisible = new GradientDrawable();
+                GradientDrawable navBar = new GradientDrawable();
+                navBar.SetColor(bgColor);
+
+                LayerDrawable windowBackground = new LayerDrawable(new Drawable[] { invisible, navBar });
+                windowBackground.SetLayerInsetTop(1, metrics.HeightPixels);
+                contextMenuDialog.Window.SetBackgroundDrawable(windowBackground);
+            }
+
+            StopGLThread();
+
+            contextMenuCallback = callback;
+            contextMenuDialog.Show();
+        }
+
+        private void ContextMenuDialog_DismissEvent(object sender, EventArgs e)
+        {
+            // If non-null, means user has not chosen any options.
+            if (contextMenuCallback != null)
+            {
+                contextMenuCallback(-1);
+                contextMenuCallback = null;
+            }
+
+            contextMenuDialog = null;
+
+            StartGLThread();
+        }
+
+        private void ContextMenuDialog_Click(object sender, EventArgs e)
+        {
+            var tag = (sender as TextView).Tag as ContextMenuResult;
+
+            contextMenuCallback(tag.res);
+            contextMenuCallback = null;
+            contextMenuDialog.Dismiss();
+        }
+
         int c = 0;
 
         private GLControl GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
@@ -438,6 +548,16 @@ namespace FamiStudio
 
         public void OnLongPress(MotionEvent e)
         {
+            PlatformUtils.VibrateClick();
+
+            ShowContextMenu(new[]
+            {
+                new ContextMenuOption("", "Hello", 0),
+                new ContextMenuOption("", "Toto", 1),
+                new ContextMenuOption("", "Titi", 2)
+            },
+            (i) => { });
+
             Debug.WriteLine($"{c++} OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
             lock (renderLock)
                 GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y, true);
@@ -483,6 +603,17 @@ namespace FamiStudio
             lock (renderLock)
                 GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.End);
         }
+
+        // MATTT : Rename to result.
+        private class ContextMenuResult : Java.Lang.Object
+        {
+            public int res;
+            public ContextMenuResult(int r)
+            {
+                res = r;
+            }
+        };
+
     }
 
 #if DEBUG
@@ -508,4 +639,19 @@ namespace FamiStudio
         }
     }
 #endif
+
+    // Move this to a common class
+    public class ContextMenuOption
+    {
+        public string Image  { get; private set; }
+        public string Text   { get; private set; }
+        public int    Result { get; private set; }
+
+        public ContextMenuOption(string img, string text, int result)
+        {
+            Image  = img;
+            Text   = text;
+            Result = result;
+        }
+    }
 }

@@ -990,7 +990,7 @@ namespace FamiStudio
                 c.Transform.GetOrigin(out var ox, out var oy);
                 var fullscreenRect = new Rectangle(0, 0, ParentFormSize.Width, ParentFormSize.Height);
                 fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, c.Graphics.GetSolidBrush(Color.Black, 1.0f, expandRatio * 0.5f));
+                c.FillRectangle(fullscreenRect, c.Graphics.GetSolidBrush(Color.Black, 1.0f, expandRatio * 0.6f));
             }
         }
 
@@ -1160,7 +1160,12 @@ namespace FamiStudio
                 else
                 */
                 {
-                    GetButtonAtCoord(x, y)?.Click(); 
+                    var btn = GetButtonAtCoord(x, y);
+                    if (btn != null)
+                    {
+                        PlatformUtils.VibrateTick();
+                        btn.Click();
+                    }
                 }
             }
         }

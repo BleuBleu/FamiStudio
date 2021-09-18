@@ -6,7 +6,11 @@ Plan:
 - But, most note operation (move, resize, move release) can be done without it.
 - Square selection in sequencer will be a bit tricky, but ok.
 
-1) Migrate SelectedInstrument/SelectedArpeggio.
+1) Create drawer popup.
+	- Cancel dialog if rotation.
+	- Callback
+	- Add asset to ensure only 1 dialog active.
+	- 
 2) Start with sequencer to prototype controls
 3) 
 
@@ -87,9 +91,13 @@ Tools:
 	- Select (better way to make square selection?)
 Controls:
 	- HOW TO DUPLICATE? COPY? ****
-	- long-press = custom settings, pattern properties, solo/unsolo.
-	- Swipe = select (unless dragging seek bar itself)
-	- tap = seek
+		=> Long press : properties, move & instanciate, move & duplicate
+	- Tap = add pattern
+	- Long press = pattern properties
+	- Swipe = pan
+	- Header long-press = custom settings, pattern properties, solo/unsolo.
+	- Header Swipe = select (unless dragging seek bar itself)
+	- Header Tap = seek
 
 Prop page:
 / Reactivate dialogs in code, test

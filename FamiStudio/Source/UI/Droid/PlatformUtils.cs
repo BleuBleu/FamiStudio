@@ -57,6 +57,18 @@ namespace FamiStudio
                 new Android.Graphics.BitmapFactory.Options() { InPremultiplied = premultiplied });
         }
 
+        public static void VibrateTick()
+        {
+            Vibrator v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
+            v.Vibrate(VibrationEffect.CreatePredefined(VibrationEffect.EffectTick));
+        }
+
+        public static void VibrateClick()
+        {
+            Vibrator v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
+            v.Vibrate(VibrationEffect.CreatePredefined(VibrationEffect.EffectClick));
+        }
+
         public const bool IsMobile  = true;
         public const bool IsAndroid = true;
         public const bool IsDesktop = false;

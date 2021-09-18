@@ -689,7 +689,7 @@ namespace FamiStudio
             {
                 var fullscreenRect = new Rectangle(0, 0, ParentFormSize.Width, ParentFormSize.Height);
                 fullscreenRect.Offset(-(int)ox, -(int)oy);
-                c.FillRectangle(fullscreenRect, g.GetSolidBrush(Color.Black, 1.0f, popupRatio * 0.5f));
+                c.FillRectangle(fullscreenRect, g.GetSolidBrush(Color.Black, 1.0f, popupRatio * 0.6f));
             }
 
             // Clear BG.
@@ -807,6 +807,7 @@ namespace FamiStudio
             {
                 if (btn.Rect.Contains(x, y))
                 {
+                    PlatformUtils.VibrateTick();
                     btn.Click();
                     return;
                 }
@@ -822,6 +823,7 @@ namespace FamiStudio
 
                     if (idx >= 0 && idx < listItems.Length)
                     {
+                        PlatformUtils.VibrateTick();
                         buttons[popupButtonIdx].ListItemClick?.Invoke(idx);
                         popupSelectedIdx = idx;
                     }

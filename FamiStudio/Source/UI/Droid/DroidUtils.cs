@@ -22,6 +22,11 @@ namespace FamiStudio
             return dimension;
         }
 
+        public static Android.Graphics.Color ToAndroidColor(System.Drawing.Color color)
+        {
+            return new Android.Graphics.Color(color.R, color.G, color.B, color.A);
+        }
+
         public static int DpToPixels(int dp)
         {
             return (int)(dp * Platform.AppContext.Resources.DisplayMetrics.Density);
