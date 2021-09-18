@@ -38,6 +38,8 @@ namespace FamiStudio
         // For property or multi-property dialogs.
         private int dialogRequestCode = -1;
         private bool glThreadIsRunning;
+        private bool glStopRequested;
+        private bool glStartRequested;
         private long lastFrameTime = -1;
         private object dialogUserData = null;
         private object renderLock = new object();
@@ -192,24 +194,14 @@ namespace FamiStudio
 
         private void StartGLThread()
         {
-            if (!glThreadIsRunning)
-            {
-                Choreographer.Instance.PostFrameCallback(this);
-                glSurfaceView.OnResume();
-                lock (renderLock) { }; // Extra safety.
-                glThreadIsRunning = true;
-            }
+            Debug.Assert(!glStartRequested && !glStopRequested);
+            glStartRequested = true;
         }
 
         private void StopGLThread()
         {
-            if (glThreadIsRunning)
-            {
-                Choreographer.Instance.RemoveFrameCallback(this);
-                glSurfaceView.OnPause();
-                lock (renderLock) { }; // Extra safety.
-                glThreadIsRunning = false;
-            }
+            Debug.Assert(!glStartRequested && !glStopRequested);
+            glStopRequested = true;
         }
 
         // For debugging property pages.
@@ -273,19 +265,41 @@ namespace FamiStudio
             if (lastFrameTime < 0)
                 lastFrameTime = frameTimeNanos;
 
-            float deltaTime = (float)((frameTimeNanos - lastFrameTime) / 1000000000.0);
-
-            if (deltaTime > 0.03)
-                Console.WriteLine($"FRAME SKIP!!!!!!!!!!!!!!!!!!!!!! {deltaTime}");
-
-            lock (renderLock)
+            if (glStartRequested || glStopRequested)
             {
-                famistudio.Tick(deltaTime);
-                controls.Tick(deltaTime);
+                Debug.Assert(glStartRequested ^ glStopRequested);
+
+                Choreographer.Instance.RemoveFrameCallback(this);
+
+                if (glStartRequested)
+                    glSurfaceView.OnResume();
+                else
+                    glSurfaceView.OnPause();
+
+                lock (renderLock) { }; // Extra safety.
+
+                glThreadIsRunning = glStartRequested;
+
+                glStartRequested = false;
+                glStopRequested  = false;
             }
 
-            if (controls.NeedsRedraw())
-                glSurfaceView.RequestRender();
+            if (glThreadIsRunning)
+            {
+                float deltaTime = (float)((frameTimeNanos - lastFrameTime) / 1000000000.0);
+
+                if (deltaTime > 0.03)
+                    Console.WriteLine($"FRAME SKIP!!!!!!!!!!!!!!!!!!!!!! {deltaTime}");
+
+                lock (renderLock)
+                {
+                    famistudio.Tick(deltaTime);
+                    controls.Tick(deltaTime);
+                }
+
+                if (controls.NeedsRedraw())
+                    glSurfaceView.RequestRender();
+            }
 
             Choreographer.Instance.PostFrameCallback(this);
             lastFrameTime = frameTimeNanos;
@@ -295,10 +309,7 @@ namespace FamiStudio
         public void OnDrawFrame(IGL10 gl)
         {
             lock (renderLock)
-            {
-                Debug.Assert(!IsAsyncDialogInProgress);
                 controls.Redraw();
-            }
         }
 
         // GL thread.
@@ -383,19 +394,6 @@ namespace FamiStudio
         {
         }
 
-        // See if slow.
-        //Dictionary<string, Android.Graphics.Bitmap> bitmapCache = new Dictionary<string, Android.Graphics.Bitmap>();
-
-        //private Android.Graphics.Bitmap GetBitmapFromCache(string name)
-        //{
-        //    if (bitmapCache.TryGetValue(name, out var bmp))
-        //        return bmp;
-
-        //    bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png", true)); // $"FamiStudio.Resources.{opt.Image}.png"
-        //    bitmapCache.Add(bmp);
-        //    return bmp;
-        //}
-
         public void ShowContextMenu(ContextMenuOption[] options, Action<int> callback)
         {
             Debug.Assert(contextMenuDialog == null && contextMenuCallback == null);
@@ -445,6 +443,8 @@ namespace FamiStudio
             // In portrait mode, add a bit of padding to cover the navigation bar.
             if (metrics.HeightPixels != glSurfaceView.Height)
             {
+                // DROIDTODO : When using gesture navigation, in landscape more, we draw a full-width bar.
+                // Needs to match the dialog.
                 GradientDrawable invisible = new GradientDrawable();
                 GradientDrawable navBar = new GradientDrawable();
                 navBar.SetColor(bgColor);
@@ -453,8 +453,6 @@ namespace FamiStudio
                 windowBackground.SetLayerInsetTop(1, metrics.HeightPixels);
                 contextMenuDialog.Window.SetBackgroundDrawable(windowBackground);
             }
-
-            StopGLThread();
 
             contextMenuCallback = callback;
             contextMenuDialog.Show();
@@ -472,12 +470,6 @@ namespace FamiStudio
             }
 
             contextMenuDialog = null;
-
-            // The callback may start a dialog.
-            if (dialogCallback == null)
-            {
-                StartGLThread();
-            }
         }
 
         private void ContextMenuDialog_Click(object sender, EventArgs e)
@@ -517,53 +509,63 @@ namespace FamiStudio
 
         public override bool OnTouchEvent(MotionEvent e)
         {
-            //if (detector.OnTouchEvent(e))
-            //    return true;
-            //if (scaleDetector.OnTouchEvent(e))
-            //    return true;
-
-            if (e.Action == MotionEventActions.Up)
+            if (!IsAsyncDialogInProgress)
             {
-                Debug.WriteLine($"{c++} Up {e.PointerCount} ({e.GetX()}, {e.GetY()})");
-                lock (renderLock)
-                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchUp(x, y);
+                if (e.Action == MotionEventActions.Up)
+                {
+                    Debug.WriteLine($"{c++} Up {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                    lock (renderLock)
+                        GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchUp(x, y);
+                }
+                else if (e.Action == MotionEventActions.Move && !scaleDetector.IsInProgress)
+                {
+                    Debug.WriteLine($"{c++} Move {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                    lock (renderLock)
+                        GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchMove(x, y);
+                }
+
+                detector.OnTouchEvent(e);
+                scaleDetector.OnTouchEvent(e);
+
+                return base.OnTouchEvent(e);
             }
-            else if (e.Action == MotionEventActions.Move && !scaleDetector.IsInProgress)
+            else
             {
-                Debug.WriteLine($"{c++} Move {e.PointerCount} ({e.GetX()}, {e.GetY()})");
-                lock (renderLock)
-                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchMove(x, y);
+                return false;
             }
-
-            detector.OnTouchEvent(e);
-            scaleDetector.OnTouchEvent(e);
-
-            return base.OnTouchEvent(e);
         }
 
         public bool OnDown(MotionEvent e)
         {
-            // DialogTest();
-
-            Debug.WriteLine($"{c++} OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
-            lock (renderLock)
-                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchDown(x, y);
+            if (!IsAsyncDialogInProgress)
+            {
+                Debug.WriteLine($"{c++} OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                lock (renderLock)
+                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchDown(x, y);
+            }
             return false;
         }
 
         public bool OnFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
         {
-            Debug.WriteLine($"{c++} OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({velocityX}, {velocityY})");
-            lock (renderLock)
-                GetCapturedControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y)?.TouchFling(x, y, velocityX, velocityY);
+            if (!IsAsyncDialogInProgress)
+            {
+
+                Debug.WriteLine($"{c++} OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({velocityX}, {velocityY})");
+                lock (renderLock)
+                    GetCapturedControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y)?.TouchFling(x, y, velocityX, velocityY);
+            }
             return false;
         }
 
         public void OnLongPress(MotionEvent e)
         {
-            Debug.WriteLine($"{c++} OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
-            lock (renderLock)
-                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchLongPress(x, y);
+            if (!IsAsyncDialogInProgress)
+            {
+                Debug.WriteLine($"{c++} OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                lock (renderLock)
+                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchLongPress(x, y);
+            }
         }
 
         public bool OnScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
@@ -573,41 +575,63 @@ namespace FamiStudio
 
         public void OnShowPress(MotionEvent e)
         {
-            Debug.WriteLine($"{c++} {e.PointerCount} OnShowPress ({e.GetX()}, {e.GetY()})");
+            if (!IsAsyncDialogInProgress)
+            {
+                Debug.WriteLine($"{c++} {e.PointerCount} OnShowPress ({e.GetX()}, {e.GetY()})");
+            }
         }
 
         public bool OnSingleTapUp(MotionEvent e)
         {
-            Debug.WriteLine($"{c++} {e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
-            lock (renderLock)
-                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y);
+            if (!IsAsyncDialogInProgress)
+            {
+                Debug.WriteLine($"{c++} {e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
+                lock (renderLock)
+                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y);
+            }
             return false;
         }
 
         public bool OnScale(ScaleGestureDetector detector)
         {
-            Debug.WriteLine($"{c++} OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
-            lock (renderLock)
-                GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.Scale);
-            return true;
+            if (!IsAsyncDialogInProgress)
+            {
+                Debug.WriteLine($"{c++} OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
+                lock (renderLock)
+                    GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.Scale);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public bool OnScaleBegin(ScaleGestureDetector detector)
         {
-            Debug.WriteLine($"{c++} OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
-            lock (renderLock)
-                GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.Begin);
-            return true;
+            if (!IsAsyncDialogInProgress)
+            {
+                Debug.WriteLine($"{c++} OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
+                lock (renderLock)
+                    GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.Begin);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public void OnScaleEnd(ScaleGestureDetector detector)
         {
-            Debug.WriteLine($"{c++} OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
-            lock (renderLock)
-                GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.End);
+            if (!IsAsyncDialogInProgress)
+            {
+                Debug.WriteLine($"{c++} OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
+                lock (renderLock)
+                    GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor, TouchScalePhase.End);
+            }
         }
 
-        // MATTT : Rename to result.
         private class ContextMenuResult : Java.Lang.Object
         {
             public int res;
@@ -616,7 +640,6 @@ namespace FamiStudio
                 res = r;
             }
         };
-
     }
 
 #if DEBUG

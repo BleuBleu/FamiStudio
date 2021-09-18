@@ -1173,6 +1173,8 @@ namespace FamiStudio
 
         protected override void OnTouchLongPress(int x, int y)
         {
+            AbortCaptureOperation();
+
             bool inPatternZone = GetPatternForCoord(x, y, out var channelIdx, out var patternIdx, out var inPatternHeader);
 
             if (inPatternZone)
@@ -1575,14 +1577,21 @@ namespace FamiStudio
 
         private void AbortCaptureOperation()
         {
-            if (App.UndoRedoManager.HasTransactionInProgress)
-                App.UndoRedoManager.AbortTransaction();
+            if (captureOperation != CaptureOperation.None)
+            {
+                if (App.UndoRedoManager.HasTransactionInProgress)
+                    App.UndoRedoManager.AbortTransaction();
 
-            Capture = false;
-            panning = false;
-            captureOperation = CaptureOperation.None;
+                Capture = false;
+                panning = false;
+                captureOperation = CaptureOperation.None;
 
-            MarkDirty();
+                MarkDirty();
+            }
+            else
+            {
+                Debug.Assert(!App.UndoRedoManager.HasTransactionInProgress);
+            }
         }
 
         protected void CancelDragSelection()
