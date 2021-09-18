@@ -226,6 +226,14 @@ namespace FamiStudio
             return graphics.DpiX / 96.0f;
         }
 
+        public static void VibrateTick()
+        {
+        }
+
+        public static void VibrateClick()
+        {
+        }
+
         public const bool IsMobile  = false;
         public const bool IsAndroid = false;
         public const bool IsDesktop = true;

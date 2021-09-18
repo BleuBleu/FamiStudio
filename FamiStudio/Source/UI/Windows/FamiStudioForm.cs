@@ -346,7 +346,11 @@ namespace FamiStudio
         public void SetActiveControl(GLControl ctrl, bool animate = true)
         {
         }
-    
+
+        public void ShowContextMenu(ContextMenuOption[] options, Action<int> callback)
+        {
+        }
+
         public static bool IsKeyDown(Keys k)
         {
             return (GetKeyState((int)k) & 0x8000) != 0;
