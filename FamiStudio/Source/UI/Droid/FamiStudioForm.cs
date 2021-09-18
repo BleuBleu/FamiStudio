@@ -107,6 +107,8 @@ namespace FamiStudio
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
 
+            EnableFullscreenMode(Window);
+
             // DROIDTODO : Move this to a function!
             //Settings.Load(); // DROIDTODO : Settings.
             DpiScaling.Initialize();
