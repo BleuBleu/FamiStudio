@@ -280,6 +280,9 @@ namespace FamiStudio
 
                 glThreadIsRunning = glStartRequested;
 
+                if (glThreadIsRunning)
+                    MarkDirty();
+
                 glStartRequested = false;
                 glStopRequested  = false;
             }
@@ -467,6 +470,7 @@ namespace FamiStudio
             {
                 contextMenuCallback(-1);
                 contextMenuCallback = null;
+                MarkDirty();
             }
 
             contextMenuDialog = null;
@@ -479,6 +483,7 @@ namespace FamiStudio
             contextMenuCallback(tag.res);
             contextMenuCallback = null;
             contextMenuDialog.Dismiss();
+            MarkDirty();
 
             PlatformUtils.VibrateClick();
         }

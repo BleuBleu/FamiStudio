@@ -3,9 +3,10 @@ using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using Color = System.Drawing.Color;
 using System.Media;
 using System.Diagnostics;
+
+using Color = System.Drawing.Color;
 
 using RenderBitmap      = FamiStudio.GLBitmap;
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
@@ -585,8 +586,8 @@ namespace FamiStudio
 
                     pt.Y -= headerSizeY;
 
-                    var dragChannelIdxStart = (captureMouseY - headerSizeY) / trackSizeY;
-                    var dragChannelIdxCurrent = pt.Y / trackSizeY;
+                    var dragChannelIdxStart = GetChannelIndexForCoord(captureMouseY);
+                    var dragChannelIdxCurrent = GetChannelIndexForCoord(pt.Y);
                     var channelIdxDelta = dragChannelIdxCurrent - dragChannelIdxStart;
 
                     for (int j = minSelectedChannelIdx + channelIdxDelta; j <= maxSelectedChannelIdx + channelIdxDelta; j++)
@@ -776,6 +777,16 @@ namespace FamiStudio
             return ClampScroll();
         }
 
+        private int GetPatternIndexForCoord(int x)
+        {
+            var noteIdx = GetNoteForPixel(x - trackNameSizeX);
+
+            if (noteIdx < 0 || noteIdx >= Song.GetPatternStartAbsoluteNoteIndex(Song.Length))
+                return -1;
+
+            return Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);
+        }
+
         private bool GetPatternForCoord(int x, int y, out int channelIdx, out int patternIdx, out bool inPatternHeader)
         {
             var noteIdx = GetNoteForPixel(x - trackNameSizeX);
@@ -793,6 +804,18 @@ namespace FamiStudio
             inPatternHeader = (y - headerSizeY) % trackSizeY < patternHeaderSizeY;
 
             return (x > trackNameSizeX && y > headerSizeY && channelIdx >= 0 && channelIdx < Song.Channels.Length);
+        }
+
+        private bool HasPatternAtCoord(int x, int y)
+        {
+            bool inPatternZone = GetPatternForCoord(x, y, out var channelIdx, out var patternIdx, out var inPatternHeader);
+            return inPatternZone && Song.Channels[channelIdx].PatternInstances[patternIdx] != null;
+        }
+
+        private int GetChannelIndexForCoord(int y)
+        {
+            // DROIDTODO : Take scrollY into account!
+            return (y - headerSizeY) / trackSizeY;
         }
 
         private void GetClampedPatternForCoord(int x, int y, out int channelIdx, out int patternIdx)
@@ -819,6 +842,21 @@ namespace FamiStudio
                 ScaleForMainWindow(12));
         }
 
+        bool IsCoordInHeader(int x, int y)
+        {
+            return y < headerSizeY;
+        }
+
+        bool IsCoordIsChannelArea(int x, int y)
+        {
+            return x < trackNameSizeX && y > headerSizeY;
+        }
+
+        bool IsCoordInPatternArea(int x, int y)
+        {
+            return x > trackNameSizeX && y > headerSizeY;
+        }
+
         private void CaptureMouse(int x, int y)
         {
             mouseLastX = x;
@@ -836,6 +874,25 @@ namespace FamiStudio
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
             GetClampedPatternForCoord(x, y, out captureChannelIdx, out capturePatternIdx);
+        }
+
+        private void SetSelectedChannel(int idx)
+        {
+            if (idx != App.SelectedChannelIndex)
+                App.SelectedChannelIndex = idx;
+        }
+
+        private void ChangeChannelForCoord(int y)
+        {
+            SetSelectedChannel(Utils.Clamp((y - headerSizeY) / trackSizeY, 0, Song.Channels.Length - 1));
+        }
+
+        private void SetLoopPoint(int patternIdx)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            Song.SetLoopPoint(Song.LoopPoint == patternIdx ? -1 : patternIdx);
+            App.UndoRedoManager.EndTransaction();
+            MarkDirty();
         }
 
         private bool HandleMouseDownPan(MouseEventArgs e)
@@ -891,28 +948,17 @@ namespace FamiStudio
 
                 if (trackIcon >= 0)
                 {
-                    int bit = (1 << trackIcon);
-
                     if (left)
-                    {
-                        // Toggle muted
-                        App.ChannelMask ^= bit;
-                    }
+                        App.ToggleChannelActive(trackIcon);
                     else
-                    {
-                        // Toggle Solo
-                        if (App.ChannelMask == bit)
-                            App.ChannelMask = -1;
-                        else
-                            App.ChannelMask = bit;
-                    }
+                        App.ToggleChannelSolo(trackIcon);
 
                     MarkDirty();
                     return true;
                 }
                 else if (ghostIcon >= 0)
                 {
-                    App.GhostChannelMask ^= (1 << ghostIcon);
+                    App.ToggleChannelGhostNotes(ghostIcon);
                     MarkDirty();
                     return true;
                 }
@@ -927,15 +973,9 @@ namespace FamiStudio
 
             if (setLoop && e.X > trackNameSizeX && e.Button.HasFlag(MouseButtons.Left))
             {
-                GetPatternForCoord(e.X, e.Y, out int channelIdx, out int patternIdx, out _);
-
+                var patternIdx = GetPatternIndexForCoord(e.X);
                 if (patternIdx >= 0)
-                {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                    Song.SetLoopPoint(Song.LoopPoint == patternIdx ? -1 : patternIdx);
-                    App.UndoRedoManager.EndTransaction();
-                    MarkDirty();
-                }
+                    SetLoopPoint(patternIdx);
                 return true;
             }
 
@@ -969,11 +1009,7 @@ namespace FamiStudio
         private bool HandleMouseDownChannelChange(MouseEventArgs e)
         {
             if (e.Y > headerSizeY && e.Y < Height - scrollBarThickness && e.Button.HasFlag(MouseButtons.Left))
-            {
-                var newChannelIndex = Utils.Clamp((e.Y - headerSizeY) / trackSizeY, 0, Song.Channels.Length - 1);
-                if (newChannelIndex != App.SelectedChannelIndex)
-                    App.SelectedChannelIndex = newChannelIndex;
-            }
+                ChangeChannelForCoord(e.Y);
 
             // Does not prevent from processing other events.
             return false;
@@ -1092,13 +1128,13 @@ namespace FamiStudio
             if (HandleMouseDownPatterns(e)) goto Handled;
             return;
 
-        Handled: // Yes, i use a goto, sue me.
+        Handled:
             MarkDirty();
         }
 
         private bool HandleTouchDownPan(int x, int y)
         {
-            if (y > headerSizeY && x > trackNameSizeX)
+            if (IsCoordInPatternArea(x, y))
             {
                 StartCaptureOperation(x, y, CaptureOperation.MobilePan);
                 return true;
@@ -1107,8 +1143,88 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnTouchDown(int x, int y)
+        private bool HandleTouchClickChannelChange(int x, int y)
         {
+            if (IsCoordIsChannelArea(x, y))
+            {
+                ChangeChannelForCoord(y);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchLongPressChannelName(int x, int y)
+        {
+            if (IsCoordIsChannelArea(x, y))
+            {
+                var channelIdx = GetChannelIndexForCoord(y);
+
+                const int ResultToggleMute = 0;
+                const int ResultToggleSolo = 1;
+
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("", App.IsChannelActive(channelIdx) ? "Mute Channel"   : "Unmute Channel", ResultToggleMute),
+                    new ContextMenuOption("", App.IsChannelSolo(channelIdx)   ? "Unsolo Channel" : "Solo Channel",   ResultToggleSolo)
+                },
+                (i) =>
+                {
+                    if (i == ResultToggleMute)
+                        App.ToggleChannelActive(channelIdx);
+                    else if (i == ResultToggleSolo)
+                        App.ToggleChannelSolo(channelIdx);
+                });
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchLongPressHeader(int x, int y)
+        {
+            if (IsCoordInHeader(x, y))
+            {
+                var patternIdx = GetPatternIndexForCoord(x);
+
+                if (patternIdx >= 0)
+                {
+                    const int ResultSetLoopPoint   = 0;
+                    const int ResultCustumSettings = 1;
+
+                    App.ShowContextMenu(new[]
+                    {
+                    new ContextMenuOption("", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", ResultSetLoopPoint),
+                    new ContextMenuOption("", "Custom Pattern Settings...", ResultCustumSettings)
+                    },
+                    (i) =>
+                    {
+                        if (i == ResultSetLoopPoint)
+                            SetLoopPoint(patternIdx);
+                        else if (i == ResultCustumSettings)
+                            EditPatternCustomSettings(Point.Empty, patternIdx);
+                    });
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        protected override void OnTouchDown(int x, int y)
+        {  
+            // Pattern names/area:
+            // - Set current channel
+            // Header:
+            // - Start seek drag (if click on the seek bar)
+            // - Start selection (if not click on seek bar) => Will be a bit tricky, how to tell click/down appart? Use threshold?
+            // Pattern area:
+            // - Nothing if pencil mode
+            // - Start erase op if eraser
+            // - Start selection if seleciton mode
+
             flingVelX = 0;
             flingVelY = 0;
 
@@ -1116,12 +1232,15 @@ namespace FamiStudio
 
             return;
 
-        Handled: // Yes, i use a goto, sue me.
+        Handled:
             MarkDirty();
         }
 
         protected override void OnTouchMove(int x, int y)
         {
+            // All:
+            // - Update whatever capture op we have
+
             //UpdateCaptureOperation(e, false);
             MarkDirty();
             //UpdateCaptureOperation(e, false);
@@ -1150,6 +1269,9 @@ namespace FamiStudio
 
         protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
         {
+            // Header/Pattern area:
+            // - Scale
+
             if (captureOperation != CaptureOperation.None)
             {
                 Debug.WriteLine("Oops");
@@ -1171,32 +1293,44 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnTouchClick(int x, int y)
+        {
+            // Header: 
+            // - Seek
+            // Pattern names:
+            // x Set current channel (NO WILL DO ON DOWN)
+            // - Toggle mute on icon
+            // - Force diplay? How small is the icon going to be?
+            // Pattern area:
+            // - Add pattern if empty (if pencil tool)
+            // - Select single pattern (if pencil tool)
+
+            if (HandleTouchClickChannelChange(x, y)) goto Handled;
+
+            return;
+
+        Handled:
+            MarkDirty();
+        }
+
         protected override void OnTouchLongPress(int x, int y)
         {
+            // Header:
+            // - Context menu : seet loop point, custom settings
+            // Pattern names:
+            // - Context menu : Mute/Unmute, Toggle force display, etc. (click on icon???)
+            // Pattern area:
+            // - Context menu : Pattern properties, etc. (if in selection)
+
             AbortCaptureOperation();
 
-            bool inPatternZone = GetPatternForCoord(x, y, out var channelIdx, out var patternIdx, out var inPatternHeader);
+            if (HandleTouchLongPressChannelName(x, y)) goto Handled;
+            if (HandleTouchLongPressHeader(x, y)) goto Handled;
 
-            if (inPatternZone)
-            {
-                var channel = Song.Channels[channelIdx];
-                var pattern = channel.PatternInstances[patternIdx];
+            return;
 
-                if (pattern != null)
-                {
-                    App.ShowContextMenu(new[]
-                    {
-                        new ContextMenuOption("", "Pattern Properties...", 0),
-                    },
-                    (i) => 
-                    {
-                        if (i == 0)
-                        {
-                            EditPatternProperties(Point.Empty, pattern);
-                        }
-                    });
-                }
-            }
+        Handled:
+            MarkDirty();
         }
 
         private Pattern[,] GetSelectedPatterns(out Song.PatternCustomSetting[] customSettings)
@@ -1444,8 +1578,8 @@ namespace FamiStudio
                         var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
                         var tmpPatterns = GetSelectedPatterns(out var customSettings);
 
-                        var dragChannelIdxStart = (captureMouseY - headerSizeY) / trackSizeY;
-                        var dragChannelIdxCurrent = (y - headerSizeY) / trackSizeY;
+                        var dragChannelIdxStart = GetChannelIndexForCoord(captureMouseY);
+                        var dragChannelIdxCurrent = GetChannelIndexForCoord(y);
                         var channelIdxDelta = dragChannelIdxCurrent - dragChannelIdxStart;
 
                         var copy = ModifierKeys.HasFlag(Keys.Control);
@@ -1890,14 +2024,14 @@ namespace FamiStudio
                 else if (GetTrackGhostForPos(e) >= 0)
                 {
                     tooltip = "{MouseLeft} Toggle channel display";
-                    int idx = (e.Y - headerSizeY) / trackSizeY + 1;
+                    int idx = GetChannelIndexForCoord(e.Y) + 1;
                     if (idx >= 1 && idx <= 12)
                         tooltip += $" {{Ctrl}} {{F{idx}}}";
                 }
                 else
                 {
                     tooltip = "{MouseLeft} Make channel active";
-                    int idx = (e.Y - headerSizeY) / trackSizeY + 1;
+                    int idx = GetChannelIndexForCoord(e.Y) + 1;
                     if (idx >= 1 && idx <= 12)
                         tooltip += $" {{F{idx}}}";
                 }
@@ -1918,10 +2052,12 @@ namespace FamiStudio
 
         private void UpdateCaptureOperation(MouseEventArgs e)
         {
+            const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
+
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
-                if (Math.Abs(e.X - captureMouseX) > 4 ||
-                    Math.Abs(e.Y - captureMouseY) > 4)
+                if (Math.Abs(e.X - captureMouseX) >= CaptureThreshold ||
+                    Math.Abs(e.Y - captureMouseY) >= CaptureThreshold)
                 {
                     captureThresholdMet = true;
                 }

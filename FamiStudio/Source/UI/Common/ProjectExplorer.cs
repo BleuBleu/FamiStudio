@@ -1328,10 +1328,12 @@ namespace FamiStudio
         private void UpdateCaptureOperation(int x, int y)
         {
             // DROIDTODO : DO we need this?
+            const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
+
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
-                if (Math.Abs(x - captureMouseX) > 4 ||
-                    Math.Abs(y - captureMouseY) > 4)
+                if (Math.Abs(x - captureMouseX) >= CaptureThreshold ||
+                    Math.Abs(y - captureMouseY) >= CaptureThreshold)
                 {
                     captureThresholdMet = true;
                 }

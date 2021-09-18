@@ -240,6 +240,42 @@ namespace FamiStudio
             }
         }
 
+        public bool IsChannelActive(int idx)
+        {
+            return songPlayer != null && (songPlayer.ChannelMask & (1 << idx)) != 0;
+        }
+
+        public void ToggleChannelActive(int idx)
+        {
+            if (songPlayer != null)
+                songPlayer.ChannelMask ^= (1 << idx);
+        }
+
+        public void ToggleChannelSolo(int idx)
+        {
+            if (songPlayer != null)
+            {
+                var bit = 1 << idx;
+                songPlayer.ChannelMask = songPlayer.ChannelMask == bit ? -1 : bit;
+            }
+        }
+
+        public void SoloChannel(int idx)
+        {
+            if (songPlayer != null)
+                songPlayer.ChannelMask = 1 << idx;
+        }
+        
+        public bool IsChannelSolo(int idx)
+        {
+            return songPlayer != null && songPlayer.ChannelMask == (1 << idx);
+        }
+
+        public void ToggleChannelGhostNotes(int idx)
+        {
+            GhostChannelMask ^= (1 << idx);
+        }
+
         public void SetActiveControl(RenderControl ctrl)
         {
             Debug.Assert(ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer);

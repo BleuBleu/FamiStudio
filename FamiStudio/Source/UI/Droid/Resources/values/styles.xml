@@ -27,7 +27,7 @@
   
     <style name="TextBase">
         <item name="android:fontFamily">@font/quicksand</item>
-        <item name="android:textColor">@color/LightGreyFillColor2</item>
+        <item name="android:textColor">@color/light_grey</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textSize">16dp</item>
         <item name="android:textColorPrimaryDisableOnly">#f00</item> <!-- MATTT For check boxes -->
@@ -47,7 +47,6 @@
     </style>
   
     <style name="LightGrayTextSmallTooltip" parent="TextBase">
-        <item name="android:textColor">#b2b9C6</item>
         <item name="android:textSize">12dp</item>
     </style>
 

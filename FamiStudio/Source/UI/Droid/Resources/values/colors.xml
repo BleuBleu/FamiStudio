@@ -12,6 +12,10 @@
     <color name="MediumGreyFillColor1">#565b69</color>
     <color name="LightGreyFillColor1">#b2b9c6</color>
     <color name="LightGreyFillColor2">#c6cdda</color>
+
+	<color name="Red">#ff0000</color>
+	<color name="Green">#00ff00</color>
+
 </resources>
 
 

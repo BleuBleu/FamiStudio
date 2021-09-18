@@ -25,7 +25,7 @@ namespace FamiStudio
 {
     public partial class PropertyPage : AndroidX.Fragment.App.Fragment, View.IOnTouchListener, EditText.IOnEditorActionListener
     {
-        public int PropertyCount => 0;
+        public int PropertyCount => properties.Count;
 
         private delegate void OnTouchDelegate(Property prop);
 
@@ -70,8 +70,8 @@ namespace FamiStudio
 
             editText.InputType = Android.Text.InputTypes.ClassText;
             editText.Text = txt;
-            editText.SetTextColor(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2));
-            editText.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2), BlendMode.SrcAtop));
+            editText.SetTextColor(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1));
+            editText.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendMode.SrcAtop));
             editText.SetMaxLines(1);
             editText.SetOnEditorActionListener(this);
             editText.AfterTextChanged += EditText_AfterTextChanged;
@@ -144,7 +144,7 @@ namespace FamiStudio
             var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
             adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
             spinner.Adapter = adapter;
-            spinner.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2), BlendMode.SrcAtop));
+            spinner.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendMode.SrcAtop));
             spinner.SetSelection(adapter.GetPosition(value));
             spinner.ItemSelected += Spinner_ItemSelected;
             return spinner;
@@ -597,6 +597,11 @@ namespace FamiStudio
         {
             var prop = properties[idx];
 
+            if (prop.label != null)
+                prop.label.Enabled = !prop.label.Enabled;
+            if (prop.tooltip != null)
+                prop.tooltip.Enabled = !prop.tooltip.Enabled;
+
             foreach (var ctrl in prop.controls)
                 ctrl.Enabled = enabled;
         }
@@ -634,14 +639,17 @@ namespace FamiStudio
                 case PropertyType.ColorPicker:
                     return (prop.controls[0] as ColorPickerView).SelectedColor;
                 case PropertyType.DropDownList:
-                    return (prop.controls[0] as Spinner).SelectedItemPosition;
+                {
+                    var spinner = prop.controls[0] as Spinner;
+                    return (spinner.Adapter as ArrayAdapter).GetItem(spinner.SelectedItemPosition).ToString();
+                }
                 case PropertyType.CheckBoxList:
-                    {
-                        var selected = new bool[prop.controls.Count];
-                        for (int i = 0; i < prop.controls.Count; i++)
-                            selected[i] = (prop.controls[i] as CheckBox).Checked;
-                        return selected;
-                    }
+                {
+                    var selected = new bool[prop.controls.Count];
+                    for (int i = 0; i < prop.controls.Count; i++)
+                        selected[i] = (prop.controls[i] as CheckBox).Checked;
+                    return selected;
+                }
                 case PropertyType.Button:
                     return (prop.controls[0] as MaterialButton).Text;
             }
@@ -785,7 +793,7 @@ namespace FamiStudio
             {
                 var style = position == spinner.SelectedItemPosition ? Resource.Style.SpinnerItemSelected : Resource.Style.SpinnerItem;
                 TextViewCompat.SetTextAppearance(tv, style);
-                tv.SetBackgroundResource(Resource.Color.LightGreyFillColor2);
+                tv.SetBackgroundResource(Resource.Color.LightGreyFillColor1);
             }
 
             return baseView;
@@ -816,15 +824,15 @@ namespace FamiStudio
             buttonLess = new MaterialButton(context);
             buttonLess.Text = "-";
             buttonLess.SetTextColor(Android.Graphics.Color.Black);
-            buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2));
+            buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1));
             buttonLess.LayoutParameters = lp;
-            
+
             buttonMore = new MaterialButton(context);
             buttonMore.Text = "+";
             buttonMore.SetTextColor(Android.Graphics.Color.Black);
-            buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor2));
+            buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1));
             buttonMore.LayoutParameters = lp;
-            
+
             textView = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
             textView.Text = "";
             textView.LayoutParameters = lp;
@@ -842,6 +850,16 @@ namespace FamiStudio
             value = val;
 
             UpdateValue(false);
+        }
+
+        // There has to be a better place to put this...
+        protected override void DrawableStateChanged()
+        {
+            base.DrawableStateChanged();
+
+            buttonLess.Enabled = Enabled;
+            textView.Enabled = Enabled;
+            buttonMore.Enabled = Enabled;
         }
 
         private async void UpdateFastScroll(int dir)
