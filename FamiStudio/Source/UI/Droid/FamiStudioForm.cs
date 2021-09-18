@@ -431,6 +431,7 @@ namespace FamiStudio
             Window.WindowManager.DefaultDisplay.GetMetrics(metrics);
 
             contextMenuDialog = new BottomSheetDialog(this);
+            EnableFullscreenMode(contextMenuDialog.Window);
             contextMenuDialog.Window.AddFlags(WindowManagerFlags.NotFocusable); // Prevents nav bar from appearing.
             contextMenuDialog.SetContentView(linearLayout);
             contextMenuDialog.Behavior.MaxWidth = Math.Min(metrics.HeightPixels, metrics.WidthPixels);
