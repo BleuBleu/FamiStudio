@@ -2633,7 +2633,7 @@ namespace FamiStudio
             StartCaptureOperation(x, y, CaptureOperation.MobilePan);
         }
 
-        protected override void OnTouchClick(int x, int y, bool isLong)
+        protected override void OnTouchClick(int x, int y)
         {
             if (captureOperation != CaptureOperation.None)
                 return;

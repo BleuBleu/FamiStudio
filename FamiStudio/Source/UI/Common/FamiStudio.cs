@@ -430,6 +430,11 @@ namespace FamiStudio
             mainForm.Run();
         }
 
+        public void ShowContextMenu(ContextMenuOption[] options, Action<int> callback)
+        {
+            mainForm.ShowContextMenu(options, callback);
+        }
+
         private void InitializeMultiMediaNotifications()
         {
 #if FAMISTUDIO_WINDOWS
@@ -1949,6 +1954,21 @@ namespace FamiStudio
         {
             Sequencer.InvalidatePatternCache();
             MarkEverythingDirty();
+        }
+    }
+
+    // Move this to a common class
+    public class ContextMenuOption
+    {
+        public string Image { get; private set; }
+        public string Text { get; private set; }
+        public int Result { get; private set; }
+
+        public ContextMenuOption(string img, string text, int result)
+        {
+            Image = img;
+            Text = text;
+            Result = result;
         }
     }
 }

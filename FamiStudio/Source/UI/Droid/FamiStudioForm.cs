@@ -105,8 +105,6 @@ namespace FamiStudio
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
 
-            EnableFullscreenMode(Window);
-
             // DROIDTODO : Move this to a function!
             //Settings.Load(); // DROIDTODO : Settings.
             DpiScaling.Initialize();
@@ -153,6 +151,12 @@ namespace FamiStudio
             scaleDetector.QuickScaleEnabled = true;
 
             Choreographer.Instance.PostFrameCallback(this);
+        }
+
+        public override void OnWindowFocusChanged(bool hasFocus)
+        {
+            base.OnWindowFocusChanged(hasFocus);
+            EnableFullscreenMode(Window);
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
@@ -454,6 +458,8 @@ namespace FamiStudio
 
             contextMenuCallback = callback;
             contextMenuDialog.Show();
+
+            PlatformUtils.VibrateTick();
         }
 
         private void ContextMenuDialog_DismissEvent(object sender, EventArgs e)
@@ -467,7 +473,11 @@ namespace FamiStudio
 
             contextMenuDialog = null;
 
-            StartGLThread();
+            // The callback may start a dialog.
+            if (dialogCallback == null)
+            {
+                StartGLThread();
+            }
         }
 
         private void ContextMenuDialog_Click(object sender, EventArgs e)
@@ -477,6 +487,8 @@ namespace FamiStudio
             contextMenuCallback(tag.res);
             contextMenuCallback = null;
             contextMenuDialog.Dismiss();
+
+            PlatformUtils.VibrateClick();
         }
 
         int c = 0;
@@ -549,19 +561,9 @@ namespace FamiStudio
 
         public void OnLongPress(MotionEvent e)
         {
-            PlatformUtils.VibrateClick();
-
-            ShowContextMenu(new[]
-            {
-                new ContextMenuOption("", "Hello", 0),
-                new ContextMenuOption("", "Toto", 1),
-                new ContextMenuOption("", "Titi", 2)
-            },
-            (i) => { });
-
             Debug.WriteLine($"{c++} OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
             lock (renderLock)
-                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y, true);
+                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchLongPress(x, y);
         }
 
         public bool OnScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
@@ -578,7 +580,7 @@ namespace FamiStudio
         {
             Debug.WriteLine($"{c++} {e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
             lock (renderLock)
-                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y, false);
+                GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y);
             return false;
         }
 
@@ -640,19 +642,4 @@ namespace FamiStudio
         }
     }
 #endif
-
-    // Move this to a common class
-    public class ContextMenuOption
-    {
-        public string Image  { get; private set; }
-        public string Text   { get; private set; }
-        public int    Result { get; private set; }
-
-        public ContextMenuOption(string img, string text, int result)
-        {
-            Image  = img;
-            Text   = text;
-            Result = result;
-        }
-    }
 }

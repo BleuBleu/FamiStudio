@@ -44,7 +44,8 @@ namespace FamiStudio
         protected virtual void OnTouchDown(int x, int y) { }
         protected virtual void OnTouchUp(int x, int y) { }
         protected virtual void OnTouchMove(int x, int y) { }
-        protected virtual void OnTouchClick(int x, int y, bool isLong) { }
+        protected virtual void OnTouchClick(int x, int y) { }
+        protected virtual void OnTouchLongPress(int x, int y) { }
         protected virtual void OnTouchScale(int x, int y, float scale, TouchScalePhase phase) { }
         protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
         public virtual void DoMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
@@ -64,7 +65,8 @@ namespace FamiStudio
         public void TouchDown(int x, int y) { OnTouchDown(x, y); }
         public void TouchUp(int x, int y) { OnTouchUp(x, y); }
         public void TouchMove(int x, int y) { OnTouchMove(x, y); }
-        public void TouchClick(int x, int y, bool isLong) { OnTouchClick(x, y, isLong); }
+        public void TouchClick(int x, int y) { OnTouchClick(x, y); }
+        public void TouchLongPress(int x, int y) { OnTouchLongPress(x, y); }
         public void TouchScale(int x, int y, float scale, TouchScalePhase phase) { OnTouchScale(x, y, scale, phase); }
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void Focus() { }

@@ -801,7 +801,7 @@ namespace FamiStudio
             captureOperation = CaptureOperation.None;
         }
 
-        protected override void OnTouchClick(int x, int y, bool isLong)
+        protected override void OnTouchClick(int x, int y)
         {
             foreach (var btn in buttons)
             {

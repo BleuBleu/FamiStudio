@@ -1171,6 +1171,32 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnTouchLongPress(int x, int y)
+        {
+            bool inPatternZone = GetPatternForCoord(x, y, out var channelIdx, out var patternIdx, out var inPatternHeader);
+
+            if (inPatternZone)
+            {
+                var channel = Song.Channels[channelIdx];
+                var pattern = channel.PatternInstances[patternIdx];
+
+                if (pattern != null)
+                {
+                    App.ShowContextMenu(new[]
+                    {
+                        new ContextMenuOption("", "Pattern Properties...", 0),
+                    },
+                    (i) => 
+                    {
+                        if (i == 0)
+                        {
+                            EditPatternProperties(Point.Empty, pattern);
+                        }
+                    });
+                }
+            }
+        }
+
         private Pattern[,] GetSelectedPatterns(out Song.PatternCustomSetting[] customSettings)
         {
             customSettings = null;

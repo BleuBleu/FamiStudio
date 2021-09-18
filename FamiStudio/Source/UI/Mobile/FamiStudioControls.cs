@@ -274,10 +274,11 @@ namespace FamiStudio
                 if (prevTimer > 0.5f && transitionTimer <= 0.5f)
                 {
                     activeControl = transitionControl;
-                    activeControl.MarkDirty();
                     transitionControl = null;
                     UpdateLayout(true);
                 }
+
+                MarkDirty();
             }
         }
 

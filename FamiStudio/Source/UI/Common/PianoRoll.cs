@@ -4624,12 +4624,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnTouchClick(int x, int y, bool isLong)
+        protected override void OnTouchClick(int x, int y)
         {
-            if (!isLong)
-            {
-                if (HandleTouchClickToggleEffectPanelButton(x, y)) goto Handled;
-            }
+            if (HandleTouchClickToggleEffectPanelButton(x, y)) goto Handled;
 
         Handled: // Yes, i use a goto, sue me.
             MarkDirty();
