@@ -303,6 +303,30 @@ namespace FamiStudio
             SelectionChanged?.Invoke();
         }
 
+        private void SetSelection(int minChannelIdx, int maxChannelIdx, int minPatternIdx, int maxPatternIdx)
+        {
+            minSelectedChannelIdx = minChannelIdx;
+            maxSelectedChannelIdx = maxChannelIdx;
+            minSelectedPatternIdx = minPatternIdx;
+            maxSelectedPatternIdx = maxPatternIdx;
+            SelectionChanged?.Invoke();
+        }
+
+        private void EnsureSelectionInclude(int channelIdx, int patternIdx)
+        {
+            if (!IsSelectionValid())
+            {
+                SetSelection(channelIdx, channelIdx, patternIdx, patternIdx);
+            }
+            else
+            {
+                minSelectedChannelIdx = Math.Min(minSelectedChannelIdx, channelIdx);
+                maxSelectedChannelIdx = Math.Max(minSelectedChannelIdx, channelIdx);
+                minSelectedPatternIdx = Math.Min(minSelectedPatternIdx, patternIdx);
+                maxSelectedPatternIdx = Math.Max(minSelectedPatternIdx, patternIdx);
+            }
+        }
+
         private bool IsPatternSelected(int channelIdx, int patternIdx)
         {
             return channelIdx >= minSelectedChannelIdx && channelIdx <= maxSelectedChannelIdx &&
@@ -385,9 +409,9 @@ namespace FamiStudio
         protected bool IsSelectionValid()
         {
             return minSelectedPatternIdx >= 0 &&
-                    maxSelectedPatternIdx >= 0 &&
-                    minSelectedChannelIdx >= 0 &&
-                    maxSelectedChannelIdx >= 0;
+                   maxSelectedPatternIdx >= 0 &&
+                   minSelectedChannelIdx >= 0 &&
+                   maxSelectedChannelIdx >= 0;
         }
 
         private bool IsValidTimeOnlySelection()
@@ -895,6 +919,36 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        private void CreateNewPattern(int channelIdx, int patternIdx)
+        {
+            var channel = Song.Channels[channelIdx];
+
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            channel.PatternInstances[patternIdx] = channel.CreatePattern();
+            channel.InvalidateCumulativePatternCache();
+            PatternClicked?.Invoke(channelIdx, patternIdx);
+            App.UndoRedoManager.EndTransaction();
+
+            ClearSelection();
+            MarkDirty();
+        }
+
+        private void DeletePattern(int channelIdx, int patternIdx)
+        {
+            var channel = Song.Channels[channelIdx];
+            var pattern = channel.PatternInstances[patternIdx];
+
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            patternCache.Remove(pattern);
+            channel.PatternInstances[patternIdx] = null;
+            channel.InvalidateCumulativePatternCache();
+            PatternModified?.Invoke();
+            App.UndoRedoManager.EndTransaction();
+
+            ClearSelection();
+            MarkDirty();
+        }
+
         private bool HandleMouseDownPan(MouseEventArgs e)
         {
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
@@ -918,13 +972,11 @@ namespace FamiStudio
                 {
                     scrollX -= (Width - trackNameSizeX);
                     ClampScroll();
-                    MarkDirty();
                 }
                 else if (x > (scrollBarPosX + scrollBarSizeX))
                 {
                     scrollX += (Width - trackNameSizeX);
                     ClampScroll();
-                    MarkDirty();
                 }
                 else if (x >= scrollBarPosX && x <= (scrollBarPosX + scrollBarSizeX))
                 {
@@ -953,13 +1005,11 @@ namespace FamiStudio
                     else
                         App.ToggleChannelSolo(trackIcon);
 
-                    MarkDirty();
                     return true;
                 }
                 else if (ghostIcon >= 0)
                 {
                     App.ToggleChannelGhostNotes(ghostIcon);
-                    MarkDirty();
                     return true;
                 }
             }
@@ -1026,7 +1076,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownPatterns(MouseEventArgs e)
+        private bool HandleMouseDownPatternArea(MouseEventArgs e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
@@ -1045,13 +1095,7 @@ namespace FamiStudio
 
                     if (pattern == null && !shift)
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                        channel.PatternInstances[patternIdx] = channel.CreatePattern();
-                        channel.InvalidateCumulativePatternCache();
-                        PatternClicked?.Invoke(channelIdx, patternIdx);
-                        App.UndoRedoManager.EndTransaction();
-                        ClearSelection();
-                        MarkDirty();
+                        CreateNewPattern(channelIdx, patternIdx);
                     }
                     else
                     {
@@ -1073,23 +1117,13 @@ namespace FamiStudio
                         selectionDragAnchorPatternIdx = patternIdx;
                         selectionDragAnchorPatternXFraction = (e.X - trackNameSizeX + scrollX - GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(patternIdx), false)) / (float)GetPixelForNote(Song.GetPatternLength(patternIdx), false);
                         StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSelection);
-
-                        MarkDirty();
                     }
 
                     return true;
                 }
                 else if (right && inPatternHeader && pattern != null)
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
-                    patternCache.Remove(pattern);
-                    channel.PatternInstances[patternIdx] = null;
-                    channel.InvalidateCumulativePatternCache();
-                    App.UndoRedoManager.EndTransaction();
-                    ClearSelection();
-                    MarkDirty();
-                    PatternModified?.Invoke();
-
+                    DeletePattern(channelIdx, patternIdx);
                     return true;
                 }
                 else if (right)
@@ -1125,7 +1159,7 @@ namespace FamiStudio
             if (HandleMouseDownHeaderSelection(e)) goto Handled;
             if (HandleMouseDownChannelChange(e)) goto Handled;
             if (HandleMouseDownAltZoom(e)) goto Handled;
-            if (HandleMouseDownPatterns(e)) goto Handled;
+            if (HandleMouseDownPatternArea(e)) goto Handled;
             return;
 
         Handled:
@@ -1148,6 +1182,43 @@ namespace FamiStudio
             if (IsCoordIsChannelArea(x, y))
             {
                 ChangeChannelForCoord(y);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchClickPatternArea(int x, int y)
+        {
+            bool inPatternZone = GetPatternForCoord(x, y, out var channelIdx, out var patternIdx, out var inPatternHeader);
+
+            if (inPatternZone)
+            {
+                var channel = Song.Channels[channelIdx];
+                var pattern = channel.PatternInstances[patternIdx];
+
+                // DROIDTODO : Check if delete tool.
+                if (pattern == null)
+                {
+                    CreateNewPattern(channelIdx, patternIdx);
+                    SetSelection(channelIdx, channelIdx, patternIdx, patternIdx);
+                }
+                else
+                {
+                    if (!IsSelectionValid() || 
+                        (minSelectedChannelIdx != channelIdx ||
+                         maxSelectedChannelIdx != channelIdx ||
+                         minSelectedPatternIdx != patternIdx ||
+                         maxSelectedPatternIdx != patternIdx))
+                    {
+                        SetSelection(channelIdx, channelIdx, patternIdx, patternIdx);
+                    }
+                    else 
+                    {
+                        ClearSelection();
+                    }
+                }
+
                 return true;
             }
 
@@ -1195,9 +1266,9 @@ namespace FamiStudio
 
                     App.ShowContextMenu(new[]
                     {
-                    new ContextMenuOption("", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", ResultSetLoopPoint),
-                    new ContextMenuOption("", "Custom Pattern Settings...", ResultCustumSettings)
-                    },
+                        new ContextMenuOption("", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", ResultSetLoopPoint),
+                        new ContextMenuOption("", "Custom Pattern Settings...", ResultCustumSettings)
+                    }, 
                     (i) =>
                     {
                         if (i == ResultSetLoopPoint)
@@ -1206,6 +1277,64 @@ namespace FamiStudio
                             EditPatternCustomSettings(Point.Empty, patternIdx);
                     });
                 }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchLongPressPatternArea(int x, int y)
+        {
+            bool inPatternZone = GetPatternForCoord(x, y, out var channelIdx, out var patternIdx, out var inPatternHeader);
+
+            if (inPatternZone)
+            {
+                var channel = Song.Channels[channelIdx];
+                var pattern = channel.PatternInstances[patternIdx];
+                
+                var menu = new List<ContextMenuOption>(); ;
+
+                const int ResultPastePatternInstances = 0;
+                const int ResultPastePatternCopies    = 1;
+                const int ResultExpandSelection       = 2;
+                const int ResultDeleteSelection       = 3;
+                const int ResultPatternProperties     = 4;
+
+                // DROIDTODO : This isnt right for instances, etc.
+                if (ClipboardUtils.ConstainsPatterns)
+                {
+                    menu.Add(new ContextMenuOption("", "Paste Instances", ResultPastePatternInstances));
+                    menu.Add(new ContextMenuOption("", "Paste Copies",    ResultPastePatternCopies));
+                }
+
+                // DROIDTODO : This doesnt work well with the fact that we change the selection below.
+                // Should we have an "highlighted" pattern like in the piano roll?
+                if (IsSelectionValid())
+                    menu.Add(new ContextMenuOption("", "Expand Selection", ResultExpandSelection));
+
+                if (pattern != null)
+                {
+                    if (!IsPatternSelected(channelIdx, patternIdx))
+                        SetSelection(channelIdx, channelIdx, patternIdx, patternIdx);
+
+                    menu.Add(new ContextMenuOption("", "Delete selection", ResultDeleteSelection));
+                    menu.Add(new ContextMenuOption("", "Pattern(s) Properties...", ResultPatternProperties));
+                }
+                
+                App.ShowContextMenu(menu.ToArray(), (i) =>
+                {
+                    if (i == ResultPastePatternInstances)
+                        ; // DROIDTODO : Copy/paste!
+                    else if (i == ResultPastePatternCopies)
+                        ; // DROIDTODO : Copy/paste!
+                    else if (i == ResultExpandSelection)
+                        EnsureSelectionInclude(channelIdx, patternIdx);
+                    else if (i == ResultDeleteSelection)
+                        DeleteSelection(true);
+                    else if (i == ResultPatternProperties)
+                        EditPatternProperties(Point.Empty, pattern);
+                });
 
                 return true;
             }
@@ -1274,6 +1403,7 @@ namespace FamiStudio
 
             if (captureOperation != CaptureOperation.None)
             {
+                AbortCaptureOperation(); // Temporary.
                 Debug.WriteLine("Oops");
             }
 
@@ -1304,8 +1434,10 @@ namespace FamiStudio
             // Pattern area:
             // - Add pattern if empty (if pencil tool)
             // - Select single pattern (if pencil tool)
+            // - 
 
             if (HandleTouchClickChannelChange(x, y)) goto Handled;
+            if (HandleTouchClickPatternArea(x, y)) goto Handled;
 
             return;
 
@@ -1326,6 +1458,7 @@ namespace FamiStudio
 
             if (HandleTouchLongPressChannelName(x, y)) goto Handled;
             if (HandleTouchLongPressHeader(x, y)) goto Handled;
+            if (HandleTouchLongPressPatternArea(x, y)) goto Handled;
 
             return;
 

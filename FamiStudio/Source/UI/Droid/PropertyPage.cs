@@ -361,16 +361,17 @@ namespace FamiStudio
             return 0;
         }
 
-        private ColorPickerView CreateColorPicker()
+        private ColorPickerView CreateColorPicker(Color color)
         {
             var picker = new ColorPickerView(context);
+            picker.SelectedColor = color;
             return picker;
         }
 
-        public int AddColorPicker(System.Drawing.Color color)
+        public int AddColorPicker(Color color)
         {
             var prop = new Property();
-            var picker = CreateColorPicker();
+            var picker = CreateColorPicker(color);
 
             prop.type = PropertyType.ColorPicker;
             prop.label = CreateTextView("Color", Resource.Style.LightGrayTextMedium);
@@ -954,14 +955,27 @@ namespace FamiStudio
         Paint borderPaint;
         Paint[,] fillPaints;
 
-        // MATTT : Pass real selected color here.
-        int selectedColorX = 3;
-        int selectedColorY = 3;
+        int selectedColorX;
+        int selectedColorY;
 
-        const int BorderWidth = 5;
+        const int   BorderWidth = 5;
         const float MaxHeightScreen = 0.4f;
 
-        public System.Drawing.Color SelectedColor => Theme.CustomColors[selectedColorX, selectedColorY];
+        public Color SelectedColor
+        {
+            get
+            {
+                return Theme.CustomColors[selectedColorX, selectedColorY];
+            }
+            set
+            {
+                var idx = Theme.GetCustomColorIndex(value);
+                var len = Theme.CustomColors.GetLength(0);
+                selectedColorX = idx % len;
+                selectedColorY = idx / len;
+                Invalidate();
+            } 
+        }
 
         public ColorPickerView(Context context) : base(context)
         {
@@ -1000,13 +1014,11 @@ namespace FamiStudio
 
         private void SelectColorAt(float x, float y)
         {
-            var buttonSizeX = Width / (float)Theme.CustomColors.GetLength(0);
+            var buttonSizeX = Width  / (float)Theme.CustomColors.GetLength(0);
             var buttonSizeY = Height / (float)Theme.CustomColors.GetLength(1);
 
-            var newSelectedColorX = (int)(x / buttonSizeX);
-            var newSelectedColorY = (int)(y / buttonSizeY);
-
-            // MATTT : Clamp here!!!
+            var newSelectedColorX = Utils.Clamp((int)(x / buttonSizeX), 0, Theme.CustomColors.GetLength(0) - 1);
+            var newSelectedColorY = Utils.Clamp((int)(y / buttonSizeY), 0, Theme.CustomColors.GetLength(1) - 1);
 
             if (newSelectedColorX != selectedColorX ||
                 newSelectedColorY != selectedColorY)
@@ -1091,7 +1103,7 @@ namespace FamiStudio
                     if (percentHeight > MaxHeightScreen)
                     {
                         height = (int)(Context.Resources.DisplayMetrics.HeightPixels * MaxHeightScreen);
-                        width = (int)(height / ratio);
+                        width  = (int)(height / ratio);
                     }
                 }
             }

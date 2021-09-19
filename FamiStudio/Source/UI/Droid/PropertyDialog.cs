@@ -26,7 +26,7 @@ namespace FamiStudio
         public const int RequestCode = 1001;
 
         private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
-        public PropertyPage Properties => propertyPage;
+        public  PropertyPage Properties => propertyPage;
 
         public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, object parent = null)
         {
@@ -50,6 +50,8 @@ namespace FamiStudio
         private NestedScrollView scrollView;
         private FragmentContainerView fragmentView;
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
+
+        const int ApplyItemId = 321;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -97,30 +99,21 @@ namespace FamiStudio
             SupportFragmentManager.BeginTransaction().SetReorderingAllowed(true).Add(fragmentView.Id, dlg.Properties, "PropertyDialog").Commit();
         }
 
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            SetResult(item != null && item.ItemId == ApplyItemId ? Result.Ok : Result.Canceled);
+            Finish();
+
+            return base.OnOptionsItemSelected(item);
+        }
+
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             menu.Clear();
-            var item = menu.Add(IMenu.None, 123, IMenu.None, "Apply"); // MATTT : Label + ID.
+            var item = menu.Add(IMenu.None, ApplyItemId, IMenu.None, "Apply"); // DROIDTODO : Make the "verb" configurable.
             item.SetShowAsAction(ShowAsAction.Always);
 
             return true;
-        }
-
-        public override bool OnTouchEvent(MotionEvent e)
-        {
-            // MATTT : This is temporary.
-            if (e.Action == MotionEventActions.Down)
-            {
-                SetResult(Result.Ok);
-                Finish();
-            }
-
-            return base.OnTouchEvent(e);
-        }
-
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
         }
     }
 }
