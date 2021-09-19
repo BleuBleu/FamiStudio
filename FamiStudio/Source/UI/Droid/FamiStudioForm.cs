@@ -460,7 +460,7 @@ namespace FamiStudio
             contextMenuCallback = callback;
             contextMenuDialog.Show();
 
-            PlatformUtils.VibrateTick();
+            PlatformUtils.VibrateClick();
         }
 
         private void ContextMenuDialog_DismissEvent(object sender, EventArgs e)
@@ -485,7 +485,7 @@ namespace FamiStudio
             contextMenuDialog.Dismiss();
             MarkDirty();
 
-            PlatformUtils.VibrateClick();
+            PlatformUtils.VibrateTick();
         }
 
         int c = 0;
