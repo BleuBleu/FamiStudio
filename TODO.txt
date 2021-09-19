@@ -99,6 +99,11 @@ Controls:
 	- Header Swipe = select (unless dragging seek bar itself)
 	- Header Tap = seek
 
+Toolbar:
+- Collapse when pressing outside (or pressing any button?)
+- Add version next to "..."
+- 
+
 Prop page:
 / Reactivate dialogs in code, test
 - Numeric updown await issue.
