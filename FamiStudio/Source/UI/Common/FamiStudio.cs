@@ -992,6 +992,11 @@ namespace FamiStudio
             {
                 instrumentPlayer.ReleaseNote(Sequencer.SelectedChannel);
             }
+            if (ProjectExplorer.SelectedInstrument.HasReleaseEnvelope || (ProjectExplorer.SelectedInstrument.ExpansionType == ExpansionType.EPSM &&
+                (song.Channels[Sequencer.SelectedChannel].IsEPSMFmChannel || song.Channels[Sequencer.SelectedChannel].IsEPSMRythmChannel)))
+            {
+                instrumentPlayer.ReleaseNote(Sequencer.SelectedChannel);
+            }
             else
             {
                 instrumentPlayer.StopAllNotes();

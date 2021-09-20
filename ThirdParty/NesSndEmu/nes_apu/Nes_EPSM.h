@@ -6,6 +6,7 @@
 
 #include "Nes_Apu.h"
 #include "ym3438.h"
+#include <queue>
 #include <array>
 
 class Nes_EPSM {
@@ -38,6 +39,8 @@ private:
 	// noncopyable
 	Nes_EPSM(const Nes_EPSM&);
 	Nes_EPSM& operator = (const Nes_EPSM&);
+	std::queue<int> dataWrite;
+	std::queue<int> aWrite;
 
 	void reset_psg();
 	void reset_opn2();
@@ -48,18 +51,6 @@ private:
 	double vol;
 	struct __PSG* psg;
 	ym3438_t opn2;
-
-
-	struct InputEntry
-	{
-		uint8_t addr = 0;
-		uint8_t data = 0;
-		uint8_t time = 0;
-		uint8_t wrote = 0;
-	};
-	static constexpr uint8_t INPUT_BUFFER_SIZE = 24;
-	using InputBuffer = std::array<InputEntry, INPUT_BUFFER_SIZE>;
-	InputBuffer _inputBuffer;
 
 	Blip_Buffer* output_buffer;
 	cpu_time_t last_time;

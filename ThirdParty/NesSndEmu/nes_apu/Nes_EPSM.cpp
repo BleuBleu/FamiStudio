@@ -48,11 +48,6 @@ void Nes_EPSM::reset_psg()
 
 void Nes_EPSM::reset_opn2()
 {
-	//if (opn2)
-		// destruct or handle opn2 somehow
-	//opn2 = new ym3438_t();
-	//opn2 = OPN_New();
-	// construct opn2 somehow
 	OPN2_Reset(&opn2);
 	OPN2_SetChipType(0);
 }
@@ -74,8 +69,6 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 {
 	if (idx < 3)
 	{
-		//Console.WriteLine("enable idx " + idx);
-	//idx = idx - 3;
 		if (psg)
 		{
 			if (enabled)
@@ -87,53 +80,19 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 }
 
 void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
-{
-	if (addr >= reg_select && addr < (reg_select + reg_range)) {
-		//a0 = 0;
-		//a1 = 0;
+{	if (addr >= reg_select && addr < (reg_select + reg_range)) {
 		reg = data;
-		//if (addr == 0xC002) { a1 = 1; }
-		//OPN2_Write(opn2, a0 | (a1 << 1), data);
 	}
 	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
-		//std::cout << "addr" << addr << std::endl;
 			if((addr == 0xE000) && (reg < 0x10)){
-			//	std::cout << "addr ok write still" << addr << "a1" << a1 <<  std::endl;
-				//PSG_writeReg(psg, reg, data);
-			//	a0 = 1;
 			}
-			//if ((addr == 0xE002) && (reg < 0x10)) {
-			//	a0 = 1;
-			//}
-			//std::cout << "addr again " << addr << "a1" << a1 << std::endl;
-		//OPN2_Write(opn2, a0 | (a1 << 1), data);
 	}
 
-	int t = 0;
-	int sample = 0;
-	while (t < 10)
-	{
-		int16_t samples[4];
-		OPN2_Clock(&opn2, samples);
-		sample += (samples[0] + samples[1]) / 2;
-		sample += (samples[2] + samples[3]) / 2;
-		t++;
-	}
-	sample = clamp(sample, -7710, 7710);
-	int delta = sample - last_amp;
-	if (delta)
-	{
-		synth.offset(t, delta, output_buffer);
-		last_amp = sample;
-	}
-
-		a0 = (addr & 0xF000) == 0xE000; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
-		a1 = !!(addr & 0xF); //const uint8_t a1 = !!(addr & 0xF);
-		//if (a0 == 0x0) { addr = 0xC000; }
-		//if (a0 == 0x1) { addr = 0xE000; }
-		if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
-		OPN2_Write(&opn2,a0 | (a1 << 1), data);
-		std::cout << "time " << time << std::endl;
+	a0 = (addr & 0xF000) == 0xE000; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
+	a1 = !!(addr & 0xF); //const uint8_t a1 = !!(addr & 0xF);
+	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
+	dataWrite.push(data);
+	aWrite.push((a0 | (a1 << 1)));
 
 }
 
@@ -148,28 +107,29 @@ void Nes_EPSM::end_frame(cpu_time_t time)
 
 	while (t < time)
 	{
+		if (!dataWrite.empty() && !aWrite.empty())
+		{
+			OPN2_Write(&opn2, aWrite.front(), dataWrite.front());
+			dataWrite.pop();
+			aWrite.pop();
+		}
 		int sample = PSG_calc(psg);
 		sample = clamp(sample, -7710, 7710);
-		int sampleopn2 = 0;
 		int t2 = 0;
 		int16_t samples[4];
 		while (t2 < 12)
 		{
 			OPN2_Clock(&opn2, samples);
-			sampleopn2 += (samples[0] + samples[1]) / 2;
-			sampleopn2 += (samples[2] + samples[3]) / 4;
+			sample += (samples[0] + samples[1]) * 4;
+			sample += (samples[2] + samples[3]) / 8;
 			t2++;
 		}
-
-		sampleopn2 = clamp(sampleopn2, -7710, 7710);
-		sample = sample + sampleopn2;
 		int delta = sample - last_amp;
 		if (delta)
 		{
 			synth.offset(t, delta, output_buffer);
 			last_amp = sample;
 		}
-
 		t += 16;
 	}
 
@@ -195,8 +155,8 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 
 void Nes_EPSM::write_shadow_register(int addr, int data)
 {
-	if (addr >= reg_select && addr < (reg_select + reg_range))
+	/*if (addr >= reg_select && addr < (reg_select + reg_range))
 		reg = data;
 	else if (addr >= reg_write && addr < (reg_write + reg_range))
-		shadow_internal_regs[reg] = data;
+		shadow_internal_regs[reg] = data;*/
 }

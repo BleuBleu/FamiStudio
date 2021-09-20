@@ -26,6 +26,8 @@ namespace FamiStudio
         public bool IsFdsWaveChannel => type == ChannelType.FdsWave;
         public bool IsN163WaveChannel => type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8;
         public bool IsVrc7FmChannel => type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6;
+        public bool IsEPSMFmChannel => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
+        public bool IsEPSMRythmChannel => type >= ChannelType.EPSMrythm1 && type <= ChannelType.EPSMrythm6;
         public bool IsNoiseChannel => type == ChannelType.Noise;
 
         public Channel(Song song, int type, int songLength)
@@ -1647,12 +1649,12 @@ namespace FamiStudio
             "FM 4", // EPSM
             "FM 5", // EPSM
             "FM 6", // EPSM
-            "Rythm 1", // EPSM
-            "Rythm 2", // EPSM
-            "Rythm 3", // EPSM
-            "Rythm 4", // EPSM
-            "Rythm 5", // EPSM
-            "Rythm 6", // EPSM
+            "Bass Drum", // EPSM
+            "Snare Drum", // EPSM
+            "Top Cymbal", // EPSM
+            "Hi-hat", // EPSM
+            "Tom", // EPSM
+            "Rim shot", // EPSM
         };
 
         public static readonly string[] ShortNames =
