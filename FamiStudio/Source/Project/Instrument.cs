@@ -34,6 +34,10 @@ namespace FamiStudio
         private byte vrc7Patch = Vrc7InstrumentPatch.Bell;
         private byte[] vrc7PatchRegs = new byte[8];
 
+        // EPSM
+        private byte epsmPatch = EPSMInstrumentPatch.Bell;
+        private byte[] epsmPatchRegs = new byte[31];
+
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
@@ -43,6 +47,7 @@ namespace FamiStudio
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
+        public byte[] EpsmPatchRegs => epsmPatchRegs;
 
         public Instrument()
         {
@@ -73,6 +78,11 @@ namespace FamiStudio
             {
                 vrc7Patch = Vrc7InstrumentPatch.Bell;
                 Array.Copy(Vrc7InstrumentPatch.Infos[Vrc7InstrumentPatch.Bell].data, vrc7PatchRegs, 8);
+            }
+            else if (expansion == global::FamiStudio.ExpansionType.EPSM)
+            {
+                epsmPatch = EPSMInstrumentPatch.Bell;
+                Array.Copy(EPSMInstrumentPatch.Infos[EPSMInstrumentPatch.Bell].data, epsmPatchRegs, 31);
             }
         }
 
@@ -173,6 +183,17 @@ namespace FamiStudio
             }
         }
 
+        public byte EpsmPatch
+        {
+            get { return epsmPatch; }
+            set
+            {
+                epsmPatch = value;
+                if (epsmPatch != 0)
+                    Array.Copy(EPSMInstrumentPatch.Infos[epsmPatch].data, epsmPatchRegs, 31);
+            }
+        }
+
         public ushort FdsModSpeed     { get => fdsModSpeed;     set => fdsModSpeed = value; }
         public byte   FdsModDepth     { get => fdsModDepth;     set => fdsModDepth = value; }
         public byte   FdsModDelay     { get => fdsModDelay;     set => fdsModDelay = value; } 
@@ -197,6 +218,11 @@ namespace FamiStudio
         public static string GetVrc7PatchName(int preset)
         {
             return Vrc7InstrumentPatch.Infos[preset].name;
+        }
+
+        public static string GetEpsmPatchName(int preset)
+        {
+            return EPSMInstrumentPatch.Infos[preset].name;
         }
 
         public uint ComputeCRC(uint crc = 0)
@@ -277,6 +303,41 @@ namespace FamiStudio
                             buffer.Serialize(ref vrc7PatchRegs[5]);
                             buffer.Serialize(ref vrc7PatchRegs[6]);
                             buffer.Serialize(ref vrc7PatchRegs[7]);
+                            break;
+
+                        case global::FamiStudio.ExpansionType.EPSM:
+                            buffer.Serialize(ref epsmPatch);
+                            buffer.Serialize(ref epsmPatchRegs[0]);
+                            buffer.Serialize(ref epsmPatchRegs[1]);
+                            buffer.Serialize(ref epsmPatchRegs[2]);
+                            buffer.Serialize(ref epsmPatchRegs[3]);
+                            buffer.Serialize(ref epsmPatchRegs[4]);
+                            buffer.Serialize(ref epsmPatchRegs[5]);
+                            buffer.Serialize(ref epsmPatchRegs[6]);
+                            buffer.Serialize(ref epsmPatchRegs[7]);
+                            buffer.Serialize(ref epsmPatchRegs[8]);
+                            buffer.Serialize(ref epsmPatchRegs[9]);
+                            buffer.Serialize(ref epsmPatchRegs[10]);
+                            buffer.Serialize(ref epsmPatchRegs[11]);
+                            buffer.Serialize(ref epsmPatchRegs[12]);
+                            buffer.Serialize(ref epsmPatchRegs[13]);
+                            buffer.Serialize(ref epsmPatchRegs[14]);
+                            buffer.Serialize(ref epsmPatchRegs[15]);
+                            buffer.Serialize(ref epsmPatchRegs[16]);
+                            buffer.Serialize(ref epsmPatchRegs[17]);
+                            buffer.Serialize(ref epsmPatchRegs[18]);
+                            buffer.Serialize(ref epsmPatchRegs[19]);
+                            buffer.Serialize(ref epsmPatchRegs[20]);
+                            buffer.Serialize(ref epsmPatchRegs[21]);
+                            buffer.Serialize(ref epsmPatchRegs[22]);
+                            buffer.Serialize(ref epsmPatchRegs[23]);
+                            buffer.Serialize(ref epsmPatchRegs[24]);
+                            buffer.Serialize(ref epsmPatchRegs[25]);
+                            buffer.Serialize(ref epsmPatchRegs[26]);
+                            buffer.Serialize(ref epsmPatchRegs[27]);
+                            buffer.Serialize(ref epsmPatchRegs[28]);
+                            buffer.Serialize(ref epsmPatchRegs[29]);
+                            buffer.Serialize(ref epsmPatchRegs[30]);
                             break;
                         case global::FamiStudio.ExpansionType.Vrc6:
                             // At version 10 (FamiStudio 3.0.0) we added a master volume to the VRC6 saw.
@@ -369,6 +430,53 @@ namespace FamiStudio
             new Vrc7PatchInfo() { name = "BassGuitar",   data = new byte[] { 0x01, 0x02, 0xd3, 0x05, 0xc9, 0x95, 0x03, 0x02 } }, // BassGuitar  
             new Vrc7PatchInfo() { name = "Synthesizer",  data = new byte[] { 0x61, 0x63, 0x0c, 0x00, 0x94, 0xC0, 0x33, 0xf6 } }, // Synthesizer 
             new Vrc7PatchInfo() { name = "Chorus",       data = new byte[] { 0x21, 0x72, 0x0d, 0x00, 0xc1, 0xd5, 0x56, 0x06 } }  // Chorus      
+        };
+    }
+
+
+    public static class EPSMInstrumentPatch
+    {
+        public const byte Custom = 0;
+        public const byte Bell = 1;
+        public const byte Guitar = 2;
+        public const byte Piano = 3;
+        public const byte Flute = 4;
+        public const byte Clarinet = 5;
+        public const byte RattlingBell = 6;
+        public const byte Trumpet = 7;
+        public const byte ReedOrgan = 8;
+        public const byte SoftBell = 9;
+        public const byte Xylophone = 10;
+        public const byte Vibraphone = 11;
+        public const byte Brass = 12;
+        public const byte BassGuitar = 13;
+        public const byte Synthetizer = 14;
+        public const byte Chorus = 15;
+
+        public struct EPSMPatchInfo
+        {
+            public string name;
+            public byte[] data;
+        };
+
+        public static readonly EPSMPatchInfo[] Infos = new[]
+        {
+            new EPSMPatchInfo() { name = "Custom",       data = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Custom      
+            new EPSMPatchInfo() { name = "Bell",         data = new byte[] { 0x03, 0x21, 0x05, 0x06, 0xe8, 0x81, 0x42, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Bell        
+            new EPSMPatchInfo() { name = "Guitar",       data = new byte[] { 0x13, 0x41, 0x14, 0x0d, 0xd8, 0xf6, 0x23, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Guitar      
+            new EPSMPatchInfo() { name = "Piano",        data = new byte[] { 0x11, 0x11, 0x08, 0x08, 0xfa, 0xb2, 0x20, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Piano       
+            new EPSMPatchInfo() { name = "Flute",        data = new byte[] { 0x31, 0x61, 0x0c, 0x07, 0xa8, 0x64, 0x61, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Flute       
+            new EPSMPatchInfo() { name = "Clarinet",     data = new byte[] { 0x32, 0x21, 0x1e, 0x06, 0xe1, 0x76, 0x01, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Clarinet    
+            new EPSMPatchInfo() { name = "RattlingBell", data = new byte[] { 0x02, 0x01, 0x06, 0x00, 0xa3, 0xe2, 0xf4, 0xf4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // RattlingBell
+            new EPSMPatchInfo() { name = "Trumpet",      data = new byte[] { 0x21, 0x61, 0x1d, 0x07, 0x82, 0x81, 0x11, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Trumpet     
+            new EPSMPatchInfo() { name = "ReedOrgan",    data = new byte[] { 0x23, 0x21, 0x22, 0x17, 0xa2, 0x72, 0x01, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // ReedOrgan   
+            new EPSMPatchInfo() { name = "SoftBell",     data = new byte[] { 0x35, 0x11, 0x25, 0x00, 0x40, 0x73, 0x72, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // SoftBell    
+            new EPSMPatchInfo() { name = "Xylophone",    data = new byte[] { 0xb5, 0x01, 0x0f, 0x0F, 0xa8, 0xa5, 0x51, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Xylophone   
+            new EPSMPatchInfo() { name = "Vibraphone",   data = new byte[] { 0x17, 0xc1, 0x24, 0x07, 0xf8, 0xf8, 0x22, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Vibraphone  
+            new EPSMPatchInfo() { name = "Brass",        data = new byte[] { 0x71, 0x23, 0x11, 0x06, 0x65, 0x74, 0x18, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Brass       
+            new EPSMPatchInfo() { name = "BassGuitar",   data = new byte[] { 0x01, 0x02, 0xd3, 0x05, 0xc9, 0x95, 0x03, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // BassGuitar  
+            new EPSMPatchInfo() { name = "Synthesizer",  data = new byte[] { 0x61, 0x63, 0x0c, 0x00, 0x94, 0xC0, 0x33, 0xf6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Synthesizer 
+            new EPSMPatchInfo() { name = "Chorus",       data = new byte[] { 0x21, 0x72, 0x0d, 0x00, 0xc1, 0xd5, 0x56, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }  // Chorus 
         };
     }
 

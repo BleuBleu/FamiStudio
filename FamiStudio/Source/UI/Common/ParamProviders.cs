@@ -67,7 +67,8 @@ namespace FamiStudio
                 instrument.ExpansionType == ExpansionType.Fds   ||
                 instrument.ExpansionType == ExpansionType.N163  ||
                 instrument.ExpansionType == ExpansionType.Vrc6  ||
-                instrument.ExpansionType == ExpansionType.Vrc7;
+                instrument.ExpansionType == ExpansionType.Vrc7  ||
+                instrument.ExpansionType == ExpansionType.EPSM;
         }
 
         static public ParamInfo[] GetParams(Instrument instrument)
@@ -178,6 +179,68 @@ namespace FamiStudio
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[2] & 0x3f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[2] = (byte)((instrument.Vrc7PatchRegs[2] & (~0x3f)) | ((v << 0) & 0x3f)); instrument.Vrc7Patch = 0; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Feedback", 0, 7, (Vrc7InstrumentPatch.Infos[1].data[3] & 0x07) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[3] & 0x07) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[3] = (byte)((instrument.Vrc7PatchRegs[3] & (~0x07)) | ((v << 0) & 0x07)); instrument.Vrc7Patch = 0; } });
+                    break;
+
+                case ExpansionType.EPSM:
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 15, 1, null, true)//set number of patches
+                    { GetValue = () => { return instrument.EpsmPatch; }, GetValueString = () => { return Instrument.GetEpsmPatchName(instrument.EpsmPatch); }, SetValue = (v) => { instrument.EpsmPatch = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Algorithm", 0, 7, (EPSMInstrumentPatch.Infos[1].data[0] & 0x07) >> 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[0] = (byte)((instrument.EpsmPatchRegs[0] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
+
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Feedback", 0, 7, (EPSMInstrumentPatch.Infos[1].data[0] & 0x38) >> 3)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x38) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[0] = (byte)((instrument.EpsmPatchRegs[0] & (~0x38)) | ((v << 3) & 0x38)); instrument.EpsmPatch = 0; } });
+
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Left", 0, 1, (EPSMInstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x80) >> 7; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x80)) | ((v << 7) & 0x80)); instrument.EpsmPatch = 0; } });
+
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Right", 0, 1, (EPSMInstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x40) >> 6; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x40)) | ((v << 6) & 0x40)); instrument.EpsmPatch = 0; } });
+
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "AMS", 0, 3, (EPSMInstrumentPatch.Infos[1].data[1] & 0x30) >> 4)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x30) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x30)) | ((v << 4) & 0x30)); instrument.EpsmPatch = 0; } });
+
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "PMS", 0, 7, (EPSMInstrumentPatch.Infos[1].data[1] & 0x07) >> 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
+
+                    for (int i = 1; i < 5; i++)
+                    {
+                        int i2 = ((7 * i) - 7);
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Detune", 0, 7, (EPSMInstrumentPatch.Infos[1].data[2 + (6 * i) - 6] & 0x70) >> 4)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x70) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x70)) | ((v << 4) & 0x70)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Frequency Ratio", 0, 15, (EPSMInstrumentPatch.Infos[1].data[(2 + i2)] & 0x0f) >> 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Volume", 0, 127, (EPSMInstrumentPatch.Infos[1].data[(3 + i2)] & 0x7f) >> 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(3 + i2)] & 0x7f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(3 + i2)] = (byte)((instrument.EpsmPatchRegs[(3 + i2)] & (~0x7f)) | ((v << 0) & 0x7f)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Key Scale", 0, 3, (EPSMInstrumentPatch.Infos[1].data[(4 + i2)] & 0xc0) >> 6)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(4 + i2)] & 0xc0) >> 6; }, SetValue = (v) => { instrument.EpsmPatchRegs[(4 + i2)] = (byte)((instrument.EpsmPatchRegs[(4 + i2)] & (~0xc0)) | ((v << 6) & 0xc0)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Attack Rate", 0, 31, (EPSMInstrumentPatch.Infos[1].data[(4 + i2)] & 0x1f) >> 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(4 + i2)] & 0x1f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(4 + i2)] = (byte)((instrument.EpsmPatchRegs[(4 + i2)] & (~0x1f)) | ((v << 0) & 0x1f)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Amplitude Modulation", 0, 1, (EPSMInstrumentPatch.Infos[1].data[(5 + i2)] & 0x80) >> 7)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(5 + i2)] & 0x80) >> 7; }, SetValue = (v) => { instrument.EpsmPatchRegs[(5 + i2)] = (byte)((instrument.EpsmPatchRegs[(5 + i2)] & (~0x80)) | ((v << 7) & 0x80)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Decay Rate", 0, 31, (EPSMInstrumentPatch.Infos[1].data[(5 + i2)] & 0x1f) >> 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(5 + i2)] & 0x1f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(5 + i2)] = (byte)((instrument.EpsmPatchRegs[(5 + i2)] & (~0x1f)) | ((v << 0) & 0x1f)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Sustain Rate", 0, 31, (EPSMInstrumentPatch.Infos[1].data[(6 + i2)] & 0x1f) >> 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(6 + i2)] & 0x1f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(6 + i2)] = (byte)((instrument.EpsmPatchRegs[(6 + i2)] & (~0x1f)) | ((v << 0) & 0x1f)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Sustain Level", 0, 15, (EPSMInstrumentPatch.Infos[1].data[(7 + i2)] & 0xf0) >> 4)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(7 + i2)] & 0xf0) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(7 + i2)] = (byte)((instrument.EpsmPatchRegs[(7 + i2)] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Release Rate", 0, 15, (EPSMInstrumentPatch.Infos[1].data[(7 + i2)] & 0x0f) >> 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(7 + i2)] & 0x0f) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(7 + i2)] = (byte)((instrument.EpsmPatchRegs[(7 + i2)] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.EpsmPatch = 0; } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " SSG-Envelope EN", 0, 1, (EPSMInstrumentPatch.Infos[1].data[(8 + i2)] & 0x08) >> 3)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x08) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x08)) | ((v << 3) & 0x08)); instrument.EpsmPatch = 0; } });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " SSG-Envelope", 0, 7, (EPSMInstrumentPatch.Infos[1].data[(8 + i2)] & 0x07) >> 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[(8 + i2)] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[(8 + i2)] = (byte)((instrument.EpsmPatchRegs[(8 + i2)] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
+                    }
+
                     break;
             }
 

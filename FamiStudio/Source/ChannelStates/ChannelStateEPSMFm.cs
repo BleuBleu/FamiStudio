@@ -11,7 +11,7 @@ namespace FamiStudio
         protected int ChannelAddr = NesApu.EPSM_ADDR0;
         protected int ChannelData = NesApu.EPSM_DATA0;
         protected int ChannelKey = 0;
-        protected byte vrc7Instrument = 0;
+        protected byte epsmInstrument = 0;
         protected byte prevPeriodHi;
         int lastNoteOn = 0;
 
@@ -21,7 +21,7 @@ namespace FamiStudio
             customRelease = true;
         }
 
-        private void WriteVrc7Register(int reg, int data)
+        private void WriteEPSMRegister(int reg, int data)
         {
          /*   WriteRegister(NesApu.VRC7_REG_SEL, reg);
             WriteRegister(NesApu.VRC7_REG_WRITE, data);*/
@@ -35,7 +35,7 @@ namespace FamiStudio
 
                 if (instrument.ExpansionType == ExpansionType.EPSM)
                 {
-                    if (instrument.Vrc7Patch == 0)
+                    if (instrument.EpsmPatch == 0)
                     {
                         // Tell other channels using custom patches that they will need 
                         // to reload their instruments.
@@ -49,10 +49,10 @@ namespace FamiStudio
                             (1 << ChannelType.EPSMFm6));
 
                         //for (byte i = 0; i < 8; i++)
-                        //    WriteVrc7Register(i, instrument.Vrc7PatchRegs[i]);
+                            //WriteEPSMRegister(i, instrument.EpsmPatchRegs[i]);
                     }
 
-                    //vrc7Instrument = (byte)(instrument.Vrc7Patch << 4);
+                    epsmInstrument = (byte)(instrument.EpsmPatch << 4);
                 }
            // }
         }
