@@ -39,6 +39,7 @@ namespace FamiStudio
         protected float windowScaling = 1.0f;
         protected float fontScaling   = 1.0f;
         protected int windowSizeY;
+        protected int maxSmoothLineWidth = int.MaxValue;
         protected Rectangle controlRect;
         protected Rectangle controlRectFlip;
         protected GLTransform transform = new GLTransform();
@@ -123,7 +124,7 @@ namespace FamiStudio
 
         public virtual GLCommandList CreateCommandList()
         {
-            return new GLCommandList(this, dashedBitmap.Size.Width);
+            return new GLCommandList(this, dashedBitmap.Size.Width, true, maxSmoothLineWidth);
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc)
@@ -877,6 +878,7 @@ namespace FamiStudio
         public bool HasAnyTickLineMeshes => false;
 #endif
 
+        private int maxSmoothLineWidth = int.MaxValue;
         private float invDashTextureSize;
         private MeshBatch meshBatch;
         private MeshBatch meshSmoothBatch;
@@ -897,11 +899,12 @@ namespace FamiStudio
         public bool HasAnyBitmaps => bitmaps.Count > 0;
         public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps || HasAnyTickLineMeshes;
 
-        public GLCommandList(GLGraphicsBase g, int dashTextureSize, bool supportsLineWidth = true)
+        public GLCommandList(GLGraphicsBase g, int dashTextureSize, bool supportsLineWidth = true, int maxSmoothWidth = int.MaxValue)
         {
             graphics = g;
             xform = g.Transform;
             invDashTextureSize = 1.0f / dashTextureSize;
+            maxSmoothLineWidth = maxSmoothWidth;
 #if FAMISTUDIO_LINUX
             drawThickLineAsPolygon = !supportsLineWidth;
 #endif
@@ -1166,14 +1169,32 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            DrawLineInternal(x0, y0, x1, y0, brush, width, smooth, false);
-            DrawLineInternal(x1, y0, x1, y1, brush, width, smooth, false);
-            DrawLineInternal(x1, y1, x0, y1, brush, width, smooth, false);
-            DrawLineInternal(x0, y1, x0, y0, brush, width, smooth, false);
+            var halfWidth = 0.0f;
+
+#if FAMISTUDIO_ANDROID
+            if (width > maxSmoothLineWidth)
+            {
+                smooth = false;
+                halfWidth = width * 0.5f;
+            }
+#endif
+
+            DrawLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, brush, width, smooth, false);
+            DrawLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, brush, width, smooth, false);
+            DrawLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, brush, width, smooth, false);
+            DrawLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, brush, width, smooth, false);
         }
 
         public void DrawGeometry(GLGeometry geo, GLBrush brush, float width, bool smooth = false, bool miter = false)
         {
+#if FAMISTUDIO_ANDROID
+            if (width > maxSmoothLineWidth)
+            {
+                smooth = false;
+                miter = true;
+            }
+#endif
+
             var points = miter ? geo.GetMiterPoints(width) : geo.Points;
 
             var x0 = points[0];
@@ -1367,7 +1388,8 @@ namespace FamiStudio
 
             if (!brush.IsGradient)
             {
-                for (int i = 0; i < geo.Points.Length; i += 2)
+                // All our geometries are closed, so no need for the last vert.
+                for (int i = 0; i < geo.Points.Length - 2; i += 2)
                 {
                     float x = geo.Points[i + 0];
                     float y = geo.Points[i + 1];
@@ -1383,6 +1405,7 @@ namespace FamiStudio
             {
                 Debug.Assert(brush.GradientSizeX == 0.0f);
 
+                // All our geometries are closed, so no need for the last vert.
                 for (int i = 0; i < geo.Points.Length; i += 2)
                 {
                     float x = geo.Points[i + 0];
@@ -1402,8 +1425,8 @@ namespace FamiStudio
                 }
             }
 
-            // Simple fan.
-            var numVertices = geo.Points.Length / 2;
+            // Simple fan
+            var numVertices = geo.Points.Length / 2 - 1;
             for (int i = 0; i < numVertices - 2; i++)
             {
                 batch.idxArray[batch.idxIdx++] = i0;

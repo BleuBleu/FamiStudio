@@ -90,17 +90,14 @@ Tools:
 	- Eraser
 	- Select (better way to make square selection?)
 Controls:
-	- HOW TO MOVE? DUPLICATE? COPY? ****
-		=> Long press : properties, move & instanciate, move & duplicate
-		=> Or special tool? 
-		=> Or can only move the highlighting pattern? Could be the solution for all. 
-		=> Whatever solution needs to feel similar with piano roll...
-	
-	- Tap = add pattern
-	- Long press = pattern properties
-	- Swipe = pan
+	- Copy/paste/instanciate
+	- Longpress : Instanciate/Copy selection here
 
-	- Header long-press = custom settings, pattern properties, solo/unsolo.
+	x Tap = add pattern
+	x Long press = pattern properties
+	x Swipe = pan
+
+	x Header long-press = custom settings, pattern properties, solo/unsolo.
 	- Header Swipe = select (unless dragging seek bar itself)
 	- Header Tap = seek
 

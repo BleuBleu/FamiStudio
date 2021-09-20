@@ -4747,7 +4747,7 @@ namespace FamiStudio
             selectionMax = -1;
         }
 
-        private void ScrollIfSelectionNearEdge(int mouseX)
+        private void ScrollIfNearEdge(int mouseX)
         {
             if ((mouseX - whiteKeySizeX) < 0)
             {
@@ -4797,7 +4797,7 @@ namespace FamiStudio
 
         private void UpdateSelection(MouseEventArgs e)
         {
-            ScrollIfSelectionNearEdge(e.X);
+            ScrollIfNearEdge(e.X);
 
             int noteIdx = GetNoteForPixel(e.X - whiteKeySizeX);
 
@@ -4811,7 +4811,7 @@ namespace FamiStudio
 
         private void UpdateWaveSelection(MouseEventArgs e)
         {
-            ScrollIfSelectionNearEdge(e.X);
+            ScrollIfNearEdge(e.X);
 
             float time = Math.Max(0.0f, GetWaveTimeForPixel(e.X - whiteKeySizeX));
 
@@ -5524,7 +5524,7 @@ namespace FamiStudio
 
         private void UpdateNoteCreation(MouseEventArgs e, bool first, bool last)
         {
-            ScrollIfSelectionNearEdge(e.X);
+            ScrollIfNearEdge(e.X);
             GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
 
             if (!first)
@@ -5622,7 +5622,7 @@ namespace FamiStudio
 
             App.UndoRedoManager.RestoreTransaction(false);
 
-            ScrollIfSelectionNearEdge(e.X);
+            ScrollIfNearEdge(e.X);
             GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
 
             var resizeStart = captureOperation == CaptureOperation.ResizeNoteStart || captureOperation == CaptureOperation.ResizeSelectionNoteStart;
@@ -5877,7 +5877,7 @@ namespace FamiStudio
                 return note;
             });
 
-            ScrollIfSelectionNearEdge(e.X);
+            ScrollIfNearEdge(e.X);
             GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
 
             var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;

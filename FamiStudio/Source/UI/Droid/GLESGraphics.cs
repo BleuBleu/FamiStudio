@@ -49,6 +49,10 @@ namespace FamiStudio
                 usedColBuffers[i] = new List<IntBuffer>();
                 usedIdxBuffers[i] = new List<ShortBuffer>();
             }
+
+            var smoothLineWidths = new int[2];
+            GLES11.GlGetIntegerv(GLES11.GlSmoothLineWidthRange, smoothLineWidths, 0);
+            maxSmoothLineWidth = smoothLineWidths[1];
         }
 
         public override void BeginDrawFrame()

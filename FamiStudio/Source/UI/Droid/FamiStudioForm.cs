@@ -148,9 +148,9 @@ namespace FamiStudio
             famistudio.Initialize(filename);
 
             detector = new GestureDetectorCompat(this, this);
-            detector.IsLongpressEnabled = true; // MATTT
+            detector.IsLongpressEnabled = true;
             scaleDetector = new ScaleGestureDetector(this, this);
-            scaleDetector.QuickScaleEnabled = true;
+            scaleDetector.QuickScaleEnabled = false;
 
             Choreographer.Instance.PostFrameCallback(this);
         }
