@@ -938,17 +938,17 @@ namespace FamiStudio
                 ScaleForMainWindow(12));
         }
 
-        bool IsCoordInHeader(int x, int y)
+        bool IsPointInHeader(int x, int y)
         {
             return y < headerSizeY;
         }
 
-        bool IsCoordIsChannelArea(int x, int y)
+        bool IsPointInChannelArea(int x, int y)
         {
             return x < trackNameSizeX && y > headerSizeY;
         }
 
-        bool IsCoordInPatternArea(int x, int y)
+        bool IsPointInPatternArea(int x, int y)
         {
             return x > trackNameSizeX && y > headerSizeY;
         }
@@ -1246,12 +1246,12 @@ namespace FamiStudio
 
         private bool HandleTouchDownDragSeekBar(int x, int y)
         {
-            if (IsCoordInHeader(x, y))
+            if (IsPointInHeader(x, y))
             {
                 var seekX = GetPixelForNote(App.CurrentFrame) + trackNameSizeX;
 
                 // See if we are close enough to the yellow triangle.
-                if (Math.Abs(seekX - x) < headerSizeY * 2)
+                if (Math.Abs(seekX - x) < headerSizeY)
                 {
                     StartCaptureOperation(x, y, CaptureOperation.DragSeekBar);
                     UpdateSeekDrag(x, false);
@@ -1264,7 +1264,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownHeaderSelection(int x, int y)
         {
-            if (IsCoordInHeader(x, y))
+            if (IsPointInHeader(x, y))
             {
                 // If pattern column is already select, dont start another selection
                 // since we will want the longpress to be processed.
@@ -1282,7 +1282,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownPan(int x, int y)
         {
-            if (IsCoordInPatternArea(x, y))
+            if (IsPointInPatternArea(x, y))
             {
                 StartCaptureOperation(x, y, CaptureOperation.MobilePan);
                 return true;
@@ -1293,7 +1293,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownPatternArea(int x, int y)
         {
-            if (IsCoordInPatternArea(x, y))
+            if (IsPointInPatternArea(x, y))
             {
                 bool inPatternZone = GetPatternForCoord(x, y, out var channelIdx, out var patternIdx, out _);
 
@@ -1312,7 +1312,7 @@ namespace FamiStudio
 
         private bool HandleTouchClickChannelChange(int x, int y)
         {
-            if (IsCoordIsChannelArea(x, y))
+            if (IsPointInChannelArea(x, y))
             {
                 ChangeChannelForCoord(y);
                 return true;
@@ -1323,7 +1323,7 @@ namespace FamiStudio
 
         private bool HandleTouchClickPatternHeader(int x, int y)
         {
-            if (IsCoordInHeader(x, y))
+            if (IsPointInHeader(x, y))
             {
                 App.SeekSong(GetNoteForPixel(x - trackNameSizeX));
                 return true;
@@ -1341,6 +1341,12 @@ namespace FamiStudio
                 var channel = Song.Channels[channelIdx];
                 var pattern = channel.PatternInstances[patternIdx];
 
+                //// Toggle hover pattern.
+                //if (hoverChannelIdx == channelIdx && hoverPatternIdx == patternIdx)
+                //    ClearHoverPatern();
+                //else
+
+                // DROIDTODO : Any way to clear the hover pattern?
                 SetHoverPattern(channelIdx, patternIdx);
 
                 // DROIDTODO : Check if delete tool.
@@ -1373,7 +1379,7 @@ namespace FamiStudio
 
         private bool HandleTouchLongPressChannelName(int x, int y)
         {
-            if (IsCoordIsChannelArea(x, y))
+            if (IsPointInChannelArea(x, y))
             {
                 var channelIdx = GetChannelIndexForCoord(y);
 
@@ -1401,7 +1407,7 @@ namespace FamiStudio
 
         private bool HandleTouchLongPressHeader(int x, int y)
         {
-            if (IsCoordInHeader(x, y))
+            if (IsPointInHeader(x, y))
             {
                 var patternIdx = GetPatternIndexForCoord(x);
 

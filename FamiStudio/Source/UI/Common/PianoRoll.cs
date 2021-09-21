@@ -334,6 +334,8 @@ namespace FamiStudio
         int snapResolution = SnapResolution.OneNote;
         int scrollX = 0;
         int scrollY = 0;
+        float flingVelX = 0.0f;
+        float flingVelY = 0.0f;
         float zoom = 1.0f;
         float zoomY = PlatformUtils.IsMobile ? 0.75f : 1.0f;
         float pianoScaleX = 1.0f; // Only used by video export.
@@ -2930,10 +2932,10 @@ namespace FamiStudio
             return false;
         }
 
-        void ResizeEnvelope(MouseEventArgs e)
+        void ResizeEnvelope(int x, int y)
         {
             var env = EditEnvelope;
-            int length = GetNoteForPixel(e.X - whiteKeySizeX);
+            int length = GetNoteForPixel(x - whiteKeySizeX);
 
             switch (captureOperation)
             {
@@ -2960,14 +2962,14 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        void StartChangeEffectValue(MouseEventArgs e, NoteLocation location)
+        void StartChangeEffectValue(int x, int y, NoteLocation location)
         {
             var channel   = Song.Channels[editChannel];
             var pattern   = channel.PatternInstances[location.PatternIndex];
             var note      = channel.GetNoteAt(location);
             var selection = IsSelectionValid() && IsNoteSelected(location) && note != null && note.HasValidEffectValue(selectedEffectIdx);
 
-            StartCaptureOperation(e.X, e.Y, selection ? CaptureOperation.ChangeSelectionEffectValue : CaptureOperation.ChangeEffectValue, false, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(x, y, selection ? CaptureOperation.ChangeSelectionEffectValue : CaptureOperation.ChangeEffectValue, false, location.ToAbsoluteNoteIndex(Song));
 
             var minPatternIdx = Song.PatternIndexFromAbsoluteNoteIndex(selectionMin);
             var maxPatternIdx = Song.PatternIndexFromAbsoluteNoteIndex(selectionMax);
@@ -2984,10 +2986,10 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
             }
 
-            UpdateChangeEffectValue(e);
+            UpdateChangeEffectValue(x, y);
         }
 
-        void UpdateChangeEffectValue(MouseEventArgs e)
+        void UpdateChangeEffectValue(int x, int y)
         {
             Debug.Assert(selectedEffectIdx >= 0);
 
@@ -3014,11 +3016,11 @@ namespace FamiStudio
 
             if (shift)
             {
-                delta = (captureMouseY - e.Y) / 4;
+                delta = (captureMouseY - y) / 4;
             }
             else
             {
-                var ratio = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
+                var ratio = Utils.Clamp(1.0f - (y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
                 var newValue = (int)Math.Round(ratio * (maxValue - minValue) + minValue);
                 delta = newValue - originalValue;
             }
@@ -3076,13 +3078,13 @@ namespace FamiStudio
             pattern.InvalidateCumulativeCache();
         }
 
-        void UpdateDragVolumeSlide(MouseEventArgs e, bool final)
+        void UpdateDragVolumeSlide(int x, int y, bool final)
         {
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
             var note    = pattern.Notes[captureNoteLocation.NoteIndex];
 
-            var ratio = Utils.Clamp(1.0f - (e.Y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
+            var ratio = Utils.Clamp(1.0f - (y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
             note.VolumeSlideTarget = (byte)Math.Round(ratio * Note.VolumeMax);
 
             if (final)
@@ -3099,9 +3101,9 @@ namespace FamiStudio
             }
         }
 
-        void DrawEnvelope(MouseEventArgs e, bool first = false)
+        void DrawEnvelope(int x, int y, bool first = false)
         {
-            if (GetEnvelopeValueForCoord(e.X, e.Y, out int idx1, out sbyte val1))
+            if (GetEnvelopeValueForCoord(x, y, out int idx1, out sbyte val1))
             {
                 int idx0;
                 sbyte val0;
@@ -3219,7 +3221,7 @@ namespace FamiStudio
                 if (GetNoteValueForCoord(e.X, e.Y, out byte noteValue))
                 {
                     // In case we were dragging a sample.
-                    EndCaptureOperation(e);
+                    EndCaptureOperation(e.X, e.Y);
 
                     var mapping = App.Project.GetDPCMMapping(noteValue);
                     if (left && mapping != null)
@@ -3316,39 +3318,39 @@ namespace FamiStudio
                 hoverNoteLocation = captureNoteLocation;
         }
 
-        private void UpdateScrollBarX(MouseEventArgs e)
+        private void UpdateScrollBarX(int x, int y)
         {
             GetScrollBarParams(true, out _, out var scrollBarSizeX);
             GetMinMaxScroll(out _, out _, out var maxScrollX, out _);
 
             int scrollAreaSizeX = Width - whiteKeySizeX;
-            scrollX = (int)Math.Round(captureScrollX + ((e.X - captureMouseX) / (float)(scrollAreaSizeX - scrollBarSizeX) * maxScrollX));
+            scrollX = (int)Math.Round(captureScrollX + ((x - captureMouseX) / (float)(scrollAreaSizeX - scrollBarSizeX) * maxScrollX));
 
             ClampScroll();
             MarkDirty();
         }
 
-        private void UpdateScrollBarY(MouseEventArgs e)
+        private void UpdateScrollBarY(int x, int y)
         {
             GetScrollBarParams(false, out _, out var scrollBarSizeY);
             GetMinMaxScroll(out _, out _, out _, out var maxScrollY);
 
             int scrollAreaSizeY = Height - headerAndEffectSizeY;
-            scrollY = (int)Math.Round(captureScrollY + ((e.Y - captureMouseY) / (float)(scrollAreaSizeY - scrollBarSizeY) * maxScrollY));
+            scrollY = (int)Math.Round(captureScrollY + ((y - captureMouseY) / (float)(scrollAreaSizeY - scrollBarSizeY) * maxScrollY));
 
             ClampScroll();
             MarkDirty();
         }
 
-        private void UpdateCaptureOperation(MouseEventArgs e, bool realTime)
+        private void UpdateCaptureOperation(int x, int y, bool realTime)
         {  
             // DROIDTODO : DO we need this?
             const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
 
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
-                if (Math.Abs(e.X - captureMouseX) >= CaptureThreshold ||
-                    Math.Abs(e.Y - captureMouseY) >= CaptureThreshold)
+                if (Math.Abs(x - captureMouseX) >= CaptureThreshold ||
+                    Math.Abs(y - captureMouseY) >= CaptureThreshold)
                 {
                     captureThresholdMet = true;
                 }
@@ -3361,69 +3363,72 @@ namespace FamiStudio
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
                     case CaptureOperation.ResizeEnvelope:
-                        ResizeEnvelope(e);
+                        ResizeEnvelope(x, y);
                         break;
                     case CaptureOperation.PlayPiano:
-                        PlayPiano(e.X, e.Y);
+                        PlayPiano(x, y);
                         break;
                     case CaptureOperation.ChangeEffectValue:
                     case CaptureOperation.ChangeSelectionEffectValue:
-                        UpdateChangeEffectValue(e);
+                        UpdateChangeEffectValue(x, y);
                         break;
                     case CaptureOperation.DragSample:
-                        UpdateDragDPCMSampleMapping(e);
+                        UpdateDragDPCMSampleMapping(x, y);
                         break;
                     case CaptureOperation.DrawEnvelope:
-                        DrawEnvelope(e);
+                        DrawEnvelope(x, y);
                         break;
                     case CaptureOperation.Select:
-                        UpdateSelection(e);
+                        UpdateSelection(x, y);
                         break;
                     case CaptureOperation.SelectWave:
-                        UpdateWaveSelection(e);
+                        UpdateWaveSelection(x, y);
                         break;
                     case CaptureOperation.DragSlideNoteTarget:
                     case CaptureOperation.CreateSlideNote:
-                        UpdateSlideNoteCreation(e, false);
+                        UpdateSlideNoteCreation(x, y, false);
                         break;
                     case CaptureOperation.DragVolumeSlideTarget:
-                        UpdateDragVolumeSlide(e, false);
+                        UpdateDragVolumeSlide(x, y, false);
                         break;
                     case CaptureOperation.CreateNote:
-                        UpdateNoteCreation(e, false, false);
+                        UpdateNoteCreation(x, y, false, false);
                         break;
                     case CaptureOperation.ResizeNoteEnd:
                     case CaptureOperation.ResizeSelectionNoteEnd:
-                        UpdateNoteResizeEnd(e, false);
+                        UpdateNoteResizeEnd(x, y, false);
                         break;
                     case CaptureOperation.MoveNoteRelease:
-                        UpdateMoveNoteRelease(e);
+                        UpdateMoveNoteRelease(x, y);
                         break;
                     case CaptureOperation.DragNote:
                     case CaptureOperation.DragSelection:
                     case CaptureOperation.ResizeNoteStart:
                     case CaptureOperation.ResizeSelectionNoteStart:
-                        UpdateNoteDrag(e, false);
+                        UpdateNoteDrag(x, y, false);
                         break;
                     case CaptureOperation.AltZoom:
-                        UpdateAltZoom(e);
+                        UpdateAltZoom(x, y);
                         break;
                     case CaptureOperation.DragSeekBar:
-                        UpdateSeekDrag(e, false);
+                        UpdateSeekDrag(x, y, false);
                         break;
                     case CaptureOperation.DragWaveVolumeEnvelope:
-                        UpdateVolumeEnvelopeDrag(e, false);
+                        UpdateVolumeEnvelopeDrag(x, y, false);
                         break;
                     case CaptureOperation.ScrollBarX:
-                        UpdateScrollBarX(e);
+                        UpdateScrollBarX(x, y);
                         break;
                     case CaptureOperation.ScrollBarY:
-                        UpdateScrollBarY(e);
+                        UpdateScrollBarY(x, y);
+                        break;
+                    case CaptureOperation.MobilePan:
+                        DoScroll(x - mouseLastX, y - mouseLastY);
                         break;
                 }
             }
         }
-        private void UpdateDragDPCMSampleMapping(MouseEventArgs e)
+        private void UpdateDragDPCMSampleMapping(int x, int y)
         {
             if (draggedSample == null)
             {
@@ -3433,11 +3438,11 @@ namespace FamiStudio
             }
         }
 
-        private void EndDragDPCMSampleMapping(MouseEventArgs e)
+        private void EndDragDPCMSampleMapping(int x, int y)
         {
             if (draggedSample != null)
             {
-                if (GetNoteValueForCoord(e.X, e.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
+                if (GetNoteValueForCoord(x, y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue) && noteValue != captureNoteValue && draggedSample != null)
                 {
                     var sample = draggedSample;
 
@@ -3478,7 +3483,7 @@ namespace FamiStudio
             }
         }
 
-        private void EndCaptureOperation(MouseEventArgs e)
+        private void EndCaptureOperation(int x, int y)
         {
             if (captureOperation != CaptureOperation.None)
             {
@@ -3493,32 +3498,32 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.CreateSlideNote:
                     case CaptureOperation.DragSlideNoteTarget:
-                        UpdateSlideNoteCreation(e, true);
+                        UpdateSlideNoteCreation(x, y, true);
                         break;
                     case CaptureOperation.DragVolumeSlideTarget:
-                        UpdateDragVolumeSlide(e, true);
+                        UpdateDragVolumeSlide(x, y, true);
                         break;
                     case CaptureOperation.CreateNote:
-                        UpdateNoteCreation(e, false, true);
+                        UpdateNoteCreation(x, y, false, true);
                         break;
                     case CaptureOperation.ResizeNoteEnd:
                     case CaptureOperation.ResizeSelectionNoteEnd:
-                        UpdateNoteResizeEnd(e, true);
+                        UpdateNoteResizeEnd(x, y, true);
                         break;
                     case CaptureOperation.DragNote:
                     case CaptureOperation.DragSelection:
                     case CaptureOperation.ResizeNoteStart:
                     case CaptureOperation.ResizeSelectionNoteStart:
-                        UpdateNoteDrag(e, true, !captureThresholdMet);
+                        UpdateNoteDrag(x, y, true, !captureThresholdMet);
                         break;
                     case CaptureOperation.DragSample:
-                        EndDragDPCMSampleMapping(e);
+                        EndDragDPCMSampleMapping(x, y);
                         break;
                     case CaptureOperation.DragSeekBar:
-                        UpdateSeekDrag(e, true);
+                        UpdateSeekDrag(x, y, true);
                         break;
                     case CaptureOperation.DragWaveVolumeEnvelope:
-                        UpdateVolumeEnvelopeDrag(e, true);
+                        UpdateVolumeEnvelopeDrag(x, y, true);
                         break;
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
@@ -4078,7 +4083,7 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Left) && IsPointInHeader(e.X, e.Y))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSeekBar);
-                UpdateSeekDrag(e, false);
+                UpdateSeekDrag(e.X, e.Y, false);
                 return true;
             }
 
@@ -4090,7 +4095,7 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Right) && IsPointInHeader(e.X, e.Y))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.Select, false);
-                UpdateSelection(e);
+                UpdateSelection(e.X, e.Y);
                 return true;
             }
 
@@ -4102,7 +4107,7 @@ namespace FamiStudio
             if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.Select);
-                UpdateSelection(e);
+                UpdateSelection(e.X, e.Y);
                 return true;
             }
 
@@ -4147,7 +4152,7 @@ namespace FamiStudio
                 else
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
 
-                ResizeEnvelope(e);
+                ResizeEnvelope(e.X, e.Y);
                 return true;
             }
 
@@ -4169,7 +4174,7 @@ namespace FamiStudio
                 else
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
 
-                ResizeEnvelope(e);
+                ResizeEnvelope(e.X, e.Y);
                 return true;
             }
 
@@ -4187,7 +4192,7 @@ namespace FamiStudio
                 else
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
 
-                DrawEnvelope(e, true);
+                DrawEnvelope(e.X, e.Y, true);
                 return true;
             }
 
@@ -4208,7 +4213,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        StartChangeEffectValue(e, location);
+                        StartChangeEffectValue(e.X, e.Y, location);
                     }
                 }
             }
@@ -4309,7 +4314,7 @@ namespace FamiStudio
             if ((left || right) && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.SelectWave);
-                UpdateWaveSelection(e);
+                UpdateWaveSelection(e.X, e.Y);
                 return true;
             }
 
@@ -4534,7 +4539,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownPan(int x, int y)
         {
-            if (y > headerSizeY && x > whiteKeySizeX)
+            if (IsPointInNoteArea(x, y))
             {
                 StartCaptureOperation(x, y, CaptureOperation.MobilePan);
                 return true;
@@ -4567,6 +4572,9 @@ namespace FamiStudio
 
         protected override void OnTouchDown(int x, int y)
         {
+            flingVelX = 0;
+            flingVelY = 0;
+
             if (HandleTouchDownPan(x, y)) goto Handled;
             if (HandleTouchDownPiano(x, y)) goto Handled;
 
@@ -4578,19 +4586,7 @@ namespace FamiStudio
 
         protected override void OnTouchMove(int x, int y)
         {
-            // MATTT : Move to "UpdateCaptureOperation".
-            if (captureOperation == CaptureOperation.PlayPiano)
-                PlayPiano(x, y);
-
-            //UpdateCaptureOperation(e, false);
-            MarkDirty();
-            //UpdateCaptureOperation(e, false);
-
-            // MATTT : Move to "UpdateCaptureOperation".
-            if (captureOperation == CaptureOperation.MobilePan)
-            {
-                DoScroll(x - mouseLastX, y - mouseLastY);
-            }
+            UpdateCaptureOperation(x, y, false);
 
             mouseLastX = x;
             mouseLastY = y;
@@ -4598,13 +4594,21 @@ namespace FamiStudio
 
         protected override void OnTouchUp(int x, int y)
         {
-            EndCaptureOperation(new MouseEventArgs(MouseButtons.None, 0, x, y, 0));
+            EndCaptureOperation(x, y);
+        }
+
+        protected override void OnTouchFling(int x, int y, float velX, float velY)
+        {
+            EndCaptureOperation(x, y);
+            flingVelX = velX;
+            flingVelY = velY;
         }
 
         protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
         {
             if (captureOperation != CaptureOperation.None)
             {
+                AbortCaptureOperation(); // Temporary.
                 Debug.WriteLine("Oops");
             }
 
@@ -4622,7 +4626,7 @@ namespace FamiStudio
                         ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
                     break;
                 case TouchScalePhase.End:
-                    EndCaptureOperation(new MouseEventArgs(MouseButtons.None, 0, x, y, 0)); // MATTT
+                    EndCaptureOperation(x, y);
                     break;
             }
         }
@@ -4680,27 +4684,32 @@ namespace FamiStudio
             }
         }
 
-        private void ClampScroll()
+        private bool ClampScroll()
         {
+            var scrolledX = true;
+            var scrolledY = true;
+
             if (Song != null)
             {
                 GetMinMaxScroll(out var minScrollX, out var minScrollY, out var maxScrollX, out var maxScrollY);
 
-                scrollX = Utils.Clamp(scrollX, minScrollX, maxScrollX);
-                scrollY = Utils.Clamp(scrollY, minScrollY, maxScrollY);
+                if (scrollX < minScrollX) { scrollX = minScrollX; scrolledX = false; }
+                if (scrollX > maxScrollX) { scrollX = maxScrollX; scrolledY = false; }
+                if (scrollY < minScrollY) { scrollY = minScrollY; scrolledY = false; }
+                if (scrollY > maxScrollY) { scrollY = maxScrollY; scrolledY = false; }
             }
 
             ScrollChanged?.Invoke();
+
+            return scrolledX || scrolledY;
         }
 
-
-        private void DoScroll(int deltaX, int deltaY)
+        private bool DoScroll(int deltaX, int deltaY)
         {
             scrollX -= deltaX;
             scrollY -= deltaY;
-
-            ClampScroll();
             MarkDirty();
+            return ClampScroll();
         }
 
         private void SetSelection(int min, int max)
@@ -4792,14 +4801,14 @@ namespace FamiStudio
         private void StartSelection(MouseEventArgs e)
         {
             StartCaptureOperation(e.X, e.Y, CaptureOperation.Select, false);
-            UpdateSelection(e);
+            UpdateSelection(e.X, e.Y);
         }
 
-        private void UpdateSelection(MouseEventArgs e)
+        private void UpdateSelection(int x, int y)
         {
-            ScrollIfNearEdge(e.X);
+            ScrollIfNearEdge(x);
 
-            int noteIdx = GetNoteForPixel(e.X - whiteKeySizeX);
+            int noteIdx = GetNoteForPixel(x - whiteKeySizeX);
 
             int minSelectionIdx = Math.Min(noteIdx, captureMouseAbsoluteIdx);
             int maxSelectionIdx = Math.Max(noteIdx, captureMouseAbsoluteIdx);
@@ -4809,11 +4818,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void UpdateWaveSelection(MouseEventArgs e)
+        private void UpdateWaveSelection(int x, int y)
         {
-            ScrollIfNearEdge(e.X);
+            ScrollIfNearEdge(x);
 
-            float time = Math.Max(0.0f, GetWaveTimeForPixel(e.X - whiteKeySizeX));
+            float time = Math.Max(0.0f, GetWaveTimeForPixel(x - whiteKeySizeX));
 
             float minSelectionTime = Math.Min(time, captureWaveTime);
             float maxSelectionTime = Math.Max(time, captureWaveTime);
@@ -4832,9 +4841,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void UpdateSeekDrag(MouseEventArgs e, bool final)
+        private void UpdateSeekDrag(int x, int y, bool final)
         {
-            dragSeekPosition = GetNoteForPixel(e.X - whiteKeySizeX);
+            dragSeekPosition = GetNoteForPixel(x - whiteKeySizeX);
             dragSeekPosition = SnapNote(dragSeekPosition);
 
             if (final)
@@ -4843,13 +4852,13 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void UpdateVolumeEnvelopeDrag(MouseEventArgs e, bool final)
+        private void UpdateVolumeEnvelopeDrag(int x, int y, bool final)
         {
             var halfHeight    = effectPanelSizeY * 0.5f;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
 
-            var time   = Utils.Clamp((int)Math.Round(GetWaveTimeForPixel(e.X - whiteKeySizeX) * editSample.SourceSampleRate), 0, editSample.SourceNumSamples - 1);
-            var volume = Utils.Clamp(((e.Y - headerSizeY) - halfHeight) / -halfHeightPad + 1.0f, 0.0f, 2.0f);
+            var time   = Utils.Clamp((int)Math.Round(GetWaveTimeForPixel(x - whiteKeySizeX) * editSample.SourceSampleRate), 0, editSample.SourceNumSamples - 1);
+            var volume = Utils.Clamp(((y - headerSizeY) - halfHeight) / -halfHeightPad + 1.0f, 0.0f, 2.0f);
 
             // Cant move 1st and last vertex.
             if (volumeEnvelopeDragVertex != 0 &&
@@ -4912,7 +4921,7 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateSlideNoteCreation(MouseEventArgs e, bool final)
+        private void UpdateSlideNoteCreation(int x, int y, bool final)
         {
             Debug.Assert(captureNoteAbsoluteIdx >= 0);
 
@@ -4920,7 +4929,7 @@ namespace FamiStudio
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
 
-            if (GetNoteValueForCoord(e.X, e.Y, out var noteValue))
+            if (GetNoteValueForCoord(x, y, out var noteValue))
             {
                 var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
 
@@ -5204,6 +5213,16 @@ namespace FamiStudio
             return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && x > whiteKeySizeX && y > headerSizeY && y < headerAndEffectSizeY;
         }
 
+        private bool IsPointInNoteArea(int x, int y)
+        {
+            return y > headerSizeY && x > whiteKeySizeX;
+        }
+
+        private bool IsPointInTopLeftCorner(int x, int y)
+        {
+            return (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && y < headerSizeY && x < whiteKeySizeX;
+        }
+
         private bool IsPointOnSnapResolutionButton(int x, int y)
         {
             var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
@@ -5229,16 +5248,6 @@ namespace FamiStudio
             return 
                 x > posX && x < posX + snapButtonSize &&
                 y > headerIconsPosY && y < headerIconsPosY + snapButtonSize;
-        }
-
-        private bool IsPointInNoteArea(int x, int y)
-        {
-            return y > headerSizeY && x > whiteKeySizeX;
-        }
-
-        private bool IsPointInTopLeftCorner(int x, int y)
-        {
-            return (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && y < headerSizeY && x < whiteKeySizeX;
         }
 
         private void UpdateToolTip(MouseEventArgs e)
@@ -5514,7 +5523,7 @@ namespace FamiStudio
             {
                 App.PlayInstrumentNote(noteValue, false, false);
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.CreateNote, true);
-                UpdateNoteCreation(e, true, false);
+                UpdateNoteCreation(e.X, e.Y, true, false);
             }
             else
             {
@@ -5522,10 +5531,10 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateNoteCreation(MouseEventArgs e, bool first, bool last)
+        private void UpdateNoteCreation(int x, int y, bool first, bool last)
         {
-            ScrollIfNearEdge(e.X);
-            GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
+            ScrollIfNearEdge(x);
+            GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
             if (!first)
             {
@@ -5608,10 +5617,10 @@ namespace FamiStudio
 
             dragLastNoteValue = -1;
 
-            UpdateNoteDrag(e, false);
+            UpdateNoteDrag(e.X, e.Y, false);
         }
 
-        private void UpdateNoteDrag(MouseEventArgs e, bool final, bool createNote = false)
+        private void UpdateNoteDrag(int x, int y, bool final, bool createNote = false)
         {
             Debug.Assert(
                 App.UndoRedoManager.HasTransactionInProgress && (
@@ -5622,8 +5631,8 @@ namespace FamiStudio
 
             App.UndoRedoManager.RestoreTransaction(false);
 
-            ScrollIfNearEdge(e.X);
-            GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
+            ScrollIfNearEdge(x);
+            GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
             var resizeStart = captureOperation == CaptureOperation.ResizeNoteStart || captureOperation == CaptureOperation.ResizeSelectionNoteStart;
             var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
@@ -5853,7 +5862,7 @@ namespace FamiStudio
             StartCaptureOperation(e.X, e.Y, captureOp, true, location.ToAbsoluteNoteIndex(Song));
         }
 
-        private void UpdateNoteResizeEnd(MouseEventArgs e, bool final)
+        private void UpdateNoteResizeEnd(int x, int y, bool final)
         {
             var channel = Song.Channels[editChannel];
 
@@ -5877,8 +5886,8 @@ namespace FamiStudio
                 return note;
             });
 
-            ScrollIfNearEdge(e.X);
-            GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, true);
+            ScrollIfNearEdge(x);
+            GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
             var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
 
@@ -5907,9 +5916,9 @@ namespace FamiStudio
             StartCaptureOperation(e.X, e.Y, CaptureOperation.MoveNoteRelease, false, location.ToAbsoluteNoteIndex(Song));
         }
 
-        private void UpdateMoveNoteRelease(MouseEventArgs e)
+        private void UpdateMoveNoteRelease(int x, int y)
         {
-            GetLocationForCoord(e.X, e.Y, out var location, out var noteValue, false);
+            GetLocationForCoord(x, y, out var location, out var noteValue, false);
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
@@ -5919,14 +5928,14 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void UpdateAltZoom(MouseEventArgs e)
+        private void UpdateAltZoom(int x, int y)
         {
-            var deltaY = e.Y - captureMouseY;
+            var deltaY = y - captureMouseY;
 
             if (Math.Abs(deltaY) > 50)
             {
-                ZoomAtLocation(e.X, deltaY < 0.0f ? 2.0f : 0.5f);
-                captureMouseY = e.Y;
+                ZoomAtLocation(x, deltaY < 0.0f ? 2.0f : 0.5f);
+                captureMouseY = y;
             }
         }
 
@@ -6071,7 +6080,7 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
-            UpdateCaptureOperation(e, false);
+            UpdateCaptureOperation(e.X, e.Y, false);
 
             if (middle)
             {
@@ -6096,7 +6105,7 @@ namespace FamiStudio
             if (middle)
                 panning = false;
             else
-                EndCaptureOperation(e);
+                EndCaptureOperation(e.X, e.Y);
         }
 
         private void ZoomAtLocation(int x, float scale)
@@ -6216,16 +6225,35 @@ namespace FamiStudio
             }
         }
 
+        private void TickFling(float delta)
+        {
+            if (flingVelX != 0.0f ||
+                flingVelY != 0.0f)
+            {
+                var deltaPixelX = (int)Math.Round(flingVelX * delta);
+                var deltaPixelY = (int)Math.Round(flingVelY * delta);
+
+                if ((deltaPixelX != 0 || deltaPixelY != 0) && DoScroll(deltaPixelX, deltaPixelY))
+                {
+                    flingVelX *= (float)Math.Exp(delta * -6.0f);
+                    flingVelY *= (float)Math.Exp(delta * -6.0f);
+                }
+                else
+                {
+                    flingVelX = 0.0f;
+                    flingVelY = 0.0f;
+                }
+            }
+        }
+
         public void Tick(float delta)
         {
             if (App == null)
                 return;
 
-            var pt = this.PointToClient(Cursor.Position);
-            var e = new MouseEventArgs(MouseButtons.None, 1, pt.X, pt.Y, 0);
-
-            UpdateCaptureOperation(e, true);
+            UpdateCaptureOperation(mouseLastX, mouseLastY, true);
             UpdateFollowMode();
+            TickFling(delta);
         }
 
         private bool GetEffectNoteForCoord(int x, int y, out NoteLocation location)
