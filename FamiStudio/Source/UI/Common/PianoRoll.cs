@@ -328,7 +328,7 @@ namespace FamiStudio
         SortedList<int, Note> dragNotes = new SortedList<int, Note>();
 
         bool maximized = false;
-        bool showSelection = false;
+        bool showSelection = false; // DROIDTODO : Must always be true on mobile.
         bool showEffectsPanel = false;
         bool snap = false;
         int snapResolution = SnapResolution.OneNote;
@@ -686,6 +686,18 @@ namespace FamiStudio
             snapResolution = SnapResolution.Clamp(snapResolution, App.Project.UsesFamiTrackerTempo);
         }
 
+        private void SetMouseLastPos(int x, int y)
+        {
+            mouseLastX = x;
+            mouseLastY = y;
+        }
+
+        private void SetFlingVelocity(float x, float y)
+        {
+            flingVelX = x;
+            flingVelY = y;
+        }
+
         private Song Song
         {
             get { return videoSong != null ? videoSong : App?.SelectedSong; }
@@ -1011,6 +1023,7 @@ namespace FamiStudio
             public RenderCommandList cb; // Right side (note area) background
             public RenderCommandList cf; // Right side (note area) foreground
             public RenderCommandList cs; // Scroll bars
+            public RenderCommandList cd; // Debug
         }
 
         private void RenderHeader(RenderInfo r)
@@ -2841,6 +2854,17 @@ namespace FamiStudio
             }
         }
 
+        private void RenderDebug(RenderInfo r)
+        {
+#if DEBUG
+            if (PlatformUtils.IsMobile)
+            {
+                r.cd = r.g.CreateCommandList();
+                r.cd.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, ThemeResources.WhiteBrush);
+            }
+#endif
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
             // Init
@@ -2880,6 +2904,7 @@ namespace FamiStudio
             RenderNotes(r);
             RenderWaveform(r);
             RenderScrollBars(r);
+            RenderDebug(r);
 
             // Submit draw calls.
             var cornerRect = new Rectangle(0, 0, whiteKeySizeX, headerAndEffectSizeY);
@@ -2894,6 +2919,7 @@ namespace FamiStudio
             g.DrawCommandList(r.cb, notesRect);
             g.DrawCommandList(r.cf, notesRect);
             g.DrawCommandList(r.cs, notesRect);
+            g.DrawCommandList(r.cd);
         }
 
         private bool GetScrollBarParams(bool horizontal, out int pos, out int size)
@@ -3279,8 +3305,7 @@ namespace FamiStudio
 
         private void CaptureMouse(int x, int y)
         {
-            mouseLastX = x;
-            mouseLastY = y;
+            SetMouseLastPos(x, y);
             captureMouseX = x;
             captureMouseY = y;
             captureScrollX = scrollX;
@@ -3342,7 +3367,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void UpdateCaptureOperation(int x, int y, bool realTime)
+        private void UpdateCaptureOperation(int x, int y, float scale = 1.0f, bool realTime = false)
         {  
             // DROIDTODO : DO we need this?
             const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
@@ -3424,6 +3449,12 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.MobilePan:
                         DoScroll(x - mouseLastX, y - mouseLastY);
+                        break;
+                    case CaptureOperation.MobileZoomVertical:
+                        ZoomVerticallyAtLocation(y, scale); // MATTT : Center is stuck at the initial position.
+                        break;
+                    case CaptureOperation.MobileZoom:
+                        ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
                         break;
                 }
             }
@@ -3524,6 +3555,9 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.DragWaveVolumeEnvelope:
                         UpdateVolumeEnvelopeDrag(x, y, true);
+                        break;
+                    case CaptureOperation.MobileZoomVertical:
+                    case CaptureOperation.MobileZoom:
                         break;
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
@@ -4094,8 +4128,7 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Right) && IsPointInHeader(e.X, e.Y))
             {
-                StartCaptureOperation(e.X, e.Y, CaptureOperation.Select, false);
-                UpdateSelection(e.X, e.Y);
+                StartSelection(e.X, e.Y);
                 return true;
             }
 
@@ -4106,8 +4139,7 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
-                StartCaptureOperation(e.X, e.Y, CaptureOperation.Select);
-                UpdateSelection(e.X, e.Y);
+                StartSelection(e.X, e.Y);
                 return true;
             }
 
@@ -4400,7 +4432,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        StartSelection(e);
+                        StartSelection(e.X, e.Y);
                     }
                 }
 
@@ -4423,7 +4455,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    StartSelection(e);
+                    StartSelection(e.X, e.Y);
                 }
 
                 return true;
@@ -4531,12 +4563,6 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        //==============================================================================================================
-        //==============================================================================================================
-        //==============================================================================================================
-        //==============================================================================================================
-        //==============================================================================================================
-
         private bool HandleTouchDownPan(int x, int y)
         {
             if (IsPointInNoteArea(x, y))
@@ -4559,6 +4585,35 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchDownDragSeekBar(int x, int y)
+        {
+            if (IsPointInHeader(x, y))
+            {
+                var seekX = GetPixelForNote(App.CurrentFrame) + whiteKeySizeX;
+
+                // See if we are close enough to the yellow triangle.
+                if (Math.Abs(seekX - x) < headerSizeY)
+                {
+                    StartCaptureOperation(x, y, CaptureOperation.DragSeekBar);
+                    UpdateSeekDrag(x, y, false);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDownHeaderSelection(int x, int y)
+        {
+            if (IsPointInHeader(x, y))
+            {
+                StartSelection(x, y);
+                return true;
+            }
+
+            return false;
+        }
+
         private bool HandleTouchClickToggleEffectPanelButton(int x, int y)
         {
             if (IsPointInTopLeftCorner(x, y))
@@ -4570,12 +4625,25 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchClickHeaderSeek(int x, int y)
+        {
+            if (IsPointInHeader(x, y))
+            {
+                App.SeekSong(GetNoteForPixel(x - whiteKeySizeX));
+                return true;
+            }
+
+            return false;
+        }
+
         protected override void OnTouchDown(int x, int y)
         {
-            flingVelX = 0;
-            flingVelY = 0;
+            SetFlingVelocity(0, 0);
+            SetMouseLastPos(x, y);
 
             if (HandleTouchDownPan(x, y)) goto Handled;
+            if (HandleTouchDownDragSeekBar(x, y)) goto Handled;
+            if (HandleTouchDownHeaderSelection(x, y)) goto Handled;
             if (HandleTouchDownPiano(x, y)) goto Handled;
 
             return;
@@ -4586,64 +4654,56 @@ namespace FamiStudio
 
         protected override void OnTouchMove(int x, int y)
         {
-            UpdateCaptureOperation(x, y, false);
-
-            mouseLastX = x;
-            mouseLastY = y;
+            UpdateCaptureOperation(x, y);
+            SetMouseLastPos(x, y);
         }
 
         protected override void OnTouchUp(int x, int y)
         {
             EndCaptureOperation(x, y);
+            SetMouseLastPos(x, y);
         }
 
         protected override void OnTouchFling(int x, int y, float velX, float velY)
         {
             EndCaptureOperation(x, y);
-            flingVelX = velX;
-            flingVelY = velY;
+            SetFlingVelocity(velX, velY);
         }
 
         protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
         {
-            if (captureOperation != CaptureOperation.None)
-            {
-                AbortCaptureOperation(); // Temporary.
-                Debug.WriteLine("Oops");
-            }
+            SetMouseLastPos(x, y);
 
-            // TODO : Capture operation.
-            switch (phase)
+            if (phase == TouchScalePhase.Begin)
             {
-                case TouchScalePhase.Begin:
-                    panning = false; // MATTT This will not be used on mobile.
-                    StartCaptureOperation(x, y, IsPointInPiano(x, y) ? CaptureOperation.MobileZoomVertical : CaptureOperation.MobileZoom);
-                    break;
-                case TouchScalePhase.Scale:
-                    if (captureOperation == CaptureOperation.MobileZoomVertical)
-                        ZoomVerticallyAtLocation(y, scale); // MATTT : Center is stuck at the initial position.
-                    else
-                        ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
-                    break;
-                case TouchScalePhase.End:
-                    EndCaptureOperation(x, y);
-                    break;
+                if (captureOperation != CaptureOperation.None)
+                {
+                    Debug.Assert(captureOperation != CaptureOperation.MobileZoomVertical && captureOperation != CaptureOperation.MobileZoom);
+                    AbortCaptureOperation(); // Temporary.
+                }
+
+                StartCaptureOperation(x, y, IsPointInPiano(x, y) ? CaptureOperation.MobileZoomVertical : CaptureOperation.MobileZoom);
+            }
+            else if (phase == TouchScalePhase.Scale)
+            {
+                UpdateCaptureOperation(x, y, scale);
+            }
+            else
+            {
+                EndCaptureOperation(x, y);
             }
         }
 
         protected override void OnTouchClick(int x, int y)
         {
+            SetMouseLastPos(x, y);
+
+            if (HandleTouchClickHeaderSeek(x, y)) goto Handled;
             if (HandleTouchClickToggleEffectPanelButton(x, y)) goto Handled;
 
         Handled: // Yes, i use a goto, sue me.
             MarkDirty();
         }
-
-        //==============================================================================================================
-        //==============================================================================================================
-        //==============================================================================================================
-        //==============================================================================================================
-        //==============================================================================================================
 
         public void LayoutChanged()
         {
@@ -4798,10 +4858,10 @@ namespace FamiStudio
             playingNote = -1;
         }
 
-        private void StartSelection(MouseEventArgs e)
+        private void StartSelection(int x, int y)
         {
-            StartCaptureOperation(e.X, e.Y, CaptureOperation.Select, false);
-            UpdateSelection(e.X, e.Y);
+            StartCaptureOperation(x, y, CaptureOperation.Select, false);
+            UpdateSelection(x, y);
         }
 
         private void UpdateSelection(int x, int y)
@@ -6080,7 +6140,7 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
-            UpdateCaptureOperation(e.X, e.Y, false);
+            UpdateCaptureOperation(e.X, e.Y);
 
             if (middle)
             {
@@ -6088,10 +6148,8 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
+            SetMouseLastPos(e.X, e.Y);
             MarkDirty();
-
-            mouseLastX = e.X;
-            mouseLastY = e.Y;
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -6251,7 +6309,7 @@ namespace FamiStudio
             if (App == null)
                 return;
 
-            UpdateCaptureOperation(mouseLastX, mouseLastY, true);
+            UpdateCaptureOperation(mouseLastX, mouseLastY, 1.0f, true);
             UpdateFollowMode();
             TickFling(delta);
         }

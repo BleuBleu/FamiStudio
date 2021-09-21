@@ -114,7 +114,7 @@ namespace FamiStudio
             false, // MobilePan,
         };
 
-        bool showSelection = true;
+        bool showSelection = true; // DROIDTODO : Must always be true on mobile.
         bool showExpansionIcons = false;
         int captureMouseX = -1;
         int captureMouseY = -1;
@@ -379,6 +379,18 @@ namespace FamiStudio
             }
         }
 
+        private void SetMouseLastPos(int x, int y)
+        {
+            mouseLastX = x;
+            mouseLastY = y;
+        }
+
+        private void SetFlingVelocity(float x, float y)
+        {
+            flingVelX = x;
+            flingVelY = y;
+        }
+
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             Debug.Assert(MiscImageNames.Length == (int)MiscImageIndices.Count);
@@ -639,7 +651,7 @@ namespace FamiStudio
                         cp.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1); // MATTT : We use the bitmap size here.
                         cp.DrawText(pattern.Name, ThemeResources.FontSmall, patternNamePosX, patternNamePosY, ThemeResources.BlackBrush, RenderTextFlags.Left | RenderTextFlags.Clip, sx - patternNamePosX);
                         if (IsPatternSelected(t, i))
-                            cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2, true);
+                            cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 4 /*2 MATTT */, true);
                         cp.PopTransform();
                     }
 
@@ -647,7 +659,7 @@ namespace FamiStudio
                     if (PlatformUtils.IsMobile && hoverChannelIdx == t && hoverPatternIdx == i)
                     {
                         cf.PushTranslation(0, py);
-                        cf.DrawRectangle(0, 0, sx, trackSizeY, hoverPatternBrush, 2, false);
+                        cf.DrawRectangle(0, 0, sx, trackSizeY, hoverPatternBrush, 4 /*2 MATTT */, false);
                         cf.PopTransform();
                     }
                 }
@@ -955,8 +967,7 @@ namespace FamiStudio
 
         private void CaptureMouse(int x, int y)
         {
-            mouseLastX = x;
-            mouseLastY = y;
+            SetMouseLastPos(x, y);
             captureMouseX = x;
             captureMouseY = y;
             captureScrollX = scrollX;
@@ -1341,12 +1352,6 @@ namespace FamiStudio
                 var channel = Song.Channels[channelIdx];
                 var pattern = channel.PatternInstances[patternIdx];
 
-                //// Toggle hover pattern.
-                //if (hoverChannelIdx == channelIdx && hoverPatternIdx == patternIdx)
-                //    ClearHoverPatern();
-                //else
-
-                // DROIDTODO : Any way to clear the hover pattern?
                 SetHoverPattern(channelIdx, patternIdx);
 
                 // DROIDTODO : Check if delete tool.
@@ -1511,7 +1516,7 @@ namespace FamiStudio
         }
 
         protected override void OnTouchDown(int x, int y)
-        {  
+        {
             // Pattern names/area:
             // - Set current channel
             // Header:
@@ -1522,8 +1527,8 @@ namespace FamiStudio
             // - Start erase op if eraser
             // - Start selection if seleciton mode
 
-            flingVelX = 0;
-            flingVelY = 0;
+            SetFlingVelocity(0, 0);
+            SetMouseLastPos(x, y);
 
             if (HandleTouchDownPatternArea(x, y)) goto Handled;
             if (HandleTouchDownDragSeekBar(x, y)) goto Handled;
@@ -1537,48 +1542,43 @@ namespace FamiStudio
 
         protected override void OnTouchMove(int x, int y)
         {
-            UpdateCaptureOperation(x, y, false);
-
-            mouseLastX = x;
-            mouseLastY = y;
+            UpdateCaptureOperation(x, y);
+            SetMouseLastPos(x, y);
         }
 
         protected override void OnTouchUp(int x, int y)
         {
             EndCaptureOperation(x, y);
+            SetMouseLastPos(x, y);
         }
 
         protected override void OnTouchFling(int x, int y, float velX, float velY)
         {
             EndCaptureOperation(x, y);
-            flingVelX = velX;
-            flingVelY = velY;
+            SetFlingVelocity(velX, velY);
         }
 
         protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
         {
-            // Header/Pattern area:
-            // - Scale
+            SetMouseLastPos(x, y);
 
-            if (captureOperation != CaptureOperation.None)
+            if (phase == TouchScalePhase.Begin)
             {
-                AbortCaptureOperation(); // Temporary.
-                Debug.WriteLine("Oops");
+                if (captureOperation != CaptureOperation.None)
+                {
+                    Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
+                    AbortCaptureOperation(); // Temporary.
+                }
+
+                StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
             }
-
-            // TODO : Capture operation.
-            switch (phase)
+            else if (phase == TouchScalePhase.Scale)
             {
-                case TouchScalePhase.Begin:
-                    panning = false; // MATTT This will not be used on mobile.
-                    StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
-                    break;
-                case TouchScalePhase.Scale:
-                    ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
-                    break;
-                case TouchScalePhase.End:
-                    EndCaptureOperation(x, y);
-                    break;
+                UpdateCaptureOperation(x, y, scale);
+            }
+            else
+            {
+                EndCaptureOperation(x, y);
             }
         }
 
@@ -2358,7 +2358,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void UpdateCaptureOperation(int x, int y, bool realTime)
+        private void UpdateCaptureOperation(int x, int y, float scale = 1.0f, bool realTime = false)
         {
             const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
 
@@ -2393,6 +2393,9 @@ namespace FamiStudio
                     case CaptureOperation.DragSelection:
                         UpdateDragSelection(x, y);
                         break;
+                    case CaptureOperation.MobileZoom:
+                        ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
+                        break;
                     default:
                         MarkDirty();
                         break;
@@ -2407,7 +2410,7 @@ namespace FamiStudio
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
-            UpdateCaptureOperation(e.X, e.Y, false);
+            UpdateCaptureOperation(e.X, e.Y);
 
             if (middle)
             {
@@ -2415,10 +2418,8 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e);
+            SetMouseLastPos(e.X, e.Y);
             ShowExpansionIcons = false;
-
-            mouseLastX = e.X;
-            mouseLastY = e.Y;
         }
 
         private void EditPatternCustomSettings(Point pt, int patternIdx)
@@ -2674,7 +2675,7 @@ namespace FamiStudio
             if (App == null)
                 return;
 
-            UpdateCaptureOperation(mouseLastX, mouseLastY, true);
+            UpdateCaptureOperation(mouseLastX, mouseLastY, 1.0f, true);
             UpdateFollowMode();
             TickFling(delta);
         }

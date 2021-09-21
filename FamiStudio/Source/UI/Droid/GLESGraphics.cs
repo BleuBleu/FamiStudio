@@ -342,124 +342,127 @@ namespace FamiStudio
 
         public override unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
         {
-            if (!list.HasAnything)
+            if (list == null)
                 return;
 
-            if (!scissor.IsEmpty)
-                SetScissorRect(scissor.Left, scissor.Top, scissor.Right, scissor.Bottom);
-
-            if (list.HasAnyMeshes)
+            if (list.HasAnything)
             {
-                var drawData = list.GetMeshDrawData();
+                if (!scissor.IsEmpty)
+                    SetScissorRect(scissor.Left, scissor.Top, scissor.Right, scissor.Bottom);
 
-                GLES11.GlEnableClientState(GLES11.GlColorArray);
-
-                foreach (var draw in drawData)
+                if (list.HasAnyMeshes)
                 {
-                    var vb = CopyGetVtxBuffer(draw.vtxArray, draw.vtxArraySize);
-                    var cb = CopyGetColBuffer(draw.colArray, draw.colArraySize);
-                    var ib = CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize);
+                    var drawData = list.GetMeshDrawData();
 
-                    //if (draw.smooth) GLES11.GlEnable(GLES11.GlPolygonSmooth);
-                    GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
-                    GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
-                    GLES11.GlDrawElements(GLES11.GlTriangles, draw.numIndices, GLES11.GlUnsignedShort, ib);
-                    //if (draw.smooth) GLES11.GlDisable(GLES11.GlPolygonSmooth);
+                    GLES11.GlEnableClientState(GLES11.GlColorArray);
+
+                    foreach (var draw in drawData)
+                    {
+                        var vb = CopyGetVtxBuffer(draw.vtxArray, draw.vtxArraySize);
+                        var cb = CopyGetColBuffer(draw.colArray, draw.colArraySize);
+                        var ib = CopyGetIdxBuffer(draw.idxArray, draw.idxArraySize);
+
+                        //if (draw.smooth) GLES11.GlEnable(GLES11.GlPolygonSmooth);
+                        GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                        GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
+                        GLES11.GlDrawElements(GLES11.GlTriangles, draw.numIndices, GLES11.GlUnsignedShort, ib);
+                        //if (draw.smooth) GLES11.GlDisable(GLES11.GlPolygonSmooth);
+                    }
+
+                    GLES11.GlDisableClientState(GLES11.GlColorArray);
                 }
 
-                GLES11.GlDisableClientState(GLES11.GlColorArray);
-            }
-
-            if (list.HasAnyLines)
-            {
-                var drawData = list.GetLineDrawData();
-
-                GLES11.GlPushMatrix();
-                GLES11.GlTranslatef(0.5f, 0.5f, 0.0f);
-                GLES11.GlEnable(GLES11.GlTexture2d);
-                GLES11.GlBindTexture(GLES11.GlTexture2d, dashedBitmap.Id);
-                GLES11.GlEnableClientState(GLES11.GlColorArray);
-                GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
-
-                foreach (var draw in drawData)
+                if (list.HasAnyLines)
                 {
-                    var vb = CopyGetVtxBuffer(draw.vtxArray, draw.vtxArraySize);
-                    var cb = CopyGetColBuffer(draw.colArray, draw.colArraySize);
-                    var tb = CopyGetVtxBuffer(draw.texArray, draw.texArraySize);
+                    var drawData = list.GetLineDrawData();
 
-                    if (draw.smooth) GLES11.GlEnable(GLES11.GlLineSmooth);
-                    GLES11.GlLineWidth(draw.lineWidth);
+                    GLES11.GlPushMatrix();
+                    GLES11.GlTranslatef(0.5f, 0.5f, 0.0f);
+                    GLES11.GlEnable(GLES11.GlTexture2d);
+                    GLES11.GlBindTexture(GLES11.GlTexture2d, dashedBitmap.Id);
+                    GLES11.GlEnableClientState(GLES11.GlColorArray);
+                    GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
+
+                    foreach (var draw in drawData)
+                    {
+                        var vb = CopyGetVtxBuffer(draw.vtxArray, draw.vtxArraySize);
+                        var cb = CopyGetColBuffer(draw.colArray, draw.colArraySize);
+                        var tb = CopyGetVtxBuffer(draw.texArray, draw.texArraySize);
+
+                        if (draw.smooth) GLES11.GlEnable(GLES11.GlLineSmooth);
+                        GLES11.GlLineWidth(draw.lineWidth);
+                        GLES11.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
+                        GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                        GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
+                        GLES11.GlDrawArrays(GLES11.GlLines, 0, draw.numVertices);
+                        if (draw.smooth) GLES11.GlDisable(GLES11.GlLineSmooth);
+                    }
+
+                    GLES11.GlDisableClientState(GLES11.GlColorArray);
+                    GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
+                    GLES11.GlDisable(GLES11.GlTexture2d);
+                    GLES11.GlPopMatrix();
+                }
+
+                if (list.HasAnyBitmaps)
+                {
+                    var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize, out var idxSize);
+
+                    var vb = CopyGetVtxBuffer(vtxArray, vtxSize);
+                    var cb = CopyGetColBuffer(colArray, colSize);
+                    var tb = CopyGetVtxBuffer(texArray, texSize);
+                    var ib = CopyGetIdxBuffer(quadIdxArray, idxSize);
+
+                    GLES11.GlEnable(GLES11.GlTexture2d);
+                    GLES11.GlEnableClientState(GLES11.GlColorArray);
+                    GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
                     GLES11.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
                     GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
                     GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
-                    GLES11.GlDrawArrays(GLES11.GlLines, 0, draw.numVertices);
-                    if (draw.smooth) GLES11.GlDisable(GLES11.GlLineSmooth);
+
+                    foreach (var draw in drawData)
+                    {
+                        ib.Position(draw.start);
+                        GLES11.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
+                        GLES11.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
+                    }
+
+                    GLES11.GlDisableClientState(GLES11.GlColorArray);
+                    GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
+                    GLES11.GlDisable(GLES11.GlTexture2d);
                 }
 
-                GLES11.GlDisableClientState(GLES11.GlColorArray);
-                GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
-                GLES11.GlDisable(GLES11.GlTexture2d);
-                GLES11.GlPopMatrix();
-            }
-
-            if (list.HasAnyBitmaps)
-            {
-                var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize, out var idxSize);
-
-                var vb = CopyGetVtxBuffer(vtxArray, vtxSize);
-                var cb = CopyGetColBuffer(colArray, colSize);
-                var tb = CopyGetVtxBuffer(texArray, texSize);
-                var ib = CopyGetIdxBuffer(quadIdxArray, idxSize);
-
-                GLES11.GlEnable(GLES11.GlTexture2d);
-                GLES11.GlEnableClientState(GLES11.GlColorArray);
-                GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
-                GLES11.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
-                GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
-                GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
-
-                foreach (var draw in drawData)
+                if (list.HasAnyTexts)
                 {
-                    ib.Position(draw.start);
-                    GLES11.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
-                    GLES11.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
+                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize, out var idxSize);
+
+                    var vb = CopyGetVtxBuffer(vtxArray, vtxSize);
+                    var cb = CopyGetColBuffer(colArray, colSize);
+                    var tb = CopyGetVtxBuffer(texArray, texSize);
+                    var ib = CopyGetIdxBuffer(quadIdxArray, idxSize);
+
+                    GLES11.GlEnable(GLES11.GlTexture2d);
+                    GLES11.GlEnableClientState(GLES11.GlColorArray);
+                    GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
+                    GLES11.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
+                    GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
+                    GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
+
+                    foreach (var draw in drawData)
+                    {
+                        ib.Position(draw.start);
+                        GLES11.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
+                        GLES11.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
+                    }
+
+                    GLES11.GlDisableClientState(GLES11.GlColorArray);
+                    GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
+                    GLES11.GlDisable(GLES11.GlTexture2d);
                 }
 
-                GLES11.GlDisableClientState(GLES11.GlColorArray);
-                GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
-                GLES11.GlDisable(GLES11.GlTexture2d);
+                if (!scissor.IsEmpty)
+                    ClearScissorRect();
             }
-
-            if (list.HasAnyTexts)
-            {
-                var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out var vtxSize, out var texSize, out var colSize, out var idxSize);
-
-                var vb = CopyGetVtxBuffer(vtxArray, vtxSize);
-                var cb = CopyGetColBuffer(colArray, colSize);
-                var tb = CopyGetVtxBuffer(texArray, texSize);
-                var ib = CopyGetIdxBuffer(quadIdxArray, idxSize);
-
-                GLES11.GlEnable(GLES11.GlTexture2d);
-                GLES11.GlEnableClientState(GLES11.GlColorArray);
-                GLES11.GlEnableClientState(GLES11.GlTextureCoordArray);
-                GLES11.GlTexCoordPointer(2, GLES11.GlFloat, 0, tb);
-                GLES11.GlColorPointer(4, GLES11.GlUnsignedByte, 0, cb);
-                GLES11.GlVertexPointer(2, GLES11.GlFloat, 0, vb);
-
-                foreach (var draw in drawData)
-                {
-                    ib.Position(draw.start);
-                    GLES11.GlBindTexture(GLES11.GlTexture2d, draw.textureId);
-                    GLES11.GlDrawElements(GLES11.GlTriangles, draw.count, GLES11.GlUnsignedShort, ib);
-                }
-
-                GLES11.GlDisableClientState(GLES11.GlColorArray);
-                GLES11.GlDisableClientState(GLES11.GlTextureCoordArray);
-                GLES11.GlDisable(GLES11.GlTexture2d);
-            }
-
-            if (!scissor.IsEmpty)
-                ClearScissorRect();
 
             list.Release();
         }
