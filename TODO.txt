@@ -146,6 +146,7 @@ UI:
 - Timecode alignment looks like ass now, create a special mode for texture that uses fixed width + center align?
 - Hide lines in piano roll when snapping is enabled?
 - Convert more icons to white + remove last border (release + loop point.)
+- Copy instrument.
 
 Misc:
 

@@ -189,7 +189,7 @@ namespace FamiStudio
             return AddTextBox("Color", value);
         }
 
-        private LinearLayout CreateLinearLayout(bool vertical, bool matchParentWidth, bool matchParentHeight, int margin)
+        private LinearLayout CreateLinearLayout(bool vertical, bool matchParentWidth, bool matchParentHeight, int margin, bool radioGroup = false)
         {
             var layout = new LinearLayout.LayoutParams(
                     matchParentWidth  ? ViewGroup.LayoutParams.MatchParent : ViewGroup.LayoutParams.WrapContent,
@@ -197,7 +197,7 @@ namespace FamiStudio
             margin = DroidUtils.DpToPixels(margin);
             layout.SetMargins(margin, margin, margin, margin);
 
-            var lin = new LinearLayout(context);
+            var lin = radioGroup ? new RadioGroup(context) : new LinearLayout(context);
             lin.LayoutParameters = layout;
             lin.Orientation = vertical ? Orientation.Vertical : Orientation.Horizontal;
             return lin;
@@ -208,6 +208,13 @@ namespace FamiStudio
             var text = new TextView(new ContextThemeWrapper(context, style));
             text.Text = str;
             return text;
+        }
+
+        private RadioButton CreateRadioButton(string str, int style, bool check)
+        {
+            var radio = new RadioButton(new ContextThemeWrapper(context, style));
+            radio.Text = str;
+            return radio;
         }
 
         private View CreateSpacer()
@@ -412,17 +419,55 @@ namespace FamiStudio
 
         public int AddRadioButton(string label, string text, bool check)
         {
-            // DROIDTODO: Radio!
-            Debug.Assert(false);
-            return 0;
+            var first = properties.Count == 0 || properties[properties.Count - 1].type != PropertyType.Radio;
+            var prop = new Property();
+
+            // Create the group on the first radio.
+            var group = (RadioGroup)null;
+
+            if (first)
+            {
+                group = CreateLinearLayout(true, true, false, 10, true) as RadioGroup;
+
+                prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
+                prop.layout = group;
+                prop.layout.AddView(prop.label);
+                if (prop.tooltip != null)
+                    prop.layout.AddView(prop.tooltip);
+            }
+            else
+            {
+                for (int i = 0; i < properties.Count; i++)
+                {
+                    if (properties[i].type == PropertyType.Radio)
+                    {
+                        group = properties[i].layout as RadioGroup;
+                        break;
+                    }
+                }
+            }
+
+            // Create the radio, but add ourselves to the previous layout.
+            var radio = CreateRadioButton(text, Resource.Style.LightGrayCheckBox, false);
+            prop.type = PropertyType.Radio;
+            prop.controls.Add(radio);
+            group.AddView(radio);
+            properties.Add(prop);
+
+            if (check)
+                radio.Checked = true;
+
+            return properties.Count - 1;
         }
 
         public void UpdateIntegerRange(int idx, int min, int max)
         {
+            Debug.Assert(false);
         }
 
         public void UpdateIntegerRange(int idx, int value, int min, int max)
         {
+            Debug.Assert(false);
         }
 
         public void AddDomainRange(string label, int[] values, int value)
@@ -435,14 +480,17 @@ namespace FamiStudio
 
         public void SetLabelText(int idx, string text)
         {
+            Debug.Assert(false);
         }
 
         public void SetDropDownListIndex(int idx, int selIdx)
         {
+            Debug.Assert(false);
         }
 
         public void UpdateDropDownListItems(int idx, string[] values)
         {
+            Debug.Assert(false);
         }
 
         public void SetPropertyVisible(int idx, bool visible)
@@ -485,6 +533,7 @@ namespace FamiStudio
 
         public int AddLabelCheckBox(string label, bool value, int margin = 0)
         {
+            Debug.Assert(false);
             return 0;
         }
 
@@ -768,8 +817,8 @@ namespace FamiStudio
                     pageLayout.AddView(CreateSpacer());
                 if (i == firstAdvancedProperty)
                     pageLayout.AddView(CreateAdvancedPropertiesBanner());
-
-                pageLayout.AddView(prop.layout);
+                if (prop.layout != null)
+                    pageLayout.AddView(prop.layout);
             }
 
             return pageLayout;
