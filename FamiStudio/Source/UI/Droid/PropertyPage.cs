@@ -412,6 +412,8 @@ namespace FamiStudio
 
         public int AddRadioButton(string label, string text, bool check)
         {
+            // DROIDTODO: Radio!
+            Debug.Assert(false);
             return 0;
         }
 

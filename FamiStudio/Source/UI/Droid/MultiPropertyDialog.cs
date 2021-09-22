@@ -35,15 +35,17 @@ namespace FamiStudio
             public bool visible = true;
         }
 
+        private string title;
         private int selectedIndex = 0;
         private List<PropertyPageTab> tabs = new List<PropertyPageTab>();
 
+        public string Title => title;
         public int PageCount => tabs.Count;
         public int SelectedIndex => selectedIndex;
         
-        public MultiPropertyDialog(int width, int height, int tabsWidth = 150)
+        public MultiPropertyDialog(string text, int width, int height, int tabsWidth = 150)
         {
-
+            title = text;
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
@@ -87,7 +89,7 @@ namespace FamiStudio
         private FragmentContainerView fragmentView;
         private MultiPropertyTabFragment tabsFragment;
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
-        private MultiPropertyDialog dialog;
+        private MultiPropertyDialog dlg;
         private IMenuItem applyMenuItem;
         private UpdateToolbarRunnable updateToolbarRunnable;
 
@@ -97,9 +99,9 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            dialog = FamiStudioForm.Instance.DialogUserData as MultiPropertyDialog;
+            dlg = FamiStudioForm.Instance.DialogUserData as MultiPropertyDialog;
             updateToolbarRunnable = new UpdateToolbarRunnable(this);
-            tabsFragment = new MultiPropertyTabFragment(dialog);
+            tabsFragment = new MultiPropertyTabFragment(dlg);
             
             var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, Android.Resource.Attribute.ActionBarSize));
             appBarLayoutParams.ScrollFlags = 0;
@@ -114,6 +116,7 @@ namespace FamiStudio
                 actionBar.SetDisplayHomeAsUpEnabled(true);
                 actionBar.SetHomeButtonEnabled(true);
                 actionBar.SetHomeAsUpIndicator(Android.Resource.Drawable.IcMenuCloseClearCancel);
+                actionBar.Title = dlg.Title;
             }
 
             appBarLayout = new AppBarLayout(this);
@@ -171,9 +174,9 @@ namespace FamiStudio
         {
             if (selectedTabIndex == -1)
             {
-                for (int i = 0; i < dialog.PageCount; i++)
+                for (int i = 0; i < dlg.PageCount; i++)
                 {
-                    var tab = dialog.GetPropertyPageTab(i);
+                    var tab = dlg.GetPropertyPageTab(i);
                     if (tab.button == v)
                     {
                         selectedTabIndex = i;

@@ -34,7 +34,7 @@ namespace FamiStudio
         public unsafe TransformDialog(FamiStudio famistudio)
         {
             app = famistudio;
-            dialog = new MultiPropertyDialog(550, 500);
+            dialog = new MultiPropertyDialog("Transform Songs", 550, 500);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
@@ -43,7 +43,6 @@ namespace FamiStudio
                 CreatePropertyPage(page, section);
             }
         }
-
 
         private string[] GetSongNames()
         {
@@ -218,6 +217,8 @@ namespace FamiStudio
                             break;
                     }
                 }
+
+                callback(r);
             });
         }
     }

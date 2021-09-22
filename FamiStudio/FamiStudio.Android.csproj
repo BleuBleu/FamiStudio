@@ -245,7 +245,6 @@
     <Compile Include="Source\UI\Common\PasteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
-    <Compile Include="Source\UI\Common\Program.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs">
       <SubType>UserControl</SubType>

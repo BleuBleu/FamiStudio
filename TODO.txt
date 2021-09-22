@@ -112,12 +112,14 @@ Prop page:
 - "Apply" should be "Export" in export dialog.
 - Fix transitions, ugly.
 - Review text color light gray 1 or 2?
-- Add a title to dialogs
+x Add a title to dialogs
+- Config dialog needs an "Apply" on the first page too.
 - Toolbar font.
 - Button font.
 - Cleanup where we use GLGraphics, always use render.
 - Change insturment dialog for a combo
 - Some icons still have borders.
+- Radio buttons.
 
 Scaling issue:
 - Support 3 scalings (Will not affect toolbars)? 

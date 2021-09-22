@@ -13,7 +13,7 @@ namespace FamiStudio
 
         public unsafe DeleteSpecialDialog(Channel channel, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            dialog = new PropertyDialog(200);
+            dialog = new PropertyDialog("Delete Special", 200);
             dialog.Properties.AddLabelCheckBox("Delete Notes", notes);
             dialog.Properties.AddLabelCheckBox("Delete Effects", effectsMask == Note.EffectAllMask);
 

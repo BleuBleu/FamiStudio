@@ -31,7 +31,7 @@ namespace FamiStudio
                 for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
                     expNames[i - ExpansionType.Start] = ExpansionType.Names[i];
 
-                dialog = new PropertyDialog(500);
+                dialog = new PropertyDialog("MIDI Import", 500);
                 dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 0
                 dialog.Properties.AddNumericUpDown("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 1
                 dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 2
@@ -123,7 +123,7 @@ namespace FamiStudio
 
                 if (src.type == MidiSourceType.Channel && src.index == 9)
                 {
-                    var dlg = new PropertyDialog(300, true, true, dialog);
+                    var dlg = new PropertyDialog("MIDI Source", 300, true, true, dialog);
                     dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 0
                     dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 1
                     dlg.Properties.AddButton(null, "Select All"); // 2

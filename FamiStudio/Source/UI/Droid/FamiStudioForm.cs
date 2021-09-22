@@ -208,7 +208,7 @@ namespace FamiStudio
         private void DialogTest()
         {
 #if DEBUG
-            var dlg = new PropertyDialog(200);
+            var dlg = new PropertyDialog("Test Dialog", 200);
 
             dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
             dlg.Properties.AddColorPicker(System.Drawing.Color.Pink);

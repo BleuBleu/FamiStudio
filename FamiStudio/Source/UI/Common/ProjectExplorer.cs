@@ -1539,7 +1539,6 @@ namespace FamiStudio
 
             if (filename != null)
             {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
                 var dlgLog = new LogDialog(ParentForm);
                 using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                 {
@@ -1554,8 +1553,7 @@ namespace FamiStudio
                     foreach (var song in otherProject.Songs)
                         songNames.Add(song.Name);
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-                    var dlg = new PropertyDialog(300);
+                    var dlg = new PropertyDialog("Import Songs", 300);
                     dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
                     dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
                     dlg.Properties.AddButton(null, "Select All"); // 2
@@ -1563,36 +1561,37 @@ namespace FamiStudio
                     dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
                     dlg.Properties.Build();
 
-                    if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                    dlg.ShowDialog(ParentForm, (r) =>
                     {
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                        var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                        var songIds = new List<int>();
-
-                        for (int i = 0; i < selected.Length; i++)
+                        if (r == DialogResult.OK)
                         {
-                            if (selected[i])
-                                songIds.Add(otherProject.Songs[i].Id);
-                        }
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
-                        bool success = false;
-                        if (songIds.Count > 0)
-                        {
-                            otherProject.DeleteAllSongsBut(songIds.ToArray());
-                            success = App.Project.MergeProject(otherProject);
-                        }
+                            var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                            var songIds = new List<int>();
 
-                        if (success)
-                            App.UndoRedoManager.EndTransaction();
-                        else
-                            App.UndoRedoManager.AbortTransaction();
-                    }
+                            for (int i = 0; i < selected.Length; i++)
+                            {
+                                if (selected[i])
+                                    songIds.Add(otherProject.Songs[i].Id);
+                            }
+
+                            bool success = false;
+                            if (songIds.Count > 0)
+                            {
+                                otherProject.DeleteAllSongsBut(songIds.ToArray());
+                                success = App.Project.MergeProject(otherProject);
+                            }
+
+                            if (success)
+                                App.UndoRedoManager.EndTransaction();
+                            else
+                                App.UndoRedoManager.AbortTransaction();
+                        }
+                    });
 
                     dlgLog.ShowDialogIfMessages();
-#endif
                 }
-#endif
             }
 
             RefreshButtons();
@@ -1620,7 +1619,6 @@ namespace FamiStudio
 
             if (filename != null)
             {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
                 var dlgLog = new LogDialog(ParentForm);
                 using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                 {
@@ -1656,8 +1654,7 @@ namespace FamiStudio
                                 instrumentNames.Add(instrument.NameWithExpansion);
                             }
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-                            var dlg = new PropertyDialog(300);
+                            var dlg = new PropertyDialog("Import Instruments", 300);
                             dlg.Properties.AddLabel(null, "Select instruments to import:"); // 0
                             dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null); // 1
                             dlg.Properties.AddButton(null, "Select All"); // 2
@@ -1665,28 +1662,30 @@ namespace FamiStudio
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                            dlg.ShowDialog(ParentForm, (r) =>
                             {
-                                var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                                var instrumentsIdsToMerge = new List<int>();
-
-                                for (int i = hasDpcmInstrument ? 1 : 0; i < selected.Length; i++)
+                                if (r == DialogResult.OK)
                                 {
-                                    if (selected[i])
-                                        instrumentsIdsToMerge.Add(instruments[i].Id);
+                                    var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                    var instrumentsIdsToMerge = new List<int>();
+
+                                    for (int i = hasDpcmInstrument ? 1 : 0; i < selected.Length; i++)
+                                    {
+                                        if (selected[i])
+                                            instrumentsIdsToMerge.Add(instruments[i].Id);
+                                    }
+
+                                    // Wipe everything but the instruments we want.
+                                    if (!hasDpcmInstrument || selected[0] == false)
+                                        instrumentProject.DeleteAllSamples();
+                                    instrumentProject.DeleteAllSongs();
+                                    instrumentProject.DeleteAllArpeggios();
+                                    instrumentProject.DeleteAllInstrumentBut(instrumentsIdsToMerge.ToArray());
+                                    instrumentProject.DeleteUnmappedSamples();
+
+                                    success = App.Project.MergeProject(instrumentProject);
                                 }
-
-                                // Wipe everything but the instruments we want.
-                                if (!hasDpcmInstrument || selected[0] == false)
-                                    instrumentProject.DeleteAllSamples();
-                                instrumentProject.DeleteAllSongs();
-                                instrumentProject.DeleteAllArpeggios();
-                                instrumentProject.DeleteAllInstrumentBut(instrumentsIdsToMerge.ToArray());
-                                instrumentProject.DeleteUnmappedSamples();
-
-                                success = App.Project.MergeProject(instrumentProject);
-                            }
-#endif
+                            });
                         }
                     }
 
@@ -1697,7 +1696,6 @@ namespace FamiStudio
 
                     dlgLog.ShowDialogIfMessages();
                 }
-#endif
             }
 
             RefreshButtons();
@@ -1757,56 +1755,56 @@ namespace FamiStudio
                         foreach (var sample in samplesProject.Samples)
                             samplesNames.Add(sample.Name);
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-                        var dlg = new PropertyDialog(300);
+                        var dlg = new PropertyDialog("Import DPCM Samples", 300);
                         dlg.Properties.AddLabel(null, "Select samples to import:"); // 0
-                        dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null); // 1
+                        dlg.Properties.AddCheckBoxList("Import DPCM Samples", samplesNames.ToArray(), null); // 1
                         dlg.Properties.AddButton(null, "Select All"); // 2
                         dlg.Properties.AddButton(null, "Select None"); // 3
                         dlg.Properties.Build();
                         dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                        if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                        dlg.ShowDialog(ParentForm, (r) =>
                         {
-                            var dlgLog = new LogDialog(ParentForm);
-
-                            using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+                            if (r == DialogResult.OK)
                             {
-                                var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                                var sampleIdsToMerge = new List<int>();
+                                var dlgLog = new LogDialog(ParentForm);
 
-                                for (int i = 0; i < selected.Length; i++)
+                                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                                 {
-                                    if (selected[i])
-                                        sampleIdsToMerge.Add(samplesProject.Samples[i].Id);
+                                    var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                    var sampleIdsToMerge = new List<int>();
+
+                                    for (int i = 0; i < selected.Length; i++)
+                                    {
+                                        if (selected[i])
+                                            sampleIdsToMerge.Add(samplesProject.Samples[i].Id);
+                                    }
+
+                                    // Wipe everything but the instruments we want.
+                                    samplesProject.DeleteAllSongs();
+                                    samplesProject.DeleteAllArpeggios();
+                                    samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
+                                    samplesProject.DeleteAllInstruments();
+                                    samplesProject.DeleteAllMappings();
+
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
+
+                                    bool success = App.Project.MergeProject(samplesProject);
+
+                                    if (success)
+                                        App.UndoRedoManager.EndTransaction();
+                                    else
+                                        App.UndoRedoManager.AbortTransaction();
                                 }
 
-                                // Wipe everything but the instruments we want.
-                                samplesProject.DeleteAllSongs();
-                                samplesProject.DeleteAllArpeggios();
-                                samplesProject.DeleteAllSamplesBut(sampleIdsToMerge.ToArray());
-                                samplesProject.DeleteAllInstruments();
-                                samplesProject.DeleteAllMappings();
-
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
-
-                                bool success = App.Project.MergeProject(samplesProject);
-
-                                if (success)
-                                    App.UndoRedoManager.EndTransaction();
-                                else
-                                    App.UndoRedoManager.AbortTransaction();
+                                RefreshButtons();
+                                dlgLog.ShowDialogIfMessages();
                             }
-
-                            RefreshButtons();
-                            dlgLog.ShowDialogIfMessages();
-                        }
-#endif
+                        });
                     }
                 }
                 else if (numSamplesFiles > 0)
                 {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
                     var dlgLog = new LogDialog(ParentForm);
                     using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
                     {
@@ -1850,7 +1848,6 @@ namespace FamiStudio
                         RefreshButtons();
                         dlgLog.ShowDialogIfMessages();
                     }
-#endif
                 }
             }
         }
@@ -1903,7 +1900,7 @@ namespace FamiStudio
                         expNames.Add(ExpansionType.Names[activeExpansions[i]]);
                 }
 
-                var dlg = new PropertyDialog(PointToScreen(new Point(x, y)), 260, true);
+                var dlg = new PropertyDialog("Add Instrument", PointToScreen(new Point(x, y)), 260, true);
                 dlg.Properties.AddDropDownList("Expansion:", expNames.ToArray(), expNames[0]); // 0
                 dlg.Properties.Build();
 
@@ -2695,7 +2692,7 @@ namespace FamiStudio
                 expBools[i - ExpansionType.Start] = project.UsesExpansionAudio(i);
             }
 
-            var dlg = new PropertyDialog(PointToScreen(pt), 360, true);
+            var dlg = new PropertyDialog("Project Properties", PointToScreen(pt), 360, true);
             dlg.Properties.ShowWarnings = true;
             dlg.Properties.AddTextBox("Title :", project.Name, 31); // 0
             dlg.Properties.AddTextBox("Author :", project.Author, 31); // 1
@@ -2793,7 +2790,6 @@ namespace FamiStudio
 
         private void UpdateProjectPropertiesWarnings(PropertyPage props)
         {
-#if !FAMISTUDIO_ANDROID
             var famiStudioTempo = props.GetPropertyValue<string>(3) == "FamiStudio";
             var selectedExpansions = props.GetPropertyValue<bool[]>(6);
             var numExpansionsSelected = 0;
@@ -2808,7 +2804,6 @@ namespace FamiStudio
                 props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to the FamiStudio Sound Engine or FamiTracker.");
             else
                 props.SetPropertyWarning(6, CommentType.Good, "");
-#endif
         }
 
         private void ProjectProperties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -2847,8 +2842,7 @@ namespace FamiStudio
 
         private void EditSongProperties(Point pt, Song song)
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-            var dlg = new PropertyDialog(PointToScreen(pt), 320, true); 
+            var dlg = new PropertyDialog("Song Properties", PointToScreen(pt), 320, true); 
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 
@@ -2858,104 +2852,107 @@ namespace FamiStudio
             tempoProperties.AddProperties();
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+            dlg.ShowDialog(ParentForm, (r) =>
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                App.SeekSong(0);
-
-                var newName = dlg.Properties.GetPropertyValue<string>(0);
-
-                if (App.Project.RenameSong(song, newName))
+                if (r == DialogResult.OK)
                 {
-                    song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
-                    song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
+                    App.SeekSong(0);
 
-                    tempoProperties.Apply();
+                    var newName = dlg.Properties.GetPropertyValue<string>(0);
 
-                    SongModified?.Invoke(song);
-                    App.UndoRedoManager.EndTransaction();
-                    RefreshButtons(false);
+                    if (App.Project.RenameSong(song, newName))
+                    {
+                        song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                        song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
+
+                        tempoProperties.Apply();
+
+                        SongModified?.Invoke(song);
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons(false);
+                    }
+                    else
+                    {
+                        App.UndoRedoManager.AbortTransaction();
+                        SystemSounds.Beep.Play();
+                    }
+
+                    MarkDirty();
                 }
-                else
-                {
-                    App.UndoRedoManager.AbortTransaction();
-                    SystemSounds.Beep.Play();
-                }
-
-                MarkDirty();
-            }
-#endif
+            });
         }
 
         private void EditInstrumentProperties(Point pt, Instrument instrument)
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-            var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog("Instrument Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+            dlg.ShowDialog(ParentForm, (r) =>
             {
-                var newName = dlg.Properties.GetPropertyValue<string>(0);
-
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-
-                if (App.Project.RenameInstrument(instrument, newName))
+                if (r == DialogResult.OK)
                 {
-                    instrument.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
-                    InstrumentColorChanged?.Invoke(instrument);
-                    RefreshButtons();
-                    App.UndoRedoManager.EndTransaction();
+                    var newName = dlg.Properties.GetPropertyValue<string>(0);
+
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+
+                    if (App.Project.RenameInstrument(instrument, newName))
+                    {
+                        instrument.Color = dlg.Properties.GetPropertyValue<Color>(1);
+                        InstrumentColorChanged?.Invoke(instrument);
+                        RefreshButtons();
+                        App.UndoRedoManager.EndTransaction();
+                    }
+                    else
+                    {
+                        App.UndoRedoManager.AbortTransaction();
+                        SystemSounds.Beep.Play();
+                    }
                 }
-                else
-                {
-                    App.UndoRedoManager.AbortTransaction();
-                    SystemSounds.Beep.Play();
-                }
-            }
-#endif
+            });
         }
 
         private void EditArpeggioProperties(Point pt, Arpeggio arpeggio)
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-            var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog("Arpeggio Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(arpeggio.Name, arpeggio.Color); // 0
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+            dlg.ShowDialog(ParentForm, (r) =>
             {
-                var newName = dlg.Properties.GetPropertyValue<string>(0);
-
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-
-                if (App.Project.RenameArpeggio(arpeggio, newName))
+                if (r == DialogResult.OK)
                 {
-                    arpeggio.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
-                    ArpeggioColorChanged?.Invoke(arpeggio);
-                    RefreshButtons();
-                    App.UndoRedoManager.EndTransaction();
+                    var newName = dlg.Properties.GetPropertyValue<string>(0);
+
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+
+                    if (App.Project.RenameArpeggio(arpeggio, newName))
+                    {
+                        arpeggio.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                        ArpeggioColorChanged?.Invoke(arpeggio);
+                        RefreshButtons();
+                        App.UndoRedoManager.EndTransaction();
+                    }
+                    else
+                    {
+                        App.UndoRedoManager.AbortTransaction();
+                        SystemSounds.Beep.Play();
+                    }
                 }
-                else
-                {
-                    App.UndoRedoManager.AbortTransaction();
-                    SystemSounds.Beep.Play();
-                }
-            }
-#endif
+            });
         }
 
         private void EditDPCMSampleProperties(Point pt, DPCMSample sample)
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
-            var dlg = new PropertyDialog(PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog("DPCM Sample Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(sample.Name, sample.Color); // 0
             dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();
 
-            if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+            dlg.ShowDialog(ParentForm, (r) =>
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 
@@ -2973,8 +2970,7 @@ namespace FamiStudio
                     App.UndoRedoManager.AbortTransaction();
                     SystemSounds.Beep.Play();
                 }
-            }
-#endif
+            });
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)

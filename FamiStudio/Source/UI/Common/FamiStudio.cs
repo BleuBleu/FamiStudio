@@ -1048,7 +1048,6 @@ namespace FamiStudio
 
         public void OpenTransformDialog()
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlg = new TransformDialog(this);
             dlg.CleaningUp += TransformDialog_CleaningUp;
             dlg.ShowDialog(mainForm, (r) =>
@@ -1063,7 +1062,6 @@ namespace FamiStudio
                     MarkEverythingDirty();
                 }
             });
-#endif
         }
 
         private void TransformDialog_CleaningUp()

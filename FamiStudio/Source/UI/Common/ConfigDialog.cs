@@ -77,7 +77,7 @@ namespace FamiStudio
             int width  = PlatformUtils.IsWindows ? 550 : 570;
             int height = PlatformUtils.IsWindows ? 350 : 450;
 
-            this.dialog = new MultiPropertyDialog(width, height);
+            this.dialog = new MultiPropertyDialog("FamiStudio Configuration", width, height);
 
             // Keep a copy of QWERTY keys.
             qwertyKeys = new int[37, 2];
@@ -257,7 +257,7 @@ namespace FamiStudio
             {
                 if (click == ClickType.Double)
                 {
-                    var dlg = new PropertyDialog(300, false, true, dialog);
+                    var dlg = new PropertyDialog("", 300, false, true, dialog);
                     dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
                     dlg.Properties.Build();
 

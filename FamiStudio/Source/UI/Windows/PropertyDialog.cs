@@ -21,7 +21,7 @@ namespace FamiStudio
         private PropertyPage propertyPage;
         private ToolTip toolTip;
 
-        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, Form parent = null)
+        public PropertyDialog(string title, int width, bool canAccept = true, bool canCancel = true, Form parent = null)
         {
             StartPosition = FormStartPosition.CenterParent;
             Init();
@@ -31,7 +31,7 @@ namespace FamiStudio
             FormClosed += PropertyDialog_FormClosed;
         }
 
-        public PropertyDialog(Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        public PropertyDialog(string title, Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
             top   = topAlign;
             width = DpiScaling.ScaleForDialog(width);

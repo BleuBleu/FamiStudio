@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -6,7 +7,6 @@ using RenderTheme = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class PasteSpecialDialog
     {
         private PropertyDialog dialog;
@@ -15,7 +15,7 @@ namespace FamiStudio
 
         public unsafe PasteSpecialDialog(Channel channel, bool mix = false, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            dialog = new PropertyDialog(200);
+            dialog = new PropertyDialog("Paste Special", 200);
             dialog.Properties.AddLabelCheckBox("Mix With Existing Notes", mix);
             dialog.Properties.AddLabelCheckBox("Paste Notes", notes);
             dialog.Properties.AddLabelCheckBox("Paste Effects", effectsMask == Note.EffectAllMask);
@@ -32,7 +32,6 @@ namespace FamiStudio
             dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32);
             dialog.Properties.Build();
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
-            dialog.Name = "PasteSpecialDialog";
         }
 
         private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -70,9 +69,9 @@ namespace FamiStudio
             inPropertyChanged = false;
         }
 
-        public DialogResult ShowDialog(FamiStudioForm parent)
+        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            return dialog.ShowDialog(parent);
+             dialog.ShowDialog(parent, callback);
         }
 
         public bool PasteMix        => dialog.Properties.GetPropertyValue<bool>(0);
@@ -98,5 +97,4 @@ namespace FamiStudio
 
         public int PasteRepeat => dialog.Properties.GetPropertyValue<int>(dialog.Properties.PropertyCount - 1);
     }
-#endif
 }

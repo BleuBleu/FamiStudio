@@ -37,7 +37,7 @@ namespace FamiStudio
         {
             this.parentForm = parentForm;
 
-            dialog = new PropertyDialog(800, false);
+            dialog = new PropertyDialog("Log", 800, false);
             dialog.Properties.AddMultilineTextBox(null, ""); // 0
             dialog.Properties.AddProgressBar(null, 0.0f); // 1
             dialog.Properties.Build();

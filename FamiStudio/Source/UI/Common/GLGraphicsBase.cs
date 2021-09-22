@@ -1548,8 +1548,7 @@ namespace FamiStudio
             inst.sy = height;
             inst.tint = tint;
 
-            // We dont have borders on icons anymore, no need for half pixel offset.
-            if (false && PlatformUtils.IsMobile) 
+            if (PlatformUtils.IsMobile) 
             {
                 var halfPixelX = 0.5f / bmp.Size.Width;
                 var halfPixelY = 0.5f / bmp.Size.Height;

@@ -25,15 +25,20 @@ namespace FamiStudio
     {
         public const int RequestCode = 1001;
 
+        private string title = "";
         private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
-        public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, object parent = null)
+        public PropertyPage Properties => propertyPage;
+        public string Title => title;
+
+        public PropertyDialog(string text, int width, bool canAccept = true, bool canCancel = true, object parent = null)
         {
+            title = text;
         }
 
-        public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        public PropertyDialog(string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
+            title = text;
         }
 
         public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
@@ -72,6 +77,7 @@ namespace FamiStudio
                 actionBar.SetDisplayHomeAsUpEnabled(true);
                 actionBar.SetHomeButtonEnabled(true);
                 actionBar.SetHomeAsUpIndicator(Android.Resource.Drawable.IcMenuCloseClearCancel);
+                actionBar.Title = dlg.Title;
             }
 
             appBarLayout = new AppBarLayout(this);

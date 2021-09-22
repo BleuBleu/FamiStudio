@@ -64,11 +64,9 @@ namespace FamiStudio
             LinuxUtils.SetProcessName("FamiStudio");
 #endif
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             var cli = new CommandLineInterface(args);
 
             if (!cli.Run())
-#endif
             {
                 var famiStudio = new FamiStudio();
                 famiStudio.Initialize(args.Length > 0 ? args[0] : null);

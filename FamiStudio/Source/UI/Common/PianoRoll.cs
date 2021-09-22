@@ -1860,24 +1860,25 @@ namespace FamiStudio
             {
                 AbortCaptureOperation();
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
                 var dlg = new PasteSpecialDialog(Song.Channels[editChannel], lastPasteSpecialPasteMix, lastPasteSpecialPasteNotes, lastPasteSpecialPasteEffectMask);
 
-                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                dlg.ShowDialog(ParentForm, (r) =>
                 {
-                    var effectMask = dlg.PasteEffectMask;
+                    if (r == DialogResult.OK)
+                    {
+                        var effectMask = dlg.PasteEffectMask;
 
-                    // Include volume slides if volume is selected.
-                    if ((effectMask & Note.EffectVolumeMask) != 0 && Song.Channels[editChannel].SupportsEffect(Note.EffectVolumeSlide))
-                        effectMask |= Note.EffectVolumeAndSlideMask;
+                        // Include volume slides if volume is selected.
+                        if ((effectMask & Note.EffectVolumeMask) != 0 && Song.Channels[editChannel].SupportsEffect(Note.EffectVolumeSlide))
+                            effectMask |= Note.EffectVolumeAndSlideMask;
 
-                    PasteNotes(dlg.PasteNotes, effectMask, dlg.PasteMix, dlg.PasteRepeat);
+                        PasteNotes(dlg.PasteNotes, effectMask, dlg.PasteMix, dlg.PasteRepeat);
 
-                    lastPasteSpecialPasteMix = dlg.PasteMix;
-                    lastPasteSpecialPasteNotes = dlg.PasteNotes;
-                    lastPasteSpecialPasteEffectMask = dlg.PasteEffectMask;
-                }
-#endif
+                        lastPasteSpecialPasteMix = dlg.PasteMix;
+                        lastPasteSpecialPasteNotes = dlg.PasteNotes;
+                        lastPasteSpecialPasteEffectMask = dlg.PasteEffectMask;
+                    }
+                });
             }
         }
 
@@ -3254,21 +3255,22 @@ namespace FamiStudio
                     {
                         var strings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-                        var dlg = new PropertyDialog(PointToScreen(new Point(e.X, e.Y)), 280, false, e.Y > Height / 2);
+                        var dlg = new PropertyDialog("DPCM Key Properties", PointToScreen(new Point(e.X, e.Y)), 280, false, e.Y > Height / 2);
                         dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
                         dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
                         dlg.Properties.Build();
 
-                        if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                        dlg.ShowDialog(ParentForm, (r) =>
                         {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
-                            mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
-                            mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
-                            App.UndoRedoManager.EndTransaction();
-                            MarkDirty();
-                        }
-#endif
+                            if (r == DialogResult.OK)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                                mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
+                                mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
+                                App.UndoRedoManager.EndTransaction();
+                                MarkDirty();
+                            }
+                        });
                     }
                 }
             }
@@ -5033,7 +5035,6 @@ namespace FamiStudio
 
         private void MapDPCMSample(byte noteValue)
         {
-#if !FAMISTUDIO_ANDROID
             if (App.Project.Samples.Count == 0)
             {
                 PlatformUtils.MessageBox("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons.OK);
@@ -5044,21 +5045,23 @@ namespace FamiStudio
                 foreach (var sample in App.Project.Samples)
                     sampleNames.Add(sample.Name);
 
-                var dlg = new PropertyDialog(300);
+                var dlg = new PropertyDialog("Assign DPCM Sample", 300);
                 dlg.Properties.AddLabel(null, "Select sample to assign:"); // 0
                 dlg.Properties.AddDropDownList(null, sampleNames.ToArray(), sampleNames[0]); // 1
                 dlg.Properties.Build();
 
-                if (dlg.ShowDialog(ParentForm) == DialogResult.OK)
+                dlg.ShowDialog(ParentForm, (r) =>
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
-                    var sampleName = dlg.Properties.GetPropertyValue<string>(1);
-                    App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
-                    App.UndoRedoManager.EndTransaction();
-                    DPCMSampleMapped?.Invoke(noteValue);
-                }
+                    if (r == DialogResult.OK)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
+                        var sampleName = dlg.Properties.GetPropertyValue<string>(1);
+                        App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
+                        App.UndoRedoManager.EndTransaction();
+                        DPCMSampleMapped?.Invoke(noteValue);
+                    }
+                });
             }
-#endif
         }
 
         private void StartDragDPCMSampleMapping(MouseEventArgs e, byte noteValue)

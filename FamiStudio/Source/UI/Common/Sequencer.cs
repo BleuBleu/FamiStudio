@@ -1815,7 +1815,7 @@ namespace FamiStudio
             if (!IsSelectionValid())
                 return;
 
-            var dialog = new PropertyDialog(200);
+            var dialog = new PropertyDialog("Paste Special", 200);
             dialog.Properties.AddLabelCheckBox("Insert", false); // 0
             dialog.Properties.AddLabelCheckBox("Extend song", false); // 1
             dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32); // 2
@@ -2424,7 +2424,7 @@ namespace FamiStudio
 
         private void EditPatternCustomSettings(Point pt, int patternIdx)
         {
-            var dlg = new PropertyDialog(PointToScreen(pt), 240);
+            var dlg = new PropertyDialog("Pattern Custom Settings", PointToScreen(pt), 240);
             var song = Song;
             var enabled = song.PatternHasCustomSettings(patternIdx);
 
@@ -2472,7 +2472,7 @@ namespace FamiStudio
         {
             bool multiplePatternSelected = selection && ((maxSelectedChannelIdx != minSelectedChannelIdx) || (minSelectedPatternIdx != maxSelectedPatternIdx));
 
-            var dlg = new PropertyDialog(PointToScreen(pt), 240);
+            var dlg = new PropertyDialog("Pattern Properties", PointToScreen(pt), 240);
             dlg.Properties.AddColoredTextBox(pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
             dlg.Properties.AddColorPicker(pattern.Color);
