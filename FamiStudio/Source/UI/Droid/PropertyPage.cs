@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
+using Android.App;
 using Android.Util;
 using Android.Content.Res;
 using Android.Content;
@@ -7,19 +9,18 @@ using Android.Graphics;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
+using Android.Text;
 using Android.Widget;
 using AndroidX.Core.Widget;
 using AndroidX.AppCompat.Widget;
 using AndroidX.CoordinatorLayout.Widget;
-using Google.Android.Material.Button;
-
-using Debug = System.Diagnostics.Debug;
-using Color = System.Drawing.Color;
-using AlertDialog = AndroidX.AppCompat.App.AlertDialog;
-using Orientation = Android.Widget.Orientation;
 using Android.Views.InputMethods;
-using Android.Text;
-using System.Threading.Tasks;
+using Google.Android.Material.Button;
+using Java.Util;
+
+using Debug       = System.Diagnostics.Debug;
+using Color       = System.Drawing.Color;
+using Orientation = Android.Widget.Orientation;
 
 namespace FamiStudio
 {
@@ -827,6 +828,9 @@ namespace FamiStudio
         private MaterialButton buttonMore;
         private TextView textView;
 
+        private Timer timer;
+        private FastScrollTask timerTask;
+
         private int value = 50;
         private int minimum = 0;
         private int maximum = 100;
@@ -879,19 +883,38 @@ namespace FamiStudio
             buttonMore.Enabled = Enabled;
         }
 
-        private async void UpdateFastScroll(int dir)
+        private void StartFastScroll(int dir)
         {
-            fastScrollDir = dir;
-            await Task.Delay(500);
-            if (fastScrollDir == 0) return;
+            // Can be needed if we press both buttons at same time.
+            CancelFastScroll();
 
-            do
+            fastScrollDir = dir;
+            timerTask = new FastScrollTask(this);
+            timer = new Timer();
+            timer.ScheduleAtFixedRate(timerTask, 500, 50);
+        }
+
+        private void CancelFastScroll()
+        {
+            fastScrollDir = 0;
+            if (timer != null)
             {
-                value += fastScrollDir;
-                UpdateValue();
-                await Task.Delay(50);
+                timer.Cancel();
+                timer = null;
             }
-            while (fastScrollDir != 0);
+            if (timerTask != null)
+            {
+                timerTask = null;
+            }
+        }
+
+        private void DoFastScroll()
+        {
+            if (fastScrollDir == 0)
+                return;
+
+            value += fastScrollDir;
+            UpdateValue();
         }
 
         private void UpdateValue(MotionEventActions action, int dir)
@@ -900,12 +923,12 @@ namespace FamiStudio
             {
                 value += dir;
                 UpdateValue();
-                UpdateFastScroll(dir);
+                StartFastScroll(dir);
             }
             else if (action == MotionEventActions.Up || 
                      action == MotionEventActions.Cancel)
             {
-                fastScrollDir = 0;
+                CancelFastScroll();
             }
         }
 
@@ -947,6 +970,21 @@ namespace FamiStudio
         {
             get { return value; }
             set { this.value = value; UpdateValue(); }
+        }
+
+        private class FastScrollTask : TimerTask
+        {
+            HorizontalNumberPicker picker;
+            
+            public FastScrollTask(HorizontalNumberPicker p)
+            {
+                picker = p;
+            }
+
+            public override void Run()
+            {
+                (picker.Context as Activity).RunOnUiThread(() => { picker.DoFastScroll(); });
+            }
         }
     }
 

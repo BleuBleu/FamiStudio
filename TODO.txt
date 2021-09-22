@@ -39,7 +39,7 @@ TDB:
 
 Piano roll:
 - Possible actions: 
-	- Pan/zoom
+	x Pan/zoom
 	- Create notes
 	- Drag note/selection
 	- Slide notes
@@ -51,12 +51,12 @@ Piano roll:
 	- Delete note 
 	- Create/Change effect value 
 	- Clear effect value  ====> HOW
-	- Select 
-	- Seek 
+	x Select 
+	x Seek 
 	- DPCM vol envelope 
-	- Move env loop/release point ====> HOW
-	- Resize enveloper ====> HOW
-	- Play piano 
+	- Move env loop/release point ====> HOW, long press?
+	- Resize envelope ====> HOW? Add button in header?
+	x Play piano 
 	- Map/clear DPCM sample
 	- Move DPCM mapping 
 Controls:
@@ -92,36 +92,32 @@ Tools:
 Controls:
 	- Copy/paste/instanciate
 	- Longpress : Instanciate/Copy selection here
+	- Force display, how?
+	- Go to piano roll.
 
 	x Tap = add pattern
 	x Long press = pattern properties
 	x Swipe = pan
 
 	x Header long-press = custom settings, pattern properties, solo/unsolo.
-	- Header Swipe = select (unless dragging seek bar itself)
-	- Header Tap = seek
+	x Header Swipe = select (unless dragging seek bar itself)
+	x Header Tap = seek
 
 Toolbar:
 - Collapse when pressing outside (or pressing any button?)
 - Add version next to "..."
-- 
 
 Prop page:
 / Reactivate dialogs in code, test
-- Numeric updown await issue.
 - "Apply" should be "Export" in export dialog.
-- Ugly when no label, empty space (exemple: list of channels)
 - Fix transitions, ugly.
 - Review text color light gray 1 or 2?
 - Add a title to dialogs
 - Toolbar font.
 - Button font.
-- Store unknown property values, is it needed?
 - Cleanup where we use GLGraphics, always use render.
 - Change insturment dialog for a combo
 - Some icons still have borders.
-- Red = 216	16 48
-- 
 
 Scaling issue:
 - Support 3 scalings (Will not affect toolbars)? 
@@ -132,25 +128,22 @@ Scaling issue:
 UI:
 - Quick access:
 		- Remove expand arrows
-		- Make list work
 		- Add scroll bar
 - Create 2nd piano.
 
-x Remove all lines around icons? Would be cool.
 / Line widths (yes, 1->3, 3->5 looks great, wait until more stuff works)
 - Replace inheritance by partial
 
 3.2.0
 =====
-- Pattern index 0/1 bug from github.
 - NSF bug tempo from Discord!
 - Weird osc behavior low frequency
 - Export intro-only is broken?
 - Crash when adding note to last note of pattern #256
 - Bring back fonts for 150%...
-- Timecode alignment looks like ass now, create a special mode for texture that uses fixed width + center align.
-- Hide lines in piano roll when snapping is enabled.
-- Convert more icons to white. 
+- Timecode alignment looks like ass now, create a special mode for texture that uses fixed width + center align?
+- Hide lines in piano roll when snapping is enabled?
+- Convert more icons to white + remove last border (release + loop point.)
 
 Misc:
 
@@ -188,25 +181,8 @@ Testing
 
 Videos:
 =======
-/ Sampling soundfont instruments
-	- Thumbnail
-	- Descripiton
-	- Link in video
+- Mobile tutorial? Or just a documentation page with a bunch of GIFs?
 - Tutorial for FamiTracker
-
-Doc
-===
-- Add replace instrument (with selection) info
-- Gopnick errors
-	1. Two attributes are missing, Instrument->Vrc6SawMasterVolume and Note->Release (legacy stuff?)
-	2. The "general structure" part suggests "PatternInstance" as a child of "Song" while the indentation in the actual files indicates that it's a child of "Channel"
-- Volume slide, noise slide
-- Metronome
-- OGG
-
-Youtube corrections:
-====================
-- Patterns are one based.
 
 Linux notes 
 =========== 
