@@ -435,167 +435,161 @@ namespace FamiStudio
 
                     WriteRegister(apuIdx, EPSM_ADDR0, 0x29);
                     WriteRegister(apuIdx, EPSM_DATA0, 0x80);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x27);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x00);
 
-                    int EPSM_ADDRLoop1 = EPSM_ADDR0;
-                    int EPSM_DATALoop1 = EPSM_DATA0;
 
 
-                    for (int i = 0; i < 2; i++)
-                    {
-                        for (int y = 0; y < 135; y++)
-                        {
-                            //Console.WriteLine("continue " + (0x30 + y));
-                            if (new[] { 0x33, 0x37, 0x3b, 0x43, 0x47, 0x4b, 0x53, 0x57, 0x5b, 0x63, 0x67, 0x6b, 0x73, 0x77, 0x7b, 0x83, 0x87, 0x8b, 0x93, 0x97, 0x9b, }.Contains(0x30 + y))
-                            {
-                                //Console.WriteLine("continue " + (0x30 + y));
-                                continue;
-                            }
-                            WriteRegister(apuIdx, EPSM_ADDRLoop1, 0x30 + y);
-                            if ((0x30 + y) > 0x4f && (0x30 + y) < 0x5f)
-                                WriteRegister(apuIdx, EPSM_DATALoop1, 0x1f);
-                            if ((0x30 + y) > 0xb3)
-                                WriteRegister(apuIdx, EPSM_DATALoop1, 0xc0);
-                            else
-                                WriteRegister(apuIdx, EPSM_DATALoop1, 0x00);
-                        }
+                   /* WriteRegister(apuIdx, EPSM_ADDR0, 0xB4);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xC0);
 
-                        EPSM_ADDRLoop1 = EPSM_ADDR1;
-                        EPSM_DATALoop1 = EPSM_DATA1;
-                    }
 
-                    for (int y = 0; y < 6; y++) {
-                        int i = y;
-                        int EPSM_ADDRLoop = EPSM_ADDR0;
-                        int EPSM_DATALoop = EPSM_DATA0;
-                        if (y >= 3) {
-                            i = y - 3;
-                        //i = 2;
-                            EPSM_ADDRLoop = EPSM_ADDR1;
-                            EPSM_DATALoop = EPSM_DATA1;
-                        }
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0xB0 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x04);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0xB5);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xC0);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x30 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0xB6);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xC0);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x40 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x20);
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0xB4);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xC0);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x50 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x1F);
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0xB5);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xC0);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x60 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0xB6);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xC0);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x70 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x07);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xFF);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x80 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x07);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x11);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x3F);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x90 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x18);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x38 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x19);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x48 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x1A);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x58 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x1F);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x1B);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x68 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x1C);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x78 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x1D);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0xDF);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x88 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x07);
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x00);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xA1);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x98 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x0C);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0xFF);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x34 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x0D);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x1F);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x44 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x20);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x80);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x54 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x1F);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x88);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x64 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x84);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x74 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x8C);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x84 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x07);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x81);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x94 + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x89);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x3C + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x85);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x4C + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x8D);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x5C + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x1F);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x82);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x6C + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x8A);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x7C + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x86);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x8C + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x07);
+                    WriteRegister(apuIdx, EPSM_ADDR0, 0x8E);
+                    WriteRegister(apuIdx, EPSM_DATA0, 0x07);
 
 
-                        WriteRegister(apuIdx, EPSM_ADDRLoop, 0x9C + i);
-                        WriteRegister(apuIdx, EPSM_DATALoop, 0x00);
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x80);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
 
-            }
 
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x88);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
 
-                        //WriteRegister(apuIdx, EPSM_ADDR0, 0x28);
-                        //WriteRegister(apuIdx, EPSM_DATA0, 0xF6);
 
-                        WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
-                    WriteRegister(apuIdx, EPSM_DATA0, 0x38);
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x84);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x8C);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x81);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x89);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x85);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);
+
+
+                    WriteRegister(apuIdx, EPSM_ADDR1, 0x8D);
+                    WriteRegister(apuIdx, EPSM_DATA1, 0x07);*/
+
+
+
+
 
                     break;
             }

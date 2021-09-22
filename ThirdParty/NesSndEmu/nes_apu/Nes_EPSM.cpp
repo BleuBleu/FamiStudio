@@ -107,21 +107,21 @@ void Nes_EPSM::end_frame(cpu_time_t time)
 
 	while (t < time)
 	{
-		if (!dataWrite.empty() && !aWrite.empty())
+		if (!dataWrite.empty() && !aWrite.empty() && !(t % 1))
 		{
 			OPN2_Write(&opn2, aWrite.front(), dataWrite.front());
 			dataWrite.pop();
 			aWrite.pop();
 		}
-		int sample = PSG_calc(psg);
+		int sample = PSG_calc(psg)/2.3;
 		sample = clamp(sample, -7710, 7710);
 		int t2 = 0;
 		int16_t samples[4];
 		while (t2 < 12)
 		{
 			OPN2_Clock(&opn2, samples);
-			sample += (samples[0] + samples[1]) * 4;
-			sample += (samples[2] + samples[3]) / 8;
+			sample += (samples[0] + samples[1]) * 8;
+			sample += (samples[2] + samples[3]) / 2;
 			t2++;
 		}
 		int delta = sample - last_amp;
@@ -155,8 +155,12 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 
 void Nes_EPSM::write_shadow_register(int addr, int data)
 {
-	/*if (addr >= reg_select && addr < (reg_select + reg_range))
+	/*if (addr >= reg_select && addr < (reg_select + reg_range)) {
+
 		reg = data;
-	else if (addr >= reg_write && addr < (reg_write + reg_range))
-		shadow_internal_regs[reg] = data;*/
+	}
+	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
+
+		shadow_internal_regs[reg] = data;
+	}*/
 }
