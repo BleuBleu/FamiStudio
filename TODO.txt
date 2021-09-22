@@ -1,24 +1,11 @@
 Android
 =======
 
-Plan:
-- Tool-less + longpress
-- But, most note operation (move, resize, move release) can be done without it.
-- Square selection in sequencer will be a bit tricky, but ok.
-
-1) Create drawer popup.
-	- Cancel dialog if rotation.
-	- Callback
-	- Add asset to ensure only 1 dialog active.
-	- 
-2) Start with sequencer to prototype controls
-3) 
-
-Quick access 100% done:
-- Hookup with FamiStudio, then start working on real shit.
+Quick access:
 - Show some kind of scroll bar.
 - Ensure visible.
 - Advanced stuff like longpress, etc.
+- Disable buttons when they dont make sense (snapping in sequencer, etc.)
 
 Project explorer:
 - Possible actions: 
@@ -34,8 +21,6 @@ Long press:
 TDB:
 	- Env replace? Instrument replace?
 	- Song reorder?
-- Checkbox has no border.
-- Wrong icon for arpeggio
 
 Piano roll:
 - Possible actions: 
@@ -119,7 +104,6 @@ x Add a title to dialogs
 - Cleanup where we use GLGraphics, always use render.
 - Change insturment dialog for a combo
 - Some icons still have borders.
-- Radio buttons.
 
 Scaling issue:
 - Support 3 scalings (Will not affect toolbars)? 
@@ -127,13 +111,9 @@ Scaling issue:
 	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
 
-UI:
-- Quick access:
-		- Remove expand arrows
-		- Add scroll bar
-- Create 2nd piano.
+2nd piano.
 
-/ Line widths (yes, 1->3, 3->5 looks great, wait until more stuff works)
+/ Line widths, bias + 2
 - Replace inheritance by partial
 
 3.2.0
@@ -147,6 +127,7 @@ UI:
 - Hide lines in piano roll when snapping is enabled?
 - Convert more icons to white + remove last border (release + loop point.)
 - Copy instrument.
+- Make snapping relative to beats (1 = 1 beat).
 
 Misc:
 

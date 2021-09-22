@@ -485,8 +485,8 @@ namespace FamiStudio
             if (CheckNeedsClosing((int)ButtonType.Snap))
                 return;
 
-            int minVal = SnapResolution.GetMinSnapValue(App.Project.UsesFamiTrackerTempo);
-            int maxVal = SnapResolution.GetMaxSnapValue();
+            int minVal = SnapResolutionType.GetMinSnapValue(App.Project.UsesFamiTrackerTempo);
+            int maxVal = SnapResolutionType.GetMaxSnapValue();
 
             var items = new ListItem[maxVal - minVal + 2];
 
@@ -495,17 +495,17 @@ namespace FamiStudio
                 var item = new ListItem();
                 item.Color = Theme.LightGreyFillColor1;
                 item.ImageIndex = (int)ButtonImageIndices.MobileSnapOn;
-                item.Text = $"Snap to {SnapResolution.Names[minVal + i]} notes";
+                item.Text = $"Snap to {SnapResolutionType.Names[minVal + i]} notes";
                 items[i] = item;
             }
 
             var turnOffItem = new ListItem();
             turnOffItem.Color = Theme.LightGreyFillColor1;
             turnOffItem.ImageIndex = (int)ButtonImageIndices.MobileSnapOff;
-            turnOffItem.Text = $"Snap off";
+            turnOffItem.Text = $"Snap Off";
             items[items.Length - 1] = turnOffItem;
 
-            popupSelectedIdx = 0; // MATTT
+            popupSelectedIdx = App.SnapEnabled ? App.SnapResolution : items.Length - 1;
 
             StartExpandingList((int)ButtonType.Snap, items);
         }
@@ -623,7 +623,7 @@ namespace FamiStudio
 
         private ButtonImageIndices GetSnapRenderInfo(out string text, out Color tint)
         {
-            text = "1/2";
+            text = App.SnapEnabled ? SnapResolutionType.Names[App.SnapResolution] : "Off";
             tint = Theme.LightGreyFillColor1;
             return ButtonImageIndices.MobileSnapOn;
         }
@@ -640,7 +640,7 @@ namespace FamiStudio
             var inst = App.SelectedInstrument;
             text = inst != null ? inst.Name  : "DPCM";
             tint = inst != null ? inst.Color : Theme.LightGreyFillColor1;
-            return ButtonImageIndices.MobileInstrumentNamco;
+            return (ButtonImageIndices)Array.IndexOf(ButtonImageNames, ExpansionType.Icons[inst.Expansion]);
         }
 
         private ButtonImageIndices GetArpeggioRenderInfo(out string text, out Color tint)
@@ -658,7 +658,15 @@ namespace FamiStudio
 
         private void OnSnapChange(int idx)
         {
-
+            if (idx <= SnapResolutionType.GetMaxSnapValue())
+            {
+                App.SnapResolution = idx;
+                App.SnapEnabled = true;
+            }
+            else
+            {
+                App.SnapEnabled = false;
+            }
         }
 
         private void OnChannelChange(int idx)

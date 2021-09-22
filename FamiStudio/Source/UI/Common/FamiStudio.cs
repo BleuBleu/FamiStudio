@@ -28,79 +28,79 @@ namespace FamiStudio
         private const int MaxAutosaves = 30;
 
         private FamiStudioForm mainForm;
-        
         private Project project;
         private Song song;
-        private int selectedChannelIndex;
         private Instrument selectedInstrument = null; // null = DPCM
         private Arpeggio selectedArpeggio = null;
-
         private SongPlayer songPlayer;
         private InstrumentPlayer instrumentPlayer;
         private Oscilloscope oscilloscope;
         private UndoRedoManager undoRedoManager;
         private ExportDialog exportDialog;
+
+        private int selectedChannelIndex;
         private int ghostChannelMask = 0;
         private int lastMidiNote = -1;
+        private int tutorialCounter = 3;
+        private int baseRecordingOctave = 3;
+        private int lastTickCurrentFrame = -1;
+        private int previewDPCMSampleId = -1;
+        private int previewDPCMSampleRate = 44100;
+        private int lastRecordingKeyDown = -1;
+        private bool previewDPCMIsSource = false;
+        private bool metronome = false;
         private bool palPlayback = false;
         private bool audioDeviceChanged = false;
         private bool pianoRollScrollChanged = false;
         private bool recordingMode = false;
         private bool qwertyPiano = false;
         private bool followMode = false;
-        private int tutorialCounter = 3;
-        private int baseRecordingOctave = 3;
-        private int lastTickCurrentFrame = -1;
-        private int previewDPCMSampleId = -1;
-        private int previewDPCMSampleRate = 44100;
-        private bool previewDPCMIsSource = false;
-        private bool metronome = false;
+        private float stopInstrumentTimer = 0.0f;
         private short[] metronomeSound;
-        private int lastRecordingKeyDown = -1;
         private BitArray keyStates = new BitArray(65536);
         private ConcurrentQueue<Tuple<int, bool>> midiNoteQueue = new ConcurrentQueue<Tuple<int, bool>>();
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations;
 #endif
-        private DateTime lastTickTime = DateTime.Now;
-        private float averageTickRateMs = 8.0f;
         private int autoSaveIndex = 0;
+        private float averageTickRateMs = 8.0f;
+        private DateTime lastTickTime = DateTime.Now;
         private DateTime lastAutoSave;
 
-        private bool newReleaseAvailable = false;
+        private bool   newReleaseAvailable = false;
         private string newReleaseString = null;
         private string newReleaseUrl = null;
 
-        public bool IsPlaying => songPlayer != null && songPlayer.IsPlaying;
-        public bool IsRecording => recordingMode;
-        public bool IsQwertyPianoEnabled => qwertyPiano;
-        public bool IsMetronomeEnabled => metronome;
-        public bool FollowModeEnabled { get => followMode; set => followMode = value; }
-        public bool SequencerHasSelection => Sequencer.GetPatternTimeSelectionRange(out _, out _);
-        public int BaseRecordingOctave => baseRecordingOctave;
-        public int CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
-        public int ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : -1; set => songPlayer.ChannelMask = value; }
-        public int PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { if (!IsPlaying) songPlayer.PlayRate = value; } }
+        public bool  IsPlaying => songPlayer != null && songPlayer.IsPlaying;
+        public bool  IsRecording => recordingMode;
+        public bool  IsQwertyPianoEnabled => qwertyPiano;
+        public bool  IsMetronomeEnabled => metronome;
+        public bool  FollowModeEnabled { get => followMode; set => followMode = value; }
+        public bool  SequencerHasSelection => Sequencer.GetPatternTimeSelectionRange(out _, out _);
+        public int   BaseRecordingOctave => baseRecordingOctave;
+        public int   CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
+        public int   ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : -1; set => songPlayer.ChannelMask = value; }
+        public int   PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { if (!IsPlaying) songPlayer.PlayRate = value; } }
         public float AverageTickRate => averageTickRateMs;
 
-        public UndoRedoManager UndoRedoManager => undoRedoManager;
-        public LoopMode LoopMode { get => songPlayer != null ? songPlayer.Loop : LoopMode.LoopPoint; set => songPlayer.Loop = value; }
-        public DPCMSample DraggedSample => ProjectExplorer.DraggedSample;
+        public bool SnapEnabled    { get => PianoRoll.SnapEnabled;    set => PianoRoll.SnapEnabled    = value; }
+        public int  SnapResolution { get => PianoRoll.SnapResolution; set => PianoRoll.SnapResolution = value; }
 
-        public Project    Project              => project;
-        public Channel    SelectedChannel      => song.Channels[SelectedChannelIndex];
-
-        public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
-        public int  PreviewDPCMSampleId    => previewDPCMSampleId;
-        public int  PreviewDPCMSampleRate  => previewDPCMSampleRate;
-        public bool PreviewDPCMIsSource    => previewDPCMIsSource;
-
+        public UndoRedoManager UndoRedoManager => undoRedoManager; 
+        public DPCMSample      DraggedSample   => ProjectExplorer.DraggedSample;
+        public Project         Project         => project;
+        public Channel         SelectedChannel => song.Channels[SelectedChannelIndex];
         public Toolbar         ToolBar         => mainForm.ToolBar;
         public Sequencer       Sequencer       => mainForm.Sequencer;
         public PianoRoll       PianoRoll       => mainForm.PianoRoll;
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
         public QuickAccessBar  QuickAccessBar  => mainForm.QuickAccessBar;
         public RenderControl   ActiveControl   => mainForm.ActiveControl;
+        
+        public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
+        public int  PreviewDPCMSampleId    => previewDPCMSampleId;
+        public int  PreviewDPCMSampleRate  => previewDPCMSampleRate;
+        public bool PreviewDPCMIsSource    => previewDPCMIsSource;
 
         public static Project    StaticProject  { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
@@ -179,6 +179,12 @@ namespace FamiStudio
                 Task.Factory.StartNew(CheckForNewRelease);
             }
 #endif
+        }
+
+        public LoopMode LoopMode 
+        { 
+            get => songPlayer != null ? songPlayer.Loop : LoopMode.LoopPoint; 
+            set => songPlayer.Loop = value; 
         }
 
         public Song SelectedSong
@@ -1099,7 +1105,7 @@ namespace FamiStudio
             mainForm.Text = title;
         }
 
-        public void PlayInstrumentNote(int n, bool showWarning, bool allowRecording, bool custom = false, Instrument customInstrument = null, Arpeggio customArpeggio = null)
+        public void PlayInstrumentNote(int n, bool showWarning, bool allowRecording, bool custom = false, Instrument customInstrument = null, Arpeggio customArpeggio = null, float stopDelay = 0.0f)
         {
             Note note = new Note(n);
             note.Volume = Note.VolumeMax;
@@ -1142,6 +1148,8 @@ namespace FamiStudio
 
             if (allowRecording && recordingMode)
                 PianoRoll.RecordNote(note);
+
+            stopInstrumentTimer = stopDelay;
         }
 
         public void StopOrReleaseIntrumentNote(bool allowRecording = false)
@@ -1795,6 +1803,18 @@ namespace FamiStudio
                 PianoRoll.HighlightPianoNote(instrumentPlayer.PlayingNote);
         }
 
+        private void CheckStopInstrumentNote(float deltaTime)
+        {
+            if (stopInstrumentTimer > 0.0f)
+            {
+                stopInstrumentTimer = Math.Max(0.0f, stopInstrumentTimer - deltaTime);
+                if (stopInstrumentTimer == 0.0f)
+                {
+                    StopOrReleaseIntrumentNote();
+                }
+            }
+        }
+
         public void Tick(float deltaTime = -1.0f)
         {
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
@@ -1806,6 +1826,7 @@ namespace FamiStudio
             ConditionalShowTutorial();
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
+            CheckStopInstrumentNote(deltaTime);
         }
 
         private void TickControls(float deltaTime)
@@ -1868,7 +1889,7 @@ namespace FamiStudio
 
         private void ProjectExplorer_DPCMSampleReloaded(DPCMSample sample)
         {
-            if (PianoRoll.IsEditingDPCMSample && PianoRoll.CurrentEditSample == sample)
+            if (PianoRoll.IsEditingDPCMSample && PianoRoll.EditSample == sample)
             {
                 PianoRoll.StartEditDPCMSample(sample);
             }

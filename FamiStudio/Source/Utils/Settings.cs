@@ -170,7 +170,7 @@ namespace FamiStudio
         const int DefaultNumBufferedAudioFrames = 3;
 #endif
         public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
-        public static int InstrumentStopTime = 2;
+        public static int InstrumentStopTime = 1;
         public static bool SquareSmoothVibrato = true;
         public static bool NoDragSoungWhenPlaying = false;
         public static int MetronomeVolume = 50;
