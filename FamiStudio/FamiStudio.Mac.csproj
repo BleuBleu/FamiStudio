@@ -287,6 +287,13 @@
     <Content Include="Vorbis.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMRythm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMSquare.cs" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM%402x.png" />
+    <EmbeddedResource Include="Resources\Rythm.png" />
+    <EmbeddedResource Include="Resources\Rythm%402x.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
