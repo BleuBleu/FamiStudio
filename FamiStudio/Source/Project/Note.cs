@@ -50,6 +50,7 @@ namespace FamiStudio
         public const int MusicalNoteMin  = 0x01;
         public const int MusicalNoteMax  = 0x60;
         public const int MusicalNoteC4   = 0x31;
+        public const int MusicalNoteC7   = 0x55;
         public const int DPCMNoteMin     = 0x0c;
         public const int DPCMNoteMax     = 0x4b;
         
@@ -254,6 +255,7 @@ namespace FamiStudio
         public bool HasRelease
         {
             get { return release > 0; }
+            set { if (!value) release = 0; }
         }
 
         public bool IsRelease

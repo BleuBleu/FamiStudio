@@ -235,6 +235,16 @@ namespace FamiStudio
             }
         }
 
+        public Pattern GetPatternInstance(PatternLocation location)
+        {
+            if (location.IsPatternInSong(this) && location.IsChannelInSong(this))
+            {
+                return channels[location.ChannelIndex].PatternInstances[location.PatternIndex];
+            }
+
+            return null;
+        }
+
         public Pattern GetPattern(int id)
         {
             foreach (var channel in channels)
@@ -1170,7 +1180,110 @@ namespace FamiStudio
                 return clone;
             }
         };
+    }
 
+    public struct PatternLocation
+    {
+        public int ChannelIndex;
+        public int PatternIndex;
+
+        public bool IsValid => ChannelIndex >= 0 && PatternIndex >= 0;
+
+        public PatternLocation(int c, int p)
+        {
+            ChannelIndex = c;
+            PatternIndex = p;
+        }
+
+        public bool IsPatternInSong(Song s)
+        {
+            return PatternIndex < s.Length;
+        }
+
+        public bool IsChannelInSong(Song s)
+        {
+            return ChannelIndex >= 0 && ChannelIndex < s.Channels.Length;
+        }
+
+        public override string ToString()
+        {
+            return $"{ChannelIndex}:{PatternIndex}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = (PatternLocation)obj;
+            return ChannelIndex == other.ChannelIndex && PatternIndex == other.PatternIndex;
+        }
+
+        public override int GetHashCode()
+        {
+            return Utils.HashCombine(ChannelIndex, PatternIndex);
+        }
+
+        public static bool operator ==(PatternLocation p0, PatternLocation p1)
+        {
+            return p0.ChannelIndex == p1.ChannelIndex && p0.PatternIndex == p1.PatternIndex;
+        }
+
+        public static bool operator !=(PatternLocation p0, PatternLocation p1)
+        {
+            return p0.ChannelIndex != p1.ChannelIndex || p0.PatternIndex != p1.PatternIndex;
+        }
+
+        /*
+        public static bool operator <(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex < n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex < n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator <=(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex < n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex <= n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator >(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex > n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex > n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator >=(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex > n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex >= n1.NoteIndex;
+            return false;
+        }
+        */
+
+        public static PatternLocation Min(PatternLocation p0, PatternLocation p1)
+        {
+            return new PatternLocation(
+                Math.Min(p0.ChannelIndex, p1.ChannelIndex),
+                Math.Min(p0.PatternIndex, p1.PatternIndex));
+        }
+
+        public static PatternLocation Max(PatternLocation p0, PatternLocation p1)
+        {
+            return new PatternLocation(
+                Math.Max(p0.ChannelIndex, p1.ChannelIndex),
+                Math.Max(p0.PatternIndex, p1.PatternIndex));
+        }
+
+        public static readonly PatternLocation Invalid = new PatternLocation(-1, -1);
     }
 
     public struct NoteLocation
@@ -1206,11 +1319,6 @@ namespace FamiStudio
             NoteLocation loc = this;
             s.AdvanceNumberOfNotes(ref loc, num);
             return loc;
-        }
-
-        public bool IsInside(Song s)
-        {
-            return PatternIndex < s.Length;
         }
 
         public int DistanceTo(Song s, NoteLocation other)

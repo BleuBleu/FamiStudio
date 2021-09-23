@@ -100,9 +100,10 @@ namespace FamiStudio
             return count;
         }
 
-        public bool SupportsReleaseNotes => type != ChannelType.Dpcm;
-        public bool SupportsSlideNotes   => type != ChannelType.Dpcm;
-        public bool SupportsArpeggios    => type != ChannelType.Dpcm;
+        public bool SupportsReleaseNotes  => type != ChannelType.Dpcm;
+        public bool SupportsSlideNotes    => type != ChannelType.Dpcm;
+        public bool SupportsArpeggios     => type != ChannelType.Dpcm;
+        public bool SupportsNoAttackNotes => type != ChannelType.Dpcm;
 
         public bool SupportsEffect(int effect)
         {

@@ -137,14 +137,13 @@ namespace FamiStudio
         RenderBrush selectionBgVisibleBrush;
         RenderBrush selectionBgInvisibleBrush;
         RenderBrush selectionNoteBrush;
-        RenderBrush hoverNoteBrush;
+        RenderBrush highlightNoteBrush;
         RenderBrush attackBrush;
         RenderBrush iconTransparentBrush;
         RenderBrush invalidDpcmMappingBrush;
         RenderBrush volumeSlideBarFillBrush;
         RenderBitmapAtlas bmpMiscAtlas;
         RenderBitmapAtlas bmpEffectAtlas;
-        //RenderBitmapAtlas bmpEffectFillAtlas;
         RenderGeometry[] stopNoteGeometry        = new RenderGeometry[2]; // [1] is used to draw arps.
         RenderGeometry[] stopReleaseNoteGeometry = new RenderGeometry[2]; // [1] is used to draw arps.
         RenderGeometry[] releaseNoteGeometry     = new RenderGeometry[2]; // [1] is used to draw arps.
@@ -293,13 +292,9 @@ namespace FamiStudio
             false, // MobilePan
         };
 
-        NoteLocation hoverNoteLocation = NoteLocation.Invalid;
-        NoteLocation captureNoteLocation;
-        NoteLocation captureMouseLocation;
         int captureNoteAbsoluteIdx = 0;
         int captureMouseAbsoluteIdx = 0;
         int captureNoteValue = 0;
-        float captureWaveTime = 0.0f;
         int mouseLastX = 0;
         int mouseLastY = 0;
         int captureMouseX = 0;
@@ -313,35 +308,36 @@ namespace FamiStudio
         int selectionMin = -1;
         int selectionMax = -1;
         int dragSeekPosition = -1;
+        int snapResolution = SnapResolutionType.OneBeat;
+        int scrollX = 0;
+        int scrollY = 0;
+        int selectedEffectIdx = 0;
         int[] supportedEffects;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
-        bool panning = false; // TODO: Make this a capture operation.
+        bool panning = false;
         bool continuouslyFollowing = false;
+        bool maximized = false;
+        bool showSelection = false; // DROIDTODO : Must always be true on mobile.
+        bool showEffectsPanel = false;
+        bool snap = true;
+        float flingVelX = 0.0f;
+        float flingVelY = 0.0f;
+        float zoom = 1.0f;
+        float zoomY = PlatformUtils.IsMobile ? 0.75f : 1.0f;
+        float pianoScaleX = 1.0f; // Only used by video export.
+        float captureWaveTime = 0.0f;
+        string noteTooltip = "";
         CaptureOperation captureOperation = CaptureOperation.None;
+        EditionMode editMode = EditionMode.None;
+        NoteLocation highlightNoteLocation = NoteLocation.Invalid;
+        NoteLocation captureNoteLocation;
 
         // Note dragging support.
         int dragFrameMin = -1;
         int dragFrameMax = -1;
         int dragLastNoteValue = -1;
         SortedList<int, Note> dragNotes = new SortedList<int, Note>();
-
-        bool maximized = false;
-        bool showSelection = false; // DROIDTODO : Must always be true on mobile.
-        bool showEffectsPanel = false;
-        bool snap = true;
-        int snapResolution = SnapResolutionType.OneBeat;
-        int scrollX = 0;
-        int scrollY = 0;
-        float flingVelX = 0.0f;
-        float flingVelY = 0.0f;
-        float zoom = 1.0f;
-        float zoomY = PlatformUtils.IsMobile ? 0.75f : 1.0f;
-        float pianoScaleX = 1.0f; // Only used by video export.
-        int selectedEffectIdx = 0;
-        string noteTooltip = "";
-
-        EditionMode editMode = EditionMode.None;
 
         // Pattern edit mode.
         int editChannel = -1;
@@ -358,7 +354,7 @@ namespace FamiStudio
         // Remembering last paste-special settings
         bool lastPasteSpecialPasteMix = false;
         bool lastPasteSpecialPasteNotes = true;
-        int lastPasteSpecialPasteEffectMask = Note.EffectAllMask;
+        int  lastPasteSpecialPasteEffectMask = Note.EffectAllMask;
 
         // DPCM editing mode
         int volumeEnvelopeDragVertex = -1;
@@ -370,6 +366,13 @@ namespace FamiStudio
         // Video stuff
         Song videoSong;
         Color videoKeyColor;
+
+        private class MobileGizmo
+        {
+            public Rectangle Rect;
+            public int ImageIndex;
+            public int Action;
+        };
 
         public bool SnapAllowed    { get => editMode == EditionMode.Channel; }
         public bool SnapEnabled    { get => SnapAllowed && snap; set { if (SnapAllowed) snap = value; } }
@@ -780,14 +783,13 @@ namespace FamiStudio
             selectionBgVisibleBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
             selectionBgInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, Theme.LightGreyFillColor1));
             selectionNoteBrush = g.CreateSolidBrush(Theme.LightGreyFillColor1);
-            hoverNoteBrush = g.CreateSolidBrush(Theme.WhiteColor);
+            highlightNoteBrush = g.CreateSolidBrush(Theme.WhiteColor);
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, Theme.BlackColor));
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, Theme.DarkGreyLineColor2));
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
             bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
-            //bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
             fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
 
             if (PlatformUtils.IsMobile)
@@ -827,14 +829,13 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref selectionBgVisibleBrush);
             Utils.DisposeAndNullify(ref selectionBgInvisibleBrush);
             Utils.DisposeAndNullify(ref selectionNoteBrush);
-            Utils.DisposeAndNullify(ref hoverNoteBrush);
+            Utils.DisposeAndNullify(ref highlightNoteBrush);
             Utils.DisposeAndNullify(ref attackBrush);
             Utils.DisposeAndNullify(ref iconTransparentBrush);
             Utils.DisposeAndNullify(ref invalidDpcmMappingBrush);
             Utils.DisposeAndNullify(ref volumeSlideBarFillBrush);
             Utils.DisposeAndNullify(ref bmpMiscAtlas);
             Utils.DisposeAndNullify(ref bmpEffectAtlas);
-            //Utils.DisposeAndNullify(ref bmpEffectFillAtlas);
             Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
             Utils.DisposeAndNullify(ref stopNoteGeometry[1]);
             Utils.DisposeAndNullify(ref releaseNoteGeometry[0]);
@@ -1486,17 +1487,25 @@ namespace FamiStudio
 
                     DrawSelectionRect(r.ch, effectPanelSizeY);
 
-                    var hoverLocation = NoteLocation.Invalid;
-                    if (hoverNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresEffectHighlight(captureOperation))
+                    var highlightLocation = NoteLocation.Invalid;
+
+                    if (PlatformUtils.IsMobile)
                     {
-                        hoverLocation = hoverNoteLocation;
+                        highlightLocation = highlightNoteLocation;
                     }
-                    else if (captureOperation == CaptureOperation.None)
+                    else
                     {
-                        var pt = PointToClient(Cursor.Position);
-                        GetEffectNoteForCoord(pt.X, pt.Y, out hoverLocation);
+                        if (highlightNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresEffectHighlight(captureOperation))
+                        {
+                            highlightLocation = highlightNoteLocation;
+                        }
+                        else if (captureOperation == CaptureOperation.None)
+                        {
+                            var pt = PointToClient(Cursor.Position);
+                            GetEffectNoteForCoord(pt.X, pt.Y, out highlightLocation);
+                        }
                     }
-                    
+
                     // Draw the actual effect bars.
                     for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, NoteFilter.All); !it.Done; it.Next())
                     {
@@ -1516,13 +1525,13 @@ namespace FamiStudio
                             if (!Note.EffectWantsPreviousValue(selectedEffectIdx))
                                 r.ch.FillRectangle(0, 0, noteSizeX, effectPanelSizeY, ThemeResources.DarkGreyFillBrush2);
 
-                            var hover = location == hoverLocation;
+                            var highlighted = location == highlightLocation;
                             var selected = IsNoteSelected(location);
 
                             r.ch.FillAndDrawRectangle(
                                 0, effectPanelSizeY - sizeY, noteSizeX, effectPanelSizeY,
                                 singleFrameSlides.Contains(location) ? volumeSlideBarFillBrush : ThemeResources.LightGreyFillBrush1,
-                                hover ? ThemeResources.WhiteBrush : ThemeResources.BlackBrush, hover || selected ? 2 : 1, hover || selected);
+                                highlighted ? ThemeResources.WhiteBrush : ThemeResources.BlackBrush, highlighted || selected ? 2 : 1, highlighted || selected);
 
                             var text = effectValue.ToString();
                             if (text.Length * fontSmallCharSizeX + 2 < noteSizeX)
@@ -2032,23 +2041,34 @@ namespace FamiStudio
                     }
 
                     // Highlight note under mouse.
-                    var hoverNote = (Note)null;
-                    var hoverLocation = NoteLocation.Invalid;
-                    var hoverReleased = false;
-                    var hoverLastNoteValue = Note.NoteInvalid;
-                    var hoverLastInstrument = (Instrument)null;
+                    var highlightNote = (Note)null;
+                    var highlightLocation = NoteLocation.Invalid;
+                    var highlightReleased = false;
+                    var highlightLastNoteValue = Note.NoteInvalid;
+                    var highlightLastInstrument = (Instrument)null;
 
                     if (editMode != EditionMode.VideoRecording)
                     {
-                        if (hoverNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresNoteHighlight(captureOperation))
+                        if (PlatformUtils.IsMobile)
                         {
-                            hoverLocation = hoverNoteLocation;
-                            hoverNote = song.Channels[editChannel].GetNoteAt(hoverLocation);
+                            if (highlightNoteLocation != NoteLocation.Invalid)
+                            {
+                                highlightLocation = highlightNoteLocation;
+                                highlightNote = song.Channels[editChannel].GetNoteAt(highlightLocation);
+                            }
                         }
-                        else if (captureOperation == CaptureOperation.None)
+                        else
                         {
-                            var pt = PointToClient(Cursor.Position);
-                            hoverNote = GetNoteForCoord(pt.X, pt.Y, out _, out hoverLocation, out _);
+                            if (highlightNoteLocation != NoteLocation.Invalid && CaptureOperationRequiresNoteHighlight(captureOperation))
+                            {
+                                highlightLocation = highlightNoteLocation;
+                                highlightNote = song.Channels[editChannel].GetNoteAt(highlightLocation);
+                            }
+                            else if (captureOperation == CaptureOperation.None)
+                            {
+                                var pt = PointToClient(Cursor.Position);
+                                highlightNote = GetNoteForCoord(pt.X, pt.Y, out _, out highlightLocation, out _);
+                            }
                         }
                     }
 
@@ -2110,11 +2130,11 @@ namespace FamiStudio
                                         released = false;
                                 }
 
-                                if (isActiveChannel && it.Location == hoverLocation)
+                                if (isActiveChannel && it.Location == highlightLocation)
                                 {
-                                    hoverReleased = released;
-                                    hoverLastNoteValue = lastNoteValue;
-                                    hoverLastInstrument = lastInstrument;
+                                    highlightReleased = released;
+                                    highlightLastNoteValue = lastNoteValue;
+                                    highlightLastInstrument = lastInstrument;
                                 }
 
                                 if (note.IsMusical)
@@ -2132,15 +2152,15 @@ namespace FamiStudio
                                 }
                             }
 
-                            if (isActiveChannel && hoverNote != null)
+                            if (isActiveChannel && highlightNote != null)
                             {
-                                if (hoverNote.IsMusical)
+                                if (highlightNote.IsMusical)
                                 {
-                                    RenderNote(r, hoverLocation, hoverNote, song, channel, channel.GetDistanceToNextNote(hoverLocation), drawImplicitStopNotes, true, true, hoverReleased);
+                                    RenderNote(r, highlightLocation, highlightNote, song, channel, channel.GetDistanceToNextNote(highlightLocation), drawImplicitStopNotes, true, true, highlightReleased);
                                 }
-                                else if (hoverNote.IsStop)
+                                else if (highlightNote.IsStop)
                                 {
-                                    RenderNoteReleaseOrStop(r, hoverNote, GetNoteColor(channel, hoverLastNoteValue, hoverLastInstrument, song.Project), hoverLocation.ToAbsoluteNoteIndex(Song), hoverLastNoteValue, true, false, true, hoverReleased);
+                                    RenderNoteReleaseOrStop(r, highlightNote, GetNoteColor(channel, highlightLastNoteValue, highlightLastInstrument, song.Project), highlightLocation.ToAbsoluteNoteIndex(Song), highlightLastNoteValue, true, false, true, highlightReleased);
                                 }
                             }
                         }
@@ -2252,12 +2272,12 @@ namespace FamiStudio
                     else if (captureOperation == CaptureOperation.None)
                     {
                         var pt = PointToClient(Cursor.Position);
-                        if (GetLocationForCoord(pt.X, pt.Y, out _, out var hoverNoteValue))
+                        if (GetLocationForCoord(pt.X, pt.Y, out _, out var highlightNoteValue))
                         {
-                            var mapping = App.Project.GetDPCMMapping(hoverNoteValue);
+                            var mapping = App.Project.GetDPCMMapping(highlightNoteValue);
                             if (mapping != null)
                             {
-                                var y = virtualSizeY - hoverNoteValue * noteSizeY - scrollY;
+                                var y = virtualSizeY - highlightNoteValue * noteSizeY - scrollY;
 
                                 r.cf.PushTranslation(0, y);
                                 r.cf.DrawRectangle(0, 0, Width - whiteKeySizeX, noteSizeY, ThemeResources.WhiteBrush, 2, true);
@@ -2415,7 +2435,7 @@ namespace FamiStudio
             if (!outline)
                 r.cf.FillRectangle(0, 0, sx, sy, r.g.GetVerticalGradientBrush(color, sy, 0.8f));
 
-            r.cf.DrawRectangle(0, 0, sx, sy, outline ? hoverNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), selected || outline ? 2 : 1, selected || outline);
+            r.cf.DrawRectangle(0, 0, sx, sy, outline ? highlightNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), selected || outline ? 2 : 1, selected || outline);
 
             if (!outline)
             {
@@ -2460,7 +2480,7 @@ namespace FamiStudio
             r.cf.PushTransform(x, y, noteSizeX, 1);
             if (!outline)
                 r.cf.FillGeometry(geo[0], r.g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-            r.cf.DrawGeometry(geo[0], outline ? hoverNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), outline || selected ? 2 : 1, true);
+            r.cf.DrawGeometry(geo[0], outline ? highlightNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), outline || selected ? 2 : 1, true);
             r.cf.PopTransform();
 
             r.cf.PushTranslation(x, y);
@@ -2477,7 +2497,7 @@ namespace FamiStudio
             r.cf.PopTransform();
         }
 
-        private void RenderNote(RenderInfo r, NoteLocation location, Note note, Song song, Channel channel, int distanceToNextNote, bool drawImplicityStopNotes, bool isActiveChannel, bool hover, bool released)
+        private void RenderNote(RenderInfo r, NoteLocation location, Note note, Song song, Channel channel, int distanceToNextNote, bool drawImplicityStopNotes, bool isActiveChannel, bool highlighted, bool released)
         {
             Debug.Assert(note.IsMusical);
 
@@ -2497,13 +2517,13 @@ namespace FamiStudio
             // Draw first part, from start to release point.
             if (note.HasRelease)
             {
-                RenderNoteBody(r, note, color, absoluteIndex, Math.Min(note.Release, duration), hover, selected, isActiveChannel, released, true, slideDuration);
+                RenderNoteBody(r, note, color, absoluteIndex, Math.Min(note.Release, duration), highlighted, selected, isActiveChannel, released, true, slideDuration);
                 absoluteIndex += note.Release;
                 duration -= note.Release;
 
                 if (duration > 0)
                 {
-                    RenderNoteReleaseOrStop(r, note, color, absoluteIndex, note.Value, hover, selected, false, released);
+                    RenderNoteReleaseOrStop(r, note, color, absoluteIndex, note.Value, highlighted, selected, false, released);
                     absoluteIndex++;
                     duration--;
                 }
@@ -2514,13 +2534,13 @@ namespace FamiStudio
             // Then second part, after release to stop note.
             if (duration > 0)
             {
-                RenderNoteBody(r, note, color, absoluteIndex, duration, hover, selected, isActiveChannel, released, !note.HasRelease, slideDuration);
+                RenderNoteBody(r, note, color, absoluteIndex, duration, highlighted, selected, isActiveChannel, released, !note.HasRelease, slideDuration);
                 absoluteIndex += duration;
                 duration -= duration;
 
-                if (drawImplicityStopNotes && absoluteIndex < nextAbsoluteIndex && !hover)
+                if (drawImplicityStopNotes && absoluteIndex < nextAbsoluteIndex && !highlighted)
                 {
-                    RenderNoteReleaseOrStop(r, note, Color.FromArgb(128, color), absoluteIndex, note.Value, hover, selected, true, released);
+                    RenderNoteReleaseOrStop(r, note, Color.FromArgb(128, color), absoluteIndex, note.Value, highlighted, selected, true, released);
                 }
             }
         }
@@ -3331,13 +3351,12 @@ namespace FamiStudio
             captureMouseAbsoluteIdx = GetNoteForPixel(x - whiteKeySizeX);
             if (allowSnap)
                 captureMouseAbsoluteIdx = SnapNote(captureMouseAbsoluteIdx);
-            captureMouseLocation = Song.AbsoluteNoteIndexToNoteLocation(captureMouseAbsoluteIdx);
 
             captureNoteAbsoluteIdx = noteIdx >= 0 ? noteIdx : captureMouseAbsoluteIdx;
             captureNoteLocation = Song.AbsoluteNoteIndexToNoteLocation(captureNoteAbsoluteIdx);
 
             if (noteIdx >= 0)
-                hoverNoteLocation = captureNoteLocation;
+                highlightNoteLocation = captureNoteLocation;
         }
 
         private void UpdateScrollBarX(int x, int y)
@@ -3567,9 +3586,10 @@ namespace FamiStudio
 
                 draggedSample = null;
                 captureOperation = CaptureOperation.None;
-                hoverNoteLocation = NoteLocation.Invalid;
                 Capture = false;
                 panning = false;
+                if (!PlatformUtils.IsMobile)
+                    highlightNoteLocation = NoteLocation.Invalid;
 
                 MarkDirty();
             }
@@ -3588,7 +3608,8 @@ namespace FamiStudio
                 captureOperation = CaptureOperation.None;
                 Capture = false;
                 panning = false;
-                hoverNoteLocation = NoteLocation.Invalid;
+                if (!PlatformUtils.IsMobile)
+                    highlightNoteLocation = NoteLocation.Invalid;
 
                 ManyPatternChanged?.Invoke();
             }
@@ -3780,6 +3801,11 @@ namespace FamiStudio
                 ClampScroll();
                 MarkDirty();
             }
+        }
+
+        private List<MobileGizmo> GetGizmosForNote(Note note)
+        {
+            return null;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -4392,7 +4418,7 @@ namespace FamiStudio
                     {
                         if (note != null)
                         {
-                            var captureOp = GetHoverNoteCaptureOperationForCoord(e.X, e.Y);
+                            var captureOp = GetHighlightedNoteCaptureOperationForCoord(e.X, e.Y);
 
                             if (captureOp == CaptureOperation.DragSelection ||
                                 captureOp == CaptureOperation.DragNote ||
@@ -4556,7 +4582,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void CreateSingleNote(int x, int y)
+        private Note CreateSingleNote(int x, int y)
         {
             GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
@@ -4581,8 +4607,11 @@ namespace FamiStudio
             note.Duration = SnapEnabled ? Math.Max(1, SnapNote(abs, true) - abs) : Song.GetPatternBeatLength(location.PatternIndex);
             note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
 
+            SetHighlightedNote(location);
             MarkPatternDirty(pattern);
             App.UndoRedoManager.EndTransaction();
+
+            return note;
         }
 
         private bool HandleTouchDownPan(int x, int y)
@@ -4675,8 +4704,85 @@ namespace FamiStudio
                 }
                 else
                 {
-                    // Highlight the note
+                    SetHighlightedNote(noteLocation);
                 }
+            }
+
+            return false;
+        }
+
+        private void ToggleSlideNote(Note note)
+        {
+            if (note.IsSlideNote)
+            {
+                note.IsSlideNote = false;
+            }
+            else 
+            {
+                if (note.Value < Note.MusicalNoteC7)
+                    note.SlideNoteTarget = (byte)(note.Value + 5);
+                else
+                    note.SlideNoteTarget = (byte)(note.Value - 5);
+            }
+        }
+
+        private void ToggleNoteRelease(Note note)
+        {
+            if (note.HasRelease)
+            {
+                note.HasRelease = false;
+            }
+            else if (note.Duration > 1)
+            {
+                note.Release = Math.Max(1, note.Duration / 2);
+            }
+        }
+
+        private bool HandleLongPressChannelNote(int x, int y)
+        {
+            if (GetLocationForCoord(x, y, out var mouseLocation, out byte noteValue))
+            {
+                if (!mouseLocation.IsInSong(Song))
+                    return true;
+
+                var channel = Song.Channels[editChannel];
+                var noteLocation = mouseLocation;
+                var note = channel.FindMusicalNoteAtLocation(ref noteLocation, noteValue);
+
+                var menu = new List<ContextMenuOption>();
+
+                const int ResultToggleAttack  = 0;
+                const int ResultToggleSlide   = 1;
+                const int ResultToggleRelease = 2;
+
+                if (note != null)
+                {
+                    // DROIDTODO : Check selection, etc.
+                    if (note.IsMusical)
+                    {
+                        if (channel.SupportsNoAttackNotes)
+                            menu.Add(new ContextMenuOption("", "Toggle Note Attack", ResultToggleAttack));
+                        if (channel.SupportsSlideNotes)
+                            menu.Add(new ContextMenuOption("", "Toggle Slide Note", ResultToggleSlide));
+                        if (channel.SupportsReleaseNotes)
+                            menu.Add(new ContextMenuOption("", "Toggle Release", ResultToggleRelease));
+                    }
+                }
+
+                if (menu.Count > 0)
+                {
+                    App.ShowContextMenu(menu.ToArray(), (i) =>
+                    {
+                        if (i == ResultToggleAttack)
+                            note.HasAttack = !note.HasAttack;
+                        else if (i == ResultToggleSlide)
+                            ToggleSlideNote(note);
+                        else if (i == ResultToggleRelease)
+                            ToggleNoteRelease(note);
+                    });
+                }
+
+                return true;
             }
 
             return false;
@@ -4687,6 +4793,7 @@ namespace FamiStudio
             SetFlingVelocity(0, 0);
             SetMouseLastPos(x, y);
 
+            // DROIDTODO : Check edit mode, maybe not apply to all.
             if (HandleTouchDownPan(x, y)) goto Handled;
             if (HandleTouchDownDragSeekBar(x, y)) goto Handled;
             if (HandleTouchDownHeaderSelection(x, y)) goto Handled;
@@ -4720,6 +4827,7 @@ namespace FamiStudio
         {
             SetMouseLastPos(x, y);
 
+            // DROIDTODO : Check edit mode, maybe not apply to all.
             if (phase == TouchScalePhase.Begin)
             {
                 if (captureOperation != CaptureOperation.None)
@@ -4757,7 +4865,24 @@ namespace FamiStudio
                 if (HandleTouchClickToggleEffectPanelButton(x, y)) goto Handled;
             }
 
-        Handled: // Yes, i use a goto, sue me.
+            return;
+
+        Handled:
+            MarkDirty();
+        }
+
+        protected override void OnTouchLongPress(int x, int y)
+        {
+            AbortCaptureOperation();
+
+            if (editMode == EditionMode.Channel)
+            {
+                if (HandleLongPressChannelNote(x, y)) goto Handled;
+            }
+
+           return;
+
+        Handled:
             MarkDirty();
         }
 
@@ -4870,6 +4995,24 @@ namespace FamiStudio
         {
             selectionMin = -1;
             selectionMax = -1;
+        }
+
+        private void SetHighlightedNote(NoteLocation location)
+        {
+            Debug.Assert(PlatformUtils.IsMobile);
+            highlightNoteLocation = location;
+        }
+
+        private void ClearHighlightedNote()
+        {
+            Debug.Assert(PlatformUtils.IsMobile);
+            highlightNoteLocation = NoteLocation.Invalid;
+        }
+
+        private bool HasHighlightedNote()
+        {
+            Debug.Assert(PlatformUtils.IsMobile);
+            return highlightNoteLocation.IsValid;
         }
 
         private void ScrollIfNearEdge(int mouseX)
@@ -5079,11 +5222,16 @@ namespace FamiStudio
         {
             if (note.IsMusical)
             {
-                var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                pattern.Notes[location.NoteIndex].HasAttack ^= true;
-                MarkPatternDirty(location.PatternIndex);
-                App.UndoRedoManager.EndTransaction();
+                var channel = Song.Channels[editChannel];
+                var pattern = channel.PatternInstances[location.PatternIndex];
+
+                if (channel.SupportsNoAttackNotes)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                    pattern.Notes[location.NoteIndex].HasAttack ^= true;
+                    MarkPatternDirty(location.PatternIndex);
+                    App.UndoRedoManager.EndTransaction();
+                }
             }
         }
 
@@ -5474,7 +5622,7 @@ namespace FamiStudio
                         }
 
                         // Main click action.
-                        var captureOp = GetHoverNoteCaptureOperationForCoord(e.X, e.Y);
+                        var captureOp = GetHighlightedNoteCaptureOperationForCoord(e.X, e.Y);
                         var tooltipList = new List<string>();
 
                         switch (captureOp)
@@ -5695,7 +5843,7 @@ namespace FamiStudio
             var minAbsoluteNoteIndex = minLocation.ToAbsoluteNoteIndex(Song);
             var maxAbsoluteNoteIndex = maxLocation.ToAbsoluteNoteIndex(Song);
 
-            hoverNoteLocation = minLocation;
+            highlightNoteLocation = minLocation;
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[minLocation.PatternIndex];
@@ -5788,7 +5936,7 @@ namespace FamiStudio
             var newDragFrameMin = dragFrameMin + deltaNoteIdx;
             var newDragFrameMax = dragFrameMax + deltaNoteIdx;
 
-            hoverNoteLocation = captureNoteLocation.Advance(Song, deltaNoteIdx);
+            highlightNoteLocation = captureNoteLocation.Advance(Song, deltaNoteIdx);
 
             // When we cross pattern boundaries, we will have to promote the current transaction
             // from pattern to channel.
@@ -6105,7 +6253,7 @@ namespace FamiStudio
                 op == CaptureOperation.DragNote;
         }
 
-        private CaptureOperation GetHoverEffectCaptureOperationForCoord(int x, int y)
+        private CaptureOperation GetHighlightedEffectCaptureOperationForCoord(int x, int y)
         {
             Debug.Assert(editMode == EditionMode.Channel);
 
@@ -6120,7 +6268,7 @@ namespace FamiStudio
             return CaptureOperation.None;
         }
 
-        private CaptureOperation GetHoverNoteCaptureOperationForCoord(int x, int y)
+        private CaptureOperation GetHighlightedNoteCaptureOperationForCoord(int x, int y)
         {
             Debug.Assert(editMode == EditionMode.Channel);
 
@@ -6178,7 +6326,7 @@ namespace FamiStudio
                 {
                     if (IsPointInEffectPanel(pt.X, pt.Y))
                     {
-                        var captureOp = GetHoverEffectCaptureOperationForCoord(pt.X, pt.Y);
+                        var captureOp = GetHighlightedEffectCaptureOperationForCoord(pt.X, pt.Y);
 
                         switch (captureOp)
                         {
@@ -6192,7 +6340,7 @@ namespace FamiStudio
                     }
                     else if (IsPointInNoteArea(pt.X, pt.Y))
                     {
-                        var captureOp = GetHoverNoteCaptureOperationForCoord(pt.X, pt.Y);
+                        var captureOp = GetHighlightedNoteCaptureOperationForCoord(pt.X, pt.Y);
 
                         switch (captureOp)
                         {
@@ -6493,6 +6641,12 @@ namespace FamiStudio
             buffer.Serialize(ref maximized);
             buffer.Serialize(ref selectionMin);
             buffer.Serialize(ref selectionMax);
+
+            if (PlatformUtils.IsMobile)
+            {
+                buffer.Serialize(ref highlightNoteLocation.PatternIndex);
+                buffer.Serialize(ref highlightNoteLocation.NoteIndex);
+            }
 
             if (buffer.IsReading)
             {
