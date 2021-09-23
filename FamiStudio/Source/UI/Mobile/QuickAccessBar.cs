@@ -485,17 +485,14 @@ namespace FamiStudio
             if (CheckNeedsClosing((int)ButtonType.Snap))
                 return;
 
-            int minVal = SnapResolutionType.GetMinSnapValue(App.Project.UsesFamiTrackerTempo);
-            int maxVal = SnapResolutionType.GetMaxSnapValue();
-
-            var items = new ListItem[maxVal - minVal + 2];
+            var items = new ListItem[SnapResolutionType.Max + 2];
 
             for (int i = 0; i < items.Length - 1; i++)
             {
                 var item = new ListItem();
                 item.Color = Theme.LightGreyFillColor1;
                 item.ImageIndex = (int)ButtonImageIndices.MobileSnapOn;
-                item.Text = $"Snap to {SnapResolutionType.Names[minVal + i]} notes";
+                item.Text = $"Snap to {SnapResolutionType.Names[i]} Beats";
                 items[i] = item;
             }
 
@@ -658,7 +655,7 @@ namespace FamiStudio
 
         private void OnSnapChange(int idx)
         {
-            if (idx <= SnapResolutionType.GetMaxSnapValue())
+            if (idx <= SnapResolutionType.Max)
             {
                 App.SnapResolution = idx;
                 App.SnapEnabled = true;

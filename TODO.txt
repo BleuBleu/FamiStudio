@@ -127,7 +127,6 @@ Scaling issue:
 - Hide lines in piano roll when snapping is enabled?
 - Convert more icons to white + remove last border (release + loop point.)
 - Copy instrument.
-- Make snapping relative to beats (1 = 1 beat).
 
 Misc:
 
