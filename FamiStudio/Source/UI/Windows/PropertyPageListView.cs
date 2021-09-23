@@ -64,7 +64,7 @@ namespace FamiStudio
             GridLines = true;
             FullRowSelect = true;
             HeaderStyle = ColumnHeaderStyle.Nonclickable;
-            BackColor = ThemeBase.LightGreyFillColor2;
+            BackColor = Theme.LightGreyFillColor2;
 
             bmpCheck = System.Drawing.Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Check.png")) as System.Drawing.Bitmap;
         }

@@ -107,6 +107,9 @@ namespace FamiStudio
             { -1, -1 },
             { -1, -1 }
         };
+#elif FAMISTUDIO_ANDROID
+        // DROIDTODO!
+        public static readonly int[,] DefaultQwertyKeys = new int[37, 2];
 #else
         public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
         {
@@ -167,7 +170,7 @@ namespace FamiStudio
         const int DefaultNumBufferedAudioFrames = 3;
 #endif
         public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
-        public static int InstrumentStopTime = 2;
+        public static int InstrumentStopTime = 1;
         public static bool SquareSmoothVibrato = true;
         public static bool NoDragSoungWhenPlaying = false;
         public static int MetronomeVolume = 50;
@@ -322,18 +325,19 @@ namespace FamiStudio
             // Clamp to something reasonable.
             NumBufferedAudioFrames = Utils.Clamp(NumBufferedAudioFrames, 2, 16);
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
             // Linux or Mac is more likely to have standard path for ffmpeg.
-            if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
+            if (PlatformUtils.IsLinux || PlatformUtils.IsMacOS)
             {
-                if (File.Exists("/usr/bin/ffmpeg"))
-                    FFmpegExecutablePath = "/usr/bin/ffmpeg";
-                else if (File.Exists("/usr/local/bin/ffmpeg"))
-                    FFmpegExecutablePath = "/usr/local/bin/ffmpeg";
-                else
-                    FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
+                if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
+                {
+                    if (File.Exists("/usr/bin/ffmpeg"))
+                        FFmpegExecutablePath = "/usr/bin/ffmpeg";
+                    else if (File.Exists("/usr/local/bin/ffmpeg"))
+                        FFmpegExecutablePath = "/usr/local/bin/ffmpeg";
+                    else
+                        FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
+                }
             }
-#endif
 
             // No deprecation at the moment.
             Version = SettingsVersion;

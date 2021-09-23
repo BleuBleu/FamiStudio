@@ -34,7 +34,7 @@ namespace FamiStudio
         public unsafe TransformDialog(FamiStudio famistudio)
         {
             app = famistudio;
-            dialog = new MultiPropertyDialog(550, 500);
+            dialog = new MultiPropertyDialog("Transform Songs", 550, 500);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
@@ -43,7 +43,6 @@ namespace FamiStudio
                 CreatePropertyPage(page, section);
             }
         }
-
 
         private string[] GetSongNames()
         {
@@ -200,26 +199,27 @@ namespace FamiStudio
             }
         }
 
-        public DialogResult ShowDialog(FamiStudioForm parent)
+        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            var dialogResult = dialog.ShowDialog(parent);
-
-            if (dialogResult == DialogResult.OK)
+            dialog.ShowDialog(parent, (r) =>
             {
-                var operation = (TransformOperation)dialog.SelectedIndex;
-
-                switch (operation)
+                if (r == DialogResult.OK)
                 {
-                    case TransformOperation.SongCleanup:
-                        SongCleanup();
-                        break;
-                    case TransformOperation.ProjectCleanup:
-                        ProjectCleanup();
-                        break;
-                }
-            }
+                    var operation = (TransformOperation)dialog.SelectedIndex;
 
-            return dialogResult;
+                    switch (operation)
+                    {
+                        case TransformOperation.SongCleanup:
+                            SongCleanup();
+                            break;
+                        case TransformOperation.ProjectCleanup:
+                            ProjectCleanup();
+                            break;
+                    }
+                }
+
+                callback(r);
+            });
         }
     }
 }

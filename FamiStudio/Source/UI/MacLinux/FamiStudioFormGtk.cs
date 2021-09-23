@@ -466,12 +466,12 @@ namespace FamiStudio
         public void RefreshLayout()
         { 
             controls.Resize(GtkUtils.ScaleWindowCoord(Allocation.Width), GtkUtils.ScaleWindowCoord(Allocation.Height));
-            controls.Invalidate();
+            controls.MarkDirty();
         }
 
-        public void Invalidate()
+        public void MarkDirty()
         {
-            controls.Invalidate();
+            controls.MarkDirty();
         }
 
         private void GetScaledWindowOrigin(out int ox, out int oy)

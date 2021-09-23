@@ -61,7 +61,7 @@ namespace FamiStudio
             this.id = id;
             this.expansion = expansion;
             this.name = name;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
                 if (IsEnvelopeActive(i))

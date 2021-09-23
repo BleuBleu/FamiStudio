@@ -1,29 +1,147 @@
+Android
+=======
+
+Quick access:
+- Show some kind of scroll bar.
+- Ensure visible.
+- Advanced stuff like longpress, etc.
+- Disable buttons when they dont make sense (snapping in sequencer, etc.)
+
+Project explorer:
+- Possible actions: 
+	/ Pan
+	- Edit song/project/inst properties
+	/ Chane current song/instrument/arp
+	/ Expand 
+	- Widgets
+	- Env edition
+	- Import instrument, etc. Dialogs.
+Long press:
+	- Properties, etc.
+TDB:
+	- Env replace? Instrument replace?
+	- Song reorder?
+
+Piano roll:
+- Possible actions: 
+	x Pan/zoom
+	- Create notes
+	- Drag note/selection
+	- Slide notes
+	- Toggle attack
+	- Eyedrop 
+	- Toggle release note 
+	- Stop note 
+	- Resize from start/end 
+	- Delete note 
+	- Create/Change effect value 
+	- Clear effect value  ====> HOW
+	x Select 
+	x Seek 
+	- DPCM vol envelope 
+	- Move env loop/release point ====> HOW, long press?
+	- Resize envelope ====> HOW? Add button in header?
+	x Play piano 
+	- Map/clear DPCM sample
+	- Move DPCM mapping 
+Controls:
+	Longpress : 
+		- Toggle attack
+		- Toggle release
+		- Toggle stop note
+		- Toggle slide 
+		- Eyedropper
+		- Replace instrument/arp?
+		- Anything else?
+	Tap:
+		- Add/drag note/selection
+- Hide the vertical piano when editing DPCM samples, envelopes, etc. Clamp the scroll to what makes sense.
+
+Sequencer:
+- Possible actions:
+	- Change active channel
+	- Channel solo/mute
+	- Force display
+	- Set loop point
+	- Seek
+	- Select
+	- Select rectangle
+	- Create/delete pattern
+	- Drag patterns
+	- Edit pattern properties
+	- Edit custom pattern settings
+Tools:
+	- Pencil
+	- Eraser
+	- Select (better way to make square selection?)
+Controls:
+	- Copy/paste/instanciate
+	- Longpress : Instanciate/Copy selection here
+	- Force display, how?
+	- Go to piano roll.
+
+	x Tap = add pattern
+	x Long press = pattern properties
+	x Swipe = pan
+
+	x Header long-press = custom settings, pattern properties, solo/unsolo.
+	x Header Swipe = select (unless dragging seek bar itself)
+	x Header Tap = seek
+
+Toolbar:
+- Collapse when pressing outside (or pressing any button?)
+- Add version next to "..."
+
+Prop page:
+/ Reactivate dialogs in code, test
+- "Apply" should be "Export" in export dialog.
+- Fix transitions, ugly.
+- Review text color light gray 1 or 2?
+x Add a title to dialogs
+- Config dialog needs an "Apply" on the first page too.
+- Toolbar font.
+- Button font.
+- Cleanup where we use GLGraphics, always use render.
+- Change insturment dialog for a combo
+- Some icons still have borders.
+
+Scaling issue:
+- Support 3 scalings (Will not affect toolbars)? 
+	- 4x (with 2x font) (Default for <  1080p, xhdpi and below)
+	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
+	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
+
+2nd piano.
+
+/ Line widths, bias + 2
+- Replace inheritance by partial
+
 3.2.0
 =====
+- NSF bug tempo from Discord!
+- Weird osc behavior low frequency
+- Export intro-only is broken?
+- Crash when adding note to last note of pattern #256
+- Bring back fonts for 150%...
+- Timecode alignment looks like ass now, create a special mode for texture that uses fixed width + center align?
+- Hide lines in piano roll when snapping is enabled?
+- Convert more icons to white + remove last border (release + loop point.)
+- Copy instrument.
+
+Misc:
 
 DMC counter effect:
+- *** CUT ***
 - Sound engine
 - Check if we apply before, after, etc. Compare with FamiTracker.
 
 Diable attack on DPCM
+- *** CUT ***
 - Sound engine
 
 Improve disable attack?
+- *** CUT ***
 - If same envelopes, allow? This would allow VRC7 to not have attack.
-
-Android prototype:
-- See if can draw with OpenGL
-- See how to call C++ code
-- If can do both, then all good.
-
-Overclocking (maybe not...):
-- Basic support in project + tempo
-- NesSndEmu partial frame update
-- How will it affect video?
-- ROM export
-- FDS export
-- NSF export
-- FamiTracker import (only certain frequencies)
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.
@@ -42,29 +160,13 @@ Testing
 =======
 - Add multi-exp unit test.
 - Test project/instrument merge (with expansions).
-- 
+- Retest with various scaling (lots of cahnges to everything, zooming, etc.)
+- Test without snapping, i tested snapping a lot, but not witout.
 
 Videos:
 =======
-/ Sampling soundfont instruments
-	- Thumbnail
-	- Descripiton
-	- Link in video
+- Mobile tutorial? Or just a documentation page with a bunch of GIFs?
 - Tutorial for FamiTracker
-
-Doc
-===
-- Add replace instrument (with selection) info
-- Gopnick errors
-	1. Two attributes are missing, Instrument->Vrc6SawMasterVolume and Note->Release (legacy stuff?)
-	2. The "general structure" part suggests "PatternInstance" as a child of "Song" while the indentation in the actual files indicates that it's a child of "Channel"
-- Volume slide, noise slide
-- Metronome
-- OGG
-
-Youtube corrections:
-====================
-- Patterns are one based.
 
 Linux notes 
 =========== 

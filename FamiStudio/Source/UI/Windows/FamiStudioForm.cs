@@ -6,6 +6,7 @@ using System.Drawing;
 using OpenTK.Graphics.OpenGL;
 
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -19,14 +20,32 @@ namespace FamiStudio
         public Sequencer Sequencer => controls.Sequencer;
         public PianoRoll PianoRoll => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
+        public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
+        public new GLControl ActiveControl => null;
+
+        public bool IsLandscape => true;
 
         private GLControl captureControl = null;
         private MouseButtons captureButton   = MouseButtons.None;
         private MouseButtons lastButtonPress = MouseButtons.None;
         private Timer timer = new Timer();
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct NativeMessage
+        {
+            public IntPtr Handle;
+            public uint Message;
+            public IntPtr WParameter;
+            public IntPtr LParameter;
+            public uint Time;
+            public Point Location;
+        }
+
         [DllImport("USER32.dll")]
         private static extern short GetKeyState(int key);
+
+        [DllImport("user32.dll")]
+        public static extern int PeekMessage(out NativeMessage message, IntPtr window, uint filterMin, uint filterMax, uint remove);
 
         public FamiStudioForm(FamiStudio famistudio)
         {
@@ -38,13 +57,27 @@ namespace FamiStudio
 
             timer.Tick += timer_Tick;
             timer.Interval = 4;
-            timer.Start();
 
             InitForm();
 
-            MouseWheel += FamiStudioForm_MouseWheel;
-            DragDrop   += FamiStudioForm_DragDrop;
-            DragEnter  += FamiStudioForm_DragEnter;
+            DragDrop  += FamiStudioForm_DragDrop;
+            DragEnter += FamiStudioForm_DragEnter;
+            Application.Idle += Application_Idle;
+        }
+
+        bool IsApplicationIdle()
+        {
+            NativeMessage msg;
+            return PeekMessage(out msg, IntPtr.Zero, 0, 0, 0) == 0;
+        }
+
+        private void Application_Idle(object sender, EventArgs e)
+        {
+            do
+            {
+                TickAndRender();
+            }
+            while (IsApplicationIdle());
         }
 
         private void InitForm()
@@ -64,7 +97,17 @@ namespace FamiStudio
 
         private void timer_Tick(object sender, EventArgs e)
         {
+            TickAndRender();
+        }
+
+        private void TickAndRender()
+        {
             famistudio.Tick();
+
+            if (controls.AnyControlNeedsRedraw())
+                RenderFrameAndSwapBuffers();
+            else
+                System.Threading.Thread.Sleep(4); 
         }
 
         protected override void GraphicsContextInitialized()
@@ -72,9 +115,9 @@ namespace FamiStudio
             GL.Disable(EnableCap.DepthTest);
             GL.Viewport(0, 0, Width, Height);
             GL.ClearColor(
-                ThemeBase.DarkGreyFillColor2.R / 255.0f,
-                ThemeBase.DarkGreyFillColor2.G / 255.0f,
-                ThemeBase.DarkGreyFillColor2.B / 255.0f,
+                Theme.DarkGreyFillColor2.R / 255.0f,
+                Theme.DarkGreyFillColor2.G / 255.0f,
+                Theme.DarkGreyFillColor2.B / 255.0f,
                 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             GraphicsContext.CurrentContext.SwapBuffers();
@@ -98,13 +141,16 @@ namespace FamiStudio
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
+
+            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
+            if (ctrl != null)
+                ctrl.MouseWheel(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
         }
 
         protected override void RenderFrame(bool force = false)
         {
             if (force)
-                controls.Invalidate();
-
+                controls.MarkDirty();
             controls.Redraw();
         }
 
@@ -220,16 +266,10 @@ namespace FamiStudio
             }
         }
 
-        private void FamiStudioForm_MouseWheel(object sender, MouseEventArgs e)
-        {
-            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
-            if (ctrl != null)
-                ctrl.MouseWheel(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
-        }
-
-        protected override void WndProc(ref System.Windows.Forms.Message m)
+        protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
+
             if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
             {
                 var e = PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m);
@@ -237,6 +277,15 @@ namespace FamiStudio
 
                 if (ctrl != null)
                     ctrl.MouseHorizontalWheel(e);
+            }
+            else if (m.Msg == 0x0231) // WM_ENTERSIZEMOVE 
+            {
+                // We dont receive any messages during resize/move, so we rely on a timer.
+                timer.Start();
+            }
+            else if (m.Msg == 0x0232) // WM_EXITSIZEMOVE
+            {
+                timer.Stop();
             }
         }
 
@@ -261,7 +310,12 @@ namespace FamiStudio
         public void RefreshLayout()
         {
             controls.Resize(ClientRectangle.Width, ClientRectangle.Height);
-            controls.Invalidate();
+            controls.MarkDirty();
+        }
+
+        public void MarkDirty()
+        {
+            controls.MarkDirty();
         }
 
         public Keys GetModifierKeys()
@@ -288,7 +342,15 @@ namespace FamiStudio
             if (ctrl != null)
                 Cursor = ctrl.Cursor.Current;
         }
-    
+
+        public void SetActiveControl(GLControl ctrl, bool animate = true)
+        {
+        }
+
+        public void ShowContextMenu(ContextMenuOption[] options, Action<int> callback)
+        {
+        }
+
         public static bool IsKeyDown(Keys k)
         {
             return (GetKeyState((int)k) & 0x8000) != 0;
@@ -328,6 +390,8 @@ namespace FamiStudio
             {
                 // Will likely fail on Win7/8.
             }
+
+            //timerTask = Task.Factory.StartNew(TimerThread, TaskCreationOptions.LongRunning);
         }
 
         public void Run()

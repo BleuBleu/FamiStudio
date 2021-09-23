@@ -16,8 +16,8 @@ namespace FamiStudio
 
         readonly static char[] Seperators = new[] { ' ', '\t', '\r', '\n', ',', ';', '\0' };
 
-#if FAMISTUDIO_LINUX
-        static byte[] linuxClipboardData; // Cant copy between FamiStudio instance on Linux.
+#if FAMISTUDIO_LINUX || FAMISTUDIO_ANDROID
+        static byte[] internalClipboardData; // Cant copy between FamiStudio instance on Linux.
 #endif
 
         private static void SetClipboardDataInternal(byte[] data)
@@ -27,7 +27,7 @@ namespace FamiStudio
 #elif FAMISTUDIO_MACOS
             MacUtils.SetPasteboardData(data);
 #else
-            linuxClipboardData = data;
+            internalClipboardData = data;
 #endif
         }
 
@@ -39,7 +39,7 @@ namespace FamiStudio
 #elif FAMISTUDIO_MACOS
             buffer = MacUtils.GetPasteboardData();
 #else
-            buffer = linuxClipboardData;
+            buffer = internalClipboardData;
 #endif
 
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)

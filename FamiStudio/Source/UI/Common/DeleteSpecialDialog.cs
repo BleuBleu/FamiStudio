@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using System;
+using System.Collections.Generic;
 
-using RenderTheme = FamiStudio.GLTheme;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace FamiStudio
 {
@@ -14,7 +13,7 @@ namespace FamiStudio
 
         public unsafe DeleteSpecialDialog(Channel channel, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            dialog = new PropertyDialog(200);
+            dialog = new PropertyDialog("Delete Special", 200);
             dialog.Properties.AddLabelCheckBox("Delete Notes", notes);
             dialog.Properties.AddLabelCheckBox("Delete Effects", effectsMask == Note.EffectAllMask);
 
@@ -23,13 +22,12 @@ namespace FamiStudio
                 if (channel.ShouldDisplayEffect(i))
                 {
                     propToEffect[dialog.Properties.PropertyCount] = i;
-                    dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
+                    dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, DpiScaling.ScaleForDialog(24));
                 }
             }
 
             dialog.Properties.Build();
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
-            dialog.Name = "DeleteSpecialDialog";
         }
 
         private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -67,9 +65,9 @@ namespace FamiStudio
             inPropertyChanged = false;
         }
 
-        public DialogResult ShowDialog(FamiStudioForm parent)
+        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            return dialog.ShowDialog(parent);
+            dialog.ShowDialog(parent, callback);
         }
 
         public bool DeleteNotes => dialog.Properties.GetPropertyValue<bool>(0);

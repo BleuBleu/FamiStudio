@@ -4,8 +4,6 @@ using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 
-using RenderTheme = FamiStudio.GLTheme;
-
 namespace FamiStudio
 {
     public partial class PropertyDialog : Form
@@ -17,20 +15,26 @@ namespace FamiStudio
         private bool top = false;
         private bool advancedPropertiesVisible = false;
 
-        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, Form parent = null)
+        private NoFocusButton buttonNo;
+        private NoFocusButton buttonYes;
+        private NoFocusButton buttonAdvanced;
+        private PropertyPage propertyPage;
+        private ToolTip toolTip;
+
+        public PropertyDialog(string title, int width, bool canAccept = true, bool canCancel = true, Form parent = null)
         {
             StartPosition = FormStartPosition.CenterParent;
             Init();
-            Width = (int)(width * RenderTheme.DialogScaling);
+            Width = DpiScaling.ScaleForDialog(width);
             buttonYes.Visible = canAccept;
             buttonNo.Visible = canCancel;
             FormClosed += PropertyDialog_FormClosed;
         }
 
-        public PropertyDialog(Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        public PropertyDialog(string title, Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
-            top = topAlign;
-            width = (int)(width * RenderTheme.DialogScaling);
+            top   = topAlign;
+            width = DpiScaling.ScaleForDialog(width);
 
             if (leftAlign)
                 pt.X -= width;
@@ -56,7 +60,8 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            string suffix = RenderTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
+
             buttonYes.Image      = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
             buttonNo.Image       = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
             buttonAdvanced.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.PlusSmall{suffix}.png"));
@@ -64,6 +69,64 @@ namespace FamiStudio
             toolTip.SetToolTip(buttonYes, "Accept");
             toolTip.SetToolTip(buttonNo, "Cancel");
             toolTip.SetToolTip(buttonAdvanced, "Toggle Advanced Options");
+        }
+
+        private void InitializeComponent()
+        {
+            propertyPage = new PropertyPage();
+            buttonYes = new NoFocusButton();
+            buttonNo = new NoFocusButton();
+            buttonAdvanced = new NoFocusButton();
+            toolTip = new ToolTip();
+
+            propertyPage.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            propertyPage.BackColor = Theme.DarkGreyFillColor1;
+            propertyPage.Dock = DockStyle.Top;
+            propertyPage.Location = new Point(0, 0);
+            propertyPage.Padding = new Padding(3);
+            propertyPage.Size = new Size(298, 200);
+            propertyPage.PropertyWantsClose += new PropertyPage.PropertyWantsCloseDelegate(propertyPage_PropertyWantsClose);
+
+            buttonYes.FlatAppearance.BorderSize = 0;
+            buttonYes.FlatStyle = FlatStyle.Flat;
+            buttonYes.Location = new Point(224, 361);
+            buttonYes.Size = new Size(32, 32);
+            buttonYes.UseVisualStyleBackColor = true;
+            buttonYes.Click += new EventHandler(buttonYes_Click);
+
+            buttonNo.FlatAppearance.BorderSize = 0;
+            buttonNo.FlatStyle = FlatStyle.Flat;
+            buttonNo.Location = new Point(261, 361);
+            buttonNo.Size = new Size(32, 32);
+            buttonNo.UseVisualStyleBackColor = true;
+            buttonNo.Click += new EventHandler(buttonNo_Click);
+
+            buttonAdvanced.FlatAppearance.BorderSize = 0;
+            buttonAdvanced.FlatStyle = FlatStyle.Flat;
+            buttonAdvanced.Location = new Point(5, 361);
+            buttonAdvanced.Size = new Size(32, 32);
+            buttonAdvanced.UseVisualStyleBackColor = true;
+            buttonAdvanced.Visible = false;
+            buttonAdvanced.Click += new EventHandler(buttonAdvanced_Click);
+
+            AutoScaleMode = AutoScaleMode.None;
+            BackColor = Theme.DarkGreyFillColor1;
+            ClientSize = new Size(298, 398);
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            ControlBox = false;
+            KeyPreview = true;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ShowInTaskbar = false;
+            SizeGripStyle = SizeGripStyle.Hide;
+            KeyDown += new KeyEventHandler(PropertyDialog_KeyDown);
+
+            SuspendLayout();
+            Controls.Add(buttonAdvanced);
+            Controls.Add(propertyPage);
+            Controls.Add(buttonYes);
+            Controls.Add(buttonNo);
+            ResumeLayout(true);
         }
 
         protected override CreateParams CreateParams
@@ -89,10 +152,10 @@ namespace FamiStudio
 
         private void UpdateLayout()
         {
-            buttonYes.Width  = (int)(buttonYes.Width  * RenderTheme.DialogScaling);
-            buttonYes.Height = (int)(buttonYes.Height * RenderTheme.DialogScaling);
-            buttonNo.Width   = (int)(buttonNo.Width   * RenderTheme.DialogScaling);
-            buttonNo.Height  = (int)(buttonNo.Height  * RenderTheme.DialogScaling);
+            buttonYes.Width  = DpiScaling.ScaleForDialog(buttonYes.Width);
+            buttonYes.Height = DpiScaling.ScaleForDialog(buttonYes.Height);
+            buttonNo.Width   = DpiScaling.ScaleForDialog(buttonNo.Width);
+            buttonNo.Height  = DpiScaling.ScaleForDialog(buttonNo.Height);
 
             Height = propertyPage.Height + buttonNo.Height + 7;
 
@@ -112,8 +175,8 @@ namespace FamiStudio
             if (propertyPage.HasAdvancedProperties)
             {
                 buttonAdvanced.Visible = true;
-                buttonAdvanced.Width   = (int)(buttonAdvanced.Width  * RenderTheme.DialogScaling);
-                buttonAdvanced.Height  = (int)(buttonAdvanced.Height * RenderTheme.DialogScaling);
+                buttonAdvanced.Width   = DpiScaling.ScaleForMainWindow(buttonAdvanced.Width);
+                buttonAdvanced.Height  = DpiScaling.ScaleForMainWindow(buttonAdvanced.Height);
                 buttonAdvanced.Left    = 5;
                 buttonAdvanced.Top     = propertyPage.Bottom + 0;
             }
@@ -163,7 +226,7 @@ namespace FamiStudio
             UpdateLayout();
 
             var iconName = advancedPropertiesVisible ? "Minus" : "Plus";
-            var suffix = RenderTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             buttonAdvanced.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{iconName}Small{suffix}.png"));
         }
 
@@ -171,6 +234,11 @@ namespace FamiStudio
         {
             if (Visible)
                 Application.DoEvents();
+        }
+
+        public void ShowDialog(IWin32Window parent, Action<DialogResult> callback)
+        {
+            callback(ShowDialog());
         }
 
         public void ShowModal(FamiStudioForm form)

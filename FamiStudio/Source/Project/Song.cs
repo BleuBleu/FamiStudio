@@ -62,7 +62,7 @@ namespace FamiStudio
             this.project = project;
             this.id = id;
             this.name = name;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
 
             CreateCustomSettings();
             SetDefaultsForTempoMode(project.TempoMode);
@@ -1135,7 +1135,7 @@ namespace FamiStudio
 
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
-                color = ThemeBase.RandomCustomColor();
+                color = Theme.RandomCustomColor();
         }
 
         public class PatternCustomSetting

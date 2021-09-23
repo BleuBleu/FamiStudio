@@ -202,11 +202,7 @@ namespace FamiStudio
             textView.Buffer.Text = txt;
             textView.Editable = false;
             textView.CursorVisible = false;
-#if FAMISTUDIO_MACOS
-            textView.ModifyFont(FontDescription.FromString($"Quicksand 10"));
-#else
-            textView.ModifyFont(FontDescription.FromString($"Quicksand 8"));
-#endif
+            textView.ModifyFont(FontDescription.FromString(PlatformUtils.IsMacOS ? "Quicksand 10" : "Quicksand 8"));
             textView.WrapMode = Gtk.WrapMode.WordChar;
             textView.Show();
 
@@ -531,7 +527,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
+        public int AddNumericUpDown(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()

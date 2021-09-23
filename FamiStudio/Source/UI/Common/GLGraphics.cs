@@ -18,7 +18,7 @@ namespace FamiStudio
     {
         bool supportsLineWidth = true;
 
-        public GLGraphics()
+        public GLGraphics(float mainScale, float fontScale) : base(mainScale, fontScale)
         {
             dashedBitmap = CreateBitmapFromResource("Dash");
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.Repeat);
@@ -75,7 +75,7 @@ namespace FamiStudio
             GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, data);
         }
 
-        protected override int CreateEmptyTexture(int width, int height)
+        protected override int CreateEmptyTexture(int width, int height, bool filter = false)
         {
             int id = GL.GenTexture();
 
@@ -162,49 +162,7 @@ namespace FamiStudio
             return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height);
         }
 
-        private unsafe void ChangeBitmapBackground(Bitmap bmp, Color color)
-        {
-#if FAMISTUDIO_WINDOWS
-            for (int y = 0; y < bmp.Height; y++)
-            {
-                for (int x = 0; x < bmp.Width; x++)
-                {
-                    var pixel = bmp.GetPixel(x, y);
-
-                    var r = (byte)Utils.Lerp(color.R, pixel.R, pixel.A / 255.0f);
-                    var g = (byte)Utils.Lerp(color.G, pixel.G, pixel.A / 255.0f);
-                    var b = (byte)Utils.Lerp(color.B, pixel.B, pixel.A / 255.0f);
-
-                    bmp.SetPixel(x, y, Color.FromArgb(r, g, b));
-                }
-            }
-#else
-            var p = (int*)bmp.Pixels.ToPointer();
-
-            for (int y = 0; y < bmp.Height; y++)
-            {
-                for (int x = 0; x < bmp.Width; x++)
-                {
-                    var pixel = Color.FromArgb(p[x]);
-
-                    var r = (byte)Utils.Lerp(color.R, pixel.B, pixel.A / 255.0f);
-                    var g = (byte)Utils.Lerp(color.G, pixel.G, pixel.A / 255.0f);
-                    var b = (byte)Utils.Lerp(color.B, pixel.R, pixel.A / 255.0f);
-
-                    p[x] = Color.FromArgb(b, g, r).ToArgb();
-                }
-
-                p += bmp.Rowstride / 4;
-            }
-#endif
-        }
-
         public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
-        {
-            return CreateBitmapAtlasFromResources(names, Color.Empty);
-        }
-
-        public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names, Color backgroundOverride)
         {
             var bitmaps = new Bitmap[names.Length];
             var elementSizeX = 0;
@@ -214,17 +172,14 @@ namespace FamiStudio
             {
                 var bmp = LoadBitmapFromResourceWithScaling(names[i]);
 
-                if (backgroundOverride != Color.Empty)
-                    ChangeBitmapBackground(bmp, backgroundOverride);
-
                 elementSizeX = Math.Max(elementSizeX, bmp.Width);
                 elementSizeY = Math.Max(elementSizeY, bmp.Height);
 
                 bitmaps[i] = bmp;
             }
-            
-            var numRows = Utils.DivideAndRoundUp(elementSizeX * names.Length, MaxAtlasResolution);
-            var elementsPerRow = names.Length / numRows;
+
+            var elementsPerRow = MaxAtlasResolution / elementSizeX;
+            var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
             var atlasSizeX = elementsPerRow * elementSizeX;
             var atlasSizeY = numRows * elementSizeY;
             var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
@@ -278,134 +233,135 @@ namespace FamiStudio
             return bmp.Size.Width;
         }
 
-        public GLCommandList CreateCommandList()
+        public override GLCommandList CreateCommandList()
         {
             return new GLCommandList(this, dashedBitmap.Size.Width, supportsLineWidth);
         }
 
-        public void DrawCommandList(GLCommandList list)
+        public unsafe override void DrawCommandList(GLCommandList list, Rectangle scissor)
         {
-            DrawCommandList(list, Rectangle.Empty);
-        }
+            if (list == null)
+                return;
 
-        public unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
-        {
-            if (!scissor.IsEmpty)
-                SetScissorRect(scissor.Left, scissor.Top, scissor.Right, scissor.Bottom);
-
-            if (list.HasAnyMeshes)
+            if (list.HasAnything)
             {
-                var drawData = list.GetMeshDrawData();
+                if (!scissor.IsEmpty)
+                    SetScissorRect(scissor.Left, scissor.Top, scissor.Right, scissor.Bottom);
 
-                GL.EnableClientState(ArrayCap.ColorArray);
-
-                foreach (var draw in drawData)
+                if (list.HasAnyMeshes)
                 {
-                    if (draw.smooth) GL.Enable(EnableCap.PolygonSmooth);
+                    var drawData = list.GetMeshDrawData();
+
+                    GL.EnableClientState(ArrayCap.ColorArray);
+
+                    foreach (var draw in drawData)
+                    {
+                        if (draw.smooth) GL.Enable(EnableCap.PolygonSmooth);
+                        GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
+                        GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
+                        GL.DrawElements(PrimitiveType.Triangles, draw.numIndices, DrawElementsType.UnsignedShort, draw.idxArray);
+                        if (draw.smooth) GL.Disable(EnableCap.PolygonSmooth);
+                    }
+
+                    GL.DisableClientState(ArrayCap.ColorArray);
+                }
+
+                if (list.HasAnyLines)
+                {
+                    var drawData = list.GetLineDrawData();
+
+                    GL.PushMatrix();
+                    GL.Translate(0.5f, 0.5f, 0.0f);
+                    GL.Enable(EnableCap.Texture2D);
+                    GL.BindTexture(TextureTarget.Texture2D, dashedBitmap.Id);
+                    GL.EnableClientState(ArrayCap.ColorArray);
+                    GL.EnableClientState(ArrayCap.TextureCoordArray);
+
+                    foreach (var draw in drawData)
+                    {
+                        if (draw.smooth) GL.Enable(EnableCap.LineSmooth);
+                        GL.LineWidth(draw.lineWidth);
+                        GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, draw.texArray);
+                        GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
+                        GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
+                        GL.DrawArrays(PrimitiveType.Lines, 0, draw.numVertices);
+                        if (draw.smooth) GL.Disable(EnableCap.LineSmooth);
+                    }
+
+                    GL.DisableClientState(ArrayCap.ColorArray);
+                    GL.DisableClientState(ArrayCap.TextureCoordArray);
+                    GL.Disable(EnableCap.Texture2D);
+                    GL.PopMatrix();
+                }
+
+#if FAMISTUDIO_LINUX
+                if (list.HasAnyTickLineMeshes)
+                {
+                    var draw = list.GetThickLineAsPolygonDrawData();
+
+                    /*if (draw.smooth)*/ GL.Enable(EnableCap.PolygonSmooth);
+                    GL.EnableClientState(ArrayCap.ColorArray);
                     GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
                     GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
                     GL.DrawElements(PrimitiveType.Triangles, draw.numIndices, DrawElementsType.UnsignedShort, draw.idxArray);
-                    if (draw.smooth) GL.Disable(EnableCap.PolygonSmooth);
+                    GL.DisableClientState(ArrayCap.ColorArray);
+                    /*if (draw.smooth)*/ GL.Disable(EnableCap.PolygonSmooth);
                 }
-
-                GL.DisableClientState(ArrayCap.ColorArray);
-            }
-
-            if (list.HasAnyLines)
-            {
-                var drawData = list.GetLineDrawData();
-
-                GL.PushMatrix();
-                GL.Translate(0.5f, 0.5f, 0.0f);
-                GL.Enable(EnableCap.Texture2D);
-                GL.BindTexture(TextureTarget.Texture2D, dashedBitmap.Id);
-                GL.EnableClientState(ArrayCap.ColorArray);
-                GL.EnableClientState(ArrayCap.TextureCoordArray);
-
-                foreach (var draw in drawData)
-                {
-                    if (draw.smooth) GL.Enable(EnableCap.LineSmooth);
-                    GL.LineWidth(draw.lineWidth);
-                    GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, draw.texArray);
-                    GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
-                    GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
-                    GL.DrawArrays(PrimitiveType.Lines, 0, draw.numVertices);
-                    if (draw.smooth) GL.Disable(EnableCap.LineSmooth);
-                }
-
-                GL.DisableClientState(ArrayCap.ColorArray);
-                GL.DisableClientState(ArrayCap.TextureCoordArray);
-                GL.Disable(EnableCap.Texture2D);
-                GL.PopMatrix();
-            }
-
-#if FAMISTUDIO_LINUX
-            if (list.HasAnyTickLineMeshes)
-            {
-                var draw = list.GetThickLineAsPolygonDrawData();
-
-                /*if (draw.smooth)*/ GL.Enable(EnableCap.PolygonSmooth);
-                GL.EnableClientState(ArrayCap.ColorArray);
-                GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
-                GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
-                GL.DrawElements(PrimitiveType.Triangles, draw.numIndices, DrawElementsType.UnsignedShort, draw.idxArray);
-                GL.DisableClientState(ArrayCap.ColorArray);
-                /*if (draw.smooth)*/ GL.Disable(EnableCap.PolygonSmooth);
-            }
 #endif
 
-            if (list.HasAnyBitmaps)
-            {
-                var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);
-
-                GL.Enable(EnableCap.Texture2D);
-                GL.EnableClientState(ArrayCap.ColorArray);
-                GL.EnableClientState(ArrayCap.TextureCoordArray);
-                GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texArray);
-                GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, colArray);
-                GL.VertexPointer(2, VertexPointerType.Float, 0, vtxArray);
-
-                fixed (short* ptr = quadIdxArray)
+                if (list.HasAnyBitmaps)
                 {
-                    foreach (var draw in drawData)
+                    var drawData = list.GetBitmapDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);
+
+                    GL.Enable(EnableCap.Texture2D);
+                    GL.EnableClientState(ArrayCap.ColorArray);
+                    GL.EnableClientState(ArrayCap.TextureCoordArray);
+                    GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texArray);
+                    GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, colArray);
+                    GL.VertexPointer(2, VertexPointerType.Float, 0, vtxArray);
+
+                    fixed (short* ptr = quadIdxArray)
                     {
-                        GL.BindTexture(TextureTarget.Texture2D, draw.textureId);
-                        GL.DrawElements(PrimitiveType.Triangles, draw.count, DrawElementsType.UnsignedShort, new IntPtr(ptr + draw.start));
+                        foreach (var draw in drawData)
+                        {
+                            GL.BindTexture(TextureTarget.Texture2D, draw.textureId);
+                            GL.DrawElements(PrimitiveType.Triangles, draw.count, DrawElementsType.UnsignedShort, new IntPtr(ptr + draw.start));
+                        }
                     }
+
+                    GL.DisableClientState(ArrayCap.ColorArray);
+                    GL.DisableClientState(ArrayCap.TextureCoordArray);
+                    GL.Disable(EnableCap.Texture2D);
                 }
 
-                GL.DisableClientState(ArrayCap.ColorArray);
-                GL.DisableClientState(ArrayCap.TextureCoordArray);
-                GL.Disable(EnableCap.Texture2D);
-            }
-
-            if (list.HasAnyTexts)
-            {
-                var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);
-
-                GL.Enable(EnableCap.Texture2D);
-                GL.EnableClientState(ArrayCap.ColorArray);
-                GL.EnableClientState(ArrayCap.TextureCoordArray);
-                GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texArray);
-                GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, colArray);
-                GL.VertexPointer(2, VertexPointerType.Float, 0, vtxArray);
-
-                fixed (short* ptr = quadIdxArray)
+                if (list.HasAnyTexts)
                 {
-                    foreach (var draw in drawData)
+                    var drawData = list.GetTextDrawData(vtxArray, texArray, colArray, out _, out _, out _, out _);
+
+                    GL.Enable(EnableCap.Texture2D);
+                    GL.EnableClientState(ArrayCap.ColorArray);
+                    GL.EnableClientState(ArrayCap.TextureCoordArray);
+                    GL.TexCoordPointer(2, TexCoordPointerType.Float, 0, texArray);
+                    GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, colArray);
+                    GL.VertexPointer(2, VertexPointerType.Float, 0, vtxArray);
+
+                    fixed (short* ptr = quadIdxArray)
                     {
-                        GL.BindTexture(TextureTarget.Texture2D, draw.textureId);
-                        GL.DrawElements(PrimitiveType.Triangles, draw.count, DrawElementsType.UnsignedShort, new IntPtr(ptr + draw.start));
+                        foreach (var draw in drawData)
+                        {
+                            GL.BindTexture(TextureTarget.Texture2D, draw.textureId);
+                            GL.DrawElements(PrimitiveType.Triangles, draw.count, DrawElementsType.UnsignedShort, new IntPtr(ptr + draw.start));
+                        }
                     }
+
+                    GL.DisableClientState(ArrayCap.ColorArray);
+                    GL.DisableClientState(ArrayCap.TextureCoordArray);
+                    GL.Disable(EnableCap.Texture2D);
                 }
 
-                GL.DisableClientState(ArrayCap.ColorArray);
-                GL.DisableClientState(ArrayCap.TextureCoordArray);
-                GL.Disable(EnableCap.Texture2D);
+                if (!scissor.IsEmpty)
+                    ClearScissorRect();
             }
-
-            if (!scissor.IsEmpty)
-                ClearScissorRect();
 
             list.Release();
         }
@@ -422,7 +378,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private GLOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback)
+        private GLOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(1.0f, 1.0f) 
         {
             resX = imageSizeX;
             resY = imageSizeY;

@@ -3,13 +3,18 @@ using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 
-using RenderTheme = FamiStudio.GLTheme;
-
 namespace FamiStudio
 {
     public partial class TutorialDialog : Form
     {
         int pageIndex = 0;
+
+        private NoFocusButton buttonRight;
+        private NoFocusButton buttonLeft;
+        private PictureBox pictureBox1;
+        private Label label1;
+        private CheckBox checkBoxDontShow;
+        private ToolTip toolTip;
 
         public TutorialDialog()
         {
@@ -20,24 +25,25 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            string suffix = RenderTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             buttonLeft.Image   = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowLeft{suffix}.png"));
 
-            Width  = (int)(RenderTheme.DialogScaling * Width);
-            Height = (int)(RenderTheme.DialogScaling * Height);
-            label1.Height = (int)(RenderTheme.DialogScaling * label1.Height);
-            pictureBox1.Top = (label1.Top + label1.Height) + 8;
+            Width         = DpiScaling.ScaleForDialog(Width);
+            Height        = DpiScaling.ScaleForDialog(Height);
+            label1.Height = DpiScaling.ScaleForDialog(label1.Height);
+
+            pictureBox1.Top    = (label1.Top + label1.Height) + 8;
             pictureBox1.Height = (int)(pictureBox1.Width / 1.7777777f); // 16:9
-            pictureBox1.Width = (int)(RenderTheme.DialogScaling * pictureBox1.Width);
-            pictureBox1.Height = (int)(RenderTheme.DialogScaling * pictureBox1.Height);
+            pictureBox1.Width  = DpiScaling.ScaleForDialog(pictureBox1.Width);
+            pictureBox1.Height = DpiScaling.ScaleForDialog(pictureBox1.Height);
 
-            label1.ForeColor = ThemeBase.LightGreyFillColor2;
-            checkBoxDontShow.ForeColor = ThemeBase.LightGreyFillColor2;
+            label1.ForeColor           = Theme.LightGreyFillColor2;
+            checkBoxDontShow.ForeColor = Theme.LightGreyFillColor2;
 
-            buttonLeft.Width   = (int)(buttonLeft.Width   * RenderTheme.DialogScaling);
-            buttonLeft.Height  = (int)(buttonLeft.Height  * RenderTheme.DialogScaling);
-            buttonRight.Width  = (int)(buttonRight.Width  * RenderTheme.DialogScaling);
-            buttonRight.Height = (int)(buttonRight.Height * RenderTheme.DialogScaling);
+            buttonLeft.Width   = DpiScaling.ScaleForDialog(buttonLeft.Width);
+            buttonLeft.Height  = DpiScaling.ScaleForDialog(buttonLeft.Height);
+            buttonRight.Width  = DpiScaling.ScaleForDialog(buttonRight.Width);
+            buttonRight.Height = DpiScaling.ScaleForDialog(buttonRight.Height);
 
             buttonRight.Left  = Width  - buttonRight.Width  - 10;
             buttonRight.Top   = Height - buttonRight.Height - 10;
@@ -57,6 +63,70 @@ namespace FamiStudio
             SetPage(0);
         }
 
+        private void InitializeComponent()
+        {
+            pictureBox1 = new PictureBox();
+            label1 = new Label();
+            checkBoxDontShow = new CheckBox();
+            buttonLeft = new NoFocusButton();
+            buttonRight = new NoFocusButton();
+            toolTip = new ToolTip();
+
+            pictureBox1.Location = new Point(10, 88);
+            pictureBox1.Size = new Size(736, 414);
+            pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox1.TabStop = false;
+
+            label1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            label1.Location = new Point(10, 10);
+            label1.Size = new Size(736, 64);
+            label1.Text = "Welcome To FamiStudio!";
+
+            checkBoxDontShow.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            checkBoxDontShow.AutoSize = true;
+            checkBoxDontShow.Location = new Point(10, 513);
+            checkBoxDontShow.Size = new Size(115, 17);
+            checkBoxDontShow.Text = "Do not show again";
+            checkBoxDontShow.UseVisualStyleBackColor = true;
+
+            buttonLeft.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonLeft.FlatAppearance.BorderSize = 0;
+            buttonLeft.FlatStyle = FlatStyle.Flat;
+            buttonLeft.Location = new Point(676, 504);
+            buttonLeft.Size = new Size(32, 32);
+            buttonLeft.UseVisualStyleBackColor = true;
+            buttonLeft.Click += new EventHandler(buttonLeft_Click);
+
+            buttonRight.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonRight.FlatAppearance.BorderSize = 0;
+            buttonRight.FlatStyle = FlatStyle.Flat;
+            buttonRight.Location = new Point(714, 504);
+            buttonRight.Size = new Size(32, 32);
+            buttonRight.UseVisualStyleBackColor = true;
+            buttonRight.Click += new EventHandler(buttonRight_Click);
+
+            AutoScaleMode = AutoScaleMode.None;
+            BackColor = Theme.DarkGreyFillColor1;
+            ClientSize = new Size(754, 548);
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            ControlBox = false;
+            KeyPreview = true;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ShowInTaskbar = false;
+            SizeGripStyle = SizeGripStyle.Hide;
+            StartPosition = FormStartPosition.CenterParent;
+            KeyDown += new KeyEventHandler(TutorialDialog_KeyDown);
+
+            SuspendLayout();
+            Controls.Add(checkBoxDontShow);
+            Controls.Add(label1);
+            Controls.Add(pictureBox1);
+            Controls.Add(buttonLeft);
+            Controls.Add(buttonRight);
+            ResumeLayout(true);
+        }
+
         private void SetPage(int idx)
         {
             pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Messages.Length - 1);
@@ -64,7 +134,7 @@ namespace FamiStudio
             label1.Text = TutorialMessages.Messages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
 
-            string suffix = RenderTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             buttonRight.Image = pageIndex == TutorialMessages.Messages.Length - 1 ?
                 Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png")) :
                 Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowRight{suffix}.png"));

@@ -1,0 +1,74 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/DarkGreyLineColor1</item>
+        <item name="colorPrimaryDark">@color/DarkGreyLineColor1</item>
+        <item name="colorAccent">@color/LightGreyFillColor1</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
+
+    <style name="ToolbarTheme">
+        <item name="android:textColorPrimary">@color/LightGreyFillColor2</item>
+        <item name="actionMenuTextColor">@color/LightGreyFillColor2</item>
+    </style>
+
+    <style name="DarkBackgroundStyle">
+        <item name="android:background">#2a3033</item>
+    </style>
+  
+    <style name="TextBase">
+        <item name="android:fontFamily">@font/quicksand</item>
+        <item name="android:textColor">@color/light_grey</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">16dp</item>
+        <item name="android:textColorPrimaryDisableOnly">#f00</item> <!-- MATTT For check boxes -->
+    </style>
+  
+    <style name="LightGrayLargeBold" parent="TextBase">
+        <item name="android:textSize">16dp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+  
+    <style name="LightGrayTextMedium" parent="TextBase">
+        <item name="android:textSize">16dp</item>
+    </style>
+  
+    <style name="LightGrayTextSmall" parent="TextBase">
+        <item name="android:textSize">12dp</item>
+    </style>
+  
+    <style name="LightGrayTextSmallTooltip" parent="TextBase">
+        <item name="android:textSize">12dp</item>
+    </style>
+
+    <style name="LightGrayCheckBox" parent="TextBase">
+        <item name="android:textColorPrimaryDisableOnly">@color/LightGreyFillColor2</item> <!-- For check boxes -->
+        <item name="android:buttonTint">@color/LightGreyFillColor2</item>
+        <item name="android:textSize">12dp</item>
+    </style>
+
+    <style name="LightGraySeekBar">
+        <item name="android:progressBackgroundTint">@color/LightGreyFillColor2</item>
+    </style>
+
+    <style name="SpinnerItem" parent="TextBase">
+      <item name="android:textSize">16dp</item>
+      <item name="android:textColor">#000</item>
+    </style>
+  
+    <style name="SpinnerItemSelected" parent="TextBase">
+      <item name="android:textColor">#000</item>
+      <item name="android:textSize">16dp</item>
+      <item name="android:textStyle">bold</item>
+    </style>
+  
+</resources>

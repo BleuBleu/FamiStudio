@@ -4,18 +4,19 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class LogDialog : ILogOutput
     {
         private PropertyDialog dialog;
         private FamiStudioForm parentForm;
         private List<string>   messages = new List<string>();
 
-        public unsafe LogDialog(FamiStudioForm parentForm)
+        public LogDialog(FamiStudioForm parentForm)
         {
             this.parentForm = parentForm;
 
-            dialog = new PropertyDialog(800, false);
-            dialog.Properties.AddMultilineString(null, ""); // 0
+            dialog = new PropertyDialog("Log", 800, false);
+            dialog.Properties.AddMultilineTextBox(null, ""); // 0
             dialog.Properties.Build();
         }
 
@@ -44,4 +45,30 @@ namespace FamiStudio
         public bool AbortOperation => dialog.DialogResult != DialogResult.None;
         public void ReportProgress(float progress) { }
     }
+#else
+    class LogDialog : ILogOutput
+    {
+        public LogDialog(FamiStudioForm parentForm)
+        {
+        }
+
+        public DialogResult ShowDialog()
+        {
+            return DialogResult.OK;
+        }
+
+        public DialogResult ShowDialogIfMessages()
+        {
+            return DialogResult.OK;
+        }
+
+        public void LogMessage(string msg)
+        {
+        }
+
+        public bool HasMessages => false;
+        public bool AbortOperation => false;
+        public void ReportProgress(float progress) { }
+    }
+#endif
 }

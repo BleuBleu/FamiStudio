@@ -10,7 +10,7 @@ using RenderBrush    = FamiStudio.GLBrush;
 using RenderGeometry = FamiStudio.GLGeometry;
 using RenderControl  = FamiStudio.GLControl;
 using RenderGraphics = FamiStudio.GLOffscreenGraphics;
-using RenderTheme    = FamiStudio.GLTheme;
+using RenderTheme    = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -280,9 +280,9 @@ namespace FamiStudio
 #endif
         }
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, string ffmpegExecutable, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool stereo, float[] pan)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, int pianoRollZoom, bool stereo, float[] pan)
         {
-            if (!Initialize(ffmpegExecutable, channelMask, loopCount))
+            if (!Initialize(channelMask, loopCount))
                 return false;
             
             videoResX = resX;
@@ -293,12 +293,24 @@ namespace FamiStudio
 
             ExtendSongForLooping(song, loopCount);
 
-            Log.LogMessage(LogSeverity.Info, "Initializing channels...");
+            // Save audio to temporary file.
+            Log.LogMessage(LogSeverity.Info, "Exporting audio...");
 
-            var frameRateNumerator = song.Project.PalMode ? 5000773 : 6009883;
-            if (halfFrameRate)
-                frameRateNumerator /= 2;
-            var frameRate = frameRateNumerator.ToString() + "/100000";
+            var tempFolder = Utils.GetTemporaryDiretory();
+            var tempAudioFile = Path.Combine(tempFolder, "temp.wav");
+
+            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+
+            // Start encoder, must be done before any GL calls on Android.
+            GetFrameRateInfo(song.Project, halfFrameRate, out var frameRateNumer, out var frameRateDenom);
+
+            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, tempAudioFile, filename))
+            {
+                Log.LogMessage(LogSeverity.Error, "Error starting video encoder, aborting.");
+                return false;
+            }
+
+            Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
             var numChannels = Utils.NumberOfSetBits(channelMask);
             var channelResXFloat = videoResX / (float)numChannels;
@@ -314,7 +326,7 @@ namespace FamiStudio
                 return false;
             }
             
-            var theme = RenderTheme.CreateResourcesForGraphics(videoGraphics);
+            var themeResources = new ThemeRenderResources(videoGraphics);
             var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
             // Generate WAV data for each individual channel for the oscilloscope.
@@ -345,7 +357,7 @@ namespace FamiStudio
                     maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
 
                 // Measure the longest text.
-                longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, ThemeBase.FontBigUnscaled));
+                longestChannelName = Math.Max(longestChannelName, state.graphics.MeasureString(state.channelText, themeResources.FontVeryLarge));
 
                 Log.ReportProgress(0.0f);
             }
@@ -353,7 +365,7 @@ namespace FamiStudio
             // Tweak some cosmetic stuff that depends on resolution.
             var smallChannelText = longestChannelName + 32 + ChannelIconTextSpacing > channelResY * 0.8f;
             var bmpSuffix = smallChannelText ? "" : "@2x";
-            var font = smallChannelText ? ThemeBase.FontMediumUnscaled : ThemeBase.FontBigUnscaled;
+            var font = smallChannelText ? themeResources.FontMedium : themeResources.FontVeryLarge;
             var textOffsetY = smallChannelText ? 1 : 4;
             var pianoRollScaleX = Utils.Clamp(resY / 1080.0f, 0.6f, 0.9f);
             var pianoRollScaleY = channelResY < VeryThinNoteThreshold ? 0.5f : (channelResY < ThinNoteThreshold ? 0.667f : 1.0f);
@@ -389,136 +401,117 @@ namespace FamiStudio
             var videoImage   = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscWindowSize, 2];
 
-            // Start ffmpeg with pipe input.
-            var tempFolder = Utils.GetTemporaryDiretory();
-            var tempAudioFile = Path.Combine(tempFolder, "temp.wav");
-
 #if !DEBUG
             try
 #endif
             {
-                Log.LogMessage(LogSeverity.Info, "Exporting audio...");
-
-                // Save audio to temporary file.
-                AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
-
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-y -f rawvideo -pix_fmt argb -s {videoResX}x{videoResY} -r {frameRate} -i - -i \"{tempAudioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{filename}\"", true, false);
-
-#if FAMISTUDIO_WINDOWS
-                // Cant raise the process priority without being admin on Linux/MacOS.
-                Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
-#endif
-
                 // Generate each of the video frames.
-                using (var stream = new BinaryWriter(process.StandardInput.BaseStream))
+                for (int f = 0; f < metadata.Length; f++)
                 {
-                    for (int f = 0; f < metadata.Length; f++)
+                    if (Log.ShouldAbortOperation)
+                        break;
+
+                    if ((f % 100) == 0)
+                        Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
+
+                    Log.ReportProgress(f / (float)(metadata.Length - 1));
+
+                    if (halfFrameRate && (f & 1) != 0)
+                        continue;
+
+                    var frame = metadata[f];
+
+                    // Render the piano rolls for each channels.
+                    foreach (var s in channelStates)
                     {
-                        if (Log.ShouldAbortOperation)
-                            break;
+                        var volume = frame.channelVolumes[s.songChannelIndex];
+                        var note   = frame.channelNotes[s.songChannelIndex];
 
-                        if ((f % 100) == 0)
-                            Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
+                        var color = Color.Transparent;
 
-                        Log.ReportProgress(f / (float)(metadata.Length - 1));
-
-                        if (halfFrameRate && (f & 1) != 0)
-                            continue;
-
-                        var frame = metadata[f];
-
-                        // Render the piano rolls for each channels.
-                        foreach (var s in channelStates)
+                        if (note.IsMusical)
                         {
-                            var volume = frame.channelVolumes[s.songChannelIndex];
-                            var note   = frame.channelNotes[s.songChannelIndex];
-
-                            var color = Color.Transparent;
-
-                            if (note.IsMusical)
+                            if (s.channel.Type == ChannelType.Dpcm)
                             {
-                                if (s.channel.Type == ChannelType.Dpcm)
-                                {
-                                    var mapping = project.GetDPCMMapping(note.Value);
-                                    if (mapping != null)
-                                        color = mapping.Sample.Color;
-                                }
-                                else
-                                {
-                                    color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : ThemeBase.LightGreyFillColor1);
-                                }
+                                var mapping = project.GetDPCMMapping(note.Value);
+                                if (mapping != null)
+                                    color = mapping.Sample.Color;
                             }
-
-                            s.graphics.BeginDrawFrame();
-                            s.graphics.BeginDrawControl(new Rectangle(0, 0, channelResX, channelResY), channelResY);
-                            pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
-                            s.graphics.EndDrawControl();
-                            s.graphics.EndDrawFrame();
+                            else
+                            {
+                                color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : Theme.LightGreyFillColor1);
+                            }
                         }
 
-                        // Render the full screen overlay.
-                        videoGraphics.BeginDrawFrame();
-                        videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
-                        videoGraphics.Clear(Color.Black);
-
-                        var bg = videoGraphics.CreateCommandList();
-                        var fg = videoGraphics.CreateCommandList();
-
-                        // Composite the channel renders.
-                        foreach (var s in channelStates)
-                        {
-                            int channelPosX0 = (int)Math.Round(s.videoChannelIndex * channelResXFloat);
-                            bg.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
-                        }
-
-                        // Gradient
-                        fg.FillRectangle(0, 0, videoResX, gradientSizeY, gradientBrush);
-
-                        // Channel names + oscilloscope
-                        foreach (var s in channelStates)
-                        {
-                            int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
-                            int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
-
-                            var channelNameSizeX = videoGraphics.MeasureString(s.channelText, font);
-                            var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmpIcon.Size.Width + ChannelIconTextSpacing) / 2;
-
-                            fg.FillRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, ChannelIconPosY + s.bmpIcon.Size.Height, theme.DarkGreyLineBrush2);
-                            fg.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY);
-                            fg.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, theme.LightGreyFillBrush1);
-
-                            if (s.videoChannelIndex > 0)
-                                fg.DrawLine(channelPosX0, 0, channelPosX0, videoResY, theme.BlackBrush, channelLineWidth);
-
-                            var oscMinY = (int)(ChannelIconPosY + s.bmpIcon.Size.Height + 10);
-                            var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
-
-                            // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
-                            GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0 + 10, oscMaxY, channelPosX1 - 10, oscMinY, oscilloscope);
-
-                            fg.DrawGeometry(oscilloscope, theme.LightGreyFillBrush1, 1, true);
-                        }
-
-                        // Watermark.
-                        fg.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
-                        
-                        videoGraphics.DrawCommandList(bg);
-                        videoGraphics.DrawCommandList(fg);
-                        videoGraphics.EndDrawControl();
-                        videoGraphics.EndDrawFrame();
-
-                        // Readback + send to ffmpeg.
-                        videoGraphics.GetBitmap(videoImage);
-                        stream.Write(videoImage);
-
-                        // Dump debug images.
-                        // DumpDebugImage(videoImage, videoResX, videoResY, f);
+                        s.graphics.BeginDrawFrame();
+                        s.graphics.BeginDrawControl(new Rectangle(0, 0, channelResX, channelResY), channelResY);
+                        pianoRoll.RenderVideoFrame(s.graphics, s.channel.Index, frame.playPattern, frame.playNote, frame.scroll[s.songChannelIndex], note.Value, color);
+                        s.graphics.EndDrawControl();
+                        s.graphics.EndDrawFrame();
                     }
+
+                    // Render the full screen overlay.
+                    videoGraphics.BeginDrawFrame();
+                    videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
+                    videoGraphics.Clear(Color.Black);
+
+                    var bg = videoGraphics.CreateCommandList();
+                    var fg = videoGraphics.CreateCommandList();
+
+                    // Composite the channel renders.
+                    foreach (var s in channelStates)
+                    {
+                        int channelPosX0 = (int)Math.Round(s.videoChannelIndex * channelResXFloat);
+                        bg.DrawBitmap(s.bitmap, channelPosX0, 0, s.bitmap.Size.Height, s.bitmap.Size.Width, 1.0f, 0, 0, 1, 1, true);
+                    }
+
+                    // Gradient
+                    fg.FillRectangle(0, 0, videoResX, gradientSizeY, gradientBrush);
+
+                    // Channel names + oscilloscope
+                    foreach (var s in channelStates)
+                    {
+                        int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
+                        int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
+
+                        var channelNameSizeX = videoGraphics.MeasureString(s.channelText, font);
+                        var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmpIcon.Size.Width + ChannelIconTextSpacing) / 2;
+
+                        fg.FillRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, ChannelIconPosY + s.bmpIcon.Size.Height, themeResources.DarkGreyLineBrush2);
+                        fg.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY);
+                        fg.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, themeResources.LightGreyFillBrush1);
+
+                        if (s.videoChannelIndex > 0)
+                            fg.DrawLine(channelPosX0, 0, channelPosX0, videoResY, themeResources.BlackBrush, channelLineWidth);
+
+                        var oscMinY = (int)(ChannelIconPosY + s.bmpIcon.Size.Height + 10);
+                        var oscMaxY = (int)(oscMinY + 100.0f * (resY / 1080.0f));
+
+                        // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
+                        GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0 + 10, oscMaxY, channelPosX1 - 10, oscMinY, oscilloscope);
+
+                        fg.DrawGeometry(oscilloscope, themeResources.LightGreyFillBrush1, 1, true);
+                    }
+
+                    // Watermark.
+                    fg.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
+                        
+                    videoGraphics.DrawCommandList(bg);
+                    videoGraphics.DrawCommandList(fg);
+                    videoGraphics.EndDrawControl();
+                    videoGraphics.EndDrawFrame();
+
+                    // Readback
+                    videoGraphics.GetBitmap(videoImage);
+
+                    // Send to encoder.
+                    videoEncoder.AddFrame(videoImage);
+
+                    // Dump debug images.
+                    // DumpDebugImage(videoImage, videoResX, videoResY, f);
                 }
 
-                process.WaitForExit();
-                process.Dispose();
-                process = null;
+                videoEncoder.EndEncoding();
 
                 File.Delete(tempAudioFile);
             }
@@ -543,7 +536,7 @@ namespace FamiStudio
                     c.bitmap.Dispose();
                     c.graphics.Dispose();
                 }
-                theme.Terminate();
+                themeResources.Dispose();
                 bmpWatermark.Dispose();
                 gradientBrush.Dispose();
                 videoGraphics.Dispose();

@@ -2,7 +2,14 @@
 using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
+using Color = System.Drawing.Color;
+
+#if FAMISTUDIO_ANDROID
+using Android.Opengl;
+using Bitmap = Android.Graphics.Bitmap;
+#else
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 #if FAMISTUDIO_WINDOWS
@@ -10,24 +17,44 @@ using Bitmap = System.Drawing.Bitmap;
 #else
 using Bitmap = Gdk.Pixbuf;
 #endif
+#endif
 
 namespace FamiStudio
 {
+    // DROIDTODO : Use a partial class, move to Desktop.
     public abstract class GLGraphicsBase : IDisposable
     {
+        protected struct GradientCacheKey
+        {
+            public Color color0;
+            public Color color1;
+            public int size;
+
+            public override int GetHashCode()
+            {
+                return Utils.HashCombine(Utils.HashCombine(color0.ToArgb(), color1.ToArgb()), size);
+            }
+        }
+
         protected float windowScaling = 1.0f;
+        protected float fontScaling   = 1.0f;
         protected int windowSizeY;
+        protected int maxSmoothLineWidth = int.MaxValue;
         protected Rectangle controlRect;
         protected Rectangle controlRectFlip;
         protected GLTransform transform = new GLTransform();
-        protected Dictionary<Tuple<Color, int>, GLBrush> verticalGradientCache = new Dictionary<Tuple<Color, int>, GLBrush>();
         protected GLBitmap dashedBitmap;
 
+        protected Dictionary<GradientCacheKey, GLBrush> verticalGradientCache   = new Dictionary<GradientCacheKey, GLBrush>();
+        protected Dictionary<GradientCacheKey, GLBrush> horizontalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
+        protected Dictionary<Color, GLBrush>            solidGradientCache      = new Dictionary<Color, GLBrush>();
+
+        public float FontScaling   => fontScaling;
         public float WindowScaling => windowScaling;
         public int DashTextureSize => dashedBitmap.Size.Width;
         public GLTransform Transform => transform;
 
-        protected const int MaxAtlasResolution = 1024;
+        protected const int MaxAtlasResolution = 512;
         protected const int MaxVertexCount = 64 * 1024;
         protected const int MaxTexCoordCount = 64 * 1024;
         protected const int MaxColorCount = 64 * 1024;
@@ -42,9 +69,14 @@ namespace FamiStudio
         protected List<int[]>   freeColArrays = new List<int[]>();
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
-        protected GLGraphicsBase()
+        protected abstract int CreateEmptyTexture(int width, int height, bool filter = false);
+        protected abstract int CreateTexture(Bitmap bmp);
+        public abstract void DrawCommandList(GLCommandList list, Rectangle scissor);
+
+        protected GLGraphicsBase(float mainScale, float fontScale)
         {
-            windowScaling = GLTheme.MainWindowScaling;
+            windowScaling = mainScale;
+            fontScaling   = fontScale;
 
             // Quad index buffer.
             // TODO : On PC, we have GL_QUADS, we could get rid of this.
@@ -63,9 +95,6 @@ namespace FamiStudio
                 quadIdxArray[j++] = i3;
             }
         }
-
-        protected abstract int CreateEmptyTexture(int width, int height);
-        protected abstract int CreateTexture(Bitmap bmp);
 
         public virtual void BeginDrawFrame()
         {
@@ -86,6 +115,16 @@ namespace FamiStudio
 
         public virtual void EndDrawControl()
         {
+        }
+
+        public void DrawCommandList(GLCommandList list)
+        {
+            DrawCommandList(list, Rectangle.Empty);
+        }
+
+        public virtual GLCommandList CreateCommandList()
+        {
+            return new GLCommandList(this, dashedBitmap.Size.Width, true, maxSmoothLineWidth);
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc)
@@ -128,31 +167,68 @@ namespace FamiStudio
 
         public GLBrush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
         {
-            Color color2 = Color.FromArgb(
-                Utils.Clamp((int)(color.A * alphaDimming), 0, 255),
-                Utils.Clamp((int)(color.R * dimming), 0, 255),
-                Utils.Clamp((int)(color.G * dimming), 0, 255),
-                Utils.Clamp((int)(color.B * dimming), 0, 255));
+            if (dimming != 1.0f || alphaDimming != 1.0f)
+            {
+                color = Color.FromArgb(
+                    (int)(color.A * alphaDimming),
+                    (int)(color.R * dimming),
+                    (int)(color.G * dimming),
+                    (int)(color.B * dimming));
+            }
 
-            return new GLBrush(color2);
-        }
-
-        public GLBrush GetVerticalGradientBrush(Color color1, int sizeY, float dimming)
-        {
-            var key = new Tuple<Color, int>(color1, sizeY);
-
-            GLBrush brush;
-            if (verticalGradientCache.TryGetValue(key, out brush))
+            if (solidGradientCache.TryGetValue(color, out var brush))
                 return brush;
 
-            Color color2 = Color.FromArgb(
-                Utils.Clamp((int)(color1.A), 0, 255),
-                Utils.Clamp((int)(color1.R * dimming), 0, 255),
-                Utils.Clamp((int)(color1.G * dimming), 0, 255),
-                Utils.Clamp((int)(color1.B * dimming), 0, 255));
+            brush = new GLBrush(color);
+            solidGradientCache[color] = brush;
 
-            brush = CreateVerticalGradientBrush(0, sizeY, color1, color2);
+            return brush;
+        }
+
+        public GLBrush GetVerticalGradientBrush(Color color0, int sizeY, float dimming)
+        {
+            Color color1 = Color.FromArgb(
+                (int)(color0.A),
+                (int)(color0.R * dimming),
+                (int)(color0.G * dimming),
+                (int)(color0.B * dimming));
+
+            return GetVerticalGradientBrush(color0, color1, sizeY);
+        }
+
+        public GLBrush GetVerticalGradientBrush(Color color0, Color color1, int sizeY)
+        {
+            var key = new GradientCacheKey() { color0 = color0, color1 = color1, size = sizeY };
+
+            if (verticalGradientCache.TryGetValue(key, out var brush))
+                return brush;
+
+            brush = CreateVerticalGradientBrush(0, sizeY, color0, color1);
             verticalGradientCache[key] = brush;
+
+            return brush;
+        }
+
+        public GLBrush GetHorizontalGradientBrush(Color color0, int sizeY, float dimming)
+        {
+            Color color1 = Color.FromArgb(
+                (int)(color0.A),
+                (int)(color0.R * dimming),
+                (int)(color0.G * dimming),
+                (int)(color0.B * dimming));
+
+            return GetHorizontalGradientBrush(color0, color1, sizeY);
+        }
+
+        public GLBrush GetHorizontalGradientBrush(Color color0, Color color1, int sizeY)
+        {
+            var key = new GradientCacheKey() { color0 = color0, color1 = color1, size = sizeY };
+
+            if (horizontalGradientCache.TryGetValue(key, out var brush))
+                return brush;
+
+            brush = CreateHorizontalGradientBrush(0, sizeY, color0, color1);
+            horizontalGradientCache[key] = brush;
 
             return brush;
         }
@@ -171,12 +247,32 @@ namespace FamiStudio
             return default(T);
         }
 
-        public GLFont CreateFont(Bitmap bmp, string[] def, int size, int alignment, bool ellipsis, int existingTexture = -1)
+        public GLFont CreateScaledFont(GLFont source, int desiredHeight)
         {
+            return null;
+        }
+
+        public GLFont CreateFontFromResource(string name, bool bold, int size)
+        {
+            var suffix   = bold ? "Bold" : "";
+            var basename = $"{name}{size}{suffix}";
+            var fntfile  = $"FamiStudio.Resources.{basename}.fnt";
+            var imgfile  = $"FamiStudio.Resources.{basename}_0.png";
+
+            var str = "";
+            using (Stream stream = typeof(GLGraphicsBase).Assembly.GetManifestResourceStream(fntfile))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                str = reader.ReadToEnd();
+            }
+
+            var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var bmp = PlatformUtils.LoadBitmapFromResource(imgfile);
+
             var font = (GLFont)null;
-            var lines = def;
 
             int baseValue = 0;
+            int lineHeight = 0;
             int texSizeX = 256;
             int texSizeY = 256;
 
@@ -189,14 +285,10 @@ namespace FamiStudio
                     case "common":
                         {
                             baseValue = ReadFontParam<int>(splits, "base");
+                            lineHeight = ReadFontParam<int>(splits, "lineHeight");
                             texSizeX = ReadFontParam<int>(splits, "scaleW");
                             texSizeY = ReadFontParam<int>(splits, "scaleH");
-
-                            int glTex = existingTexture;
-                            if (glTex == 0)
-                                glTex = CreateTexture(bmp);
-
-                            font = new GLFont(glTex, size - baseValue, alignment, ellipsis);
+                            font = new GLFont(CreateTexture(bmp), size, baseValue, lineHeight);
                             break;
                         }
                     case "char":
@@ -318,23 +410,33 @@ namespace FamiStudio
         Dictionary<char, CharInfo> charMap = new Dictionary<char, CharInfo>();
         Dictionary<int, int> kerningPairs = new Dictionary<int, int>();
 
-        public int Texture { get; private set; }
-        public int OffsetY { get; private set; }
-        public int Alignment { get; private set; }
-        public bool Ellipsis { get; private set; }
+        private int texture;
+        private int size;
+        private int baseValue;
+        private int lineHeight;
 
-        public GLFont(int tex, int offsetY, int alignment, bool ellipsis)
+        public int Texture    => texture;
+        public int Size       => size;
+        public int LineHeight => lineHeight;
+        public int OffsetY    => size - baseValue;
+
+        public GLFont(int tex, int sz, int b, int l)
         {
-            Texture = tex;
-            OffsetY = offsetY;
-            Alignment = alignment;
-            Ellipsis = ellipsis;
+            texture = tex;
+            size = sz;
+            baseValue = b;
+            lineHeight = l;
         }
 
         public void Dispose()
         {
+#if FAMISTUDIO_ANDROID
+            var id = new[] { Texture };
+            GLES11.GlDeleteTextures(1, id, 0);
+#else
             GL.DeleteTexture(Texture);
-            Texture = -1;
+#endif
+            texture = -1;
         }
 
         public void AddChar(char c, CharInfo info)
@@ -365,6 +467,35 @@ namespace FamiStudio
             return kerningPairs.TryGetValue(key, out int amount) ? amount : 0;
         }
 
+        public bool TruncateString(ref string text, int maxSizeX)
+        {
+            int x = 0;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c0 = text[i];
+                var info = GetCharInfo(c0);
+
+                int x0 = x + info.xoffset;
+                int x1 = x0 + info.width;
+
+                if (x1 >= maxSizeX)
+                {
+                    text = text.Substring(0, i);
+                    return true;
+                }
+
+                x += info.xadvance;
+                if (i != text.Length - 1)
+                {
+                    char c1 = text[i + 1];
+                    x += GetKerning(c0, c1);
+                }
+            }
+
+            return false;
+        }
+
         public void MeasureString(string text, out int minX, out int maxX)
         {
             minX = 0;
@@ -390,6 +521,12 @@ namespace FamiStudio
                     x += GetKerning(c0, c1);
                 }
             }
+        }
+
+        public int MeasureString(string text)
+        {
+            MeasureString(text, out var minX, out var maxX);
+            return maxX - minX;
         }
     }
 
@@ -475,7 +612,7 @@ namespace FamiStudio
             GradientSizeY = sizeY;
         }
 
-        public bool IsGradient => GradientSizeX > 0 || GradientSizeY > 0;
+        public bool IsGradient => GradientSizeX != 0 || GradientSizeY != 0;
 
         public void Dispose()
         {
@@ -501,7 +638,14 @@ namespace FamiStudio
         public void Dispose()
         {
             if (dispose)
+            {
+#if FAMISTUDIO_ANDROID
+                var idArray = new[] { id };
+                GLES11.GlDeleteTextures(1, idArray, 0);
+#else
                 GL.DeleteTexture(id);
+#endif
+            }
             id = -1;
         }
 
@@ -527,6 +671,7 @@ namespace FamiStudio
         {
             var rect = elementRects[elementIndex];
 
+            // DROIDTODO : +0.5?
             u0 = rect.Left   / (float)size.Width;
             u1 = rect.Right  / (float)size.Width;
             v0 = rect.Top    / (float)size.Height;
@@ -599,6 +744,43 @@ namespace FamiStudio
             width  *= transform.X;
             height *= transform.Y;
         }
+
+        public void GetOrigin(out float x, out float y)
+        {
+            x = 0;
+            y = 0;
+            TransformPoint(ref x, ref y);
+        }
+    }
+
+    [Flags]
+    public enum RenderTextFlags
+    {
+        None = 0,
+
+        HorizontalAlignMask = 0x3,
+        VerticalAlignMask   = 0xc,
+
+        Left   = 0 << 0,
+        Center = 1 << 0,
+        Right  = 2 << 0,
+
+        Top    = 0 << 2,
+        Middle = 1 << 2,
+        Bottom = 2 << 2,
+
+        TopLeft      = Top    | Left,
+        TopCenter    = Top    | Center,
+        TopRight     = Top    | Right,
+        MiddleLeft   = Middle | Left,
+        MiddleCenter = Middle | Center,
+        MiddleRight  = Middle | Right,
+        BottomLeft   = Bottom | Left,
+        BottomCenter = Bottom | Center,
+        BottomRight  = Bottom | Right,
+
+        Clip     = 1 << 7,
+        Ellipsis = 1 << 8
     }
 
     // This is common to both OGL, it only does data packing, no GL calls.
@@ -631,11 +813,9 @@ namespace FamiStudio
 
         private class TextInstance
         {
-            public float x;
-            public float y;
-            public float width;
+            public RectangleF rect;
+            public RenderTextFlags flags;
             public string text;
-            public bool clip;
             public GLBrush brush;
         };
 
@@ -650,6 +830,7 @@ namespace FamiStudio
             public float u1;
             public float v1;
             public float opacity;
+            public Color tint;
             public bool rotated;
         }
 
@@ -697,6 +878,7 @@ namespace FamiStudio
         public bool HasAnyTickLineMeshes => false;
 #endif
 
+        private int maxSmoothLineWidth = int.MaxValue;
         private float invDashTextureSize;
         private MeshBatch meshBatch;
         private MeshBatch meshSmoothBatch;
@@ -705,9 +887,11 @@ namespace FamiStudio
         private Dictionary<GLFont,   List<TextInstance>>   texts   = new Dictionary<GLFont,   List<TextInstance>>();
         private Dictionary<GLBitmap, List<BitmapInstance>> bitmaps = new Dictionary<GLBitmap, List<BitmapInstance>>();
 
-        private GLGraphics  graphics;
+        private GLGraphicsBase graphics;
         private GLTransform xform;
-        public  GLTransform Transform => xform;
+
+        public GLTransform Transform => xform;
+        public GLGraphicsBase Graphics => graphics;
 
         public bool HasAnyMeshes  => meshBatch != null || meshSmoothBatch != null;
         public bool HasAnyLines   => lineBatches.Count > 0;
@@ -715,11 +899,12 @@ namespace FamiStudio
         public bool HasAnyBitmaps => bitmaps.Count > 0;
         public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps || HasAnyTickLineMeshes;
 
-        public GLCommandList(GLGraphics g, int dashTextureSize, bool supportsLineWidth = true)
+        public GLCommandList(GLGraphicsBase g, int dashTextureSize, bool supportsLineWidth = true, int maxSmoothWidth = int.MaxValue)
         {
             graphics = g;
             xform = g.Transform;
             invDashTextureSize = 1.0f / dashTextureSize;
+            maxSmoothLineWidth = maxSmoothWidth;
 #if FAMISTUDIO_LINUX
             drawThickLineAsPolygon = !supportsLineWidth;
 #endif
@@ -974,19 +1159,42 @@ namespace FamiStudio
             }
         }
 
+        public void DrawRectangle(Rectangle rect, GLBrush brush, float width = 1.0f, bool smooth = false)
+        {
+            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
+        }
+
         public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool smooth = false)
         {
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            DrawLineInternal(x0, y0, x1, y0, brush, width, smooth, false);
-            DrawLineInternal(x1, y0, x1, y1, brush, width, smooth, false);
-            DrawLineInternal(x1, y1, x0, y1, brush, width, smooth, false);
-            DrawLineInternal(x0, y1, x0, y0, brush, width, smooth, false);
+            var halfWidth = 0.0f;
+
+#if FAMISTUDIO_ANDROID
+            if (width > maxSmoothLineWidth)
+            {
+                smooth = false;
+                halfWidth = width * 0.5f;
+            }
+#endif
+
+            DrawLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, brush, width, smooth, false);
+            DrawLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, brush, width, smooth, false);
+            DrawLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, brush, width, smooth, false);
+            DrawLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, brush, width, smooth, false);
         }
 
         public void DrawGeometry(GLGeometry geo, GLBrush brush, float width, bool smooth = false, bool miter = false)
         {
+#if FAMISTUDIO_ANDROID
+            if (width > maxSmoothLineWidth)
+            {
+                smooth = false;
+                miter = true;
+            }
+#endif
+
             var points = miter ? geo.GetMiterPoints(width) : geo.Points;
 
             var x0 = points[0];
@@ -1021,10 +1229,9 @@ namespace FamiStudio
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
-            bool fullHorizontalGradient = brush.IsGradient && brush.GradientSizeX == (x1 - x0);
-            bool fullVerticalGradient   = brush.IsGradient && brush.GradientSizeY == (y1 - y0);
+            bool fullHorizontalGradient = brush.IsGradient && Math.Abs(brush.GradientSizeX) >= Math.Abs(x1 - x0);
+            bool fullVerticalGradient   = brush.IsGradient && Math.Abs(brush.GradientSizeY) >= Math.Abs(y1 - y0);
 
-            // MATTT : Make sure this doesnt add any overhead!
             if (!brush.IsGradient || fullHorizontalGradient || fullVerticalGradient)
             {
                 var i0 = (short)(batch.vtxIdx / 2 + 0);
@@ -1152,6 +1359,11 @@ namespace FamiStudio
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
+        public void FillRectangle(Rectangle rect, GLBrush brush)
+        {
+            FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
+        }
+
         public void FillRectangle(RectangleF rect, GLBrush brush)
         {
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
@@ -1163,6 +1375,12 @@ namespace FamiStudio
             DrawRectangle(x0, y0, x1, y1, lineBrush, width, smooth);
         }
 
+        public void FillAndDrawRectangle(Rectangle rect, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool smooth = false)
+        {
+            FillRectangle(rect, fillBrush);
+            DrawRectangle(rect, lineBrush, width, smooth);
+        }
+
         public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)
         {
             var batch = GetMeshBatch(smooth);
@@ -1170,7 +1388,8 @@ namespace FamiStudio
 
             if (!brush.IsGradient)
             {
-                for (int i = 0; i < geo.Points.Length; i += 2)
+                // All our geometries are closed, so no need for the last vert.
+                for (int i = 0; i < geo.Points.Length - 2; i += 2)
                 {
                     float x = geo.Points[i + 0];
                     float y = geo.Points[i + 1];
@@ -1186,6 +1405,7 @@ namespace FamiStudio
             {
                 Debug.Assert(brush.GradientSizeX == 0.0f);
 
+                // All our geometries are closed, so no need for the last vert.
                 for (int i = 0; i < geo.Points.Length; i += 2)
                 {
                     float x = geo.Points[i + 0];
@@ -1205,8 +1425,8 @@ namespace FamiStudio
                 }
             }
 
-            // Simple fan.
-            var numVertices = geo.Points.Length / 2;
+            // Simple fan
+            var numVertices = geo.Points.Length / 2 - 1;
             for (int i = 0; i < numVertices - 2; i++)
             {
                 batch.idxArray[batch.idxIdx++] = i0;
@@ -1271,8 +1491,13 @@ namespace FamiStudio
             }
         }
 
-        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, float width = 1000, bool clip = false)
+        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, RenderTextFlags flags = RenderTextFlags.None, float width = 0, float height = 0)
         {
+            Debug.Assert(!flags.HasFlag(RenderTextFlags.Clip) || !flags.HasFlag(RenderTextFlags.Ellipsis));
+            Debug.Assert(!flags.HasFlag(RenderTextFlags.Ellipsis) || width > 0);
+            Debug.Assert((flags & RenderTextFlags.HorizontalAlignMask) == RenderTextFlags.Left || width  > 0);
+            Debug.Assert((flags & RenderTextFlags.VerticalAlignMask)   == RenderTextFlags.Top  || height > 0);
+
             if (!texts.TryGetValue(font, out var list))
             {
                 list = new List<TextInstance>();
@@ -1282,30 +1507,31 @@ namespace FamiStudio
             xform.TransformPoint(ref x, ref y);
 
             var inst = new TextInstance();
-            inst.x = x;
-            inst.y = y;
+            inst.rect = new RectangleF(x, y, width, height);
+            inst.flags = flags;
             inst.text = text;
             inst.brush = brush;
-            inst.width = width;
-            inst.clip = clip;
 
             list.Add(inst);
         }
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
         {
+            Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
         }
 
-        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f)
+        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
+            Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             atlas.GetElementUVs(bitmapIndex, out var u0, out var v0, out var u1, out var v1);
             var elementSize = atlas.GetElementSize(bitmapIndex);
-            DrawBitmap(atlas, x, y, elementSize.Width, elementSize.Height, opacity, u0, v0, u1, v1);
+            DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, false, tint);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false)
+        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = new Color())
         {
+            Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             if (!bitmaps.TryGetValue(bmp, out var list))
             {
                 list = new List<BitmapInstance>();
@@ -1320,10 +1546,26 @@ namespace FamiStudio
             inst.y = y;
             inst.sx = width;
             inst.sy = height;
-            inst.u0 = u0;
-            inst.v0 = v0;
-            inst.u1 = u1;
-            inst.v1 = v1;
+            inst.tint = tint;
+
+            if (PlatformUtils.IsMobile) 
+            {
+                var halfPixelX = 0.5f / bmp.Size.Width;
+                var halfPixelY = 0.5f / bmp.Size.Height;
+
+                inst.u0 = u0 + halfPixelX;
+                inst.v0 = v0 + halfPixelY;
+                inst.u1 = u1 - halfPixelX;
+                inst.v1 = v1 - halfPixelY;
+            }
+            else
+            {
+                inst.u0 = u0;
+                inst.v0 = v0;
+                inst.u1 = u1;
+                inst.v1 = v1;
+            }
+
             inst.opacity = opacity;
             inst.rotated = rotated;
 
@@ -1428,34 +1670,66 @@ namespace FamiStudio
 
                 foreach (var inst in list)
                 {
-                    int alignmentOffsetX = 0;
-                    if (font.Alignment != 0)
-                    {
-                        font.MeasureString(inst.text, out int minX, out int maxX);
+                    var alignmentOffsetX = 0;
+                    var alignmentOffsetY = font.OffsetY;
 
-                        if (font.Alignment == 1)
+                    if (inst.flags.HasFlag(RenderTextFlags.Ellipsis))
+                    {
+                        font.MeasureString("...", out var dotsMinX, out var dotsMaxX);
+                        var ellipsisSizeX = (dotsMaxX - dotsMinX) * 2; // Leave some padding.
+                        if (font.TruncateString(ref inst.text, (int)(inst.rect.Width - ellipsisSizeX)))
+                            inst.text += "...";
+                    }
+
+                    if (inst.flags != RenderTextFlags.TopLeft)
+                    {
+                        font.MeasureString(inst.text, out var minX, out var maxX);
+
+                        var halign = inst.flags & RenderTextFlags.HorizontalAlignMask;
+                        var valign = inst.flags & RenderTextFlags.VerticalAlignMask;
+
+                        if (halign == RenderTextFlags.Center)
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.width - maxX - minX) / 2;
+                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX) / 2;
                         }
-                        else
+                        else if (halign == RenderTextFlags.Right)
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.width - maxX - minX);
+                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX);
+                        }
+
+                        if (valign != RenderTextFlags.Top)
+                        {
+                            // Use a tall character with no descender as reference.
+                            var charA = font.GetCharInfo('A');
+
+                            // When aligning middle or center, ignore the y offset since it just
+                            // adds extra padding and messes up calculations.
+                            alignmentOffsetY = -charA.yoffset;
+
+                            if (valign == RenderTextFlags.Middle)
+                            {
+                                alignmentOffsetY += ((int)inst.rect.Height - charA.height + 1) / 2;
+                            }
+                            else if (valign == RenderTextFlags.Bottom)
+                            {
+                                alignmentOffsetY += ((int)inst.rect.Height - charA.height);
+                            }
                         }
                     }
 
                     var packedColor = inst.brush.PackedColor0;
                     var numVertices = inst.text.Length * 4;
 
-                    int x = (int)(inst.x + alignmentOffsetX);
-                    int y = (int)(inst.y + font.OffsetY);
+                    int x = (int)(inst.rect.X + alignmentOffsetX);
+                    int y = (int)(inst.rect.Y + alignmentOffsetY);
 
                     // Slow path when there is clipping.
-                    if (inst.clip)
+                    if (inst.flags.HasFlag(RenderTextFlags.Clip))
                     {
-                        var clipMinX = (int)(inst.x);
-                        var clipMaxX = (int)(inst.x + inst.width);
+                        var clipMinX = (int)(inst.rect.X);
+                        var clipMaxX = (int)(inst.rect.X + inst.rect.Width);
 
                         for (int i = 0; i < inst.text.Length; i++)
                         {
@@ -1612,10 +1886,11 @@ namespace FamiStudio
 
                 foreach (var inst in list)
                 {
-                    float x0 = inst.x;
-                    float y0 = inst.y;
-                    float x1 = inst.x + inst.sx;
-                    float y1 = inst.y + inst.sy;
+                    var x0 = inst.x;
+                    var y0 = inst.y;
+                    var x1 = inst.x + inst.sx;
+                    var y1 = inst.y + inst.sy;
+                    var tint = inst.tint != Color.Empty ? inst.tint : Color.White;
 
                     vtxArray[vtxIdx++] = x0;
                     vtxArray[vtxIdx++] = y0;
@@ -1649,7 +1924,7 @@ namespace FamiStudio
                         texArray[texIdx++] = inst.v1;
                     }
 
-                    var packedOpacity = GLColorUtils.PackColor(255, 255, 255, (int)(inst.opacity * 255));
+                    var packedOpacity = GLColorUtils.PackColor(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)); 
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;

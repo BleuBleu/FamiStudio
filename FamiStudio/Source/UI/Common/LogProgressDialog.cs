@@ -4,6 +4,29 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if FAMISTUDIO_ANDROID
+    class LogProgressDialog : ILogOutput
+    {
+        public unsafe LogProgressDialog(FamiStudioForm parentForm)
+        {
+        }
+
+        public void LogMessage(string msg)
+        {
+        }
+
+        public void ReportProgress(float progress)
+        {
+        }
+
+        public void StayModalUntilClosed()
+        {
+        }
+
+        public bool HasMessages => false;
+        public bool AbortOperation => false;
+    }
+#else
     class LogProgressDialog : ILogOutput
     {
         private PropertyDialog dialog;
@@ -14,8 +37,8 @@ namespace FamiStudio
         {
             this.parentForm = parentForm;
 
-            dialog = new PropertyDialog(800, false);
-            dialog.Properties.AddMultilineString(null, ""); // 0
+            dialog = new PropertyDialog("Log", 800, false);
+            dialog.Properties.AddMultilineTextBox(null, ""); // 0
             dialog.Properties.AddProgressBar(null, 0.0f); // 1
             dialog.Properties.Build();
         }
@@ -53,4 +76,5 @@ namespace FamiStudio
         public bool HasMessages => hasMessages;
         public bool AbortOperation => dialog.DialogResult != DialogResult.None;
     }
+#endif
 }

@@ -20,6 +20,8 @@ namespace FamiStudio
         static extern bool FcConfigAppFontAddFile1(System.IntPtr config, string fontPath);
 #endif
 
+        public static string ApplicationVersion => System.Windows.Forms.Application.ProductVersion;
+
         public static void Initialize()
         {
             // When debugging or when in a app package, our paths are a bit different.
@@ -324,6 +326,23 @@ namespace FamiStudio
         {
             return Gdk.Pixbuf.LoadFromResource(name);
         }
+
+        public static float GetDesktopScaling()
+        {
+            return (float)Gdk.Display.Default.DefaultScreen.Resolution / 96.0f;
+        }
+
+        public const bool IsMobile  = false;
+        public const bool IsAndroid = false;
+        public const bool IsDesktop = true;
+        public const bool IsWindows = false;
+#if FAMISTUDIO_LINUX
+        public const bool IsLinux   = true;
+        public const bool IsMacOS   = false;
+#else
+        public const bool IsLinux   = false;
+        public const bool IsMacOS   = true;
+#endif
     }
 }
 

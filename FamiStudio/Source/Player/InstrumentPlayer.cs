@@ -95,7 +95,7 @@ namespace FamiStudio
 
         unsafe void PlayerThread(object o)
         {
-#if DEBUG
+#if !DEBUG
             try
             {
 #endif
@@ -185,7 +185,7 @@ namespace FamiStudio
                 audioStream.Stop();
                 while (sampleQueue.TryDequeue(out _)) ;
 
-#if DEBUG
+#if !DEBUG
             }
             catch (Exception e)
             {

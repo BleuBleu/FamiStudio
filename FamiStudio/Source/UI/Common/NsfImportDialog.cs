@@ -4,6 +4,7 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class NsfImportDialog
     {
         private PropertyDialog dialog;
@@ -17,11 +18,11 @@ namespace FamiStudio
 
             if (songNames != null && songNames.Length > 0)
             {
-                dialog = new PropertyDialog(350);
+                dialog = new PropertyDialog("NSF Import", 350);
                 dialog.Properties.AddDropDownList("Song:", songNames, songNames[0]);  // 0
-                dialog.Properties.AddIntegerRange("Duration (s):", 120, 1, 600);    // 1
-                dialog.Properties.AddIntegerRange("Pattern Length:", 256, 4, 256);  // 2
-                dialog.Properties.AddIntegerRange("Start frame:", 0, 0, 256);       // 3
+                dialog.Properties.AddNumericUpDown("Duration (s):", 120, 1, 600);    // 1
+                dialog.Properties.AddNumericUpDown("Pattern Length:", 256, 4, 256);  // 2
+                dialog.Properties.AddNumericUpDown("Start frame:", 0, 0, 256);       // 3
                 dialog.Properties.AddCheckBox("Remove intro silence:", true);        // 4
                 dialog.Properties.AddCheckBox("Reverse DPCM bits:", false);          // 5
                 dialog.Properties.AddCheckBox("Preserve DPCM padding byte:", false); // 6
@@ -49,4 +50,5 @@ namespace FamiStudio
         public bool ReverseDpcmBits => dialog.Properties.GetPropertyValue<bool>(5);
         public bool PreserveDpcmPadding => dialog.Properties.GetPropertyValue<bool>(6);
     }
+#endif
 }
