@@ -31,7 +31,7 @@ I'm hesitant to take unsolicited pull requests. If you want to contribute a feat
 ## Platforms, Feature Parity & Testing
 Assuming we agree on a feature to be developed, I expect:
 - All features needs to be implemented and tested on all 3 platforms (Windows, MacOS and Linux). 
-- Testing must include Hi-DPI scaling on Windows (150% and 200%) as well as Retina display on MacOS as these have been know to break often.
+- Testing must include Hi-DPI scaling on Windows/Linux (150% and 200%) as well as Retina display on MacOS as these have been know to break often.
 - Any feature that impacts the music needs to be integrated to all import/export format (FamiTracker, NSF, FTI, etc.)
 - Any new feature needs to be added to the NSF driver needs to be toggeable if it has a cost (RAM or CPU cycles).
 - New features need to be integrated with any of the 3 unit tests that applies (Sound engine code similarity, NSF import/export and sound emulation tests).
