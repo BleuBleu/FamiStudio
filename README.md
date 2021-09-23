@@ -35,6 +35,7 @@ Assuming we agree on a feature to be developed, I expect:
 - Any feature that impacts the music needs to be integrated to all import/export format (FamiTracker, NSF, FTI, etc.)
 - Any new feature needs to be added to the NSF driver needs to be toggeable if it has a cost (RAM or CPU cycles).
 - New features need to be integrated with any of the 3 unit tests that applies (Sound engine code similarity, NSF import/export and sound emulation tests).
+- Documentation needs to be updated as well.
 
 ## Contact
 Please open issues contact me if you find bugs or have feature suggestion ideas. 
