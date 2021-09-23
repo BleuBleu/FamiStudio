@@ -77,6 +77,21 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 				PSG_setMask(psg, psg->mask | (1 << idx));
 		}
 	}
+	if (idx < 9 && idx > 2)
+	{
+		if (enabled)
+		maskFm = maskFm | (1 << (idx-3));
+		else
+		maskFm = maskFm & ~(1 << (idx-3));
+	}
+	if (idx > 8)
+	{
+		//std::cout << "enabled: " << enabled << " index" << (idx - 9) << std::endl;
+		if (enabled)
+			maskRythm = maskRythm | (1 << (idx-9));
+		else
+			maskRythm = maskRythm & ~(1 << (idx-9));
+	}
 }
 
 void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
@@ -87,12 +102,36 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			if((addr == 0xE000) && (reg < 0x10)){
 			}
 	}
+	int mask = 0;
+	switch(addr) {
+		case 0xC000:
+		case 0xC002:
+			currentRegister = data;
+			break;
+		case 0xE000:
+		case 0xE002:
+			if (currentRegister == 0x10) {
+				data = data & maskRythm;
+			}
+				//currentRegister = data;
+			else if (currentRegister == 0x28) {
+				if(!(maskFm & 0x1) && ((data & 0x7)) == 0){ mask = 1; }
+				else if (!(maskFm & 0x2) && ((data & 0x7)) == 1) { mask = 1; }
+				else if (!(maskFm & 0x4) && ((data & 0x7)) == 2) { mask = 1; }
+				else if (!(maskFm & 0x8) && ((data & 0x7)) == 4) { mask = 1; }
+				else if (!(maskFm & 0x10) && ((data & 0x7)) == 5) { mask = 1; }
+				else if (!(maskFm & 0x20) && ((data & 0x7)) == 6) { mask = 1; }
+				//std::cout << "fm" << std::endl;
+			}
+			break;
+	}
+
 
 	a0 = (addr & 0xF000) == 0xE000; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
 	a1 = !!(addr & 0xF); //const uint8_t a1 = !!(addr & 0xF);
 	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
-	dataWrite.push(data);
-	aWrite.push((a0 | (a1 << 1)));
+	if (!mask) dataWrite.push(data);
+	if (!mask) aWrite.push((a0 | (a1 << 1)));
 
 }
 

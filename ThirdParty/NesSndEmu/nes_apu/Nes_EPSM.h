@@ -48,6 +48,9 @@ private:
 	int reg;
 	uint8_t a0;
 	uint8_t a1;
+	uint8_t currentRegister;
+	uint8_t maskFm = 0;
+	uint8_t maskRythm = 0;
 	double vol;
 	struct __PSG* psg;
 	ym3438_t opn2;
