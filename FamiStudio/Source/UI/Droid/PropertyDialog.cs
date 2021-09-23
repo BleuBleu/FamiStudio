@@ -58,6 +58,10 @@ namespace FamiStudio
 
         const int ApplyItemId = 321;
 
+        public PropertyDialogActivity()
+        {
+        }
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);

@@ -134,6 +134,7 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
+#if FALSE
             var filename = Path.Combine(Path.GetTempPath(), "Silius.fms");
 
             using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Silius.fms"))
@@ -142,6 +143,9 @@ namespace FamiStudio
                 s.Read(buffer, 0, (int)s.Length);
                 File.WriteAllBytes(filename, buffer);
             }
+#else
+            var filename = (string)null;
+#endif
 
             Instance = this;
             famistudio = new FamiStudio();

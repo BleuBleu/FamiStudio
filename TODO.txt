@@ -161,6 +161,7 @@ Testing
 - Add multi-exp unit test.
 - Test project/instrument merge (with expansions).
 - Retest with various scaling (lots of cahnges to everything, zooming, etc.)
+- Test without snapping, i tested snapping a lot, but not witout.
 
 Videos:
 =======

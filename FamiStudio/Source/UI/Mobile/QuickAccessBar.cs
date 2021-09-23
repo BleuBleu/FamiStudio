@@ -492,7 +492,7 @@ namespace FamiStudio
                 var item = new ListItem();
                 item.Color = Theme.LightGreyFillColor1;
                 item.ImageIndex = (int)ButtonImageIndices.MobileSnapOn;
-                item.Text = $"Snap to {SnapResolutionType.Names[i]} Beats";
+                item.Text = $"Snap to {SnapResolutionType.Names[i]} Beat{(SnapResolutionType.Factors[i] > 1.0 ? "s" : "")}";
                 items[i] = item;
             }
 

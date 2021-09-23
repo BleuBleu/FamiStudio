@@ -95,6 +95,10 @@ namespace FamiStudio
 
         private int selectedTabIndex = -1; // -1 means in the tab page.
 
+        public MultiPropertyDialogActivity()
+        {
+        }
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
