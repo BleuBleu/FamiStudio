@@ -1776,7 +1776,7 @@ namespace FamiStudio
             "Nintendo MMC5",
             "Namco 163",
             "Sunsoft 5B",
-            "EPSM"
+            "EPSM (Experimental)"
         };
 
         public static readonly string[] ShortNames =
@@ -1788,7 +1788,7 @@ namespace FamiStudio
             "MMC5",
             "N163",
             "S5B",
-            "EPSM"
+            "EPSM (Experimental)"
         };
 
         public static int GetValueForName(string str)
