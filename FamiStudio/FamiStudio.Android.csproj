@@ -519,13 +519,6 @@
     <EmbeddedResource Include="Resources\Sequencer%402x.png" />
     <EmbeddedResource Include="Resources\Slide%402x.png" />
     <EmbeddedResource Include="Resources\Snap%402x.png" />
-    <EmbeddedResource Include="Resources\Snap1%402x.png" />
-    <EmbeddedResource Include="Resources\Snap1_2%402x.png" />
-    <EmbeddedResource Include="Resources\Snap1_3%402x.png" />
-    <EmbeddedResource Include="Resources\Snap1_4%402x.png" />
-    <EmbeddedResource Include="Resources\Snap2%402x.png" />
-    <EmbeddedResource Include="Resources\Snap3%402x.png" />
-    <EmbeddedResource Include="Resources\Snap4%402x.png" />
     <EmbeddedResource Include="Resources\Stop%402x.png" />
     <EmbeddedResource Include="Resources\ToolAdd%404x.png" />
     <EmbeddedResource Include="Resources\ToolDelete%404x.png" />

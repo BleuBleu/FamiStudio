@@ -143,7 +143,6 @@ namespace FamiStudio
         RenderBrush invalidDpcmMappingBrush;
         RenderBrush volumeSlideBarFillBrush;
         RenderBitmapAtlas bmpMiscAtlas;
-        RenderBitmapAtlas bmpSnapResolutionAtlas;
         RenderBitmapAtlas bmpEffectAtlas;
         //RenderBitmapAtlas bmpEffectFillAtlas;
         RenderGeometry[] stopNoteGeometry        = new RenderGeometry[2]; // [1] is used to draw arps.
@@ -331,7 +330,7 @@ namespace FamiStudio
         bool showSelection = false; // DROIDTODO : Must always be true on mobile.
         bool showEffectsPanel = false;
         bool snap = true;
-        int snapResolution = SnapResolutionType.OneNote;
+        int snapResolution = SnapResolutionType.OneBeat;
         int scrollX = 0;
         int scrollY = 0;
         float flingVelX = 0.0f;
@@ -374,7 +373,7 @@ namespace FamiStudio
 
         public bool SnapAllowed    { get => editMode == EditionMode.Channel; }
         public bool SnapEnabled    { get => SnapAllowed && snap; set { if (SnapAllowed) snap = value; } }
-        public int  SnapResolution { get => snapResolution; set { snapResolution = value; ClampMinSnap(); } }
+        public int  SnapResolution { get => snapResolution; set => snapResolution = value; }
 
         public bool IsMaximized                => maximized;
         public bool IsEditingInstrument        => editMode == EditionMode.Enveloppe; 
@@ -478,7 +477,6 @@ namespace FamiStudio
             UpdateRenderCoords();
             CenterScroll(patternIdx);
             ClampScroll();
-            ClampMinSnap();
             MarkDirty();
         }
 
@@ -681,11 +679,6 @@ namespace FamiStudio
             }
         }
 
-        private void ClampMinSnap()
-        {
-            snapResolution = SnapResolutionType.Clamp(snapResolution, App.Project.UsesFamiTrackerTempo);
-        }
-
         private void SetMouseLastPos(int x, int y)
         {
             mouseLastX = x;
@@ -745,7 +738,6 @@ namespace FamiStudio
             noteTooltip = "";
             UpdateRenderCoords();
             ClampScroll();
-            ClampMinSnap();
             ClearSelection();
         }
 
@@ -775,7 +767,6 @@ namespace FamiStudio
             UpdateRenderCoords();
 
             Debug.Assert(MiscImageNames.Length == (int)MiscImageIndices.Count);
-            Debug.Assert(SnapResolutionType.ImageNames.Length == (int)SnapResolutionType.Max);
             Debug.Assert(EffectImageNames.Length == Note.EffectCount + 1);
 
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, whiteKeySizeX, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
@@ -795,7 +786,6 @@ namespace FamiStudio
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
             bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
-            bmpSnapResolutionAtlas = g.CreateBitmapAtlasFromResources(SnapResolutionType.ImageNames);
             bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
             //bmpEffectFillAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames, Theme.DarkGreyLineColor2);
             fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
@@ -843,7 +833,6 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref invalidDpcmMappingBrush);
             Utils.DisposeAndNullify(ref volumeSlideBarFillBrush);
             Utils.DisposeAndNullify(ref bmpMiscAtlas);
-            Utils.DisposeAndNullify(ref bmpSnapResolutionAtlas);
             Utils.DisposeAndNullify(ref bmpEffectAtlas);
             //Utils.DisposeAndNullify(ref bmpEffectFillAtlas);
             Utils.DisposeAndNullify(ref stopNoteGeometry[0]);
@@ -1177,16 +1166,22 @@ namespace FamiStudio
             // Effect icons
             if (editMode == EditionMode.Channel)
             {
-                var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
+                var toggleRect = GetToggleEffectPannelButtonRect();
+                r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, toggleRect.X, toggleRect.Y, 1.0f, bitmapScale, Theme.LightGreyFillColor1);
 
-                r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, effectIconPosX, effectIconPosY, 1.0f, bitmapScale, Theme.LightGreyFillColor1);
                 if (!PlatformUtils.IsMobile)
-                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1, headerIconsPosY, maximized ? 1.0f : 0.3f, 1.0f, Theme.LightGreyFillColor1);
+                {
+                    var maxRect = GetMaximizeButtonRect();
+                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, maxRect.X, maxRect.Y, maximized ? 1.0f : 0.3f, 1.0f, Theme.LightGreyFillColor1);
+                }
 
                 if (SnapAllowed && !PlatformUtils.IsMobile)
                 {
-                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Snap, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1, headerIconsPosY, SnapEnabled || App.IsRecording ? 1.0f : 0.3f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1);
-                    r.cc.DrawBitmapAtlas(bmpSnapResolutionAtlas, (int)snapResolution, whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 3 - 1, headerIconsPosY, SnapEnabled || App.IsRecording ? 1.0f : 0.3f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1);
+                    var snapBtnRect = GetSnapButtonRect();
+                    var snapResRect = GetSnapResolutionRect();
+
+                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Snap, snapBtnRect.X, snapBtnRect.Y, SnapEnabled || App.IsRecording ? 1.0f : 0.3f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1);
+                    r.cc.DrawText(SnapResolutionType.Names[snapResolution], ThemeResources.FontSmall, snapResRect.X, snapResRect.Y, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Right | RenderTextFlags.Middle, snapResRect.Width, snapResRect.Height);
                 }
 
                 if (showEffectsPanel)
@@ -4291,13 +4286,9 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((left || right) && IsPointOnSnapResolutionButton(e.X, e.Y))
+            if ((left || right) && IsPointOnSnapResolution(e.X, e.Y))
             {
-                if (left)
-                    snapResolution = SnapResolutionType.Clamp(snapResolution + 1, App.Project.UsesFamiTrackerTempo);
-                else
-                    snapResolution = SnapResolutionType.Clamp(snapResolution - 1, App.Project.UsesFamiTrackerTempo);
-
+                snapResolution = Utils.Clamp(snapResolution + (left ? 1 : -1), SnapResolutionType.Min, SnapResolutionType.Max);
                 MarkDirty();
                 return true;
             }
@@ -4331,7 +4322,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInTopLeftCorner(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointOnToggleEffectPannelButton(e.X, e.Y))
             {
                 ToggleEffectPannel();
                 return true;
@@ -5348,31 +5339,51 @@ namespace FamiStudio
             return (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && y < headerSizeY && x < whiteKeySizeX;
         }
 
-        private bool IsPointOnSnapResolutionButton(int x, int y)
+        private Rectangle GetToggleEffectPannelButtonRect()
+        {
+            var expandButtonSize = bmpMiscAtlas.GetElementSize((int)MiscImageIndices.EffectExpanded).Width;
+            return new Rectangle(effectIconPosX, effectIconPosY, expandButtonSize, expandButtonSize);
+        }
+
+        private Rectangle GetSnapButtonRect()
         {
             var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
-            var posX = whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 3 - 1;
-            return SnapAllowed &&
-                x > posX && x < posX + snapButtonSize &&
-                y > headerIconsPosY && y < headerIconsPosY + snapButtonSize;
+            var posX = whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1;
+            return new Rectangle(posX, headerIconsPosY, snapButtonSize, snapButtonSize);
+        }
+
+        private Rectangle GetMaximizeButtonRect()
+        {
+            var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
+            var posX = whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1;
+            return new Rectangle(posX, headerIconsPosY, snapButtonSize, snapButtonSize);
+        }
+
+        private Rectangle GetSnapResolutionRect()
+        {
+            var toggleRect = GetToggleEffectPannelButtonRect();
+            var snapRect   = GetSnapButtonRect();
+            return new Rectangle(toggleRect.Right, toggleRect.Top + 1, snapRect.Left - toggleRect.Right - (int)MainWindowScaling, snapRect.Height);
+        }
+
+        private bool IsPointOnToggleEffectPannelButton(int x, int y)
+        {
+            return GetToggleEffectPannelButtonRect().Contains(x, y);
         }
 
         private bool IsPointOnSnapButton(int x, int y)
         {
-            var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
-            var posX = whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 2 - 1;
-            return SnapAllowed &&
-                x > posX && x < posX + snapButtonSize &&
-                y > headerIconsPosY && y < headerIconsPosY + snapButtonSize;
+            return GetSnapButtonRect().Contains(x, y);
+        }
+
+        private bool IsPointOnSnapResolution(int x, int y)
+        {
+            return GetSnapResolutionRect().Contains(x, y);
         }
 
         private bool IsPointOnMaximizeButton(int x, int y)
         {
-            var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
-            var posX = whiteKeySizeX - (snapButtonSize + headerIconsPosX) * 1 - 1;
-            return 
-                x > posX && x < posX + snapButtonSize &&
-                y > headerIconsPosY && y < headerIconsPosY + snapButtonSize;
+            return GetMaximizeButtonRect().Contains(x, y);
         }
 
         private void UpdateToolTip(MouseEventArgs e)
@@ -5396,7 +5407,7 @@ namespace FamiStudio
             {
                 tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan\n{MouseLeft} {MouseLeft} Configure scales";
             }
-            else if (IsPointOnSnapResolutionButton(e.X, e.Y))
+            else if (IsPointOnSnapResolution(e.X, e.Y))
             {
                 tooltip = "{MouseLeft} Next snap precision {MouseRight} Previous snap precision {MouseWheel} Change snap precision";
             }
@@ -5571,53 +5582,63 @@ namespace FamiStudio
                 noteTooltip = newNoteTooltip;
         }
 
+        private double GetEffectiveSnapResolution(NoteLocation location)
+        {
+            var snapFactor = SnapResolutionType.Factors[snapResolution];
+            var beatLength = Song.GetPatternBeatLength(location.PatternIndex);
+
+            if (snapFactor >= 1.0f)
+            {
+                return snapFactor;
+            }
+            else
+            {
+                int invSnapFactor = (int)Math.Round(1.0f / snapFactor);
+                // For fractional snapping, make sure the beat length can somewhat divided.
+                if (invSnapFactor > beatLength)
+                {
+                    return 1.0 / beatLength;
+                }
+                else
+                {
+                    return snapFactor;
+                }
+            }
+        }
+
         private int SnapNote(int absoluteNoteIndex, bool roundUp = false, bool forceSnap = false)
         {
             if (SnapEnabled || forceSnap)
             {
                 var location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
-                var noteLength = Song.Project.UsesFamiTrackerTempo ? 1 : Song.GetPatternNoteLength(location.PatternIndex);
-                var snapFactor = SnapResolutionType.Factors[snapResolution];
-
-                Debug.Assert(snapFactor >= 1.0); // Fractional snapping is no longer supported.
+                var beatLength = Song.GetPatternBeatLength(location.PatternIndex);
+                var snapFactor = GetEffectiveSnapResolution(location);
 
                 var snappedNoteIndex = location.NoteIndex;
                 if (snapFactor >= 1.0)
                 {
-	                var numNotes = noteLength * (int)snapFactor;
-	                snappedNoteIndex = (location.NoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
+	                var numNotes = beatLength * (int)snapFactor;
+                    if (numNotes == 1) 
+                        return absoluteNoteIndex;
+                    snappedNoteIndex = (location.NoteIndex / numNotes + (roundUp ? 1 : 0)) * numNotes;
           		}
                 else
                 {
                     // Subtract the base note so that snapping inside a note is always deterministic. 
                     // Otherwise, rounding errors can create a different snapping pattern every note (6-5-5-6 like Gimmick).
-                    var baseNodeIdx  = location.NoteIndex / noteLength * noteLength;
-                    var noteFrameIdx = location.NoteIndex % noteLength;
+                    var baseNoteIdx   = location.NoteIndex / beatLength * beatLength;
+                    var beatFrameIdx  = location.NoteIndex % beatLength;
                     var numSnapPoints = (int)Math.Round(1.0 / snapFactor);
 
-                    // This is terrible...
-                    if (roundUp)
+                    for (int i = numSnapPoints - 1; i >= 0; i--)
                     {
-                        for (int i = 0; i <= numSnapPoints; i++)
+                        var snapPoint = (int)Math.Round(i / (double)numSnapPoints * beatLength);
+                        if (beatFrameIdx >= snapPoint)
                         {
-                            var snapPoint = (int)Math.Round(i / (double)numSnapPoints * noteLength);
-                            if (noteFrameIdx < snapPoint)
-                            {
-                                snappedNoteIndex = baseNodeIdx + snapPoint;
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for (int i = numSnapPoints - 1; i >= 0; i--)
-                        {
-                            var snapPoint = (int)Math.Round(i / (double)numSnapPoints * noteLength);
-                            if (noteFrameIdx >= snapPoint)
-                            {
-                                snappedNoteIndex = baseNodeIdx + snapPoint;
-                                break;
-                            }
+                            if (roundUp)
+                                snapPoint = (int)Math.Round((i + 1) / (double)numSnapPoints * beatLength);
+                            snappedNoteIndex = baseNoteIdx + snapPoint;
+                            break;
                         }
                     }
                 }
@@ -5671,7 +5692,7 @@ namespace FamiStudio
             var minLocation = NoteLocation.Min(location, captureNoteLocation);
             var maxLocation = NoteLocation.Max(location, captureNoteLocation);
             var minAbsoluteNoteIndex = minLocation.ToAbsoluteNoteIndex(Song);
-            var maxAbsoluteNoteIndex = maxLocation.ToAbsoluteNoteIndex(Song) + 1;
+            var maxAbsoluteNoteIndex = maxLocation.ToAbsoluteNoteIndex(Song);
 
             hoverNoteLocation = minLocation;
 
@@ -5928,14 +5949,15 @@ namespace FamiStudio
                     var dragNoteOldDuration = dragNoteNextDistance > 0 ? Math.Min(dragNote.Duration, dragNoteNextDistance) : dragNote.Duration;
 
                     // Shorten the drag notes.
-                    dragNote.Duration = (ushort)Song.CountNotesBetween(dragNoteLocation, location);
+                    var duration = Song.CountNotesBetween(dragNoteLocation, location);;
+                    dragNote.Duration = (ushort)duration;
 
                     var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
 
                     note.Value = noteValue;
                     note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
                     note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
-                    note.Duration = (ushort)(dragNoteOldDuration - dragNote.Duration);
+                    note.Duration = (ushort)(dragNoteOldDuration - duration);
 
                     channel.InvalidateCumulativePatternCache(pattern);
                 }
@@ -6306,13 +6328,9 @@ namespace FamiStudio
                     ZoomAtLocation(e.X, e.Delta < 0.0f ? 0.5f : 2.0f);
                 }
             }
-            else if (IsPointOnSnapResolutionButton(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
+            else if (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
-                if (e.Delta > 0)
-                    snapResolution = SnapResolutionType.Clamp(snapResolution + 1, App.Project.UsesFamiTrackerTempo);
-                else
-                    snapResolution = SnapResolutionType.Clamp(snapResolution - 1, App.Project.UsesFamiTrackerTempo);
-
+                snapResolution = Utils.Clamp(snapResolution + (e.Delta > 0 ? 1 : -1), SnapResolutionType.Min, SnapResolutionType.Max);
                 MarkDirty();
             }
         }
@@ -6480,7 +6498,6 @@ namespace FamiStudio
                 BuildSupportEffectList();
                 UpdateRenderCoords();
                 ClampScroll();
-                ClampMinSnap();
                 MarkDirty();
 
                 captureOperation = CaptureOperation.None;
@@ -6492,17 +6509,16 @@ namespace FamiStudio
 
     public class SnapResolutionType
     {
-        public const int OneQuarter = 0;
-        public const int OneThird   = 1;
-        public const int OneHalf    = 2;
-        public const int OneNote    = 3;
-        public const int TwoNote    = 4;
-        public const int ThreeNote  = 5;
-        public const int FourNote   = 6;
-        public const int Max        = 7;
+        public const int Min     = 0;
+        public const int Max     = 10;
+        public const int OneBeat = 7;
 
         public static readonly double[] Factors = new[]
         {
+            1.0 / 16.0,
+            1.0 / 12.0,
+            1.0 / 8.0,
+            1.0 / 6.0,
             1.0 / 4.0,
             1.0 / 3.0,
             1.0 / 2.0,
@@ -6514,6 +6530,10 @@ namespace FamiStudio
 
         public static readonly string[] Names = new string[]
         {
+            "1/16",
+            "1/12",
+            "1/8",
+            "1/6",
             "1/4",
             "1/3",
             "1/2",
@@ -6522,31 +6542,5 @@ namespace FamiStudio
             "3",
             "4"
         };
-
-        public static readonly string[] ImageNames = new string[]
-        {
-            "Snap1_4",
-            "Snap1_3",
-            "Snap1_2",
-            "Snap1",
-            "Snap2",
-            "Snap3",
-            "Snap4"
-        };
-
-        public static int GetMinSnapValue(bool famitrackerTempo)
-        {
-            return famitrackerTempo ? OneNote : OneQuarter;
-        }
-
-        public static int GetMaxSnapValue()
-        {
-            return FourNote;
-        }
-
-        public static int Clamp(int value, bool famitrackerTempo)
-        {
-            return Utils.Clamp(value, famitrackerTempo ? OneNote : OneQuarter, FourNote);
-        }
     }
 }
