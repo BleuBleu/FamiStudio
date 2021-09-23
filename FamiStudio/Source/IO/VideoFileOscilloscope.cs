@@ -186,7 +186,7 @@ namespace FamiStudio
                 channelIndex++;
 
                 // Find maximum absolute value to rescale the waveform.
-                foreach (short s in state.wav)
+                foreach (int s in state.wav)
                     maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
 
                 // Measure the longest text.
