@@ -29,7 +29,7 @@ namespace FamiStudio
         private Panel panelTabs;
         private ToolTip toolTip;
 
-        public MultiPropertyDialog(int width, int height, int tabsWidth = 150)
+        public MultiPropertyDialog(string title, int width, int height, int tabsWidth = 150)
         {
             InitializeComponent();
 
