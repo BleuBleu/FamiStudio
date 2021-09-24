@@ -402,6 +402,7 @@ namespace FamiStudio
         RenderBitmap   bmpButtonRight;
         RenderBitmap[] bmpInstrument = new RenderBitmap[ExpansionType.Count];
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[EnvelopeType.Count];
+        RenderBitmap[] bmpOpEnvelope = new RenderBitmap[9];
 
         public Song SelectedSong => selectedSong;
         public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null;
@@ -562,7 +563,9 @@ namespace FamiStudio
                     {
                         foreach (var param in instrumentParams)
                         {
-                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id });
+                            int opSelect = 8;
+                            //if (param.Name == "Algorithm") { opSelect = param.GetValue; }
+                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, icon = bmpOpEnvelope[opSelect]});
                         }
                     }
                 }
@@ -619,6 +622,16 @@ namespace FamiStudio
             bmpEnvelopes[EnvelopeType.FdsWaveform]   = g.CreateBitmapFromResource("Wave");
             bmpEnvelopes[EnvelopeType.FdsModulation] = g.CreateBitmapFromResource("Mod");
             bmpEnvelopes[EnvelopeType.N163Waveform]  = g.CreateBitmapFromResource("Wave");
+
+            bmpOpEnvelope[0] = g.CreateBitmapFromResource("Envelope0");
+            bmpOpEnvelope[1] = g.CreateBitmapFromResource("Envelope1");
+            bmpOpEnvelope[2] = g.CreateBitmapFromResource("Envelope2");
+            bmpOpEnvelope[3] = g.CreateBitmapFromResource("Envelope3");
+            bmpOpEnvelope[4] = g.CreateBitmapFromResource("Envelope4");
+            bmpOpEnvelope[5] = g.CreateBitmapFromResource("Envelope5");
+            bmpOpEnvelope[6] = g.CreateBitmapFromResource("Envelope6");
+            bmpOpEnvelope[7] = g.CreateBitmapFromResource("Envelope7");
+            bmpOpEnvelope[8] = null;
 
             bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");
             bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");

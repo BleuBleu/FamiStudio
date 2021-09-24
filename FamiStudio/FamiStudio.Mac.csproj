@@ -294,6 +294,22 @@
     <EmbeddedResource Include="Resources\InstrumentEPSM%402x.png" />
     <EmbeddedResource Include="Resources\Rythm.png" />
     <EmbeddedResource Include="Resources\Rythm%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope7%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope7.png" />
+    <EmbeddedResource Include="Resources\Envelope6%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope6.png" />
+    <EmbeddedResource Include="Resources\Envelope5%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope5.png" />
+    <EmbeddedResource Include="Resources\Envelope4%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope4.png" />
+    <EmbeddedResource Include="Resources\Envelope3%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope3.png" />
+    <EmbeddedResource Include="Resources\Envelope2%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope2.png" />
+    <EmbeddedResource Include="Resources\Envelope1%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope0.png" />
+    <EmbeddedResource Include="Resources\Envelope0%402x.png" />
+    <EmbeddedResource Include="Resources\Envelope1.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
