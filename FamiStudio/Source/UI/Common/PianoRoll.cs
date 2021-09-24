@@ -3875,6 +3875,12 @@ namespace FamiStudio
                 var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + note.Duration) + noteSizeY / 2;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY - noteSizeY / 2;
 
+                if (captureOperation == CaptureOperation.ResizeNoteEnd ||
+                    captureOperation == CaptureOperation.ResizeSelectionNoteEnd)
+                {
+                    x = mouseLastX - whiteKeySizeX - noteSizeY;
+                }
+
                 MobileGizmo resizeGizmo = new MobileGizmo();
                 resizeGizmo.ImageIndex = GizmoImageIndices.GizmoResizeLeftRight;
                 resizeGizmo.Action = GizmoAction.ResizeNote;
@@ -3888,6 +3894,11 @@ namespace FamiStudio
                 var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + note.Release) - noteSizeY;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY + noteSizeY * 3 / 2;
 
+                if (captureOperation == CaptureOperation.MoveNoteRelease)
+                {
+                    x = mouseLastX - whiteKeySizeX - noteSizeY;
+                }
+
                 MobileGizmo releaseGizmo = new MobileGizmo();
                 releaseGizmo.ImageIndex = GizmoImageIndices.GizmoResizeLeftRight;
                 releaseGizmo.Action = GizmoAction.MoveRelease;
@@ -3898,8 +3909,14 @@ namespace FamiStudio
             // Slide note gizmo
             if (note.IsSlideNote)
             {
+                var side = note.SlideNoteTarget > note.Value ? 1 : -1;
                 var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + note.Duration) + noteSizeY / 2;
-                var y = virtualSizeY - (note.SlideNoteTarget + 1) * noteSizeY - scrollY - noteSizeY / 2;
+                var y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - noteSizeY / 2;
+
+                if (captureOperation == CaptureOperation.DragSlideNoteTarget)
+                {
+                    y = mouseLastY - headerAndEffectSizeY - noteSizeY;
+                }
 
                 MobileGizmo slideGizmo = new MobileGizmo();
                 slideGizmo.ImageIndex = GizmoImageIndices.GizmoResizeUpDown;
