@@ -37,7 +37,7 @@ namespace FamiStudio
         }
 
         protected float windowScaling = 1.0f;
-        protected float fontScaling   = 1.0f;
+        protected float fontScaling = 1.0f;
         protected int windowSizeY;
         protected int maxSmoothLineWidth = int.MaxValue;
         protected Rectangle controlRect;
@@ -45,11 +45,11 @@ namespace FamiStudio
         protected GLTransform transform = new GLTransform();
         protected GLBitmap dashedBitmap;
 
-        protected Dictionary<GradientCacheKey, GLBrush> verticalGradientCache   = new Dictionary<GradientCacheKey, GLBrush>();
+        protected Dictionary<GradientCacheKey, GLBrush> verticalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
         protected Dictionary<GradientCacheKey, GLBrush> horizontalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
-        protected Dictionary<Color, GLBrush>            solidGradientCache      = new Dictionary<Color, GLBrush>();
+        protected Dictionary<Color, GLBrush> solidGradientCache = new Dictionary<Color, GLBrush>();
 
-        public float FontScaling   => fontScaling;
+        public float FontScaling => fontScaling;
         public float WindowScaling => windowScaling;
         public int DashTextureSize => dashedBitmap.Size.Width;
         public GLTransform Transform => transform;
@@ -62,11 +62,11 @@ namespace FamiStudio
 
         protected float[] vtxArray = new float[MaxVertexCount * 2];
         protected float[] texArray = new float[MaxVertexCount * 2];
-        protected int[]   colArray = new int[MaxVertexCount];
+        protected int[] colArray = new int[MaxVertexCount];
         protected short[] quadIdxArray = new short[MaxIndexCount];
 
         protected List<float[]> freeVtxArrays = new List<float[]>();
-        protected List<int[]>   freeColArrays = new List<int[]>();
+        protected List<int[]> freeColArrays = new List<int[]>();
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
         protected abstract int CreateEmptyTexture(int width, int height, bool filter = false);
@@ -76,7 +76,7 @@ namespace FamiStudio
         protected GLGraphicsBase(float mainScale, float fontScale)
         {
             windowScaling = mainScale;
-            fontScaling   = fontScale;
+            fontScaling = fontScale;
 
             // Quad index buffer.
             // TODO : On PC, we have GL_QUADS, we could get rid of this.
@@ -254,10 +254,10 @@ namespace FamiStudio
 
         public GLFont CreateFontFromResource(string name, bool bold, int size)
         {
-            var suffix   = bold ? "Bold" : "";
+            var suffix = bold ? "Bold" : "";
             var basename = $"{name}{size}{suffix}";
-            var fntfile  = $"FamiStudio.Resources.{basename}.fnt";
-            var imgfile  = $"FamiStudio.Resources.{basename}_0.png";
+            var fntfile = $"FamiStudio.Resources.{basename}.fnt";
+            var imgfile = $"FamiStudio.Resources.{basename}_0.png";
 
             var str = "";
             using (Stream stream = typeof(GLGraphicsBase).Assembly.GetManifestResourceStream(fntfile))
@@ -415,10 +415,10 @@ namespace FamiStudio
         private int baseValue;
         private int lineHeight;
 
-        public int Texture    => texture;
-        public int Size       => size;
+        public int Texture => texture;
+        public int Size => size;
         public int LineHeight => lineHeight;
-        public int OffsetY    => size - baseValue;
+        public int OffsetY => size - baseValue;
 
         public GLFont(int tex, int sz, int b, int l)
         {
@@ -621,7 +621,7 @@ namespace FamiStudio
 
     public class GLBitmap : IDisposable
     {
-        protected int  id;
+        protected int id;
         protected Size size;
 
         public int Id => id;
@@ -661,7 +661,7 @@ namespace FamiStudio
 
         public Size GetElementSize(int index) => elementRects[index].Size;
 
-        public GLBitmapAtlas(int id, int width, int height, Rectangle[] elementRects, bool disp = true) : 
+        public GLBitmapAtlas(int id, int width, int height, Rectangle[] elementRects, bool disp = true) :
             base(id, width, height, disp)
         {
             this.elementRects = elementRects;
@@ -672,9 +672,9 @@ namespace FamiStudio
             var rect = elementRects[elementIndex];
 
             // DROIDTODO : +0.5?
-            u0 = rect.Left   / (float)size.Width;
-            u1 = rect.Right  / (float)size.Width;
-            v0 = rect.Top    / (float)size.Height;
+            u0 = rect.Left / (float)size.Width;
+            u1 = rect.Right / (float)size.Width;
+            v0 = rect.Top / (float)size.Height;
             v1 = rect.Bottom / (float)size.Height;
         }
     }
@@ -702,6 +702,7 @@ namespace FamiStudio
         protected Stack<Vector4> transformStack = new Stack<Vector4>();
 
         public Vector4 Transform => transform;
+        public bool HasScaling => transform.X != 1.0f || transform.Y != 1.0f;
 
         public void SetIdentity()
         {
@@ -1191,7 +1192,7 @@ namespace FamiStudio
             if (width > maxSmoothLineWidth)
             {
                 smooth = false;
-                miter = true;
+                miter = !xform.HasScaling; // Miter doesnt work with scaling atm.
             }
 #endif
 
@@ -1219,7 +1220,7 @@ namespace FamiStudio
         public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool smooth = false, bool miter = false)
         {
             FillGeometry(geo, fillBrush, smooth);
-            DrawGeometry(geo, lineBrush, lineWidth, miter);
+            DrawGeometry(geo, lineBrush, lineWidth, smooth, miter);
         }
 
         public void FillRectangle(float x0, float y0, float x1, float y1, GLBrush brush)

@@ -412,6 +412,8 @@
     <EmbeddedResource Include="Resources\FamiStudio.ico" />
     <EmbeddedResource Include="Resources\File%402x.png" />
     <EmbeddedResource Include="Resources\Follow%402x.png" />
+    <EmbeddedResource Include="Resources\GizmoResizeLeftRight.png" />
+    <EmbeddedResource Include="Resources\GizmoResizeUpDown.png" />
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
     <EmbeddedResource Include="Resources\Help%402x.png" />
     <EmbeddedResource Include="Resources\Instance%402x.png" />
