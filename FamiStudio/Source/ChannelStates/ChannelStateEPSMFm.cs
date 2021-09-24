@@ -125,7 +125,7 @@ namespace FamiStudio
                 var step = (Math.Log(127+adjustment) - Math.Log(adjustment)) / (steps - 1);
                 volume = 127-(int)((Math.Exp(Math.Log(adjustment) + (15-volume) * step)) - adjustment);
                 int[] channelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
-                switch (channelAlgorithmMask[channelAlgorithm[channelIdx] & 0xf])
+                switch (channelAlgorithmMask[channelAlgorithm[channelIdx] & 0x7])
                 {
                     case  0xF:
                         WriteEPSMRegister(0x40 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[0 + 4 * channelIdx]) / 127 * volume), a1);
