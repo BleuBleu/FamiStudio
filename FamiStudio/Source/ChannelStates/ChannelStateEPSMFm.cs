@@ -15,6 +15,7 @@ namespace FamiStudio
         int[] opOrder = { 0, 2, 1, 3 };
         int[] opRegisters = { 0xb0, 0xb4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90 };
         int[] opStereo = { 0,0,0,0,0,0};
+        int[] channelAlgorithm = { 0, 0, 0, 0, 0, 0 };
         int[] opVolume = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
         public ChannelStateEPSMFm(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
@@ -61,6 +62,7 @@ namespace FamiStudio
             //opVolume[3 + 4 * channelIdx] = instrument.EpsmPatchRegs[3 + 21];
             if (instrument.ExpansionType == ExpansionType.EPSM)
             {
+                channelAlgorithm[channelIdx] = instrument.EpsmPatchRegs[0];
                 WriteEPSMRegister(opRegisters[0] + channelIdxHigh, instrument.EpsmPatchRegs[0], a1);
                 WriteEPSMRegister(opRegisters[1] + channelIdxHigh, instrument.EpsmPatchRegs[1], a1);
                 for (byte y = 0; y < 4; y++)
@@ -117,10 +119,49 @@ namespace FamiStudio
                 var periodLo = (byte)(period & 0xff);
                 var volume = GetVolume();
 
-                WriteEPSMRegister(0x40 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[0 + 4 * channelIdx]) / 15 * volume), a1);
+                int steps = 16;
+                int adjustment = 5;
+                //Logarithmic volume adjustment
+                var step = (Math.Log(127+adjustment) - Math.Log(adjustment)) / (steps - 1);
+                volume = 127-(int)((Math.Exp(Math.Log(adjustment) + (15-volume) * step)) - adjustment);
+                int[] channelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
+                switch (channelAlgorithmMask[channelAlgorithm[channelIdx] & 0xf])
+                {
+                    case  0xF:
+                        WriteEPSMRegister(0x40 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[0 + 4 * channelIdx]) / 127 * volume), a1);
+                        WriteEPSMRegister(0x44 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[1 + 4 * channelIdx]) / 127 * volume), a1);
+                        WriteEPSMRegister(0x48 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[2 + 4 * channelIdx]) / 127 * volume), a1);
+                        WriteEPSMRegister(0x4c + channelIdxHigh, 127 - (int)((127 - (float)opVolume[3 + 4 * channelIdx]) / 127 * volume), a1);
+                        break;
+                    case 0xE:
+                        WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
+                        WriteEPSMRegister(0x44 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[1 + 4 * channelIdx]) / 127 * volume), a1);
+                        WriteEPSMRegister(0x48 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[2 + 4 * channelIdx]) / 127 * volume), a1);
+                        WriteEPSMRegister(0x4c + channelIdxHigh, 127 - (int)((127 - (float)opVolume[3 + 4 * channelIdx]) / 127 * volume), a1);
+                        break;
+                    case 0xC:
+                        WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
+                        WriteEPSMRegister(0x44 + channelIdxHigh, opVolume[1 + 4 * channelIdx], a1);
+                        WriteEPSMRegister(0x48 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[2 + 4 * channelIdx]) / 127 * volume), a1);
+                        WriteEPSMRegister(0x4c + channelIdxHigh, 127 - (int)((127 - (float)opVolume[3 + 4 * channelIdx]) / 127 * volume), a1);
+                        break;
+                    case 0x8:
+                        WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
+                        WriteEPSMRegister(0x44 + channelIdxHigh, opVolume[1 + 4 * channelIdx], a1);
+                        WriteEPSMRegister(0x48 + channelIdxHigh, opVolume[2 + 4 * channelIdx], a1);
+                        WriteEPSMRegister(0x4c + channelIdxHigh, 127 - (int)((127 - (float)opVolume[3 + 4 * channelIdx]) / 127 * volume), a1);
+                        break;
+
+                }
+
+                //WriteEPSMRegister(0x40 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[0 + 4 * channelIdx]) / 127 * volume), a1);
+                //WriteEPSMRegister(0x44 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[1 + 4 * channelIdx]) / 127 * volume), a1);
+                //WriteEPSMRegister(0x48 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[2 + 4 * channelIdx]) / 127 * volume), a1);
+                //WriteEPSMRegister(0x4c + channelIdxHigh, 127 - (int)((127 - (float)opVolume[3 + 4 * channelIdx]) / 127 * volume), a1);
+                /*WriteEPSMRegister(0x40 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[0 + 4 * channelIdx]) / 15 * volume), a1);
                 WriteEPSMRegister(0x44 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[1 + 4 * channelIdx]) / 15 * volume), a1);
                 WriteEPSMRegister(0x48 + channelIdxHigh, 127 - (int)((127 - (float)opVolume[2 + 4 * channelIdx]) / 15 * volume), a1);
-                WriteEPSMRegister(0x4c + channelIdxHigh, 127 - (int)((127 - (float)opVolume[3 + 4 * channelIdx]) / 15 * volume), a1);
+                WriteEPSMRegister(0x4c + channelIdxHigh, 127 - (int)((127 - (float)opVolume[3 + 4 * channelIdx]) / 15 * volume), a1);*/
                 if (noteTriggered)
                 {
                     WriteRegister(NesApu.EPSM_ADDR0, 0x28);
