@@ -70,9 +70,6 @@ Sequencer:
 	/ Drag patterns
 	/ Edit pattern properties
 	/ Edit custom pattern settings
-Tools:
-	- Pencil
-	- Eraser
 Controls:
 	- Copy/paste/instanciate
 	- Longpress : Instanciate/Copy selection here

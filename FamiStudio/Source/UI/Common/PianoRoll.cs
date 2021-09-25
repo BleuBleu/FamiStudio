@@ -4978,36 +4978,22 @@ namespace FamiStudio
                 var selection = IsHighlightedNoteSelected();
                 var menu = new List<ContextMenuOption>();
 
-                const int ResultToggleAttack  = 0;
-                const int ResultToggleSlide   = 1;
-                const int ResultToggleRelease = 2;
-
                 if (note != null)
                 {
                     // DROIDTODO : Check selection, etc.
                     if (note.IsMusical)
                     {
                         if (channel.SupportsNoAttackNotes)
-                            menu.Add(new ContextMenuOption("", $"Toggle {(selection ? "Selection" : "")} Note Attack", ResultToggleAttack));
+                            menu.Add(new ContextMenuOption("MenuToggleAttack", $"Toggle {(selection ? "Selection" : "")} Note Attack", () => { ToggleNoteAttack(noteLocation, note); } ));
                         if (channel.SupportsSlideNotes)
-                            menu.Add(new ContextMenuOption("", $"Toggle {(selection ? "Selection" : "")} Slide Note", ResultToggleSlide));
+                            menu.Add(new ContextMenuOption("MenuToggleSlide", $"Toggle {(selection ? "Selection" : "")} Slide Note", () => { ToggleSlideNote(noteLocation, note); }));
                         if (channel.SupportsReleaseNotes)
-                            menu.Add(new ContextMenuOption("", $"Toggle {(selection ? "Selection" : "")} Release", ResultToggleRelease));
+                            menu.Add(new ContextMenuOption("MenuToggleRelease", $"Toggle {(selection ? "Selection" : "")} Release", () => { ToggleNoteRelease(noteLocation, note); }));
                     }
                 }
 
                 if (menu.Count > 0)
-                {
-                    App.ShowContextMenu(menu.ToArray(), (i) =>
-                    {
-                        if (i == ResultToggleAttack)
-                            ToggleNoteAttack(noteLocation, note);
-                        else if (i == ResultToggleSlide)
-                            ToggleSlideNote(noteLocation, note);
-                        else if (i == ResultToggleRelease)
-                            ToggleNoteRelease(noteLocation, note);
-                    });
-                }
+                    App.ShowContextMenu(menu.ToArray());
 
                 return true;
             }

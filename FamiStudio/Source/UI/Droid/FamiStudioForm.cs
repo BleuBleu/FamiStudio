@@ -31,7 +31,6 @@ namespace FamiStudio
 
         // For context menus.
         BottomSheetDialog contextMenuDialog;
-        Action<int> contextMenuCallback;
 
         // For property or multi-property dialogs.
         private int dialogRequestCode = -1;
@@ -46,7 +45,7 @@ namespace FamiStudio
 
         public static FamiStudioForm Instance { get; private set; }
         public object DialogUserData => dialogUserData;
-        public bool IsAsyncDialogInProgress => dialogCallback != null || contextMenuCallback != null; // DROIDTODO : Add lots of validation with that.
+        public bool IsAsyncDialogInProgress => dialogCallback != null || contextMenuDialog != null; // DROIDTODO : Add lots of validation with that.
 
         public FamiStudio      FamiStudio      => famistudio;
         public Toolbar         ToolBar         => controls.ToolBar;
@@ -404,9 +403,9 @@ namespace FamiStudio
         {
         }
 
-        public void ShowContextMenu(ContextMenuOption[] options, Action<int> callback)
+        public void ShowContextMenu(ContextMenuOption[] options)
         {
-            Debug.Assert(contextMenuDialog == null && contextMenuCallback == null);
+            Debug.Assert(contextMenuDialog == null);
 
             var bgColor = DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyFillColor1);
 
@@ -421,9 +420,8 @@ namespace FamiStudio
             for (int i = 0; i < options.Length; i++)
             {
                 var opt = options[i];
-                Debug.Assert(opt.Result >= 0);
 
-                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.ConfigGeneral@2x.png", true)); // $"FamiStudio.Resources.{opt.Image}.png"
+                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{opt.Image}.png", true)); // $"FamiStudio.Resources.{opt.Image}.png"
                 bmp.SetBounds(0, 0, imageSize, imageSize);
 
                 var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
@@ -433,7 +431,7 @@ namespace FamiStudio
                 textView.SetPadding(imagePad, imagePad, imagePad, imagePad);
                 textView.Gravity = GravityFlags.CenterVertical;
                 textView.Text = opt.Text;
-                textView.Tag = new ContextMenuResult(opt.Result);
+                textView.Tag = new ContextMenuTag(opt);
                 textView.Click += ContextMenuDialog_Click;
 
                 linearLayout.AddView(textView);
@@ -464,7 +462,6 @@ namespace FamiStudio
                 contextMenuDialog.Window.SetBackgroundDrawable(windowBackground);
             }
 
-            contextMenuCallback = callback;
             contextMenuDialog.Show();
 
             PlatformUtils.VibrateClick();
@@ -472,23 +469,15 @@ namespace FamiStudio
 
         private void ContextMenuDialog_DismissEvent(object sender, EventArgs e)
         {
-            // If non-null, means user has not chosen any options.
-            if (contextMenuCallback != null)
-            {
-                contextMenuCallback(-1);
-                contextMenuCallback = null;
-                MarkDirty();
-            }
-
             contextMenuDialog = null;
+            MarkDirty();
         }
 
         private void ContextMenuDialog_Click(object sender, EventArgs e)
         {
-            var tag = (sender as TextView).Tag as ContextMenuResult;
+            var tag = (sender as TextView).Tag as ContextMenuTag;
 
-            contextMenuCallback(tag.res);
-            contextMenuCallback = null;
+            tag.opt.Callback();
             contextMenuDialog.Dismiss();
             MarkDirty();
 
@@ -646,12 +635,12 @@ namespace FamiStudio
             }
         }
 
-        private class ContextMenuResult : Java.Lang.Object
+        private class ContextMenuTag : Java.Lang.Object
         {
-            public int res;
-            public ContextMenuResult(int r)
+            public ContextMenuOption opt;
+            public ContextMenuTag(ContextMenuOption o)
             {
-                res = r;
+                opt = o;
             }
         };
     }

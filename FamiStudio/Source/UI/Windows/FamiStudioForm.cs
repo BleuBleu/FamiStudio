@@ -347,7 +347,7 @@ namespace FamiStudio
         {
         }
 
-        public void ShowContextMenu(ContextMenuOption[] options, Action<int> callback)
+        public void ShowContextMenu(ContextMenuOption[] options)
         {
         }
 

@@ -472,9 +472,9 @@ namespace FamiStudio
             mainForm.Run();
         }
 
-        public void ShowContextMenu(ContextMenuOption[] options, Action<int> callback)
+        public void ShowContextMenu(ContextMenuOption[] options)
         {
-            mainForm.ShowContextMenu(options, callback);
+            mainForm.ShowContextMenu(options);
         }
 
         private void InitializeMultiMediaNotifications()
@@ -2017,13 +2017,13 @@ namespace FamiStudio
     {
         public string Image { get; private set; }
         public string Text { get; private set; }
-        public int Result { get; private set; }
+        public Action Callback { get; private set; }
 
-        public ContextMenuOption(string img, string text, int result)
+        public ContextMenuOption(string img, string text, Action callback)
         {
             Image = img;
             Text = text;
-            Result = result;
+            Callback = callback;
         }
     }
 }

@@ -607,6 +607,8 @@ namespace FamiStudio
                 cb.DrawLine(0, y, Width, y, ThemeResources.BlackBrush);
 
             // Patterns
+            var highlightedPatternRect = Rectangle.Empty;
+
             int patternCacheSizeY = trackSizeY - patternHeaderSizeY - 1;
             patternCache.Update(patternCacheSizeY);
 
@@ -639,17 +641,15 @@ namespace FamiStudio
                         cp.PopTransform();
                     }
 
-                    // DROIDTODO : Store and render at end for proper sorting.
                     if (PlatformUtils.IsMobile && highlightLocation == location)
-                    {
-                        cf.PushTranslation(0, py);
-                        cf.DrawRectangle(0, 0, sx, trackSizeY, highlightPatternBrush, 4 /*2 MATTT */, false);
-                        cf.PopTransform();
-                    }
+                        highlightedPatternRect = new Rectangle(px, py, sx, trackSizeY);
                 }
 
                 cp.PopTransform();
             }
+
+            // Draw highlighted pattern at end for proper sorting.
+            cf.DrawRectangle(highlightedPatternRect, highlightPatternBrush, 4 /*2 MATTT */, false);
 
             // TODO : This is really bad, since all the logic is in the rendering code. Make
             // this more like any other capture op eventually.
@@ -1259,7 +1259,7 @@ namespace FamiStudio
                 // since we will want the longpress to be processed.
                 var patternIdx = GetPatternIndexForCoord(x);
 
-                if (patternIdx >= 0 && !IsPatternColumnSelected(patternIdx))
+                if (patternIdx >= 0)
                 {
                     StartCaptureOperation(x, y, CaptureOperation.Select);
                     return true;
@@ -1362,21 +1362,12 @@ namespace FamiStudio
             if (IsPointInChannelArea(x, y))
             {
                 var channelIdx = GetChannelIndexForCoord(y);
-
-                const int ResultToggleMute = 0;
-                const int ResultToggleSolo = 1;
-
+               
                 App.ShowContextMenu(new[]
                 {
-                    new ContextMenuOption("", App.IsChannelActive(channelIdx) ? "Mute Channel"   : "Unmute Channel", ResultToggleMute),
-                    new ContextMenuOption("", App.IsChannelSolo(channelIdx)   ? "Unsolo Channel" : "Solo Channel",   ResultToggleSolo)
-                },
-                (i) =>
-                {
-                    if (i == ResultToggleMute)
-                        App.ToggleChannelActive(channelIdx);
-                    else if (i == ResultToggleSolo)
-                        App.ToggleChannelSolo(channelIdx);
+                    new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(channelIdx); }),
+                    new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(channelIdx); }),
+                    new ContextMenuOption("MenuForceDisplay", "Force Display Channel", () => { App.ToggleChannelGhostNotes(channelIdx); })
                 });
 
                 return true;
@@ -1393,20 +1384,10 @@ namespace FamiStudio
 
                 if (patternIdx >= 0)
                 {
-                    const int ResultSetLoopPoint   = 0;
-                    const int ResultCustumSettings = 1;
-
                     App.ShowContextMenu(new[]
                     {
-                        new ContextMenuOption("", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", ResultSetLoopPoint),
-                        new ContextMenuOption("", "Custom Pattern Settings...", ResultCustumSettings)
-                    }, 
-                    (i) =>
-                    {
-                        if (i == ResultSetLoopPoint)
-                            SetLoopPoint(patternIdx);
-                        else if (i == ResultCustumSettings)
-                            EditPatternCustomSettings(Point.Empty, patternIdx);
+                        new ContextMenuOption("MenuLoopPoint", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
+                        new ContextMenuOption("MenuCustomPatternSettings", "Custom Pattern Settings...", () => { EditPatternCustomSettings(Point.Empty, patternIdx); } )
                     });
                 }
 
@@ -1428,60 +1409,35 @@ namespace FamiStudio
 
                 var menu = new List<ContextMenuOption>(); ;
 
-                const int ResultPastePatternInstances = 0;
-                const int ResultPastePatternCopies    = 1;
-                const int ResultExpandSelection       = 2;
-                const int ResultDelete                = 3;
-                const int ResultDeleteSelection       = 4;
-                const int ResultProperties            = 5;
-                const int ResultSelectionProperties   = 6;
-
                 // DROIDTODO : This isnt right for instances, etc.
                 if (ClipboardUtils.ConstainsPatterns)
                 {
-                    menu.Add(new ContextMenuOption("", "Paste Instances", ResultPastePatternInstances));
-                    menu.Add(new ContextMenuOption("", "Paste Copies",    ResultPastePatternCopies));
+                    // DROIDTODO : Copy/paste!
+                    //menu.Add(new ContextMenuOption("", "Paste Instances", ResultPastePatternInstances));
+                    //menu.Add(new ContextMenuOption("", "Paste Copies",    ResultPastePatternCopies));
                 }
 
                 if (IsSelectionValid() && !IsPatternSelected(location))
                 {
-                    menu.Add(new ContextMenuOption("", "Expand Selection", ResultExpandSelection));
+                    menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
                 }
 
                 if (pattern != null)
                 {
                     if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
                     {
-                        menu.Add(new ContextMenuOption("", "Delete selection", ResultDeleteSelection));
-                        menu.Add(new ContextMenuOption("", "Selected Patterns Properties...", ResultSelectionProperties));
+                        menu.Add(new ContextMenuOption("MenuDelete", "Delete selection", () => { DeleteSelection(true); }));
+                        menu.Add(new ContextMenuOption("MenuPatternProperties", "Selected Patterns Properties...", () => { EditPatternProperties(Point.Empty, pattern, true); }));
                     }
                     else
                     {
-                        menu.Add(new ContextMenuOption("", "Delete pattern", ResultDelete));
-                        menu.Add(new ContextMenuOption("", "Pattern Properties...", ResultProperties));
+                        menu.Add(new ContextMenuOption("MenuDelete", "Delete pattern", () => { DeletePattern(location); }));
+                        menu.Add(new ContextMenuOption("MenuPatternProperties", "Pattern Properties...", () => { EditPatternProperties(Point.Empty, pattern, false); }));
                     }
                 }
 
                 if (menu.Count > 0)
-                {
-                    App.ShowContextMenu(menu.ToArray(), (i) =>
-                    {
-                        if (i == ResultPastePatternInstances)
-                            ; // DROIDTODO : Copy/paste!
-                        else if (i == ResultPastePatternCopies)
-                            ; // DROIDTODO : Copy/paste!
-                        else if (i == ResultExpandSelection)
-                            EnsureSelectionInclude(location);
-                        else if (i == ResultDelete)
-                            DeletePattern(location);
-                        else if (i == ResultDeleteSelection)
-                            DeleteSelection(true);
-                        else if (i == ResultProperties)
-                            EditPatternProperties(Point.Empty, pattern, false);
-                        else if (i == ResultSelectionProperties)
-                            EditPatternProperties(Point.Empty, pattern, true);
-                    });
-                }
+                    App.ShowContextMenu(menu.ToArray());
 
                 return true;
             }
@@ -2461,7 +2417,7 @@ namespace FamiStudio
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
-                    var newName = dlg.Properties.GetPropertyValue<string>(0);
+                    var newName  = dlg.Properties.GetPropertyValue<string>(0);
                     var newColor = dlg.Properties.GetPropertyValue<Color>(1);
 
                     if (multiplePatternSelected)

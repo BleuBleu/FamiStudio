@@ -232,6 +232,11 @@ namespace FamiStudio
         {
             private MultiPropertyDialog dialog;
 
+            public MultiPropertyTabFragment()
+            {
+
+            }
+
             public MultiPropertyTabFragment(MultiPropertyDialog dlg)
             {
                 dialog = dlg;
