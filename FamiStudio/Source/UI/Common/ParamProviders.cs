@@ -202,6 +202,12 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, "PMS", 0, 7, (EPSMInstrumentPatch.Infos[1].data[1] & 0x07) >> 0)
                     { GetValue = () => { return (instrument.EpsmPatchRegs[1] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[1] = (byte)((instrument.EpsmPatchRegs[1] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
 
+                    paramInfos.Add(new InstrumentParamInfo(instrument, " LF Oscillator EN", 0, 1, (EPSMInstrumentPatch.Infos[1].data[30] & 0x08) >> 3, "Low Frequency Oscillator (Vibrato)\nThis setting applies to all channels, Last channel instrument to load dictates the setting")
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[30] & 0x08) >> 3; }, SetValue = (v) => { instrument.EpsmPatchRegs[30] = (byte)((instrument.EpsmPatchRegs[30] & (~0x08)) | ((v << 3) & 0x08)); instrument.EpsmPatch = 0; } });
+
+                    paramInfos.Add(new InstrumentParamInfo(instrument, " LF Oscillator", 0, 7, (EPSMInstrumentPatch.Infos[1].data[30] & 0x07) >> 0, "freq(Hz) 3.98 5.56 6.02 6.37 6.88 9.63 48.1 72.2")
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[30] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[30] = (byte)((instrument.EpsmPatchRegs[30] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
+
                     for (int i = 1; i < 5; i++)
                     {
                         int i2 = ((7 * i) - 7);

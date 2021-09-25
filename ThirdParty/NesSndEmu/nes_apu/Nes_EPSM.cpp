@@ -178,6 +178,7 @@ void Nes_EPSM::end_frame(cpu_time_t time)
 void Nes_EPSM::start_seeking()
 {
 	memset(shadow_internal_regs, -1, sizeof(shadow_internal_regs));
+	memset(shadow_internal_regs2, -1, sizeof(shadow_internal_regs2));
 }
 
 void Nes_EPSM::stop_seeking(blip_time_t& clock)
@@ -190,16 +191,32 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 			write_register(clock += 4, reg_write, shadow_internal_regs[i]);
 		}
 	}
+	for (int i = 0; i < array_count(shadow_internal_regs2); i++)
+	{
+		if (shadow_internal_regs2[i] >= 0)
+		{
+			write_register(clock += 4, reg_select2, i);
+			write_register(clock += 4, reg_write2, shadow_internal_regs2[i]);
+		}
+	}
 }
 
 void Nes_EPSM::write_shadow_register(int addr, int data)
 {
-	/*if (addr >= reg_select && addr < (reg_select + reg_range)) {
+	if (addr >= reg_select && addr < (reg_select + reg_range)) {
 
 		reg = data;
 	}
 	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
 
 		shadow_internal_regs[reg] = data;
-	}*/
+	}
+	if (addr >= reg_select2 && addr < (reg_select2 + reg_range)) {
+
+		reg = data;
+	}
+	else if (addr >= reg_write2 && addr < (reg_write2 + reg_range)) {
+
+		shadow_internal_regs2[reg] = data;
+	}
 }

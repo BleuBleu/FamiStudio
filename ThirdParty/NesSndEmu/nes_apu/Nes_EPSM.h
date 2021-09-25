@@ -28,9 +28,11 @@ public:
 	enum { psg_clock = 4000000 };
 	enum { reg_select = 0xc000 };
 	enum { reg_write = 0xe000 };
-	enum { reg_range = 0x2000 };
+	enum { reg_select2 = 0xc002 };
+	enum { reg_write2 = 0xe002 };
+	enum { reg_range = 0x1 };
 
-	enum { shadow_internal_regs_count = 76 };
+	enum { shadow_internal_regs_count = 600 };
 	void start_seeking();
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
@@ -61,6 +63,7 @@ private:
 	Blip_Synth<blip_med_quality, 15420> synth;
 
 	short shadow_internal_regs[shadow_internal_regs_count];
+	short shadow_internal_regs2[shadow_internal_regs_count];
 };
 
 #endif

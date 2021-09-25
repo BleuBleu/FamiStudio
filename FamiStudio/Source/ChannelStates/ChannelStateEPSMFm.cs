@@ -13,7 +13,7 @@ namespace FamiStudio
         protected int ChannelKey = 0;
         protected byte epsmInstrument = 0;
         int[] opOrder = { 0, 2, 1, 3 };
-        int[] opRegisters = { 0xb0, 0xb4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90 };
+        int[] opRegisters = { 0xb0, 0xb4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x22 };
         int[] opStereo = { 0,0,0,0,0,0};
         int[] channelAlgorithm = { 0, 0, 0, 0, 0, 0 };
         int[] opVolume = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -65,6 +65,7 @@ namespace FamiStudio
                 channelAlgorithm[channelIdx] = instrument.EpsmPatchRegs[0];
                 WriteEPSMRegister(opRegisters[0] + channelIdxHigh, instrument.EpsmPatchRegs[0], a1);
                 WriteEPSMRegister(opRegisters[1] + channelIdxHigh, instrument.EpsmPatchRegs[1], a1);
+                WriteEPSMRegister(opRegisters[9], instrument.EpsmPatchRegs[30], 0); //LFO - This accounts for all channels
                 for (byte y = 0; y < 4; y++)
                 {
                     opVolume[opOrder[y] + 4 * channelIdx] = instrument.EpsmPatchRegs[3 + (y * 7)];
