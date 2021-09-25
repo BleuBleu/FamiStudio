@@ -52,7 +52,7 @@ Controls:
 		/ Toggle slide 
 		- Eyedropper
 		- Replace instrument/arp?
-		- Anything else?
+		- Anything else? Copy? Paste?
 	Tap:
 		- Add/drag note/selection
 - Hide the vertical piano when editing DPCM samples, envelopes, etc. Clamp the scroll to what makes sense.

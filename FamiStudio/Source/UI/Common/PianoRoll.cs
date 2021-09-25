@@ -679,7 +679,7 @@ namespace FamiStudio
             return x;
         }
 
-        private int GetNoteForPixel(int x, bool scroll = true)
+        private int GetAbsoluteNoteIndexForPixel(int x, bool scroll = true)
         {
             if (scroll)
                 x += scrollX;
@@ -981,8 +981,8 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
             {
-                minNoteIdx = Math.Max(GetNoteForPixel(0), 0);
-                maxNoteIdx = Math.Min(GetNoteForPixel(Width - whiteKeySizeX) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
+                minNoteIdx = Math.Max(GetAbsoluteNoteIndexForPixel(0), 0);
+                maxNoteIdx = Math.Min(GetAbsoluteNoteIndexForPixel(Width - whiteKeySizeX) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
                 channelIndex = editChannel;
 
                 return true;
@@ -2944,8 +2944,8 @@ namespace FamiStudio
             // Init
             var r = new RenderInfo();
 
-            var minVisibleNoteIdx = Math.Max(GetNoteForPixel(0), 0);
-            var maxVisibleNoteIdx = Math.Min(GetNoteForPixel(Width) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
+            var minVisibleNoteIdx = Math.Max(GetAbsoluteNoteIndexForPixel(0), 0);
+            var maxVisibleNoteIdx = Math.Min(GetAbsoluteNoteIndexForPixel(Width) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
 
             r.g = g;
             r.cc = g.CreateCommandList();
@@ -3035,7 +3035,7 @@ namespace FamiStudio
         void ResizeEnvelope(int x, int y)
         {
             var env = EditEnvelope;
-            int length = GetNoteForPixel(x - whiteKeySizeX);
+            int length = GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX);
 
             switch (captureOperation)
             {
@@ -3353,7 +3353,7 @@ namespace FamiStudio
                 {
                     if (IsPointInHeader(e.X, e.Y))
                     {
-                        int patIdx = Song.PatternIndexFromAbsoluteNoteIndex(GetNoteForPixel(e.X - whiteKeySizeX));
+                        int patIdx = Song.PatternIndexFromAbsoluteNoteIndex(GetAbsoluteNoteIndexForPixel(e.X - whiteKeySizeX));
                         if (patIdx >= 0 && patIdx < Song.Length)
                             SetSelection(Song.GetPatternStartAbsoluteNoteIndex(patIdx), Song.GetPatternStartAbsoluteNoteIndex(patIdx + 1) - 1);
                     }
@@ -3406,7 +3406,7 @@ namespace FamiStudio
             captureSelectionMin = selectionMin;
             captureSelectionMax = selectionMax;
 
-            captureMouseAbsoluteIdx = GetNoteForPixel(x - whiteKeySizeX);
+            captureMouseAbsoluteIdx = GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX);
             if (allowSnap)
                 captureMouseAbsoluteIdx = SnapNote(captureMouseAbsoluteIdx);
 
@@ -3677,6 +3677,11 @@ namespace FamiStudio
         {
             return selectionMin >= 0 && selectionMax >= 0;
         }
+
+        private bool SelectionCoversMultiplePatterns()
+        {
+            return IsSelectionValid() && Song.PatternIndexFromAbsoluteNoteIndex(selectionMin) != Song.PatternIndexFromAbsoluteNoteIndex(selectionMax);
+        }
         
         private void MoveNotes(int amount)
         {
@@ -3868,12 +3873,12 @@ namespace FamiStudio
             if (note == null || !note.IsMusical)
                 return null;
 
+            var visualDuration = GetVisualNoteDuration(highlightNoteLocation, note);
             var list = new List<MobileGizmo>();
 
             // Resize gizmo
             {
-                // DROIDTODO : Using the real duration is wrong here, need to see if note after.
-                var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + note.Duration) + noteSizeY / 2;
+                var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + visualDuration) + noteSizeY / 2;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY - noteSizeY / 2;
 
                 if (captureOperation == CaptureOperation.ResizeNoteEnd ||
@@ -3890,7 +3895,7 @@ namespace FamiStudio
             }
 
             // Release gizmo
-            if (note.HasRelease)
+            if (note.HasRelease && note.Release < visualDuration)
             {
                 var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + note.Release) - noteSizeY;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY + noteSizeY * 3 / 2;
@@ -3911,7 +3916,7 @@ namespace FamiStudio
             if (note.IsSlideNote)
             {
                 var side = note.SlideNoteTarget > note.Value ? 1 : -1;
-                var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + note.Duration) + noteSizeY / 2;
+                var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + visualDuration) + noteSizeY / 2;
                 var y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - noteSizeY / 2;
 
                 if (captureOperation == CaptureOperation.DragSlideNoteTarget)
@@ -4546,7 +4551,7 @@ namespace FamiStudio
                                 captureOp == CaptureOperation.ResizeNoteStart ||
                                 captureOp == CaptureOperation.ResizeSelectionNoteStart)
                             {
-                                StartNoteDrag(e, captureOp, noteLocation, note);
+                                StartNoteDrag(e.X, e.Y, captureOp, noteLocation, note);
                             }
                             else if (captureOp == CaptureOperation.ResizeNoteEnd ||
                                      captureOp == CaptureOperation.ResizeSelectionNoteEnd)
@@ -4720,7 +4725,7 @@ namespace FamiStudio
                 pattern = channel.CreatePatternAndInstance(location.PatternIndex);
             }
 
-            App.PlayInstrumentNote(noteValue, false, false, false, null, null, 1.0f);
+            App.PlayInstrumentNote(noteValue, false, false, false, null, null, 0.5f);
 
             var abs = location.ToAbsoluteNoteIndex(Song);
             var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
@@ -4791,6 +4796,23 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchDownDragNote(int x, int y)
+        {
+            if (HasHighlightedNote() && IsPointInNoteArea(x, y))
+            {
+                var mouseNote = GetNoteForCoord(x, y, out _, out _, out var duration);
+                var highlightNote = GetHighlightedNote();
+
+                if (highlightNote != null && mouseNote == highlightNote)
+                {
+                    StartNoteDrag(x, y, IsHighlightedNoteSelected() ? CaptureOperation.DragSelection : CaptureOperation.DragNote, highlightNoteLocation, highlightNote);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool HandleTouchDownDragSeekBar(int x, int y)
         {
             if (IsPointInHeader(x, y))
@@ -4835,7 +4857,7 @@ namespace FamiStudio
         {
             if (IsPointInHeader(x, y))
             {
-                App.SeekSong(GetNoteForPixel(x - whiteKeySizeX));
+                App.SeekSong(GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX));
                 return true;
             }
 
@@ -4866,31 +4888,78 @@ namespace FamiStudio
             return false;
         }
 
-        private void ToggleSlideNote(Note note)
+        private void ToggleSlideNote(NoteLocation location, Note note)
         {
-            if (note.IsSlideNote)
+            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            var selected = IsNoteSelected(location);
+
+            if (selected && SelectionCoversMultiplePatterns())
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+            else
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+
+            note.SlideNoteTarget = note.IsSlideNote ? (byte)0 : (byte)(note.Value + (note.Value < Note.MusicalNoteC7 ? 5 : -5));
+
+            if (selected)
             {
-                note.IsSlideNote = false;
+                TransformNotes(selectionMin, selectionMax, false, true, false, (n, idx) =>
+                {
+                    if (n != null && n.IsMusical)
+                    {
+                        if (!note.IsSlideNote)
+                            n.IsSlideNote = false;
+                        else if (!n.IsSlideNote)
+                            n.SlideNoteTarget = (byte)(n.Value + (n.Value < Note.MusicalNoteC7 ? 5 : -5));
+                    }
+
+                    return n;
+                });
+
+                MarkSelectedPatternsDirty();
             }
-            else 
+            else
             {
-                if (note.Value < Note.MusicalNoteC7)
-                    note.SlideNoteTarget = (byte)(note.Value + 5);
-                else
-                    note.SlideNoteTarget = (byte)(note.Value - 5);
+                MarkPatternDirty(location.PatternIndex);
             }
+
+            App.UndoRedoManager.EndTransaction();
         }
 
-        private void ToggleNoteRelease(Note note)
+        private void ToggleNoteRelease(NoteLocation location, Note note)
         {
-            if (note.HasRelease)
+            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            var selected = IsNoteSelected(location);
+
+            if (selected && SelectionCoversMultiplePatterns())
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+            else
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+
+            note.Release = note.HasRelease ? 0 : Math.Max(1, note.Duration / 2);
+
+            if (selected)
             {
-                note.HasRelease = false;
+                TransformNotes(selectionMin, selectionMax, false, true, false, (n, idx) =>
+                {
+                    if (n != null && n.IsMusical)
+                    {
+                        if (!note.HasRelease)
+                            n.HasRelease = false;
+                        else if (!n.HasRelease)
+                            n.Release = Math.Max(1, n.Duration / 2);
+                    }
+
+                    return n;
+                });
+
+                MarkSelectedPatternsDirty();
             }
-            else if (note.Duration > 1)
+            else
             {
-                note.Release = Math.Max(1, note.Duration / 2);
+                MarkPatternDirty(location.PatternIndex);
             }
+
+            App.UndoRedoManager.EndTransaction();
         }
 
         private bool HandleLongPressChannelNote(int x, int y)
@@ -4904,6 +4973,9 @@ namespace FamiStudio
                 var noteLocation = mouseLocation;
                 var note = channel.FindMusicalNoteAtLocation(ref noteLocation, noteValue);
 
+                SetHighlightedNote(noteLocation);
+
+                var selection = IsHighlightedNoteSelected();
                 var menu = new List<ContextMenuOption>();
 
                 const int ResultToggleAttack  = 0;
@@ -4916,11 +4988,11 @@ namespace FamiStudio
                     if (note.IsMusical)
                     {
                         if (channel.SupportsNoAttackNotes)
-                            menu.Add(new ContextMenuOption("", "Toggle Note Attack", ResultToggleAttack));
+                            menu.Add(new ContextMenuOption("", $"Toggle {(selection ? "Selection" : "")} Note Attack", ResultToggleAttack));
                         if (channel.SupportsSlideNotes)
-                            menu.Add(new ContextMenuOption("", "Toggle Slide Note", ResultToggleSlide));
+                            menu.Add(new ContextMenuOption("", $"Toggle {(selection ? "Selection" : "")} Slide Note", ResultToggleSlide));
                         if (channel.SupportsReleaseNotes)
-                            menu.Add(new ContextMenuOption("", "Toggle Release", ResultToggleRelease));
+                            menu.Add(new ContextMenuOption("", $"Toggle {(selection ? "Selection" : "")} Release", ResultToggleRelease));
                     }
                 }
 
@@ -4929,11 +5001,11 @@ namespace FamiStudio
                     App.ShowContextMenu(menu.ToArray(), (i) =>
                     {
                         if (i == ResultToggleAttack)
-                            note.HasAttack = !note.HasAttack;
+                            ToggleNoteAttack(noteLocation, note);
                         else if (i == ResultToggleSlide)
-                            ToggleSlideNote(note);
+                            ToggleSlideNote(noteLocation, note);
                         else if (i == ResultToggleRelease)
-                            ToggleNoteRelease(note);
+                            ToggleNoteRelease(noteLocation, note);
                     });
                 }
 
@@ -4951,6 +5023,7 @@ namespace FamiStudio
             if (editMode == EditionMode.Channel)
             {
                 if (HandleTouchDownNoteGizmos(x, y)) goto Handled;
+                if (HandleTouchDownDragNote(x, y)) goto Handled;
             }
 
             // DROIDTODO : Check edit mode, maybe not apply to all. Like piano may not be there in all modes.
@@ -5175,6 +5248,11 @@ namespace FamiStudio
             return highlightNoteLocation.IsValid;
         }
 
+        private bool IsHighlightedNoteSelected()
+        {
+            return HasHighlightedNote() && IsNoteSelected(highlightNoteLocation);
+        }
+
         private Note GetHighlightedNote()
         {
             return highlightNoteLocation.IsValid ? Song.Channels[editChannel].GetNoteAt(highlightNoteLocation) : null; 
@@ -5210,6 +5288,25 @@ namespace FamiStudio
             PatternChanged?.Invoke(pattern);
         }
 
+        private void MarkSelectedPatternsDirty()
+        {
+            if (IsSelectionValid())
+            {
+                var channel = Song.Channels[editChannel];
+                var patternMin = Song.PatternIndexFromAbsoluteNoteIndex(selectionMin);
+                var patternMax = Song.PatternIndexFromAbsoluteNoteIndex(selectionMax);
+
+                channel.InvalidateCumulativePatternCache(patternMin, patternMax);
+
+                for (int i = patternMin; i <= patternMax; i++)
+                {
+                    var pattern = channel.PatternInstances[i];
+                    if (pattern != null)
+                        PatternChanged?.Invoke(pattern);
+                }
+            }
+        }
+
         private void StartPlayPiano(int x, int y)
         {
             StartCaptureOperation(x, y, CaptureOperation.PlayPiano);
@@ -5232,7 +5329,7 @@ namespace FamiStudio
         {
             ScrollIfNearEdge(x);
 
-            int noteIdx = GetNoteForPixel(x - whiteKeySizeX);
+            int noteIdx = GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX);
 
             int minSelectionIdx = Math.Min(noteIdx, captureMouseAbsoluteIdx);
             int maxSelectionIdx = Math.Max(noteIdx, captureMouseAbsoluteIdx);
@@ -5267,7 +5364,7 @@ namespace FamiStudio
 
         private void UpdateSeekDrag(int x, int y, bool final)
         {
-            dragSeekPosition = GetNoteForPixel(x - whiteKeySizeX);
+            dragSeekPosition = GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX);
             dragSeekPosition = SnapNote(dragSeekPosition);
 
             if (final)
@@ -5392,9 +5489,32 @@ namespace FamiStudio
 
                 if (channel.SupportsNoAttackNotes)
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                    pattern.Notes[location.NoteIndex].HasAttack ^= true;
-                    MarkPatternDirty(location.PatternIndex);
+                    var selected = IsNoteSelected(location);
+
+                    if (selected && SelectionCoversMultiplePatterns())
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                    else
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+
+                    note.HasAttack ^= true;
+                    var attack = note.HasAttack;
+
+                    if (selected)
+                    {
+                        TransformNotes(selectionMin, selectionMax, false, true, false, (n, idx) =>
+                        {
+                            if (n != null && n.IsMusical)
+                                n.HasAttack = attack;
+                            return n;
+                        });
+
+                        MarkSelectedPatternsDirty();
+                    }
+                    else
+                    {
+                        MarkPatternDirty(location.PatternIndex);
+                    }
+
                     App.UndoRedoManager.EndTransaction();
                 }
             }
@@ -6038,7 +6158,7 @@ namespace FamiStudio
             }
         }
 
-        private void StartNoteDrag(MouseEventArgs e, CaptureOperation captureOp, NoteLocation location, Note note)
+        private void StartNoteDrag(int x, int y, CaptureOperation captureOp, NoteLocation location, Note note)
         {
             var dragSelection = 
                 captureOp == CaptureOperation.DragSelection || 
@@ -6056,7 +6176,7 @@ namespace FamiStudio
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
 
-            StartCaptureOperation(e.X, e.Y, captureOp, true, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(x, y, captureOp, true, location.ToAbsoluteNoteIndex(Song));
 
             if (dragSelection)
             {
@@ -6077,7 +6197,7 @@ namespace FamiStudio
 
             dragLastNoteValue = -1;
 
-            UpdateNoteDrag(e.X, e.Y, false);
+            UpdateNoteDrag(x, y, false);
         }
 
         private void UpdateNoteDrag(int x, int y, bool final, bool createNote = false)
@@ -6715,7 +6835,7 @@ namespace FamiStudio
         {
             if (x > whiteKeySizeX && y > headerSizeY && y < headerAndEffectSizeY)
             {
-                var absoluteNoteIndex = GetNoteForPixel(x - whiteKeySizeX);
+                var absoluteNoteIndex = GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX);
                 location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
                 if (location.PatternIndex < Song.Length)
                     return true;
@@ -6737,7 +6857,7 @@ namespace FamiStudio
 
         private bool GetLocationForCoord(int x, int y, out NoteLocation location, out byte noteValue, bool allowSnap = false)
         {
-            var absoluteNoteIndex = Utils.Clamp(GetNoteForPixel(x - whiteKeySizeX), 0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
+            var absoluteNoteIndex = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX), 0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
 
             if (allowSnap)
                 absoluteNoteIndex = SnapNote(absoluteNoteIndex);
@@ -6746,6 +6866,17 @@ namespace FamiStudio
             noteValue = (byte)(NumNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, NumNotes));
 
             return (x > whiteKeySizeX && y > headerAndEffectSizeY && location.PatternIndex < Song.Length);
+        }
+
+        private int GetVisualNoteDuration(NoteLocation location, Note note)
+        {
+            var duration = note.Duration;
+
+            var distToNext = Song.Channels[editChannel].GetDistanceToNextNote(location);
+            if (distToNext >= 0)
+                duration = Math.Min(duration, distToNext);
+
+            return duration;
         }
 
         private Note GetNoteForCoord(int x, int y, out NoteLocation mouseLocation, out NoteLocation noteLocation, out int duration)
@@ -6779,7 +6910,7 @@ namespace FamiStudio
         {
             var maxValue = 64 / envelopeValueZoom - 1; 
 
-            idx = GetNoteForPixel(x - whiteKeySizeX);
+            idx = GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX);
             value = (sbyte)(maxValue - (int)Math.Min((y + scrollY - headerAndEffectSizeY - 1) / envelopeSizeY, 128)); 
 
             return x > whiteKeySizeX;
