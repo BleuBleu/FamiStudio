@@ -449,6 +449,7 @@
     <EmbeddedResource Include="Resources\MenuMute.png" />
     <EmbeddedResource Include="Resources\MenuPatternProperties.png" />
     <EmbeddedResource Include="Resources\MenuSolo.png" />
+    <EmbeddedResource Include="Resources\MenuStopNote.png" />
     <EmbeddedResource Include="Resources\MenuToggleAttack.png" />
     <EmbeddedResource Include="Resources\MenuToggleRelease.png" />
     <EmbeddedResource Include="Resources\MenuToggleSlide.png" />

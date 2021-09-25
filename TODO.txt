@@ -19,29 +19,29 @@ Project explorer:
 Long press:
 	- Properties, etc.
 TDB:
-	- Env replace? Instrument replace?
-	- Song reorder?
+	- Env replace? Instrument replace? Song reorder?
+		=> Will be done with cursor mecanic.
 
 Piano roll:
 - Possible actions: 
 	x Pan/zoom
 	x Create notes
-	- Drag note/selection
-	/ Slide notes
-	/ Toggle attack
-	/ Toggle release note 
-	- Eyedrop 
-	- Stop note 
-	/ Resize from end 
-	- Delete note 
-	- Create/Change effect value 
-	- Clear effect value  ====> HOW
+	x Drag note/selection
+	x Slide notes
+	x Toggle attack
+	x Toggle release note 
+	x Eyedrop 
+	x Stop note 
+	x Delete note 
 	x Select 
 	x Seek 
+	x Play piano 
+	x Resize from end 
+	- Create/Change effect value 
+	- Clear effect value
 	- DPCM vol envelope 
 	- Move env loop/release point ====> HOW, long press?
 	- Resize envelope ====> HOW? Add button in header?
-	x Play piano 
 	- Map/clear DPCM sample
 	- Move DPCM mapping 
 Controls:
@@ -85,6 +85,9 @@ Controls:
 	x Header Tap = seek
 
 Toolbar:
+- Fix font size thing
+- Clicking on timecode doesnt change mode. 
+- Oscilloscope doesnt seem to work
 - Collapse when pressing outside (or pressing any button?)
 - Add version next to "..."
 

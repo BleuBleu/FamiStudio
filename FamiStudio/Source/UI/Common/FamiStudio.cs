@@ -115,7 +115,7 @@ namespace FamiStudio
             mainForm = new FamiStudioForm(this);
 #endif
 
-            mainForm.SetActiveControl(PianoRoll, false);
+            SetActiveControl(PianoRoll);
 
             Sequencer.PatternClicked         += Sequencer_PatternClicked;
             Sequencer.ControlActivated       += Sequencer_ControlActivated;
@@ -286,6 +286,14 @@ namespace FamiStudio
         {
             Debug.Assert(ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer);
             mainForm.SetActiveControl(ctrl);
+            UpdateShowSelection(ctrl);
+        }
+
+        private void UpdateShowSelection(RenderControl ctrl)
+        {
+            PianoRoll.ShowSelection = ctrl == PianoRoll;
+            Sequencer.ShowSelection = ctrl == Sequencer;
+            ToolBar.MarkDirty();
         }
 
         private void ProjectExplorer_InstrumentsHovered(bool showExpansions)
@@ -455,16 +463,12 @@ namespace FamiStudio
 
         private void Sequencer_ControlActivated()
         {
-            PianoRoll.ShowSelection = false;
-            Sequencer.ShowSelection = true;
-            ToolBar.MarkDirty();
+            UpdateShowSelection(Sequencer);
         }
 
         private void PianoRoll_ControlActivated()
         {
-            PianoRoll.ShowSelection = true;
-            Sequencer.ShowSelection = false;
-            ToolBar.MarkDirty();
+            UpdateShowSelection(PianoRoll);
         }
 
         public void Run()
@@ -1933,6 +1937,8 @@ namespace FamiStudio
                     case 1: mainForm.SetActiveControl(PianoRoll, false); break;
                     case 2: mainForm.SetActiveControl(ProjectExplorer, false); break;
                 }
+
+                UpdateShowSelection(mainForm.ActiveControl);
             }
         }
 

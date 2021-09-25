@@ -1426,12 +1426,12 @@ namespace FamiStudio
                 {
                     if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
                     {
-                        menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete selection", () => { DeleteSelection(true); }));
+                        menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Patterns", () => { DeleteSelection(true); }));
                         menu.Add(new ContextMenuOption("MenuPatternProperties", "Selected Patterns Properties...", () => { EditPatternProperties(Point.Empty, pattern, true); }));
                     }
                     else
                     {
-                        menu.Add(new ContextMenuOption("MenuDelete", "Delete pattern", () => { DeletePattern(location); }));
+                        menu.Add(new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }));
                         menu.Add(new ContextMenuOption("MenuPatternProperties", "Pattern Properties...", () => { EditPatternProperties(Point.Empty, pattern, false); }));
                     }
                 }
@@ -2638,6 +2638,7 @@ namespace FamiStudio
             buffer.Serialize(ref selectionMin.PatternIndex);
             buffer.Serialize(ref selectionMax.PatternIndex);
             buffer.Serialize(ref timeOnlySelection);
+            buffer.Serialize(ref showSelection);
 
             if (buffer.IsReading)
             {

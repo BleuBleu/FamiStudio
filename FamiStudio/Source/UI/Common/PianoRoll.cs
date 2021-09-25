@@ -28,6 +28,7 @@ namespace FamiStudio
         const float DrawFrameZoom           = 0.5f;
         const float ContinuousFollowPercent = 0.75f;
         const float DefaultZoomWaveTime     = 0.25f;
+        const float ScrollSpeedFactor       = PlatformUtils.IsMobile ? 2.0f : 1.0f;
 
         const int NumOctaves = 8;
         const int NumNotes   = NumOctaves * 12;
@@ -4777,7 +4778,7 @@ namespace FamiStudio
                             {
                                 // DROIDTODO : Operate on multiple notes if in selection.
                                 case GizmoAction.ResizeNote:
-                                    StartNoteResizeEnd(x, y, CaptureOperation.ResizeNoteEnd, highlightNoteLocation);
+                                    StartNoteResizeEnd(x, y,  IsNoteSelected(highlightNoteLocation) ? CaptureOperation.ResizeSelectionNoteEnd : CaptureOperation.ResizeNoteEnd, highlightNoteLocation);
                                     break;
                                 case GizmoAction.MoveRelease:
                                     StartMoveNoteRelease(x, y, highlightNoteLocation);
@@ -4962,6 +4963,15 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
+        private void ConvertToStopNote(NoteLocation location, Note note)
+        {
+            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+            note.IsStop = true;
+            MarkPatternDirty(pattern);
+            App.UndoRedoManager.EndTransaction();
+        }
+
         private bool HandleLongPressChannelNote(int x, int y)
         {
             if (GetLocationForCoord(x, y, out var mouseLocation, out byte noteValue))
@@ -4989,6 +4999,10 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuToggleSlide", $"Toggle {(selection ? "Selection" : "")} Slide Note", () => { ToggleSlideNote(noteLocation, note); }));
                         if (channel.SupportsReleaseNotes)
                             menu.Add(new ContextMenuOption("MenuToggleRelease", $"Toggle {(selection ? "Selection" : "")} Release", () => { ToggleNoteRelease(noteLocation, note); }));
+                        if (channel.Type != ChannelType.Dpcm)
+                            menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
+
+                        menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
                     }
                     
                     menu.Add(new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
@@ -4996,7 +5010,7 @@ namespace FamiStudio
 
                 if (IsNoteSelected(mouseLocation))
                 {
-                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selection", () => { DeleteSelectedNotes(); }));
+                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Notes", () => { DeleteSelectedNotes(); }));
                 }
 
                 if (IsSelectionValid())
@@ -5257,19 +5271,38 @@ namespace FamiStudio
             return highlightNoteLocation.IsValid ? Song.Channels[editChannel].GetNoteAt(highlightNoteLocation) : null; 
         }
 
-        private void ScrollIfNearEdge(int mouseX)
+        private void ScrollIfNearEdge(int x, int y, bool scrollHorizontal = true, bool scrollVertical = false)
         {
-            if ((mouseX - whiteKeySizeX) < 0)
+            if (scrollHorizontal)
             {
-                var scrollAmount = Utils.Clamp((whiteKeySizeX - mouseX) / (float)whiteKeySizeX, 0.0f, 1.0f);
-                scrollX -= (int)(App.AverageTickRate * scrollAmount);
-                ClampScroll();
+                if ((x - whiteKeySizeX) < 0)
+                {
+                    var scrollAmount = Utils.Clamp((whiteKeySizeX - x) / (float)whiteKeySizeX, 0.0f, 1.0f);
+                    scrollX -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
+                else if ((Width - x) < whiteKeySizeX)
+                {
+                    var scrollAmount = Utils.Clamp((x - (Width - whiteKeySizeX)) / (float)whiteKeySizeX, 0.0f, 1.0f);
+                    scrollX += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
             }
-            else if ((Width - mouseX) < whiteKeySizeX)
+
+            if (scrollVertical)
             {
-                var scrollAmount = Utils.Clamp((mouseX - (Width - whiteKeySizeX)) / (float)whiteKeySizeX, 0.0f, 1.0f);
-                scrollX += (int)(App.AverageTickRate * scrollAmount);
-                ClampScroll();
+                if ((y - headerAndEffectSizeY) < 0)
+                {
+                    var scrollAmount = Utils.Clamp((headerAndEffectSizeY - y) / (float)headerAndEffectSizeY, 0.0f, 1.0f);
+                    scrollY -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
+                else if ((Height - y) < headerAndEffectSizeY)
+                {
+                    var scrollAmount = Utils.Clamp((y - (Height - headerAndEffectSizeY)) / (float)headerAndEffectSizeY, 0.0f, 1.0f);
+                    scrollY += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
             }
         }
 
@@ -5326,7 +5359,7 @@ namespace FamiStudio
 
         private void UpdateSelection(int x, int y)
         {
-            ScrollIfNearEdge(x);
+            ScrollIfNearEdge(x, y);
 
             int noteIdx = GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX);
 
@@ -5340,7 +5373,7 @@ namespace FamiStudio
 
         private void UpdateWaveSelection(int x, int y)
         {
-            ScrollIfNearEdge(x);
+            ScrollIfNearEdge(x, y);
 
             float time = Math.Max(0.0f, GetWaveTimeForPixel(x - whiteKeySizeX));
 
@@ -6112,7 +6145,7 @@ namespace FamiStudio
 
         private void UpdateNoteCreation(int x, int y, bool first, bool last)
         {
-            ScrollIfNearEdge(x);
+            ScrollIfNearEdge(x, y);
             GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
             if (!first)
@@ -6210,7 +6243,7 @@ namespace FamiStudio
 
             App.UndoRedoManager.RestoreTransaction(false);
 
-            ScrollIfNearEdge(x);
+            ScrollIfNearEdge(x, y, true, PlatformUtils.IsMobile);
             GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
             var resizeStart = captureOperation == CaptureOperation.ResizeNoteStart || captureOperation == CaptureOperation.ResizeSelectionNoteStart;
@@ -6466,7 +6499,7 @@ namespace FamiStudio
                 return note;
             });
 
-            ScrollIfNearEdge(x);
+            ScrollIfNearEdge(x, y);
             GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
             var deltaNoteIdx = location.ToAbsoluteNoteIndex(Song) - captureMouseAbsoluteIdx;
@@ -6936,6 +6969,7 @@ namespace FamiStudio
             buffer.Serialize(ref maximized);
             buffer.Serialize(ref selectionMin);
             buffer.Serialize(ref selectionMax);
+            buffer.Serialize(ref showSelection);
 
             if (PlatformUtils.IsMobile)
             {

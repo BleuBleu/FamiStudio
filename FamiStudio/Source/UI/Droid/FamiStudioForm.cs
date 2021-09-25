@@ -414,8 +414,8 @@ namespace FamiStudio
             linearLayout.Orientation = Orientation.Vertical;
             linearLayout.SetBackgroundColor(bgColor);
 
-            var imagePad  = DroidUtils.DpToPixels(4);
-            var imageSize = DroidUtils.DpToPixels(36);
+            var imagePad  = DroidUtils.DpToPixels(2);
+            var imageSize = DroidUtils.DpToPixels(32);
 
             for (int i = 0; i < options.Length; i++)
             {
