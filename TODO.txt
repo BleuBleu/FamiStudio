@@ -27,12 +27,12 @@ Piano roll:
 	x Pan/zoom
 	x Create notes
 	- Drag note/selection
-	- Slide notes
-	- Toggle attack
+	/ Slide notes
+	/ Toggle attack
+	/ Toggle release note 
 	- Eyedrop 
-	- Toggle release note 
 	- Stop note 
-	- Resize from start/end 
+	/ Resize from end 
 	- Delete note 
 	- Create/Change effect value 
 	- Clear effect value  ====> HOW
@@ -46,10 +46,10 @@ Piano roll:
 	- Move DPCM mapping 
 Controls:
 	Longpress : 
-		- Toggle attack
-		- Toggle release
+		/ Toggle attack
+		/ Toggle release
 		- Toggle stop note
-		- Toggle slide 
+		/ Toggle slide 
 		- Eyedropper
 		- Replace instrument/arp?
 		- Anything else?
@@ -59,21 +59,20 @@ Controls:
 
 Sequencer:
 - Possible actions:
-	- Change active channel
-	- Channel solo/mute
+	/ Change active channel
+	/ Channel solo/mute
 	- Force display
-	- Set loop point
-	- Seek
-	- Select
-	- Select rectangle
-	- Create/delete pattern
-	- Drag patterns
-	- Edit pattern properties
-	- Edit custom pattern settings
+	/ Set loop point
+	x Seek
+	x Select
+	x Select rectangle
+	/ Create/delete pattern
+	/ Drag patterns
+	/ Edit pattern properties
+	/ Edit custom pattern settings
 Tools:
 	- Pencil
 	- Eraser
-	- Select (better way to make square selection?)
 Controls:
 	- Copy/paste/instanciate
 	- Longpress : Instanciate/Copy selection here

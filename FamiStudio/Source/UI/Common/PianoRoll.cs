@@ -3872,6 +3872,7 @@ namespace FamiStudio
 
             // Resize gizmo
             {
+                // DROIDTODO : Using the real duration is wrong here, need to see if note after.
                 var x = GetPixelForNote(highlightNoteLocation.ToAbsoluteNoteIndex(Song) + note.Duration) + noteSizeY / 2;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY - noteSizeY / 2;
 
