@@ -441,6 +441,7 @@
     <EmbeddedResource Include="Resources\MenuClearSelection.png" />
     <EmbeddedResource Include="Resources\MenuCustomPatternSettings.png" />
     <EmbeddedResource Include="Resources\MenuDelete.png" />
+    <EmbeddedResource Include="Resources\MenuDeleteSelection.png" />
     <EmbeddedResource Include="Resources\MenuExpandSelection.png" />
     <EmbeddedResource Include="Resources\MenuEyedropper.png" />
     <EmbeddedResource Include="Resources\MenuForceDisplay.png" />

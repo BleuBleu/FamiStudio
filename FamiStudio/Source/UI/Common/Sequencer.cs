@@ -1426,7 +1426,7 @@ namespace FamiStudio
                 {
                     if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
                     {
-                        menu.Add(new ContextMenuOption("MenuDelete", "Delete selection", () => { DeleteSelection(true); }));
+                        menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete selection", () => { DeleteSelection(true); }));
                         menu.Add(new ContextMenuOption("MenuPatternProperties", "Selected Patterns Properties...", () => { EditPatternProperties(Point.Empty, pattern, true); }));
                     }
                     else

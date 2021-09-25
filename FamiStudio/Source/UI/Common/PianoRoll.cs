@@ -4573,7 +4573,7 @@ namespace FamiStudio
                 {
                     if (note != null)
                     {
-                        ClickDeleteNote(noteLocation, mouseLocation, note);
+                        DeleteSingleNote(noteLocation, mouseLocation, note);
                     }
                     else
                     {
@@ -4990,6 +4990,19 @@ namespace FamiStudio
                         if (channel.SupportsReleaseNotes)
                             menu.Add(new ContextMenuOption("MenuToggleRelease", $"Toggle {(selection ? "Selection" : "")} Release", () => { ToggleNoteRelease(noteLocation, note); }));
                     }
+                    
+                    menu.Add(new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
+                }
+
+                if (IsNoteSelected(mouseLocation))
+                {
+                    menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selection", () => { DeleteSelectedNotes(); }));
+                }
+
+                if (IsSelectionValid())
+                {
+                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); }));
+
                 }
 
                 if (menu.Count > 0)
@@ -5551,7 +5564,7 @@ namespace FamiStudio
             DPCMSampleUnmapped?.Invoke(noteValue);
         }
 
-        private void ClickDeleteNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
+        private void DeleteSingleNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
         {
             var pattern = Song.Channels[editChannel].PatternInstances[noteLocation.PatternIndex];
             var dist = noteLocation.DistanceTo(Song, mouseLocation);
