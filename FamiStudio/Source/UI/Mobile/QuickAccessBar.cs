@@ -713,7 +713,7 @@ namespace FamiStudio
 
             var navBgBrush = IsLandscape ?
                 g.GetHorizontalGradientBrush(Theme.DarkGreyLineColor1, buttonSize, 0.8f) :
-                g.GetVerticalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f);
+                g.GetVerticalGradientBrush(Theme.DarkGreyLineColor1, buttonSize, 0.8f);
             var bgBrush = IsLandscape ?
                 g.GetHorizontalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f) :
                 g.GetVerticalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f);

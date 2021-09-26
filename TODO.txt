@@ -4,6 +4,7 @@ Android
 Quick access:
 - Show some kind of scroll bar.
 - Ensure visible.
+- Replace "tool" by something else useful.
 - Advanced stuff like longpress, etc.
 - Disable buttons when they dont make sense (snapping in sequencer, etc.)
 
