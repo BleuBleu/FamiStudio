@@ -1,6 +1,22 @@
 Android
 =======
 
+File I/O:
+- Project open:
+	- User files
+	- How to support NSF import? Must not change flow too much. StartOpenProject?
+- Project save:
+	- New file
+	- Overwrite existing.
+	- Add a "saved to xxx" toast when saving.
+- Project delete? 
+	- How? Checklist box somewhere... Config?
+- How to know why project is open? Add label to project properties?
+- Sharing:
+	- Export = share, output to cache, then share?
+	- How to share .fms file? Add to export?
+	- 
+
 Quick access:
 - Show some kind of scroll bar.
 - Ensure visible.
