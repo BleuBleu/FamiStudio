@@ -118,10 +118,6 @@
     <PackageReference Include="Xamarin.Essentials" Version="1.7.0" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Source\UI\Droid\Resources\anim\fade_in.xml" />
-    <AndroidResource Include="Source\UI\Droid\Resources\anim\fade_out.xml" />
-    <AndroidResource Include="Source\UI\Droid\Resources\anim\slide_in_right.xml" />
-    <AndroidResource Include="Source\UI\Droid\Resources\anim\slide_out_right.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand.xml">
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
     </AndroidResource>

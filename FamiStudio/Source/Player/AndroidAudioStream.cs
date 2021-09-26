@@ -38,6 +38,7 @@ namespace FamiStudio
 
         public void Start()
         {
+            quit = false;
             audioTrack.Play();
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }

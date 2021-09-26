@@ -47,6 +47,10 @@ namespace FamiStudio
             tableLayout.ColumnStyles[0].Width = tabsWidth * DpiScaling.Dialog;
         }
 
+        public void SetVerb(string text, bool showOnTabPage = false)
+        {
+        }
+
         private void InitializeComponent()
         {
             buttonYes = new NoFocusButton();

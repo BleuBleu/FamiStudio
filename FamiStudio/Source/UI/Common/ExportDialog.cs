@@ -74,6 +74,7 @@ namespace FamiStudio
             int height = PlatformUtils.IsLinux ? 650 : (PlatformUtils.IsMacOS ? 630 : 550);
 
             this.dialog = new MultiPropertyDialog("Export Songs", width, height, 200);
+            this.dialog.SetVerb("Export");
             this.project = project;
 
             for (int i = 0; i < (int)ExportFormat.Max; i++)

@@ -54,7 +54,7 @@ namespace FamiStudio
         public static int FollowSync = 0;
         public static bool ShowNoteLabels = true;
         public static int  ScrollBars = ScrollBarsNone;
-        public static bool ShowOscilloscope = false;
+        public static bool ShowOscilloscope = true;
         public static bool ForceCompactSequencer = false;
         public static bool ShowImplicitStopNotes = true;
 

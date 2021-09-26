@@ -179,7 +179,7 @@ namespace FamiStudio
         public GLBitmap CreateBitmapFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);
-            return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height);
+            return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height, true, true);
         }
 
         public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
@@ -224,12 +224,12 @@ namespace FamiStudio
                 bmp.Recycle();
             }
 
-            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, elementRects);
+            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, elementRects, true, true);
         }
 
         public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
         {
-            return new GLBitmap(g.Texture, g.SizeX, g.SizeY, false);
+            return new GLBitmap(g.Texture, g.SizeX, g.SizeY, false, false);
         }
 
         public float GetBitmapWidth(GLBitmap bmp)

@@ -808,6 +808,7 @@ namespace FamiStudio
             pageLayout = new LinearLayout(container.Context);
             pageLayout.LayoutParameters = coordLayoutParameters;
             pageLayout.Orientation = Orientation.Vertical;
+            pageLayout.SetBackgroundColor(DroidUtils.ToAndroidColor(Theme.DarkGreyFillColor1));
 
             for (int i = 0; i < properties.Count; i++)
             {

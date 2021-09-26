@@ -77,7 +77,8 @@ namespace FamiStudio
             int width  = PlatformUtils.IsWindows ? 550 : 570;
             int height = PlatformUtils.IsWindows ? 350 : 450;
 
-            this.dialog = new MultiPropertyDialog("FamiStudio Configuration", width, height);
+            dialog = new MultiPropertyDialog("FamiStudio Configuration", width, height);
+            dialog.SetVerb("Apply", true);
 
             // Keep a copy of QWERTY keys.
             qwertyKeys = new int[37, 2];

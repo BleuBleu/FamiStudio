@@ -145,7 +145,7 @@ namespace FamiStudio
 
         public GLBitmap CreateEmptyBitmap(int width, int height)
         {
-            return new GLBitmap(CreateEmptyTexture(width, height), width, height);
+            return new GLBitmap(CreateEmptyTexture(width, height), width, height, true, false);
         }
 
         public GLBrush CreateSolidBrush(Color color)
@@ -623,16 +623,21 @@ namespace FamiStudio
     {
         protected int id;
         protected Size size;
+        protected bool dispose = true;
+        protected bool filter = false;
+        protected bool atlas = false;
 
         public int Id => id;
         public Size Size => size;
-        private bool dispose = true;
+        public bool Filtering => filter;
+        public bool IsAtlas => atlas;
 
-        public GLBitmap(int id, int width, int height, bool disp = true)
+        public GLBitmap(int id, int width, int height, bool disp = true, bool filter = false)
         {
             this.id = id;
             this.size = new Size(width, height);
             this.dispose = disp;
+            this.filter = filter;
         }
 
         public void Dispose()
@@ -661,10 +666,11 @@ namespace FamiStudio
 
         public Size GetElementSize(int index) => elementRects[index].Size;
 
-        public GLBitmapAtlas(int id, int width, int height, Rectangle[] elementRects, bool disp = true) :
-            base(id, width, height, disp)
+        public GLBitmapAtlas(int id, int width, int height, Rectangle[] elementRects, bool disp = true, bool filter = false) :
+            base(id, width, height, disp, filter)
         {
             this.elementRects = elementRects;
+            this.atlas = true;
         }
 
         public void GetElementUVs(int elementIndex, out float u0, out float v0, out float u1, out float v1)
@@ -1549,8 +1555,9 @@ namespace FamiStudio
             inst.sy = height;
             inst.tint = tint;
 
-            if (PlatformUtils.IsMobile) 
+            if (bmp.IsAtlas && bmp.Filtering) 
             {
+                // Prevent leaking from other images in the atlas.
                 var halfPixelX = 0.5f / bmp.Size.Width;
                 var halfPixelY = 0.5f / bmp.Size.Height;
 

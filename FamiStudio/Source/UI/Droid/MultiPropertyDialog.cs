@@ -36,16 +36,26 @@ namespace FamiStudio
         }
 
         private string title;
+        private string verb = "Apply";
+        private bool showVerbOnTabPage = false;
         private int selectedIndex = 0;
         private List<PropertyPageTab> tabs = new List<PropertyPageTab>();
 
         public string Title => title;
+        public string Verb => verb;
+        public bool ShowVerbOnTabPage => showVerbOnTabPage;
         public int PageCount => tabs.Count;
         public int SelectedIndex => selectedIndex;
         
         public MultiPropertyDialog(string text, int width, int height, int tabsWidth = 150)
         {
             title = text;
+        }
+
+        public void SetVerb(string text, bool showOnTabPage = false)
+        {
+            verb = text;
+            showVerbOnTabPage = showOnTabPage;
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
@@ -83,6 +93,9 @@ namespace FamiStudio
     [Activity(Theme = "@style/AppTheme.NoActionBar")]
     public class MultiPropertyDialogActivity : AppCompatActivity, View.IOnClickListener
     {
+        private const int FragmentViewId  = 1008;
+        private const int ApplyMenuItemId = 1009;
+
         private CoordinatorLayout coordLayout;
         private AppBarLayout appBarLayout;
         private NestedScrollView scrollView;
@@ -91,7 +104,6 @@ namespace FamiStudio
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
         private MultiPropertyDialog dlg;
         private IMenuItem applyMenuItem;
-        private UpdateToolbarRunnable updateToolbarRunnable;
 
         private int selectedTabIndex = -1; // -1 means in the tab page.
 
@@ -104,7 +116,6 @@ namespace FamiStudio
             base.OnCreate(savedInstanceState);
 
             dlg = FamiStudioForm.Instance.DialogUserData as MultiPropertyDialog;
-            updateToolbarRunnable = new UpdateToolbarRunnable(this);
             tabsFragment = new MultiPropertyTabFragment(dlg);
             
             var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, Android.Resource.Attribute.ActionBarSize));
@@ -127,15 +138,19 @@ namespace FamiStudio
             appBarLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
             appBarLayout.AddView(toolbar);
 
+            var fragmentViewLayoutParams = new NestedScrollView.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
+            fragmentViewLayoutParams.Gravity = GravityFlags.Fill;
+
             fragmentView = new FragmentContainerView(this);
-            fragmentView.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
-            fragmentView.Id = 123;
+            fragmentView.LayoutParameters = fragmentViewLayoutParams;
+            fragmentView.Id = FragmentViewId;
 
             var scrollViewLayoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
             scrollViewLayoutParams.Behavior = new AppBarLayout.ScrollingViewBehavior(this, null);
 
             scrollView = new NestedScrollView(new ContextThemeWrapper(this, Resource.Style.DarkBackgroundStyle));
             scrollView.LayoutParameters = scrollViewLayoutParams;
+            scrollView.FillViewport = true;
             scrollView.AddView(fragmentView);
 
             coordLayout = new CoordinatorLayout(this);
@@ -156,8 +171,8 @@ namespace FamiStudio
             if (applyMenuItem == null)
             {
                 menu.Clear();
-                applyMenuItem = menu.Add(IMenu.None, 123, IMenu.None, "Apply"); // MATTT : Label + ID.
-                UpdateToolbar(false);
+                applyMenuItem = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, dlg.Verb); 
+                UpdateToolbar(dlg.ShowVerbOnTabPage);
             }
 
             return true;
@@ -184,11 +199,10 @@ namespace FamiStudio
                     if (tab.button == v)
                     {
                         selectedTabIndex = i;
-                        UpdateToolbar(false);
+                        UpdateToolbar(true);
                         SupportFragmentManager.BeginTransaction()
-                            .SetCustomAnimations(Resource.Animation.slide_in_right, Resource.Animation.fade_out)
+                            .SetTransition(AndroidX.Fragment.App.FragmentTransaction.TransitFragmentFade)
                             .Replace(fragmentView.Id, tab.properties, "MultiPropertyDialog")
-                            .RunOnCommit(updateToolbarRunnable)
                             .Commit();
                         break;
                     }
@@ -201,30 +215,15 @@ namespace FamiStudio
             if (selectedTabIndex >= 0)
             {
                 selectedTabIndex = -1;
-                UpdateToolbar(false);
+                UpdateToolbar(dlg.ShowVerbOnTabPage);
                 SupportFragmentManager.BeginTransaction()
-                    .SetCustomAnimations(Resource.Animation.fade_in, Resource.Animation.slide_out_right)
+                    .SetTransition(AndroidX.Fragment.App.FragmentTransaction.TransitFragmentFade)
                     .Replace(fragmentView.Id, tabsFragment, "MultiPropertyDialogTabs")
                     .Commit();
             }
             else
             {
                 base.OnBackPressed();
-            }
-        }
-
-        private class UpdateToolbarRunnable : Java.Lang.Object, Java.Lang.IRunnable
-        {
-            MultiPropertyDialogActivity activity;
-
-            public UpdateToolbarRunnable(MultiPropertyDialogActivity act)
-            {
-                activity = act;
-            }
-
-            public void Run()
-            {
-                activity.UpdateToolbar(true);
             }
         }
 
@@ -256,6 +255,7 @@ namespace FamiStudio
                 var linearLayout = new LinearLayout(container.Context);
                 linearLayout.Orientation = Orientation.Vertical;
                 linearLayout.LayoutParameters = linearLayoutParams;
+                linearLayout.SetBackgroundColor(DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyFillColor1));
 
                 for (int i = 0; i < dialog.PageCount; i++)
                 {

@@ -87,22 +87,16 @@ Controls:
 Toolbar:
 - Fix font size thing
 - Clicking on timecode doesnt change mode. 
-- Oscilloscope doesnt seem to work
 - Collapse when pressing outside (or pressing any button?)
 - Add version next to "..."
 
 Prop page:
 / Reactivate dialogs in code, test
-- "Apply" should be "Export" in export dialog.
-- Fix transitions, ugly.
 - Review text color light gray 1 or 2?
-x Add a title to dialogs
-- Config dialog needs an "Apply" on the first page too.
 - Toolbar font.
 - Button font.
 - Cleanup where we use GLGraphics, always use render.
 - Change insturment dialog for a combo
-- Some icons still have borders.
 
 Scaling issue:
 - Support 3 scalings (Will not affect toolbars)? 
