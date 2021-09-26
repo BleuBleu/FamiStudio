@@ -256,6 +256,7 @@
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
     <Compile Include="Source\UI\Droid\MultiPropertyDialog.cs" />
+    <Compile Include="Source\UI\Droid\OpenProjectDialog.cs" />
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
     <Compile Include="Source\UI\Droid\PropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
@@ -558,7 +559,25 @@
     <EmbeddedResource Include="Rom\rom_famitracker_pal.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
-    <EmbeddedResource Include="Silius.fms" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\Setup\Demo Songs\After The Rain (FamiTone2).fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Danger Streets (FamiTone2).fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Dedricil.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\DuckTales.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Gimmick.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Gradius 2.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Gyruss.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Journey To Silius.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Layla The Iris Missions.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 2.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\SFX.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Shatterhand.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Shovel Knight.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Silver Surfer.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Tower of Heaven.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Tutorial Song.fms" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Source\UI\Droid\Resources\drawable\" />

@@ -133,22 +133,9 @@ namespace FamiStudio
 
             controls = new FamiStudioControls(this);
 
-#if FALSE
-            var filename = Path.Combine(Path.GetTempPath(), "Silius.fms");
-
-            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Silius.fms"))
-            {
-                var buffer = new byte[(int)s.Length];
-                s.Read(buffer, 0, (int)s.Length);
-                File.WriteAllBytes(filename, buffer);
-            }
-#else
-            var filename = (string)null;
-#endif
-
             Instance = this;
             famistudio = new FamiStudio();
-            famistudio.Initialize(filename);
+            famistudio.Initialize(null);
 
             detector = new GestureDetectorCompat(this, this);
             detector.IsLongpressEnabled = true;
@@ -171,7 +158,7 @@ namespace FamiStudio
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
-        private void StartFileActivity(Action<DialogResult> callback)
+        private void StartFileActivity()
         {
             //dialogRequestCode = FILE_RESULT_CODE;
             //dialogCallback = FileActivityCallback;
@@ -180,6 +167,8 @@ namespace FamiStudio
             //chooseFile.AddCategory(Intent.CategoryOpenable);
             //chooseFile.SetType("text/plain");
             //StartActivityForResult(Intent.CreateChooser(chooseFile, "Choose a file"), FILE_RESULT_CODE);
+
+            //Xamarin.Essentials.FilePicker.PickAsync();
         }
 
         public void StartDialogActivity(Type type, int resultCode, Action<DialogResult> callback, object userData)
@@ -587,6 +576,7 @@ namespace FamiStudio
             if (!IsAsyncDialogInProgress)
             {
                 //DialogTest();
+                //StartFileActivity();
 
                 Debug.WriteLine($"{c++} {e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)

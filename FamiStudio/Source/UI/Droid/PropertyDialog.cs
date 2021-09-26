@@ -26,10 +26,15 @@ namespace FamiStudio
         public const int RequestCode = 1001;
 
         private string title = "";
+        private string verb = "Apply";
         private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
 
         public PropertyPage Properties => propertyPage;
         public string Title => title;
+        public string Verb  => verb;
+
+        public delegate void CloseRequestDelegate(DialogResult result);
+        public event CloseRequestDelegate CloseRequested;
 
         public PropertyDialog(string text, int width, bool canAccept = true, bool canCancel = true, object parent = null)
         {
@@ -41,6 +46,16 @@ namespace FamiStudio
             title = text;
         }
 
+        public void SetVerb(string text)
+        {
+            verb = text;
+        }
+
+        public void CloseWithResult(DialogResult result)
+        {
+            CloseRequested?.Invoke(result);
+        }
+
         public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
         {
             FamiStudioForm.Instance.StartDialogActivity(typeof(PropertyDialogActivity), RequestCode, callback, this);
@@ -50,13 +65,15 @@ namespace FamiStudio
     [Activity(Theme = "@style/AppTheme.NoActionBar")]
     public class PropertyDialogActivity : AppCompatActivity
     {
+        private const int FragmentViewId  = 1008;
+        private const int ApplyMenuItemId = 1009;
+
         private CoordinatorLayout coordLayout;
         private AppBarLayout appBarLayout;
         private NestedScrollView scrollView;
         private FragmentContainerView fragmentView;
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
-
-        const int ApplyItemId = 321;
+        private PropertyDialog dlg;
 
         public PropertyDialogActivity()
         {
@@ -66,7 +83,8 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            var dlg = FamiStudioForm.Instance.DialogUserData as PropertyDialog;
+            dlg = FamiStudioForm.Instance.DialogUserData as PropertyDialog;
+            dlg.CloseRequested += Dlg_CloseRequested;
 
             var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, Android.Resource.Attribute.ActionBarSize));
             appBarLayoutParams.ScrollFlags = 0;
@@ -90,7 +108,7 @@ namespace FamiStudio
 
             fragmentView = new FragmentContainerView(this);
             fragmentView.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
-            fragmentView.Id = 123;
+            fragmentView.Id = FragmentViewId;
 
             var scrollViewLayoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
             scrollViewLayoutParams.Behavior = new AppBarLayout.ScrollingViewBehavior(this, null);
@@ -109,9 +127,22 @@ namespace FamiStudio
             SupportFragmentManager.BeginTransaction().SetReorderingAllowed(true).Add(fragmentView.Id, dlg.Properties, "PropertyDialog").Commit();
         }
 
+        private void Dlg_CloseRequested(DialogResult result)
+        {
+            SetResult(result == DialogResult.OK ? Result.Ok : Result.Canceled);
+            Finish();
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            dlg.CloseRequested -= Dlg_CloseRequested;
+        }
+
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
-            SetResult(item != null && item.ItemId == ApplyItemId ? Result.Ok : Result.Canceled);
+            SetResult(item != null && item.ItemId == ApplyMenuItemId ? Result.Ok : Result.Canceled);
             Finish();
 
             return base.OnOptionsItemSelected(item);
@@ -120,7 +151,7 @@ namespace FamiStudio
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             menu.Clear();
-            var item = menu.Add(IMenu.None, ApplyItemId, IMenu.None, "Apply"); // DROIDTODO : Make the "verb" configurable.
+            var item = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, dlg.Verb); 
             item.SetShowAsAction(ShowAsAction.Always);
 
             return true;

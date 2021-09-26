@@ -698,6 +698,15 @@ namespace FamiStudio
             // DROIDTODO : Do we need to check the byte ordering here?
             return (a << 24) | (b << 16) | (g << 8) | r;
         }
+
+        public static int PackColorForTexture(Color c)
+        {
+#if FAMISTUDIO_ANDROID
+            return (c.A << 24) | (c.B << 16) | (c.G << 8) | c.R;
+#else
+            return c.ToArgb();
+#endif
+        }
     }
 
     public class GLTransform

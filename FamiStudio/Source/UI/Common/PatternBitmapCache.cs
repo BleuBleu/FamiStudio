@@ -248,7 +248,7 @@ namespace FamiStudio
 
             for (int j = 0; j < noteSizeY; j++)
                 for (int x = t0; x < t1; x++)
-                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = color.ToArgb();
+                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = GLColorUtils.PackColorForTexture(color);
         }
 
         private int ComputePatternSizeX(int patternLen, int framesPerNote)

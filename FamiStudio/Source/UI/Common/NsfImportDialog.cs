@@ -19,7 +19,7 @@ namespace FamiStudio
             if (songNames != null && songNames.Length > 0)
             {
                 dialog = new PropertyDialog("NSF Import", 350);
-                dialog.Properties.AddDropDownList("Song:", songNames, songNames[0]);  // 0
+                dialog.Properties.AddDropDownList("Song:", songNames, songNames[0]); // 0
                 dialog.Properties.AddNumericUpDown("Duration (s):", 120, 1, 600);    // 1
                 dialog.Properties.AddNumericUpDown("Pattern Length:", 256, 4, 256);  // 2
                 dialog.Properties.AddNumericUpDown("Start frame:", 0, 0, 256);       // 3

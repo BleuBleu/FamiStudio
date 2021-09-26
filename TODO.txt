@@ -87,8 +87,6 @@ Controls:
 
 Toolbar:
 - Fix font size thing
-- Clicking on timecode doesnt change mode. 
-- Collapse when pressing outside (or pressing any button?)
 - Add version next to "..."
 
 Prop page:
@@ -156,6 +154,7 @@ Testing
 - Test project/instrument merge (with expansions).
 - Retest with various scaling (lots of cahnges to everything, zooming, etc.)
 - Test without snapping, i tested snapping a lot, but not witout.
+- Compare instrument colors (seq/piano roll) for all platforms
 
 Videos:
 =======

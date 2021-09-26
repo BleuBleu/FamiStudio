@@ -417,9 +417,9 @@ namespace FamiStudio
             return 0;
         }
 
-        public int AddRadioButton(string label, string text, bool check)
+        public int AddRadioButton(string label, string text, bool check, bool forceStartGroup = false)
         {
-            var first = properties.Count == 0 || properties[properties.Count - 1].type != PropertyType.Radio;
+            var first = properties.Count == 0 || properties[properties.Count - 1].type != PropertyType.Radio || forceStartGroup;
             var prop = new Property();
 
             // Create the group on the first radio.
@@ -437,18 +437,20 @@ namespace FamiStudio
             }
             else
             {
-                for (int i = 0; i < properties.Count; i++)
+                for (int i = properties.Count - 1; i >= 0; i--)
                 {
                     if (properties[i].type == PropertyType.Radio)
                     {
                         group = properties[i].layout as RadioGroup;
-                        break;
+                        if (group != null)
+                            break;
                     }
                 }
             }
 
             // Create the radio, but add ourselves to the previous layout.
             var radio = CreateRadioButton(text, Resource.Style.LightGrayCheckBox, false);
+            radio.CheckedChange += Radio_CheckedChange;
             prop.type = PropertyType.Radio;
             prop.controls.Add(radio);
             group.AddView(radio);
@@ -458,6 +460,14 @@ namespace FamiStudio
                 radio.Checked = true;
 
             return properties.Count - 1;
+        }
+
+        private void Radio_CheckedChange(object sender, CompoundButton.CheckedChangeEventArgs e)
+        {
+            var radio = sender as RadioButton;
+            var idx = GetPropertyIndexForView(radio);
+            if (idx >= 0)
+                PropertyChanged?.Invoke(this, idx, -1, -1, e.IsChecked);
         }
 
         public void UpdateIntegerRange(int idx, int min, int max)
@@ -681,6 +691,22 @@ namespace FamiStudio
         {
         }
 
+        public void ClearRadioGroup(int idx)
+        {
+            var prop = properties[idx];
+            Debug.Assert(prop.type == PropertyType.Radio);
+
+            for (int i = idx; i >= 0; i--)
+            {
+                var group = prop.layout as RadioGroup;
+                if (group != null)
+                {
+                    group.ClearCheck();
+                    break;
+                }
+            }
+        }
+
         public object GetPropertyValue(int idx)
         {
             var prop = properties[idx];
@@ -697,9 +723,7 @@ namespace FamiStudio
                 case PropertyType.Slider:
                     return (double)(prop.controls[0] as SeekBar).Progress;
                 case PropertyType.Radio:
-                    Debug.Assert(false); // MATTT
-                    //return (prop.control as RadioButton).Checked;
-                    break;
+                    return (prop.controls[0] as RadioButton).Checked;
                 case PropertyType.CheckBox:
                     return (prop.controls[0] as SwitchCompat).Checked;
                 case PropertyType.ColorPicker:
@@ -814,12 +838,15 @@ namespace FamiStudio
             {
                 var prop = properties[i];
 
+                if (prop.layout == null)
+                    continue;
+
                 if (i != 0)
                     pageLayout.AddView(CreateSpacer());
                 if (i == firstAdvancedProperty)
                     pageLayout.AddView(CreateAdvancedPropertiesBanner());
-                if (prop.layout != null)
-                    pageLayout.AddView(prop.layout);
+
+                pageLayout.AddView(prop.layout);
             }
 
             return pageLayout;

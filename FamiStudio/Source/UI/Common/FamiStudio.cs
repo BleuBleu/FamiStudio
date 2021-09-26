@@ -732,11 +732,9 @@ namespace FamiStudio
                 return;
             }
 
-#if !FAMISTUDIO_ANDROID // DROIDTODO
             var dlgLog = new LogDialog(mainForm);
             using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
             {
-#endif
                 project = OpenProjectFile(filename);
 
                 if (project != null)
@@ -752,15 +750,27 @@ namespace FamiStudio
                 }
 
                 mainForm.Refresh();
-#if !FAMISTUDIO_ANDROID // DROIDTODO
                 dlgLog.ShowDialogIfMessages();
             }
-#endif
         }
 
         public void OpenProject()
         {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
+            var filename = (string)null;
+            
+            if (PlatformUtils.IsDesktop)
+            {
+                filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
+            }
+            else
+            {
+#if FAMISTUDIO_ANDROID
+                // DROIDTODO : Figure out what is the final flow here.
+                var dlg = new OpenProjectDialog(this);
+                dlg.ShowDialog(mainForm);
+#endif
+            }
+
             if (filename != null)
             {
                 OpenProject(filename);

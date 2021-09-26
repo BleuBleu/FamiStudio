@@ -226,6 +226,7 @@ namespace FamiStudio
         const int DefaultButtonIconPosY          = PlatformUtils.IsMobile ?  12 : 4;
         const int DefaultButtonSize              = PlatformUtils.IsMobile ? 120 : 36;
         const int DefaultIconSize                = PlatformUtils.IsMobile ?  96 : 32; 
+        const float ShowExtraButtonsThreshold    = 0.8f;
 
         int tooltipSingleLinePosY;
         int tooltipMultiLinePosY;
@@ -291,7 +292,8 @@ namespace FamiStudio
 
         // Mobile-only stuff
         private float expandRatio = 0.0f;
-        private bool  expanded = false; // MATTT : Testing.
+        private bool  expanding = false; 
+        private bool  closing   = false; 
 
         public int   LayoutSize  => buttonSize * 2;
         public int   RenderSize  => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio)));
@@ -483,7 +485,7 @@ namespace FamiStudio
                 foreach (var btn in buttons)
                     btn.Visible = false;
 
-                var numRows = expanded ? 4 : 2;
+                var numRows = expandRatio >= ShowExtraButtonsThreshold ? 4 : 2;
 
                 foreach (var bl in ButtonLayout)
                 {
@@ -534,7 +536,9 @@ namespace FamiStudio
         protected override void OnResize(EventArgs e)
         {
             UpdateButtonLayout();
-            expandRatio = expanded ? 1.0f : 0.0f;
+            expandRatio = IsExpanded ? 1.0f : 0.0f;
+            expanding = false;
+            closing = false;
         }
 
         // DROIDTODO : This makes no sense on mobile, move elsewhere.
@@ -573,20 +577,24 @@ namespace FamiStudio
             {
                 var prevRatio = expandRatio;
 
-                if (expanded && expandRatio < 1.0f)
+                if (expanding)
                 {
                     delta *= 6.0f;
                     expandRatio = Math.Min(1.0f, expandRatio + delta);
-                    if (prevRatio < 0.5f && expandRatio >= 0.5f)
+                    if (prevRatio < ShowExtraButtonsThreshold && expandRatio >= ShowExtraButtonsThreshold)
                         UpdateButtonLayout();
+                    if (expandRatio == 1.0f)
+                        expanding = false;
                     MarkDirty();
                 }
-                else if (!expanded && expandRatio > 0.0f)
+                else if (closing)
                 {
                     delta *= 10.0f;
                     expandRatio = Math.Max(0.0f, expandRatio - delta);
-                    if (prevRatio > 0.5f && expandRatio <= 0.5f)
+                    if (prevRatio >= ShowExtraButtonsThreshold && expandRatio < ShowExtraButtonsThreshold)
                         UpdateButtonLayout();
+                    if (expandRatio == 0.0f)
+                        closing = false;
                     MarkDirty();
                 }
             }
@@ -830,7 +838,17 @@ namespace FamiStudio
 
         private void OnMore()
         {
-            expanded = !expanded;
+            if (expanding || closing)
+            {
+                expanding = !expanding;
+                closing   = !closing;
+            }
+            else
+            {
+                expanding = expandRatio == 0.0f;
+                closing   = expandRatio == 1.0f;
+            }
+
             MarkDirty();
         }
 
@@ -844,7 +862,7 @@ namespace FamiStudio
                 if (btn == null || !btn.Visible)
                     continue;
 
-                var hover = btn.Rect.Contains(pt);
+                var hover = btn.Rect.Contains(pt) && !PlatformUtils.IsMobile;
                 var tint = Theme.LightGreyFillColor1;
                 var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap(ref tint) : btn.BmpAtlasIndex;
                 var status = btn.Enabled == null ? ButtonStatus.Enabled : btn.Enabled();
@@ -1135,6 +1153,7 @@ namespace FamiStudio
                             btn.Click?.Invoke();
                         else
                             btn.RightClick?.Invoke();
+                        MarkDirty();
                     }
                 }
             }
@@ -1142,31 +1161,31 @@ namespace FamiStudio
             base.OnMouseDown(e);
         }
 
-        // DROIDTODO TEMPORARY!
-        protected override void OnTouchDown(int x, int y)
+        protected override void OnTouchClick(int x, int y)
         {
-            //bool left  = e.Button.HasFlag(MouseButtons.Left);
-            //bool right = e.Button.HasFlag(MouseButtons.Right);
-
-            //if (left || right)
+            var btn = GetButtonAtCoord(x, y);
+            if (btn != null)
             {
-                /*
-                if (x > timecodePosX && x < timecodePosX + timecodeOscSizeX &&
-                    y > timecodePosY && y < Height - timecodePosY)
-                {
-                    Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
-                    Invalidate();
-                }
-                else
-                */
-                {
-                    var btn = GetButtonAtCoord(x, y);
-                    if (btn != null)
-                    {
-                        PlatformUtils.VibrateTick();
-                        btn.Click();
-                    }
-                }
+                PlatformUtils.VibrateTick();
+                btn.Click();
+                MarkDirty();
+                return;
+            }
+
+            if (x > timecodePosX && x < timecodePosX + timecodeOscSizeX &&
+                y > timecodePosY && y < Height - timecodePosY)
+            {
+                Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
+                PlatformUtils.VibrateTick();
+                MarkDirty();
+                return;
+            }
+
+            if (IsExpanded)
+            {
+                PlatformUtils.VibrateTick();
+                expanding = false;
+                closing   = true;
             }
         }
     }

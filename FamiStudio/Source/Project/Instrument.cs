@@ -336,10 +336,13 @@ namespace FamiStudio
             }
 
             // At FamiStudio 3.2.0, we realized that we had some FDS envelopes (likely imported from NSF)
-            // with bad values.
-            if (buffer.Version < 12 && IsFdsInstrument)
+            // with bad values. Also, some pitches as well.
+            if (buffer.Version < 12)
             {
-                envelopes[EnvelopeType.FdsWaveform].ClampToValidRange(this, EnvelopeType.FdsWaveform);
+                if (IsFdsInstrument)
+                    envelopes[EnvelopeType.FdsWaveform].ClampToValidRange(this, EnvelopeType.FdsWaveform);
+                if (IsVrc6Instrument)
+                    envelopes[EnvelopeType.Pitch].ClampToValidRange(this, EnvelopeType.Pitch);
             }
         }
     }
