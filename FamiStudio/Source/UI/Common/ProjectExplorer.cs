@@ -564,7 +564,7 @@ namespace FamiStudio
                         foreach (var param in instrumentParams)
                         {
                             int opSelect = 8;
-                            //if (param.Name == "Algorithm") { opSelect = param.GetValue; }
+                            if (param.Name == "Algorithm") { opSelect = param.GetValue(); }
                             buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, icon = bmpOpEnvelope[opSelect]});
                         }
                     }
@@ -1145,6 +1145,7 @@ namespace FamiStudio
 
         private void UpdateSlider(MouseEventArgs e, bool final)
         {
+            UpdateImage(sliderDragButton);
             if (!final)
             {
                 UpdateSliderValue(sliderDragButton, e, false);
@@ -1154,6 +1155,12 @@ namespace FamiStudio
             {
                 App.UndoRedoManager.EndTransaction();
             }
+        }
+
+        private void UpdateImage(Button sliderDragButton)
+        {
+            if(sliderDragButton.param.Name == "Algorithm")
+            sliderDragButton.icon = bmpOpEnvelope[sliderDragButton.param.GetValue()];
         }
 
         private void UpdateScrollBar(MouseEventArgs e)

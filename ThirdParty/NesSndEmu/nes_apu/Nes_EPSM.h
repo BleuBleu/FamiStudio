@@ -32,7 +32,7 @@ public:
 	enum { reg_write2 = 0xe002 };
 	enum { reg_range = 0x1 };
 
-	enum { shadow_internal_regs_count = 600 };
+	enum { shadow_internal_regs_count = 130 };
 	void start_seeking();
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
