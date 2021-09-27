@@ -158,25 +158,25 @@
     <AndroidNativeLibrary Include="libs\arm64-v8a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\arm64-v8a\libNotSoFatso.so">
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\armeabi-v7a\libNotSoFatso.so">
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\x86\libNotSoFatso.so">
+    <AndroidNativeLibrary Include="libs\x86\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
-    <AndroidNativeLibrary Include="libs\x86_64\libNotSoFatso.so">
+    <AndroidNativeLibrary Include="libs\x86_64\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
   </ItemGroup>
