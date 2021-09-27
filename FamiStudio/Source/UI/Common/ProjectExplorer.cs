@@ -402,7 +402,7 @@ namespace FamiStudio
         RenderBitmap   bmpButtonRight;
         RenderBitmap[] bmpInstrument = new RenderBitmap[ExpansionType.Count];
         RenderBitmap[] bmpEnvelopes = new RenderBitmap[EnvelopeType.Count];
-        RenderBitmap[] bmpOpEnvelope = new RenderBitmap[9];
+        RenderBitmap[] bmpEpsmAlgorithm = new RenderBitmap[9];
 
         public Song SelectedSong => selectedSong;
         public DPCMSample DraggedSample => captureOperation == CaptureOperation.DragSample ? draggedSample : null;
@@ -563,9 +563,11 @@ namespace FamiStudio
                     {
                         foreach (var param in instrumentParams)
                         {
-                            int opSelect = 8;
-                            if (param.Name == "Algorithm") { opSelect = param.GetValue(); }
-                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, icon = bmpOpEnvelope[opSelect]});
+                            if (param.Name == "Algorithm") {
+                                buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, icon = bmpEpsmAlgorithm[param.GetValue()] });
+                            }
+                            else
+                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id});
                         }
                     }
                 }
@@ -623,15 +625,14 @@ namespace FamiStudio
             bmpEnvelopes[EnvelopeType.FdsModulation] = g.CreateBitmapFromResource("Mod");
             bmpEnvelopes[EnvelopeType.N163Waveform]  = g.CreateBitmapFromResource("Wave");
 
-            bmpOpEnvelope[0] = g.CreateBitmapFromResource("Envelope0");
-            bmpOpEnvelope[1] = g.CreateBitmapFromResource("Envelope1");
-            bmpOpEnvelope[2] = g.CreateBitmapFromResource("Envelope2");
-            bmpOpEnvelope[3] = g.CreateBitmapFromResource("Envelope3");
-            bmpOpEnvelope[4] = g.CreateBitmapFromResource("Envelope4");
-            bmpOpEnvelope[5] = g.CreateBitmapFromResource("Envelope5");
-            bmpOpEnvelope[6] = g.CreateBitmapFromResource("Envelope6");
-            bmpOpEnvelope[7] = g.CreateBitmapFromResource("Envelope7");
-            bmpOpEnvelope[8] = null;
+            bmpEpsmAlgorithm[0] = g.CreateBitmapFromResource("Algorithm0");
+            bmpEpsmAlgorithm[1] = g.CreateBitmapFromResource("Algorithm1");
+            bmpEpsmAlgorithm[2] = g.CreateBitmapFromResource("Algorithm2");
+            bmpEpsmAlgorithm[3] = g.CreateBitmapFromResource("Algorithm3");
+            bmpEpsmAlgorithm[4] = g.CreateBitmapFromResource("Algorithm4");
+            bmpEpsmAlgorithm[5] = g.CreateBitmapFromResource("Algorithm5");
+            bmpEpsmAlgorithm[6] = g.CreateBitmapFromResource("Algorithm6");
+            bmpEpsmAlgorithm[7] = g.CreateBitmapFromResource("Algorithm7");
 
             bmpExpand = g.CreateBitmapFromResource("InstrumentExpand");
             bmpExpanded = g.CreateBitmapFromResource("InstrumentExpanded");
@@ -1160,7 +1161,7 @@ namespace FamiStudio
         private void UpdateImage(Button sliderDragButton)
         {
             if(sliderDragButton.param.Name == "Algorithm")
-            sliderDragButton.icon = bmpOpEnvelope[sliderDragButton.param.GetValue()];
+            sliderDragButton.icon = bmpEpsmAlgorithm[sliderDragButton.param.GetValue()];
         }
 
         private void UpdateScrollBar(MouseEventArgs e)

@@ -187,8 +187,14 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 	{
 		if (shadow_internal_regs[i] >= 0)
 		{
-			write_register(clock += 4, reg_select, i);
-			write_register(clock += 4, reg_write, shadow_internal_regs[i]);
+			if(i >= 0xC0){
+				write_register(clock += 4, reg_select, 0x28);
+				write_register(clock += 4, reg_write, shadow_internal_regs[i]);
+            }
+			else{
+				write_register(clock += 4, reg_select, i);
+				write_register(clock += 4, reg_write, shadow_internal_regs[i]);
+			}
 		}
 	}
 	for (int i = 0; i < array_count(shadow_internal_regs2); i++)
@@ -204,12 +210,16 @@ void Nes_EPSM::stop_seeking(blip_time_t& clock)
 void Nes_EPSM::write_shadow_register(int addr, int data)
 {
 	if (addr >= reg_select && addr < (reg_select + reg_range)) {
-
 		reg = data;
 	}
 	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
-
-		shadow_internal_regs[reg] = data;
+		
+		if(reg == 0x28){
+			shadow_internal_regs[0xC0+(0xF & data)] = data;
+        }
+		else{
+			shadow_internal_regs[reg] = data;
+        }
 	}
 	if (addr >= reg_select2 && addr < (reg_select2 + reg_range)) {
 
