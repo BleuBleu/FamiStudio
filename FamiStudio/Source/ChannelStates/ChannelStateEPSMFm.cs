@@ -26,7 +26,6 @@ namespace FamiStudio
 
         private void WriteEPSMRegister(int reg, int data, int a1)
         {
-            string hex;
             if (a1 == 0)
             {
                 WriteRegister(NesApu.EPSM_ADDR0, reg);
