@@ -152,7 +152,9 @@ namespace FamiStudio
         {
             "WAV",
             "MP3",
+#if !FAMISTUDIO_ANDROID
             "Ogg Vorbis"
+#endif
         };
 
         public static readonly string[] Extentions =

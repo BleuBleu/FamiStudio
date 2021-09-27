@@ -1,14 +1,5 @@
 ﻿using System;
-using System.Drawing.Text;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using System.Drawing;
-using System.Collections.Generic;
-
-using RenderFont     = FamiStudio.GLFont;
-using RenderBrush    = FamiStudio.GLBrush;
-using RenderGraphics = FamiStudio.GLGraphics;
 
 namespace FamiStudio
 {

@@ -29,7 +29,7 @@ namespace FamiStudio
 
         string[] ExportFormatNames =
         {
-            "WAV / MP3 / OGG",
+            PlatformUtils.IsDesktop ? "WAV / MP3 / OGG" : "WAV / MP3",
             "Video (Piano Roll)",
             "Video (Oscilloscope)",
             "NSF",
