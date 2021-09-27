@@ -779,40 +779,48 @@ namespace FamiStudio
 
         public Project OpenProjectFile(string filename, bool allowComplexFormats = true)
         {
+            var extension = Path.GetExtension(filename.ToLower());
+
+            var fms = extension == ".fms";
+            var ftm = extension == ".ftm";
+            var txt = extension == ".txt";
+            var nsf = extension == ".nsf" || extension == ".nsfe";
+            var mid = extension == ".mid";
+
+            var requiresDialog = PlatformUtils.IsDesktop && allowComplexFormats && (nsf || mid);
+
             var project = (Project)null;
 
-            if (filename.ToLower().EndsWith("fms"))
+            if (requiresDialog)
             {
-                project = new ProjectFile().Load(filename);
-            }
-            else if (filename.ToLower().EndsWith("ftm"))
-            {
-                project = new FamitrackerBinaryFile().Load(filename);
-            }
-            else if (filename.ToLower().EndsWith("txt"))
-            {
-                if (FamistudioTextFile.LooksLikeFamiStudioText(filename))
-                    project = new FamistudioTextFile().Load(filename);
-                else
-                    project = new FamitrackerTextFile().Load(filename);
-            }
-            else if (allowComplexFormats && filename.ToLower().EndsWith("mid"))
-            {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-                var dlg = new MidiImportDialog(filename);
-                project = dlg.ShowDialog(mainForm);
-#endif
-            }
-            else if (allowComplexFormats && (filename.ToLower().EndsWith("nsf") || filename.ToLower().EndsWith("nsfe")))
-            {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
-                var dlg = new NsfImportDialog(filename);
-
-                if (dlg.ShowDialog(mainForm) == DialogResult.OK)
+                if (mid)
                 {
-                    project = new NsfFile().Load(filename, dlg.SongIndex, dlg.Duration, dlg.PatternLength, dlg.StartFrame, dlg.RemoveIntroSilence, dlg.ReverseDpcmBits, dlg.PreserveDpcmPadding);
+                    var dlg = new MidiImportDialog(filename);
+                    project = dlg.ShowDialog(mainForm);
                 }
-#endif
+                else if (nsf)
+                {
+                    var dlg = new NsfImportDialog(filename);
+                    project = dlg.ShowDialog(mainForm);
+                }
+            }
+            else
+            {
+                if (fms)
+                {
+                    project = new ProjectFile().Load(filename);
+                }
+                else if (ftm)
+                {
+                    project = new FamitrackerBinaryFile().Load(filename);
+                }
+                else if (txt)
+                {
+                    if (FamistudioTextFile.LooksLikeFamiStudioText(filename))
+                        project = new FamistudioTextFile().Load(filename);
+                    else
+                        project = new FamitrackerTextFile().Load(filename);
+                }
             }
 
             return project;
@@ -1006,34 +1014,37 @@ namespace FamiStudio
 
         private void InitializeAutoSave()
         {
-            var path = Settings.GetAutoSaveFilePath();
-            var maxTime = DateTime.MinValue;
-            var maxIdx = -1;
-
-            Directory.CreateDirectory(path);
-
-            for (int i = 0; i < MaxAutosaves; i++)
+            if (PlatformUtils.IsDesktop)
             {
-                var filename = Path.Combine(path, $"AutoSave{i:D2}.fms");
+                var path = Settings.GetAutoSaveFilePath();
+                var maxTime = DateTime.MinValue;
+                var maxIdx = -1;
 
-                if (File.Exists(filename))
+                Directory.CreateDirectory(path);
+
+                for (int i = 0; i < MaxAutosaves; i++)
                 {
-                    var time = File.GetLastWriteTime(filename);
-                    if (time > maxTime)
+                    var filename = Path.Combine(path, $"AutoSave{i:D2}.fms");
+
+                    if (File.Exists(filename))
                     {
-                        maxTime = time;
-                        maxIdx = i;
+                        var time = File.GetLastWriteTime(filename);
+                        if (time > maxTime)
+                        {
+                            maxTime = time;
+                            maxIdx = i;
+                        }
                     }
                 }
-            }
 
-            autoSaveIndex = (maxIdx + 1) % MaxAutosaves;
-            lastAutoSave = DateTime.Now;
+                autoSaveIndex = (maxIdx + 1) % MaxAutosaves;
+                lastAutoSave = DateTime.Now;
+            }
         }
 
         private void ConditionalAutoSave()
         {
-            if (Settings.AutoSaveCopy)
+            if (Settings.AutoSaveCopy && PlatformUtils.IsDesktop)
             {
                 var now = DateTime.Now;
                 var timespan = now - lastAutoSave;

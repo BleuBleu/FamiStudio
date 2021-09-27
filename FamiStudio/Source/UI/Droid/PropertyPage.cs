@@ -417,9 +417,9 @@ namespace FamiStudio
             return 0;
         }
 
-        public int AddRadioButton(string label, string text, bool check, bool forceStartGroup = false)
+        public int AddRadioButton(string label, string text, bool check)
         {
-            var first = properties.Count == 0 || properties[properties.Count - 1].type != PropertyType.Radio || forceStartGroup;
+            var first = properties.Count == 0 || properties[properties.Count - 1].type != PropertyType.Radio;
             var prop = new Property();
 
             // Create the group on the first radio.
@@ -605,6 +605,34 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null)
+        {
+            var prop = new Property();
+            prop.type = PropertyType.RadioList;
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
+            prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
+
+            var radioGroup = CreateLinearLayout(true, true, false, 10, true) as RadioGroup;
+
+            prop.layout = radioGroup;
+            prop.layout.AddView(prop.label);
+            if (prop.tooltip != null)
+                prop.layout.AddView(prop.tooltip);
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                var radio = CreateRadioButton(values[i], Resource.Style.LightGrayCheckBox, i == selectedIndex);
+                radio.CheckedChange += Radio_CheckedChange;
+                radio.Id = i;
+                prop.controls.Add(radio);
+                prop.layout.AddView(radio);
+            }
+
+            properties.Add(prop);
+
+            return properties.Count - 1;
+        }
+
         private LinearLayout.LayoutParams CreateLinearLayoutParams(int width, int height, GravityFlags gravity = GravityFlags.NoGravity, float weight = -1.0f)
         {
             var layout = new LinearLayout.LayoutParams(width, height);
@@ -691,20 +719,14 @@ namespace FamiStudio
         {
         }
 
-        public void ClearRadioGroup(int idx)
+        public void ClearRadioList(int idx)
         {
             var prop = properties[idx];
-            Debug.Assert(prop.type == PropertyType.Radio);
+            Debug.Assert(prop.type == PropertyType.RadioList);
 
-            for (int i = idx; i >= 0; i--)
-            {
-                var group = prop.layout as RadioGroup;
-                if (group != null)
-                {
-                    group.ClearCheck();
-                    break;
-                }
-            }
+            var group = prop.layout as RadioGroup;
+            if (group != null)
+                group.ClearCheck();
         }
 
         public object GetPropertyValue(int idx)
@@ -766,6 +788,8 @@ namespace FamiStudio
             {
                 case PropertyType.DropDownList:
                     return (prop.controls[0] as Spinner).SelectedItemPosition;
+                case PropertyType.RadioList:
+                    return (prop.layout as RadioGroup).CheckedRadioButtonId;
             }
 
             return -1;

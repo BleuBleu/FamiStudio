@@ -41,7 +41,8 @@ namespace FamiStudio
         Button,
         MultilineTextBox,
         ProgressBar,
-        Radio
+        Radio,
+        RadioList
     };
 
     public enum CommentType

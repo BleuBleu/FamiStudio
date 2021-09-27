@@ -131,19 +131,22 @@ namespace FamiStudio
                     dlg.Properties.Build();
                     dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
 
-                    if (dlg.ShowDialog(null) == DialogResult.OK)
+                    dlg.ShowDialog(null, (r) =>
                     {
-                        var keysBool = dlg.Properties.GetPropertyValue<bool[]>(1);
-
-                        src.keys = 0ul;
-                        for (int i = 0; i < keysBool.Length; i++)
+                        if (r == DialogResult.OK)
                         {
-                            if (keysBool[i])
-                                src.keys |= (1ul << i);
-                        }
+                            var keysBool = dlg.Properties.GetPropertyValue<bool[]>(1);
 
-                        UpdateListView();
-                    }
+                            src.keys = 0ul;
+                            for (int i = 0; i < keysBool.Length; i++)
+                            {
+                                if (keysBool[i])
+                                    src.keys |= (1ul << i);
+                            }
+
+                            UpdateListView();
+                        }
+                    });
                 }
                 else
                 {
@@ -249,18 +252,27 @@ namespace FamiStudio
 
         public Project ShowDialog(FamiStudioForm parent)
         {
-            if (dialog != null && dialog.ShowDialog(parent) == DialogResult.OK)
-            {
-                var expansionMask = GetExpansionMask(dialog.Properties.GetPropertyValue<bool[]>(4));
-                var polyphony = dialog.Properties.GetSelectedIndex(0);
-                var measuresPerPattern = dialog.Properties.GetPropertyValue<int>(1);
-                var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
-                var pal = expansionMask != ExpansionType.NoneMask ? false : dialog.Properties.GetPropertyValue<bool>(3);
+            var project = (Project)null;
 
-                return new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
+            if (dialog != null)
+            {
+                // This is only ran in desktop and this isnt really async, so its ok.
+                dialog.ShowDialog(parent, (r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        var expansionMask = GetExpansionMask(dialog.Properties.GetPropertyValue<bool[]>(4));
+                        var polyphony = dialog.Properties.GetSelectedIndex(0);
+                        var measuresPerPattern = dialog.Properties.GetPropertyValue<int>(1);
+                        var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
+                        var pal = expansionMask != ExpansionType.NoneMask ? false : dialog.Properties.GetPropertyValue<bool>(3);
+
+                        project = new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
+                    }
+                });
             }
 
-            return null;
+            return project;
         }
     }
 }

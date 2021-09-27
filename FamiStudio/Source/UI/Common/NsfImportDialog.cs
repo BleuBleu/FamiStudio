@@ -4,7 +4,6 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class NsfImportDialog
     {
         private PropertyDialog dialog;
@@ -30,25 +29,31 @@ namespace FamiStudio
             }
         }
 
-        public DialogResult ShowDialog(FamiStudioForm parent)
+        public Project ShowDialog(FamiStudioForm parent)
         {
+            var project = (Project)null;
+
             if (dialog != null)
             {
-                return dialog.ShowDialog(parent);
-            }
-            else
-            {
-                return DialogResult.Cancel;
-            }
-        }
+                // This is only ran in desktop and this isnt really async, so its ok.
+                dialog.ShowDialog(parent, (r) =>
+                {
+                    if (r == DialogResult.OK)
+                    { 
+                        var songIndex           = Array.IndexOf(songNames, dialog.Properties.GetPropertyValue<string>(0)); ;
+                        var duration            = dialog.Properties.GetPropertyValue<int>(1); 
+                        var patternLen          = dialog.Properties.GetPropertyValue<int>(2); 
+                        var startFrame          = dialog.Properties.GetPropertyValue<int>(3);
+                        var removeIntro         = dialog.Properties.GetPropertyValue<bool>(4); 
+                        var reverseDpcmBits     = dialog.Properties.GetPropertyValue<bool>(5); 
+                        var preserveDpcmPadding = dialog.Properties.GetPropertyValue<bool>(6);
 
-        public int SongIndex => Array.IndexOf(songNames, dialog.Properties.GetPropertyValue<string>(0));
-        public int Duration => dialog.Properties.GetPropertyValue<int>(1);
-        public int PatternLength => dialog.Properties.GetPropertyValue<int>(2);
-        public int StartFrame => dialog.Properties.GetPropertyValue<int>(3);
-        public bool RemoveIntroSilence => dialog.Properties.GetPropertyValue<bool>(4);
-        public bool ReverseDpcmBits => dialog.Properties.GetPropertyValue<bool>(5);
-        public bool PreserveDpcmPadding => dialog.Properties.GetPropertyValue<bool>(6);
+                        project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, removeIntro, reverseDpcmBits, preserveDpcmPadding);
+                    }
+                });
+            }
+
+            return project;
+        }
     }
-#endif
 }

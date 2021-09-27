@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Android.App;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -14,8 +15,8 @@ namespace FamiStudio
         private FamiStudio famistudio;
         private PropertyDialog dialog;
 
-        private Dictionary<int, string> demoProjects = new Dictionary<int, string>();
-        private Dictionary<int, string> userProjects = new Dictionary<int, string>();
+        private string[] demoProjects;
+        private string[] userProjects;
         private string storageFilename;
 
         public OpenProjectDialog(FamiStudio fami)
@@ -28,7 +29,7 @@ namespace FamiStudio
             // Demo songs.
             var assembly = Assembly.GetExecutingAssembly();
             var files = assembly.GetManifestResourceNames();
-            var first = true;
+            var demoProjectsList = new List<string>();
 
             foreach (var file in files)
             {
@@ -36,23 +37,28 @@ namespace FamiStudio
                 {
                     // Filename will be in the for 'FamiStudio.Ducktales.fms'.
                     var trimmedFilename = Path.GetFileNameWithoutExtension(file.Substring(file.IndexOf('.') + 1));
-                    var idx = dialog.Properties.AddRadioButton("Demo Projects", trimmedFilename, first, first);
-                    demoProjects.Add(idx, file);
-                    first = false;
+                    demoProjectsList.Add(trimmedFilename);
                 }
             }
 
+            demoProjects = demoProjectsList.ToArray();
+
             // User files.
-            // TODO
-            for (int i = 0; i < 3; i++)
+            var userProjectsDir = Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
+            if (Directory.Exists(userProjectsDir))
             {
-                var idx = dialog.Properties.AddRadioButton("Your Projects", $"Allo{i}", false, i == 0);
-                userProjects.Add(idx, $"Allo{i}");
+                userProjects = Directory.GetFiles(userProjectsDir, "*.fms");
+
+                for (int i = 0; i < userProjects.Length; i++)
+                    userProjects[i] = Path.GetFileNameWithoutExtension(userProjects[i]);
             }
 
-            // Import
-            dialog.Properties.AddButton("Open project from storage", "Open");
-
+            if (userProjects == null || userProjects.Length == 0)
+                dialog.Properties.AddLabel("User Projects", "No user projects found!", false, "These are your projects.");
+            else
+                dialog.Properties.AddRadioButtonList("User Projects", userProjects, 0, "These are your projects.");
+            dialog.Properties.AddRadioButtonList("Demo Projects", demoProjects, 0, "These are demo projects provided with FamiStudio. They are great resource for learning.");
+            dialog.Properties.AddButton("Open project from storage", "Open From Storage", "This will prompt you to open a file from your device's storage. You can open FamiStudio .FMS files, as well as other file formats such as FamiTracker FTM or TXT files.");
             dialog.Properties.PropertyChanged += Properties_PropertyChanged;
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
 
@@ -61,22 +67,10 @@ namespace FamiStudio
 
         private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (demoProjects.ContainsKey(propIdx))
-            {
-                foreach (var kv in userProjects)
-                {
-                    props.ClearRadioGroup(kv.Key);
-                    break;
-                }
-            }
-            else if (userProjects.ContainsKey(propIdx))
-            {
-                foreach (var kv in demoProjects)
-                {
-                    props.ClearRadioGroup(kv.Key);
-                    break;
-                }
-            }
+            if (propIdx == 0)
+                props.ClearRadioList(1);
+            else if (propIdx == 1 && userProjects != null && userProjects.Length > 0)
+                props.ClearRadioList(0);
         }
 
         private async void Properties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
@@ -100,34 +94,33 @@ namespace FamiStudio
                     {
                         famistudio.OpenProject(storageFilename);
                         famistudio.Project.Filename = null; // Wipe filename so it asks when saving.
+                        return;
                     }
 
-                    foreach (var kv in demoProjects)
+                    var userProjectIdx = dialog.Properties.GetSelectedIndex(0);
+                    if (userProjectIdx >= 0)
                     {
-                        if (dialog.Properties.GetPropertyValue<bool>(kv.Key))
-                        {
-                            var filename = Path.Combine(Path.GetTempPath(), "Temp.fms");
-
-                            using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream(kv.Value))
-                            {
-                                var buffer = new byte[(int)s.Length];
-                                s.Read(buffer, 0, (int)s.Length);
-                                File.WriteAllBytes(filename, buffer);
-                            }
-
-                            famistudio.OpenProject(filename);
-                            famistudio.Project.Filename = null; // Wipe filename for demo songs.
-
-                            return;
-                        }
+                        var userProjectsDir = Path.Combine(Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects"), $"{userProjects[userProjectIdx]}.fms");
+                        famistudio.OpenProject(userProjectsDir);
+                        return;
                     }
 
-                    foreach (var kv in userProjects)
+                    var demoProjectIdx = dialog.Properties.GetSelectedIndex(1);
+                    if (demoProjectIdx >= 0)
                     {
-                        if (dialog.Properties.GetPropertyValue<bool>(kv.Key))
+                        // Save to temporary file.
+                        var filename = Path.Combine(Path.GetTempPath(), "Temp.fms");
+
+                        using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.{demoProjects[demoProjectIdx]}.fms"))
                         {
-                            return;
+                            var buffer = new byte[(int)s.Length];
+                            s.Read(buffer, 0, (int)s.Length);
+                            File.WriteAllBytes(filename, buffer);
                         }
+
+                        famistudio.OpenProject(filename);
+                        famistudio.Project.Filename = null; // Wipe filename for demo songs.
+                        return;
                     }
                 }
             });
