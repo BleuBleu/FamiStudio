@@ -268,11 +268,11 @@
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
     <Compile Include="Source\UI\Droid\MultiPropertyDialog.cs" />
-    <Compile Include="Source\UI\Droid\OpenProjectDialog.cs" />
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
     <Compile Include="Source\UI\Droid\PropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
     <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />
+    <Compile Include="Source\UI\Droid\MobileProjectDialog.cs" />
     <Compile Include="Source\UI\Droid\SystemMedia.cs" />
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
@@ -421,9 +421,9 @@
     <EmbeddedResource Include="Resources\FamiStudio.ico" />
     <EmbeddedResource Include="Resources\File%402x.png" />
     <EmbeddedResource Include="Resources\Follow%402x.png" />
+    <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
     <EmbeddedResource Include="Resources\GizmoResizeLeftRight.png" />
     <EmbeddedResource Include="Resources\GizmoResizeUpDown.png" />
-    <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
     <EmbeddedResource Include="Resources\Help%402x.png" />
     <EmbeddedResource Include="Resources\Instance%402x.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />

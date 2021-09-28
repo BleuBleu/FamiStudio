@@ -811,10 +811,14 @@ namespace FamiStudio
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, Theme.DarkGreyLineColor2));
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
-            bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
-            bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
-            bmpGizmos = PlatformUtils.IsMobile ? g.CreateBitmapAtlasFromResources(GizmoImageNames) : null;
             fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
+
+            if (editMode != EditionMode.VideoRecording)
+            {
+                bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
+                bmpEffectAtlas = g.CreateBitmapAtlasFromResources(EffectImageNames);
+                bmpGizmos = PlatformUtils.IsMobile ? g.CreateBitmapAtlasFromResources(GizmoImageNames) : null;
+            }
 
             if (PlatformUtils.IsMobile)
             {

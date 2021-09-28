@@ -38,7 +38,7 @@ namespace FamiStudio
         private string title;
         private string verb = "Apply";
         private bool showVerbOnTabPage = false;
-        private int selectedIndex = 0;
+        private int selectedIndex = -1;
         private List<PropertyPageTab> tabs = new List<PropertyPageTab>();
 
         public string Title => title;
@@ -72,6 +72,11 @@ namespace FamiStudio
         public void SetPageVisible(int idx, bool visible)
         {
             tabs[idx].visible = visible;
+        }
+
+        public void SetSelectedIndex(int idx)
+        {
+            selectedIndex = idx;
         }
 
         public PropertyPage GetPropertyPage(int idx)
@@ -165,7 +170,14 @@ namespace FamiStudio
                 .Commit();
         }
 
-        // MATTT : WHy does this cause problem when changing fragment.
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            SetResult(item != null && item.ItemId == ApplyMenuItemId ? Result.Ok : Result.Canceled);
+            Finish();
+
+            return base.OnOptionsItemSelected(item);
+        }
+
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             if (applyMenuItem == null)
@@ -199,6 +211,7 @@ namespace FamiStudio
                     if (tab.button == v)
                     {
                         selectedTabIndex = i;
+                        dlg.SetSelectedIndex(i);
                         UpdateToolbar(true);
                         SupportFragmentManager.BeginTransaction()
                             .SetTransition(AndroidX.Fragment.App.FragmentTransaction.TransitFragmentFade)
@@ -215,6 +228,7 @@ namespace FamiStudio
             if (selectedTabIndex >= 0)
             {
                 selectedTabIndex = -1;
+                dlg.SetSelectedIndex(-1);
                 UpdateToolbar(dlg.ShowVerbOnTabPage);
                 SupportFragmentManager.BeginTransaction()
                     .SetTransition(AndroidX.Fragment.App.FragmentTransaction.TransitFragmentFade)

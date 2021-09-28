@@ -2,18 +2,8 @@
 using System.Drawing;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Diagnostics;
 
-using RenderFont     = FamiStudio.GLFont;
-using RenderBitmap   = FamiStudio.GLBitmap;
-using RenderBrush    = FamiStudio.GLBrush;
-using RenderGeometry = FamiStudio.GLGeometry;
-using RenderControl  = FamiStudio.GLControl;
 using RenderGraphics = FamiStudio.GLOffscreenGraphics;
-using RenderTheme    = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -119,7 +109,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, int lineThickness, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        public bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, int lineThickness, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
             if (!Initialize(channelMask, loopCount))
                 return false;
@@ -231,6 +221,7 @@ namespace FamiStudio
 
             var videoImage = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscWindowSize, 2];
+            var success = true;
 
 #if !DEBUG
             try
@@ -240,14 +231,16 @@ namespace FamiStudio
                 for (int f = 0; f < metadata.Length; f++)
                 {
                     if (Log.ShouldAbortOperation)
+                    {
+                        success = false;
                         break;
-
-                    // MATTT!
-                    if (f == 100)
-                        break;
+                    }
 
                     if ((f % 100) == 0)
                         Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
+
+                    //if (PlatformUtils.IsMobile && (f % 10) == 0)
+                    //    await Task.Delay(20);
 
                     Log.ReportProgress(f / (float)(metadata.Length - 1));
 
@@ -330,11 +323,6 @@ namespace FamiStudio
             finally
 #endif
             {
-#if FAMISTUDIO_WINDOWS
-                // Cant raise the process priority without being admin on Linux/MacOS.
-                Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.Normal;
-#endif
-
                 foreach (var c in channelStates)
                     c.bmpIcon.Dispose();
 
@@ -344,7 +332,7 @@ namespace FamiStudio
                 videoGraphics.Dispose();
             }
 
-            return true;
+            return success;
         }
     }
 

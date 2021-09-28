@@ -1,14 +1,12 @@
-﻿using Android.App;
+﻿using System;
+using System.Reflection;
+using Android.App;
 using Android.Content;
 using Android.OS;
-using Android.Runtime;
-using Android.Views;
 using Android.Widget;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+using Xamarin.Essentials;
+
+using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
 {
@@ -18,9 +16,46 @@ namespace FamiStudio
         {
         }
 
-        public static System.Windows.Forms.DialogResult MessageBox(string text, string title, System.Windows.Forms.MessageBoxButtons buttons, System.Windows.Forms.MessageBoxIcon icon = System.Windows.Forms.MessageBoxIcon.None)
+        public static System.Windows.Forms.DialogResult MessageBox(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)
         {
             return System.Windows.Forms.DialogResult.None;
+        }
+
+        public static void MessageBoxAsync(string text, string title, System.Windows.Forms.MessageBoxButtons buttons, Action<System.Windows.Forms.DialogResult> callback)
+        {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(Xamarin.Essentials.Platform.CurrentActivity);
+            AlertDialog alert = dialog.Create();
+            
+            alert.SetTitle(title);
+            alert.SetMessage(text);
+
+            if (buttons == System.Windows.Forms.MessageBoxButtons.YesNo ||
+                buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
+            {
+                alert.SetButton("Yes", (c, ev) => { callback(System.Windows.Forms.DialogResult.Yes); });
+                alert.SetButton2("No",  (c, ev) => { callback(System.Windows.Forms.DialogResult.No); });
+                if (buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
+                    alert.SetButton3("Cancel", (c, ev) => { callback(System.Windows.Forms.DialogResult.Cancel); });
+            }
+            else
+            {
+                alert.SetButton("OK", (c, ev) => { callback(System.Windows.Forms.DialogResult.OK); });
+            }
+
+            alert.Show();
+        }
+
+        public static void StartMobileSaveOperationAsync(string mimeType, string filename, Action<string> callback)
+        {
+            FamiStudioForm.Instance.StartSaveFileActivityAsync(mimeType, filename, callback);
+        }
+
+        public static void FinishMobileSaveOperationAsync(bool commit, Action callback)
+        {
+            MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                FamiStudioForm.Instance.FinishSaveFileActivityAsync(commit, callback);
+            });
         }
 
         public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
@@ -67,6 +102,14 @@ namespace FamiStudio
         {
             Vibrator v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
             v.Vibrate(VibrationEffect.CreatePredefined(VibrationEffect.EffectClick));
+        }
+
+        public static void ShowToast(string message)
+        {
+            MainThread.InvokeOnMainThreadAsync(() => 
+            {
+                Toast.MakeText(Application.Context, message, ToastLength.Short).Show(); 
+            });
         }
 
         public const bool IsMobile  = true;

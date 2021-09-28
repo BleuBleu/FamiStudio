@@ -157,11 +157,18 @@ namespace FamiStudio
 #endif
         };
 
-        public static readonly string[] Extentions =
+        public static readonly string[] Extensions =
         {
             "wav",
             "mp3",
             "ogg",
+        };
+
+        public static readonly string[] MimeTypes =
+        {
+            "audio/x-wav",
+            "audio/mpeg",
+            "audio/ogg",
         };
 
         public static int GetValueForName(string str)

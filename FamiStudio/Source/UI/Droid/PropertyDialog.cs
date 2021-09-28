@@ -27,21 +27,27 @@ namespace FamiStudio
 
         private string title = "";
         private string verb = "Apply";
+        private bool canAccept;
+        private bool canCancel;
         private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
 
         public PropertyPage Properties => propertyPage;
         public string Title => title;
         public string Verb  => verb;
+        public bool CanAccept => canAccept;
+        public bool CanCancel => canCancel;
 
         public delegate void CloseRequestDelegate(DialogResult result);
         public event CloseRequestDelegate CloseRequested;
 
         public PropertyDialog(string text, int width, bool canAccept = true, bool canCancel = true, object parent = null)
         {
-            title = text;
+            this.title = text;
+            this.canAccept = canAccept;
+            this.canCancel = canCancel;
         }
 
-        public PropertyDialog(string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
+    public PropertyDialog(string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
             title = text;
         }
@@ -151,8 +157,12 @@ namespace FamiStudio
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             menu.Clear();
-            var item = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, dlg.Verb); 
-            item.SetShowAsAction(ShowAsAction.Always);
+
+            if (dlg.CanAccept)
+            {
+                var item = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, dlg.Verb);
+                item.SetShowAsAction(ShowAsAction.Always);
+            }
 
             return true;
         }

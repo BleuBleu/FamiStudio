@@ -71,7 +71,7 @@ namespace FamiStudio
 
             editText.InputType = Android.Text.InputTypes.ClassText;
             editText.Text = txt;
-            editText.SetTextColor(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1));
+            editText.SetTextColor(Application.Context.GetColorStateList(Resource.Color.light_grey));
             editText.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendMode.SrcAtop));
             editText.SetMaxLines(1);
             editText.SetOnEditorActionListener(this);
@@ -210,7 +210,16 @@ namespace FamiStudio
             return text;
         }
 
-        private RadioButton CreateRadioButton(string str, int style, bool check)
+        private ProgressBar CreateProgressBar(float value)
+        {
+            var progress = new ProgressBar(context, null, Android.Resource.Attribute.ProgressBarStyleHorizontal);
+            progress.Min = 0;
+            progress.Max = 1000;
+            progress.Progress = (int)Math.Round(value * 1000);
+            return progress;
+        }
+
+        private RadioButton CreateRadioButton(string str, int style)
         {
             var radio = new RadioButton(new ContextThemeWrapper(context, style));
             radio.Text = str;
@@ -349,7 +358,7 @@ namespace FamiStudio
             var prop = new Property();
             var textView = CreateTextView(value, Resource.Style.LightGrayTextMedium);
 
-            prop.type = PropertyType.TextBox;
+            prop.type = PropertyType.Label;
             prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
             prop.controls.Add(textView);
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
@@ -412,9 +421,23 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddProgressBar(string label, float value)
+        public int AddProgressBar(string label, float value, string tooltip = null)
         {
-            return 0;
+            var prop = new Property();
+            var picker = CreateProgressBar(value);
+
+            prop.type = PropertyType.ProgressBar;
+            prop.controls.Add(picker);
+            prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
+            prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
+            prop.layout = CreateLinearLayout(true, true, false, 10);
+            prop.layout.AddView(prop.label);
+            if (prop.tooltip != null)
+                prop.layout.AddView(prop.tooltip);
+            prop.layout.AddView(picker);
+            properties.Add(prop);
+
+            return properties.Count - 1;
         }
 
         public int AddRadioButton(string label, string text, bool check)
@@ -449,7 +472,7 @@ namespace FamiStudio
             }
 
             // Create the radio, but add ourselves to the previous layout.
-            var radio = CreateRadioButton(text, Resource.Style.LightGrayCheckBox, false);
+            var radio = CreateRadioButton(text, Resource.Style.LightGrayCheckBox);
             radio.CheckedChange += Radio_CheckedChange;
             prop.type = PropertyType.Radio;
             prop.controls.Add(radio);
@@ -460,6 +483,14 @@ namespace FamiStudio
                 radio.Checked = true;
 
             return properties.Count - 1;
+        }
+
+        private void RadioGroup_CheckedChange(object sender, RadioGroup.CheckedChangeEventArgs e)
+        {
+            var radio = sender as RadioGroup;
+            var idx = GetPropertyIndexForView(radio);
+            if (idx >= 0)
+                PropertyChanged?.Invoke(this, idx, -1, -1, e.CheckedId);
         }
 
         private void Radio_CheckedChange(object sender, CompoundButton.CheckedChangeEventArgs e)
@@ -613,6 +644,7 @@ namespace FamiStudio
             prop.tooltip = !string.IsNullOrEmpty(tooltip) ? CreateTextView(tooltip, Resource.Style.LightGrayTextSmallTooltip) : null;
 
             var radioGroup = CreateLinearLayout(true, true, false, 10, true) as RadioGroup;
+            radioGroup.CheckedChange += RadioGroup_CheckedChange;
 
             prop.layout = radioGroup;
             prop.layout.AddView(prop.label);
@@ -621,8 +653,8 @@ namespace FamiStudio
 
             for (int i = 0; i < values.Length; i++)
             {
-                var radio = CreateRadioButton(values[i], Resource.Style.LightGrayCheckBox, i == selectedIndex);
-                radio.CheckedChange += Radio_CheckedChange;
+                var radio = CreateRadioButton(values[i], Resource.Style.LightGrayCheckBox);
+                radio.Checked = i == selectedIndex;
                 radio.Id = i;
                 prop.controls.Add(radio);
                 prop.layout.AddView(radio);
@@ -811,8 +843,7 @@ namespace FamiStudio
                     (prop.controls[0] as EditText).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:
-                    //(prop.controls[0] as SeekBar).Progress = (int)Math.Round((float)value * 1000);
-                    Debug.Assert(false);
+                    (prop.controls[0] as ProgressBar).Progress = (int)Math.Round((float)value * 1000);
                     break;
                 case PropertyType.Slider:
                     (prop.controls[0] as SeekBar).Progress = (int)(double)value;

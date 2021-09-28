@@ -37,6 +37,8 @@ namespace FamiStudio
         private Oscilloscope oscilloscope;
         private UndoRedoManager undoRedoManager;
         private ExportDialog exportDialog;
+        private LogDialog logDialog;
+        private LogProgressDialog progressLogDialog;
 
         private int selectedChannelIndex;
         private int ghostChannelMask = 0;
@@ -96,6 +98,7 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
         public QuickAccessBar  QuickAccessBar  => mainForm.QuickAccessBar;
         public RenderControl   ActiveControl   => mainForm.ActiveControl;
+        public FamiStudioForm  MainForm        => mainForm;
         
         public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
         public int  PreviewDPCMSampleId    => previewDPCMSampleId;
@@ -117,11 +120,11 @@ namespace FamiStudio
 
             SetActiveControl(PianoRoll);
 
-            Sequencer.PatternClicked         += Sequencer_PatternClicked;
-            Sequencer.ControlActivated       += Sequencer_ControlActivated;
-            Sequencer.PatternModified        += Sequencer_PatternModified;
-            Sequencer.SelectionChanged       += Sequencer_SelectionChanged;
-            Sequencer.PatternsPasted         += PianoRoll_NotesPasted;
+            Sequencer.PatternClicked     += Sequencer_PatternClicked;
+            Sequencer.ControlActivated   += Sequencer_ControlActivated;
+            Sequencer.PatternModified    += Sequencer_PatternModified;
+            Sequencer.SelectionChanged   += Sequencer_SelectionChanged;
+            Sequencer.PatternsPasted     += PianoRoll_NotesPasted;
 
             PianoRoll.PatternChanged     += PianoRoll_PatternChanged;
             PianoRoll.ManyPatternChanged += PianoRoll_ManyPatternChanged;
@@ -166,7 +169,7 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(filename))
             {
-                OpenProject(filename);
+                OpenProjectInternal(filename);
             }
             else
             {
@@ -320,6 +323,46 @@ namespace FamiStudio
         public void SetToolTip(string msg, bool red = false)
         {
             ToolBar.SetToolTip(msg, red);
+        }
+
+        public void BeginLogTask(bool progress = false)
+        {
+            Debug.Assert(logDialog == null && progressLogDialog == null);
+
+            if (progress)
+            {
+                progressLogDialog = new LogProgressDialog(mainForm);
+                Log.SetLogOutput(progressLogDialog);
+            }
+            else if (PlatformUtils.IsDesktop)
+            {
+                logDialog = new LogDialog(mainForm);
+                Log.SetLogOutput(logDialog);
+            }
+        }
+
+        public void EndLogTask()
+        {
+            if (progressLogDialog != null)
+            {
+                if (progressLogDialog.HasMessages)
+                {
+                    Log.LogMessage(LogSeverity.Info, "Done!");
+                    Log.ReportProgress(1.0f);
+                }
+
+                if (PlatformUtils.IsDesktop)
+                    progressLogDialog.StayModalUntilClosed();
+                else
+                    progressLogDialog.Close();
+            }
+            else if (PlatformUtils.IsDesktop)
+            {
+                logDialog.ShowDialogIfMessages();
+                logDialog = null;
+            }
+
+            Log.ClearLogOutput();
         }
 
         public TimeSpan CurrentTime
@@ -624,27 +667,28 @@ namespace FamiStudio
 #endif
         }
 
-        public bool CheckUnloadProject()
+        public void TrySaveProjectAsync(Action callback)
+        {
+            if (undoRedoManager != null && undoRedoManager.NeedsSaving)
+            {
+                PlatformUtils.MessageBoxAsync("Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel, (r) =>
+                {
+                    if (r == DialogResult.No)
+                        callback();
+                    else if (r == DialogResult.Yes)
+                        SaveProjectAsync(false, callback);
+                });
+            }
+            else
+            {
+                callback();
+            }
+        }
+
+        private void UnloadProject()
         {
             if (undoRedoManager != null)
             {
-                if (undoRedoManager.NeedsSaving)
-                {
-                    var result = PlatformUtils.MessageBox("Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel);
-                    if (result == DialogResult.Cancel)
-                    {
-                        return false;
-                    }
-
-                    if (result == DialogResult.Yes)
-                    {
-                        if (!SaveProject())
-                        {
-                            return false;
-                        }
-                    }
-                }
-
                 FreeExportDialog();
 
                 undoRedoManager.PreUndoRedo -= UndoRedoManager_PreUndoRedo;
@@ -657,22 +701,24 @@ namespace FamiStudio
 
                 StopEverything();
             }
-
-            return true;
+            else
+            {
+                Debug.Assert(project == null);
+            }
         }
 
         public void NewProject(bool isDefault = false)
         {
-            if (!CheckUnloadProject())
+            TrySaveProjectAsync(() =>
             {
-                return;
-            }
+                UnloadProject();
 
-            project = new Project(true);
-            InitProject();
+                project = new Project(true);
+                InitProject();
 
-            if (!isDefault)
-                Settings.LastProjectFile = "";
+                if (!isDefault)
+                    Settings.LastProjectFile = "";
+            });
         }
 
         private void FreeExportDialog()
@@ -723,17 +769,13 @@ namespace FamiStudio
             RefreshLayout();
         }
 
-        public void OpenProject(string filename)
+        private void OpenProjectInternal(string filename)
         {
+            Debug.Assert(project == null && undoRedoManager == null);
+
             StopEverything();
 
-            if (!CheckUnloadProject())
-            {
-                return;
-            }
-
-            var dlgLog = new LogDialog(mainForm);
-            using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+            BeginLogTask();
             {
                 project = OpenProjectFile(filename);
 
@@ -750,31 +792,35 @@ namespace FamiStudio
                 }
 
                 mainForm.Refresh();
-                dlgLog.ShowDialogIfMessages();
             }
+            EndLogTask();
         }
 
-        public void OpenProject()
+        public void OpenProject(string filename = null)
         {
-            var filename = (string)null;
-            
-            if (PlatformUtils.IsDesktop)
+            TrySaveProjectAsync(() =>
             {
-                filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
-            }
-            else
-            {
-#if FAMISTUDIO_ANDROID
-                // DROIDTODO : Figure out what is the final flow here.
-                var dlg = new OpenProjectDialog(this);
-                dlg.ShowDialog(mainForm);
-#endif
-            }
+                if (PlatformUtils.IsDesktop)
+                {
+                    if (filename == null)
+                        filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
 
-            if (filename != null)
-            {
-                OpenProject(filename);
-            }
+                    if (filename != null)
+                    {
+                        UnloadProject();
+                        OpenProjectInternal(filename);
+                    }
+                }
+                else
+                {
+                    var dlg = new MobileProjectDialog(this, false);
+                    dlg.ShowDialogAsync(mainForm, (f) =>
+                    {
+                        UnloadProject();
+                        OpenProjectInternal(f);
+                    });
+                }
+            });
         }
 
         public Project OpenProjectFile(string filename, bool allowComplexFormats = true)
@@ -826,56 +872,72 @@ namespace FamiStudio
             return project;
         }
 
-        public bool SaveProject(bool forceSaveAs = false)
+        public void SaveProjectAsync(bool forceSaveAs = false, Action callback = null)
         {
-            bool success = true;
+            var filename = project.Filename;
 
-            if (forceSaveAs || string.IsNullOrEmpty(project.Filename))
+            if (forceSaveAs || string.IsNullOrEmpty(filename))
             {
-                string filename = PlatformUtils.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms", ref Settings.LastFileFolder);
-                if (filename != null)
+                if (PlatformUtils.IsDesktop)
                 {
-                    success = new ProjectFile().Save(project, filename);
-                    if (success)
+                    filename = PlatformUtils.ShowSaveFileDialog("Save File", "FamiStudio Files (*.fms)|*.fms", ref Settings.LastFileFolder);
+                    if (filename != null)
                     {
-                        UpdateTitle();
-                        Settings.LastProjectFile = project.Filename;
+                        SaveProjectInternal(filename);
+                        callback?.Invoke();
                     }
                 }
                 else
                 {
-                    return false;
+                    var dlg = new MobileProjectDialog(this, true);
+                    dlg.ShowDialogAsync(mainForm, (f) =>
+                    {
+                        SaveProjectInternal(f);
+                        callback?.Invoke();
+                    });
                 }
             }
             else
             {
-                success = new ProjectFile().Save(project, project.Filename);
+                SaveProjectInternal(filename);
+                callback?.Invoke();
             }
+        }
+
+        private void SaveProjectInternal(string filename)
+        {
+            var success = new ProjectFile().Save(project, filename);
 
             if (success)
             {
+                UpdateTitle();
+                Settings.LastProjectFile = project.Filename;
+
                 if (Settings.ClearUndoRedoOnSave)
                     undoRedoManager.Clear();
 
                 undoRedoManager.NotifySaved();
+                PlatformUtils.ShowToast("Project Saved!");
             }
             else
             {
-                PlatformUtils.MessageBox("An error happened while saving.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // DROIDTODO : See if we want to unify this under a single, cross-platform call.
+                if (PlatformUtils.IsDesktop)
+                    PlatformUtils.MessageBox("An error happened while saving.", "Error", MessageBoxButtons.OK);
+                else
+                    PlatformUtils.ShowToast("Error Saving Project!");
             }
 
             MarkEverythingDirty();
-
-            return true;
         }
 
         public void Export()
         {
             FreeExportDialog();
 
-            exportDialog = new ExportDialog(project);
+            exportDialog = new ExportDialog(this);
             exportDialog.Exporting += ExportDialog_Exporting;
-            exportDialog.ShowDialog(mainForm);
+            exportDialog.ShowDialog();
         }
 
         public void RepeatLastExport()
@@ -891,7 +953,7 @@ namespace FamiStudio
             }
             else
             {
-                exportDialog.Export(mainForm, true);
+                exportDialog.Export(true);
             }
         }
 
@@ -926,19 +988,24 @@ namespace FamiStudio
 
         public bool TryClosing()
         {
-            if (!CheckUnloadProject())
+            var close = false;
+
+            // This only runs on desktop and desktop doesnt run anything async.
+            TrySaveProjectAsync(() =>
             {
-                return false;
-            }
+                UnloadProject();
 
-            Midi.NotePlayed -= Midi_NotePlayed;
-            Midi.Shutdown();
+                Midi.NotePlayed -= Midi_NotePlayed;
+                Midi.Shutdown();
 
-            StopEverything();
-            ShutdownInstrumentPlayer();
-            ShutdownSongPlayer();
+                StopEverything();
+                ShutdownInstrumentPlayer();
+                ShutdownSongPlayer();
 
-            return true;
+                close = true;
+            });
+
+            return close;
         }
 
         private void RefreshLayout()
@@ -1500,7 +1567,7 @@ namespace FamiStudio
             }
             else if (ctrl && e.KeyCode == Keys.S)
             {
-                SaveProject();
+                SaveProjectAsync();
             }
             else if (ctrl && e.KeyCode == Keys.E)
             {

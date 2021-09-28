@@ -271,13 +271,9 @@ namespace FamiStudio
                 switch (type)
                 {
                     case ButtonType.SongHeader:
-                        active = new[] { true, true };
-                        return new[] { SubButtonType.Add,
-                                       SubButtonType.Load };
                     case ButtonType.InstrumentHeader:
-                        active = new[] { true ,true };
-                        return new[] { SubButtonType.Add,
-                                       SubButtonType.Load };
+                        active = PlatformUtils.IsDesktop ? new[] { true, true } : new[] { true };
+                        return PlatformUtils.IsDesktop ? new[] { SubButtonType.Add, SubButtonType.Load } : new[] { SubButtonType.Add };
                     case ButtonType.ArpeggioHeader:
                         active = new[] { true };
                         return new[] { SubButtonType.Add };
@@ -1539,59 +1535,55 @@ namespace FamiStudio
 
             if (filename != null)
             {
-                var dlgLog = new LogDialog(ParentForm);
-                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+                App.BeginLogTask();
                 {
                     Project otherProject = App.OpenProjectFile(filename, false);
 
-                    if (otherProject == null)
+                    if (otherProject != null)
                     {
-                        return;
-                    }
+                        var songNames = new List<string>();
+                        foreach (var song in otherProject.Songs)
+                            songNames.Add(song.Name);
 
-                    var songNames = new List<string>();
-                    foreach (var song in otherProject.Songs)
-                        songNames.Add(song.Name);
+                        var dlg = new PropertyDialog("Import Songs", 300);
+                        dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
+                        dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
+                        dlg.Properties.AddButton(null, "Select All"); // 2
+                        dlg.Properties.AddButton(null, "Select None"); // 3
+                        dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
+                        dlg.Properties.Build();
 
-                    var dlg = new PropertyDialog("Import Songs", 300);
-                    dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
-                    dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
-                    dlg.Properties.AddButton(null, "Select All"); // 2
-                    dlg.Properties.AddButton(null, "Select None"); // 3
-                    dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
-                    dlg.Properties.Build();
-
-                    dlg.ShowDialog(ParentForm, (r) =>
-                    {
-                        if (r == DialogResult.OK)
+                        dlg.ShowDialog(ParentForm, (r) =>
                         {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
-
-                            var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
-                            var songIds = new List<int>();
-
-                            for (int i = 0; i < selected.Length; i++)
+                            if (r == DialogResult.OK)
                             {
-                                if (selected[i])
-                                    songIds.Add(otherProject.Songs[i].Id);
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+
+                                var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
+                                var songIds = new List<int>();
+
+                                for (int i = 0; i < selected.Length; i++)
+                                {
+                                    if (selected[i])
+                                        songIds.Add(otherProject.Songs[i].Id);
+                                }
+
+                                bool success = false;
+                                if (songIds.Count > 0)
+                                {
+                                    otherProject.DeleteAllSongsBut(songIds.ToArray());
+                                    success = App.Project.MergeProject(otherProject);
+                                }
+
+                                if (success)
+                                    App.UndoRedoManager.EndTransaction();
+                                else
+                                    App.UndoRedoManager.AbortTransaction();
                             }
-
-                            bool success = false;
-                            if (songIds.Count > 0)
-                            {
-                                otherProject.DeleteAllSongsBut(songIds.ToArray());
-                                success = App.Project.MergeProject(otherProject);
-                            }
-
-                            if (success)
-                                App.UndoRedoManager.EndTransaction();
-                            else
-                                App.UndoRedoManager.AbortTransaction();
-                        }
-                    });
-
-                    dlgLog.ShowDialogIfMessages();
+                        });
+                    }
                 }
+                App.EndLogTask();
             }
 
             RefreshButtons();
@@ -1619,8 +1611,7 @@ namespace FamiStudio
 
             if (filename != null)
             {
-                var dlgLog = new LogDialog(ParentForm);
-                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+                App.BeginLogTask();
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -1693,9 +1684,8 @@ namespace FamiStudio
                         App.UndoRedoManager.AbortTransaction();
                     else
                         App.UndoRedoManager.EndTransaction();
-
-                    dlgLog.ShowDialogIfMessages();
                 }
+                App.EndLogTask();
             }
 
             RefreshButtons();
@@ -1719,6 +1709,7 @@ namespace FamiStudio
 
         private void LoadDPCMSample()
         {
+            // DROIDTODO : Loading of DPCM samples.
             var filenames = PlatformUtils.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc|FamiStudio Files (*.fms)|*.fms", ref Settings.LastSampleFolder, true);
 
             if (filenames != null && filenames.Length > 0)
@@ -1767,9 +1758,7 @@ namespace FamiStudio
                         {
                             if (r == DialogResult.OK)
                             {
-                                var dlgLog = new LogDialog(ParentForm);
-
-                                using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+                                App.BeginLogTask();
                                 {
                                     var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
                                     var sampleIdsToMerge = new List<int>();
@@ -1796,17 +1785,15 @@ namespace FamiStudio
                                     else
                                         App.UndoRedoManager.AbortTransaction();
                                 }
-
+                                App.EndLogTask();
                                 RefreshButtons();
-                                dlgLog.ShowDialogIfMessages();
                             }
                         });
                     }
                 }
                 else if (numSamplesFiles > 0)
                 {
-                    var dlgLog = new LogDialog(ParentForm);
-                    using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Warning))
+                    App.BeginLogTask();
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples);
 
@@ -1846,8 +1833,8 @@ namespace FamiStudio
 
                         App.UndoRedoManager.EndTransaction();
                         RefreshButtons();
-                        dlgLog.ShowDialogIfMessages();
                     }
+                    App.EndLogTask();
                 }
             }
         }

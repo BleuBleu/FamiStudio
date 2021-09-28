@@ -89,7 +89,7 @@ namespace FamiStudio
 
         public void AddFrame(byte[] image)
         {
-            Console.WriteLine($"Sending frame {frameIndex} to encoder");
+            Debug.WriteLine($"Sending frame {frameIndex} to encoder");
 
             EGLExt.EglPresentationTimeANDROID(eglDisplay, eglSurface, ComputePresentationTimeNsec(frameIndex++));
             CheckEglError();

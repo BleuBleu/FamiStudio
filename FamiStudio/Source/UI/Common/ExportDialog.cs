@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -64,18 +65,20 @@ namespace FamiStudio
         private MultiPropertyDialog dialog;
         private uint lastExportCrc;
         private string lastExportFilename;
+        private FamiStudio app;
 
         public delegate void EmptyDelegate();
         public event EmptyDelegate Exporting;
 
-        public unsafe ExportDialog(Project project)
+        public unsafe ExportDialog(FamiStudio famistudio)
         {
             int width  = 600;
             int height = PlatformUtils.IsLinux ? 650 : (PlatformUtils.IsMacOS ? 630 : 550);
 
-            this.dialog = new MultiPropertyDialog("Export Songs", width, height, 200);
-            this.dialog.SetVerb("Export");
-            this.project = project;
+            dialog = new MultiPropertyDialog("Export Songs", width, height, 200);
+            dialog.SetVerb("Export");
+            app = famistudio;
+            project = app.Project;
 
             for (int i = 0; i < (int)ExportFormat.Max; i++)
             {
@@ -384,142 +387,194 @@ namespace FamiStudio
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.WavMp3);
             var format = props.GetSelectedIndex(1);
-            var filename = (string)null;
-
-            if (lastExportFilename != null)
+            
+            Action<string> ExportWavMp3Action = (filename) =>
             {
-                filename = lastExportFilename;
+                if (filename != null)
+                {
+                    var songName = props.GetPropertyValue<string>(0);
+                    var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2), CultureInfo.InvariantCulture);
+                    var bitrate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
+                    var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
+                    var duration = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
+                    var separateFiles = props.GetPropertyValue<bool>(7);
+                    var separateIntro = props.GetPropertyValue<bool>(8);
+                    var stereo = props.GetPropertyValue<bool>(9) && !separateFiles;
+                    var song = project.GetSong(songName);
+
+                    var channelCount = project.GetActiveChannelCount();
+                    var channelMask = 0;
+                    var pan = (float[])null;
+
+                    if (PlatformUtils.IsDesktop)
+                    {
+                        pan = new float[channelCount]; 
+
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            if (props.GetPropertyValue<bool>(10, i, 0))
+                                channelMask |= (1 << i);
+
+                            pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
+                        }
+                    }
+                    else
+                    {
+                        var selectedChannels = props.GetPropertyValue<bool[]>(10);
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            if (selectedChannels[i])
+                                channelMask |= (1 << i);
+                        }
+                    }
+
+                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
+                         (samples, samplesChannels, fn) =>
+                         {
+                             switch (format)
+                             {
+                                 case AudioFormatType.Mp3:
+                                     Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                     break;
+                                 case AudioFormatType.Wav:
+                                     WaveFile.Save(samples, fn, sampleRate, samplesChannels);
+                                     break;
+                                 case AudioFormatType.Vorbis:
+                                     VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                     break;
+                             }
+                         });
+
+                    lastExportFilename = filename;
+                }
+            };
+
+            if (PlatformUtils.IsMobile)
+            {
+                var songName = props.GetPropertyValue<string>(0);
+                PlatformUtils.StartMobileSaveOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
+                {
+                    ExportWavMp3Action(f);
+
+                    PlatformUtils.FinishMobileSaveOperationAsync(true, () =>
+                    {
+                        PlatformUtils.ShowToast("Audio Export Successful!");
+                    });
+                });
             }
             else
             {
-                filename = PlatformUtils.ShowSaveFileDialog(
-                    $"Export {AudioFormatType.Names[format]} File",
-                    $"{AudioFormatType.Names[format]} Audio File (*.{AudioFormatType.Extentions[format]})|*.{AudioFormatType.Extentions[format]}",
-                    ref Settings.LastExportFolder);
-            }
+                var filename = (string)null;
 
-            if (filename != null)
-            {
-                var songName = props.GetPropertyValue<string>(0);
-                var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2), CultureInfo.InvariantCulture);
-                var bitrate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
-                var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
-                var duration = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
-                var separateFiles = props.GetPropertyValue<bool>(7);
-                var separateIntro = props.GetPropertyValue<bool>(8);
-                var stereo = props.GetPropertyValue<bool>(9) && !separateFiles;
-                var song = project.GetSong(songName);
-
-                var channelCount = project.GetActiveChannelCount();
-                var channelMask = 0;
-                var pan = (float[])null;
-
-                if (PlatformUtils.IsDesktop)
+                if (lastExportFilename != null)
                 {
-                    pan = new float[channelCount]; 
-
-                    for (int i = 0; i < channelCount; i++)
-                    {
-                        if (props.GetPropertyValue<bool>(10, i, 0))
-                            channelMask |= (1 << i);
-
-                        pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
-                    }
+                    filename = lastExportFilename;
                 }
                 else
                 {
-                    var selectedChannels = props.GetPropertyValue<bool[]>(10);
-                    for (int i = 0; i < channelCount; i++)
-                    {
-                        if (selectedChannels[i])
-                            channelMask |= (1 << i);
-                    }
+                    filename = PlatformUtils.ShowSaveFileDialog(
+                        $"Export {AudioFormatType.Names[format]} File",
+                        $"{AudioFormatType.Names[format]} Audio File (*.{AudioFormatType.Extensions[format]})|*.{AudioFormatType.Extensions[format]}",
+                        ref Settings.LastExportFolder);
                 }
 
-                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
-                     (samples, samplesChannels, fn) =>
-                     {
-                         switch (format)
-                         {
-                             case AudioFormatType.Mp3:
-                                 Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
-                                 break;
-                             case AudioFormatType.Wav:
-                                 WaveFile.Save(samples, fn, sampleRate, samplesChannels);
-                                 break;
-                             case AudioFormatType.Vorbis:
-                                 VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
-                                 break;
-                         }
-                     });
-
-                lastExportFilename = filename;
+                ExportWavMp3Action(filename);
             }
         }
 
         private void ExportVideo(bool pianoRoll)
         {
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
+            var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
 
-            if (filename != null)
+            Func<string, bool> ExportVideoAction = (filename) =>
             {
-                var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
+                if (filename != null)
+                {
+                    var stereoPropIdx = pianoRoll ? 7 : 9;
+                    var channelsPropIdx = pianoRoll ? 8 : 10;
 
-                var stereoPropIdx = pianoRoll ? 7 : 9;
-                var channelsPropIdx = pianoRoll ? 8 : 10;
+                    var songName = props.GetPropertyValue<string>(0);
+                    var resolutionIdx = props.GetSelectedIndex(1);
+                    var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
+                    var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
+                    var halfFrameRate = props.GetSelectedIndex(2) == 1;
+                    var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
+                    var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
+                    var loopCount = props.GetPropertyValue<int>(5);
+                    var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
+                    var song = project.GetSong(songName);
+                    var channelCount = project.GetActiveChannelCount();
+                    var channelMask = 0;
+                    var pan = (float[])null;
 
+                    if (PlatformUtils.IsDesktop)
+                    {
+                        pan = new float[channelCount];
+
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
+                                channelMask |= (1 << i);
+
+                            pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
+                        }
+                    }
+                    else
+                    {
+                        var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            if (selectedChannels[i])
+                                channelMask |= (1 << i);
+                        }
+                    }
+
+                    lastExportFilename = filename;
+
+                    if (pianoRoll)
+                    {
+                        var pianoRollZoom = props.GetSelectedIndex(6) - 3;
+
+                        return new VideoFilePianoRoll().Save(project, song.Id, loopCount, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                    }
+                    else
+                    {
+                        var oscNumColumns    = props.GetPropertyValue<int>(6);
+                        var oscLineThickness = props.GetPropertyValue<int>(7);
+                        var oscColorMode     = props.GetSelectedIndex(8);
+
+                        return new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            };
+
+            if (PlatformUtils.IsMobile)
+            {
                 var songName = props.GetPropertyValue<string>(0);
-                var resolutionIdx = props.GetSelectedIndex(1);
-                var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
-                var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
-                var halfFrameRate = props.GetSelectedIndex(2) == 1;
-                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
-                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
-                var loopCount = props.GetPropertyValue<int>(5);
-                var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
-                var song = project.GetSong(songName);
-                var channelCount = project.GetActiveChannelCount();
-                var channelMask = 0;
-                var pan = (float[])null;
-
-                if (PlatformUtils.IsDesktop)
+                PlatformUtils.StartMobileSaveOperationAsync("video/mp4", $"{songName}", (f) =>
                 {
-                    pan = new float[channelCount];
-
-                    for (int i = 0; i < channelCount; i++)
+                    new Thread(() =>
                     {
-                        if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
-                            channelMask |= (1 << i);
+                        app.BeginLogTask(true);
+                        var success = ExportVideoAction(f);
 
-                        pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
-                    }
-                }
-                else
-                {
-                    var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
-                    for (int i = 0; i < channelCount; i++)
-                    {
-                        if (selectedChannels[i])
-                            channelMask |= (1 << i);
-                    }
-                }
+                        PlatformUtils.FinishMobileSaveOperationAsync(success, () =>
+                        {
+                            app.EndLogTask();
+                            PlatformUtils.ShowToast($"Video Export {(success ? "Successful!" : "Failed.")}!");
+                        });
 
-                if (pianoRoll)
-                {
-                    var pianoRollZoom = props.GetSelectedIndex(6) - 3;
-
-                    new VideoFilePianoRoll().Save(project, song.Id, loopCount, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
-                }
-                else
-                {
-                    var oscNumColumns = props.GetPropertyValue<int>(6);
-                    var oscLineThickness = props.GetPropertyValue<int>(7);
-                    var oscColorMode = props.GetSelectedIndex(8);
-
-                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
-                }
-
-                lastExportFilename = filename;
+                    }).Start();
+                });
+            }
+            else
+            {
+                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
+                ExportVideoAction(filename);
             }
         }
 
@@ -795,52 +850,46 @@ namespace FamiStudio
             return lastExportCrc == ComputeProjectCrc(project);
         }
 
-        public void Export(FamiStudioForm parentForm, bool repeatLast)
+        public void Export(bool repeatLast)
         {
-            var dlgLog = new LogProgressDialog(parentForm);
-            using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Info))
+            if (PlatformUtils.IsDesktop)
+                app.BeginLogTask(true);
+
+            var selectedFormat = (ExportFormat)dialog.SelectedIndex;
+
+            Exporting?.Invoke();
+
+            if (!repeatLast)
+                lastExportFilename = null;
+
+            switch (selectedFormat)
             {
-                var selectedFormat = (ExportFormat)dialog.SelectedIndex;
-
-                Exporting?.Invoke();
-
-                if (!repeatLast)
-                    lastExportFilename = null;
-
-                switch (selectedFormat)
-                {
-                    case ExportFormat.WavMp3: ExportWavMp3(); break;
-                    case ExportFormat.VideoPianoRoll: ExportVideo(true); break;
-                    case ExportFormat.VideoOscilloscope: ExportVideo(false); break;
-                    case ExportFormat.Nsf: ExportNsf(); break;
-                    case ExportFormat.Rom: ExportRom(); break;
-                    case ExportFormat.Midi: ExportMidi(); break;
-                    case ExportFormat.Text: ExportText(); break;
-                    case ExportFormat.FamiTracker: ExportFamiTracker(); break;
-                    case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
-                    case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
-                    case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
-                    case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
-                }
-
-                if (dlgLog.HasMessages)
-                {
-                    Log.LogMessage(LogSeverity.Info, "Done!");
-                    Log.ReportProgress(1.0f);
-                }
-
-                dlgLog.StayModalUntilClosed();
+                case ExportFormat.WavMp3: ExportWavMp3(); break;
+                case ExportFormat.VideoPianoRoll: ExportVideo(true); break;
+                case ExportFormat.VideoOscilloscope: ExportVideo(false); break;
+                case ExportFormat.Nsf: ExportNsf(); break;
+                case ExportFormat.Rom: ExportRom(); break;
+                case ExportFormat.Midi: ExportMidi(); break;
+                case ExportFormat.Text: ExportText(); break;
+                case ExportFormat.FamiTracker: ExportFamiTracker(); break;
+                case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
+                case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
+                case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
+                case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
             }
+
+            if (PlatformUtils.IsDesktop)
+                app.EndLogTask();
         }
 
-        public void ShowDialog(FamiStudioForm parentForm)
+        public void ShowDialog()
         {
-            dialog.ShowDialog(parentForm, (r) =>
+            dialog.ShowDialog(app.MainForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
                     // dialog.Hide(); MATTT : Is this needed?
-                    Export(parentForm, false);
+                    Export(false);
                     lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;
                 }
             });

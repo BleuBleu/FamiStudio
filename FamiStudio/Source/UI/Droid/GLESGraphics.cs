@@ -474,7 +474,6 @@ namespace FamiStudio
         protected int texture;
         protected int resX;
         protected int resY;
-        protected IGL11ExtensionPack gl11Ext;
 
         public int Texture => texture;
         public int SizeX => resX;
@@ -485,16 +484,17 @@ namespace FamiStudio
             resX = imageSizeX;
             resY = imageSizeY;
 
-            if (allowReadback)
+            if (!allowReadback)
             {
                 texture = CreateEmptyTexture(imageSizeX, imageSizeY, false);
 
                 var fbos = new int[1];
                 GLES11Ext.GlGenFramebuffersOES(1, fbos, 0);
-                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, fbos[0]);
-                GLES11Ext.GlFramebufferTexture2DOES(GLES11Ext.GlFramebufferOes, GLES11Ext.GlColorAttachment0Oes, GLES11.GlTexture2d, texture, 0);
-                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, 0);
                 fbo = fbos[0];
+
+                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, fbo);
+                GLES11Ext.GlFramebufferTexture2DOES(GLES11Ext.GlFramebufferOes, GLES11Ext.GlColorAttachment0Oes, GLES11.GlTexture2d, texture, 0);
+                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, 0);
             }
         }
 
@@ -521,7 +521,12 @@ namespace FamiStudio
         public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
         {
             if (fbo > 0)
-                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, fbo);
+            {
+                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, fbo);
+
+                var status = GLES11Ext.GlCheckFramebufferStatusOES(GLES11Ext.GlFramebufferOes);
+                status = status;
+            }
 
             base.BeginDrawControl(unflippedControlRect, windowSizeY);
         }
@@ -531,7 +536,7 @@ namespace FamiStudio
             base.EndDrawControl();
 
             if (fbo > 0)
-                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlRenderbufferOes, 0);
+                GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, 0);
         }
 
         public unsafe void GetBitmap(byte[] data)

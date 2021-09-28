@@ -2,20 +2,21 @@ Android
 =======
 
 File I/O:
-- Project open:
-	- User files
-	- How to support NSF import? Must not change flow too much. StartOpenProject?
+x Project open:
 - Project save:
-	- New file
-	- Overwrite existing.
-	- Add a "saved to xxx" toast when saving.
-- Project delete? 
-	- How? Checklist box somewhere... Config?
-- How to know why project is open? Add label to project properties?
-- Sharing:
-	- Export = share, output to cache, then share?
-	- How to share .fms file? Add to export?
-	- 
+	- Long press to save as (select current project initially)
+	- Add DELETE button in save.
+- Video export
+	- Progress dialog
+	- Finish piano roll too.
+	- Abort/commit file transaction (must work on threads)
+	- Keep screen ON during export.
+	- Hide apply button.
+	x Cleanup scoped log : Being slow 
+- Add toast for other export formats.
+- How to share the FMS file itself? New export format?
+- How to know which project is open? Add label to project properties?
+- DPCM import (always from user files, audio files)
 
 Quick access:
 - Show some kind of scroll bar.
@@ -101,6 +102,8 @@ Controls:
 	x Header Swipe = select (unless dragging seek bar itself)
 	x Header Tap = seek
 
+- CHANNEL AREA DOESNT SCROLL!
+
 Toolbar:
 - Fix font size thing
 - Add version next to "..."
@@ -176,6 +179,7 @@ Testing
 - Retest with various scaling (lots of cahnges to everything, zooming, etc.)
 - Test without snapping, i tested snapping a lot, but not witout.
 - Compare instrument colors (seq/piano roll) for all platforms
+- Make sure video export at the same zoom level as before.
 
 Videos:
 =======

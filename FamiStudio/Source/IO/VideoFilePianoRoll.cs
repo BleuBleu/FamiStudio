@@ -4,13 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-using RenderFont     = FamiStudio.GLFont;
-using RenderBitmap   = FamiStudio.GLBitmap;
-using RenderBrush    = FamiStudio.GLBrush;
-using RenderGeometry = FamiStudio.GLGeometry;
-using RenderControl  = FamiStudio.GLControl;
 using RenderGraphics = FamiStudio.GLOffscreenGraphics;
-using RenderTheme    = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -385,6 +379,7 @@ namespace FamiStudio
             // Setup piano roll and images.
             var pianoRoll = new PianoRoll();
             pianoRoll.Move(0, 0, channelResX, channelResY);
+            pianoRoll.SetThemeRenderResource(themeResources);
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);
 
             // Build the scrolling data.
@@ -474,8 +469,8 @@ namespace FamiStudio
                         int channelPosX0 = (int)Math.Round((s.videoChannelIndex + 0) * channelResXFloat);
                         int channelPosX1 = (int)Math.Round((s.videoChannelIndex + 1) * channelResXFloat);
 
-                        var channelNameSizeX = videoGraphics.MeasureString(s.channelText, font);
-                        var channelIconPosX = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmpIcon.Size.Width + ChannelIconTextSpacing) / 2;
+                        var channelNameSizeX = (int)videoGraphics.MeasureString(s.channelText, font);
+                        var channelIconPosX  = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmpIcon.Size.Width + ChannelIconTextSpacing) / 2;
 
                         fg.FillRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, ChannelIconPosY + s.bmpIcon.Size.Height, themeResources.DarkGreyLineBrush2);
                         fg.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY);
@@ -524,11 +519,6 @@ namespace FamiStudio
             finally
 #endif
             {
-#if FAMISTUDIO_WINDOWS
-                // Cant raise the process priority without being admin on Linux/MacOS.
-                Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.Normal;
-#endif
-
                 pianoRoll.EndVideoRecording();
                 foreach (var c in channelStates)
                 {

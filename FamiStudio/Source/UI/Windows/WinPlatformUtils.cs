@@ -119,9 +119,17 @@ namespace FamiStudio
             return null;
         }
 
-        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)
+        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
         {
+            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
             return System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
+        }
+
+        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback)
+        {
+            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
+            var result = System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
+            callback(result);
         }
 
         public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
@@ -234,6 +242,10 @@ namespace FamiStudio
         {
         }
 
+        public static void ShowToast(string text)
+        {
+        }
+
         public const bool IsMobile  = false;
         public const bool IsAndroid = false;
         public const bool IsDesktop = true;
@@ -241,5 +253,16 @@ namespace FamiStudio
         public const bool IsLinux   = false;
         public const bool IsMacOS   = false;
         public const bool IsGTK     = false;
+    }
+
+    public class MobileProjectDialog
+    {
+        public MobileProjectDialog(FamiStudio fami, bool save)
+        {
+        }
+
+        public void ShowDialogAsync(FamiStudioForm parent, Action<string> callback)
+        {
+        }
     }
 }

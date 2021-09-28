@@ -587,32 +587,30 @@ namespace FamiStudio
             if (args.Length >= 3)
             {
                 InitializeConsole();
-
-                using (var scopedLog = new ScopedLogOutput(this))
+                Log.SetLogOutput(this);
+                
+                if (OpenProject())
                 {
-                    if (OpenProject())
-                    {
-                        var outputFilename = args[2];
+                    var outputFilename = args[2];
 
-                        switch (args[1].ToLower().Trim())
-                        {
-                            case "wav-export": AudioExport(outputFilename, AudioFormatType.Wav); break;
-                            case "mp3-export": AudioExport(outputFilename, AudioFormatType.Mp3); break;
-                            case "ogg-export": AudioExport(outputFilename, AudioFormatType.Vorbis); break;
-                            case "nsf-export": NsfExport(outputFilename); break;
-                            case "rom-export": RomExport(outputFilename); break;
-                            case "fds-export": FdsExport(outputFilename); break;
-                            case "famitracker-txt-export": FamiTrackerTextExport(outputFilename); break;
-                            case "famistudio-txt-export": FamiStudioTextExport(outputFilename); break;
-                            case "famitone2-asm-export": FamiTone2MusicExport(outputFilename, false); break;
-                            case "famitone2-asm-sfx-export": FamiTone2SfxExport(outputFilename, false); break;
-                            case "famistudio-asm-export": FamiTone2MusicExport(outputFilename, true); break;
-                            case "famistudio-asm-sfx-export": FamiTone2SfxExport(outputFilename, true); break;
-                            case "unit-test": RunUnitTest(outputFilename); break;
-                            default:
-                                Console.WriteLine($"Unknown command {args[1]}. Use -help or -? for help.");
-                                break;
-                        }
+                    switch (args[1].ToLower().Trim())
+                    {
+                        case "wav-export": AudioExport(outputFilename, AudioFormatType.Wav); break;
+                        case "mp3-export": AudioExport(outputFilename, AudioFormatType.Mp3); break;
+                        case "ogg-export": AudioExport(outputFilename, AudioFormatType.Vorbis); break;
+                        case "nsf-export": NsfExport(outputFilename); break;
+                        case "rom-export": RomExport(outputFilename); break;
+                        case "fds-export": FdsExport(outputFilename); break;
+                        case "famitracker-txt-export": FamiTrackerTextExport(outputFilename); break;
+                        case "famistudio-txt-export": FamiStudioTextExport(outputFilename); break;
+                        case "famitone2-asm-export": FamiTone2MusicExport(outputFilename, false); break;
+                        case "famitone2-asm-sfx-export": FamiTone2SfxExport(outputFilename, false); break;
+                        case "famistudio-asm-export": FamiTone2MusicExport(outputFilename, true); break;
+                        case "famistudio-asm-sfx-export": FamiTone2SfxExport(outputFilename, true); break;
+                        case "unit-test": RunUnitTest(outputFilename); break;
+                        default:
+                            Console.WriteLine($"Unknown command {args[1]}. Use -help or -? for help.");
+                            break;
                     }
                 }
 

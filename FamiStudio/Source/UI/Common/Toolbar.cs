@@ -266,6 +266,7 @@ namespace FamiStudio
             public Rectangle Rect;
             public Point IconPos;
             public bool Visible = true;
+            public bool CloseOnClick = true;
             public string ToolTip;
             public ButtonImageIndices BmpAtlasIndex;
             public ButtonStatusDelegate Enabled;
@@ -298,7 +299,7 @@ namespace FamiStudio
         public int   LayoutSize  => buttonSize * 2;
         public int   RenderSize  => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio)));
         public float ExpandRatio => expandRatio;
-        public bool  IsExpanded  => expandRatio > 0.001f;
+        public bool  IsExpanded  => expandRatio > 0.0f;
 
         public override bool WantsFullScreenViewport => PlatformUtils.IsMobile;
 
@@ -327,11 +328,11 @@ namespace FamiStudio
             buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap };
             buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
-            buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap };
+            buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap, CloseOnClick = false };
             buttons[(int)ButtonType.Qwerty]    = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
-            buttons[(int)ButtonType.Metronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled };
-            buttons[(int)ButtonType.Machine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled };
-            buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled };
+            buttons[(int)ButtonType.Metronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled, CloseOnClick = false };
+            buttons[(int)ButtonType.Machine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled, CloseOnClick = false };
+            buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled, CloseOnClick = false };
             buttons[(int)ButtonType.Help]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, Click = OnHelp };
 
             if (PlatformUtils.IsMobile)
@@ -536,7 +537,7 @@ namespace FamiStudio
         protected override void OnResize(EventArgs e)
         {
             UpdateButtonLayout();
-            expandRatio = IsExpanded ? 1.0f : 0.0f;
+            expandRatio = 0.0f;
             expanding = false;
             closing = false;
         }
@@ -618,12 +619,12 @@ namespace FamiStudio
 
         private void OnSave()
         {
-            App.SaveProject();
+            App.SaveProjectAsync();
         }
 
         private void OnSaveAs()
         {
-            App.SaveProject(true);
+            App.SaveProjectAsync(true);
         }
 
         private void OnExport()
@@ -834,6 +835,12 @@ namespace FamiStudio
         private void OnHelp()
         {
             App.ShowHelp();
+        }
+
+        private void StartClosing()
+        {
+            expanding = false;
+            closing   = expandRatio > 0.0f;
         }
 
         private void OnMore()
@@ -1169,7 +1176,8 @@ namespace FamiStudio
                 PlatformUtils.VibrateTick();
                 btn.Click();
                 MarkDirty();
-                return;
+                if (!btn.CloseOnClick)
+                    return;
             }
 
             if (x > timecodePosX && x < timecodePosX + timecodeOscSizeX &&
@@ -1184,8 +1192,7 @@ namespace FamiStudio
             if (IsExpanded)
             {
                 PlatformUtils.VibrateTick();
-                expanding = false;
-                closing   = true;
+                StartClosing();
             }
         }
     }
