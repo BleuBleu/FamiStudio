@@ -184,6 +184,16 @@ namespace FamiStudio
                 case ExpansionType.EPSM:
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 186, 1, null, true)//set number of patches
                     { GetValue = () => { return instrument.EpsmPatch; }, GetValueString = () => { return Instrument.GetEpsmPatchName(instrument.EpsmPatch); }, SetValue = (v) => { instrument.EpsmPatch = (byte)v; } });
+
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Algorithm", 0, 7, (EPSMInstrumentPatch.Infos[1].data[0] & 0x07) >> 0)
                     { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[0] = (byte)((instrument.EpsmPatchRegs[0] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
 
@@ -211,6 +221,9 @@ namespace FamiStudio
                     for (int i = 1; i < 5; i++)
                     {
                         int i2 = ((7 * i) - 7);
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Settings", 0, 0, 0)
+                        { GetValue = () => { return 0; }, SetValue = (v) => { } });
+
                         paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Detune", 0, 7, (EPSMInstrumentPatch.Infos[1].data[2 + (6 * i) - 6] & 0x70) >> 4)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x70) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x70)) | ((v << 4) & 0x70)); instrument.EpsmPatch = 0; } });
 

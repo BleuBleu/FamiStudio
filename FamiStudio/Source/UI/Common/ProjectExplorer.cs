@@ -88,8 +88,11 @@ namespace FamiStudio
             ArpeggioHeader,
             Arpeggio,
             ParamCheckbox,
+            ParamHeader,
             ParamSlider,
             ParamList,
+            ParamAlgorithm,
+            ParamAlgImage,
             Max
         };
 
@@ -526,6 +529,12 @@ namespace FamiStudio
                 widgetType = ButtonType.ParamList;
             else if (param.MaxValue == 1)
                 widgetType = ButtonType.ParamCheckbox;
+            else if (param.Name == "AlgImage")
+                widgetType = ButtonType.ParamAlgImage;
+            else if (param.MaxValue == 0)
+                widgetType = ButtonType.ParamHeader;
+            else if (param.Name == "Algorithm")
+                widgetType = ButtonType.ParamAlgorithm;
 
             return widgetType;
         }
@@ -566,6 +575,10 @@ namespace FamiStudio
                             if (param.Name == "Algorithm") {
                                 buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, icon = bmpEpsmAlgorithm[param.GetValue()] });
                             }
+                            //if (param.Name.Contains("Settings"))
+                            //{
+                            //    buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param,  font = ThemeBase.FontMediumBoldCenter, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id});
+                            //}
                             else
                             buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = theme.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id});
                         }
@@ -726,7 +739,10 @@ namespace FamiStudio
                 g.PushTranslation(0, y);
 
                 if (button.type == ButtonType.ParamCheckbox || 
-                    button.type == ButtonType.ParamSlider   || 
+                    button.type == ButtonType.ParamSlider ||
+                    button.type == ButtonType.ParamHeader ||
+                    button.type == ButtonType.ParamAlgorithm ||
+                    button.type == ButtonType.ParamAlgImage ||
                     button.type == ButtonType.ParamList)
                 {
                     if (firstParam)
@@ -737,6 +753,9 @@ namespace FamiStudio
                         {
                             if (buttons[j].type != ButtonType.ParamCheckbox &&
                                 buttons[j].type != ButtonType.ParamSlider &&
+                                buttons[j].type != ButtonType.ParamHeader &&
+                                buttons[j].type != ButtonType.ParamAlgorithm &&
+                                buttons[j].type != ButtonType.ParamAlgImage &&
                                 buttons[j].type != ButtonType.ParamList)
                             { 
                                 break;
@@ -770,7 +789,7 @@ namespace FamiStudio
                 }
 
                 var leftPadding = 0;
-                var leftAligned = button.type == ButtonType.Instrument || button.type == ButtonType.Song || button.type == ButtonType.ParamSlider || button.type == ButtonType.ParamCheckbox || button.type == ButtonType.ParamList || button.type == ButtonType.Arpeggio || button.type == ButtonType.Dpcm;
+                var leftAligned = button.type == ButtonType.Instrument || button.type == ButtonType.Song || button.type == ButtonType.ParamSlider || button.type == ButtonType.ParamCheckbox || button.type == ButtonType.ParamList || button.type == ButtonType.Arpeggio || button.type == ButtonType.Dpcm || button.type == ButtonType.ParamAlgorithm;
 
                 if (showExpandButton && leftAligned)
                 {
@@ -780,10 +799,31 @@ namespace FamiStudio
 
                 var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
 
-                g.DrawText(button.Text, button.Font, icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, actualWidth - buttonTextNoIconPosX * 2);
 
-                if (icon != null)
-                    g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY);
+
+                if (button.type == ButtonType.ParamHeader)
+                {
+                    //button.font = ThemeBase.FontMediumBoldCenter;
+                    g.DrawText(button.Text, ThemeBase.FontMediumBoldCenter, buttonTextNoIconPosX, buttonTextPosY, button.textBrush, actualWidth - buttonTextNoIconPosX * 2);
+                }
+                else if (button.type == ButtonType.ParamAlgImage)
+                {
+                }
+
+                else if (button.type == ButtonType.ParamAlgorithm)
+                {
+                    g.DrawText(button.Text, button.Font, buttonTextNoIconPosX, buttonTextPosY, button.textBrush, actualWidth - buttonTextNoIconPosX * 2);
+                
+                    if (icon != null)
+                        g.DrawBitmap(icon, buttonIconPosX, -(4*buttonSizeY));
+                }
+                else
+                {
+                    g.DrawText(button.Text, button.Font, icon == null ? buttonTextNoIconPosX : buttonTextPosX, buttonTextPosY, enabled ? button.textBrush : disabledBrush, actualWidth - buttonTextNoIconPosX * 2);
+
+                    if (icon != null)
+                        g.DrawBitmap(icon, buttonIconPosX, buttonIconPosY);
+                }
 
                 if (leftPadding != 0)
                     g.PopTransform();
@@ -803,10 +843,21 @@ namespace FamiStudio
                         g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
                         g.PopTransform();
                     }
+                    if (button.type == ButtonType.ParamAlgorithm)
+                    {
+                        var valSizeX = (int)Math.Round((paramVal - button.param.MinValue) / (float)(button.param.MaxValue - button.param.MinValue) * sliderSizeX);
+
+                        g.PushTranslation(actualWidth - sliderPosX, sliderPosY);
+                        g.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
+                        g.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? theme.BlackBrush : disabledBrush);
+                        g.DrawText(paramStr, ThemeBase.FontMediumCenter, 0, buttonTextPosY - sliderPosY, theme.BlackBrush, sliderSizeX);
+                        g.PopTransform();
+                    }
                     else if (button.type == ButtonType.ParamCheckbox)
                     {
                         g.DrawBitmap(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f);
                     }
+
                     else if (button.type == ButtonType.ParamList)
                     {
                         var paramPrev = button.param.SnapAndClampValue(paramVal - 1);
@@ -1058,6 +1109,17 @@ namespace FamiStudio
                     }
                 }
                 else if (buttonType == ButtonType.ParamSlider)
+                {
+                    if (e.X >= Width - scrollBarThickness - sliderPosX)
+                    {
+                        tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
+                    }
+                    else if (button.param.ToolTip != null)
+                    {
+                        tooltip = button.param.ToolTip;
+                    }
+                }
+                else if (buttonType == ButtonType.ParamAlgorithm)
                 {
                     if (e.X >= Width - scrollBarThickness - sliderPosX)
                     {
@@ -2072,6 +2134,41 @@ namespace FamiStudio
             return true;
         }
 
+        private bool HandleMouseDownParamAlgorithmButton(MouseEventArgs e, Button button, int buttonIdx)
+        {
+            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
+
+            if (left || right)
+            {
+                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+
+                if (left)
+                {
+                    captureMouseX = e.X; // Hack, UpdateSliderValue relies on this.
+
+                    if (UpdateSliderValue(button, e, true))
+                    {
+                        sliderDragButton = button;
+                        StartCaptureOperation(e, CaptureOperation.MoveSlider, buttonIdx);
+                        ConditionalInvalidate();
+                    }
+                    else
+                    {
+                        App.UndoRedoManager.AbortTransaction();
+                    }
+                }
+                else
+                {
+                    button.param.SetValue(button.param.DefaultValue);
+                    App.UndoRedoManager.EndTransaction();
+                    ConditionalInvalidate();
+                }
+            }
+
+            return true;
+        }
+
         private bool HandleMouseDownParamCheckboxButton(MouseEventArgs e, Button button)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
@@ -2342,6 +2439,8 @@ namespace FamiStudio
                         return HandleMouseDownInstrumentButton(e, button, subButtonType, buttonIdx, buttonRelX, buttonRelY);
                     case ButtonType.ParamSlider:
                         return HandleMouseDownParamSliderButton(e, button, buttonIdx);
+                    case ButtonType.ParamAlgorithm:
+                        return HandleMouseDownParamAlgorithmButton(e, button, buttonIdx);
                     case ButtonType.ParamCheckbox:
                         return HandleMouseDownParamCheckboxButton(e, button);
                     case ButtonType.ParamList:
