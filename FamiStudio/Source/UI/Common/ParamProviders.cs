@@ -182,8 +182,10 @@ namespace FamiStudio
                     break;
 
                 case ExpansionType.EPSM:
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 186, 1, null, true)//set number of patches
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 1, 1, null, true)//set number of patches
                     { GetValue = () => { return instrument.EpsmPatch; }, GetValueString = () => { return Instrument.GetEpsmPatchName(instrument.EpsmPatch); }, SetValue = (v) => { instrument.EpsmPatch = (byte)v; } });
+                    //paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 186, 1, null, false)//set number of patches
+                    //{ GetValue = () => { return instrument.EpsmPatch; }, GetValueString = () => { return Instrument.GetEpsmPatchName(instrument.EpsmPatch); }, SetValue = (v) => { instrument.EpsmPatch = (byte)v; } });
 
                     paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
                     { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
