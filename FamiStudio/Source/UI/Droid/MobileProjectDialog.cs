@@ -142,6 +142,8 @@ namespace FamiStudio
             }
             else
             {
+                // Not a fan of the await semantic, but this is our only option here
+                // since we dont support nested dialogs/activity at the moment. 
                 var result = await Xamarin.Essentials.FilePicker.PickAsync();
 
                 if (result != null)

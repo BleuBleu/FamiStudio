@@ -110,11 +110,11 @@ Scaling issue:
 
 2nd piano.
 
+Misc:
 / Line widths, bias + 2
 - Replace inheritance by partial
 - Remove bold fonts in dialogs.
 - Cleanup temp folder every now and then.
-- 
 
 Icon notes:
 - 46% zoom, start with 128x128 png.

@@ -1531,10 +1531,10 @@ namespace FamiStudio
             list.Add(inst);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f)
+        public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
-            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity);
+            DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, false, tint);
         }
 
         public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())

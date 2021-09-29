@@ -3,7 +3,9 @@ using Android.Opengl;
 using Android.Views;
 using Java.Nio;
 using System;
-
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
@@ -11,18 +13,30 @@ namespace FamiStudio
     // Based off https://bigflake.com/mediacodec/. Thanks!!!
     class VideoEncoderAndroid
     {
-        private string MimeType = "video/avc";    // H.264 Advanced Video Coding
+        const long SecondsToMicroSeconds = 1000000;
+        const long SecondsToNanoSeconds  = 1000000000;
 
-        private Surface mSurface;
-        private MediaCodec encoder;
+        private readonly string VideoMimeType = "video/avc";       // H.264 Advanced Video Coding
+        private readonly string AudioMimeType = "audio/mp4a-latm"; // AAC
+
+        private Surface surface;
+        private MediaCodec videoEncoder;
+        private MediaCodec audioEncoder;
         private MediaMuxer muxer;
-        private int trackIndex;
+        private int videoTrackIndex;
+        private int audioTrackIndex;
         private int frameIndex;
         private int frameRateNumer;
         private int frameRateDenom;
         private bool muxerStarted;
+        private ManualResetEvent muxerStartEvent = new ManualResetEvent(false);
+        private Task audioEncodingTask;
 
-        private MediaCodec.BufferInfo bufferInfo;
+        private int audioDataIdx;
+        private byte[] audioData;
+
+        private MediaCodec.BufferInfo videoBufferInfo;
+        private MediaCodec.BufferInfo audioBufferInfo;
 
         private const int EGL_RECORDABLE_ANDROID = 0x3142;
 
@@ -45,74 +59,148 @@ namespace FamiStudio
             return new VideoEncoderAndroid();
         }
 
+        // https://github.com/lanhq147/SampleMediaFrame/blob/e2f20ff9eef73318e5a9b4de15458c5c2eb0fd46/app/src/main/java/com/google/android/exoplayer2/video/av/HWRecorder.java
+
         public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, string audioFile, string outputFile)
         {
-            bufferInfo = new MediaCodec.BufferInfo();
+            videoBufferInfo = new MediaCodec.BufferInfo();
+            audioBufferInfo = new MediaCodec.BufferInfo();
 
             frameRateNumer = rateNumer;
             frameRateDenom = rateDenom;
 
-            MediaFormat format = MediaFormat.CreateVideoFormat(MimeType, resX, resY);
+            MediaFormat videoFormat = MediaFormat.CreateVideoFormat(VideoMimeType, resX, resY);
+            videoFormat.SetInteger(MediaFormat.KeyColorFormat, (int)MediaCodecCapabilities.Formatsurface);
+            videoFormat.SetInteger(MediaFormat.KeyBitRate, videoBitRate * 1000);
+            videoFormat.SetFloat(MediaFormat.KeyFrameRate, rateNumer / (float)rateDenom);
+            videoFormat.SetInteger(MediaFormat.KeyIFrameInterval, 4);
+            videoFormat.SetInteger(MediaFormat.KeyProfile, (int)MediaCodecProfileType.Avcprofilehigh);
+            videoFormat.SetInteger(MediaFormat.KeyLevel, (int)MediaCodecProfileLevel.Avclevel31);
 
-            format.SetInteger(MediaFormat.KeyColorFormat, (int)MediaCodecCapabilities.Formatsurface);
-            format.SetInteger(MediaFormat.KeyBitRate, videoBitRate * 1000);
-            format.SetFloat(MediaFormat.KeyFrameRate, rateNumer / (float)rateDenom);
-            format.SetInteger(MediaFormat.KeyIFrameInterval, 4);
-            format.SetInteger(MediaFormat.KeyProfile, (int)MediaCodecProfileType.Avcprofilehigh);
-            format.SetInteger(MediaFormat.KeyLevel, (int)MediaCodecProfileLevel.Avclevel31);
-            Debug.WriteLine($"Media format : {format}");
+            videoEncoder = MediaCodec.CreateEncoderByType(VideoMimeType);
+            videoEncoder.Configure(videoFormat, null, null, MediaCodecConfigFlags.Encode);
+            surface = videoEncoder.CreateInputSurface();
+            videoEncoder.Start();
 
-            encoder = MediaCodec.CreateEncoderByType(MimeType);
-            encoder.Configure(format, null, null, MediaCodecConfigFlags.Encode);
-            mSurface = encoder.CreateInputSurface();
-            encoder.Start();
+            MediaFormat audioFormat = MediaFormat.CreateAudioFormat(AudioMimeType, 44100, 1);
+            audioFormat.SetInteger(MediaFormat.KeyAacProfile, (int)MediaCodecProfileType.Aacobjectlc);
+            audioFormat.SetInteger(MediaFormat.KeyBitRate, audioBitRate * 1000);
+
+            audioEncoder = MediaCodec.CreateEncoderByType(AudioMimeType);
+            audioEncoder.Configure(audioFormat, null, null, MediaCodecConfigFlags.Encode);
+            audioEncoder.Start();
             
             try
             {
                 muxer = new MediaMuxer(outputFile, MuxerOutputType.Mpeg4);
             }
-            catch (Exception e)
+            catch
             {
                 return false;
             }
 
-            trackIndex = -1;
+            videoTrackIndex = -1;
+            audioTrackIndex = -1;
             muxerStarted = false;
 
             if (!ElgInitialize())
                 return false;
 
-            DrainEncoder(false);
+            audioData = File.ReadAllBytes(audioFile);
+
+            if (audioData == null)
+                return false;
+
+            DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
+            DrainEncoder(audioEncoder, audioBufferInfo, audioTrackIndex, false);
+
+            audioEncodingTask = Task.Factory.StartNew(AudioEncodeThread, TaskCreationOptions.LongRunning);
 
             return true;
+        }
+
+        private void AudioEncodeThread()
+        {
+            var done = false;
+
+            try
+            {
+                while (!done)
+                {
+                    done = !WriteAudio();
+                    DrainEncoder(audioEncoder, audioBufferInfo, audioTrackIndex, false);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                Debug.WriteLine(e.StackTrace);
+            }
+        }
+
+        private bool WriteAudio()
+        {
+            int index = audioEncoder.DequeueInputBuffer(-1);
+            if (index >= 0)
+            {
+                ByteBuffer[] inputBuffers = audioEncoder.GetInputBuffers();
+                ByteBuffer buffer = inputBuffers[index];
+
+                var len = Utils.Clamp(audioData.Length - audioDataIdx, 0, buffer.Remaining());
+                buffer.Clear();
+                buffer.Put(audioData, audioDataIdx, len);
+
+                long presentationTime = (audioDataIdx * SecondsToMicroSeconds) / (44100 * 2);
+                audioDataIdx += len;
+
+                var done = audioDataIdx == audioData.Length;
+                audioEncoder.QueueInputBuffer(index, 0, len, presentationTime, done ? MediaCodecBufferFlags.EndOfStream : MediaCodecBufferFlags.None);
+            }
+
+            return audioDataIdx < audioData.Length;
         }
 
         public void AddFrame(byte[] image)
         {
             Debug.WriteLine($"Sending frame {frameIndex} to encoder");
 
-            EGLExt.EglPresentationTimeANDROID(eglDisplay, eglSurface, ComputePresentationTimeNsec(frameIndex++));
+            long presentationTime = ComputePresentationTimeNsec(frameIndex++);
+            EGLExt.EglPresentationTimeANDROID(eglDisplay, eglSurface, presentationTime);
             CheckEglError();
 
             EGL14.EglSwapBuffers(eglDisplay, eglSurface);
             CheckEglError();
 
-            DrainEncoder(false);
+            DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
         }
 
         public void EndEncoding()
         {
             Debug.WriteLine("Releasing encoder objects");
 
-            DrainEncoder(false);
-
-            if (encoder != null)
+            if (audioEncodingTask != null)
             {
-                encoder.Stop();
-                encoder.Release();
-                encoder = null;
+                audioEncodingTask.Wait();
+                audioEncodingTask = null;
             }
-            
+
+            DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
+            DrainEncoder(audioEncoder, audioBufferInfo, audioTrackIndex, false);
+
+            if (videoEncoder != null)
+            {
+                videoEncoder.Stop();
+                videoEncoder.Release();
+                videoEncoder = null;
+            }
+
+            if (audioEncoder != null)
+            {
+                audioEncoder.Stop();
+                audioEncoder.Release();
+                audioEncoder = null;
+            }
+
             ElgShutdown();
 
             if (muxer != null)
@@ -164,7 +252,7 @@ namespace FamiStudio
             CheckEglError();
 
             int[] surfaceAttribs = { EGL14.EglNone };
-            eglSurface = EGL14.EglCreateWindowSurface(eglDisplay, configs[0], mSurface, surfaceAttribs, 0);
+            eglSurface = EGL14.EglCreateWindowSurface(eglDisplay, configs[0], surface, surfaceAttribs, 0);
             CheckEglError();
 
             EGL14.EglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
@@ -184,13 +272,13 @@ namespace FamiStudio
                 EGL14.EglTerminate(eglDisplay);
             }
 
-            mSurface.Release();
+            surface.Release();
 
             eglDisplay = EGL14.EglNoDisplay;
             eglContext = EGL14.EglNoContext;
             eglSurface = EGL14.EglNoSurface;
 
-            mSurface = null;
+            surface = null;
 
             EGL14.EglMakeCurrent(prevEglDisplay, prevEglSurfaceDraw, prevEglSurfaceRead, prevEglContext);
         }
@@ -200,7 +288,7 @@ namespace FamiStudio
             Debug.Assert(EGL14.EglGetError() == EGL14.EglSuccess);
         }
 
-        private void DrainEncoder(bool endOfStream)
+        private void DrainEncoder(MediaCodec encoder, MediaCodec.BufferInfo bufferInfo, int trackIndex, bool endOfStream)
         {
             Debug.WriteLine($"DrainEncoder {endOfStream})");
 
@@ -234,17 +322,30 @@ namespace FamiStudio
                 }
                 else if (encoderStatus == (int)MediaCodecInfoState.OutputFormatChanged)
                 {
-                    if (muxerStarted)
-                    {
-                        throw new Exception();
-                    }
+                    Debug.Assert(!muxerStarted);
                     MediaFormat newFormat = encoder.OutputFormat;
-                    Debug.WriteLine("Encoder output format changed: {newFormat}");
+                    Debug.WriteLine($"Encoder output format changed: {newFormat}");
+
+                    var isVideo = encoder == videoEncoder;
+
+                    if (isVideo)
+                    {
+                        videoTrackIndex = muxer.AddTrack(newFormat);
+                        trackIndex = videoTrackIndex;
+                    }
+                    else
+                    {
+                        audioTrackIndex = muxer.AddTrack(newFormat);
+                        trackIndex = audioTrackIndex;
+                    }
 
                     // now that we have the Magic Goodies, start the muxer
-                    trackIndex = muxer.AddTrack(newFormat);
-                    muxer.Start();
-                    muxerStarted = true;
+                    if (videoTrackIndex >= 0 && audioTrackIndex >= 0)
+                    {
+                        muxer.Start();
+                        muxerStarted = true;
+                        muxerStartEvent.Set();
+                    }
                 }
                 else if (encoderStatus < 0)
                 {
@@ -253,10 +354,7 @@ namespace FamiStudio
                 else
                 {
                     ByteBuffer encodedData = encoderOutputBuffers[encoderStatus];
-                    if (encodedData == null)
-                    {
-                        throw new Exception();
-                    }
+                    Debug.Assert(encodedData != null);
 
                     if ((bufferInfo.Flags & MediaCodecBufferFlags.CodecConfig) != 0)
                     {
@@ -266,16 +364,13 @@ namespace FamiStudio
 
                     if (bufferInfo.Size != 0)
                     {
-                        if (!muxerStarted)
-                        {
-                            throw new Exception("muxer hasn't started");
-                        }
+                        muxerStartEvent.WaitOne();
 
                         encodedData.Position(bufferInfo.Offset);
                         encodedData.Limit(bufferInfo.Offset + bufferInfo.Size);
 
                         muxer.WriteSampleData(trackIndex, encodedData, bufferInfo);
-                        Debug.WriteLine("Sent {mBufferInfo.Size} bytes to muxer");
+                        Debug.WriteLine($"Sent {bufferInfo.Size} bytes to muxer");
                     }
 
                     encoder.ReleaseOutputBuffer(encoderStatus, false);
@@ -298,8 +393,7 @@ namespace FamiStudio
 
         private long ComputePresentationTimeNsec(int frameIndex)
         {
-            const long OneBillion = 1000000000;
-            return frameIndex * OneBillion * frameRateDenom / frameRateNumer;
+            return frameIndex * SecondsToNanoSeconds * frameRateDenom / frameRateNumer;
         }
     }
 }

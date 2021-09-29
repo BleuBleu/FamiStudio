@@ -41,9 +41,11 @@ namespace FamiStudio
         const int DefaultNoteAttackSizeX           = 3;
         const int DefaultReleaseNoteSizeY          = 8;
         const int DefaultEnvelopeSizeY             = 9;
-        const int DefaultWhiteKeySizeX             = PlatformUtils.IsMobile ? 40 : 94;
+        const int DefaultWhiteKeySizeX             = 94;
+        const int DefaultWhiteKeySizeXMobile       = 40;
         const int DefaultWhiteKeySizeY             = 20;
-        const int DefaultBlackKeySizeX             = PlatformUtils.IsMobile ? 20 : 56;
+        const int DefaultBlackKeySizeX             = 56;
+        const int DefaultBlackKeySizeXMobile       = 20;
         const int DefaultBlackKeySizeY             = 14;
         const int DefaultSnapIconPosX              = 3;
         const int DefaultSnapIconPosY              = 3;
@@ -437,6 +439,7 @@ namespace FamiStudio
 
         private void UpdateRenderCoords()
         {
+            var videoMode = editMode == EditionMode.VideoRecording;
             var headerScale = editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM || editMode == EditionMode.None ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2);
             var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
             var effectIconsScale = PlatformUtils.IsMobile ? 0.5f : 1.0f;
@@ -451,10 +454,10 @@ namespace FamiStudio
             noteSizeY                 = ScaleForMainWindow(DefaultNoteSizeY * zoomY);
             noteAttackSizeX           = ScaleForMainWindow(DefaultNoteAttackSizeX);
             releaseNoteSizeY          = ScaleForMainWindow(DefaultReleaseNoteSizeY * zoomY) & 0xfe; // Keep even
+            whiteKeySizeX             = ScaleForMainWindow((videoMode || PlatformUtils.IsDesktop ? DefaultWhiteKeySizeX : DefaultWhiteKeySizeXMobile) * pianoScaleX);
+            blackKeySizeX             = ScaleForMainWindow((videoMode || PlatformUtils.IsDesktop ? DefaultBlackKeySizeX : DefaultBlackKeySizeXMobile) * pianoScaleX);
             whiteKeySizeY             = ScaleForMainWindow(DefaultWhiteKeySizeY * zoomY);
-            whiteKeySizeX             = ScaleForMainWindow(DefaultWhiteKeySizeX * pianoScaleX);
             blackKeySizeY             = ScaleForMainWindow(DefaultBlackKeySizeY * zoomY);
-            blackKeySizeX             = ScaleForMainWindow(DefaultBlackKeySizeX * pianoScaleX);
             effectIconPosX            = ScaleForMainWindow(DefaultEffectIconPosX * effectIconsScale);
             effectIconPosY            = ScaleForMainWindow(DefaultEffectIconPosY * effectIconsScale);
             headerIconsPosX           = ScaleForMainWindow(DefaultSnapIconPosX);
