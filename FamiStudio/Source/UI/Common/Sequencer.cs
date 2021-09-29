@@ -1753,7 +1753,7 @@ namespace FamiStudio
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();
 
-            dialog.ShowDialog(ParentForm, (r) =>
+            dialog.ShowDialogAsync(ParentForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -2379,7 +2379,7 @@ namespace FamiStudio
             dlg.Properties.PropertiesUserData = tempoProperties;
             dlg.Properties.Build();
 
-            dlg.ShowDialog(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -2411,7 +2411,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(pattern.Color);
             dlg.Properties.Build();
 
-            dlg.ShowDialog(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {

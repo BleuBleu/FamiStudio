@@ -91,6 +91,10 @@ namespace FamiStudio
             dialog.StayModalUntilClosed();
         }
 
+        public void Close()
+        {
+        }
+
         public bool HasMessages => hasMessages;
         public bool AbortOperation => dialog.DialogResult != DialogResult.None;
     }

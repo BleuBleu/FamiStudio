@@ -62,7 +62,7 @@ namespace FamiStudio
             CloseRequested?.Invoke(result);
         }
 
-        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
         {
             FamiStudioForm.Instance.StartDialogActivity(typeof(PropertyDialogActivity), RequestCode, callback, this);
         }

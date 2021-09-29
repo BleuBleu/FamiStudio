@@ -36,7 +36,7 @@ namespace FamiStudio
             if (dialog != null)
             {
                 // This is only ran in desktop and this isnt really async, so its ok.
-                dialog.ShowDialog(parent, (r) =>
+                dialog.ShowDialogAsync(parent, (r) =>
                 {
                     if (r == DialogResult.OK)
                     { 

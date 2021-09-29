@@ -696,6 +696,12 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null)
+        {
+            Debug.Assert(false);
+            return -1;
+        }
+
         private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string tooltip = null)
         {
             var slider = new Slider(value, min, max, increment, numDecimals, showLabel);

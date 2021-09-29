@@ -117,7 +117,7 @@ namespace FamiStudio
             Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
 
             // DROIDTODO : Move this to a function!
-            //Settings.Load(); // DROIDTODO : Settings.
+            Settings.Load();
             DpiScaling.Initialize();
             Utils.Initialize();
             PlatformUtils.Initialize();
@@ -268,7 +268,7 @@ namespace FamiStudio
             dlg.Properties.AddCheckBox("CheckBox1", true, "Checkbox tooltip!");
             dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX", "Tooltip for slider");
 
-            dlg.ShowDialog(this, (r) =>
+            dlg.ShowDialogAsync(this, (r) =>
             {
                 if (r == DialogResult.OK)
                 {

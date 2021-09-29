@@ -73,7 +73,7 @@ namespace FamiStudio
                 if (!shown)
                 {
                     shown = true;
-                    dialog.ShowDialog(parentForm, (r) => { abort = r != DialogResult.None; });
+                    dialog.ShowDialogAsync(parentForm, (r) => { abort = r != DialogResult.None; });
                 }
 
                 dialog.Properties.SetPropertyValue(0, progress);

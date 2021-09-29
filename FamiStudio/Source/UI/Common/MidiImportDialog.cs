@@ -131,7 +131,7 @@ namespace FamiStudio
                     dlg.Properties.Build();
                     dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
 
-                    dlg.ShowDialog(null, (r) =>
+                    dlg.ShowDialogAsync(null, (r) =>
                     {
                         if (r == DialogResult.OK)
                         {
@@ -257,7 +257,7 @@ namespace FamiStudio
             if (dialog != null)
             {
                 // This is only ran in desktop and this isnt really async, so its ok.
-                dialog.ShowDialog(parent, (r) =>
+                dialog.ShowDialogAsync(parent, (r) =>
                 {
                     if (r == DialogResult.OK)
                     {

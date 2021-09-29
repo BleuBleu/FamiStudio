@@ -89,7 +89,7 @@ namespace FamiStudio
             return tabs[idx];
         }
 
-        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
         {
             FamiStudioForm.Instance.StartDialogActivity(typeof(MultiPropertyDialogActivity), RequestCode, callback, this);
         }

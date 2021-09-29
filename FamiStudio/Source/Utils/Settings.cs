@@ -464,6 +464,8 @@ namespace FamiStudio
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
 #elif FAMISTUDIO_LINUX
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
+#elif FAMISTUDIO_ANDROID
+                return Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 #else
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
 #endif

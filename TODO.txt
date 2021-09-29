@@ -2,10 +2,7 @@ Android
 =======
 
 File I/O:
-- DPCM import (always from user files, audio files)
 - How to know which project is open? Add label to project properties?
-- Config file location.
-- Rename all things with callback to Async.
 
 Quick access:
 - Show some kind of scroll bar.

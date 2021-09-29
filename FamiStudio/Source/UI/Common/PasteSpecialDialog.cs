@@ -69,9 +69,9 @@ namespace FamiStudio
             inPropertyChanged = false;
         }
 
-        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
         {
-             dialog.ShowDialog(parent, callback);
+             dialog.ShowDialogAsync(parent, callback);
         }
 
         public bool PasteMix        => dialog.Properties.GetPropertyValue<bool>(0);

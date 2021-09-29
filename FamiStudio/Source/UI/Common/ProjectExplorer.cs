@@ -1553,7 +1553,7 @@ namespace FamiStudio
                         dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
                         dlg.Properties.Build();
 
-                        dlg.ShowDialog(ParentForm, (r) =>
+                        dlg.ShowDialogAsync(ParentForm, (r) =>
                         {
                             if (r == DialogResult.OK)
                             {
@@ -1658,7 +1658,7 @@ namespace FamiStudio
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            dlg.ShowDialog(ParentForm, (r) =>
+                            dlg.ShowDialogAsync(ParentForm, (r) =>
                             {
                                 if (r == DialogResult.OK)
                                 {
@@ -1767,7 +1767,7 @@ namespace FamiStudio
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            dlg.ShowDialog(ParentForm, (r) =>
+                            dlg.ShowDialogAsync(ParentForm, (r) =>
                             {
                                 if (r == DialogResult.OK)
                                 {
@@ -1910,7 +1910,7 @@ namespace FamiStudio
                 dlg.Properties.AddDropDownList("Expansion:", expNames.ToArray(), expNames[0]); // 0
                 dlg.Properties.Build();
 
-                dlg.ShowDialog(ParentForm, (r) =>
+                dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
                     if (r == DialogResult.OK)
                     {
@@ -2713,7 +2713,7 @@ namespace FamiStudio
             UpdateProjectPropertiesWarnings(dlg.Properties);
             dlg.Properties.Build();
 
-            dlg.ShowDialog(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -2858,7 +2858,7 @@ namespace FamiStudio
             tempoProperties.AddProperties();
             dlg.Properties.Build();
 
-            dlg.ShowDialog(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -2896,7 +2896,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialog(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -2927,7 +2927,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialog(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -2958,7 +2958,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialog(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentForm, (r) =>
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 

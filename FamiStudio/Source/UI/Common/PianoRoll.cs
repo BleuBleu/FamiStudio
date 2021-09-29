@@ -1907,7 +1907,7 @@ namespace FamiStudio
 
                 var dlg = new PasteSpecialDialog(Song.Channels[editChannel], lastPasteSpecialPasteMix, lastPasteSpecialPasteNotes, lastPasteSpecialPasteEffectMask);
 
-                dlg.ShowDialog(ParentForm, (r) =>
+                dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
                     if (r == DialogResult.OK)
                     {
@@ -1935,7 +1935,7 @@ namespace FamiStudio
 
                 var dlg = new DeleteSpecialDialog(Song.Channels[editChannel]);
 
-                dlg.ShowDialog(ParentForm, (r) =>
+                dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
                     if (r == DialogResult.OK)
                         DeleteSelectedNotes(true, dlg.DeleteNotes, dlg.DeleteEffectMask);
@@ -3338,7 +3338,7 @@ namespace FamiStudio
                         dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
                         dlg.Properties.Build();
 
-                        dlg.ShowDialog(ParentForm, (r) =>
+                        dlg.ShowDialogAsync(ParentForm, (r) =>
                         {
                             if (r == DialogResult.OK)
                             {
@@ -5573,7 +5573,7 @@ namespace FamiStudio
                 dlg.Properties.AddDropDownList(null, sampleNames.ToArray(), sampleNames[0]); // 1
                 dlg.Properties.Build();
 
-                dlg.ShowDialog(ParentForm, (r) =>
+                dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
                     if (r == DialogResult.OK)
                     {

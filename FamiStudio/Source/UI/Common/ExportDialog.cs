@@ -961,9 +961,9 @@ namespace FamiStudio
                 app.EndLogTask();
         }
 
-        public void ShowDialog()
+        public void ShowDialogAsync()
         {
-            dialog.ShowDialog(app.MainForm, (r) =>
+            dialog.ShowDialogAsync(app.MainForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {

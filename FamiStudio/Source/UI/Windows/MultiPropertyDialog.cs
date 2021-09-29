@@ -292,7 +292,7 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialog(IWin32Window parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(IWin32Window parent, Action<DialogResult> callback)
         {
             callback(ShowDialog());
         }

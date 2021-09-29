@@ -802,7 +802,8 @@ namespace FamiStudio
                 case PropertyType.DropDownList:
                 {
                     var spinner = prop.controls[0] as Spinner;
-                    return (spinner.Adapter as ArrayAdapter).GetItem(spinner.SelectedItemPosition).ToString();
+                    var adapter = spinner.Adapter as ArrayAdapter;
+                    return spinner.SelectedItemPosition >= 0 ? adapter.GetItem(spinner.SelectedItemPosition).ToString() : "";
                 }
                 case PropertyType.CheckBoxList:
                 {

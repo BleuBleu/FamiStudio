@@ -287,7 +287,7 @@ namespace FamiStudio
                         }
                     };
 #endif
-                    dlg.ShowDialog(null, (r) => { });
+                    dlg.ShowDialogAsync(null, (r) => { });
 
                     pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
                 }
@@ -308,32 +308,34 @@ namespace FamiStudio
         {
             var data = new string[37, 4];
 
-            // Stop note.
+            if (PlatformUtils.IsDesktop)
             {
-                var k0 = qwertyKeys[0, 0];
-                var k1 = qwertyKeys[0, 1];
+                // Stop note.
+                {
+                    var k0 = qwertyKeys[0, 0];
+                    var k1 = qwertyKeys[0, 1];
 
-                data[0, 0] = "N/A";
-                data[0, 1] = "Stop Note";
-                data[0, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 0]);
-                data[0, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 1]);
+                    data[0, 0] = "N/A";
+                    data[0, 1] = "Stop Note";
+                    data[0, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 0]);
+                    data[0, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 1]);
+                }
+
+                // Regular notes.
+                for (int idx = 1; idx < data.GetLength(0); idx++)
+                {
+                    var octave = (idx - 1) / 12;
+                    var note = (idx - 1) % 12;
+
+                    var k0 = qwertyKeys[idx, 0];
+                    var k1 = qwertyKeys[idx, 1];
+
+                    data[idx, 0] = octave.ToString();
+                    data[idx, 1] = Note.NoteNames[note];
+                    data[idx, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 0]);
+                    data[idx, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 1]);
+                }
             }
-
-            // Regular notes.
-            for (int idx = 1; idx < data.GetLength(0); idx++)
-            {
-                var octave = (idx - 1) / 12;
-                var note   = (idx - 1) % 12;
-
-                var k0 = qwertyKeys[idx, 0];
-                var k1 = qwertyKeys[idx, 1];
-
-                data[idx, 0] = octave.ToString();
-                data[idx, 1] = Note.NoteNames[note];
-                data[idx, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 0]);
-                data[idx, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 1]);
-            }
-
             return data;
         }
 
@@ -400,9 +402,9 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            dialog.ShowDialog(parent, (r) =>
+            dialog.ShowDialogAsync(parent, (r) =>
             {
                 if (r == DialogResult.OK)
                 {

@@ -199,9 +199,9 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialog(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            dialog.ShowDialog(parent, (r) =>
+            dialog.ShowDialogAsync(parent, (r) =>
             {
                 if (r == DialogResult.OK)
                 {

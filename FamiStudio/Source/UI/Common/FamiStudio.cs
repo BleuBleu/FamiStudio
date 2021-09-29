@@ -937,7 +937,7 @@ namespace FamiStudio
 
             exportDialog = new ExportDialog(this);
             exportDialog.Exporting += ExportDialog_Exporting;
-            exportDialog.ShowDialog();
+            exportDialog.ShowDialogAsync();
         }
 
         public void RepeatLastExport()
@@ -974,7 +974,7 @@ namespace FamiStudio
         {
             var dlg = new ConfigDialog();
 
-            dlg.ShowDialog(mainForm, (r) =>
+            dlg.ShowDialogAsync(mainForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -1153,7 +1153,7 @@ namespace FamiStudio
         {
             var dlg = new TransformDialog(this);
             dlg.CleaningUp += TransformDialog_CleaningUp;
-            dlg.ShowDialog(mainForm, (r) =>
+            dlg.ShowDialogAsync(mainForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {

@@ -125,11 +125,11 @@ namespace FamiStudio
             return System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
         }
 
-        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback)
+        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
         {
             var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
             var result = System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
-            callback(result);
+            callback?.Invoke(result);
         }
 
         public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
@@ -234,6 +234,27 @@ namespace FamiStudio
             return graphics.DpiX / 96.0f;
         }
 
+        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
+        {
+        }
+
+        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
+        {
+        }
+
+        public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)
+        {
+        }
+
+        public static void StartShareFileAsync(string filename, Action callback)
+        {
+        }
+
+        public static string GetShareFilename(string filename)
+        {
+            return null;
+        }
+
         public static void VibrateTick()
         {
         }
@@ -257,11 +278,11 @@ namespace FamiStudio
 
     public class MobileProjectDialog
     {
-        public MobileProjectDialog(FamiStudio fami, bool save)
+        public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
         {
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<string> callback)
+        public void ShowDialogAsync(Action<string> callback)
         {
         }
     }
