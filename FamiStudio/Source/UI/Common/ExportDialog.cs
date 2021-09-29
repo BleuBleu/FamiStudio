@@ -459,10 +459,10 @@ namespace FamiStudio
             if (PlatformUtils.IsMobile)
             {
                 var songName = props.GetPropertyValue<string>(0);
-                PlatformUtils.StartMobileSaveOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
+                PlatformUtils.StartMobileSaveFileOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
                 {
                     ExportWavMp3Action(f);
-                    PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("Audio Export Successful!"); });
+                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("Audio Export Successful!"); });
                 });
             }
             else
@@ -558,14 +558,14 @@ namespace FamiStudio
             if (PlatformUtils.IsMobile)
             {
                 var songName = props.GetPropertyValue<string>(0);
-                PlatformUtils.StartMobileSaveOperationAsync("video/mp4", $"{songName}", (f) =>
+                PlatformUtils.StartMobileSaveFileOperationAsync("video/mp4", $"{songName}", (f) =>
                 {
                     new Thread(() =>
                     {
                         app.BeginLogTask(true);
                         var success = ExportVideoAction(f);
 
-                        PlatformUtils.FinishMobileSaveOperationAsync(success, () =>
+                        PlatformUtils.FinishMobileSaveFileOperationAsync(success, () =>
                         {
                             app.EndLogTask();
                             PlatformUtils.ShowToast($"Video Export {(success ? "Successful!" : "Failed.")}!");
@@ -608,10 +608,10 @@ namespace FamiStudio
 
             if (PlatformUtils.IsMobile)
             {
-                PlatformUtils.StartMobileSaveOperationAsync("*/*", $"{project.Name}.nsf", (f) =>
+                PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nsf", (f) =>
                 {
                     ExportNsfAction(f);
-                    PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("NSF Export Successful!"); });
+                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("NSF Export Successful!"); });
                 });
             }
             else
@@ -652,10 +652,10 @@ namespace FamiStudio
 
                 if (PlatformUtils.IsMobile)
                 {
-                    PlatformUtils.StartMobileSaveOperationAsync("*/*", $"{project.Name}.nes", (f) =>
+                    PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nes", (f) =>
                     {
                         ExportRomAction(f);
-                        PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("NES ROM Export Successful!"); });
+                        PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("NES ROM Export Successful!"); });
                     });
                 }
                 else
@@ -682,10 +682,10 @@ namespace FamiStudio
 
                 if (PlatformUtils.IsMobile)
                 {
-                    PlatformUtils.StartMobileSaveOperationAsync("*/*", $"{project.Name}.fds", (f) =>
+                    PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.fds", (f) =>
                     {
                         ExportFdsAction(f);
-                        PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("FDS Disk Export Successful!"); });
+                        PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("FDS Disk Export Successful!"); });
                     });
                 }
                 else
@@ -707,17 +707,17 @@ namespace FamiStudio
             {
                 filename = PlatformUtils.GetShareFilename(filename);
                 app.SaveProjectCopy(filename);
-                PlatformUtils.ShareFileAsync(filename, () => 
+                PlatformUtils.StartShareFileAsync(filename, () => 
                 {
                     PlatformUtils.ShowToast("Sharing Successful!");
                 });
             }
             else
             {
-                PlatformUtils.StartMobileSaveOperationAsync("*/*", filename, (f) =>
+                PlatformUtils.StartMobileSaveFileOperationAsync("*/*", filename, (f) =>
                 {
                     app.SaveProjectCopy(f);
-                    PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("Sharing Successful!"); });
+                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("Sharing Successful!"); });
                 });
             }
         }

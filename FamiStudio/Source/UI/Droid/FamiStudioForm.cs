@@ -180,6 +180,19 @@ namespace FamiStudio
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
 
+        public void StartLoadFileActivityAsync(string mimeType, Action<string> callback)
+        {
+            Debug.Assert(!IsAsyncDialogInProgress);
+
+            dialogRequestCode  = LoadFileRequestCode;
+            fileDialogCallback = callback;
+
+            Intent intent = new Intent(Intent.ActionOpenDocument);
+            intent.AddCategory(Intent.CategoryOpenable);
+            intent.SetType(mimeType);
+            StartActivityForResult(intent, dialogRequestCode);
+        }
+
         public void StartSaveFileActivityAsync(string mimeType, string filename, Action<string> callback)
         {
             Debug.Assert(!IsAsyncDialogInProgress);
@@ -293,13 +306,50 @@ namespace FamiStudio
 
                 ClearDialogCallbacks();
 
-                if (resultCode == Result.Ok && requestCode == SaveFileRequestCode)
+                if (resultCode == Result.Ok)
                 {
-                    lastSaveFileUri = data.Data;
-                    lastSaveTempFile = Path.GetTempFileName();
+                    if (requestCode == SaveFileRequestCode)
+                    {
+                        lastSaveFileUri = data.Data;
+                        lastSaveTempFile = Path.GetTempFileName();
 
-                    // Save to temporary file and copy.
-                    callback(lastSaveTempFile);
+                        // Save to temporary file and copy.
+                        callback(lastSaveTempFile);
+                    }
+                    else
+                    {
+                        var filename = (string)null;
+
+                        var c = ContentResolver.Query(data.Data, null, null, null);
+                        if (c != null && c.MoveToFirst())
+                        {
+                            int id = c.GetColumnIndex(Android.Provider.IOpenableColumns.DisplayName);
+                            if (id != -1)
+                                filename = c.GetString(id);
+                        }
+
+                        if (filename != null)
+                        {
+                            var tempFile = Path.Combine(Path.GetTempPath(), filename);
+                            var buffer = new byte[256 * 1024];
+
+                            using (var streamIn = ContentResolver.OpenInputStream(data.Data))
+                            {
+                                using (var streamOut = File.OpenWrite(tempFile))
+                                {
+                                    while (true)
+                                    {
+                                        var len = streamIn.Read(buffer, 0, buffer.Length);
+                                        if (len == 0)
+                                            break;
+                                        streamOut.Write(buffer, 0, len);
+                                    }
+                                }
+                            }
+
+                            callback(tempFile);
+                        }
+                    }
                 }
 
                 Window.ClearFlags(WindowManagerFlags.KeepScreenOn);

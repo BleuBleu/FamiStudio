@@ -813,8 +813,8 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var dlg = new MobileProjectDialog(this, false);
-                    dlg.ShowDialogAsync(mainForm, (f) =>
+                    var dlg = new MobileProjectDialog(this, "Open FamiStudio Project", false);
+                    dlg.ShowDialogAsync((f) =>
                     {
                         UnloadProject();
                         OpenProjectInternal(f);
@@ -889,8 +889,8 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var dlg = new MobileProjectDialog(this, true);
-                    dlg.ShowDialogAsync(mainForm, (f) =>
+                    var dlg = new MobileProjectDialog(this, "Save FamiStudio Project", true);
+                    dlg.ShowDialogAsync((f) =>
                     {
                         SaveProjectInternal(f);
                         callback?.Invoke();

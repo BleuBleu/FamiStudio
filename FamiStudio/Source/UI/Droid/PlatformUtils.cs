@@ -47,12 +47,17 @@ namespace FamiStudio
             alert.Show();
         }
 
-        public static void StartMobileSaveOperationAsync(string mimeType, string filename, Action<string> callback)
+        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
+        {
+            FamiStudioForm.Instance.StartLoadFileActivityAsync(mimeType, callback);
+        }
+
+        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
         {
             FamiStudioForm.Instance.StartSaveFileActivityAsync(mimeType, filename, callback);
         }
 
-        public static void FinishMobileSaveOperationAsync(bool commit, Action callback)
+        public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)
         {
             MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -60,7 +65,7 @@ namespace FamiStudio
             });
         }
 
-        public static void ShareFileAsync(string filename, Action callback)
+        public static void StartShareFileAsync(string filename, Action callback)
         {
             FamiStudioForm.Instance.StartFileSharingActivity(filename, callback);
         }

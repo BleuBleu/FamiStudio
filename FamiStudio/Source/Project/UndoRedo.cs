@@ -207,6 +207,14 @@ namespace FamiStudio
             project.ValidateIntegrity();
         }
 
+        public void AbortOrEndTransaction(bool success)
+        {
+            if (success)
+                EndTransaction();
+            else
+                AbortTransaction();
+        }
+
         public void RestoreTransaction(bool serializeAppState = true)
         {
             Debug.Assert(!transactions.Last().IsEnded);

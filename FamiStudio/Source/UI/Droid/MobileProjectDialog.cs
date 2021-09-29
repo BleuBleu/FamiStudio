@@ -23,15 +23,13 @@ namespace FamiStudio
         private readonly string DemoProjectLoadTooltip = "These are demo projects provided with FamiStudio. They are great resource for learning.";
         private readonly string StorageTooltip         = "This will prompt you to open a file from your device's storage. You can open FamiStudio .FMS files, as well as other file formats such as FamiTracker FTM or TXT files.";
 
-        public MobileProjectDialog(FamiStudio fami, bool save)
+        public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
         {
             famistudio = fami;
             saveMode = save;
 
-            var verb = save ? "Save" : "Open";
-
-            dialog = new PropertyDialog($"{verb} FamiStudio Project", 100);
-            dialog.SetVerb(verb);
+            dialog = new PropertyDialog(title, 100);
+            dialog.SetVerb(save ? "Save" : "Open");
 
             // User files.
             var userProjectsDir = Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
@@ -85,7 +83,8 @@ namespace FamiStudio
             else
             {
                 dialog.Properties.AddRadioButtonList("Demo Projects", demoProjects.ToArray(), hasUserProjects ? -1 : 0, DemoProjectLoadTooltip); // 1
-                dialog.Properties.AddButton("Open project from storage", "Open From Storage", StorageTooltip); // 2
+                if (allowStorage)
+                    dialog.Properties.AddButton("Open project from storage", "Open From Storage", StorageTooltip); // 2
             }
 
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
@@ -158,9 +157,9 @@ namespace FamiStudio
             return Path.Combine(Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects"), $"{name}.fms");
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<string> callback)
+        public void ShowDialogAsync(Action<string> callback)
         {
-            dialog.ShowDialog(parent, (r) =>
+            dialog.ShowDialog(famistudio.MainForm, (r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -202,7 +201,7 @@ namespace FamiStudio
                         if (demoProjectIdx >= 0)
                         {
                             // Save to temporary file.
-                            var tempFilename = Path.GetTempFileName();
+                            var tempFilename = Path.Combine(Path.GetTempPath(), "Temp.fms");
                             
                             using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.{demoProjects[demoProjectIdx]}.fms"))
                             {
