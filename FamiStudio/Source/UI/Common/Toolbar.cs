@@ -317,7 +317,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
             buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen };
             buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
-            buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = OnRepeatLastExport };
+            buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = PlatformUtils.IsDesktop ? OnRepeatLastExport : (EmptyDelegate)null };
             buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
             buttons[(int)ButtonType.Cut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
             buttons[(int)ButtonType.Paste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
@@ -1168,13 +1168,27 @@ namespace FamiStudio
             base.OnMouseDown(e);
         }
 
+        protected override void OnTouchLongPress(int x, int y)
+        {
+            var btn = GetButtonAtCoord(x, y);
+
+            if (btn != null && btn.RightClick != null)
+            {
+                PlatformUtils.VibrateClick();
+                btn.RightClick();
+                MarkDirty();
+                if (btn.CloseOnClick && IsExpanded)
+                    StartClosing();
+            }
+        }
+
         protected override void OnTouchClick(int x, int y)
         {
             var btn = GetButtonAtCoord(x, y);
             if (btn != null)
             {
                 PlatformUtils.VibrateTick();
-                btn.Click();
+                btn.Click?.Invoke();
                 MarkDirty();
                 if (!btn.CloseOnClick)
                     return;
@@ -1191,7 +1205,8 @@ namespace FamiStudio
 
             if (IsExpanded)
             {
-                PlatformUtils.VibrateTick();
+                if (btn == null)
+                    PlatformUtils.VibrateTick();
                 StartClosing();
             }
         }

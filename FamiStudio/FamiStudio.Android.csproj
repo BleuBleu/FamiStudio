@@ -247,8 +247,6 @@
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
     <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
-    <Compile Include="Source\UI\Common\LogDialog.cs" />
-    <Compile Include="Source\UI\Common\LogProgressDialog.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
@@ -277,6 +275,7 @@
     <Compile Include="Source\UI\Droid\SystemMedia.cs" />
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Mobile\LogDialog.cs" />
     <Compile Include="Source\UI\Mobile\QuickAccessBar.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />

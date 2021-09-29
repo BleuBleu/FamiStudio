@@ -35,13 +35,11 @@ namespace FamiStudio
 
             // User files.
             var userProjectsDir = Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
-            if (Directory.Exists(userProjectsDir))
-            {
-                userProjects = Directory.GetFiles(userProjectsDir, "*.fms");
+            Directory.CreateDirectory(userProjectsDir);
 
-                for (int i = 0; i < userProjects.Length; i++)
-                    userProjects[i] = Path.GetFileNameWithoutExtension(userProjects[i]);
-            }
+            userProjects = Directory.GetFiles(userProjectsDir, "*.fms");
+            for (int i = 0; i < userProjects.Length; i++)
+                userProjects[i] = Path.GetFileNameWithoutExtension(userProjects[i]);
 
             var hasUserProjects = userProjects != null && userProjects.Length > 0;
 
@@ -179,8 +177,8 @@ namespace FamiStudio
                         if (demoProjectIdx >= 0)
                         {
                             // Save to temporary file.
-                            var tempFilename = Path.Combine(Path.GetTempPath(), "Temp.fms");
-
+                            var tempFilename = Path.GetTempFileName();
+                            
                             using (var s = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.{demoProjects[demoProjectIdx]}.fms"))
                             {
                                 var buffer = new byte[(int)s.Length];

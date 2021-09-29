@@ -7,7 +7,6 @@ using Rectangle = System.Drawing.Rectangle;
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderBrush       = FamiStudio.GLBrush;
 using RenderFont        = FamiStudio.GLFont;
 
 namespace FamiStudio

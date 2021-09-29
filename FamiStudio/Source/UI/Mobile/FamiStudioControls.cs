@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Android.Opengl;
-using Javax.Microedition.Khronos.Opengles;
 
 namespace FamiStudio
 {

@@ -114,6 +114,7 @@ namespace FamiStudio
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
 
             EnableFullscreenMode(Window);
+            Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
 
             // DROIDTODO : Move this to a function!
             //Settings.Load(); // DROIDTODO : Settings.
@@ -152,6 +153,18 @@ namespace FamiStudio
             scaleDetector.QuickScaleEnabled = false;
 
             Choreographer.Instance.PostFrameCallback(this);
+            
+            StartCleanCacheFolder();
+        }
+
+        private void StartCleanCacheFolder()
+        {
+            new Thread(() =>
+            {
+                var files = Directory.GetFiles(Path.GetTempPath());
+                foreach (var f in files)
+                    File.Delete(f);
+            }).Start();
         }
 
         public override void OnWindowFocusChanged(bool hasFocus)
@@ -173,6 +186,8 @@ namespace FamiStudio
 
             dialogRequestCode = SaveFileRequestCode;
             fileDialogCallback = callback;
+
+            Window.AddFlags(WindowManagerFlags.KeepScreenOn);
 
             Intent intent = new Intent(Intent.ActionCreateDocument);
             intent.AddCategory(Intent.CategoryOpenable);
@@ -281,11 +296,13 @@ namespace FamiStudio
                 if (resultCode == Result.Ok && requestCode == SaveFileRequestCode)
                 {
                     lastSaveFileUri = data.Data;
-                    lastSaveTempFile = Path.GetTempFileName(); ;
+                    lastSaveTempFile = Path.GetTempFileName();
 
                     // Save to temporary file and copy.
                     callback(lastSaveTempFile);
                 }
+
+                Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
             }
             else if (dialogRequestCode == PropertyDialog.RequestCode ||
                      dialogRequestCode == MultiPropertyDialog.RequestCode)

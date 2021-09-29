@@ -4,7 +4,6 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-#if !FAMISTUDIO_ANDROID // DROIDTODO!
     class LogDialog : ILogOutput
     {
         private PropertyDialog dialog;
@@ -45,30 +44,54 @@ namespace FamiStudio
         public bool AbortOperation => dialog.DialogResult != DialogResult.None;
         public void ReportProgress(float progress) { }
     }
-#else
-    class LogDialog : ILogOutput
+
+    class LogProgressDialog : ILogOutput
     {
-        public LogDialog(FamiStudioForm parentForm)
-        {
-        }
+        private PropertyDialog dialog;
+        private FamiStudioForm parentForm;
+        private bool hasMessages = false;
 
-        public DialogResult ShowDialog()
+        public unsafe LogProgressDialog(FamiStudioForm parentForm)
         {
-            return DialogResult.OK;
-        }
+            this.parentForm = parentForm;
 
-        public DialogResult ShowDialogIfMessages()
-        {
-            return DialogResult.OK;
+            dialog = new PropertyDialog("Log", 800, false);
+            dialog.Properties.AddMultilineTextBox(null, ""); // 0
+            dialog.Properties.AddProgressBar(null, 0.0f); // 1
+            dialog.Properties.Build();
         }
 
         public void LogMessage(string msg)
         {
+            dialog.UpdateModalEvents();
+
+            if (AbortOperation)
+                return;
+
+            hasMessages = true;
+            if (!dialog.Visible)
+                dialog.ShowModal(parentForm);
+            dialog.Properties.AppendText(0, msg);
+            dialog.UpdateModalEvents();
         }
 
-        public bool HasMessages => false;
-        public bool AbortOperation => false;
-        public void ReportProgress(float progress) { }
+        public void ReportProgress(float progress)
+        {
+            dialog.UpdateModalEvents();
+
+            if (AbortOperation)
+                return;
+
+            dialog.Properties.SetPropertyValue(1, progress);
+            dialog.UpdateModalEvents();
+        }
+
+        public void StayModalUntilClosed()
+        {
+            dialog.StayModalUntilClosed();
+        }
+
+        public bool HasMessages => hasMessages;
+        public bool AbortOperation => dialog.DialogResult != DialogResult.None;
     }
-#endif
 }
