@@ -149,7 +149,7 @@ namespace FamiStudio
         private void Label_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             var link = sender as LinkLabel;
-            Utils.OpenUrl(link.Links[0].LinkData as string);
+            PlatformUtils.OpenUrl(link.Links[0].LinkData as string);
         }
 
         private TextBox CreateColoredTextBox(string txt, Color backColor)

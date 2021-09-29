@@ -1144,7 +1144,7 @@ namespace FamiStudio
 
                 if (PlatformUtils.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    Utils.OpenUrl("http://www.famistudio.org");
+                    PlatformUtils.OpenUrl("http://www.famistudio.org");
                 }
             }
         }
@@ -1181,7 +1181,7 @@ namespace FamiStudio
 
         public void ShowHelp()
         {
-            Utils.OpenUrl("http://www.famistudio.org/doc/index.html");
+            PlatformUtils.OpenUrl("http://www.famistudio.org/doc/index.html");
         }
 
         private void UpdateTitle()

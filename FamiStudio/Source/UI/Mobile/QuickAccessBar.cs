@@ -194,9 +194,9 @@ namespace FamiStudio
             // MATTT : Font scaling?
             var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
 
-            buttonFont   = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultTextSize, scale), false);
-            listFont     = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultListItemTextSize, scale), false);
-            listFontBold = ThemeResources.GetBestMatchingFont(g, ScaleCustom(DefaultListItemTextSize, scale), true);
+            buttonFont   = ThemeResources.GetBestMatchingFontByHeight(g, ScaleCustom(DefaultTextSize, scale), false);
+            listFont     = ThemeResources.GetBestMatchingFontByHeight(g, ScaleCustom(DefaultListItemTextSize, scale), false);
+            listFontBold = ThemeResources.GetBestMatchingFontByHeight(g, ScaleCustom(DefaultListItemTextSize, scale), true);
 
             buttonSize        = ScaleCustom(DefaultButtonSize, scale);
             buttonSizeNav     = ScaleCustom(DefaultNavButtonSize, scale);

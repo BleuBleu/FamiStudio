@@ -8883,13 +8883,13 @@ namespace FamiStudio
 			public const int LightGrayCheckBox = 2131755245;
 			
 			// aapt resource value: 0x7F1000EE
-			public const int LightGrayLargeBold = 2131755246;
+			public const int LightGraySeekBar = 2131755246;
 			
 			// aapt resource value: 0x7F1000EF
-			public const int LightGraySeekBar = 2131755247;
+			public const int LightGrayTextMedium = 2131755247;
 			
 			// aapt resource value: 0x7F1000F0
-			public const int LightGrayTextMedium = 2131755248;
+			public const int LightGrayTextMediumBold = 2131755248;
 			
 			// aapt resource value: 0x7F1000F1
 			public const int LightGrayTextSmall = 2131755249;

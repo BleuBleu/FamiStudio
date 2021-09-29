@@ -1,24 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Android.App;
-using Android.Content;
 using Android.OS;
-using Android.Runtime;
+using Android.Text;
+using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
 using AndroidX.AppCompat.App;
 using AndroidX.Fragment.App;
 using AndroidX.Core.Widget;
-using AndroidX.DrawerLayout.Widget;
 using AndroidX.CoordinatorLayout.Widget;
 using Google.Android.Material.AppBar;
+using Java.Lang;
 
-using Debug = System.Diagnostics.Debug;
+using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
-using ActionBar = AndroidX.AppCompat.App.ActionBar;
-using Android.Graphics.Drawables;
+using ActionBar    = AndroidX.AppCompat.App.ActionBar;
 
 namespace FamiStudio
 {
@@ -128,6 +125,7 @@ namespace FamiStudio
 
             toolbar = new AndroidX.AppCompat.Widget.Toolbar(new ContextThemeWrapper(this, Resource.Style.ToolbarTheme));
             toolbar.LayoutParameters = appBarLayoutParams;
+            toolbar.SetTitleTextAppearance(this, Resource.Style.LightGrayTextMediumBold);
             SetSupportActionBar(toolbar);
 
             ActionBar actionBar = SupportActionBar;
@@ -178,12 +176,19 @@ namespace FamiStudio
             return base.OnOptionsItemSelected(item);
         }
 
+        private ICharSequence SetMenuItemFont(string text, int resId)
+        {
+            SpannableStringBuilder sb = new SpannableStringBuilder(text);
+            sb.SetSpan(new TextAppearanceSpan(this, resId), 0, text.Length, 0);
+            return sb;
+        }
+
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             if (applyMenuItem == null)
             {
                 menu.Clear();
-                applyMenuItem = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, dlg.Verb); 
+                applyMenuItem = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, SetMenuItemFont(dlg.Verb, Resource.Style.LightGrayTextMedium)); 
                 UpdateToolbar(dlg.ShowVerbOnTabPage);
             }
 
@@ -293,7 +298,7 @@ namespace FamiStudio
                     var textViewLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
                     textViewLayoutParams.Gravity = GravityFlags.Left | GravityFlags.CenterVertical;
 
-                    var textView = new TextView(new ContextThemeWrapper(container.Context, Resource.Style.LightGrayLargeBold));
+                    var textView = new TextView(new ContextThemeWrapper(container.Context, Resource.Style.LightGrayTextMedium));
                     textView.Text = tab.text;
                     textView.LayoutParameters = textViewLayoutParams;
                     textView.SetPadding(dp10, 0, 0, 0);

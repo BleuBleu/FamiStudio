@@ -1,19 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Android.Text;
+using Android.Text.Style;
 using Android.App;
-using Android.Content;
 using Android.OS;
-using Android.Runtime;
 using Android.Views;
-using Android.Widget;
 using AndroidX.AppCompat.App;
 using AndroidX.Fragment.App;
 using AndroidX.Core.Widget;
-using AndroidX.DrawerLayout.Widget;
 using AndroidX.CoordinatorLayout.Widget;
 using Google.Android.Material.AppBar;
+using Java.Lang;
 
 using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
@@ -27,8 +23,8 @@ namespace FamiStudio
 
         private string title = "";
         private string verb = "Apply";
-        private bool canAccept;
-        private bool canCancel;
+        private bool canAccept = true;
+        private bool canCancel = true;
         private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
 
         public PropertyPage Properties => propertyPage;
@@ -47,7 +43,7 @@ namespace FamiStudio
             this.canCancel = canCancel;
         }
 
-    public PropertyDialog(string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        public PropertyDialog(string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
             title = text;
         }
@@ -97,6 +93,7 @@ namespace FamiStudio
 
             toolbar = new AndroidX.AppCompat.Widget.Toolbar(new ContextThemeWrapper(this, Resource.Style.ToolbarTheme));
             toolbar.LayoutParameters = appBarLayoutParams;
+            toolbar.SetTitleTextAppearance(this, Resource.Style.LightGrayTextMediumBold);
             SetSupportActionBar(toolbar);
 
             ActionBar actionBar = SupportActionBar;
@@ -154,13 +151,20 @@ namespace FamiStudio
             return base.OnOptionsItemSelected(item);
         }
 
+        private ICharSequence SetMenuItemFont(string text, int resId)
+        {
+            SpannableStringBuilder sb = new SpannableStringBuilder(text);
+            sb.SetSpan(new TextAppearanceSpan(this, resId), 0, text.Length, 0);
+            return sb;
+        }
+
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             menu.Clear();
 
             if (dlg.CanAccept)
             {
-                var item = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, dlg.Verb);
+                var item = menu.Add(IMenu.None, ApplyMenuItemId, IMenu.None, SetMenuItemFont(dlg.Verb, Resource.Style.LightGrayTextMedium));
                 item.SetShowAsAction(ShowAsAction.Always);
             }
 

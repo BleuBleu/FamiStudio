@@ -56,7 +56,7 @@ namespace FamiStudio
 
         public static FamiStudioForm Instance { get; private set; }
         public object DialogUserData => dialogUserData;
-        public bool IsAsyncDialogInProgress => dialogCallback != null || fileDialogCallback != null || contextMenuDialog != null || shareCallback != null; // DROIDTODO : Add lots of validation with that.
+        public bool IsAsyncDialogInProgress => dialogCallback != null || fileDialogCallback != null || shareCallback != null; // DROIDTODO : Add lots of validation with that.
 
         public FamiStudio      FamiStudio      => famistudio;
         public Toolbar         ToolBar         => controls.ToolBar;

@@ -144,22 +144,42 @@ namespace FamiStudio
             customColorBrushes.Clear();
         }
 
-        public RenderFont GetBestMatchingFont(RenderGraphics g, int desiredHeight, bool bold)
+        public RenderFont GetBestMatchingFontByWidth(string text, int desiredWidth, bool bold)
         {
             var foundIdx = 0;
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 var def = FontDefinitions[i];
 
-                if (def.Bold == bold && 
-                    def.Size * DpiScaling.Font >= desiredHeight)
+                if (def.Bold == bold)
                 {
-                    foundIdx = i;
+                    var width = fonts[i].MeasureString(text);
+                    if (width > desiredWidth)
+                    {
+                        foundIdx = i - 1;
+                        break;
+                    }
+                }
+            }
+
+            return fonts[Math.Max(0, foundIdx)];
+        }
+
+        public RenderFont GetBestMatchingFontByHeight(RenderGraphics g, int desiredHeight, bool bold)
+        {
+            var foundIdx = 0;
+            for (int i = 0; i < FontDefinitions.Length; i++)
+            {
+                var def = FontDefinitions[i];
+
+                if (def.Bold == bold &&  def.Size * DpiScaling.Font > desiredHeight)
+                {
+                    foundIdx = i - 1;
                     break;
                 }
             }
 
-            return fonts[foundIdx];
+            return fonts[Math.Max(0, foundIdx)];
         }
 
         /*

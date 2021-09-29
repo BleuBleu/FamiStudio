@@ -226,7 +226,7 @@ namespace FamiStudio
         {
             if (click == ClickType.Button)
             {
-                Utils.OpenUrl(Settings.GetAutoSaveFilePath());
+                PlatformUtils.OpenUrl(Settings.GetAutoSaveFilePath());
             }
         }
 
@@ -247,7 +247,7 @@ namespace FamiStudio
                 }
                 else if (propIdx == 2)
                 {
-                    Utils.OpenUrl("https://famistudio.org/doc/ffmpeg/");
+                    PlatformUtils.OpenUrl("https://famistudio.org/doc/ffmpeg/");
                 }
             }
         }

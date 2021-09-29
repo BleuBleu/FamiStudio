@@ -136,6 +136,11 @@ namespace FamiStudio
             });
         }
 
+        public static void OpenUrl(string url)
+        {
+            FamiStudioForm.Instance.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(url)));
+        }
+
         public const bool IsMobile  = true;
         public const bool IsAndroid = true;
         public const bool IsDesktop = false;

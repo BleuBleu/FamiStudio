@@ -1,9 +1,6 @@
 Android
 =======
 
-File I/O:
-- How to know which project is open? Add label to project properties?
-
 Quick access:
 - Show some kind of scroll bar.
 - Ensure visible.
@@ -91,15 +88,7 @@ Controls:
 - CHANNEL AREA DOESNT SCROLL!
 
 Toolbar:
-- Fix font size thing
-- Add version next to "..."
-
-Prop page:
-- Review text color light gray 1 or 2?
-- Toolbar font.
-- Button font.
-- Cleanup where we use GLGraphics, always use render.
-- Change insturment dialog for a combo
+- Reorganize buttons, need to see delete + export. 
 
 Scaling issue:
 - Support 3 scalings (Will not affect toolbars)? 
@@ -112,12 +101,9 @@ Scaling issue:
 Misc:
 / Line widths, bias + 2
 - Replace inheritance by partial
-- Remove bold fonts in dialogs.
-- Cleanup temp folder every now and then.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
-- 
 
 Features missing from the Mobile version:
 - No MIDI import/export
@@ -140,6 +126,7 @@ Features missing from the Mobile version:
 - Hide lines in piano roll when snapping is enabled?
 - Convert more icons to white + remove last border (release + loop point.)
 - Copy instrument.
+- Change insturment dialog for a combo
 
 Misc:
 

@@ -10,6 +10,7 @@ using Rectangle = System.Drawing.Rectangle;
 
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderBrush       = FamiStudio.GLBrush;
+using RenderFont        = FamiStudio.GLFont;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
 using RenderCommandList = FamiStudio.GLCommandList;
@@ -252,6 +253,7 @@ namespace FamiStudio
         int lastButtonX = 500;
         bool redTooltip = false;
         string tooltip = "";
+        RenderFont timeCodeFont;
         RenderBitmapAtlas bmpSpecialCharAtlas;
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
@@ -313,6 +315,7 @@ namespace FamiStudio
             toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1); // DROIDTODO : Makes no sense on mobile.
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
             bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
+            timeCodeFont = ThemeResources.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
             buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen };
@@ -531,6 +534,8 @@ namespace FamiStudio
                 timecodePosY = buttonIconPosX + timeRow * buttonSize;
                 oscilloscopePosX = buttonIconPosX + oscCol * buttonSize;
                 oscilloscopePosY = buttonIconPosX + oscRow * buttonSize;
+
+                timeCodeFont = ThemeResources.GetBestMatchingFontByWidth("00:00:000", timecodeOscSizeX, false);
             }
         }
 
@@ -887,8 +892,8 @@ namespace FamiStudio
             var frame = App.CurrentFrame;
             var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
 
-            var zeroSizeX  = c.Graphics.MeasureString("0", ThemeResources.FontHuge);
-            var colonSizeX = c.Graphics.MeasureString(":", ThemeResources.FontHuge);
+            var zeroSizeX  = c.Graphics.MeasureString("0", timeCodeFont);
+            var colonSizeX = c.Graphics.MeasureString(":", timeCodeFont);
 
             var timeCodeSizeY = Height - timecodePosY * 2;
             var textColor = App.IsRecording ? ThemeResources.DarkRedFillBrush : ThemeResources.LightGreyFillBrush2;
@@ -909,11 +914,11 @@ namespace FamiStudio
                 var charPosX = sx / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
                 for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
-                    c.DrawText(patternString[i].ToString(), ThemeResources.FontHuge, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
-                c.DrawText(":", ThemeResources.FontHuge, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
+                    c.DrawText(patternString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
+                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
                 charPosX += colonSizeX;
                 for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
-                    c.DrawText(noteString[i].ToString(), ThemeResources.FontHuge, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
+                    c.DrawText(noteString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
             }
             else
             {
@@ -927,15 +932,15 @@ namespace FamiStudio
                 var charPosX = sx / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
 
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    c.DrawText(minutesString[i].ToString(), ThemeResources.FontHuge, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
-                c.DrawText(":", ThemeResources.FontHuge, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
+                    c.DrawText(minutesString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
+                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    c.DrawText(secondsString[i].ToString(), ThemeResources.FontHuge, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
-                c.DrawText(":", ThemeResources.FontHuge, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
+                    c.DrawText(secondsString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
+                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
-                    c.DrawText(millisecondsString[i].ToString(), ThemeResources.FontHuge, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
+                    c.DrawText(millisecondsString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
             }
 
             c.PopTransform();
