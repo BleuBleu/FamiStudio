@@ -168,33 +168,27 @@ namespace FamiStudio
         public RenderFont GetBestMatchingFontByHeight(RenderGraphics g, int desiredHeight, bool bold)
         {
             var foundIdx = 0;
+
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 var def = FontDefinitions[i];
 
-                if (def.Bold == bold &&  def.Size * DpiScaling.Font > desiredHeight)
+                if (def.Bold == bold && def.Size * DpiScaling.Font > desiredHeight)
                 {
-                    foundIdx = i - 1;
+                    for (int j = i - 1; j >= 0; j--)
+                    {
+                        var def2 = FontDefinitions[j];
+                        if (def2.Size != def.Size && def2.Bold == bold)
+                        {
+                            foundIdx = j;
+                            break;
+                        }
+                    }
                     break;
                 }
             }
 
             return fonts[Math.Max(0, foundIdx)];
         }
-
-        /*
-        private GLFont GetOrCreateFont(int idx)
-        {
-            if (fonts[idx] == null)
-            {
-                fonts[idx] = g.CreateFontFromResource(
-                       FontDefinitions[idx].Name,
-                       FontDefinitions[idx].Bold,
-                       FontDefinitions[idx].Size);
-            }
-
-            return fonts[idx];
-        }
-        */
     }
 }
