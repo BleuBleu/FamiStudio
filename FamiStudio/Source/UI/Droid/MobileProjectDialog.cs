@@ -14,8 +14,8 @@ namespace FamiStudio
         private bool saveMode;
         private bool inPropertyChange = false;
 
-        private string[] demoProjects;
-        private string[] userProjects;
+        private List<string> demoProjects = new List<string>();
+        private List<string> userProjects = new List<string>();
         private string storageFilename;
 
         private readonly string UserProjectSaveTooltip = "These are your projects. Select one to overwrite it. The save to a new project file, select the last option and enter a name.";
@@ -37,27 +37,30 @@ namespace FamiStudio
             var userProjectsDir = Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
             Directory.CreateDirectory(userProjectsDir);
 
-            userProjects = Directory.GetFiles(userProjectsDir, "*.fms");
-            for (int i = 0; i < userProjects.Length; i++)
+            userProjects.AddRange(Directory.GetFiles(userProjectsDir, "*.fms"));
+            for (int i = 0; i < userProjects.Count; i++)
                 userProjects[i] = Path.GetFileNameWithoutExtension(userProjects[i]);
 
-            var hasUserProjects = userProjects != null && userProjects.Length > 0;
+            var hasUserProjects = userProjects != null && userProjects.Count > 0;
+            var newProjectName = (string)null;
 
             if (save)
             {
-                if (userProjects == null)
-                    userProjects = new string[1];
-                else
-                    Array.Resize(ref userProjects, userProjects.Length + 1);
+                userProjects.Add("Save to a New Project.");
 
-                userProjects[userProjects.Length - 1] = "Save to a New Project.";
+                // Generate unique name
+                for (int i = 1; ; i++)
+                {
+                    newProjectName = $"NewProject{i}";
+                    if (userProjects.Find(p => p.ToLower() == newProjectName.ToLower()) == null)
+                        break;
+                }
             }
             else
             {
                 // Demo songs.
                 var assembly = Assembly.GetExecutingAssembly();
                 var files = assembly.GetManifestResourceNames();
-                var demoProjectsList = new List<string>();
 
                 foreach (var file in files)
                 {
@@ -65,23 +68,23 @@ namespace FamiStudio
                     {
                         // Filename will be in the for 'FamiStudio.Ducktales.fms'.
                         var trimmedFilename = Path.GetFileNameWithoutExtension(file.Substring(file.IndexOf('.') + 1));
-                        demoProjectsList.Add(trimmedFilename);
+                        demoProjects.Add(trimmedFilename);
                     }
                 }
-
-                demoProjects = demoProjectsList.ToArray();
             }
 
-            dialog.Properties.AddRadioButtonList("User Projects", userProjects, 0, save ? UserProjectSaveTooltip : UserProjectLoadTooltip); // 0
+            dialog.Properties.AddRadioButtonList("User Projects", userProjects.ToArray(), userProjects.Count - 1, save ? UserProjectSaveTooltip : UserProjectLoadTooltip); // 0
 
             if (save)
             {
-                dialog.Properties.AddTextBox("New Project Name", "NewProject", 0, "Enter the name of the new project."); // 1
-                dialog.Properties.SetPropertyEnabled(1, userProjects.Length == 1);
+                dialog.Properties.AddTextBox("New Project Name", newProjectName, 0, "Enter the name of the new project."); // 1
+                dialog.Properties.AddButton("Delete Selected Project", "Delete"); // 2
+                dialog.Properties.SetPropertyEnabled(1, true);
+                dialog.Properties.SetPropertyEnabled(2, false);
             }
             else
             {
-                dialog.Properties.AddRadioButtonList("Demo Projects", demoProjects, hasUserProjects ? -1 : 0, DemoProjectLoadTooltip); // 1
+                dialog.Properties.AddRadioButtonList("Demo Projects", demoProjects.ToArray(), hasUserProjects ? -1 : 0, DemoProjectLoadTooltip); // 1
                 dialog.Properties.AddButton("Open project from storage", "Open From Storage", StorageTooltip); // 2
             }
 
@@ -96,8 +99,9 @@ namespace FamiStudio
             {
                 if (propIdx == 0)
                 {
-                    var newFile = (int)value == userProjects.Length - 1;
-                    dialog.Properties.SetPropertyEnabled(1, newFile);
+                    var newFile = (int)value == userProjects.Count - 1;
+                    dialog.Properties.SetPropertyEnabled(1,  newFile);
+                    dialog.Properties.SetPropertyEnabled(2, !newFile);
                 }
             }
             else
@@ -109,7 +113,7 @@ namespace FamiStudio
 
                 if (propIdx == 0)
                     props.ClearRadioList(1);
-                else if (propIdx == 1 && userProjects != null && userProjects.Length > 0)
+                else if (propIdx == 1 && userProjects != null && userProjects.Count > 0)
                     props.ClearRadioList(0);
 
                 inPropertyChange = false;
@@ -120,6 +124,22 @@ namespace FamiStudio
         {
             if (saveMode)
             {
+                var idx = dialog.Properties.GetSelectedIndex(0);
+                if (idx >= 0 && idx < userProjects.Count - 1)
+                {
+                    PlatformUtils.MessageBoxAsync("Delete project?", "Delete", MessageBoxButtons.YesNo, (r) =>
+                    {
+                        if (r == DialogResult.Yes)
+                        {
+                            File.Delete(GetUserProjectFilename(userProjects[idx]));
+                            userProjects.RemoveAt(idx);
+                            props.UpdateRadioButtonList(0, userProjects.ToArray(), userProjects.Count - 1);
+                            props.SetPropertyEnabled(1, true);
+                            props.SetPropertyEnabled(2, false);
+                            PlatformUtils.ShowToast("Project Deleted!");
+                        }
+                    });
+                }
             }
             else
             {
@@ -131,6 +151,11 @@ namespace FamiStudio
                     dialog.CloseWithResult(DialogResult.OK);
                 }
             }
+        }
+
+        private string GetUserProjectFilename(string name)
+        {
+            return Path.Combine(Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects"), $"{name}.fms");
         }
 
         public void ShowDialogAsync(FamiStudioForm parent, Action<string> callback)
@@ -145,7 +170,7 @@ namespace FamiStudio
                         var filename = "";
 
                         // New file requested.
-                        if (userProjectIdx == userProjects.Length - 1)
+                        if (userProjectIdx == userProjects.Count - 1)
                             filename = dialog.Properties.GetPropertyValue<string>(1);
                         else
                             filename = userProjects[userProjectIdx];
@@ -168,7 +193,7 @@ namespace FamiStudio
                         var userProjectIdx = dialog.Properties.GetSelectedIndex(0);
                         if (userProjectIdx >= 0)
                         {
-                            var filename = Path.Combine(Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects"), $"{userProjects[userProjectIdx]}.fms");
+                            var filename = GetUserProjectFilename(userProjects[userProjectIdx]);
                             callback(filename);
                             return;
                         }

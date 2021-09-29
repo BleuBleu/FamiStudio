@@ -665,6 +665,23 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public void UpdateRadioButtonList(int idx, string[] values, int selectedIndex)
+        {
+            var prop = properties[idx];
+            var radioGroup = prop.layout as RadioGroup;
+
+            radioGroup.RemoveAllViews();
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                var radio = CreateRadioButton(values[i], Resource.Style.LightGrayCheckBox);
+                radio.Checked = i == selectedIndex;
+                radio.Id = i;
+                prop.controls.Add(radio);
+                prop.layout.AddView(radio);
+            }
+        }
+
         private LinearLayout.LayoutParams CreateLinearLayoutParams(int width, int height, GravityFlags gravity = GravityFlags.NoGravity, float weight = -1.0f)
         {
             var layout = new LinearLayout.LayoutParams(width, height);
