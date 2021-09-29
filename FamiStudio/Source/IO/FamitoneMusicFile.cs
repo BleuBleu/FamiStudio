@@ -102,6 +102,7 @@ namespace FamiStudio
 
             if (project.ExpansionAudio == ExpansionType.Fds ||
                 project.ExpansionAudio == ExpansionType.N163 ||
+                project.ExpansionAudio == ExpansionType.EPSM ||
                 project.ExpansionAudio == ExpansionType.Vrc7)
             {
                 lines.Add($"\t{dw} {ll}instruments_{project.ExpansionAudioShortName.ToLower()}");
@@ -365,6 +366,7 @@ namespace FamiStudio
 
                 if (instrument.ExpansionType != ExpansionType.Fds &&
                     instrument.ExpansionType != ExpansionType.N163 &&
+                    instrument.ExpansionType != ExpansionType.EPSM &&
                     instrument.ExpansionType != ExpansionType.Vrc7)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
@@ -398,6 +400,7 @@ namespace FamiStudio
             // FDS, N163 and VRC7 instruments are special.
             if (project.ExpansionAudio == ExpansionType.Fds ||
                 project.ExpansionAudio == ExpansionType.N163 ||
+                project.ExpansionAudio == ExpansionType.EPSM ||
                 project.ExpansionAudio == ExpansionType.Vrc7)
             {
                 lines.Add($"{ll}instruments_{project.ExpansionAudioShortName.ToLower()}:");
@@ -435,6 +438,11 @@ namespace FamiStudio
                         {
                             lines.Add($"\t{db} ${(instrument.Vrc7Patch << 4):x2}, $00");
                             lines.Add($"\t{db} {String.Join(",", instrument.Vrc7PatchRegs.Select(r => $"${r:x2}"))}");
+                        }
+                        else if (instrument.ExpansionType == ExpansionType.EPSM)
+                        {
+                            lines.Add($"\t{db} ${(instrument.EpsmPatch << 4):x2}, $00");
+                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Select(r => $"${r:x2}"))}");
                         }
 
                         size += 16;

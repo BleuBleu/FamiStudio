@@ -113,6 +113,16 @@ namespace FamiStudio
                                 instrumentLine += GenerateAttribute($"Vrc7Reg{i}", instrument.Vrc7PatchRegs[i]);
                         }
                     }
+                    else if (instrument.ExpansionType == ExpansionType.EPSM)
+                    {
+                        instrumentLine += GenerateAttribute("EpsmPatch", instrument.EpsmPatch);
+
+                        if (instrument.EpsmPatch == EPSMInstrumentPatch.Custom)
+                        {
+                            for (int i = 0; i < 31; i++)
+                                instrumentLine += GenerateAttribute($"EpsmReg{i}", instrument.EpsmPatchRegs[i]);
+                        }
+                    }
                 }
                 lines.Add(instrumentLine);
 
@@ -395,6 +405,19 @@ namespace FamiStudio
                                     {
                                         if (parameters.TryGetValue($"Vrc7Reg{i}", out var regStr))
                                            instrument.Vrc7PatchRegs[i] = byte.Parse(regStr);
+                                    }
+                                }
+                            }
+                            else if (instrument.ExpansionType == ExpansionType.EPSM)
+                            {
+                                if (parameters.TryGetValue("EpsmPatch", out var epsmPatchStr)) instrument.EpsmPatch = byte.Parse(epsmPatchStr);
+
+                                if (instrument.EpsmPatch == EPSMInstrumentPatch.Custom)
+                                {
+                                    for (int i = 0; i < 31; i++)
+                                    {
+                                        if (parameters.TryGetValue($"EpsmReg{i}", out var regStr))
+                                           instrument.EpsmPatchRegs[i] = byte.Parse(regStr);
                                     }
                                 }
                             }
