@@ -150,6 +150,7 @@
     <AndroidResource Include="Source\UI\Droid\Resources\values\ic_launcher_background.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\strings.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\values\styles.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\xml\filepaths.xml" />
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Source\UI\Droid\Assets\AboutAssets.txt" />
     <None Include="Source\UI\Droid\Resources\AboutResources.txt" />
@@ -414,6 +415,7 @@
     <EmbeddedResource Include="Resources\ExportMIDI%402x.png" />
     <EmbeddedResource Include="Resources\ExportNsf%402x.png" />
     <EmbeddedResource Include="Resources\ExportRom%402x.png" />
+    <EmbeddedResource Include="Resources\ExportShare%402x.png" />
     <EmbeddedResource Include="Resources\ExportText%402x.png" />
     <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
     <EmbeddedResource Include="Resources\ExportWav%402x.png" />

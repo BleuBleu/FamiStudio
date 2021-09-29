@@ -25,6 +25,7 @@ namespace FamiStudio
             FamiStudioSfx,
             FamiTone2Music,
             FamiTone2Sfx,
+            Share,
             Max
         };
 
@@ -42,6 +43,7 @@ namespace FamiStudio
             "FamiStudio SFX Code",
             "FamiTone2 Music Code",
             "FamiTone2 SFX Code",
+            "Share",
             ""
         };
 
@@ -58,7 +60,8 @@ namespace FamiStudio
             "ExportFamiStudioEngine",
             "ExportFamiStudioEngine",
             "ExportFamiTone2",
-            "ExportFamiTone2"
+            "ExportFamiTone2",
+            "ExportShare"
         };
 
         private Project project;
@@ -95,6 +98,7 @@ namespace FamiStudio
             dialog.SetPageVisible((int)ExportFormat.FamiStudioSfx,   PlatformUtils.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiTone2Music,  PlatformUtils.IsDesktop);
             dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx,    PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.Share,           PlatformUtils.IsMobile);
 
             if (PlatformUtils.IsDesktop)
                 UpdateMidiInstrumentMapping();
@@ -320,6 +324,9 @@ namespace FamiStudio
                     page.AddCheckBox("Generate SFX list include :", false); // 2
                     page.AddCheckBoxList(null, songNames, null); // 3
                     break;
+                case ExportFormat.Share:
+                    page.AddRadioButtonList("Sharing mode", new[] { "Copy to Storage", "Share" }, 0, "Copy the FamiStudio project to your phone's storage, or share it to another application.");
+                    break;
             }
 
             page.Build();
@@ -455,11 +462,7 @@ namespace FamiStudio
                 PlatformUtils.StartMobileSaveOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
                 {
                     ExportWavMp3Action(f);
-
-                    PlatformUtils.FinishMobileSaveOperationAsync(true, () =>
-                    {
-                        PlatformUtils.ShowToast("Audio Export Successful!");
-                    });
+                    PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("Audio Export Successful!"); });
                 });
             }
             else
@@ -580,25 +583,41 @@ namespace FamiStudio
 
         private void ExportNsf()
         {
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf", ref Settings.LastExportFolder);
-            if (filename != null)
+            Action<string> ExportNsfAction = (filename) =>
             {
-                var props = dialog.GetPropertyPage((int)ExportFormat.Nsf);
-                var mode = MachineType.GetValueForName(props.GetPropertyValue<string>(3));
+                if (filename != null)
+                {
+                    var props = dialog.GetPropertyPage((int)ExportFormat.Nsf);
+                    var mode = MachineType.GetValueForName(props.GetPropertyValue<string>(3));
 #if DEBUG
-                var kernel = FamiToneKernel.GetValueForName(props.GetPropertyValue<string>(5));
+                    var kernel = FamiToneKernel.GetValueForName(props.GetPropertyValue<string>(5));
 #else
-                var kernel = FamiToneKernel.FamiStudio;
+                    var kernel = FamiToneKernel.FamiStudio;
 #endif
 
-                new NsfFile().Save(project, kernel, filename,
-                    GetSongIds(props.GetPropertyValue<bool[]>(4)),
-                    props.GetPropertyValue<string>(0),
-                    props.GetPropertyValue<string>(1),
-                    props.GetPropertyValue<string>(2),
-                    mode);
+                    new NsfFile().Save(project, kernel, filename,
+                        GetSongIds(props.GetPropertyValue<bool[]>(4)),
+                        props.GetPropertyValue<string>(0),
+                        props.GetPropertyValue<string>(1),
+                        props.GetPropertyValue<string>(2),
+                        mode);
 
-                lastExportFilename = filename;
+                    lastExportFilename = filename;
+                }
+            };
+
+            if (PlatformUtils.IsMobile)
+            {
+                PlatformUtils.StartMobileSaveOperationAsync("*/*", $"{project.Name}.nsf", (f) =>
+                {
+                    ExportNsfAction(f);
+                    PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("NSF Export Successful!"); });
+                });
+            }
+            else
+            {
+                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf", ref Settings.LastExportFolder);
+                ExportNsfAction(filename);
             }
         }
 
@@ -607,40 +626,99 @@ namespace FamiStudio
             var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
 
+            // DROIDTODO : Test this again on all platforms.
             if (songIds.Length > RomFileBase.MaxSongs)
             {
-                PlatformUtils.MessageBox($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
+                PlatformUtils.MessageBoxAsync($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
                 return;
             }
 
             if (props.GetPropertyValue<string>(0) == "NES ROM")
             {
-                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes", ref Settings.LastExportFolder);
-                if (filename != null)
+                Action<string> ExportRomAction = (filename) =>
                 {
-                    var rom = new RomFile();
-                    rom.Save(
-                        project, filename, songIds,
-                        props.GetPropertyValue<string>(1),
-                        props.GetPropertyValue<string>(2),
-                        props.GetPropertyValue<string>(3) == "PAL");
+                    if (filename != null)
+                    {
+                        var rom = new RomFile();
+                        rom.Save(
+                            project, filename, songIds,
+                            props.GetPropertyValue<string>(1),
+                            props.GetPropertyValue<string>(2),
+                            props.GetPropertyValue<string>(3) == "PAL");
 
-                    lastExportFilename = filename;
+                        lastExportFilename = filename;
+                    }
+                };
+
+                if (PlatformUtils.IsMobile)
+                {
+                    PlatformUtils.StartMobileSaveOperationAsync("*/*", $"{project.Name}.nes", (f) =>
+                    {
+                        ExportRomAction(f);
+                        PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("NES ROM Export Successful!"); });
+                    });
+                }
+                else
+                {
+                    var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes", ref Settings.LastExportFolder);
+                    ExportRomAction(filename);
                 }
             }
             else
             {
-                var filename = lastExportFilename != null ? null : PlatformUtils.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
-                if (filename != null)
+                Action<string> ExportFdsAction = (filename) =>
                 {
-                    var fds = new FdsFile();
-                    fds.Save(
-                        project, filename, songIds,
-                        props.GetPropertyValue<string>(1),
-                        props.GetPropertyValue<string>(2));
+                    if (filename != null)
+                    {
+                        var fds = new FdsFile();
+                        fds.Save(
+                            project, filename, songIds,
+                            props.GetPropertyValue<string>(1),
+                            props.GetPropertyValue<string>(2));
 
-                    lastExportFilename = filename;
+                        lastExportFilename = filename;
+                    }
+                };
+
+                if (PlatformUtils.IsMobile)
+                {
+                    PlatformUtils.StartMobileSaveOperationAsync("*/*", $"{project.Name}.fds", (f) =>
+                    {
+                        ExportFdsAction(f);
+                        PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("FDS Disk Export Successful!"); });
+                    });
                 }
+                else
+                {
+                    var filename = lastExportFilename != null ? null : PlatformUtils.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
+                    ExportFdsAction(filename);
+                }
+            }
+        }
+
+        private void ExportShare()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Share);
+            var share = props.GetSelectedIndex(0) == 1;
+
+            var filename = !string.IsNullOrEmpty(app.Project.Filename) ? Path.GetFileName(app.Project.Filename) : $"{project.Name}.fms";
+
+            if (share)
+            {
+                filename = PlatformUtils.GetShareFilename(filename);
+                app.SaveProjectCopy(filename);
+                PlatformUtils.ShareFileAsync(filename, () => 
+                {
+                    PlatformUtils.ShowToast("Sharing Successful!");
+                });
+            }
+            else
+            {
+                PlatformUtils.StartMobileSaveOperationAsync("*/*", filename, (f) =>
+                {
+                    app.SaveProjectCopy(f);
+                    PlatformUtils.FinishMobileSaveOperationAsync(true, () => { PlatformUtils.ShowToast("Sharing Successful!"); });
+                });
             }
         }
 
@@ -876,6 +954,7 @@ namespace FamiStudio
                 case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
                 case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
                 case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
+                case ExportFormat.Share: ExportShare(); break;
             }
 
             if (PlatformUtils.IsDesktop)

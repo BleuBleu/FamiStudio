@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using Android.App;
 using Android.Content;
@@ -18,12 +19,13 @@ namespace FamiStudio
 
         public static System.Windows.Forms.DialogResult MessageBox(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)
         {
+            Debug.Assert(false); 
             return System.Windows.Forms.DialogResult.None;
         }
 
-        public static void MessageBoxAsync(string text, string title, System.Windows.Forms.MessageBoxButtons buttons, Action<System.Windows.Forms.DialogResult> callback)
+        public static void MessageBoxAsync(string text, string title, System.Windows.Forms.MessageBoxButtons buttons, Action<System.Windows.Forms.DialogResult> callback = null)
         {
-            AlertDialog.Builder dialog = new AlertDialog.Builder(Xamarin.Essentials.Platform.CurrentActivity);
+            AlertDialog.Builder dialog = new AlertDialog.Builder(Platform.CurrentActivity);
             AlertDialog alert = dialog.Create();
             
             alert.SetTitle(title);
@@ -32,14 +34,14 @@ namespace FamiStudio
             if (buttons == System.Windows.Forms.MessageBoxButtons.YesNo ||
                 buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
             {
-                alert.SetButton("Yes", (c, ev) => { callback(System.Windows.Forms.DialogResult.Yes); });
-                alert.SetButton2("No",  (c, ev) => { callback(System.Windows.Forms.DialogResult.No); });
+                alert.SetButton("Yes", (c, ev) => { callback?.Invoke(System.Windows.Forms.DialogResult.Yes); });
+                alert.SetButton2("No",  (c, ev) => { callback?.Invoke(System.Windows.Forms.DialogResult.No); });
                 if (buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
-                    alert.SetButton3("Cancel", (c, ev) => { callback(System.Windows.Forms.DialogResult.Cancel); });
+                    alert.SetButton3("Cancel", (c, ev) => { callback?.Invoke(System.Windows.Forms.DialogResult.Cancel); });
             }
             else
             {
-                alert.SetButton("OK", (c, ev) => { callback(System.Windows.Forms.DialogResult.OK); });
+                alert.SetButton("OK", (c, ev) => { callback?.Invoke(System.Windows.Forms.DialogResult.OK); });
             }
 
             alert.Show();
@@ -58,23 +60,39 @@ namespace FamiStudio
             });
         }
 
+        public static void ShareFileAsync(string filename, Action callback)
+        {
+            FamiStudioForm.Instance.StartFileSharingActivity(filename, callback);
+        }
+
+        public static string GetShareFilename(string filename)
+        {
+            var shareDir = Path.Combine(Application.Context.CacheDir.AbsolutePath, "Sharing");
+            Directory.CreateDirectory(shareDir);
+            return Path.Combine(shareDir, filename);
+        }
+
         public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
+            Debug.Assert(false);
             return null;
         }
 
         public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindow = null)
         {
+            Debug.Assert(false);
             return null;
         }
 
         public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, object parentWindow = null)
         {
+            Debug.Assert(false);
             return null;
         }
 
         public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
+            Debug.Assert(false);
             return null;
         }
 
@@ -82,6 +100,7 @@ namespace FamiStudio
 
         public static string KeyCodeToString(int keyval)
         {
+            Debug.Assert(false);
             return string.Empty;
         }
 

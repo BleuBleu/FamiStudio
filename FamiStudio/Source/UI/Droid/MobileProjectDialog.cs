@@ -19,7 +19,7 @@ namespace FamiStudio
         private string storageFilename;
 
         private readonly string UserProjectSaveTooltip = "These are your projects. Select one to overwrite it. The save to a new project file, select the last option and enter a name.";
-        private readonly string UserProjectLoadTooltip = "This will prompt you to open a file from your device's storage. You can open FamiStudio .FMS files, as well as other file formats such as FamiTracker FTM or TXT files.";
+        private readonly string UserProjectLoadTooltip = "These are your projects. Select one to load it.";
         private readonly string DemoProjectLoadTooltip = "These are demo projects provided with FamiStudio. They are great resource for learning.";
         private readonly string StorageTooltip         = "This will prompt you to open a file from your device's storage. You can open FamiStudio .FMS files, as well as other file formats such as FamiTracker FTM or TXT files.";
 

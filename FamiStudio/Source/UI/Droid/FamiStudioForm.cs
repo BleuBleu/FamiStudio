@@ -19,14 +19,16 @@ using Google.Android.Material.BottomSheet;
 
 using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
+using AndroidX.Core.Content;
 
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | Android.Content.PM.ConfigChanges.ScreenSize)]
     public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
     {
-        private const int LoadFileRequestCode = 2001;
-        private const int SaveFileRequestCode = 2002;
+        private const int LoadFileRequestCode  = 2001;
+        private const int SaveFileRequestCode  = 2002;
+        private const int ShareFileRequestCode = 2003;
 
         private LinearLayout linearLayout;
         private GLSurfaceView glSurfaceView;
@@ -47,13 +49,14 @@ namespace FamiStudio
         private object renderLock = new object();
         private Action<DialogResult> dialogCallback;
         private Action<string> fileDialogCallback;
+        private Action shareCallback;
         private string lastSaveTempFile;
         private Android.Net.Uri lastSaveFileUri;
         private GLControl captureControl;
 
         public static FamiStudioForm Instance { get; private set; }
         public object DialogUserData => dialogUserData;
-        public bool IsAsyncDialogInProgress => dialogCallback != null || fileDialogCallback != null || contextMenuDialog != null; // DROIDTODO : Add lots of validation with that.
+        public bool IsAsyncDialogInProgress => dialogCallback != null || fileDialogCallback != null || contextMenuDialog != null || shareCallback != null; // DROIDTODO : Add lots of validation with that.
 
         public FamiStudio      FamiStudio      => famistudio;
         public Toolbar         ToolBar         => controls.ToolBar;
@@ -166,30 +169,44 @@ namespace FamiStudio
 
         public void StartSaveFileActivityAsync(string mimeType, string filename, Action<string> callback)
         {
-            Debug.Assert(dialogCallback == null && dialogRequestCode == -1 && dialogUserData == null);
+            Debug.Assert(!IsAsyncDialogInProgress);
 
             dialogRequestCode = SaveFileRequestCode;
             fileDialogCallback = callback;
-            dialogUserData = null;
 
             Intent intent = new Intent(Intent.ActionCreateDocument);
             intent.AddCategory(Intent.CategoryOpenable);
             intent.SetType(mimeType);
             intent.PutExtra(Intent.ExtraTitle, filename);
-            StartActivityForResult(intent, SaveFileRequestCode);
+            StartActivityForResult(intent, dialogRequestCode);
         }
 
         public void StartDialogActivity(Type type, int resultCode, Action<DialogResult> callback, object userData)
         {
             // No support for nested dialog at the moment.
-            Debug.Assert(dialogCallback == null && fileDialogCallback == null && dialogRequestCode == -1 && dialogUserData == null);
+            Debug.Assert(!IsAsyncDialogInProgress);
 
             dialogRequestCode = resultCode;
             dialogCallback = callback;
             dialogUserData = userData;
 
             StopGLThread();
-            StartActivityForResult(new Intent(this, type), resultCode);
+            StartActivityForResult(new Intent(this, type), dialogRequestCode);
+        }
+
+        public void StartFileSharingActivity(string filename, Action callback)
+        {
+            Debug.Assert(!IsAsyncDialogInProgress);
+
+            dialogRequestCode = ShareFileRequestCode; ;
+            shareCallback = callback;
+
+            var uri = FileProvider.GetUriForFile(this, "org.famistudio.fileprovider", new Java.IO.File(filename), filename); 
+
+            Intent shareIntent = new Intent(Intent.ActionSend);
+            shareIntent.SetType("*/*");
+            shareIntent.PutExtra(Intent.ExtraStream, uri);
+            StartActivityForResult(Intent.CreateChooser(shareIntent, "Share File"), dialogRequestCode);
         }
 
         private void StartGLThread()
@@ -241,6 +258,15 @@ namespace FamiStudio
                 return DialogResult.Cancel;
         }
 
+        private void ClearDialogCallbacks()
+        {
+            dialogRequestCode = -1;
+            fileDialogCallback = null;
+            dialogCallback = null;
+            shareCallback = null;
+            dialogUserData = null;
+        }
+
         protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
         {
             Debug.Assert(dialogRequestCode == requestCode);
@@ -250,11 +276,9 @@ namespace FamiStudio
             {
                 var callback = fileDialogCallback;
 
-                dialogRequestCode = -1;
-                fileDialogCallback = null;
-                dialogUserData = null;
+                ClearDialogCallbacks();
 
-                if (requestCode == SaveFileRequestCode)
+                if (resultCode == Result.Ok && requestCode == SaveFileRequestCode)
                 {
                     lastSaveFileUri = data.Data;
                     lastSaveTempFile = Path.GetTempFileName(); ;
@@ -262,28 +286,28 @@ namespace FamiStudio
                     // Save to temporary file and copy.
                     callback(lastSaveTempFile);
                 }
-                else
-                {
-                    Debug.Assert(false);
-                }
             }
-            else
+            else if (dialogRequestCode == PropertyDialog.RequestCode ||
+                     dialogRequestCode == MultiPropertyDialog.RequestCode)
             {
-                Debug.Assert(
-                    (dialogRequestCode == PropertyDialog.RequestCode && dialogUserData is PropertyDialog) ||
-                    (dialogRequestCode == MultiPropertyDialog.RequestCode && dialogUserData is MultiPropertyDialog));
-
                 var callback = dialogCallback;
 
-                dialogRequestCode = -1;
-                dialogCallback = null;
-                dialogUserData = null;
+                ClearDialogCallbacks();
 
                 callback(ToWinFormsResult(resultCode));
             }
+            else if (dialogRequestCode == ShareFileRequestCode)
+            {
+                var callback = shareCallback;
+
+                ClearDialogCallbacks();
+
+                if (resultCode == Result.Ok)
+                    callback();
+            }
 
             // If not more dialog are needed, restart GL thread.
-            if (dialogCallback == null && fileDialogCallback == null)
+            if (dialogCallback == null && fileDialogCallback == null && shareCallback == null)
                 StartGLThread();
 
             base.OnActivityResult(requestCode, resultCode, data);

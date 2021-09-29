@@ -1121,14 +1121,19 @@ namespace FamiStudio
                     var path = Settings.GetAutoSaveFilePath();
                     var filename = Path.Combine(path, $"AutoSave{autoSaveIndex:D2}.fms");
 
-                    var oldFilename = project.Filename;
-                    new ProjectFile().Save(project, filename);
-                    project.Filename = oldFilename;
+                    SaveProjectCopy(filename);
 
                     autoSaveIndex = (autoSaveIndex + 1) % MaxAutosaves;
                     lastAutoSave = now;
                 }
             }
+        }
+
+        public void SaveProjectCopy(string filename)
+        {
+            var oldFilename = project.Filename;
+            new ProjectFile().Save(project, filename);
+            project.Filename = oldFilename;
         }
 
         private void CheckNewReleaseDone()
