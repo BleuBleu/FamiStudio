@@ -95,7 +95,6 @@ Toolbar:
 - Add version next to "..."
 
 Prop page:
-/ Reactivate dialogs in code, test
 - Review text color light gray 1 or 2?
 - Toolbar font.
 - Button font.
@@ -119,6 +118,16 @@ Misc:
 Icon notes:
 - 46% zoom, start with 128x128 png.
 - 
+
+Features missing from the Mobile version:
+- No MIDI import/export
+- No NSF import
+- No Sound Engine/Famitone 2 export
+- No FamiTracker text export
+- No FamiStudio text export
+- No FamiTracker FTI instrument import
+- No DPCM sample import from other projects (WAV/DMC only)
+- (No song reordering?)
 
 3.2.0
 =====

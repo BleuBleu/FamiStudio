@@ -310,7 +310,7 @@ namespace FamiStudio
                     videoEncoder.AddFrame(videoImage);
                 }
 
-                videoEncoder.EndEncoding();
+                videoEncoder.EndEncoding(!success);
 
                 File.Delete(tempAudioFile);
             }

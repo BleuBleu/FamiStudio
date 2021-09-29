@@ -48,7 +48,7 @@ namespace FamiStudio
             stream.Write(image);
         }
 
-        public void EndEncoding()
+        public void EndEncoding(bool abort)
         {
             stream.Dispose();
             stream = null;

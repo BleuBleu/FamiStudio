@@ -395,6 +395,7 @@ namespace FamiStudio
 
             var videoImage   = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscWindowSize, 2];
+            var success = true;
 
 #if !DEBUG
             try
@@ -404,7 +405,10 @@ namespace FamiStudio
                 for (int f = 0; f < metadata.Length; f++)
                 {
                     if (Log.ShouldAbortOperation)
+                    {
+                        success = false;
                         break;
+                    }
 
                     if ((f % 100) == 0)
                         Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
@@ -506,7 +510,7 @@ namespace FamiStudio
                     // DumpDebugImage(videoImage, videoResX, videoResY, f);
                 }
 
-                videoEncoder.EndEncoding();
+                videoEncoder.EndEncoding(!success);
 
                 File.Delete(tempAudioFile);
             }

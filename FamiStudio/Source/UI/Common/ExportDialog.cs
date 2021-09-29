@@ -568,7 +568,7 @@ namespace FamiStudio
                         PlatformUtils.FinishMobileSaveFileOperationAsync(success, () =>
                         {
                             app.EndLogTask();
-                            PlatformUtils.ShowToast($"Video Export {(success ? "Successful!" : "Failed.")}!");
+                            PlatformUtils.ShowToast($"Video Export {(success ? "Successful" : "Failed")}!");
                         });
 
                     }).Start();

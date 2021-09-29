@@ -29,6 +29,7 @@ namespace FamiStudio
         private int frameRateNumer;
         private int frameRateDenom;
         private bool muxerStarted;
+        private bool abortAudioEncoding;
         private ManualResetEvent muxerStartEvent = new ManualResetEvent(false);
         private Task audioEncodingTask;
 
@@ -125,7 +126,7 @@ namespace FamiStudio
 
             try
             {
-                while (!done)
+                while (!done && !abortAudioEncoding)
                 {
                     done = !WriteAudio();
                     DrainEncoder(audioEncoder, audioBufferInfo, audioTrackIndex, false);
@@ -174,9 +175,11 @@ namespace FamiStudio
             DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
         }
 
-        public void EndEncoding()
+        public void EndEncoding(bool abort)
         {
             Debug.WriteLine("Releasing encoder objects");
+
+            abortAudioEncoding = abort;
 
             if (audioEncodingTask != null)
             {
@@ -184,8 +187,11 @@ namespace FamiStudio
                 audioEncodingTask = null;
             }
 
-            DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
-            DrainEncoder(audioEncoder, audioBufferInfo, audioTrackIndex, false);
+            if (!abortAudioEncoding)
+            {
+                DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
+                DrainEncoder(audioEncoder, audioBufferInfo, audioTrackIndex, false);
+            }
 
             if (videoEncoder != null)
             {
