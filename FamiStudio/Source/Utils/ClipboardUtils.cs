@@ -20,6 +20,7 @@ namespace FamiStudio
         static byte[] internalClipboardData; // Cant copy between FamiStudio instance on Linux.
 #endif
 
+        // TODO : Clean this up, move to PlatformUtils or some interface.
         private static void SetClipboardDataInternal(byte[] data)
         {
 #if FAMISTUDIO_WINDOWS
@@ -68,9 +69,9 @@ namespace FamiStudio
 #endif
         }
 
-        public static bool ConstainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
-        public static bool ConstainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null || GetStringEnvelopeData() != null;
-        public static bool ConstainsPatterns => GetClipboardDataInternal(MagicNumberClipboardPatterns, 4) != null;
+        public static bool ContainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
+        public static bool ContainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null || GetStringEnvelopeData() != null;
+        public static bool ContainsPatterns => GetClipboardDataInternal(MagicNumberClipboardPatterns, 4) != null;
 
         public static sbyte[] GetStringEnvelopeData()
         {

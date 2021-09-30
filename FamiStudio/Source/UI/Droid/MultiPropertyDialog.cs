@@ -88,7 +88,7 @@ namespace FamiStudio
 
         public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            FamiStudioForm.Instance.StartDialogActivity(typeof(MultiPropertyDialogActivity), RequestCode, callback, this);
+            FamiStudioForm.Instance.StartMultiPropertyDialogActivity(callback, this);
         }
     }
 
@@ -117,7 +117,15 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            dlg = FamiStudioForm.Instance.DialogUserData as MultiPropertyDialog;
+            var info = FamiStudioForm.Instance != null ? FamiStudioForm.Instance.ActiveDialog as MultiPropertyDialogActivityInfo : null;
+
+            if (savedInstanceState != null || info == null)
+            {
+                Finish();
+                return;
+            }
+
+            dlg = info.Dialog;
             tabsFragment = new MultiPropertyTabFragment(dlg);
             
             var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, Android.Resource.Attribute.ActionBarSize));
@@ -201,11 +209,6 @@ namespace FamiStudio
             applyMenuItem.SetVisible(showApplyButton);
         }
 
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-        }
-
         public void OnClick(View v)
         {
             if (selectedTabIndex == -1)
@@ -246,13 +249,44 @@ namespace FamiStudio
             }
         }
 
+
+        protected override void OnStop()
+        {
+            Debug.WriteLine("MultiProperty.OnStop");
+            base.OnStop();
+        }
+
+        protected override void OnStart()
+        {
+            Debug.WriteLine("MultiProperty.OnStart");
+            base.OnStart();
+        }
+
+        protected override void OnDestroy()
+        {
+            Debug.WriteLine("MultiProperty.OnDestroy");
+            base.OnDestroy();
+        }
+
+        protected override void OnPause()
+        {
+            Debug.WriteLine("MultiProperty.OnPause");
+            base.OnPause();
+        }
+
+        protected override void OnResume()
+        {
+            Debug.WriteLine("MultiProperty.OnResume");
+            base.OnResume();
+        }
+
+
         private class MultiPropertyTabFragment : AndroidX.Fragment.App.Fragment
         {
             private MultiPropertyDialog dialog;
 
             public MultiPropertyTabFragment()
             {
-
             }
 
             public MultiPropertyTabFragment(MultiPropertyDialog dlg)

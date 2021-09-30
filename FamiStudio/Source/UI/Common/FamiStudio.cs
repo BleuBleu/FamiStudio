@@ -57,6 +57,7 @@ namespace FamiStudio
         private bool recordingMode = false;
         private bool qwertyPiano = false;
         private bool followMode = false;
+        private bool suspended = false;
         private float stopInstrumentTimer = 0.0f;
         private short[] metronomeSound;
         private BitArray keyStates = new BitArray(65536);
@@ -77,6 +78,7 @@ namespace FamiStudio
         public bool  IsRecording => recordingMode;
         public bool  IsQwertyPianoEnabled => qwertyPiano;
         public bool  IsMetronomeEnabled => metronome;
+        public bool  IsSuspended => suspended;
         public bool  FollowModeEnabled { get => followMode; set => followMode = value; }
         public bool  SequencerHasSelection => Sequencer.GetPatternTimeSelectionRange(out _, out _);
         public int   BaseRecordingOctave => baseRecordingOctave;
@@ -99,7 +101,10 @@ namespace FamiStudio
         public QuickAccessBar  QuickAccessBar  => mainForm.QuickAccessBar;
         public RenderControl   ActiveControl   => mainForm.ActiveControl;
         public FamiStudioForm  MainForm        => mainForm;
-        
+
+        private string WipProject  => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.fms");
+        private string WipFilename => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.txt");
+
         public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
         public int  PreviewDPCMSampleId    => previewDPCMSampleId;
         public int  PreviewDPCMSampleRate  => previewDPCMSampleRate;
@@ -112,11 +117,32 @@ namespace FamiStudio
         {
             StaticInstance = this;
 
-#if FAMISTUDIO_ANDROID
-            mainForm = FamiStudioForm.Instance;
-#else
-            mainForm = new FamiStudioForm(this);
+            SetMainForm(PlatformUtils.IsMobile ? FamiStudioForm.Instance : new FamiStudioForm(this));
+            InitializeMetronome();
+            InitializeSongPlayer();
+            InitializeMidi();
+            InitializeMultiMediaNotifications();
+
+            if (string.IsNullOrEmpty(filename) && PlatformUtils.IsDesktop && Settings.OpenLastProjectOnStart && !string.IsNullOrEmpty(Settings.LastProjectFile) && File.Exists(Settings.LastProjectFile))
+                filename = Settings.LastProjectFile;
+
+            if (string.IsNullOrEmpty(filename) && PlatformUtils.IsMobile && File.Exists(WipProject))
+                filename = WipProject;
+
+            if (!string.IsNullOrEmpty(filename))
+                OpenProjectInternal(filename);
+            else
+                NewProject(true);
+
+#if !DEBUG
+            if (Settings.CheckUpdates)
+                Task.Factory.StartNew(CheckForNewRelease);
 #endif
+        }
+
+        public void SetMainForm(FamiStudioForm form)
+        {
+            mainForm = form;
 
             SetActiveControl(PianoRoll);
 
@@ -156,32 +182,6 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
             ProjectExplorer.DPCMSampleMapped         += ProjectExplorer_DPCMSampleMapped;
             ProjectExplorer.InstrumentsHovered       += ProjectExplorer_InstrumentsHovered;
-
-            InitializeMetronome();
-            InitializeSongPlayer();
-            InitializeMidi();
-            InitializeMultiMediaNotifications();
-
-            if (string.IsNullOrEmpty(filename) && Settings.OpenLastProjectOnStart && !string.IsNullOrEmpty(Settings.LastProjectFile) && File.Exists(Settings.LastProjectFile))
-            {
-                filename = Settings.LastProjectFile;
-            }
-
-            if (!string.IsNullOrEmpty(filename))
-            {
-                OpenProjectInternal(filename);
-            }
-            else
-            {
-                NewProject(true);
-            }
-
-#if !DEBUG
-            if (Settings.CheckUpdates)
-            {
-                Task.Factory.StartNew(CheckForNewRelease);
-            }
-#endif
         }
 
         public LoopMode LoopMode 
@@ -764,9 +764,46 @@ namespace FamiStudio
             undoRedoManager.TransactionEnded += UndoRedoManager_PostUndoRedo;
             undoRedoManager.Updated += UndoRedoManager_Updated;
 
+            FixMobileProjectFilename();
+            SaveLastOpenProjectFile();
+            SaveWorkInProgress();
             MarkEverythingDirty();
             UpdateTitle();
             RefreshLayout();
+        }
+
+        private void FixMobileProjectFilename()
+        {
+            if (PlatformUtils.IsMobile)
+            {
+                if (!string.IsNullOrEmpty(project.Filename))
+                {
+                    if (project.Filename.ToLower() == WipProject.ToLower())
+                    {
+                        try
+                        {
+                            var lines = File.ReadAllLines(WipFilename);
+                            if (lines != null && lines.Length > 0)
+                                project.Filename = lines[0];
+                        }
+                        catch
+                        {
+                            project.Filename = null;
+                        }
+
+                    }
+                    else if (!project.Filename.ToLower().StartsWith(PlatformUtils.UserProjectsDirectory.ToLower()))
+                    {
+                        project.Filename = null;
+                    }
+                }
+            }
+        }
+
+        private void SaveLastOpenProjectFile()
+        {
+            if (project.Filename != null && Path.GetExtension(project.Filename).ToLower() == ".fms")
+                Settings.LastProjectFile = project.Filename;
         }
 
         private void OpenProjectInternal(string filename)
@@ -782,9 +819,6 @@ namespace FamiStudio
                 if (project != null)
                 {
                     InitProject();
-
-                    if (Path.GetExtension(filename).ToLower() == ".fms")
-                        Settings.LastProjectFile = filename;
                 }
                 else
                 {
@@ -798,6 +832,12 @@ namespace FamiStudio
 
         public void OpenProject(string filename = null)
         {
+            Action<string> UnloadAndOpenAction = (f) =>
+            {
+                UnloadProject();
+                OpenProjectInternal(f);
+            };
+
             TrySaveProjectAsync(() =>
             {
                 if (PlatformUtils.IsDesktop)
@@ -806,18 +846,19 @@ namespace FamiStudio
                         filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Supported Files (*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid)|*.fms;*.txt;*.nsf;*.nsfe;*.ftm;*.mid|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt|NES Sound Format (*.nsf;*.nsfe)|*.nsf;*.nsfe|MIDI files (*.mid)|*.mid", ref Settings.LastFileFolder);
 
                     if (filename != null)
-                    {
-                        UnloadProject();
-                        OpenProjectInternal(filename);
-                    }
+                        UnloadAndOpenAction(filename);
                 }
                 else
                 {
                     var dlg = new MobileProjectDialog(this, "Open FamiStudio Project", false);
                     dlg.ShowDialogAsync((f) =>
                     {
-                        UnloadProject();
-                        OpenProjectInternal(f);
+                        // HACK : We don't support nested activities right now, so return
+                        // this special code to signal that we should open from storage.
+                        if (f == "///STORAGE///")
+                            PlatformUtils.StartMobileLoadFileOperationAsync("*/*", (fs) => { UnloadAndOpenAction(fs); });
+                        else
+                            UnloadAndOpenAction(f);
                     });
                 }
             });
@@ -929,6 +970,7 @@ namespace FamiStudio
             }
 
             MarkEverythingDirty();
+            SaveWorkInProgress();
         }
 
         public void Export()
@@ -967,6 +1009,31 @@ namespace FamiStudio
             {
                 PianoRoll.Reset();
                 Debug.Assert(!AppNeedsRealTimeUpdate());
+            }
+        }
+
+        public void Suspend()
+        {
+            if (!suspended)
+            {
+                StopEverything();
+                ShutdownSongPlayer();
+                ShutdownInstrumentPlayer();
+                ShutdownOscilloscope();
+                SaveWorkInProgress();
+                suspended = true;
+            }
+        }
+
+        public void Resume()
+        {
+            if (suspended)
+            {
+                InitializeSongPlayer();
+                InitializeInstrumentPlayer();
+                InitializeOscilloscope();
+                MarkEverythingDirty();
+                suspended = false;
             }
         }
 
@@ -1081,47 +1148,51 @@ namespace FamiStudio
 
         private void InitializeAutoSave()
         {
-            if (PlatformUtils.IsDesktop)
+            var path = Settings.GetAutoSaveFilePath();
+            var maxTime = DateTime.MinValue;
+            var maxIdx = -1;
+
+            Directory.CreateDirectory(path);
+
+            for (int i = 0; i < MaxAutosaves; i++)
             {
-                var path = Settings.GetAutoSaveFilePath();
-                var maxTime = DateTime.MinValue;
-                var maxIdx = -1;
+                var filename = Path.Combine(path, $"AutoSave{i:D2}.fms");
 
-                Directory.CreateDirectory(path);
-
-                for (int i = 0; i < MaxAutosaves; i++)
+                if (File.Exists(filename))
                 {
-                    var filename = Path.Combine(path, $"AutoSave{i:D2}.fms");
-
-                    if (File.Exists(filename))
+                    var time = File.GetLastWriteTime(filename);
+                    if (time > maxTime)
                     {
-                        var time = File.GetLastWriteTime(filename);
-                        if (time > maxTime)
-                        {
-                            maxTime = time;
-                            maxIdx = i;
-                        }
+                        maxTime = time;
+                        maxIdx = i;
                     }
                 }
-
-                autoSaveIndex = (maxIdx + 1) % MaxAutosaves;
-                lastAutoSave = DateTime.Now;
             }
+
+            autoSaveIndex = (maxIdx + 1) % MaxAutosaves;
+            lastAutoSave = DateTime.Now;
         }
 
         private void ConditionalAutoSave()
         {
-            if (Settings.AutoSaveCopy && PlatformUtils.IsDesktop)
+            if (Settings.AutoSaveCopy)
             {
                 var now = DateTime.Now;
                 var timespan = now - lastAutoSave;
 
                 if (timespan.TotalMinutes > 2)
                 {
-                    var path = Settings.GetAutoSaveFilePath();
-                    var filename = Path.Combine(path, $"AutoSave{autoSaveIndex:D2}.fms");
+                    if (PlatformUtils.IsDesktop)
+                    {
+                        var path = Settings.GetAutoSaveFilePath();
+                        var filename = Path.Combine(path, $"AutoSave{autoSaveIndex:D2}.fms");
 
-                    SaveProjectCopy(filename);
+                        SaveProjectCopy(filename);
+                    }
+                    else
+                    {
+                        SaveWorkInProgress();
+                    }
 
                     autoSaveIndex = (autoSaveIndex + 1) % MaxAutosaves;
                     lastAutoSave = now;
@@ -1134,6 +1205,22 @@ namespace FamiStudio
             var oldFilename = project.Filename;
             new ProjectFile().Save(project, filename);
             project.Filename = oldFilename;
+        }
+
+        public void SaveWorkInProgress()
+        {
+            if (PlatformUtils.IsMobile)
+            {
+                Debug.Assert(PlatformUtils.IsInMainThread());
+
+                SaveProjectCopy(WipProject);
+                
+                // Save the actual project filename in a text file along with it.
+                if (!string.IsNullOrEmpty(project.Filename))
+                    File.WriteAllLines(WipFilename, new[] { project.Filename });
+                else
+                    File.Delete(WipFilename);
+            }
         }
 
         private void CheckNewReleaseDone()

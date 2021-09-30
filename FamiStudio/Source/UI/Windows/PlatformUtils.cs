@@ -5,22 +5,31 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
-using Microsoft.Win32;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Threading;
+using System.Media;
 
 namespace FamiStudio
 {
     public static class PlatformUtils
     {
         public static PrivateFontCollection PrivateFontCollection;
+
         public static string ApplicationVersion => Application.ProductVersion;
+        public static string UserProjectsDirectory => null;
+        public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
+        private static Thread mainThread;
+
+        public static bool IsInMainThread()
+        {
+            return mainThread == Thread.CurrentThread;
+        }
 
         public static void Initialize()
         {
+            mainThread = Thread.CurrentThread;
             PrivateFontCollection = new PrivateFontCollection();
             AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Regular.ttf");
             AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Bold.ttf");
@@ -265,6 +274,20 @@ namespace FamiStudio
 
         public static void ShowToast(string text)
         {
+        }
+
+        public static void OpenUrl(string url)
+        {
+            try
+            {
+                Process.Start(url);
+            }
+            catch { }
+        }
+
+        public static void Beep()
+        {
+            SystemSounds.Beep.Play();
         }
 
         public const bool IsMobile  = false;

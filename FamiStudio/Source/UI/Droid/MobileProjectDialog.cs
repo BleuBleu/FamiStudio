@@ -32,7 +32,7 @@ namespace FamiStudio
             dialog.SetVerb(save ? "Save" : "Open");
 
             // User files.
-            var userProjectsDir = Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
+            var userProjectsDir = PlatformUtils.UserProjectsDirectory;
             Directory.CreateDirectory(userProjectsDir);
 
             userProjects.AddRange(Directory.GetFiles(userProjectsDir, "*.fms"));
@@ -142,21 +142,16 @@ namespace FamiStudio
             }
             else
             {
-                // Not a fan of the await semantic, but this is our only option here
-                // since we dont support nested dialogs/activity at the moment. 
-                var result = await Xamarin.Essentials.FilePicker.PickAsync();
-
-                if (result != null)
-                {
-                    storageFilename = result.FullPath;
-                    dialog.CloseWithResult(DialogResult.OK);
-                }
+                // HACK : We dont support nested activities right now, so return
+                // this special code to signal that we should open from storage.
+                storageFilename = "///STORAGE///";
+                dialog.CloseWithResult(DialogResult.OK);
             }
         }
 
         private string GetUserProjectFilename(string name)
         {
-            return Path.Combine(Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects"), $"{name}.fms");
+            return Path.Combine(PlatformUtils.UserProjectsDirectory, $"{name}.fms");
         }
 
         public void ShowDialogAsync(Action<string> callback)
@@ -178,7 +173,7 @@ namespace FamiStudio
 
                         if (!string.IsNullOrEmpty(filename))
                         {
-                            filename = Path.Combine(Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects"), $"{filename}.fms");
+                            filename = Path.Combine(PlatformUtils.UserProjectsDirectory, $"{filename}.fms");
                             callback(filename);
                         }
                     }
@@ -187,7 +182,6 @@ namespace FamiStudio
                         if (storageFilename != null)
                         {
                             callback(storageFilename);
-                            famistudio.Project.Filename = null; // Wipe filename so it asks when saving.
                             return;
                         }
 
@@ -213,7 +207,6 @@ namespace FamiStudio
                             }
 
                             callback(tempFilename);
-                            famistudio.Project.Filename = null; // Wipe filename for demo songs.
                             File.Delete(tempFilename);
                             return;
                         }

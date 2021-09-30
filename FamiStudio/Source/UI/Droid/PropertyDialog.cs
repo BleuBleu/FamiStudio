@@ -14,6 +14,8 @@ using Java.Lang;
 using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
 using ActionBar    = AndroidX.AppCompat.App.ActionBar;
+using Android.Runtime;
+using Android.Content;
 
 namespace FamiStudio
 {
@@ -60,7 +62,7 @@ namespace FamiStudio
 
         public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            FamiStudioForm.Instance.StartDialogActivity(typeof(PropertyDialogActivity), RequestCode, callback, this);
+            FamiStudioForm.Instance.StartPropertyDialogActivity(callback, this);
         }
     }
 
@@ -85,7 +87,15 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            dlg = FamiStudioForm.Instance.DialogUserData as PropertyDialog;
+            var info = FamiStudioForm.Instance != null ? FamiStudioForm.Instance.ActiveDialog as PropertyDialogActivityInfo : null;
+
+            if (savedInstanceState != null || info == null)
+            {
+                Finish();
+                return;
+            }
+
+            dlg = info.Dialog;
             dlg.CloseRequested += Dlg_CloseRequested;
 
             var appBarLayoutParams = new AppBarLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, DroidUtils.GetSizeAttributeInPixel(this, Android.Resource.Attribute.ActionBarSize));

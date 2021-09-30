@@ -243,7 +243,7 @@ namespace FamiStudio
 #endif
 
         // Taken from FamiTracker 
-        public static void InitializeNoteTables()
+        private static void InitializeNoteTables()
         {
             const double BaseFreq = 32.7032; /// C0
 
@@ -280,6 +280,11 @@ namespace FamiStudio
             DumpNoteTable(NoteTableN163[6], "N163");
             DumpNoteTable(NoteTableN163[7], "N163");
 #endif
+        }
+
+        public static void Initialize()
+        {
+            InitializeNoteTables();
         }
 
         public static ushort[] GetNoteTableForChannelType(int channelType, bool pal, int numN163Channels)

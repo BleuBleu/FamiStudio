@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.Media;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -150,7 +148,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    SystemSounds.Beep.Play();
+                    PlatformUtils.Beep();
                 }
             }
         }

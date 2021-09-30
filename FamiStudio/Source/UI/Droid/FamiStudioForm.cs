@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 
 using Android.Widget;
@@ -12,24 +11,21 @@ using Android.Opengl;
 using Android.Runtime;
 using Android.Util;
 using Android.Views;
+using Android.Content.PM;
 using AndroidX.Core.View;
 using AndroidX.AppCompat.App;
+using AndroidX.Core.Content;
 using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
 
 using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
-using AndroidX.Core.Content;
 
 namespace FamiStudio
 {
-    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ConfigurationChanges = Android.Content.PM.ConfigChanges.Orientation | Android.Content.PM.ConfigChanges.ScreenSize)]
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ResizeableActivity = false, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize)]
     public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
     {
-        private const int LoadFileRequestCode  = 2001;
-        private const int SaveFileRequestCode  = 2002;
-        private const int ShareFileRequestCode = 2003;
-
         private LinearLayout linearLayout;
         private GLSurfaceView glSurfaceView;
 
@@ -40,23 +36,17 @@ namespace FamiStudio
         BottomSheetDialog contextMenuDialog;
 
         // For property or multi-property dialogs.
-        private int dialogRequestCode = -1;
         private bool glThreadIsRunning;
         private bool glStopRequested;
         private bool glStartRequested;
         private long lastFrameTime = -1;
-        private object dialogUserData = null;
         private object renderLock = new object();
-        private Action<DialogResult> dialogCallback;
-        private Action<string> fileDialogCallback;
-        private Action shareCallback;
-        private string lastSaveTempFile;
-        private Android.Net.Uri lastSaveFileUri;
+        private BaseDialogActivityInfo activeDialog;
         private GLControl captureControl;
 
         public static FamiStudioForm Instance { get; private set; }
-        public object DialogUserData => dialogUserData;
-        public bool IsAsyncDialogInProgress => dialogCallback != null || fileDialogCallback != null || shareCallback != null; // DROIDTODO : Add lots of validation with that.
+        public BaseDialogActivityInfo ActiveDialog => activeDialog;
+        public bool IsAsyncDialogInProgress => activeDialog != null || contextMenuDialog != null; // DROIDTODO : Add lots of validation with that.
 
         public FamiStudio      FamiStudio      => famistudio;
         public Toolbar         ToolBar         => controls.ToolBar;
@@ -72,6 +62,15 @@ namespace FamiStudio
 
         private GestureDetectorCompat detector;
         private ScaleGestureDetector  scaleDetector;
+
+        public FamiStudioForm()
+        {
+        }
+
+        public FamiStudioForm(FamiStudio f)
+        {
+            Debug.Assert(false);
+        }
 
         public System.Drawing.Rectangle Bounds
         {
@@ -106,23 +105,25 @@ namespace FamiStudio
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
-#if DEBUG
-            Debug.Listeners.Add(new DebuggerBreakListener());
-#endif
-
             base.OnCreate(savedInstanceState);
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
 
             EnableFullscreenMode(Window);
             Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
 
-            // DROIDTODO : Move this to a function!
-            Settings.Load();
-            DpiScaling.Initialize();
-            Utils.Initialize();
-            PlatformUtils.Initialize();
-            global::FamiStudio.Theme.Initialize();
-            NesApu.InitializeNoteTables();
+#if DEBUG
+            Debug.Listeners.Add(new DebuggerBreakListener());
+#endif
+
+            Init.InitializeBaseSystems();
+
+            // Only create the app once.
+            var appAlreadyExists = FamiStudio.StaticInstance != null;
+
+            if (appAlreadyExists)
+                famistudio = FamiStudio.StaticInstance;
+            else
+                famistudio = new FamiStudio();
 
             glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.PreserveEGLContextOnPause = true;
@@ -144,8 +145,12 @@ namespace FamiStudio
             controls = new FamiStudioControls(this);
 
             Instance = this;
-            famistudio = new FamiStudio();
-            famistudio.Initialize(null);
+
+            // Simply update the form if the app already exists.
+            if (appAlreadyExists)
+                famistudio.SetMainForm(this);
+            else
+                famistudio.Initialize(null);
 
             detector = new GestureDetectorCompat(this, this);
             detector.IsLongpressEnabled = true;
@@ -173,68 +178,56 @@ namespace FamiStudio
             EnableFullscreenMode(Window);
         }
 
-        public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
-        {
-            Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-
-            base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-
         public void StartLoadFileActivityAsync(string mimeType, Action<string> callback)
         {
-            Debug.Assert(!IsAsyncDialogInProgress);
-
-            dialogRequestCode  = LoadFileRequestCode;
-            fileDialogCallback = callback;
+            Debug.Assert(activeDialog == null);
+            activeDialog = new LoadDialogActivityInfo(callback);
+            StopGLThread();
 
             Intent intent = new Intent(Intent.ActionOpenDocument);
             intent.AddCategory(Intent.CategoryOpenable);
             intent.SetType(mimeType);
-            StartActivityForResult(intent, dialogRequestCode);
+            StartActivityForResult(intent, activeDialog.RequestCode);
         }
 
         public void StartSaveFileActivityAsync(string mimeType, string filename, Action<string> callback)
         {
-            Debug.Assert(!IsAsyncDialogInProgress);
-
-            dialogRequestCode = SaveFileRequestCode;
-            fileDialogCallback = callback;
-
-            Window.AddFlags(WindowManagerFlags.KeepScreenOn);
+            activeDialog = new SaveDialogActivityInfo(callback);
+            StopGLThread();
 
             Intent intent = new Intent(Intent.ActionCreateDocument);
             intent.AddCategory(Intent.CategoryOpenable);
             intent.SetType(mimeType);
             intent.PutExtra(Intent.ExtraTitle, filename);
-            StartActivityForResult(intent, dialogRequestCode);
+            StartActivityForResult(intent, activeDialog.RequestCode);
+            Window.AddFlags(WindowManagerFlags.KeepScreenOn);
         }
 
-        public void StartDialogActivity(Type type, int resultCode, Action<DialogResult> callback, object userData)
+        public void StartPropertyDialogActivity(Action<DialogResult> callback, PropertyDialog dlg)
         {
-            // No support for nested dialog at the moment.
-            Debug.Assert(!IsAsyncDialogInProgress);
-
-            dialogRequestCode = resultCode;
-            dialogCallback = callback;
-            dialogUserData = userData;
-
+            activeDialog = new PropertyDialogActivityInfo(dlg, callback);
             StopGLThread();
-            StartActivityForResult(new Intent(this, type), dialogRequestCode);
+            StartActivityForResult(new Intent(this, typeof(PropertyDialogActivity)), activeDialog.RequestCode);
+        }
+
+        public void StartMultiPropertyDialogActivity(Action<DialogResult> callback, MultiPropertyDialog dlg)
+        {
+            activeDialog = new MultiPropertyDialogActivityInfo(dlg, callback);
+            StopGLThread();
+            StartActivityForResult(new Intent(this, typeof(MultiPropertyDialogActivity)), activeDialog.RequestCode);
         }
 
         public void StartFileSharingActivity(string filename, Action callback)
         {
-            Debug.Assert(!IsAsyncDialogInProgress);
-
-            dialogRequestCode = ShareFileRequestCode; ;
-            shareCallback = callback;
+            activeDialog = new ShareActivityInfo(callback);
+            StopGLThread();
 
             var uri = FileProvider.GetUriForFile(this, "org.famistudio.fileprovider", new Java.IO.File(filename), filename); 
 
             Intent shareIntent = new Intent(Intent.ActionSend);
             shareIntent.SetType("*/*");
             shareIntent.PutExtra(Intent.ExtraStream, uri);
-            StartActivityForResult(Intent.CreateChooser(shareIntent, "Share File"), dialogRequestCode);
+            StartActivityForResult(Intent.CreateChooser(shareIntent, "Share File"), activeDialog.RequestCode);
         }
 
         private void StartGLThread()
@@ -247,6 +240,13 @@ namespace FamiStudio
         {
             Debug.Assert(!glStartRequested && !glStopRequested);
             glStopRequested = true;
+        }
+
+        private void ConditionalStartGLThread()
+        {
+            // If not more dialog are needed, restart GL thread.
+            if (activeDialog == null)
+                StartGLThread();
         }
 
         // For debugging property pages.
@@ -278,150 +278,33 @@ namespace FamiStudio
 #endif
         }
 
-        private DialogResult ToWinFormsResult([GeneratedEnum] Result resultCode)
-        {
-            if (resultCode == Result.Ok)
-                return DialogResult.OK;
-            else
-                return DialogResult.Cancel;
-        }
-
-        private void ClearDialogCallbacks()
-        {
-            dialogRequestCode = -1;
-            fileDialogCallback = null;
-            dialogCallback = null;
-            shareCallback = null;
-            dialogUserData = null;
-        }
-
         protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
         {
-            Debug.Assert(dialogRequestCode == requestCode);
+            // This happens if the activity was destroyed while inside a dialog. The main activity will 
+            // have been re-created and we wont remember what we were doing. Simply ignore. 
+            if (activeDialog == null)
+                return;
 
-            if (requestCode == LoadFileRequestCode ||
-                requestCode == SaveFileRequestCode)
-            {
-                var callback = fileDialogCallback;
+            var dialog = activeDialog;
 
-                ClearDialogCallbacks();
+            if (activeDialog.IsDialogDone(resultCode))
+                activeDialog = null;
 
-                if (resultCode == Result.Ok)
-                {
-                    if (requestCode == SaveFileRequestCode)
-                    {
-                        lastSaveFileUri = data.Data;
-                        lastSaveTempFile = Path.GetTempFileName();
+            dialog.OnResult(this, resultCode, data);
 
-                        // Save to temporary file and copy.
-                        callback(lastSaveTempFile);
-                    }
-                    else
-                    {
-                        var filename = (string)null;
-
-                        var c = ContentResolver.Query(data.Data, null, null, null);
-                        if (c != null && c.MoveToFirst())
-                        {
-                            int id = c.GetColumnIndex(Android.Provider.IOpenableColumns.DisplayName);
-                            if (id != -1)
-                                filename = c.GetString(id);
-                        }
-
-                        if (filename != null)
-                        {
-                            var tempFile = Path.Combine(Path.GetTempPath(), filename);
-                            var buffer = new byte[256 * 1024];
-
-                            using (var streamIn = ContentResolver.OpenInputStream(data.Data))
-                            {
-                                using (var streamOut = File.OpenWrite(tempFile))
-                                {
-                                    while (true)
-                                    {
-                                        var len = streamIn.Read(buffer, 0, buffer.Length);
-                                        if (len == 0)
-                                            break;
-                                        streamOut.Write(buffer, 0, len);
-                                    }
-                                }
-                            }
-
-                            callback(tempFile);
-                        }
-                    }
-                }
-
-                Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
-            }
-            else if (dialogRequestCode == PropertyDialog.RequestCode ||
-                     dialogRequestCode == MultiPropertyDialog.RequestCode)
-            {
-                var callback = dialogCallback;
-
-                ClearDialogCallbacks();
-
-                callback(ToWinFormsResult(resultCode));
-            }
-            else if (dialogRequestCode == ShareFileRequestCode)
-            {
-                var callback = shareCallback;
-
-                ClearDialogCallbacks();
-
-                if (resultCode == Result.Ok)
-                    callback();
-            }
-
-            // If not more dialog are needed, restart GL thread.
-            if (dialogCallback == null && fileDialogCallback == null && shareCallback == null)
-                StartGLThread();
-
+            ConditionalStartGLThread();
             base.OnActivityResult(requestCode, resultCode, data);
         }
 
         public void FinishSaveFileActivityAsync(bool commit, Action callback)
         {
-            if (commit)
-            {
-                if (lastSaveTempFile != null && File.Exists(lastSaveTempFile))
-                {
-                    Log.LogMessage(LogSeverity.Info, "Copying file to storage...");
-
-                    var buffer = new byte[256 * 1024];
-
-                    using (var streamIn = File.OpenRead(lastSaveTempFile))
-                    {
-                        using (var streamOut = ContentResolver.OpenOutputStream(lastSaveFileUri))
-                        {
-                            while (true)
-                            {
-                                var len = streamIn.Read(buffer, 0, buffer.Length);
-                                if (len == 0)
-                                    break;
-                                streamOut.Write(buffer, 0, len);
-                            }
-                        }
-                    }
-
-                    File.Delete(lastSaveTempFile);
-                }
-            }
-            else if (lastSaveTempFile != null && File.Exists(lastSaveTempFile))
-            {
-                File.Delete(lastSaveTempFile);
-            }
-
-            lastSaveTempFile = null;
-            lastSaveFileUri  = null;
-
-            callback();
-        }
-
-        public void AbortLastFileSaveOperation()
-        {
-            lastSaveTempFile = null;
-            lastSaveFileUri  = null;
+            Debug.Assert(activeDialog != null);
+            var saveInfo = activeDialog as SaveDialogActivityInfo;
+            Debug.Assert(saveInfo != null);
+            activeDialog = null;
+            saveInfo.Finish(commit, callback);
+            Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
+            ConditionalStartGLThread();
         }
 
         public void DoFrame(long frameTimeNanos)
@@ -472,11 +355,18 @@ namespace FamiStudio
             lastFrameTime = frameTimeNanos;
         }
 
+        float x = 0.0f;
+
         // GL thread.
         public void OnDrawFrame(IGL10 gl)
         {
             lock (renderLock)
+            {
+                //gl.GlClearColor((float)Math.Sin(x), (float)Math.Cos(x * 0.5f), (float)Math.Sin(x * 0.25), 1);
+                //gl.GlClear(GLES11.GlColorBufferBit);
+                //x += 0.2f;
                 controls.Redraw();
+            }
         }
 
         // GL thread.
@@ -490,8 +380,6 @@ namespace FamiStudio
         {
             controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
             controls.InitializeGL();
-
-            controls.PianoRoll.StartEditPattern(0, 0);
         }
 
         public System.Windows.Forms.Keys GetModifierKeys()
@@ -559,6 +447,56 @@ namespace FamiStudio
 
         public void Run()
         {
+        }
+
+        protected override void OnStop()
+        {
+            Debug.WriteLine("FamiStudioForm.OnStop");
+
+            // If we are begin stopped, but not because we are opening a dialog,
+            // this likely mean the user is switching app. Let's suspend.
+            if (activeDialog == null)
+                famistudio.Suspend();
+
+            famistudio.SaveWorkInProgress();
+
+            if (glThreadIsRunning)
+                glSurfaceView.OnPause();
+
+            base.OnStop();
+        }
+
+        protected override void OnStart()
+        {
+            Debug.WriteLine("FamiStudioForm.OnStart");
+
+            base.OnStart();
+
+            famistudio.Resume();
+
+            if (glThreadIsRunning)
+                glSurfaceView.OnResume();
+        }
+
+        protected override void OnDestroy()
+        {
+            Debug.WriteLine("FamiStudioForm.OnDestroy");
+
+            // This will stop all audio and prevent issues.
+            famistudio.Suspend();
+            base.OnDestroy();
+        }
+
+        protected override void OnPause()
+        {
+            Debug.WriteLine("FamiStudioForm.OnPause");
+            base.OnPause();
+        }
+
+        protected override void OnResume()
+        {
+            Debug.WriteLine("FamiStudioForm.OnResume");
+            base.OnResume();
         }
 
         public void ShowContextMenu(ContextMenuOption[] options)
@@ -804,6 +742,181 @@ namespace FamiStudio
         };
     }
 
+    public abstract class BaseDialogActivityInfo
+    {
+        protected int requestCode;
+        public int  RequestCode => requestCode;
+        public virtual bool IsDialogDone(Result result) => true;
+        public abstract void OnResult(FamiStudioForm main, Result code, Intent data);
+    };
+
+    public class LoadDialogActivityInfo : BaseDialogActivityInfo
+    {
+        protected Action<string> callback;
+
+        public LoadDialogActivityInfo(Action<string> cb)
+        {
+            requestCode = 1000;
+            callback = cb;
+        }
+
+        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        {
+            if (code == Result.Ok)
+            {
+                var filename = (string)null;
+
+                var c = main.ContentResolver.Query(data.Data, null, null, null);
+                if (c != null && c.MoveToFirst())
+                {
+                    int id = c.GetColumnIndex(Android.Provider.IOpenableColumns.DisplayName);
+                    if (id != -1)
+                        filename = c.GetString(id);
+                }
+
+                if (filename != null)
+                {
+                    var tempFile = Path.Combine(Path.GetTempPath(), filename);
+                    var buffer = new byte[256 * 1024];
+
+                    using (var streamIn = main.ContentResolver.OpenInputStream(data.Data))
+                    {
+                        using (var streamOut = File.OpenWrite(tempFile))
+                        {
+                            while (true)
+                            {
+                                var len = streamIn.Read(buffer, 0, buffer.Length);
+                                if (len == 0)
+                                    break;
+                                streamOut.Write(buffer, 0, len);
+                            }
+                        }
+                    }
+
+                    callback(tempFile);
+                }
+            }
+
+            main.Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
+        }
+    }
+
+    public class SaveDialogActivityInfo : BaseDialogActivityInfo
+    {
+        protected Action<string> callback;
+        protected string lastSaveTempFile;
+        protected Android.Net.Uri lastSaveFileUri;
+
+        public SaveDialogActivityInfo(Action<string> cb)
+        {
+            requestCode = 1001;
+            callback = cb;
+        }
+
+        public override bool IsDialogDone(Result result) => result != Result.Ok;
+
+        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        {
+            if (code == Result.Ok)
+            {
+                lastSaveFileUri  = data.Data;
+                lastSaveTempFile = Path.GetTempFileName();
+
+                // Save to temporary file and copy.
+                callback(lastSaveTempFile);
+            }
+        }
+
+        public void Finish(bool commit, Action callback)
+        {
+            if (commit)
+            {
+                if (lastSaveTempFile != null && File.Exists(lastSaveTempFile))
+                {
+                    Log.LogMessage(LogSeverity.Info, "Copying file to storage...");
+
+                    var buffer = new byte[256 * 1024];
+
+                    using (var streamIn = File.OpenRead(lastSaveTempFile))
+                    {
+                        using (var streamOut = FamiStudioForm.Instance.ContentResolver.OpenOutputStream(lastSaveFileUri))
+                        {
+                            while (true)
+                            {
+                                var len = streamIn.Read(buffer, 0, buffer.Length);
+                                if (len == 0)
+                                    break;
+                                streamOut.Write(buffer, 0, len);
+                            }
+                        }
+                    }
+
+                    File.Delete(lastSaveTempFile);
+                }
+            }
+            else if (lastSaveTempFile != null && File.Exists(lastSaveTempFile))
+            {
+                File.Delete(lastSaveTempFile);
+            }
+
+            callback();
+        }
+    }
+
+    public class PropertyDialogActivityInfo : BaseDialogActivityInfo
+    {
+        protected PropertyDialog dialog;
+        protected Action<DialogResult> callback;
+        public PropertyDialog Dialog => dialog;
+
+        public PropertyDialogActivityInfo(PropertyDialog dlg, Action<DialogResult> cb)
+        {
+            requestCode = 2000;
+            dialog = dlg;
+            callback = cb;
+        }
+
+        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        {
+            callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
+        }
+    }
+
+    public class MultiPropertyDialogActivityInfo : BaseDialogActivityInfo
+    {
+        protected MultiPropertyDialog dialog;
+        protected Action<DialogResult> callback;
+        public MultiPropertyDialog Dialog => dialog;
+
+        public MultiPropertyDialogActivityInfo(MultiPropertyDialog dlg, Action<DialogResult> cb)
+        {
+            requestCode = 2001;
+            dialog = dlg;
+            callback = cb;
+        }
+
+        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        {
+            callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
+        }
+    }
+
+    public class ShareActivityInfo : BaseDialogActivityInfo
+    {
+        protected Action callback;
+
+        public ShareActivityInfo(Action cb)
+        {
+            requestCode = 2002;
+            callback = cb;
+        }
+
+        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        {
+            if (code == Result.Ok)
+                callback();
+        }
+    }
 #if DEBUG
     // By default Debug.Assert() doesnt break in the debugger on Android. This does that.
     public class DebuggerBreakListener : System.Diagnostics.TraceListener

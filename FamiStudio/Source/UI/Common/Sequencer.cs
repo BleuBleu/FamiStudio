@@ -3,7 +3,6 @@ using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using System.Media;
 using System.Diagnostics;
 
 using Color = System.Drawing.Color;
@@ -90,7 +89,7 @@ namespace FamiStudio
         bool continuouslyFollowing = false;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
-        bool showSelection = true; // DROIDTODO : Must always be true on mobile.
+        bool showSelection = true;
         bool showExpansionIcons = false;
         bool timeOnlySelection = false;
         PatternLocation selectionMin = PatternLocation.Invalid;
@@ -475,22 +474,24 @@ namespace FamiStudio
 
         protected void RenderChannelNames(RenderGraphics g)
         {
-            var c = g.CreateCommandList();
+            var ch = g.CreateCommandList();
+            var cc = g.CreateCommandList();
 
             // Track name background
-            c.DrawRectangle(0, 0, trackNameSizeX, Height, ThemeResources.DarkGreyFillBrush1);
+            ch.DrawRectangle(0, 0, trackNameSizeX, Height, ThemeResources.DarkGreyFillBrush1);
+            ch.DrawLine(0, headerSizeY, Width, headerSizeY, ThemeResources.BlackBrush);
+
+            cc.PushTranslation(0, headerSizeY - scrollY);
 
             // Horizontal lines
-            c.DrawLine(0, 0, trackNameSizeX, 0, ThemeResources.BlackBrush);
-            c.DrawLine(0, Height - 1, trackNameSizeX, Height - 1, ThemeResources.BlackBrush);
+            cc.DrawLine(0, 0, trackNameSizeX, 0, ThemeResources.BlackBrush);
+            cc.DrawLine(0, Height - 1, trackNameSizeX, Height - 1, ThemeResources.BlackBrush);
 
-            for (int i = 0, y = headerSizeY; i < Song.Channels.Length; i++, y += trackSizeY)
-                c.DrawLine(0, y, Width, y, ThemeResources.BlackBrush);
+            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
+                cc.DrawLine(0, y, Width, y, ThemeResources.BlackBrush);
 
             // Vertical line seperating the track labels.
-            c.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, ThemeResources.BlackBrush);
-
-            c.PushTranslation(0, headerSizeY);
+            cc.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, ThemeResources.BlackBrush);
 
             // Icons
             var showExpIcons = showExpansionIcons && Song.Project.UsesAnyExpansionAudio;
@@ -499,7 +500,7 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
                 var bitmapIndex = showExpIcons ? Song.Channels[i].Expansion : Song.Channels[i].Type;
-                c.DrawBitmapAtlas(atlas, bitmapIndex, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, channelBitmapScale, Theme.LightGreyFillColor1);
+                cc.DrawBitmapAtlas(atlas, bitmapIndex, trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, channelBitmapScale, Theme.LightGreyFillColor1);
             }
 
             // Track names
@@ -507,17 +508,19 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
                 var font = i == selectedChannelIndex ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
-                c.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackNamePosY, ThemeResources.LightGreyFillBrush2);
+                cc.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackNamePosY, ThemeResources.LightGreyFillBrush2);
             }
 
             // Ghost note icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
-                c.DrawBitmapAtlas(bmpAtlasMisc, (int)MiscImageIndices.ForceDisplay, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, bitmapScale, Theme.LightGreyFillColor1);
+                cc.DrawBitmapAtlas(bmpAtlasMisc, (int)MiscImageIndices.ForceDisplay, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, bitmapScale, Theme.LightGreyFillColor1);
             }
 
-            c.PopTransform();
-            g.DrawCommandList(c, new Rectangle(0, 0, trackNameSizeX, Height));
+            cc.PopTransform();
+            
+            g.DrawCommandList(ch, new Rectangle(0, 0,           trackNameSizeX, Height));
+            g.DrawCommandList(cc, new Rectangle(0, headerSizeY, trackNameSizeX, Height));
         }
 
         protected void RenderPatternArea(RenderGraphics g)
@@ -550,8 +553,8 @@ namespace FamiStudio
             if (IsSelectionValid())
             {
                 cp.FillRectangle(
-                    GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), trackSizeY * (selectionMin.ChannelIndex + 0) + headerSizeY,
-                    GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), trackSizeY * (selectionMax.ChannelIndex + 1) + headerSizeY,
+                    GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), trackSizeY * (selectionMin.ChannelIndex + 0) + headerSizeY - scrollY,
+                    GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), trackSizeY * (selectionMax.ChannelIndex + 1) + headerSizeY - scrollY,
                     showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
 
                 if (IsValidTimeOnlySelection())
@@ -663,7 +666,7 @@ namespace FamiStudio
                     var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(noteIdx);
                     var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
 
-                    var dragChannelIdxStart = GetChannelIndexForCoord(captureMouseY);
+                    var dragChannelIdxStart   = captureChannelIdx;
                     var dragChannelIdxCurrent = GetChannelIndexForCoord(pt.Y);
                     var channelIdxDelta = dragChannelIdxCurrent - dragChannelIdxStart;
 
@@ -896,22 +899,15 @@ namespace FamiStudio
             return x > trackNameSizeX && y > headerSizeY && location.IsChannelInSong(Song);
         }
 
-        private bool HasPatternAtCoord(int x, int y)
-        {
-            bool inPatternZone = GetPatternForCoord(x, y, out var location, out var inPatternHeader);
-            return inPatternZone && Song.GetPatternInstance(location) != null;
-        }
-
         private int GetChannelIndexForCoord(int y)
         {
-            // DROIDTODO : Take scrollY into account!
-            return (y - headerSizeY) / trackSizeY;
+            return ((y - headerSizeY) + scrollY) / trackSizeY;
         }
 
         private void GetClampedPatternForCoord(int x, int y, out int channelIdx, out int patternIdx)
         {
             patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(Utils.Clamp(GetNoteForPixel(x - trackNameSizeX), 0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1));
-            channelIdx = Utils.Clamp((y - headerSizeY) / trackSizeY, 0, Song.Channels.Length - 1);
+            channelIdx = Utils.Clamp(GetChannelIndexForCoord(y), 0, Song.Channels.Length - 1);
         }
 
         Rectangle GetTrackIconRect(int idx)
@@ -974,7 +970,7 @@ namespace FamiStudio
 
         private void ChangeChannelForCoord(int y)
         {
-            SetSelectedChannel(Utils.Clamp((y - headerSizeY) / trackSizeY, 0, Song.Channels.Length - 1));
+            SetSelectedChannel(Utils.Clamp(GetChannelIndexForCoord(y), 0, Song.Channels.Length - 1));
         }
 
         private void SetLoopPoint(int patternIdx)
@@ -1103,7 +1099,7 @@ namespace FamiStudio
             if (IsMouseInHeader(e) && e.Button.HasFlag(MouseButtons.Left))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSeekBar);
-                UpdateSeekDrag(e.X, false);
+                UpdateSeekDrag(e.X, e.Y, false);
                 return true;
             }
 
@@ -1243,7 +1239,7 @@ namespace FamiStudio
                 if (Math.Abs(seekX - x) < headerSizeY)
                 {
                     StartCaptureOperation(x, y, CaptureOperation.DragSeekBar);
-                    UpdateSeekDrag(x, false);
+                    UpdateSeekDrag(x, y, false);
                     return true;
                 }
             }
@@ -1331,7 +1327,6 @@ namespace FamiStudio
 
                 SetHighlightedPattern(location);
 
-                // DROIDTODO : Check if delete tool.
                 if (pattern == null)
                 {
                     CreateNewPattern(location);
@@ -1410,7 +1405,7 @@ namespace FamiStudio
                 var menu = new List<ContextMenuOption>(); ;
 
                 // DROIDTODO : This isnt right for instances, etc.
-                if (ClipboardUtils.ConstainsPatterns)
+                if (ClipboardUtils.ContainsPatterns)
                 {
                     // DROIDTODO : Copy/paste!
                     //menu.Add(new ContextMenuOption("", "Paste Instances", ResultPastePatternInstances));
@@ -1585,7 +1580,7 @@ namespace FamiStudio
         }
 
         public bool CanCopy  => showSelection && IsSelectionValid();
-        public bool CanPaste => showSelection && IsSelectionValid() && ClipboardUtils.ConstainsPatterns;
+        public bool CanPaste => showSelection && IsSelectionValid() && ClipboardUtils.ContainsPatterns;
 
         public void Copy()
         {
@@ -1801,7 +1796,7 @@ namespace FamiStudio
                         var patternIdxDelta = patternIdx - selectionDragAnchorPatternIdx;
                         var tmpPatterns = GetSelectedPatterns(out var customSettings);
 
-                        var dragChannelIdxStart = GetChannelIndexForCoord(captureMouseY);
+                        var dragChannelIdxStart   = captureChannelIdx;
                         var dragChannelIdxCurrent = GetChannelIndexForCoord(y);
                         var channelIdxDelta = dragChannelIdxCurrent - dragChannelIdxStart;
 
@@ -1918,7 +1913,7 @@ namespace FamiStudio
                         EndDragSelection(x, y);
                         break;
                     case CaptureOperation.DragSeekBar:
-                        UpdateSeekDrag(x, true);
+                        UpdateSeekDrag(x, y, true);
                         break;
                 }
 
@@ -2062,9 +2057,9 @@ namespace FamiStudio
             UpdateToolTip(null);
         }
 
-        private void UpdateSeekDrag(int mouseX, bool final)
+        private void UpdateSeekDrag(int mouseX, int mouseY, bool final)
         {
-            ScrollIfNearEdge(mouseX);
+            ScrollIfNearEdge(mouseX, mouseY);
 
             dragSeekPosition = GetNoteForPixel(mouseX - trackNameSizeX);
 
@@ -2074,25 +2069,44 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void ScrollIfNearEdge(int mouseX)
+        private void ScrollIfNearEdge(int x, int y, bool scrollHorizontal = true, bool scrollVertical = false)
         {
-            if ((mouseX - trackNameSizeX) < 0)
+            if (scrollHorizontal)
             {
-                var scrollAmount = Utils.Clamp((trackNameSizeX - mouseX) / (float)trackNameSizeX, 0.0f, 1.0f);
-                scrollX -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
-                ClampScroll();
+                if ((x - trackNameSizeX) < 0)
+                {
+                    var scrollAmount = Utils.Clamp((trackNameSizeX - x) / (float)trackNameSizeX, 0.0f, 1.0f);
+                    scrollX -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
+                else if ((Width - x) < trackNameSizeX)
+                {
+                    var scrollAmount = Utils.Clamp((x - (Width - trackNameSizeX)) / (float)trackNameSizeX, 0.0f, 1.0f);
+                    scrollX += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
             }
-            else if ((Width - mouseX) < trackNameSizeX)
+
+            if (scrollVertical)
             {
-                var scrollAmount = Utils.Clamp((mouseX - (Width - trackNameSizeX)) / (float)trackNameSizeX, 0.0f, 1.0f);
-                scrollX += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
-                ClampScroll();
+                if ((y - headerSizeY) < 0)
+                {
+                    var scrollAmount = Utils.Clamp((headerSizeY - y) / (float)headerSizeY, 0.0f, 1.0f);
+                    scrollY -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
+                else if ((Height - y) < headerSizeY)
+                {
+                    var scrollAmount = Utils.Clamp((y - (Height - headerSizeY)) / (float)headerSizeY, 0.0f, 1.0f);
+                    scrollY += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
             }
         }
 
         private void UpdateSelection(int x, int y, bool first = false)
         {
-            ScrollIfNearEdge(x);
+            ScrollIfNearEdge(x, y);
 
             var shift = ModifierKeys.HasFlag(Keys.Shift);
 
@@ -2143,7 +2157,7 @@ namespace FamiStudio
 
         private void UpdateDragSelection(int x, int y)
         {
-            ScrollIfNearEdge(x);
+            ScrollIfNearEdge(x, y, true, PlatformUtils.IsMobile);
             MarkDirty();
         }
 
@@ -2315,7 +2329,7 @@ namespace FamiStudio
                         UpdateAltZoom(x, y);
                         break;
                     case CaptureOperation.DragSeekBar:
-                        UpdateSeekDrag(x, false);
+                        UpdateSeekDrag(x, y, false);
                         break;
                     case CaptureOperation.ScrollBar:
                         UpdateScrollBarX(x, y);
@@ -2441,7 +2455,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        SystemSounds.Beep.Play();
+                        PlatformUtils.Beep(); 
                     }
 
                     MarkDirty();

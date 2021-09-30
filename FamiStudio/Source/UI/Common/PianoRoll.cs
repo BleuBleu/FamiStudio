@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Media;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
@@ -335,7 +334,7 @@ namespace FamiStudio
         bool panning = false;
         bool continuouslyFollowing = false;
         bool maximized = false;
-        bool showSelection = false; // DROIDTODO : Must always be true on mobile.
+        bool showSelection = false; 
         bool showEffectsPanel = false;
         bool snap = true;
         float flingVelX = 0.0f;
@@ -409,7 +408,7 @@ namespace FamiStudio
         public bool IsEditingDPCMSampleMapping => editMode == EditionMode.DPCMMapping;
         
         public bool CanCopy  => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
-        public bool CanPaste => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ConstainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ConstainsEnvelope);
+        public bool CanPaste => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
 
         public Instrument EditInstrument => editInstrument;
         public Arpeggio   EditArpeggio   => editArpeggio;
@@ -1328,7 +1327,7 @@ namespace FamiStudio
                     r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseY - noteSizeY + 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, whiteKeySizeX - r.g.WindowScaling * 2, noteSizeY - 1);
             }
 
-            if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled))
+            if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled) && PlatformUtils.IsDesktop)
             {
                 var showQwerty = App.IsRecording || App.IsQwertyPianoEnabled;
                 var keyStrings = new string[Note.MusicalNoteMax];
@@ -3591,7 +3590,7 @@ namespace FamiStudio
                     App.UndoRedoManager.AbortTransaction();
 
                     if (noteValue != captureNoteValue && draggedSample != null)
-                        SystemSounds.Beep.Play();
+                        PlatformUtils.Beep();
                 }
             }
         }
@@ -4783,7 +4782,6 @@ namespace FamiStudio
                         {
                             switch (g.Action)
                             {
-                                // DROIDTODO : Operate on multiple notes if in selection.
                                 case GizmoAction.ResizeNote:
                                     StartNoteResizeEnd(x, y,  IsNoteSelected(highlightNoteLocation) ? CaptureOperation.ResizeSelectionNoteEnd : CaptureOperation.ResizeNoteEnd, highlightNoteLocation);
                                     break;
@@ -4997,7 +4995,6 @@ namespace FamiStudio
 
                 if (note != null)
                 {
-                    // DROIDTODO : Check selection, etc.
                     if (note.IsMusical)
                     {
                         if (channel.SupportsNoAttackNotes)

@@ -239,9 +239,6 @@ namespace FamiStudio
                     if ((f % 100) == 0)
                         Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
 
-                    //if (PlatformUtils.IsMobile && (f % 10) == 0)
-                    //    await Task.Delay(20);
-
                     Log.ReportProgress(f / (float)(metadata.Length - 1));
 
                     if (halfFrameRate && (f & 1) != 0)

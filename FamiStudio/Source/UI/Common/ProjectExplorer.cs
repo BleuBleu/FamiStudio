@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Drawing;
-using System.Media;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using Color = System.Drawing.Color;
@@ -2881,7 +2880,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        SystemSounds.Beep.Play();
+                        PlatformUtils.Beep();
                     }
 
                     MarkDirty();
@@ -2914,7 +2913,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        SystemSounds.Beep.Play();
+                        PlatformUtils.Beep();
                     }
                 }
             });
@@ -2945,7 +2944,7 @@ namespace FamiStudio
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
-                        SystemSounds.Beep.Play();
+                        PlatformUtils.Beep();
                     }
                 }
             });
@@ -2974,7 +2973,7 @@ namespace FamiStudio
                 else
                 {
                     App.UndoRedoManager.AbortTransaction();
-                    SystemSounds.Beep.Play();
+                    PlatformUtils.Beep();
                 }
             });
         }

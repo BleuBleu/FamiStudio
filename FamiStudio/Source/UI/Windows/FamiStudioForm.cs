@@ -21,6 +21,7 @@ namespace FamiStudio
         public PianoRoll PianoRoll => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
+        public static FamiStudioForm Instance => null;
         public new GLControl ActiveControl => null;
 
         public bool IsLandscape => true;

@@ -48,16 +48,9 @@ namespace FamiStudio
             }
 #endif
 
-            Settings.Load();
-            DpiScaling.Initialize();
-            Utils.Initialize();
-            PlatformUtils.Initialize();
-            Theme.Initialize();
-            NesApu.InitializeNoteTables();
+            Init.InitializeBaseSystems();
 
 #if FAMISTUDIO_WINDOWS
-            WinUtils.Initialize();
-            PerformanceCounter.Initialize();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 #elif FAMISTUDIO_LINUX

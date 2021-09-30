@@ -156,6 +156,7 @@
     <Compile Include="Source\UI\Common\GLControl.cs" />
     <Compile Include="Source\UI\Common\GLGraphics.cs" />
     <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
+    <Compile Include="Source\UI\Common\Init.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
     <Compile Include="Source\UI\Common\Oscilloscope.cs" />
@@ -213,8 +214,8 @@
     <Compile Include="Source\UI\Windows\TutorialDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Source\UI\Windows\WinCursors.cs" />
-    <Compile Include="Source\UI\Windows\WinPlatformUtils.cs" />
+    <Compile Include="Source\UI\Windows\Cursors.cs" />
+    <Compile Include="Source\UI\Windows\PlatformUtils.cs" />
     <Compile Include="Source\UI\Windows\WinUtils.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />

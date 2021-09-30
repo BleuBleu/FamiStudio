@@ -305,6 +305,8 @@ namespace FamiStudio
 
         public void InitializeGL()
         {
+            Debug.Assert(gfx == null);
+
             gfx = new GLGraphics(DpiScaling.MainWindow, DpiScaling.Font);
             res = new ThemeRenderResources(gfx);
             

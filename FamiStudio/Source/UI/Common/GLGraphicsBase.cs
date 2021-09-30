@@ -21,7 +21,6 @@ using Bitmap = Gdk.Pixbuf;
 
 namespace FamiStudio
 {
-    // DROIDTODO : Use a partial class, move to Desktop.
     public abstract class GLGraphicsBase : IDisposable
     {
         protected struct GradientCacheKey
@@ -677,10 +676,9 @@ namespace FamiStudio
         {
             var rect = elementRects[elementIndex];
 
-            // DROIDTODO : +0.5?
-            u0 = rect.Left / (float)size.Width;
-            u1 = rect.Right / (float)size.Width;
-            v0 = rect.Top / (float)size.Height;
+            u0 = rect.Left   / (float)size.Width;
+            u1 = rect.Right  / (float)size.Width;
+            v0 = rect.Top    / (float)size.Height;
             v1 = rect.Bottom / (float)size.Height;
         }
     }
@@ -689,13 +687,11 @@ namespace FamiStudio
     {
         public static int PackColor(Color c)
         {
-            // DROIDTODO : Do we need to check the byte ordering here?
             return (c.A << 24) | (c.B << 16) | (c.G << 8) | c.R;
         }
 
         public static int PackColor(int r, int g, int b, int a)
         {
-            // DROIDTODO : Do we need to check the byte ordering here?
             return (a << 24) | (b << 16) | (g << 8) | r;
         }
 

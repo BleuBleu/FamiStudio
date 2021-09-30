@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Media;
 using System.Windows.Forms;
 using System.Diagnostics;
 
@@ -262,7 +261,6 @@ namespace FamiStudio
         private delegate ButtonStatus ButtonStatusDelegate();
         private delegate ButtonImageIndices BitmapDelegate(ref Color tint);
 
-        // DROIDTODO : Have a separate position + hitbox.
         private class Button
         {
             public Rectangle Rect;
@@ -569,7 +567,7 @@ namespace FamiStudio
             warningTime = DateTime.Now;
             warning = "{Warning} " + msg;
             if (beep)
-                SystemSounds.Beep.Play();
+                PlatformUtils.Beep();
         }
 
         public void Tick(float delta)

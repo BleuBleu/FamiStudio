@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using Android.App;
 using Android.Content;
 using Android.OS;
@@ -12,9 +13,26 @@ using Debug = System.Diagnostics.Debug;
 namespace FamiStudio
 {
     public static class PlatformUtils
-    {
+    {  
         public static void Initialize()
         {
+        }
+
+        public static bool IsInMainThread()
+        {
+            return MainThread.IsMainThread;
+        }
+
+        public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
+        public static string SettingsDirectory     => System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+        public static string ApplicationVersion
+        {
+            get
+            {
+                var ctx = Application.Context;
+                var version = ctx.ApplicationContext.PackageManager.GetPackageInfo(ctx.PackageName, 0).VersionName;
+                return version;
+            }
         }
 
         public static System.Windows.Forms.DialogResult MessageBox(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)
@@ -101,8 +119,6 @@ namespace FamiStudio
             return null;
         }
 
-        public static string ApplicationVersion => "9.9.9"; // DROIDTODO
-
         public static string KeyCodeToString(int keyval)
         {
             Debug.Assert(false);
@@ -134,6 +150,10 @@ namespace FamiStudio
             {
                 Toast.MakeText(Application.Context, message, ToastLength.Short).Show(); 
             });
+        }
+
+        public static void Beep()
+        {
         }
 
         public static void OpenUrl(string url)

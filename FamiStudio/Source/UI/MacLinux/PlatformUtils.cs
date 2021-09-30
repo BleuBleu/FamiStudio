@@ -332,6 +332,24 @@ namespace FamiStudio
             return (float)Gdk.Display.Default.DefaultScreen.Resolution / 96.0f;
         }
 
+        public static void OpenUrl(string url)
+        {
+            try
+            {
+#if FAMISTUDIO_LINUX
+                Process.Start("xdg-open", url);
+#else
+                Process.Start("open", url);
+#endif
+            }
+            catch { }
+        }
+
+        public static void Beep()
+        {
+            SystemSounds.Beep.Play();
+        }
+
         public const bool IsMobile  = false;
         public const bool IsAndroid = false;
         public const bool IsDesktop = true;

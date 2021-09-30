@@ -9,18 +9,6 @@ namespace FamiStudio
 {
     static class Utils
     {
-        private static Thread mainThread;
-
-        public static void Initialize()
-        {
-            mainThread = Thread.CurrentThread;
-        }
-
-        public static bool IsInMainThread()
-        {
-            return mainThread == Thread.CurrentThread;
-        }
-
         public static int Clamp(int val, int min, int max)
         {
             if (val < min) return min;
@@ -345,21 +333,6 @@ namespace FamiStudio
         public static string ForceASCII(string str)
         {
             return System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(str));
-        }
-
-        public static void OpenUrl(string url)
-        {
-            try
-            {
-#if FAMISTUDIO_LINUX
-                Process.Start("xdg-open", url);
-#elif FAMISTUDIO_MACOS
-                Process.Start("open", url);
-#else
-                Process.Start(url);
-#endif
-            }
-            catch { }
         }
     }
 }
