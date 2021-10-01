@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Media;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Gtk;
 using OpenTK;
+
+using Action = System.Action;
 
 namespace FamiStudio
 {
@@ -22,8 +25,15 @@ namespace FamiStudio
 
         public static string ApplicationVersion => System.Windows.Forms.Application.ProductVersion;
 
+        public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
+        public static string UserProjectsDirectory => null;
+
+        private static Thread mainThread;
+
         public static void Initialize()
         {
+            mainThread = Thread.CurrentThread;
+
             // When debugging or when in a app package, our paths are a bit different.
             string[] pathsToSearch =
             {
@@ -76,6 +86,11 @@ namespace FamiStudio
 #endif
 
             InitializeGtk();
+        }
+
+        public static bool IsInMainThread()
+        {
+            return mainThread == Thread.CurrentThread;
         }
 
         private static void ParseRcFileFromResource(string rcFile)
@@ -309,6 +324,12 @@ namespace FamiStudio
 #endif
         }
 
+        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
+        {
+            var res = MessageBox(text, title, buttons);
+            callback?.Invoke(res);
+        }
+
         public static string KeyCodeToString(int keyval)
         {
             var str = char.ConvertFromUtf32((int)Gdk.Keyval.ToUnicode((uint)keyval));
@@ -330,6 +351,39 @@ namespace FamiStudio
         public static float GetDesktopScaling()
         {
             return (float)Gdk.Display.Default.DefaultScreen.Resolution / 96.0f;
+        }
+
+        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
+        {
+        }
+
+        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
+        {
+        }
+
+        public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)
+        {
+        }
+
+        public static void StartShareFileAsync(string filename, Action callback)
+        {
+        }
+
+        public static string GetShareFilename(string filename)
+        {
+            return null;
+        }
+
+        public static void VibrateTick()
+        {
+        }
+
+        public static void VibrateClick()
+        {
+        }
+
+        public static void ShowToast(string text)
+        {
         }
 
         public static void OpenUrl(string url)
@@ -354,6 +408,7 @@ namespace FamiStudio
         public const bool IsAndroid = false;
         public const bool IsDesktop = true;
         public const bool IsWindows = false;
+        public const bool IsGTK     = true;
 #if FAMISTUDIO_LINUX
         public const bool IsLinux   = true;
         public const bool IsMacOS   = false;
@@ -361,6 +416,18 @@ namespace FamiStudio
         public const bool IsLinux   = false;
         public const bool IsMacOS   = true;
 #endif
+    }
+
+    // MATTT : Move to a common file.
+    public class MobileProjectDialog
+    {
+        public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
+        {
+        }
+
+        public void ShowDialogAsync(Action<string> callback)
+        {
+        }
     }
 }
 

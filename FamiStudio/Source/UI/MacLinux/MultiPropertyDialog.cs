@@ -1,6 +1,7 @@
 ﻿using Gtk;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -19,11 +20,11 @@ namespace FamiStudio
         private HBox mainHbox;
         private System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.None;
 
-        public MultiPropertyDialog(int width, int height, int tabWidth = 160)
+        public MultiPropertyDialog(string title, int width, int height, int tabWidth = 160)
         {
             var buttonsHBox = new HBox(false, 0);
 
-            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             var buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
             var buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
 
@@ -83,7 +84,7 @@ namespace FamiStudio
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             var pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{image}{suffix}.png");
 
             var page = new PropertyPage();
@@ -102,6 +103,10 @@ namespace FamiStudio
             return page;
         }
 
+        public void SetVerb(string text, bool showOnTabPage = false)
+        {
+        }
+
         private FlatButton AddButton(string text, Gdk.Pixbuf image)
         {
             var btn = new FlatButton(image, text);
@@ -118,6 +123,13 @@ namespace FamiStudio
         public PropertyPage GetPropertyPage(int idx)
         {
             return tabs[idx].properties;
+        }
+
+        public void SetPageVisible(int idx, bool visible)
+        {
+            // MATTT! Fix.
+            Debug.Assert(false);
+            //tabs[idx].visible = visible;
         }
 
         public int SelectedIndex => selectedIndex;
@@ -178,5 +190,10 @@ namespace FamiStudio
             Hide();
             return result;
         }
-    }
+
+        public void ShowDialogAsync(FamiStudioForm parent, Action<System.Windows.Forms.DialogResult> callback)
+        {
+            callback(ShowDialog(parent));
+        }
+}
 }
