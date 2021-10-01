@@ -25,6 +25,7 @@ namespace FamiStudio
         public new GLControl ActiveControl => null;
 
         public bool IsLandscape => true;
+        public bool IsAsyncDialogInProgress => false;
 
         private GLControl captureControl = null;
         private MouseButtons captureButton   = MouseButtons.None;

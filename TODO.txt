@@ -123,6 +123,7 @@ Features missing from the Mobile version:
 - Copy instrument.
 - Change insturment dialog for a combo
 - Get rid of "None" mode on piano roll.
+- Real fix for flatpak videos.
 
 Misc:
 
