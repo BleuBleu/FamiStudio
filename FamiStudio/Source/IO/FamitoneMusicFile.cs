@@ -1569,6 +1569,8 @@ namespace FamiStudio
         private int GetAsmFileSize(List<string> lines)
         {
             int size = 0;
+            var dbspc = db + " ";
+            var dwspc = dw + " ";
 
             foreach (var line in lines)
             {
@@ -1578,8 +1580,8 @@ namespace FamiStudio
                 if (commentIdx >= 0)
                     trimmedLine = trimmedLine.Substring(0, commentIdx);
 
-                bool isByte = trimmedLine.StartsWith("db") || trimmedLine.StartsWith(".db") || trimmedLine.StartsWith(".byte");
-                bool isWord = trimmedLine.StartsWith("dw") || trimmedLine.StartsWith(".dw") || trimmedLine.StartsWith(".word");
+                bool isByte = trimmedLine.StartsWith(dbspc);
+                bool isWord = trimmedLine.StartsWith(dwspc);
 
                 if (isByte || isWord)
                 {
@@ -1592,6 +1594,7 @@ namespace FamiStudio
         }
 #endif
 
+        // Assumed to be in ASM6 format.
         public static byte[] ParseAsmFile(string filename, int songOffset, int dpcmOffset)
         {
             var labels = new Dictionary<string, int>();
@@ -1610,8 +1613,8 @@ namespace FamiStudio
                     trimmedLine = trimmedLine.Substring(0, commentIdx);
                 }
 
-                bool isByte = trimmedLine.StartsWith("db");
-                bool isWord = trimmedLine.StartsWith("dw");
+                bool isByte = trimmedLine.StartsWith("db ");
+                bool isWord = trimmedLine.StartsWith("dw ");
 
                 if (isByte || isWord)
                 {

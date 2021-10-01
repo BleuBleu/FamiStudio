@@ -1126,7 +1126,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        g.DrawText(p.ToString(), ThemeBase.FontMediumCenter, px, headerTextPosY, theme.LightGreyFillBrush1, sx);
+                        g.DrawText((p + 1).ToString(), ThemeBase.FontMediumCenter, px, headerTextPosY, theme.LightGreyFillBrush1, sx);
                     }
 
                     if (pattern != null)
