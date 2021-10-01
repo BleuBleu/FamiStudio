@@ -83,7 +83,7 @@ Controls:
 	x Header Swipe = select (unless dragging seek bar itself)
 	x Header Tap = seek
 
-- CHANNEL AREA DOESNT SCROLL!
+- BUG : When dragging pattern up/down with a time-only selection messes up the selection.
 
 Toolbar:
 - Reorganize buttons, need to see delete + export. 
@@ -94,10 +94,18 @@ Scaling issue:
 	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
 
-2nd piano.
+2nd piano:
+- About 1/4 of the screen
+- 2 buttons to go fwd/backward by 1 snap unit (only enabled in rec mode)
+- Can pinch to zoom
+- How to scroll?
+	=> Like musepad, button between black keys?
+
 
 Misc:
 / Line widths, bias + 2
+- WIP file will never appear dirty, use a INI file with info in it?
+- 
 
 Icon notes:
 - 46% zoom, start with 128x128 png.

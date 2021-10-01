@@ -276,6 +276,7 @@
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Mobile\LogDialog.cs" />
+    <Compile Include="Source\UI\Mobile\Piano.cs" />
     <Compile Include="Source\UI\Mobile\QuickAccessBar.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
