@@ -136,9 +136,8 @@ namespace FamiStudio
 
         public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
         {
-            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
-            var result = System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
-            callback?.Invoke(result);
+            var res = MessageBox(text, title, buttons);
+            callback?.Invoke(res);
         }
 
         public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
