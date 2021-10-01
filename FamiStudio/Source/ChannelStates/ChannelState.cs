@@ -25,7 +25,6 @@ namespace FamiStudio
         protected int[] envelopeIdx = new int[EnvelopeType.Count];
         protected int[] envelopeValues = new int[EnvelopeType.Count];
         protected bool customRelease = false;
-        protected bool noteChanged = false;
         protected bool noteTriggered = false;
         protected bool forceInstrumentReload = false;
         protected ushort[] noteTable = null;
@@ -158,8 +157,6 @@ namespace FamiStudio
             if (!newNote.HasFdsModSpeed    && note.HasFdsModSpeed)     newNote.FdsModSpeed = note.FdsModSpeed;
             if (newNote.Instrument == null && note.Instrument != null) newNote.Instrument  = note.Instrument;
             if (newNote.Arpeggio   == null && note.Arpeggio   != null && !newNote.IsMusical) newNote.Arpeggio = note.Arpeggio;
-
-            noteChanged = true;
 
             if (newNote.IsValid)
             {
@@ -495,7 +492,6 @@ namespace FamiStudio
         public virtual void UpdateAPU()
         {
             noteTriggered = false;
-            noteChanged = false;
             NesApu.SkipCycles(apuIdx, CyclesBetweenChannels);
         }
 
