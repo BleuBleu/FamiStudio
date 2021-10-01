@@ -41,8 +41,8 @@ namespace FamiStudio
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
-        protected int channelMask = -1;
-        protected int playPosition = 0;
+        protected volatile int channelMask = -1;
+        protected volatile int playPosition = 0;
         protected NoteLocation playLocation = new NoteLocation(0, 0);
 
         // Only used by FamiTracker tempo.

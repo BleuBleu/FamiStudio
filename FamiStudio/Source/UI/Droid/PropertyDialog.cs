@@ -78,6 +78,7 @@ namespace FamiStudio
         private FragmentContainerView fragmentView;
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
         private PropertyDialog dlg;
+        private bool stoppedByUser;
 
         public PropertyDialogActivity()
         {
@@ -140,8 +141,15 @@ namespace FamiStudio
             SupportFragmentManager.BeginTransaction().SetReorderingAllowed(true).Add(fragmentView.Id, dlg.Properties, "PropertyDialog").Commit();
         }
 
+        public override void OnBackPressed()
+        {
+            stoppedByUser = true;
+            base.OnBackPressed();
+        }
+
         private void Dlg_CloseRequested(DialogResult result)
         {
+            stoppedByUser = true;
             SetResult(result == DialogResult.OK ? Result.Ok : Result.Canceled);
             Finish();
         }
@@ -149,12 +157,22 @@ namespace FamiStudio
         protected override void OnDestroy()
         {
             base.OnDestroy();
-
             dlg.CloseRequested -= Dlg_CloseRequested;
+        }
+
+        protected override void OnPause()
+        {
+            // If we are being stopped, but not by the user closing the dialog,
+            // it is likely that the user switched app. If the main activity isnt
+            // running, lets suspend FamiStudio.
+            if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
+                FamiStudio.StaticInstance.Suspend();
+            base.OnPause();
         }
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
+            stoppedByUser = true;
             SetResult(item != null && item.ItemId == ApplyMenuItemId ? Result.Ok : Result.Canceled);
             Finish();
 

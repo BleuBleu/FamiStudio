@@ -106,6 +106,7 @@ namespace FamiStudio
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
         private MultiPropertyDialog dlg;
         private IMenuItem applyMenuItem;
+        private bool stoppedByUser;
 
         private int selectedTabIndex = -1; // -1 means in the tab page.
 
@@ -176,8 +177,19 @@ namespace FamiStudio
                 .Commit();
         }
 
+        protected override void OnPause()
+        {
+            // If we are being stopped, but not by the user closing the dialog,
+            // it is likely that the user switched app. If the main activity isnt
+            // running, lets suspend FamiStudio.
+            if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
+                FamiStudio.StaticInstance.Suspend();
+            base.OnPause();
+        }
+
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
+            stoppedByUser = true;
             SetResult(item != null && item.ItemId == ApplyMenuItemId ? Result.Ok : Result.Canceled);
             Finish();
 
@@ -245,41 +257,10 @@ namespace FamiStudio
             }
             else
             {
+                stoppedByUser = true;
                 base.OnBackPressed();
             }
         }
-
-
-        protected override void OnStop()
-        {
-            Debug.WriteLine("MultiProperty.OnStop");
-            base.OnStop();
-        }
-
-        protected override void OnStart()
-        {
-            Debug.WriteLine("MultiProperty.OnStart");
-            base.OnStart();
-        }
-
-        protected override void OnDestroy()
-        {
-            Debug.WriteLine("MultiProperty.OnDestroy");
-            base.OnDestroy();
-        }
-
-        protected override void OnPause()
-        {
-            Debug.WriteLine("MultiProperty.OnPause");
-            base.OnPause();
-        }
-
-        protected override void OnResume()
-        {
-            Debug.WriteLine("MultiProperty.OnResume");
-            base.OnResume();
-        }
-
 
         private class MultiPropertyTabFragment : AndroidX.Fragment.App.Fragment
         {

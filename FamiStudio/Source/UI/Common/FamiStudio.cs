@@ -602,6 +602,8 @@ namespace FamiStudio
 
         private void UndoRedoManager_PreUndoRedo(TransactionScope scope, TransactionFlags flags)
         {
+            Debug.Assert(!mainForm.IsAsyncDialogInProgress);
+
             ValidateIntegrity();
 
             // Special category for stuff that is so important, we should stop the song.
@@ -624,6 +626,8 @@ namespace FamiStudio
 
         private void UndoRedoManager_PostUndoRedo(TransactionScope scope, TransactionFlags flags)
         {
+            Debug.Assert(!mainForm.IsAsyncDialogInProgress);
+
             ValidateIntegrity();
 
             if (flags.HasFlag(TransactionFlags.ReinitializeAudio))
@@ -2001,6 +2005,8 @@ namespace FamiStudio
 
         public void Tick(float deltaTime = -1.0f)
         {
+            Debug.Assert(!mainForm.IsAsyncDialogInProgress);
+
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
 
             ProcessAudioDeviceChanges();

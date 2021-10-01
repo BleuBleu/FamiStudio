@@ -33,6 +33,7 @@ namespace FamiStudio
             audioTrack = new AudioTrack.Builder()
                 .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).Build())
                 .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(rate).SetEncoding(Android.Media.Encoding.Pcm16bit).SetChannelMask(ChannelOut.Mono).Build())
+                .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
                 .SetBufferSizeInBytes(bufferSize).Build();
         }
 
@@ -66,7 +67,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    System.Threading.Thread.Sleep(1);
+                    System.Threading.Thread.Sleep(4);
                 }
             }
         }

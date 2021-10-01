@@ -18,17 +18,17 @@ namespace FamiStudio
         private ManualResetEvent stopEvent    = new ManualResetEvent(false);
         private AutoResetEvent   samplesEvent = new AutoResetEvent(false);
         private ConcurrentQueue<short[]> sampleQueue;
-        private float[,] geometry;
         private int renderIdx = 0;
         private int numVertices = 128;
-        private bool hasNonZeroData = false;
+        private volatile float[,] geometry;
+        private volatile bool hasNonZeroData = false;
 
         private int bufferPos = 0;
         private short[] sampleBuffer = new short[NumSamples * 2];
 
         public Oscilloscope(int scaling)
         {
-            numVertices *= scaling;
+            numVertices *= Math.Min(2, scaling);
         }
 
         public void Start()

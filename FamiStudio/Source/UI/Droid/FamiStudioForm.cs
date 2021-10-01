@@ -39,14 +39,16 @@ namespace FamiStudio
         private bool glThreadIsRunning;
         private bool glStopRequested;
         private bool glStartRequested;
+        private static bool activityRunning;
         private long lastFrameTime = -1;
         private object renderLock = new object();
         private BaseDialogActivityInfo activeDialog;
         private GLControl captureControl;
 
+        public static bool ActivityRunning => activityRunning;
         public static FamiStudioForm Instance { get; private set; }
         public BaseDialogActivityInfo ActiveDialog => activeDialog;
-        public bool IsAsyncDialogInProgress => activeDialog != null || contextMenuDialog != null; // DROIDTODO : Add lots of validation with that.
+        public bool IsAsyncDialogInProgress => activeDialog != null;
 
         public FamiStudio      FamiStudio      => famistudio;
         public Toolbar         ToolBar         => controls.ToolBar;
@@ -453,16 +455,6 @@ namespace FamiStudio
         {
             Debug.WriteLine("FamiStudioForm.OnStop");
 
-            // If we are begin stopped, but not because we are opening a dialog,
-            // this likely mean the user is switching app. Let's suspend.
-            if (activeDialog == null)
-                famistudio.Suspend();
-
-            famistudio.SaveWorkInProgress();
-
-            if (glThreadIsRunning)
-                glSurfaceView.OnPause();
-
             base.OnStop();
         }
 
@@ -472,10 +464,6 @@ namespace FamiStudio
 
             base.OnStart();
 
-            famistudio.Resume();
-
-            if (glThreadIsRunning)
-                glSurfaceView.OnResume();
         }
 
         protected override void OnDestroy()
@@ -490,12 +478,36 @@ namespace FamiStudio
         protected override void OnPause()
         {
             Debug.WriteLine("FamiStudioForm.OnPause");
+
+            Debug.Assert(activityRunning);
+            activityRunning = false;
+
+            // If we are begin stopped, but not because we are opening a dialog,
+            // this likely mean the user is switching app. Let's suspend.
+            // The property dialogs will handle this themselves.
+            if (activeDialog == null || activeDialog.ShouldSuspend)
+                famistudio.Suspend();
+
+            famistudio.SaveWorkInProgress();
+
+            if (glThreadIsRunning)
+                glSurfaceView.OnPause();
+
             base.OnPause();
         }
 
         protected override void OnResume()
         {
             Debug.WriteLine("FamiStudioForm.OnResume");
+
+            Debug.Assert(!activityRunning);
+            activityRunning = true;
+
+            famistudio.Resume();
+
+            if (glThreadIsRunning)
+                glSurfaceView.OnResume();
+
             base.OnResume();
         }
 
@@ -746,6 +758,7 @@ namespace FamiStudio
     {
         protected int requestCode;
         public int  RequestCode => requestCode;
+        public virtual bool ShouldSuspend => true;
         public virtual bool IsDialogDone(Result result) => true;
         public abstract void OnResult(FamiStudioForm main, Result code, Intent data);
     };
@@ -868,6 +881,7 @@ namespace FamiStudio
         protected PropertyDialog dialog;
         protected Action<DialogResult> callback;
         public PropertyDialog Dialog => dialog;
+        public override bool ShouldSuspend => false;
 
         public PropertyDialogActivityInfo(PropertyDialog dlg, Action<DialogResult> cb)
         {
@@ -887,6 +901,7 @@ namespace FamiStudio
         protected MultiPropertyDialog dialog;
         protected Action<DialogResult> callback;
         public MultiPropertyDialog Dialog => dialog;
+        public override bool ShouldSuspend => false;
 
         public MultiPropertyDialogActivityInfo(MultiPropertyDialog dlg, Action<DialogResult> cb)
         {
