@@ -22,17 +22,17 @@ namespace FamiStudio
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
         private static Thread mainThread;
 
-        public static bool IsInMainThread()
-        {
-            return mainThread == Thread.CurrentThread;
-        }
-
         public static void Initialize()
         {
             mainThread = Thread.CurrentThread;
             PrivateFontCollection = new PrivateFontCollection();
             AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Regular.ttf");
             AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Bold.ttf");
+        }
+
+        public static bool IsInMainThread()
+        {
+            return mainThread == Thread.CurrentThread;
         }
 
         [DllImport("gdi32.dll")]
