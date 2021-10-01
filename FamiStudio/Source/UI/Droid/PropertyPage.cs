@@ -21,6 +21,7 @@ using Java.Util;
 using Debug       = System.Diagnostics.Debug;
 using Color       = System.Drawing.Color;
 using Orientation = Android.Widget.Orientation;
+using AndroidX.Core.Graphics;
 
 namespace FamiStudio
 {
@@ -69,10 +70,10 @@ namespace FamiStudio
         {
             var editText = new EditText(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
 
-            editText.InputType = Android.Text.InputTypes.ClassText;
+            editText.InputType = InputTypes.ClassText;
             editText.Text = txt;
             editText.SetTextColor(Application.Context.GetColorStateList(Resource.Color.light_grey));
-            editText.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendMode.SrcAtop));
+            editText.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
             editText.SetMaxLines(1);
             editText.SetOnEditorActionListener(this);
             editText.AfterTextChanged += EditText_AfterTextChanged;
@@ -145,7 +146,7 @@ namespace FamiStudio
             var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
             adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
             spinner.Adapter = adapter;
-            spinner.Background.SetColorFilter(new BlendModeColorFilter(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendMode.SrcAtop));
+            spinner.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
             spinner.SetSelection(adapter.GetPosition(value));
             spinner.ItemSelected += Spinner_ItemSelected;
             return spinner;
