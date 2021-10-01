@@ -59,7 +59,7 @@ namespace FamiStudio
 
             if (warningIcons == null)
             {
-                var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+                var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
 
                 warningIcons = new Pixbuf[3];
                 warningIcons[0] = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.WarningGood{suffix}.png");
@@ -84,15 +84,15 @@ namespace FamiStudio
         {
             if (colorBitmap == null)
             {
-                var width  = ThemeBase.CustomColors.GetLength(0);
-                var height = ThemeBase.CustomColors.GetLength(1);
+                var width  = Theme.CustomColors.GetLength(0);
+                var height = Theme.CustomColors.GetLength(1);
                 var data = new byte[width * height * 4];
 
                 for (int j = 0, p = 0; j < height; j++)
                 {
                     for (int i = 0; i < width; i++)
                     {
-                        var color = ThemeBase.CustomColors[i, j];
+                        var color = Theme.CustomColors[i, j];
 
                         data[p++] = color.R;
                         data[p++] = color.G;
@@ -237,7 +237,7 @@ namespace FamiStudio
 
         private ColorSelector CreatePictureBox(System.Drawing.Color color) 
         {
-            var pictureBox = new ColorSelector(GetColorBitmap(), ThemeBase.GetCustomColorIndex(color));
+            var pictureBox = new ColorSelector(GetColorBitmap(), Theme.GetCustomColorIndex(color));
 
             pictureBox.Show();
             pictureBox.ButtonPressEvent += PictureBox_ButtonPressEvent;
@@ -255,8 +255,8 @@ namespace FamiStudio
 
         private void ChangeColor(ColorSelector image, int x, int y)
         {
-            int colorSizeX = ThemeBase.CustomColors.GetLength(0);
-            int colorSizeY = ThemeBase.CustomColors.GetLength(1);
+            int colorSizeX = Theme.CustomColors.GetLength(0);
+            int colorSizeY = Theme.CustomColors.GetLength(1);
             int imageWidth  = image.Allocation.Width;
             int imageHeight = image.Allocation.Height;
 
@@ -275,7 +275,7 @@ namespace FamiStudio
             }
 #endif
 
-            color = ThemeBase.CustomColors[i, j];
+            color = Theme.CustomColors[i, j];
         }
 
         private void PictureBox_ButtonPressEvent(object o, ButtonPressEventArgs args)
@@ -414,35 +414,35 @@ namespace FamiStudio
             return button;
         }
 
-        public int AddColoredString(string value, System.Drawing.Color color)
+        public int AddColoredTextBox(string value, System.Drawing.Color color)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.ColoredString,
+                    type = PropertyType.ColoredTextBox,
                     control = CreateColoredTextBox(value, color)
                 });
             return properties.Count - 1;
         }
 
-        public int AddString(string label, string value, int maxLength = 0)
+        public int AddTextBox(string label, string value, int maxLength = 0)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.String,
+                    type = PropertyType.TextBox,
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateTextBox(value, maxLength)
                 });
             return properties.Count - 1;
         }
 
-        public int AddMultilineString(string label, string value)
+        public int AddMultilineTextBox(string label, string value)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.MultilineString,
+                    type = PropertyType.MultilineTextBox,
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateMultilineTextBox(value)
                 });
@@ -639,6 +639,12 @@ namespace FamiStudio
                     control = CreateCheckedListBox(values, selected, height)
                 });
             return properties.Count - 1;
+        }
+
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null)
+        {
+            Debug.Assert(false);
+            return -1;
         }
 
         private ListStore CreateListStoreFromData(ColumnDesc[] columns, object[,] data)
@@ -1107,6 +1113,13 @@ namespace FamiStudio
             properties[idx].control.Sensitive = enabled;
         }
 
+        public void SetPropertyVisible(int idx, bool visible)
+        {
+            // MATTT : Fix!
+            Debug.Assert(false);
+            //properties[idx].visible = visible;
+        }
+
         public void SetLabelText(int idx, string text)
         {
             (properties[idx].control as Label).Text = text;
@@ -1159,8 +1172,8 @@ namespace FamiStudio
 
             switch (prop.type)
             {
-                case PropertyType.String:
-                case PropertyType.ColoredString:
+                case PropertyType.TextBox:
+                case PropertyType.ColoredTextBox:
                     ForceTextBoxASCII(prop.control as Entry);
                     return (prop.control as Entry).Text;
                 case PropertyType.NumericUpDown:

@@ -28,7 +28,13 @@ namespace FamiStudio
         public Sequencer Sequencer => controls.Sequencer;
         public PianoRoll PianoRoll => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
+        public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
+        public GLControl ActiveControl => null;
         public static FamiStudioForm Instance => instance;
+
+        public bool IsLandscape => true;
+        public bool IsAsyncDialogInProgress => false;
+        public Size Size => Size.Empty;
 
         bool exposed = false;
         bool glInit  = false;
@@ -260,7 +266,7 @@ namespace FamiStudio
         protected override void Resized(int width, int height)
         {
             controls.Resize(GtkUtils.ScaleWindowCoord(width), GtkUtils.ScaleWindowCoord(height));
-            Invalidate();
+            MarkDirty();
             RenderFrame();
         }
 
@@ -474,6 +480,14 @@ namespace FamiStudio
             controls.MarkDirty();
         }
 
+        public void SetActiveControl(GLControl ctrl, bool animate = true)
+        {
+        }
+
+        public void ShowContextMenu(ContextMenuOption[] options)
+        {
+        }
+
         private void GetScaledWindowOrigin(out int ox, out int oy)
         {
             GdkWindow.GetOrigin(out ox, out oy);
@@ -511,9 +525,9 @@ namespace FamiStudio
 
             GL.Viewport(0, 0, Allocation.Width, Allocation.Height);
             GL.ClearColor(
-                ThemeBase.DarkGreyFillColor2.R / 255.0f,
-                ThemeBase.DarkGreyFillColor2.G / 255.0f,
-                ThemeBase.DarkGreyFillColor2.B / 255.0f,
+                Theme.DarkGreyFillColor2.R / 255.0f,
+                Theme.DarkGreyFillColor2.G / 255.0f,
+                Theme.DarkGreyFillColor2.B / 255.0f,
                 1.0f);
 
             // Clear+swap twice. Seems to clear up the garbage that may be in the back buffer.
@@ -558,7 +572,7 @@ namespace FamiStudio
         protected override void RenderFrame(bool force = false)
         {
             if (force)
-                Invalidate();
+                MarkDirty();
 
             if (glInit && GdkWindow != null && controls.Redraw())
             {

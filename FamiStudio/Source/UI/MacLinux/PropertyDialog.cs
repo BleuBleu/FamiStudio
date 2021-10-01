@@ -25,7 +25,7 @@ namespace FamiStudio
 
         public  PropertyPage Properties => propertyPage;
 
-        public PropertyDialog(int width, bool canAccept = true, bool canCancel = true, Window parent = null) : base(WindowType.Toplevel)
+        public PropertyDialog(string title, int width, bool canAccept = true, bool canCancel = true, Window parent = null) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = GtkUtils.ScaleGtkWidget(width);
@@ -39,7 +39,7 @@ namespace FamiStudio
             SetPosition(WindowPosition.CenterOnParent);
         }
 
-        public PropertyDialog(System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
+        public PropertyDialog(string title, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false) : base(WindowType.Toplevel)
         {
             Init();
             WidthRequest = GtkUtils.ScaleGtkWidget(width);
@@ -58,7 +58,7 @@ namespace FamiStudio
             var hbox = new HBox(false, 0);
             var hboxYesNo = new HBox(false, 0);
 
-            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
 
             buttonYes = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png"));
             buttonNo  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.No{suffix}.png"));
@@ -141,7 +141,7 @@ namespace FamiStudio
             propertyPage.Build(advancedPropertiesVisible);
 
             var iconName = advancedPropertiesVisible ? "Minus" : "Plus";
-            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             buttonAdvanced.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{iconName}Small{suffix}.png");
         }
 
@@ -190,6 +190,11 @@ namespace FamiStudio
             Hide();
 
             return result;
+        }
+
+        public void ShowDialogAsync(FamiStudioForm parent, Action<System.Windows.Forms.DialogResult> callback)
+        {
+            callback(ShowDialog(parent));
         }
 
         public void ShowModal(FamiStudioForm parent = null)

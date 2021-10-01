@@ -8,7 +8,7 @@ namespace FamiStudio
         public static int ScaleGtkWidget(int x)
         {
 #if FAMISTUDIO_LINUX
-            return (int)(x * GLTheme.DialogScaling);
+            return (int)(x * DpiScaling.Dialog);
 #else
             return x;
 #endif

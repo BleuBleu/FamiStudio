@@ -213,7 +213,7 @@ namespace FamiStudio
 
         public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
         {
-            Debug.Assert(Utils.IsInMainThread());
+            Debug.Assert(PlatformUtils.IsInMainThread());
 
             StopImmediate();
 
@@ -235,7 +235,7 @@ namespace FamiStudio
 
         public void StopImmediate()
         {
-            Debug.Assert(Utils.IsInMainThread());
+            Debug.Assert(PlatformUtils.IsInMainThread());
 
             if (immediateStream != IntPtr.Zero)
             {

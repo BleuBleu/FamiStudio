@@ -26,7 +26,7 @@ namespace FamiStudio
 
         private void Init()
         {
-            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             buttonLeft  = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.ArrowLeft{suffix}.png"));
             buttonRight = new FlatButton(Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.ArrowRight{suffix}.png"));
 
@@ -106,7 +106,7 @@ namespace FamiStudio
             label.Text = TutorialMessages.Messages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
 
-            var suffix = GLTheme.DialogScaling >= 2.0f ? "@2x" : "";
+            var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             buttonRight.Pixbuf = pageIndex == TutorialMessages.Messages.Length - 1 ?
                 Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png") :
                 Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.ArrowRight{suffix}.png");
