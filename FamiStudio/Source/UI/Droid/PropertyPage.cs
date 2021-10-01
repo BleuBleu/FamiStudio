@@ -43,6 +43,7 @@ namespace FamiStudio
             public View view;
             public OnTouchDelegate onTouch;
             public string sliderFormat;
+            public double sliderMin;
             public bool visible = true;
         };
 
@@ -119,10 +120,9 @@ namespace FamiStudio
             var padding = DroidUtils.DpToPixels(20);
 
             seek.SetPadding(padding, padding, padding, padding);
-            seek.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
-            seek.Min = (int)min;
-            seek.Max = (int)max;
-            seek.Progress = (int)value;
+            seek.Min = (int)(min * 1000);
+            seek.Max = (int)(max * 1000);
+            seek.Progress = (int)(value * 1000);
             seek.ProgressChanged += Seek_ProgressChanged;
 
             return seek;
@@ -134,9 +134,10 @@ namespace FamiStudio
             if (idx >= 0)
             {
                 var prop = properties[idx];
+                var newValue = prop.sliderMin + e.Progress / 1000.0;
                 if (prop.value != null)
-                    prop.value.Text = string.Format(prop.sliderFormat, e.Progress);
-                PropertyChanged?.Invoke(this, idx, -1, -1, (double)e.Progress);
+                    prop.value.Text = string.Format(prop.sliderFormat, newValue);
+                PropertyChanged?.Invoke(this, idx, -1, -1, newValue);
             }
         }
 
@@ -697,8 +698,10 @@ namespace FamiStudio
 
         public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, string format = "{0}", string tooltip = null)
         {
+            // On older androids, the seekbar misbehave when using negative values. 
+            // Make everything relative to zero and remap.
             var prop = new Property();
-            var seekBar = CreateSeekBar(value, min, max, 0, 0, false);
+            var seekBar = CreateSeekBar(value - min, 0, max - min, 0, 0, false);
 
             prop.type = PropertyType.Slider;
             prop.label = CreateTextView(SanitizeLabel(label), Resource.Style.LightGrayTextMedium);
@@ -708,15 +711,16 @@ namespace FamiStudio
             prop.layout = CreateLinearLayout(true, true, false, 10);
             prop.controls.Add(seekBar);
             prop.sliderFormat = format;
+            prop.sliderMin = min;
 
             var inner = CreateLinearLayout(false, true, false, 0);
 
-            seekBar.LayoutParameters = CreateLinearLayoutParams(0, ViewGroup.LayoutParams.WrapContent, GravityFlags.Left | GravityFlags.CenterVertical, 1.0f); ;
+            seekBar.LayoutParameters = CreateLinearLayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent,GravityFlags.CenterVertical, 1.0f);
             inner.AddView(seekBar);
 
             if (prop.value != null)
             {
-                prop.value.LayoutParameters = CreateLinearLayoutParams(DroidUtils.DpToPixels(72), ViewGroup.LayoutParams.WrapContent, GravityFlags.Right | GravityFlags.CenterVertical);
+                prop.value.LayoutParameters = CreateLinearLayoutParams(DroidUtils.DpToPixels(72), ViewGroup.LayoutParams.WrapContent, GravityFlags.CenterVertical);
                 inner.AddView(prop.value);
             }
 
@@ -793,7 +797,10 @@ namespace FamiStudio
                 case PropertyType.NumericUpDown:
                     return (prop.controls[0] as HorizontalNumberPicker).Value;
                 case PropertyType.Slider:
-                    return (double)(prop.controls[0] as SeekBar).Progress;
+                {
+                    var seekbar = prop.controls[0] as SeekBar;
+                    return seekbar.Progress / 1000.0 + prop.sliderMin;
+                }
                 case PropertyType.Radio:
                     return (prop.controls[0] as RadioButton).Checked;
                 case PropertyType.CheckBox:
@@ -865,7 +872,7 @@ namespace FamiStudio
                     (prop.controls[0] as ProgressBar).Progress = (int)Math.Round((float)value * 1000);
                     break;
                 case PropertyType.Slider:
-                    (prop.controls[0] as SeekBar).Progress = (int)(double)value;
+                    (prop.controls[0] as SeekBar).Progress = (int)(((double)value - prop.sliderMin) * 1000.0);
                     break;
                 case PropertyType.Label:
                     (prop.controls[0] as TextView).Text = (string)value;
