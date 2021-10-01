@@ -134,14 +134,20 @@ namespace FamiStudio
 
         public static void VibrateTick()
         {
-            Vibrator v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
-            v.Vibrate(VibrationEffect.CreatePredefined(VibrationEffect.EffectTick));
+            var v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
+            var fx = Build.VERSION.SdkInt >= BuildVersionCodes.Q ?
+                VibrationEffect.CreatePredefined(VibrationEffect.EffectTick) :
+                VibrationEffect.CreateOneShot(20, 64);
+            v.Vibrate(fx);
         }
 
         public static void VibrateClick()
         {
             Vibrator v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
-            v.Vibrate(VibrationEffect.CreatePredefined(VibrationEffect.EffectClick));
+            var fx = Build.VERSION.SdkInt >= BuildVersionCodes.Q ?
+                VibrationEffect.CreatePredefined(VibrationEffect.EffectHeavyClick) :
+                VibrationEffect.CreateOneShot(20, 128);
+            v.Vibrate(fx);
         }
 
         public static void ShowToast(string message)
