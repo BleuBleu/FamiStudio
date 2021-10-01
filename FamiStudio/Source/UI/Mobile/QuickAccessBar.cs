@@ -5,6 +5,7 @@ using Color     = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
+using RenderBrush       = FamiStudio.GLBrush;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
 using RenderFont        = FamiStudio.GLFont;
@@ -14,17 +15,18 @@ namespace FamiStudio
     public class QuickAccessBar : RenderControl
     {
         // All of these were calibrated at 1080p and will scale up/down from there.
-        const int DefaultNavButtonSize     = 120;
-        const int DefaultButtonSize        = 144;
-        const int DefaultIconSize          = 96;
-        const int DefaultIconPos1          = 12;
-        const int DefaultIconPos2          = 24;
-        const int DefaultTextSize          = 24; // MATTT : Implement same font size solution everywhere.
-        const int DefaultTextPosTop        = 108;
+        const int DefaultNavButtonSize    = 120;
+        const int DefaultButtonSize       = 144;
+        const int DefaultIconSize         = 96;
+        const int DefaultIconPos1         = 12;
+        const int DefaultIconPos2         = 24;
+        const int DefaultTextSize         = 24; // MATTT : Implement same font size solution everywhere.
+        const int DefaultTextPosTop       = 108;
+        const int DefaultScrollBarSizeX   = 16;
 
-        const int DefaultListItemTextSize  = 36; // MATTT : Implement same font size solution everywhere.
-        const int DefaultListItemSize      = 120;
-        const int DefaultListIconPos       = 12;
+        const int DefaultListItemTextSize = 36; // MATTT : Implement same font size solution everywhere.
+        const int DefaultListItemSize     = 120;
+        const int DefaultListIconPos      = 12;
 
         private delegate ButtonImageIndices RenderInfoDelegate(out string text, out Color tint);
         private delegate void ListItemClickDelegate(int idx);
@@ -133,6 +135,7 @@ namespace FamiStudio
         RenderFont buttonFont;
         RenderFont listFont;
         RenderFont listFontBold;
+        RenderBrush scrollBarBrush;
         RenderBitmapAtlas bmpButtonAtlas;
         Button[] buttons = new Button[(int)ButtonType.Count];
 
@@ -167,6 +170,7 @@ namespace FamiStudio
         private int textPosTop;
         private int listItemSize;
         private int listIconPos;
+        private int scrollBarSizeX;
 
         private float iconScaleFloat = 1.0f;
 
@@ -181,6 +185,7 @@ namespace FamiStudio
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
 
             bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
+            scrollBarBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
 
             buttons[(int)ButtonType.Sequencer]  = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
             buttons[(int)ButtonType.PianoRoll]  = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
@@ -205,12 +210,14 @@ namespace FamiStudio
             textPosTop        = ScaleCustom(DefaultTextPosTop, scale);
             listItemSize      = ScaleCustom(DefaultListItemSize, scale);
             listIconPos       = ScaleCustom(DefaultListIconPos, scale);
+            scrollBarSizeX    = ScaleCustom(DefaultScrollBarSizeX, scale);
             iconScaleFloat    = ScaleCustomFloat(DefaultIconSize / (float)bmpButtonAtlas.GetElementSize(0).Width, scale);
         }
 
         protected override void OnRenderTerminated()
         {
             Utils.DisposeAndNullify(ref bmpButtonAtlas);
+            Utils.DisposeAndNullify(ref scrollBarBrush);
         }
 
         protected override void OnResize(EventArgs e)
@@ -385,7 +392,6 @@ namespace FamiStudio
 
             minScrollY = 0;
             maxScrollY = y - popupRect.Height;
-            scrollY = 0;
 
             popupButtonIdx = idx;
             popupRatio = 0.0f;
@@ -394,9 +400,11 @@ namespace FamiStudio
             listItems = items;
             flingVelY = 0.0f;
 
+            // Try to center selected item.
+            scrollY = (int)((popupSelectedIdx + 0.5f) * listItemSize - popupRect.Height * 0.5f);
             ClampScroll();
         }
-        
+
         private void StartClosingList()
         {
             if (popupButtonIdx >= 0)
@@ -682,6 +690,24 @@ namespace FamiStudio
             App.SelectedArpeggio = arpeggio;
         }
 
+        private Rectangle GetScrollBarRect()
+        {
+            var visibleSizeY = popupRect.Height;
+            var virtualSizeY = listItems.Length * listItemSize;
+
+            if (visibleSizeY < virtualSizeY)
+            {
+                var sizeY = (int)Math.Round(visibleSizeY * (visibleSizeY / (float)virtualSizeY));
+                var posY  = (int)Math.Round(visibleSizeY * (scrollY      / (float)virtualSizeY));
+
+                return new Rectangle(popupRect.Width - scrollBarSizeX, posY, scrollBarSizeX, sizeY);
+            }
+            else
+            {
+                return Rectangle.Empty;
+            }
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList();
@@ -760,6 +786,15 @@ namespace FamiStudio
 
                 c.PopTransform();
 
+                var scrollBarRect = GetScrollBarRect();
+
+                if ((Math.Abs(flingVelY) > 0.0f || captureOperation == CaptureOperation.MobilePan) && !scrollBarRect.IsEmpty)
+                {
+                    c.PushTranslation(rect.Left, rect.Top);
+                    c.FillRectangle(GetScrollBarRect(), scrollBarBrush);
+                    c.PopTransform();
+                }
+
                 if (IsLandscape)
                     rect.Width  = -rect.X;
                 else
@@ -803,6 +838,7 @@ namespace FamiStudio
         private void EndCaptureOperation(int x, int y)
         {
             captureOperation = CaptureOperation.None;
+            MarkDirty();
         }
 
         protected override void OnTouchClick(int x, int y)
