@@ -2,9 +2,7 @@ Android
 =======
 
 Quick access:
-- Show some kind of scroll bar.
-- Ensure visible.
-- Replace "tool" by something else useful.
+- Replace "tool" by something else useful (effect?)
 - Advanced stuff like longpress, etc.
 - Disable buttons when they dont make sense (snapping in sequencer, etc.)
 
@@ -100,7 +98,6 @@ Scaling issue:
 
 Misc:
 / Line widths, bias + 2
-- Replace inheritance by partial
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
@@ -126,22 +123,8 @@ Features missing from the Mobile version:
 - Copy instrument.
 - Change insturment dialog for a combo
 - Get rid of "None" mode on piano roll.
-- Is cleanup icon white?
 
 Misc:
-
-DMC counter effect:
-- *** CUT ***
-- Sound engine
-- Check if we apply before, after, etc. Compare with FamiTracker.
-
-Diable attack on DPCM
-- *** CUT ***
-- Sound engine
-
-Improve disable attack?
-- *** CUT ***
-- If same envelopes, allow? This would allow VRC7 to not have attack.
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.

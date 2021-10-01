@@ -202,7 +202,6 @@ namespace FamiStudio
             "EffectNoteDelay",
             "EffectCutDelay",
             "EffectVolume",
-            "EffectDutyCycle", // MATTT : Wrong
             "EffectFrame" // Special background rectangle image.
         };
 
