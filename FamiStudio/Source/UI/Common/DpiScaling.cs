@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,36 +9,43 @@ namespace FamiStudio
 {
     public static class DpiScaling
     {
-        private static float mainWindowScaling = 1;
-        private static float fontScaling       = 1;
-        private static float dialogScaling     = 1;
+        private static bool initialized; 
 
-        public static float MainWindow => mainWindowScaling;
-        public static float Font       => fontScaling;
-        public static float Dialog     => dialogScaling;
+        private static float mainWindowScaling = 1;
+        private static float fontScaling = 1;
+        private static float dialogScaling = 1;
+
+        public static float MainWindow { get { Debug.Assert(initialized); return mainWindowScaling; } }
+        public static float Font       { get { Debug.Assert(initialized); return fontScaling; } }
+        public static float Dialog     { get { Debug.Assert(initialized); return dialogScaling; } }
 
         public static int ScaleCustom(float val, float scale)
         {
+            Debug.Assert(initialized);
             return (int)Math.Round(scale * mainWindowScaling);
         }
 
         public static float ScaleCustomFloat(float val, float scale)
         {
+            Debug.Assert(initialized);
             return scale * mainWindowScaling;
         }
 
         public static int ScaleForMainWindow(float val)
         {
+            Debug.Assert(initialized);
             return (int)Math.Round(val * mainWindowScaling);
         }
 
         public static float ScaleForMainWindowFloat(float val)
         {
+            Debug.Assert(initialized);
             return val * mainWindowScaling;
         }
 
         public static int ScaleForDialog(float val)
         {
+            Debug.Assert(initialized);
             return (int)Math.Round(val * dialogScaling);
         }
 
@@ -58,6 +66,8 @@ namespace FamiStudio
 
             fontScaling = mainWindowScaling;
 #endif
+
+            initialized = true;
         }
     }
 }

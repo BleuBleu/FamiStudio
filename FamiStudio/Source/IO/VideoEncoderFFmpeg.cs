@@ -71,7 +71,7 @@ namespace FamiStudio
             if (usePngPipe)
             {
                 // TODO : Move this to PlatformUtils or something.
-                var pngData = new Gdk.Pixbuf(videoImage, true, 8, resX, resY, resX * 4).SaveToBuffer("png");
+                var pngData = new Gdk.Pixbuf(image, true, 8, resX, resY, resX * 4).SaveToBuffer("png");
                 stream.Write(pngData);
             }
             else

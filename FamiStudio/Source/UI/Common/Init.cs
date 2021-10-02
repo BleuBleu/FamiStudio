@@ -5,8 +5,8 @@
         public static void InitializeBaseSystems()
         {
             Settings.Load();
-            DpiScaling.Initialize();
             PlatformUtils.Initialize();
+            DpiScaling.Initialize();
             Theme.Initialize();
             NesApu.Initialize();
 #if FAMISTUDIO_WINDOWS
