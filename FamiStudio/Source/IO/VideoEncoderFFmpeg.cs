@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace FamiStudio
@@ -22,7 +25,6 @@ namespace FamiStudio
 
         private VideoEncoderFFmpeg(bool png, bool openH264)
         {
-            usePngPipe  = png;
             useOpenH264 = openH264;
         }
 
@@ -32,7 +34,7 @@ namespace FamiStudio
             {
                 if ((hasRawVideo || hasPngPipe) && (hasX264 || hasOpenH264))
                 {
-                    return new VideoEncoderFFmpeg(hasRawVideo ? hasRawVideo : hasPngPipe, hasX264 ? hasX264 : hasOpenH264);
+                    return new VideoEncoderFFmpeg(!hasRawVideo, !hasX264);
                 }
                 else
                 {
@@ -52,9 +54,8 @@ namespace FamiStudio
             resX = x;
             resY = y;
 
-            var inputFormat = usePngPipe ? "png_pipe" : "rawvideo -pix_fmt argb";
+            var inputFormat = usePngPipe  ? "png_pipe"    : "rawvideo -pix_fmt argb";
             var videoCodec  = useOpenH264 ? "libopenh264" : "h264";
-            process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f {inputFormat} -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v {videoCodec} - pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
 
             if (PlatformUtils.IsWindows)
@@ -70,15 +71,28 @@ namespace FamiStudio
 
         public void AddFrame(byte[] image)
         {
-            #if FAMISTUDIO_LINUX
             if (usePngPipe)
             {
                 // TODO : Move this to PlatformUtils or something.
+#if FAMISTUDIO_LINUX
                 var pngData = new Gdk.Pixbuf(image, true, 8, resX, resY, resX * 4).SaveToBuffer("png");
+#elif FAMISTUDIO_WINDOWS
+                var bmp = new Bitmap(resX, resY, PixelFormat.Format32bppArgb);
+                var bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, bmp.PixelFormat);
+
+                Marshal.Copy(image, 0, bitmapData.Scan0, image.Length);
+                bmp.UnlockBits(bitmapData);
+
+                var pngData = (byte[])null;
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    bmp.Save(memoryStream, ImageFormat.Png);
+                    pngData = memoryStream.ToArray();
+                }
+#endif
                 stream.Write(pngData);
             }
             else
-            #endif
             {
                 stream.Write(image);
             }
