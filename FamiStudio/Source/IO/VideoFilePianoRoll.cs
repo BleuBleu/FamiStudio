@@ -501,7 +501,7 @@ namespace FamiStudio
                     videoGraphics.EndDrawFrame();
 
                     // Readback
-                    videoGraphics.GetBitmap(videoImage);
+                    videoGraphics.GetBitmap(videoImage, videoEncoder.AlternateByteOrdering);
 
                     // Send to encoder.
                     videoEncoder.AddFrame(videoImage);

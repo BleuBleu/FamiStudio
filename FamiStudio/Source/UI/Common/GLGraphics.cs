@@ -417,7 +417,7 @@ namespace FamiStudio
             GL.Ext.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
         }
 
-        public unsafe void GetBitmap(byte[] data)
+        public unsafe void GetBitmap(byte[] data, bool alternateByteOrdering)
         {
             byte[] tmp = new byte[data.Length];
 
@@ -436,14 +436,29 @@ namespace FamiStudio
                     y0 *= resX * 4;
                     y1 *= resX * 4;
 
-                    // ABGR -> RGBA
-                    byte* p = tmpPtr + y0; 
-                    for (int x = 0; x < resX * 4; x += 4)
+                    if (alternateByteOrdering)
                     {
-                        data[y1 + x + 3] = *p++;
-                        data[y1 + x + 2] = *p++;
-                        data[y1 + x + 1] = *p++;
-                        data[y1 + x + 0] = *p++;
+                        // BGRA -> RGBA
+                        byte* p = tmpPtr + y0;
+                        for (int x = 0; x < resX * 4; x += 4)
+                        {
+                            data[y1 + x + 2] = *p++;
+                            data[y1 + x + 1] = *p++;
+                            data[y1 + x + 0] = *p++;
+                            data[y1 + x + 3] = *p++;
+                        }
+                    }
+                    else
+                    {
+                        // ABGR -> RGBA
+                        byte* p = tmpPtr + y0;
+                        for (int x = 0; x < resX * 4; x += 4)
+                        {
+                            data[y1 + x + 3] = *p++;
+                            data[y1 + x + 2] = *p++;
+                            data[y1 + x + 1] = *p++;
+                            data[y1 + x + 0] = *p++;
+                        }
                     }
                 }
             }

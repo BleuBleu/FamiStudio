@@ -12,25 +12,45 @@ namespace FamiStudio
         private Process process;
         private BinaryWriter stream;
 
-        private VideoEncoderFFmpeg()
-        {
+        private bool usePngPipe;
+        private bool useOpenH264;
 
+        private int resX;
+        private int resY;
+
+        public bool AlternateByteOrdering => usePngPipe;
+
+        private VideoEncoderFFmpeg(bool png, bool openH264)
+        {
+            usePngPipe  = png;
+            useOpenH264 = openH264;
         }
 
         public static VideoEncoderFFmpeg CreateInstance()
         {
-            if (DetectFFmpeg(Settings.FFmpegExecutablePath))
+            if (DetectFFmpeg(Settings.FFmpegExecutablePath, out var hasX264, out var hasOpenH264, out var hasRawVideo, out var hasPngPipe))
             {
-                return new VideoEncoderFFmpeg();
+                if ((hasRawVideo || hasPngPipe) && (hasX264 || hasOpenH264))
+                {
+                    return new VideoEncoderFFmpeg(hasRawVideo ? hasRawVideo : hasPngPipe, hasX264 ? hasX264 : hasOpenH264);
+                }
+                else
+                {
+                    Log.LogMessage(LogSeverity.Error, "ffmpeg does not seem to be compiled with x264 or OpenH264 support, or is missing rawvideo or png_pipe input. Make sure you have the GPL version if you want x264.");
+                    return null;
+                }
             }
             else
             {
+                Log.LogMessage(LogSeverity.Error, "Error launching ffmpeg. Make sure the path is correct.");
                 return null;
             }
         }
 
-        public bool BeginEncoding(int resX, int resY, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, string audioFile, string outputFile)
+        public bool BeginEncoding(int x, int y, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, string audioFile, string outputFile)
         {
+            resX = x;
+            resY = y;
             process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
 
@@ -43,9 +63,22 @@ namespace FamiStudio
             return true;
         }
 
+
+
         public void AddFrame(byte[] image)
         {
-            stream.Write(image);
+            #if FAMISTUDIO_LINUX
+            if (usePngPipe)
+            {
+                // TODO : Move this to PlatformUtils or something.
+                var pngData = new Gdk.Pixbuf(videoImage, true, 8, resX, resY, resX * 4).SaveToBuffer("png");
+                stream.Write(pngData);
+            }
+            else
+            #endif
+            {
+                stream.Write(image);
+            }
         }
 
         public void EndEncoding(bool abort)
@@ -88,28 +121,35 @@ namespace FamiStudio
             return process;
         }
 
-        private static bool DetectFFmpeg(string ffmpegExecutable)
+        private static bool DetectFFmpeg(string ffmpegExecutable, out bool hasX264, out bool hasOpenH264, out bool hasRawVideo, out bool hasPngPipe)
         {
+            hasX264     = false;
+            hasOpenH264 = false;
+            hasRawVideo = false;
+            hasPngPipe  = false;
+
             try
             {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true);
-                var output = process.StandardOutput.ReadToEnd();
-
-                var ret = true;
-                if (!output.Contains("--enable-libx264"))
+                using (var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true))
                 {
-                    Log.LogMessage(LogSeverity.Error, "ffmpeg does not seem to be compiled with x264 support. Make sure you have the GPL version.");
-                    ret = false;
+                    var output = process.StandardOutput.ReadToEnd();
+                    hasX264     = output.Contains("--enable-libx264");
+                    hasOpenH264 = output.Contains("--enable-libopenh264");
+                    process.WaitForExit();
                 }
 
-                process.WaitForExit();
-                process.Dispose();
+                using (var process = LaunchFFmpeg(ffmpegExecutable, $"-formats", false, true))
+                {
+                    var output = process.StandardOutput.ReadToEnd();
+                    hasRawVideo = output.Contains("rawvideo");
+                    hasPngPipe  = output.Contains("png_pipe") && PlatformUtils.IsLinux; // We only care to support this for flatpak.
+                    process.WaitForExit();
+                }
 
-                return ret;
+                return true;
             }
             catch
             {
-                Log.LogMessage(LogSeverity.Error, "Error launching ffmpeg. Make sure the path is correct.");
                 return false;
             }
         }

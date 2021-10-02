@@ -539,8 +539,10 @@ namespace FamiStudio
                 GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, 0);
         }
 
-        public unsafe void GetBitmap(byte[] data)
+        public unsafe void GetBitmap(byte[] data, bool dummy)
         {
+            // This code is totally not needed or used
+            /*
             if (texture > 0)
             {
                 byte[] tmp = new byte[data.Length];
@@ -573,6 +575,7 @@ namespace FamiStudio
                     }
                 }
             }
+            */
         }
 
         public override void Dispose()

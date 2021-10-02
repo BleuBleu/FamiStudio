@@ -43,6 +43,7 @@ namespace FamiStudio
         private long lastFrameTime = -1;
         private object renderLock = new object();
         private BaseDialogActivityInfo activeDialog;
+        private BaseDialogActivityInfo pendingFinishDialog;
         private GLControl captureControl;
 
         public static bool ActivityRunning => activityRunning;
@@ -182,7 +183,7 @@ namespace FamiStudio
 
         public void StartLoadFileActivityAsync(string mimeType, Action<string> callback)
         {
-            Debug.Assert(activeDialog == null);
+            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new LoadDialogActivityInfo(callback);
             StopGLThread();
 
@@ -194,6 +195,7 @@ namespace FamiStudio
 
         public void StartSaveFileActivityAsync(string mimeType, string filename, Action<string> callback)
         {
+            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new SaveDialogActivityInfo(callback);
             StopGLThread();
 
@@ -207,6 +209,7 @@ namespace FamiStudio
 
         public void StartPropertyDialogActivity(Action<DialogResult> callback, PropertyDialog dlg)
         {
+            Debug.Assert(activeDialog == null);
             activeDialog = new PropertyDialogActivityInfo(dlg, callback);
             StopGLThread();
             StartActivityForResult(new Intent(this, typeof(PropertyDialogActivity)), activeDialog.RequestCode);
@@ -214,6 +217,7 @@ namespace FamiStudio
 
         public void StartMultiPropertyDialogActivity(Action<DialogResult> callback, MultiPropertyDialog dlg)
         {
+            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new MultiPropertyDialogActivityInfo(dlg, callback);
             StopGLThread();
             StartActivityForResult(new Intent(this, typeof(MultiPropertyDialogActivity)), activeDialog.RequestCode);
@@ -221,6 +225,7 @@ namespace FamiStudio
 
         public void StartFileSharingActivity(string filename, Action callback)
         {
+            Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new ShareActivityInfo(callback);
             StopGLThread();
 
@@ -289,8 +294,9 @@ namespace FamiStudio
 
             var dialog = activeDialog;
 
-            if (activeDialog.IsDialogDone(resultCode))
-                activeDialog = null;
+            if (!activeDialog.IsDialogDone(resultCode))
+                pendingFinishDialog = activeDialog;
+            activeDialog = null;
 
             dialog.OnResult(this, resultCode, data);
 
@@ -300,10 +306,10 @@ namespace FamiStudio
 
         public void FinishSaveFileActivityAsync(bool commit, Action callback)
         {
-            Debug.Assert(activeDialog != null);
-            var saveInfo = activeDialog as SaveDialogActivityInfo;
+            Debug.Assert(pendingFinishDialog != null);
+            var saveInfo = pendingFinishDialog as SaveDialogActivityInfo;
             Debug.Assert(saveInfo != null);
-            activeDialog = null;
+            pendingFinishDialog = null;
             saveInfo.Finish(commit, callback);
             Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
             ConditionalStartGLThread();

@@ -50,6 +50,8 @@ namespace FamiStudio
         private EGLSurface prevEglSurfaceRead;
         private EGLSurface prevEglSurfaceDraw;
 
+        public bool AlternateByteOrdering => false;
+
         private VideoEncoderAndroid()
         {
         }
