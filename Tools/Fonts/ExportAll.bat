@@ -10,6 +10,13 @@ call ExportFont 20 Regular 256 256
 call ExportFont 20 Bold 256 256
 call ExportFont 28 Regular 256 256
 
+:: 1.5x scale (Windows only)
+call ExportFont 15 Regular 256 128
+call ExportFont 15 Bold 256 128
+call ExportFont 18 Regular 256 128
+call ExportFont 18 Bold 256 128
+call ExportFont 42 Regular 512 256
+
 :: 2x scale (Retina / 200% scaling)
 call ExportFont 16 Bold 256 128
 call ExportFont 24 Regular 256 256

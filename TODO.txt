@@ -105,7 +105,7 @@ Misc:
 - WIP file will never appear dirty, use a INI file with info in it?
 - Assert when exporting video, seem like the save dialog info gets popped? Or not pushed?
 	=> Log dialog overwrites the save. FUCK.
-- 
+- Snapping needs to preserve value even when not in channel mode.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
@@ -125,13 +125,10 @@ Features missing from the Mobile version:
 - NSF bug tempo from Discord!
 - Export intro-only is broken?
 - Crash when adding note to last note of pattern #256
-- Bring back fonts for 150%...
-- Timecode alignment looks like ass now, create a special mode for texture that uses fixed width + center align?
 - Convert more icons to white + remove last border (release + loop point.)
 - Copy instrument.
 - Change insturment dialog for a combo
 - Get rid of "None" mode on piano roll.
-- Real fix for flatpak videos.
 
 Misc:
 
