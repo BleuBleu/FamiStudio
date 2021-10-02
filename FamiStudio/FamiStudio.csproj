@@ -392,6 +392,8 @@
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportRom%402x.png" />
     <EmbeddedResource Include="Resources\ExportRom.png" />
+    <EmbeddedResource Include="Resources\ExportShare.png" />
+    <EmbeddedResource Include="Resources\ExportShare%402x.png" />
     <EmbeddedResource Include="Resources\ExportText%402x.png" />
     <EmbeddedResource Include="Resources\ExportText.png" />
     <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
