@@ -155,7 +155,6 @@ Testing
 - Retest with various scaling (lots of cahnges to everything, zooming, etc.)
 - Test without snapping, i tested snapping a lot, but not witout.
 - Compare instrument colors (seq/piano roll) for all platforms
-- Make sure video export at the same zoom level as before.
 - Re-test last open file.
 
 Videos:

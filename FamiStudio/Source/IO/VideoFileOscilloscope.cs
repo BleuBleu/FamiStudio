@@ -283,7 +283,7 @@ namespace FamiStudio
                         var channelIconPosX = channelPosX0 + s.bmpIcon.Size.Width  / 2;
                         var channelIconPosY = channelPosY0 + s.bmpIcon.Size.Height / 2;
 
-                        cmd.FillRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, themeResources.DarkGreyLineBrush2);
+                        cmd.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width, channelIconPosY + s.bmpIcon.Size.Height, themeResources.DarkGreyLineBrush2, themeResources.LightGreyFillBrush1);
                         cmd.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyFillColor1);
                         cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, themeResources.LightGreyFillBrush1); 
                     }

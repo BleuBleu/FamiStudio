@@ -698,7 +698,6 @@ namespace FamiStudio
 
         public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null)
         {
-            Debug.Assert(false);
             return -1;
         }
 

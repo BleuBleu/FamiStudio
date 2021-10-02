@@ -586,7 +586,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void StartVideoRecording(RenderGraphics g, Song song, int videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
+        public void StartVideoRecording(RenderGraphics g, Song song, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
         {
             editChannel = 0;
             editMode = EditionMode.VideoRecording;

@@ -355,6 +355,8 @@ namespace FamiStudio
                     progressLogDialog.StayModalUntilClosed();
                 else
                     progressLogDialog.Close();
+
+                progressLogDialog = null;
             }
             else if (PlatformUtils.IsDesktop)
             {
