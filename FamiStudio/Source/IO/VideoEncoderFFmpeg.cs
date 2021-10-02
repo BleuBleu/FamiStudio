@@ -51,7 +51,9 @@ namespace FamiStudio
         {
             resX = x;
             resY = y;
-            process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false);
+
+            var inputFormat = usePngPipe ? "png_pipe" : "rawvideo -pix_fmt argb";
+            process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f {inputFormat} -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
 
             if (PlatformUtils.IsWindows)
