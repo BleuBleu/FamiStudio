@@ -83,8 +83,6 @@ Controls:
 	x Header Swipe = select (unless dragging seek bar itself)
 	x Header Tap = seek
 
-- BUG : When dragging pattern up/down with a time-only selection messes up the selection.
-
 Toolbar:
 - Reorganize buttons, need to see delete + export. 
 

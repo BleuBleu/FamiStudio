@@ -1881,12 +1881,20 @@ namespace FamiStudio
 
                         App.UndoRedoManager.EndTransaction();
 
+                        var timeOnly = IsValidTimeOnlySelection();
+
                         selectionMin = new PatternLocation(
                             Utils.Clamp(selectionMin.ChannelIndex + channelIdxDelta, 0, Song.Channels.Length - 1),
                             Utils.Clamp(selectionMin.PatternIndex + patternIdxDelta, 0, Song.Length - 1));
                         selectionMax = new PatternLocation(
                             Utils.Clamp(selectionMax.ChannelIndex + channelIdxDelta, 0, Song.Channels.Length - 1),
                             Utils.Clamp(selectionMax.PatternIndex + patternIdxDelta, 0, Song.Length - 1));
+
+                        if (timeOnly)
+                        {
+                            selectionMin.ChannelIndex = 0;
+                            selectionMax.ChannelIndex = Song.Channels.Length - 1;
+                        }
 
                         if (HasHighlightedPattern())
                         {
