@@ -484,6 +484,7 @@
     <EmbeddedResource Include="Resources\PALToNTSC%402x.png" />
     <EmbeddedResource Include="Resources\Paste%402x.png" />
     <EmbeddedResource Include="Resources\Pause%402x.png" />
+    <EmbeddedResource Include="Resources\Piano%402x.png" />
     <EmbeddedResource Include="Resources\PianoRoll%402x.png" />
     <EmbeddedResource Include="Resources\Play%402x.png" />
     <EmbeddedResource Include="Resources\PlayHalf%402x.png" />

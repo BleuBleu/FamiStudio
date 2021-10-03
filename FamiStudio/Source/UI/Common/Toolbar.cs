@@ -42,6 +42,7 @@ namespace FamiStudio
             Follow,
             Help,
             More,
+            Piano,
             Count
         }
 
@@ -85,6 +86,7 @@ namespace FamiStudio
             Follow,
             Help,
             More,
+            Piano,
             Count
         };
 
@@ -120,7 +122,8 @@ namespace FamiStudio
             "QwertyPiano",
             "Follow",
             "Help",
-            "More"
+            "More",
+            "Piano"
         };
 
         enum SpecialCharImageIndices
@@ -184,7 +187,7 @@ namespace FamiStudio
             new MobileButtonLayoutItem(1,  2, ButtonType.Delete),
             new MobileButtonLayoutItem(1,  3, ButtonType.Redo),
             new MobileButtonLayoutItem(1,  6, ButtonType.Rewind),
-            new MobileButtonLayoutItem(1,  7, ButtonType.Qwerty),
+            new MobileButtonLayoutItem(1,  7, ButtonType.Piano),
             new MobileButtonLayoutItem(1,  8, ButtonType.More),
 
             new MobileButtonLayoutItem(2,  0, ButtonType.New),
@@ -327,7 +330,6 @@ namespace FamiStudio
             buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
             buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap, CloseOnClick = false };
-            buttons[(int)ButtonType.Qwerty]    = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
             buttons[(int)ButtonType.Metronome] = new Button { BmpAtlasIndex = ButtonImageIndices.Metronome, Click = OnMetronome, Enabled = OnMetronomeEnabled, CloseOnClick = false };
             buttons[(int)ButtonType.Machine]   = new Button { Click = OnMachine, GetBitmap = OnMachineGetBitmap, Enabled = OnMachineEnabled, CloseOnClick = false };
             buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled, CloseOnClick = false };
@@ -337,6 +339,7 @@ namespace FamiStudio
             {
                 buttons[(int)ButtonType.Delete] = new Button { BmpAtlasIndex = ButtonImageIndices.Delete, Click = OnDelete, RightClick = OnDeleteSpecial, Enabled = OnCopyEnabled };
                 buttons[(int)ButtonType.More]   = new Button { BmpAtlasIndex = ButtonImageIndices.More, Click = OnMore };
+                buttons[(int)ButtonType.Piano]  = new Button { BmpAtlasIndex = ButtonImageIndices.Piano, Click = OnMobilePiano, Enabled = OnMobilePianoEnabled };
 
                 // On mobile, everything will scale from 1080p.
                 var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
@@ -348,9 +351,11 @@ namespace FamiStudio
                 iconSize       = ScaleCustom(DefaultIconSize, scale);
                 iconScaleFloat = iconSize / (float)(bitmapSize.Width);
             }
-            else 
+            else
             {
-                timecodePosY            = ScaleForMainWindow(DefaultTimecodePosY);
+                buttons[(int)ButtonType.Qwerty] = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
+
+                timecodePosY = ScaleForMainWindow(DefaultTimecodePosY);
                 oscilloscopePosY        = ScaleForMainWindow(DefaultTimecodePosY);
                 timecodeOscSizeX        = ScaleForMainWindow(DefaultTimecodeSizeX);
                 tooltipSingleLinePosY   = ScaleForMainWindow(DefaultTooltipSingleLinePosY);
@@ -483,7 +488,10 @@ namespace FamiStudio
                 var landscape = IsLandscape;
 
                 foreach (var btn in buttons)
-                    btn.Visible = false;
+                {
+                    if (btn != null)
+                        btn.Visible = false;
+                }
 
                 var numRows = expandRatio >= ShowExtraButtonsThreshold ? 3 : 2;
 
@@ -868,6 +876,16 @@ namespace FamiStudio
             }
 
             MarkDirty();
+        }
+
+        private void OnMobilePiano()
+        {
+
+        }
+
+        private ButtonStatus OnMobilePianoEnabled()
+        {
+            return ButtonStatus.Enabled;
         }
 
         private void RenderButtons(RenderCommandList c)
