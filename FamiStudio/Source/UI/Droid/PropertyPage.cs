@@ -576,8 +576,7 @@ namespace FamiStudio
 
         public int AddLabelCheckBox(string label, bool value, int margin = 0)
         {
-            Debug.Assert(false);
-            return 0;
+            return AddCheckBox(label, value);
         }
 
         public int AddDropDownList(string label, string[] values, string value, string tooltip = null)

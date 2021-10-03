@@ -333,7 +333,6 @@ namespace FamiStudio
         bool panning = false;
         bool continuouslyFollowing = false;
         bool maximized = false;
-        bool showSelection = false; 
         bool showEffectsPanel = false;
         bool snap = true;
         float flingVelX = 0.0f;
@@ -406,8 +405,9 @@ namespace FamiStudio
         public bool IsEditingDPCMSample        => editMode == EditionMode.DPCM;
         public bool IsEditingDPCMSampleMapping => editMode == EditionMode.DPCMMapping;
         
-        public bool CanCopy  => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
-        public bool CanPaste => showSelection && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
+        public bool CanCopy  => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
+        public bool CanPaste => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
+        public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public Instrument EditInstrument => editInstrument;
         public Arpeggio   EditArpeggio   => editArpeggio;
@@ -423,7 +423,6 @@ namespace FamiStudio
         public event EmptyDelegate       ManyPatternChanged;
         public event EmptyDelegate       DPCMSampleChanged;
         public event EmptyDelegate       EnvelopeChanged;
-        public event EmptyDelegate       ControlActivated;
         public event EmptyDelegate       NotesPasted;
         public event EmptyDelegate       ScrollChanged;
         public event NoteDelegate        NoteEyedropped;
@@ -733,12 +732,6 @@ namespace FamiStudio
                 else
                     return null;
             }
-        }
-
-        public bool ShowSelection
-        {
-            get { return showSelection; }
-            set { showSelection = value; MarkDirty(); }
         }
 
         public void HighlightPianoNote(int note)
@@ -1928,6 +1921,11 @@ namespace FamiStudio
             }
         }
 
+        public void DeleteSelection()
+        {
+            DeleteSelectedNotes();
+        }
+
         public void DeleteSpecial()
         {
             if (editMode == EditionMode.Channel)
@@ -1986,7 +1984,7 @@ namespace FamiStudio
             {
                 c.FillRectangle(
                     GetPixelForNote(selectionMin + 0), 0,
-                    GetPixelForNote(selectionMax + 1), height, showSelection ? selectionBgVisibleBrush : selectionBgInvisibleBrush);
+                    GetPixelForNote(selectionMax + 1), height, IsActiveControl ? selectionBgVisibleBrush : selectionBgInvisibleBrush);
             }
         }
 
@@ -3963,7 +3961,7 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
-            else if (showSelection && IsSelectionValid())
+            else if (IsActiveControl && IsSelectionValid())
             {
                 if (ctrl)
                 {
@@ -4653,8 +4651,6 @@ namespace FamiStudio
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-
-            ControlActivated?.Invoke();
 
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
@@ -6972,7 +6968,6 @@ namespace FamiStudio
             buffer.Serialize(ref maximized);
             buffer.Serialize(ref selectionMin);
             buffer.Serialize(ref selectionMax);
-            buffer.Serialize(ref showSelection);
 
             if (PlatformUtils.IsMobile)
             {

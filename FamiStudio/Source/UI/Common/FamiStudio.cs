@@ -147,7 +147,6 @@ namespace FamiStudio
             SetActiveControl(PianoRoll);
 
             Sequencer.PatternClicked     += Sequencer_PatternClicked;
-            Sequencer.ControlActivated   += Sequencer_ControlActivated;
             Sequencer.PatternModified    += Sequencer_PatternModified;
             Sequencer.SelectionChanged   += Sequencer_SelectionChanged;
             Sequencer.PatternsPasted     += PianoRoll_NotesPasted;
@@ -156,7 +155,6 @@ namespace FamiStudio
             PianoRoll.ManyPatternChanged += PianoRoll_ManyPatternChanged;
             PianoRoll.DPCMSampleChanged  += PianoRoll_DPCMSampleChanged;
             PianoRoll.EnvelopeChanged    += PianoRoll_EnvelopeChanged;
-            PianoRoll.ControlActivated   += PianoRoll_ControlActivated;
             PianoRoll.NotesPasted        += PianoRoll_NotesPasted;
             PianoRoll.ScrollChanged      += PianoRoll_ScrollChanged;
             PianoRoll.NoteEyedropped     += PianoRoll_NoteEyedropped;
@@ -289,14 +287,6 @@ namespace FamiStudio
         {
             Debug.Assert(ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer);
             mainForm.SetActiveControl(ctrl);
-            UpdateShowSelection(ctrl);
-        }
-
-        private void UpdateShowSelection(RenderControl ctrl)
-        {
-            PianoRoll.ShowSelection = ctrl == PianoRoll;
-            Sequencer.ShowSelection = ctrl == Sequencer;
-            ToolBar.MarkDirty();
         }
 
         private void ProjectExplorer_InstrumentsHovered(bool showExpansions)
@@ -504,16 +494,6 @@ namespace FamiStudio
         private void Sequencer_PatternModified()
         {
             PianoRoll.MarkDirty();
-        }
-
-        private void Sequencer_ControlActivated()
-        {
-            UpdateShowSelection(Sequencer);
-        }
-
-        private void PianoRoll_ControlActivated()
-        {
-            UpdateShowSelection(PianoRoll);
         }
 
         public void Run()
@@ -1705,39 +1685,53 @@ namespace FamiStudio
             }
         }
 
-        public bool CanCopy  => PianoRoll.CanCopy  || Sequencer.CanCopy;
-        public bool CanPaste => PianoRoll.CanPaste || Sequencer.CanPaste;
-
+        public bool CanCopy  => PianoRoll.IsActiveControl && PianoRoll.CanCopy  || Sequencer.IsActiveControl && Sequencer.CanCopy;
+        public bool CanPaste => PianoRoll.IsActiveControl && PianoRoll.CanPaste || Sequencer.IsActiveControl && Sequencer.CanPaste;
+        
         public void Copy()
         {
-            if (PianoRoll.ShowSelection)
+            if (PianoRoll.IsActiveControl)
                 PianoRoll.Copy();
-            else
+            else if (Sequencer.IsActiveControl)
                 Sequencer.Copy();
         }
 
         public void Cut()
         {
-            if (PianoRoll.ShowSelection)
+            if (PianoRoll.IsActiveControl)
                 PianoRoll.Cut();
-            else
+            else if (Sequencer.IsActiveControl)
                 Sequencer.Cut();
         }
 
         public void Paste()
         {
-            if (PianoRoll.ShowSelection)
+            if (PianoRoll.IsActiveControl)
                 PianoRoll.Paste();
-            else
+            else if (Sequencer.IsActiveControl)
                 Sequencer.Paste();
         }
 
         public void PasteSpecial()
         {
-            if (PianoRoll.ShowSelection)
+            if (PianoRoll.IsActiveControl)
                 PianoRoll.PasteSpecial();
-            else
+            else if (Sequencer.IsActiveControl)
                 Sequencer.PasteSpecial();
+        }
+
+        public void Delete()
+        {
+            if (PianoRoll.IsActiveControl)
+                PianoRoll.DeleteSelection();
+            else if (Sequencer.IsActiveControl)
+                Sequencer.DeleteSelection();
+        }
+
+        public void DeleteSpecial()
+        {
+            if (PianoRoll.IsActiveControl)
+                PianoRoll.DeleteSpecial();
         }
 
         public void KeyUp(KeyEventArgs e, int rawKeyCode)
@@ -2099,10 +2093,6 @@ namespace FamiStudio
 
         private void SerializeActiveControl(ProjectBuffer buffer)
         {
-            Debug.Assert(
-                PlatformUtils.IsDesktop && ActiveControl == null ||
-                PlatformUtils.IsMobile  && ActiveControl != null);
-
             if (buffer.IsWriting)
             {
                 int controlIdx = 0;
@@ -2125,8 +2115,6 @@ namespace FamiStudio
                     case 1: mainForm.SetActiveControl(PianoRoll, false); break;
                     case 2: mainForm.SetActiveControl(ProjectExplorer, false); break;
                 }
-
-                UpdateShowSelection(mainForm.ActiveControl);
             }
         }
 

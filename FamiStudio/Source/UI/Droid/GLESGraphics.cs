@@ -539,7 +539,7 @@ namespace FamiStudio
                 GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, 0);
         }
 
-        public unsafe void GetBitmap(byte[] data, bool dummy)
+        public unsafe void GetBitmap(byte[] data)
         {
             // This code is totally not needed or used
             /*

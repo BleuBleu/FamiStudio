@@ -83,9 +83,6 @@ Controls:
 	x Header Swipe = select (unless dragging seek bar itself)
 	x Header Tap = seek
 
-Toolbar:
-- Reorganize buttons, need to see delete + export. 
-
 Scaling issue:
 - Support 3 scalings (Will not affect toolbars)? 
 	- 4x (with 2x font) (Default for <  1080p, xhdpi and below)
@@ -102,9 +99,6 @@ Scaling issue:
 
 Misc:
 / Line widths, bias + 2
-- WIP file will never appear dirty, use a INI file with info in it?
-- Assert when exporting video, seem like the save dialog info gets popped? Or not pushed?
-	=> Log dialog overwrites the save. FUCK.
 - Snapping needs to preserve value even when not in channel mode.
 
 Icon notes:

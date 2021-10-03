@@ -27,6 +27,7 @@ namespace FamiStudio
             Copy,
             Cut,
             Paste,
+            Delete,
             Undo,
             Redo,
             Transform,
@@ -74,6 +75,7 @@ namespace FamiStudio
             Copy,
             Cut,
             Paste,
+            Delete,
             Undo,
             Redo,
             Transform,
@@ -109,6 +111,7 @@ namespace FamiStudio
             "Copy",
             "Cut",
             "Paste",
+            "Delete",
             "Undo",
             "Redo",
             "Transform",
@@ -170,35 +173,29 @@ namespace FamiStudio
         {
             new MobileButtonLayoutItem(0,  0, ButtonType.Open),
             new MobileButtonLayoutItem(0,  1, ButtonType.Copy),
-            new MobileButtonLayoutItem(0,  2, ButtonType.Undo),
-            new MobileButtonLayoutItem(0,  3, ButtonType.Config),
+            new MobileButtonLayoutItem(0,  2, ButtonType.Cut),
+            new MobileButtonLayoutItem(0,  3, ButtonType.Undo),
             new MobileButtonLayoutItem(0,  6, ButtonType.Play),
             new MobileButtonLayoutItem(0,  7, ButtonType.Rec),
             new MobileButtonLayoutItem(0,  8, ButtonType.Help),
 
             new MobileButtonLayoutItem(1,  0, ButtonType.Save),
             new MobileButtonLayoutItem(1,  1, ButtonType.Paste),
-            new MobileButtonLayoutItem(1,  2, ButtonType.Redo),
-            new MobileButtonLayoutItem(1,  3, ButtonType.Transform),
+            new MobileButtonLayoutItem(1,  2, ButtonType.Delete),
+            new MobileButtonLayoutItem(1,  3, ButtonType.Redo),
             new MobileButtonLayoutItem(1,  6, ButtonType.Rewind),
             new MobileButtonLayoutItem(1,  7, ButtonType.Qwerty),
             new MobileButtonLayoutItem(1,  8, ButtonType.More),
 
             new MobileButtonLayoutItem(2,  0, ButtonType.New),
-            new MobileButtonLayoutItem(2,  1, ButtonType.Cut),
-            new MobileButtonLayoutItem(2,  2, ButtonType.Count),
-            new MobileButtonLayoutItem(2,  3, ButtonType.Count),
+            new MobileButtonLayoutItem(2,  1, ButtonType.Export),
+            new MobileButtonLayoutItem(2,  2, ButtonType.Config),
+            new MobileButtonLayoutItem(2,  3, ButtonType.Transform),
+            new MobileButtonLayoutItem(2,  4, ButtonType.Machine),
+            new MobileButtonLayoutItem(2,  5, ButtonType.Follow),
             new MobileButtonLayoutItem(2,  6, ButtonType.Loop),
             new MobileButtonLayoutItem(2,  7, ButtonType.Metronome),
             new MobileButtonLayoutItem(2,  8, ButtonType.Count),
-
-            new MobileButtonLayoutItem(3,  0, ButtonType.Export),
-            new MobileButtonLayoutItem(3,  1, ButtonType.Count), // MATTT : Delete
-            new MobileButtonLayoutItem(3,  2, ButtonType.Count),
-            new MobileButtonLayoutItem(3,  3, ButtonType.Count),
-            new MobileButtonLayoutItem(3,  6, ButtonType.Machine),
-            new MobileButtonLayoutItem(3,  7, ButtonType.Follow),
-            new MobileButtonLayoutItem(3,  8, ButtonType.Count),
         };
 
         // [portrait/landscape, timecode/oscilloscope]
@@ -297,7 +294,7 @@ namespace FamiStudio
         private bool  closing   = false; 
 
         public int   LayoutSize  => buttonSize * 2;
-        public int   RenderSize  => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio)));
+        public int   RenderSize  => (int)Math.Round(LayoutSize * (1.0f + Utils.SmootherStep(expandRatio) * 0.5f));
         public float ExpandRatio => expandRatio;
         public bool  IsExpanded  => expandRatio > 0.0f;
 
@@ -338,7 +335,8 @@ namespace FamiStudio
 
             if (PlatformUtils.IsMobile)
             {
-                buttons[(int)ButtonType.More]  = new Button { BmpAtlasIndex = ButtonImageIndices.More, Click = OnMore, Visible = false };
+                buttons[(int)ButtonType.Delete] = new Button { BmpAtlasIndex = ButtonImageIndices.Delete, Click = OnDelete, RightClick = OnDeleteSpecial, Enabled = OnCopyEnabled };
+                buttons[(int)ButtonType.More]   = new Button { BmpAtlasIndex = ButtonImageIndices.More, Click = OnMore };
 
                 // On mobile, everything will scale from 1080p.
                 var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
@@ -487,7 +485,7 @@ namespace FamiStudio
                 foreach (var btn in buttons)
                     btn.Visible = false;
 
-                var numRows = expandRatio >= ShowExtraButtonsThreshold ? 4 : 2;
+                var numRows = expandRatio >= ShowExtraButtonsThreshold ? 3 : 2;
 
                 foreach (var bl in ButtonLayout)
                 {
@@ -539,10 +537,10 @@ namespace FamiStudio
 
         protected override void OnResize(EventArgs e)
         {
-            UpdateButtonLayout();
             expandRatio = 0.0f;
             expanding = false;
             closing = false;
+            UpdateButtonLayout();
         }
 
         // DROIDTODO : This makes no sense on mobile, move elsewhere.
@@ -673,6 +671,16 @@ namespace FamiStudio
         private ButtonStatus OnPasteEnabled()
         {
             return App.CanPaste ? ButtonStatus.Enabled : ButtonStatus.Disabled;
+        }
+
+        private void OnDelete()
+        {
+            App.Delete();
+        }
+
+        private void OnDeleteSpecial()
+        {
+            App.DeleteSpecial();
         }
 
         private void OnUndo()

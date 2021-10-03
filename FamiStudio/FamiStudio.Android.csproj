@@ -389,6 +389,7 @@
     <EmbeddedResource Include="Resources\Cut%402x.png" />
     <EmbeddedResource Include="Resources\Dash%404x.png" />
     <EmbeddedResource Include="Resources\Dash.png" />
+    <EmbeddedResource Include="Resources\Delete%402x.png" />
     <EmbeddedResource Include="Resources\Drag%402x.png" />
     <EmbeddedResource Include="Resources\Duplicate%402x.png" />
     <EmbeddedResource Include="Resources\DuplicateMove%402x.png" />

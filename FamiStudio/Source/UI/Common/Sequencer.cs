@@ -89,7 +89,6 @@ namespace FamiStudio
         bool continuouslyFollowing = false;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
-        bool showSelection = true;
         bool showExpansionIcons = false;
         bool timeOnlySelection = false;
         PatternLocation selectionMin = PatternLocation.Invalid;
@@ -172,7 +171,6 @@ namespace FamiStudio
         public delegate void EmptyDelegate();
 
         public event TrackBarDelegate PatternClicked;
-        public event EmptyDelegate ControlActivated;
         public event EmptyDelegate PatternModified;
         public event EmptyDelegate PatternsPasted;
         public event EmptyDelegate SelectionChanged;
@@ -185,12 +183,6 @@ namespace FamiStudio
         private Song Song
         {
             get { return App?.SelectedSong; }
-        }
-
-        public bool ShowSelection
-        {
-            get { return showSelection; }
-            set { showSelection = value; MarkDirty(); }
         }
 
         public bool ShowExpansionIcons
@@ -555,14 +547,14 @@ namespace FamiStudio
                 cp.FillRectangle(
                     GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), trackSizeY * (selectionMin.ChannelIndex + 0) + headerSizeY - scrollY,
                     GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), trackSizeY * (selectionMax.ChannelIndex + 1) + headerSizeY - scrollY,
-                    showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
+                    IsActiveControl ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
 
                 if (IsValidTimeOnlySelection())
                 {
                     ch.FillRectangle(
                         GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMin.PatternIndex + 0, Song.Length))), 0,
                         GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Math.Min(selectionMax.PatternIndex + 1, Song.Length))), headerSizeY,
-                        showSelection ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
+                        IsActiveControl ? selectedPatternVisibleBrush : selectedPatternInvisibleBrush);
                 }
             }
 
@@ -1204,10 +1196,8 @@ namespace FamiStudio
         {
             base.OnMouseDown(e);
 
-            ControlActivated?.Invoke();
-
-            bool left    = e.Button.HasFlag(MouseButtons.Left);
-            bool right   = e.Button.HasFlag(MouseButtons.Right);
+            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (captureOperation != CaptureOperation.None && (left || right))
                 return;
@@ -1579,8 +1569,9 @@ namespace FamiStudio
             return patterns;
         }
 
-        public bool CanCopy  => showSelection && IsSelectionValid();
-        public bool CanPaste => showSelection && IsSelectionValid() && ClipboardUtils.ContainsPatterns;
+        public bool CanCopy  => IsActiveControl && IsSelectionValid();
+        public bool CanPaste => IsActiveControl && IsSelectionValid() && ClipboardUtils.ContainsPatterns;
+        public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public void Copy()
         {
@@ -1977,6 +1968,11 @@ namespace FamiStudio
             captureMouseY = -1;
         }
 
+        public void DeleteSelection()
+        {
+            DeleteSelection(true, IsValidTimeOnlySelection());
+        }
+
         private void DeleteSelection(bool trans = true, bool clearCustomSettings = false)
         {
             if (trans)
@@ -2021,7 +2017,7 @@ namespace FamiStudio
                 ClearSelection();
                 MarkDirty();
             }
-            else if (showSelection)
+            else if (IsActiveControl)
             {
                 bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
                 bool shift = e.Modifiers.HasFlag(Keys.Shift);
@@ -2660,7 +2656,6 @@ namespace FamiStudio
             buffer.Serialize(ref selectionMin.PatternIndex);
             buffer.Serialize(ref selectionMax.PatternIndex);
             buffer.Serialize(ref timeOnlySelection);
-            buffer.Serialize(ref showSelection);
 
             if (buffer.IsReading)
             {
