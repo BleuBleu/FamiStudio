@@ -338,7 +338,7 @@ namespace FamiStudio
         float flingVelX = 0.0f;
         float flingVelY = 0.0f;
         float zoom = 1.0f;
-        float zoomY = PlatformUtils.IsMobile ? 0.75f : 1.0f;
+        float zoomY = PlatformUtils.IsMobile ? 0.8f : 1.0f;
         float pianoScaleX = 1.0f; // Only used by video export.
         float captureWaveTime = 0.0f;
         string noteTooltip = "";
@@ -5140,7 +5140,6 @@ namespace FamiStudio
 
         protected override void OnResize(EventArgs e)
         {
-            base.OnResize(e);
             UpdateRenderCoords();
             ClampScroll();
         }

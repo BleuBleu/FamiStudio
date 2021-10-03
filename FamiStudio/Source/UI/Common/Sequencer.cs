@@ -426,7 +426,7 @@ namespace FamiStudio
         protected override void OnResize(EventArgs e)
         {
             UpdateRenderCoords();
-            base.OnResize(e);
+            ClampScroll();
         }
 
         protected bool IsSelectionValid()

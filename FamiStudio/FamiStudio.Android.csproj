@@ -276,7 +276,7 @@
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Mobile\LogDialog.cs" />
-    <Compile Include="Source\UI\Mobile\Piano.cs" />
+    <Compile Include="Source\UI\Mobile\MobilePiano.cs" />
     <Compile Include="Source\UI\Mobile\QuickAccessBar.cs" />
     <Compile Include="Source\Utils\AndroidMidi.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
@@ -469,6 +469,9 @@
     <EmbeddedResource Include="Resources\Metronome.wav" />
     <EmbeddedResource Include="Resources\MinusSmall%402x.png" />
     <EmbeddedResource Include="Resources\MobileArpeggio.png" />
+    <EmbeddedResource Include="Resources\MobilePianoDrag.png" />
+    <EmbeddedResource Include="Resources\MobilePianoNext.png" />
+    <EmbeddedResource Include="Resources\MobilePianoPrev.png" />
     <EmbeddedResource Include="Resources\MobileSnapOff.png" />
     <EmbeddedResource Include="Resources\MobileSnapOn.png" />
     <EmbeddedResource Include="Resources\More%402x.png" />

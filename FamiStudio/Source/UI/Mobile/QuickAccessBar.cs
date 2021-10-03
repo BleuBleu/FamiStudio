@@ -197,7 +197,8 @@ namespace FamiStudio
             buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, ListItemClick = OnArpeggioChange };
 
             // MATTT : Font scaling?
-            var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
+            var displayInfo = Xamarin.Essentials.DeviceDisplay.MainDisplayInfo;
+            var scale = Math.Min((int)displayInfo.Width, (int)displayInfo.Height) / 1080.0f;
 
             buttonFont   = ThemeResources.GetBestMatchingFontByHeight(g, ScaleCustom(DefaultTextSize, scale), false);
             listFont     = ThemeResources.GetBestMatchingFontByHeight(g, ScaleCustom(DefaultListItemTextSize, scale), false);

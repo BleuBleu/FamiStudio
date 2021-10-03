@@ -57,10 +57,12 @@ namespace FamiStudio
         public PianoRoll       PianoRoll       => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar  QuickAccessBar  => controls.QuickAccessBar;
+        public MobilePiano     MobilePiano     => controls.MobilePiano;
         public GLControl       ActiveControl   => controls.ActiveControl;
 
         public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
+        public bool MobilePianoVisible { get => controls.MobilePianoVisible; set => controls.MobilePianoVisible = value; }
         public string Text { get; set; }
 
         private GestureDetectorCompat detector;

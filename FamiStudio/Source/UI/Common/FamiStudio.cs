@@ -82,6 +82,7 @@ namespace FamiStudio
         public bool  FollowModeEnabled { get => followMode; set => followMode = value; }
         public bool  SequencerHasSelection => Sequencer.GetPatternTimeSelectionRange(out _, out _);
         public int   BaseRecordingOctave => baseRecordingOctave;
+        public bool  MobilePianoVisible { get => mainForm.MobilePianoVisible; set => mainForm.MobilePianoVisible = value; }
         public int   CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int   ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : -1; set => songPlayer.ChannelMask = value; }
         public int   PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { if (!IsPlaying) songPlayer.PlayRate = value; } }
@@ -99,6 +100,7 @@ namespace FamiStudio
         public PianoRoll       PianoRoll       => mainForm.PianoRoll;
         public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
         public QuickAccessBar  QuickAccessBar  => mainForm.QuickAccessBar;
+        public MobilePiano     MobilePiano     => mainForm.MobilePiano;
         public RenderControl   ActiveControl   => mainForm.ActiveControl;
         public FamiStudioForm  MainForm        => mainForm;
 
@@ -1827,7 +1829,8 @@ namespace FamiStudio
             Debug.Assert(!recordingMode);
             StopSong();
             recordingMode = true;
-            qwertyPiano = true;
+            qwertyPiano = PlatformUtils.IsDesktop;
+            MobilePianoVisible = PlatformUtils.IsMobile;
             MarkEverythingDirty();
         }
 
@@ -2046,6 +2049,7 @@ namespace FamiStudio
             Sequencer.Tick(deltaTime);
             ProjectExplorer.Tick(deltaTime);
             QuickAccessBar.Tick(deltaTime);
+            MobilePiano.Tick(deltaTime);
 
             lastTickTime = tickTime;
         }

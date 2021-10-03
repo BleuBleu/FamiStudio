@@ -342,7 +342,8 @@ namespace FamiStudio
                 buttons[(int)ButtonType.Piano]  = new Button { BmpAtlasIndex = ButtonImageIndices.Piano, Click = OnMobilePiano, Enabled = OnMobilePianoEnabled };
 
                 // On mobile, everything will scale from 1080p.
-                var scale = Math.Min(ParentFormSize.Width, ParentFormSize.Height) / 1080.0f;
+                var displayInfo = Xamarin.Essentials.DeviceDisplay.MainDisplayInfo;
+                var scale = Math.Min((int)displayInfo.Width, (int)displayInfo.Height) / 1080.0f;
                 var bitmapSize = bmpButtonAtlas.GetElementSize(0);
 
                 buttonIconPosX = ScaleCustom(DefaultButtonIconPosX, scale);
@@ -880,12 +881,12 @@ namespace FamiStudio
 
         private void OnMobilePiano()
         {
-
+            App.MobilePianoVisible = !App.MobilePianoVisible;
         }
 
         private ButtonStatus OnMobilePianoEnabled()
         {
-            return ButtonStatus.Enabled;
+            return App.MobilePianoVisible ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
         private void RenderButtons(RenderCommandList c)

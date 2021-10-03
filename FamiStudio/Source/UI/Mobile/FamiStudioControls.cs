@@ -11,26 +11,39 @@ namespace FamiStudio
         private GLGraphics  gfx;
         private ThemeRenderResources res;
 
-        private GLControl[] controls = new GLControl[5];
+        private GLControl[] controls = new GLControl[6];
         private GLControl   transitionControl;
         private GLControl   activeControl;
         private float       transitionTimer;
+        private bool        mobilePianoVisible = true; // MATTT
 
         private Toolbar         toolbar;
         private Sequencer       sequencer;
         private PianoRoll       pianoRoll;
         private ProjectExplorer projectExplorer;
         private QuickAccessBar  quickAccessBar;
+        private MobilePiano     mobilePiano;
 
         public Toolbar         ToolBar         => toolbar;
         public Sequencer       Sequencer       => sequencer;
         public PianoRoll       PianoRoll       => pianoRoll;
         public ProjectExplorer ProjectExplorer => projectExplorer;
         public QuickAccessBar  QuickAccessBar  => quickAccessBar;
+        public MobilePiano     MobilePiano     => mobilePiano;
         public GLControl       ActiveControl   => activeControl;
 
         public GLControl[] Controls => controls;
         public bool IsLandscape => width > height;
+        
+        public bool MobilePianoVisible
+        {
+            get { return mobilePianoVisible; }
+            set
+            {
+                mobilePianoVisible = value;
+                UpdateLayout(false);
+            }
+        }
 
         public FamiStudioControls(FamiStudioForm parent)
         {
@@ -39,12 +52,14 @@ namespace FamiStudio
             pianoRoll       = new PianoRoll();
             projectExplorer = new ProjectExplorer();
             quickAccessBar  = new QuickAccessBar();
+            mobilePiano     = new MobilePiano();
 
             controls[0] = sequencer;
             controls[1] = pianoRoll;
             controls[2] = projectExplorer;
             controls[3] = quickAccessBar;
             controls[4] = toolbar;
+            controls[5] = mobilePiano;
 
             activeControl = pianoRoll;
 
@@ -82,9 +97,10 @@ namespace FamiStudio
 
         private void UpdateLayout(bool activeControlOnly)
         {
-            var landscape = IsLandscape;
+            var landscape          = IsLandscape;
             var quickAccessBarSize = quickAccessBar.LayoutSize;
-            var toolLayoutSize = toolbar.LayoutSize;
+            var toolLayoutSize     = toolbar.LayoutSize;
+            var pianoLayoutSize    = mobilePianoVisible ? mobilePiano.LayoutSize : 0;
 
             if (landscape)
             {
@@ -92,17 +108,20 @@ namespace FamiStudio
                 {
                     toolbar.Move(0, 0, toolLayoutSize, height);
                     quickAccessBar.Move(width - quickAccessBarSize, 0, quickAccessBarSize, height);
+                    mobilePiano.Move(toolLayoutSize, height - pianoLayoutSize, width - toolLayoutSize - quickAccessBarSize, pianoLayoutSize);
                 }
-                activeControl.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height);
+
+                activeControl.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height - pianoLayoutSize);
             }
             else
             {
                 if (!activeControlOnly)
                 {
                     toolbar.Move(0, 0, width, toolLayoutSize);
-                    quickAccessBar.Move(0, height - quickAccessBarSize, width, quickAccessBarSize);
+                    quickAccessBar.Move(0, height - quickAccessBarSize - pianoLayoutSize, width, quickAccessBarSize);
+                    mobilePiano.Move(0, height - pianoLayoutSize, width, pianoLayoutSize);
                 }
-                activeControl.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize);
+                activeControl.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize - pianoLayoutSize);
             }
         }
 
@@ -152,6 +171,12 @@ namespace FamiStudio
                 return toolbar;
             }
 
+            if (mobilePianoVisible)
+            {
+                if (IsPointInControl(mobilePiano, formX, formY, out ctrlX, out ctrlY))
+                    return mobilePiano;
+            }
+
             if (IsPointInControl(activeControl, formX, formY, out ctrlX, out ctrlY))
                 return activeControl;
             if (IsPointInControl(quickAccessBar, formX, formY, out ctrlX, out ctrlY))
@@ -175,6 +200,8 @@ namespace FamiStudio
             anyNeedsRedraw |= activeControl.NeedsRedraw;
             anyNeedsRedraw |= quickAccessBar.NeedsRedraw;
             anyNeedsRedraw |= toolbar.NeedsRedraw;
+            if (mobilePianoVisible)
+                anyNeedsRedraw |= mobilePiano.NeedsRedraw;
 
             return anyNeedsRedraw;
         }
@@ -286,6 +313,11 @@ namespace FamiStudio
             {
                 RenderControl(activeControl);
                 RenderTransitionOverlay();
+
+                if (mobilePianoVisible)
+                {
+                    RenderControl(mobilePiano);
+                }
 
                 if (toolbar.IsExpanded)
                 {
