@@ -103,7 +103,7 @@ namespace FamiStudio
         public FamiStudioForm  MainForm        => mainForm;
 
         private string WipProject  => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.fms");
-        private string WipFilename => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.txt");
+        private string WipSettings => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.ini");
 
         public int  PreviewDPCMWavPosition => instrumentPlayer != null ? instrumentPlayer.RawPcmSamplePlayPosition : 0;
         public int  PreviewDPCMSampleId    => previewDPCMSampleId;
@@ -766,17 +766,7 @@ namespace FamiStudio
                 {
                     if (project.Filename.ToLower() == WipProject.ToLower())
                     {
-                        try
-                        {
-                            var lines = File.ReadAllLines(WipFilename);
-                            if (lines != null && lines.Length > 0)
-                                project.Filename = lines[0];
-                        }
-                        catch
-                        {
-                            project.Filename = null;
-                        }
-
+                        LoadWipSettings();
                     }
                     else if (!project.Filename.ToLower().StartsWith(PlatformUtils.UserProjectsDirectory.ToLower()))
                     {
@@ -1200,12 +1190,38 @@ namespace FamiStudio
                 Debug.Assert(PlatformUtils.IsInMainThread());
 
                 SaveProjectCopy(WipProject);
-                
-                // Save the actual project filename in a text file along with it.
-                if (!string.IsNullOrEmpty(project.Filename))
-                    File.WriteAllLines(WipFilename, new[] { project.Filename });
-                else
-                    File.Delete(WipFilename);
+                SaveWipSettings();
+            }
+        }
+        private void LoadWipSettings()
+        {
+            var ini = new IniFile();
+
+            if (ini.Load(WipSettings))
+            {
+                project.Filename = ini.GetString("General", "Filename", null);
+                if (ini.GetBool("General", "Dirty", false))
+                    undoRedoManager.ForceDirty();
+            }
+            else
+            {
+                project.Filename = null;
+            }
+        }
+
+        private void SaveWipSettings()
+        {
+            // Save the actual project filename in a text file along with it.
+            if (!string.IsNullOrEmpty(project.Filename))
+            {
+                var ini = new IniFile();
+                ini.SetString("General", "Filename", project.Filename);
+                ini.SetBool("General", "Dirty", undoRedoManager.NeedsSaving);
+                ini.Save(WipSettings);
+            }
+            else
+            {
+                File.Delete(WipSettings);
             }
         }
 

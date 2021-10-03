@@ -154,11 +154,17 @@ namespace FamiStudio
         private List<Transaction> transactions = new List<Transaction>();
         private int index = 0;
         private int saveIndex = 0;
+        private bool forceDirty;
 
         public UndoRedoManager(Project proj, FamiStudio app) 
         {
             this.project = proj;
             this.app = app;
+        }
+
+        public void ForceDirty()
+        {
+            forceDirty = true;
         }
 
         public void BeginTransaction(TransactionScope scope, TransactionFlags flags)
@@ -245,7 +251,7 @@ namespace FamiStudio
         {
             get
             {
-                return saveIndex != index;
+                return saveIndex != index || forceDirty;
             }
         }
 
@@ -262,6 +268,7 @@ namespace FamiStudio
         public void NotifySaved()
         {
             saveIndex = index;
+            forceDirty = false;
         }
 
         public void Undo()
@@ -294,6 +301,7 @@ namespace FamiStudio
         {
             Debug.Assert(transactions.Count == 0 || transactions.Last().IsEnded);
             index = 0;
+            forceDirty = false;
             transactions.Clear();
             Updated?.Invoke();
         }
