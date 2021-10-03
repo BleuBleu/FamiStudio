@@ -22,7 +22,6 @@ namespace FamiStudio
         const int RomTocOffset        = 0x1200; // Table of content is right after the code at FE00
         const int RomTileSize         = 0x2000; // 8KB CHR data.
         const int MaxSongSize         = 0x4000; // 16KB max per song.
-        const int RomMinNumberBanks   = 2;
         const int RomCodeDpcmNumBanks = 2;
         const int RomHeaderLength     = 16;     // INES header size.
         const int RomHeaderPrgOffset  = 4;      // Offset of the PRG bank count in INES header.
@@ -145,9 +144,12 @@ namespace FamiStudio
                 //File.WriteAllBytes("D:\\debug.bin", songDataBytes.ToArray());
 
                 // Add extra empty banks if we haven't reached the minimum.
-                if (songBanks.Count < RomMinNumberBanks)
+                // Total PRG banks should be a power of 2
+                int totalBanks = (int)Math.Pow(2, Math.Ceiling(Math.Log(songBanks.Count+RomCodeDpcmNumBanks, 2)));
+                int songBanksNeeded = TotalBanks - RomCodeDpcmNumBanks;
+                if (songBanks.Count < songBanksNeeded)
                 {
-                    for (int i = songBanks.Count; i < RomMinNumberBanks; i++)
+                    for (int i = songBanks.Count; i < songBanksNeeded; i++)
                         songBanks.Add(new List<byte>());
                 }
                 else if ((songBanks.Count & 1) != 0)
