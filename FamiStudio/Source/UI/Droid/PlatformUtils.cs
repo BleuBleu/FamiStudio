@@ -14,7 +14,10 @@ using Debug = System.Diagnostics.Debug;
 namespace FamiStudio
 {
     public static class PlatformUtils
-    {  
+    {
+        private static WaitToastDoneCallback toastCallback = new WaitToastDoneCallback();
+        private static bool toastOnScreen;
+
         public static void Initialize()
         {
         }
@@ -159,9 +162,18 @@ namespace FamiStudio
 
         public static void ShowToast(string message)
         {
-            MainThread.InvokeOnMainThreadAsync(() => 
+            MainThread.InvokeOnMainThreadAsync(() =>
             {
-                Toast.MakeText(Application.Context, message, ToastLength.Short).Show(); 
+                // Toasts stack, and adding a bunch crashes the add or can
+                // stay on screen for multiple minutes. Ignore any other until
+                // the current one is gone.
+                if (!toastOnScreen)
+                {
+                    toastOnScreen = true;
+                    var toast = Toast.MakeText(Application.Context, message, ToastLength.Short);
+                    toast.AddCallback(toastCallback);
+                    toast.Show();
+                }
             });
         }
 
@@ -172,6 +184,15 @@ namespace FamiStudio
         public static void OpenUrl(string url)
         {
             FamiStudioForm.Instance.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(url)));
+        }
+
+        private class WaitToastDoneCallback : Toast.Callback
+        {
+            public override void OnToastHidden()
+            {
+                toastOnScreen = false;
+                base.OnToastHidden();
+            }
         }
 
         public const bool IsMobile  = true;

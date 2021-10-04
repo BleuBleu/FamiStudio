@@ -249,7 +249,7 @@ namespace FamiStudio
             false, // ChangeEffectValue
             false, // ChangeSelectionEffectValue
             false, // DrawEnvelope
-            false, // Select
+            PlatformUtils.IsMobile, // Select
             false, // SelectWave
             false, // CreateNote
             true,  // CreateDragSlideNoteTarget
@@ -4710,6 +4710,12 @@ namespace FamiStudio
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
 
+            if (!channel.SupportsInstrument(App.SelectedInstrument))
+            {
+                App.DisplayWarning("Selected instrument is incompatible with channel!");
+                return null;
+            }
+
             if (pattern != null)
             {
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
@@ -4851,7 +4857,8 @@ namespace FamiStudio
         {
             if (IsPointInHeader(x, y))
             {
-                App.SeekSong(GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX));
+                var absNoteIndex = GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX);
+                App.SeekSong(SnapNote(absNoteIndex));
                 return true;
             }
 
@@ -5345,7 +5352,8 @@ namespace FamiStudio
         private void StartSelection(int x, int y)
         {
             StartCaptureOperation(x, y, CaptureOperation.Select, false);
-            UpdateSelection(x, y);
+            if (captureThresholdMet)
+                UpdateSelection(x, y);
         }
 
         private void UpdateSelection(int x, int y)

@@ -60,7 +60,7 @@ namespace FamiStudio
         RenderBitmapAtlas bmpButtonAtlas;
         //Button[] buttons = new Button[(int)ButtonType.Count];
 
-        private int scrollX = 0;
+        private int scrollX = -1;
         private int playAbsNote = -1;
         private int highlightAbsNote = Note.NoteInvalid;
         private int lastX;
@@ -95,6 +95,10 @@ namespace FamiStudio
             blackKeySizeX = ScaleCustom(DefaultBlackKeySizeX, scale * zoom);
             octaveSizeX   = 7 * whiteKeySizeX;
             virtualSizeX  = octaveSizeX * NumOctaves;
+
+            // Center the piano initially.
+            if (scrollX < 0)
+                scrollX = (virtualSizeX - Width) / 2;
         }
 
         protected override void OnRenderTerminated()
@@ -351,6 +355,7 @@ namespace FamiStudio
             lastX = x;
             lastY = y;
             captureOperation = op;
+            Capture = true;
         }
 
         private void UpdateCaptureOperation(int x, int y, float scale = 1.0f)
@@ -378,10 +383,12 @@ namespace FamiStudio
                     break;
             }
 
+            Capture = false;
             captureOperation = CaptureOperation.None;
             MarkDirty();
         }
 
+        // DROIDTODO: When the touch moves out of the control, we dont get a touchup???
         protected override void OnTouchUp(int x, int y)
         {
             EndCaptureOperation(x, y);

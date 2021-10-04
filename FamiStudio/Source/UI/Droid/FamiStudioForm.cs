@@ -632,7 +632,15 @@ namespace FamiStudio
                 {
                     Debug.WriteLine($"{c++} Up {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                     lock (renderLock)
-                        GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchUp(x, y);
+                    {
+                        var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                        if (ctrl != null)
+                        {
+                            if (captureControl == ctrl)
+                                ReleaseMouse();
+                            ctrl.TouchUp(x, y);
+                        }
+                    }
                 }
                 else if (e.Action == MotionEventActions.Move && !scaleDetector.IsInProgress)
                 {

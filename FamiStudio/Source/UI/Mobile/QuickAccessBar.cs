@@ -9,6 +9,7 @@ using RenderBrush       = FamiStudio.GLBrush;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
 using RenderFont        = FamiStudio.GLFont;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -544,28 +545,33 @@ namespace FamiStudio
 
             // DROIDTODO : Add "DPCM" (null) instrument.
             var project = App.Project;
-            var items = new ListItem[project.Instruments.Count + 1];
+            var channel = App.SelectedChannel;
+            var items = new List<ListItem>();
 
             var dpcmItem = new ListItem();
             dpcmItem.Color = Theme.LightGreyFillColor1;
             dpcmItem.ImageIndex = (int)ButtonImageIndices.MobileInstrument;
             dpcmItem.Text = "DPCM";
-            items[0] = dpcmItem;
+            items.Add(dpcmItem);
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
                 var inst = project.Instruments[i];
-                var item = new ListItem();
-                item.Color = inst.Color;
-                item.ImageIndex = Array.IndexOf(ButtonImageNames, ExpansionType.Icons[inst.Expansion]);
-                item.Text = inst.Name;
-                item.Data = inst;
-                items[i + 1] = item;
+
+                if (channel.SupportsInstrument(inst))
+                {
+                    var item = new ListItem();
+                    item.Color = inst.Color;
+                    item.ImageIndex = Array.IndexOf(ButtonImageNames, ExpansionType.Icons[inst.Expansion]);
+                    item.Text = inst.Name;
+                    item.Data = inst;
+                    items.Add(item);
+                }
             }
 
-            popupSelectedIdx = Array.FindIndex(items, i => i.Data == App.SelectedInstrument);
+            popupSelectedIdx = items.FindIndex(i => i.Data == App.SelectedInstrument);
 
-            StartExpandingList((int)ButtonType.Instrument, items);
+            StartExpandingList((int)ButtonType.Instrument, items.ToArray());
         }
 
         private void OnArpeggio()
@@ -813,6 +819,7 @@ namespace FamiStudio
             captureX = x;
             captureY = y;
             captureOperation = op;
+            Capture = true;
         }
 
         private bool ClampScroll()
@@ -839,6 +846,7 @@ namespace FamiStudio
         private void EndCaptureOperation(int x, int y)
         {
             captureOperation = CaptureOperation.None;
+            Capture = false;
             MarkDirty();
         }
 
