@@ -391,7 +391,8 @@ namespace FamiStudio
         {
             for (int i = 0; i < NumOctaves; i++)
             {
-                for (int j = 0; j < 2; j++)
+                var maxIdx = App.IsRecording ? 1 : 2;
+                for (int j = 0; j < maxIdx; j++)
                 {
                     if (GetPanRectangle(i, j).Contains(x, y))
                         return true;
@@ -401,12 +402,32 @@ namespace FamiStudio
             return false;
         }
 
+        private bool IsPointInRestRectangle(int x, int y)
+        {
+            if (App.IsRecording)
+            {
+                for (int i = 0; i < NumOctaves; i++)
+                {
+                    if (GetPanRectangle(i, 1).Contains(x, y))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         protected override void OnTouchDown(int x, int y)
         {
+            Debug.Assert(captureOperation == CaptureOperation.None);
+
             flingVelX = 0;
+            lastX = x;
+            lastY = y;
 
             if (IsPointInPanRectangle(x, y))
                 StartCaptureOperation(x, y, CaptureOperation.MobilePan);
+            else if (IsPointInRestRectangle(x, y))
+                App.AdvanceRecording();
             else
                 StartCaptureOperation(x, y, CaptureOperation.PlayPiano);
         }

@@ -1771,6 +1771,11 @@ namespace FamiStudio
 #endif
         }
 
+        public void AdvanceRecording()
+        {
+            PianoRoll.AdvanceRecording(CurrentFrame, true);
+        }
+
         private void Midi_NotePlayed(int n, bool on)
         {
             midiNoteQueue.Enqueue(new Tuple<int, bool>(n, on));
