@@ -22,18 +22,15 @@ namespace FamiStudio
         const int DefaultWhiteKeySizeX = 120;
         const int DefaultBlackKeySizeX = 96;
 
-        private int   whiteKeySizeX;
-        private int   blackKeySizeX;
-        private int   octaveSizeX;
-        private int   iconPos;
-        private int   virtualSizeX;
-        private int   buttonSize;
-        private float iconScaleFloat = 1.0f;
+        const float MinZoom = 0.5f;
+        const float MaxZoom = 2.0f;
 
         enum CaptureOperation
         {
             None,
-            MobilePan
+            MobilePan,
+            MobileZoom,
+            PlayPiano
         }
 
         private enum ButtonImageIndices
@@ -51,24 +48,30 @@ namespace FamiStudio
             "MobilePianoDrag"
         };
 
+        private int whiteKeySizeX;
+        private int blackKeySizeX;
+        private int octaveSizeX;
+        private int iconPos;
+        private int virtualSizeX;
+        private int buttonSize;
+        private float iconScaleFloat = 1.0f;
+
         RenderBrush whiteKeyBrush;
         RenderBrush blackKeyBrush;
+        RenderBrush whiteKeyPressedBrush;
+        RenderBrush blackKeyPressedBrush;
         RenderBitmapAtlas bmpButtonAtlas;
         //Button[] buttons = new Button[(int)ButtonType.Count];
 
-        private float zoomX = 1.0f;
         private int scrollX = 0;
-
-        // Mouse tracking.
+        private int playAbsNote = -1;
+        private int highlightAbsNote = Note.NoteInvalid;
         private int lastX;
         private int lastY;
-        private int captureX;
-        private int captureY;
+        private int layoutSize;
+        private float zoom = 1.0f;
         private float flingVelX;
         private CaptureOperation captureOperation = CaptureOperation.None;
-
-        // Scaled layout variables.
-        private int layoutSize;
         
         public int LayoutSize => layoutSize;
 
@@ -76,23 +79,24 @@ namespace FamiStudio
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
 
-            var displayInfo = Xamarin.Essentials.DeviceDisplay.MainDisplayInfo;
-
-            layoutSize = Math.Min((int)displayInfo.Width, (int)displayInfo.Height) / 4;
+            var screenSize = PlatformUtils.GetScreenResolution();
+            layoutSize = Math.Min(screenSize.Width, screenSize.Height) / 4;
             buttonSize = layoutSize / 2;
 
-            whiteKeyBrush  = g.CreateVerticalGradientBrush(0, layoutSize, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
-            blackKeyBrush  = g.CreateVerticalGradientBrush(0, layoutSize, Theme.DarkGreyFillColor1,  Theme.DarkGreyFillColor2);
-            bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
+            bmpButtonAtlas       = g.CreateBitmapAtlasFromResources(ButtonImageNames);
+            whiteKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
+            blackKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.DarkGreyFillColor1,  Theme.DarkGreyFillColor2);
+            whiteKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Darken(Theme.LightGreyFillColor1), Theme.Darken(Theme.LightGreyFillColor2));
+            blackKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Lighten(Theme.DarkGreyFillColor1), Theme.Lighten(Theme.DarkGreyFillColor2));
         }
         
         private void UpdateRenderCoords()
         {
-            var displayInfo = Xamarin.Essentials.DeviceDisplay.MainDisplayInfo;
-            var scale = Math.Min((int)displayInfo.Width, (int)displayInfo.Height) / 1080.0f;
+            var screenSize = PlatformUtils.GetScreenResolution();
+            var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-            whiteKeySizeX = ScaleCustom(DefaultWhiteKeySizeX, scale * zoomX);
-            blackKeySizeX = ScaleCustom(DefaultBlackKeySizeX, scale * zoomX);
+            whiteKeySizeX = ScaleCustom(DefaultWhiteKeySizeX, scale * zoom);
+            blackKeySizeX = ScaleCustom(DefaultBlackKeySizeX, scale * zoom);
             octaveSizeX   = 7 * whiteKeySizeX;
             virtualSizeX  = octaveSizeX * NumOctaves;
         }
@@ -100,10 +104,10 @@ namespace FamiStudio
         protected override void OnRenderTerminated()
         {
             Utils.DisposeAndNullify(ref bmpButtonAtlas);
-            //Utils.DisposeAndNullify(ref scrollBarBrush);
-
             Utils.DisposeAndNullify(ref whiteKeyBrush);
             Utils.DisposeAndNullify(ref blackKeyBrush);
+            Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
+            Utils.DisposeAndNullify(ref blackKeyPressedBrush);
         }
 
         protected override void OnResize(EventArgs e)
@@ -129,6 +133,15 @@ namespace FamiStudio
             TickFling(delta);
         }
 
+        public void HighlightPianoNote(int note)
+        {
+            if (note != highlightAbsNote)
+            {
+                highlightAbsNote = note;
+                MarkDirty();
+            }
+        }
+
         private bool IsBlackKey(int key)
         {
             return key == 1 || key == 3 || key == 6 || key == 8 || key == 10;
@@ -146,7 +159,7 @@ namespace FamiStudio
                 return new Rectangle(octaveSizeX * octave + key * whiteKeySizeX - scrollX, 0, whiteKeySizeX, Height);
         }
 
-        private Rectangle GetDragRectangle(int octave, int idx)
+        private Rectangle GetPanRectangle(int octave, int idx)
         {
             if (octave == NumOctaves - 1 && idx == 1)
                 return Rectangle.Empty;
@@ -157,7 +170,19 @@ namespace FamiStudio
             return new Rectangle(r0.Right, 0, r1.Left - r0.Right, Height / 2);
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected void RenderDebug(RenderGraphics g)
+        {
+#if DEBUG
+            if (PlatformUtils.IsMobile)
+            {
+                var c = g.CreateCommandList();
+                c.FillRectangle(lastX - 30, lastY - 30, lastX + 30, lastY + 30, ThemeResources.WhiteBrush);
+                g.DrawCommandList(c);
+            }
+#endif
+        }
+
+        protected void RenderPiano(RenderGraphics g)
         {
             int actualWidth = Width - buttonSize;
             int maxVisibleOctave = 8; // NumOctaves - Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
@@ -165,9 +190,15 @@ namespace FamiStudio
 
             var cb = g.CreateCommandList();
             var cp = g.CreateCommandList();
-
+           
             // Background (white keys)
             cb.FillRectangle(0, 0, Width, Height, whiteKeyBrush);
+
+            // Highlighted note.
+            var playOctave = Note.IsMusicalNote(highlightAbsNote) ? (highlightAbsNote - 1) / 12 : -1;
+            var playNote   = Note.IsMusicalNote(highlightAbsNote) ? (highlightAbsNote - 1) % 12 : -1;
+            if (playNote >= 0 && !IsBlackKey(playNote))
+                cp.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);
 
             // Black keys
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
@@ -175,7 +206,10 @@ namespace FamiStudio
                 for (int j = 0; j < 12; j++)
                 {
                     if (IsBlackKey(j))
-                        cp.FillRectangle(GetKeyRectangle(i, j), blackKeyBrush);
+                    {
+                        var brush = playOctave == i && playNote == j ? blackKeyPressedBrush : blackKeyBrush;
+                        cp.FillRectangle(GetKeyRectangle(i, j), brush);
+                    }
                 }
             }
 
@@ -186,11 +220,23 @@ namespace FamiStudio
                 {
                     if (!IsBlackKey(j))
                     {
+                        var groupStart = j == 0 || j == 5;
                         var x = GetKeyRectangle(i, j).X;
-                        var y = j == 0 || j == 5 ? 0 : Height / 2;
-                        cp.DrawLine(x, y, x, Height, ThemeResources.BlackBrush);
+                        var y = groupStart ? 0 : Height / 2;
+                        var brush = groupStart ? ThemeResources.BlackBrush : ThemeResources.DarkGreyFillBrush2;
+                        cp.DrawLine(x, y, x, Height, brush);
                     }
                 }
+            }
+
+            // Top line
+            cp.DrawLine(0, 0, Width, 0, ThemeResources.BlackBrush);
+
+            // Octave labels
+            for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
+            {
+                var r = GetKeyRectangle(i, 0);
+                cp.DrawText("C" + i, ThemeResources.FontSmall, r.X, r.Y, ThemeResources.BlackBrush, RenderTextFlags.BottomCenter, r.Width, r.Height - ThemeResources.FontSmall.Size);
             }
 
             // Drag images
@@ -198,14 +244,14 @@ namespace FamiStudio
             {
                 for (int j = 0; j < 2; j++)
                 {
-                    var r = GetDragRectangle(i, j);
+                    var r = GetPanRectangle(i, j);
                     if (!r.IsEmpty)
                     {
-                        var size  = bmpButtonAtlas.GetElementSize((int)ButtonImageIndices.MobilePianoDrag);
+                        var size = bmpButtonAtlas.GetElementSize((int)ButtonImageIndices.MobilePianoDrag);
                         var scale = Math.Min(r.Width, r.Height) / (float)Math.Min(size.Width, size.Height);
-                        var posX  = r.X + r.Width  / 2 - (int)(size.Width  * scale / 2);
-                        var posY  =       r.Height / 2 - (int)(size.Height * scale / 2);
-                        cp.DrawBitmapAtlas(bmpButtonAtlas, (int)ButtonImageIndices.MobilePianoDrag, posX, posY, 0.5f, scale, Color.Black);
+                        var posX = r.X + r.Width / 2 - (int)(size.Width * scale / 2);
+                        var posY = r.Height / 2 - (int)(size.Height * scale / 2);
+                        cp.DrawBitmapAtlas(bmpButtonAtlas, (int)ButtonImageIndices.MobilePianoDrag, posX, posY, 0.25f, scale, Color.Black);
                     }
                 }
             }
@@ -219,13 +265,31 @@ namespace FamiStudio
             g.DrawCommandList(cp, new Rectangle(0, 0, actualWidth, Height));
         }
 
-        private void StartCaptureOperation(int x, int y, CaptureOperation op)
+        protected override void OnRender(RenderGraphics g)
         {
-            lastX = x;
-            lastY = y;
-            captureX = x;
-            captureY = y;
-            captureOperation = op;
+            RenderPiano(g); 
+            RenderDebug(g);
+        }
+
+        private void ZoomAtLocation(int x, float scale)
+        {
+            if (scale == 1.0f)
+                return;
+
+            var absoluteX = x + scrollX;
+            var prevNoteSizeX = whiteKeySizeX;
+
+            zoom *= scale;
+            zoom = Utils.Clamp(zoom, MinZoom, MaxZoom);
+
+            // This will update the noteSizeX.
+            UpdateRenderCoords();
+
+            absoluteX = (int)Math.Round(absoluteX * (whiteKeySizeX / (double)prevNoteSizeX));
+            scrollX = absoluteX - x;
+
+            ClampScroll();
+            MarkDirty();
         }
 
         private bool ClampScroll()
@@ -247,14 +311,77 @@ namespace FamiStudio
             return ClampScroll();
         }
 
-        private void UpdateCaptureOperation(int x, int y)
+        protected int GetPianoNote(int x, int y)
         {
-            if (captureOperation == CaptureOperation.MobilePan)
-                DoScroll(lastX - x);
+            for (int i = 0; i < NumOctaves; i++)
+            {
+                for (int j = 0; j < 12 && i * 12 + j < NumNotes; j++)
+                {
+                    if (IsBlackKey(j) && GetKeyRectangle(i, j).Contains(x, y))
+                        return i * 12 + j + 1;
+                }
+                for (int j = 0; j < 12 && i * 12 + j < NumNotes; j++)
+                {
+                    if (!IsBlackKey(j) && GetKeyRectangle(i, j).Contains(x, y))
+                        return i * 12 + j + 1;
+                }
+            }
+
+            return -1;
+        }
+
+        protected void PlayPiano(int x, int y)
+        {
+            var note = GetPianoNote(x, y);
+            if (note >= 0)
+            {
+                if (note != playAbsNote)
+                {
+                    playAbsNote = note;
+                    App.PlayInstrumentNote(playAbsNote, true, true);
+                    MarkDirty();
+                }
+            }
+        }
+
+        private void EndPlayPiano()
+        {
+            App.StopOrReleaseIntrumentNote(false);
+            playAbsNote = -1;
+        }
+
+        private void StartCaptureOperation(int x, int y, CaptureOperation op)
+        {
+            lastX = x;
+            lastY = y;
+            captureOperation = op;
+        }
+
+        private void UpdateCaptureOperation(int x, int y, float scale = 1.0f)
+        {
+            switch (captureOperation)
+            {
+                case CaptureOperation.MobilePan:
+                    DoScroll(lastX - x);
+                    break;
+                case CaptureOperation.PlayPiano:
+                    PlayPiano(x, y);
+                    break;
+                case CaptureOperation.MobileZoom:
+                    ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
+                    break;
+            }
         }
 
         private void EndCaptureOperation(int x, int y)
         {
+            switch (captureOperation)
+            {
+                case CaptureOperation.PlayPiano:
+                    EndPlayPiano();
+                    break;
+            }
+
             captureOperation = CaptureOperation.None;
             MarkDirty();
         }
@@ -264,24 +391,62 @@ namespace FamiStudio
             EndCaptureOperation(x, y);
         }
 
+        private bool IsPointInPanRectangle(int x, int y)
+        {
+            for (int i = 0; i < NumOctaves; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    if (GetPanRectangle(i, j).Contains(x, y))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         protected override void OnTouchDown(int x, int y)
         {
             flingVelX = 0;
 
-/*
-            if (popupRatio == 1.0f)
-            {
-                var rect = GetExpandedListRect();
-                if (rect.Contains(x, y))
-                    StartCaptureOperation(x, y, CaptureOperation.MobilePan);
-            }
-*/            
+            if (IsPointInPanRectangle(x, y))
+                StartCaptureOperation(x, y, CaptureOperation.MobilePan);
+            else
+                StartCaptureOperation(x, y, CaptureOperation.PlayPiano);
         }
 
         protected override void OnTouchFling(int x, int y, float velX, float velY)
         {
-            EndCaptureOperation(x, y);
-            flingVelX = velX;
+            if (IsPointInPanRectangle(lastX, lastY))
+            {
+                EndCaptureOperation(x, y);
+                flingVelX = velX;
+            }
+        }
+
+        protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
+        {
+            lastX = x;
+            lastY = y;
+
+            if (phase == TouchScalePhase.Begin)
+            {
+                if (captureOperation != CaptureOperation.None)
+                {
+                    Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
+                    EndCaptureOperation(x, y); // MATTT Temporary.
+                }
+
+                StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
+            }
+            else if (phase == TouchScalePhase.Scale)
+            {
+                UpdateCaptureOperation(x, y, scale);
+            }
+            else
+            {
+                EndCaptureOperation(x, y);
+            }
         }
 
         protected override void OnTouchMove(int x, int y)

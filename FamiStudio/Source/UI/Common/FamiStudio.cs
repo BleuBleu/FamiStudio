@@ -581,7 +581,10 @@ namespace FamiStudio
 
         public void DisplayWarning(string msg, bool beep = true)
         {
-            ToolBar.DisplayWarning(msg, beep);
+            if (PlatformUtils.IsMobile)
+                PlatformUtils.ShowToast(msg);
+            else
+                ToolBar.DisplayWarning(msg, beep);
         }
 
         private void UndoRedoManager_PreUndoRedo(TransactionScope scope, TransactionFlags flags)
@@ -2003,7 +2006,10 @@ namespace FamiStudio
         private void HighlightPlayingInstrumentNote()
         {
             if (instrumentPlayer != null)
+            {
                 PianoRoll.HighlightPianoNote(instrumentPlayer.PlayingNote);
+                MobilePiano.HighlightPianoNote(instrumentPlayer.PlayingNote);
+            }
         }
 
         private void CheckStopInstrumentNote(float deltaTime)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -33,6 +34,12 @@ namespace FamiStudio
                 var version = ctx.ApplicationContext.PackageManager.GetPackageInfo(ctx.PackageName, 0).VersionName;
                 return version;
             }
+        }
+
+        public static Size GetScreenResolution()
+        {
+            var displayInfo = DeviceDisplay.MainDisplayInfo;
+            return new Size((int)displayInfo.Width, (int)displayInfo.Height);
         }
 
         public static System.Windows.Forms.DialogResult MessageBox(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)

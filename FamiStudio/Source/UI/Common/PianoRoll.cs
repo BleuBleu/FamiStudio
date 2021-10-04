@@ -1274,9 +1274,8 @@ namespace FamiStudio
             var draggingNote = captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.CreateNote;
             var dragOctave = (dragLastNoteValue - 1) / 12;
             var dragNote = (dragLastNoteValue - 1) % 12;
-
-            if (highlightNote >= Note.MusicalNoteMin && 
-                highlightNote <  Note.MusicalNoteMax)
+            
+            if (Note.IsMusicalNote(highlightNote))
             {
                 playOctave = (highlightNote - 1) / 12;
                 playNote   = (highlightNote - 1) - playOctave * 12;
@@ -3272,12 +3271,6 @@ namespace FamiStudio
                 App.UndoRedoManager.EndTransaction();
         }
 
-        protected bool PointInRectangle(Rectangle rect, int x, int y)
-        {
-            return (x >= rect.Left && x <= rect.Right &&
-                    y >= rect.Top && y <= rect.Bottom);
-        }
-
         protected int GetPianoNote(int x, int y)
         {
             y -= headerAndEffectSizeY;
@@ -3286,12 +3279,12 @@ namespace FamiStudio
             {
                 for (int j = 0; j < 12 && i * 12 + j < NumNotes; j++)
                 {
-                    if (IsBlackKey(j) && PointInRectangle(GetKeyRectangle(i, j), x, y))
+                    if (IsBlackKey(j) && GetKeyRectangle(i, j).Contains(x, y))
                         return i * 12 + j + 1;
                 }
                 for (int j = 0; j < 12 && i * 12 + j < NumNotes; j++)
                 {
-                    if (!IsBlackKey(j) && PointInRectangle(GetKeyRectangle(i, j), x, y))
+                    if (!IsBlackKey(j) && GetKeyRectangle(i, j).Contains(x, y))
                         return i * 12 + j + 1;
                 }
             }
@@ -5078,7 +5071,7 @@ namespace FamiStudio
                 if (captureOperation != CaptureOperation.None)
                 {
                     Debug.Assert(captureOperation != CaptureOperation.MobileZoomVertical && captureOperation != CaptureOperation.MobileZoom);
-                    AbortCaptureOperation(); // Temporary.
+                    AbortCaptureOperation(); // MATTT Temporary.
                 }
 
                 StartCaptureOperation(x, y, IsPointInPiano(x, y) ? CaptureOperation.MobileZoomVertical : CaptureOperation.MobileZoom);

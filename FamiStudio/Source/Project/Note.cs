@@ -498,6 +498,11 @@ namespace FamiStudio
             return note;
         }
 
+        public static bool IsMusicalNote(int note)
+        {
+            return note >= MusicalNoteMin && note <= MusicalNoteMax;
+        }
+
         public Note Clone()
         {
             return (Note)MemberwiseClone();

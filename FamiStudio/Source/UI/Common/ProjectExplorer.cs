@@ -2649,7 +2649,6 @@ namespace FamiStudio
             UpdateCursor();
             UpdateCaptureOperation(x, y);
             UpdateToolTip(x, y);
-            EmitInstrumentHoverEvent(x, y);
 
             mouseLastX = x;
             mouseLastY = y;

@@ -21,11 +21,13 @@ namespace FamiStudio
         public PianoRoll PianoRoll => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
+        public MobilePiano MobilePiano => controls.MobilePiano;
         public static FamiStudioForm Instance => null;
         public new GLControl ActiveControl => activeControl;
 
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => false;
+        public bool MobilePianoVisible { get => false; set => value = false; }
 
         private GLControl activeControl = null;
         private GLControl captureControl = null;

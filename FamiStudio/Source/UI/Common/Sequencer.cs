@@ -826,7 +826,7 @@ namespace FamiStudio
         private void GetMinMaxScroll(out int minScrollX, out int maxScrollX, out int minScrollY, out int maxScrollY)
         {
             minScrollX = 0;
-            maxScrollX = Math.Max(GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Song.Length), false) - scrollMargin, 0);
+            maxScrollX = Song != null ? Math.Max(GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Song.Length), false) - scrollMargin, 0) : 0;
 
             if (PlatformUtils.IsMobile)
             {
@@ -1482,7 +1482,7 @@ namespace FamiStudio
                 if (captureOperation != CaptureOperation.None)
                 {
                     Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
-                    AbortCaptureOperation(); // Temporary.
+                    AbortCaptureOperation(); // MATTT Temporary.
                 }
 
                 StartCaptureOperation(x, y, CaptureOperation.MobileZoom);

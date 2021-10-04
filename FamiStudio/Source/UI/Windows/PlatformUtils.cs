@@ -35,6 +35,11 @@ namespace FamiStudio
             return mainThread == Thread.CurrentThread;
         }
 
+        public static Size GetScreenResolution()
+        {
+            return Screen.PrimaryScreen.Bounds.Size;
+        }
+
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
 

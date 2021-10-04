@@ -178,6 +178,7 @@
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
     <Compile Include="Source\UI\Desktop\QuickAccessBar.cs" />
+    <Compile Include="Source\UI\Desktop\MobilePiano.cs" />
     <Compile Include="Source\UI\Windows\AutoScrollTextBox.cs">
       <SubType>Component</SubType>
     </Compile>

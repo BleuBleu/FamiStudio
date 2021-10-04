@@ -90,11 +90,9 @@ Scaling issue:
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
 
 2nd piano:
-- About 1/4 of the screen
-- 2 buttons to go fwd/backward by 1 snap unit (only enabled in rec mode)
-- Can pinch to zoom
-- How to scroll?
-	=> Like musepad, button between black keys?
+- 2 buttons to go fwd/backward 
+	=> Show/hide when rec mode changes.
+- Black line at top.
 
 Misc:
 / Line widths, bias + 2
