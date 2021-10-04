@@ -1670,7 +1670,7 @@ namespace FamiStudio
 
         private void ImportInstruments()
         {
-            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm)|*.fti;*.fms;*.txt;*.ftm|FamiTracker Instrument File (*.fti)|*.fti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+            var filename = PlatformUtils.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti)|*.fti;*.fms;*.txt;*.ftm;*.bti|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
 
             if (filename != null)
             {
@@ -1684,6 +1684,10 @@ namespace FamiStudio
                     if (filename.ToLower().EndsWith("fti"))
                     {
                         success = new FamitrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
+                    }
+                    if (filename.ToLower().EndsWith("bti"))
+                    {
+                        success = new BambootrackerInstrumentFile().CreateFromFile(App.Project, filename) != null;
                     }
                     else
                     {
