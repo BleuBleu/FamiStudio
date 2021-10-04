@@ -310,6 +310,7 @@
     <EmbeddedResource Include="Resources\Algorithm0%402x.png" />
     <EmbeddedResource Include="Resources\Algorithm1.png" />
     <EmbeddedResource Include="Resources\Algorithm7%402x.png" />
+    <Compile Include="Source\IO\BambootrackerInstrumentFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
