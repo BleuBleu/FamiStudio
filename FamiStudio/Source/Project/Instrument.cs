@@ -41,7 +41,7 @@ namespace FamiStudio
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public Color Color { get => color; set => color = value; }
-        public int ExpansionType => expansion;
+        public int ExpansionType { get => expansion; set => expansion = value; }
         public bool IsExpansionInstrument => expansion != global::FamiStudio.ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);

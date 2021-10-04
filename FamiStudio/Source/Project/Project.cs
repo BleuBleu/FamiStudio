@@ -692,7 +692,11 @@ namespace FamiStudio
                 var numChannelsToPreserved = GetActiveChannelCount();
 
                 if (changed)
+                {
                     numChannelsToPreserved = ChannelType.ExpansionAudioStart;
+                    if ((expansionAudio == ExpansionType.EPSM) || (expansionAudio == ExpansionType.S5B) && (expansion == ExpansionType.EPSM) || (expansion == ExpansionType.S5B))
+                        numChannelsToPreserved += 3;
+                }
                 else if (expansion == ExpansionType.N163)
                     numChannelsToPreserved = ChannelType.ExpansionAudioStart + Math.Min(numChannels, expansionNumChannels);
 
@@ -710,7 +714,14 @@ namespace FamiStudio
                     {
                         var inst = instruments[i];
                         if (inst.IsExpansionInstrument)
+                        {
+                            if(instruments[i].ExpansionType == ExpansionType.EPSM && expansion == ExpansionType.S5B)
+                                instruments[i].ExpansionType = ExpansionType.S5B;
+                            else if (instruments[i].ExpansionType == ExpansionType.S5B && expansion == ExpansionType.EPSM)
+                                instruments[i].ExpansionType = ExpansionType.EPSM;
+                            else
                             DeleteInstrument(inst);
+                        }
                     }
                 }
             }
