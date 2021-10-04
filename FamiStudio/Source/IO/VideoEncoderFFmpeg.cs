@@ -99,6 +99,16 @@ namespace FamiStudio
                 if (!output.Contains("--enable-libx264"))
                 {
                     Log.LogMessage(LogSeverity.Error, "ffmpeg does not seem to be compiled with x264 support. Make sure you have the GPL version.");
+
+                    if (PlatformUtils.IsLinux)
+                    {
+                        Log.LogMessage(LogSeverity.Info, 
+                            "If you are running the FlatPak build, then video export simply cannot work since the " +
+                            "ffmpeg version they distribute has none of the codecs FamiStudio requires " +
+                            "(rawvideo, x264 and MP4) are all missing. Please raise an issue with freedesktop or " +
+                            "flatpak directly and ask them to distribute a more complete version in the future.");
+                    }
+
                     ret = false;
                 }
 
