@@ -35,17 +35,15 @@ namespace FamiStudio
 
         private enum ButtonImageIndices
         {
-            MobilePianoNext,
-            MobilePianoPrev,
             MobilePianoDrag,
+            MobilePianoRest,
             Count
         };
 
         private readonly string[] ButtonImageNames = new string[]
         {
-            "MobilePianoNext",
-            "MobilePianoPrev",
-            "MobilePianoDrag"
+            "MobilePianoDrag",
+            "MobilePianoRest"
         };
 
         private int whiteKeySizeX;
@@ -53,7 +51,6 @@ namespace FamiStudio
         private int octaveSizeX;
         private int iconPos;
         private int virtualSizeX;
-        private int buttonSize;
         private float iconScaleFloat = 1.0f;
 
         RenderBrush whiteKeyBrush;
@@ -81,7 +78,6 @@ namespace FamiStudio
 
             var screenSize = PlatformUtils.GetScreenResolution();
             layoutSize = Math.Min(screenSize.Width, screenSize.Height) / 4;
-            buttonSize = layoutSize / 2;
 
             bmpButtonAtlas       = g.CreateBitmapAtlasFromResources(ButtonImageNames);
             whiteKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
@@ -184,9 +180,8 @@ namespace FamiStudio
 
         protected void RenderPiano(RenderGraphics g)
         {
-            int actualWidth = Width - buttonSize;
-            int maxVisibleOctave = 8; // NumOctaves - Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
-            int minVisibleOctave = 0; // NumOctaves - Utils.Clamp((int)Math.Ceiling((scrollX + actualWidth) / (float)octaveSizeX), 0, NumOctaves);
+            int minVisibleOctave = Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
+            int maxVisibleOctave = Utils.Clamp((int)Math.Ceiling((scrollX + Width) / (float)octaveSizeX), 0, NumOctaves);
 
             var cb = g.CreateCommandList();
             var cp = g.CreateCommandList();
@@ -251,7 +246,8 @@ namespace FamiStudio
                         var scale = Math.Min(r.Width, r.Height) / (float)Math.Min(size.Width, size.Height);
                         var posX = r.X + r.Width / 2 - (int)(size.Width * scale / 2);
                         var posY = r.Height / 2 - (int)(size.Height * scale / 2);
-                        cp.DrawBitmapAtlas(bmpButtonAtlas, (int)ButtonImageIndices.MobilePianoDrag, posX, posY, 0.25f, scale, Color.Black);
+                        var imageIndex = App.IsRecording && j == 1 ? (int)ButtonImageIndices.MobilePianoRest : (int)ButtonImageIndices.MobilePianoDrag;
+                        cp.DrawBitmapAtlas(bmpButtonAtlas, imageIndex, posX, posY, 0.25f, scale, Color.Black);
                     }
                 }
             }
@@ -262,7 +258,7 @@ namespace FamiStudio
             //    r.cp.FillRectangle(GetKeyRectangle(i, j), blackKeyPressedBrush);
 
             g.DrawCommandList(cb);
-            g.DrawCommandList(cp, new Rectangle(0, 0, actualWidth, Height));
+            g.DrawCommandList(cp, new Rectangle(0, 0, Width, Height));
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -294,9 +290,8 @@ namespace FamiStudio
 
         private bool ClampScroll()
         {
-            var actualWidth = Width - buttonSize;
             var minScrollX = 0;
-            var maxScrollX = Math.Max(virtualSizeX - actualWidth, 0);
+            var maxScrollX = Math.Max(virtualSizeX - Width, 0);
 
             var scrolled = true;
             if (scrollX < 0) { scrollX = 0; scrolled = false; }

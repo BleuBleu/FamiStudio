@@ -470,8 +470,7 @@
     <EmbeddedResource Include="Resources\MinusSmall%402x.png" />
     <EmbeddedResource Include="Resources\MobileArpeggio.png" />
     <EmbeddedResource Include="Resources\MobilePianoDrag.png" />
-    <EmbeddedResource Include="Resources\MobilePianoNext.png" />
-    <EmbeddedResource Include="Resources\MobilePianoPrev.png" />
+    <EmbeddedResource Include="Resources\MobilePianoRest.png" />
     <EmbeddedResource Include="Resources\MobileSnapOff.png" />
     <EmbeddedResource Include="Resources\MobileSnapOn.png" />
     <EmbeddedResource Include="Resources\More%402x.png" />
