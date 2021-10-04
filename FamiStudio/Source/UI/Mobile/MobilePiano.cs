@@ -334,6 +334,7 @@ namespace FamiStudio
                 {
                     playAbsNote = note;
                     App.PlayInstrumentNote(playAbsNote, true, true);
+                    PlatformUtils.VibrateTick();
                     MarkDirty();
                 }
             }
