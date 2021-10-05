@@ -673,7 +673,7 @@ namespace FamiStudio
 
         public void InvalidateCumulativePatternCache(int startPatternIdx, int endPatternIdx)
         {
-            for (int idx = startPatternIdx; idx <= endPatternIdx && maxValidCacheIndex != -1; idx++)
+            for (int idx = startPatternIdx; idx <= endPatternIdx && idx < Song.MaxLength && maxValidCacheIndex != -1; idx++)
             {
                 var pattern = patternInstances[idx];
                 if (pattern != null)
@@ -772,37 +772,40 @@ namespace FamiStudio
             var startLocation = location;
 
             song.AdvanceNumberOfNotes(ref location, 1);
-            var pattern = patternInstances[location.PatternIndex];
-
-            // Look in current pattern.
-            if (pattern != null)
+            if (location.PatternIndex < patternInstances.Length)
             {
-                var idx = pattern.BinarySearchList(pattern.Notes.Keys, location.NoteIndex, true);
+                var pattern = patternInstances[location.PatternIndex];
 
-                if (idx >= 0)
+                // Look in current pattern.
+                if (pattern != null)
                 {
-                    for (; idx < pattern.Notes.Values.Count; idx++)
+                    var idx = pattern.BinarySearchList(pattern.Notes.Keys, location.NoteIndex, true);
+
+                    if (idx >= 0)
                     {
-                        var note = pattern.Notes.Values[idx];
-                        if (note.MatchesFilter(filter))
+                        for (; idx < pattern.Notes.Values.Count; idx++)
                         {
-                            location.NoteIndex = pattern.Notes.Keys[idx];
-                            return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
+                            var note = pattern.Notes.Values[idx];
+                            if (note.MatchesFilter(filter))
+                            {
+                                location.NoteIndex = pattern.Notes.Keys[idx];
+                                return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
+                            }
                         }
                     }
                 }
-            }
 
-            // Then look in the following patterns using the cache.
-            for (var p = location.PatternIndex + 1; p < song.Length; p++)
-            {
-                var firstNoteIdx = GetCachedFirstNoteIndex(p);
-                if (firstNoteIdx >= 0)
+                // Then look in the following patterns using the cache.
+                for (var p = location.PatternIndex + 1; p < song.Length; p++)
                 {
-                    var note = patternInstances[p].Notes[firstNoteIdx];
-                    location.PatternIndex = p;
-                    location.NoteIndex = firstNoteIdx;
-                    return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
+                    var firstNoteIdx = GetCachedFirstNoteIndex(p);
+                    if (firstNoteIdx >= 0)
+                    {
+                        var note = patternInstances[p].Notes[firstNoteIdx];
+                        location.PatternIndex = p;
+                        location.NoteIndex = firstNoteIdx;
+                        return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
+                    }
                 }
             }
 

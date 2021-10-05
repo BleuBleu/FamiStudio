@@ -740,7 +740,7 @@ namespace FamiStudio
             ToolBar.Reset();
             ProjectExplorer.Reset();
             Sequencer.Reset();
-            PianoRoll.StartEditChannel(selectedChannelIndex, 0);
+            PianoRoll.Reset(selectedChannelIndex);
 
             InitializeAutoSave();
             InitializeSongPlayer();

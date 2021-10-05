@@ -24,7 +24,6 @@ namespace FamiStudio
         const float MaxZoomY                = 4.0f;
         const float MaxWaveZoom             = 256.0f;
         const float DefaultEnvelopeZoom     = 4.0f;
-        const float DrawFrameZoom           = 0.5f;
         const float ContinuousFollowPercent = 0.75f;
         const float DefaultZoomWaveTime     = 0.25f;
         const float ScrollSpeedFactor       = PlatformUtils.IsMobile ? 2.0f : 1.0f;
@@ -70,6 +69,7 @@ namespace FamiStudio
         const int DefaultScrollMargin              = 128;
         const int DefaultNoteResizeMargin          = 8;
         const int DefaultBeatTextPosX              = 3;
+        const int DefaultMinPixelDistForLines      = 5;
 
         int headerSizeY;
         int headerAndEffectSizeY;
@@ -108,6 +108,7 @@ namespace FamiStudio
         int beatTextPosX;
         int geometryNoteSizeY;
         int fontSmallCharSizeX;
+        int minPixelDistForLines;
         float minZoom;
         float maxZoom;
         float envelopeSizeY;
@@ -478,8 +479,9 @@ namespace FamiStudio
             scrollMargin              = ScaleForMainWindow(DefaultScrollMargin);
             noteResizeMargin          = ScaleForMainWindow(DefaultNoteResizeMargin);
             envelopeSizeY             = ScaleForMainWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
+            minPixelDistForLines      = ScaleForMainWindow(DefaultMinPixelDistForLines);
 
-            //// Make sure the effect panel actually fit on screen on mobile.
+            // Make sure the effect panel actually fit on screen on mobile.
             if (PlatformUtils.IsMobile && ParentForm != null)
                 effectPanelSizeY = Math.Min(ParentFormSize.Height / 2, ScaleForMainWindow(DefaultEffectPanelSizeY));
             else
@@ -490,7 +492,7 @@ namespace FamiStudio
             virtualSizeY         = NumNotes * noteSizeY;
         }
 
-        public void StartEditChannel(int channelIdx, int patternIdx)
+        public void StartEditChannel(int channelIdx, int patternIdx = 0)
         {
             editMode = EditionMode.Channel;
             editChannel = channelIdx;
@@ -744,19 +746,13 @@ namespace FamiStudio
 
         public void Reset(int channelIdx)
         {
+            // At this point, this is just a more agressive StartEditChannel().
             AbortCaptureOperation();
             showEffectsPanel = false;
-            scrollX = 0;
-            scrollY = 0;
-            zoom = 0;
-            editMode = EditionMode.Channel;
-            editChannel = channelIdx;
             editInstrument = null;
             editArpeggio = null;
-            noteTooltip = "";
-            UpdateRenderCoords();
-            ClampScroll();
-            ClearSelection();
+            zoom = 1.0f;
+            StartEditChannel(channelIdx);
         }
 
         public void SongModified()
@@ -821,9 +817,9 @@ namespace FamiStudio
 
             seekGeometry = g.CreateGeometry(new float[,]
             {
-                { -headerSizeY / 2, 1 },
-                { 0, headerSizeY - 2 },
-                { headerSizeY / 2, 1 }
+                { -headerSizeY / 4, 1 },
+                { 0, headerSizeY / 2 - 2 },
+                { headerSizeY / 4, 1 }
             });
 
             sampleGeometry = g.CreateGeometry(new float[,]
@@ -1146,7 +1142,7 @@ namespace FamiStudio
                     }
 
                     if (pattern != null)
-                        r.ch.DrawText(pattern.Name, ThemeResources.FontMedium, px, headerSizeY / 2, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sx, headerSizeY / 2 - 1);
+                        r.ch.DrawText(pattern.Name, ThemeResources.FontMedium, px, headerSizeY / 2, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter | RenderTextFlags.Clip, sx, headerSizeY / 2 - 1);
                 }
 
                 int maxX = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern));
@@ -1184,7 +1180,7 @@ namespace FamiStudio
                 if (seekFrame >= 0)
                 {
                     r.ch.PushTranslation(GetPixelForNote(seekFrame), 0);
-                    r.ch.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), ThemeResources.BlackBrush, 1);
+                    r.ch.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), ThemeResources.BlackBrush, 1, true);
                     r.ch.DrawLine(0, headerSizeY / 2, 0, headerSizeY, GetSeekBarBrush(), 3);
                     r.ch.PopTransform();
                 }
@@ -2002,6 +1998,14 @@ namespace FamiStudio
             return Theme.LightGreyFillColor1;
         }
 
+        private bool ShouldDrawLines(Song song, int patternIdx, int numNotes)
+        {
+            var x0 = GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(patternIdx));
+            var x1 = GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(patternIdx) + numNotes);
+
+            return (x1 - x0) >= minPixelDistForLines;
+        }
+
         private void RenderNotes(RenderInfo r)
         {
             var song = Song;
@@ -2043,6 +2047,8 @@ namespace FamiStudio
                         if (song.UsesFamiStudioTempo)
                         {
                             var noteLength = song.GetPatternNoteLength(p);
+                            var drawNotes = ShouldDrawLines(song, p, noteLength);
+                            var drawFrames = drawNotes && ShouldDrawLines(song, p, 1);
 
                             for (int i = p == 0 ? 1 : 0; i < patternLen; i++)
                             {
@@ -2050,21 +2056,23 @@ namespace FamiStudio
 
                                 if (i % beatLength == 0)
                                     r.cb.DrawLine(x, 0, x, Height, ThemeResources.BlackBrush, i == 0 ? 3.0f : 1.0f);
-                                else if (i % noteLength == 0)
+                                else if (drawNotes && i % noteLength == 0)
                                     r.cb.DrawLine(x, 0, x, Height, ThemeResources.DarkGreyLineBrush1);
-                                else if (zoom >= DrawFrameZoom && editMode != EditionMode.VideoRecording)
+                                else if (drawFrames && editMode != EditionMode.VideoRecording)
                                     r.cb.DrawLine(x, 0, x, Height, ThemeResources.DarkGreyLineBrush1, 1, false, true);
                             }
                         }
                         else
                         {
+                            var drawNotes = ShouldDrawLines(song, p, 1);
+
                             for (int i = p == 0 ? 1 : 0; i < patternLen; i++)
                             {
                                 int x = GetPixelForNote(song.GetPatternStartAbsoluteNoteIndex(p) + i);
 
                                 if (i % beatLength == 0)
                                     r.cb.DrawLine(x, 0, x, Height, ThemeResources.BlackBrush, i == 0 ? 3.0f : 1.0f);
-                                else if (zoom >= 0.5f)
+                                else if (drawNotes)
                                     r.cb.DrawLine(x, 0, x, Height, ThemeResources.DarkGreyLineBrush2);
                             }
                         }
