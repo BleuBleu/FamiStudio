@@ -119,7 +119,6 @@ namespace FamiStudio
 
         enum EditionMode
         {
-            None,
             Channel,
             Enveloppe,
             DPCM,
@@ -343,7 +342,7 @@ namespace FamiStudio
         float captureWaveTime = 0.0f;
         string noteTooltip = "";
         CaptureOperation captureOperation = CaptureOperation.None;
-        EditionMode editMode = EditionMode.None;
+        EditionMode editMode = EditionMode.Channel;
         NoteLocation highlightNoteLocation = NoteLocation.Invalid;
         NoteLocation captureNoteLocation;
 
@@ -437,7 +436,7 @@ namespace FamiStudio
         private void UpdateRenderCoords()
         {
             var videoMode = editMode == EditionMode.VideoRecording;
-            var headerScale = editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM || editMode == EditionMode.None ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2);
+            var headerScale = editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2);
             var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
             var effectIconsScale = PlatformUtils.IsMobile ? 0.5f : 1.0f;
 
@@ -491,10 +490,10 @@ namespace FamiStudio
             virtualSizeY         = NumNotes * noteSizeY;
         }
 
-        public void StartEditPattern(int trackIdx, int patternIdx)
+        public void StartEditChannel(int channelIdx, int patternIdx)
         {
             editMode = EditionMode.Channel;
-            editChannel = trackIdx;
+            editChannel = channelIdx;
             noteTooltip = "";
 
             BuildSupportEffectList();
@@ -505,12 +504,12 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void ChangeChannel(int trackIdx)
+        public void ChangeChannel(int channelIdx)
         {
             if (editMode == EditionMode.Channel)
             {
                 AbortCaptureOperation();
-                editChannel = trackIdx;
+                editChannel = channelIdx;
                 noteTooltip = "";
                 BuildSupportEffectList();
                 MarkDirty();
@@ -557,7 +556,7 @@ namespace FamiStudio
         {
             editMode = EditionMode.DPCM;
             editSample = sample;
-            zoom = 0;
+            zoom = 1.0f;
             noteTooltip = "";
             envelopeValueZoom = 1;
             envelopeValueOffset = 0;
@@ -573,7 +572,7 @@ namespace FamiStudio
         {
             editMode = EditionMode.DPCMMapping;
             showEffectsPanel = false;
-            zoom = 0;
+            zoom = 1.0f;
             noteTooltip = "";
             envelopeValueZoom = 1;
             envelopeValueOffset = 0;
@@ -743,15 +742,15 @@ namespace FamiStudio
             }
         }
 
-        public void Reset()
+        public void Reset(int channelIdx)
         {
             AbortCaptureOperation();
             showEffectsPanel = false;
             scrollX = 0;
             scrollY = 0;
             zoom = 0;
-            editMode = EditionMode.None;
-            editChannel = -1;
+            editMode = EditionMode.Channel;
+            editChannel = channelIdx;
             editInstrument = null;
             editArpeggio = null;
             noteTooltip = "";
@@ -767,12 +766,12 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void SongChanged()
+        public void SongChanged(int channelIdx)
         {
             if (editMode == EditionMode.Channel)
             {
-                editMode = EditionMode.None;
-                editChannel = -1;
+                editMode = EditionMode.Channel;
+                editChannel = channelIdx;
                 editInstrument = null;
                 editArpeggio = null;
                 showEffectsPanel = false;
@@ -5149,7 +5148,7 @@ namespace FamiStudio
             minScrollX = 0;
             minScrollY = 0;
             maxScrollX = 0;
-            maxScrollY = editMode == EditionMode.None ? 0 : Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
+            maxScrollY = Math.Max(virtualSizeY + headerAndEffectSizeY - Height, 0);
 
             if (editMode == EditionMode.Channel ||
                 editMode == EditionMode.VideoRecording)
@@ -6946,6 +6945,13 @@ namespace FamiStudio
 
             return x > whiteKeySizeX;
         }
+
+#if DEBUG
+        public void ValidateIntegrity()
+        {
+            Debug.Assert(editMode != EditionMode.Channel || editChannel == App.SelectedChannelIndex);
+        }
+#endif
 
         public void SerializeState(ProjectBuffer buffer)
         {

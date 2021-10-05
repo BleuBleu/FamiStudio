@@ -203,7 +203,7 @@ namespace FamiStudio
                     song = value;
 
                     ResetSelectedChannel();
-                    PianoRoll.SongChanged();
+                    PianoRoll.SongChanged(selectedChannelIndex);
                     Sequencer.Reset();
                     ToolBar.Reset();
 
@@ -447,24 +447,24 @@ namespace FamiStudio
             ResetSelectedInstrumentArpeggio();
             ResetSelectedInstrumentArpeggio();
             Sequencer.Reset();
-            PianoRoll.Reset();
+            PianoRoll.Reset(selectedChannelIndex);
         }
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
         {
             ResetSelectedInstrumentArpeggio();
-            PianoRoll.Reset();
+            PianoRoll.Reset(selectedChannelIndex);
         }
 
         private void ProjectExplorer_ArpeggioDeleted(Arpeggio arpeggio)
         {
             ResetSelectedInstrumentArpeggio();
-            PianoRoll.Reset();
+            PianoRoll.Reset(selectedChannelIndex);
         }
 
         private void ProjectExplorer_DPCMSampleDeleted(DPCMSample sample)
         {
-            PianoRoll.Reset();
+            PianoRoll.Reset(selectedChannelIndex);
         }
 
         private void PianoRoll_NotesPasted()
@@ -655,6 +655,7 @@ namespace FamiStudio
                 Debug.Assert(project.ArpeggioExists(selectedArpeggio));
 
             Sequencer.ValidateIntegrity();
+            PianoRoll.ValidateIntegrity();
 #endif
         }
 
@@ -738,8 +739,8 @@ namespace FamiStudio
 
             ToolBar.Reset();
             ProjectExplorer.Reset();
-            PianoRoll.Reset();
             Sequencer.Reset();
+            PianoRoll.StartEditChannel(selectedChannelIndex, 0);
 
             InitializeAutoSave();
             InitializeSongPlayer();
@@ -988,7 +989,7 @@ namespace FamiStudio
             // be constantly rendering frames as we export.
             if (AppNeedsRealTimeUpdate())
             {
-                PianoRoll.Reset();
+                PianoRoll.Reset(selectedChannelIndex);
                 Debug.Assert(!AppNeedsRealTimeUpdate());
             }
         }
@@ -1254,7 +1255,7 @@ namespace FamiStudio
                     ResetSelectedSong();
                     ResetSelectedInstrumentArpeggio();
                     Sequencer.Reset();
-                    PianoRoll.Reset();
+                    PianoRoll.Reset(selectedChannelIndex);
                     ProjectExplorer.RefreshButtons();
                     MarkEverythingDirty();
                 }
@@ -1270,7 +1271,7 @@ namespace FamiStudio
             ResetSelectedSong();
             ResetSelectedInstrumentArpeggio();
             Sequencer.Reset();
-            PianoRoll.Reset();
+            PianoRoll.Reset(selectedChannelIndex);
         }
 
         public void ShowHelp()
@@ -2067,7 +2068,7 @@ namespace FamiStudio
 
         private void Sequencer_PatternClicked(int trackIndex, int patternIndex)
         {
-            PianoRoll.StartEditPattern(trackIndex, patternIndex);
+            PianoRoll.StartEditChannel(trackIndex, patternIndex);
         }
 
         private void PianoRoll_PatternChanged(Pattern pattern)

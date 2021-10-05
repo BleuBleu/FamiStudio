@@ -15,7 +15,7 @@ namespace FamiStudio
         private GLControl   transitionControl;
         private GLControl   activeControl;
         private float       transitionTimer;
-        private bool        mobilePianoVisible = true; // MATTT
+        private bool        mobilePianoVisible = false;
 
         private Toolbar         toolbar;
         private Sequencer       sequencer;

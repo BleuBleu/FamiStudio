@@ -120,6 +120,10 @@ Features missing from the Mobile version:
 - Copy instrument.
 - Change insturment dialog for a combo
 - Get rid of "None" mode on piano roll.
+- "Volume doesn't export correctly when exporting a VRC7 song with FamiTracker Text"
+- Dont render note lines in piano roll when zoomed out a lot.
+- Clip pattern name (or use elipsis) in piano roll. Ugly when zoomed out.
+- Seek triangle takes 2 rows now? WTF?
 
 Misc:
 

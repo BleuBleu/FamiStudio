@@ -105,7 +105,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, 
                             "If you are running the FlatPak build, then video export simply cannot work since the " +
                             "ffmpeg version they distribute has none of the codecs FamiStudio requires " +
-                            "(rawvideo, x264 and MP4) are all missing. Please raise an issue with freedesktop or " +
+                            "(rawvideo, x264 and MP4 are all missing). Please raise an issue with freedesktop or " +
                             "flatpak directly and ask them to distribute a more complete version in the future.");
                     }
 
