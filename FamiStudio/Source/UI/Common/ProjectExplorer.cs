@@ -776,7 +776,7 @@ namespace FamiStudio
 
                             c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
                             c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
-                            c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1.0f);
+                            c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1);
                             c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
                             c.PopTransform();
                         }

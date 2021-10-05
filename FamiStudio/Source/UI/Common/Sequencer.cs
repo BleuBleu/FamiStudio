@@ -386,8 +386,8 @@ namespace FamiStudio
             seekBarRecBrush = g.CreateSolidBrush(Theme.DarkRedFillColor);
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, trackNameSizeX, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
             patternHeaderBrush = g.CreateVerticalGradientBrush(0, patternHeaderSizeY, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
-            selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(96, Theme.LightGreyFillColor1));
-            selectedPatternInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(48, Theme.LightGreyFillColor1));
+            selectedPatternVisibleBrush   = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
+            selectedPatternInvisibleBrush = g.CreateSolidBrush(Color.FromArgb(16, Theme.LightGreyFillColor1));
             selectionPatternBrush = g.CreateSolidBrush(Theme.LightGreyFillColor1);
             highlightPatternBrush = g.CreateSolidBrush(Theme.WhiteColor);
 
@@ -473,6 +473,14 @@ namespace FamiStudio
             ch.DrawRectangle(0, 0, trackNameSizeX, Height, ThemeResources.DarkGreyFillBrush1);
             ch.DrawLine(0, headerSizeY, Width, headerSizeY, ThemeResources.BlackBrush);
 
+            // Vertical line seperating the track labels.
+            ch.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, ThemeResources.BlackBrush);
+            ch.DrawLine(0, 0, trackNameSizeX, 0, ThemeResources.BlackBrush);
+
+            // Vertical line seperating with the toolbar
+            if (PlatformUtils.IsMobile && IsLandscape)
+                ch.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
+
             cc.PushTranslation(0, headerSizeY - scrollY);
 
             // Horizontal lines
@@ -481,9 +489,6 @@ namespace FamiStudio
 
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 cc.DrawLine(0, y, Width, y, ThemeResources.BlackBrush);
-
-            // Vertical line seperating the track labels.
-            cc.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, ThemeResources.BlackBrush);
 
             // Icons
             var showExpIcons = showExpansionIcons && Song.Project.UsesAnyExpansionAudio;
@@ -560,16 +565,14 @@ namespace FamiStudio
 
             // Header
             ch.DrawLine(0, 0, Width, 0, ThemeResources.BlackBrush);
+            ch.DrawLine(0, headerSizeY, Width, headerSizeY, ThemeResources.BlackBrush);
             ch.DrawLine(0, Height - 1, Width, Height - 1, ThemeResources.BlackBrush);
 
-            // Vertical lines
-            for (int i = minVisiblePattern; i <= maxVisiblePattern; i++)
+            // Vertical lines (Header)
+            for (int i = Math.Max(1, minVisiblePattern); i <= maxVisiblePattern; i++)
             {
-                if (i != 0)
-                {
-                    var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
-                    ch.DrawLine(px, 0, px, actualSizeY, ThemeResources.BlackBrush);
-                }
+                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
+                ch.DrawLine(px, 0, px, headerSizeY, ThemeResources.BlackBrush);
             }
 
             for (int i = minVisiblePattern; i < maxVisiblePattern; i++)
@@ -595,12 +598,19 @@ namespace FamiStudio
                 ch.PopTransform();
             }
 
+            // Vertical lines
+            for (int i = Math.Max(1, minVisiblePattern); i <= maxVisiblePattern; i++)
+            {
+                var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
+                cb.DrawLine(px, 0, px, Height, ThemeResources.BlackBrush);
+            }
+
             cb.PushTranslation(0, -scrollY);
 
             // Horizontal lines
             for (int i = 0, y = headerSizeY; i < Song.Channels.Length; i++, y += trackSizeY)
                 cb.DrawLine(0, y, Width, y, ThemeResources.BlackBrush);
-
+            
             // Patterns
             var highlightedPatternRect = Rectangle.Empty;
 
@@ -627,12 +637,12 @@ namespace FamiStudio
 
                         // DROIDTODO : The icons arent aligned probably on mobile while moving patterns.
                         cp.PushTranslation(0, py);
-                        cp.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY, 0.8f));
+                        cb.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY, 0.8f));
                         cp.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, ThemeResources.BlackBrush);
                         cp.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1);
                         cp.DrawText(pattern.Name, ThemeResources.FontSmall, patternNamePosX, patternNamePosY, ThemeResources.BlackBrush, RenderTextFlags.Left | RenderTextFlags.Clip, sx - patternNamePosX);
                         if (IsPatternSelected(location))
-                            cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 4 /*2 MATTT */, true);
+                            cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2, true);
                         cp.PopTransform();
                     }
 
@@ -644,7 +654,7 @@ namespace FamiStudio
             }
 
             // Draw highlighted pattern at end for proper sorting.
-            cf.DrawRectangle(highlightedPatternRect, highlightPatternBrush, 4 /*2 MATTT */, false);
+            cf.DrawRectangle(highlightedPatternRect, highlightPatternBrush, 2, false);
 
             // TODO : This is really bad, since all the logic is in the rendering code. Make
             // this more like any other capture op eventually.
@@ -738,6 +748,8 @@ namespace FamiStudio
                 cb.FillAndDrawRectangle(scrollBarPosX - 1, actualSizeY, scrollBarPosX + scrollBarSizeX, Height, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
             }
 
+            cb.PopTransform();
+
             // Seek bar
             cb.PushTranslation(seekX, 0);
             cf.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), ThemeResources.BlackBrush);
@@ -745,7 +757,10 @@ namespace FamiStudio
             cb.PopTransform();
 
             cb.PopTransform();
-            cb.PopTransform();
+
+            // Line seperating with the quick access bar.
+            if (PlatformUtils.IsMobile && IsLandscape)
+                cf.DrawLine(Width - 1, 0, Width - 1, Height, ThemeResources.BlackBrush);
 
             var headerRect      = new Rectangle(trackNameSizeX, 0, Width, Height);
             var patternOnlyRect = new Rectangle(trackNameSizeX, headerSizeY, Width, Height);

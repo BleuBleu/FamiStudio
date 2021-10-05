@@ -220,6 +220,8 @@ namespace FamiStudio
             else
                 gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.Left, ctrl.Top, ctrl.Width, ctrl.Height), height);
 
+            gfx.SetLineBias(2);
+
             if (fullscreenViewport)
                 gfx.Transform.PushTranslation(ctrl.Left, ctrl.Top);
 

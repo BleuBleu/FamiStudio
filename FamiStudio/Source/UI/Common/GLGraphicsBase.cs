@@ -38,6 +38,7 @@ namespace FamiStudio
         protected float windowScaling = 1.0f;
         protected float fontScaling = 1.0f;
         protected int windowSizeY;
+        protected int lineWidthBias;
         protected int maxSmoothLineWidth = int.MaxValue;
         protected Rectangle controlRect;
         protected Rectangle controlRectFlip;
@@ -107,6 +108,7 @@ namespace FamiStudio
         {
             this.windowSizeY = windowSizeY;
 
+            lineWidthBias = 0;
             controlRect = unflippedControlRect;
             controlRectFlip = FlipRectangleY(unflippedControlRect);
             transform.SetIdentity();
@@ -116,6 +118,11 @@ namespace FamiStudio
         {
         }
 
+        public void SetLineBias(int bias)
+        {
+            lineWidthBias = bias;
+        }
+
         public void DrawCommandList(GLCommandList list)
         {
             DrawCommandList(list, Rectangle.Empty);
@@ -123,7 +130,7 @@ namespace FamiStudio
 
         public virtual GLCommandList CreateCommandList()
         {
-            return new GLCommandList(this, dashedBitmap.Size.Width, true, maxSmoothLineWidth);
+            return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, true, maxSmoothLineWidth);
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc)
@@ -891,6 +898,7 @@ namespace FamiStudio
 #endif
 
         private int maxSmoothLineWidth = int.MaxValue;
+        private int lineWidthBias;
         private float invDashTextureSize;
         private MeshBatch meshBatch;
         private MeshBatch meshSmoothBatch;
@@ -911,11 +919,12 @@ namespace FamiStudio
         public bool HasAnyBitmaps => bitmaps.Count > 0;
         public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps || HasAnyTickLineMeshes;
 
-        public GLCommandList(GLGraphicsBase g, int dashTextureSize, bool supportsLineWidth = true, int maxSmoothWidth = int.MaxValue)
+        public GLCommandList(GLGraphicsBase g, int dashTextureSize, int lineBias = 0, bool supportsLineWidth = true, int maxSmoothWidth = int.MaxValue)
         {
             graphics = g;
             xform = g.Transform;
             invDashTextureSize = 1.0f / dashTextureSize;
+            lineWidthBias = lineBias;
             maxSmoothLineWidth = maxSmoothWidth;
 #if FAMISTUDIO_LINUX
             drawThickLineAsPolygon = !supportsLineWidth;
@@ -1030,7 +1039,7 @@ namespace FamiStudio
             return currentLineBatch;
         }
 
-        private void DrawLineInternal(float x0, float y0, float x1, float y1, GLBrush brush, float width, bool smooth, bool dash)
+        private void DrawLineInternal(float x0, float y0, float x1, float y1, GLBrush brush, int width, bool smooth, bool dash)
         {
 #if FAMISTUDIO_LINUX
             if (width > 1.0f && drawThickLineAsPolygon)
@@ -1123,16 +1132,20 @@ namespace FamiStudio
         }
 #endif
 
-        public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool smooth = false, bool dash = false)
+        public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, int width = 1, bool smooth = false, bool dash = false)
         {
+            width += lineWidthBias;
+
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
             DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, dash);
         }
 
-        public void DrawLine(float[] points, GLBrush brush, float width = 1.0f, bool smooth = false)
+        public void DrawLine(float[] points, GLBrush brush, int width = 1, bool smooth = false)
         {
+            width += lineWidthBias;
+
             var x0 = points[0];
             var y0 = points[1];
 
@@ -1151,8 +1164,10 @@ namespace FamiStudio
             }
         }
 
-        public void DrawGeometry(float[,] points, GLBrush brush, float width = 1.0f, bool smooth = false)
+        public void DrawGeometry(float[,] points, GLBrush brush, int width = 1, bool smooth = false)
         {
+            width += lineWidthBias;
+
             var x0 = points[0, 0];
             var y0 = points[0, 1];
 
@@ -1171,13 +1186,15 @@ namespace FamiStudio
             }
         }
 
-        public void DrawRectangle(Rectangle rect, GLBrush brush, float width = 1.0f, bool smooth = false)
+        public void DrawRectangle(Rectangle rect, GLBrush brush, int width = 1, bool smooth = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, float width = 1.0f, bool smooth = false)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, int width = 1, bool smooth = false)
         {
+            width += lineWidthBias;
+
             xform.TransformPoint(ref x0, ref y0);
             xform.TransformPoint(ref x1, ref y1);
 
@@ -1187,7 +1204,7 @@ namespace FamiStudio
             if (width > maxSmoothLineWidth)
             {
                 smooth = false;
-                halfWidth = width * 0.5f;
+                halfWidth = (float)Math.Floor(width * 0.5f);
             }
 #endif
 
@@ -1197,8 +1214,10 @@ namespace FamiStudio
             DrawLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, brush, width, smooth, false);
         }
 
-        public void DrawGeometry(GLGeometry geo, GLBrush brush, float width, bool smooth = false, bool miter = false)
+        public void DrawGeometry(GLGeometry geo, GLBrush brush, int width, bool smooth = false, bool miter = false)
         {
+            width += lineWidthBias;
+
 #if FAMISTUDIO_ANDROID
             if (width > maxSmoothLineWidth)
             {
@@ -1228,7 +1247,7 @@ namespace FamiStudio
             }
         }
 
-        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, float lineWidth = 1.0f, bool smooth = false, bool miter = false)
+        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, int lineWidth = 1, bool smooth = false, bool miter = false)
         {
             FillGeometry(geo, fillBrush, smooth);
             DrawGeometry(geo, lineBrush, lineWidth, smooth, miter);
@@ -1381,13 +1400,13 @@ namespace FamiStudio
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool smooth = false)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, int width = 1, bool smooth = false)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
             DrawRectangle(x0, y0, x1, y1, lineBrush, width, smooth);
         }
 
-        public void FillAndDrawRectangle(Rectangle rect, GLBrush fillBrush, GLBrush lineBrush, float width = 1.0f, bool smooth = false)
+        public void FillAndDrawRectangle(Rectangle rect, GLBrush fillBrush, GLBrush lineBrush, int width = 1, bool smooth = false)
         {
             FillRectangle(rect, fillBrush);
             DrawRectangle(rect, lineBrush, width, smooth);

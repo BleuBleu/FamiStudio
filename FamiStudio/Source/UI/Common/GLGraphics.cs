@@ -235,7 +235,7 @@ namespace FamiStudio
 
         public override GLCommandList CreateCommandList()
         {
-            return new GLCommandList(this, dashedBitmap.Size.Width, supportsLineWidth);
+            return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, supportsLineWidth);
         }
 
         public unsafe override void DrawCommandList(GLCommandList list, Rectangle scissor)

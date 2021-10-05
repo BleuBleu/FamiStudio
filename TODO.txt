@@ -20,6 +20,7 @@ Long press:
 TDB:
 	- Env replace? Instrument replace? Song reorder?
 		=> Will be done with cursor mecanic.
+- Draw line that seperates with toolbar + quick access.
 
 Piano roll:
 - Possible actions: 
@@ -55,6 +56,7 @@ Controls:
 	Tap:
 		- Add/drag note/selection
 - Hide the vertical piano when editing DPCM samples, envelopes, etc. Clamp the scroll to what makes sense.
+- Draw line that seperates with toolbar + quick access.
 
 Sequencer:
 - Possible actions:
@@ -90,7 +92,6 @@ Scaling issue:
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
 
 Misc:
-/ Line widths, bias + 2
 - Snapping needs to preserve value even when not in channel mode.
 
 Icon notes:

@@ -1061,9 +1061,15 @@ namespace FamiStudio
                 var brush = c.Graphics.GetSolidBrush(Theme.DarkGreyFillColor1);
 
                 if (IsLandscape)
+                {
                     c.FillRectangle(0, 0, RenderSize, Height, brush);
+                    c.DrawLine(Width - 1, 0, Width - 1, Height, ThemeResources.BlackBrush);
+                }
                 else
+                {
                     c.FillRectangle(0, 0, Width, RenderSize, brush);
+                    c.DrawLine(0, Height - 1, Width, Height - 1, ThemeResources.BlackBrush);
+                }
             }
         }
 
@@ -1114,7 +1120,7 @@ namespace FamiStudio
                 float scaleY = sy / -2; // D3D is upside down compared to how we display waves typically.
 
                 c.PushTransform(x, y + sy / 2, scaleX, scaleY);
-                c.DrawGeometry(oscilloscopeGeometry, ThemeResources.LightGreyFillBrush2, 1.0f, true);
+                c.DrawGeometry(oscilloscopeGeometry, ThemeResources.LightGreyFillBrush2, 1, true);
                 c.PopTransform();
             }
             else
