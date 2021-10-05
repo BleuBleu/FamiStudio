@@ -128,6 +128,7 @@ Testing
 - Compare instrument colors (seq/piano roll) for all platforms
 - Re-test last open file.
 - Figure out max GL buffer sizes at the end.
+- Occasional crash when opening hopes and dreams on Android. 
 
 Features missing from the Mobile version
 ========================================

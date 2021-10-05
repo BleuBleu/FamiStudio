@@ -55,18 +55,16 @@ namespace FamiStudio
         public GLTransform Transform => transform;
 
         protected const int MaxAtlasResolution = 512;
-        protected const int MaxVertexCount = 64 * 1024;
-        protected const int MaxTexCoordCount = 64 * 1024;
-        protected const int MaxColorCount = 64 * 1024;
+        protected const int MaxVertexCount = (PlatformUtils.IsDesktop ? 128 : 64) * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
         protected float[] vtxArray = new float[MaxVertexCount * 2];
         protected float[] texArray = new float[MaxVertexCount * 2];
-        protected int[] colArray = new int[MaxVertexCount];
+        protected int[]   colArray = new int[MaxVertexCount];
         protected short[] quadIdxArray = new short[MaxIndexCount];
 
         protected List<float[]> freeVtxArrays = new List<float[]>();
-        protected List<int[]> freeColArrays = new List<int[]>();
+        protected List<int[]>   freeColArrays = new List<int[]>();
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
         protected abstract int CreateEmptyTexture(int width, int height, bool filter = false);
@@ -823,7 +821,7 @@ namespace FamiStudio
 
             public float[] vtxArray;
             public float[] texArray;
-            public int[] colArray;
+            public int[]   colArray;
 
             public int vtxIdx = 0;
             public int texIdx = 0;
