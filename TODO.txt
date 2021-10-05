@@ -89,27 +89,12 @@ Scaling issue:
 	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
 
-2nd piano:
-- 2 buttons to go fwd/backward 
-	=> Show/hide when rec mode changes.
-- Black line at top.
-
 Misc:
 / Line widths, bias + 2
 - Snapping needs to preserve value even when not in channel mode.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
-
-Features missing from the Mobile version:
-- No MIDI import/export
-- No NSF import
-- No Sound Engine/Famitone 2 export
-- No FamiTracker text export
-- No FamiStudio text export
-- No FamiTracker FTI instrument import
-- No DPCM sample import from other projects (WAV/DMC only)
-- (No song reordering?)
 
 3.2.0
 =====
@@ -141,6 +126,18 @@ Testing
 - Test without snapping, i tested snapping a lot, but not witout.
 - Compare instrument colors (seq/piano roll) for all platforms
 - Re-test last open file.
+- Figure out max GL buffer sizes at the end.
+
+Features missing from the Mobile version
+========================================
+- No MIDI import/export
+- No NSF import
+- No Sound Engine/Famitone 2 export
+- No FamiTracker text export
+- No FamiStudio text export
+- No FamiTracker FTI instrument import
+- No DPCM sample import from other projects (WAV/DMC only)
+- (No song reordering?)
 
 Videos:
 =======

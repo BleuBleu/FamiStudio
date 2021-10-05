@@ -825,8 +825,6 @@ namespace FamiStudio
                     callback(tempFile);
                 }
             }
-
-            main.Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
         }
     }
 

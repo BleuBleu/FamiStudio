@@ -605,9 +605,7 @@ namespace FamiStudio
                 // This is overly careful, the only case where this might be needed
                 // is when PAL mode changes, or when the number of buffered frames are 
                 // changed in the settings.
-                ShutdownInstrumentPlayer();
-                ShutdownSongPlayer();
-                ShutdownOscilloscope();
+                ShutdownAudioPlayers();
             }
         }
 
@@ -620,9 +618,7 @@ namespace FamiStudio
             if (flags.HasFlag(TransactionFlags.ReinitializeAudio))
             {
                 palPlayback = project.PalMode;
-                InitializeInstrumentPlayer();
-                InitializeSongPlayer();
-                InitializeOscilloscope();
+                InitializeAudioPlayers();
                 MarkEverythingDirty();
             }
 
@@ -725,9 +721,7 @@ namespace FamiStudio
         private void InitProject()
         {
             StopRecording();
-            ShutdownSongPlayer();
-            ShutdownInstrumentPlayer();
-            ShutdownOscilloscope();
+            ShutdownAudioPlayers();
 
             StaticProject = project;
             song = project.Songs[0];
@@ -743,9 +737,7 @@ namespace FamiStudio
             PianoRoll.Reset(selectedChannelIndex);
 
             InitializeAutoSave();
-            InitializeSongPlayer();
-            InitializeInstrumentPlayer();
-            InitializeOscilloscope();
+            InitializeAudioPlayers();
 
             FreeExportDialog();
 
@@ -998,12 +990,10 @@ namespace FamiStudio
         {
             if (!suspended)
             {
-                StopEverything();
-                ShutdownSongPlayer();
-                ShutdownInstrumentPlayer();
-                ShutdownOscilloscope();
-                SaveWorkInProgress();
                 suspended = true;
+                StopEverything();
+                ShutdownAudioPlayers();
+                SaveWorkInProgress();
             }
         }
 
@@ -1011,11 +1001,9 @@ namespace FamiStudio
         {
             if (suspended)
             {
-                InitializeSongPlayer();
-                InitializeInstrumentPlayer();
-                InitializeOscilloscope();
-                MarkEverythingDirty();
                 suspended = false;
+                InitializeAudioPlayers();
+                MarkEverythingDirty();
             }
         }
 
@@ -1048,8 +1036,7 @@ namespace FamiStudio
                 Midi.Shutdown();
 
                 StopEverything();
-                ShutdownInstrumentPlayer();
-                ShutdownSongPlayer();
+                ShutdownAudioPlayers();
 
                 close = true;
             });
@@ -1493,22 +1480,14 @@ namespace FamiStudio
                 var playersWereValid = songPlayer != null;
 
                 if (playersWereValid)
-                {
-                    ShutdownSongPlayer();
-                    ShutdownInstrumentPlayer();
-                    ShutdownOscilloscope();
-                }
+                    ShutdownAudioPlayers();
 
 				palPlayback = value;
 				if (project.UsesFamiTrackerTempo)
 	                project.PalMode = value;
 
                 if (playersWereValid)
-                {
-                    InitializeSongPlayer();
-                    InitializeInstrumentPlayer();
-                    InitializeOscilloscope();
-                }
+                    InitializeAudioPlayers();
 
                 MarkEverythingDirty();
             }
@@ -1939,15 +1918,28 @@ namespace FamiStudio
             ProjectExplorer.MarkDirty();
         }
 
-        private void RecreateAudioPlayers()
+        private void InitializeAudioPlayers()
+        {
+            if (!suspended)
+            {
+                InitializeSongPlayer();
+                InitializeInstrumentPlayer();
+                InitializeOscilloscope();
+            }
+        }
+
+        private void ShutdownAudioPlayers()
         {
             ShutdownSongPlayer();
             ShutdownInstrumentPlayer();
             ShutdownOscilloscope();
+        }
+
+        private void RecreateAudioPlayers()
+        {
+            ShutdownAudioPlayers();
             InitializeMetronome();
-            InitializeSongPlayer();
-            InitializeInstrumentPlayer();
-            InitializeOscilloscope();
+            InitializeAudioPlayers();
         }
 
         private void ConditionalShowTutorial()
