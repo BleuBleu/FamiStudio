@@ -114,7 +114,6 @@ Features missing from the Mobile version:
 3.2.0
 =====
 - NSF bug tempo from Discord!
-- Export intro-only is broken?
 - Convert more icons to white + remove last border (release + loop point.)
 - Copy instrument.
 - Change insturment dialog for a combo

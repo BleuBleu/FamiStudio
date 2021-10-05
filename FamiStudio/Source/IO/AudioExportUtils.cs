@@ -93,6 +93,7 @@ namespace FamiStudio
                     }
 
                     numChannels = 2;
+                    introDuration *= 2;
                 }
                 else
                 {
