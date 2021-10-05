@@ -1059,16 +1059,17 @@ namespace FamiStudio
             {
                 // MATTT : Toolbar brush.
                 var brush = c.Graphics.GetSolidBrush(Theme.DarkGreyFillColor1);
+                var renderSize = RenderSize;
 
                 if (IsLandscape)
                 {
-                    c.FillRectangle(0, 0, RenderSize, Height, brush);
-                    c.DrawLine(Width - 1, 0, Width - 1, Height, ThemeResources.BlackBrush);
+                    c.FillRectangle(0, 0, renderSize, Height, brush);
+                    c.DrawLine(renderSize - 1, 0, renderSize - 1, Height, ThemeResources.BlackBrush);
                 }
                 else
                 {
                     c.FillRectangle(0, 0, Width, RenderSize, brush);
-                    c.DrawLine(0, Height - 1, Width, Height - 1, ThemeResources.BlackBrush);
+                    c.DrawLine(0, renderSize - 1, Width, renderSize - 1, ThemeResources.BlackBrush);
                 }
             }
         }

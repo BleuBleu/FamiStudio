@@ -473,20 +473,19 @@ namespace FamiStudio
             ch.DrawRectangle(0, 0, trackNameSizeX, Height, ThemeResources.DarkGreyFillBrush1);
             ch.DrawLine(0, headerSizeY, Width, headerSizeY, ThemeResources.BlackBrush);
 
-            // Vertical line seperating the track labels.
+            // Global lines
             ch.DrawLine(trackNameSizeX - 1, 0, trackNameSizeX - 1, Height, ThemeResources.BlackBrush);
             ch.DrawLine(0, 0, trackNameSizeX, 0, ThemeResources.BlackBrush);
+            cc.DrawLine(0, Height - 1, trackNameSizeX, Height - 1, ThemeResources.BlackBrush);
 
             // Vertical line seperating with the toolbar
             if (PlatformUtils.IsMobile && IsLandscape)
                 ch.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
 
+            // Scrollable area.
             cc.PushTranslation(0, headerSizeY - scrollY);
 
-            // Horizontal lines
-            cc.DrawLine(0, 0, trackNameSizeX, 0, ThemeResources.BlackBrush);
-            cc.DrawLine(0, Height - 1, trackNameSizeX, Height - 1, ThemeResources.BlackBrush);
-
+            // Horizontal lines seperating patterns.
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
                 cc.DrawLine(0, y, Width, y, ThemeResources.BlackBrush);
 
