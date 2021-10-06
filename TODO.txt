@@ -13,6 +13,7 @@ Quick access:
 	- PR/DPCMMapping (?)
 	- Seq (Channel)
 	- Project explorer (Instrument/Channel/Envelope)
+- We should pick fonts based on size. Looks bad in 66% scaling.
 
 Project explorer:
 - Env replace? Instrument replace? Song reorder?
@@ -78,6 +79,7 @@ Testing
 - Re-test last open file.
 - Occasional crash when opening hopes and dreams on Android. 
 - Test light/dark modes.
+- Linux seem to support 150% scaling as well, make sure the fonts are there.
 
 Features missing from the Mobile version
 ========================================

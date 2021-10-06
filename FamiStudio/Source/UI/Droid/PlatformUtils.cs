@@ -32,6 +32,11 @@ namespace FamiStudio
             return MainThread.IsMainThread;
         }
 
+        public static float GetDesktopScaling()
+        {
+            return 1.0f;
+        }
+
         public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
         public static string SettingsDirectory     => System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
         public static string ApplicationVersion

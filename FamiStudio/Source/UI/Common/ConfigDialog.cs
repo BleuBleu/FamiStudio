@@ -100,6 +100,18 @@ namespace FamiStudio
             dialog.SetPageVisible((int)ConfigSection.QWERTY, PlatformUtils.IsDesktop);
         }
 
+        private string[] BuildDpiScalingList()
+        {
+            var scalings = DpiScaling.GetAvailableScalings();
+            var list = new string[scalings.Length + 1];
+
+            list[0] = "System";
+            for (int i = 0; i < scalings.Length; i++)
+                list[i + 1] = $"{scalings[i]}%";
+
+            return list;
+        }
+
         private PropertyPage CreatePropertyPage(PropertyPage page, ConfigSection section)
         {
             switch (section)
@@ -119,14 +131,7 @@ namespace FamiStudio
 
                 case ConfigSection.UserInterface:
                 {
-                    // DROIDTODO: Make this cleaner, maybe move to DpiScaling?
-#if FAMISTUDIO_WINDOWS || FAMISTUDIO_LINUX
-                    var scalingValues = new[] { "System", "100%", "150%", "200%" };
-#elif FAMISTUDIO_MACOS
-                    var scalingValues = new[] { "System", "100%", "200%" };
-#elif FAMISTUDIO_ANDROID
-                    var scalingValues = new[] { "System" };
-#endif
+                    var scalingValues   = BuildDpiScalingList();
                     var scalingIndex    = Settings.DpiScaling == 0 ? 0 : Array.IndexOf(scalingValues, $"{Settings.DpiScaling}%");
                     var timeFormatIndex = Settings.TimeFormat < (int)TimeFormat.Max ? Settings.TimeFormat : 0;
                     var followModeIndex = Settings.FollowMode <= 0 ? 0 : Settings.FollowMode % FollowModeStrings.Length;
@@ -422,8 +427,8 @@ namespace FamiStudio
 
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);
-
-                    Settings.DpiScaling = scalingString == "System" ? 0 : int.Parse(scalingString.Substring(0, 3));
+                    
+                    Settings.DpiScaling = scalingString == "System" ? 0 : Utils.ParseIntWithTrailingGarbage(scalingString);
                     Settings.TimeFormat = pageUI.GetSelectedIndex(1);
                     Settings.FollowMode = pageUI.GetSelectedIndex(2);
                     Settings.FollowSync = pageUI.GetSelectedIndex(3);

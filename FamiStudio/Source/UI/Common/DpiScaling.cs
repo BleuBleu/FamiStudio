@@ -49,23 +49,38 @@ namespace FamiStudio
             return (int)Math.Round(val * dialogScaling);
         }
 
+        public static int[] GetAvailableScalings()
+        {
+            if (PlatformUtils.IsWindows || PlatformUtils.IsLinux)
+                return new[] { 100, 150, 200 };
+            else if (PlatformUtils.IsMacOS)
+                return new[] { 100, 200 };
+            else if (PlatformUtils.IsAndroid)
+                return new[] { 66, 100, 133 };
+
+            Debug.Assert(false);
+            return new int[] { };
+        }
+
         public static void Initialize()
         {
-#if FAMISTUDIO_ANDROID
-            // DROIDTODO!
-            mainWindowScaling = 6;
-            fontScaling = 3;
-            dialogScaling = 1;
-#else
             dialogScaling = PlatformUtils.GetDesktopScaling();
 
             if (Settings.DpiScaling != 0)
                 mainWindowScaling = Settings.DpiScaling / 100.0f;
             else
-                mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
+                mainWindowScaling = dialogScaling;
 
-            fontScaling = mainWindowScaling;
-#endif
+            if (PlatformUtils.IsAndroid)
+            {
+                fontScaling       = (float)Math.Round(mainWindowScaling * 3);
+                mainWindowScaling = (float)Math.Round(mainWindowScaling * 6);
+            }
+            else
+            {
+                mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); // Round to 1/2 (so only 100%, 150% and 200%) are supported.
+                fontScaling = mainWindowScaling;
+            }
 
             initialized = true;
         }

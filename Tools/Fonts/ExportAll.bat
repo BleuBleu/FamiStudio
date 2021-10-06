@@ -36,3 +36,11 @@ call ExportFont 48 Regular 512 512
 call ExportFont 60 Regular 512 512
 call ExportFont 60 Bold 512 512
 call ExportFont 84 Regular 1024 512
+
+:: 4x scale (Mobile)
+call ExportFont 32 Bold 512 256
+call ExportFont 48 Bold 512 512
+call ExportFont 64 Regular 1024 512
+call ExportFont 80 Regular 1024 512
+call ExportFont 80 Bold 1024 512
+call ExportFont 112 Regular 1024 1024

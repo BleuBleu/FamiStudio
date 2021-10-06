@@ -302,7 +302,7 @@ namespace FamiStudio
 
             UpdateKeyCodeMaps();
 
-            if (DpiScaling != 100 && DpiScaling != 150 && DpiScaling != 200)
+            if (Array.IndexOf(global::FamiStudio.DpiScaling.GetAvailableScalings(), DpiScaling) < 0)
                 DpiScaling = 0;
 
             InstrumentStopTime = Utils.Clamp(InstrumentStopTime, 0, 10);
