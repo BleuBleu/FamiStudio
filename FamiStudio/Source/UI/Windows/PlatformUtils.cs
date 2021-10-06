@@ -307,15 +307,4 @@ namespace FamiStudio
         public const bool IsMacOS   = false;
         public const bool IsGTK     = false;
     }
-
-    public class MobileProjectDialog
-    {
-        public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
-        {
-        }
-
-        public void ShowDialogAsync(Action<string> callback)
-        {
-        }
-    }
 }

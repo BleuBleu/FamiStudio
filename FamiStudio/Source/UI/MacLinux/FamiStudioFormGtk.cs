@@ -141,6 +141,7 @@ namespace FamiStudio
         {
             IntPtr windowHandle = MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle);
             MacUtils.Initialize(windowHandle);
+            DpiScaling.Initialize();
 
             // Hijack GDK main event loop so we can handle some more events.
             var pollFunc = g_main_context_get_poll_func(IntPtr.Zero);

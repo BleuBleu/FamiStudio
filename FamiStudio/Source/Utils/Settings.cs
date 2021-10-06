@@ -463,12 +463,6 @@ namespace FamiStudio
             else
             {
                 return PlatformUtils.SettingsDirectory;
-
-//#elif FAMISTUDIO_LINUX
-//                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
-//#else
-//                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
-//#endif
             }
         }
 

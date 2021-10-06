@@ -16,15 +16,12 @@ namespace FamiStudio
 {
     public static class PlatformUtils
     {
-#if FAMISTUDIO_LINUX
         [System.Runtime.InteropServices.DllImport("fontconfig.so")]
         static extern bool FcConfigAppFontAddFile(System.IntPtr config, string fontPath);
         [System.Runtime.InteropServices.DllImport("fontconfig.so.1", EntryPoint = "FcConfigAppFontAddFile")]
         static extern bool FcConfigAppFontAddFile1(System.IntPtr config, string fontPath);
-#endif
 
         public static string ApplicationVersion => System.Windows.Forms.Application.ProductVersion;
-
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
         public static string UserProjectsDirectory => null;
 
@@ -60,9 +57,6 @@ namespace FamiStudio
                     foreach (var font in fontsToLoad)
                     {
                         var fullpath = Path.Combine(absPath, font);
-#if FAMISTUDIO_MACOS
-                        MacUtils.CoreTextRegisterFont(fullpath);
-#else
                         try
                         {
                             FcConfigAppFontAddFile(IntPtr.Zero, fullpath);
@@ -71,19 +65,16 @@ namespace FamiStudio
                         {
                             try { FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); } catch { }
                         }
-#endif
                     }
                     break;
                 }
             }
 
-#if FAMISTUDIO_LINUX
             Toolkit.Init(new ToolkitOptions
             {
                 Backend = PlatformBackend.PreferX11,
                 EnableHighResolution = false
             });
-#endif
 
             InitializeGtk();
         }
@@ -118,15 +109,10 @@ namespace FamiStudio
         {
             Gtk.Application.Init();
 
-#if FAMISTUDIO_MACOS
-            var rcFile = "FamiStudio.Resources.gtk_mac.rc";
-#else
             var rcFile = "FamiStudio.Resources.gtk_linux.rc";
-#endif
 
             ParseRcFileFromResource(rcFile);
 
-#if FAMISTUDIO_LINUX
             var dpi = Gdk.Display.Default.DefaultScreen.Resolution;
 
             if (dpi < 0)
@@ -137,7 +123,6 @@ namespace FamiStudio
 
             if (dpi >= 192.0)
                 ParseRcFileFromResource("FamiStudio.Resources.gtk_linux_hidpi.rc");
-#endif
         }
 
         private static string[] GetExtensionList(string str)
@@ -157,12 +142,6 @@ namespace FamiStudio
         {
             var extensionList = GetExtensionList(extensions);
 
-#if FAMISTUDIO_MACOS
-            var filenames = MacUtils.ShowOpenDialog(title, extensionList, multiselect, defaultPath);
-            if (filenames != null && !string.IsNullOrEmpty(filenames[0]))
-                defaultPath = Path.GetDirectoryName(filenames[0]);
-            return filenames;
-#else
             Gtk.Rc.ResetStyles(Gtk.Settings.GetForScreen(Gdk.Screen.Default));
             Gtk.Rc.ReparseAll();
 
@@ -197,7 +176,6 @@ namespace FamiStudio
             filechooser.Destroy();
 
             return filenames;
-#endif
         }
 
         public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, Window parentWindow = null)
@@ -213,12 +191,7 @@ namespace FamiStudio
         public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             var extensionList = GetExtensionList(extensions);
-#if FAMISTUDIO_MACOS
-            var filename = MacUtils.ShowSaveDialog(title, extensionList, defaultPath);
-            if (!string.IsNullOrEmpty(filename))
-                defaultPath = Path.GetDirectoryName(filename);
-            return filename;
-#else
+
             Gtk.FileChooserDialog filechooser =
                 new Gtk.FileChooserDialog(title,
                     null,
@@ -253,23 +226,10 @@ namespace FamiStudio
             filechooser.Destroy();
 
             return filename;
-#endif
         }
 
         public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
-#if FAMISTUDIO_MACOS
-            var filename = MacUtils.ShowBrowseFolderDialog(title, defaultPath);
-            if (!string.IsNullOrEmpty(filename))
-            {
-                if (Directory.Exists(filename))
-                    defaultPath = filename;
-                else
-                    defaultPath = Path.GetDirectoryName(filename);
-                return defaultPath;
-            }
-            return null;
-#else
             Gtk.FileChooserDialog filechooser =
                 new Gtk.FileChooserDialog("Choose the file to save",
                     null,
@@ -293,7 +253,6 @@ namespace FamiStudio
             filechooser.Destroy();
 
             return filename;
-#endif
         }
 
         public static string ShowSaveFileDialog(string title, string extensions)
@@ -304,9 +263,6 @@ namespace FamiStudio
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icon = MessageBoxIcon.None)
         {
-#if FAMISTUDIO_MACOS
-            return MacUtils.ShowAlert(text, title, buttons);
-#else
             if (buttons == MessageBoxButtons.YesNoCancel)
             {
                 buttons = MessageBoxButtons.YesNo;
@@ -332,7 +288,6 @@ namespace FamiStudio
                 return ret == -8 ? DialogResult.Yes : ret == -9 ? DialogResult.No : DialogResult.Cancel;
             else
                 return DialogResult.OK;
-#endif
         }
 
         public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
@@ -401,11 +356,7 @@ namespace FamiStudio
         {
             try
             {
-#if FAMISTUDIO_LINUX
                 Process.Start("xdg-open", url);
-#else
-                Process.Start("open", url);
-#endif
             }
             catch { }
         }
@@ -420,25 +371,8 @@ namespace FamiStudio
         public const bool IsDesktop = true;
         public const bool IsWindows = false;
         public const bool IsGTK     = true;
-#if FAMISTUDIO_LINUX
         public const bool IsLinux   = true;
         public const bool IsMacOS   = false;
-#else
-        public const bool IsLinux   = false;
-        public const bool IsMacOS   = true;
-#endif
-    }
-
-    // MATTT : Move to a common file.
-    public class MobileProjectDialog
-    {
-        public MobileProjectDialog(FamiStudio fami, string title, bool save, bool allowStorage = true)
-        {
-        }
-
-        public void ShowDialogAsync(Action<string> callback)
-        {
-        }
     }
 }
 
