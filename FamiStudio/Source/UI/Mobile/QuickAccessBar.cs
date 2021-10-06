@@ -134,8 +134,6 @@ namespace FamiStudio
         };
 
         RenderFont buttonFont;
-        RenderFont listFont;
-        RenderFont listFontBold;
         RenderBrush scrollBarBrush;
         RenderBitmapAtlas bmpButtonAtlas;
         Button[] buttons = new Button[(int)ButtonType.Count];
@@ -197,14 +195,10 @@ namespace FamiStudio
             buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, ListItemClick = OnInstrumentChange };
             buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, ListItemClick = OnArpeggioChange };
 
-            // MATTT : Font scaling?
             var screenSize = PlatformUtils.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-            buttonFont   = ThemeResources.GetBestMatchingFontByHeight(g, ScaleCustom(DefaultTextSize, scale), false);
-            listFont     = ThemeResources.GetBestMatchingFontByHeight(g, ScaleCustom(DefaultListItemTextSize, scale), false);
-            listFontBold = ThemeResources.GetBestMatchingFontByHeight(g, ScaleCustom(DefaultListItemTextSize, scale), true);
-
+            buttonFont        = scale > 1.2f ? ThemeResources.FontSmall : ThemeResources.FontVerySmall;
             buttonSize        = ScaleCustom(DefaultButtonSize, scale);
             buttonSizeNav     = ScaleCustom(DefaultNavButtonSize, scale);
             buttonIconPos1    = ScaleCustom(DefaultIconPos1, scale);
@@ -343,7 +337,7 @@ namespace FamiStudio
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                var size = textPosTop + listFontBold.MeasureString(item.Text) * 5 / 4;
+                var size = textPosTop + ThemeResources.FontMediumBold.MeasureString(item.Text) * 5 / 4;
 
                 popupRect.Width = Math.Max(popupRect.Width, size);
             }
@@ -792,7 +786,7 @@ namespace FamiStudio
 
                     c.FillAndDrawRectangle(item.Rect, brush, ThemeResources.BlackBrush);
                     c.DrawBitmapAtlas(bmpButtonAtlas, item.ImageIndex, item.IconX, item.IconY, 1.0f, iconScaleFloat, Color.Black);
-                    c.DrawText(item.Text, i == popupSelectedIdx ? listFontBold : listFont, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
+                    c.DrawText(item.Text, i == popupSelectedIdx ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();
