@@ -145,7 +145,6 @@ namespace FamiStudio
         {
             var spinner = new Spinner(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
             var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
-            adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
             spinner.Adapter = adapter;
             spinner.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
             spinner.SetSelection(adapter.GetPosition(value));
@@ -505,16 +504,17 @@ namespace FamiStudio
 
         public void UpdateIntegerRange(int idx, int min, int max)
         {
-            Debug.Assert(false);
+            var picker = properties[idx].controls[0] as HorizontalNumberPicker;
+            picker.Minimum = min;
+            picker.Maximum = max;
         }
 
         public void UpdateIntegerRange(int idx, int value, int min, int max)
         {
-            Debug.Assert(false);
-        }
-
-        public void AddDomainRange(string label, int[] values, int value)
-        {
+            var picker = properties[idx].controls[0] as HorizontalNumberPicker;
+            picker.Minimum = min;
+            picker.Maximum = max;
+            picker.Value = value;
         }
 
         public void UpdateDomainRange(int idx, int[] values, int value)
@@ -523,17 +523,28 @@ namespace FamiStudio
 
         public void SetLabelText(int idx, string text)
         {
-            Debug.Assert(false);
+            var textView = properties[idx].controls[0] as TextView;
+            textView.Text = text;
         }
 
         public void SetDropDownListIndex(int idx, int selIdx)
         {
-            Debug.Assert(false);
+            var spinner = properties[idx].controls[0] as Spinner;
+            spinner.SetSelection(selIdx);
         }
 
         public void UpdateDropDownListItems(int idx, string[] values)
         {
-            Debug.Assert(false);
+            var spinner = properties[idx].controls[0] as Spinner;
+            var selIdx  = spinner.SelectedItemPosition;
+            var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
+
+            spinner.Adapter = adapter;
+            
+            if (selIdx >= 0 && selIdx < values.Length)
+                spinner.SetSelection(selIdx);
+            else
+                spinner.SetSelection(0);
         }
 
         public void SetPropertyVisible(int idx, bool visible)
@@ -949,6 +960,7 @@ namespace FamiStudio
         public CustomFontArrayAdapter(Spinner spin, Context context, int textViewResourceId, string[] values) : base(context, textViewResourceId, values)
         {
             spinner = spin;
+            SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
         }
 
         public override View GetView(int position, View convertView, ViewGroup parent)

@@ -49,7 +49,6 @@ namespace FamiStudio
             //AddColoredString("Hello!", System.Drawing.Color.FromArgb(0, 128, 0));
             //AddString("Allo oii oQi ", "Qoto");
             //AddIntegerRange("Number", 7, 0, 16);
-            //AddDomainRange("Domain", new[] { 3, 7, 11, 16, 22 }, 11);
             //AddString("123Q", "44QQ4");
             //AddBoolean("YoQQ!", true);
             //AddStringListMulti(null, new[] {"Item1", "Item2", "Item3" }, new[] { false, true, true });
@@ -358,11 +357,6 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private DomainSpinButton CreateDomainUpDown(int[] values, int value)
-        {
-            return new DomainSpinButton(values, value);
-        }
-
         private ComboBox CreateDropDownList(string[] values, string value, string tooltip = null)
         {
             var cb = ComboBox.NewText();
@@ -575,25 +569,6 @@ namespace FamiStudio
             var spin = (properties[idx].control as SpinButton);
             spin.SetRange(min, max);
             spin.Value = value;
-        }
-
-        public int AddDomainRange(string label, int[] values, int value)
-        {
-            properties.Add(
-                new Property()
-                {
-                    type = PropertyType.DomainUpDown,
-                    label = label != null ? CreateLabel(label) : null,
-                    control = CreateDomainUpDown(values, value)
-                });
-            return properties.Count - 1;
-        }
-
-        public void UpdateDomainRange(int idx, int[] values, int value)
-        {
-            var spin = (properties[idx].control as DomainSpinButton);
-
-            spin.UpdateValues(values, value);
         }
 
         public int AddDropDownList(string label, string[] values, string value, string tooltip = null)
@@ -1178,8 +1153,6 @@ namespace FamiStudio
                     return (prop.control as Entry).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as SpinButton).Value;
-                case PropertyType.DomainUpDown:
-                    return int.Parse((prop.control as DomainSpinButton).Text);
                 case PropertyType.Slider:
                     return (prop.control as HScale).Value;
                 case PropertyType.Radio:

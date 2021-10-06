@@ -448,29 +448,32 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
+        protected override void OnTouchScaleBegin(int x, int y)
         {
             lastX = x;
             lastY = y;
 
-            if (phase == TouchScalePhase.Begin)
+            if (captureOperation != CaptureOperation.None)
             {
-                if (captureOperation != CaptureOperation.None)
-                {
-                    Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
-                    EndCaptureOperation(x, y); // MATTT Temporary.
-                }
+                Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
+                EndCaptureOperation(x, y); // MATTT Temporary.
+            }
 
-                StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
-            }
-            else if (phase == TouchScalePhase.Scale)
-            {
-                UpdateCaptureOperation(x, y, scale);
-            }
-            else
-            {
-                EndCaptureOperation(x, y);
-            }
+            StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
+        }
+
+        protected override void OnTouchScale(int x, int y, float scale)
+        {
+            lastX = x;
+            lastY = y;
+            UpdateCaptureOperation(x, y, scale);
+        }
+
+        protected override void OnTouchScaleEnd(int x, int y)
+        {
+            lastX = x;
+            lastY = y;
+            EndCaptureOperation(x, y);
         }
 
         protected override void OnTouchMove(int x, int y)

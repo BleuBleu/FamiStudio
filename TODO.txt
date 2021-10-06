@@ -79,6 +79,7 @@ Controls:
 	- Longpress : Instanciate/Copy selection here
 	- Force display, how?
 	- Go to piano roll.
+	- Clicking should toggle cursor, not selection.
 
 	x Tap = add pattern
 	x Long press = pattern properties

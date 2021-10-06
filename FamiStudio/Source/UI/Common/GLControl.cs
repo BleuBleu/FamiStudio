@@ -46,7 +46,9 @@ namespace FamiStudio
         protected virtual void OnTouchMove(int x, int y) { }
         protected virtual void OnTouchClick(int x, int y) { }
         protected virtual void OnTouchLongPress(int x, int y) { }
-        protected virtual void OnTouchScale(int x, int y, float scale, TouchScalePhase phase) { }
+        protected virtual void OnTouchScaleBegin(int x, int y) { }
+        protected virtual void OnTouchScale(int x, int y, float scale) { }
+        protected virtual void OnTouchScaleEnd(int x, int y) { }
         protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
         public virtual void DoMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
         public virtual bool WantsFullScreenViewport => false;
@@ -67,7 +69,9 @@ namespace FamiStudio
         public void TouchMove(int x, int y) { OnTouchMove(x, y); }
         public void TouchClick(int x, int y) { OnTouchClick(x, y); }
         public void TouchLongPress(int x, int y) { OnTouchLongPress(x, y); }
-        public void TouchScale(int x, int y, float scale, TouchScalePhase phase) { OnTouchScale(x, y, scale, phase); }
+        public void TouchScaleBegin(int x, int y) { OnTouchScaleBegin(x, y); }
+        public void TouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }
+        public void TouchScaleEnd(int x, int y) { OnTouchScaleEnd(x, y); }
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void Focus() { }
 
@@ -129,12 +133,5 @@ namespace FamiStudio
             get { return cursor; }
             set { cursor = value; parentControl.ParentForm.RefreshCursor(); }
         }
-    }
-
-    public enum TouchScalePhase
-    {
-        Begin,
-        Scale,
-        End
     }
 }

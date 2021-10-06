@@ -1489,28 +1489,29 @@ namespace FamiStudio
             SetFlingVelocity(velX, velY);
         }
 
-        protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
+        protected override void OnTouchScaleBegin(int x, int y)
         {
             SetMouseLastPos(x, y);
 
-            if (phase == TouchScalePhase.Begin)
+            if (captureOperation != CaptureOperation.None)
             {
-                if (captureOperation != CaptureOperation.None)
-                {
-                    Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
-                    AbortCaptureOperation(); // MATTT Temporary.
-                }
+                Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
+                AbortCaptureOperation(); // MATTT Temporary.
+            }
 
-                StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
-            }
-            else if (phase == TouchScalePhase.Scale)
-            {
-                UpdateCaptureOperation(x, y, scale);
-            }
-            else
-            {
-                EndCaptureOperation(x, y);
-            }
+            StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
+        }
+
+        protected override void OnTouchScale(int x, int y, float scale)
+        {
+            SetMouseLastPos(x, y);
+            UpdateCaptureOperation(x, y, scale);
+        }
+
+        protected override void OnTouchScaleEnd(int x, int y)
+        {
+            SetMouseLastPos(x, y);
+            EndCaptureOperation(x, y);
         }
 
         protected override void OnTouchClick(int x, int y)

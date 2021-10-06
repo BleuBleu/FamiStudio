@@ -336,17 +336,6 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private DomainUpDown CreateDomainUpDown(int[] values, int value)
-        {
-            var upDown = new DomainUpDown();
-
-            upDown.Items.AddRange(values);
-            upDown.SelectedItem = value;
-            upDown.Font = font;
-
-            return upDown;
-        }
-
         private CheckBox CreateCheckBox(bool value, string text = "", string tooltip = null)
         {
             var cb = new CheckBox();
@@ -601,27 +590,6 @@ namespace FamiStudio
             upDown.Minimum = min;
             upDown.Maximum = max;
             upDown.Value = value;
-        }
-
-        public void AddDomainRange(string label, int[] values, int value)
-        {
-            properties.Add(
-                new Property()
-                {
-                    type = PropertyType.DomainUpDown,
-                    label = label != null ? CreateLabel(label) : null,
-                    control = CreateDomainUpDown(values, value)
-                });
-        }
-
-        public void UpdateDomainRange(int idx, int[] values, int value)
-        {
-            var upDown = (properties[idx].control as DomainUpDown);
-
-            upDown.Items.Clear();
-            upDown.Items.AddRange(values);
-            upDown.Text = " "; // Workaround refresh bug.
-            upDown.SelectedItem = value;
         }
 
         public void SetLabelText(int idx, string text)
@@ -897,8 +865,6 @@ namespace FamiStudio
                     return (prop.control as TextBox).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as NumericUpDown).Value;
-                case PropertyType.DomainUpDown:
-                    return int.TryParse(prop.control.Text, out var val) ? val : 0;
                 case PropertyType.Slider:
                     return (prop.control as Slider).Value;
                 case PropertyType.Radio:

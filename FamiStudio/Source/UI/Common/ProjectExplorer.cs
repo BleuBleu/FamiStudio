@@ -1866,18 +1866,21 @@ namespace FamiStudio
             // DROIDTODO : Scroll to the new song.
         }
 
-        private void AskAndDeleteSong(Song song)
+        private void AskDeleteSong(Song song)
         {
-            if (PlatformUtils.MessageBox($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo, (r) =>
             {
-                bool selectNewSong = song == App.SelectedSong;
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                App.Project.DeleteSong(song);
-                if (selectNewSong)
-                    App.SelectedSong = App.Project.Songs[0];
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
+                if (r == DialogResult.Yes)
+                {
+                    bool selectNewSong = song == App.SelectedSong;
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
+                    App.Project.DeleteSong(song);
+                    if (selectNewSong)
+                        App.SelectedSong = App.Project.Songs[0];
+                    App.UndoRedoManager.EndTransaction();
+                    RefreshButtons();
+                }
+            });
         }
 
         private void AddInstrument(int expansionType)
@@ -1932,17 +1935,20 @@ namespace FamiStudio
 
         private void AskDeleteInstrument(Instrument inst)
         {
-            if (PlatformUtils.MessageBox($"Are you sure you want to delete '{inst.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{inst.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo, (r) =>
             {
-                bool selectNewInstrument = inst == App.SelectedInstrument;
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                App.Project.DeleteInstrument(inst);
-                if (selectNewInstrument)
-                    App.SelectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
-                InstrumentDeleted?.Invoke(inst);
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
+                if (r == DialogResult.Yes)
+                {
+                    bool selectNewInstrument = inst == App.SelectedInstrument;
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
+                    App.Project.DeleteInstrument(inst);
+                    if (selectNewInstrument)
+                        App.SelectedInstrument = App.Project.Instruments.Count > 0 ? App.Project.Instruments[0] : null;
+                    InstrumentDeleted?.Invoke(inst);
+                    App.UndoRedoManager.EndTransaction();
+                    RefreshButtons();
+                }
+            });
         }
 
         private void ClearInstrumentEnvelope(Instrument inst, int envelopeType)
@@ -1963,17 +1969,20 @@ namespace FamiStudio
 
         private void AskDeleteArpeggio(Arpeggio arpeggio)
         {
-            if (PlatformUtils.MessageBox($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo, (r) =>
             {
-                bool selectNewArpeggio = arpeggio == App.SelectedArpeggio;
-                App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
-                App.Project.DeleteArpeggio(arpeggio);
-                if (selectNewArpeggio)
-                    App.SelectedArpeggio = App.Project.Arpeggios.Count > 0 ? App.Project.Arpeggios[0] : null;
-                ArpeggioDeleted?.Invoke(arpeggio);
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
+                if (r == DialogResult.Yes)
+                {
+                    bool selectNewArpeggio = arpeggio == App.SelectedArpeggio;
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
+                    App.Project.DeleteArpeggio(arpeggio);
+                    if (selectNewArpeggio)
+                        App.SelectedArpeggio = App.Project.Arpeggios.Count > 0 ? App.Project.Arpeggios[0] : null;
+                    ArpeggioDeleted?.Invoke(arpeggio);
+                    App.UndoRedoManager.EndTransaction();
+                    RefreshButtons();
+                }
+            });
         }
 
         private void ReloadDPCMSampleSourceData(DPCMSample sample)
@@ -2050,14 +2059,17 @@ namespace FamiStudio
 
         private void AskDeleteDPCMSample(DPCMSample sample)
         {
-            if (PlatformUtils.MessageBox($"Are you sure you want to delete DPCM Sample '{sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            PlatformUtils.MessageBoxAsync($"Are you sure you want to delete DPCM Sample '{sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo, (r) =>
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples, TransactionFlags.StopAudio);
-                App.Project.DeleteSample(sample);
-                DPCMSampleDeleted?.Invoke(sample);
-                App.UndoRedoManager.EndTransaction();
-                RefreshButtons();
-            }
+                if (r == DialogResult.Yes)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples, TransactionFlags.StopAudio);
+                    App.Project.DeleteSample(sample);
+                    DPCMSampleDeleted?.Invoke(sample);
+                    App.UndoRedoManager.EndTransaction();
+                    RefreshButtons();
+                }
+            });
         }
 
         private bool HandleMouseDownPan(MouseEventArgs e)
@@ -2123,7 +2135,7 @@ namespace FamiStudio
             }
             else if (e.Button.HasFlag(MouseButtons.Right) && App.Project.Songs.Count > 1)
             {
-                AskAndDeleteSong(button.song);
+                AskDeleteSong(button.song);
             }
 
             return true;
@@ -2388,9 +2400,6 @@ namespace FamiStudio
 
             if (buttonIdx >= 0)
             {
-                bool left  = e.Button.HasFlag(MouseButtons.Left);
-                bool right = e.Button.HasFlag(MouseButtons.Right);
-
                 var button = buttons[buttonIdx];
 
                 switch (button.type)
@@ -2431,9 +2440,6 @@ namespace FamiStudio
 
             if (captureOperation != CaptureOperation.None)
                 return;
-
-            bool left   = e.Button.HasFlag(MouseButtons.Left);
-            bool right  = e.Button.HasFlag(MouseButtons.Right);
 
             if (HandleMouseDownPan(e)) goto Handled;
             if (HandleMouseDownScrollbar(e)) goto Handled;
@@ -2582,7 +2588,6 @@ namespace FamiStudio
             return true;
         }
 
-
         private bool HandleTouchClickButtons(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
@@ -2626,6 +2631,86 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchLongPressProjectSettings(int x, int y)
+        {    
+            App.ShowContextMenu(new[]
+            {
+                new ContextMenuOption("MenuForceDisplay", "Project Settings...", () => { EditProjectProperties(Point.Empty); }) // DROIDTODO : Wrong icon!
+            });
+
+            return true;
+        }
+
+        private bool HandleTouchLongPressSongButton(int x, int y, Button button)
+        {
+            var menu = new List<ContextMenuOption>();
+            menu.Add(new ContextMenuOption("MenuForceDisplay", "Song/Tempo Settings...", () => { EditSongProperties(Point.Empty, button.song); })); // DROIDTODO : Wrong icon!
+            if (App.Project.Songs.Count > 1)
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
+            App.ShowContextMenu(menu.ToArray());
+            return true;
+        }
+
+        private bool HandleTouchLongPressInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        {
+            var menu = new List<ContextMenuOption>();
+            menu.Add(new ContextMenuOption("MenuForceDisplay", "Instrument Settings...", () => { EditInstrumentProperties(Point.Empty, button.instrument); })); // DROIDTODO : Wrong icon!
+            menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }));
+            if (subButtonType < SubButtonType.EnvelopeMax)
+                menu.Add(new ContextMenuOption("MenuDelete", "Clear Envelope", () => { ClearInstrumentEnvelope(button.instrument, (int)subButtonType); })); // DROIDTODO : Wrong icon!
+            App.ShowContextMenu(menu.ToArray());
+            return true;
+        }
+
+        private bool HandleTouchLongPressArpeggioButton(int x, int y, Button button)
+        {
+            //App.SelectedSong = button.song;
+            return true;
+        }
+
+        private bool HandleTouchLongPressDpcmButton(int x, int y, Button button)
+        {
+            //App.SelectedSong = button.song;
+            return true;
+        }
+
+        private bool HandleTouchLongPressButtons(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0)
+            {
+                var button = buttons[buttonIdx];
+
+                switch (button.type)
+                {
+                    case ButtonType.ProjectSettings:
+                        return HandleTouchLongPressProjectSettings(x, y);
+                    case ButtonType.Song:
+                        return HandleTouchLongPressSongButton(x, y, button);
+                    case ButtonType.Instrument:
+                        return HandleTouchLongPressInstrumentButton(x, y, button, subButtonType, buttonIdx);
+                    /*
+                     * DROIRDTODO : Reset to default for those.
+                    case ButtonType.ParamSlider:
+                        return HandleMouseDownParamSliderButton(e, button, buttonIdx);
+                    case ButtonType.ParamCheckbox:
+                        return HandleMouseDownParamCheckboxButton(e, button);
+                    case ButtonType.ParamList:
+                        return HandleMouseDownParamListButton(e, button);
+                    */
+                    case ButtonType.Arpeggio:
+                        return HandleTouchLongPressArpeggioButton(x, y, button);
+                    case ButtonType.Dpcm:
+                        return HandleTouchLongPressDpcmButton(x, y, button);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         protected override void OnTouchDown(int x, int y)
         {
             flingVelY = 0;
@@ -2642,6 +2727,18 @@ namespace FamiStudio
                 return;
 
             HandleTouchClickButtons(x, y);
+        }
+
+        protected override void OnTouchLongPress(int x, int y)
+        {
+            AbortCaptureOperation();
+
+            if (HandleTouchLongPressButtons(x, y)) goto Handled;
+
+            return;
+
+        Handled:
+            MarkDirty();
         }
 
         protected override void OnTouchMove(int x, int y)

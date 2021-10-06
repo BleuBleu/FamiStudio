@@ -5074,29 +5074,29 @@ namespace FamiStudio
             SetFlingVelocity(velX, velY);
         }
 
-        protected override void OnTouchScale(int x, int y, float scale, TouchScalePhase phase)
+        protected override void OnTouchScaleBegin(int x, int y)
         {
             SetMouseLastPos(x, y);
 
-            // DROIDTODO : Check edit mode, maybe not apply to all.
-            if (phase == TouchScalePhase.Begin)
+            if (captureOperation != CaptureOperation.None)
             {
-                if (captureOperation != CaptureOperation.None)
-                {
-                    Debug.Assert(captureOperation != CaptureOperation.MobileZoomVertical && captureOperation != CaptureOperation.MobileZoom);
-                    AbortCaptureOperation(); // MATTT Temporary.
-                }
+                Debug.Assert(captureOperation != CaptureOperation.MobileZoomVertical && captureOperation != CaptureOperation.MobileZoom);
+                AbortCaptureOperation(); // MATTT Temporary.
+            }
 
-                StartCaptureOperation(x, y, IsPointInPiano(x, y) ? CaptureOperation.MobileZoomVertical : CaptureOperation.MobileZoom);
-            }
-            else if (phase == TouchScalePhase.Scale)
-            {
-                UpdateCaptureOperation(x, y, scale);
-            }
-            else
-            {
-                EndCaptureOperation(x, y);
-            }
+            StartCaptureOperation(x, y, IsPointInPiano(x, y) ? CaptureOperation.MobileZoomVertical : CaptureOperation.MobileZoom);
+        }
+
+        protected override void OnTouchScale(int x, int y, float scale)
+        {
+            SetMouseLastPos(x, y);
+            UpdateCaptureOperation(x, y, scale);
+        }
+
+        protected override void OnTouchScaleEnd(int x, int y)
+        {
+            SetMouseLastPos(x, y);
+            EndCaptureOperation(x, y);
         }
 
         protected override void OnTouchClick(int x, int y)

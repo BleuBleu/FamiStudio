@@ -30,7 +30,6 @@ namespace FamiStudio
         TextBox,
         ColoredTextBox,
         NumericUpDown,
-        DomainUpDown,
         Slider,
         CheckBox,
         DropDownList,
