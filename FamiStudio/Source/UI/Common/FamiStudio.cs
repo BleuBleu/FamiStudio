@@ -441,12 +441,7 @@ namespace FamiStudio
 
         private void ProjectExplorer_ProjectModified()
         {
-            RefreshLayout();
-            ResetSelectedChannel();
-            ResetSelectedInstrumentArpeggio();
-            ResetSelectedInstrumentArpeggio();
-            Sequencer.Reset();
-            PianoRoll.Reset(selectedChannelIndex);
+            ResetEverything();
         }
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
@@ -672,21 +667,34 @@ namespace FamiStudio
             }
         }
 
+        private void InitializeUndoRedoManager()
+        {
+            undoRedoManager = new UndoRedoManager(project, this);
+            undoRedoManager.PreUndoRedo += UndoRedoManager_PreUndoRedo;
+            undoRedoManager.PostUndoRedo += UndoRedoManager_PostUndoRedo;
+            undoRedoManager.TransactionBegan += UndoRedoManager_PreUndoRedo;
+            undoRedoManager.TransactionEnded += UndoRedoManager_PostUndoRedo;
+            undoRedoManager.Updated += UndoRedoManager_Updated;
+        }
+
+        private void ShutdownUndoRedoManager()
+        {
+            undoRedoManager.PreUndoRedo -= UndoRedoManager_PreUndoRedo;
+            undoRedoManager.PostUndoRedo -= UndoRedoManager_PostUndoRedo;
+            undoRedoManager.TransactionBegan -= UndoRedoManager_PreUndoRedo;
+            undoRedoManager.TransactionEnded -= UndoRedoManager_PostUndoRedo;
+            undoRedoManager.Updated -= UndoRedoManager_Updated;
+            undoRedoManager = null;
+        }
+
         private void UnloadProject()
         {
             if (undoRedoManager != null)
             {
                 FreeExportDialog();
-
-                undoRedoManager.PreUndoRedo -= UndoRedoManager_PreUndoRedo;
-                undoRedoManager.PostUndoRedo -= UndoRedoManager_PostUndoRedo;
-                undoRedoManager.TransactionBegan -= UndoRedoManager_PreUndoRedo;
-                undoRedoManager.TransactionEnded -= UndoRedoManager_PostUndoRedo;
-                undoRedoManager.Updated -= UndoRedoManager_Updated;
-                undoRedoManager = null;
-                project = null;
-
+                ShutdownUndoRedoManager();
                 StopEverything();
+                project = null;
             }
             else
             {
@@ -726,33 +734,30 @@ namespace FamiStudio
             song = project.Songs[0];
             palPlayback = project.PalMode;
 
-            ResetSelectedChannel();
-            ResetSelectedInstrumentArpeggio();
-            ResetSelectedSong();
-
-            ToolBar.Reset();
-            ProjectExplorer.Reset();
-            Sequencer.Reset();
-            PianoRoll.Reset(selectedChannelIndex);
-
+            ResetEverything();
             InitializeAutoSave();
             InitializeAudioPlayers();
-
             FreeExportDialog();
-
-            undoRedoManager = new UndoRedoManager(project, this);
-            undoRedoManager.PreUndoRedo += UndoRedoManager_PreUndoRedo;
-            undoRedoManager.PostUndoRedo += UndoRedoManager_PostUndoRedo;
-            undoRedoManager.TransactionBegan += UndoRedoManager_PreUndoRedo;
-            undoRedoManager.TransactionEnded += UndoRedoManager_PostUndoRedo;
-            undoRedoManager.Updated += UndoRedoManager_Updated;
-
+            InitializeUndoRedoManager();
             FixMobileProjectFilename();
             SaveLastOpenProjectFile();
             SaveWorkInProgress();
             MarkEverythingDirty();
             UpdateTitle();
             RefreshLayout();
+        }
+
+        private void ResetEverything()
+        {
+            ResetSelectedChannel();
+            ResetSelectedInstrumentArpeggio();
+            ResetSelectedSong();
+            MarkEverythingDirty();
+
+            ToolBar.Reset();
+            ProjectExplorer.Reset();
+            Sequencer.Reset();
+            PianoRoll.Reset(selectedChannelIndex);
         }
 
         private void FixMobileProjectFilename()
@@ -1237,27 +1242,14 @@ namespace FamiStudio
             dlg.ShowDialogAsync(mainForm, (r) =>
             {
                 if (r == DialogResult.OK)
-                {
-                    ResetSelectedSong();
-                    ResetSelectedInstrumentArpeggio();
-                    Sequencer.Reset();
-                    PianoRoll.Reset(selectedChannelIndex);
-                    ProjectExplorer.RefreshButtons();
-                    MarkEverythingDirty();
-                }
+                    ResetEverything();
             });
         }
 
         private void TransformDialog_CleaningUp()
         {
             StopEverything();
-
-            // We might be deleting data like entire songs/envelopes/samples that
-            // are being edited right now.
-            ResetSelectedSong();
-            ResetSelectedInstrumentArpeggio();
-            Sequencer.Reset();
-            PianoRoll.Reset(selectedChannelIndex);
+            ResetEverything();
         }
 
         public void ShowHelp()

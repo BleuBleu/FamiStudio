@@ -91,6 +91,7 @@ Features missing from the Mobile version
 - No FamiTracker FTI instrument import
 - No DPCM sample import from other projects (WAV/DMC only)
 - No DPCM sample data export
+- No MIDI support.
 - (No song reordering?)
 
 Videos:
