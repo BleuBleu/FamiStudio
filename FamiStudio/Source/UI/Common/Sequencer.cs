@@ -751,7 +751,7 @@ namespace FamiStudio
 
             // Seek bar
             cb.PushTranslation(seekX, 0);
-            cf.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), ThemeResources.BlackBrush);
+            ch.FillAndDrawGeometry(seekGeometry, GetSeekBarBrush(), ThemeResources.BlackBrush);
             cb.DrawLine(0, headerSizeY, 0, actualSizeY, GetSeekBarBrush(), 3);
             cb.PopTransform();
 
