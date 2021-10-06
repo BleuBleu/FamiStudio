@@ -47,8 +47,6 @@ namespace FamiStudio
                 dialog.Properties.AddProgressBar("Export progress", 0.0f, "Exporting videos may take a very long time, especially at high resolutions. Make sure FamiStudio remains open, clicking BACK or closing this window will abort the operation. FamiStudio is currently preventing the screen from going to sleep."); // 0
                 dialog.Properties.AddLabel("Current Step", ""); // 1
                 dialog.Properties.Build();
-
-                dialog.Properties.SetPropertyVisible(1, false);
             });
         }
 
@@ -56,12 +54,6 @@ namespace FamiStudio
         {
             MainThread.InvokeOnMainThreadAsync(() =>
             {
-                if (!hasMessages)
-                {
-                    hasMessages = true;
-                    dialog.Properties.SetPropertyVisible(1, true);
-                }
-
                 dialog.Properties.SetPropertyValue(1, msg);
             });
         }

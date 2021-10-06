@@ -2414,10 +2414,12 @@ namespace FamiStudio
                 if (r == DialogResult.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
-                    tempoProperties.Apply(dlg.Properties.GetPropertyValue<bool>(0));
-                    App.UndoRedoManager.EndTransaction();
-                    MarkDirty();
-                    PatternModified?.Invoke();
+                    tempoProperties.ApplyAsync(dlg.Properties.GetPropertyValue<bool>(0), () =>
+                    {
+                        App.UndoRedoManager.EndTransaction();
+                        MarkDirty();
+                        PatternModified?.Invoke();
+                    });
                 }
             });
         }

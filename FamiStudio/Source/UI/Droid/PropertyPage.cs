@@ -554,12 +554,14 @@ namespace FamiStudio
             var prop = properties[idx];
 
             prop.visible = visible;
-            if (prop.label   != null) prop.label.Visibility   = visible ? ViewStates.Visible : ViewStates.Gone;
-            if (prop.layout  != null) prop.layout.Visibility  = visible ? ViewStates.Visible : ViewStates.Gone;
-            if (prop.tooltip != null) prop.tooltip.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
 
-            foreach (var ctrl in prop.controls)
-                ctrl.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
+            // Properties must be shows/hidden before calling Build(). We dont need this.
+            //if (prop.label   != null) prop.label.Visibility   = visible ? ViewStates.Visible : ViewStates.Gone;
+            //if (prop.layout  != null) prop.layout.Visibility  = visible ? ViewStates.Visible : ViewStates.Gone;
+            //if (prop.tooltip != null) prop.tooltip.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
+
+            //foreach (var ctrl in prop.controls)
+            //    ctrl.Visibility = visible ? ViewStates.Visible : ViewStates.Gone;
         }
 
         public int AddCheckBox(string label, bool value, string tooltip = null)
@@ -925,19 +927,22 @@ namespace FamiStudio
             pageLayout.Orientation = Orientation.Vertical;
             pageLayout.SetBackgroundColor(DroidUtils.ToAndroidColor(Theme.DarkGreyFillColor1));
 
+            var first = true;
+
             for (int i = 0; i < properties.Count; i++)
             {
                 var prop = properties[i];
 
-                if (prop.layout == null)
+                if (prop.layout == null || prop.visible == false)
                     continue;
 
-                if (i != 0)
+                if (!first)
                     pageLayout.AddView(CreateSpacer());
                 if (i == firstAdvancedProperty)
                     pageLayout.AddView(CreateAdvancedPropertiesBanner());
 
                 pageLayout.AddView(prop.layout);
+                first = false;
             }
 
             return pageLayout;

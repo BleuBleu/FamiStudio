@@ -3002,19 +3002,19 @@ namespace FamiStudio
                         song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
                         song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
 
-                        tempoProperties.Apply();
-
-                        SongModified?.Invoke(song);
-                        App.UndoRedoManager.EndTransaction();
-                        RefreshButtons(false);
+                        tempoProperties.ApplyAsync(false, () =>
+                        {
+                            SongModified?.Invoke(song);
+                            App.UndoRedoManager.EndTransaction();
+                            RefreshButtons(false);
+                        });
                     }
                     else
                     {
                         App.UndoRedoManager.AbortTransaction();
                         PlatformUtils.Beep();
+                        MarkDirty();
                     }
-
-                    MarkDirty();
                 }
             });
         }

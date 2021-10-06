@@ -56,8 +56,6 @@ Icon notes:
 - Change insturment dialog for a combo
 - "Volume doesn't export correctly when exporting a VRC7 song with FamiTracker Text"
 
-Misc:
-
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.
 - Add a global 80% volume to match FamiTracker.
@@ -91,7 +89,7 @@ Features missing from the Mobile version
 - No FamiTracker FTI instrument import
 - No DPCM sample import from other projects (WAV/DMC only)
 - No DPCM sample data export
-- No MIDI support.
+- No MIDI support
 - (No song reordering?)
 
 Videos:
