@@ -4705,7 +4705,7 @@ namespace FamiStudio
             }
             return;
 
-        Handled: // Yes, i use a goto, sue me.
+        Handled: 
             MarkDirty();
         }
 
@@ -5021,7 +5021,6 @@ namespace FamiStudio
                 if (IsSelectionValid())
                 {
                     menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); }));
-
                 }
 
                 if (menu.Count > 0)
@@ -5052,7 +5051,7 @@ namespace FamiStudio
 
             return;
 
-        Handled: // Yes, i use a goto, sue me.
+        Handled:
             MarkDirty();
         }
 

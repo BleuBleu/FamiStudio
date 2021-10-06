@@ -328,8 +328,16 @@ namespace FamiStudio
                         }
                         break;
                     case ButtonType.Dpcm:
-                        active = new[] { true, true, !string.IsNullOrEmpty(sample.SourceFilename), true, true };
-                        return new[] { SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
+                        if (PlatformUtils.IsMobile)
+                        {
+                            active = new[] { true, true, true };
+                            return new[] { SubButtonType.EditWave, SubButtonType.Play, SubButtonType.Expand };
+                        }
+                        else
+                        {
+                            active = new[] { true, true, !string.IsNullOrEmpty(sample.SourceFilename), true, true };
+                            return new[] { SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
+                        }
                 }
 
                 active = null;
@@ -2192,32 +2200,39 @@ namespace FamiStudio
             return true;
         }
 
+        private bool StartMoveSlider(int x, int y, Button button, int buttonIdx)
+        {
+            App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+            captureMouseX = x; // Hack, UpdateSliderValue relies on this.
+
+            if (UpdateSliderValue(button, x, y, true))
+            {
+                sliderDragButton = button;
+                StartCaptureOperation(x, y, CaptureOperation.MoveSlider, buttonIdx);
+                MarkDirty();
+                return true;
+            }
+            else
+            {
+                App.UndoRedoManager.AbortTransaction();
+                return false;
+            }
+        }
+
         private bool HandleMouseDownParamSliderButton(MouseEventArgs e, Button button, int buttonIdx)
         {
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (left || right)
             {
-                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-
                 if (left)
                 {
-                    captureMouseX = e.X; // Hack, UpdateSliderValue relies on this.
-
-                    if (UpdateSliderValue(button, e.X, e.Y, true))
-                    {
-                        sliderDragButton = button;
-                        StartCaptureOperation(e.X, e.Y, CaptureOperation.MoveSlider, buttonIdx);
-                        MarkDirty();
-                    }
-                    else
-                    {
-                        App.UndoRedoManager.AbortTransaction();
-                    }
+                    StartMoveSlider(e.X, e.Y, button, buttonIdx);
                 }
                 else
                 {
+                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
                     button.param.SetValue(button.param.DefaultValue);
                     App.UndoRedoManager.EndTransaction();
                     MarkDirty();
@@ -2227,32 +2242,70 @@ namespace FamiStudio
             return true;
         }
 
+        private void ClickParamCheckbox(int x, int y, Button button, bool reset)
+        {
+            var actualWidth = Width - scrollBarThickness;
+
+            if (x >= actualWidth - checkBoxPosX)
+            {
+                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+
+                if (!reset)
+                {
+                    var val = button.param.GetValue();
+                    button.param.SetValue(val == 0 ? 1 : 0);
+                }
+                else
+                {
+                    button.param.SetValue(button.param.DefaultValue);
+                }
+
+                App.UndoRedoManager.EndTransaction();
+                MarkDirty();
+            }
+        }
+
+        private void ClickParamListButton(int x, int y, Button button, bool reset)
+        {
+            var actualWidth = Width - scrollBarThickness;
+            var buttonWidth = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width;
+            var buttonX = x;
+            var leftButton  = buttonX > (actualWidth - sliderPosX) && buttonX < (actualWidth - sliderPosX + buttonWidth);
+            var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - buttonWidth) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
+            var delta = leftButton ? -1 : (rightButton ? 1 : 0);
+
+            if (!reset && (leftButton || rightButton))
+            {
+                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+
+                var val = button.param.GetValue();
+
+                if (rightButton)
+                    val = button.param.SnapAndClampValue(button.param.GetValue() + 1);
+                else
+                    val = button.param.SnapAndClampValue(button.param.GetValue() - 1);
+
+                button.param.SetValue(val);
+
+                App.UndoRedoManager.EndTransaction();
+                MarkDirty();
+            }
+            else if (reset && buttonX > (actualWidth - sliderPosX))
+            {
+                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+                button.param.SetValue(button.param.DefaultValue);
+                App.UndoRedoManager.EndTransaction();
+                MarkDirty();
+            }
+        }
+
         private bool HandleMouseDownParamCheckboxButton(MouseEventArgs e, Button button)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (left || right)
-            {
-                var actualWidth = Width - scrollBarThickness;
-
-                if (e.X >= actualWidth - checkBoxPosX)
-                {
-                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-
-                    if (left)
-                    {
-                        var val = button.param.GetValue();
-                        button.param.SetValue(val == 0 ? 1 : 0);
-                    }
-                    else
-                    {
-                        button.param.SetValue(button.param.DefaultValue);
-                    }
-                    App.UndoRedoManager.EndTransaction();
-                    MarkDirty();
-                }
-            }
+                ClickParamCheckbox(e.X, e.Y, button, right);
 
             return true;
         }
@@ -2263,38 +2316,7 @@ namespace FamiStudio
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (left || right)
-            {
-                var actualWidth = Width - scrollBarThickness;
-                var buttonWidth = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width;
-                var buttonX = e.X;
-                var leftButton = buttonX > (actualWidth - sliderPosX) && buttonX < (actualWidth - sliderPosX + buttonWidth);
-                var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - buttonWidth) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
-                var delta = leftButton ? -1 : (rightButton ? 1 : 0);
-
-                if (left && (leftButton || rightButton))
-                {
-                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-
-                    var val = button.param.GetValue();
-
-                    if (rightButton)
-                        val = button.param.SnapAndClampValue(button.param.GetValue() + 1);
-                    else
-                        val = button.param.SnapAndClampValue(button.param.GetValue() - 1);
-
-                    button.param.SetValue(val);
-
-                    App.UndoRedoManager.EndTransaction();
-                    MarkDirty();
-                }
-                else if (right && buttonX > (actualWidth - sliderPosX))
-                {
-                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-                    button.param.SetValue(button.param.DefaultValue);
-                    App.UndoRedoManager.EndTransaction();
-                    MarkDirty();
-                }
-            }
+                ClickParamListButton(e.X, e.Y, button, right);
 
             return true;
         }
@@ -2446,7 +2468,7 @@ namespace FamiStudio
             if (HandleMouseDownButtons(e)) goto Handled;
             return;
 
-        Handled: // Yes, i use a goto, sue me.
+        Handled:
             MarkDirty();
         }
 
@@ -2478,31 +2500,21 @@ namespace FamiStudio
 
         private bool HandleTouchClickInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            //if (e.Button.HasFlag(MouseButtons.Left))
-            //{
-                App.SelectedInstrument = button.instrument;
+            App.SelectedInstrument = button.instrument;
 
-                if (subButtonType == SubButtonType.Expand)
-                {
-                    ToggleExpandInstrument(button.instrument);
-                }
-                else if (subButtonType == SubButtonType.DPCM)
-                {
-                    InstrumentEdited?.Invoke(button.instrument, EnvelopeType.Count);
-                }
-                else if (subButtonType < SubButtonType.EnvelopeMax)
-                {
-                    InstrumentEdited?.Invoke(button.instrument, (int)subButtonType);
-                    envelopeDragIdx = (int)subButtonType;
-                }
-            //}
-            //else if (e.Button.HasFlag(MouseButtons.Right) && button.instrument != null)
-            //{
-            //    if (subButtonType < SubButtonType.EnvelopeMax)
-            //        ClearInstrumentEnvelope(button.instrument, (int)subButtonType);
-            //    else if (subButtonType == SubButtonType.Max)
-            //        AskDeleteInstrument(button.instrument);
-            //}
+            if (subButtonType == SubButtonType.Expand)
+            {
+                ToggleExpandInstrument(button.instrument);
+            }
+            else if (subButtonType == SubButtonType.DPCM)
+            {
+                InstrumentEdited?.Invoke(button.instrument, EnvelopeType.Count);
+            }
+            else if (subButtonType < SubButtonType.EnvelopeMax)
+            {
+                InstrumentEdited?.Invoke(button.instrument, (int)subButtonType);
+                envelopeDragIdx = (int)subButtonType;
+            }
 
             return true;
         }
@@ -2516,17 +2528,10 @@ namespace FamiStudio
 
         private bool HandleTouchClickArpeggioButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            //if (e.Button.HasFlag(MouseButtons.Left))
-            //{
-                App.SelectedArpeggio = button.arpeggio;
+            App.SelectedArpeggio = button.arpeggio;
 
-                if (subButtonType < SubButtonType.EnvelopeMax)
-                    ArpeggioEdited?.Invoke(button.arpeggio);
-            //}
-            //else if (e.Button.HasFlag(MouseButtons.Right) && button.arpeggio != null)
-            //{
-            //    AskDeleteArpeggio(button.arpeggio);
-            //}
+            if (subButtonType < SubButtonType.EnvelopeMax)
+                ArpeggioEdited?.Invoke(button.arpeggio);
 
             return true;
         }
@@ -2540,51 +2545,31 @@ namespace FamiStudio
 
         private bool HandleTouchClickDpcmButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
-            //if (e.Button.HasFlag(MouseButtons.Left))
-            //{
-                if (subButtonType == SubButtonType.EditWave)
-                {
-                    DPCMSampleEdited?.Invoke(button.sample);
-                }
-                else if (subButtonType == SubButtonType.Reload)
-                {
-                    ReloadDPCMSampleSourceData(button.sample);
-                }
-                else if (subButtonType == SubButtonType.Save)
-                {
-                    ExportDPCMSampleProcessedData(button.sample);
-                }
-                else if (subButtonType == SubButtonType.Play)
-                {
-                    App.PreviewDPCMSample(button.sample, false);
-                }
-                else if (subButtonType == SubButtonType.Expand)
-                {
-                    ToggleExpandDPCMSample(button.sample);
-                }
-                //else if (subButtonType == SubButtonType.Max)
-                //{
-                //    draggedSample = button.sample;
-                //    StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSample, buttonIdx);
-                //    MarkDirty();
-                //}
-            //}
-            //else if (e.Button.HasFlag(MouseButtons.Right))
-            //{
-            //    if (subButtonType == SubButtonType.Play)
-            //    {
-            //        App.PreviewDPCMSample(button.sample, true);
-            //    }
-            //    else if (subButtonType == SubButtonType.Save)
-            //    {
-            //        ExportDPCMSampleSourceData(button.sample);
-            //    }
-            //    else if (subButtonType == SubButtonType.Max)
-            //    {
-            //        AskDeleteDPCMSample(button.sample);
-            //    }
-            //}
+            if (subButtonType == SubButtonType.EditWave)
+            {
+                DPCMSampleEdited?.Invoke(button.sample);
+            }
+            else if (subButtonType == SubButtonType.Play)
+            {
+                App.PreviewDPCMSample(button.sample, false);
+            }
+            else if (subButtonType == SubButtonType.Expand)
+            {
+                ToggleExpandDPCMSample(button.sample);
+            }
 
+            return true;
+        }
+
+        private bool HandleTouchClickParamCheckboxButton(int x, int y, Button button)
+        {
+            ClickParamCheckbox(x, y, button, false);
+            return true;
+        }
+
+        private bool HandleTouchClickParamListButton(int x, int y, Button button)
+        {
+            ClickParamListButton(x, y, button, false);
             return true;
         }
 
@@ -2606,14 +2591,10 @@ namespace FamiStudio
                         return HandleTouchClickInstrumentHeaderButton(x, y, subButtonType);
                     case ButtonType.Instrument:
                         return HandleTouchClickInstrumentButton(x, y, button, subButtonType, buttonIdx, buttonRelX, buttonRelY);
-                        /*
-                    case ButtonType.ParamSlider:
-                        return HandleMouseDownParamSliderButton(e, button, buttonIdx);
                     case ButtonType.ParamCheckbox:
-                        return HandleMouseDownParamCheckboxButton(e, button);
+                        return HandleTouchClickParamCheckboxButton(x, y, button);
                     case ButtonType.ParamList:
-                        return HandleMouseDownParamListButton(e, button);
-                        */
+                        return HandleTouchClickParamListButton(x, y, button);
                     case ButtonType.ArpeggioHeader:
                         return HandleTouchClickArpeggioHeaderButton(x, y, subButtonType);
                     case ButtonType.Arpeggio:
@@ -2635,7 +2616,7 @@ namespace FamiStudio
         {    
             App.ShowContextMenu(new[]
             {
-                new ContextMenuOption("MenuForceDisplay", "Project Settings...", () => { EditProjectProperties(Point.Empty); }) // DROIDTODO : Wrong icon!
+                new ContextMenuOption("MenuForceDisplay", "Project Properties...", () => { EditProjectProperties(Point.Empty); }) // DROIDTODO : Wrong icon!
             });
 
             return true;
@@ -2644,7 +2625,7 @@ namespace FamiStudio
         private bool HandleTouchLongPressSongButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
-            menu.Add(new ContextMenuOption("MenuForceDisplay", "Song/Tempo Settings...", () => { EditSongProperties(Point.Empty, button.song); })); // DROIDTODO : Wrong icon!
+            menu.Add(new ContextMenuOption("MenuForceDisplay", "Song/Tempo Properties...", () => { EditSongProperties(Point.Empty, button.song); })); // DROIDTODO : Wrong icon!
             if (App.Project.Songs.Count > 1)
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
             App.ShowContextMenu(menu.ToArray());
@@ -2654,23 +2635,59 @@ namespace FamiStudio
         private bool HandleTouchLongPressInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
             var menu = new List<ContextMenuOption>();
-            menu.Add(new ContextMenuOption("MenuForceDisplay", "Instrument Settings...", () => { EditInstrumentProperties(Point.Empty, button.instrument); })); // DROIDTODO : Wrong icon!
-            menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }));
+            if (button.instrument != null)
+            {
+                menu.Add(new ContextMenuOption("MenuForceDisplay", "Instrument Properties...", () => { EditInstrumentProperties(Point.Empty, button.instrument); })); // DROIDTODO : Wrong icon!
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }));
+            }
             if (subButtonType < SubButtonType.EnvelopeMax)
+            {
                 menu.Add(new ContextMenuOption("MenuDelete", "Clear Envelope", () => { ClearInstrumentEnvelope(button.instrument, (int)subButtonType); })); // DROIDTODO : Wrong icon!
-            App.ShowContextMenu(menu.ToArray());
+            }
+            if (menu.Count > 0)
+                App.ShowContextMenu(menu.ToArray());
             return true;
         }
 
         private bool HandleTouchLongPressArpeggioButton(int x, int y, Button button)
         {
-            //App.SelectedSong = button.song;
+            var menu = new List<ContextMenuOption>();
+            if (button.arpeggio != null)
+            {
+                menu.Add(new ContextMenuOption("MenuForceDisplay", "Arpeggio Properties...", () => { EditArpeggioProperties(Point.Empty, button.arpeggio); })); // DROIDTODO : Wrong icon!
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }));
+            }
+            if (menu.Count > 0)
+                App.ShowContextMenu(menu.ToArray());
             return true;
         }
 
         private bool HandleTouchLongPressDpcmButton(int x, int y, Button button)
         {
-            //App.SelectedSong = button.song;
+            App.ShowContextMenu(new[]
+            {
+                new ContextMenuOption("MenuForceDisplay", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(Point.Empty, button.sample); }), // DROIDTODO : Wrong icon!
+                new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); })
+            });
+
+            return true;
+        }
+
+        private void ResetParamButtonDefaultValue(Button button)
+        {
+            App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+            button.param.SetValue(button.param.DefaultValue);
+            App.UndoRedoManager.EndTransaction();
+            MarkDirty();
+        }
+
+        private bool HandleTouchLongPressParamButton(int x, int y, Button button)
+        {
+            App.ShowContextMenu(new[]
+            {
+                new ContextMenuOption("MenuForceDisplay", "Reset Default Value", () => { ResetParamButtonDefaultValue(button); }) // DROIDTODO : Wrong icon!
+            });
+
             return true;
         }
 
@@ -2690,15 +2707,10 @@ namespace FamiStudio
                         return HandleTouchLongPressSongButton(x, y, button);
                     case ButtonType.Instrument:
                         return HandleTouchLongPressInstrumentButton(x, y, button, subButtonType, buttonIdx);
-                    /*
-                     * DROIRDTODO : Reset to default for those.
                     case ButtonType.ParamSlider:
-                        return HandleMouseDownParamSliderButton(e, button, buttonIdx);
                     case ButtonType.ParamCheckbox:
-                        return HandleMouseDownParamCheckboxButton(e, button);
                     case ButtonType.ParamList:
-                        return HandleMouseDownParamListButton(e, button);
-                    */
+                        return HandleTouchLongPressParamButton(x, y, button);
                     case ButtonType.Arpeggio:
                         return HandleTouchLongPressArpeggioButton(x, y, button);
                     case ButtonType.Dpcm:
@@ -2711,14 +2723,38 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchDownParamSliderButton(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.ParamSlider)
+            {
+                if (StartMoveSlider(x, y, buttons[buttonIdx], buttonIdx))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDownPan(int x, int y)
+        {
+            StartCaptureOperation(x, y, CaptureOperation.MobilePan);
+            return true;
+        }
+
         protected override void OnTouchDown(int x, int y)
         {
+            // MATTT : Why do we have this?
+            Debug.Assert(captureOperation == CaptureOperation.None);
+
             flingVelY = 0;
 
-            if (captureOperation != CaptureOperation.None)
-                return;
+            if (HandleTouchDownParamSliderButton(x, y)) goto Handled;
+            if (HandleTouchDownPan(x, y)) goto Handled;
+            return;
 
-            StartCaptureOperation(x, y, CaptureOperation.MobilePan);
+         Handled:
+            MarkDirty();
         }
 
         protected override void OnTouchClick(int x, int y)

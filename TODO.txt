@@ -6,97 +6,44 @@ Quick access:
 - Advanced stuff like longpress, etc.
 - Disable buttons when they dont make sense (snapping in sequencer, etc.)
 - Will need to be more flexible :
-	=> Play source/process in DPCM
-	=> Switch instrument/envelope when editing instrument.
+	- PR/Channel (Like it is now)
+	- PR/Envelope (Instrument/Channel/Envelope)
+	- PR/Arpeggio (Channel)
+	- PR/DPCM (Play source/Play processed)
+	- PR/DPCMMapping (?)
+	- Seq (Channel)
+	- Project explorer (Instrument/Channel/Envelope)
 
 Project explorer:
-- Possible actions: 
-	/ Pan
-	- Edit song/project/inst properties
-	/ Chane current song/instrument/arp
-	/ Expand 
-	- Widgets
-	- Env edition
-	- Import instrument, etc. Dialogs.
-Long press:
-	- Properties, etc.
-TDB:
-	- Env replace? Instrument replace? Song reorder?
-		=> Will be done with cursor mecanic.
+- Env replace? Instrument replace? Song reorder?
+	=> Will be done with cursor mecanic.
 - Draw line that seperates with toolbar + quick access.
+- Editing envelope/DPCM will still be considered "Project explorer", only channel mode will be PR.
 
 Piano roll:
-- Possible actions: 
-	x Pan/zoom
-	x Create notes
-	x Drag note/selection
-	x Slide notes
-	x Toggle attack
-	x Toggle release note 
-	x Eyedrop 
-	x Stop note 
-	x Delete note 
-	x Select 
-	x Seek 
-	x Play piano 
-	x Resize from end 
-	- Create/Change effect value 
-	- Clear effect value
-	- DPCM vol envelope 
-	- Move env loop/release point ====> HOW, long press?
-	- Resize envelope ====> HOW? Add button in header?
-	- Map/clear DPCM sample
-	- Move DPCM mapping 
-Controls:
-	Longpress : 
-		/ Toggle attack
-		/ Toggle release
-		- Toggle stop note
-		/ Toggle slide 
-		- Eyedropper
-		- Replace instrument/arp?
-		- Anything else? Copy? Paste?
-	Tap:
-		- Add/drag note/selection
+- Create/Change effect value 
+- Clear effect value
+- DPCM vol envelope 
+- Move env loop/release point 
+- Resize envelope 
+- Map/clear DPCM sample
+- Move DPCM mapping 
+- Replace instrument/arp?
 - Hide the vertical piano when editing DPCM samples, envelopes, etc. Clamp the scroll to what makes sense.
 - Draw line that seperates with toolbar + quick access.
+- Snapping needs to preserve value even when not in channel mode.
+- Clicking should toggle cursor.
 
 Sequencer:
-- Possible actions:
-	/ Change active channel
-	/ Channel solo/mute
-	- Force display
-	/ Set loop point
-	x Seek
-	x Select
-	x Select rectangle
-	/ Create/delete pattern
-	/ Drag patterns
-	/ Edit pattern properties
-	/ Edit custom pattern settings
-Controls:
-	- Copy/paste/instanciate
-	- Longpress : Instanciate/Copy selection here
-	- Force display, how?
-	- Go to piano roll.
-	- Clicking should toggle cursor, not selection.
-
-	x Tap = add pattern
-	x Long press = pattern properties
-	x Swipe = pan
-
-	x Header long-press = custom settings, pattern properties, solo/unsolo.
-	x Header Swipe = select (unless dragging seek bar itself)
-	x Header Tap = seek
+- Check text alignments : Channel name, pattern names.
+- Figure out row height thing.
+- Paste should happen at cursor, not selection? Must be consistent with PR.
 
 Scaling issue:
 - Support 3 scalings (Will not affect toolbars)? 
 	- 4x (with 2x font) (Default for <  1080p, xhdpi and below)
 	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
-
-Misc:
-- Snapping needs to preserve value even when not in channel mode.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
@@ -143,6 +90,7 @@ Features missing from the Mobile version
 - No FamiStudio text export
 - No FamiTracker FTI instrument import
 - No DPCM sample import from other projects (WAV/DMC only)
+- No DPCM sample data export
 - (No song reordering?)
 
 Videos:

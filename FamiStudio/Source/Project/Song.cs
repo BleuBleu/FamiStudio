@@ -1205,6 +1205,11 @@ namespace FamiStudio
             return ChannelIndex >= 0 && ChannelIndex < s.Channels.Length;
         }
 
+        public bool IsInSong(Song s)
+        {
+            return IsPatternInSong(s) && IsChannelInSong(s);
+        }
+
         public override string ToString()
         {
             return $"{ChannelIndex}:{PatternIndex}";

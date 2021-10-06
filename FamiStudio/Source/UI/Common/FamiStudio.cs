@@ -2058,9 +2058,12 @@ namespace FamiStudio
             lastTickTime = tickTime;
         }
 
-        private void Sequencer_PatternClicked(int trackIndex, int patternIndex)
+        private void Sequencer_PatternClicked(int channelIdx, int patternIdx, bool setActive)
         {
-            PianoRoll.StartEditChannel(trackIndex, patternIndex);
+            selectedChannelIndex = channelIdx;
+            PianoRoll.StartEditChannel(channelIdx, patternIdx);
+            if (setActive)
+                SetActiveControl(PianoRoll);
         }
 
         private void PianoRoll_PatternChanged(Pattern pattern)
