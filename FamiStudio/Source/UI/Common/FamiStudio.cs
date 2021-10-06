@@ -120,6 +120,7 @@ namespace FamiStudio
             StaticInstance = this;
 
             SetMainForm(PlatformUtils.IsMobile ? FamiStudioForm.Instance : new FamiStudioForm(this));
+            InitializeMetronome();
             InitializeMidi();
             InitializeMultiMediaNotifications();
 

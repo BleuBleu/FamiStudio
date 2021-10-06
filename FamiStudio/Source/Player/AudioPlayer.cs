@@ -53,7 +53,6 @@ namespace FamiStudio
             if (metronome != null)
             {
                 var newSamples = new short[emulation.Length];
-                var metronomeIdx = metronomeIndex;
 
                 var i = 0;
                 var j = (float)metronomeIndex;
