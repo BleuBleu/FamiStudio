@@ -18,7 +18,6 @@ namespace FamiStudio
 {
     public class AudioPlayer : BasePlayer
     {
-        protected const int DefaultSampleRate = 44100;
         protected const float MetronomeFirstBeatPitch  = 1.375f;
         protected const float MetronomeFirstBeatVolume = 1.5f;
 

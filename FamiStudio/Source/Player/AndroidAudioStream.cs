@@ -1,16 +1,10 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Media;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Diagnostics;
 using System.Threading.Tasks;
+
+using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
 {
@@ -26,15 +20,22 @@ namespace FamiStudio
         private AudioTrack audioTrack;
         private Task playingTask;
 
-        public AndroidAudioStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public AndroidAudioStream(int rate, int bufferSizeInBytes, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
+            // Probably not needed, but i've seen things about effects in the log that
+            // worries me. Doesnt hurt.
+            AudioManager am = (AudioManager)Application.Context.GetSystemService(Context.AudioService);
+            am.UnloadSoundEffects();
+
             bufferFill = bufferFillCallback;
 
             audioTrack = new AudioTrack.Builder()
-                .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).Build())
+                .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
                 .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(rate).SetEncoding(Android.Media.Encoding.Pcm16bit).SetChannelMask(ChannelOut.Mono).Build())
                 .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
-                .SetBufferSizeInBytes(bufferSize).Build();
+                .SetBufferSizeInBytes(bufferSizeInBytes).Build();
+
+            Debug.Assert(audioTrack.PerformanceMode == AudioTrackPerformanceMode.LowLatency);
         }
 
         public void Start()
@@ -67,6 +68,7 @@ namespace FamiStudio
                 }
                 else
                 {
+                    System.Diagnostics.Debug.WriteLine("Starvation!");
                     System.Threading.Thread.Sleep(4);
                 }
             }
@@ -75,6 +77,7 @@ namespace FamiStudio
         public void Dispose()
         {
             Stop();
+            audioTrack.Release();
             audioTrack.Dispose();
             audioTrack = null;
         }

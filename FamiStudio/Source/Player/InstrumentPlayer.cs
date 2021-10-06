@@ -23,7 +23,7 @@ namespace FamiStudio
 
         public int PlayingNote => playingNote;
 
-        public InstrumentPlayer(bool pal) : base(NesApu.APU_INSTRUMENT, pal, DefaultSampleRate, Settings.NumBufferedAudioFrames)
+        public InstrumentPlayer(bool pal, int sampleRate) : base(NesApu.APU_INSTRUMENT, pal, sampleRate, Settings.NumBufferedAudioFrames)
         {
         }
 

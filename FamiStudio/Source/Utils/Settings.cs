@@ -166,6 +166,8 @@ namespace FamiStudio
         // Audio section
 #if FAMISTUDIO_LINUX
         const int DefaultNumBufferedAudioFrames = 4; // ALSA seems to like to have one extra buffer.
+#elif FAMISTUDIO_ANDROID
+        const int DefaultNumBufferedAudioFrames = 2;
 #else
         const int DefaultNumBufferedAudioFrames = 3;
 #endif

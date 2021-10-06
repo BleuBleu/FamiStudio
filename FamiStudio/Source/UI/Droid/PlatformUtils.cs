@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
 using Android.App;
 using Android.Content;
+using Android.Media;
 using Android.OS;
 using Android.Widget;
 using Xamarin.Essentials;
@@ -40,6 +42,14 @@ namespace FamiStudio
                 var version = ctx.ApplicationContext.PackageManager.GetPackageInfo(ctx.PackageName, 0).VersionName;
                 return version;
             }
+        }
+
+        public static int GetOutputAudioSampleSampleRate()
+        {
+            // In order to get the LowLatency flag accepted on android, the app audio output
+            // needs to match the device output sample rate.
+            AudioManager am = (AudioManager)Application.Context.GetSystemService(Context.AudioService);
+            return int.Parse(am.GetProperty(AudioManager.PropertyOutputSampleRate), CultureInfo.InvariantCulture);
         }
 
         public static Size GetScreenResolution()

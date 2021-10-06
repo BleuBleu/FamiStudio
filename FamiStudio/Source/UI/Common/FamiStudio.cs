@@ -120,8 +120,6 @@ namespace FamiStudio
             StaticInstance = this;
 
             SetMainForm(PlatformUtils.IsMobile ? FamiStudioForm.Instance : new FamiStudioForm(this));
-            InitializeMetronome();
-            InitializeSongPlayer();
             InitializeMidi();
             InitializeMultiMediaNotifications();
 
@@ -1361,7 +1359,7 @@ namespace FamiStudio
         {
             Debug.Assert(songPlayer == null);
             Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
-            songPlayer = new SongPlayer(palPlayback);
+            songPlayer = new SongPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate());
             songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
         }
@@ -1369,7 +1367,7 @@ namespace FamiStudio
         private void InitializeInstrumentPlayer()
         {
             Debug.Assert(instrumentPlayer == null);
-            instrumentPlayer = new InstrumentPlayer(palPlayback);
+            instrumentPlayer = new InstrumentPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate());
             instrumentPlayer.Start(project, palPlayback);
         }
 
@@ -1922,8 +1920,10 @@ namespace FamiStudio
         {
             if (!suspended)
             {
-                InitializeSongPlayer();
+                // Initialize the instrument player first. On Android, this
+                // has a higher change of getting the low-latency flag accepted.
                 InitializeInstrumentPlayer();
+                InitializeSongPlayer();
                 InitializeOscilloscope();
             }
         }

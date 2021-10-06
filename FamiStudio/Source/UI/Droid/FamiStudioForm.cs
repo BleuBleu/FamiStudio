@@ -600,8 +600,6 @@ namespace FamiStudio
             PlatformUtils.VibrateTick();
         }
 
-        int c = 0;
-
         private GLControl GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
             if (captureControl != null)
@@ -630,7 +628,7 @@ namespace FamiStudio
             {
                 if (e.Action == MotionEventActions.Up)
                 {
-                    Debug.WriteLine($"{c++} Up {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                    //Debug.WriteLine($"Up {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                     lock (renderLock)
                     {
                         var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
@@ -644,7 +642,7 @@ namespace FamiStudio
                 }
                 else if (e.Action == MotionEventActions.Move && !scaleDetector.IsInProgress)
                 {
-                    Debug.WriteLine($"{c++} Move {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                    //Debug.WriteLine($"Move {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                     lock (renderLock)
                         GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchMove(x, y);
                 }
@@ -664,7 +662,7 @@ namespace FamiStudio
         {
             if (!IsAsyncDialogInProgress)
             {
-                Debug.WriteLine($"{c++} OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                //Debug.WriteLine($"OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                     GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchDown(x, y);
             }
@@ -675,8 +673,7 @@ namespace FamiStudio
         {
             if (!IsAsyncDialogInProgress)
             {
-
-                Debug.WriteLine($"{c++} OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({velocityX}, {velocityY})");
+                //Debug.WriteLine($"OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({velocityX}, {velocityY})");
                 lock (renderLock)
                     GetCapturedControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y)?.TouchFling(x, y, velocityX, velocityY);
             }
@@ -687,7 +684,7 @@ namespace FamiStudio
         {
             if (!IsAsyncDialogInProgress)
             {
-                Debug.WriteLine($"{c++} OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                //Debug.WriteLine($"OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                     GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchLongPress(x, y);
             }
@@ -702,7 +699,7 @@ namespace FamiStudio
         {
             if (!IsAsyncDialogInProgress)
             {
-                Debug.WriteLine($"{c++} {e.PointerCount} OnShowPress ({e.GetX()}, {e.GetY()})");
+                //Debug.WriteLine($"{e.PointerCount} OnShowPress ({e.GetX()}, {e.GetY()})");
             }
         }
 
@@ -713,7 +710,7 @@ namespace FamiStudio
                 //DialogTest();
                 //StartSaveFileActivity("audio/mpeg", "Toto.mp3");
 
-                Debug.WriteLine($"{c++} {e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
+                //Debug.WriteLine($"{e.PointerCount} OnSingleTapUp ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                     GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchClick(x, y);
             }
@@ -724,7 +721,7 @@ namespace FamiStudio
         {
             if (!IsAsyncDialogInProgress)
             {
-                Debug.WriteLine($"{c++} OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
+                //Debug.WriteLine($"OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
                 lock (renderLock)
                     GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScale(x, y, detector.ScaleFactor);
                 return true;
@@ -739,7 +736,7 @@ namespace FamiStudio
         {
             if (!IsAsyncDialogInProgress)
             {
-                Debug.WriteLine($"{c++} OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
+                //Debug.WriteLine($"OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
                     GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScaleBegin(x, y);
                 return true;
@@ -754,7 +751,7 @@ namespace FamiStudio
         {
             if (!IsAsyncDialogInProgress)
             {
-                Debug.WriteLine($"{c++} OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
+                //Debug.WriteLine($"OnScaleEnd ({detector.FocusX}, {detector.FocusY})");
                 lock (renderLock)
                     GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScaleEnd(x, y);
             }
