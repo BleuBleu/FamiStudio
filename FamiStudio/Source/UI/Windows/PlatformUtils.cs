@@ -40,6 +40,11 @@ namespace FamiStudio
             return Screen.PrimaryScreen.Bounds.Size;
         }
 
+        public static int GetOutputAudioSampleSampleRate()
+        {
+            return 44100;
+        }
+
         [DllImport("gdi32.dll")]
         private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
 

@@ -592,7 +592,7 @@ namespace FamiStudio
             for (int i = Math.Max(1, minVisiblePattern); i <= maxVisiblePattern; i++)
             {
                 var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
-                cb.DrawLine(px, 0, px, Height, ThemeResources.BlackBrush);
+                cb.DrawLine(px, 0, px, Height - scrollBarThickness, ThemeResources.BlackBrush);
             }
 
             cb.PushTranslation(0, -scrollY);

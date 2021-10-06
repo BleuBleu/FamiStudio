@@ -93,6 +93,17 @@ namespace FamiStudio
             return mainThread == Thread.CurrentThread;
         }
 
+        public static Size GetScreenResolution()
+        {
+            Debug.Assert(false);
+            return Size.Empty;
+        }
+
+        public static int GetOutputAudioSampleSampleRate()
+        {
+            return 44100;
+        }
+
         private static void ParseRcFileFromResource(string rcFile)
         {
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(rcFile))
