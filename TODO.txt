@@ -97,10 +97,6 @@ Scaling issue:
 Misc:
 - Snapping needs to preserve value even when not in channel mode.
 
-Polish:
-- loop point icon has a grey square when selected
-- seq selected pattern border don't get clipped when scrolling in y. They overlap header
-
 Icon notes:
 - 46% zoom, start with 128x128 png.
 

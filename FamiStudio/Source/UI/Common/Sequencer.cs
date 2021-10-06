@@ -590,7 +590,7 @@ namespace FamiStudio
                 if (i == Song.LoopPoint)
                 {
                     var bmpSize = bmpAtlasMisc.GetElementSize((int)MiscImageIndices.LoopPoint);
-                    ch.FillRectangle(headerIconPosX, headerIconPosY, headerIconPosX + bmpSize.Width, headerIconPosY + bmpSize.Height, ThemeResources.DarkGreyLineBrush2);
+                    ch.FillRectangle(headerIconPosX, headerIconPosY, headerIconPosX + bmpSize.Width * bitmapScale, headerIconPosY + bmpSize.Height * bitmapScale, ThemeResources.DarkGreyLineBrush2);
                     ch.DrawBitmapAtlas(bmpAtlasMisc, (int)MiscImageIndices.LoopPoint, headerIconPosX, headerIconPosY, 1.0f, bitmapScale, Theme.LightGreyFillColor1);
                 }
 
@@ -759,15 +759,17 @@ namespace FamiStudio
 
             // Line seperating with the quick access bar.
             if (PlatformUtils.IsMobile && IsLandscape)
+            {
+                ch.DrawLine(Width - 1, 0, Width - 1, Height, ThemeResources.BlackBrush);
                 cf.DrawLine(Width - 1, 0, Width - 1, Height, ThemeResources.BlackBrush);
+            }
 
-            var headerRect      = new Rectangle(trackNameSizeX, 0, Width, Height);
-            var patternOnlyRect = new Rectangle(trackNameSizeX, headerSizeY, Width, Height);
-            var patternRect     = new Rectangle(trackNameSizeX, 0, Width, Height);
+            var headerRect  = new Rectangle(trackNameSizeX, 0, Width, Height);
+            var patternRect = new Rectangle(trackNameSizeX, headerSizeY, Width, Height);
 
             g.DrawCommandList(ch, headerRect);
-            g.DrawCommandList(cb, patternOnlyRect);
-            g.DrawCommandList(cp, patternOnlyRect);
+            g.DrawCommandList(cb, patternRect);
+            g.DrawCommandList(cp, patternRect);
             g.DrawCommandList(cf, patternRect);
         }
 
