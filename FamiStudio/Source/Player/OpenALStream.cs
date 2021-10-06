@@ -31,6 +31,8 @@ namespace FamiStudio
                 Console.WriteLine($"Default OpenAL audio device is '{AudioContext.DefaultDevice}'");
             }
 
+            // TODO : We need to decouple the number of emulated buffered frames and the 
+            // size of the low-level audio buffers.
             freq = rate;
             source = AL.GenSource();
             buffers = AL.GenBuffers(numBuffers);
