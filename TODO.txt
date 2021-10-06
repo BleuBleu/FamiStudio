@@ -13,8 +13,7 @@ Quick access:
 	- PR/DPCMMapping (?)
 	- Seq (Channel)
 	- Project explorer (Instrument/Channel/Envelope)
-- We should pick fonts based on size. Looks bad in 66% scaling.
-
+	
 Project explorer:
 - Env replace? Instrument replace? Song reorder?
 	=> Will be done with cursor mecanic.
