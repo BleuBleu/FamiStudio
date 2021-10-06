@@ -4,13 +4,11 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
 
-using RenderBitmap      = FamiStudio.GLBitmap;
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderBrush       = FamiStudio.GLBrush;
 using RenderGeometry    = FamiStudio.GLGeometry;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.ThemeRenderResources;
 using RenderCommandList = FamiStudio.GLCommandList;
 
 namespace FamiStudio
@@ -23,6 +21,7 @@ namespace FamiStudio
         const float MinZoomY                = 0.25f;
         const float MaxZoomY                = 4.0f;
         const float MaxWaveZoom             = 256.0f;
+        const float DefaultChannelZoom      = PlatformUtils.IsMobile ? MinZoomOther : 1.0f;
         const float DefaultEnvelopeZoom     = 4.0f;
         const float ContinuousFollowPercent = 0.75f;
         const float DefaultZoomWaveTime     = 0.25f;
@@ -337,7 +336,7 @@ namespace FamiStudio
         bool snap = true;
         float flingVelX = 0.0f;
         float flingVelY = 0.0f;
-        float zoom = 1.0f;
+        float zoom = DefaultChannelZoom;
         float zoomY = PlatformUtils.IsMobile ? 0.8f : 1.0f;
         float pianoScaleX = 1.0f; // Only used by video export.
         float captureWaveTime = 0.0f;
@@ -751,7 +750,7 @@ namespace FamiStudio
             showEffectsPanel = false;
             editInstrument = null;
             editArpeggio = null;
-            zoom = 1.0f;
+            zoom = DefaultChannelZoom;
             StartEditChannel(channelIdx);
         }
 

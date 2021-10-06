@@ -5,6 +5,9 @@ Quick access:
 - Replace "tool" by something else useful (effect?)
 - Advanced stuff like longpress, etc.
 - Disable buttons when they dont make sense (snapping in sequencer, etc.)
+- Will need to be more flexible :
+	=> Play source/process in DPCM
+	=> Switch instrument/envelope when editing instrument.
 
 Project explorer:
 - Possible actions: 
@@ -94,6 +97,10 @@ Scaling issue:
 Misc:
 - Snapping needs to preserve value even when not in channel mode.
 
+Polish:
+- loop point icon has a grey square when selected
+- seq selected pattern border don't get clipped when scrolling in y. They overlap header
+
 Icon notes:
 - 46% zoom, start with 128x128 png.
 
@@ -127,8 +134,8 @@ Testing
 - Test without snapping, i tested snapping a lot, but not witout.
 - Compare instrument colors (seq/piano roll) for all platforms
 - Re-test last open file.
-- Figure out max GL buffer sizes at the end.
 - Occasional crash when opening hopes and dreams on Android. 
+- Test light/dark modes.
 
 Features missing from the Mobile version
 ========================================

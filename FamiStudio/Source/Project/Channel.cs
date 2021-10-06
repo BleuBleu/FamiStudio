@@ -65,7 +65,7 @@ namespace FamiStudio
                 return type == ChannelType.Dpcm;
 
             if (type == ChannelType.Dpcm)
-                return true;
+                return instrument == null;
 
             if (instrument.Expansion == ExpansionType.None && (IsRegularChannel || IsMmc5Channel))
                 return true;

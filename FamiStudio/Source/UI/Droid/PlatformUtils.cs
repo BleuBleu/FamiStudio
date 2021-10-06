@@ -15,8 +15,11 @@ namespace FamiStudio
 {
     public static class PlatformUtils
     {
-        private static WaitToastDoneCallback toastCallback = new WaitToastDoneCallback();
-        private static bool toastOnScreen;
+        private static Toast    lastToast;
+        private static DateTime lastToastTime = DateTime.MinValue;
+        private static string   lastToastText;
+
+        private const int ToastShortDuration = 2000;
 
         public static void Initialize()
         {
@@ -164,16 +167,25 @@ namespace FamiStudio
         {
             MainThread.InvokeOnMainThreadAsync(() =>
             {
-                // Toasts stack, and adding a bunch crashes the add or can
-                // stay on screen for multiple minutes. Ignore any other until
-                // the current one is gone.
-                if (!toastOnScreen)
+                var now = DateTime.Now;
+
+                if (lastToast != null)
                 {
-                    toastOnScreen = true;
-                    var toast = Toast.MakeText(Application.Context, message, ToastLength.Short);
-                    toast.AddCallback(toastCallback);
-                    toast.Show();
+                    if (lastToastText != message || (now - lastToastTime).TotalMilliseconds > ToastShortDuration)
+                    {
+                        lastToast.Cancel();
+                        lastToast = null;
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
+
+                lastToast = Toast.MakeText(Application.Context, message, ToastLength.Short);
+                lastToast.Show();
+                lastToastText = message;
+                lastToastTime = now;
             });
         }
 
@@ -184,15 +196,6 @@ namespace FamiStudio
         public static void OpenUrl(string url)
         {
             FamiStudioForm.Instance.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(url)));
-        }
-
-        private class WaitToastDoneCallback : Toast.Callback
-        {
-            public override void OnToastHidden()
-            {
-                toastOnScreen = false;
-                base.OnToastHidden();
-            }
         }
 
         public const bool IsMobile  = true;

@@ -528,8 +528,8 @@ namespace FamiStudio
             {
                 var item = new ListItem();
                 item.Color = Theme.LightGreyFillColor1;
-                item.ImageIndex = Array.IndexOf(ButtonImageNames, ChannelType.Icons[i]);
-                item.Text = ChannelType.GetNameWithExpansion(i);
+                item.ImageIndex = Array.IndexOf(ButtonImageNames, ChannelType.Icons[channelTypes[i]]);
+                item.Text = ChannelType.GetNameWithExpansion(channelTypes[i]);
                 items[i] = item;
             }
 
@@ -548,11 +548,14 @@ namespace FamiStudio
             var channel = App.SelectedChannel;
             var items = new List<ListItem>();
 
-            var dpcmItem = new ListItem();
-            dpcmItem.Color = Theme.LightGreyFillColor1;
-            dpcmItem.ImageIndex = (int)ButtonImageIndices.MobileInstrument;
-            dpcmItem.Text = "DPCM";
-            items.Add(dpcmItem);
+            if (channel.SupportsInstrument(null))
+            {
+                var dpcmItem = new ListItem();
+                dpcmItem.Color = Theme.LightGreyFillColor1;
+                dpcmItem.ImageIndex = (int)ButtonImageIndices.MobileInstrument;
+                dpcmItem.Text = "DPCM";
+                items.Add(dpcmItem);
+            }
 
             for (int i = 0; i < project.Instruments.Count; i++)
             {
@@ -651,7 +654,8 @@ namespace FamiStudio
             var inst = App.SelectedInstrument;
             text = inst != null ? inst.Name  : "DPCM";
             tint = inst != null ? inst.Color : Theme.LightGreyFillColor1;
-            return (ButtonImageIndices)Array.IndexOf(ButtonImageNames, ExpansionType.Icons[inst.Expansion]);
+            var exp = inst != null ? inst.Expansion : ExpansionType.None;
+            return (ButtonImageIndices)Array.IndexOf(ButtonImageNames, ExpansionType.Icons[exp]);
         }
 
         private ButtonImageIndices GetArpeggioRenderInfo(out string text, out Color tint)
