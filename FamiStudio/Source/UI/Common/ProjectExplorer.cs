@@ -2615,7 +2615,7 @@ namespace FamiStudio
         {    
             App.ShowContextMenu(new[]
             {
-                new ContextMenuOption("MenuForceDisplay", "Project Properties...", () => { EditProjectProperties(Point.Empty); }) // DROIDTODO : Wrong icon!
+                new ContextMenuOption("MenuProperties", "Project Properties...", () => { EditProjectProperties(Point.Empty); })
             });
 
             return true;
@@ -2624,7 +2624,7 @@ namespace FamiStudio
         private bool HandleTouchLongPressSongButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
-            menu.Add(new ContextMenuOption("MenuForceDisplay", "Song/Tempo Properties...", () => { EditSongProperties(Point.Empty, button.song); })); // DROIDTODO : Wrong icon!
+            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(Point.Empty, button.song); }));
             if (App.Project.Songs.Count > 1)
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
             App.ShowContextMenu(menu.ToArray());
@@ -2636,12 +2636,12 @@ namespace FamiStudio
             var menu = new List<ContextMenuOption>();
             if (button.instrument != null)
             {
-                menu.Add(new ContextMenuOption("MenuForceDisplay", "Instrument Properties...", () => { EditInstrumentProperties(Point.Empty, button.instrument); })); // DROIDTODO : Wrong icon!
+                menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(Point.Empty, button.instrument); })); 
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }));
             }
             if (subButtonType < SubButtonType.EnvelopeMax)
             {
-                menu.Add(new ContextMenuOption("MenuDelete", "Clear Envelope", () => { ClearInstrumentEnvelope(button.instrument, (int)subButtonType); })); // DROIDTODO : Wrong icon!
+                menu.Add(new ContextMenuOption("MenuClearEnvelope", "Clear Envelope", () => { ClearInstrumentEnvelope(button.instrument, (int)subButtonType); }));
             }
             if (menu.Count > 0)
                 App.ShowContextMenu(menu.ToArray());
@@ -2653,7 +2653,7 @@ namespace FamiStudio
             var menu = new List<ContextMenuOption>();
             if (button.arpeggio != null)
             {
-                menu.Add(new ContextMenuOption("MenuForceDisplay", "Arpeggio Properties...", () => { EditArpeggioProperties(Point.Empty, button.arpeggio); })); // DROIDTODO : Wrong icon!
+                menu.Add(new ContextMenuOption("MenuProperties", "Arpeggio Properties...", () => { EditArpeggioProperties(Point.Empty, button.arpeggio); }));
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }));
             }
             if (menu.Count > 0)
@@ -2665,7 +2665,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(new[]
             {
-                new ContextMenuOption("MenuForceDisplay", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(Point.Empty, button.sample); }), // DROIDTODO : Wrong icon!
+                new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(Point.Empty, button.sample); }),
                 new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); })
             });
 
@@ -2684,7 +2684,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(new[]
             {
-                new ContextMenuOption("MenuForceDisplay", "Reset Default Value", () => { ResetParamButtonDefaultValue(button); }) // DROIDTODO : Wrong icon!
+                new ContextMenuOption("MenuReset", "Reset Default Value", () => { ResetParamButtonDefaultValue(button); })
             });
 
             return true;

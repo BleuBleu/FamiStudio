@@ -1415,8 +1415,8 @@ namespace FamiStudio
                 {
                     menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
                     if (selectionMin.ChannelIndex == location.ChannelIndex)
-                        menu.Add(new ContextMenuOption("MenuExpandSelection", "Instanciate Selection Here", () => { CopySelectionToCursor(false); })); // DROIDTODO Icon!
-                    menu.Add(new ContextMenuOption("MenuExpandSelection", "Duplicate Selection Here", () => { CopySelectionToCursor(true); })); // DROIDTODO Icon!
+                        menu.Add(new ContextMenuOption("MenuInstance", "Instanciate Selection Here", () => { CopySelectionToCursor(false); }));
+                    menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate Selection Here", () => { CopySelectionToCursor(true); }));
                 }
 
                 if (pattern != null)
@@ -1424,16 +1424,16 @@ namespace FamiStudio
                     if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
                     {
                         menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Patterns", () => { DeleteSelection(true); }));
-                        menu.Add(new ContextMenuOption("MenuPatternProperties", "Selected Patterns Properties...", () => { EditPatternProperties(Point.Empty, pattern, true); }));
+                        menu.Add(new ContextMenuOption("MenuProperties", "Selected Patterns Properties...", () => { EditPatternProperties(Point.Empty, pattern, true); }));
                     }
                     else
                     {
                         menu.Add(new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }));
-                        menu.Add(new ContextMenuOption("MenuPatternProperties", "Pattern Properties...", () => { EditPatternProperties(Point.Empty, pattern, false); }));
+                        menu.Add(new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(Point.Empty, pattern, false); }));
                     }
                 }
 
-                menu.Add(new ContextMenuOption("MenuDelete", "Go To Piano Roll", () => { GotoPianoRoll(location); })); // DROIDTODO : Icon!
+                menu.Add(new ContextMenuOption("MenuPiano", "Go To Piano Roll", () => { GotoPianoRoll(location); }));
 
                 if (IsSelectionValid())
                 {
