@@ -6081,6 +6081,10 @@ namespace FamiStudio
             if (SnapEnabled || forceSnap)
             {
                 var location = NoteLocation.FromAbsoluteNoteIndex(Song, absoluteNoteIndex);
+                
+                if (location.PatternIndex >= Song.Length)
+                    return absoluteNoteIndex;
+
                 var beatLength = Song.GetPatternBeatLength(location.PatternIndex);
                 var snapFactor = GetEffectiveSnapResolution(location);
 
@@ -6893,7 +6897,7 @@ namespace FamiStudio
 
         private bool GetLocationForCoord(int x, int y, out NoteLocation location, out byte noteValue, bool allowSnap = false)
         {
-            var absoluteNoteIndex = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX), 0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
+            var absoluteNoteIndex = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - whiteKeySizeX), 0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
 
             if (allowSnap)
                 absoluteNoteIndex = SnapNote(absoluteNoteIndex);

@@ -49,11 +49,9 @@ Icon notes:
 
 3.2.0
 =====
-- NSF import : Look when the DPCM channel gets disable, interpret as stop note.
 - Convert more icons to white + remove last border (release + loop point.)
 - Copy instrument.
 - Change insturment dialog for a combo
-- BUG : Snapping doesnt work well at end of song (use 1 beat snapping, try to resize note)
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.
