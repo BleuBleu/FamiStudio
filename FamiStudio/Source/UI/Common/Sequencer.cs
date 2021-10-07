@@ -19,7 +19,7 @@ namespace FamiStudio
 {
     public class Sequencer : RenderControl
     {
-        const int DefaultTrackNameSizeX      = PlatformUtils.IsMobile ? 60 : 94;
+        const int DefaultTrackNameSizeX      = PlatformUtils.IsMobile ? 64 : 94;
         const int DefaultHeaderSizeY         = 17;
         const int DefaultPatternHeaderSizeY  = 13;
         const int DefaultScrollMargin        = 128;
@@ -27,13 +27,11 @@ namespace FamiStudio
         const int DefaultTrackIconPosX       = 2;
         const int DefaultTrackIconPosY       = 3;
         const int DefaultTrackNamePosX       = 21;
-        const int DefaultTrackNamePosY       = 4;
         const int DefaultGhostNoteOffsetX    = 16;
         const int DefaultGhostNoteOffsetY    = 15;
         const int DefaultPatternNamePosX     = 2;
         const int DefaultHeaderIconPosX      = 3;
         const int DefaultHeaderIconPosY      = 3;
-        const int DefaultHeaderIconSizeX     = 12;
         const int DefaultScrollBarThickness1 = 10;
         const int DefaultScrollBarThickness2 = 16;
         const int DefaultMinScrollBarLength  = 128;
@@ -53,13 +51,11 @@ namespace FamiStudio
         int trackIconPosX;   
         int trackIconPosY;   
         int trackNamePosX;   
-        int trackNamePosY;   
         int ghostNoteOffsetX;
         int ghostNoteOffsetY;
         int patternNamePosX;
         int headerIconPosX;
         int headerIconPosY;
-        int headerIconSizeX;
         int scrollBarThickness;
         int minScrollBarLength;
         int virtualSizeY;
@@ -209,13 +205,11 @@ namespace FamiStudio
             trackIconPosX      = ScaleForMainWindow(DefaultTrackIconPosX);
             trackIconPosY      = ScaleForMainWindow(DefaultTrackIconPosY);
             trackNamePosX      = ScaleForMainWindow(DefaultTrackNamePosX);
-            trackNamePosY      = ScaleForMainWindow(DefaultTrackNamePosY);
             ghostNoteOffsetX   = ScaleForMainWindow(DefaultGhostNoteOffsetX);
             ghostNoteOffsetY   = ScaleForMainWindow(DefaultGhostNoteOffsetY);
             patternNamePosX    = ScaleForMainWindow(DefaultPatternNamePosX);
             headerIconPosX     = ScaleForMainWindow(DefaultHeaderIconPosX);
             headerIconPosY     = ScaleForMainWindow(DefaultHeaderIconPosY);
-            headerIconSizeX    = ScaleForMainWindow(DefaultHeaderIconSizeX);
             scrollBarThickness = ScaleForMainWindow(scrollBarSize);
             minScrollBarLength = ScaleForMainWindow(DefaultMinScrollBarLength);
             noteSizeX          = ScaleForMainWindowFloat(zoom * patternZoom);
@@ -502,7 +496,8 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
                 var font = i == selectedChannelIndex ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
-                cc.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackNamePosY, ThemeResources.LightGreyFillBrush2);
+                var iconHeight = bmpAtlasTracks.GetElementSize(0).Height * channelBitmapScale;
+                cc.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackIconPosY, ThemeResources.LightGreyFillBrush2, RenderTextFlags.MiddleLeft, 0, iconHeight);
             }
 
             // Ghost note icons

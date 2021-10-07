@@ -35,7 +35,6 @@ Piano roll:
 - Clicking should toggle cursor.
 
 Sequencer:
-- Check text alignments : Channel name.
 - Paste should happen at cursor, not selection? Must be consistent with PR.
 
 Scaling issue:
