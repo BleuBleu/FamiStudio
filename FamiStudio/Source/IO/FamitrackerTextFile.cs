@@ -247,11 +247,29 @@ namespace FamiStudio
                                 Log.LogMessage(LogSeverity.Warning, $"N163 instrument '{instrument.Name}' has more than 1 waveform ({wavCount}). All others will be ignored.");
                         }
 
+                        var usedEnvelopes = new bool[commonEnvelopes.Length];
+
                         for (int envTypeIdx = 0; envTypeIdx <= EnvelopeType.DutyCycle; envTypeIdx++)
                         {
                             int envIdx = commonEnvelopes[envTypeIdx];
                             if (envIdx >= 0 && instrument.IsEnvelopeActive(envTypeIdx) && envelopes[expansion, envTypeIdx].TryGetValue(envIdx, out var foundEnv) && foundEnv != null)
+                            {
                                 instrument.Envelopes[envTypeIdx] = envelopes[expansion, envTypeIdx][envIdx].ShallowClone();
+                                usedEnvelopes[envTypeIdx] = true;
+                            }
+                        }
+
+                        if (usedEnvelopes[EnvelopeType.Arpeggio] && usedEnvelopes[EnvelopeType.Pitch])
+                        {
+                            if (instrument.IsEnvelopeEmpty(EnvelopeType.Arpeggio) && instrument.Envelopes[EnvelopeType.Arpeggio].Loop >= 0)
+                            {
+                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{instrument.Name}' uses a looping null arpeggio envelope and a pitch envelopes. Assuming envelope should be 'Absolute'.");
+                                instrument.Envelopes[EnvelopeType.Pitch].Relative = false;
+                            }
+                            else
+                            {
+                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{instrument.Name}' uses both an arpeggio envelope and a pitch envelope. This instrument will likely require manual corrections due to the vastly different way FamiTracker/FamiStudio handles those.");
+                            }
                         }
 
                         instruments[idx] = instrument;

@@ -121,6 +121,8 @@ namespace FamiStudio
         {
             idx += sizeof(int); // SEQ_COUNT
 
+            var usedEnvelopes = new bool[EnvelopeType.Count];
+
             for (int i = 0; i < SequenceCount; ++i)
             {
                 var enabled = bytes[idx++];
@@ -133,12 +135,30 @@ namespace FamiStudio
                     if (envType != EnvelopeType.Count)
                     {
                         if (instrument.Envelopes[envType] != null && envelopesArray[index, i] != null)
+                        {
                             instrument.Envelopes[envType] = envelopesArray[index, i];
+                            usedEnvelopes[envType] = true;
+                        }
                     }
                     else
                     {
                         Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported (instrument {instIdx:X2}), ignoring.");
                     }
+                }
+            }
+
+            // When people use a single looping zero arpeggio, they are likely trying to fake an "absolute" pitch
+            // envelope, so let's give them that.
+            if (usedEnvelopes[EnvelopeType.Arpeggio] && usedEnvelopes[EnvelopeType.Pitch])
+            {
+                if (instrument.IsEnvelopeEmpty(EnvelopeType.Arpeggio) && instrument.Envelopes[EnvelopeType.Arpeggio].Loop >= 0)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses a looping null arpeggio envelope and a pitch envelopes. Assuming envelope should be 'Absolute'.");
+                    instrument.Envelopes[EnvelopeType.Pitch].Relative = false;
+                }
+                else
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses both an arpeggio envelope and a pitch envelope. This instrument will likely require manual corrections due to the vastly different way FamiTracker/FamiStudio handles those.");
                 }
             }
         }
