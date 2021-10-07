@@ -159,7 +159,7 @@ namespace FamiStudio
         public GLBitmap CreateBitmapFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);
-            return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height);
+            return new GLBitmap(CreateTexture(bmp, false), bmp.Width, bmp.Height);
         }
 
         public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)

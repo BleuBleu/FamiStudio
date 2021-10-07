@@ -69,7 +69,6 @@ namespace FamiStudio
 
        public void SetActiveControl(GLControl ctrl, bool animate = true)
         {
-            // DROIDTODO : Test mashing nav buttons quick.
             Debug.Assert(transitionTimer == 0.0f && transitionControl == null);
 
             if (activeControl != ctrl)
