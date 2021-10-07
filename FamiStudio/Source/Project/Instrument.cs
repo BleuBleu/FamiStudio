@@ -111,6 +111,11 @@ namespace FamiStudio
             return false;
         }
 
+        public bool IsEnvelopeEmpty(int envelopeType)
+        {
+            return envelopes[envelopeType].IsEmpty(envelopeType);
+        }
+
         public byte FdsWavePreset
         {
             get { return fdsWavPreset; }

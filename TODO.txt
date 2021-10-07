@@ -33,6 +33,7 @@ Piano roll:
 - Draw line that seperates with toolbar + quick access.
 - Snapping needs to preserve value even when not in channel mode.
 - Clicking should toggle cursor.
+- BUG : Missing info at bottom right of piano roll
 
 Sequencer:
 - Paste should happen at cursor, not selection? Must be consistent with PR.
@@ -52,7 +53,6 @@ Icon notes:
 - Convert more icons to white + remove last border (release + loop point.)
 - Copy instrument.
 - Change insturment dialog for a combo
-- "Volume doesn't export correctly when exporting a VRC7 song with FamiTracker Text"
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.

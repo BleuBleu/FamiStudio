@@ -783,6 +783,13 @@ namespace FamiStudio
                 else if (instrument.IsVrc7Instrument)
                 {
                     lines.Add($"INSTVRC7{i,4}{instrument.Vrc7Patch,4} {String.Join(" ", instrument.Vrc7PatchRegs.Select(x => $"{x:X2}"))} \"{instrument.Name}\"");
+
+                    if (!instrument.IsEnvelopeEmpty(EnvelopeType.Volume) ||
+                        !instrument.IsEnvelopeEmpty(EnvelopeType.Pitch)  ||
+                        !instrument.IsEnvelopeEmpty(EnvelopeType.Arpeggio))
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"VRC7 Instrument '{instrument.Name}' uses a volume, pitch or arpeggio envelope. FamiTracker does not support this. Ignoring.");
+                    }
                 }
                 else if (instrument.IsN163Instrument)
                 {
