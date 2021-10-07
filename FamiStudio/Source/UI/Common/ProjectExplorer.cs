@@ -1330,7 +1330,6 @@ namespace FamiStudio
 
         private void UpdateCaptureOperation(int x, int y)
         {
-            // DROIDTODO : DO we need this?
             const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
 
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
@@ -2744,9 +2743,6 @@ namespace FamiStudio
 
         protected override void OnTouchDown(int x, int y)
         {
-            // MATTT : Why do we have this?
-            Debug.Assert(captureOperation == CaptureOperation.None);
-
             flingVelY = 0;
 
             if (HandleTouchDownParamSliderButton(x, y)) goto Handled;

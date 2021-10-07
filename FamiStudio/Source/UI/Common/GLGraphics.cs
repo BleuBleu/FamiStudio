@@ -89,7 +89,7 @@ namespace FamiStudio
             return id;
         }
 
-        protected override int CreateTexture(Bitmap bmp)
+        protected override int CreateTexture(Bitmap bmp, bool filter)
         {
 #if FAMISTUDIO_WINDOWS
             var bmpData =

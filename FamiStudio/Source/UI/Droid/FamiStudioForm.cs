@@ -81,7 +81,6 @@ namespace FamiStudio
         {
             get
             {
-                // DROIDTODO : Not sure about this.
                 Android.Graphics.Rect rect = new Android.Graphics.Rect();
                 glSurfaceView.GetDrawingRect(rect);
                 return new System.Drawing.Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());

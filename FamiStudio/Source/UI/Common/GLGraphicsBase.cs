@@ -68,7 +68,7 @@ namespace FamiStudio
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
         protected abstract int CreateEmptyTexture(int width, int height, bool filter = false);
-        protected abstract int CreateTexture(Bitmap bmp);
+        protected abstract int CreateTexture(Bitmap bmp, bool filter);
         public abstract void DrawCommandList(GLCommandList list, Rectangle scissor);
 
         protected GLGraphicsBase(float mainScale, float fontScale)
@@ -292,7 +292,7 @@ namespace FamiStudio
                             lineHeight = ReadFontParam<int>(splits, "lineHeight");
                             texSizeX = ReadFontParam<int>(splits, "scaleW");
                             texSizeY = ReadFontParam<int>(splits, "scaleH");
-                            font = new GLFont(CreateTexture(bmp), size, baseValue, lineHeight);
+                            font = new GLFont(CreateTexture(bmp, false), size, baseValue, lineHeight);
                             break;
                         }
                     case "char":

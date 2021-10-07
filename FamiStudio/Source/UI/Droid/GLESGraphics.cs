@@ -143,10 +143,8 @@ namespace FamiStudio
             return id[0];
         }
 
-        protected override int CreateTexture(Bitmap bmp)
+        protected override int CreateTexture(Bitmap bmp, bool filter)
         {
-            bool filter = true; // DROIDTODO : No filter on pattern cache or text.
-
             var id = new int[1];
             GLES11.GlGenTextures(1, id, 0);
             GLES11.GlBindTexture(GLES11.GlTexture2d, id[0]);
@@ -179,7 +177,7 @@ namespace FamiStudio
         public GLBitmap CreateBitmapFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);
-            return new GLBitmap(CreateTexture(bmp), bmp.Width, bmp.Height, true, true);
+            return new GLBitmap(CreateTexture(bmp, true), bmp.Width, bmp.Height, true, true);
         }
 
         public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)

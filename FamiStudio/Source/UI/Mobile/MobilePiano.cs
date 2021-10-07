@@ -369,7 +369,7 @@ namespace FamiStudio
                     PlayPiano(x, y);
                     break;
                 case CaptureOperation.MobileZoom:
-                    ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
+                    ZoomAtLocation(x, scale);
                     break;
             }
         }
@@ -388,7 +388,6 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        // DROIDTODO: When the touch moves out of the control, we dont get a touchup???
         protected override void OnTouchUp(int x, int y)
         {
             EndCaptureOperation(x, y);
@@ -456,7 +455,7 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None)
             {
                 Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
-                EndCaptureOperation(x, y); // MATTT Temporary.
+                EndCaptureOperation(x, y);
             }
 
             StartCaptureOperation(x, y, CaptureOperation.MobileZoom);

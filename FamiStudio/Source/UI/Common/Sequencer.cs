@@ -1487,7 +1487,7 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None)
             {
                 Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
-                AbortCaptureOperation(); // MATTT Temporary.
+                AbortCaptureOperation();
             }
 
             StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
@@ -2359,7 +2359,7 @@ namespace FamiStudio
                         UpdateDragSelection(x, y);
                         break;
                     case CaptureOperation.MobileZoom:
-                        ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
+                        ZoomAtLocation(x, scale);
                         break;
                     default:
                         MarkDirty();

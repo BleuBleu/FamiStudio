@@ -289,7 +289,7 @@ namespace FamiStudio
                 var linearLayout = new LinearLayout(container.Context);
                 linearLayout.Orientation = Orientation.Vertical;
                 linearLayout.LayoutParameters = linearLayoutParams;
-                linearLayout.SetBackgroundColor(DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyFillColor1));
+                linearLayout.SetBackgroundColor(DroidUtils.GetColorFromResources(container.Context, Resource.Color.DarkGreyFillColor1));
 
                 for (int i = 0; i < dialog.PageCount; i++)
                 {
@@ -302,7 +302,7 @@ namespace FamiStudio
                     {
                         var spacer = new View(container.Context);
                         spacer.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-                        spacer.SetBackgroundColor(Android.Graphics.Color.LightGray); // MATTT color.
+                        spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(container.Context, Resource.Color.LightGreyFillColor1));
                         linearLayout.AddView(spacer);
                     }
 

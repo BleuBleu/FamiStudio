@@ -21,11 +21,9 @@ namespace FamiStudio
         const int DefaultIconSize         = 96;
         const int DefaultIconPos1         = 12;
         const int DefaultIconPos2         = 24;
-        const int DefaultTextSize         = 24; // MATTT : Implement same font size solution everywhere.
         const int DefaultTextPosTop       = 108;
         const int DefaultScrollBarSizeX   = 16;
 
-        const int DefaultListItemTextSize = 36; // MATTT : Implement same font size solution everywhere.
         const int DefaultListItemSize     = 120;
         const int DefaultListIconPos      = 12;
 
@@ -478,7 +476,7 @@ namespace FamiStudio
             items[2].ImageIndex = (int)ButtonImageIndices.ToolSelect;
             items[2].Text = "Select";
 
-            popupSelectedIdx = 0; // MATTT
+            popupSelectedIdx = 0;
 
             StartExpandingList((int)ButtonType.Tool, items);
         }
@@ -537,7 +535,6 @@ namespace FamiStudio
             if (CheckNeedsClosing((int)ButtonType.Instrument))
                 return;
 
-            // DROIDTODO : Add "DPCM" (null) instrument.
             var project = App.Project;
             var channel = App.SelectedChannel;
             var items = new List<ListItem>();
@@ -624,7 +621,7 @@ namespace FamiStudio
 
         private ButtonImageIndices GetToolRenderInfo(out string text, out Color tint)
         {
-            text = "Edit"; // DROIDTODO : Tool!
+            text = "Edit"; 
             tint = Theme.LightGreyFillColor1;
             return ButtonImageIndices.ToolAdd;
         }

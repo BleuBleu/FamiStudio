@@ -30,7 +30,7 @@
         <item name="android:textColor">@color/light_grey</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textSize">16dp</item>
-        <item name="android:textColorPrimaryDisableOnly">#f00</item> <!-- MATTT For check boxes -->
+        <item name="android:textColorPrimaryDisableOnly">#ccc</item>
     </style>
   
     <style name="LightGrayTextMediumBold" parent="TextBase">

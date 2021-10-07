@@ -241,39 +241,6 @@ namespace FamiStudio
             ctrl.ClearDirtyFlag();
         }
 
-        //private GLBrush GetShadowBrush(float alpha, bool horizontal, int sign)
-        //{
-        //    const int GradientSize = 100; // MATTT
-
-        //    var color0 = System.Drawing.Color.FromArgb((byte)(224 * alpha), 0, 0, 0);
-        //    var color1 = System.Drawing.Color.FromArgb((byte)(128 * alpha), 0, 0, 0);
-
-        //    if (horizontal)
-        //        return gfx.GetHorizontalGradientBrush(color0, color1, GradientSize * sign);
-        //    else
-        //        return gfx.GetVerticalGradientBrush(color0, color1, GradientSize * sign);
-        //}
-
-        //private void DrawVerticalDropShadow(GLCommandList c, int pos, bool up, float alpha)
-        //{
-        //    var brush = GetShadowBrush(alpha, false, up ? -1 : 1);
-
-        //    if (up)
-        //        c.FillRectangle(0, pos, width, 0, brush);
-        //    else
-        //        c.FillRectangle(0, pos, width, height, brush);
-        //}
-
-        //private void DrawHorizontalDropShadow(GLCommandList c, int pos, bool left, float alpha)
-        //{
-        //    var brush = GetShadowBrush(alpha, true, left ? -1 : 1);
-
-        //    if (left)
-        //        c.FillRectangle(pos, 0, 0, height, brush);
-        //    else
-        //        c.FillRectangle(pos, 0, width, height, brush);
-        //}
-
         private void RenderTransitionOverlay()
         {
             if (transitionTimer > 0.0f)

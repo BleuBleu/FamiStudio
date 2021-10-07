@@ -2468,8 +2468,9 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
-                // MATTT : The position of the text is wrong here. Creates asserts and shit when minimizing (or resizing?) the window
-                //r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
+                var textWidth = Width - tooltipTextPosX - scrollBarThickness;
+                if (textWidth > 0)
+                    r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, textWidth);
             }
         }
 
@@ -3446,7 +3447,6 @@ namespace FamiStudio
 
         private void UpdateCaptureOperation(int x, int y, float scale = 1.0f, bool realTime = false)
         {  
-            // DROIDTODO : DO we need this?
             const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
 
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
@@ -3528,10 +3528,10 @@ namespace FamiStudio
                         DoScroll(x - mouseLastX, y - mouseLastY);
                         break;
                     case CaptureOperation.MobileZoomVertical:
-                        ZoomVerticallyAtLocation(y, scale); // MATTT : Center is stuck at the initial position.
+                        ZoomVerticallyAtLocation(y, scale);
                         break;
                     case CaptureOperation.MobileZoom:
-                        ZoomAtLocation(x, scale); // MATTT : Center is stuck at the initial position.
+                        ZoomAtLocation(x, scale);
                         break;
                 }
             }
@@ -5080,7 +5080,7 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None)
             {
                 Debug.Assert(captureOperation != CaptureOperation.MobileZoomVertical && captureOperation != CaptureOperation.MobileZoom);
-                AbortCaptureOperation(); // MATTT Temporary.
+                AbortCaptureOperation();
             }
 
             StartCaptureOperation(x, y, IsPointInPiano(x, y) ? CaptureOperation.MobileZoomVertical : CaptureOperation.MobileZoom);

@@ -30,8 +30,8 @@ namespace FamiStudio
         private FamiStudioForm mainForm;
         private Project project;
         private Song song;
-        private Instrument selectedInstrument = null; // null = DPCM
-        private Arpeggio selectedArpeggio = null;
+        private Instrument selectedInstrument; // null = DPCM
+        private Arpeggio selectedArpeggio;
         private SongPlayer songPlayer;
         private InstrumentPlayer instrumentPlayer;
         private Oscilloscope oscilloscope;
@@ -220,8 +220,8 @@ namespace FamiStudio
                 {
                     StopInstrument();
                     selectedChannelIndex = value;
-                    Sequencer.MarkDirty();
                     PianoRoll.ChangeChannel(selectedChannelIndex);
+                    MarkEverythingDirty();
                 }
             }
         }
@@ -232,8 +232,7 @@ namespace FamiStudio
             set
             {
                 selectedInstrument = value;
-                ProjectExplorer.MarkDirty();
-                // MATTT
+                MarkEverythingDirty();
             }
         }
 
@@ -243,8 +242,7 @@ namespace FamiStudio
             set
             {
                 selectedArpeggio = value;
-                ProjectExplorer.MarkDirty();
-                // MATTT
+                MarkEverythingDirty();
             }
         }
 
@@ -1059,7 +1057,7 @@ namespace FamiStudio
 
         private void CheckForNewRelease()
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
+#if !FAMISTUDIO_ANDROID
             try
             {
                 using (var client = new HttpClient())
@@ -1736,10 +1734,6 @@ namespace FamiStudio
                 if (recordingMode)
                     return;
             }
-
-#if FALSE // MATTT FAMISTUDIO_WINDOWS
-            if (!Sequencer.Focused) Sequencer.UnfocusedKeyUp(e);
-#endif
         }
 
         public void AdvanceRecording()
@@ -2172,16 +2166,6 @@ namespace FamiStudio
                 }
             }
         }
-
-        //private void ProjectExplorer_InstrumentSelected(Instrument instrument)
-        //{
-        //    selectedInstrument = instrument;
-        //}
-
-        //private void ProjectExplorer_ArpeggioSelected(Arpeggio arpeggio)
-        //{
-        //    selectedArpeggio = arpeggio;
-        //}
 
         private void ProjectExplorer_InstrumentColorChanged(Instrument instrument)
         {

@@ -85,10 +85,26 @@ namespace FamiStudio
             return editText;
         }
 
+        private void ForceEditTextASCII(EditText text)
+        {
+            var oldText = text.Text;
+            var newText = Utils.ForceASCII(oldText);
+
+            if (oldText != newText)
+            {
+                var sel1 = text.SelectionStart;
+                var sel2 = text.SelectionEnd;
+                text.Text = newText;
+                text.SetSelection(sel1, sel2);
+            }
+        }
+
         private void EditText_AfterTextChanged(object sender, AfterTextChangedEventArgs e)
         {
-            // MATTT : Force ASCII here!
             var editText = sender as EditText;
+
+            ForceEditTextASCII(editText);
+
             var idx = GetPropertyIndexForView(editText);
             if (idx >= 0)
                 PropertyChanged?.Invoke(this, idx, -1, -1, editText.Text);
@@ -231,7 +247,7 @@ namespace FamiStudio
         {
             var spacer = new View(context);
             spacer.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-            spacer.SetBackgroundColor(Android.Graphics.Color.LightGray); // MATTT color.
+            spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1)); 
             return spacer;
         }
 
@@ -804,7 +820,7 @@ namespace FamiStudio
                 case PropertyType.TextBox:
                 case PropertyType.ColoredTextBox:
                 case PropertyType.MultilineTextBox:
-                    //ForceTextBoxASCII(prop.control as TextBox); MATTT
+                    ForceEditTextASCII(prop.controls[0] as EditText);
                     return (prop.controls[0] as EditText).Text;
                 case PropertyType.NumericUpDown:
                     return (prop.controls[0] as HorizontalNumberPicker).Value;

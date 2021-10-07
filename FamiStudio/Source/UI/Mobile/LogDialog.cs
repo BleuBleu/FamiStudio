@@ -43,7 +43,7 @@ namespace FamiStudio
             MainThread.InvokeOnMainThreadAsync(() =>
             {
                 // HACK : We only use this for video export on mobile.
-                dialog = new PropertyDialog("Exporting Video", 100, false); // DROIDTODO : CanAccept is false here. Take into account.
+                dialog = new PropertyDialog("Exporting Video", 100, false);
                 dialog.Properties.AddProgressBar("Export progress", 0.0f, "Exporting videos may take a very long time, especially at high resolutions. Make sure FamiStudio remains open, clicking BACK or closing this window will abort the operation. FamiStudio is currently preventing the screen from going to sleep."); // 0
                 dialog.Properties.AddLabel("Current Step", ""); // 1
                 dialog.Properties.Build();

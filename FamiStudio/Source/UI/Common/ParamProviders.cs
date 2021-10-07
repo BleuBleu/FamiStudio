@@ -83,6 +83,9 @@ namespace FamiStudio
                     SetValue = (v) =>
                     {
                         var newRelative = v != 0;
+
+                        /*
+                         * Intentially not doing this, this is more confusing/frustrating than anything.
                         if (instrument.Envelopes[EnvelopeType.Pitch].Relative != newRelative)
                         {
                             if (newRelative)
@@ -90,6 +93,7 @@ namespace FamiStudio
                             else
                                 instrument.Envelopes[EnvelopeType.Pitch].ConvertToAbsolute();
                         }
+                        */
 
                         instrument.Envelopes[EnvelopeType.Pitch].Relative = newRelative;
                     }

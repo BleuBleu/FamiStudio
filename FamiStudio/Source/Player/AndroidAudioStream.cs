@@ -18,6 +18,7 @@ namespace FamiStudio
         private GetBufferDataCallback bufferFill;
         private bool quit;
         private AudioTrack audioTrack;
+        private AudioTrack audioTrackImmediate;
         private Task playingTask;
 
         public AndroidAudioStream(int rate, int bufferSizeInBytes, int numBuffers, GetBufferDataCallback bufferFillCallback)
@@ -32,6 +33,7 @@ namespace FamiStudio
             audioTrack = new AudioTrack.Builder()
                 .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
                 .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(rate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(ChannelOut.Mono).Build())
+                .SetTransferMode(AudioTrackMode.Stream)
                 .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
                 .SetBufferSizeInBytes(bufferSizeInBytes).Build();
 
@@ -77,14 +79,43 @@ namespace FamiStudio
         public void Dispose()
         {
             Stop();
+            StopImmediate();
+
             audioTrack.Release();
             audioTrack.Dispose();
             audioTrack = null;
         }
 
-        // DROIDTODO
+        private void StopImmediate()
+        {
+            if (audioTrackImmediate != null)
+            {
+                audioTrackImmediate.Stop();
+                audioTrackImmediate.Release();
+                audioTrackImmediate.Dispose();
+                audioTrackImmediate = null;
+            }
+        }
+
         public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
         {
+            StopImmediate();
+
+            audioTrackImmediate = new AudioTrack.Builder()
+                .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
+                .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(sampleRate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(ChannelOut.Mono).Build())
+                .SetTransferMode(AudioTrackMode.Static)
+                .SetBufferSizeInBytes(data.Length * sizeof(short)).Build();
+
+            // Volume adjustment
+            short vol = (short)(volume * 32768);
+
+            var immediateStreamData = new short[data.Length];
+            for (int i = 0; i < data.Length; i++)
+                immediateStreamData[i] = (short)((data[i] * vol) >> 15);
+
+            audioTrackImmediate.Write(immediateStreamData, 0, immediateStreamData.Length);
+            audioTrackImmediate.Play();
         }
     }
 }

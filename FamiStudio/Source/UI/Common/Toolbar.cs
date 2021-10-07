@@ -310,7 +310,11 @@ namespace FamiStudio
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
-            toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1); // DROIDTODO : Makes no sense on mobile.
+            if (PlatformUtils.IsMobile)
+                toolbarBrush = g.CreateSolidBrush(Theme.DarkGreyFillColor1);
+            else
+                toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1);
+
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
             bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
             timeCodeFont = ThemeResources.FontHuge;
@@ -552,7 +556,6 @@ namespace FamiStudio
             UpdateButtonLayout();
         }
 
-        // DROIDTODO : This makes no sense on mobile, move elsewhere.
         public void LayoutChanged()
         {
             UpdateButtonLayout();
@@ -1057,18 +1060,17 @@ namespace FamiStudio
             }
             else
             {
-                // MATTT : Toolbar brush.
-                var brush = c.Graphics.GetSolidBrush(Theme.DarkGreyFillColor1);
                 var renderSize = RenderSize;
 
                 if (IsLandscape)
                 {
-                    c.FillRectangle(0, 0, renderSize, Height, brush);
+                    c.FillRectangle(0, 0, renderSize, Height, toolbarBrush);
                     c.DrawLine(renderSize - 1, 0, renderSize - 1, Height, ThemeResources.BlackBrush);
                 }
                 else
                 {
-                    c.FillRectangle(0, 0, Width, RenderSize, brush);
+                    var brush = c.Graphics.GetVerticalGradientBrush(Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1, LayoutSize);
+                    c.FillRectangle(0, 0, Width, RenderSize, toolbarBrush);
                     c.DrawLine(0, renderSize - 1, Width, renderSize - 1, ThemeResources.BlackBrush);
                 }
             }

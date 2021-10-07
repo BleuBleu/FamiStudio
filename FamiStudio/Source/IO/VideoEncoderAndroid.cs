@@ -58,7 +58,7 @@ namespace FamiStudio
 
         public static VideoEncoderAndroid CreateInstance()
         {
-            // DROIDTODO : Check support!
+            // TODO : Check support!
             return new VideoEncoderAndroid();
         }
 

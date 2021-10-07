@@ -44,6 +44,10 @@ x Support 3 scalings (Will not affect toolbars)?
 	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
 
+Polish (if time):
+- When pinch to zoom, pan as the center moves
+- 
+
 Icon notes:
 - 46% zoom, start with 128x128 png.
 
