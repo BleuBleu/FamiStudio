@@ -904,9 +904,17 @@ namespace FamiStudio
                     break;
 
                 var playCalled = 0;
+                var waitFrameCount = 0;
                 do
                 {
                     playCalled = NsfRunFrame(nsf);
+
+                    if (++waitFrameCount == 1000)
+                    {
+                        Log.LogMessage(LogSeverity.Error, "NSF did not call PLAY after 1000 frames, aborting.");
+                        NsfClose(nsf);
+                        return null;
+                    }
                 }
                 while (playCalled == 0);
 

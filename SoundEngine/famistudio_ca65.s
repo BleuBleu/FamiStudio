@@ -2318,6 +2318,7 @@ famistudio_update_row:
         lda famistudio_chn_note+4
         bne @play_sample
         jsr famistudio_sample_stop
+        ldx #4
         bne @no_new_note
         @play_sample:
             jsr famistudio_music_sample_play
