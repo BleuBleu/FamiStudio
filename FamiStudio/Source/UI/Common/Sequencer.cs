@@ -263,9 +263,7 @@ namespace FamiStudio
                // Dont let the pattern become smaller than the header.
                // The division by 6 is simply to undo the base scaling for everything on Mobile
                // since this function is supposed to be done in unscaled coordinates.
-                var screenSize = PlatformUtils.GetScreenResolution();
-                var minAxis = Math.Min(screenSize.Width, screenSize.Height) / 6;
-                return Math.Max(DefaultHeaderSizeY, (minAxis - DefaultHeaderSizeY) / GetChannelCount());
+                return Math.Max(DefaultHeaderSizeY, (Height / 6 - DefaultHeaderSizeY) / GetChannelCount());
             }
             else
             {
