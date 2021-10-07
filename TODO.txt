@@ -13,7 +13,7 @@ Quick access:
 	- PR/DPCMMapping (?)
 	- Seq (Channel)
 	- Project explorer (Instrument/Channel/Envelope)
-	
+
 Project explorer:
 - Env replace? Instrument replace? Song reorder?
 	=> Will be done with cursor mecanic.
@@ -35,12 +35,11 @@ Piano roll:
 - Clicking should toggle cursor.
 
 Sequencer:
-- Check text alignments : Channel name, pattern names.
-- Figure out row height thing.
+- Check text alignments : Channel name.
 - Paste should happen at cursor, not selection? Must be consistent with PR.
 
 Scaling issue:
-- Support 3 scalings (Will not affect toolbars)? 
+x Support 3 scalings (Will not affect toolbars)? 
 	- 4x (with 2x font) (Default for <  1080p, xhdpi and below)
 	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)

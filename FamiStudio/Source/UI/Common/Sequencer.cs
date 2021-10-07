@@ -259,9 +259,18 @@ namespace FamiStudio
         private int ComputeDesiredTrackSizeY()
         {
             if (PlatformUtils.IsMobile)
-                return 32; // MATTT Constant or something.
+            {
+               // Dont let the pattern become smaller than the header.
+               // The division by 6 is simply to undo the base scaling for everything on Mobile
+               // since this function is supposed to be done in unscaled coordinates.
+                var screenSize = PlatformUtils.GetScreenResolution();
+                var minAxis = Math.Min(screenSize.Width, screenSize.Height) / 6;
+                return Math.Max(DefaultHeaderSizeY, (minAxis - DefaultHeaderSizeY) / GetChannelCount());
+            }
             else
+            {
                 return Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
+            }
         }
 
         public int ComputeDesiredSizeY()
