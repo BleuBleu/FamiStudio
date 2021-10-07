@@ -151,7 +151,8 @@ namespace FamiStudio
             // envelope, so let's give them that.
             if (usedEnvelopes[EnvelopeType.Arpeggio] && usedEnvelopes[EnvelopeType.Pitch])
             {
-                if (instrument.IsEnvelopeEmpty(EnvelopeType.Arpeggio) && instrument.Envelopes[EnvelopeType.Arpeggio].Loop >= 0)
+                var arp = instrument.Envelopes[EnvelopeType.Arpeggio];
+                if (arp.IsEmpty(EnvelopeType.Arpeggio) && arp.Length > 0 && arp.Loop >= 0)
                 {
                     Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses a looping null arpeggio envelope and a pitch envelopes. Assuming envelope should be 'Absolute'.");
                     instrument.Envelopes[EnvelopeType.Pitch].Relative = false;
