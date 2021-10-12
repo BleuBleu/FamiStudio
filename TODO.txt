@@ -1,13 +1,29 @@
 Android
 =======
 
+Big tasks left:
+- Quick access stuff (are the buttons changing?)
+- Finish all controls
+- Envelope editing.
+	/ Click 
+		=> Click sets highlighted note.
+		=> Highlighted note has a gizmo
+		=> If resize gizmo, change 1 value or selection.
+	/ Longpress = free draw
+	/ Resize from end
+	/ Longpress for loop/release points/resize.
+	x Labels disapears too early
+	x Icon sizes.
+	- Arpeggio drawing (or clicking?) is off by one.
+	- Finish rendering/cleanup code, its a mess now.
+	
 Quick access:
 - Replace "tool" by something else useful (effect?)
 - Advanced stuff like longpress, etc.
 - Disable buttons when they dont make sense (snapping in sequencer, etc.)
 - Will need to be more flexible :
 	- PR/Channel (Like it is now)
-	- PR/Envelope (Instrument/Channel/Envelope)
+	- PR/Envelope (Instrument/Channel/Envelope) 
 	- PR/Arpeggio (Channel)
 	- PR/DPCM (Play source/Play processed)
 	- PR/DPCMMapping (?)
@@ -33,10 +49,10 @@ Piano roll:
 - Draw line that seperates with toolbar + quick access.
 - Snapping needs to preserve value even when not in channel mode.
 - Clicking should toggle cursor.
-- BUG : Missing info at bottom right of piano roll
 
 Sequencer:
 - Paste should happen at cursor, not selection? Must be consistent with PR.
+- Duplicate icons alignment.
 
 Scaling issue:
 x Support 3 scalings (Will not affect toolbars)? 
@@ -45,8 +61,10 @@ x Support 3 scalings (Will not affect toolbars)?
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
 
 Polish (if time):
-- When pinch to zoom, pan as the center moves
-- 
+- Margins for auto-scroll
+- Hide more stuff in the settings
+- Tutorial (post-beta?)
+- Improve look of envelope editing a bit, 2 colors + add "resize/loop/release" hint somewhere.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
@@ -80,6 +98,10 @@ Testing
 - Occasional crash when opening hopes and dreams on Android. 
 - Test light/dark modes.
 - Linux seem to support 150% scaling as well, make sure the fonts are there.
+
+Packaging:
+==========
+- Make download list vertical on website.
 
 Features missing from the Mobile version
 ========================================

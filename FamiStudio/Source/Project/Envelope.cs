@@ -321,7 +321,7 @@ namespace FamiStudio
 
         public void SetFromPreset(int type, int preset)
         {
-            GetMinMaxValue(null, type, out var min, out var max);
+            GetMinMaxValueForType(null, type, out var min, out var max);
 
             switch (preset)
             {
@@ -396,9 +396,30 @@ namespace FamiStudio
             return true;
         }
 
-        public static void GetMinMaxValue(Instrument instrument, int type, out int min, out int max)
+        public bool GetMinMaxValue(out int min, out int max)
         {
-            if (type == EnvelopeType.Volume)
+            min = int.MaxValue;
+            max = int.MinValue;
+
+            if (length > 0)
+            {
+                for (int i = 0; i < length; i++)
+                {
+                    min = Math.Min(min, values[i]);
+                    max = Math.Max(max, values[i]);
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static void GetMinMaxValueForType(Instrument instrument, int type, out int min, out int max)
+        {
+            if (type == EnvelopeType.Volume || type == EnvelopeType.N163Waveform)
             {
                 min = 0;
                 max = 15;
@@ -413,11 +434,6 @@ namespace FamiStudio
                 min = 0;
                 max = 63;
             }
-            else if (type == EnvelopeType.N163Waveform)
-            {
-                min = 0;
-                max = 15;
-            }
             else
             {
                 min = -64;
@@ -427,7 +443,7 @@ namespace FamiStudio
 
         public bool ValuesInValidRange(Instrument instrument, int type)
         {
-            GetMinMaxValue(instrument, type, out var min, out var max);
+            GetMinMaxValueForType(instrument, type, out var min, out var max);
 
             for (int i = 0; i < length; i++)
             {
@@ -440,7 +456,7 @@ namespace FamiStudio
 
         public void ClampToValidRange(Instrument instrument, int type)
         {
-            GetMinMaxValue(instrument, type, out var min, out var max);
+            GetMinMaxValueForType(instrument, type, out var min, out var max);
 
             for (int i = 0; i < length; i++)
                 values[i] = (sbyte)Utils.Clamp(values[i], min, max);

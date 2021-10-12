@@ -957,6 +957,7 @@ namespace FamiStudio
             {
                 graphics.ReleaseVertexArray(meshSmoothBatch.vtxArray);
                 graphics.ReleaseColorArray(meshSmoothBatch.colArray);
+                graphics.ReleaseIndexArray(meshSmoothBatch.idxArray);
             }
 
             foreach (var batch in lineBatches)
@@ -1185,6 +1186,11 @@ namespace FamiStudio
         }
 
         public void DrawRectangle(Rectangle rect, GLBrush brush, int width = 1, bool smooth = false)
+        {
+            DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
+        }
+
+        public void DrawRectangle(RectangleF rect, GLBrush brush, int width = 1, bool smooth = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
         }

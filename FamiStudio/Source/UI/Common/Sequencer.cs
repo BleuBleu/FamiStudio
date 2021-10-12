@@ -1482,8 +1482,6 @@ namespace FamiStudio
 
         protected override void OnTouchScaleBegin(int x, int y)
         {
-            SetMouseLastPos(x, y);
-
             if (captureOperation != CaptureOperation.None)
             {
                 Debug.Assert(captureOperation != CaptureOperation.MobileZoom);
@@ -1491,18 +1489,19 @@ namespace FamiStudio
             }
 
             StartCaptureOperation(x, y, CaptureOperation.MobileZoom);
+            SetMouseLastPos(x, y);
         }
 
         protected override void OnTouchScale(int x, int y, float scale)
         {
-            SetMouseLastPos(x, y);
             UpdateCaptureOperation(x, y, scale);
+            SetMouseLastPos(x, y);
         }
 
         protected override void OnTouchScaleEnd(int x, int y)
         {
-            SetMouseLastPos(x, y);
             EndCaptureOperation(x, y);
+            SetMouseLastPos(x, y);
         }
 
         protected override void OnTouchClick(int x, int y)
@@ -2360,6 +2359,7 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.MobileZoom:
                         ZoomAtLocation(x, scale);
+                        DoScroll(x - mouseLastX, y - mouseLastY);
                         break;
                     default:
                         MarkDirty();

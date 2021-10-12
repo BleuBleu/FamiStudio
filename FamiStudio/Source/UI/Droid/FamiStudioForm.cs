@@ -370,25 +370,24 @@ namespace FamiStudio
         public void OnDrawFrame(IGL10 gl)
         {
             lock (renderLock)
-            {
-                //gl.GlClearColor((float)Math.Sin(x), (float)Math.Cos(x * 0.5f), (float)Math.Sin(x * 0.25), 1);
-                //gl.GlClear(GLES11.GlColorBufferBit);
-                //x += 0.2f;
                 controls.Redraw();
-            }
         }
 
         // GL thread.
         public void OnSurfaceChanged(IGL10 gl, int width, int height)
         {
-            controls.Resize(width, height);
+            lock (renderLock)
+                controls.Resize(width, height);
         }
 
         // GL thread.
         public void OnSurfaceCreated(IGL10 gl, Javax.Microedition.Khronos.Egl.EGLConfig config)
         {
-            controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
-            controls.InitializeGL();
+            lock (renderLock)
+            {
+                controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
+                controls.InitializeGL();
+            }
         }
 
         public System.Windows.Forms.Keys GetModifierKeys()
@@ -536,7 +535,7 @@ namespace FamiStudio
             {
                 var opt = options[i];
 
-                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{opt.Image}.png", true)); // $"FamiStudio.Resources.{opt.Image}.png"
+                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{opt.Image}.png", true)); 
                 bmp.SetBounds(0, 0, imageSize, imageSize);
 
                 var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));

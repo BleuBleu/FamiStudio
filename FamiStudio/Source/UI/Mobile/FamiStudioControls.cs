@@ -5,6 +5,8 @@ namespace FamiStudio
 {
     public class FamiStudioControls
     {
+        private const bool ShowRenderingTimes = false;
+
         private int width;
         private int height;
 
@@ -205,13 +207,8 @@ namespace FamiStudio
             return anyNeedsRedraw;
         }
 
-        GLBrush debugBrush;
-
         private void RenderControl(GLControl ctrl)
         {
-            if (debugBrush == null)
-                debugBrush = new GLBrush(System.Drawing.Color.SpringGreen);
-
             var fullscreenViewport = ctrl.WantsFullScreenViewport;
 
             if (fullscreenViewport)
@@ -228,9 +225,12 @@ namespace FamiStudio
             ctrl.Render(gfx);
             var t1 = DateTime.Now;
 
-            var cmd = gfx.CreateCommandList();
-            cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontVeryLargeBold, 10, 10, debugBrush);
-            gfx.DrawCommandList(cmd);
+            if (ShowRenderingTimes)
+            {
+                var cmd = gfx.CreateCommandList();
+                cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontVeryLargeBold, 10, 10, gfx.GetSolidBrush(System.Drawing.Color.SpringGreen));
+                gfx.DrawCommandList(cmd);
+            }
 
             if (fullscreenViewport)
                 gfx.Transform.PopTransform();

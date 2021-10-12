@@ -370,6 +370,7 @@ namespace FamiStudio
                     break;
                 case CaptureOperation.MobileZoom:
                     ZoomAtLocation(x, scale);
+                    DoScroll(lastX - x);
                     break;
             }
         }
@@ -463,16 +464,16 @@ namespace FamiStudio
 
         protected override void OnTouchScale(int x, int y, float scale)
         {
+            UpdateCaptureOperation(x, y, scale);
             lastX = x;
             lastY = y;
-            UpdateCaptureOperation(x, y, scale);
         }
 
         protected override void OnTouchScaleEnd(int x, int y)
         {
+            EndCaptureOperation(x, y);
             lastX = x;
             lastY = y;
-            EndCaptureOperation(x, y);
         }
 
         protected override void OnTouchMove(int x, int y)

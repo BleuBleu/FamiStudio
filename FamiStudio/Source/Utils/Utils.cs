@@ -161,6 +161,11 @@ namespace FamiStudio
             return v;
         }
 
+        public static int PrevPowerOfTwo(int v)
+        {
+            return NextPowerOfTwo(v) / 2;
+        }
+
         public static int NumberOfSetBits(int i)
         {
             i = i - ((i >> 1) & 0x55555555);
