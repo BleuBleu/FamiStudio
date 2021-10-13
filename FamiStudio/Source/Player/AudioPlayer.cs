@@ -85,7 +85,6 @@ namespace FamiStudio
                 // Mix in metronome if needed.
                 if (pair.metronomePosition >= 0)
                     pair.samples = MixSamples(pair.samples, metronomeSound, pair.metronomePosition, pair.metronomePitch, pair.metronomeVolume);
-                Console.WriteLine("samples" + pair.samples.Length);
                 return pair.samples;
             }
             else
