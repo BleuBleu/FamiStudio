@@ -379,7 +379,10 @@ namespace FamiStudio
                 keyData == Keys.Right ||
                 keyData == Keys.Tab)
             {
-                famistudio.KeyDown(new KeyEventArgs(keyData), (int)keyData);
+                var e = new KeyEventArgs(keyData);
+                famistudio.KeyDown(e, (int)keyData);
+                foreach (var ctrl in controls.Controls)
+                    ctrl.KeyDown(e);
                 return true;
             }
             else

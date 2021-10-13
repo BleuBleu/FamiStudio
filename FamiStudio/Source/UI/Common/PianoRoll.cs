@@ -69,6 +69,7 @@ namespace FamiStudio
         const int DefaultNoteResizeMargin          = 8;
         const int DefaultBeatTextPosX              = 3;
         const int DefaultMinPixelDistForLines      = 5;
+        const int DefaultEnvGizmoSize              = 20;
 
         int headerSizeY;
         int headerAndEffectSizeY;
@@ -108,6 +109,7 @@ namespace FamiStudio
         int geometryNoteSizeY;
         int fontSmallCharSizeX;
         int minPixelDistForLines;
+        int envGizmoSize;
         float minZoom;
         float maxZoom;
         float envelopeValueSizeY;
@@ -235,6 +237,7 @@ namespace FamiStudio
             ResizeNoteEnd,
             ResizeSelectionNoteEnd,
             MoveNoteRelease,
+            ChangeEnvelopeValue,
             MobileZoom,
             MobileZoomVertical,
             MobilePan
@@ -269,6 +272,7 @@ namespace FamiStudio
             false, // ResizeNoteEnd
             false, // ResizeSelectionNoteEnd
             false, // MoveNoteRelease
+            false, // ChangeEnvelopeValue
             false, // MobileZoom
             false, // MobileZoomVertical
             false, // MobilePan
@@ -303,6 +307,7 @@ namespace FamiStudio
             true,  // ResizeNoteEnd
             true,  // ResizeSelectionNoteEnd
             false, // MoveNoteRelease
+            false, // ChangeEnvelopeValue
             false, // MobileZoom
             false, // MobileZoomVertical
             false, // MobilePan
@@ -337,6 +342,7 @@ namespace FamiStudio
         bool showEffectsPanel = false;
         bool snap = true;
         bool pianoVisible = true;
+        sbyte captureEnvelopeValue = 0;
         float flingVelX = 0.0f;
         float flingVelY = 0.0f;
         float zoom = DefaultChannelZoom;
@@ -387,7 +393,8 @@ namespace FamiStudio
         {
             ResizeNote,
             MoveRelease,
-            MoveSlide
+            MoveSlide,
+            ChangeEnvValue
         };
 
         private class MobileGizmo
@@ -482,6 +489,7 @@ namespace FamiStudio
             noteResizeMargin          = ScaleForMainWindow(DefaultNoteResizeMargin);
             minPixelDistForLines      = ScaleForMainWindow(DefaultMinPixelDistForLines);
             envelopeValueSizeY        = ScaleForMainWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
+            envGizmoSize              = ScaleForMainWindow(DefaultEnvGizmoSize);
 
             // Make sure the effect panel actually fit on screen on mobile.
             if (PlatformUtils.IsMobile && ParentForm != null)
@@ -1095,6 +1103,7 @@ namespace FamiStudio
             public RenderCommandList cp; // Left side (piano area)
             public RenderCommandList cb; // Right side (note area) background
             public RenderCommandList cf; // Right side (note area) foreground
+            public RenderCommandList cg; // Right side (note area) mobile gizmos.
             public RenderCommandList cs; // Scroll bars
             public RenderCommandList cd; // Debug
         }
@@ -2333,11 +2342,11 @@ namespace FamiStudio
                             {
                                 var color = GetNoteColor(Song.Channels[editChannel], note.Value, note.Instrument);
                                     
-                                r.cf.PushTransform(g.Rect.X, g.Rect.Y, g.Rect.Width, g.Rect.Height);
-                                r.cf.FillAndDrawGeometry(circleGeo, r.g.GetSolidBrush(color), ThemeResources.WhiteBrush, 4, true);
-                                r.cf.PopTransform();
+                                r.cg.PushTransform(g.Rect.X, g.Rect.Y, g.Rect.Width, g.Rect.Height);
+                                r.cg.FillAndDrawGeometry(circleGeo, r.g.GetSolidBrush(color), ThemeResources.WhiteBrush, 4, true);
+                                r.cg.PopTransform();
 
-                                r.cf.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width);
+                                r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width);
                             }
                         }
                     }
@@ -2549,6 +2558,22 @@ namespace FamiStudio
             else
             {
                 r.cf.DrawText($"Editing Arpeggio {editArpeggio.Name}", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
+            }
+
+            if (PlatformUtils.IsMobile && HasHighlightedNote())
+            {
+                var gizmos = GetGizmosForHighlightedEnvelopeValue();
+                if (gizmos != null)
+                {
+                    foreach (var g in gizmos)
+                    {
+                        r.cg.PushTransform(g.Rect.X, g.Rect.Y, g.Rect.Width, g.Rect.Height);
+                        r.cg.FillAndDrawGeometry(circleGeo, r.g.GetSolidBrush(color), ThemeResources.WhiteBrush, 4, true);
+                        r.cg.PopTransform();
+
+                        r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width);
+                    }
+                }
             }
         }
 
@@ -3066,7 +3091,11 @@ namespace FamiStudio
             r.cp = g.CreateCommandList();
             r.cb = g.CreateCommandList();
             r.cf = g.CreateCommandList();
-            r.cs = g.CreateCommandList();
+            
+            if (PlatformUtils.IsMobile)
+                r.cg = g.CreateCommandList();
+            else
+                r.cs = g.CreateCommandList();
 
             r.maxVisibleNote = NumNotes - Utils.Clamp((int)Math.Floor(scrollY / (float)noteSizeY), 0, NumNotes);
             r.minVisibleNote = NumNotes - Utils.Clamp((int)Math.Ceiling((scrollY + Height - headerAndEffectSizeY) / (float)noteSizeY), 0, NumNotes);
@@ -3105,6 +3134,7 @@ namespace FamiStudio
             g.DrawCommandList(r.cp, pianoRect);
             g.DrawCommandList(r.cb, notesRect);
             g.DrawCommandList(r.cf, notesRect);
+            g.DrawCommandList(r.cg, notesRect);
             g.DrawCommandList(r.cs, notesRect);
             g.DrawCommandList(r.cd);
         }
@@ -3536,6 +3566,7 @@ namespace FamiStudio
             captureNoteValue = NumNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, NumNotes);
             captureSelectionMin = selectionMin;
             captureSelectionMax = selectionMax;
+            GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
 
             captureMouseAbsoluteIdx = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
             if (allowSnap)
@@ -3644,6 +3675,9 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.DragWaveVolumeEnvelope:
                         UpdateVolumeEnvelopeDrag(x, y, false);
+                        break;
+                    case CaptureOperation.ChangeEnvelopeValue:
+                        UpdateChangeEnvelopeValue(x, y);
                         break;
                     case CaptureOperation.ScrollBarX:
                         UpdateScrollBarX(x, y);
@@ -3769,6 +3803,7 @@ namespace FamiStudio
                     case CaptureOperation.ChangeEffectValue:
                     case CaptureOperation.ChangeSelectionEffectValue:
                     case CaptureOperation.MoveNoteRelease:
+                    case CaptureOperation.ChangeEnvelopeValue:
                         App.UndoRedoManager.EndTransaction();
                         break;
                 }
@@ -4067,10 +4102,31 @@ namespace FamiStudio
 
         private List<MobileGizmo> GetGizmosForHighlightedEnvelopeValue()
         {
+            var env = EditEnvelope;
+
+            if (!HasHighlightedNote() || highlightNoteAbsIndex >= env.Length)
+                return null;
+
+            Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
+            var midValue = (max + min) / 2;
+            var value = env.Values[highlightNoteAbsIndex];
+
+            var side = value >= midValue ? 0 : -2;
+            var x = GetPixelForNote(highlightNoteAbsIndex + 1) + envGizmoSize / 4;
+            var y = 0;
+            
+            if (editEnvelope == EnvelopeType.Arpeggio)
+                y = (int)(virtualSizeY - envelopeValueSizeY * (value - min)) - scrollY - envGizmoSize * 3 / 4;
+            else
+                y = (int)(virtualSizeY - envelopeValueSizeY * (value - min + (value < 0 ? 0 : 1))) + (value >= midValue ? envGizmoSize / 4 : -envGizmoSize * 5 / 4) - scrollY;
+
+            MobileGizmo slideGizmo = new MobileGizmo();
+            slideGizmo.ImageIndex = GizmoImageIndices.GizmoResizeUpDown;
+            slideGizmo.Action = GizmoAction.ChangeEnvValue;
+            slideGizmo.Rect = new Rectangle(x, y, envGizmoSize, envGizmoSize);
+
             var list = new List<MobileGizmo>();
-
-            // DROIDTODO.
-
+            list.Add(slideGizmo);
             return list;
         }
 
@@ -5019,6 +5075,68 @@ namespace FamiStudio
             return false;
         }
 
+        private void UpdateChangeEnvelopeValue(int x, int y)
+        {
+            App.UndoRedoManager.RestoreTransaction(false);
+
+            GetEnvelopeValueForCoord(x, y, out _, out var value);
+            Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
+
+            var env = EditEnvelope;
+            var delta = value - captureEnvelopeValue;
+
+            if (IsEnvelopeValueSelected(highlightNoteAbsIndex))
+            {
+                for (int i = selectionMin; i <= selectionMax; i++)
+                    env.Values[i] = (sbyte)Utils.Clamp(env.Values[i] + delta, min, max);
+            }
+            else
+            {
+                env.Values[highlightNoteAbsIndex] = (sbyte)Utils.Clamp(env.Values[highlightNoteAbsIndex] + delta, min, max);
+            }
+
+            MarkDirty();
+        }
+
+        private void StartChangeEnvelopeValue(int x, int y)
+        {
+            StartCaptureOperation(x, y, CaptureOperation.ChangeEnvelopeValue);
+
+            if (editMode == EditionMode.Enveloppe)
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+            else
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
+
+            UpdateChangeEnvelopeValue(x, y);
+        }
+
+        private bool HandleTouchDownEnvelopeGizmos(int x, int y)
+        {
+            if (HasHighlightedNote() && IsPointInNoteArea(x, y))
+            {
+                var gizmos = GetGizmosForHighlightedEnvelopeValue();
+                if (gizmos != null)
+                {
+                    foreach (var g in gizmos)
+                    {
+                        if (g.Rect.Contains(x - pianoSizeX, y - headerAndEffectSizeY))
+                        {
+                            switch (g.Action)
+                            {
+                                case GizmoAction.ChangeEnvValue:
+                                    StartChangeEnvelopeValue(x, y);
+                                    break;
+                            }
+
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private bool HandleTouchClickDrawEnvelope(int x, int y)
         {
             if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
@@ -5034,7 +5152,8 @@ namespace FamiStudio
         {
             if (IsPointInHeader(x, y) && x < GetPixelForNote(EditEnvelope.Length))
             {
-                highlightNoteAbsIndex = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1);
+                var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1); ;
+                highlightNoteAbsIndex = absIdx == highlightNoteAbsIndex ? -1 : absIdx;
                 return true;
             }
 
@@ -5306,6 +5425,7 @@ namespace FamiStudio
             {
                 if (HandleTouchDownEnvelopeSelection(x, y)) goto Handled;
                 if (HandleTouchDownEnvelopeResize(x, y)) goto Handled;
+                if (HandleTouchDownEnvelopeGizmos(x, y)) goto Handled;
             }
 
             // DROIDTODO : Check edit mode, maybe not apply to all. Like piano may not be there in all modes.
@@ -5390,6 +5510,9 @@ namespace FamiStudio
 
         protected override void OnTouchLongPress(int x, int y)
         {
+            if (captureOperation == CaptureOperation.ChangeEnvelopeValue)
+                return;
+
             AbortCaptureOperation();
 
             if (editMode == EditionMode.Channel)

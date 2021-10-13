@@ -4,22 +4,15 @@ Android
 Big tasks left:
 - Quick access stuff (are the buttons changing?)
 - Finish all controls
+
 - Envelope editing.
 	/ Click 
-		=> Click sets highlighted note.
 		=> Highlighted note has a gizmo
 		=> If resize gizmo, change 1 value or selection.
-	/ Longpress = free draw
-	/ Resize from end
-	/ Longpress for loop/release points/resize.
-	x Labels disapears too early
-	x Icon sizes.
-	x Arpeggio drawing (or clicking?) is off by one (pitch too, anything with negative).
-	x Finish rendering/cleanup code, its a mess now.
-	- Highlight should toggle.
+	/ Longpress for loop/release points/resize. (ICON!)
 	- Nicer gradations.
 	- Value labels very far on mobile
-	- BUG : Up/down arrows doesnt change values on PC?
+	x BUG : Up/down arrows doesnt change values on PC?
 	- BUG : Changing instrument doesn't always change
 
 Quick access:
@@ -45,12 +38,9 @@ Piano roll:
 - Create/Change effect value 
 - Clear effect value
 - DPCM vol envelope 
-- Move env loop/release point 
-- Resize envelope 
 - Map/clear DPCM sample
 - Move DPCM mapping 
 - Replace instrument/arp?
-- Hide the vertical piano when editing DPCM samples, envelopes, etc. Clamp the scroll to what makes sense.
 - Draw line that seperates with toolbar + quick access.
 - Snapping needs to preserve value even when not in channel mode.
 - Clicking should toggle cursor.
@@ -69,7 +59,6 @@ Polish (if time):
 - Margins for auto-scroll
 - Hide more stuff in the settings
 - Tutorial (post-beta?)
-- Improve look of envelope editing a bit, 2 colors + add "resize/loop/release" hint somewhere.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
