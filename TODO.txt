@@ -7,10 +7,8 @@ Big tasks left:
 
 - Envelope editing.
 	/ Longpress for loop/release points/resize. (ICON!)
-	- Nicer gradations.
-	- Value labels very far on mobile
+	/ Nicer gradations. Labels?
 	- BUG : Changing instrument doesn't always change
-
 
 Quick access:
 - Replace "tool" by something else useful (effect?)

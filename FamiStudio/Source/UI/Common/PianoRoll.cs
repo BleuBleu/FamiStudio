@@ -50,8 +50,8 @@ namespace FamiStudio
         const int DefaultEffectIconPosY            = 2;
         const int DefaultEffectNamePosX            = 17;
         const int DefaultEffectIconSizeX           = 12;
-        const int DefaultEffectValuePosTextOffsetY = 12;
-        const int DefaultEffectValueNegTextOffsetY = 3;
+        const int DefaultEffectValuePosTextOffsetY = 13;
+        const int DefaultEffectValueNegTextOffsetY = 2;
         const int DefaultBigTextPosX               = 10;
         const int DefaultBigTextPosY               = 10;
         const int DefaultTooltipTextPosX           = 10;
@@ -471,8 +471,8 @@ namespace FamiStudio
             effectNamePosX            = ScaleForMainWindow(DefaultEffectNamePosX * effectIconsScale);
             beatTextPosX              = ScaleForMainWindow(DefaultBeatTextPosX);
             effectIconSizeX           = ScaleForMainWindow(DefaultEffectIconSizeX);
-            effectValuePosTextOffsetY = ScaleForMainWindow(DefaultEffectValuePosTextOffsetY);
-            effectValueNegTextOffsetY = ScaleForMainWindow(DefaultEffectValueNegTextOffsetY);
+            effectValuePosTextOffsetY = ScaleForFont(DefaultEffectValuePosTextOffsetY);
+            effectValueNegTextOffsetY = ScaleForFont(DefaultEffectValueNegTextOffsetY);
             bigTextPosX               = ScaleForFont(DefaultBigTextPosX);
             bigTextPosY               = ScaleForFont(DefaultBigTextPosY);
             tooltipTextPosX           = ScaleForFont(DefaultTooltipTextPosX);
