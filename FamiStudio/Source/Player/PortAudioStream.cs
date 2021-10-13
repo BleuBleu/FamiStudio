@@ -113,7 +113,8 @@ namespace FamiStudio
             streamCallback = new PaStreamCallback(StreamCallback);
             immediateStreamCallback = new PaStreamCallback(ImmediateStreamCallback);
 
-            Pa_OpenDefaultStream(out stream, 0, 1, PaSampleFormat.Int16, rate, 0, streamCallback, IntPtr.Zero);
+            Console.WriteLine("rate " + rate);
+            Pa_OpenDefaultStream(out stream, 0, 2, PaSampleFormat.Int16, rate, 0, streamCallback, IntPtr.Zero);
             bufferFill = bufferFillCallback;
         }
 
@@ -159,7 +160,7 @@ namespace FamiStudio
         PaStreamCallbackResult StreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
         {
             var outPtr = output;
-
+            frameCount = frameCount*2;
             do
             {
                 if (lastSamplesOffset == 0)
