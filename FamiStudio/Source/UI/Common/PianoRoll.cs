@@ -2439,14 +2439,31 @@ namespace FamiStudio
             Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int envTypeMinValue, out int envTypeMaxValue);
 
             // Draw the enveloppe value backgrounds.
-            int maxValue = 128 / (int)envelopeValueZoom; ;
-            int midValue =  64 / (int)envelopeValueZoom; ;
+            int maxValue = 128 / (int)envelopeValueZoom;
+            int midValue =  64 / (int)envelopeValueZoom;
 
-            for (int i = 0; i <= envTypeMaxValue - envTypeMinValue; i++)
+            var lastRectangleValue = int.MinValue;
+            var lastRectangleY     = -1.0f;
+            var oddRectangle       = false;
+            var maxX = GetPixelForNote(env.Length);
+
+            for (int i = 0; i <= (PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue); i++)
             {
-                var value = PlatformUtils.IsMobile ? i + envTypeMinValue : i - 64;
+                var value = PlatformUtils.IsMobile ? i + envTypeMinValue : i - midValue;
                 var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
                 r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
+
+                if ((value % spacing) == 0)
+                {
+                    if (lastRectangleValue >= envTypeMinValue && lastRectangleValue <= envTypeMaxValue)
+                    {
+                        r.cb.FillRectangle(0, lastRectangleY, maxX, y, oddRectangle ? ThemeResources.DarkGreyFillBrush2 : ThemeResources.DarkGreyFillBrush1);
+                        oddRectangle = !oddRectangle;
+                    }
+
+                    lastRectangleValue = value;
+                    lastRectangleY = y;
+                }
             }
 
             DrawSelectionRect(r.cb, Height);

@@ -6,14 +6,11 @@ Big tasks left:
 - Finish all controls
 
 - Envelope editing.
-	/ Click 
-		=> Highlighted note has a gizmo
-		=> If resize gizmo, change 1 value or selection.
 	/ Longpress for loop/release points/resize. (ICON!)
 	- Nicer gradations.
 	- Value labels very far on mobile
-	x BUG : Up/down arrows doesnt change values on PC?
 	- BUG : Changing instrument doesn't always change
+
 
 Quick access:
 - Replace "tool" by something else useful (effect?)
