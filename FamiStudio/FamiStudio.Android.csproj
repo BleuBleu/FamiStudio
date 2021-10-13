@@ -458,6 +458,8 @@
     <EmbeddedResource Include="Resources\MenuDelete.png" />
     <EmbeddedResource Include="Resources\MenuDeleteSelection.png" />
     <EmbeddedResource Include="Resources\MenuDuplicate.png" />
+    <EmbeddedResource Include="Resources\MenuEnvLoopPoint.png" />
+    <EmbeddedResource Include="Resources\MenuEnvRelease.png" />
     <EmbeddedResource Include="Resources\MenuExpandSelection.png" />
     <EmbeddedResource Include="Resources\MenuEyedropper.png" />
     <EmbeddedResource Include="Resources\MenuForceDisplay.png" />

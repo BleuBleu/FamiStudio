@@ -5,15 +5,11 @@ Big tasks left:
 - Quick access stuff (are the buttons changing?)
 - Finish all controls
 
-- Envelope editing.
-	/ Longpress for loop/release points/resize. (ICON!)
-	/ Nicer gradations. Labels?
-	- BUG : Changing instrument doesn't always change
-
 Quick access:
 - Replace "tool" by something else useful (effect?)
 - Advanced stuff like longpress, etc.
 - Disable buttons when they dont make sense (snapping in sequencer, etc.)
+- BUG : Changing instrument doesn't always change (S5B)
 - Will need to be more flexible :
 	- PR/Channel (Like it is now)
 	- PR/Envelope (Instrument/Channel/Envelope) 

@@ -2463,6 +2463,9 @@ namespace FamiStudio
 
                     lastRectangleValue = value;
                     lastRectangleY = y;
+
+                    if (value >= envTypeMinValue - 1 && value <= envTypeMaxValue + 1)
+                        r.cb.DrawText(value.ToString(), ThemeResources.FontSmall, maxX + 4 * r.g.WindowScaling, y - envelopeValueSizeY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, envelopeValueSizeY);
                 }
             }
 
@@ -2502,19 +2505,20 @@ namespace FamiStudio
                     var highlighted = PlatformUtils.IsMobile && highlightNoteAbsIndex == i;
                     var bias = PlatformUtils.IsMobile ? -envTypeMinValue : midValue;
 
-                    float x = GetPixelForNote(i);
+                    float x0 = GetPixelForNote(i + 0);
+                    float x1 = GetPixelForNote(i + 1);
                     float y = (virtualSizeY - envelopeValueSizeY * (env.Values[i] + bias)) - scrollY;
 
-                    r.cf.FillRectangle(x, y - envelopeValueSizeY, x + noteSizeX, y, r.g.GetVerticalGradientBrush(color, (int)envelopeValueSizeY, 0.8f));
+                    r.cf.FillRectangle(x0, y - envelopeValueSizeY, x1, y, r.g.GetVerticalGradientBrush(color, (int)envelopeValueSizeY, 0.8f));
 
                     if (!highlighted)
-                        r.cf.DrawRectangle(x, y - envelopeValueSizeY, x + noteSizeX, y, selected ? selectionNoteBrush : ThemeResources.BlackBrush, selected ? 2 : 1, selected);
+                        r.cf.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? selectionNoteBrush : ThemeResources.BlackBrush, selected ? 2 : 1, selected);
                     else
-                        highlightRect = new RectangleF(x, y - envelopeValueSizeY, noteSizeX, envelopeValueSizeY);
+                        highlightRect = new RectangleF(x0, y - envelopeValueSizeY, x1 - x0, envelopeValueSizeY);
 
                     var label = env.Values[i].ToString("+#;-#;0");
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                        r.cf.DrawText(label, ThemeResources.FontSmall, x, y - envelopeValueSizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
+                        r.cf.DrawText(label, ThemeResources.FontSmall, x0, y - envelopeValueSizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
                 }
             }
             else
@@ -2539,16 +2543,17 @@ namespace FamiStudio
                         ty = y1;
                     }
 
-                    var x = GetPixelForNote(i);
+                    var x0 = GetPixelForNote(i + 0);
+                    var x1 = GetPixelForNote(i + 1);
                     var selected = IsEnvelopeValueSelected(i);
                     var highlighted = PlatformUtils.IsMobile && highlightNoteAbsIndex == i;
 
-                    r.cf.FillRectangle(x, y0, x + noteSizeX, y1, r.g.GetSolidBrush(color));
+                    r.cf.FillRectangle(x0, y0, x1, y1, r.g.GetSolidBrush(color));
 
                     if (!highlighted)
-                        r.cf.DrawRectangle(x, y0, x + noteSizeX, y1, selected ? selectionNoteBrush : ThemeResources.BlackBrush, selected ? 2 : 1, selected);
+                        r.cf.DrawRectangle(x0, y0, x1, y1, selected ? selectionNoteBrush : ThemeResources.BlackBrush, selected ? 2 : 1, selected);
                     else
-                        highlightRect = new RectangleF(x, y0, noteSizeX, y1 - y0);
+                        highlightRect = new RectangleF(x0, y0, x1 - x0, y1 - y0);
 
                     bool drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * MainWindowScaling * 2);
                     var brush = drawOutside ? ThemeResources.LightGreyFillBrush1 : ThemeResources.BlackBrush;
@@ -2556,7 +2561,7 @@ namespace FamiStudio
 
                     var label = val.ToString();
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                        r.cf.DrawText(label, ThemeResources.FontSmall, x, ty + offset, brush, RenderTextFlags.Center, noteSizeX);
+                        r.cf.DrawText(label, ThemeResources.FontSmall, x0, ty + offset, brush, RenderTextFlags.Center, noteSizeX);
                 }
             }
 
@@ -5402,9 +5407,9 @@ namespace FamiStudio
                 if (editMode == EditionMode.Enveloppe && x < lastPixel)
                 {
                     if (env.CanLoop)
-                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); })); // DROIDTODO : Icon?
+                        menu.Add(new ContextMenuOption("MenuEnvLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }));
                     if (env.CanRelease)
-                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); })); // DROIDTODO : Icon!
+                        menu.Add(new ContextMenuOption("MenuEnvRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
                 }
 
                 if (IsSelectionValid())
