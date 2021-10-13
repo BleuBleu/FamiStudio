@@ -41,18 +41,23 @@ void Simple_Apu::dmc_reader( int (*f)( void* user_data, cpu_addr_t ), void* p )
 
 blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 {
+	int ratiodivider = 1;
 	pal_mode = pal;
-	frame_length = pal ? 33247 : 29780;
-	apu.output( &buf );
+	frame_length = pal ? 33247/ ratiodivider : 29780/ ratiodivider;
+	apu.output(&buf);
 	vrc6.output(&buf);
 	vrc7.output(&buf);
 	fds.output(&buf);
 	mmc5.output(&buf);
 	namco.output(&buf);
 	sunsoft.output(&buf);
-	epsm.output(&buf);
-	buf.clock_rate( pal ? 1662607 : 1789773 );
-	return buf.sample_rate( rate );
+	epsm.output(&bufLeft, &bufRight);
+	buf.clock_rate( pal ? 1662607/ ratiodivider : 1789773/ ratiodivider);
+	bufLeft.clock_rate(pal ? 1662607/ ratiodivider : 1789773/ ratiodivider);
+	bufLeft.sample_rate(rate/ ratiodivider);
+	bufRight.clock_rate(pal ? 1662607 / ratiodivider : 1789773 / ratiodivider);
+	bufRight.sample_rate(rate / ratiodivider);
+	return buf.sample_rate( rate/ ratiodivider);
 }
 
 void Simple_Apu::enable_channel(int idx, bool enable)
@@ -224,6 +229,8 @@ void Simple_Apu::end_frame()
 	}
 
 	buf.end_frame( frame_length );
+	bufLeft.end_frame(frame_length);
+	bufRight.end_frame(frame_length);
 }
 
 void Simple_Apu::reset()
@@ -246,17 +253,34 @@ void Simple_Apu::set_audio_expansion(long exp)
 
 long Simple_Apu::samples_avail() const
 {
-	return buf.samples_avail();
+	//return buf.samples_avail();
+	return (buf.samples_avail()*2);
 }
 
 long Simple_Apu::read_samples( sample_t* p, long s )
 {
-	return buf.read_samples( p, s );
+	sample_t outMono [4096];
+	sample_t outLeft[4096];
+	sample_t outRight[4096];
+	long samples =  buf.read_samples(outMono, s, false);
+
+	//bufLeft.mix_samples(outMono, samples);
+	//bufRight.mix_samples(outMono, samples);
+	bufLeft.read_samples(outLeft, s, false);
+	bufRight.read_samples(outRight, s, false);
+	for (long i = 0; i < samples; ++i)
+	{
+		*p++ = (blip_sample_t)(outMono[i]+ outLeft[i]);
+		*p++ = (blip_sample_t)(outMono[i]+ outRight[i]);
+	}
+	return samples*2;
 }
 
 void Simple_Apu::remove_samples(long s)
 {
 	buf.remove_samples(s);
+	bufLeft.remove_samples(s);
+	bufRight.remove_samples(s);
 }
 
 void Simple_Apu::save_snapshot( apu_snapshot_t* out ) const

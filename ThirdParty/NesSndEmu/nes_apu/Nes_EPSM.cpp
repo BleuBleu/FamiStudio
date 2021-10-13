@@ -7,9 +7,9 @@
 #include <iostream>
 #include BLARGG_SOURCE_BEGIN
 
-Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL)
+Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL), output_bufferRight(NULL)
 {
-	output(NULL);
+	output(NULL,NULL);
 	volume(1.0);
 	reset();
 }
@@ -33,6 +33,7 @@ void Nes_EPSM::reset()
 void Nes_EPSM::volume(double v)
 {
 	synth.volume(v);
+	synthRight.volume(v);
 }
 
 
@@ -52,9 +53,10 @@ void Nes_EPSM::reset_opn2()
 	OPN2_SetChipType(0);
 }
 
-void Nes_EPSM::output(Blip_Buffer* buf)
+void Nes_EPSM::output(Blip_Buffer* buf, Blip_Buffer* bufRight)
 {
 	output_buffer = buf;
+	output_bufferRight = bufRight;
 
 	if (output_buffer && (!psg || output_buffer->sample_rate() != psg->rate))
 		reset_psg();
@@ -63,6 +65,7 @@ void Nes_EPSM::output(Blip_Buffer* buf)
 void Nes_EPSM::treble_eq(blip_eq_t const& eq)
 {
 	synth.treble_eq(eq);
+	synthRight.treble_eq(eq);
 }
 
 void Nes_EPSM::enable_channel(int idx, bool enabled)
@@ -153,21 +156,31 @@ void Nes_EPSM::end_frame(cpu_time_t time)
 			aWrite.pop();
 		}
 		int sample = PSG_calc(psg)/2.3;
+		int sampleRight;
 		sample = clamp(sample, -7710, 7710);
+		sampleRight = clamp(sample, -7710, 7710);
 		int t2 = 0;
 		int16_t samples[4];
 		while (t2 < 12)
 		{
 			OPN2_Clock(&opn2, samples);
-			sample += (samples[0] + samples[1]) * 8;
-			sample += (samples[2] + samples[3]) / 2;
+			sample += (samples[0]) * 8;
+			sample += (samples[2]) / 2;
+			sampleRight += (samples[1]) * 8;
+			sampleRight += (samples[3]) / 2;
 			t2++;
 		}
 		int delta = sample - last_amp;
+		int deltaRight = sampleRight - last_ampRight;
 		if (delta)
 		{
 			synth.offset(t, delta, output_buffer);
 			last_amp = sample;
+		}
+		if (deltaRight)
+		{
+			synthRight.offset(t, deltaRight, output_bufferRight);
+			last_ampRight = sampleRight;
 		}
 		t += 16;
 	}

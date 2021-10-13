@@ -12,7 +12,7 @@ namespace FamiStudio
     public class Oscilloscope : IOscilloscope
     {
         private const float SampleScale = 1.5f; 
-        private const int   NumSamples  = 1024;
+        private const int   NumSamples  = 2048;
 
         private Task task;
         private ManualResetEvent stopEvent    = new ManualResetEvent(false);

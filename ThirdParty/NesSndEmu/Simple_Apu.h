@@ -141,6 +141,8 @@ private:
 	//Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
 	Nes_EPSM epsm;
 	Blip_Buffer buf;
+	Blip_Buffer bufLeft;
+	Blip_Buffer bufRight;
 	blip_time_t time;
 	blip_time_t frame_length;
 	blip_time_t clock() { return time += 4; }

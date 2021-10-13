@@ -17,7 +17,7 @@ public:
 	// See Nes_Apu.h for reference
 	void reset();
 	void volume(double);
-	void output(Blip_Buffer*);
+	void output(Blip_Buffer*, Blip_Buffer*);
 	void treble_eq(blip_eq_t const& eq);
 	void enable_channel(int idx, bool enabled);
 	void end_frame(cpu_time_t);
@@ -58,9 +58,12 @@ private:
 	ym3438_t opn2;
 
 	Blip_Buffer* output_buffer;
+	Blip_Buffer* output_bufferRight;
 	cpu_time_t last_time;
 	int last_amp;
+	int last_ampRight;
 	Blip_Synth<blip_med_quality, 15420> synth;
+	Blip_Synth<blip_med_quality, 15420> synthRight;
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 	short shadow_internal_regs2[shadow_internal_regs_count];

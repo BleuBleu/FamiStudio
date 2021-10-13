@@ -33,11 +33,11 @@ namespace FamiStudio
 
         public XAudio2Stream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
-            xaudio2 = new XAudio2();
-            //xaudio2 = new XAudio2(XAudio2Version.Version27); // To simulate Windows 7 behavior.
+            //xaudio2 = new XAudio2();
+            xaudio2 = new XAudio2(XAudio2Version.Version27); // To simulate Windows 7 behavior.
             //xaudio2.CriticalError += Xaudio2_CriticalError;
             masteringVoice = new MasteringVoice(xaudio2);
-            waveFormat = new WaveFormat(rate, 16, 1);
+            waveFormat = new WaveFormat(rate, 16, 2);
             audioBuffersRing = new AudioBuffer[numBuffers];
             memBuffers = new DataPointer[audioBuffersRing.Length];
 
