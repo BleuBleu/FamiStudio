@@ -2348,7 +2348,7 @@ namespace FamiStudio
                     var channelType = song.Channels[editChannel].Type;
                     var channelName = song.Channels[editChannel].NameWithExpansion;
 
-                    r.cb.DrawText($"Editing {channelName} Channel", ThemeResources.FontVeryLarge, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
+                    r.cf.DrawText($"Editing {channelName} Channel", ThemeResources.FontVeryLarge, bigTextPosX, maxEffectPosY > 0 ? maxEffectPosY : bigTextPosY, whiteKeyBrush);
                 }
             }
             else if (App.Project != null) // Happens if DPCM panel is open and importing an NSF.
@@ -2417,7 +2417,7 @@ namespace FamiStudio
                     }
                 }
 
-                r.cb.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                r.cf.DrawText($"Editing DPCM Samples Instrument ({App.Project.GetTotalMappedSampleSize()} / {Project.MaxMappedSampleSize} Bytes)", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
             }
         }
 
@@ -2429,36 +2429,15 @@ namespace FamiStudio
 
             Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int envTypeMinValue, out int envTypeMaxValue);
 
-            // Draw the enveloppe value backgrounds
-            int maxValue;
-            int midValue;
+            // Draw the enveloppe value backgrounds.
+            int maxValue = 128 / (int)envelopeValueZoom; ;
+            int midValue =  64 / (int)envelopeValueZoom; ;
 
-            // On Desktop, the whole grid is aligned to the piano to make everything nicer, so we
-            // handle envelope editing a bit differently. On mobile, the piano is not shown, so we
-            // have a bit more freedom.
-            if (PlatformUtils.IsDesktop)
+            for (int i = 0; i <= envTypeMaxValue - envTypeMinValue; i++)
             {
-                maxValue = 128 / (int)envelopeValueZoom;
-                midValue = 64  / (int)envelopeValueZoom;
-
-                var maxVisibleValue = maxValue - Math.Min((int)Math.Floor(scrollY / envelopeValueSizeY), maxValue);
-                var minVisibleValue = maxValue - Math.Max((int)Math.Ceiling((scrollY + Height) / envelopeValueSizeY), 0);
-
-                for (int i = minVisibleValue; i <= maxVisibleValue; i++)
-                {
-                    var value = i - 64;
-                    var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
-                    r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
-                }
-            }
-            else
-            {
-                for (int i = 0; i <= envTypeMaxValue - envTypeMinValue; i++)
-                {
-                    var value = i + envTypeMinValue;
-                    var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
-                    r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
-                }
+                var value = PlatformUtils.IsMobile ? i + envTypeMinValue : i - 64;
+                var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
+                r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
             }
 
             DrawSelectionRect(r.cb, Height);
@@ -2517,36 +2496,20 @@ namespace FamiStudio
                 for (int i = 0; i < env.Length; i++)
                 {
                     var center = editEnvelope == EnvelopeType.FdsWaveform ? 32 : 0;
+                    var bias = PlatformUtils.IsMobile ? -envTypeMinValue : midValue;
                     int val = env.Values[i];
 
-                    // DROIDTODO : Cleanup this mess.
                     float y0, y1, ty;
                     if (val >= center)
                     {
-                        if (PlatformUtils.IsDesktop)
-                        {
-                            y0 = (virtualSizeY - envelopeValueSizeY * (val + midValue + 1)) - scrollY;
-                            y1 = (virtualSizeY - envelopeValueSizeY * (midValue + center) - scrollY);
-                        }
-                        else
-                        {
-                            y0 = (virtualSizeY - envelopeValueSizeY * (val - envTypeMinValue + 1)) - scrollY;
-                            y1 = (virtualSizeY - envelopeValueSizeY * (-envTypeMinValue + center) - scrollY);
-                        }
+                        y0 = (virtualSizeY - envelopeValueSizeY * (val + bias + 1)) - scrollY;
+                        y1 = (virtualSizeY - envelopeValueSizeY * (bias + center) - scrollY);
                         ty = y0;
                     }
                     else
                     {
-                        if (PlatformUtils.IsDesktop)
-                        {
-                            y1 = (virtualSizeY - envelopeValueSizeY * (val + midValue)) - scrollY;
-                            y0 = (virtualSizeY - envelopeValueSizeY * (midValue + center + 1) - scrollY);
-                        }
-                        else
-                        {
-                            y1 = (virtualSizeY - envelopeValueSizeY * (val - envTypeMinValue + 1)) - scrollY;
-                            y0 = (virtualSizeY - envelopeValueSizeY * (-envTypeMinValue + center) - scrollY);
-                        }
+                        y1 = (virtualSizeY - envelopeValueSizeY * (val + bias)) - scrollY;
+                        y0 = (virtualSizeY - envelopeValueSizeY * (bias + center + 1) - scrollY);
                         ty = y1;
                     }
 
@@ -2581,11 +2544,11 @@ namespace FamiStudio
                 if (editEnvelope == EnvelopeType.Pitch)
                     envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? "Relative " : "Absolute ") + envelopeString;
 
-                r.cb.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                r.cf.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
             }
             else
             {
-                r.cb.DrawText($"Editing Arpeggio {editArpeggio.Name}", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
+                r.cf.DrawText($"Editing Arpeggio {editArpeggio.Name}", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
             }
         }
 
@@ -2610,7 +2573,7 @@ namespace FamiStudio
             {
                 var textWidth = Width - tooltipTextPosX - scrollBarThickness;
                 if (textWidth > 0)
-                    r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, textWidth);
+                    r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, textWidth);
             }
         }
 
@@ -3009,19 +2972,19 @@ namespace FamiStudio
 
             // Title + source/processed info.
             var textY = bigTextPosY;
-            r.cb.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeResources.FontVeryLarge, bigTextPosX, textY, whiteKeyBrush);
+            r.cf.DrawText($"Editing DPCM Sample {editSample.Name}", ThemeResources.FontVeryLarge, bigTextPosX, textY, whiteKeyBrush);
             textY += ThemeResources.FontVeryLarge.LineHeight;
-            r.cb.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
+            r.cf.DrawText($"Source Data ({(editSample.SourceDataIsWav ? "WAV" : "DMC")}) : {editSample.SourceSampleRate} Hz, {editSample.SourceDataSize} Bytes, {(int)(editSample.SourceDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
             textY += ThemeResources.FontMedium.LineHeight;
-            r.cb.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
+            r.cf.DrawText($"Processed Data (DMC) : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.SampleRate)}, {editSample.ProcessedData.Length} Bytes, {(int)(editSample.ProcessedDuration * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
             textY += ThemeResources.FontMedium.LineHeight;
-            r.cb.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
+            r.cf.DrawText($"Preview Playback : {DPCMSampleRate.GetString(false, App.PalPlayback, true, true, editSample.PreviewRate)}, {(int)(editSample.GetPlaybackDuration(App.PalPlayback) * 1000)} ms", ThemeResources.FontMedium, bigTextPosX, textY, whiteKeyBrush);
 
             r.cb.PopTransform();
 
             if (!string.IsNullOrEmpty(noteTooltip))
             {
-                r.cb.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
+                r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
             }
         }
 
@@ -3184,6 +3147,9 @@ namespace FamiStudio
 
         void ResizeEnvelope(int x, int y)
         {
+            if (PlatformUtils.IsMobile)
+                ScrollIfNearEdge(x, y);
+
             var env = EditEnvelope;
             int length = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
 
@@ -3577,7 +3543,9 @@ namespace FamiStudio
 
             captureNoteAbsoluteIdx = noteIdx >= 0 ? noteIdx : captureMouseAbsoluteIdx;
             captureNoteLocation = Song.AbsoluteNoteIndexToNoteLocation(captureNoteAbsoluteIdx);
-            highlightNoteAbsIndex = captureNoteAbsoluteIdx;
+            
+            if (noteIdx >= 0)
+                highlightNoteAbsIndex = captureNoteAbsoluteIdx;
         }
 
         private void UpdateScrollBarX(int x, int y)
@@ -5062,6 +5030,17 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchClickEnvelopeHeader(int x, int y)
+        {
+            if (IsPointInHeader(x, y) && x < GetPixelForNote(EditEnvelope.Length))
+            {
+                highlightNoteAbsIndex = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1);
+                return true;
+            }
+
+            return false;
+        }
+
         private bool HandleTouchClickToggleEffectPanelButton(int x, int y)
         {
             if (IsPointInTopLeftCorner(x, y))
@@ -5384,10 +5363,9 @@ namespace FamiStudio
         {
             SetMouseLastPos(x, y);
 
-            if (HandleTouchClickHeaderSeek(x, y)) goto Handled;
-
             if (editMode == EditionMode.Channel)
             {
+                if (HandleTouchClickHeaderSeek(x, y)) goto Handled;
                 if (HandleTouchClickChannelNote(x, y)) goto Handled;
             }
 
@@ -5395,6 +5373,7 @@ namespace FamiStudio
                 editMode == EditionMode.Arpeggio)
             {
                 if (HandleTouchClickDrawEnvelope(x, y)) goto Handled;
+                if (HandleTouchClickEnvelopeHeader(x, y)) goto Handled;
             }
 
             if (editMode == EditionMode.Channel ||
@@ -5572,6 +5551,7 @@ namespace FamiStudio
 
         private void ScrollIfNearEdge(int x, int y, bool scrollHorizontal = true, bool scrollVertical = false)
         {
+            // DROIDTODO : Tweak margins + handle case where piano is zero sized (invisible).
             if (scrollHorizontal)
             {
                 if ((x - pianoSizeX) < 0)
@@ -7257,7 +7237,7 @@ namespace FamiStudio
             else
             {
                 Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
-                value = (sbyte)((max - min + 1) - ((y - headerAndEffectSizeY) + scrollY) / envelopeValueSizeY + min);
+                value = (sbyte)Math.Floor((max - min + 1) - ((y - headerAndEffectSizeY) + scrollY) / envelopeValueSizeY + min);
             }
 
             idx = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);

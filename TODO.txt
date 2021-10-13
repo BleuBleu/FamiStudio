@@ -14,9 +14,14 @@ Big tasks left:
 	/ Longpress for loop/release points/resize.
 	x Labels disapears too early
 	x Icon sizes.
-	- Arpeggio drawing (or clicking?) is off by one.
-	- Finish rendering/cleanup code, its a mess now.
-	
+	x Arpeggio drawing (or clicking?) is off by one (pitch too, anything with negative).
+	x Finish rendering/cleanup code, its a mess now.
+	- Highlight should toggle.
+	- Nicer gradations.
+	- Value labels very far on mobile
+	- BUG : Up/down arrows doesnt change values on PC?
+	- BUG : Changing instrument doesn't always change
+
 Quick access:
 - Replace "tool" by something else useful (effect?)
 - Advanced stuff like longpress, etc.
