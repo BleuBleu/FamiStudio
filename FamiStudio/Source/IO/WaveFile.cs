@@ -68,7 +68,7 @@ namespace FamiStudio
                 header.subChunk1Id[2] = (byte)'t';
                 header.subChunk1Id[3] = (byte)' ';
                 header.audioFormat = 1; // FOR PCM
-                header.numChannels = (short)numChannels; // 1 for MONO, 2 for stereo
+                header.numChannels = 2; //(short)numChannels; // 1 for MONO, 2 for stereo
                 header.sampleRate = sampleRate; // ie 44100 hertz, cd quality audio
                 header.bitsPerSample = 16; // 
                 header.byteRate = header.sampleRate * header.numChannels * header.bitsPerSample / 8;
@@ -96,8 +96,15 @@ namespace FamiStudio
                 file.Write(headerBytes, 0, headerBytes.Length);
 
                 // So lame.
+                byte skip = 0; //skip some incorrect stereo mixing samples
                 foreach (var s in samples)
-                    file.Write(BitConverter.GetBytes(s), 0, sizeof(short));
+                {
+                    skip++;
+                    if (skip == 1 || skip == 4 || (short)numChannels == 1) { 
+                        file.Write(BitConverter.GetBytes(s), 0, sizeof(short)); 
+                        if(skip == 4) { skip = 0; }
+                    }
+                }
             }
         }
 

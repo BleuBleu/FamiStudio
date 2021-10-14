@@ -164,10 +164,10 @@ void Nes_EPSM::end_frame(cpu_time_t time)
 		while (t2 < 12)
 		{
 			OPN2_Clock(&opn2, samples);
-			sample += (samples[0]) * 8;
-			sample += (samples[2]) / 2;
-			sampleRight += (samples[1]) * 8;
-			sampleRight += (samples[3]) / 2;
+			sample += (samples[0]) * 16;
+			sample += samples[2];
+			sampleRight += (samples[1]) * 16;
+			sampleRight += samples[3];
 			t2++;
 		}
 		int delta = sample - last_amp;
