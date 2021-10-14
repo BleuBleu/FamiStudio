@@ -113,7 +113,6 @@ namespace FamiStudio
             streamCallback = new PaStreamCallback(StreamCallback);
             immediateStreamCallback = new PaStreamCallback(ImmediateStreamCallback);
 
-            Console.WriteLine("rate " + rate);
             Pa_OpenDefaultStream(out stream, 0, 2, PaSampleFormat.Int16, rate, 0, streamCallback, IntPtr.Zero);
             bufferFill = bufferFillCallback;
         }
