@@ -270,8 +270,8 @@ long Simple_Apu::read_samples( sample_t* p, long s )
 	bufRight.read_samples(outRight, s, false);
 	for (long i = 0; i < samples; ++i)
 	{
-		*p++ = (blip_sample_t)(outMono[i]+ outLeft[i]);
-		*p++ = (blip_sample_t)(outMono[i]+ outRight[i]);
+		*p++ = (blip_sample_t)(outMono[i]/2+ outLeft[i]/2);
+		*p++ = (blip_sample_t)(outMono[i]/2+ outRight[i]/2);
 	}
 	return samples*2;
 }
