@@ -50,6 +50,7 @@ Polish (if time):
 - Margins for auto-scroll
 - Hide more stuff in the settings
 - Tutorial (post-beta?)
+- Color piano keys based on DPCM samples assigned.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.

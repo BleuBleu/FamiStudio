@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 using Color     = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
@@ -74,6 +75,7 @@ namespace FamiStudio
             Instrument,
             Arpeggio,
             Snap,
+            Effect,
             Count
         }
 
@@ -108,6 +110,21 @@ namespace FamiStudio
             MobileEffectNone,
             MobileArpeggio,
             Count,
+        };
+
+        readonly ButtonImageIndices[] EffectImageIndices = new ButtonImageIndices[]
+        {
+            ButtonImageIndices.MobileEffectVolume,    // Volume
+            ButtonImageIndices.MobileEffectVibrato,   // Vib Speed
+            ButtonImageIndices.MobileEffectVibrato,   // Vib Depth
+            ButtonImageIndices.MobileEffectPitch,     // Pitch
+            ButtonImageIndices.MobileEffectSpeed,     // Speed
+            ButtonImageIndices.MobileEffectMod,       // FDS Depth
+            ButtonImageIndices.MobileEffectMod,       // FDS Speed
+            ButtonImageIndices.MobileEffectDutyCycle, // Duty Cycle
+            ButtonImageIndices.MobileEffectNoteDelay, // Note Delay
+            ButtonImageIndices.MobileEffectCutDelay,  // Cut Delay
+            ButtonImageIndices.MobileEffectVolume     // Volume Slide
         };
 
         private readonly string[] ButtonImageNames = new string[]
@@ -191,6 +208,7 @@ namespace FamiStudio
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
+            Debug.Assert(Note.EffectCount == EffectImageIndices.Length);
 
             bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
             scrollBarBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
@@ -202,6 +220,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, ListItemClick = OnInstrumentChange };
             buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, ListItemClick = OnArpeggioChange };
             buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapChange };
+            buttons[(int)ButtonType.Effect]     = new Button { GetRenderInfo = GetEffectRenderInfo, Click = OnEffect, ListItemClick = OnEffectChange };
 
             var screenSize = PlatformUtils.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
@@ -359,7 +378,6 @@ namespace FamiStudio
                 {
                     popupRect.Y = (buttons[idx].Rect.Top + buttons[idx].Rect.Bottom) / 2 - popupRect.Height / 2;
 
-                    // DROIDTODO : Test this (with arpeggios)
                     if (popupRect.Top < 0)
                         popupRect.Y -= popupRect.Top;
                     else if (popupRect.Bottom > Height)
@@ -491,6 +509,39 @@ namespace FamiStudio
             StartExpandingList((int)ButtonType.Snap, items);
         }
 
+        private void OnEffect()
+        {
+            if (CheckNeedsClosing((int)ButtonType.Effect))
+                return;
+
+            var channel = App.SelectedChannel;
+            var count = 0;
+
+            for (int i = 0, j = 0; i < Note.EffectCount; i++)
+            {
+                if (channel.ShouldDisplayEffect(i))
+                    count++;
+            }
+
+            var items = new ListItem[count];
+
+            for (int i = 0, j = 0; i < Note.EffectCount; i++)
+            {
+                if (channel.ShouldDisplayEffect(i))
+                {
+                    var item = new ListItem();
+                    item.Color = Theme.LightGreyFillColor1;
+                    item.ImageIndex = (int)EffectImageIndices[i];
+                    item.Text = Note.EffectNames[i];
+                    items[j++] = item;
+                }
+            }
+
+            popupSelectedIdx = 0; // DROIDTODO : Get effect from piano roll.
+
+            StartExpandingList((int)ButtonType.Effect, items);
+        }
+
         private void OnChannel()
         {
             if (CheckNeedsClosing((int)ButtonType.Channel))
@@ -609,6 +660,13 @@ namespace FamiStudio
             return ButtonImageIndices.MobileSnapOn;
         }
 
+        private ButtonImageIndices GetEffectRenderInfo(out string text, out Color tint)
+        {
+            text = "None";
+            tint = Theme.LightGreyFillColor1;
+            return ButtonImageIndices.MobileEffectNone;
+        }
+        
         private ButtonImageIndices GetChannelRenderInfo(out string text, out Color tint)
         {
             text = App.SelectedChannel.NameWithExpansion;
@@ -644,6 +702,10 @@ namespace FamiStudio
             {
                 App.SnapEnabled = false;
             }
+        }
+
+        private void OnEffectChange(int idx)
+        {
         }
 
         private void OnChannelChange(int idx)

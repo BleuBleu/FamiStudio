@@ -5370,6 +5370,7 @@ namespace FamiStudio
         {
             if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
             {
+                PlatformUtils.VibrateClick();
                 PlatformUtils.ShowToast("Keep holding and move your finger to draw");
                 StartDrawEnvelope(x, y);
                 return true;
