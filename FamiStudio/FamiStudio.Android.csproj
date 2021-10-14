@@ -478,6 +478,15 @@
     <EmbeddedResource Include="Resources\Metronome.wav" />
     <EmbeddedResource Include="Resources\MinusSmall%402x.png" />
     <EmbeddedResource Include="Resources\MobileArpeggio.png" />
+    <EmbeddedResource Include="Resources\MobileEffectVolume.png" />
+    <EmbeddedResource Include="Resources\MobileEffectVibrato.png" />
+    <EmbeddedResource Include="Resources\MobileEffectPitch.png" />
+    <EmbeddedResource Include="Resources\MobileEffectSpeed.png" />
+    <EmbeddedResource Include="Resources\MobileEffectMod.png" />
+    <EmbeddedResource Include="Resources\MobileEffectDutyCycle.png" />
+    <EmbeddedResource Include="Resources\MobileEffectNoteDelay.png" />
+    <EmbeddedResource Include="Resources\MobileEffectCutDelay.png" />
+    <EmbeddedResource Include="Resources\MobileEffectNone.png" />
     <EmbeddedResource Include="Resources\MobilePianoDrag.png" />
     <EmbeddedResource Include="Resources\MobilePianoRest.png" />
     <EmbeddedResource Include="Resources\MobileSnapOff.png" />
@@ -582,9 +591,6 @@
     <EmbeddedResource Include="Resources\Slide%402x.png" />
     <EmbeddedResource Include="Resources\Snap%402x.png" />
     <EmbeddedResource Include="Resources\Stop%402x.png" />
-    <EmbeddedResource Include="Resources\ToolAdd%404x.png" />
-    <EmbeddedResource Include="Resources\ToolDelete%404x.png" />
-    <EmbeddedResource Include="Resources\ToolSelect%404x.png" />
     <EmbeddedResource Include="Resources\Transform%402x.png" />
     <EmbeddedResource Include="Resources\Tutorial0.jpg" />
     <EmbeddedResource Include="Resources\Tutorial1.jpg" />

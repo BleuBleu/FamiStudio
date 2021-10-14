@@ -11,13 +11,13 @@ Quick access:
 - Disable buttons when they dont make sense (snapping in sequencer, etc.)
 - BUG : Changing instrument doesn't always change (S5B)
 - Will need to be more flexible :
-	- PR/Channel (Like it is now)
-	- PR/Envelope (Instrument/Channel/Envelope) 
-	- PR/Arpeggio (Channel)
+	- PR/Channel (Channel/Instrument/Arpeggio/Snap/Effect)
+	- PR/Envelope (Channel/Instrument/Envelope) 
+	- PR/Arpeggio (Channel/Instrument)
 	- PR/DPCM (Play source/Play processed)
-	- PR/DPCMMapping (?)
-	- Seq (Channel)
-	- Project explorer (Instrument/Channel/Envelope)
+	- PR/DPCMMapping (Nothing?)
+	- Seq (Channel/Instrument/Arpeggio)
+	- Project explorer (Channel/Instrument/Arpeggio)
 
 Project explorer:
 - Env replace? Instrument replace? Song reorder?

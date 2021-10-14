@@ -70,11 +70,10 @@ namespace FamiStudio
             Sequencer,
             PianoRoll,
             Project,
-            Tool,
-            Snap,
             Channel,
             Instrument,
             Arpeggio,
+            Snap,
             Count
         }
 
@@ -83,9 +82,6 @@ namespace FamiStudio
             Sequencer,
             PianoRoll,
             ProjectExplorer,
-            ToolAdd,
-            ToolDelete,
-            ToolSelect,
             MobileSnapOn,
             MobileSnapOff,
             MobileChannelDPCM,
@@ -101,8 +97,17 @@ namespace FamiStudio
             MobileInstrumentSunsoft,
             MobileInstrumentVRC6,
             MobileInstrumentVRC7,
+            MobileEffectVolume,
+            MobileEffectVibrato,
+            MobileEffectPitch,
+            MobileEffectSpeed,
+            MobileEffectMod,
+            MobileEffectDutyCycle,
+            MobileEffectNoteDelay,
+            MobileEffectCutDelay,
+            MobileEffectNone,
             MobileArpeggio,
-            Count
+            Count,
         };
 
         private readonly string[] ButtonImageNames = new string[]
@@ -110,9 +115,6 @@ namespace FamiStudio
             "Sequencer",
             "PianoRoll",
             "ProjectExplorer",
-            "ToolAdd",
-            "ToolDelete",
-            "ToolSelect",
             "MobileSnapOn",
             "MobileSnapOff",
             "ChannelDPCM",
@@ -128,6 +130,15 @@ namespace FamiStudio
             "InstrumentSunsoft",
             "InstrumentVRC6",
             "InstrumentVRC7",
+            "MobileEffectVolume",
+            "MobileEffectVibrato",
+            "MobileEffectPitch",
+            "MobileEffectSpeed",
+            "MobileEffectMod",
+            "MobileEffectDutyCycle",
+            "MobileEffectNoteDelay",
+            "MobileEffectCutDelay",
+            "MobileEffectNone",
             "MobileArpeggio"
         };
 
@@ -187,11 +198,10 @@ namespace FamiStudio
             buttons[(int)ButtonType.Sequencer]  = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
             buttons[(int)ButtonType.PianoRoll]  = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
             buttons[(int)ButtonType.Project]    = new Button { GetRenderInfo = GetProjectExplorerInfo, Click = OnProjectExplorer, IsNavButton = true };
-            buttons[(int)ButtonType.Tool]       = new Button { GetRenderInfo = GetToolRenderInfo, Click = OnTool, ListItemClick = OnToolChange };
-            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapChange };
             buttons[(int)ButtonType.Channel]    = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel, ListItemClick = OnChannelChange };
             buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, ListItemClick = OnInstrumentChange };
             buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, ListItemClick = OnArpeggioChange };
+            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapChange };
 
             var screenSize = PlatformUtils.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
@@ -454,33 +464,6 @@ namespace FamiStudio
             return false;
         }
 
-        private void OnTool()
-        {
-            if (CheckNeedsClosing((int)ButtonType.Tool))
-                return;
-
-            var items = new ListItem[]
-            {
-                new ListItem(),
-                new ListItem(),
-                new ListItem()
-            };
-
-            items[0].Color = Theme.LightGreyFillColor1;
-            items[0].ImageIndex = (int)ButtonImageIndices.ToolAdd;
-            items[0].Text = "Edit";
-            items[1].Color = Theme.LightGreyFillColor1;
-            items[1].ImageIndex = (int)ButtonImageIndices.ToolDelete;
-            items[1].Text = "Delete";
-            items[2].Color = Theme.LightGreyFillColor1;
-            items[2].ImageIndex = (int)ButtonImageIndices.ToolSelect;
-            items[2].Text = "Select";
-
-            popupSelectedIdx = 0;
-
-            StartExpandingList((int)ButtonType.Tool, items);
-        }
-
         private void OnSnap()
         {
             if (CheckNeedsClosing((int)ButtonType.Snap))
@@ -619,13 +602,6 @@ namespace FamiStudio
             return ButtonImageIndices.ProjectExplorer;
         }
 
-        private ButtonImageIndices GetToolRenderInfo(out string text, out Color tint)
-        {
-            text = "Edit"; 
-            tint = Theme.LightGreyFillColor1;
-            return ButtonImageIndices.ToolAdd;
-        }
-
         private ButtonImageIndices GetSnapRenderInfo(out string text, out Color tint)
         {
             text = App.SnapEnabled ? SnapResolutionType.Names[App.SnapResolution] : "Off";
@@ -655,11 +631,6 @@ namespace FamiStudio
             text = arp != null ? arp.Name  : "None";
             tint = arp != null ? arp.Color : Theme.LightGreyFillColor1;
             return ButtonImageIndices.MobileArpeggio;
-        }
-
-        private void OnToolChange(int idx)
-        {
-
         }
 
         private void OnSnapChange(int idx)
