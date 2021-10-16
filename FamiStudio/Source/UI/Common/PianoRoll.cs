@@ -295,7 +295,7 @@ namespace FamiStudio
             true,  // DragNote
             true,  // DragSelection
             false, // AltZoom
-            false, // DragSample
+            true,  // DragSample
             true,  // DragSeekBar
             false, // DragWaveVolumeEnvelope
             false, // ScrollBarX
@@ -354,6 +354,7 @@ namespace FamiStudio
         CaptureOperation captureOperation = CaptureOperation.None;
         EditionMode editMode = EditionMode.Channel;
         int highlightNoteAbsIndex = -1;
+        int highlightDPCMSample = -1;
         NoteLocation captureNoteLocation;
 
         // Note dragging support.
@@ -2469,9 +2470,10 @@ namespace FamiStudio
                     if (mapping != null)
                     {
                         var y = virtualSizeY - i * noteSizeY - scrollY;
+                        var highlighted = i == highlightDPCMSample;
 
                         r.cf.PushTranslation(0, y);
-                        r.cf.FillAndDrawRectangle(0, 0, Width - pianoSizeX, noteSizeY, r.g.GetVerticalGradientBrush(mapping.Sample.Color, noteSizeY, 0.8f), ThemeResources.BlackBrush, 1);
+                        r.cf.FillAndDrawRectangle(0, 0, Width - pianoSizeX, noteSizeY, r.g.GetVerticalGradientBrush(mapping.Sample.Color, noteSizeY, 0.8f), highlighted ? ThemeResources.WhiteBrush : ThemeResources.BlackBrush, highlighted ? 2 : 1);
 
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
@@ -2494,7 +2496,7 @@ namespace FamiStudio
 
                 if (dragSample != null)
                 {
-                    var pt = PointToClient(Cursor.Position);
+                    var pt = PlatformUtils.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
 
                     if (GetNoteValueForCoord(pt.X, pt.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue))
                     {
@@ -2504,9 +2506,10 @@ namespace FamiStudio
                         r.cf.PopTransform();
                     }
                 }
-                else if (captureOperation == CaptureOperation.None)
+                else if (PlatformUtils.IsDesktop && captureOperation == CaptureOperation.None)
                 {
                     var pt = PointToClient(Cursor.Position);
+
                     if (GetLocationForCoord(pt.X, pt.Y, out _, out var highlightNoteValue))
                     {
                         var mapping = App.Project.GetDPCMMapping(highlightNoteValue);
@@ -3826,6 +3829,11 @@ namespace FamiStudio
                 draggedSample = App.Project.GetDPCMMapping(captureNoteValue);
                 App.Project.UnmapDPCMSample(captureNoteValue);
             }
+            else
+            {
+                ScrollIfNearEdge(x, y, false, true);
+                MarkDirty();
+            }
         }
 
         private void EndDragDPCMSampleMapping(int x, int y)
@@ -3842,25 +3850,31 @@ namespace FamiStudio
 
                     draggedSample = null;
 
-                    if (PlatformUtils.MessageBox($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    PlatformUtils.MessageBoxAsync($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo, (r) =>
                     {
-                        // Need to promote the transaction to project level since we are going to be transposing 
-                        // potentially in multiple songs.
-                        App.UndoRedoManager.RestoreTransaction(false);
-                        App.UndoRedoManager.AbortTransaction();
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+                        if (r == DialogResult.Yes)
+                        {
+                            // Need to promote the transaction to project level since we are going to be transposing 
+                            // potentially in multiple songs.
+                            App.UndoRedoManager.RestoreTransaction(false);
+                            App.UndoRedoManager.AbortTransaction();
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
-                        // Need to redo everything + transpose.
-                        App.Project.UnmapDPCMSample(captureNoteValue);
-                        App.Project.UnmapDPCMSample(noteValue);
-                        App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
-                        App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
-                    }
+                            // Need to redo everything + transpose.
+                            App.Project.UnmapDPCMSample(captureNoteValue);
+                            App.Project.UnmapDPCMSample(noteValue);
+                            App.Project.MapDPCMSample(noteValue, sample.Sample, sample.Pitch, sample.Loop);
+                            App.Project.TransposeDPCMMapping(captureNoteValue, noteValue);
+                        }
 
-                    DPCMSampleMapped?.Invoke(noteValue);
-                    ManyPatternChanged?.Invoke();
+                        DPCMSampleMapped?.Invoke(noteValue);
+                        ManyPatternChanged?.Invoke();
 
-                    App.UndoRedoManager.EndTransaction();
+                        App.UndoRedoManager.EndTransaction();
+                    });
+
+                    if (PlatformUtils.IsMobile)
+                        highlightDPCMSample = noteValue;
                 }
                 else
                 {
@@ -4966,7 +4980,7 @@ namespace FamiStudio
                     }
                     else if (left && mapping != null)
                     {
-                        StartDragDPCMSampleMapping(e, noteValue);
+                        StartDragDPCMSampleMapping(e.X, e.Y, noteValue);
                     }
                     else if (right && mapping != null)
                     {
@@ -5294,6 +5308,22 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchDownDPCMMapping(int x, int y)
+        {
+            if (GetLocationForCoord(x, y, out _, out var noteValue) && noteValue == highlightDPCMSample)
+            {
+                var mapping = App.Project.GetDPCMMapping(noteValue);
+
+                if (mapping != null)
+                {
+                    StartDragDPCMSampleMapping(x, y, noteValue);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool HandleTouchClickDrawEnvelope(int x, int y)
         {
             if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
@@ -5328,6 +5358,35 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchClickDPCMMapping(int x, int y)
+        {
+            if (GetLocationForCoord(x, y, out _, out var noteValue))
+            {
+                if (App.Project.NoteSupportsDPCM(noteValue))
+                {
+                    var mapping = App.Project.GetDPCMMapping(noteValue);
+
+                    if (mapping == null)
+                    {
+                        MapDPCMSample(noteValue);
+                        highlightDPCMSample = noteValue;
+                    }
+                    else
+                    {
+                        highlightDPCMSample = highlightDPCMSample == noteValue ? -1 : noteValue;
+                    }
+                }
+                else
+                {
+                    App.DisplayWarning("DPCM samples are only allowed between C1 and D6");
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+            
         private bool HandleTouchClickHeaderSeek(int x, int y)
         {
             if (IsPointInHeader(x, y))
@@ -5591,6 +5650,26 @@ namespace FamiStudio
             return true;
         }
 
+        private bool HandleTouchLongPressDPCMMapping(int x, int y)
+        {
+            if (GetLocationForCoord(x, y, out _, out var noteValue))
+            {
+                var mapping = App.Project.GetDPCMMapping(noteValue);
+
+                if (mapping != null)
+                {
+                    App.ShowContextMenu(new[]
+                    {
+                        new ContextMenuOption("MenuMute", "Remove DPCM Sample", () => { ClearDPCMSampleMapping(noteValue); }), // DROIDTODO : Icon!
+                    });
+
+                    return true;
+                }
+            }
+
+            return true;
+        }
+
         protected override void OnTouchDown(int x, int y)
         {
             SetFlingVelocity(0, 0);
@@ -5619,6 +5698,11 @@ namespace FamiStudio
             {
                 if (HandleTouchDownDPCMVolumeEnvelope(x, y)) goto Handled;
                 if (HandleTouchDownWaveSelection(x, y)) goto Handled;
+            }
+
+            if (editMode == EditionMode.DPCMMapping)
+            {
+                if (HandleTouchDownDPCMMapping(x, y)) goto Handled;
             }
 
             // DROIDTODO : Check edit mode, maybe not apply to all. Like piano may not be there in all modes.
@@ -5695,6 +5779,11 @@ namespace FamiStudio
                 if (HandleTouchClickToggleEffectPanelButton(x, y)) goto Handled;
             }
 
+            if (editMode == EditionMode.DPCMMapping)
+            {
+                if (HandleTouchClickDPCMMapping(x, y)) goto Handled;
+            }
+
             return;
 
         Handled:
@@ -5723,6 +5812,11 @@ namespace FamiStudio
             if (editMode == EditionMode.DPCM)
             {
                 if (HandleTouchLongPressWave(x, y)) goto Handled;
+            }
+
+            if (editMode == EditionMode.DPCMMapping)
+            {
+                if (HandleTouchLongPressDPCMMapping(x, y)) goto Handled;
             }
 
             return;
@@ -5853,6 +5947,7 @@ namespace FamiStudio
         private void ClearHighlightedNote()
         {
             highlightNoteAbsIndex = -1;
+            highlightDPCMSample = -1;
         }
 
         private bool HasHighlightedNote()
@@ -6165,6 +6260,7 @@ namespace FamiStudio
                 foreach (var sample in App.Project.Samples)
                     sampleNames.Add(sample.Name);
 
+                // DROIDTODO : Ugly dialog.
                 var dlg = new PropertyDialog("Assign DPCM Sample", 300);
                 dlg.Properties.AddLabel(null, "Select sample to assign:"); // 0
                 dlg.Properties.AddDropDownList(null, sampleNames.ToArray(), sampleNames[0]); // 1
@@ -6184,9 +6280,9 @@ namespace FamiStudio
             }
         }
 
-        private void StartDragDPCMSampleMapping(MouseEventArgs e, byte noteValue)
+        private void StartDragDPCMSampleMapping(int x, int y, byte noteValue)
         {
-            StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSample);
+            StartCaptureOperation(x, y, CaptureOperation.DragSample);
             draggedSample = null;
         }
 
@@ -6194,6 +6290,8 @@ namespace FamiStudio
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
             App.Project.UnmapDPCMSample(noteValue);
+            if (noteValue == highlightDPCMSample)
+                highlightDPCMSample = -1;
             App.UndoRedoManager.EndTransaction();
             DPCMSampleUnmapped?.Invoke(noteValue);
         }
@@ -7602,7 +7700,10 @@ namespace FamiStudio
             buffer.Serialize(ref selectionMax);
 
             if (PlatformUtils.IsMobile)
+            {
                 buffer.Serialize(ref highlightNoteAbsIndex);
+                buffer.Serialize(ref highlightDPCMSample);
+            }
 
             if (buffer.IsReading)
             {

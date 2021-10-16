@@ -7,23 +7,15 @@ Big tasks left:
 Piano roll:
 - Create/Change effect value 
 - Clear effect value
-- Map/clear DPCM sample
-- Move DPCM mapping 
-- Draw line that seperates with toolbar + quick access.
-- Clicking should toggle cursor.
+- Clicking note should toggle cursor.
 - Test : envelope selection, copy paste, etc.
 
 Sequencer:
 - Paste should happen at cursor, not selection? Must be consistent with PR.
 
-Scaling issue:
-x Support 3 scalings (Will not affect toolbars)? 
-	- 4x (with 2x font) (Default for <  1080p, xhdpi and below)
-	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
-	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
-
 Testing:
 - Test copy/paste/cut/delete in all cases (need to be able to delete samples too)
+- Test all scalings. 
 
 Polish (if time):
 - Margins for auto-scroll, migrate all to new function.

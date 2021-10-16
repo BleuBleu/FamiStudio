@@ -364,8 +364,6 @@ namespace FamiStudio
             lastFrameTime = frameTimeNanos;
         }
 
-        float x = 0.0f;
-
         // GL thread.
         public void OnDrawFrame(IGL10 gl)
         {
