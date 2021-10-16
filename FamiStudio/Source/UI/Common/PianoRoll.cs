@@ -252,7 +252,7 @@ namespace FamiStudio
             false, // ChangeSelectionEffectValue
             false, // DrawEnvelope
             PlatformUtils.IsMobile, // Select
-            false, // SelectWave
+            PlatformUtils.IsMobile, // SelectWave
             false, // CreateNote
             true,  // CreateDragSlideNoteTarget
             true,  // DragSlideNoteTarget
@@ -427,8 +427,9 @@ namespace FamiStudio
         public bool IsEditingDPCMSample        => editMode == EditionMode.DPCM;
         public bool IsEditingDPCMSampleMapping => editMode == EditionMode.DPCMMapping;
         
-        public bool CanCopy  => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
-        public bool CanPaste => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
+        public bool CanCopy   => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
+        public bool CanPaste  => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
+        public bool CanDelete => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio || editMode == EditionMode.DPCM);
         public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public Instrument EditInstrument   => editInstrument;
@@ -698,6 +699,9 @@ namespace FamiStudio
 
                 if (Array.IndexOf(supportedEffects, selectedEffectIdx) == -1)
                     selectedEffectIdx = supportedEffects.Length > 0 ? supportedEffects[0] : -1;
+
+                if (PlatformUtils.IsMobile && selectedEffectIdx < 0)
+                    showEffectsPanel = false;
             }
         }
 
@@ -1284,7 +1288,7 @@ namespace FamiStudio
                 {
                     r.ch.FillRectangle(
                         GetPixelForWaveTime(GetWaveTimeForSample(selectionMin, true),  scrollX), 0,
-                        GetPixelForWaveTime(GetWaveTimeForSample(selectionMax, false), scrollX), Height, selectionBgVisibleBrush);
+                        GetPixelForWaveTime(GetWaveTimeForSample(selectionMax, false), scrollX), headerSizeY, selectionBgVisibleBrush);
                 }
 
                 ForEachWaveTimecode(r, (time, x, level, idx) =>
@@ -1297,7 +1301,7 @@ namespace FamiStudio
                 var processedBrush = r.g.GetSolidBrush(editSample.Color, 1.0f, 0.25f);
                 r.ch.FillRectangle(
                     GetPixelForWaveTime(editSample.ProcessedStartTime, scrollX), 0,
-                    GetPixelForWaveTime(editSample.ProcessedEndTime,   scrollX), Height, processedBrush);
+                    GetPixelForWaveTime(editSample.ProcessedEndTime,   scrollX), headerSizeY, processedBrush);
             }
 
             r.ch.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, ThemeResources.BlackBrush);
@@ -1775,9 +1779,6 @@ namespace FamiStudio
                     // Filled part.
                     for (int i = 0; i < 3; i++)
                     {
-                        var p0 = envelopePoints[i + 0];
-                        var p1 = envelopePoints[i + 1];
-
                         var points = new float[4, 2]
                         {
                             { envelopePoints[i + 1].X, envelopePoints[i + 1].Y },
@@ -2087,7 +2088,10 @@ namespace FamiStudio
 
         public void DeleteSelection()
         {
-            DeleteSelectedNotes();
+            if (editMode == EditionMode.DPCM)
+                DeleteSelectedWaveSection();
+            else
+                DeleteSelectedNotes();
         }
 
         public void DeleteSpecial()
@@ -4727,6 +4731,13 @@ namespace FamiStudio
             return false;
         }
 
+        private void StartDragWaveVolumeEnvelope(int x, int y, int vertexIdx)
+        {
+            volumeEnvelopeDragVertex = vertexIdx;
+            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
+            StartCaptureOperation(x, y, CaptureOperation.DragWaveVolumeEnvelope);
+        }
+
         private bool HandleMouseDownDPCMVolumeEnvelope(MouseEventArgs e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
@@ -4734,14 +4745,12 @@ namespace FamiStudio
 
             if ((left || right) && IsPointInEffectPanel(e.X, e.Y))
             {
-                var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e);
+                var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e.X, e.Y);
                 if (vertexIdx >= 0)
                 {
                     if (left)
                     {
-                        volumeEnvelopeDragVertex = vertexIdx;
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
-                        StartCaptureOperation(e.X, e.Y, CaptureOperation.DragWaveVolumeEnvelope);
+                        StartDragWaveVolumeEnvelope(e.X, e.Y, vertexIdx);
                     }
                     else
                     {
@@ -4808,6 +4817,13 @@ namespace FamiStudio
             return false;
         }
 
+        private void StartSelectWave(int x, int y)
+        {
+            StartCaptureOperation(x, y, CaptureOperation.SelectWave);
+            if (captureThresholdMet)
+                UpdateWaveSelection(x, y);
+        }
+
         private bool HandleMouseDownWaveSelection(MouseEventArgs e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
@@ -4815,8 +4831,7 @@ namespace FamiStudio
 
             if ((left || right) && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
             {
-                StartCaptureOperation(e.X, e.Y, CaptureOperation.SelectWave);
-                UpdateWaveSelection(e.X, e.Y);
+                StartSelectWave(e.X, e.Y);
                 return true;
             }
 
@@ -5256,6 +5271,29 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchDownDPCMVolumeEnvelope(int x, int y)
+        {
+            var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(x, y);
+            if (vertexIdx >= 0)
+            {
+                StartDragWaveVolumeEnvelope(x, y, vertexIdx);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDownWaveSelection(int x, int y)
+        {
+            if (IsPointInNoteArea(x, y) || IsPointInHeader(x, y))
+            {
+                StartSelectWave(x, y);
+                return true;
+            }
+
+            return false;
+        }
+
         private bool HandleTouchClickDrawEnvelope(int x, int y)
         {
             if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
@@ -5524,6 +5562,35 @@ namespace FamiStudio
             return false;
         }
 
+        private void ResetVolumeEnvelope()
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
+            editSample.ResetVolumeEnvelope();
+            App.UndoRedoManager.EndTransaction();
+            MarkDirty();
+        }
+
+        private bool HandleTouchLongPressWave(int x, int y)
+        {
+            var menu = new List<ContextMenuOption>();
+
+            if (IsPointInEffectPanel(x, y))
+            {
+                menu.Add(new ContextMenuOption("MenuClearEnvelope", "Reset Volume Envelope", () => { ResetVolumeEnvelope(); }));
+            }
+
+            if (IsSelectionValid())
+            {
+                menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); }));
+                menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Samples", () => { DeleteSelectedWaveSection(); }));
+            }
+
+            if (menu.Count > 0)
+                App.ShowContextMenu(menu.ToArray());
+
+            return true;
+        }
+
         protected override void OnTouchDown(int x, int y)
         {
             SetFlingVelocity(0, 0);
@@ -5546,6 +5613,12 @@ namespace FamiStudio
                 if (HandleTouchDownEnvelopeSelection(x, y)) goto Handled;
                 if (HandleTouchDownEnvelopeResize(x, y)) goto Handled;
                 if (HandleTouchDownEnvelopeGizmos(x, y)) goto Handled;
+            }
+
+            if (editMode == EditionMode.DPCM)
+            {
+                if (HandleTouchDownDPCMVolumeEnvelope(x, y)) goto Handled;
+                if (HandleTouchDownWaveSelection(x, y)) goto Handled;
             }
 
             // DROIDTODO : Check edit mode, maybe not apply to all. Like piano may not be there in all modes.
@@ -5645,6 +5718,11 @@ namespace FamiStudio
             {
                 if (HandleTouchLongPressDrawEnvelope(x, y)) goto Handled;
                 if (HandleTouchLongPressEnvelopeHeader(x, y)) goto Handled;
+            }
+
+            if (editMode == EditionMode.DPCM)
+            {
+                if (HandleTouchLongPressWave(x, y)) goto Handled;
             }
 
             return;
@@ -6261,7 +6339,7 @@ namespace FamiStudio
 
         private readonly int[] vertexOrder = new int[] { 1, 2, 0, 3 };
 
-        private int GetWaveVolumeEnvelopeVertexIndex(MouseEventArgs e)
+        private int GetWaveVolumeEnvelopeVertexIndex(int x, int y)
         {
             Debug.Assert(editMode == EditionMode.DPCM);
             Debug.Assert(vertexOrder.Length == editSample.VolumeEnvelope.Length);
@@ -6269,8 +6347,10 @@ namespace FamiStudio
             var halfHeight    = effectPanelSizeY * 0.5f;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
 
-            var x = e.X - pianoSizeX;
-            var y = e.Y - headerSizeY;
+            var threshold = ScaleForMainWindow(PlatformUtils.IsDesktop ? 10 : 20);
+
+            x -= pianoSizeX;
+            y -= headerSizeY;
 
             for (int i = 0; i < 4; i++)
             {
@@ -6282,8 +6362,8 @@ namespace FamiStudio
                 var dx = Math.Abs(vx - x);
                 var dy = Math.Abs(vy - y);
 
-                if (dx < 10 * MainWindowScaling &&
-                    dy < 10 * MainWindowScaling)
+                if (dx < threshold &&
+                    dy < threshold)
                 {
                     return idx;
                 }
@@ -6428,7 +6508,7 @@ namespace FamiStudio
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
-                    var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e);
+                    var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e.X, e.Y);
 
                     if (vertexIdx >= 0)
                     {

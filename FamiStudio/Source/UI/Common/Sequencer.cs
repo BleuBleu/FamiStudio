@@ -1572,8 +1572,9 @@ namespace FamiStudio
             return patterns;
         }
 
-        public bool CanCopy  => IsActiveControl && IsSelectionValid();
-        public bool CanPaste => IsActiveControl && IsSelectionValid() && ClipboardUtils.ContainsPatterns;
+        public bool CanCopy   => IsActiveControl && IsSelectionValid();
+        public bool CanPaste  => IsActiveControl && IsSelectionValid() && ClipboardUtils.ContainsPatterns;
+        public bool CanDelete => CanCopy;
         public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public void Copy()

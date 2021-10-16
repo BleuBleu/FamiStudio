@@ -1474,33 +1474,6 @@ namespace FamiStudio
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
-        public void FillGeometry(float[] points, GLBrush brush, bool smooth = false)
-        {
-            var batch = GetMeshBatch(smooth);
-            var i0 = (short)(batch.vtxIdx / 2);
-
-            for (int i = 0; i < points.Length; i += 2)
-            {
-                float x = points[i + 0];
-                float y = points[i + 1];
-
-                xform.TransformPoint(ref x, ref y);
-
-                batch.vtxArray[batch.vtxIdx++] = x;
-                batch.vtxArray[batch.vtxIdx++] = y;
-                batch.colArray[batch.colIdx++] = brush.PackedColor0;
-            }
-
-            // Simple fan.
-            var numVertices = points.Length / 2;
-            for (int i = 0; i < numVertices - 2; i++)
-            {
-                batch.idxArray[batch.idxIdx++] = i0;
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 1);
-                batch.idxArray[batch.idxIdx++] = (short)(i0 + i + 2);
-            }
-        }
-
         public void FillGeometry(float[,] points, GLBrush brush, bool smooth = false)
         {
             var batch = GetMeshBatch(smooth);

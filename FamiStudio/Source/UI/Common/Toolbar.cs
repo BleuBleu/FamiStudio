@@ -341,7 +341,7 @@ namespace FamiStudio
 
             if (PlatformUtils.IsMobile)
             {
-                buttons[(int)ButtonType.Delete] = new Button { BmpAtlasIndex = ButtonImageIndices.Delete, Click = OnDelete, RightClick = OnDeleteSpecial, Enabled = OnCopyEnabled };
+                buttons[(int)ButtonType.Delete] = new Button { BmpAtlasIndex = ButtonImageIndices.Delete, Click = OnDelete, RightClick = OnDeleteSpecial, Enabled = OnDeleteEnabled };
                 buttons[(int)ButtonType.More]   = new Button { BmpAtlasIndex = ButtonImageIndices.More, Click = OnMore };
                 buttons[(int)ButtonType.Piano]  = new Button { BmpAtlasIndex = ButtonImageIndices.Piano, Click = OnMobilePiano, Enabled = OnMobilePianoEnabled };
 
@@ -693,6 +693,11 @@ namespace FamiStudio
         private void OnDeleteSpecial()
         {
             App.DeleteSpecial();
+        }
+
+        private ButtonStatus OnDeleteEnabled()
+        {
+            return App.CanDelete ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
         private void OnUndo()

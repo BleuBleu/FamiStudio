@@ -360,7 +360,7 @@ namespace FamiStudio
             }
         }
 
-        private void ResetVolumeEnvelope()
+        public void ResetVolumeEnvelope()
         {
             volumeEnvelope[0] = new SampleVolumePair(0);
             volumeEnvelope[1] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (1.0f / 3.0f)));

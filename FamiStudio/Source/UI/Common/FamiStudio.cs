@@ -1759,9 +1759,10 @@ namespace FamiStudio
             }
         }
 
-        public bool CanCopy  => PianoRoll.IsActiveControl && PianoRoll.CanCopy  || Sequencer.IsActiveControl && Sequencer.CanCopy;
-        public bool CanPaste => PianoRoll.IsActiveControl && PianoRoll.CanPaste || Sequencer.IsActiveControl && Sequencer.CanPaste;
-        
+        public bool CanCopy   => PianoRoll.IsActiveControl && PianoRoll.CanCopy   || Sequencer.IsActiveControl && Sequencer.CanCopy;
+        public bool CanPaste  => PianoRoll.IsActiveControl && PianoRoll.CanPaste  || Sequencer.IsActiveControl && Sequencer.CanPaste;
+        public bool CanDelete => PianoRoll.IsActiveControl && PianoRoll.CanDelete || Sequencer.IsActiveControl && Sequencer.CanDelete;
+
         public void Copy()
         {
             if (PianoRoll.IsActiveControl)
