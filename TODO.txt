@@ -2,12 +2,14 @@ LH778 Android
 =======
 
 Big tasks left:
-- Finish all controls (PR Effect + DPCM)
+- Finish all controls (PR Effect)
 
 Piano roll:
-- Create/Change effect value 
-- Clear effect value
-- Clicking note should toggle cursor.
+- Long press:
+	- Toggle volume slide
+- TouchDown
+	/ Gizmos (change value or slide)
+
 - Test : envelope selection, copy paste, etc.
 
 Sequencer:
@@ -18,6 +20,7 @@ Testing:
 - Test all scalings. 
 
 Polish (if time):
+- Fix effect icon scale in PR.
 - Margins for auto-scroll, migrate all to new function.
 - Hide more stuff in the settings
 - Some dialogs look bad (special paste, cleanup, etc.)
@@ -78,8 +81,7 @@ Features missing from the Mobile version
 - No FamiTracker FTI instrument import
 - No DPCM sample import from other projects (WAV/DMC only)
 - No DPCM sample data export
-- No MIDI support
-- (No song reordering?)
+- No MIDI controller support
 
 Videos:
 =======
