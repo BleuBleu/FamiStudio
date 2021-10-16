@@ -898,7 +898,7 @@ namespace FamiStudio
         {
             text = App.SelectedChannel.NameWithExpansion;
             tint = Theme.LightGreyFillColor1;
-            return (ButtonImageIndices)Array.IndexOf(ButtonImageNames, ChannelType.Icons[App.SelectedChannelIndex]);
+            return (ButtonImageIndices)Array.IndexOf(ButtonImageNames, ChannelType.Icons[App.SelectedChannel.Type]);
         }
 
         private ButtonImageIndices GetInstrumentRenderingInfo(out string text, out Color tint)

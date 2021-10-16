@@ -1212,10 +1212,12 @@ namespace FamiStudio
             }
 #endif
 
-            DrawLineInternal(x0 - halfWidth, y0, x1 + halfWidth, y0, brush, width, smooth, false);
-            DrawLineInternal(x1, y0 - halfWidth, x1, y1 + halfWidth, brush, width, smooth, false);
-            DrawLineInternal(x0 - halfWidth, y1, x1 + halfWidth, y1, brush, width, smooth, false);
-            DrawLineInternal(x0, y0 - halfWidth, x0, y1 + halfWidth, brush, width, smooth, false);
+            var extraPixel = width & 1;
+
+            DrawLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, brush, width, smooth, false);
+            DrawLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, brush, width, smooth, false);
+            DrawLineInternal(x0 - halfWidth, y1, x1 + extraPixel + halfWidth, y1, brush, width, smooth, false);
+            DrawLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, brush, width, smooth, false);
         }
 
         public void DrawGeometry(GLGeometry geo, GLBrush brush, int width, bool smooth = false, bool miter = false)

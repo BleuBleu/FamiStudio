@@ -246,7 +246,7 @@ namespace FamiStudio
                 {
                     selectedInstrument = value;
 
-                    if (PlatformUtils.IsMobile && PianoRoll.IsEditingInstrument)
+                    if (PlatformUtils.IsMobile && PianoRoll.IsEditingInstrument && selectedInstrument != null)
                     {
                         var envType = PianoRoll.EditEnvelopeType;
 

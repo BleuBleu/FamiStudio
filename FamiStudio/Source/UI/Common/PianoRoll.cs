@@ -57,7 +57,6 @@ namespace FamiStudio
         const int DefaultTooltipTextPosX           = 10;
         const int DefaultTooltipTextPosY           = 30;
         const int DefaultDPCMTextPosX              = 2;
-        const int DefaultDPCMTextPosY              = 0;
         const int DefaultRecordingKeyOffsetY       = 12;
         const int DefaultAttackIconPosX            = 1;
         const int DefaultWaveGeometrySampleSize    = 2;
@@ -94,7 +93,6 @@ namespace FamiStudio
         int tooltipTextPosX;
         int tooltipTextPosY;
         int dpcmTextPosX;
-        int dpcmTextPosY;
         int recordingKeyOffsetY;
         int octaveSizeY;
         int virtualSizeY;
@@ -494,7 +492,6 @@ namespace FamiStudio
             tooltipTextPosX           = ScaleForFont(DefaultTooltipTextPosX);
             tooltipTextPosY           = ScaleForFont(DefaultTooltipTextPosY);
             dpcmTextPosX              = ScaleForFont(DefaultDPCMTextPosX);
-            dpcmTextPosY              = ScaleForFont(DefaultDPCMTextPosY);
             recordingKeyOffsetY       = ScaleForMainWindow(DefaultRecordingKeyOffsetY);
             attackIconPosX            = ScaleForMainWindow(DefaultAttackIconPosX);
             waveGeometrySampleSize    = ScaleForMainWindow(DefaultWaveGeometrySampleSize);
@@ -2475,7 +2472,7 @@ namespace FamiStudio
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
 
-                        r.cf.DrawText(text, ThemeResources.FontSmall, dpcmTextPosX, dpcmTextPosY, ThemeResources.BlackBrush);
+                        r.cf.DrawText(text, ThemeResources.FontSmall, dpcmTextPosX, 0, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft, 0, noteSizeY);
                         r.cf.PopTransform();
                     }
                 }
