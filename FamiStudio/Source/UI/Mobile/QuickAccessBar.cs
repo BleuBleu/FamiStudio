@@ -658,6 +658,24 @@ namespace FamiStudio
 
         private void OnDPCMEffect()
         {
+            if (CheckNeedsClosing((int)ButtonType.DPCMEffect))
+                return;
+
+            popupSelectedIdx = App.EffectPanelExpanded ? 1 : 0;
+
+            var items = new ListItem[2];
+
+            items[0] = new ListItem();
+            items[0].Color = Theme.LightGreyFillColor1;
+            items[0].ImageIndex = (int)ButtonImageIndices.EffectNone;
+            items[0].Text = "None";
+
+            items[1] = new ListItem();
+            items[1].Color = Theme.LightGreyFillColor1;
+            items[1].ImageIndex = (int)ButtonImageIndices.EffectVolume;
+            items[1].Text = "Volume Envelope";
+
+            StartExpandingList((int)ButtonType.DPCMEffect, items);
         }
 
         private void OnDPCMPlay()
@@ -864,10 +882,9 @@ namespace FamiStudio
 
         private ButtonImageIndices GetDPCMEffectRenderInfo(out string text, out Color tint)
         {
-            // DROIDTODO!
-            text = ""; // validEffect ? Note.EffectNames[App.SelectedEffect] : "None";
+            text = App.EffectPanelExpanded ? "Volume" : "None";
             tint = Theme.LightGreyFillColor1;
-            return ButtonImageIndices.EffectNone;
+            return App.EffectPanelExpanded ? ButtonImageIndices.EffectVolume : ButtonImageIndices.EffectNone;
         }
 
         private ButtonImageIndices GetDPCMPlayRenderInfo(out string text, out Color tint)
@@ -939,6 +956,7 @@ namespace FamiStudio
 
         private void OnDPCMEffectItemClick(int idx)
         {
+            App.EffectPanelExpanded = idx == 1;
         }
 
         private void OnChannelItemClick(int idx)

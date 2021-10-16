@@ -495,12 +495,10 @@ namespace FamiStudio
         public event InstrumentDelegate InstrumentDeleted;
         public event InstrumentPointDelegate InstrumentDroppedOutside;
         public event SongDelegate SongModified;
-        public event ArpeggioDelegate ArpeggioEdited; // DROIDTODO : Move to App.XXX.
         public event ArpeggioDelegate ArpeggioColorChanged;
         public event ArpeggioDelegate ArpeggioDeleted;
         public event ArpeggioPointDelegate ArpeggioDroppedOutside;
         public event DPCMSampleDelegate DPCMSampleReloaded;
-        public event DPCMSampleDelegate DPCMSampleEdited; // DROIDTODO : Move to App.XXX.
         public event DPCMSampleDelegate DPCMSampleColorChanged;
         public event DPCMSampleDelegate DPCMSampleDeleted;
         public event DPCMSamplePointDelegate DPCMSampleDraggedOutside;
@@ -1313,8 +1311,7 @@ namespace FamiStudio
                                 arpeggioDst.Envelope.Loop = arpeggioSrc.Envelope.Loop;
                                 Array.Copy(arpeggioSrc.Envelope.Values, arpeggioDst.Envelope.Values, arpeggioDst.Envelope.Values.Length);
                                 App.UndoRedoManager.EndTransaction();
-
-                                ArpeggioEdited?.Invoke(arpeggioDst);
+                                App.StartEditArpeggio(arpeggioDst);
                             }
                         }
                     }
@@ -2342,7 +2339,7 @@ namespace FamiStudio
                 if (subButtonType < SubButtonType.EnvelopeMax)
                 {
                     envelopeDragIdx = (int)subButtonType;
-                    ArpeggioEdited?.Invoke(button.arpeggio);
+                    App.StartEditArpeggio(button.arpeggio);
                 }
             }
             else if (e.Button.HasFlag(MouseButtons.Right) && button.arpeggio != null) 
@@ -2369,7 +2366,7 @@ namespace FamiStudio
             {
                 if (subButtonType == SubButtonType.EditWave)
                 {
-                    DPCMSampleEdited?.Invoke(button.sample);
+                    App.StartEditDPCMSample(button.sample);
                 }
                 else if (subButtonType == SubButtonType.Reload)
                 {
@@ -2528,7 +2525,7 @@ namespace FamiStudio
             App.SelectedArpeggio = button.arpeggio;
 
             if (subButtonType < SubButtonType.EnvelopeMax)
-                ArpeggioEdited?.Invoke(button.arpeggio);
+                App.StartEditArpeggio(button.arpeggio);
 
             return true;
         }
@@ -2544,7 +2541,7 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.EditWave)
             {
-                DPCMSampleEdited?.Invoke(button.sample);
+                App.StartEditDPCMSample(button.sample);
             }
             else if (subButtonType == SubButtonType.Play)
             {

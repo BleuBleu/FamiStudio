@@ -183,12 +183,10 @@ namespace FamiStudio
             ProjectExplorer.InstrumentDroppedOutside += ProjectExplorer_InstrumentDroppedOutside;
             ProjectExplorer.SongModified             += ProjectExplorer_SongModified;
             ProjectExplorer.ProjectModified          += ProjectExplorer_ProjectModified;
-            ProjectExplorer.ArpeggioEdited           += ProjectExplorer_ArpeggioEdited;
             ProjectExplorer.ArpeggioColorChanged     += ProjectExplorer_ArpeggioColorChanged;
             ProjectExplorer.ArpeggioDeleted          += ProjectExplorer_ArpeggioDeleted;
             ProjectExplorer.ArpeggioDroppedOutside   += ProjectExplorer_ArpeggioDroppedOutside;
             ProjectExplorer.DPCMSampleReloaded       += ProjectExplorer_DPCMSampleReloaded;
-            ProjectExplorer.DPCMSampleEdited         += ProjectExplorer_DPCMSampleEdited;
             ProjectExplorer.DPCMSampleColorChanged   += ProjectExplorer_DPCMSampleColorChanged;
             ProjectExplorer.DPCMSampleDeleted        += ProjectExplorer_DPCMSampleDeleted;
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
@@ -290,13 +288,31 @@ namespace FamiStudio
                 PianoRoll.StartEditInstrument(instrument, envelope);
             }
 
-            if (PlatformUtils.IsMobile && ActiveControl != PianoRoll)
-                SetActiveControl(PianoRoll);
+            ConditionalSwitchToPianoRoll();
         }
 
         public void StartEditChannel(int channelIdx, int patternIdx = 0)
         {
             PianoRoll.StartEditChannel(channelIdx, patternIdx);
+            ConditionalSwitchToPianoRoll();
+        }
+
+        public void StartEditDPCMSample(DPCMSample sample)
+        {
+            PianoRoll.StartEditDPCMSample(sample);
+            ConditionalSwitchToPianoRoll();
+        }
+
+        public void StartEditArpeggio(Arpeggio arp)
+        {
+            PianoRoll.StartEditArpeggio(arp);
+            ConditionalSwitchToPianoRoll();
+        }
+
+        private void ConditionalSwitchToPianoRoll()
+        {
+            if (PlatformUtils.IsMobile && ActiveControl != PianoRoll)
+                SetActiveControl(PianoRoll);
         }
 
         public bool IsChannelActive(int idx)
@@ -2149,11 +2165,6 @@ namespace FamiStudio
             {
                 PianoRoll.StartEditDPCMSample(sample);
             }
-        }
-
-        private void ProjectExplorer_DPCMSampleEdited(DPCMSample sample)
-        {
-            PianoRoll.StartEditDPCMSample(sample);
         }
 
         private void PianoRoll_EnvelopeChanged()

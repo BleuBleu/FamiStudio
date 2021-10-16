@@ -2,17 +2,7 @@ LH778 Android
 =======
 
 Big tasks left:
-- Quick access stuff (are the buttons changing?)
 - Finish all controls (PR Effect + Seq + DPCM)
-
-Quick access:
-/ Longpress
-- Flexible buttons
-	x Play
-	- DPCM effect
-	x Envelope (when editing instrument)
-- Make sure changing instument/arp while editing changes.
-- BUG : Changing instrument doesn't always change (S5B)
 
 Project explorer:
 - Env replace? Instrument replace? Song reorder?
@@ -49,6 +39,7 @@ Polish (if time):
 - Hide more stuff in the settings
 - Some dialogs look bad (special paste, cleanup, etc.)
 - Tutorial (post-beta?)
+- Option to hide piano in piano roll (would need octave labels)
 - BUG : When moving mouse out of project explorer towards piano roll, the sequencer icon dont change back.
 
 Icon notes:
