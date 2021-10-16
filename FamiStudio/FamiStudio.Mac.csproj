@@ -140,7 +140,6 @@
     <Compile Include="Source\UI\Common\ExportDialog.cs" />
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
     <Compile Include="Source\UI\Common\GLControl.cs" />
-    <Compile Include="Source\UI\Common\GLGraphics.cs" />
     <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
     <Compile Include="Source\UI\Common\Init.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
@@ -160,6 +159,7 @@
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
     <Compile Include="Source\UI\Desktop\QuickAccessBar.cs" />
     <Compile Include="Source\UI\MacLinux\CairoImage.cs" />
