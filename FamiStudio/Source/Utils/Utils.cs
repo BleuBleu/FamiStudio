@@ -339,5 +339,12 @@ namespace FamiStudio
         {
             return System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(str));
         }
+
+        public static int ComputeScrollAmount(int pos, int maxPos, int marginSize, float factor, bool minSide)
+        {
+            var diff = minSide ? pos - maxPos : maxPos - pos;
+            var scrollAmount = 1.0f - Utils.Clamp(diff / (float)marginSize, 0.0f, 1.0f);
+            return (int)(factor * scrollAmount) * (minSide ? -1 : 1);
+        }
     }
 }

@@ -2,13 +2,7 @@ LH778 Android
 =======
 
 Big tasks left:
-- Finish all controls (PR Effect + Seq + DPCM)
-
-Project explorer:
-- Env replace? Instrument replace? Song reorder?
-	=> Will be done with cursor mecanic.
-- Draw line that seperates with toolbar + quick access.
-- Editing envelope/DPCM will still be considered "Project explorer", only channel mode will be PR.
+- Finish all controls (PR Effect + DPCM)
 
 Piano roll:
 - Create/Change effect value 
@@ -40,6 +34,7 @@ Polish (if time):
 - Tutorial (post-beta?)
 - Option to hide piano in piano roll (would need octave labels)
 - When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
+- Env editor : clicking again on highlight should remove it?
 - BUG : When moving mouse out of project explorer towards piano roll, the sequencer icon dont change back.
 - BUG : FDS Waveform on mobile doesnt have the right range it seems.
 

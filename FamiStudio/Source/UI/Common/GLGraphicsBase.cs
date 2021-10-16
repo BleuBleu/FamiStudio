@@ -1203,16 +1203,16 @@ namespace FamiStudio
             xform.TransformPoint(ref x1, ref y1);
 
             var halfWidth = 0.0f;
+            var extraPixel = smooth ? 0 : 1;
 
 #if FAMISTUDIO_ANDROID
             if (width > maxSmoothLineWidth)
             {
                 smooth = false;
                 halfWidth = (float)Math.Floor(width * 0.5f);
+                extraPixel = 0;
             }
 #endif
-
-            var extraPixel = width & 1;
 
             DrawLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, brush, width, smooth, false);
             DrawLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, brush, width, smooth, false);

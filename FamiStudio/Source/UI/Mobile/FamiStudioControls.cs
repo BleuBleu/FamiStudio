@@ -5,7 +5,7 @@ namespace FamiStudio
 {
     public class FamiStudioControls
     {
-        private const bool ShowRenderingTimes = false;
+        private const bool ShowRenderingTimes = true;
 
         private int width;
         private int height;
