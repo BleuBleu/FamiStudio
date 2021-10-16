@@ -490,18 +490,17 @@ namespace FamiStudio
         public delegate void DPCMSamplePointDelegate(DPCMSample instrument, Point pos);
         public delegate void DPCMSampleDelegate(DPCMSample sample);
 
-        public event InstrumentEnvelopeDelegate InstrumentEdited;
         public event InstrumentDelegate InstrumentColorChanged;
         public event InstrumentDelegate InstrumentReplaced;
         public event InstrumentDelegate InstrumentDeleted;
         public event InstrumentPointDelegate InstrumentDroppedOutside;
         public event SongDelegate SongModified;
-        public event ArpeggioDelegate ArpeggioEdited;
+        public event ArpeggioDelegate ArpeggioEdited; // DROIDTODO : Move to App.XXX.
         public event ArpeggioDelegate ArpeggioColorChanged;
         public event ArpeggioDelegate ArpeggioDeleted;
         public event ArpeggioPointDelegate ArpeggioDroppedOutside;
         public event DPCMSampleDelegate DPCMSampleReloaded;
-        public event DPCMSampleDelegate DPCMSampleEdited;
+        public event DPCMSampleDelegate DPCMSampleEdited; // DROIDTODO : Move to App.XXX.
         public event DPCMSampleDelegate DPCMSampleColorChanged;
         public event DPCMSampleDelegate DPCMSampleDeleted;
         public event DPCMSamplePointDelegate DPCMSampleDraggedOutside;
@@ -1267,8 +1266,7 @@ namespace FamiStudio
                                     }
 
                                     App.UndoRedoManager.EndTransaction();
-
-                                    InstrumentEdited?.Invoke(instrumentDst, envelopeDragIdx);
+                                    App.StartEditInstrument(instrumentDst, envelopeDragIdx);
                                 }
                             }
                         }
@@ -2180,11 +2178,11 @@ namespace FamiStudio
                 }
                 else if (subButtonType == SubButtonType.DPCM)
                 {
-                    InstrumentEdited?.Invoke(button.instrument, EnvelopeType.Count);
+                    App.StartEditInstrument(button.instrument, EnvelopeType.Count);
                 }
                 else if (subButtonType < SubButtonType.EnvelopeMax)
                 {
-                    InstrumentEdited?.Invoke(button.instrument, (int)subButtonType);
+                    App.StartEditInstrument(button.instrument, (int)subButtonType);
                     envelopeDragIdx = (int)subButtonType;
                 }
             }
@@ -2507,11 +2505,11 @@ namespace FamiStudio
             }
             else if (subButtonType == SubButtonType.DPCM)
             {
-                InstrumentEdited?.Invoke(button.instrument, EnvelopeType.Count);
+                App.StartEditInstrument(button.instrument, EnvelopeType.Count);
             }
             else if (subButtonType < SubButtonType.EnvelopeMax)
             {
-                InstrumentEdited?.Invoke(button.instrument, (int)subButtonType);
+                App.StartEditInstrument(button.instrument, (int)subButtonType);
                 envelopeDragIdx = (int)subButtonType;
             }
 

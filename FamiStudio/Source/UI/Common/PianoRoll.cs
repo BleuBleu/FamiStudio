@@ -332,7 +332,10 @@ namespace FamiStudio
         int snapResolution = SnapResolutionType.OneBeat;
         int scrollX = 0;
         int scrollY = 0;
-        int selectedEffectIdx = 0;
+        int lastChannelScrollX = -1;
+        int lastChannelScrollY = -1;
+        float lastChannelZoom = -1;
+        int selectedEffectIdx = PlatformUtils.IsMobile ? -1 : 0;
         int[] supportedEffects;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
@@ -404,11 +407,23 @@ namespace FamiStudio
             public GizmoAction Action;
         };
 
-        public bool SnapAllowed    { get => editMode == EditionMode.Channel; }
-        public bool SnapEnabled    { get => SnapAllowed && snap; set { if (SnapAllowed) snap = value; } }
-        public int  SnapResolution { get => snapResolution; set => snapResolution = value; }
+        public bool SnapAllowed { get => editMode == EditionMode.Channel; }
+        public bool SnapEnabled { get => SnapAllowed && snap; set { if (SnapAllowed) snap = value; MarkDirty(); } }
+        public bool EffectPanelExpanded { get => showEffectsPanel; set => SetShowEffectPanel(value); }
+        public int  SnapResolution
+        {
+            get { Debug.Assert(editMode == EditionMode.Channel); return snapResolution; }
+            set { Debug.Assert(editMode == EditionMode.Channel); snapResolution = value; MarkDirty(); }
+        }
+
+        public int SelectedEffect
+        {
+            get { Debug.Assert(editMode == EditionMode.Channel); return supportedEffects.Length > 0 ? selectedEffectIdx : -1; }
+            set { Debug.Assert(editMode == EditionMode.Channel); selectedEffectIdx = value; MarkDirty(); }
+        }
 
         public bool IsMaximized                => maximized;
+        public bool IsEditingChannel           => editMode == EditionMode.Channel; 
         public bool IsEditingInstrument        => editMode == EditionMode.Enveloppe; 
         public bool IsEditingArpeggio          => editMode == EditionMode.Arpeggio;
         public bool IsEditingDPCMSample        => editMode == EditionMode.DPCM;
@@ -418,9 +433,10 @@ namespace FamiStudio
         public bool CanPaste => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
         public bool IsActiveControl => App != null && App.ActiveControl == this;
 
-        public Instrument EditInstrument => editInstrument;
-        public Arpeggio   EditArpeggio   => editArpeggio;
-        public DPCMSample EditSample     => editSample;
+        public Instrument EditInstrument   => editInstrument;
+        public Arpeggio   EditArpeggio     => editArpeggio;
+        public DPCMSample EditSample       => editSample;
+        public int        EditEnvelopeType => editEnvelope;
 
         public delegate void EmptyDelegate();
         public delegate void PatternDelegate(Pattern pattern);
@@ -519,10 +535,13 @@ namespace FamiStudio
             editChannel = channelIdx;
             noteTooltip = "";
 
+            var restoredScroll = RestoreChannelScroll();
+
             BuildSupportEffectList();
             ClearSelection();
             UpdateRenderCoords();
-            CenterScroll(patternIdx);
+            if (!restoredScroll)
+                CenterScroll(patternIdx);
             ClampScroll();
             MarkDirty();
         }
@@ -539,8 +558,10 @@ namespace FamiStudio
             }
         }
 
-        public void StartEditEnveloppe(Instrument instrument, int envelope)
+        public void StartEditInstrument(Instrument instrument, int envelope)
         {
+            SaveChannelScroll();
+
             editMode = EditionMode.Enveloppe;
             editInstrument = instrument;
             editEnvelope = envelope;
@@ -560,6 +581,8 @@ namespace FamiStudio
 
         public void StartEditArpeggio(Arpeggio arpeggio)
         {
+            SaveChannelScroll();
+
             editMode = EditionMode.Arpeggio;
             editEnvelope = EnvelopeType.Arpeggio;
             editInstrument = null;
@@ -579,6 +602,8 @@ namespace FamiStudio
 
         public void StartEditDPCMSample(DPCMSample sample)
         {
+            SaveChannelScroll();
+
             editMode = EditionMode.DPCM;
             editSample = sample;
             zoom = 1.0f;
@@ -596,6 +621,8 @@ namespace FamiStudio
 
         public void StartEditDPCMMapping()
         {
+            SaveChannelScroll();
+
             editMode = EditionMode.DPCMMapping;
             showEffectsPanel = false;
             zoom = 1.0f;
@@ -629,6 +656,29 @@ namespace FamiStudio
         public void EndVideoRecording()
         {
             OnRenderTerminated();
+        }
+
+        public void SaveChannelScroll()
+        {
+            if (PlatformUtils.IsMobile && editMode == EditionMode.Channel)
+            {
+                lastChannelScrollX = scrollX;
+                lastChannelScrollY = scrollY;
+                lastChannelZoom = zoom;
+            }
+        }
+
+        public bool RestoreChannelScroll()
+        {
+            if (PlatformUtils.IsMobile && lastChannelScrollX >= 0 && lastChannelScrollY >= 0 && lastChannelZoom > 0)
+            {
+                scrollX = lastChannelScrollX;
+                scrollY = lastChannelScrollY;
+                zoom = lastChannelZoom;
+                return true;
+            }
+
+            return false;
         }
 
         private void BuildSupportEffectList()
@@ -813,6 +863,11 @@ namespace FamiStudio
             editInstrument = null;
             editArpeggio = null;
             zoom = DefaultChannelZoom;
+            scrollX = 0;
+            scrollY = 0;
+            lastChannelScrollX = -1;
+            lastChannelScrollY = -1;
+            lastChannelZoom = -1;
             StartEditChannel(channelIdx);
         }
 
@@ -1297,15 +1352,20 @@ namespace FamiStudio
 
                     int effectButtonY = 0;
 
-                    for (int i = 0; i < supportedEffects.Length; i++, effectButtonY += effectButtonSizeY)
+                    for (int i = 0; i < supportedEffects.Length; i++)
                     {
                         var effectIdx = supportedEffects[i];
+
+                        if (PlatformUtils.IsMobile && effectIdx != selectedEffectIdx)
+                            continue;
 
                         r.cc.PushTranslation(0, effectButtonY);
                         r.cc.DrawLine(0, -1, pianoSizeX, -1, ThemeResources.BlackBrush);
                         r.cc.DrawBitmapAtlas(bmpEffectAtlas, effectIdx, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyFillColor1);
                         r.cc.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeResources.FontSmallBold : ThemeResources.FontSmall, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, effectButtonSizeY);
                         r.cc.PopTransform();
+
+                        effectButtonY += effectButtonSizeY;
                     }
 
                     r.cc.PushTranslation(0, effectButtonY);
@@ -2190,7 +2250,7 @@ namespace FamiStudio
                     }
                 }
 
-                var ghostChannelMask = App != null ? App.GhostChannelMask : 0;
+                var ghostChannelMask = App != null ? App.ForceDisplayChannelMask : 0;
                 var maxEffectPosY = 0;
 
                 // Render the active channel last.
@@ -3861,7 +3921,7 @@ namespace FamiStudio
             }
         }
 
-        private bool IsSelectionValid()
+        public bool IsSelectionValid()
         {
             return selectionMin >= 0 && selectionMax >= 0;
         }
@@ -4386,12 +4446,15 @@ namespace FamiStudio
         public void ToggleEffectPannel()
         {
             if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM)
-            {
-                showEffectsPanel = !showEffectsPanel;
-                UpdateRenderCoords();
-                ClampScroll();
-                MarkDirty();
-            }
+                SetShowEffectPanel(!showEffectsPanel);
+        }
+
+        public void SetShowEffectPanel(bool expanded)
+        {
+            showEffectsPanel = expanded;
+            UpdateRenderCoords();
+            ClampScroll();
+            MarkDirty();
         }
 
         public void ToggleMaximize()
@@ -6084,10 +6147,12 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
-        public void ReplaceSelectionInstrument(Instrument instrument, Point pos)
+        public void ReplaceSelectionInstrument(Instrument instrument, Point pos, bool forceInSelection = false)
         {
             if (editMode == EditionMode.Channel && editChannel != ChannelType.Dpcm)
             {
+                Debug.Assert(!forceInSelection || IsSelectionValid());
+
                 var channel = Song.Channels[editChannel];
 
                 if (channel.SupportsInstrument(instrument))
@@ -6095,7 +6160,7 @@ namespace FamiStudio
                     GetLocationForCoord(pos.X, pos.Y, out var location, out var noteValue);
 
                     // If dragging inside the selection, replace that.
-                    if (IsSelectionValid() && IsNoteSelected(location))
+                    if (IsSelectionValid() && (IsNoteSelected(location) || forceInSelection))
                     {
                         TransformNotes(selectionMin, selectionMax, true, true, false, (note, idx) =>
                         {
@@ -6123,10 +6188,12 @@ namespace FamiStudio
             }
         }
 
-        public void ReplaceSelectionArpeggio(Arpeggio arpeggio, Point pos)
+        public void ReplaceSelectionArpeggio(Arpeggio arpeggio, Point pos, bool forceInSelection = false)
         {
             if (editMode == EditionMode.Channel)
             {
+                Debug.Assert(!forceInSelection || IsSelectionValid());
+
                 var channel = Song.Channels[editChannel];
 
                 if (channel.SupportsArpeggios)
@@ -6134,7 +6201,7 @@ namespace FamiStudio
                     GetLocationForCoord(pos.X, pos.Y, out var location, out var noteValue);
 
                     // If dragging inside the selection, replace that.
-                    if (IsSelectionValid() && IsNoteSelected(location))
+                    if (IsSelectionValid() && (IsNoteSelected(location) || forceInSelection))
                     {
                         TransformNotes(selectionMin, selectionMax, true, true, false, (note, idx) =>
                         {

@@ -41,7 +41,7 @@ namespace FamiStudio
         private LogProgressDialog progressLogDialog;
 
         private int selectedChannelIndex;
-        private int ghostChannelMask = 0;
+        private int forceDisplayChannelMask = 0;
         private int lastMidiNote = -1;
         private int tutorialCounter = 3;
         private int baseRecordingOctave = 3;
@@ -81,18 +81,23 @@ namespace FamiStudio
         public bool  IsSuspended => suspended;
         public bool  FollowModeEnabled { get => followMode; set => followMode = value; }
         public bool  SequencerHasSelection => Sequencer.GetPatternTimeSelectionRange(out _, out _);
+        public bool  PianoRollHasSelection => PianoRoll.IsSelectionValid();
         public int   BaseRecordingOctave => baseRecordingOctave;
         public bool  MobilePianoVisible { get => mainForm.MobilePianoVisible; set => mainForm.MobilePianoVisible = value; }
         public int   CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int   ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : -1; set => songPlayer.ChannelMask = value; }
         public int   PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { if (!IsPlaying) songPlayer.PlayRate = value; } }
         public float AverageTickRate => averageTickRateMs;
+        public int   EditEnvelopeType { get => PianoRoll.EditEnvelopeType; }
 
-        public bool SnapEnabled    { get => PianoRoll.SnapEnabled;    set => PianoRoll.SnapEnabled    = value; }
-        public int  SnapResolution { get => PianoRoll.SnapResolution; set => PianoRoll.SnapResolution = value; }
+        public bool SnapEnabled         { get => PianoRoll.SnapEnabled;         set => PianoRoll.SnapEnabled         = value; }
+        public int  SnapResolution      { get => PianoRoll.SnapResolution;      set => PianoRoll.SnapResolution      = value; }
+        public int  SelectedEffect      { get => PianoRoll.SelectedEffect;      set => PianoRoll.SelectedEffect      = value; }
+        public bool EffectPanelExpanded { get => PianoRoll.EffectPanelExpanded; set => PianoRoll.EffectPanelExpanded = value; }
 
         public UndoRedoManager UndoRedoManager => undoRedoManager; 
         public DPCMSample      DraggedSample   => ProjectExplorer.DraggedSample;
+        public DPCMSample      EditSample      => PianoRoll.EditSample;
         public Project         Project         => project;
         public Channel         SelectedChannel => song.Channels[SelectedChannelIndex];
         public Toolbar         ToolBar         => mainForm.ToolBar;
@@ -103,6 +108,15 @@ namespace FamiStudio
         public MobilePiano     MobilePiano     => mainForm.MobilePiano;
         public RenderControl   ActiveControl   => mainForm.ActiveControl;
         public FamiStudioForm  MainForm        => mainForm;
+
+        public bool IsSequencerActive          => ActiveControl == Sequencer;
+        public bool IsPianoRollActive          => ActiveControl == PianoRoll;
+        public bool IsProjectExplorerActive    => ActiveControl == ProjectExplorer;
+        public bool IsEditingChannel           => PianoRoll.IsEditingChannel;
+        public bool IsEditingInstrument        => PianoRoll.IsEditingInstrument;
+        public bool IsEditingArpeggio          => PianoRoll.IsEditingArpeggio;
+        public bool IsEditingDPCMSample        => PianoRoll.IsEditingDPCMSample;
+        public bool IsEditingDPCMSampleMapping => PianoRoll.IsEditingDPCMSampleMapping;
 
         private string WipProject  => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.fms");
         private string WipSettings => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "WIP.ini");
@@ -163,7 +177,6 @@ namespace FamiStudio
             PianoRoll.DPCMSampleUnmapped += PianoRoll_DPCMSampleMapped;
             PianoRoll.MaximizedChanged   += PianoRoll_MaximizedChanged;
 
-            ProjectExplorer.InstrumentEdited         += ProjectExplorer_InstrumentEdited;
             ProjectExplorer.InstrumentColorChanged   += ProjectExplorer_InstrumentColorChanged;
             ProjectExplorer.InstrumentReplaced       += ProjectExplorer_InstrumentReplaced;
             ProjectExplorer.InstrumentDeleted        += ProjectExplorer_InstrumentDeleted;
@@ -231,8 +244,23 @@ namespace FamiStudio
             get { return selectedInstrument; }
             set
             {
-                selectedInstrument = value;
-                MarkEverythingDirty();
+                if (value != selectedInstrument)
+                {
+                    selectedInstrument = value;
+
+                    if (PlatformUtils.IsMobile && PianoRoll.IsEditingInstrument)
+                    {
+                        var envType = PianoRoll.EditEnvelopeType;
+
+                        // If new instrument doesnt have this envelope, fallback to volume which is common to all.
+                        if (!selectedInstrument.IsEnvelopeActive(envType))
+                            envType = EnvelopeType.Volume;
+
+                        PianoRoll.StartEditInstrument(selectedInstrument, envType);
+                    }
+
+                    MarkEverythingDirty();
+                }
             }
         }
 
@@ -241,9 +269,34 @@ namespace FamiStudio
             get { return selectedArpeggio; }
             set
             {
-                selectedArpeggio = value;
-                MarkEverythingDirty();
+                if (value != selectedArpeggio)
+                {
+                    selectedArpeggio = value;
+                    if (PlatformUtils.IsMobile && PianoRoll.IsEditingArpeggio)
+                        PianoRoll.StartEditArpeggio(selectedArpeggio);
+                    MarkEverythingDirty();
+                }
             }
+        }
+
+        public void StartEditInstrument(Instrument instrument, int envelope)
+        {
+            if (instrument == null)
+            {
+                PianoRoll.StartEditDPCMMapping();
+            }
+            else
+            {
+                PianoRoll.StartEditInstrument(instrument, envelope);
+            }
+
+            if (PlatformUtils.IsMobile && ActiveControl != PianoRoll)
+                SetActiveControl(PianoRoll);
+        }
+
+        public void StartEditChannel(int channelIdx, int patternIdx = 0)
+        {
+            PianoRoll.StartEditChannel(channelIdx, patternIdx);
         }
 
         public bool IsChannelActive(int idx)
@@ -277,15 +330,30 @@ namespace FamiStudio
             return songPlayer != null && songPlayer.ChannelMask == (1 << idx);
         }
 
-        public void ToggleChannelGhostNotes(int idx)
+        public bool IsChannelForceDisplay(int idx)
         {
-            GhostChannelMask ^= (1 << idx);
+            return (forceDisplayChannelMask & (1 << idx)) != 0;
+        }
+
+        public void ToggleChannelForceDisplay(int idx)
+        {
+            ForceDisplayChannelMask ^= (1 << idx);
         }
 
         public void SetActiveControl(RenderControl ctrl)
         {
             Debug.Assert(ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer);
             mainForm.SetActiveControl(ctrl);
+        }
+
+        public void ReplacePianoRollSelectionInstrument(Instrument inst)
+        {
+            PianoRoll.ReplaceSelectionInstrument(inst, Point.Empty, true);
+        }
+
+        public void ReplacePianoRollSelectionArpeggio(Arpeggio arp)
+        {
+            PianoRoll.ReplaceSelectionArpeggio(arp, Point.Empty, true);
         }
 
         private void ProjectExplorer_InstrumentsHovered(bool showExpansions)
@@ -1616,7 +1684,7 @@ namespace FamiStudio
             if (!recordingMode && e.KeyCode >= Keys.F1 && e.KeyCode <= Keys.F12)
             {
                 if (ctrl)
-                    GhostChannelMask ^= (1 << (e.KeyCode - Keys.F1));
+                    ForceDisplayChannelMask ^= (1 << (e.KeyCode - Keys.F1));
                 else
                     SelectedChannelIndex = (e.KeyCode - Keys.F1);
                 Sequencer.MarkDirty();
@@ -1867,12 +1935,12 @@ namespace FamiStudio
             }
         }
 
-        public int GhostChannelMask
+        public int ForceDisplayChannelMask
         {
-            get { return ghostChannelMask; }
+            get { return forceDisplayChannelMask; }
             set
             {
-                ghostChannelMask = value;
+                forceDisplayChannelMask = value;
                 Sequencer.MarkDirty();
                 PianoRoll.MarkDirty();
             }
@@ -2070,18 +2138,6 @@ namespace FamiStudio
             ProjectExplorer.MarkDirty();
         }
 
-        private void ProjectExplorer_InstrumentEdited(Instrument instrument, int envelope)
-        {
-            if (instrument == null)
-            {
-                PianoRoll.StartEditDPCMMapping();
-            }
-            else
-            {
-                PianoRoll.StartEditEnveloppe(instrument, envelope);
-            }
-        }
-
         private void ProjectExplorer_ArpeggioEdited(Arpeggio arpeggio)
         {
             PianoRoll.StartEditArpeggio(arpeggio);
@@ -2140,7 +2196,7 @@ namespace FamiStudio
             buffer.Serialize(ref selectedChannelIndex);
             buffer.Serialize(ref selectedInstrument);
             buffer.Serialize(ref selectedArpeggio);
-            buffer.Serialize(ref ghostChannelMask);
+            buffer.Serialize(ref forceDisplayChannelMask);
             buffer.Serialize(ref song);
             buffer.Serialize(ref currentFrame);
 

@@ -503,7 +503,7 @@ namespace FamiStudio
             // Ghost note icons
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
-                cc.DrawBitmapAtlas(bmpAtlasMisc, (int)MiscImageIndices.ForceDisplay, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.GhostChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, bitmapScale, Theme.LightGreyFillColor1);
+                cc.DrawBitmapAtlas(bmpAtlasMisc, (int)MiscImageIndices.ForceDisplay, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.ForceDisplayChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, bitmapScale, Theme.LightGreyFillColor1);
             }
 
             cc.PopTransform();
@@ -581,11 +581,7 @@ namespace FamiStudio
                 ch.DrawText(text, ThemeResources.FontMedium, 0, barTextPosY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center | RenderTextFlags.Clip, sx);
 
                 if (i == Song.LoopPoint)
-                {
-                    var bmpSize = bmpAtlasMisc.GetElementSize((int)MiscImageIndices.LoopPoint);
-                    ch.FillRectangle(headerIconPosX, headerIconPosY, headerIconPosX + bmpSize.Width * bitmapScale, headerIconPosY + bmpSize.Height * bitmapScale, ThemeResources.DarkGreyLineBrush2);
                     ch.DrawBitmapAtlas(bmpAtlasMisc, (int)MiscImageIndices.LoopPoint, headerIconPosX, headerIconPosY, 1.0f, bitmapScale, Theme.LightGreyFillColor1);
-                }
 
                 ch.PopTransform();
             }
@@ -1072,7 +1068,7 @@ namespace FamiStudio
                 }
                 else if (ghostIcon >= 0)
                 {
-                    App.ToggleChannelGhostNotes(ghostIcon);
+                    App.ToggleChannelForceDisplay(ghostIcon);
                     return true;
                 }
             }
@@ -1356,7 +1352,7 @@ namespace FamiStudio
                 {
                     new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(channelIdx); }),
                     new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(channelIdx); }),
-                    new ContextMenuOption("MenuForceDisplay", "Force Display Channel", () => { App.ToggleChannelGhostNotes(channelIdx); })
+                    new ContextMenuOption("MenuForceDisplay", "Force Display Channel", () => { App.ToggleChannelForceDisplay(channelIdx); })
                 });
 
                 return true;

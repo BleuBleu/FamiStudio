@@ -6,18 +6,13 @@ Big tasks left:
 - Finish all controls
 
 Quick access:
-- Replace "tool" by something else useful (effect?)
-- Advanced stuff like longpress, etc.
-- Disable buttons when they dont make sense (snapping in sequencer, etc.)
+/ Longpress
+- Flexible buttons
+	x Play
+	- DPCM effect
+	- Envelope (when editing instrument)
+- Make sure changing instument/arp while editing changes.
 - BUG : Changing instrument doesn't always change (S5B)
-- Will need to be more flexible :
-	- PR/Channel (Channel/Instrument/Arpeggio/Snap/Effect)
-	- PR/Envelope (Channel/Instrument/Envelope) 
-	- PR/Arpeggio (Channel/Instrument)
-	- PR/DPCM (Play source/Play processed)
-	- PR/DPCMMapping (Nothing?)
-	- Seq (Channel/Instrument/Arpeggio)
-	- Project explorer (Channel/Instrument/Arpeggio)
 
 Project explorer:
 - Env replace? Instrument replace? Song reorder?
@@ -46,18 +41,22 @@ x Support 3 scalings (Will not affect toolbars)?
 	- 6x (with 3x font) (Default for >= 1080p, or xxhdpi)
 	- 8x (with 4x font) (Default for >= 1440p, or xxxhdpi)
 
+Testing:
+- Test copy/paste/cut/delete in all cases (need to be able to delete samples too)
+
 Polish (if time):
 - Margins for auto-scroll
 - Hide more stuff in the settings
+- Some dialogs look bad (special paste, cleanup, etc.)
 - Tutorial (post-beta?)
 - Color piano keys based on DPCM samples assigned.
+- BUG : When playing an instrument that has arp envelope + arpeggio (in instrument editor), seek bar goes beyond the end point. (We override the arp envelope...)
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
 
 3.2.0
 =====
-- Convert more icons to white + remove last border (release + loop point.)
 - Copy instrument.
 - Change insturment dialog for a combo
 
@@ -84,10 +83,12 @@ Testing
 - Occasional crash when opening hopes and dreams on Android. 
 - Test light/dark modes.
 - Linux seem to support 150% scaling as well, make sure the fonts are there.
+- From Perkka "when you try to quit no using cmd+q or the red close button in the corner of the windows you get a question if you want to save first so all fine and dandy, but if you rightclick on the application icon in the dock and chose quit you'll never get that question, it'll just quit and stuff will be lost"
 
 Packaging:
 ==========
 - Make download list vertical on website.
+- Recompile everything (ROM, NSF, etc). Make sure it says 3.2.0.
 
 Features missing from the Mobile version
 ========================================

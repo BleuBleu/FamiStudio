@@ -40,10 +40,13 @@ namespace FamiStudio
             public int IconY;
             public int TextX;
             public int TextY;
+            public bool Visible = true;
             public bool IsNavButton = false;
             public Color Color;
             public RenderInfoDelegate GetRenderInfo;
             public EmptyDelegate Click;
+            public EmptyDelegate LongPress;
+            public ListItemClickDelegate ListItemLongPress;
             public ListItemClickDelegate ListItemClick;
         }
 
@@ -52,10 +55,15 @@ namespace FamiStudio
             public Rectangle Rect;
             public int IconX;
             public int IconY;
+            public int ExtraIconX;
+            public int ExtraIconY;
             public int TextX;
             public int TextY;
             public Color Color;
             public int ImageIndex;
+            public int ExtraImageIndex = -1;
+            public Func<ListItem, float> GetImageOpacity;
+            public Func<ListItem, float> GetExtraImageOpacity;
             public string Text;
             public object Data;
         }
@@ -73,9 +81,12 @@ namespace FamiStudio
             Project,
             Channel,
             Instrument,
+            Envelope,
             Arpeggio,
             Snap,
             Effect,
+            DPCMEffect,
+            DPCMPlay,
             Count
         }
 
@@ -84,47 +95,67 @@ namespace FamiStudio
             Sequencer,
             PianoRoll,
             ProjectExplorer,
-            MobileSnapOn,
-            MobileSnapOff,
-            MobileChannelDPCM,
-            MobileChannelFM,
-            MobileChannelNoise,
-            MobileChannelSaw,
-            MobileChannelSquare,
-            MobileChannelTriangle,
-            MobileChannelWaveTable,
-            MobileInstrument,
-            MobileInstrumentFds,
-            MobileInstrumentNamco,
-            MobileInstrumentSunsoft,
-            MobileInstrumentVRC6,
-            MobileInstrumentVRC7,
-            MobileEffectVolume,
-            MobileEffectVibrato,
-            MobileEffectPitch,
-            MobileEffectSpeed,
-            MobileEffectMod,
-            MobileEffectDutyCycle,
-            MobileEffectNoteDelay,
-            MobileEffectCutDelay,
-            MobileEffectNone,
-            MobileArpeggio,
+            SnapOn,
+            SnapOff,
+            ChannelDPCM,
+            ChannelFM,
+            ChannelNoise,
+            ChannelSaw,
+            ChannelSquare,
+            ChannelTriangle,
+            ChannelWaveTable,
+            Instrument,
+            InstrumentFds,
+            InstrumentNamco,
+            InstrumentSunsoft,
+            InstrumentVRC6,
+            InstrumentVRC7,
+            EnvelopeVolume,
+            EnvelopeArpeggio,
+            EnvelopePitch,
+            EnvelopeDuty,
+            EnvelopeFdsWave,
+            EnvelopeMod,
+            EnvelopeN163Wave,
+            EffectVolume,
+            EffectVibrato,
+            EffectPitch,
+            EffectSpeed,
+            EffectMod,
+            EffectDutyCycle,
+            EffectNoteDelay,
+            EffectCutDelay,
+            EffectNone,
+            Arpeggio,
+            GhostSmall,
+            Play,
             Count,
         };
 
         readonly ButtonImageIndices[] EffectImageIndices = new ButtonImageIndices[]
         {
-            ButtonImageIndices.MobileEffectVolume,    // Volume
-            ButtonImageIndices.MobileEffectVibrato,   // Vib Speed
-            ButtonImageIndices.MobileEffectVibrato,   // Vib Depth
-            ButtonImageIndices.MobileEffectPitch,     // Pitch
-            ButtonImageIndices.MobileEffectSpeed,     // Speed
-            ButtonImageIndices.MobileEffectMod,       // FDS Depth
-            ButtonImageIndices.MobileEffectMod,       // FDS Speed
-            ButtonImageIndices.MobileEffectDutyCycle, // Duty Cycle
-            ButtonImageIndices.MobileEffectNoteDelay, // Note Delay
-            ButtonImageIndices.MobileEffectCutDelay,  // Cut Delay
-            ButtonImageIndices.MobileEffectVolume     // Volume Slide
+            ButtonImageIndices.EffectVolume,    // Volume
+            ButtonImageIndices.EffectVibrato,   // Vib Speed
+            ButtonImageIndices.EffectVibrato,   // Vib Depth
+            ButtonImageIndices.EffectPitch,     // Pitch
+            ButtonImageIndices.EffectSpeed,     // Speed
+            ButtonImageIndices.EffectMod,       // FDS Depth
+            ButtonImageIndices.EffectMod,       // FDS Speed
+            ButtonImageIndices.EffectDutyCycle, // Duty Cycle
+            ButtonImageIndices.EffectNoteDelay, // Note Delay
+            ButtonImageIndices.EffectCutDelay,  // Cut Delay
+            ButtonImageIndices.EffectVolume     // Volume Slide
+        };
+
+        readonly ButtonImageIndices[] EnvelopeImageIndices = new ButtonImageIndices[]
+        {
+            ButtonImageIndices.EnvelopeVolume,   // Volume
+            ButtonImageIndices.EnvelopeArpeggio, // Arpeggio
+            ButtonImageIndices.EnvelopePitch,    // Pitch
+            ButtonImageIndices.EnvelopeDuty,     // DutyCycle
+            ButtonImageIndices.EnvelopeFdsWave,  // FdsWaveform
+            ButtonImageIndices.EnvelopeMod,      // FdsModulation
+            ButtonImageIndices.EnvelopeN163Wave, // N163Waveform
         };
 
         private readonly string[] ButtonImageNames = new string[]
@@ -147,6 +178,13 @@ namespace FamiStudio
             "InstrumentSunsoft",
             "InstrumentVRC6",
             "InstrumentVRC7",
+            "EnvelopeVolume",
+            "EnvelopeArpeggio",
+            "EnvelopePitch",
+            "EnvelopeDuty",
+            "EnvelopeWave",
+            "EnvelopeMod",
+            "EnvelopeWave",
             "MobileEffectVolume",
             "MobileEffectVibrato",
             "MobileEffectPitch",
@@ -156,7 +194,9 @@ namespace FamiStudio
             "MobileEffectNoteDelay",
             "MobileEffectCutDelay",
             "MobileEffectNone",
-            "MobileArpeggio"
+            "MobileArpeggio",
+            "GhostSmall",
+            "Play"
         };
 
         RenderFont buttonFont;
@@ -209,6 +249,7 @@ namespace FamiStudio
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
             Debug.Assert(Note.EffectCount == EffectImageIndices.Length);
+            Debug.Assert(EnvelopeType.Count == EnvelopeImageIndices.Length);
 
             bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
             scrollBarBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
@@ -216,11 +257,14 @@ namespace FamiStudio
             buttons[(int)ButtonType.Sequencer]  = new Button { GetRenderInfo = GetSequencerRenderInfo, Click = OnSequencer, IsNavButton = true };
             buttons[(int)ButtonType.PianoRoll]  = new Button { GetRenderInfo = GetPianoRollRenderInfo, Click = OnPianoRoll, IsNavButton = true };
             buttons[(int)ButtonType.Project]    = new Button { GetRenderInfo = GetProjectExplorerInfo, Click = OnProjectExplorer, IsNavButton = true };
-            buttons[(int)ButtonType.Channel]    = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel, ListItemClick = OnChannelChange };
-            buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, ListItemClick = OnInstrumentChange };
-            buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, ListItemClick = OnArpeggioChange };
-            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapChange };
-            buttons[(int)ButtonType.Effect]     = new Button { GetRenderInfo = GetEffectRenderInfo, Click = OnEffect, ListItemClick = OnEffectChange };
+            buttons[(int)ButtonType.Channel]    = new Button { GetRenderInfo = GetChannelRenderInfo, Click = OnChannel, ListItemClick = OnChannelItemClick, ListItemLongPress = OnChannelItemLongPress };
+            buttons[(int)ButtonType.Instrument] = new Button { GetRenderInfo = GetInstrumentRenderingInfo, Click = OnInstrument, LongPress = OnInstrumentLongPress, ListItemClick = OnInstrumentItemClick, ListItemLongPress = OnInstrumentItemLongPress };
+            buttons[(int)ButtonType.Envelope]   = new Button { GetRenderInfo = GetEnvelopeRenderingInfo, Click = OnEnvelope, ListItemClick = OnEnvelopeItemClick };
+            buttons[(int)ButtonType.Arpeggio]   = new Button { GetRenderInfo = GetArpeggioRenderInfo, Click = OnArpeggio, LongPress = OnArpeggioLongPress, ListItemClick = OnArpeggioItemClick, ListItemLongPress = OnArpeggioItemLongPress };
+            buttons[(int)ButtonType.Snap]       = new Button { GetRenderInfo = GetSnapRenderInfo, Click = OnSnap, ListItemClick = OnSnapItemClick };
+            buttons[(int)ButtonType.Effect]     = new Button { GetRenderInfo = GetEffectRenderInfo, Click = OnEffect, ListItemClick = OnEffectItemClick };
+            buttons[(int)ButtonType.DPCMEffect] = new Button { GetRenderInfo = GetDPCMEffectRenderInfo, Click = OnDPCMEffect, ListItemClick = OnDPCMEffectItemClick };
+            buttons[(int)ButtonType.DPCMPlay]   = new Button { GetRenderInfo = GetDPCMPlayRenderInfo, Click = OnDPCMPlay, LongPress = OnDPCMPlayLongPress };
 
             var screenSize = PlatformUtils.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
@@ -265,6 +309,42 @@ namespace FamiStudio
             }
         }
 
+        private bool SetButtonVisible(ButtonType type, bool vis)
+        {
+            var btn = buttons[(int)type];
+
+            if (btn.Visible != vis)
+            {
+                btn.Visible = vis;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void UpdateVisibleButtons()
+        {
+            if (!IsRenderInitialized)
+                return;
+
+            var needsLayout = false;
+
+            needsLayout |= SetButtonVisible(ButtonType.Sequencer,  true);
+            needsLayout |= SetButtonVisible(ButtonType.PianoRoll,  true);
+            needsLayout |= SetButtonVisible(ButtonType.Project,    true);
+            needsLayout |= SetButtonVisible(ButtonType.Channel,    true);
+            needsLayout |= SetButtonVisible(ButtonType.Instrument, true);
+            needsLayout |= SetButtonVisible(ButtonType.Arpeggio,   true);
+            needsLayout |= SetButtonVisible(ButtonType.Snap,       App.IsPianoRollActive && App.IsEditingChannel);
+            needsLayout |= SetButtonVisible(ButtonType.Effect,     App.IsPianoRollActive && App.IsEditingChannel);
+            needsLayout |= SetButtonVisible(ButtonType.DPCMPlay,   App.IsPianoRollActive && App.IsEditingDPCMSample);
+            needsLayout |= SetButtonVisible(ButtonType.DPCMEffect, App.IsPianoRollActive && App.IsEditingDPCMSample);
+            needsLayout |= SetButtonVisible(ButtonType.Envelope,   App.IsPianoRollActive && App.IsEditingInstrument);
+
+            if (needsLayout)
+                UpdateButtonLayout();
+        }
+
         public void Tick(float delta)
         {
             TickFling(delta);
@@ -301,6 +381,10 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
+            else
+            {
+                UpdateVisibleButtons();
+            }
         }
 
         private Rectangle GetExpandedListRect()
@@ -327,6 +411,9 @@ namespace FamiStudio
             {
                 var btn = buttons[i];
                 var size = btn.IsNavButton ? buttonSizeNav : buttonSize;
+
+                if (!btn.Visible)
+                    continue;
 
                 if (landscape)
                 {
@@ -365,6 +452,9 @@ namespace FamiStudio
             {
                 var item = items[i];
                 var size = textPosTop + ThemeResources.FontMediumBold.MeasureString(item.Text) * 5 / 4;
+
+                if (item.ExtraImageIndex >= 0)
+                    size += ScaleCustom(bmpButtonAtlas.GetElementSize(item.ExtraImageIndex).Width, iconScaleFloat);
 
                 popupRect.Width = Math.Max(popupRect.Width, size);
             }
@@ -408,6 +498,13 @@ namespace FamiStudio
                 item.IconY = y + listIconPos;
                 item.TextX = textPosTop;
                 item.TextY = y;
+
+                if (item.ExtraImageIndex >= 0)
+                {
+                    var extraIconSize = ScaleCustom(bmpButtonAtlas.GetElementSize(item.ExtraImageIndex).Width, iconScaleFloat);
+                    item.ExtraIconX = popupRect.Width - listIconPos - extraIconSize;
+                    item.ExtraIconY = y + (listItemSize - extraIconSize) / 2;
+                }
 
                 y += listItemSize;
             }
@@ -457,6 +554,8 @@ namespace FamiStudio
         private void OnPianoRoll()
         {
             StartClosingList();
+            if (!App.IsEditingChannel)
+                App.StartEditChannel(App.SelectedChannelIndex);
             App.SetActiveControl(App.PianoRoll);
         }
 
@@ -493,14 +592,14 @@ namespace FamiStudio
             {
                 var item = new ListItem();
                 item.Color = Theme.LightGreyFillColor1;
-                item.ImageIndex = (int)ButtonImageIndices.MobileSnapOn;
+                item.ImageIndex = (int)ButtonImageIndices.SnapOn;
                 item.Text = $"Snap to {SnapResolutionType.Names[i]} Beat{(SnapResolutionType.Factors[i] > 1.0 ? "s" : "")}";
                 items[i] = item;
             }
 
             var turnOffItem = new ListItem();
             turnOffItem.Color = Theme.LightGreyFillColor1;
-            turnOffItem.ImageIndex = (int)ButtonImageIndices.MobileSnapOff;
+            turnOffItem.ImageIndex = (int)ButtonImageIndices.SnapOff;
             turnOffItem.Text = $"Snap Off";
             items[items.Length - 1] = turnOffItem;
 
@@ -514,10 +613,14 @@ namespace FamiStudio
             if (CheckNeedsClosing((int)ButtonType.Effect))
                 return;
 
-            var channel = App.SelectedChannel;
-            var count = 0;
+            popupSelectedIdx = 0;
 
-            for (int i = 0, j = 0; i < Note.EffectCount; i++)
+            var channel = App.SelectedChannel;
+            var selectedEffect = App.SelectedEffect;
+            var effectPanelExpanded = App.EffectPanelExpanded;
+            var count = 1;
+
+            for (int i = 0;  i < Note.EffectCount; i++)
             {
                 if (channel.ShouldDisplayEffect(i))
                     count++;
@@ -525,21 +628,46 @@ namespace FamiStudio
 
             var items = new ListItem[count];
 
-            for (int i = 0, j = 0; i < Note.EffectCount; i++)
+            var item = new ListItem();
+            item.Color = Theme.LightGreyFillColor1;
+            item.ImageIndex = (int)ButtonImageIndices.EffectNone;
+            item.Text = "None";
+            item.Data = -1;
+            items[0] = item;
+
+            for (int i = 0, j = 1; i < Note.EffectCount; i++)
             {
                 if (channel.ShouldDisplayEffect(i))
                 {
-                    var item = new ListItem();
+                    item = new ListItem();
                     item.Color = Theme.LightGreyFillColor1;
                     item.ImageIndex = (int)EffectImageIndices[i];
                     item.Text = Note.EffectNames[i];
-                    items[j++] = item;
+                    item.Data = i;
+                    items[j] = item;
+
+                    if (effectPanelExpanded && i == selectedEffect)
+                        popupSelectedIdx = j;
+
+                    j++;
                 }
             }
 
-            popupSelectedIdx = 0; // DROIDTODO : Get effect from piano roll.
-
             StartExpandingList((int)ButtonType.Effect, items);
+        }
+
+        private void OnDPCMEffect()
+        {
+        }
+
+        private void OnDPCMPlay()
+        {
+            App.PreviewDPCMSample(App.EditSample, false);
+        }
+
+        private void OnDPCMPlayLongPress()
+        {
+            App.PreviewDPCMSample(App.EditSample, true);
         }
 
         private void OnChannel()
@@ -555,7 +683,11 @@ namespace FamiStudio
                 var item = new ListItem();
                 item.Color = Theme.LightGreyFillColor1;
                 item.ImageIndex = Array.IndexOf(ButtonImageNames, ChannelType.Icons[channelTypes[i]]);
+                item.GetImageOpacity = (l) => { return App.IsChannelActive((int)l.Data) ? 1.0f : 0.2f; };
+                item.ExtraImageIndex = (int)ButtonImageIndices.GhostSmall;
+                item.GetExtraImageOpacity = (l) => { return App.IsChannelForceDisplay((int)l.Data) ? 1.0f : 0.2f; };
                 item.Text = ChannelType.GetNameWithExpansion(channelTypes[i]);
+                item.Data = i;
                 items[i] = item;
             }
 
@@ -569,15 +701,16 @@ namespace FamiStudio
             if (CheckNeedsClosing((int)ButtonType.Instrument))
                 return;
 
+            var editingChannel = App.IsEditingChannel;
             var project = App.Project;
             var channel = App.SelectedChannel;
             var items = new List<ListItem>();
 
-            if (channel.SupportsInstrument(null))
+            if (editingChannel && channel.SupportsInstrument(null))
             {
                 var dpcmItem = new ListItem();
                 dpcmItem.Color = Theme.LightGreyFillColor1;
-                dpcmItem.ImageIndex = (int)ButtonImageIndices.MobileInstrument;
+                dpcmItem.ImageIndex = (int)ButtonImageIndices.Instrument;
                 dpcmItem.Text = "DPCM";
                 items.Add(dpcmItem);
             }
@@ -586,7 +719,7 @@ namespace FamiStudio
             {
                 var inst = project.Instruments[i];
 
-                if (channel.SupportsInstrument(inst))
+                if (!editingChannel || channel.SupportsInstrument(inst))
                 {
                     var item = new ListItem();
                     item.Color = inst.Color;
@@ -602,6 +735,55 @@ namespace FamiStudio
             StartExpandingList((int)ButtonType.Instrument, items.ToArray());
         }
 
+        public void OnInstrumentLongPress()
+        {
+            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsInstrument(App.SelectedInstrument))
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Instrument", () => { App.ReplacePianoRollSelectionInstrument(App.SelectedInstrument); MarkDirty(); })
+                });
+            }
+        }
+
+        private void OnEnvelope()
+        {
+            if (CheckNeedsClosing((int)ButtonType.Envelope))
+                return;
+
+            var inst = App.SelectedInstrument;
+
+            if (inst == null)
+                return;
+
+            popupSelectedIdx = -1;
+
+            var items = new ListItem[inst.NumActiveEnvelopes];
+
+            for (int i = 0, j = 0; i < EnvelopeType.Count; i++)
+            {
+                var env = inst.Envelopes[i];
+                
+                if (env != null)
+                {
+                    var item = new ListItem();
+                    item.Color = Theme.LightGreyFillColor1;
+                    item.ImageIndex = (int)EnvelopeImageIndices[i];
+                    item.GetImageOpacity = (l) => { return env.IsEmpty(i) ? 0.2f : 1.0f; };
+                    item.Text = EnvelopeType.Names[i];
+                    item.Data = i;
+                    items[j] = item;
+
+                    if (i == App.EditEnvelopeType)
+                        popupSelectedIdx = j;
+
+                    j++;
+                }
+            }
+
+            StartExpandingList((int)ButtonType.Envelope, items);
+        }
+
         private void OnArpeggio()
         {
             if (CheckNeedsClosing((int)ButtonType.Arpeggio))
@@ -612,7 +794,7 @@ namespace FamiStudio
 
             var arpNoneItem = new ListItem();
             arpNoneItem.Color = Theme.LightGreyFillColor1;
-            arpNoneItem.ImageIndex = (int)ButtonImageIndices.MobileArpeggio;
+            arpNoneItem.ImageIndex = (int)ButtonImageIndices.Arpeggio;
             arpNoneItem.Text = "None";
             items[0] = arpNoneItem;
 
@@ -621,7 +803,7 @@ namespace FamiStudio
                 var arp = project.Arpeggios[i];
                 var item = new ListItem();
                 item.Color = arp.Color;
-                item.ImageIndex = (int)ButtonImageIndices.MobileArpeggio;
+                item.ImageIndex = (int)ButtonImageIndices.Arpeggio;
                 item.Text = arp.Name;
                 item.Data = arp;
                 items[i + 1] = item;
@@ -630,6 +812,17 @@ namespace FamiStudio
             popupSelectedIdx = Array.FindIndex(items, i => i.Data == App.SelectedArpeggio);
 
             StartExpandingList((int)ButtonType.Arpeggio, items);
+        }
+
+        private void OnArpeggioLongPress()
+        {
+            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsArpeggios)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Arpeggio", () => { App.ReplacePianoRollSelectionArpeggio(App.SelectedArpeggio); MarkDirty(); }) 
+                });
+            }
         }
 
         private ButtonImageIndices GetSequencerRenderInfo(out string text, out Color tint)
@@ -642,14 +835,14 @@ namespace FamiStudio
         private ButtonImageIndices GetPianoRollRenderInfo(out string text, out Color tint)
         {
             text = null;
-            tint = App.ActiveControl == App.PianoRoll ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
+            tint = App.ActiveControl == App.PianoRoll && App.IsEditingChannel ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
             return ButtonImageIndices.PianoRoll;
         }
 
         private ButtonImageIndices GetProjectExplorerInfo(out string text, out Color tint)
         {
             text = null;
-            tint = App.ActiveControl == App.ProjectExplorer ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
+            tint = App.ActiveControl == App.ProjectExplorer || App.ActiveControl == App.PianoRoll && !App.IsEditingChannel ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
             return ButtonImageIndices.ProjectExplorer;
         }
 
@@ -657,16 +850,33 @@ namespace FamiStudio
         {
             text = App.SnapEnabled ? SnapResolutionType.Names[App.SnapResolution] : "Off";
             tint = Theme.LightGreyFillColor1;
-            return ButtonImageIndices.MobileSnapOn;
+            return ButtonImageIndices.SnapOn;
         }
 
         private ButtonImageIndices GetEffectRenderInfo(out string text, out Color tint)
         {
-            text = "None";
+            var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
+
+            text = validEffect ? Note.EffectNames[App.SelectedEffect] : "None";
             tint = Theme.LightGreyFillColor1;
-            return ButtonImageIndices.MobileEffectNone;
+            return validEffect ? EffectImageIndices[App.SelectedEffect] : ButtonImageIndices.EffectNone;
         }
-        
+
+        private ButtonImageIndices GetDPCMEffectRenderInfo(out string text, out Color tint)
+        {
+            // DROIDTODO!
+            text = ""; // validEffect ? Note.EffectNames[App.SelectedEffect] : "None";
+            tint = Theme.LightGreyFillColor1;
+            return ButtonImageIndices.EffectNone;
+        }
+
+        private ButtonImageIndices GetDPCMPlayRenderInfo(out string text, out Color tint)
+        {
+            text = "Play";
+            tint = App.EditSample.Color;
+            return ButtonImageIndices.Play;
+        }
+
         private ButtonImageIndices GetChannelRenderInfo(out string text, out Color tint)
         {
             text = App.SelectedChannel.NameWithExpansion;
@@ -683,15 +893,24 @@ namespace FamiStudio
             return (ButtonImageIndices)Array.IndexOf(ButtonImageNames, ExpansionType.Icons[exp]);
         }
 
+        private ButtonImageIndices GetEnvelopeRenderingInfo(out string text, out Color tint)
+        {
+            var envType = App.EditEnvelopeType;
+            var inst = App.SelectedInstrument;
+            text = EnvelopeType.ShortNames[envType];
+            tint = inst != null ? inst.Color : Theme.LightGreyFillColor1;
+            return EnvelopeImageIndices[envType];
+        }
+
         private ButtonImageIndices GetArpeggioRenderInfo(out string text, out Color tint)
         {
             var arp = App.SelectedArpeggio;
             text = arp != null ? arp.Name  : "None";
             tint = arp != null ? arp.Color : Theme.LightGreyFillColor1;
-            return ButtonImageIndices.MobileArpeggio;
+            return ButtonImageIndices.Arpeggio;
         }
 
-        private void OnSnapChange(int idx)
+        private void OnSnapItemClick(int idx)
         {
             if (idx <= SnapResolutionType.Max)
             {
@@ -704,25 +923,80 @@ namespace FamiStudio
             }
         }
 
-        private void OnEffectChange(int idx)
+        private void OnEffectItemClick(int idx)
+        {
+            var effect = (int)listItems[idx].Data;
+            if (effect >= 0)
+            {
+                App.SelectedEffect = effect;
+                App.EffectPanelExpanded = true;
+            }
+            else
+            {
+                App.EffectPanelExpanded = false;
+            }
+        }
+
+        private void OnDPCMEffectItemClick(int idx)
         {
         }
 
-        private void OnChannelChange(int idx)
+        private void OnChannelItemClick(int idx)
         {
             App.SelectedChannelIndex = idx;
         }
 
-        private void OnInstrumentChange(int idx)
+        private void OnInstrumentItemClick(int idx)
         {
             var instrument = listItems[idx].Data as Instrument;
             App.SelectedInstrument = instrument;
         }
 
-        private void OnArpeggioChange(int idx)
+        private void OnEnvelopeItemClick(int idx)
+        {
+            App.StartEditInstrument(App.SelectedInstrument, (int)listItems[idx].Data);
+        }
+
+        private void OnArpeggioItemClick(int idx)
         {
             var arpeggio = listItems[idx].Data as Arpeggio;
             App.SelectedArpeggio = arpeggio;
+        }
+
+        private void OnChannelItemLongPress(int idx)
+        {
+            App.ShowContextMenu(new[]
+            {
+                new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(idx); MarkDirty(); }),
+                new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
+                new ContextMenuOption("MenuForceDisplay", "Force Display Channel", () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
+            });
+        }
+
+        private void OnInstrumentItemLongPress(int idx)
+        {
+            var inst = listItems[idx].Data as Instrument;
+
+            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsInstrument(inst))
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Instrument", () => { App.ReplacePianoRollSelectionInstrument(inst); MarkDirty(); })
+                });
+            }
+        }
+
+        private void OnArpeggioItemLongPress(int idx)
+        {
+            var arp = listItems[idx].Data as Arpeggio;
+
+            if (App.IsEditingChannel && App.PianoRollHasSelection && App.SelectedChannel.SupportsArpeggios)
+            {
+                App.ShowContextMenu(new[]
+                {
+                    new ContextMenuOption("MenuReplaceSelection", "Replace Selection Arpeggio", () => { App.ReplacePianoRollSelectionArpeggio(arp); MarkDirty(); })
+                });
+            }
         }
 
         private Rectangle GetScrollBarRect()
@@ -759,17 +1033,15 @@ namespace FamiStudio
 
             // Clear BG.
             var navBgRect = Rectangle.Empty;
-            var bgRect = Rectangle.Empty;
             
             for (int i = 0; i < (int)ButtonType.Count; i++)
             {
                 var btn = buttons[i];
-
-                if (btn.IsNavButton)
+                if (btn.Visible && btn.IsNavButton)
                     navBgRect = navBgRect.IsEmpty ? btn.Rect : Rectangle.Union(navBgRect, btn.Rect);
-                else
-                    bgRect = bgRect.IsEmpty ? btn.Rect : Rectangle.Union(bgRect, btn.Rect);
             }
+
+            var bgRect = new Rectangle(0, 0, Width, Height);
 
             var navBgBrush = IsLandscape ?
                 g.GetHorizontalGradientBrush(Theme.DarkGreyLineColor1, buttonSize, 0.8f) :
@@ -778,19 +1050,22 @@ namespace FamiStudio
                 g.GetHorizontalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f) :
                 g.GetVerticalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f);
 
-            c.FillRectangle(navBgRect, navBgBrush);
             c.FillRectangle(bgRect, bgBrush);
+            c.FillRectangle(navBgRect, navBgBrush);
 
             // Buttons
             for (int i = 0; i < (int)ButtonType.Count; i++)
             {
                 var btn = buttons[i];
-                var image = btn.GetRenderInfo(out var text, out var tint);
 
-                c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
+                if (btn.Visible)
+                {
+                    var image = btn.GetRenderInfo(out var text, out var tint);
+                    c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
 
-                if (!string.IsNullOrEmpty(text))
-                    c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);
+                    if (!string.IsNullOrEmpty(text))
+                        c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);
+                }
             }
 
             // Dividing line.
@@ -813,9 +1088,17 @@ namespace FamiStudio
                 {
                     var item = listItems[i];
                     var brush = g.GetVerticalGradientBrush(item.Color, listItemSize, 0.8f);
+                    var opacity = item.GetImageOpacity != null ? item.GetImageOpacity(item) : 1.0f;
 
                     c.FillAndDrawRectangle(item.Rect, brush, ThemeResources.BlackBrush);
-                    c.DrawBitmapAtlas(bmpButtonAtlas, item.ImageIndex, item.IconX, item.IconY, 1.0f, iconScaleFloat, Color.Black);
+                    c.DrawBitmapAtlas(bmpButtonAtlas, item.ImageIndex, item.IconX, item.IconY, opacity, iconScaleFloat, Color.Black);
+
+                    if (item.ExtraImageIndex >= 0)
+                    {
+                        var extraOpacity = item.GetExtraImageOpacity != null ? item.GetExtraImageOpacity(item) : 1.0f;
+                        c.DrawBitmapAtlas(bmpButtonAtlas, item.ExtraImageIndex, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
+                    }
+
                     c.DrawText(item.Text, i == popupSelectedIdx ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
                 }
 
@@ -882,7 +1165,7 @@ namespace FamiStudio
         {
             foreach (var btn in buttons)
             {
-                if (btn.Rect.Contains(x, y))
+                if (btn.Visible && btn.Rect.Contains(x, y))
                 {
                     PlatformUtils.VibrateTick();
                     btn.Click();
@@ -936,6 +1219,35 @@ namespace FamiStudio
         protected override void OnTouchMove(int x, int y)
         {
             UpdateCaptureOperation(x, y);
+            lastX = x;
+            lastY = y;
+        }
+
+        protected override void OnTouchLongPress(int x, int y)
+        {
+            foreach (var btn in buttons)
+            {
+                if (btn.Visible && btn.Rect.Contains(x, y))
+                {
+                    if (btn.LongPress != null)
+                        btn.LongPress();
+                    return;
+                }
+            }
+
+            if (popupRatio > 0.5f)
+            {
+                var rect = GetExpandedListRect();
+
+                if (rect.Contains(x, y))
+                {
+                    var idx = (y - rect.Top + scrollY) / listItemSize;
+
+                    if (idx >= 0 && idx < listItems.Length && buttons[popupButtonIdx].ListItemLongPress != null)
+                        buttons[popupButtonIdx].ListItemLongPress?.Invoke(idx);
+                }
+            }
+
             lastX = x;
             lastY = y;
         }

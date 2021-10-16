@@ -468,6 +468,7 @@
     <EmbeddedResource Include="Resources\MenuMute.png" />
     <EmbeddedResource Include="Resources\MenuPiano.png" />
     <EmbeddedResource Include="Resources\MenuProperties.png" />
+    <EmbeddedResource Include="Resources\MenuReplaceSelection.png" />
     <EmbeddedResource Include="Resources\MenuReset.png" />
     <EmbeddedResource Include="Resources\MenuSolo.png" />
     <EmbeddedResource Include="Resources\MenuStopNote.png" />

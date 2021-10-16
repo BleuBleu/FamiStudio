@@ -11,7 +11,6 @@ namespace FamiStudio
     public class AndroidAudioStream : IDisposable
     {
         public bool IsStarted => playingTask != null;
-        public int  ImmediatePlayPosition => 0;
 
         public delegate short[] GetBufferDataCallback();
 
@@ -97,7 +96,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
+        public void PlayImmediate(short[] data, int sampleRate, float volume)
         {
             StopImmediate();
 
@@ -116,6 +115,14 @@ namespace FamiStudio
 
             audioTrackImmediate.Write(immediateStreamData, 0, immediateStreamData.Length);
             audioTrackImmediate.Play();
+        }
+
+        public int ImmediatePlayPosition
+        {
+            get
+            {
+                return audioTrackImmediate != null && audioTrackImmediate.PlayState == PlayState.Playing && audioTrackImmediate.PlaybackHeadPosition < audioTrackImmediate.BufferSizeInFrames ? audioTrackImmediate.PlaybackHeadPosition : 0;
+            }
         }
     }
 }
