@@ -1343,7 +1343,7 @@ namespace FamiStudio
                     var snapResRect = GetSnapResolutionRect();
 
                     r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Snap, snapBtnRect.X, snapBtnRect.Y, SnapEnabled || App.IsRecording ? 1.0f : 0.3f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1);
-                    r.cc.DrawText(SnapResolutionType.Names[snapResolution], ThemeResources.FontSmall, snapResRect.X, snapResRect.Y, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Right | RenderTextFlags.Middle, snapResRect.Width, snapResRect.Height);
+                    r.cc.DrawText(SnapResolutionType.Names[snapResolution], ThemeResources.FontSmall, snapResRect.X, snapResRect.Y, App.IsRecording ? ThemeResources.DarkRedFillBrush : ThemeResources.LightGreyFillBrush2, RenderTextFlags.Right | RenderTextFlags.Middle, snapResRect.Width, snapResRect.Height);
                 }
 
                 if (showEffectsPanel)
@@ -1395,6 +1395,21 @@ namespace FamiStudio
             r.cc.DrawLine(0, headerAndEffectSizeY - 1, pianoSizeX, headerAndEffectSizeY - 1, ThemeResources.BlackBrush);
         }
 
+        private bool GetDPCMKeyColor(int note, ref Color color)
+        {
+            if (App.SelectedChannel.Type == ChannelType.Dpcm)
+            {
+                var mapping = Song.Project.GetDPCMMapping(note);
+                if (mapping != null)
+                {
+                    color = mapping.Sample.Color;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void RenderPiano(RenderInfo r)
         {
             if (!pianoVisible)
@@ -1423,19 +1438,38 @@ namespace FamiStudio
                 r.cp.FillRectangle(GetKeyRectangle(dragOctave, dragNote), whiteKeyPressedBrush);
             }
 
+            var color = Color.Empty;
+
+            // Early pass for DPCM white keys.
+            if ((editMode == EditionMode.Channel && Song.Channels[editChannel].Type == ChannelType.Dpcm) || editMode == EditionMode.DPCMMapping)
+            {
+                for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
+                {
+                    for (int j = 0; j < 12; j++)
+                    {
+                        if (!IsBlackKey(j) && GetDPCMKeyColor(i * 12 + j + 1, ref color))
+                            r.cp.FillRectangle(GetKeyRectangle(i, j), r.g.GetHorizontalGradientBrush(Theme.Darken(color, 20), color, pianoSizeX));
+                    }
+                }
+            }
+
             // Draw the piano
             for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
             {
-                int octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
+                var octaveBaseY = (virtualSizeY - octaveSizeY * i) - scrollY;
 
                 for (int j = 0; j < 12; j++)
                 {
-                    if (i * 12 + j >= NumNotes)
+                    var noteIdx = i * 12 + j;
+                    if (noteIdx >= NumNotes)
                         break;
 
                     if (IsBlackKey(j))
                     {
-                        r.cp.FillRectangle(GetKeyRectangle(i, j), blackKeyBrush);
+                        if (GetDPCMKeyColor(noteIdx + 1, ref color))
+                            r.cp.FillAndDrawRectangle(GetKeyRectangle(i, j), r.g.GetHorizontalGradientBrush(Theme.Darken(color, 40), Theme.Darken(color, 20), blackKeySizeX), ThemeResources.BlackBrush);
+                        else
+                            r.cp.FillRectangle(GetKeyRectangle(i, j), blackKeyBrush);
 
                         if ((i == playOctave && j == playNote) || (draggingNote && (i == dragOctave && j == dragNote)))
                             r.cp.FillRectangle(GetKeyRectangle(i, j), blackKeyPressedBrush);
@@ -2636,6 +2670,9 @@ namespace FamiStudio
                     envelopeString = (editInstrument.Envelopes[editEnvelope].Relative ? "Relative " : "Absolute ") + envelopeString;
 
                 r.cf.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
+
+                if (editEnvelope == EnvelopeType.Arpeggio && App.SelectedArpeggio != null)
+                    r.cf.DrawText($"Warning : Arpeggio envelope currently overridden by selected arpeggio '{App.SelectedArpeggio.Name}'", ThemeResources.FontMedium, bigTextPosX, bigTextPosY + ThemeResources.FontVeryLarge.LineHeight, ThemeResources.LightRedFillBrush);
             }
             else
             {

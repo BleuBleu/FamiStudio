@@ -52,7 +52,7 @@ namespace FamiStudio
         public static int GetOutputAudioSampleSampleRate()
         {
             // In order to get the LowLatency flag accepted on android, the app audio output
-            // needs to match the device output sample rate.
+            // needs to match the device output sample rate.    
             AudioManager am = (AudioManager)Application.Context.GetSystemService(Context.AudioService);
             return int.Parse(am.GetProperty(AudioManager.PropertyOutputSampleRate), CultureInfo.InvariantCulture);
         }

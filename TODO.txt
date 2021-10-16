@@ -1,4 +1,4 @@
-Android
+LH778 Android
 =======
 
 Big tasks left:
@@ -10,7 +10,7 @@ Quick access:
 - Flexible buttons
 	x Play
 	- DPCM effect
-	- Envelope (when editing instrument)
+	x Envelope (when editing instrument)
 - Make sure changing instument/arp while editing changes.
 - BUG : Changing instrument doesn't always change (S5B)
 
@@ -49,8 +49,7 @@ Polish (if time):
 - Hide more stuff in the settings
 - Some dialogs look bad (special paste, cleanup, etc.)
 - Tutorial (post-beta?)
-- Color piano keys based on DPCM samples assigned.
-- BUG : When playing an instrument that has arp envelope + arpeggio (in instrument editor), seek bar goes beyond the end point. (We override the arp envelope...)
+- BUG : When moving mouse out of project explorer towards piano roll, the sequencer icon dont change back.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
@@ -88,6 +87,7 @@ Testing
 Packaging:
 ==========
 - Make download list vertical on website.
+- Update DLLs to VS 2019 + Package redist.
 - Recompile everything (ROM, NSF, etc). Make sure it says 3.2.0.
 
 Features missing from the Mobile version

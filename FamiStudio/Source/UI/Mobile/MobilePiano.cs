@@ -170,6 +170,21 @@ namespace FamiStudio
             return new Rectangle(r0.Right, 0, r1.Left - r0.Right, Height / 2);
         }
 
+        private bool GetDPCMKeyColor(int note, ref Color color)
+        {
+            if (App.SelectedChannel.Type == ChannelType.Dpcm)
+            {
+                var mapping = App.Project.GetDPCMMapping(note);
+                if (mapping != null)
+                {
+                    color = mapping.Sample.Color;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         protected void RenderDebug(RenderGraphics g)
         {
 #if DEBUG
@@ -199,6 +214,18 @@ namespace FamiStudio
             if (playNote >= 0 && !IsBlackKey(playNote))
                 cp.FillRectangle(GetKeyRectangle(playOctave, playNote), whiteKeyPressedBrush);
 
+            var color = Color.Empty;
+
+            // Early pass for DPCM white keys
+            for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
+            {
+                for (int j = 0; j < 12; j++)
+                {
+                    if (!IsBlackKey(j) && GetDPCMKeyColor(i * 12 + j + 1, ref color))
+                        cp.FillRectangle(GetKeyRectangle(i, j), g.GetVerticalGradientBrush(Theme.Darken(color, 20), color, Height));
+                }
+            }
+
             // Black keys
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
             {
@@ -207,6 +234,8 @@ namespace FamiStudio
                     if (IsBlackKey(j))
                     {
                         var brush = playOctave == i && playNote == j ? blackKeyPressedBrush : blackKeyBrush;
+                        if (GetDPCMKeyColor(i * 12 + j + 1, ref color))
+                            brush = g.GetVerticalGradientBrush(Theme.Darken(color, 40), Theme.Darken(color, 20), Height / 2);
                         cp.FillRectangle(GetKeyRectangle(i, j), brush);
                     }
                 }
