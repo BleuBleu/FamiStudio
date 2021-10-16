@@ -3,7 +3,7 @@ Android
 
 Big tasks left:
 - Quick access stuff (are the buttons changing?)
-- Finish all controls
+- Finish all controls (PR Effect + Seq + DPCM)
 
 Quick access:
 / Longpress
