@@ -23,7 +23,6 @@ Piano roll:
 
 Sequencer:
 - Paste should happen at cursor, not selection? Must be consistent with PR.
-- Duplicate icons alignment.
 
 Scaling issue:
 x Support 3 scalings (Will not affect toolbars)? 
