@@ -62,6 +62,12 @@ namespace FamiStudio
             return new int[] { };
         }
 
+        private static float RoundScaling(float value)
+        {
+            // Round to 1/2 (so only 100%, 150% and 200%) are supported.
+            return Math.Min(2.0f, (int)(value * 2.0f) / 2.0f);
+        }
+
         public static void Initialize()
         {
             if (PlatformUtils.IsMobile)
@@ -92,12 +98,10 @@ namespace FamiStudio
                 dialogScaling = PlatformUtils.GetDesktopScaling();
 
                 if (Settings.DpiScaling != 0)
-                    mainWindowScaling = Settings.DpiScaling / 100.0f;
+                    mainWindowScaling = RoundScaling(Settings.DpiScaling / 100.0f);
                 else
-                    mainWindowScaling = dialogScaling;
+                    mainWindowScaling = RoundScaling(dialogScaling);
 
-                // Round to 1/2 (so only 100%, 150% and 200%) are supported.
-                mainWindowScaling = Math.Min(2.0f, (int)(dialogScaling * 2.0f) / 2.0f); 
                 fontScaling = mainWindowScaling;
             }
 
