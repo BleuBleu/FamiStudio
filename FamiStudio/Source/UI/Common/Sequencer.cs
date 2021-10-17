@@ -2397,7 +2397,7 @@ namespace FamiStudio
 
         private void EditPatternCustomSettings(Point pt, int patternIdx)
         {
-            var dlg = new PropertyDialog("Pattern Custom Settings", PointToScreen(pt), 240);
+            var dlg = new PropertyDialog("Pattern Custom Settings", PointToScreen(pt), 300);
             var song = Song;
             var enabled = song.PatternHasCustomSettings(patternIdx);
 
