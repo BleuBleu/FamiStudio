@@ -520,7 +520,8 @@ namespace FamiStudio
             if (PlatformUtils.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Enveloppe))
             {
                 Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
-                envelopeValueSizeY = (Height - headerAndEffectSizeY) / Math.Min(64, max - min + 1);
+                var maxValuesInScreen = editEnvelope == EnvelopeType.FdsWaveform || editEnvelope == EnvelopeType.FdsModulation ? 64 : 16;
+                envelopeValueSizeY = (Height - headerAndEffectSizeY) / Math.Min(maxValuesInScreen, max - min + 1);
                 virtualSizeY = (int)((max - min + 1) * envelopeValueSizeY);
             }
 
