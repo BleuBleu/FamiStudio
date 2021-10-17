@@ -29,6 +29,7 @@ namespace FamiStudio
             public WarningImage warningIcon;
             public ColumnDesc[] columns;
             public string multilineLabelText; // HACK for multiline labels.
+            public bool visible = true;
         };
 
         private System.Drawing.Color color;
@@ -384,8 +385,16 @@ namespace FamiStudio
 
         private CheckBoxList CreateCheckedListBox(string[] values, bool[] selected, int height)
         {
-            return new CheckBoxList(values, selected, height);
+            var checkBoxList = new CheckBoxList(values, selected, height);
+            checkBoxList.CheckChangedEvent += CheckBoxList_CheckChangedEvent;
+            return checkBoxList;
         }
+
+        void CheckBoxList_CheckChangedEvent(CheckBoxList sender, int idx, bool value)
+        {
+            var propIdx = GetPropertyIndex(sender as Widget);
+            PropertyChanged?.Invoke(this, propIdx, idx, -1, value);
+}
 
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
@@ -1090,9 +1099,7 @@ namespace FamiStudio
 
         public void SetPropertyVisible(int idx, bool visible)
         {
-            // MATTT : Fix!
-            Debug.Assert(false);
-            //properties[idx].visible = visible;
+            properties[idx].visible = visible;
         }
 
         public void SetLabelText(int idx, string text)
@@ -1235,6 +1242,9 @@ namespace FamiStudio
             for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
+
+                if (!prop.visible)
+                    continue;
 
                 if (prop.label != null)
                 {

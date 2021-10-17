@@ -127,9 +127,7 @@ namespace FamiStudio
 
         public void SetPageVisible(int idx, bool visible)
         {
-            // MATTT! Fix.
-            Debug.Assert(false);
-            //tabs[idx].visible = visible;
+            tabs[idx].button.Visible = visible;
         }
 
         public int SelectedIndex => selectedIndex;

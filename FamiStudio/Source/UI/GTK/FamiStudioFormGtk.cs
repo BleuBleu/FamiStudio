@@ -29,11 +29,13 @@ namespace FamiStudio
         public PianoRoll PianoRoll => controls.PianoRoll;
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
+        public MobilePiano MobilePiano => controls.MobilePiano;
         public GLControl ActiveControl => null;
         public static FamiStudioForm Instance => instance;
 
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => false;
+        public bool MobilePianoVisible { get => false; set => value = false; }
         public Size Size => Size.Empty;
 
         bool exposed = false;
@@ -49,6 +51,7 @@ namespace FamiStudio
         private Point lastMousePos = Point.Empty;
         private bool forceCtrlDown = false;
         private GLControl captureControl = null;
+        private GLControl hoverControl = null;
         private System.Windows.Forms.MouseButtons captureButton   = System.Windows.Forms.MouseButtons.None;
         private System.Windows.Forms.MouseButtons lastButtonPress = System.Windows.Forms.MouseButtons.None;
         private BitArray keys = new BitArray(65536);
@@ -392,16 +395,19 @@ namespace FamiStudio
             int x;
             int y;
             GLControl ctrl = null;
+            GLControl hover = null;
 
             if (captureControl != null)
             {
                 ctrl = captureControl;
                 x = scaledX - ctrl.Left;
                 y = scaledY - ctrl.Top;
+                hover = controls.GetControlAtCoord(scaledX, scaledY, out _, out _);
             }
             else
             {
                 ctrl = controls.GetControlAtCoord(scaledX, scaledY, out x, out y);
+                hover = ctrl;
             }
 
             lastMousePos.X = scaledX;
@@ -412,6 +418,24 @@ namespace FamiStudio
                 ctrl.MouseMove(GtkUtils.ToWinFormArgs(args.Event, x, y));
                 RefreshCursor(ctrl);
             }
+
+            if (hover != hoverControl)
+            {
+                if (hoverControl != null)
+                    hoverControl.MouseLeave(EventArgs.Empty);
+                hoverControl = hover;
+            }
+        }
+
+        protected override bool OnLeaveNotifyEvent(Gdk.EventCrossing evnt)
+        {
+            if (hoverControl != null)
+            {
+                hoverControl.MouseLeave(EventArgs.Empty);
+                hoverControl = null;
+            }
+
+            return base.OnLeaveNotifyEvent(evnt);
         }
 
         private void SetKeyMap(System.Windows.Forms.Keys k, bool set)

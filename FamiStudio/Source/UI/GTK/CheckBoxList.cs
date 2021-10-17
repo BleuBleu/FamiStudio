@@ -8,6 +8,9 @@ namespace FamiStudio
 {
     public class CheckBoxList : VBox
     {
+        public delegate void CheckChangedDelegate(CheckBoxList sender, int idx, bool value);
+        public event CheckChangedDelegate CheckChangedEvent;
+
         VBox vbox;
         List<CheckButton> checkButtons = new List<CheckButton>();
 
@@ -42,10 +45,18 @@ namespace FamiStudio
                 chk.Active = selected == null ? true : selected[i];
                 chk.Name = "CheckBoxList";
                 chk.CanFocus = false;
+                chk.Toggled += Chk_Toggled;
                 chk.Show();
                 vbox.PackStart(chk, false, false, 0);
                 checkButtons.Add(chk);
             }
+        }
+
+        void Chk_Toggled(object sender, EventArgs e)
+        {
+            var chk = sender as CheckButton;
+            var idx = checkButtons.IndexOf(chk);
+            CheckChangedEvent?.Invoke(this, idx, chk.Active);
         }
 
         public void Update(string[] values, bool[] selected)
