@@ -7,6 +7,7 @@ Testing:
 - Envelope selection, copy paste, etc.
 
 Polish:
+- Disable a bunch of warnings.
 - Paste should happen at cursor, not selection? Must be consistent with PR.
 - Smaller highlight for instrument
 - Margins for auto-scroll, migrate all to new function.
