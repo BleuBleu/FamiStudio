@@ -282,6 +282,8 @@
     <EmbeddedResource Include="Resources\ConfigFFmpeg.png" />
     <EmbeddedResource Include="Resources\ConfigGeneral%402x.png" />
     <EmbeddedResource Include="Resources\ConfigGeneral.png" />
+    <EmbeddedResource Include="Resources\ConfigMacOS%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMacOS.png" />
     <EmbeddedResource Include="Resources\ConfigMIDI%402x.png" />
     <EmbeddedResource Include="Resources\ConfigMIDI.png" />
     <EmbeddedResource Include="Resources\ConfigMixer%402x.png" />
