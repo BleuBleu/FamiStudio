@@ -1,31 +1,25 @@
-Android
-=======
-
-Testing:
-
+3.2.0
+=====
 
 Polish (high-priotity):
-- BUG : FDS Waveform on mobile doesnt have the right range it seems.
-- Paste should happen at cursor, not selection? Must be consistent with PR.
-- Smaller highlight for instrument
-- Margins for auto-scroll, migrate all to new function.
-- Hide more stuff in the settings
-- Some dialogs look bad (special paste, cleanup, etc.)
-- Beta testing message somewhere.
-- When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
-- Env editor : clicking again on highlight should remove it?
+- Android : BUG : FDS Waveform on mobile doesnt have the right range it seems.
+- Android : Paste should happen at cursor, not selection? Must be consistent with PR.
+- Android : Smaller highlight for instrument
+- Android : Margins for auto-scroll, migrate all to new function.
+- Android : Hide more stuff in the settings
+- Android : Some dialogs look bad (special paste, cleanup, etc.)
+- Android : Beta testing message somewhere.
+- Android : When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
+- Android : Env editor, clicking again on highlight should remove it?
 
 Polish (if time):
-- Tutorial (post-beta?)
+- Android : Tutorial (post-beta?)
+- Android : Option to hide piano in piano roll? (would need octave labels)
 - Add "gear" icon for properties?
-- Change insturment dialog for a combo
-- Option to hide piano in piano roll? (would need octave labels)
+- Change instrument dialog for a combo
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
-
-3.2.0
-=====
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.
@@ -41,15 +35,14 @@ Testing
 - Android : Test copy/paste/cut/delete in all cases (need to be able to delete samples too)
 - Android : Test all scalings. 
 - Android : Envelope selection, copy paste, etc.
+- Android : Test light/dark modes.
+- Android : Occasional crash when opening hopes and dreams.
 - Add multi-exp unit test.
 - Test project/instrument merge (with expansions).
-- Retest with various scaling (lots of cahnges to everything, zooming, etc.)
+- Re-test with various scaling (lots of cahnges to everything, zooming, etc.)
 - Test without snapping, i tested snapping a lot, but not witout.
 - Compare instrument colors (seq/piano roll) for all platforms
 - Re-test last open file.
-- Occasional crash when opening hopes and dreams on Android. 
-- Test light/dark modes.
-- Linux seem to support 150% scaling as well, make sure the fonts are there.
 - From Perkka "when you try to quit no using cmd+q or the red close button in the corner of the windows you get a question if you want to save first so all fine and dandy, but if you rightclick on the application icon in the dock and chose quit you'll never get that question, it'll just quit and stuff will be lost"
 
 Packaging:
