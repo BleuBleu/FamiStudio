@@ -3485,14 +3485,37 @@ namespace FamiStudio
             pattern.InvalidateCumulativeCache();
         }
 
+        void StartDragVolumeSlideMobile(int x, int y, NoteLocation location)
+        {
+            var channel = Song.Channels[editChannel];
+            var pattern = channel.PatternInstances[location.PatternIndex];
+
+            StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTarget, false, location.ToAbsoluteNoteIndex(Song));
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+        }
+
         void UpdateDragVolumeSlide(int x, int y, bool final)
         {
+            if (PlatformUtils.IsMobile)
+                App.UndoRedoManager.RestoreTransaction(false);
+
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
             var note    = pattern.Notes[captureNoteLocation.NoteIndex];
 
-            var ratio = Utils.Clamp(1.0f - (y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
-            note.VolumeSlideTarget = (byte)Math.Round(ratio * Note.VolumeMax);
+            if (PlatformUtils.IsDesktop)
+            {
+                var ratio = Utils.Clamp(1.0f - (y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
+                note.VolumeSlideTarget = (byte)Math.Round(ratio * Note.VolumeMax);
+            }
+            else // On mobile we drag using gizmos, so apply a delta.
+            {
+                var origValue = (int)Math.Round(Utils.Lerp(Note.VolumeMax, 0, (captureMouseY - headerSizeY) / (float)effectPanelSizeY));
+                var newValue  = (int)Math.Round(Utils.Lerp(Note.VolumeMax, 0, (y - headerSizeY) / (float)effectPanelSizeY));
+
+                var delta = newValue - origValue;
+                note.VolumeSlideTarget = (byte)Utils.Clamp(note.VolumeSlideTarget + delta, 0, Note.VolumeMax);
+            }
 
             if (final)
             {
@@ -3506,6 +3529,8 @@ namespace FamiStudio
             {
                 pattern.InvalidateCumulativeCache();
             }
+
+            MarkDirty();
         }
 
         void DrawEnvelope(int x, int y, bool first = false)
@@ -4281,11 +4306,12 @@ namespace FamiStudio
 
             var list = new List<MobileGizmo>();
 
-            var channel = Song.Channels[editChannel];
+            var channel  = Song.Channels[editChannel];
             var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
             var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
             var midValue = (minValue + maxValue) / 2;
-            var value = note.GetEffectValue(selectedEffectIdx);
+            var value    = note.GetEffectValue(selectedEffectIdx);
+            var location = NoteLocation.FromAbsoluteNoteIndex(Song, highlightNoteAbsIndex);
 
             // Effect values
             {
@@ -4304,7 +4330,17 @@ namespace FamiStudio
             // Volume slide.
             if (selectedEffectIdx == Note.EffectVolume && channel.SupportsEffect(Note.EffectVolumeSlide) && note.HasVolumeSlide)
             {
+                var duration = channel.GetVolumeSlideDuration(location);
+                var effectPosY = effectPanelSizeY - ((minValue == maxValue) ? effectPanelSizeY : (float)Math.Floor((note.VolumeSlideTarget - minValue) / (float)(maxValue - minValue) * effectPanelSizeY));
 
+                var x = GetPixelForNote(highlightNoteAbsIndex + duration) - gizmoSize * 5 / 4;
+                var y = (int)(effectPosY + (note.VolumeSlideTarget >= midValue ? gizmoSize / 4 : -gizmoSize * 5 / 4));
+
+                MobileGizmo slideGizmo = new MobileGizmo();
+                slideGizmo.ImageIndex = GizmoImageIndices.GizmoResizeUpDown;
+                slideGizmo.Action = GizmoAction.MoveVolumeSlideValue;
+                slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
+                list.Add(slideGizmo);
             }
 
             return list;
@@ -5269,6 +5305,9 @@ namespace FamiStudio
                             {
                                 case GizmoAction.ChangeEffectValue:
                                     StartChangeEffectValue(x, y, highlightLocation);
+                                    break;
+                                case GizmoAction.MoveVolumeSlideValue:
+                                    StartDragVolumeSlideMobile(x, y, highlightLocation);
                                     break;
                             }
 

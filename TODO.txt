@@ -2,10 +2,7 @@ LH778 Android
 =======
 
 Piano roll:
-- Long press:
-	- Toggle volume slide
 - TouchDown
-	/ Volume slide gizmo
 	- Crash fix arpeggio
 	- Draw rectangle when dragging envelopes
 	- Smaller highlight for instrument
@@ -31,13 +28,13 @@ Polish (if time):
 - Add "gear" icon for properties?
 - BUG : When moving mouse out of project explorer towards piano roll, the sequencer icon dont change back.
 - BUG : FDS Waveform on mobile doesnt have the right range it seems.
+- Beta testing message somewhere.
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
 
 3.2.0
 =====
-- Copy instrument.
 - Change insturment dialog for a combo
 
 DPCM/Tri volume thing (from tromino)
