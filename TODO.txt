@@ -2,24 +2,24 @@ Android
 =======
 
 Testing:
-- Test copy/paste/cut/delete in all cases (need to be able to delete samples too)
-- Test all scalings. 
-- Envelope selection, copy paste, etc.
 
-Polish:
+
+Polish (high-priotity):
+- BUG : FDS Waveform on mobile doesnt have the right range it seems.
 - Paste should happen at cursor, not selection? Must be consistent with PR.
 - Smaller highlight for instrument
 - Margins for auto-scroll, migrate all to new function.
 - Hide more stuff in the settings
 - Some dialogs look bad (special paste, cleanup, etc.)
-- Tutorial (post-beta?)
-- Option to hide piano in piano roll? (would need octave labels)
+- Beta testing message somewhere.
 - When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
 - Env editor : clicking again on highlight should remove it?
+
+Polish (if time):
+- Tutorial (post-beta?)
 - Add "gear" icon for properties?
-- BUG : FDS Waveform on mobile doesnt have the right range it seems.
-- Beta testing message somewhere.
 - Change insturment dialog for a combo
+- Option to hide piano in piano roll? (would need octave labels)
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
@@ -38,6 +38,9 @@ Misc:
 
 Testing
 =======
+- Android : Test copy/paste/cut/delete in all cases (need to be able to delete samples too)
+- Android : Test all scalings. 
+- Android : Envelope selection, copy paste, etc.
 - Add multi-exp unit test.
 - Test project/instrument merge (with expansions).
 - Retest with various scaling (lots of cahnges to everything, zooming, etc.)

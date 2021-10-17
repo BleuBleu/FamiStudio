@@ -464,10 +464,18 @@
     <EmbeddedResource Include="Resources\QuickSand12_0.png" />
     <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand15.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand15_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand15Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand15Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand16.fnt" />
     <EmbeddedResource Include="Resources\QuickSand16_0.png" />
     <EmbeddedResource Include="Resources\QuickSand16Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand16Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand18.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand18_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand18Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand18Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand20.fnt" />
     <EmbeddedResource Include="Resources\QuickSand20_0.png" />
     <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
@@ -488,6 +496,8 @@
     <EmbeddedResource Include="Resources\QuickSand40_0.png" />
     <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand40Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand42.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand42_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
