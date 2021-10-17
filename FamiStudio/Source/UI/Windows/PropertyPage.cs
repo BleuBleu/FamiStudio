@@ -123,7 +123,7 @@ namespace FamiStudio
             label.BackColor = BackColor;
             if (multiline)
                 label.MaximumSize = new Size(1000, 0);
-            toolTip.SetToolTip(label, tooltip);
+            toolTip.SetToolTip(label, SplitLongTooltip(tooltip));
 
             return label;
         }
@@ -141,7 +141,7 @@ namespace FamiStudio
             //label.AutoSize = true;
             label.ForeColor = Theme.LightGreyFillColor2;
             label.BackColor = BackColor;
-            toolTip.SetToolTip(label, tooltip);
+            toolTip.SetToolTip(label, SplitLongTooltip(tooltip));
 
             return label;
         }
@@ -172,7 +172,7 @@ namespace FamiStudio
             textBox.Font = font;
             textBox.MaxLength = maxLength;
             textBox.TextChanged += TextBox_TextChanged;
-            toolTip.SetToolTip(textBox, tooltip);
+            toolTip.SetToolTip(textBox, SplitLongTooltip(tooltip));
 
             return textBox;
         }
@@ -300,7 +300,7 @@ namespace FamiStudio
             upDown.Maximum = max;
             upDown.Text = value.ToString();
             upDown.ValueChanged += UpDown_ValueChanged;
-            toolTip.SetToolTip(upDown, tooltip);
+            toolTip.SetToolTip(upDown, SplitLongTooltip(tooltip));
 
             return upDown;
         }
@@ -345,7 +345,7 @@ namespace FamiStudio
             cb.Font = font;
             cb.ForeColor = Theme.LightGreyFillColor2;
             cb.CheckedChanged += Cb_CheckedChanged;
-            toolTip.SetToolTip(cb, tooltip);
+            toolTip.SetToolTip(cb, SplitLongTooltip(tooltip));
 
             return cb;
         }
@@ -366,7 +366,7 @@ namespace FamiStudio
             cb.Font = font;
             cb.Enabled = values.Length > 0;
             cb.SelectedIndexChanged += Cb_SelectedIndexChanged;
-            toolTip.SetToolTip(cb, tooltip);
+            toolTip.SetToolTip(cb, SplitLongTooltip(tooltip));
 
             return cb;
         }
@@ -400,7 +400,7 @@ namespace FamiStudio
             list.Height = DpiScaling.ScaleForDialog(height);
             list.HeaderStyle = ColumnHeaderStyle.None;
             list.ValueChanged += CheckedListBox_ValueChanged;
-            toolTip.SetToolTip(list, tooltip);
+            toolTip.SetToolTip(list, SplitLongTooltip(tooltip));
 
             return list;
         }
@@ -420,7 +420,7 @@ namespace FamiStudio
             button.Font = font;
             button.ForeColor = Theme.LightGreyFillColor2;
             button.Height = DpiScaling.ScaleForDialog(32);
-            toolTip.SetToolTip(button, tooltip);
+            toolTip.SetToolTip(button, SplitLongTooltip(tooltip));
             return button;
         }
 
@@ -837,6 +837,35 @@ namespace FamiStudio
             advancedPropertyStart = properties.Count;
         }
 
+        private string SplitLongTooltip(string str)
+        {
+            const int MaxCharsPerLine = 64;
+
+            if (str.Length > MaxCharsPerLine)
+            {
+                var strArray = str.ToCharArray(); 
+
+                for (var i = MaxCharsPerLine - 1; i < str.Length; )
+                {
+                    if (strArray[i] == ' ')
+                    {
+                        strArray[i] = '\n';
+                        i += MaxCharsPerLine;
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+
+                return new string(strArray);
+            }
+            else
+            {
+                return str;
+            }
+        }
+
         public void SetPropertyWarning(int idx, CommentType type, string comment)
         {
             var prop = properties[idx];
@@ -849,7 +878,7 @@ namespace FamiStudio
             prop.warningIcon.Width   = DpiScaling.ScaleForDialog(16);
             prop.warningIcon.Height  = DpiScaling.ScaleForDialog(16);
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
-            toolTip.SetToolTip(prop.warningIcon, comment);
+            toolTip.SetToolTip(prop.warningIcon, SplitLongTooltip(comment));
         }
 
         public object GetPropertyValue(int idx)

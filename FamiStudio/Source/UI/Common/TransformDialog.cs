@@ -23,6 +23,18 @@ namespace FamiStudio
             "Project Cleanup",
             ""
         };
+        
+        private readonly string MergePatternsTooltip              = "Patterns that are exactly identical and on the same channel will be merged and replaced by instanced on a single pattern.";
+        private readonly string DeleteEmptyPatternsTooltip        = "Patterns with no musical notes or effects will be deleted.";
+        private readonly string AdjustMaximumNoteLengthsTooltip   = "Notes that are long, but interrupted by another note on the same channel will have their durations adjusted to match the visual duration.";
+        private readonly string SongsTooltips                     = "Select the songs to cleanup.";
+                                                                  
+        private readonly string DeleteUnusedInstrumentsTooltip    = "Delete any instrument that is not used throughout the entire project.";
+        private readonly string MergeIdenticalInstrumentsTooltip  = "If two or more instruments are exactly identical, the redundant ones will be deleted and replaced by a single one.";
+        private readonly string UnassignUnusedSamplesTooltip      = "Remove any samples from the 'DPCM Instrument' that are not used in any song. Does not deleted the actual samples from the project.";
+        private readonly string DeleteUnassignedSamplesTooltip    = "Delete any DPCM samples that is not assigned to any keys of the 'DPCM Instrument'.";
+        private readonly string PermanentlyApplyProcessingTooltip = "For any DPCM sample that use processing (volume adjustment, etc.), will permanently apply those to the DMC data and makes this the source data. Only do this when you are completely done adjusting. For samples using WAV files as source data, this can make your project file much smaller.";
+        private readonly string DeleteUnusedArpeggiosTooltip      = "Delete any arpeggio that is not used throughout the entire project.";
 
         public delegate void EmptyDelegate();
         public event EmptyDelegate CleaningUp;
@@ -57,18 +69,18 @@ namespace FamiStudio
             switch (section)
             {
                 case TransformOperation.SongCleanup:
-                    page.AddCheckBox("Merge identical patterns:", true);                       // 0
-                    page.AddCheckBox("Delete empty patterns:", true);                          // 1
-                    page.AddCheckBox("Adjust maximum note lengths:", true);                    // 2
-                    page.AddCheckBoxList(null, GetSongNames(), null);                          // 3
+                    page.AddCheckBox("Merge identical patterns:", true, MergePatternsTooltip);                                        // 0
+                    page.AddCheckBox("Delete empty patterns:", true, DeleteEmptyPatternsTooltip);                                     // 1
+                    page.AddCheckBox("Adjust maximum note lengths:", true, AdjustMaximumNoteLengthsTooltip);                          // 2
+                    page.AddCheckBoxList(PlatformUtils.IsMobile ? "Songs to process:" : null , GetSongNames(), null, SongsTooltips) ; // 3
                     break;
                 case TransformOperation.ProjectCleanup:
-                    page.AddCheckBox("Delete unused instruments:", true);                      // 0
-                    page.AddCheckBox("Merge identical instruments:", true);                    // 1
-                    page.AddCheckBox("Unassign unused DPCM instrument keys:", true);           // 2
-                    page.AddCheckBox("Delete unassigned samples:", true);                      // 3
-                    page.AddCheckBox("Permanently apply all DPCM samples processing:", false); // 4
-                    page.AddCheckBox("Delete unused arpeggios:", true);                        // 5
+                    page.AddCheckBox("Delete unused instruments:", true, DeleteUnusedInstrumentsTooltip);                             // 0
+                    page.AddCheckBox("Merge identical instruments:", true, MergeIdenticalInstrumentsTooltip);                         // 1
+                    page.AddCheckBox("Unassign unused DPCM instrument keys:", true, UnassignUnusedSamplesTooltip);                    // 2
+                    page.AddCheckBox("Delete unassigned samples:", true, DeleteUnassignedSamplesTooltip);                             // 3
+                    page.AddCheckBox("Permanently apply all DPCM samples processing:", false, PermanentlyApplyProcessingTooltip);     // 4
+                    page.AddCheckBox("Delete unused arpeggios:", true, DeleteUnusedArpeggiosTooltip);                                 // 5
                     page.PropertyChanged += ProjectCleanup_PropertyChanged;
                     break;
             }

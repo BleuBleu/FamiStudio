@@ -5,7 +5,6 @@ Polish (high-priotity):
 - Android : Hide more stuff in the settings
 - Android : Some dialogs look bad:
 	- Delete/paste special
-	- Cleanup
 	- Add tooltips to settings.
 - Android : Paste should happen at cursor, not selection? Must be consistent with PR.
 - Android : Smaller highlight for instrument

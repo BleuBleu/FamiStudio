@@ -218,11 +218,11 @@ namespace FamiStudio
 
             if (patternIdx >= 0 && numFramesPerPattern > song.PatternLength)
             {
-                props.SetPropertyWarning(notesPerPatternPropIdx, CommentType.Warning, $"Pattern is longer than the song pattern length and FamiTracker does not support this.\nIgnore this if you are not planning to export to FamiTracker.");
+                props.SetPropertyWarning(notesPerPatternPropIdx, CommentType.Warning, $"Pattern is longer than the song pattern length and FamiTracker does not support this. Ignore this if you are not planning to export to FamiTracker.");
             }
             else if (numFramesPerPattern >= 256)
             {
-                props.SetPropertyWarning(notesPerPatternPropIdx, CommentType.Warning, $"Pattern is longer than what FamiTracker supports.\nIgnore this if you are not planning to export to FamiTracker.");
+                props.SetPropertyWarning(notesPerPatternPropIdx, CommentType.Warning, $"Pattern is longer than what FamiTracker supports. Ignore this if you are not planning to export to FamiTracker.");
             }
             else
             {

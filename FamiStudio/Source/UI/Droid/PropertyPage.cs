@@ -108,11 +108,8 @@ namespace FamiStudio
 
         private SwitchCompat CreateSwitch(bool value)
         {
-            var layout = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
-            layout.Gravity = GravityFlags.Right | GravityFlags.CenterVertical;
-
             var toggle = new SwitchCompat(context);
-            toggle.LayoutParameters = layout;
+            toggle.LayoutParameters = CreateLinearLayoutParams(DroidUtils.DpToPixels(64), ViewGroup.LayoutParams.WrapContent, GravityFlags.Right | GravityFlags.CenterVertical);
             toggle.Checked = value;
             toggle.CheckedChange += Toggle_CheckedChange;
 
@@ -202,11 +199,11 @@ namespace FamiStudio
             return AddTextBox("Color", value);
         }
 
-        private LinearLayout CreateLinearLayout(bool vertical, bool matchParentWidth, bool matchParentHeight, int margin, bool radioGroup = false)
+        private LinearLayout CreateLinearLayout(bool vertical, bool matchParentWidth, bool matchParentHeight, int margin, bool radioGroup = false, float weight = 0.0f)
         {
             var layout = new LinearLayout.LayoutParams(
                     matchParentWidth  ? ViewGroup.LayoutParams.MatchParent : ViewGroup.LayoutParams.WrapContent,
-                    matchParentHeight ? ViewGroup.LayoutParams.MatchParent : ViewGroup.LayoutParams.WrapContent);
+                    matchParentHeight ? ViewGroup.LayoutParams.MatchParent : ViewGroup.LayoutParams.WrapContent, weight);
             margin = DroidUtils.DpToPixels(margin);
             layout.SetMargins(margin, margin, margin, margin);
 
@@ -588,12 +585,13 @@ namespace FamiStudio
             prop.layout = CreateLinearLayout(false, true, false, 10);
             properties.Add(prop);
 
-            var inner = CreateLinearLayout(true, false, false, 0);
+            var inner = CreateLinearLayout(true, false, false, 0, false, 1.0f);
 
-            prop.layout.AddView(inner);
             inner.AddView(prop.label);
             if (prop.tooltip != null)
                 inner.AddView(prop.tooltip);
+
+            prop.layout.AddView(inner);
             prop.layout.AddView(sw);
 
             return properties.Count - 1;
