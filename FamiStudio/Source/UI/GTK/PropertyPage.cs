@@ -385,8 +385,16 @@ namespace FamiStudio
 
         private CheckBoxList CreateCheckedListBox(string[] values, bool[] selected, int height)
         {
-            return new CheckBoxList(values, selected, height);
+            var checkBoxList = new CheckBoxList(values, selected, height);
+            checkBoxList.CheckChangedEvent += CheckBoxList_CheckChangedEvent;
+            return checkBoxList;
         }
+
+        void CheckBoxList_CheckChangedEvent(CheckBoxList sender, int idx, bool value)
+        {
+            var propIdx = GetPropertyIndex(sender as Widget);
+            PropertyChanged?.Invoke(this, propIdx, idx, -1, value);
+}
 
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
