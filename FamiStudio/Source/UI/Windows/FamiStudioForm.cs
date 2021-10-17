@@ -272,18 +272,16 @@ namespace FamiStudio
                 hover = ctrl;
             }
 
-            var args = new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta);
-
             if (ctrl != null)
             {
-                ctrl.MouseMove(args);
+                ctrl.MouseMove(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
                 RefreshCursor(ctrl);
             }
 
             if (hover != hoverControl)
             {
                 if (hoverControl != null)
-                    hoverControl.MouseLeave(args);
+                    hoverControl.MouseLeave(EventArgs.Empty);
                 hoverControl = hover;
             }
         }
@@ -292,7 +290,7 @@ namespace FamiStudio
         {
             if (hoverControl != null)
             {
-                hoverControl.MouseLeave(e);
+                hoverControl.MouseLeave(EventArgs.Empty);
                 hoverControl = null;
             }
 
