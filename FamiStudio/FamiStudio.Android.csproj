@@ -44,6 +44,7 @@
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <BundleAssemblies>false</BundleAssemblies>
     <Debugger>Xamarin</Debugger>
+    <NoWarn>CS0162,CS0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -58,6 +59,11 @@
     <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
     <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AotAssemblies>false</AotAssemblies>
+    <EnableLLVM>false</EnableLLVM>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <BundleAssemblies>false</BundleAssemblies>
+    <NoWarn>CS0162,CS0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -547,9 +553,9 @@
     <EmbeddedResource Include="Resources\QuickSand30Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand30Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand32.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand32_0.png" />    
+    <EmbeddedResource Include="Resources\QuickSand32_0.png" />
     <EmbeddedResource Include="Resources\QuickSand32Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand32Bold_0.png" />    
+    <EmbeddedResource Include="Resources\QuickSand32Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand36.fnt" />
     <EmbeddedResource Include="Resources\QuickSand36_0.png" />
     <EmbeddedResource Include="Resources\QuickSand36Bold.fnt" />
@@ -557,7 +563,7 @@
     <EmbeddedResource Include="Resources\QuickSand40.fnt" />
     <EmbeddedResource Include="Resources\QuickSand40_0.png" />
     <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand40Bold_0.png" />    
+    <EmbeddedResource Include="Resources\QuickSand40Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand48.fnt" />
     <EmbeddedResource Include="Resources\QuickSand48_0.png" />
     <EmbeddedResource Include="Resources\QuickSand48Bold.fnt" />
@@ -565,17 +571,17 @@
     <EmbeddedResource Include="Resources\QuickSand56.fnt" />
     <EmbeddedResource Include="Resources\QuickSand56_0.png" />
     <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />    
+    <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand60.fnt" />
     <EmbeddedResource Include="Resources\QuickSand60_0.png" />
     <EmbeddedResource Include="Resources\QuickSand60Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand60Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand64.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand64_0.png" />    
+    <EmbeddedResource Include="Resources\QuickSand64_0.png" />
     <EmbeddedResource Include="Resources\QuickSand80.fnt" />
     <EmbeddedResource Include="Resources\QuickSand80_0.png" />
     <EmbeddedResource Include="Resources\QuickSand80Bold.fnt" />
-    <EmbeddedResource Include="Resources\QuickSand80Bold_0.png" />       
+    <EmbeddedResource Include="Resources\QuickSand80Bold_0.png" />
     <EmbeddedResource Include="Resources\QuickSand84.fnt" />
     <EmbeddedResource Include="Resources\QuickSand84_0.png" />
     <EmbeddedResource Include="Resources\QuickSand112.fnt" />

@@ -10,7 +10,6 @@ using RenderBrush       = FamiStudio.GLBrush;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
 using RenderFont        = FamiStudio.GLFont;
-using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -42,7 +41,6 @@ namespace FamiStudio
             public int TextY;
             public bool Visible = true;
             public bool IsNavButton = false;
-            public Color Color;
             public RenderInfoDelegate GetRenderInfo;
             public EmptyDelegate Click;
             public EmptyDelegate LongPress;

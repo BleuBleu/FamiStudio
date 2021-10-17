@@ -519,12 +519,7 @@ namespace FamiStudio
         public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
         {
             if (fbo > 0)
-            {
                 GLES11Ext.GlBindFramebufferOES(GLES11Ext.GlFramebufferOes, fbo);
-
-                var status = GLES11Ext.GlCheckFramebufferStatusOES(GLES11Ext.GlFramebufferOes);
-                status = status;
-            }
 
             base.BeginDrawControl(unflippedControlRect, windowSizeY);
         }

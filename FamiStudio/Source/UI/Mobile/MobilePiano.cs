@@ -49,16 +49,13 @@ namespace FamiStudio
         private int whiteKeySizeX;
         private int blackKeySizeX;
         private int octaveSizeX;
-        private int iconPos;
         private int virtualSizeX;
-        private float iconScaleFloat = 1.0f;
 
         RenderBrush whiteKeyBrush;
         RenderBrush blackKeyBrush;
         RenderBrush whiteKeyPressedBrush;
         RenderBrush blackKeyPressedBrush;
         RenderBitmapAtlas bmpButtonAtlas;
-        //Button[] buttons = new Button[(int)ButtonType.Count];
 
         private int scrollX = -1;
         private int playAbsNote = -1;
@@ -327,7 +324,7 @@ namespace FamiStudio
             var maxScrollX = Math.Max(virtualSizeX - Width, 0);
 
             var scrolled = true;
-            if (scrollX < 0) { scrollX = 0; scrolled = false; }
+            if (scrollX < minScrollX) { scrollX = minScrollX; scrolled = false; }
             if (scrollX > maxScrollX) { scrollX = maxScrollX; scrolled = false; }
             return scrolled;
         }

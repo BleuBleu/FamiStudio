@@ -39,16 +39,12 @@ namespace FamiStudio
             public TextView value;
             public TextView tooltip;
             public List<View> controls = new List<View>();
-            public ImageView warning;
-            public View view;
-            public OnTouchDelegate onTouch;
             public string sliderFormat;
             public double sliderMin;
             public bool visible = true;
         };
 
         private int firstAdvancedProperty = -1;
-        private string lastLabel;
         private Context context;
         private List<Property> properties = new List<Property>();
         private LinearLayout pageLayout;

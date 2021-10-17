@@ -119,7 +119,7 @@ namespace FamiStudio
             }
         }
 
-        private async void Properties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        private void Properties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
             if (saveMode)
             {
