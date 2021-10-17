@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -111,6 +111,24 @@ namespace FamiStudio
 
             return list;
         }
+
+        private readonly string CheckUpdatesTooltip             = "";
+        private readonly string TrackpadControlsTooltip         = "";
+        private readonly string ClearUndoRedoTooltip            = "";
+        private readonly string OpenLastTooltip                 = "";
+        private readonly string AutosaveTooltip                 = "";
+        private readonly string AutosaveFolderTooltip           = "";
+
+        private readonly string ScalingTooltip                  = "";
+        private readonly string TimeFormatTooltip               = "";
+        private readonly string FollowModeTooltip               = "";
+        private readonly string FollowingViewsTooltip           = "";
+        private readonly string ScrollBarsTooltip               = "";
+        private readonly string ShowPianoRollRangeTooltip       = "";
+        private readonly string ShowNoteLabelsTooltip           = "";
+        private readonly string ShowFamitrackerStopNotesTooltip = "";
+        private readonly string ShowPatternPropertyIconsTooltip = "";
+        private readonly string CompactSequencerTooltip         = "";
 
         private PropertyPage CreatePropertyPage(PropertyPage page, ConfigSection section)
         {

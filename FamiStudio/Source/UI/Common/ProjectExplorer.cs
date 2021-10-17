@@ -2619,6 +2619,14 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        private bool HandleTouchClickProjectSettingsButton(int x, int y, SubButtonType subButtonType)
+        {
+            if (subButtonType == SubButtonType.Properties)
+                EditProjectProperties(Point.Empty);
+
+            return true;
+        }
+
         private bool HandleTouchClickSongHeaderButton(int x, int y, SubButtonType subButtonType)
         {
             if (subButtonType == SubButtonType.Add)
@@ -2639,30 +2647,46 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleTouchClickSongButton(int x, int y, Button button, int buttonIdx)
+        private bool HandleTouchClickSongButton(int x, int y, Button button, int buttonIdx, SubButtonType subButtonType)
         {
-            App.SelectedSong = button.song;
-            if (App.Project.Songs.Count > 1)
-                highlightedButtonIdx = highlightedButtonIdx == buttonIdx ? -1 : buttonIdx;
+            if (subButtonType == SubButtonType.Properties)
+            {
+                EditSongProperties(Point.Empty, button.song);
+            }
+            else
+            {
+                App.SelectedSong = button.song;
+                if (App.Project.Songs.Count > 1)
+                    highlightedButtonIdx = highlightedButtonIdx == buttonIdx ? -1 : buttonIdx;
+            }
+
             return true;
         }
 
         private bool HandleTouchClickInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            App.SelectedInstrument = button.instrument;
-            highlightedButtonIdx = highlightedButtonIdx == buttonIdx && subButtonType == SubButtonType.Max || button.instrument == null ? -1 : buttonIdx;
+            if (subButtonType == SubButtonType.Properties)
+            {
+                if (button.instrument != null)
+                    EditInstrumentProperties(Point.Empty, button.instrument);
+            }
+            else
+            {
+                App.SelectedInstrument = button.instrument;
+                highlightedButtonIdx = highlightedButtonIdx == buttonIdx && subButtonType == SubButtonType.Max || button.instrument == null ? -1 : buttonIdx;
 
-            if (subButtonType == SubButtonType.Expand)
-            {
-                ToggleExpandInstrument(button.instrument);
-            }
-            else if (subButtonType == SubButtonType.DPCM)
-            {
-                App.StartEditInstrument(button.instrument, EnvelopeType.Count);
-            }
-            else if (subButtonType < SubButtonType.EnvelopeMax)
-            {
-                App.StartEditInstrument(button.instrument, (int)subButtonType);
+                if (subButtonType == SubButtonType.Expand)
+                {
+                    ToggleExpandInstrument(button.instrument);
+                }
+                else if (subButtonType == SubButtonType.DPCM)
+                {
+                    App.StartEditInstrument(button.instrument, EnvelopeType.Count);
+                }
+                else if (subButtonType < SubButtonType.EnvelopeMax)
+                {
+                    App.StartEditInstrument(button.instrument, (int)subButtonType);
+                }
             }
 
             return true;
@@ -2677,10 +2701,16 @@ namespace FamiStudio
 
         private bool HandleTouchClickArpeggioButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            App.SelectedArpeggio = button.arpeggio;
-
-            if (subButtonType < SubButtonType.EnvelopeMax)
-                App.StartEditArpeggio(button.arpeggio);
+            if (subButtonType == SubButtonType.Properties)
+            {
+                EditArpeggioProperties(Point.Empty, button.arpeggio);
+            }
+            else
+            {
+                App.SelectedArpeggio = button.arpeggio;
+                if (subButtonType < SubButtonType.EnvelopeMax)
+                    App.StartEditArpeggio(button.arpeggio);
+            }
 
             return true;
         }
@@ -2701,6 +2731,10 @@ namespace FamiStudio
             else if (subButtonType == SubButtonType.Play)
             {
                 App.PreviewDPCMSample(button.sample, false);
+            }
+            else if (subButtonType == SubButtonType.Properties)
+            {
+                EditDPCMSampleProperties(Point.Empty, button.sample);
             }
             else if (subButtonType == SubButtonType.Expand)
             {
@@ -2732,10 +2766,12 @@ namespace FamiStudio
 
                 switch (button.type)
                 {
+                    case ButtonType.ProjectSettings:
+                        return HandleTouchClickProjectSettingsButton(x, y, subButtonType);
                     case ButtonType.SongHeader:
                         return HandleTouchClickSongHeaderButton(x, y, subButtonType);
                     case ButtonType.Song:
-                        return HandleTouchClickSongButton(x, y, button, buttonIdx);
+                        return HandleTouchClickSongButton(x, y, button, buttonIdx, subButtonType);
                     case ButtonType.InstrumentHeader:
                         return HandleTouchClickInstrumentHeaderButton(x, y, subButtonType);
                     case ButtonType.Instrument:

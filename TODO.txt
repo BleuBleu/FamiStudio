@@ -15,7 +15,7 @@ Polish (high-priotity):
 Polish (if time):
 - Android : Tutorial (post-beta?)
 - Android : Option to hide piano in piano roll? (would need octave labels)
-- Add "gear" icon for properties?
+/ Add "gear" icon for properties? Handle on mobile too.
 - Change instrument dialog for a combo
 
 Icon notes:
