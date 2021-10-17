@@ -520,7 +520,7 @@ namespace FamiStudio
             if (PlatformUtils.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Enveloppe))
             {
                 Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
-                envelopeValueSizeY = (Height - headerAndEffectSizeY) / Math.Min(16, max - min + 1);
+                envelopeValueSizeY = (Height - headerAndEffectSizeY) / Math.Min(64, max - min + 1);
                 virtualSizeY = (int)((max - min + 1) * envelopeValueSizeY);
             }
 
@@ -2566,6 +2566,10 @@ namespace FamiStudio
             var lastRectangleY     = -1.0f;
             var oddRectangle       = false;
             var maxX = GetPixelForNote(env.Length);
+
+            // HACK : Force the [-64,63] to be symmetric.
+            if (PlatformUtils.IsMobile && envTypeMaxValue == 63)
+                envTypeMaxValue++;
 
             for (int i = 0; i <= (PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue); i++)
             {

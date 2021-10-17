@@ -2,7 +2,6 @@
 =====
 
 Polish (high-priotity):
-- Android : BUG : FDS Waveform on mobile doesnt have the right range it seems.
 - Android : Paste should happen at cursor, not selection? Must be consistent with PR.
 - Android : Smaller highlight for instrument
 - Android : Margins for auto-scroll, migrate all to new function.
