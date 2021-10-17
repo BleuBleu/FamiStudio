@@ -333,6 +333,7 @@ namespace FamiStudio
             label.Wrap = true;
             radio.SizeAllocated += RadioLabel_SizeAllocated;
             radio.Active = check;
+            radio.Name = "ForceGreyFg";
 
             return radio;
         }
