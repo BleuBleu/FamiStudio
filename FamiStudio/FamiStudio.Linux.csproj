@@ -298,6 +298,8 @@
     <EmbeddedResource Include="Resources\Cut.png" />
     <EmbeddedResource Include="Resources\Dash%402x.png" />
     <EmbeddedResource Include="Resources\Dash.png" />
+    <EmbeddedResource Include="Resources\Delete%402x.png" />
+    <EmbeddedResource Include="Resources\Delete.png" />
     <EmbeddedResource Include="Resources\Drag%402x.png" />
     <EmbeddedResource Include="Resources\Drag.png" />
     <EmbeddedResource Include="Resources\Duplicate%402x.png" />
@@ -334,6 +336,8 @@
     <EmbeddedResource Include="Resources\EnvelopeVolume.png" />
     <EmbeddedResource Include="Resources\EnvelopeWave%402x.png" />
     <EmbeddedResource Include="Resources\EnvelopeWave.png" />
+    <EmbeddedResource Include="Resources\EnvResize%402x.png" />
+    <EmbeddedResource Include="Resources\EnvResize.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
     <EmbeddedResource Include="Resources\ExpandedSmall.png" />
     <EmbeddedResource Include="Resources\Export%402x.png" />
@@ -438,6 +442,8 @@
     <EmbeddedResource Include="Resources\Paste.png" />
     <EmbeddedResource Include="Resources\Pause%402x.png" />
     <EmbeddedResource Include="Resources\Pause.png" />
+    <EmbeddedResource Include="Resources\Piano.png" />
+    <EmbeddedResource Include="Resources\Piano%402x.png" />
     <EmbeddedResource Include="Resources\Play%402x.png" />
     <EmbeddedResource Include="Resources\Play.png" />
     <EmbeddedResource Include="Resources\PlayHalf%402x.png" />
@@ -494,8 +500,6 @@
     <EmbeddedResource Include="Resources\Rec.png" />
     <EmbeddedResource Include="Resources\Redo%402x.png" />
     <EmbeddedResource Include="Resources\Redo.png" />
-    <EmbeddedResource Include="Resources\ReleaseSmall%402x.png" />
-    <EmbeddedResource Include="Resources\ReleaseSmall.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\ReleaseSmallFill.png" />
     <EmbeddedResource Include="Resources\Reload%402x.png" />
