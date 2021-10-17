@@ -1,22 +1,14 @@
-LH778 Android
+Android
 =======
-
-Piano roll:
-- TouchDown
-	- Crash fix arpeggio
-	- Draw rectangle when dragging envelopes
-	- Smaller highlight for instrument
-
-Sequencer:
-- Paste should happen at cursor, not selection? Must be consistent with PR.
 
 Testing:
 - Test copy/paste/cut/delete in all cases (need to be able to delete samples too)
 - Test all scalings. 
 - Envelope selection, copy paste, etc.
 
-Polish (if time):
-- Fix effect icon scale in PR.
+Polish:
+- Paste should happen at cursor, not selection? Must be consistent with PR.
+- Smaller highlight for instrument
 - Margins for auto-scroll, migrate all to new function.
 - Hide more stuff in the settings
 - Some dialogs look bad (special paste, cleanup, etc.)

@@ -49,7 +49,6 @@ namespace FamiStudio
         const int DefaultEffectIconPosX            = 2;
         const int DefaultEffectIconPosY            = 2;
         const int DefaultEffectNamePosX            = 17;
-        const int DefaultEffectIconSizeX           = 12;
         const int DefaultEffectValuePosTextOffsetY = 13;
         const int DefaultEffectValueNegTextOffsetY = 2;
         const int DefaultBigTextPosX               = 10;
@@ -85,7 +84,6 @@ namespace FamiStudio
         int headerIconsPosX;
         int headerIconsPosY;
         int effectNamePosX;
-        int effectIconSizeX;
         int effectValuePosTextOffsetY;
         int effectValueNegTextOffsetY;
         int bigTextPosX;
@@ -488,7 +486,6 @@ namespace FamiStudio
             headerIconsPosY           = ScaleForMainWindow(DefaultSnapIconPosY);
             effectNamePosX            = ScaleForMainWindow(DefaultEffectNamePosX * effectIconsScale);
             beatTextPosX              = ScaleForMainWindow(DefaultBeatTextPosX);
-            effectIconSizeX           = ScaleForMainWindow(DefaultEffectIconSizeX);
             effectValuePosTextOffsetY = ScaleForFont(DefaultEffectValuePosTextOffsetY);
             effectValueNegTextOffsetY = ScaleForFont(DefaultEffectValueNegTextOffsetY);
             bigTextPosX               = ScaleForFont(DefaultBigTextPosX);
@@ -1387,7 +1384,7 @@ namespace FamiStudio
                 {
                     r.cc.PushTranslation(0, headerSizeY);
                     r.cc.DrawLine(0, -1, pianoSizeX, -1, ThemeResources.BlackBrush);
-                    r.cc.DrawBitmapAtlas(bmpEffectAtlas, Note.EffectVolume, effectIconPosX, effectIconPosY, 1.0f, 1.0f, Theme.LightGreyFillColor1);
+                    r.cc.DrawBitmapAtlas(bmpEffectAtlas, Note.EffectVolume, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyFillColor1);
                     r.cc.DrawText(Note.EffectNames[Note.EffectVolume], ThemeResources.FontSmallBold, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, effectButtonSizeY);
                     r.cc.PopTransform();
 
@@ -2405,6 +2402,8 @@ namespace FamiStudio
                 // Draw effect icons at the top.
                 if (editMode != EditionMode.VideoRecording)
                 {
+                    var effectIconSizeX = ScaleCustom(bmpEffectAtlas.GetElementSize(0).Width, effectBitmapScale);
+
                     var channel = song.Channels[editChannel];
                     for (int p = r.minVisiblePattern; p < r.maxVisiblePattern; p++)
                     {
@@ -2437,8 +2436,8 @@ namespace FamiStudio
                                         var iconX = GetPixelForNote(channel.Song.GetPatternStartAbsoluteNoteIndex(p, time)) + (int)(noteSizeX / 2) - effectIconSizeX / 2;
                                         var iconY = effectPosY + effectIconPosY;
 
-                                        r.cf.DrawBitmapAtlas(bmpEffectAtlas, EffectImageNames.Length - 1, iconX, iconY, 1.0f, 1.0f, drawOpaque ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1);
-                                        r.cf.DrawBitmapAtlas(bmpEffectAtlas, fx, iconX, iconY, drawOpaque ? 1.0f : 0.4f, 1.0f, Theme.LightGreyFillColor1);
+                                        r.cf.DrawBitmapAtlas(bmpEffectAtlas, EffectImageNames.Length - 1, iconX, iconY, 1.0f, effectBitmapScale, drawOpaque ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1);
+                                        r.cf.DrawBitmapAtlas(bmpEffectAtlas, fx, iconX, iconY, drawOpaque ? 1.0f : 0.4f, effectBitmapScale, Theme.LightGreyFillColor1);
                                         effectPosY += effectIconSizeX + effectIconPosY + 1;
                                     }
                                 }

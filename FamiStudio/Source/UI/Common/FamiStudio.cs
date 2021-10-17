@@ -270,7 +270,7 @@ namespace FamiStudio
                 if (value != selectedArpeggio)
                 {
                     selectedArpeggio = value;
-                    if (PlatformUtils.IsMobile && PianoRoll.IsEditingArpeggio)
+                    if (PlatformUtils.IsMobile && PianoRoll.IsEditingArpeggio && selectedArpeggio != null)
                         PianoRoll.StartEditArpeggio(selectedArpeggio);
                     MarkEverythingDirty();
                 }

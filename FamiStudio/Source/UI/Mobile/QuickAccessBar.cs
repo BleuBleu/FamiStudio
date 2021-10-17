@@ -808,13 +808,16 @@ namespace FamiStudio
                 return;
 
             var project = App.Project;
-            var items = new ListItem[project.Arpeggios.Count + 1];
+            var items = new List<ListItem>();
 
-            var arpNoneItem = new ListItem();
-            arpNoneItem.Color = Theme.LightGreyFillColor1;
-            arpNoneItem.ImageIndex = (int)ButtonImageIndices.Arpeggio;
-            arpNoneItem.Text = "None";
-            items[0] = arpNoneItem;
+            if (!App.IsEditingArpeggio)
+            {
+                var arpNoneItem = new ListItem();
+                arpNoneItem.Color = Theme.LightGreyFillColor1;
+                arpNoneItem.ImageIndex = (int)ButtonImageIndices.Arpeggio;
+                arpNoneItem.Text = "None";
+                items.Add(arpNoneItem);
+            }
 
             for (int i = 0; i < project.Arpeggios.Count; i++)
             {
@@ -824,12 +827,12 @@ namespace FamiStudio
                 item.ImageIndex = (int)ButtonImageIndices.Arpeggio;
                 item.Text = arp.Name;
                 item.Data = arp;
-                items[i + 1] = item;
+                items.Add(item);
             }
 
-            popupSelectedIdx = Array.FindIndex(items, i => i.Data == App.SelectedArpeggio);
+            popupSelectedIdx = items.FindIndex(i => i.Data == App.SelectedArpeggio);
 
-            StartExpandingList((int)ButtonType.Arpeggio, items);
+            StartExpandingList((int)ButtonType.Arpeggio, items.ToArray());
         }
 
         private void OnArpeggioLongPress()

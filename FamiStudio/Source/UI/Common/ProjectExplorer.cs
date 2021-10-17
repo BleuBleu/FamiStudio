@@ -706,6 +706,7 @@ namespace FamiStudio
             var actualWidth = Width - scrollBarThickness;
             var firstParam = true;
             var y = -scrollY;
+            var envImageSize = ScaleCustom(bmpEnvelopesAtlas.GetElementSize(0).Width, bitmapScale);
 
             var minInstIdx = 1000000;
             var maxInstIdx = 0;
@@ -839,10 +840,7 @@ namespace FamiStudio
                                     c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, active[j] ? 1.0f : 0.2f, bitmapScale, tint);
 
                                     if (highlighted)
-                                    {
-                                        var imageSize = ScaleCustom(atlas.GetElementSize(atlasIdx).Width, bitmapScale);
-                                        c.DrawRectangle(x, subButtonPosY, x + imageSize - 4, subButtonPosY + imageSize - 4, ThemeResources.WhiteBrush, 2, true);
-                                    }
+                                        c.DrawRectangle(x, subButtonPosY, x + envImageSize - 4, subButtonPosY + envImageSize - 4, ThemeResources.WhiteBrush, 2, true);
                                 }
                             }
                         }
@@ -885,7 +883,13 @@ namespace FamiStudio
                     {
                         if (envelopeDragIdx >= 0)
                         {
-                            c.DrawBitmapAtlas(bmpEnvelopesAtlas, envelopeDragIdx, pt.X - captureButtonRelX, pt.Y - captureButtonRelY, 0.5f, bitmapScale, Color.Black);
+                            var bx = pt.X - captureButtonRelX;
+                            var by = pt.Y - captureButtonRelY;
+
+                            c.DrawBitmapAtlas(bmpEnvelopesAtlas, envelopeDragIdx, bx, by, 0.5f, bitmapScale, Color.Black);
+
+                            if (PlatformUtils.IsMobile)
+                                c.DrawRectangle(bx, by, bx + envImageSize - 4, by + envImageSize - 4, ThemeResources.WhiteBrush, 2, true);
                         }
                         else
                         {
