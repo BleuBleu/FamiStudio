@@ -79,7 +79,8 @@ namespace FamiStudio
         float flingVelY;
         float selectionDragAnchorPatternXFraction = -1.0f;
         CaptureOperation captureOperation = CaptureOperation.None;
-        bool panning = false; // TODO: Make this a capture operation.
+        bool panning = false;
+        bool canFling = false;
         bool continuouslyFollowing = false;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
@@ -953,6 +954,7 @@ namespace FamiStudio
         {
             Debug.Assert(captureOperation == CaptureOperation.None);
             CaptureMouse(x, y);
+            canFling = false;
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
             captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
@@ -1472,8 +1474,11 @@ namespace FamiStudio
 
         protected override void OnTouchFling(int x, int y, float velX, float velY)
         {
-            EndCaptureOperation(x, y);
-            SetFlingVelocity(velX, velY);
+            if (canFling)
+            {
+                EndCaptureOperation(x, y);
+                SetFlingVelocity(velX, velY);
+            }
         }
 
         protected override void OnTouchScaleBegin(int x, int y)
@@ -1924,6 +1929,11 @@ namespace FamiStudio
                     case CaptureOperation.DragSeekBar:
                         UpdateSeekDrag(x, y, true);
                         break;
+                    case CaptureOperation.MobilePan:
+                    case CaptureOperation.MobileZoom:
+                        canFling = true;
+                        break;
+
                 }
 
                 Capture = false;
@@ -1955,6 +1965,7 @@ namespace FamiStudio
 
                 Capture = false;
                 panning = false;
+                canFling = false;
                 captureOperation = CaptureOperation.None;
 
                 MarkDirty();

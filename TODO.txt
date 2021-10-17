@@ -7,7 +7,6 @@ Testing:
 - Envelope selection, copy paste, etc.
 
 Polish:
-- Disable a bunch of warnings.
 - Paste should happen at cursor, not selection? Must be consistent with PR.
 - Smaller highlight for instrument
 - Margins for auto-scroll, migrate all to new function.
@@ -17,7 +16,6 @@ Polish:
 - Option to hide piano in piano roll? (would need octave labels)
 - When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
 - Env editor : clicking again on highlight should remove it?
-- Dont do a fling when the transaction we are ending is a selection. Weird.
 - Add "gear" icon for properties?
 - BUG : When moving mouse out of project explorer towards piano roll, the sequencer icon dont change back.
 - BUG : FDS Waveform on mobile doesnt have the right range it seems.

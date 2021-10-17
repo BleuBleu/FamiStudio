@@ -341,6 +341,7 @@ namespace FamiStudio
         bool showEffectsPanel = false;
         bool snap = true;
         bool pianoVisible = true;
+        bool canFling = false;
         sbyte captureEnvelopeValue = 0;
         float flingVelX = 0.0f;
         float flingVelY = 0.0f;
@@ -3751,6 +3752,7 @@ namespace FamiStudio
             captureNoteValue = NumNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, NumNotes);
             captureSelectionMin = selectionMin;
             captureSelectionMax = selectionMax;
+            canFling = false;
             GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
 
             captureMouseAbsoluteIdx = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
@@ -3991,8 +3993,11 @@ namespace FamiStudio
                     case CaptureOperation.DragWaveVolumeEnvelope:
                         UpdateVolumeEnvelopeDrag(x, y, true);
                         break;
-                    case CaptureOperation.MobileZoomVertical:
+                    case CaptureOperation.MobilePan:
                     case CaptureOperation.MobileZoom:
+                        canFling = true;
+                        break;
+                    case CaptureOperation.MobileZoomVertical:
                         break;
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
@@ -4003,6 +4008,8 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
                         break;
                 }
+
+                Debug.WriteLine($"EndCapture {captureOperation}");
 
                 draggedSample = null;
                 captureOperation = CaptureOperation.None;
@@ -4028,6 +4035,7 @@ namespace FamiStudio
                 captureOperation = CaptureOperation.None;
                 Capture = false;
                 panning = false;
+                canFling = false;
                 if (!PlatformUtils.IsMobile)
                     highlightNoteAbsIndex = -1;
 
@@ -5983,8 +5991,11 @@ namespace FamiStudio
 
         protected override void OnTouchFling(int x, int y, float velX, float velY)
         {
-            EndCaptureOperation(x, y);
-            SetFlingVelocity(velX, velY);
+            if (canFling)
+            {
+                EndCaptureOperation(x, y);
+                SetFlingVelocity(velX, velY);
+            }
         }
 
         protected override void OnTouchScaleBegin(int x, int y)

@@ -165,6 +165,7 @@ namespace FamiStudio
         float bitmapScale = 1.0f;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
+        bool canFling = false;
         Button sliderDragButton = null;
         CaptureOperation captureOperation = CaptureOperation.None;
         Instrument draggedInstrument = null;
@@ -1502,6 +1503,7 @@ namespace FamiStudio
             captureButtonRelY = buttonRelY;
             captureScrollY = scrollY;
             Capture = true;
+            canFling = false;
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
             captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
@@ -1527,6 +1529,9 @@ namespace FamiStudio
                         break;
                     case CaptureOperation.DragSong:
                         UpdateDragSong(x, y, true);
+                        break;
+                    case CaptureOperation.MobilePan:
+                        canFling = true;
                         break;
                 }
             }
@@ -1555,6 +1560,7 @@ namespace FamiStudio
             sliderDragButton = null;
             captureOperation = CaptureOperation.None;
             Capture = false;
+            canFling = false;
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -2910,8 +2916,11 @@ namespace FamiStudio
 
         protected override void OnTouchFling(int x, int y, float velX, float velY)
         {
-            EndCaptureOperation(x, y);
-            flingVelY = velY;
+            if (canFling)
+            {
+                EndCaptureOperation(x, y);
+                flingVelY = velY;
+            }
         }
 
         private void TickFling(float delta)

@@ -65,6 +65,7 @@ namespace FamiStudio
         private int layoutSize;
         private float zoom = 1.0f;
         private float flingVelX;
+        private bool canFling = false;
         private CaptureOperation captureOperation = CaptureOperation.None;
         
         public int LayoutSize => layoutSize;
@@ -382,6 +383,7 @@ namespace FamiStudio
             lastY = y;
             captureOperation = op;
             Capture = true;
+            canFling = false;
         }
 
         private void UpdateCaptureOperation(int x, int y, float scale = 1.0f)
@@ -407,6 +409,10 @@ namespace FamiStudio
             {
                 case CaptureOperation.PlayPiano:
                     EndPlayPiano();
+                    break;
+                case CaptureOperation.MobilePan:
+                case CaptureOperation.MobileZoom:
+                    canFling = true;
                     break;
             }
 
@@ -467,7 +473,7 @@ namespace FamiStudio
 
         protected override void OnTouchFling(int x, int y, float velX, float velY)
         {
-            if (IsPointInPanRectangle(lastX, lastY))
+            if (IsPointInPanRectangle(lastX, lastY) && canFling)
             {
                 EndCaptureOperation(x, y);
                 flingVelX = velX;
