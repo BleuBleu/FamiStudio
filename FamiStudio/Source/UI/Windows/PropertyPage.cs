@@ -841,7 +841,7 @@ namespace FamiStudio
         {
             const int MaxCharsPerLine = 64;
 
-            if (str.Length > MaxCharsPerLine)
+            if (str != null && str.Length > MaxCharsPerLine)
             {
                 var strArray = str.ToCharArray(); 
 
