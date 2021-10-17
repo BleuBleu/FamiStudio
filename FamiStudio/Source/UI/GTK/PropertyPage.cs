@@ -29,6 +29,7 @@ namespace FamiStudio
             public WarningImage warningIcon;
             public ColumnDesc[] columns;
             public string multilineLabelText; // HACK for multiline labels.
+            public bool visible = true;
         };
 
         private System.Drawing.Color color;
@@ -1090,9 +1091,7 @@ namespace FamiStudio
 
         public void SetPropertyVisible(int idx, bool visible)
         {
-            // MATTT : Fix!
-            Debug.Assert(false);
-            //properties[idx].visible = visible;
+            properties[idx].visible = visible;
         }
 
         public void SetLabelText(int idx, string text)
@@ -1235,6 +1234,9 @@ namespace FamiStudio
             for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
+
+                if (!prop.visible)
+                    continue;
 
                 if (prop.label != null)
                 {
