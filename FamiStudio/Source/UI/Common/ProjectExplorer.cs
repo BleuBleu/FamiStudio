@@ -25,7 +25,7 @@ namespace FamiStudio
         const int DefaultButtonIconPosY       = 3;
         const int DefaultButtonTextPosX       = 21;
         const int DefaultButtonTextNoIconPosX = 4;
-        const int DefaultSubButtonSpacingX    = 18;
+        const int DefaultSubButtonSpacingX    = PlatformUtils.IsMobile ? 17 : 18;
         const int DefaultSubButtonPosY        = 3;
         const int DefaultScrollBarThickness1  = 10;
         const int DefaultScrollBarThickness2  = 16;
@@ -830,7 +830,7 @@ namespace FamiStudio
                                 {
                                     c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, (activeMask & (1 << j)) != 0 ? 1.0f : 0.2f, bitmapScale, tint);
 
-                                    if (highlighted)
+                                    if (highlighted && subButtons[j] < SubButtonType.EnvelopeMax)
                                         c.DrawRectangle(x, subButtonPosY, x + envImageSize - 4, subButtonPosY + envImageSize - 4, ThemeResources.WhiteBrush, 2, true);
                                 }
                             }

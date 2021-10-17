@@ -520,6 +520,8 @@
     <EmbeddedResource Include="Resources\PlusSmall%402x.png" />
     <EmbeddedResource Include="Resources\ProjectExplorer%402x.png" />
     <EmbeddedResource Include="Resources\ProjectExplorer.png" />
+    <EmbeddedResource Include="Resources\Properties.png" />
+    <EmbeddedResource Include="Resources\Properties%404x.png" />
     <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
     <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
     <EmbeddedResource Include="Resources\QuickSand8.fnt" />
