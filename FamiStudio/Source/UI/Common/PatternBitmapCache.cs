@@ -10,8 +10,8 @@ namespace FamiStudio
         private const int MaxPatternCacheSizeX = 64;
         private const int MaxPatternCacheSizeY = 32;
 
-        private const int CleanupFrameInterval = 100;
-        private const int StaleEntryFrameCount = 500;
+        private const int CleanupFrameInterval = 240;
+        private const int StaleEntryFrameCount = 480;
 
         private const int   PatternCacheTextureSize    = 512;
         private const float InvPatternCacheTextureSize = 1.0f / PatternCacheTextureSize;
@@ -175,7 +175,10 @@ namespace FamiStudio
                     {
                         var data = list[i];
                         if ((frameIndex - data.lastUsedFrame) > StaleEntryFrameCount)
+                        {
                             list.RemoveAt(i);
+                            Free(data.textureIdx, data.rect.X, data.rect.Y, data.rect.Width);
+                        }
                     }
 
                     if (list.Count == 0)
@@ -194,6 +197,8 @@ namespace FamiStudio
 
                     patternCache = newPatternCache;
                 }
+
+                PrintCacheStats();
             }
         }
 
@@ -220,6 +225,29 @@ namespace FamiStudio
             {
                 CleanupStaleEntries();
             }
+        }
+
+        private void PrintCacheStats()
+        {
+#if DEBUG
+            Debug.WriteLine($"Pattern Bitmap Cache Stats: {cacheTextures.Count} textures");
+
+            for (int i = 0; i < cacheTextures.Count; i++)
+            { 
+                var tex = cacheTextures[i];
+                var pixelCount = 0;
+
+                foreach (var row in tex.rows)
+                {
+                    foreach (var entry in row.usedEntries)
+                        pixelCount += entry.sizeX * clampedPatternCacheSizeY;
+                }
+
+                var percent = pixelCount * 100 / (float)(PatternCacheTextureSize * PatternCacheTextureSize);
+
+                Debug.WriteLine($"  Texture {i} is {percent}% full.");
+            }
+#endif
         }
 
         public void Clear()

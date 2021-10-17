@@ -11,11 +11,11 @@ Polish (high-priotity):
 - Android : Margins for auto-scroll, migrate all to new function.
 - Android : When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
 - Android : Env editor, clicking again on highlight should remove it?
+- Desktop : When multiple expansions are used, i can still export to sound engine, wtf?
 
 Polish (if time):
 - Android : Tutorial (post-beta?)
 - Android : Option to hide piano in piano roll? (would need octave labels)
-/ Add "gear" icon for properties? Handle on mobile too.
 - Change instrument dialog for a combo
 
 Icon notes:
