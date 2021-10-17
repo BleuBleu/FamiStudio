@@ -20,17 +20,17 @@ Polish:
 - BUG : FDS Waveform on mobile doesnt have the right range it seems.
 - Beta testing message somewhere.
 - MacOS/Linux : Implement OnMouseLeave.
+- Change insturment dialog for a combo
 
 Icon notes:
 - 46% zoom, start with 128x128 png.
 
 3.2.0
 =====
-- Change insturment dialog for a combo
 
 DPCM/Tri volume thing (from tromino)
 - Run more tests on NES, with more volumes + noise too.
-- Add a global 80% volume to match FamiTracker.
+- Add a global 80% volume to match FamiTracker?
 - Channels will need to be rebalanced a bit since i bumped the squares.
 - Compare with old FamiStudio to see if old project will sound like ass.
 	
