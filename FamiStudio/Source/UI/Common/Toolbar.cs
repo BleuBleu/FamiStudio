@@ -1138,6 +1138,14 @@ namespace FamiStudio
                 c.PopTransform();
             }
 
+            if (PlatformUtils.IsMobile)
+            {
+                Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out var betaNumber);
+
+                if (betaNumber > 0)
+                    c.DrawText($"BETA {betaNumber}", ThemeResources.FontSmall, x + 4, y + 4, ThemeResources.LightRedFillBrush);
+            }
+
             c.DrawRectangle(x, y, x + sx, y + sy, ThemeResources.LightGreyFillBrush2);
         }
 

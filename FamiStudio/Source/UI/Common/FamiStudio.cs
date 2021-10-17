@@ -1,5 +1,3 @@
-#define DEVELOPMENT_VERSION
-
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -1159,17 +1157,19 @@ namespace FamiStudio
                         newReleaseString = release["tag_name"].ToString();
                         newReleaseUrl = release["html_url"].ToString();
 
-                        var versionComparison = string.Compare(newReleaseString, PlatformUtils.ApplicationVersion, StringComparison.OrdinalIgnoreCase);
+                        var appVersion = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out var betaNumber);
+                        var versionComparison = string.Compare(newReleaseString, appVersion, StringComparison.OrdinalIgnoreCase);
                         var newerVersionAvailable = versionComparison > 0;
 
-#if DEVELOPMENT_VERSION
-                        // If we were running a development version (BETA, etc.), but an official version of 
-                        // the same number appears on GitHub, prompt for update.
-                        if (!newerVersionAvailable && versionComparison == 0)
+                        if (betaNumber > 0)
                         {
-                            newerVersionAvailable = true;
+                            // If we were running a development version, but an official version of 
+                            // the same number appears on GitHub, prompt for update.
+                            if (!newerVersionAvailable && versionComparison == 0)
+                            {
+                                newerVersionAvailable = true;
+                            }
                         }
-#endif
 
                         // Assume > alphabetical order means newer version.
                         if (newerVersionAvailable)
@@ -1346,13 +1346,11 @@ namespace FamiStudio
             if (!string.IsNullOrEmpty(project.Filename))
                 projectFile = System.IO.Path.GetFileName(project.Filename);
 
-            var version = PlatformUtils.ApplicationVersion.Substring(0, PlatformUtils.ApplicationVersion.LastIndexOf('.'));
+            var version = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out var betaNumber);
+            var title = $"FamiStudio {version} - {projectFile}";
 
-            string title = $"FamiStudio {version} - {projectFile}";
-
-#if DEVELOPMENT_VERSION
-            title += " - DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
-#endif
+            if (betaNumber > 0)
+                title += " - DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
 
             mainForm.Text = title;
         }

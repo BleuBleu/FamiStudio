@@ -32,7 +32,7 @@ namespace FamiStudio
 
             var lines = new List<string>();
 
-            var versionString = PlatformUtils.ApplicationVersion.Substring(0, PlatformUtils.ApplicationVersion.LastIndexOf('.'));
+            var versionString = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
             var projectLine = $"Project{GenerateAttribute("Version", versionString)}{GenerateAttribute("TempoMode", TempoType.Names[project.TempoMode])}";
 
             if (project.Name      != "")    projectLine += GenerateAttribute("Name", project.Name);

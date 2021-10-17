@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -345,6 +346,13 @@ namespace FamiStudio
             var diff = minSide ? pos - maxPos : maxPos - pos;
             var scrollAmount = 1.0f - Utils.Clamp(diff / (float)marginSize, 0.0f, 1.0f);
             return (int)(factor * scrollAmount) * (minSide ? -1 : 1);
+        }
+
+        public static string SplitVersionNumber(string version, out int betaNumber)
+        {
+            var dotIdx = version.LastIndexOf('.');
+            betaNumber = int.Parse(version.Substring(dotIdx + 1), CultureInfo.InvariantCulture);
+            return version.Substring(0, dotIdx);
         }
     }
 }

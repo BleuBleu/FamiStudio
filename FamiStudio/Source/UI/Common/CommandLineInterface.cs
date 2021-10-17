@@ -118,7 +118,7 @@ namespace FamiStudio
 
         private void DisplayHelp()
         {
-            var version = PlatformUtils.ApplicationVersion.Substring(0, PlatformUtils.ApplicationVersion.LastIndexOf('.'));
+            var version = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
 
             InitializeConsole();
             Console.WriteLine($"FamiStudio {version} Command-Line Usage");
