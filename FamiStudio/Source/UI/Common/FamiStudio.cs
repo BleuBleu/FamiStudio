@@ -1350,7 +1350,7 @@ namespace FamiStudio
             var title = $"FamiStudio {version} - {projectFile}";
 
             if (betaNumber > 0)
-                title += " - DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
+                title += $" - BETA {betaNumber} - DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
 
             mainForm.Text = title;
         }
