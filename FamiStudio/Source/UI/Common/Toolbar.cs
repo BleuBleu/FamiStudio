@@ -1149,7 +1149,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            MarkDirty();
+            base.OnMouseMove(e);
 
             foreach (var btn in buttons)
             {
@@ -1160,8 +1160,8 @@ namespace FamiStudio
                 }
             }
 
+            MarkDirty();
             SetToolTip("");
-            base.OnMouseMove(e);
         }
 
         private Button GetButtonAtCoord(int x, int y)

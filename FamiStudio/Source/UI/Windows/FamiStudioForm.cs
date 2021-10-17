@@ -31,6 +31,7 @@ namespace FamiStudio
 
         private GLControl activeControl = null;
         private GLControl captureControl = null;
+        private GLControl hoverControl = null;
         private MouseButtons captureButton   = MouseButtons.None;
         private MouseButtons lastButtonPress = MouseButtons.None;
         private Timer timer = new Timer();
@@ -256,23 +257,46 @@ namespace FamiStudio
             int x;
             int y;
             GLControl ctrl = null;
+            GLControl hover = null;
 
             if (captureControl != null)
             {
                 ctrl = captureControl;
                 x = e.X - ctrl.Left;
                 y = e.Y - ctrl.Top;
+                hover = controls.GetControlAtCoord(e.X, e.Y, out _, out _);
             }
             else
             {
                 ctrl = controls.GetControlAtCoord(e.X, e.Y, out x, out y);
+                hover = ctrl;
             }
+
+            var args = new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta);
 
             if (ctrl != null)
             {
-                ctrl.MouseMove(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+                ctrl.MouseMove(args);
                 RefreshCursor(ctrl);
             }
+
+            if (hover != hoverControl)
+            {
+                if (hoverControl != null)
+                    hoverControl.MouseLeave(args);
+                hoverControl = hover;
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            if (hoverControl != null)
+            {
+                hoverControl.MouseLeave(e);
+                hoverControl = null;
+            }
+
+            base.OnMouseLeave(e);
         }
 
         protected override void WndProc(ref Message m)

@@ -520,7 +520,6 @@ namespace FamiStudio
         public event DPCMSamplePointDelegate DPCMSampleDraggedOutside;
         public event DPCMSamplePointDelegate DPCMSampleMapped;
         public event EmptyDelegate ProjectModified;
-        public event BoolDelegate InstrumentsHovered;
 
         public ProjectExplorer()
         {
@@ -1441,11 +1440,10 @@ namespace FamiStudio
             }
         }
 
-        protected void EmitInstrumentHoverEvent(int x, int y)
+        protected void ConditionalShowExpansionIcons(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out _);
-            var showExpansions = buttonIdx >= 0 && (buttons[buttonIdx].type == ButtonType.Instrument || buttons[buttonIdx].type == ButtonType.InstrumentHeader);
-            InstrumentsHovered?.Invoke(showExpansions);
+            App.SequencerShowExpansionIcons = buttonIdx >= 0 && (buttons[buttonIdx].type == ButtonType.Instrument || buttons[buttonIdx].type == ButtonType.InstrumentHeader);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -1463,7 +1461,7 @@ namespace FamiStudio
             }
 
             UpdateToolTip(e.X, e.Y);
-            EmitInstrumentHoverEvent(e.X, e.Y);
+            ConditionalShowExpansionIcons(e.X, e.Y);
 
             mouseLastX = e.X;
             mouseLastY = e.Y;
@@ -1471,7 +1469,8 @@ namespace FamiStudio
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            InstrumentsHovered?.Invoke(false);
+            base.OnMouseLeave(e);
+            App.SequencerShowExpansionIcons = false;
         }
 
         protected override void OnMouseUp(MouseEventArgs e)

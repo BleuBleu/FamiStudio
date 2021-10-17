@@ -1,4 +1,4 @@
-// #define DEVELOPMENT_VERSION
+#define DEVELOPMENT_VERSION
 
 using System;
 using System.Collections;
@@ -90,10 +90,11 @@ namespace FamiStudio
         public float AverageTickRate => averageTickRateMs;
         public int   EditEnvelopeType { get => PianoRoll.EditEnvelopeType; }
 
-        public bool SnapEnabled         { get => PianoRoll.SnapEnabled;         set => PianoRoll.SnapEnabled         = value; }
-        public int  SnapResolution      { get => PianoRoll.SnapResolution;      set => PianoRoll.SnapResolution      = value; }
-        public int  SelectedEffect      { get => PianoRoll.SelectedEffect;      set => PianoRoll.SelectedEffect      = value; }
-        public bool EffectPanelExpanded { get => PianoRoll.EffectPanelExpanded; set => PianoRoll.EffectPanelExpanded = value; }
+        public bool SnapEnabled                 { get => PianoRoll.SnapEnabled;         set => PianoRoll.SnapEnabled         = value; }
+        public int  SnapResolution              { get => PianoRoll.SnapResolution;      set => PianoRoll.SnapResolution      = value; }
+        public int  SelectedEffect              { get => PianoRoll.SelectedEffect;      set => PianoRoll.SelectedEffect      = value; }
+        public bool EffectPanelExpanded         { get => PianoRoll.EffectPanelExpanded; set => PianoRoll.EffectPanelExpanded = value; }
+        public bool SequencerShowExpansionIcons { get => Sequencer.ShowExpansionIcons;  set => Sequencer.ShowExpansionIcons  = value; }
 
         public UndoRedoManager UndoRedoManager => undoRedoManager; 
         public DPCMSample      DraggedSample   => ProjectExplorer.DraggedSample;
@@ -191,7 +192,6 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleDeleted        += ProjectExplorer_DPCMSampleDeleted;
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
             ProjectExplorer.DPCMSampleMapped         += ProjectExplorer_DPCMSampleMapped;
-            ProjectExplorer.InstrumentsHovered       += ProjectExplorer_InstrumentsHovered;
         }
 
         public LoopMode LoopMode 

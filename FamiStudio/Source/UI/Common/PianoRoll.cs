@@ -7701,6 +7701,7 @@ namespace FamiStudio
             UpdateToolTip(e);
             SetMouseLastPos(e.X, e.Y);
             MarkDirty();
+            App.SequencerShowExpansionIcons = false;
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
