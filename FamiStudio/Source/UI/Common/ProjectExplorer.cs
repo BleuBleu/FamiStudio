@@ -99,6 +99,7 @@ namespace FamiStudio
             Play,
             Expand,
             Overflow,
+            Properties,
             Max
         }
 
@@ -199,6 +200,7 @@ namespace FamiStudio
             WaveEdit,
             Reload,
             Save,
+            Properties,
             Count
         };
 
@@ -218,7 +220,8 @@ namespace FamiStudio
             "InstrumentOpen",
             "WaveEdit",
             "Reload",
-            "SaveSmall"
+            "SaveSmall",
+            "Properties"
         };
 
         enum EnvelopesImageIndices
@@ -276,87 +279,72 @@ namespace FamiStudio
                 textDisabledBrush = pe.disabledBrush;
             }
 
-            private bool IsEnvelopeEmpty(Envelope env, int type)
+            public SubButtonType[] GetSubButtons(out int active)
             {
-                return env.IsEmpty(type);
-            }
+                active = -1;
 
-            public SubButtonType[] GetSubButtons(out bool[] active)
-            {
                 switch (type)
                 {
                     case ButtonType.SongHeader:
                     case ButtonType.InstrumentHeader:
-                        active = new[] { true, true };
                         return new[] { SubButtonType.Add, SubButtonType.Load };
                     case ButtonType.ArpeggioHeader:
-                        active = new[] { true };
                         return new[] { SubButtonType.Add };
                     case ButtonType.DpcmHeader:
-                        active = new[] { true };
                         return new[] { SubButtonType.Load };
+                    case ButtonType.ProjectSettings:
+                    case ButtonType.Song:
+                        return new[] { SubButtonType.Properties };
                     case ButtonType.Instrument:
                         if (instrument == null)
                         {
                             var project = projectExplorer.App.Project;
                             if (project != null && project.GetTotalMappedSampleSize() > Project.MaxMappedSampleSize)
-                            {
-                                active = new[] { true, true };
                                 return new[] { SubButtonType.DPCM, SubButtonType.Overflow };
-                            }
                             else
-                            {
-                                active = new[] { true };
                                 return new[] { SubButtonType.DPCM };
-                            }
                         }
                         else
                         {
                             var expandButton = projectExplorer.ShowExpandButtons() && InstrumentParamProvider.HasParams(instrument);
-                            var numSubButtons = instrument.NumActiveEnvelopes + (expandButton ? 1 : 0);
+                            var numSubButtons = instrument.NumActiveEnvelopes + (expandButton ? 1 : 0) + 1;
                             var buttons = new SubButtonType[numSubButtons];
-                            active = new bool[numSubButtons];
+                            buttons[0] = SubButtonType.Properties;
 
-                            for (int i = 0, j = 0; i < EnvelopeType.Count; i++)
+                            for (int i = 0, j = 1; i < EnvelopeType.Count; i++)
                             {
                                 int idx = EnvelopeDisplayOrder[i];
                                 if (instrument.Envelopes[idx] != null)
                                 {
                                     buttons[j] = (SubButtonType)idx;
-                                    active[j] = !IsEnvelopeEmpty(instrument.Envelopes[idx], idx);
+                                    if (instrument.Envelopes[idx].IsEmpty(idx))
+                                        active &= ~(1 << j);
                                     j++;
                                 }
                             }
 
                             if (expandButton)
-                            {
                                 buttons[numSubButtons - 1] = SubButtonType.Expand;
-                                active[numSubButtons - 1]  = true;
-                            }
 
                             return buttons;
                         }
                     case ButtonType.Arpeggio:
                         if (arpeggio != null)
-                        {
-                            active = new[] { true };
-                            return new[] { SubButtonType.ArpeggioEnvelope };
-                        }
+                            return new[] { SubButtonType.Properties, SubButtonType.ArpeggioEnvelope };
                         break;
                     case ButtonType.Dpcm:
                         if (PlatformUtils.IsMobile)
                         {
-                            active = new[] { true, true, true };
-                            return new[] { SubButtonType.EditWave, SubButtonType.Play, SubButtonType.Expand };
+                            return new[] { SubButtonType.Properties, SubButtonType.EditWave, SubButtonType.Play, SubButtonType.Expand };
                         }
                         else
                         {
-                            active = new[] { true, true, !string.IsNullOrEmpty(sample.SourceFilename), true, true };
-                            return new[] { SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
+                            if (string.IsNullOrEmpty(sample.SourceFilename))
+                                active &= ~(1 << 3);
+                            return new[] { SubButtonType.Properties, SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
                         }
                 }
 
-                active = null;
                 return null;
             }
 
@@ -445,7 +433,7 @@ namespace FamiStudio
                 }
             }
 
-            public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader ? Theme.LightGreyFillColor1 : Color.Black;
+            public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyFillColor1 : Color.Black;
 
             public bool TextEllipsis => type == ButtonType.ProjectSettings;
             
@@ -476,6 +464,9 @@ namespace FamiStudio
                         return projectExplorer.bmpMiscAtlas;
                     case SubButtonType.Overflow: 
                         atlasIdx = (int)MiscImageIndices.Overflow;
+                        return projectExplorer.bmpMiscAtlas;
+                    case SubButtonType.Properties:
+                        atlasIdx = (int)MiscImageIndices.Properties;
                         return projectExplorer.bmpMiscAtlas;
                     case SubButtonType.Expand:
                     {
@@ -822,7 +813,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        var subButtons = button.GetSubButtons(out var active);
+                        var subButtons = button.GetSubButtons(out var activeMask);
                         var tint = button.SubButtonTint;
 
                         if (subButtons != null)
@@ -837,7 +828,7 @@ namespace FamiStudio
                                 }
                                 else
                                 {
-                                    c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, active[j] ? 1.0f : 0.2f, bitmapScale, tint);
+                                    c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, (activeMask & (1 << j)) != 0 ? 1.0f : 0.2f, bitmapScale, tint);
 
                                     if (highlighted)
                                         c.DrawRectangle(x, subButtonPosY, x + envImageSize - 4, subButtonPosY + envImageSize - 4, ThemeResources.WhiteBrush, 2, true);
@@ -998,6 +989,9 @@ namespace FamiStudio
 
                     for (int i = 0; i < subButtons.Length; i++)
                     {
+                        if (subButtons[i] == SubButtonType.Expand)
+                            continue;
+
                         int sx = Width - scrollBarThickness - subButtonSpacingX * (i + 1);
                         int sy = subButtonPosY;
                         int dx = x - sx;
@@ -1052,7 +1046,14 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.Song)
                 {
-                    tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song properties - {MouseRight} Delete song\n{MouseLeft} {Drag} Re-order song";
+                    if (subButtonType == SubButtonType.Properties)
+                    {
+                        tooltip = "{MouseLeft} Song/Tempo properties";
+                    }
+                    else
+                    {
+                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song/Tempo properties - {MouseRight} Delete song\n{MouseLeft} {Drag} Re-order song";
+                    }
                 }
                 else if (buttonType == ButtonType.InstrumentHeader)
                 {
@@ -1074,7 +1075,14 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ProjectSettings)
                 {
-                    tooltip = "{MouseLeft}{MouseLeft} Project properties";
+                    if (subButtonType == SubButtonType.Properties)
+                    {
+                        tooltip = "{MouseLeft} Project properties";
+                    }
+                    else
+                    {
+                        tooltip = "{MouseLeft}{MouseLeft} Project properties";
+                    }
                 }
                 else if (buttonType == ButtonType.ParamCheckbox)
                 {
@@ -1133,6 +1141,10 @@ namespace FamiStudio
                             tooltip = "DPCM sample limit size limit is 16384 bytes. Some samples will not play correctly.";
                             redTooltip = true;
                         }
+                        else if (subButtonType == SubButtonType.Properties)
+                        {
+                            tooltip = "{MouseLeft} Instrument properties";
+                        }
                     }
                 }
                 else if (buttonType == ButtonType.Dpcm)
@@ -1157,12 +1169,27 @@ namespace FamiStudio
                     {
                         tooltip = "{MouseLeft}{MouseLeft} Edit properties\n{MouseRight} Delete sample";
                     }
+                    else if (subButtonType == SubButtonType.Properties)
+                    {
+                        tooltip = "{MouseLeft} Instrument properties";
+                    }
                 }
                 else if (buttonType == ButtonType.DpcmHeader)
                 {
                     if (subButtonType == SubButtonType.Load)
                     {
                         tooltip = "{MouseLeft} Load DPCM sample from WAV or DMC file";
+                    }
+                }
+                else if (buttonType == ButtonType.Arpeggio)
+                {
+                    if (subButtonType == SubButtonType.Max)
+                    {
+                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{MouseLeft} Arpeggio properties\n{MouseRight} Delete arpeggio - {MouseLeft} {Drag} Replace arpeggio";
+                    }
+                    else if (subButtonType == SubButtonType.Properties)
+                    {
+                        tooltip = "{MouseLeft} Arpeggio properties";
                     }
                 }
             }
@@ -2202,6 +2229,17 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleMouseDownSongProjectSettings(MouseEventArgs e, SubButtonType subButtonType)
+        {
+            if (e.Button.HasFlag(MouseButtons.Left))
+            {
+                if (subButtonType == SubButtonType.Properties)
+                    EditProjectProperties(new Point(e.X, e.Y));
+            }
+
+            return true;
+        }
+
         private bool HandleMouseDownSongHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
             if (e.Button.HasFlag(MouseButtons.Left))
@@ -2215,15 +2253,22 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownSongButton(MouseEventArgs e, Button button, int buttonIdx)
+        private bool HandleMouseDownSongButton(MouseEventArgs e, Button button, int buttonIdx, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            var left  = e.Button.HasFlag(MouseButtons.Left);
+            var right = e.Button.HasFlag(MouseButtons.Right);
+
+            if (left && subButtonType == SubButtonType.Properties)
+            {
+                EditSongProperties(new Point(e.X, e.Y), button.song);
+            }
+            else if (left && subButtonType == SubButtonType.Max)
             {
                 App.SelectedSong = button.song;
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSong, buttonIdx);
                 draggedSong = button.song;
             }
-            else if (e.Button.HasFlag(MouseButtons.Right) && App.Project.Songs.Count > 1)
+            else if (right && App.Project.Songs.Count > 1)
             {
                 AskDeleteSong(button.song);
             }
@@ -2248,6 +2293,22 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left))
             {
+                if (subButtonType == SubButtonType.Expand)
+                {
+                    ToggleExpandInstrument(button.instrument);
+                    return true;
+                }
+                else if (subButtonType == SubButtonType.DPCM)
+                {
+                    App.StartEditInstrument(button.instrument, EnvelopeType.Count);
+                    return true;
+                }
+                else if (subButtonType == SubButtonType.Properties)
+                {
+                    EditInstrumentProperties(new Point(e.X, e.Y), button.instrument);
+                    return true;
+                }
+
                 App.SelectedInstrument = button.instrument;
 
                 if (button.instrument != null)
@@ -2257,15 +2318,7 @@ namespace FamiStudio
                     StartCaptureOperation(e.X, e.Y, CaptureOperation.DragInstrument, buttonIdx, buttonRelX, buttonRelY);
                 }
 
-                if (subButtonType == SubButtonType.Expand)
-                {
-                    ToggleExpandInstrument(button.instrument);
-                }
-                else if (subButtonType == SubButtonType.DPCM)
-                {
-                    App.StartEditInstrument(button.instrument, EnvelopeType.Count);
-                }
-                else if (subButtonType < SubButtonType.EnvelopeMax)
+                if (subButtonType < SubButtonType.EnvelopeMax)
                 {
                     App.StartEditInstrument(button.instrument, (int)subButtonType);
                     envelopeDragIdx = (int)subButtonType;
@@ -2418,6 +2471,12 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left))
             {
+                if (subButtonType == SubButtonType.Properties)
+                {
+                    EditArpeggioProperties(new Point(e.X, e.Y), button.arpeggio);
+                    return true;
+                }
+
                 App.SelectedArpeggio = button.arpeggio;
 
                 envelopeDragIdx = -1;
@@ -2468,6 +2527,10 @@ namespace FamiStudio
                 {
                     App.PreviewDPCMSample(button.sample, false);
                 }
+                else if (subButtonType == SubButtonType.Properties)
+                {
+                    EditDPCMSampleProperties(new Point(e.X, e.Y), button.sample);
+                }
                 else if (subButtonType == SubButtonType.Expand)
                 {
                     ToggleExpandDPCMSample(button.sample);
@@ -2508,10 +2571,12 @@ namespace FamiStudio
 
                 switch (button.type)
                 {
+                    case ButtonType.ProjectSettings:
+                        return HandleMouseDownSongProjectSettings(e, subButtonType);
                     case ButtonType.SongHeader:
                         return HandleMouseDownSongHeaderButton(e, subButtonType);
                     case ButtonType.Song:
-                        return HandleMouseDownSongButton(e, button, buttonIdx);
+                        return HandleMouseDownSongButton(e, button, buttonIdx, subButtonType);
                     case ButtonType.InstrumentHeader:
                         return HandleMouseDownInstrumentHeaderButton(e, subButtonType);
                     case ButtonType.Instrument:

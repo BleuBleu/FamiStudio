@@ -6,7 +6,7 @@ Polish (high-priotity):
 - Android : Some dialogs look bad:
 	- Delete/paste special
 	- Add tooltips to settings.
-- Android : Paste should happen at cursor, not selection? Must be consistent with PR.
+- Android : Paste should happen at cursor, not selection? Must be consistent with PR. Should we move selection on seek?
 - Android : Smaller highlight for instrument
 - Android : Margins for auto-scroll, migrate all to new function.
 - Android : When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
