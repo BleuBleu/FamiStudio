@@ -19,7 +19,6 @@ Polish:
 - Add "gear" icon for properties?
 - BUG : FDS Waveform on mobile doesnt have the right range it seems.
 - Beta testing message somewhere.
-- MacOS/Linux : Implement OnMouseLeave.
 - Change insturment dialog for a combo
 
 Icon notes:
@@ -35,10 +34,7 @@ DPCM/Tri volume thing (from tromino)
 - Compare with old FamiStudio to see if old project will sound like ass.
 	
 Misc:
-- Mac/Linux : CheckListBox doesnt fire events (needed for Midi import/PAL).
-- Mac/Linux : Make sure piano roll maximize layout works, and also that sequencer doesnt render when disabled.
-- Make sure OnMouseLeave works on that too.
-- Fix GTK single multiple label issue.	
+- Fix GTK single multiple label issue. WTF was that again???
 
 Testing
 =======
