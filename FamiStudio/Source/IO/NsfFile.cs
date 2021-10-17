@@ -29,7 +29,7 @@ namespace FamiStudio
         const int NsfDpcmOffset      = 0xc000;
         const int NsfPageSize        = 0x1000;
 
-        const int NsfGlobalVarsSize     = 2;
+        const int NsfGlobalVarsSize     = 4;
         const int NsfSongTableEntrySize = 4;
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -63,7 +63,7 @@ namespace FamiStudio
                 if (songIds.Length == 0)
                     return false;
 
-                Debug.Assert(!originalProject.UsesExpansionAudio || machine == MachineType.NTSC);
+                Debug.Assert(!originalProject.UsesAnyExpansionAudio || machine == MachineType.NTSC);
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
@@ -84,7 +84,7 @@ namespace FamiStudio
                 header.playSpeedNTSC = 16639;
                 header.playSpeedPAL = 19997;
                 header.palNtscFlags = (byte)machine;
-                header.extensionFlags = (byte)(project.ExpansionAudio == ExpansionType.None ? 0 : 1 << (project.ExpansionAudio - 1));
+                header.extensionFlags = (byte)(project.UsesAnyExpansionAudio ? project.ExpansionAudioMask : 0);
                 header.banks[0] = 0;
                 header.banks[1] = 1;
                 header.banks[2] = 2;
@@ -117,13 +117,20 @@ namespace FamiStudio
                         kernelBinary += "_famitracker";
                     }
 
-                    if (project.UsesExpansionAudio)
+                    if (project.UsesSingleExpansionAudio)
                     {
-                        kernelBinary += $"_{project.ExpansionAudioShortName.ToLower()}";
-
-                        if (project.ExpansionAudio == ExpansionType.N163)
-                            kernelBinary += $"_{project.ExpansionNumChannels}ch";
+                        kernelBinary += $"_{ExpansionType.ShortNames[project.SingleExpansion].ToLower()}";
                     }
+                    else if (project.UsesMultipleExpansionAudios)
+                    {
+                        kernelBinary += $"_multi";
+
+                        if (project.UsesN163Expansion)
+                            kernelBinary += $"_n163";
+                    }
+
+                    if (project.UsesN163Expansion)
+                        kernelBinary += $"_{project.ExpansionNumN163Channels}ch";
                 }
                 else
                 {
@@ -190,12 +197,15 @@ namespace FamiStudio
 
                     nsfBytes.AddRange(project.GetPackedSampleData());
 
-                    nsfBytes[songTableIdx + 0] = (byte)dpcmPageStart; // DPCM_PAGE_START
-                    nsfBytes[songTableIdx + 1] = (byte)dpcmPageCount; // DPCM_PAGE_CNT
+                    nsfBytes[songTableIdx + 0] = (byte)dpcmPageStart;
+                    nsfBytes[songTableIdx + 1] = (byte)dpcmPageCount;
 
                     Log.LogMessage(LogSeverity.Info, $"DPCM samples size: {totalSampleSize} bytes.");
                     Log.LogMessage(LogSeverity.Info, $"DPCM padding size: {initPaddingSize + dpcmPadding} bytes.");
                 }
+
+                // This is only used in multi-expansion.
+                nsfBytes[songTableIdx + 2] = (byte)project.ExpansionAudioMask;
 
                 // Export each song individually, build TOC at the same time.
                 for (int i = 0; i < project.Songs.Count; i++)
@@ -371,7 +381,7 @@ namespace FamiStudio
 
         private Instrument GetDutyInstrument(Channel channel, int duty)
         {
-            var expansion = channel.IsExpansionChannel && project.NeedsExpansionInstruments ? project.ExpansionAudio : ExpansionType.None;
+            var expansion = channel.Expansion;
             var expPrefix = expansion == ExpansionType.None ? "" : ExpansionType.ShortNames[expansion] + " ";
             var name = $"{expPrefix}Duty {duty}";
 
@@ -393,7 +403,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.ExpansionType == ExpansionType.Fds)
+                if (inst.IsFdsInstrument)
                 {
                     if (inst.FdsMasterVolume == masterVolume &&
                         wavEnv.SequenceEqual(inst.Envelopes[EnvelopeType.FdsWaveform].Values.Take(64)) &&
@@ -430,7 +440,7 @@ namespace FamiStudio
                 // Custom instrument, look for a match.
                 foreach (var inst in project.Instruments)
                 {
-                    if (inst.ExpansionType == ExpansionType.Vrc7)
+                    if (inst.IsVrc7Instrument)
                     {
                         if (inst.Vrc7Patch == 0 && inst.Vrc7PatchRegs.SequenceEqual(patchRegs))
                             return inst;
@@ -469,7 +479,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.ExpansionType == ExpansionType.N163)
+                if (inst.IsN163Instrument)
                 {
                     if (inst.N163WavePos  == wavePos &&
                         inst.N163WaveSize == waveData.Length &&
@@ -501,7 +511,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.ExpansionType == ExpansionType.S5B)
+                if (inst.IsS5BInstrument)
                     return inst;
             }
 
@@ -511,7 +521,7 @@ namespace FamiStudio
         private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
-            var channelIdx = Channel.ChannelTypeToIndex(channel.Type);
+            var channelIdx = channel.Index;
             var hasNote = false;
 
             if (channel.Type == ChannelType.Dpcm)
@@ -587,11 +597,11 @@ namespace FamiStudio
                     volume = 15 - volume;
                 }
 
-                var hasOctave  = channel.IsVrc7FmChannel;
+                var hasOctave  = channel.IsVrc7Channel;
                 var hasVolume  = channel.Type != ChannelType.Triangle;
                 var hasPitch   = channel.Type != ChannelType.Noise;
                 var hasDuty    = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise || channel.Type == ChannelType.Vrc6Square1 || channel.Type == ChannelType.Vrc6Square2 || channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
-                var hasTrigger = channel.IsVrc7FmChannel;
+                var hasTrigger = channel.IsVrc7Channel;
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
@@ -648,9 +658,9 @@ namespace FamiStudio
                     var modEnv = new sbyte[32];
 
                     for (int i = 0; i < 64; i++)
-                        wavEnv[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_FDSWAVETABLE, i);
+                        wavEnv[i] = (sbyte)(NsfGetState(nsf, channel.Type, STATE_FDSWAVETABLE, i) & 0x3f);
                     for (int i = 0; i < 32; i++)
-                        modEnv[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONTABLE, i);
+                        modEnv[i] = (sbyte)(NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONTABLE, i));
 
                     Envelope.ConvertFdsModulationToAbsolute(modEnv);
 
@@ -715,7 +725,7 @@ namespace FamiStudio
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
-                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumChannels);
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
 
@@ -759,7 +769,7 @@ namespace FamiStudio
 
                     if (hasPitch && !stop)
                     {
-                        Channel.GetShiftsForType(channel.Type, project.ExpansionNumChannels, out int pitchShift, out _);
+                        Channel.GetShiftsForType(channel.Type, project.ExpansionNumN163Channels, out int pitchShift, out _);
 
                         // We scale all pitches changes (slides, fine pitch, pitch envelopes) for
                         // some channels with HUGE pitch values (N163, VRC7).
@@ -852,20 +862,19 @@ namespace FamiStudio
             project.Copyright = Marshal.PtrToStringAnsi(NsfGetCopyright(nsf));
             project.PalMode   = palSource;
 
-            switch (NsfGetExpansion(nsf))
+            // Our expansion mask is the same as NSF.
+            var expansionMask = NsfGetExpansion(nsf);
+
+            // The 2 upper bits of the mask need to be zero, we dont support these.
+            if (expansionMask != (expansionMask & ExpansionType.AllMask))
             {
-                case EXTSOUND_VRC6: project.SetExpansionAudio(ExpansionType.Vrc6); break;
-                case EXTSOUND_VRC7: project.SetExpansionAudio(ExpansionType.Vrc7); break;
-                case EXTSOUND_FDS:  project.SetExpansionAudio(ExpansionType.Fds);  break;
-                case EXTSOUND_MMC5: project.SetExpansionAudio(ExpansionType.Mmc5); break;
-                case EXTSOUND_N163: project.SetExpansionAudio(ExpansionType.N163, GetNumNamcoChannels(filename, songIndex, numFrames)); break;
-                case EXTSOUND_S5B:  project.SetExpansionAudio(ExpansionType.S5B);  break;
-                case 0: break;
-                default:
-                    Log.LogMessage(LogSeverity.Error, "NSF uses multiple expansion chips at the same time. This is not supported.");
-                    NsfClose(nsf); // Unsupported expansion combination.
-                    return null;
+                Log.LogMessage(LogSeverity.Error, "NSF uses unknown or unsupported expansion chips, aborting.");
+                NsfClose(nsf);
+                return null;
             }
+
+            var numN163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? GetNumNamcoChannels(filename, songIndex, numFrames) : 1;
+            project.SetExpansionAudioMask(expansionMask, numN163Channels);
 
             var songName = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, songIndex));
 
@@ -895,9 +904,17 @@ namespace FamiStudio
                     break;
 
                 var playCalled = 0;
+                var waitFrameCount = 0;
                 do
                 {
                     playCalled = NsfRunFrame(nsf);
+
+                    if (++waitFrameCount == 1000)
+                    {
+                        Log.LogMessage(LogSeverity.Error, "NSF did not call PLAY after 1000 frames, aborting.");
+                        NsfClose(nsf);
+                        return null;
+                    }
                 }
                 while (playCalled == 0);
 

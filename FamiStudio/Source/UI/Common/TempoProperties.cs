@@ -54,16 +54,16 @@ namespace FamiStudio
             {
                 if (patternIdx < 0)
                 {
-                    famitrackerTempoPropIdx = props.AddIntegerRange("Tempo :", song.FamitrackerTempo, 32, 255, CommonTooltips.Tempo); // 0
-                    famitrackerSpeedPropIdx = props.AddIntegerRange("Speed :", song.FamitrackerSpeed, 1, 31, CommonTooltips.Speed); // 1
+                    famitrackerTempoPropIdx = props.AddNumericUpDown("Tempo :", song.FamitrackerTempo, 32, 255, CommonTooltips.Tempo); // 0
+                    famitrackerSpeedPropIdx = props.AddNumericUpDown("Speed :", song.FamitrackerSpeed, 1, 31, CommonTooltips.Speed); // 1
                 }
                 
                 var notesPerBeat    = patternIdx < 0 ? song.BeatLength    : song.GetPatternBeatLength(patternIdx);
                 var notesPerPattern = patternIdx < 0 ? song.PatternLength : song.GetPatternLength(patternIdx);
                 var bpm = Song.ComputeFamiTrackerBPM(song.Project.PalMode, song.FamitrackerSpeed, song.FamitrackerTempo, notesPerBeat);
 
-                notesPerBeatPropIdx    = props.AddIntegerRange("Notes per Beat :", notesPerBeat, 1, 256, CommonTooltips.NotesPerBeat); // 2
-                notesPerPatternPropIdx = props.AddIntegerRange("Notes per Pattern :", notesPerPattern, 1, Pattern.MaxLength, CommonTooltips.NotesPerPattern); // 3
+                notesPerBeatPropIdx    = props.AddNumericUpDown("Notes per Beat :", notesPerBeat, 1, 256, CommonTooltips.NotesPerBeat); // 2
+                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern :", notesPerPattern, 1, Pattern.MaxLength, CommonTooltips.NotesPerPattern); // 3
                 bpmLabelPropIdx        = props.AddLabel("BPM :", bpm.ToString("n1"), false, CommonTooltips.BPM); // 4
 
                 props.ShowWarnings = true;
@@ -88,8 +88,8 @@ namespace FamiStudio
                 grooveStrings = grooveList.Select(g => string.Join("-", g)).ToArray();
 
                 famistudioBpmPropIdx   = props.AddDropDownList("BPM : ", tempoStrings, tempoStrings[tempoIndex], CommonTooltips.BPM); // 0
-                notesPerBeatPropIdx    = props.AddIntegerRange("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, CommonTooltips.NotesPerBeat); // 1
-                notesPerPatternPropIdx = props.AddIntegerRange("Notes per Pattern : ", notesPerPattern / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
+                notesPerBeatPropIdx    = props.AddNumericUpDown("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, CommonTooltips.NotesPerBeat); // 1
+                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern : ", notesPerPattern / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
                 framesPerNotePropIdx   = props.AddLabel("Frames per Note :", noteLength.ToString(), false, CommonTooltips.FramesPerNote); // 3
 
                 props.ShowWarnings = true;
@@ -236,19 +236,38 @@ namespace FamiStudio
                 props.SetPropertyEnabled(i, enabled);
         }
 
-        private bool ShowConvertTempoDialog()
+        private void ShowConvertTempoDialogAsync(bool conversionNeeded, Action<bool> callback)
         {
-            var messageDlg = new PropertyDialog(400, true, false);
-            messageDlg.Properties.AddLabel(null, "You changed the BPM enough so that the number of frames in a note has changed.", true); // 0
-            messageDlg.Properties.AddRadioButton(null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true); // 1
-            messageDlg.Properties.AddRadioButton(null, "Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.", false); // 2
-            messageDlg.Properties.Build();
-            messageDlg.ShowDialog(null);
+            if (conversionNeeded)
+            {
+                const string label = "You changed the BPM enough so that the number of frames in a note has changed. What do you want to do?";
 
-            return messageDlg.Properties.GetPropertyValue<bool>(1);
+                var messageDlg = new PropertyDialog("Tempo Conversion", 400, true, false);
+                messageDlg.Properties.AddLabel(null, label, true); // 0
+                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true); // 1
+                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, "Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.", false); // 2
+                messageDlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
+                messageDlg.Properties.Build();
+                messageDlg.ShowDialogAsync(null, (r) =>
+                {
+                    callback(messageDlg.Properties.GetPropertyValue<bool>(1));
+                });
+            }
+            else
+            {
+                callback(false);
+            }
         }
 
-        public void Apply(bool custom = false)
+        private void FinishApply(Action callback)
+        {
+            song.DeleteNotesPastMaxInstanceLength();
+            song.InvalidateCumulativePatternCache();
+            song.Project.ValidateIntegrity();
+            callback();
+        }
+
+        public void ApplyAsync(bool custom, Action callback)
         {
             if (song.UsesFamiTrackerTempo)
             {
@@ -276,6 +295,8 @@ namespace FamiStudio
                             song.ClearPatternCustomSettings(i);
                     }
                 }
+
+                FinishApply(callback);
             }
             else
             {
@@ -296,15 +317,15 @@ namespace FamiStudio
 
                 if (patternIdx == -1)
                 {
-                    var convertTempo = false;
+                    ShowConvertTempoDialogAsync(noteLength != originalNoteLength, (c) =>
+                    {
+                        song.ChangeFamiStudioTempoGroove(groove, c);
+                        song.SetBeatLength(beatLength * song.NoteLength);
+                        song.SetDefaultPatternLength(patternLength * song.NoteLength);
+                        song.SetGroovePaddingMode(groovePadMode);
 
-                    if (noteLength != originalNoteLength)
-                        convertTempo = ShowConvertTempoDialog();
-
-                    song.ChangeFamiStudioTempoGroove(groove, convertTempo);
-                    song.SetBeatLength(beatLength * song.NoteLength);
-                    song.SetDefaultPatternLength(patternLength * song.NoteLength);
-                    song.SetGroovePaddingMode(groovePadMode);
+                        FinishApply(callback);
+                    });
                 }
                 else
                 {
@@ -326,28 +347,26 @@ namespace FamiStudio
                             patternsToResize.Add(i);
                     }
 
-                    if (patternsToResize.Count > 0)
+                    ShowConvertTempoDialogAsync(patternsToResize.Count > 0, (c) =>
                     {
-                        if (ShowConvertTempoDialog())
+                        if (c)
                         {
                             foreach (var p in patternsToResize)
                                 song.ResizePatternNotes(p, actualNoteLength);
                         }
-                    }
 
-                    for (int i = minPatternIdx; i <= maxPatternIdx; i++)
-                    {
-                        if (custom)
-                            song.SetPatternCustomSettings(i, actualPatternLength, actualBeatLength, groove, groovePadMode);
-                        else
-                            song.ClearPatternCustomSettings(i);
-                    }
+                        for (int i = minPatternIdx; i <= maxPatternIdx; i++)
+                        {
+                            if (custom)
+                                song.SetPatternCustomSettings(i, actualPatternLength, actualBeatLength, groove, groovePadMode);
+                            else
+                                song.ClearPatternCustomSettings(i);
+                        }
+
+                        FinishApply(callback);
+                    });
                 }
             }
-
-            song.DeleteNotesPastMaxInstanceLength();
-            song.InvalidateCumulativePatternCache();
-            song.Project.ValidateIntegrity();
         }
     }
 }

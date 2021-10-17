@@ -11,6 +11,8 @@ namespace FamiStudio
         private const string NesSndEmuDll = "NesSndEmu.dll";
 #elif FAMISTUDIO_MACOS
         private const string NesSndEmuDll = "NesSndEmu.dylib";
+#elif FAMISTUDIO_ANDROID
+        private const string NesSndEmuDll = "libNesSndEmu.so";
 #else
         private const string NesSndEmuDll = "NesSndEmu.so";
 #endif
@@ -34,7 +36,7 @@ namespace FamiStudio
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuReset")]
         public extern static void Reset(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuEnableChannel")]
-        public extern static void EnableChannel(int apuIdx, int idx, int enable);
+        public extern static void EnableChannel(int apuIdx, int exp, int idx, int enable);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuStartSeeking")]
         public extern static void StartSeeking(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuStopSeeking")]
@@ -43,8 +45,8 @@ namespace FamiStudio
         public extern static int IsSeeking(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuTrebleEq")]
         public extern static void TrebleEq(int apuIdx, int expansion, double treble, int sample_rate);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetAudioExpansion")]
-        public extern static int GetAudioExpansion(int apuIdx);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetAudioExpansions")]
+        public extern static int GetAudioExpansions(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSetExpansionVolume")]
         public extern static int SetExpansionVolume(int apuIdx, int expansion, double volume);
 
@@ -62,6 +64,17 @@ namespace FamiStudio
         public const int APU_EXPANSION_MMC5    = 4;
         public const int APU_EXPANSION_NAMCO   = 5;
         public const int APU_EXPANSION_SUNSOFT = 6;
+
+        public const int APU_EXPANSION_FIRST   = 1;
+        public const int APU_EXPANSION_LAST    = 6;
+
+        public const int APU_EXPANSION_MASK_NONE    = 0;
+        public const int APU_EXPANSION_MASK_VRC6    = 1 << 0;
+        public const int APU_EXPANSION_MASK_VRC7    = 1 << 1;
+        public const int APU_EXPANSION_MASK_FDS     = 1 << 2;
+        public const int APU_EXPANSION_MASK_MMC5    = 1 << 3;
+        public const int APU_EXPANSION_MASK_NAMCO   = 1 << 4;
+        public const int APU_EXPANSION_MASK_SUNSOFT = 1 << 5;
 
         public const int APU_PL1_VOL        = 0x4000;
         public const int APU_PL1_SWEEP      = 0x4001;
@@ -209,6 +222,11 @@ namespace FamiStudio
             new ushort[97]
         };
 
+        public static int ExpansionToMask(int exp)
+        {
+            return exp == APU_EXPANSION_NONE ? APU_EXPANSION_MASK_NONE : 1 << (exp - 1);
+        }
+
 #if DEBUG
         private static void DumpNoteTable(ushort[] noteTable, string name = "")
         {
@@ -225,7 +243,7 @@ namespace FamiStudio
 #endif
 
         // Taken from FamiTracker 
-        public static void InitializeNoteTables()
+        private static void InitializeNoteTables()
         {
             const double BaseFreq = 32.7032; /// C0
 
@@ -262,6 +280,11 @@ namespace FamiStudio
             DumpNoteTable(NoteTableN163[6], "N163");
             DumpNoteTable(NoteTableN163[7], "N163");
 #endif
+        }
+
+        public static void Initialize()
+        {
+            InitializeNoteTables();
         }
 
         public static ushort[] GetNoteTableForChannelType(int channelType, bool pal, int numN163Channels)
@@ -328,9 +351,9 @@ namespace FamiStudio
             return FamiStudio.StaticProject.GetSampleForAddress(addr - 0xc000);
         }
 
-        public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int expansion, int numExpansionChannels, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
+        public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int expansions, int numNamcoChannels, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
         {
-            Init(apuIdx, sampleRate, pal ? 1 : 0, expansion, dmcCallback);
+            Init(apuIdx, sampleRate, pal ? 1 : 0, expansions, dmcCallback);
             Reset(apuIdx);
             WriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC
             WriteRegister(apuIdx, APU_TRI_LINEAR, 0x80); // disable triangle length counter
@@ -342,41 +365,48 @@ namespace FamiStudio
             WriteRegister(apuIdx, APU_PL2_SWEEP,  0x08);
 
             var apuSettings = Settings.ExpansionMixerSettings[NesApu.APU_EXPANSION_NONE];
-            var expSettings = Settings.ExpansionMixerSettings[expansion];
 
             TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.treble, sampleRate);
             SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.volume));
 
-            if (expansion != APU_EXPANSION_NONE)
+            if (expansions != APU_EXPANSION_MASK_NONE)
             {
-                TrebleEq(apuIdx, expansion, expSettings.treble, sampleRate);
-                SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.volume));
-            }
+                for (int expansion = APU_EXPANSION_FIRST; expansion <= APU_EXPANSION_LAST; expansion++)
+                {
+                    if ((expansions & ExpansionToMask(expansion)) != 0)
+                    {
+                        var expSettings = Settings.ExpansionMixerSettings[expansion];
 
-            switch (expansion)
-            {
-                case APU_EXPANSION_VRC6:
-                    WriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change
-                    break;
-                case APU_EXPANSION_FDS:
-                    break;
-                case APU_EXPANSION_MMC5:
-                    WriteRegister(apuIdx, MMC5_PL1_VOL, 0x10);
-                    WriteRegister(apuIdx, MMC5_PL2_VOL, 0x10);
-                    WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
-                    break;
-                case APU_EXPANSION_VRC7:
-                    WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
-                    break;
-                case APU_EXPANSION_NAMCO:
-                    // This is mainly because the instrument player might not update all the channels all the time.
-                    WriteRegister(apuIdx, N163_ADDR, N163_REG_VOLUME); 
-                    WriteRegister(apuIdx, N163_DATA, (numExpansionChannels - 1) << 4);
-                    break;
-                case APU_EXPANSION_SUNSOFT:
-                    WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
-                    WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
-                    break;
+                        TrebleEq(apuIdx, expansion, expSettings.treble, sampleRate);
+                        SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.volume));
+
+                        switch (expansion)
+                        {
+                            case APU_EXPANSION_VRC6:
+                                WriteRegister(apuIdx, VRC6_CTRL, 0x00);  // No halt, no octave change
+                                break;
+                            case APU_EXPANSION_FDS:
+                                break;
+                            case APU_EXPANSION_MMC5:
+                                WriteRegister(apuIdx, MMC5_PL1_VOL, 0x10);
+                                WriteRegister(apuIdx, MMC5_PL2_VOL, 0x10);
+                                WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
+                                break;
+                            case APU_EXPANSION_VRC7:
+                                WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
+                                break;
+                            case APU_EXPANSION_NAMCO:
+                                // This is mainly because the instrument player might not update all the channels all the time.
+                                WriteRegister(apuIdx, N163_ADDR, N163_REG_VOLUME);
+                                WriteRegister(apuIdx, N163_DATA, (numNamcoChannels - 1) << 4);
+                                break;
+                            case APU_EXPANSION_SUNSOFT:
+                                WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
+                                WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
+                                break;
+                        }
+                    }
+                }
             }
         }
     }

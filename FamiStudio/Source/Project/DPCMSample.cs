@@ -87,7 +87,7 @@ namespace FamiStudio
         {
             this.id = id;
             this.name = name;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
         }
 
         public float GetPlaybackSampleRate(bool palPlayback)
@@ -360,7 +360,7 @@ namespace FamiStudio
             }
         }
 
-        private void ResetVolumeEnvelope()
+        public void ResetVolumeEnvelope()
         {
             volumeEnvelope[0] = new SampleVolumePair(0);
             volumeEnvelope[1] = new SampleVolumePair((int)Math.Round(SourceNumSamples * (1.0f / 3.0f)));
@@ -392,7 +392,7 @@ namespace FamiStudio
                 buffer.Serialize(ref reverseBits);
             }
 
-            color = ThemeBase.RandomCustomColor();
+            color = Theme.RandomCustomColor();
             paddingMode = DPCMPaddingType.Unpadded;
 
             ResetVolumeEnvelope();

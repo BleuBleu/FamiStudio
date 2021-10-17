@@ -1,9 +1,82 @@
-3.1.2
-=====
-- Test the ASM parsing thing a bit more
-- Square 2 volume issue.
+Android
+=======
 
-- Flatpak ffmpeg thing.
+Testing:
+- Test copy/paste/cut/delete in all cases (need to be able to delete samples too)
+- Test all scalings. 
+- Envelope selection, copy paste, etc.
+
+Polish:
+- Disable a bunch of warnings.
+- Paste should happen at cursor, not selection? Must be consistent with PR.
+- Smaller highlight for instrument
+- Margins for auto-scroll, migrate all to new function.
+- Hide more stuff in the settings
+- Some dialogs look bad (special paste, cleanup, etc.)
+- Tutorial (post-beta?)
+- Option to hide piano in piano roll? (would need octave labels)
+- When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
+- Env editor : clicking again on highlight should remove it?
+- Dont do a fling when the transaction we are ending is a selection. Weird.
+- Add "gear" icon for properties?
+- BUG : When moving mouse out of project explorer towards piano roll, the sequencer icon dont change back.
+- BUG : FDS Waveform on mobile doesnt have the right range it seems.
+- Beta testing message somewhere.
+
+Icon notes:
+- 46% zoom, start with 128x128 png.
+
+3.2.0
+=====
+- Change insturment dialog for a combo
+
+DPCM/Tri volume thing (from tromino)
+- Run more tests on NES, with more volumes + noise too.
+- Add a global 80% volume to match FamiTracker.
+- Channels will need to be rebalanced a bit since i bumped the squares.
+- Compare with old FamiStudio to see if old project will sound like ass.
+	
+Misc:
+- Mac/Linux : CheckListBox doesnt fire events (needed for Midi import/PAL).
+- Mac/Linux : Make sure piano roll maximize layout works, and also that sequencer doesnt render when disabled.
+- Make sure OnMouseLeave works on that too.
+- Fix GTK single multiple label issue.	
+
+Testing
+=======
+- Add multi-exp unit test.
+- Test project/instrument merge (with expansions).
+- Retest with various scaling (lots of cahnges to everything, zooming, etc.)
+- Test without snapping, i tested snapping a lot, but not witout.
+- Compare instrument colors (seq/piano roll) for all platforms
+- Re-test last open file.
+- Occasional crash when opening hopes and dreams on Android. 
+- Test light/dark modes.
+- Linux seem to support 150% scaling as well, make sure the fonts are there.
+- From Perkka "when you try to quit no using cmd+q or the red close button in the corner of the windows you get a question if you want to save first so all fine and dandy, but if you rightclick on the application icon in the dock and chose quit you'll never get that question, it'll just quit and stuff will be lost"
+
+Packaging:
+==========
+- Make download list vertical on website.
+- Update DLLs to VS 2019 + Package redist.
+- Recompile everything (ROM, NSF, etc). Make sure it says 3.2.0.
+
+Features missing from the Mobile version
+========================================
+- No MIDI import/export
+- No NSF import
+- No Sound Engine/Famitone 2 export
+- No FamiTracker text export
+- No FamiStudio text export
+- No FamiTracker FTI instrument import
+- No DPCM sample import from other projects (WAV/DMC only)
+- No DPCM sample data export
+- No MIDI controller support
+
+Videos:
+=======
+- Mobile tutorial? Or just a documentation page with a bunch of GIFs?
+- Tutorial for FamiTracker
 
 Linux notes 
 =========== 
@@ -78,6 +151,7 @@ Backlog:
 - Left/right pan with +/- (cubase style)?
 - TailWindz : CTRL + Scroll should do "something"
 - Hardware sweep (how to not conflict with smooth vibrato?)
+- Write delta counter (Zxx).
 - Scales
 - Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 

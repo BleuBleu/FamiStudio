@@ -8,7 +8,7 @@ namespace FamiStudio
     {
         Dictionary<string, Dictionary<string, string>> iniContent = new Dictionary<string, Dictionary<string, string>>();
 
-        public void Load(string filename)
+        public bool Load(string filename)
         {
             try
             {
@@ -43,9 +43,12 @@ namespace FamiStudio
                 {
                     iniContent.Add(sectionName, sectionValues);
                 }
+
+                return true;
             }
             catch
             {
+                return false;
             }
         }
 

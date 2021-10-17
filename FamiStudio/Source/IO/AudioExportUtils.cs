@@ -93,6 +93,7 @@ namespace FamiStudio
                     }
 
                     numChannels = 2;
+                    introDuration *= 2;
                 }
                 else
                 {
@@ -152,14 +153,23 @@ namespace FamiStudio
         {
             "WAV",
             "MP3",
+#if !FAMISTUDIO_ANDROID
             "Ogg Vorbis"
+#endif
         };
 
-        public static readonly string[] Extentions =
+        public static readonly string[] Extensions =
         {
             "wav",
             "mp3",
             "ogg",
+        };
+
+        public static readonly string[] MimeTypes =
+        {
+            "audio/x-wav",
+            "audio/mpeg",
+            "audio/ogg",
         };
 
         public static int GetValueForName(string str)

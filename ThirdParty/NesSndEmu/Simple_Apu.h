@@ -19,43 +19,21 @@
 class Simple_Apu {
 public:
 
-	enum { expansion_none       = 0 };
-	enum { expansion_vrc6       = 1 };
-	enum { expansion_vrc7       = 2 };
-	enum { expansion_fds        = 3 };
-	enum { expansion_mmc5       = 4 };
-	enum { expansion_namco      = 5 };
-	enum { expansion_sunsoft    = 6 };
+	enum { expansion_none = 0 };
+	enum { expansion_vrc6 = 1 };
+	enum { expansion_vrc7 = 2 };
+	enum { expansion_fds = 3 };
+	enum { expansion_mmc5 = 4 };
+	enum { expansion_namco = 5 };
+	enum { expansion_sunsoft = 6 };
 
-	enum { channel_square1      = 0 };
-	enum { channel_square2      = 1 };
-	enum { channel_triangle     = 2 };
-	enum { channel_noise        = 3 };
-	enum { channel_dpcm         = 4 };
-	enum { channel_vrc6_square1 = 5 };
-	enum { channel_vrc6_square2 = 6 };
-	enum { channel_vrc6_saw     = 7 };
-	enum { channel_vrc7_fm1     = 8 };
-	enum { channel_vrc7_fm2     = 9 };
-	enum { channel_vrc7_fm3     = 10 };
-	enum { channel_vrc7_fm4     = 11 };
-	enum { channel_vrc7_fm5     = 12 };
-	enum { channel_vrc7_fm6     = 13 };
-	enum { channel_fds          = 14 };
-	enum { channel_mmc5_square1 = 15 };
-	enum { channel_mmc5_square2 = 16 };
-	enum { channel_mmc5_dpcm    = 17 };
-	enum { channel_n163_wave1   = 18 };
-	enum { channel_n163_wave2   = 19 };
-	enum { channel_n163_wave3   = 20 };
-	enum { channel_n163_wave4   = 21 };
-	enum { channel_n163_wave5   = 22 };
-	enum { channel_n163_wave6   = 23 };
-	enum { channel_n163_wave7   = 24 };
-	enum { channel_n163_wave8   = 25 };
-	enum { channel_s5b_square1  = 26 };
-	enum { channel_s5b_square2  = 27 };
-	enum { channel_s5b_square3  = 28 };
+	enum { expansion_mask_none       = 0 };
+	enum { expansion_mask_vrc6       = 1 << 0 };
+	enum { expansion_mask_vrc7       = 1 << 1 };
+	enum { expansion_mask_fds        = 1 << 2 };
+	enum { expansion_mask_mmc5       = 1 << 3 };
+	enum { expansion_mask_namco      = 1 << 4 };
+	enum { expansion_mask_sunsoft    = 1 << 5 };
 
 	Simple_Apu();
 	~Simple_Apu();
@@ -83,13 +61,13 @@ public:
 	// Resets
 	void reset();
 
-	void set_audio_expansion(long exp);
-	int get_audio_expansion() const { return expansion; }
+	void set_audio_expansions(long exp);
+	int get_audio_expansions() const { return expansions; }
 
 	// Number of samples in buffer
 	long samples_avail() const;
 
-	void enable_channel(int, bool);
+	void enable_channel(int, int, bool);
 	
 	void treble_eq(int exp, double treble, int sample_rate);
 	void set_expansion_volume(int expansion, double evolume);
@@ -110,9 +88,24 @@ public:
 	bool is_seeking() const { return seeking; }
 
 private:
+
+	//inline long nonlinearize(long raw_sample) const
+	//{
+	//	const int   sample_shift = blip_sample_bits - 16;
+	//	const float sample_scale = (float)(1 << sample_shift);
+
+	//	double sample_float = raw_sample / (1 << sample_shift);
+
+	//	float sample_202_range = (s / 65535.0f * 202.0f);
+	//	return (long)((163.67f / (24329.0f / sample_202_range + 100.0f)) * 65535.0f);
+	//}
+
+private:
 	bool pal_mode;
 	bool seeking;
-	int  expansion;
+	double tnd_volume;
+	int  expansions;
+	long nonlinear_accum;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
 	Nes_Vrc7 vrc7;
@@ -122,6 +115,7 @@ private:
 	//Nes_Sunsoft sunsoft; // My version, based on emu2149
 	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
 	Blip_Buffer buf;
+	Blip_Buffer tnd;
 	blip_time_t time;
 	blip_time_t frame_length;
 	blip_time_t clock() { return time += 4; }

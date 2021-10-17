@@ -8,6 +8,8 @@ using System.Threading;
 using AudioStream = FamiStudio.XAudio2Stream;
 #elif FAMISTUDIO_LINUX
 using AudioStream = FamiStudio.OpenALStream;
+#elif FAMISTUDIO_ANDROID
+using AudioStream = FamiStudio.AndroidAudioStream;
 #else
 using AudioStream = FamiStudio.PortAudioStream;
 #endif
@@ -16,7 +18,6 @@ namespace FamiStudio
 {
     public class AudioPlayer : BasePlayer
     {
-        protected const int DefaultSampleRate = 44100;
         protected const float MetronomeFirstBeatPitch  = 1.375f;
         protected const float MetronomeFirstBeatVolume = 1.5f;
 
@@ -52,7 +53,6 @@ namespace FamiStudio
             if (metronome != null)
             {
                 var newSamples = new short[emulation.Length];
-                var metronomeIdx = metronomeIndex;
 
                 var i = 0;
                 var j = (float)metronomeIndex;

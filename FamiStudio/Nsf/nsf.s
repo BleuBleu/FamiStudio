@@ -27,7 +27,11 @@
         FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
     .endif
 
-    .include "../../SoundEngine/famistudio_ca65.s"
+    .ifdef FAMISTUDIO_MULTI_EXPANSION
+        .include "../../SoundEngine/famistudio_multi_ca65.s"
+    .else
+        .include "../../SoundEngine/famistudio_ca65.s"
+    .endif
 
 .else
 
@@ -127,6 +131,12 @@ nsf_mode: .res 1
 .endif
 
 .ifdef FAMISTUDIO
+
+    .ifdef FAMISTUDIO_MULTI_EXPANSION
+        lda nsf_expansion_mask
+        jsr famistudio_multi_init
+    .endif
+
     jsr famistudio_init
     lda #0
     jsr famistudio_music_play
@@ -155,6 +165,8 @@ nsf_mode: .res 1
 
 nsf_dpcm_page_start: .res 1
 nsf_dpcm_page_cnt:   .res 1
+nsf_expansion_mask:  .res 1
+nsf_unused:          .res 1
 
 ; each entry in the song table is 4 bytes
 ;  - first page of the song (1 byte)

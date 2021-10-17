@@ -64,10 +64,10 @@ namespace FamiStudio
         {
             return
                 instrument.IsEnvelopeActive(EnvelopeType.Pitch) ||
-                instrument.ExpansionType == ExpansionType.Fds   ||
-                instrument.ExpansionType == ExpansionType.N163  ||
-                instrument.ExpansionType == ExpansionType.Vrc6  ||
-                instrument.ExpansionType == ExpansionType.Vrc7;
+                instrument.IsFdsInstrument  ||
+                instrument.IsN163Instrument ||
+                instrument.IsVrc6Instrument ||
+                instrument.IsVrc7Instrument;
         }
 
         static public ParamInfo[] GetParams(Instrument instrument)
@@ -83,6 +83,9 @@ namespace FamiStudio
                     SetValue = (v) =>
                     {
                         var newRelative = v != 0;
+
+                        /*
+                         * Intentially not doing this, this is more confusing/frustrating than anything.
                         if (instrument.Envelopes[EnvelopeType.Pitch].Relative != newRelative)
                         {
                             if (newRelative)
@@ -90,13 +93,14 @@ namespace FamiStudio
                             else
                                 instrument.Envelopes[EnvelopeType.Pitch].ConvertToAbsolute();
                         }
+                        */
 
                         instrument.Envelopes[EnvelopeType.Pitch].Relative = newRelative;
                     }
                 });
             }
 
-            switch (instrument.ExpansionType)
+            switch (instrument.Expansion)
             {
                 case ExpansionType.Fds:
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, null, true)

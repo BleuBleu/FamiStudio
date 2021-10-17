@@ -12,8 +12,8 @@ namespace FamiStudio
 #endif
 
         // Project properties.
-        public readonly static string ExpansionAudio = "Expansion audio chip to use. This will add extra audio channels and disable any PAL support.";
-        public readonly static string ExpansionNumChannels = "Namco 163 audio supports between 1 and 8 channels. As you add more channels the audio quality will deteriorate.";
+        public readonly static string ExpansionAudio = "Expansion audio chip(s) to use. This will add extra audio channels and disable any PAL support.";
+        public readonly static string ExpansionNumChannels = "Namco 163 audio supports between 1 and 8 channels. As you add more channels the audio quality will deteriorate. Only available when the 'Namco 163' expansion is enabled.";
         public readonly static string TempoMode = "FamiStudio tempo gives you precise control to every frame, has good PAL/NTSC conversion support and is the recommended way to use FamiStudio.\nFamiTracker tempo behaves like FamiTracker with speed/tempo settings. Use only if you have very specific compatibility needs as support is limited and it will not yield the best FamiStudio experience.";
         public readonly static string AuthoringMachine = "For use with FamiStudio tempo. Defines the machine on which the music is edited. Playback to the other space will be approximate, but still good.";
 
@@ -22,7 +22,7 @@ namespace FamiStudio
         public readonly static string Tempo = "This is not the BPM! It is the rate at which the internal tempo counter in incremented.\nValues other than 150 may yield uneven notes. Please see FamiTracker documentation.";
         public readonly static string Speed = "If tempo is 150, number of NTSC frames (1/60th of a second) between each notes.\nLarger values lead to slower tempo. Please see FamiTracker documentation.";
         public readonly static string BPM = "Beats per minute.";
-        public readonly static string FramesPerNote = "Number of frames (1/60th of a second in NTSC, 1/50th in PAL) in a notes.";
+        public readonly static string FramesPerNote = "Number of frames (1/60th of a second in NTSC, 1/50th in PAL) in a notes.\nThis is computed automatically from the BPM.";
         public readonly static string NotesPerPattern = "Number of notes in a pattern. A pattern is the smallest unit of your song that you may want to repeat multiple times.";
         public readonly static string NotesPerBeat = "Number of notes in a beat. A darker line will be drawn between beats in the piano roll. Affects BPM calculation.";
         public readonly static string Groove = "The sequence of frame counts that will be executed to achieve the desired BPM.";

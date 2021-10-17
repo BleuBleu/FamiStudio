@@ -21,20 +21,6 @@ namespace FamiStudio
         bool AbortOperation { get; }
     }
 
-    public class ScopedLogOutput : IDisposable
-    {
-        public ScopedLogOutput(ILogOutput log, LogSeverity minSeverity = LogSeverity.Info)
-        {
-            Log.LogOutput = log;
-            Log.MinSeverity = minSeverity;
-        }
-
-        public void Dispose()
-        {
-            Log.LogOutput = null;
-        }
-    }
-
     public static class Log
     {
         private static readonly string[] SeverityStrings = new []
@@ -53,6 +39,19 @@ namespace FamiStudio
             if ((int)severity >= (int)MinSeverity && LogOutput != null)
                 LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
             Debug.WriteLine(SeverityStrings[(int)severity] + msg);
+        }
+
+        public static void SetLogOutput(ILogOutput log, LogSeverity minSeverity = LogSeverity.Info)
+        {
+            Debug.Assert(LogOutput == null);
+
+            LogOutput = log;
+            MinSeverity = minSeverity;
+        }
+
+        public static void ClearLogOutput()
+        {
+            LogOutput = null;
         }
 
         public static void ReportProgress(float progress)

@@ -39,7 +39,7 @@ namespace FamiStudio
         public static bool TrackPadControls = false;
         public static bool ShowTutorial = true;
         public static bool ClearUndoRedoOnSave = true;
-        public static bool OpenLastProjectOnStart = true;
+        public static bool OpenLastProjectOnStart = PlatformUtils.IsDesktop;
         public static bool AutoSaveCopy = true;
         public static string LastProjectFile;
 
@@ -54,7 +54,7 @@ namespace FamiStudio
         public static int FollowSync = 0;
         public static bool ShowNoteLabels = true;
         public static int  ScrollBars = ScrollBarsNone;
-        public static bool ShowOscilloscope = false;
+        public static bool ShowOscilloscope = true;
         public static bool ForceCompactSequencer = false;
         public static bool ShowImplicitStopNotes = true;
 
@@ -107,6 +107,8 @@ namespace FamiStudio
             { -1, -1 },
             { -1, -1 }
         };
+#elif FAMISTUDIO_ANDROID
+        public static readonly int[,] DefaultQwertyKeys = new int[37, 2];
 #else
         public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
         {
@@ -163,11 +165,13 @@ namespace FamiStudio
         // Audio section
 #if FAMISTUDIO_LINUX
         const int DefaultNumBufferedAudioFrames = 4; // ALSA seems to like to have one extra buffer.
+#elif FAMISTUDIO_ANDROID
+        const int DefaultNumBufferedAudioFrames = 2;
 #else
         const int DefaultNumBufferedAudioFrames = 3;
 #endif
         public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
-        public static int InstrumentStopTime = 2;
+        public static int InstrumentStopTime = 1;
         public static bool SquareSmoothVibrato = true;
         public static bool NoDragSoungWhenPlaying = false;
         public static int MetronomeVolume = 50;
@@ -297,7 +301,7 @@ namespace FamiStudio
 
             UpdateKeyCodeMaps();
 
-            if (DpiScaling != 100 && DpiScaling != 150 && DpiScaling != 200)
+            if (Array.IndexOf(global::FamiStudio.DpiScaling.GetAvailableScalings(), DpiScaling) < 0)
                 DpiScaling = 0;
 
             InstrumentStopTime = Utils.Clamp(InstrumentStopTime, 0, 10);
@@ -322,18 +326,19 @@ namespace FamiStudio
             // Clamp to something reasonable.
             NumBufferedAudioFrames = Utils.Clamp(NumBufferedAudioFrames, 2, 16);
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
             // Linux or Mac is more likely to have standard path for ffmpeg.
-            if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
+            if (PlatformUtils.IsLinux || PlatformUtils.IsMacOS)
             {
-                if (File.Exists("/usr/bin/ffmpeg"))
-                    FFmpegExecutablePath = "/usr/bin/ffmpeg";
-                else if (File.Exists("/usr/local/bin/ffmpeg"))
-                    FFmpegExecutablePath = "/usr/local/bin/ffmpeg";
-                else
-                    FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
+                if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
+                {
+                    if (File.Exists("/usr/bin/ffmpeg"))
+                        FFmpegExecutablePath = "/usr/bin/ffmpeg";
+                    else if (File.Exists("/usr/local/bin/ffmpeg"))
+                        FFmpegExecutablePath = "/usr/local/bin/ffmpeg";
+                    else
+                        FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
+                }
             }
-#endif
 
             // No deprecation at the moment.
             Version = SettingsVersion;
@@ -464,13 +469,7 @@ namespace FamiStudio
             }
             else
             {
-#if FAMISTUDIO_WINDOWS
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
-#elif FAMISTUDIO_LINUX
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
-#else
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
-#endif
+                return PlatformUtils.SettingsDirectory;
             }
         }
 

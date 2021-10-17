@@ -22,7 +22,7 @@ public:
 	~Nes_Apu();
 	
 	// Set buffer to generate all sound into, or disable sound if NULL
-	void output( Blip_Buffer* );
+	void output( Blip_Buffer*, Blip_Buffer* );
 	
 	// Set memory reader callback used by DMC oscillator to fetch samples.
 	// When callback is invoked, 'user_data' is passed unchanged as the
@@ -103,10 +103,8 @@ public:
 	void stop_seeking(blip_time_t& clock);
 	void write_shadow_register(int addr, int data);
 
-// End of public interface.
-private:
-	friend class Nes_Nonlinearizer;
 	void enable_nonlinear( double volume );
+
 private:
 	// noncopyable
 	Nes_Apu( const Nes_Apu& );

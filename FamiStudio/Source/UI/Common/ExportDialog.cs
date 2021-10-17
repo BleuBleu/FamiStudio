@@ -1,10 +1,10 @@
-﻿using FamiStudio.Properties;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -25,12 +25,13 @@ namespace FamiStudio
             FamiStudioSfx,
             FamiTone2Music,
             FamiTone2Sfx,
+            Share,
             Max
         };
 
         string[] ExportFormatNames =
         {
-            "WAV / MP3 / OGG",
+            PlatformUtils.IsDesktop ? "WAV / MP3 / OGG" : "WAV / MP3",
             "Video (Piano Roll)",
             "Video (Oscilloscope)",
             "NSF",
@@ -42,6 +43,7 @@ namespace FamiStudio
             "FamiStudio SFX Code",
             "FamiTone2 Music Code",
             "FamiTone2 SFX Code",
+            "Share",
             ""
         };
 
@@ -58,30 +60,28 @@ namespace FamiStudio
             "ExportFamiStudioEngine",
             "ExportFamiStudioEngine",
             "ExportFamiTone2",
-            "ExportFamiTone2"
+            "ExportFamiTone2",
+            "ExportShare"
         };
 
         private Project project;
         private MultiPropertyDialog dialog;
         private uint lastExportCrc;
         private string lastExportFilename;
+        private FamiStudio app;
 
         public delegate void EmptyDelegate();
         public event EmptyDelegate Exporting;
 
-        public unsafe ExportDialog(Project project)
+        public unsafe ExportDialog(FamiStudio famistudio)
         {
             int width  = 600;
-            int height = 550;
+            int height = PlatformUtils.IsLinux ? 650 : (PlatformUtils.IsMacOS ? 630 : 550);
 
-#if FAMISTUDIO_LINUX
-            height += 100;
-#elif FAMISTUDIO_MACOS
-            height += 80;
-#endif
-
-            this.dialog = new MultiPropertyDialog(width, height, 200);
-            this.project = project;
+            dialog = new MultiPropertyDialog("Export Songs", width, height, 200);
+            dialog.SetVerb("Export");
+            app = famistudio;
+            project = app.Project;
 
             for (int i = 0; i < (int)ExportFormat.Max; i++)
             {
@@ -89,6 +89,19 @@ namespace FamiStudio
                 var page = dialog.AddPropertyPage(ExportFormatNames[i], ExportIcons[i]);
                 CreatePropertyPage(page, format);
             }
+
+            // Hide a few formats we don't care about on mobile.
+            dialog.SetPageVisible((int)ExportFormat.Midi,            PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.Text,            PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTracker,     PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiStudioSfx,   PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTone2Music,  PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx,    PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.Share,           PlatformUtils.IsMobile);
+
+            if (PlatformUtils.IsDesktop)
+                UpdateMidiInstrumentMapping();
         }
 
         private string[] GetSongNames()
@@ -99,7 +112,44 @@ namespace FamiStudio
             return names;
         }
 
-        private object[,] GetDefaultChannelsData()
+        private string[] GetChannelNames()
+        {   
+            var channelTypes = project.GetActiveChannelList();
+            var channelNames = new string[channelTypes.Length];
+            for (int i = 0; i < channelTypes.Length; i++)
+            {
+                channelNames[i] = ChannelType.GetNameWithExpansion(channelTypes[i]);
+            }
+
+            return channelNames;
+        }
+
+        private bool[] GetDefaultActiveChannels()
+        {
+            // Find all channels used by the project.
+            var anyChannelActive = false;
+            var channelActives = new bool[project.GetActiveChannelCount()];
+
+            foreach (var song in project.Songs)
+            {
+                for (int i = 0; i < song.Channels.Length; i++)
+                {
+                    var channel = song.Channels[i];
+                    if (channel.Patterns.Count > 0)
+                    {
+                        anyChannelActive = true;
+                        channelActives[i] = true;
+                    }
+                }
+            }
+
+            if (!anyChannelActive)
+                return null;
+
+            return channelActives;
+        }
+
+        private object[,] GetDefaultChannelsGridData()
         {
             // Find all channels used by the project.
             var anyChannelActive = false;
@@ -122,9 +172,7 @@ namespace FamiStudio
             for (int i = 0; i < channelTypes.Length; i++)
             {
                 data[i, 0] = !anyChannelActive || channelActives[i];
-                data[i, 1] = ChannelType.Names[channelTypes[i]] ;
-                if (i >= ChannelType.ExpansionAudioStart)
-                    data[i, 1] += $" ({project.ExpansionAudioShortName})";
+                data[i, 1] = ChannelType.GetNameWithExpansion(channelTypes[i]);
                 data[i, 2] = 50;
             }
 
@@ -133,23 +181,25 @@ namespace FamiStudio
 
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {
-            if (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath))
+            // TODO : Make this part of the VideoEncoder.
+            var canExportVideo = (!PlatformUtils.IsDesktop || (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath)));
+
+            if (canExportVideo)
             {
                 page.AddDropDownList("Song :", songNames, songNames[0]); // 0
                 page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 1
                 page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 2
                 page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
                 page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000"); // 4
-                page.AddIntegerRange("Loop Count :", 1, 1, 8); // 5
+                page.AddNumericUpDown("Loop Count :", 1, 1, 8); // 5
                 return true;
             }
             else
             {
                 page.AddLabel(null, "Video export requires FFmpeg. Please go in the application settings and look for the 'FFmpeg' section.", true);
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
                 // HACK : Last minute hack, too lazy to debug GTK layouting issues right now.
-                page.AddLabel(null, " ");
-#endif
+                if (PlatformUtils.IsGTK)
+                    page.AddLabel(null, " ");
                 return false;
             }
         }
@@ -166,14 +216,20 @@ namespace FamiStudio
                     page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
                     page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
                     page.AddDropDownList("Mode :", new[] { "Loop N times", "Duration" }, "Loop N times"); // 4
-                    page.AddIntegerRange("Loop count:", 1, 1, 10); // 5
-                    page.AddIntegerRange("Duration (sec):", 120, 1, 1000); // 6
+                    page.AddNumericUpDown("Loop count:", 1, 1, 10); // 5
+                    page.AddNumericUpDown("Duration (sec):", 120, 1, 1000); // 6
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
                     page.AddCheckBox("Stereo", false); // 9
-                    page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 10
+                    if (PlatformUtils.IsDesktop)
+                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
+                    else
+                        page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
+                    page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // No separate files on mobile.
+                    page.SetPropertyVisible(8, PlatformUtils.IsDesktop); // No separate files on mobile.
+                    page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // No stereo on mobile.
                     page.SetColumnEnabled(10, 2, false);
                     page.PropertyChanged += WavMp3_PropertyChanged;
                     page.PropertyClicked += WavMp3_PropertyClicked;
@@ -183,48 +239,58 @@ namespace FamiStudio
                     {
                         page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
                         page.AddCheckBox("Stereo", false); // 7
-                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 8
+                        if (PlatformUtils.IsDesktop)
+                            page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 8
+                        else
+                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 8
                         page.SetColumnEnabled(8, 2, false);
+                        page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // Stereo on mobile.
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
                 case ExportFormat.VideoOscilloscope:
                     if (AddCommonVideoProperties(page, songNames)) // 0-5
                     {
-                        page.AddIntegerRange("Oscilloscope Columns :", 1, 1, 3); // 6
-                        page.AddIntegerRange("Oscilloscope Thickness :", 1, 1, 4); // 7
+                        page.AddNumericUpDown("Oscilloscope Columns :", 1, 1, 5); // 6
+                        page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 4); // 7
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
                         page.AddCheckBox("Stereo", false); // 9
-                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsData(), 200); // 10
+                        if (PlatformUtils.IsDesktop)
+                            page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
+                        else
+                            page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
                         page.SetColumnEnabled(10, 2, false);
+                        page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // Stereo on mobile.
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
                 case ExportFormat.Nsf:
-                    page.AddString("Name :", project.Name, 31); // 0
-                    page.AddString("Artist :", project.Author, 31); // 1
-                    page.AddString("Copyright :", project.Copyright, 31); // 2
+                    page.AddTextBox("Name :", project.Name, 31); // 0
+                    page.AddTextBox("Artist :", project.Author, 31); // 1
+                    page.AddTextBox("Copyright :", project.Copyright, 31); // 2
                     page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 3
-                    page.AddCheckBoxList(null, songNames, null); // 4
+                    page.AddCheckBoxList(PlatformUtils.IsDesktop ? null : "Songs", songNames, null); // 4
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
 #endif
-                    page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
+                    page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     break;
                 case ExportFormat.Rom:
-                    page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.ExpansionAudio == ExpansionType.Fds ? "FDS Disk" : "NES ROM"); // 0
-                    page.AddString("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
-                    page.AddString("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
+                    page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM"); // 0
+                    page.AddTextBox("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
+                    page.AddTextBox("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
                     page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
-                    page.AddCheckBoxList(null, songNames, null); // 2
-                    page.SetPropertyEnabled(0,  project.ExpansionAudio == ExpansionType.Fds);
-                    page.SetPropertyEnabled(3, !project.UsesExpansionAudio);
+                    page.AddCheckBoxList(PlatformUtils.IsDesktop ? null : "Songs", songNames, null); // 4
+                    if (project.UsesAnyExpansionAudio)
+                        page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "ROM export does not support audio expansions. FDS disk export only supports the FDS expansion. Any incompatible expansion channel(s) will be ignored during the export.", true);
+                    page.SetPropertyEnabled(0,  project.UsesFdsExpansion);
+                    page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     break;
                 case ExportFormat.Midi:
                     page.AddDropDownList("Song :", songNames, songNames[0]); // 0
                     page.AddCheckBox("Export volume as velocity :", true); // 1
                     page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
-                    page.AddIntegerRange("Pitch wheel range :", 24, 1, 24); // 3
+                    page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24); // 3
                     page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
                     page.AddMultiColumnList(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
@@ -234,14 +300,17 @@ namespace FamiStudio
                     page.AddCheckBox("Delete unused data :", false); // 1
                     break;
                 case ExportFormat.FamiTracker:
-                    page.AddCheckBoxList(null, songNames, null); // 0
+                    if (!project.UsesMultipleExpansionAudios)
+                        page.AddCheckBoxList(null, songNames, null); // 0
+                    else
+                        page.AddLabel(null, "The original FamiTracker does not support multiple audio expansions. Limit yourself to a single expansion to enable export.", true);
                     break;
                 case ExportFormat.FamiTone2Music:
                 case ExportFormat.FamiStudioMusic:
                     page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
                     page.AddCheckBox("Separate Files :", false); // 1
-                    page.AddString("Song Name Pattern :", "{project}_{song}"); // 2
-                    page.AddString("DMC Name Pattern :", "{project}"); // 3
+                    page.AddTextBox("Song Name Pattern :", "{project}_{song}"); // 2
+                    page.AddTextBox("DMC Name Pattern :", "{project}"); // 3
                     page.AddCheckBox("Generate song list include :", false); // 4
                     page.AddCheckBoxList(null, songNames, null); // 5
                     page.SetPropertyEnabled(2, false);
@@ -255,14 +324,12 @@ namespace FamiStudio
                     page.AddCheckBox("Generate SFX list include :", false); // 2
                     page.AddCheckBoxList(null, songNames, null); // 3
                     break;
+                case ExportFormat.Share:
+                    page.AddRadioButtonList("Sharing mode", new[] { "Copy to Storage", "Share" }, 0, "Copy the FamiStudio project to your phone's storage, or share it to another application.");
+                    break;
             }
 
             page.Build();
-
-            if (format == ExportFormat.Midi)
-            {
-                UpdateMidiInstrumentMapping();
-            }
 
             return page;
         }
@@ -272,15 +339,6 @@ namespace FamiStudio
             if (propIdx == props.PropertyCount - 2) // Stereo
             {
                 props.SetColumnEnabled(props.PropertyCount - 1, 2, (bool)value);
-            }
-        }
-
-        private void SoundEngine_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
-        {
-            if (propIdx == 1)
-            {
-                props.SetPropertyEnabled(2, (bool)value);
-                props.SetPropertyEnabled(3, (bool)value);
             }
         }
 
@@ -319,6 +377,360 @@ namespace FamiStudio
             }
         }
 
+        private int[] GetSongIds(bool[] selectedSongs)
+        {
+            var songIds = new List<int>();
+
+            for (int i = 0; i < selectedSongs.Length; i++)
+            {
+                if (selectedSongs[i])
+                    songIds.Add(project.Songs[i].Id);
+            }
+
+            return songIds.ToArray();
+        }
+
+        private void ExportWavMp3()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.WavMp3);
+            var format = props.GetSelectedIndex(1);
+            
+            Action<string> ExportWavMp3Action = (filename) =>
+            {
+                if (filename != null)
+                {
+                    var songName = props.GetPropertyValue<string>(0);
+                    var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2), CultureInfo.InvariantCulture);
+                    var bitrate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
+                    var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
+                    var duration = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
+                    var separateFiles = props.GetPropertyValue<bool>(7);
+                    var separateIntro = props.GetPropertyValue<bool>(8);
+                    var stereo = props.GetPropertyValue<bool>(9) && !separateFiles;
+                    var song = project.GetSong(songName);
+
+                    var channelCount = project.GetActiveChannelCount();
+                    var channelMask = 0;
+                    var pan = (float[])null;
+
+                    if (PlatformUtils.IsDesktop)
+                    {
+                        pan = new float[channelCount]; 
+
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            if (props.GetPropertyValue<bool>(10, i, 0))
+                                channelMask |= (1 << i);
+
+                            pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
+                        }
+                    }
+                    else
+                    {
+                        var selectedChannels = props.GetPropertyValue<bool[]>(10);
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            if (selectedChannels[i])
+                                channelMask |= (1 << i);
+                        }
+                    }
+
+                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
+                         (samples, samplesChannels, fn) =>
+                         {
+                             switch (format)
+                             {
+                                 case AudioFormatType.Mp3:
+                                     Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                     break;
+                                 case AudioFormatType.Wav:
+                                     WaveFile.Save(samples, fn, sampleRate, samplesChannels);
+                                     break;
+                                 case AudioFormatType.Vorbis:
+                                     VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                     break;
+                             }
+                         });
+
+                    lastExportFilename = filename;
+                }
+            };
+
+            if (PlatformUtils.IsMobile)
+            {
+                var songName = props.GetPropertyValue<string>(0);
+                PlatformUtils.StartMobileSaveFileOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
+                {
+                    ExportWavMp3Action(f);
+                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("Audio Export Successful!"); });
+                });
+            }
+            else
+            {
+                var filename = (string)null;
+
+                if (lastExportFilename != null)
+                {
+                    filename = lastExportFilename;
+                }
+                else
+                {
+                    filename = PlatformUtils.ShowSaveFileDialog(
+                        $"Export {AudioFormatType.Names[format]} File",
+                        $"{AudioFormatType.Names[format]} Audio File (*.{AudioFormatType.Extensions[format]})|*.{AudioFormatType.Extensions[format]}",
+                        ref Settings.LastExportFolder);
+                }
+
+                ExportWavMp3Action(filename);
+            }
+        }
+
+        private void ExportVideo(bool pianoRoll)
+        {
+            var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
+
+            Func<string, bool> ExportVideoAction = (filename) =>
+            {
+                if (filename != null)
+                {
+                    var stereoPropIdx = pianoRoll ? 7 : 9;
+                    var channelsPropIdx = pianoRoll ? 8 : 10;
+
+                    var songName = props.GetPropertyValue<string>(0);
+                    var resolutionIdx = props.GetSelectedIndex(1);
+                    var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
+                    var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
+                    var halfFrameRate = props.GetSelectedIndex(2) == 1;
+                    var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
+                    var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
+                    var loopCount = props.GetPropertyValue<int>(5);
+                    var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
+                    var song = project.GetSong(songName);
+                    var channelCount = project.GetActiveChannelCount();
+                    var channelMask = 0;
+                    var pan = (float[])null;
+
+                    if (PlatformUtils.IsDesktop)
+                    {
+                        pan = new float[channelCount];
+
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
+                                channelMask |= (1 << i);
+
+                            pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
+                        }
+                    }
+                    else
+                    {
+                        var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
+                        for (int i = 0; i < channelCount; i++)
+                        {
+                            if (selectedChannels[i])
+                                channelMask |= (1 << i);
+                        }
+                    }
+
+                    lastExportFilename = filename;
+
+                    if (pianoRoll)
+                    {
+                        var pianoRollZoom = (float)Math.Pow(2.0, props.GetSelectedIndex(6) - 3);
+
+                        return new VideoFilePianoRoll().Save(project, song.Id, loopCount, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
+                    }
+                    else
+                    {
+                        var oscNumColumns    = props.GetPropertyValue<int>(6);
+                        var oscLineThickness = props.GetPropertyValue<int>(7);
+                        var oscColorMode     = props.GetSelectedIndex(8);
+
+                        return new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            };
+
+            if (PlatformUtils.IsMobile)
+            {
+                var songName = props.GetPropertyValue<string>(0);
+                PlatformUtils.StartMobileSaveFileOperationAsync("video/mp4", $"{songName}", (f) =>
+                {
+                    new Thread(() =>
+                    {
+                        app.BeginLogTask(true);
+                        var success = ExportVideoAction(f);
+
+                        PlatformUtils.FinishMobileSaveFileOperationAsync(success, () =>
+                        {
+                            app.EndLogTask();
+                            PlatformUtils.ShowToast($"Video Export {(success ? "Successful" : "Failed")}!");
+                        });
+
+                    }).Start();
+                });
+            }
+            else
+            {
+                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
+                ExportVideoAction(filename);
+            }
+        }
+
+        private void ExportNsf()
+        {
+            Action<string> ExportNsfAction = (filename) =>
+            {
+                if (filename != null)
+                {
+                    var props = dialog.GetPropertyPage((int)ExportFormat.Nsf);
+                    var mode = MachineType.GetValueForName(props.GetPropertyValue<string>(3));
+#if DEBUG
+                    var kernel = FamiToneKernel.GetValueForName(props.GetPropertyValue<string>(5));
+#else
+                    var kernel = FamiToneKernel.FamiStudio;
+#endif
+
+                    new NsfFile().Save(project, kernel, filename,
+                        GetSongIds(props.GetPropertyValue<bool[]>(4)),
+                        props.GetPropertyValue<string>(0),
+                        props.GetPropertyValue<string>(1),
+                        props.GetPropertyValue<string>(2),
+                        mode);
+
+                    lastExportFilename = filename;
+                }
+            };
+
+            if (PlatformUtils.IsMobile)
+            {
+                PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nsf", (f) =>
+                {
+                    ExportNsfAction(f);
+                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("NSF Export Successful!"); });
+                });
+            }
+            else
+            {
+                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf", ref Settings.LastExportFolder);
+                ExportNsfAction(filename);
+            }
+        }
+
+        private void ExportRom()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
+
+            // DROIDTODO : Test this again on all platforms.
+            if (songIds.Length > RomFileBase.MaxSongs)
+            {
+                PlatformUtils.MessageBoxAsync($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
+                return;
+            }
+
+            if (props.GetPropertyValue<string>(0) == "NES ROM")
+            {
+                Action<string> ExportRomAction = (filename) =>
+                {
+                    if (filename != null)
+                    {
+                        var rom = new RomFile();
+                        rom.Save(
+                            project, filename, songIds,
+                            props.GetPropertyValue<string>(1),
+                            props.GetPropertyValue<string>(2),
+                            props.GetPropertyValue<string>(3) == "PAL");
+
+                        lastExportFilename = filename;
+                    }
+                };
+
+                if (PlatformUtils.IsMobile)
+                {
+                    PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nes", (f) =>
+                    {
+                        ExportRomAction(f);
+                        PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("NES ROM Export Successful!"); });
+                    });
+                }
+                else
+                {
+                    var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes", ref Settings.LastExportFolder);
+                    ExportRomAction(filename);
+                }
+            }
+            else
+            {
+                Action<string> ExportFdsAction = (filename) =>
+                {
+                    if (filename != null)
+                    {
+                        var fds = new FdsFile();
+                        fds.Save(
+                            project, filename, songIds,
+                            props.GetPropertyValue<string>(1),
+                            props.GetPropertyValue<string>(2));
+
+                        lastExportFilename = filename;
+                    }
+                };
+
+                if (PlatformUtils.IsMobile)
+                {
+                    PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.fds", (f) =>
+                    {
+                        ExportFdsAction(f);
+                        PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("FDS Disk Export Successful!"); });
+                    });
+                }
+                else
+                {
+                    var filename = lastExportFilename != null ? null : PlatformUtils.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
+                    ExportFdsAction(filename);
+                }
+            }
+        }
+
+        private void ExportShare()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Share);
+            var share = props.GetSelectedIndex(0) == 1;
+
+            var filename = !string.IsNullOrEmpty(app.Project.Filename) ? Path.GetFileName(app.Project.Filename) : $"{project.Name}.fms";
+
+            if (share)
+            {
+                filename = PlatformUtils.GetShareFilename(filename);
+                app.SaveProjectCopy(filename);
+                PlatformUtils.StartShareFileAsync(filename, () => 
+                {
+                    PlatformUtils.ShowToast("Sharing Successful!");
+                });
+            }
+            else
+            {
+                PlatformUtils.StartMobileSaveFileOperationAsync("*/*", filename, (f) =>
+                {
+                    app.SaveProjectCopy(f);
+                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("Sharing Successful!"); });
+                });
+            }
+        }
+
+        private void SoundEngine_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        {
+            if (propIdx == 1)
+            {
+                props.SetPropertyEnabled(2, (bool)value);
+                props.SetPropertyEnabled(3, (bool)value);
+            }
+        }
+
         private void Midi_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             if (propIdx == 4)
@@ -337,7 +749,8 @@ namespace FamiStudio
                 data = new object[project.Instruments.Count, 2];
                 for (int i = 0; i < project.Instruments.Count; i++)
                 {
-                    data[i, 0] = project.Instruments[i].Name;
+                    var inst = project.Instruments[i];
+                    data[i, 0] = inst.NameWithExpansion;
                     data[i, 1] = MidiFileReader.MidiInstrumentNames[0];
                 }
 
@@ -358,200 +771,6 @@ namespace FamiStudio
             }
 
             props.UpdateMultiColumnList(5, data, cols);
-        }
-
-        private int[] GetSongIds(bool[] selectedSongs)
-        {
-            var songIds = new List<int>();
-
-            for (int i = 0; i < selectedSongs.Length; i++)
-            {
-                if (selectedSongs[i])
-                    songIds.Add(project.Songs[i].Id);
-            }
-
-            return songIds.ToArray();
-        }
-
-        private void ExportWavMp3()
-        {
-            var props = dialog.GetPropertyPage((int)ExportFormat.WavMp3);
-            var format = props.GetSelectedIndex(1);
-            var filename = (string)null;
-
-            if (lastExportFilename != null)
-            {
-                filename = lastExportFilename;
-            }
-            else
-            {
-                filename = PlatformUtils.ShowSaveFileDialog(
-                    $"Export {AudioFormatType.Names[format]} File",
-                    $"{AudioFormatType.Names[format]} Audio File (*.{AudioFormatType.Extentions[format]})|*.{AudioFormatType.Extentions[format]}",
-                    ref Settings.LastExportFolder);
-            }
-
-            if (filename != null)
-            {
-                var songName = props.GetPropertyValue<string>(0);
-                var sampleRate = Convert.ToInt32(props.GetPropertyValue<string>(2), CultureInfo.InvariantCulture);
-                var bitrate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
-                var loopCount = props.GetPropertyValue<string>(4) != "Duration" ? props.GetPropertyValue<int>(5) : -1;
-                var duration  = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
-                var separateFiles = props.GetPropertyValue<bool>(7);
-                var separateIntro = props.GetPropertyValue<bool>(8);
-                var stereo = props.GetPropertyValue<bool>(9) && !separateFiles;
-                var song = project.GetSong(songName);
-
-                var channelCount = project.GetActiveChannelCount();
-                var channelMask = 0;
-                var pan = new float[channelCount];
-                for (int i = 0; i < channelCount; i++)
-                {
-                    if (props.GetPropertyValue<bool>(10, i, 0))
-                        channelMask |= (1 << i);
-
-                    pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
-                }
-
-                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
-                     (samples, samplesChannels, fn) => 
-                     {
-                         switch (format)
-                         {
-                             case AudioFormatType.Mp3:
-                                 Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
-                                 break;
-                             case AudioFormatType.Wav:
-                                 WaveFile.Save(samples, fn, sampleRate, samplesChannels);
-                                 break;
-                             case AudioFormatType.Vorbis:
-                                 VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
-                                 break;
-                         }
-                     });
-
-                lastExportFilename = filename;
-            }
-        }
-
-        private void ExportVideo(bool pianoRoll)
-        {
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
-
-            if (filename != null)
-            {
-                var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
-
-                var stereoPropIdx   = pianoRoll ? 7 : 9;
-                var channelsPropIdx = pianoRoll ? 8 : 10;
-
-                var songName = props.GetPropertyValue<string>(0);
-                var resolutionIdx = props.GetSelectedIndex(1);
-                var resolutionX = VideoResolution.ResolutionX[resolutionIdx];
-                var resolutionY = VideoResolution.ResolutionY[resolutionIdx];
-                var halfFrameRate = props.GetSelectedIndex(2) == 1;
-                var audioBitRate = Convert.ToInt32(props.GetPropertyValue<string>(3), CultureInfo.InvariantCulture);
-                var videoBitRate = Convert.ToInt32(props.GetPropertyValue<string>(4), CultureInfo.InvariantCulture);
-                var loopCount = props.GetPropertyValue<int>(5);
-                var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
-                var selectedChannels = props.GetPropertyValue<bool[]>(channelsPropIdx);
-                var song = project.GetSong(songName);
-                var channelCount = project.GetActiveChannelCount();
-                var channelMask = 0;
-
-                var pan = new float[channelCount];
-                for (int i = 0; i < channelCount; i++)
-                {
-                    if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
-                        channelMask |= (1 << i);
-
-                    pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
-                }
-
-                if (pianoRoll)
-                {
-                    var pianoRollZoom = props.GetSelectedIndex(6) - 3;
-
-                    new VideoFilePianoRoll().Save(project, song.Id, loopCount, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, pianoRollZoom, stereo, pan);
-                }
-                else
-                {
-                    var oscNumColumns    = props.GetPropertyValue<int>(6);
-                    var oscLineThickness = props.GetPropertyValue<int>(7);
-                    var oscColorMode     = props.GetSelectedIndex(8);
-
-                    new VideoFileOscilloscope().Save(project, song.Id, loopCount, oscColorMode, oscNumColumns, oscLineThickness, Settings.FFmpegExecutablePath, filename, resolutionX, resolutionY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan);
-                }
-
-                lastExportFilename = filename;
-            }
-        }
-
-        private void ExportNsf()
-        {
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf", ref Settings.LastExportFolder);
-            if (filename != null)
-            {
-                var props  = dialog.GetPropertyPage((int)ExportFormat.Nsf);
-                var mode   = MachineType.GetValueForName(props.GetPropertyValue<string>(3));
-#if DEBUG
-                var kernel = FamiToneKernel.GetValueForName(props.GetPropertyValue<string>(5));
-#else
-                var kernel = FamiToneKernel.FamiStudio;
-#endif
-
-                new NsfFile().Save(project, kernel, filename,
-                    GetSongIds(props.GetPropertyValue<bool[]>(4)),
-                    props.GetPropertyValue<string>(0),
-                    props.GetPropertyValue<string>(1),
-                    props.GetPropertyValue<string>(2),
-                    mode);
-
-                lastExportFilename = filename;
-            }
-        }
-
-        private void ExportRom()
-        {
-            var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
-
-            if (songIds.Length > RomFileBase.MaxSongs)
-            {
-                PlatformUtils.MessageBox($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
-                return;
-            }
-
-            if (props.GetPropertyValue<string>(0) == "NES ROM")
-            {
-                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes", ref Settings.LastExportFolder);
-                if (filename != null)
-                {
-                    var rom = new RomFile();
-                    rom.Save(
-                        project, filename, songIds,
-                        props.GetPropertyValue<string>(1),
-                        props.GetPropertyValue<string>(2),
-                        props.GetPropertyValue<string>(3) == "PAL");
-
-                    lastExportFilename = filename;
-                }
-            }
-            else
-            {
-                var filename = lastExportFilename != null ? null : PlatformUtils.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
-                if (filename != null)
-                {
-                    var fds = new FdsFile();
-                    fds.Save(
-                        project, filename, songIds,
-                        props.GetPropertyValue<string>(1),
-                        props.GetPropertyValue<string>(2));
-
-                    lastExportFilename = filename;
-                }
-            }
         }
 
         private void ExportMidi()
@@ -591,12 +810,15 @@ namespace FamiStudio
 
         private void ExportFamiTracker()
         {
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
-            if (filename != null)
+            if (!project.UsesMultipleExpansionAudios)
             {
-                var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
-                new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
-                lastExportFilename = filename;
+                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
+                if (filename != null)
+                {
+                    var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
+                    new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
+                    lastExportFilename = filename;
+                }
             }
         }
 
@@ -678,8 +900,8 @@ namespace FamiStudio
         private uint ComputeProjectCrc(Project project)
         {
             // Only hashing fields that would have an impact on the generated UI.
-            uint crc = CRC32.Compute(project.ExpansionAudio);
-            crc = CRC32.Compute(project.ExpansionNumChannels, crc);
+            uint crc = CRC32.Compute(project.ExpansionAudioMask);
+            crc = CRC32.Compute(project.ExpansionNumN163Channels, crc);
 
             foreach (var song in project.Songs)
             {
@@ -706,52 +928,50 @@ namespace FamiStudio
             return lastExportCrc == ComputeProjectCrc(project);
         }
 
-        public void Export(FamiStudioForm parentForm, bool repeatLast)
+        public void Export(bool repeatLast)
         {
-            var dlgLog = new LogProgressDialog(parentForm);
-            using (var scopedLog = new ScopedLogOutput(dlgLog, LogSeverity.Info))
+            if (PlatformUtils.IsDesktop)
+                app.BeginLogTask(true);
+
+            var selectedFormat = (ExportFormat)dialog.SelectedIndex;
+
+            Exporting?.Invoke();
+
+            if (!repeatLast)
+                lastExportFilename = null;
+
+            switch (selectedFormat)
             {
-                var selectedFormat = (ExportFormat)dialog.SelectedIndex;
-
-                Exporting?.Invoke();
-
-                if (!repeatLast)
-                    lastExportFilename = null;
-
-                switch (selectedFormat)
-                {
-                    case ExportFormat.WavMp3: ExportWavMp3(); break;
-                    case ExportFormat.VideoPianoRoll: ExportVideo(true); break;
-                    case ExportFormat.VideoOscilloscope: ExportVideo(false); break;
-                    case ExportFormat.Nsf: ExportNsf(); break;
-                    case ExportFormat.Rom: ExportRom(); break;
-                    case ExportFormat.Midi: ExportMidi(); break;
-                    case ExportFormat.Text: ExportText(); break;
-                    case ExportFormat.FamiTracker: ExportFamiTracker(); break;
-                    case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
-                    case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
-                    case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
-                    case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
-                }
-
-                if (dlgLog.HasMessages)
-                {
-                    Log.LogMessage(LogSeverity.Info, "Done!");
-                    Log.ReportProgress(1.0f);
-                }
-
-                dlgLog.StayModalUntilClosed();
+                case ExportFormat.WavMp3: ExportWavMp3(); break;
+                case ExportFormat.VideoPianoRoll: ExportVideo(true); break;
+                case ExportFormat.VideoOscilloscope: ExportVideo(false); break;
+                case ExportFormat.Nsf: ExportNsf(); break;
+                case ExportFormat.Rom: ExportRom(); break;
+                case ExportFormat.Midi: ExportMidi(); break;
+                case ExportFormat.Text: ExportText(); break;
+                case ExportFormat.FamiTracker: ExportFamiTracker(); break;
+                case ExportFormat.FamiTone2Music: ExportFamiTone2Music(false); break;
+                case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
+                case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
+                case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
+                case ExportFormat.Share: ExportShare(); break;
             }
+
+            if (PlatformUtils.IsDesktop)
+                app.EndLogTask();
         }
 
-        public void ShowDialog(FamiStudioForm parentForm)
+        public void ShowDialogAsync()
         {
-            if (dialog.ShowDialog(parentForm) == DialogResult.OK)
+            dialog.ShowDialogAsync(app.MainForm, (r) =>
             {
-                dialog.Hide();
-                Export(parentForm, false);
-                lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;
-            }
+                if (r == DialogResult.OK)
+                {
+                    // dialog.Hide(); MATTT : Is this needed?
+                    Export(false);
+                    lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;
+                }
+            });
         }
     }
 }

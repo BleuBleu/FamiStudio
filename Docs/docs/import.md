@@ -29,7 +29,7 @@ Besides effects, there are also other limitations:
 * All DPCM samples will be loaded (and potentially assigned to a key of the DPCM instrument) but any sample over the 16KB FamiStudio limit will not play correctly or at all.
 * Namco 163 instrument can only have a single waveform. Any other waveform than zero will be ignored.
 * VRC7 1xx/2xx/3xx/Qxx/Rxx effects will likely not sound like FamiTracker and will need manual corrections.
-* Instruments using both pitch and arpeggio envelopes at the same time will not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker re-triggers the pitch envelope at each arpeggio notes (probably the more sensible way), while FamiStudio simply runs both at the same time.
+* Instruments using both pitch and arpeggio envelopes at the same time will likely not sound the same as in FamiTracker. This is due to the vastly different way both applications handles these. FamiTracker resets the pitch at each arpeggio notes, while FamiStudio does not. 
 * VRC6 saw channel is not influenced by duty cycle in FamiStudio. FamiStudio has a "saw master volume" on VRC6 instruments. Import/export process does not try account for this. Manual corrections may be needed.
 * Vibrato effect might sound a bit different, please see table above for exact mappings.
 * The noise channel in FamiStudio is not affected by pitch envelope or any pitch effects (1xx, 2xx, 3xx, Qxx and Rxx).

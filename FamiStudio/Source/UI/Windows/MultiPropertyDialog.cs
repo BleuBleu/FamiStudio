@@ -1,10 +1,9 @@
-﻿using FamiStudio.Properties;
-using System;
+﻿using System;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -14,6 +13,7 @@ namespace FamiStudio
         {
             public Button button;
             public PropertyPage properties;
+            public bool visible = true;
         }
 
         int selectedIndex = 0;
@@ -22,34 +22,123 @@ namespace FamiStudio
         Font font;
         Font fontBold;
 
-        public MultiPropertyDialog(int width, int height, int tabsWidth = 150)
+        private NoFocusButton buttonYes;
+        private NoFocusButton buttonNo;
+        private TableLayoutPanel tableLayout;
+        private Panel panelProps;
+        private Panel panelTabs;
+        private ToolTip toolTip;
+
+        public MultiPropertyDialog(string title, int width, int height, int tabsWidth = 150)
         {
             InitializeComponent();
 
-            string suffix = Direct2DTheme.DialogScaling >= 2.0f ? "@2x" : "";
-            this.buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
-            this.buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
-            this.Width    = (int)(width  * Direct2DTheme.DialogScaling);
-            this.font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
-            this.fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
+            string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
+
+            buttonYes.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png"));
+            buttonNo.Image  = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.No{suffix}.png"));
+            Width    = DpiScaling.ScaleForDialog(width);
+            font     = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
+            fontBold = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Bold);
 
             toolTip.SetToolTip(buttonYes, "Accept");
             toolTip.SetToolTip(buttonNo, "Cancel");
 
-            tableLayout.ColumnStyles[0].Width = tabsWidth * Direct2DTheme.DialogScaling;
+            tableLayout.ColumnStyles[0].Width = tabsWidth * DpiScaling.Dialog;
+        }
+
+        public void SetVerb(string text, bool showOnTabPage = false)
+        {
+        }
+
+        private void InitializeComponent()
+        {
+            buttonYes = new NoFocusButton();
+            buttonNo = new NoFocusButton();
+            tableLayout = new TableLayoutPanel();
+            panelProps = new Panel();
+            panelTabs = new Panel();
+            toolTip = new ToolTip();
+
+            buttonYes.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonYes.FlatAppearance.BorderSize = 0;
+            buttonYes.FlatStyle = FlatStyle.Flat;
+            buttonYes.Location = new Point(374, 337);
+            buttonYes.Size = new Size(32, 32);
+            buttonYes.UseVisualStyleBackColor = true;
+            buttonYes.Click += new EventHandler(buttonYes_Click);
+
+            buttonNo.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonNo.FlatAppearance.BorderSize = 0;
+            buttonNo.FlatStyle = FlatStyle.Flat;
+            buttonNo.Location = new Point(411, 337);
+            buttonNo.Size = new Size(32, 32);
+            buttonNo.UseVisualStyleBackColor = true;
+            buttonNo.Click += new EventHandler(buttonNo_Click);
+
+            tableLayout.SuspendLayout();
+            tableLayout.Anchor = AnchorStyles.Top | AnchorStyles.Left| AnchorStyles.Right;
+            tableLayout.ColumnCount = 2;
+            tableLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
+            tableLayout.ColumnStyles.Add(new ColumnStyle());
+            tableLayout.Location = new Point(5, 5);
+            tableLayout.Margin = new Padding(0);
+            tableLayout.RowCount = 1;
+            tableLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayout.Size = new Size(438, 327);
+            tableLayout.Controls.Add(panelProps, 1, 0);
+            tableLayout.Controls.Add(panelTabs, 0, 0);
+            tableLayout.ResumeLayout(false);
+
+            panelProps.Dock = DockStyle.Fill;
+            panelProps.Location = new Point(150, 0);
+            panelProps.Margin = new Padding(0);
+            panelProps.Size = new Size(307, 327);
+
+            panelTabs.BackColor = Theme.DarkGreyFillColor1;
+            panelTabs.Dock = DockStyle.Fill;
+            panelTabs.Location = new Point(0, 0);
+            panelTabs.Margin = new Padding(0);
+            panelTabs.Name = "panelTabs";
+            panelTabs.Size = new Size(150, 327);
+            panelTabs.TabIndex = 21;
+
+            AutoScaleMode = AutoScaleMode.None;
+            BackColor = Theme.DarkGreyFillColor1;
+            ClientSize = new Size(448, 373);
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            ControlBox = false;
+            KeyPreview = true;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ShowIcon = false;
+            ShowInTaskbar = false;
+            StartPosition = FormStartPosition.CenterParent;
+            KeyDown += new KeyEventHandler(MultiPropertyDialog_KeyDown);
+
+            SuspendLayout();
+            Controls.Add(tableLayout);
+            Controls.Add(buttonYes);
+            Controls.Add(buttonNo);
+            ResumeLayout(true);
         }
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var suffix = Direct2DTheme.DialogScaling > 1.0f ? "@2x" : "";
-            var bmp = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}{suffix}.png")) as Bitmap;
+            var suffix = DpiScaling.Dialog > 1.0f ? "@2x" : "";
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{image}{suffix}.png");
+            
+            if (stream == null)
+                Debug.WriteLine($"Error loading bitmap {image }.");
 
-            if ((Direct2DTheme.DialogScaling % 1.0f) != 0.0f)
+            var bmp = stream != null ? Image.FromStream(stream) as Bitmap : null;
+
+            if ((DpiScaling.Dialog % 1.0f) != 0.0f && bmp != null)
             {
-                var newWidth  = (int)(bmp.Width  * (Direct2DTheme.DialogScaling / 2.0f));
-                var newHeight = (int)(bmp.Height * (Direct2DTheme.DialogScaling / 2.0f));
+                var newWidth  = (int)(bmp.Width  * (DpiScaling.Dialog / 2.0f));
+                var newHeight = (int)(bmp.Height * (DpiScaling.Dialog / 2.0f));
 
-                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
+                bmp = new Bitmap(bmp, newWidth, newHeight);
             }
 
             var page = new PropertyPage();
@@ -81,18 +170,28 @@ namespace FamiStudio
         {
             SuspendLayout();
 
-            int maxHeight = Math.Max((int)(32 * Direct2DTheme.DialogScaling * tabs.Count), Width / 2);
+            var y = 0;
+            var maxHeight = 0;
             for (int i = 0; i < tabs.Count; i++)
             {
-                maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
+                var tab = tabs[i];
+                tab.button.Visible = tab.visible;
+                if (tab.visible)
+                {
+                    tab.button.Top = y;
+                    y += tab.button.Height;
+                    maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
+                }
             }
+
+            maxHeight = Math.Max(maxHeight, Width / 2);
 
             tableLayout.Height = maxHeight;
 
-            buttonYes.Width  = (int)(buttonYes.Width  * Direct2DTheme.DialogScaling);
-            buttonYes.Height = (int)(buttonYes.Height * Direct2DTheme.DialogScaling);
-            buttonNo.Width   = (int)(buttonNo.Width   * Direct2DTheme.DialogScaling);
-            buttonNo.Height  = (int)(buttonNo.Height  * Direct2DTheme.DialogScaling);
+            buttonYes.Width  = DpiScaling.ScaleForDialog(buttonYes.Width);
+            buttonYes.Height = DpiScaling.ScaleForDialog(buttonYes.Height);
+            buttonNo.Width   = DpiScaling.ScaleForDialog(buttonNo.Width);
+            buttonNo.Height  = DpiScaling.ScaleForDialog(buttonNo.Height);
 
             Height = maxHeight + buttonNo.Height + 20;
 
@@ -110,6 +209,11 @@ namespace FamiStudio
         public PropertyPage GetPropertyPage(int idx)
         {
             return tabs[idx].properties;
+        }
+
+        public void SetPageVisible(int idx, bool visible)
+        {
+            tabs[idx].visible = visible;
         }
 
         public int SelectedIndex => selectedIndex;
@@ -139,16 +243,16 @@ namespace FamiStudio
         private Button AddButton(string text, Bitmap image)
         {
             var btn = new NoFocusButton();
-            var sizeY = (int)(32 * Direct2DTheme.DialogScaling);
+            var sizeY = DpiScaling.ScaleForDialog(32);
 
             btn.BackColor = BackColor;
-            btn.ForeColor = ThemeBase.LightGreyFillColor2;
+            btn.ForeColor = Theme.LightGreyFillColor2;
             btn.ImageAlign = ContentAlignment.MiddleLeft;
             btn.TextAlign = ContentAlignment.MiddleLeft;
             btn.FlatStyle = FlatStyle.Flat;
             btn.FlatAppearance.BorderSize = 0;
-            btn.FlatAppearance.MouseOverBackColor = ThemeBase.DarkGreyFillColor2;
-            btn.FlatAppearance.MouseDownBackColor = ThemeBase.DarkGreyFillColor2;
+            btn.FlatAppearance.MouseOverBackColor = Theme.DarkGreyFillColor2;
+            btn.FlatAppearance.MouseDownBackColor = Theme.DarkGreyFillColor2;
             btn.Image = image;
             btn.Top = tabs.Count * sizeY;
             btn.Left = 0;
@@ -186,6 +290,11 @@ namespace FamiStudio
                 DialogResult = DialogResult.Cancel;
                 Close();
             }
+        }
+
+        public void ShowDialogAsync(IWin32Window parent, Action<DialogResult> callback)
+        {
+            callback(ShowDialog());
         }
 
         private void buttonYes_Click(object sender, EventArgs e)

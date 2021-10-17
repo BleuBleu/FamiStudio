@@ -5,12 +5,11 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
-using Microsoft.Win32;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Threading;
+using System.Media;
 
 namespace FamiStudio
 {
@@ -18,11 +17,32 @@ namespace FamiStudio
     {
         public static PrivateFontCollection PrivateFontCollection;
 
+        public static string ApplicationVersion => Application.ProductVersion;
+        public static string UserProjectsDirectory => null;
+        public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
+        private static Thread mainThread;
+
         public static void Initialize()
         {
+            mainThread = Thread.CurrentThread;
             PrivateFontCollection = new PrivateFontCollection();
             AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Regular.ttf");
             AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Bold.ttf");
+        }
+
+        public static bool IsInMainThread()
+        {
+            return mainThread == Thread.CurrentThread;
+        }
+
+        public static Size GetScreenResolution()
+        {
+            return Screen.PrimaryScreen.Bounds.Size;
+        }
+
+        public static int GetOutputAudioSampleSampleRate()
+        {
+            return 44100;
         }
 
         [DllImport("gdi32.dll")]
@@ -118,9 +138,16 @@ namespace FamiStudio
             return null;
         }
 
-        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icons = MessageBoxIcon.None)
+        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
         {
+            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
             return System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
+        }
+
+        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
+        {
+            var res = MessageBox(text, title, buttons);
+            callback?.Invoke(res);
         }
 
         public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
@@ -140,7 +167,7 @@ namespace FamiStudio
             {
                 // Super ghetto way of detecting if the runtime is installed is simply by calling
                 // any function that will cause a C++ DLL to be loaded.
-                NesApu.GetAudioExpansion(0);
+                NesApu.GetAudioExpansions(0);
                 return true;
             }
             catch
@@ -213,5 +240,71 @@ namespace FamiStudio
 
             return str;
         }
+
+        public static Bitmap LoadBitmapFromResource(string name)
+        {
+            return System.Drawing.Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(name)) as System.Drawing.Bitmap;
+        }
+
+        public static float GetDesktopScaling()
+        {
+            var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
+            return graphics.DpiX / 96.0f;
+        }
+
+        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
+        {
+        }
+
+        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
+        {
+        }
+
+        public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)
+        {
+        }
+
+        public static void StartShareFileAsync(string filename, Action callback)
+        {
+        }
+
+        public static string GetShareFilename(string filename)
+        {
+            return null;
+        }
+
+        public static void VibrateTick()
+        {
+        }
+
+        public static void VibrateClick()
+        {
+        }
+
+        public static void ShowToast(string text)
+        {
+        }
+
+        public static void OpenUrl(string url)
+        {
+            try
+            {
+                Process.Start(url);
+            }
+            catch { }
+        }
+
+        public static void Beep()
+        {
+            SystemSounds.Beep.Play();
+        }
+
+        public const bool IsMobile  = false;
+        public const bool IsAndroid = false;
+        public const bool IsDesktop = true;
+        public const bool IsWindows = true;
+        public const bool IsLinux   = false;
+        public const bool IsMacOS   = false;
+        public const bool IsGTK     = false;
     }
 }

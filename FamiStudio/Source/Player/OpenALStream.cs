@@ -31,6 +31,8 @@ namespace FamiStudio
                 Console.WriteLine($"Default OpenAL audio device is '{AudioContext.DefaultDevice}'");
             }
 
+            // TODO : We need to decouple the number of emulated buffered frames and the 
+            // size of the low-level audio buffers.
             freq = rate;
             source = AL.GenSource();
             buffers = AL.GenBuffers(numBuffers);
@@ -132,7 +134,7 @@ namespace FamiStudio
 
         public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
         {
-            Debug.Assert(Utils.IsInMainThread());
+            Debug.Assert(PlatformUtils.IsInMainThread());
 
             StopImmediate();
 
@@ -149,7 +151,7 @@ namespace FamiStudio
 
         public void StopImmediate()
         {
-            Debug.Assert(Utils.IsInMainThread());
+            Debug.Assert(PlatformUtils.IsInMainThread());
 
             if (immediateSource >= 0)
             {

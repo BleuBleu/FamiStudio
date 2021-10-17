@@ -38,14 +38,14 @@ namespace FamiStudio
                 if (songIds.Length == 0)
                     return false;
 
-                Debug.Assert(!originalProject.UsesExpansionAudio || !pal);
+                Debug.Assert(!originalProject.UsesAnyExpansionAudio || !pal);
 
                 if (songIds.Length > MaxSongs)
                     Array.Resize(ref songIds, MaxSongs);
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
-                project.SetExpansionAudio(ExpansionType.None);
+                project.SetExpansionAudioMask(ExpansionType.NoneMask);
 
                 var headerBytes = new byte[RomHeaderLength];
                 var codeBytes   = new byte[RomCodeAndTocSize + RomTileSize];

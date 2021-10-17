@@ -62,7 +62,7 @@ namespace FamiStudio
             this.project = project;
             this.id = id;
             this.name = name;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
 
             CreateCustomSettings();
             SetDefaultsForTempoMode(project.TempoMode);
@@ -94,26 +94,42 @@ namespace FamiStudio
                 patternCustomSettings[i] = new PatternCustomSetting();
         }
 
-        public void CreateChannels(bool preserve = false, int numChannelsToPreserve = ChannelType.ExpansionAudioStart)
+        public void CreateChannels(bool preserve = false, int oldExpansionMask = 0, int oldN163Channels = 0)
         {
-            int channelCount = project.GetActiveChannelCount();
+            var channelCount = project.GetActiveChannelCount();
+            var oldChannels = channels;
 
+            channels = new Channel[channelCount];
+
+            // Optionally map the old channel to the new channels.
             if (preserve)
             {
-                Array.Resize(ref channels, channelCount);
-                for (int i = numChannelsToPreserve; i < channels.Length; i++)
-                    channels[i] = null;
-            }
-            else
-            {
-                channels = new Channel[channelCount];
+                for (int i = 0; i < ChannelType.Count; i++)
+                {
+                    var oldActive = Project.IsChannelActive(i, oldExpansionMask, oldN163Channels);
+                    var newActive = project.IsChannelActive(i);
+
+                    if (oldActive && newActive)
+                    {
+                        var oldIdx = Channel.ChannelTypeToIndex(i, oldExpansionMask, oldN163Channels);
+                        var newIdx = Channel.ChannelTypeToIndex(i, project.ExpansionAudioMask, project.ExpansionNumN163Channels);
+
+                        channels[newIdx] = oldChannels[oldIdx];
+                    }
+                }
             }
 
+            // Create the new ones.
             for (int i = 0; i < ChannelType.Count; i++)
             {
-                var idx = Channel.ChannelTypeToIndex(i);
-                if (project.IsChannelActive(i) && channels[idx] == null)
-                    channels[idx] = new Channel(this, i, songLength);
+                if (project.IsChannelActive(i))
+                {
+                    var idx = Channel.ChannelTypeToIndex(i, project.ExpansionAudioMask, project.ExpansionNumN163Channels);
+                    if (channels[idx] == null)
+                    {
+                        channels[idx] = new Channel(this, i, songLength);
+                    }
+                }
             }
         }
 
@@ -219,6 +235,16 @@ namespace FamiStudio
             }
         }
 
+        public Pattern GetPatternInstance(PatternLocation location)
+        {
+            if (location.IsPatternInSong(this) && location.IsChannelInSong(this))
+            {
+                return channels[location.ChannelIndex].PatternInstances[location.PatternIndex];
+            }
+
+            return null;
+        }
+
         public Pattern GetPattern(int id)
         {
             foreach (var channel in channels)
@@ -320,7 +346,7 @@ namespace FamiStudio
 
         public Channel GetChannelByType(int type)
         {
-            return channels[Channel.ChannelTypeToIndex(type)];
+            return channels[Channel.ChannelTypeToIndex(type, project.ExpansionAudioMask, project.ExpansionNumN163Channels)];
         }
 
         public void Trim()
@@ -1119,7 +1145,7 @@ namespace FamiStudio
 
             // Before 2.3.0, songs had an invalid color by default.
             if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
-                color = ThemeBase.RandomCustomColor();
+                color = Theme.RandomCustomColor();
         }
 
         public class PatternCustomSetting
@@ -1154,7 +1180,115 @@ namespace FamiStudio
                 return clone;
             }
         };
+    }
 
+    public struct PatternLocation
+    {
+        public int ChannelIndex;
+        public int PatternIndex;
+
+        public bool IsValid => ChannelIndex >= 0 && PatternIndex >= 0;
+
+        public PatternLocation(int c, int p)
+        {
+            ChannelIndex = c;
+            PatternIndex = p;
+        }
+
+        public bool IsPatternInSong(Song s)
+        {
+            return PatternIndex < s.Length;
+        }
+
+        public bool IsChannelInSong(Song s)
+        {
+            return ChannelIndex >= 0 && ChannelIndex < s.Channels.Length;
+        }
+
+        public bool IsInSong(Song s)
+        {
+            return IsPatternInSong(s) && IsChannelInSong(s);
+        }
+
+        public override string ToString()
+        {
+            return $"{ChannelIndex}:{PatternIndex}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = (PatternLocation)obj;
+            return ChannelIndex == other.ChannelIndex && PatternIndex == other.PatternIndex;
+        }
+
+        public override int GetHashCode()
+        {
+            return Utils.HashCombine(ChannelIndex, PatternIndex);
+        }
+
+        public static bool operator ==(PatternLocation p0, PatternLocation p1)
+        {
+            return p0.ChannelIndex == p1.ChannelIndex && p0.PatternIndex == p1.PatternIndex;
+        }
+
+        public static bool operator !=(PatternLocation p0, PatternLocation p1)
+        {
+            return p0.ChannelIndex != p1.ChannelIndex || p0.PatternIndex != p1.PatternIndex;
+        }
+
+        /*
+        public static bool operator <(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex < n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex < n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator <=(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex < n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex <= n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator >(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex > n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex > n1.NoteIndex;
+            return false;
+        }
+
+        public static bool operator >=(NoteLocation n0, NoteLocation n1)
+        {
+            if (n0.PatternIndex > n1.PatternIndex)
+                return true;
+            else if (n0.PatternIndex == n1.PatternIndex)
+                return n0.NoteIndex >= n1.NoteIndex;
+            return false;
+        }
+        */
+
+        public static PatternLocation Min(PatternLocation p0, PatternLocation p1)
+        {
+            return new PatternLocation(
+                Math.Min(p0.ChannelIndex, p1.ChannelIndex),
+                Math.Min(p0.PatternIndex, p1.PatternIndex));
+        }
+
+        public static PatternLocation Max(PatternLocation p0, PatternLocation p1)
+        {
+            return new PatternLocation(
+                Math.Max(p0.ChannelIndex, p1.ChannelIndex),
+                Math.Max(p0.PatternIndex, p1.PatternIndex));
+        }
+
+        public static readonly PatternLocation Invalid = new PatternLocation(-1, -1);
     }
 
     public struct NoteLocation
@@ -1190,11 +1324,6 @@ namespace FamiStudio
             NoteLocation loc = this;
             s.AdvanceNumberOfNotes(ref loc, num);
             return loc;
-        }
-
-        public bool IsInside(Song s)
-        {
-            return PatternIndex < s.Length;
         }
 
         public int DistanceTo(Song s, NoteLocation other)

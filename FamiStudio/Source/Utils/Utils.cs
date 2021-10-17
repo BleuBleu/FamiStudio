@@ -9,18 +9,6 @@ namespace FamiStudio
 {
     static class Utils
     {
-        private static Thread mainThread;
-
-        public static void Initialize()
-        {
-            mainThread = Thread.CurrentThread;
-        }
-
-        public static bool IsInMainThread()
-        {
-            return mainThread == Thread.CurrentThread;
-        }
-
         public static int Clamp(int val, int min, int max)
         {
             if (val < min) return min;
@@ -73,6 +61,11 @@ namespace FamiStudio
         }
 
         public static float Frac(float x)
+        {
+            return x - (int)x;
+        }
+
+        public static double Frac(double x)
         {
             return x - (int)x;
         }
@@ -166,6 +159,11 @@ namespace FamiStudio
             v++;
 
             return v;
+        }
+
+        public static int PrevPowerOfTwo(int v)
+        {
+            return NextPowerOfTwo(v) / 2;
         }
 
         public static int NumberOfSetBits(int i)
@@ -342,19 +340,11 @@ namespace FamiStudio
             return System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(str));
         }
 
-        public static void OpenUrl(string url)
+        public static int ComputeScrollAmount(int pos, int maxPos, int marginSize, float factor, bool minSide)
         {
-            try
-            {
-#if FAMISTUDIO_LINUX
-                Process.Start("xdg-open", url);
-#elif FAMISTUDIO_MACOS
-                Process.Start("open", url);
-#else
-                Process.Start(url);
-#endif
-            }
-            catch { }
+            var diff = minSide ? pos - maxPos : maxPos - pos;
+            var scrollAmount = 1.0f - Utils.Clamp(diff / (float)marginSize, 0.0f, 1.0f);
+            return (int)(factor * scrollAmount) * (minSide ? -1 : 1);
         }
     }
 }

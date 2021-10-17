@@ -16,10 +16,11 @@ namespace FamiStudio
 
         readonly static char[] Seperators = new[] { ' ', '\t', '\r', '\n', ',', ';', '\0' };
 
-#if FAMISTUDIO_LINUX
-        static byte[] linuxClipboardData; // Cant copy between FamiStudio instance on Linux.
+#if FAMISTUDIO_LINUX || FAMISTUDIO_ANDROID
+        static byte[] internalClipboardData; // Cant copy between FamiStudio instance on Linux.
 #endif
 
+        // TODO : Clean this up, move to PlatformUtils or some interface.
         private static void SetClipboardDataInternal(byte[] data)
         {
 #if FAMISTUDIO_WINDOWS
@@ -27,7 +28,7 @@ namespace FamiStudio
 #elif FAMISTUDIO_MACOS
             MacUtils.SetPasteboardData(data);
 #else
-            linuxClipboardData = data;
+            internalClipboardData = data;
 #endif
         }
 
@@ -39,7 +40,7 @@ namespace FamiStudio
 #elif FAMISTUDIO_MACOS
             buffer = MacUtils.GetPasteboardData();
 #else
-            buffer = linuxClipboardData;
+            buffer = internalClipboardData;
 #endif
 
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)
@@ -68,9 +69,9 @@ namespace FamiStudio
 #endif
         }
 
-        public static bool ConstainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
-        public static bool ConstainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null || GetStringEnvelopeData() != null;
-        public static bool ConstainsPatterns => GetClipboardDataInternal(MagicNumberClipboardPatterns, 4) != null;
+        public static bool ContainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
+        public static bool ContainsEnvelope => GetClipboardDataInternal(MagicNumberClipboardEnvelope, 4) != null || GetStringEnvelopeData() != null;
+        public static bool ContainsPatterns => GetClipboardDataInternal(MagicNumberClipboardPatterns, 4) != null;
 
         public static sbyte[] GetStringEnvelopeData()
         {
@@ -203,7 +204,7 @@ namespace FamiStudio
             foreach (var inst in instruments)
             {
                 var instId = inst.Id;
-                var instType = inst.ExpansionType;
+                var instType = inst.Expansion;
                 var instName = inst.Name;
                 serializer.Serialize(ref instId);
                 serializer.Serialize(ref instType);
@@ -358,7 +359,7 @@ namespace FamiStudio
 
                 if (existingInstrument != null)
                 {
-                    if (existingInstrument.ExpansionType == instType)
+                    if (existingInstrument.Expansion == instType)
                         serializer.RemapId(instId, existingInstrument.Id);
                     else
                         serializer.RemapId(instId, -1); // Incompatible expansion type, skip.
@@ -369,7 +370,7 @@ namespace FamiStudio
                 {
                     needMerge = true;
 
-                    if (!checkOnly && createMissing && (instType == ExpansionType.None || instType == serializer.Project.ExpansionAudio))
+                    if (!checkOnly && createMissing && (instType == ExpansionType.None || serializer.Project.UsesExpansionAudio(instType)))
                     {
                         var instrument = serializer.Project.CreateInstrument(instType, instName);
                         serializer.RemapId(instId, instrument.Id);

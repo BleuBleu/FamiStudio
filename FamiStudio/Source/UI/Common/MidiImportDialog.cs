@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.Media;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -27,12 +25,16 @@ namespace FamiStudio
 
             if (trackNames != null)
             {
-                dialog = new PropertyDialog(500);
-                dialog.Properties.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
-                dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 1
-                dialog.Properties.AddIntegerRange("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 2
-                dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 3
-                dialog.Properties.AddCheckBox("Create PAL project:", false); // 4
+                var expNames = new string[ExpansionType.Count - 1];
+                for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+                    expNames[i - ExpansionType.Start] = ExpansionType.Names[i];
+
+                dialog = new PropertyDialog("MIDI Import", 500);
+                dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 0
+                dialog.Properties.AddNumericUpDown("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 1
+                dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 2
+                dialog.Properties.AddCheckBox("Create PAL project:", false); // 3
+                dialog.Properties.AddCheckBoxList("Expansions :", expNames, new bool[expNames.Length], null, 150); // 4
                 dialog.Properties.AddLabel(null, "Channel mapping:"); // 5
                 dialog.Properties.AddMultiColumnList(new[] { new ColumnDesc("NES Channel", 0.25f), new ColumnDesc("MIDI Source", 0.45f, GetSourceNames()), new ColumnDesc("Channel 10 Keys", 0.3f, ColumnType.Button) }, null); // 6
                 dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, only blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
@@ -44,12 +46,23 @@ namespace FamiStudio
             }
         }
 
+        private int GetExpansionMask(bool[] values)
+        {
+            var mask = 0;
+            for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+            {
+                if (values[i - ExpansionType.Start])
+                    mask |= ExpansionType.GetMaskFromValue(i);
+            }
+            return mask;
+        }
+
         private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (propIdx == 0)
+            if (propIdx == 4)
             {
-                var expansion = ExpansionType.GetValueForName((string)value);
-                var newChannelCount = Channel.GetChannelCountForExpansion(expansion);
+                var expansionMask = GetExpansionMask(props.GetPropertyValue<bool[]>(4));
+                var newChannelCount = Channel.GetChannelCountForExpansionMask(expansionMask, 8);
                 var oldChannelCount = channelSources.Length;
 
                 var maxChannelIndex = 3;
@@ -68,10 +81,10 @@ namespace FamiStudio
 
                 UpdateListView();
 
-                bool allowPal = expansion == ExpansionType.None;
-                dialog.Properties.SetPropertyEnabled(4, allowPal);
+                bool allowPal = expansionMask == ExpansionType.NoneMask;
+                dialog.Properties.SetPropertyEnabled(3, allowPal);
                 if (!allowPal)
-                    dialog.Properties.SetPropertyValue(4, false);
+                    dialog.Properties.SetPropertyValue(3, false);
             }
             else if (propIdx == 6)
             {
@@ -108,7 +121,7 @@ namespace FamiStudio
 
                 if (src.type == MidiSourceType.Channel && src.index == 9)
                 {
-                    var dlg = new PropertyDialog(300, true, true, dialog);
+                    var dlg = new PropertyDialog("MIDI Source", 300, true, true, dialog);
                     dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 0
                     dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 1
                     dlg.Properties.AddButton(null, "Select All"); // 2
@@ -116,23 +129,26 @@ namespace FamiStudio
                     dlg.Properties.Build();
                     dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
 
-                    if (dlg.ShowDialog(null) == DialogResult.OK)
+                    dlg.ShowDialogAsync(null, (r) =>
                     {
-                        var keysBool = dlg.Properties.GetPropertyValue<bool[]>(1);
-
-                        src.keys = 0ul;
-                        for (int i = 0; i < keysBool.Length; i++)
+                        if (r == DialogResult.OK)
                         {
-                            if (keysBool[i])
-                                src.keys |= (1ul << i);
-                        }
+                            var keysBool = dlg.Properties.GetPropertyValue<bool[]>(1);
 
-                        UpdateListView();
-                    }
+                            src.keys = 0ul;
+                            for (int i = 0; i < keysBool.Length; i++)
+                            {
+                                if (keysBool[i])
+                                    src.keys |= (1ul << i);
+                            }
+
+                            UpdateListView();
+                        }
+                    });
                 }
                 else
                 {
-                    SystemSounds.Beep.Play();
+                    PlatformUtils.Beep();
                 }
             }
         }
@@ -195,8 +211,8 @@ namespace FamiStudio
 
         public void UpdateListView()
         {
-            var expansion = ExpansionType.GetValueForName(dialog.Properties.GetPropertyValue<string>(0));
-            var channels = Channel.GetChannelsForExpansion(expansion);
+            var expansionMask = GetExpansionMask(dialog.Properties.GetPropertyValue<bool[]>(4));
+            var channels = Channel.GetChannelsForExpansionMask(expansionMask, 8);
 
             Debug.Assert(channelSources.Length == channels.Length);
 
@@ -210,7 +226,7 @@ namespace FamiStudio
                 gridData[i, 2] = "N/A";
 
                 if (i >= ChannelType.ExpansionAudioStart)
-                    gridData[i, 0] += $" ({ExpansionType.ShortNames[expansion]})";
+                    gridData[i, 0] += $" ({ExpansionType.ShortNames[ChannelType.GetExpansionTypeForChannelType(channels[i])]})";
 
                 if (src.type == MidiSourceType.Track)
                 {
@@ -234,18 +250,27 @@ namespace FamiStudio
 
         public Project ShowDialog(FamiStudioForm parent)
         {
-            if (dialog != null && dialog.ShowDialog(parent) == DialogResult.OK)
-            {
-                var expansion = dialog.Properties.GetSelectedIndex(0);
-                var polyphony = dialog.Properties.GetSelectedIndex(1);
-                var measuresPerPattern = dialog.Properties.GetPropertyValue<int>(2);
-                var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(3);
-                var pal = expansion != ExpansionType.None ? false : dialog.Properties.GetPropertyValue<bool>(4);
+            var project = (Project)null;
 
-                return new MidiFileReader().Load(filename, expansion, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
+            if (dialog != null)
+            {
+                // This is only ran in desktop and this isnt really async, so its ok.
+                dialog.ShowDialogAsync(parent, (r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        var expansionMask = GetExpansionMask(dialog.Properties.GetPropertyValue<bool[]>(4));
+                        var polyphony = dialog.Properties.GetSelectedIndex(0);
+                        var measuresPerPattern = dialog.Properties.GetPropertyValue<int>(1);
+                        var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
+                        var pal = expansionMask != ExpansionType.NoneMask ? false : dialog.Properties.GetPropertyValue<bool>(3);
+
+                        project = new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
+                    }
+                });
             }
 
-            return null;
+            return project;
         }
     }
 }

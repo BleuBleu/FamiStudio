@@ -268,7 +268,7 @@ void Nes_Dmc::reset()
 	next_irq = Nes_Apu::no_irq;
 	irq_flag = false;
 	irq_enabled = false;
-	
+
 	Nes_Osc::reset();
 	period = 0x1AC;
 }
@@ -428,7 +428,7 @@ void Nes_Dmc::run( cpu_time_t time, cpu_time_t end_time )
 					bits >>= 1;
 					if ( unsigned (dac + step) <= 0x7F ) {
 						dac += step;
-						synth.offset_inline( time, step, output );
+						synth.offset_inline(time, step, output);
 					}
 				}
 				

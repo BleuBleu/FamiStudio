@@ -7,12 +7,6 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Reflection;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderTheme = FamiStudio.Direct2DTheme;
-#else
-    using RenderTheme = FamiStudio.GLTheme;
-#endif
-
 namespace FamiStudio
 {
     public partial class PropertyPage : UserControl
@@ -27,12 +21,14 @@ namespace FamiStudio
             public int leftMarging;
             public string sliderFormat;
             public PictureBox warningIcon;
+            public bool visible = true;
         };
 
         private int layoutHeight;
         private Font font;
         private Bitmap colorBitmap;
         private List<Property> properties = new List<Property>();
+        private ToolTip toolTip;
 
         public int LayoutHeight => layoutHeight;
         public int PropertyCount => properties.Count;
@@ -55,13 +51,21 @@ namespace FamiStudio
 
             if (warningIcons ==  null)
             {
-                string suffix = Direct2DTheme.DialogScaling > 1 ? "@2x" : "";
+                string suffix = DpiScaling.Dialog > 1 ? "@2x" : "";
                 
                 warningIcons = new Bitmap[3];
                 warningIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
                 warningIcons[1] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningYellow{suffix}.png")) as Bitmap;
                 warningIcons[2] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Warning{suffix}.png"))       as Bitmap;
             }
+        }
+
+        private void InitializeComponent()
+        {
+            toolTip = new ToolTip();
+            AutoScaleMode = AutoScaleMode.None;
+            BackColor = Theme.DarkGreyFillColor1;
+            Padding = new Padding(3);
         }
 
         private int GetPropertyIndexForControl(Control ctrl)
@@ -81,7 +85,7 @@ namespace FamiStudio
         {
             if (colorBitmap == null)
             {
-                colorBitmap = new Bitmap(ThemeBase.CustomColors.GetLength(0), ThemeBase.CustomColors.GetLength(1));
+                colorBitmap = new Bitmap(Theme.CustomColors.GetLength(0), Theme.CustomColors.GetLength(1));
                 var data = colorBitmap.LockBits(new Rectangle(0, 0, colorBitmap.Width, colorBitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
                 byte* ptr = (byte*)data.Scan0.ToPointer();
 
@@ -89,7 +93,7 @@ namespace FamiStudio
                 {
                     for (int i = 0; i < colorBitmap.Width; i++)
                     {
-                        var color = ThemeBase.CustomColors[i, j];
+                        var color = Theme.CustomColors[i, j];
 
                         ptr[i * 4 + 0] = color.B;
                         ptr[i * 4 + 1] = color.G;
@@ -115,7 +119,7 @@ namespace FamiStudio
             label.Text = str;
             label.Font = font;
             label.AutoSize = true;
-            label.ForeColor = ThemeBase.LightGreyFillColor2;
+            label.ForeColor = Theme.LightGreyFillColor2;
             label.BackColor = BackColor;
             if (multiline)
                 label.MaximumSize = new Size(1000, 0);
@@ -130,12 +134,12 @@ namespace FamiStudio
 
             label.Text = str;
             label.Font = font;
-            label.LinkColor = ThemeBase.LightGreyFillColor1;
+            label.LinkColor = Theme.LightGreyFillColor1;
             label.Links.Add(0, str.Length, url);
             label.LinkClicked += Label_LinkClicked;
             label.TextAlign = ContentAlignment.BottomCenter;
             //label.AutoSize = true;
-            label.ForeColor = ThemeBase.LightGreyFillColor2;
+            label.ForeColor = Theme.LightGreyFillColor2;
             label.BackColor = BackColor;
             toolTip.SetToolTip(label, tooltip);
 
@@ -145,7 +149,7 @@ namespace FamiStudio
         private void Label_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             var link = sender as LinkLabel;
-            Utils.OpenUrl(link.Links[0].LinkData as string);
+            PlatformUtils.OpenUrl(link.Links[0].LinkData as string);
         }
 
         private TextBox CreateColoredTextBox(string txt, Color backColor)
@@ -202,14 +206,14 @@ namespace FamiStudio
 
             textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 8.0f, FontStyle.Regular);
             textBox.Text = txt;
-            textBox.BackColor = ThemeBase.DarkGreyFillColor1;
-            textBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            textBox.ForeColor = ThemeBase.LightGreyFillColor2;
-            textBox.Location = new System.Drawing.Point(5, 5);
+            textBox.BackColor = Theme.DarkGreyFillColor1;
+            textBox.BorderStyle = BorderStyle.FixedSingle;
+            textBox.ForeColor = Theme.LightGreyFillColor2;
+            textBox.Location = new Point(5, 5);
             textBox.Multiline = true;
             textBox.ReadOnly = true;
-            textBox.Height = (int)(300 * RenderTheme.DialogScaling);
-            textBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            textBox.Height = DpiScaling.ScaleForDialog(300);
+            textBox.ScrollBars = ScrollBars.Vertical;
             textBox.Select(0, 0);
             textBox.GotFocus += TextBox_GotFocus;
 
@@ -243,8 +247,8 @@ namespace FamiStudio
             var pictureBox = new PictureBox();
 
             pictureBox.Image = bmp;
-            pictureBox.Width  = (int)(bmp.Width  * RenderTheme.DialogScaling);
-            pictureBox.Height = (int)(bmp.Height * RenderTheme.DialogScaling);
+            pictureBox.Width  = DpiScaling.ScaleForDialog(bmp.Width);
+            pictureBox.Height = DpiScaling.ScaleForDialog(bmp.Height);
             pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox.BorderStyle = BorderStyle.None;
 
@@ -253,18 +257,18 @@ namespace FamiStudio
 
         private void ChangeColor(PictureBox pictureBox, int x, int y)
         {
-            int i = Math.Min(ThemeBase.CustomColors.GetLength(0) - 1, Math.Max(0, (int)(x / (float)pictureBox.Width  * ThemeBase.CustomColors.GetLength(0))));
-            int j = Math.Min(ThemeBase.CustomColors.GetLength(1) - 1, Math.Max(0, (int)(y / (float)pictureBox.Height * ThemeBase.CustomColors.GetLength(1))));
+            int i = Math.Min(Theme.CustomColors.GetLength(0) - 1, Math.Max(0, (int)(x / (float)pictureBox.Width  * Theme.CustomColors.GetLength(0))));
+            int j = Math.Min(Theme.CustomColors.GetLength(1) - 1, Math.Max(0, (int)(y / (float)pictureBox.Height * Theme.CustomColors.GetLength(1))));
 
             foreach (var prop in properties)
             {
-                if (prop.type == PropertyType.ColoredString)
+                if (prop.type == PropertyType.ColoredTextBox)
                 {
-                    prop.control.BackColor = ThemeBase.CustomColors[i, j];
+                    prop.control.BackColor = Theme.CustomColors[i, j];
                 }
             }
 
-            pictureBox.BackColor = ThemeBase.CustomColors[i, j];
+            pictureBox.BackColor = Theme.CustomColors[i, j];
         }
 
         private void PictureBox_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -318,7 +322,7 @@ namespace FamiStudio
             var radio = new RadioButton();
 
             radio.Font = font;
-            radio.ForeColor = ThemeBase.LightGreyFillColor2;
+            radio.ForeColor = Theme.LightGreyFillColor2;
             radio.Text = text;
             radio.AutoSize = false;
             radio.Checked = check;
@@ -332,17 +336,6 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private DomainUpDown CreateDomainUpDown(int[] values, int value)
-        {
-            var upDown = new DomainUpDown();
-
-            upDown.Items.AddRange(values);
-            upDown.SelectedItem = value;
-            upDown.Font = font;
-
-            return upDown;
-        }
-
         private CheckBox CreateCheckBox(bool value, string text = "", string tooltip = null)
         {
             var cb = new CheckBox();
@@ -350,7 +343,7 @@ namespace FamiStudio
             cb.Text = text;
             cb.Checked = value;
             cb.Font = font;
-            cb.ForeColor = ThemeBase.LightGreyFillColor2;
+            cb.ForeColor = Theme.LightGreyFillColor2;
             cb.CheckedChanged += Cb_CheckedChanged;
             toolTip.SetToolTip(cb, tooltip);
 
@@ -384,7 +377,7 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private PropertyPageListView CreateCheckedListBox(string[] values, bool[] selected)
+        private PropertyPageListView CreateCheckedListBox(string[] values, bool[] selected, string tooltip = null, int height = 200)
         {
             var columns = new[]
             {
@@ -404,14 +397,18 @@ namespace FamiStudio
             list.UpdateData(data);
 
             list.Font = font;
-            list.Height = (int)(200 * RenderTheme.DialogScaling);
+            list.Height = DpiScaling.ScaleForDialog(height);
             list.HeaderStyle = ColumnHeaderStyle.None;
-            //list.MouseDoubleClick += ListView_MouseDoubleClick;
-            //list.MouseDown += ListView_MouseDown;
-            //list.ButtonPressed += ListView_ButtonPressed;
-            //list.ValueChanged += ListView_ValueChanged;
+            list.ValueChanged += CheckedListBox_ValueChanged;
+            toolTip.SetToolTip(list, tooltip);
 
             return list;
+        }
+
+        private void CheckedListBox_ValueChanged(object sender, int itemIndex, int columnIndex, object value)
+        {
+            var propIdx = GetPropertyIndexForControl(sender as Control);
+            PropertyChanged?.Invoke(this, propIdx, itemIndex, columnIndex, value);
         }
 
         private Button CreateButton(string text, string tooltip)
@@ -421,8 +418,8 @@ namespace FamiStudio
             button.Click += Button_Click;
             button.FlatStyle = FlatStyle.Flat;
             button.Font = font;
-            button.ForeColor = ThemeBase.LightGreyFillColor2;
-            button.Height = (int)(32 * RenderTheme.DialogScaling);
+            button.ForeColor = Theme.LightGreyFillColor2;
+            button.Height = DpiScaling.ScaleForDialog(32);
             toolTip.SetToolTip(button, tooltip);
             return button;
         }
@@ -460,35 +457,35 @@ namespace FamiStudio
             list.Invalidate();
         }
 
-        public int AddColoredString(string value, Color color)
+        public int AddColoredTextBox(string value, Color color)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.ColoredString,
+                    type = PropertyType.ColoredTextBox,
                     control = CreateColoredTextBox(value, color)
                 });
             return properties.Count - 1;
         }
 
-        public int AddString(string label, string value, int maxLength = 0, string tooltip = null)
+        public int AddTextBox(string label, string value, int maxLength = 0, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.String,
+                    type = PropertyType.TextBox,
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateTextBox(value, maxLength, tooltip)
                 });
             return properties.Count - 1;
         }
 
-        public int AddMultilineString(string label, string value)
+        public int AddMultilineTextBox(string label, string value)
         {
             properties.Add(
                 new Property()
                 {
-                    type = PropertyType.MultilineString,
+                    type = PropertyType.MultilineTextBox,
                     label = label != null ? CreateLabel(label) : null,
                     control = CreateMultilineTextBox(value)
                 });
@@ -542,7 +539,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddIntegerRange(string label, int value, int min, int max, string tooltip = null)
+        public int AddNumericUpDown(string label, int value, int min, int max, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -595,27 +592,6 @@ namespace FamiStudio
             upDown.Value = value;
         }
 
-        public void AddDomainRange(string label, int[] values, int value)
-        {
-            properties.Add(
-                new Property()
-                {
-                    type = PropertyType.DomainUpDown,
-                    label = label != null ? CreateLabel(label) : null,
-                    control = CreateDomainUpDown(values, value)
-                });
-        }
-
-        public void UpdateDomainRange(int idx, int[] values, int value)
-        {
-            var upDown = (properties[idx].control as DomainUpDown);
-
-            upDown.Items.Clear();
-            upDown.Items.AddRange(values);
-            upDown.Text = " "; // Workaround refresh bug.
-            upDown.SelectedItem = value;
-        }
-
         public void SetLabelText(int idx, string text)
         {
             (properties[idx].control as Label).Text = text;
@@ -640,7 +616,7 @@ namespace FamiStudio
                 cb.SelectedIndex = 0;
         }
 
-        public void AddCheckBox(string label, bool value, string tooltip = null)
+        public int AddCheckBox(string label, bool value, string tooltip = null)
         {
             properties.Add(
                 new Property()
@@ -649,6 +625,7 @@ namespace FamiStudio
                     label = label != null ? CreateLabel(label, tooltip) : null,
                     control = CreateCheckBox(value, "", tooltip)
                 });
+            return properties.Count - 1;
         }
 
         public int AddLabelCheckBox(string label, bool value, int margin = 0)
@@ -675,16 +652,21 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddCheckBoxList(string label, string[] values, bool[] selected)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int height = 200)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
                     label = label != null ? CreateLabel(label) : null,
-                    control = CreateCheckedListBox(values, selected)
+                    control = CreateCheckedListBox(values, selected, tooltip, height)
                 });
             return properties.Count - 1;
+        }
+
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null)
+        {
+            return -1;
         }
 
         private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string tooltip = null)
@@ -733,7 +715,7 @@ namespace FamiStudio
                 list.UpdateData(data);
 
             list.Font = font;
-            list.Height = (int)(height * RenderTheme.DialogScaling);
+            list.Height = DpiScaling.ScaleForDialog(height);
             list.MouseDoubleClick += ListView_MouseDoubleClick;
             list.MouseDown += ListView_MouseDown;
             list.ButtonPressed += ListView_ButtonPressed;
@@ -827,12 +809,17 @@ namespace FamiStudio
 
             if (label != null)
             {
-                label.ForeColor = enabled ? ThemeBase.LightGreyFillColor2 : ThemeBase.MediumGreyFillColor1;
+                label.ForeColor = enabled ? Theme.LightGreyFillColor2 : Theme.MediumGreyFillColor1;
             }
             else
             {
                 properties[idx].control.Enabled = enabled;
             }
+        }
+
+        public void SetPropertyVisible(int idx, bool visible)
+        {
+            properties[idx].visible = visible;
         }
 
         public void AppendText(int idx, string line)
@@ -859,8 +846,8 @@ namespace FamiStudio
             else
                 prop.warningIcon.Image = warningIcons[(int)type];
 
-            prop.warningIcon.Width  = (int)(16 * RenderTheme.DialogScaling);
-            prop.warningIcon.Height = (int)(16 * RenderTheme.DialogScaling);
+            prop.warningIcon.Width   = DpiScaling.ScaleForDialog(16);
+            prop.warningIcon.Height  = DpiScaling.ScaleForDialog(16);
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
             toolTip.SetToolTip(prop.warningIcon, comment);
         }
@@ -871,15 +858,13 @@ namespace FamiStudio
 
             switch (prop.type)
             {
-                case PropertyType.String:
-                case PropertyType.ColoredString:
-                case PropertyType.MultilineString:
+                case PropertyType.TextBox:
+                case PropertyType.ColoredTextBox:
+                case PropertyType.MultilineTextBox:
                     ForceTextBoxASCII(prop.control as TextBox);
                     return (prop.control as TextBox).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as NumericUpDown).Value;
-                case PropertyType.DomainUpDown:
-                    return int.TryParse(prop.control.Text, out var val) ? val : 0;
                 case PropertyType.Slider:
                     return (prop.control as Slider).Value;
                 case PropertyType.Radio:
@@ -943,7 +928,7 @@ namespace FamiStudio
                 case PropertyType.Button:
                     (prop.control as Button).Text = (string)value;
                     break;
-                case PropertyType.MultilineString:
+                case PropertyType.MultilineTextBox:
                     (prop.control as TextBox).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:
@@ -959,9 +944,9 @@ namespace FamiStudio
         {
             var testLabel = CreateLabel(text, null, true);
 
-            testLabel.MaximumSize = new Size(width - (int)(16 * RenderTheme.DialogScaling), 0);
+            testLabel.MaximumSize = new Size(width - DpiScaling.ScaleForDialog(16), 0);
             Controls.Add(testLabel);
-            var height = testLabel.Height + (int)(8 * RenderTheme.DialogScaling);
+            var height = testLabel.Height + DpiScaling.ScaleForDialog(8);
             Controls.Remove(testLabel);
 
             return height;
@@ -971,13 +956,13 @@ namespace FamiStudio
         {
             SuspendLayout();
 
-            int margin = (int)(5 * RenderTheme.DialogScaling);
+            int margin = DpiScaling.ScaleForDialog(5);
             int maxLabelWidth = 0;
             int defaultLabelHeight = 24;
 
             // Workaround scaling issue with checkboxes. 
             // Measure a label and well use this for checkbox.
-            if (RenderTheme.DialogScaling > 1.0f)
+            if (DpiScaling.Dialog > 1.0f)
             {
                 Label testLabel = CreateLabel("888");
                 Controls.Add(testLabel);
@@ -991,7 +976,7 @@ namespace FamiStudio
             {
                 var prop = properties[i];
 
-                if (prop.label != null)
+                if (prop.visible && prop.label != null)
                 {
                     // This is really ugly. We cant measure the labels unless they are added.
                     Controls.Add(prop.label);
@@ -1002,15 +987,18 @@ namespace FamiStudio
 
             int widthNoMargin = Width - (margin * 2);
             int totalHeight = margin;
-            int warningWidth = showWarnings ? (int)(16 * RenderTheme.DialogScaling) + margin : 0;
+            int warningWidth = showWarnings ? DpiScaling.ScaleForDialog(16) + margin : 0;
 
             for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
                 var height = 0;
 
+                if (!prop.visible)
+                    continue;
+
                 // Hack for checkbox that dont scale with Hi-DPI. 
-                if (RenderTheme.DialogScaling > 1.0f && prop.control is CheckBox)
+                if (DpiScaling.Dialog > 1.0f && prop.control is CheckBox)
                 {
                     prop.control.Height = defaultLabelHeight;
                     if (prop.label != null)
