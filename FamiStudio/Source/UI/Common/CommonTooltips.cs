@@ -2,14 +2,11 @@ using System;
 
 namespace FamiStudio
 {
+    // TODO : Get rid of this, these are not longer shared with multiple dialogs.
     public static class CommonTooltips
     {
         // Custom pattern.
-#if !FAMISTUDIO_WINDOWS
-        public readonly static string CustomPattern = null;
-#else
         public readonly static string CustomPattern = "Enable to use different length or tempo parameter for this pattern.";
-#endif
 
         // Project properties.
         public readonly static string ExpansionAudio = "Expansion audio chip(s) to use. This will add extra audio channels and disable any PAL support.";
@@ -27,7 +24,6 @@ namespace FamiStudio
         public readonly static string NotesPerBeat = "Number of notes in a beat. A darker line will be drawn between beats in the piano roll. Affects BPM calculation.";
         public readonly static string Groove = "The sequence of frame counts that will be executed to achieve the desired BPM.";
         public readonly static string GroovePadding = "Determines where an empty frame will be injected when the current groove value is higher than the number of frames in a note.";
-
     }
 
     public static class TutorialMessages

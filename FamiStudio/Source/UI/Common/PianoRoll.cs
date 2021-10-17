@@ -4014,8 +4014,6 @@ namespace FamiStudio
                         break;
                 }
 
-                Debug.WriteLine($"EndCapture {captureOperation}");
-
                 draggedSample = null;
                 captureOperation = CaptureOperation.None;
                 Capture = false;
