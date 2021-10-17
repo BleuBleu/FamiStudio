@@ -1,16 +1,14 @@
 LH778 Android
 =======
 
-Big tasks left:
-- Finish all controls (PR Effect)
-
 Piano roll:
 - Long press:
 	- Toggle volume slide
 - TouchDown
-	/ Gizmos (change value or slide)
-
-- Test : envelope selection, copy paste, etc.
+	/ Volume slide gizmo
+	- Crash fix arpeggio
+	- Draw rectangle when dragging envelopes
+	- Smaller highlight for instrument
 
 Sequencer:
 - Paste should happen at cursor, not selection? Must be consistent with PR.
@@ -18,6 +16,7 @@ Sequencer:
 Testing:
 - Test copy/paste/cut/delete in all cases (need to be able to delete samples too)
 - Test all scalings. 
+- Envelope selection, copy paste, etc.
 
 Polish (if time):
 - Fix effect icon scale in PR.
@@ -29,6 +28,7 @@ Polish (if time):
 - When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
 - Env editor : clicking again on highlight should remove it?
 - Dont do a fling when the transaction we are ending is a selection. Weird.
+- Add "gear" icon for properties?
 - BUG : When moving mouse out of project explorer towards piano roll, the sequencer icon dont change back.
 - BUG : FDS Waveform on mobile doesnt have the right range it seems.
 
