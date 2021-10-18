@@ -157,7 +157,8 @@ namespace FamiStudio
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            dlg.CloseRequested -= Dlg_CloseRequested;
+            if (dlg != null)
+                dlg.CloseRequested -= Dlg_CloseRequested;
         }
 
         protected override void OnPause()

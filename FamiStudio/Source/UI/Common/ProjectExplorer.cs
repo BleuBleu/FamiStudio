@@ -3040,6 +3040,15 @@ namespace FamiStudio
             TickFling(delta);
             UpdateCaptureOperation(mouseLastX, mouseLastY, true);
         }
+        
+        // Project properties.
+        public readonly static string ExpansionAudioTooltip       = "Expansion audio chip(s) to use. This will add extra audio channels and disable any PAL support.";
+        public readonly static string ExpansionNumChannelsTooltip = "Namco 163 audio supports between 1 and 8 channels. As you add more channels the audio quality will deteriorate. Only available when the 'Namco 163' expansion is enabled.";
+        public readonly static string TempoModeTooltip            = "FamiStudio tempo gives you precise control to every frame, has good PAL/NTSC conversion support and is the recommended way to use FamiStudio. FamiTracker tempo behaves like FamiTracker with speed/tempo settings. Use only if you have very specific compatibility needs as support is limited and it will not yield the best FamiStudio experience.";
+        public readonly static string AuthoringMachineTooltip     = "For use with FamiStudio tempo. Defines the machine on which the music is edited. Playback to the other space will be approximate, but still good.";
+
+        // Song properties.
+        public readonly static string SongLengthTooltip = "Number of patterns in the song.";
 
         private void EditProjectProperties(Point pt)
         {
@@ -3059,10 +3068,10 @@ namespace FamiStudio
             dlg.Properties.AddTextBox("Title :", project.Name, 31); // 0
             dlg.Properties.AddTextBox("Author :", project.Author, 31); // 1
             dlg.Properties.AddTextBox("Copyright :", project.Copyright, 31); // 2
-            dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], CommonTooltips.TempoMode); // 3
-            dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], CommonTooltips.AuthoringMachine); // 4
-            dlg.Properties.AddNumericUpDown("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, CommonTooltips.ExpansionNumChannels); // 5 (Namco)
-            dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, CommonTooltips.ExpansionAudio, 150); // 6
+            dlg.Properties.AddDropDownList("Tempo Mode :", TempoType.Names, TempoType.Names[project.TempoMode], TempoModeTooltip); // 3
+            dlg.Properties.AddDropDownList("Authoring Machine :", MachineType.NamesNoDual, MachineType.NamesNoDual[project.PalMode ? MachineType.PAL : MachineType.NTSC], AuthoringMachineTooltip); // 4
+            dlg.Properties.AddNumericUpDown("N163 Channels :", project.ExpansionNumN163Channels, 1, 8, ExpansionNumChannelsTooltip); // 5 (Namco)
+            dlg.Properties.AddCheckBoxList("Expansion Audio :", expNames, expBools, ExpansionAudioTooltip, 150); // 6
             dlg.Properties.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
             dlg.Properties.SetPropertyEnabled(5, project.UsesExpansionAudio(ExpansionType.N163));
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
@@ -3213,7 +3222,7 @@ namespace FamiStudio
 
             dlg.Properties.AddColoredTextBox(song.Name, song.Color); // 0
             dlg.Properties.AddColorPicker(song.Color); // 1
-            dlg.Properties.AddNumericUpDown("Song Length :", song.Length, 1, Song.MaxLength, CommonTooltips.SongLength); // 2
+            dlg.Properties.AddNumericUpDown("Song Length :", song.Length, 1, Song.MaxLength, SongLengthTooltip); // 2
             tempoProperties.AddProperties();
             dlg.Properties.Build();
 

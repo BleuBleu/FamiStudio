@@ -291,6 +291,8 @@ namespace FamiStudio
                 linearLayout.LayoutParameters = linearLayoutParams;
                 linearLayout.SetBackgroundColor(DroidUtils.GetColorFromResources(container.Context, Resource.Color.DarkGreyFillColor1));
 
+                var first = true;
+
                 for (int i = 0; i < dialog.PageCount; i++)
                 {
                     var tab = dialog.GetPropertyPageTab(i);
@@ -298,13 +300,15 @@ namespace FamiStudio
                     if (!tab.visible)
                         continue;
 
-                    if (i > 0)
+                    if (!first)
                     {
                         var spacer = new View(container.Context);
                         spacer.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
                         spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(container.Context, Resource.Color.LightGreyFillColor1));
                         linearLayout.AddView(spacer);
                     }
+
+                    first = false;
 
                     var imageView = new ImageView(container.Context);
                     imageView.LayoutParameters = new LinearLayout.LayoutParams(dp36, dp36);

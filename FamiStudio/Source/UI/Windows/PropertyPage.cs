@@ -628,13 +628,13 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddLabelCheckBox(string label, bool value, int margin = 0)
+        public int AddLabelCheckBox(string label, bool value, int margin = 0, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBox,
-                    control = CreateCheckBox(value, label),
+                    control = CreateCheckBox(value, label, tooltip),
                     leftMarging = margin
                 });
             return properties.Count - 1;

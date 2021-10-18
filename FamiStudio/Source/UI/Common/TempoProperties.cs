@@ -35,6 +35,15 @@ namespace FamiStudio
         string[]    tempoStrings;
         string[]    grooveStrings;
 
+        public readonly static string TempoTooltip           = "This is not the BPM! It is the rate at which the internal tempo counter in incremented. Values other than 150 may yield uneven notes. Please see FamiTracker documentation.";
+        public readonly static string SpeedTooltip           = "If tempo is 150, number of NTSC frames (1/60th of a second) between each notes. Larger values lead to slower tempo. Please see FamiTracker documentation.";
+        public readonly static string BPMTooltip             = "Beats per minute.";
+        public readonly static string FramesPerNoteTooltip   = "Number of frames (1/60th of a second in NTSC, 1/50th in PAL) in a notes. This is computed automatically from the BPM.";
+        public readonly static string NotesPerPatternTooltip = "Number of notes in a pattern. A pattern is the smallest unit of your song that you may want to repeat multiple times.";
+        public readonly static string NotesPerBeatTooltip    = "Number of notes in a beat. A darker line will be drawn between beats in the piano roll. Affects BPM calculation.";
+        public readonly static string GrooveTooltip          = "The sequence of frame counts that will be executed to achieve the desired BPM.";
+        public readonly static string GroovePaddingTooltip   = "Determines where an empty frame will be injected when the current groove value is higher than the number of frames in a note.";
+
         public TempoProperties(PropertyPage props, Song song, int patternIdx = -1, int minPatternIdx = -1, int maxPatternIdx = -1)
         {
             this.song = song;
@@ -54,17 +63,17 @@ namespace FamiStudio
             {
                 if (patternIdx < 0)
                 {
-                    famitrackerTempoPropIdx = props.AddNumericUpDown("Tempo :", song.FamitrackerTempo, 32, 255, CommonTooltips.Tempo); // 0
-                    famitrackerSpeedPropIdx = props.AddNumericUpDown("Speed :", song.FamitrackerSpeed, 1, 31, CommonTooltips.Speed); // 1
+                    famitrackerTempoPropIdx = props.AddNumericUpDown("Tempo :", song.FamitrackerTempo, 32, 255, TempoTooltip); // 0
+                    famitrackerSpeedPropIdx = props.AddNumericUpDown("Speed :", song.FamitrackerSpeed, 1, 31, SpeedTooltip); // 1
                 }
                 
                 var notesPerBeat    = patternIdx < 0 ? song.BeatLength    : song.GetPatternBeatLength(patternIdx);
                 var notesPerPattern = patternIdx < 0 ? song.PatternLength : song.GetPatternLength(patternIdx);
                 var bpm = Song.ComputeFamiTrackerBPM(song.Project.PalMode, song.FamitrackerSpeed, song.FamitrackerTempo, notesPerBeat);
 
-                notesPerBeatPropIdx    = props.AddNumericUpDown("Notes per Beat :", notesPerBeat, 1, 256, CommonTooltips.NotesPerBeat); // 2
-                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern :", notesPerPattern, 1, Pattern.MaxLength, CommonTooltips.NotesPerPattern); // 3
-                bpmLabelPropIdx        = props.AddLabel("BPM :", bpm.ToString("n1"), false, CommonTooltips.BPM); // 4
+                notesPerBeatPropIdx    = props.AddNumericUpDown("Notes per Beat :", notesPerBeat, 1, 256, NotesPerBeatTooltip); // 2
+                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern :", notesPerPattern, 1, Pattern.MaxLength, NotesPerPatternTooltip); // 3
+                bpmLabelPropIdx        = props.AddLabel("BPM :", bpm.ToString("n1"), false, BPMTooltip); // 4
 
                 props.ShowWarnings = true;
 
@@ -87,15 +96,15 @@ namespace FamiStudio
                 Debug.Assert(grooveIndex >= 0);
                 grooveStrings = grooveList.Select(g => string.Join("-", g)).ToArray();
 
-                famistudioBpmPropIdx   = props.AddDropDownList("BPM : ", tempoStrings, tempoStrings[tempoIndex], CommonTooltips.BPM); // 0
-                notesPerBeatPropIdx    = props.AddNumericUpDown("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, CommonTooltips.NotesPerBeat); // 1
-                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern : ", notesPerPattern / noteLength, 1, Pattern.MaxLength / noteLength, CommonTooltips.NotesPerPattern); // 2
-                framesPerNotePropIdx   = props.AddLabel("Frames per Note :", noteLength.ToString(), false, CommonTooltips.FramesPerNote); // 3
+                famistudioBpmPropIdx   = props.AddDropDownList("BPM : ", tempoStrings, tempoStrings[tempoIndex], BPMTooltip); // 0
+                notesPerBeatPropIdx    = props.AddNumericUpDown("Notes per Beat : ", notesPerBeat / noteLength, 1, 256, NotesPerBeatTooltip); // 1
+                notesPerPatternPropIdx = props.AddNumericUpDown("Notes per Pattern : ", notesPerPattern / noteLength, 1, Pattern.MaxLength / noteLength, NotesPerPatternTooltip); // 2
+                framesPerNotePropIdx   = props.AddLabel("Frames per Note :", noteLength.ToString(), false, FramesPerNoteTooltip); // 3
 
                 props.ShowWarnings = true;
                 props.BeginAdvancedProperties();
-                groovePropIdx    = props.AddDropDownList("Groove : ", grooveStrings, grooveStrings[grooveIndex], CommonTooltips.Groove); // 4
-                groovePadPropIdx = props.AddDropDownList("Groove Padding : ", GroovePaddingType.Names, GroovePaddingType.Names[song.GroovePaddingMode], CommonTooltips.GroovePadding); // 5
+                groovePropIdx    = props.AddDropDownList("Groove : ", grooveStrings, grooveStrings[grooveIndex], GrooveTooltip); // 4
+                groovePadPropIdx = props.AddDropDownList("Groove Padding : ", GroovePaddingType.Names, GroovePaddingType.Names[song.GroovePaddingMode], GroovePaddingTooltip); // 5
 
                 originalNoteLength      = noteLength;
                 originalNotesPerBeat    = notesPerBeat;

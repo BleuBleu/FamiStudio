@@ -66,6 +66,41 @@ namespace FamiStudio
             "Thin",
             "Thick"
         };
+        
+        // General
+        private readonly string CheckUpdatesTooltip             = "When enabled, FamiStudio will check for updates every time you start the app.";
+        private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that this does not work well on Linux.";
+        private readonly string ClearUndoRedoTooltip            = "When enabled, the undo/redo stack will be cleared every time you save. Disabling this can help keep the memory usage down.";
+        private readonly string OpenLastTooltip                 = "When enabled, FamiStudio will open the last project you were working on when you last closed the app.";
+        private readonly string AutosaveTooltip                 = "When enabled, a copy of your project will be save approximately every 2 minutes. This can prevent loosing data when a crash occurs.";
+        private readonly string AutosaveFolderTooltip           = "Click to open the auto save folder.";
+
+        // UI
+        private readonly string ScalingTooltip                  = "Overall scaling of the main FamiStudio window. Leave it to 'System' if you want FamiStudio to automatically detect it based on the system configuration.";
+        private readonly string TimeFormatTooltip               = "Affects how time is displayed in the toolbar.";
+        private readonly string FollowModeTooltip               = "Scrolling behavior when enabling follow mode in the toolbar.";
+        private readonly string FollowingViewsTooltip           = "Affects which views will scroll when enabling follow mode in the toolbar.";
+        private readonly string ScrollBarsTooltip               = "Affects the visibility and size of the scroll bars in the app.";
+        private readonly string ShowPianoRollRangeTooltip       = "When enabled, a grey rectangle will be displayed in the Sequencer to show you the currently visible range in the Piano Roll.";
+        private readonly string ShowNoteLabelsTooltip           = "When enabled, labels (ex: C#4) will be displayed on notes in the piano roll.";
+        private readonly string ShowFamitrackerStopNotesTooltip = "When enabled, partially transparent stop notes will be displayed whenever a note ends, when using FamiTracker tempo mode. This can help you to visually align note delays with stop notes.";
+        private readonly string ShowOscilloscopeTooltip         = "When enabled, the oscilloscope will be visible in the toolbar. Disabling it can help performances on low-end systems.";
+        private readonly string CompactSequencerTooltip         = "When enabled, the Sequencer will always try to keep its size as small as possible.";
+
+        // Sound
+        private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
+        private readonly string StopInstrumentTooltip           = "Number of secondes to wait before stopping instruments that have a release part in their volume envelopes.";
+        private readonly string PreventPoppingTooltip           = "When enabled, FamiStudio will use the sweep unit to prevent popping around certain notes on the 2 main square channels. Also known as 'Blargg's Smooth Vibrato' technique.";
+        private readonly string NoDragSoundTooltip              = "When enabled, FamiStudio wil not emit sounds when dragging notes in the Piano Roll if the song is playing.";
+        private readonly string MetronomeVolumeTooltip          = "Volume of the metronome.";
+
+        // Mixer
+        private readonly string ExpansionTooltip                = "Select the audio expansion for which you want to adjust the audio.";
+        private readonly string VolumeTooltip                   = "Volume adjustment, in db.";
+        private readonly string TrebleTooltip                   = "Treble adjustment, in db.";
+
+        // MIDI
+        private readonly string MidiDeviceTooltip               = "The MIDI device that will be used to input notes.";
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
@@ -94,10 +129,11 @@ namespace FamiStudio
                 CreatePropertyPage(page, section);
             }
 
-            dialog.SetPageVisible((int)ConfigSection.MacOS,  PlatformUtils.IsMacOS);
-            dialog.SetPageVisible((int)ConfigSection.MIDI,   PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.FFmpeg, PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.QWERTY, PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.General, PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.MacOS,   PlatformUtils.IsMacOS);
+            dialog.SetPageVisible((int)ConfigSection.MIDI,    PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.FFmpeg,  PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.QWERTY,  PlatformUtils.IsDesktop);
         }
 
         private string[] BuildDpiScalingList()
@@ -112,36 +148,18 @@ namespace FamiStudio
             return list;
         }
 
-        private readonly string CheckUpdatesTooltip             = "";
-        private readonly string TrackpadControlsTooltip         = "";
-        private readonly string ClearUndoRedoTooltip            = "";
-        private readonly string OpenLastTooltip                 = "";
-        private readonly string AutosaveTooltip                 = "";
-        private readonly string AutosaveFolderTooltip           = "";
-
-        private readonly string ScalingTooltip                  = "";
-        private readonly string TimeFormatTooltip               = "";
-        private readonly string FollowModeTooltip               = "";
-        private readonly string FollowingViewsTooltip           = "";
-        private readonly string ScrollBarsTooltip               = "";
-        private readonly string ShowPianoRollRangeTooltip       = "";
-        private readonly string ShowNoteLabelsTooltip           = "";
-        private readonly string ShowFamitrackerStopNotesTooltip = "";
-        private readonly string ShowPatternPropertyIconsTooltip = "";
-        private readonly string CompactSequencerTooltip         = "";
-
         private PropertyPage CreatePropertyPage(PropertyPage page, ConfigSection section)
         {
             switch (section)
             {
                 case ConfigSection.General:
                 {
-                    page.AddCheckBox("Check for updates:", Settings.CheckUpdates); // 0
-                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls); // 1
-                    page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave); // 2
-                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart); // 3
-                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy); // 4
-                    page.AddButton(null, "Open Autosave folder"); // 4
+                    page.AddCheckBox("Check for updates:", Settings.CheckUpdates, CheckUpdatesTooltip); // 0
+                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls, TrackpadControlsTooltip); // 1
+                    page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 2
+                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 3
+                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 4
+                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 4
                     page.PropertyClicked += PageGeneral_PropertyClicked;
                     page.PropertyChanged += PageGeneral_PropertyChanged;
                     break;
@@ -155,33 +173,37 @@ namespace FamiStudio
                     var followModeIndex = Settings.FollowMode <= 0 ? 0 : Settings.FollowMode % FollowModeStrings.Length;
                     var followSyncIndex = Settings.FollowSync <= 0 ? 0 : Settings.FollowSync % FollowSyncStrings.Length;
 
-                    page.AddDropDownList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex]); // 0
-                    page.AddDropDownList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex]); // 1
-                    page.AddDropDownList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex]);  // 2
-                    page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex]); // 3
-                    page.AddDropDownList("Scroll Bars:", ScrollBarsStrings, ScrollBarsStrings[Settings.ScrollBars]); // 4
-                    page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange); // 5
-                    page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels); // 6
-                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes); // 7
-                    page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope); // 8
-                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer); // 9
+                    page.AddDropDownList("Scaling (Requires restart):", scalingValues, scalingValues[scalingIndex], ScalingTooltip); // 0
+                    page.AddDropDownList("Time Format:", TimeFormatStrings, TimeFormatStrings[timeFormatIndex], TimeFormatTooltip); // 1
+                    page.AddDropDownList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
+                    page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
+                    page.AddDropDownList("Scroll Bars:", ScrollBarsStrings, ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 4
+                    page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange, ShowPianoRollRangeTooltip); // 5
+                    page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels, ShowNoteLabelsTooltip); // 6
+                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 7
+                    page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope, ShowOscilloscopeTooltip); // 8
+                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 9
+                    page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(8, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(9, PlatformUtils.IsDesktop);
                     break;
                     }
                 case ConfigSection.Sound:
                 {
-                    page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16); // 0
-                    page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10); // 1
-                    page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato); // 2
-                    page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying); // 3
-                    page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null); // 4
+                    page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16, NumBufferedFramesTooltip); // 0
+                    page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10, StopInstrumentTooltip); // 1
+                    page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 2
+                    page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 3
+                    page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 4
                     break;
                 }
                 case ConfigSection.Mixer:
                 {
                     // TODO : Tooltips.
-                    page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0]); // 0
-                    page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB"); // 1
-                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB"); // 2
+                    page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 0
+                    page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", VolumeTooltip); // 1
+                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", TrebleTooltip); // 2
                     page.AddButton(PlatformUtils.IsDesktop ? null : "Reset", "Reset to default", "Resets this expansion to the default settings."); // 3
                     page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4
                     page.PropertyChanged += MixerPage_PropertyChanged;
@@ -206,7 +228,7 @@ namespace FamiStudio
                     else if (midiDevices.Count > 0)
                         midiDevice = midiDevices[0];
 
-                    page.AddDropDownList("Device :", midiDevices.ToArray(), midiDevice); // 0
+                    page.AddDropDownList("Device :", midiDevices.ToArray(), midiDevice, MidiDeviceTooltip); // 0
                     break;
                 }
                 case ConfigSection.FFmpeg:

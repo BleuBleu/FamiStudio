@@ -597,9 +597,9 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddLabelCheckBox(string label, bool value, int margin = 0)
+        public int AddLabelCheckBox(string label, bool value, int margin = 0, string tooltip = null)
         {
-            return AddCheckBox(label, value);
+            return AddCheckBox(label, value, tooltip);
         }
 
         public int AddDropDownList(string label, string[] values, string value, string tooltip = null)

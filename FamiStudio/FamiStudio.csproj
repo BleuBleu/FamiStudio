@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -147,7 +147,6 @@
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\CommandLineInterface.cs" />
-    <Compile Include="Source\UI\Common\CommonTooltips.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\DpiScaling.cs" />
@@ -178,6 +177,9 @@
     <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
     <Compile Include="Source\UI\Desktop\MobileClasses.cs" />
+    <Compile Include="Source\UI\Desktop\TutorialDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Source\UI\Windows\AutoScrollTextBox.cs">
       <SubType>Component</SubType>
     </Compile>

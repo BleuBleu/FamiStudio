@@ -1741,9 +1741,9 @@ namespace FamiStudio
                 return;
 
             var dialog = new PropertyDialog("Paste Special", 200);
-            dialog.Properties.AddLabelCheckBox("Insert", false); // 0
-            dialog.Properties.AddLabelCheckBox("Extend song", false); // 1
-            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32); // 2
+            dialog.Properties.AddLabelCheckBox("Insert", false, 0, "When enabled, will move the existing patterns to the right to make room for new pasted patterns."); // 0
+            dialog.Properties.AddLabelCheckBox("Extend song", false, 0, "When enabled, will extend the song to make room for the new pasted patterns."); // 1
+            dialog.Properties.AddNumericUpDown("Repeat :", 1, 1, 32, "Number of times to paste the patterns."); // 2
             dialog.Properties.SetPropertyEnabled(1, false);
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();
@@ -2395,6 +2395,9 @@ namespace FamiStudio
             ShowExpansionIcons = false;
         }
 
+        // Custom pattern.
+        private readonly string CustomPatternTooltip = "Enable to use different length or tempo parameter for this pattern.";
+
         private void EditPatternCustomSettings(Point pt, int patternIdx)
         {
             var dlg = new PropertyDialog("Pattern Custom Settings", PointToScreen(pt), 300);
@@ -2412,7 +2415,7 @@ namespace FamiStudio
 
             var tempoProperties = new TempoProperties(dlg.Properties, song, patternIdx, minPattern, maxPattern);
 
-            dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CommonTooltips.CustomPattern); // 0
+            dlg.Properties.AddCheckBox("Custom Pattern :", song.PatternHasCustomSettings(patternIdx), CustomPatternTooltip); // 0
             tempoProperties.AddProperties();
             tempoProperties.EnableProperties(enabled);
             dlg.Properties.PropertyChanged += PatternCustomSettings_PropertyChanged;
@@ -2653,7 +2656,13 @@ namespace FamiStudio
             UpdateCaptureOperation(mouseLastX, mouseLastY, 1.0f, true);
             UpdateFollowMode();
             TickFling(delta);
-            patternCache.Tick();
+            TickPatternCache();
+        }
+
+        private void TickPatternCache()
+        {
+            if (patternCache != null)
+                patternCache.Tick();
         }
 
         public void SongModified()

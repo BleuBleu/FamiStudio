@@ -129,13 +129,13 @@ namespace FamiStudio
 
         private void SetPage(int idx)
         {
-            pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Messages.Length - 1);
-            pictureBox1.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{TutorialMessages.Images[pageIndex]}"));
-            label1.Text = TutorialMessages.Messages[pageIndex];
+            pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Length - 1);
+            pictureBox1.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{TutorialImages[pageIndex]}"));
+            label1.Text = TutorialMessages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
 
             string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
-            buttonRight.Image = pageIndex == TutorialMessages.Messages.Length - 1 ?
+            buttonRight.Image = pageIndex == TutorialMessages.Length - 1 ?
                 Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png")) :
                 Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowRight{suffix}.png"));
         }
@@ -157,7 +157,7 @@ namespace FamiStudio
 
         private void buttonRight_Click(object sender, EventArgs e)
         {
-            if (pageIndex == TutorialMessages.Messages.Length - 1)
+            if (pageIndex == TutorialMessages.Length - 1)
             {
                 DialogResult = checkBoxDontShow.Checked ? DialogResult.OK : DialogResult.Cancel;
                 Close();
