@@ -326,6 +326,7 @@ namespace FamiStudio
             radio.Text = text;
             radio.AutoSize = false;
             radio.Checked = check;
+            radio.Padding = new Padding(DpiScaling.ScaleForDialog(16), 0, 0, 0);
 
             return radio;
         }
@@ -1022,6 +1023,7 @@ namespace FamiStudio
             {
                 var prop = properties[i];
                 var height = 0;
+                var marginScale = 1;
 
                 if (!prop.visible)
                     continue;
@@ -1057,9 +1059,14 @@ namespace FamiStudio
 
                     // HACK : For some multiline controls.
                     if (prop.control is Label && prop.control.MaximumSize.Width != 0)
+                    {
                         prop.control.MaximumSize = new Size(prop.control.Width, 0);
+                    }
                     else if (prop.control is RadioButton)
+                    {
                         prop.control.Height = GetRadioButtonHeight(prop.control.Text, prop.control.Width);
+                        marginScale = 0;
+                    }
 
                     Controls.Add(prop.control);
                 }
@@ -1073,7 +1080,7 @@ namespace FamiStudio
                     Controls.Add(prop.warningIcon);
                 }
 
-                totalHeight += height + margin;
+                totalHeight += height + margin * marginScale;
             }
 
             Height = totalHeight;

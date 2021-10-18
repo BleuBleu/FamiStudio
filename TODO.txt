@@ -12,7 +12,6 @@ Polish (high-priotity):
 Polish (if time):
 - Android : Tutorial (post-beta?)
 - Android : Option to hide piano in piano roll? (would need octave labels)
-- Change instrument dialog for a combo
 
 Icon notes:
 - 46% zoom, start with 128x128 png.

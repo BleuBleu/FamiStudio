@@ -2017,22 +2017,38 @@ namespace FamiStudio
                 var activeExpansions = App.Project.GetActiveExpansions();
                 var expNames = new List<string>();
 
+                var dlg = new PropertyDialog("Add Instrument", PointToScreen(new Point(x, y)), 260, true);
+                dlg.Properties.AddLabel(null, "Select audio expansion:"); // 0
+
                 expNames.Add(ExpansionType.Names[ExpansionType.None]);
+                dlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? "Select audio expansion" : null, expNames[0], true);
+
                 for (int i = 0; i < activeExpansions.Length; i++)
                 {
                     if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
-                        expNames.Add(ExpansionType.Names[activeExpansions[i]]);
+                    {
+                        var expName = ExpansionType.Names[activeExpansions[i]];
+                        dlg.Properties.AddRadioButton(null, expName, false);
+                        expNames.Add(expName);
+                    }
                 }
 
-                var dlg = new PropertyDialog("Add Instrument", PointToScreen(new Point(x, y)), 260, true);
-                dlg.Properties.AddDropDownList("Expansion:", expNames.ToArray(), expNames[0]); // 0
+                dlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
                 dlg.Properties.Build();
 
                 dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
                     if (r == DialogResult.OK)
                     {
-                        instrumentType = ExpansionType.GetValueForName(dlg.Properties.GetPropertyValue<string>(0));
+                        for (int i = 0; i < expNames.Count; i++)
+                        {
+                            if (dlg.Properties.GetPropertyValue<bool>(i + 1))
+                            {
+                                instrumentType = ExpansionType.GetValueForName(expNames[i]);
+                                break;
+                            }
+                        }
+
                         AddInstrument(instrumentType);
                     }
                 });
