@@ -158,7 +158,7 @@ namespace FamiStudio
         {
             mainForm = form;
 
-            SetActiveControl(PianoRoll);
+            SetActiveControl(PlatformUtils.IsDesktop ? (RenderControl)PianoRoll : Sequencer);
 
             Sequencer.PatternClicked     += Sequencer_PatternClicked;
             Sequencer.PatternModified    += Sequencer_PatternModified;
@@ -1270,6 +1270,7 @@ namespace FamiStudio
 
                 SaveProjectCopy(WipProject);
                 SaveWipSettings();
+                Settings.Save();
             }
         }
         private void LoadWipSettings()

@@ -4,6 +4,10 @@ using Android.Text.Style;
 using Android.App;
 using Android.OS;
 using Android.Views;
+using Android.Runtime;
+using Android.Content;
+using Android.Content.Res;
+using Android.Content.PM;
 using AndroidX.AppCompat.App;
 using AndroidX.Fragment.App;
 using AndroidX.Core.Widget;
@@ -14,9 +18,6 @@ using Java.Lang;
 using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
 using ActionBar    = AndroidX.AppCompat.App.ActionBar;
-using Android.Runtime;
-using Android.Content;
-
 namespace FamiStudio
 {
     public class PropertyDialog
@@ -66,7 +67,7 @@ namespace FamiStudio
         }
     }
 
-    [Activity(Theme = "@style/AppTheme.NoActionBar")]
+    [Activity(Theme = "@style/AppTheme.NoActionBar", ResizeableActivity = false, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize)]
     public class PropertyDialogActivity : AppCompatActivity
     {
         private const int FragmentViewId  = 1008;

@@ -2,9 +2,9 @@
 =====
 
 Polish (high-priotity):
-- Android : Paste should happen at cursor, not selection? Must be consistent with PR. Should we move selection on seek?
 - Android : Smaller highlight for instrument
 - Android : Margins for auto-scroll, migrate all to new function.
+- Android : Paste should happen at cursor, not selection? Must be consistent with PR. Should we move selection on seek?
 - Android : When in instrument editor, if channel is DPCM, you get invalid instrument error, but cant switch to DPCM instrument. COnfusing.
 - Android : Env editor, clicking again on highlight should remove it?
 - Desktop : When multiple expansions are used, i can still export to sound engine, wtf?

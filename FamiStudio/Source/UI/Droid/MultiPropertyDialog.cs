@@ -6,6 +6,7 @@ using Android.Text;
 using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
+using Android.Content.PM;
 using AndroidX.AppCompat.App;
 using AndroidX.Fragment.App;
 using AndroidX.Core.Widget;
@@ -92,7 +93,7 @@ namespace FamiStudio
         }
     }
 
-    [Activity(Theme = "@style/AppTheme.NoActionBar")]
+    [Activity(Theme = "@style/AppTheme.NoActionBar", ResizeableActivity = false, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize)]
     public class MultiPropertyDialogActivity : AppCompatActivity, View.IOnClickListener
     {
         private const int FragmentViewId  = 1008;
