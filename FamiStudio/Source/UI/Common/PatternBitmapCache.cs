@@ -50,7 +50,6 @@ namespace FamiStudio
         private GLGraphics graphics;
         private List<CacheTexture> cacheTextures = new List<CacheTexture>();
         private Dictionary<int, List<PatternCacheData>> patternCache = new Dictionary<int, List<PatternCacheData>>();
-        public int DesiredPatternCacheSizeY => desiredPatternCacheSizeY;
 
         public PatternBitmapCache(GLGraphics g)
         {
@@ -203,10 +202,14 @@ namespace FamiStudio
             }
         }
 
-        public void Update(int patternSizeY)
-        { 
+        public void Tick()
+        {
             frameIndex++;
+            CleanupStaleEntries();
+        }
 
+        public void UpdateDesiredSize(int patternSizeY)
+        { 
             if (desiredPatternCacheSizeY != patternSizeY)
             {
                 desiredPatternCacheSizeY = patternSizeY;
@@ -221,10 +224,6 @@ namespace FamiStudio
 
                 scaleFactorV = (clampedPatternCacheSizeY * factor) / (float)desiredPatternCacheSizeY;
                 Clear();
-            }
-            else
-            {
-                CleanupStaleEntries();
             }
         }
 
