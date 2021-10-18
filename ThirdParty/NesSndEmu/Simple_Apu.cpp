@@ -41,9 +41,8 @@ void Simple_Apu::dmc_reader( int (*f)( void* user_data, cpu_addr_t ), void* p )
 
 blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 {
-	int ratiodivider = 1;
 	pal_mode = pal;
-	frame_length = pal ? 33247/ ratiodivider : 29780/ ratiodivider;
+	frame_length = pal ? 33247 : 29780;
 	apu.output(&buf);
 	vrc6.output(&buf);
 	vrc7.output(&buf);
@@ -52,12 +51,12 @@ blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 	namco.output(&buf);
 	sunsoft.output(&buf);
 	epsm.output(&bufLeft, &bufRight);
-	buf.clock_rate( pal ? 1662607/ ratiodivider : 1789773/ ratiodivider);
-	bufLeft.clock_rate(pal ? 1662607/ ratiodivider : 1789773/ ratiodivider);
-	bufLeft.sample_rate(rate/ ratiodivider);
-	bufRight.clock_rate(pal ? 1662607 / ratiodivider : 1789773 / ratiodivider);
-	bufRight.sample_rate(rate / ratiodivider);
-	return buf.sample_rate( rate/ ratiodivider);
+	buf.clock_rate( pal ? 1662607 : 1789773);
+	bufLeft.clock_rate(pal ? 1662607 : 1789773);
+	bufLeft.sample_rate(rate);
+	bufRight.clock_rate(pal ? 1662607 : 1789773);
+	bufRight.sample_rate(rate);
+	return buf.sample_rate( rate);
 }
 
 void Simple_Apu::enable_channel(int idx, bool enable)
@@ -292,4 +291,3 @@ void Simple_Apu::load_snapshot( apu_snapshot_t const& in )
 {
 	apu.load_snapshot( in );
 }
-
