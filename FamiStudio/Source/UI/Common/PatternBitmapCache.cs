@@ -50,6 +50,7 @@ namespace FamiStudio
         private GLGraphics graphics;
         private List<CacheTexture> cacheTextures = new List<CacheTexture>();
         private Dictionary<int, List<PatternCacheData>> patternCache = new Dictionary<int, List<PatternCacheData>>();
+        public int DesiredPatternCacheSizeY => desiredPatternCacheSizeY;
 
         public PatternBitmapCache(GLGraphics g)
         {

@@ -457,6 +457,12 @@ namespace FamiStudio
             return captureOperation == CaptureOperation.DragSeekBar ? dragSeekPosition : App.CurrentFrame;
         }
 
+        private void UpdatePatternCache()
+        {
+            int patternCacheSizeY = trackSizeY - patternHeaderSizeY - 1;
+            patternCache.Update(patternCacheSizeY);
+        }
+
         protected void RenderChannelNames(RenderGraphics g)
         {
             var ch = g.CreateCommandList();
@@ -603,9 +609,6 @@ namespace FamiStudio
             // Patterns
             var highlightedPatternRect = Rectangle.Empty;
 
-            int patternCacheSizeY = trackSizeY - patternHeaderSizeY - 1;
-            patternCache.Update(patternCacheSizeY);
-
             for (int p = minVisiblePattern; p < maxVisiblePattern; p++)
             {
                 var patternLen = Song.GetPatternLength(p);
@@ -628,7 +631,7 @@ namespace FamiStudio
                         cp.PushTranslation(0, py);
                         cb.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY, 0.8f));
                         cp.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, ThemeResources.BlackBrush);
-                        cp.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCacheSizeY, 1.0f, u0, v0, u1, v1);
+                        cp.DrawBitmap(bmp, 1.0f, 1.0f + patternHeaderSizeY, sx - 1, patternCache.DesiredPatternCacheSizeY, 1.0f, u0, v0, u1, v1);
                         cp.DrawText(pattern.Name, ThemeResources.FontSmall, patternNamePosX, 0, ThemeResources.BlackBrush, RenderTextFlags.Left | RenderTextFlags.Middle | RenderTextFlags.Clip, sx - patternNamePosX, patternHeaderSizeY);
                         if (IsPatternSelected(location))
                             cf.DrawRectangle(0, 0, sx, trackSizeY, selectionPatternBrush, 2, true);
@@ -2653,6 +2656,7 @@ namespace FamiStudio
             UpdateCaptureOperation(mouseLastX, mouseLastY, 1.0f, true);
             UpdateFollowMode();
             TickFling(delta);
+            UpdatePatternCache();
         }
 
         public void SongModified()
