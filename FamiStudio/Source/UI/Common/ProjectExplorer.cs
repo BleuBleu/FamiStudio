@@ -1979,8 +1979,6 @@ namespace FamiStudio
             App.SelectedSong = App.Project.CreateSong();
             App.UndoRedoManager.EndTransaction();
             RefreshButtons();
-
-            // DROIDTODO : Scroll to the new song.
         }
 
         private void AskDeleteSong(Song song)
@@ -3135,8 +3133,7 @@ namespace FamiStudio
 
                     if (changedExpansion || changedNumChannels)
                     {
-                        // DROIDTODO : This will not work on mobile!
-                        if (!expansionRemoved || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        if (!expansionRemoved || PlatformUtils.IsMobile || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
                             project.SetExpansionAudioMask(expansionMask, numChannels);
@@ -3149,15 +3146,13 @@ namespace FamiStudio
                     {
                         if (tempoMode == TempoType.FamiStudio)
                         {
-                            // DROIDTODO : This will not work on mobile!
-                            if (!project.AreSongsEmpty)
+                            if (!project.AreSongsEmpty && PlatformUtils.IsDesktop)
                                 PlatformUtils.MessageBox($"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
                             project.ConvertToFamiStudioTempo();
                         }
                         else if (tempoMode == TempoType.FamiTracker)
                         {
-                            // DROIDTODO : This will not work on mobile!
-                            if (!project.AreSongsEmpty)
+                            if (!project.AreSongsEmpty && PlatformUtils.IsDesktop)
                                 PlatformUtils.MessageBox($"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
                             project.ConvertToFamiTrackerTempo(project.AreSongsEmpty);
                         }
@@ -3170,6 +3165,11 @@ namespace FamiStudio
                     {
                         project.PalMode = palAuthoring;
                         App.PalPlayback = palAuthoring;
+                    }
+
+                    if (PlatformUtils.IsMobile && expansionRemoved)
+                    {
+                        PlatformUtils.ShowToast("All channels and instruments related to the removed expansion(s) were deleted.");
                     }
 
                     App.UndoRedoManager.EndTransaction();

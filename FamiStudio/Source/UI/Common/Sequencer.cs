@@ -624,7 +624,6 @@ namespace FamiStudio
                     {
                         var bmp = patternCache.GetOrAddPattern(pattern, patternLen, noteLen, out var u0, out var v0, out var u1, out var v1);
 
-                        // DROIDTODO : The icons arent aligned probably on mobile while moving patterns.
                         cp.PushTranslation(0, py);
                         cb.FillRectangle(1, 1, sx, patternHeaderSizeY, g.GetVerticalGradientBrush(pattern.Color, patternHeaderSizeY, 0.8f));
                         cp.DrawLine(0, patternHeaderSizeY, sx, patternHeaderSizeY, ThemeResources.BlackBrush);

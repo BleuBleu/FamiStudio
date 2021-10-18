@@ -1020,7 +1020,7 @@ namespace FamiStudio
             }
             else
             {
-                // DROIDTODO : See if we want to unify this under a single, cross-platform call.
+                // TODO : See if we want to unify this under a single, cross-platform call.
                 if (PlatformUtils.IsDesktop)
                     PlatformUtils.MessageBox("An error happened while saving.", "Error", MessageBoxButtons.OK);
                 else

@@ -1208,7 +1208,7 @@ namespace FamiStudio
                 if (env.CanResize)
                 {
                     r.ch.PushTranslation(GetPixelForNote(env.Length), 0);
-                    r.ch.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Resize, iconPos + 1, iconPos, 1.0f, bitmapScale, Theme.LightGreyFillColor1); // DROIDTODO : BMP scales.
+                    r.ch.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Resize, iconPos + 1, iconPos, 1.0f, bitmapScale, Theme.LightGreyFillColor1);
                     r.ch.PopTransform();
                 }
 
@@ -5797,7 +5797,6 @@ namespace FamiStudio
 
                 var menu = new List<ContextMenuOption>();
 
-                // DROIDTODO : We should allow deleting selection here.
                 if (hasValue || IsNoteSelected(location))
                 {
                     menu.Add(new ContextMenuOption("MenuDelete", "Clear Effect Value", () => { ClearEffectValue(location, note, IsNoteSelected(location)); }));
@@ -5971,7 +5970,6 @@ namespace FamiStudio
                 if (HandleTouchDownDPCMMapping(x, y)) goto Handled;
             }
 
-            // DROIDTODO : Check edit mode, maybe not apply to all. Like piano may not be there in all modes.
             if (HandleTouchDownPan(x, y)) goto Handled;
 
             return;
