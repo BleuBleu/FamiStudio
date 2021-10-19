@@ -697,7 +697,7 @@ namespace FamiStudio
             var actualWidth = Width - scrollBarThickness;
             var firstParam = true;
             var y = -scrollY;
-            var envImageSize = ScaleCustom(bmpEnvelopesAtlas.GetElementSize(0).Width, bitmapScale);
+            var iconSize = ScaleCustom(bmpEnvelopesAtlas.GetElementSize(0).Width, bitmapScale);
 
             var minInstIdx = 1000000;
             var maxInstIdx = 0;
@@ -737,10 +737,7 @@ namespace FamiStudio
                         }
                     }
 
-                    Rectangle rect = new Rectangle(0, 0, actualWidth, numButtonsInGroup * buttonSizeY);
-                    if (highlighted) 
-                        rect.Inflate(-2, 0);
-                    c.FillAndDrawRectangle(rect, g.GetVerticalGradientBrush(button.color, rect.Height, 0.8f), highlighted ? ThemeResources.WhiteBrush : ThemeResources.BlackBrush, highlighted ? 2 : 1, true);
+                    c.FillAndDrawRectangle(0, 0, actualWidth, numButtonsInGroup * buttonSizeY, g.GetVerticalGradientBrush(button.color, buttonSizeY, 0.8f), ThemeResources.BlackBrush, 1);
 
                     if (button.type == ButtonType.Instrument)
                     {
@@ -774,7 +771,11 @@ namespace FamiStudio
                     c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextPosX, buttonSizeY);
 
                     if (atlas != null)
+                    {
                         c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, Color.Black);
+                        if (highlighted)
+                            c.DrawRectangle(buttonIconPosX, buttonIconPosY, buttonIconPosX + iconSize - 4, buttonIconPosY + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
+                    }
 
                     if (leftPadding != 0)
                         c.PopTransform();
@@ -831,7 +832,7 @@ namespace FamiStudio
                                     c.DrawBitmapAtlas(atlas, atlasIdx, x, subButtonPosY, (activeMask & (1 << j)) != 0 ? 1.0f : 0.2f, bitmapScale, tint);
 
                                     if (highlighted && subButtons[j] < SubButtonType.EnvelopeMax)
-                                        c.DrawRectangle(x, subButtonPosY, x + envImageSize - 4, subButtonPosY + envImageSize - 4, ThemeResources.WhiteBrush, 2, true);
+                                        c.DrawRectangle(x, subButtonPosY, x + iconSize - 4, subButtonPosY + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
                                 }
                             }
                         }
@@ -872,22 +873,26 @@ namespace FamiStudio
                     var pt = PlatformUtils.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
                     if (ClientRectangle.Contains(pt))
                     {
-                        if (envelopeDragIdx >= 0)
+                        if (envelopeDragIdx >= 0 || PlatformUtils.IsMobile)
                         {
+                            var button = buttons[captureButtonIdx];
                             var bx = pt.X - captureButtonRelX;
                             var by = pt.Y - captureButtonRelY;
 
-                            c.DrawBitmapAtlas(bmpEnvelopesAtlas, envelopeDragIdx, bx, by, 0.5f, bitmapScale, Color.Black);
+                            if (envelopeDragIdx >= 0)
+                                c.DrawBitmapAtlas(bmpEnvelopesAtlas, envelopeDragIdx, bx, by, 0.5f, bitmapScale, Color.Black);
+                            else
+                                c.DrawBitmapAtlas(button.atlas, button.atlasIdx, bx, by, 0.5f, bitmapScale, Color.Black);
 
                             if (PlatformUtils.IsMobile)
-                                c.DrawRectangle(bx, by, bx + envImageSize - 4, by + envImageSize - 4, ThemeResources.WhiteBrush, 2, true);
+                                c.DrawRectangle(bx, by, bx + iconSize - 4, by + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
                         }
                         else
                         {
                             var minY = (captureOperation == CaptureOperation.DragInstrument ? minInstIdx : minArpIdx) * buttonSizeY - scrollY;
                             var maxY = (captureOperation == CaptureOperation.DragInstrument ? maxInstIdx : maxArpIdx) * buttonSizeY - scrollY;
                             var color = (captureOperation == CaptureOperation.DragInstrument ? draggedInstrument.Color : draggedArpeggio.Color);
-                            var dragY = Utils.Clamp(pt.Y - captureButtonRelY - captureScrollY, minY, maxY);
+                            var dragY = Utils.Clamp(pt.Y - captureButtonRelY, minY, maxY);
 
                             c.FillRectangle(0, dragY, actualWidth, dragY + buttonSizeY, g.GetSolidBrush(color, 1, 0.5f));
                         }
@@ -980,7 +985,7 @@ namespace FamiStudio
                 }
 
                 buttonRelX = x;
-                buttonRelY = y - buttonIndex * buttonSizeY;
+                buttonRelY = y - buttonIndex * buttonSizeY + scrollY;
 
                 var subButtons = button.GetSubButtons(out _);
                 if (subButtons != null)
@@ -2935,6 +2940,21 @@ namespace FamiStudio
             return false;
         }
 
+        private bool IsPositionInButtonIcon(Button button, int buttonRelX, int buttonRelY)
+        {
+            var iconSize = ScaleCustom(bmpEnvelopesAtlas.GetElementSize(0).Width, bitmapScale);
+            var iconRelX = buttonRelX - (buttonIconPosX + (ShowExpandButtons() ? expandButtonPosX + expandButtonSizeX : 0));
+            var iconRelY = buttonRelY - buttonIconPosY;
+
+            if (iconRelX < 0 || iconRelX > iconSize ||
+                iconRelY < 0 || iconRelY > iconSize)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private bool HandleTouchDownDragInstrument(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
@@ -2944,6 +2964,9 @@ namespace FamiStudio
                 var button = buttons[buttonIdx];
                 if (button.instrument != null && buttonIdx == highlightedButtonIdx && subButtonType != SubButtonType.Expand)
                 {
+                    if (subButtonType == SubButtonType.Max && !IsPositionInButtonIcon(button, buttonRelX, buttonRelY))
+                        return false;
+
                     envelopeDragIdx = subButtonType < SubButtonType.EnvelopeMax ? (int)subButtonType : -1;
                     draggedInstrument = button.instrument;
                     StartCaptureOperation(x, y, CaptureOperation.DragInstrument, buttonIdx, buttonRelX, buttonRelY);
@@ -2956,12 +2979,12 @@ namespace FamiStudio
 
         private bool HandleTouchDownDragSong(int x, int y)
         {
-            var buttonIdx = GetButtonAtCoord(x, y, out var _, out var _, out var _);
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
 
             if (buttonIdx >= 0)
             {
                 var button = buttons[buttonIdx];
-                if (button.song != null && buttonIdx == highlightedButtonIdx)
+                if (button.song != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPositionInButtonIcon(button, buttonRelX, buttonRelY))
                 {
                     App.SelectedSong = button.song;
                     StartCaptureOperation(x, y, CaptureOperation.DragSong, buttonIdx);

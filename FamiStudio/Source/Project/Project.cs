@@ -249,7 +249,7 @@ namespace FamiStudio
             return note > Note.DPCMNoteMin && note <= Note.DPCMNoteMax;
         }
 
-        public void MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
+        public DPCMSampleMapping MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
         {
             if (sample != null && NoteSupportsDPCM(note))
             {
@@ -261,8 +261,12 @@ namespace FamiStudio
                     samplesMapping[note].Sample = sample;
                     samplesMapping[note].Pitch = pitch;
                     samplesMapping[note].Loop = loop;
+
+                    return samplesMapping[note];
                 }
             }
+
+            return null;
         }
 
         public void TransposeDPCMMapping(int oldNote, int newNote)

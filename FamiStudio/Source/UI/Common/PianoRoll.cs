@@ -4214,6 +4214,16 @@ namespace FamiStudio
             });
         }
 
+        private void FlattenEnvelopeValues(int idx)
+        {
+            var value = EditEnvelope.Values[idx];
+
+            TransformEnvelopeValues(selectionMin, selectionMax, (val, idx) =>
+            {
+                return value;
+            });
+        }
+
         private void DeleteSelectedWaveSection()
         {
             if (IsSelectionValid())
@@ -5477,20 +5487,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchClickDrawEnvelope(int x, int y)
+        private bool HandleTouchClickEnvelope(int x, int y)
         {
-            if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
-            {
-                DrawSingleEnvelopeValue(x, y);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool HandleTouchClickEnvelopeHeader(int x, int y)
-        {
-            if (IsPointInHeader(x, y) && x < GetPixelForNote(EditEnvelope.Length))
+            if ((IsPointInHeader(x, y) || IsPointInNoteArea(x, y)) && x < GetPixelForNote(EditEnvelope.Length))
             {
                 var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1); ;
                 highlightNoteAbsIndex = absIdx == highlightNoteAbsIndex ? -1 : absIdx;
@@ -5876,6 +5875,9 @@ namespace FamiStudio
                 if (IsSelectionValid())
                 {
                     menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); }));
+
+                    if (GetEnvelopeValueForCoord(x, y, out int idx, out _) && idx < EditEnvelope.Length)
+                        menu.Add(new ContextMenuOption("MenuClearEnvelope", "Flatten Selection", () => { FlattenEnvelopeValues(idx); }));
                 }
 
                 if (menu.Count > 0)
@@ -5926,7 +5928,7 @@ namespace FamiStudio
                 {
                     App.ShowContextMenu(new[]
                     {
-                        new ContextMenuOption("MenuMute", "Remove DPCM Sample", () => { ClearDPCMSampleMapping(noteValue); }), // DROIDTODO : Icon!
+                        new ContextMenuOption("MenuDelete", "Remove DPCM Sample", () => { ClearDPCMSampleMapping(noteValue); }),
                     });
 
                     return true;
@@ -6037,8 +6039,7 @@ namespace FamiStudio
             if (editMode == EditionMode.Enveloppe ||
                 editMode == EditionMode.Arpeggio)
             {
-                if (HandleTouchClickDrawEnvelope(x, y)) goto Handled;
-                if (HandleTouchClickEnvelopeHeader(x, y)) goto Handled;
+                if (HandleTouchClickEnvelope(x, y)) goto Handled;
             }
 
             if (editMode == EditionMode.Channel ||
@@ -6534,7 +6535,7 @@ namespace FamiStudio
         {
             if (App.Project.Samples.Count == 0)
             {
-                PlatformUtils.MessageBox("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons.OK);
+                PlatformUtils.MessageBoxAsync("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons.OK);
             }
             else
             {
@@ -6542,10 +6543,14 @@ namespace FamiStudio
                 foreach (var sample in App.Project.Samples)
                     sampleNames.Add(sample.Name);
 
-                // DROIDTODO : Ugly dialog.
+                var pitchStrings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
+
                 var dlg = new PropertyDialog("Assign DPCM Sample", 300);
                 dlg.Properties.AddLabel(null, "Select sample to assign:"); // 0
-                dlg.Properties.AddDropDownList(null, sampleNames.ToArray(), sampleNames[0]); // 1
+                dlg.Properties.AddDropDownList(PlatformUtils.IsMobile ? "Select the sample to assign" : null, sampleNames.ToArray(), sampleNames[0]); // 1
+                dlg.Properties.AddDropDownList("Pitch :", pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 2
+                dlg.Properties.AddCheckBox("Loop :", false); // 3
+                dlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
                 dlg.Properties.Build();
 
                 dlg.ShowDialogAsync(ParentForm, (r) =>
@@ -6554,7 +6559,9 @@ namespace FamiStudio
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
                         var sampleName = dlg.Properties.GetPropertyValue<string>(1);
-                        App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
+                        var mapping = App.Project.MapDPCMSample(noteValue, App.Project.GetSample(sampleName));
+                        mapping.Pitch = dlg.Properties.GetSelectedIndex(2);
+                        mapping.Loop = dlg.Properties.GetPropertyValue<bool>(3);
                         App.UndoRedoManager.EndTransaction();
                         DPCMSampleMapped?.Invoke(noteValue);
                     }
