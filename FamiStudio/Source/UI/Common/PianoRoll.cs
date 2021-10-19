@@ -252,7 +252,7 @@ namespace FamiStudio
             PlatformUtils.IsMobile, // Select
             PlatformUtils.IsMobile, // SelectWave
             false, // CreateNote
-            true,  // CreateDragSlideNoteTarget
+            true,  // CreateSlideNote
             true,  // DragSlideNoteTarget
             false, // DragVolumeSlideTarget
             true,  // DragNote
@@ -287,8 +287,8 @@ namespace FamiStudio
             true,  // Select
             true,  // SelectWave
             true,  // CreateNote
-            false, // CreateDragSlideNoteTarget
-            false, // DragSlideNoteTarget
+            true,  // CreateSlideNote
+            true,  // DragSlideNoteTarget
             false, // DragVolumeSlideTarget
             true,  // DragNote
             true,  // DragSelection
@@ -3333,9 +3333,6 @@ namespace FamiStudio
 
         void ResizeEnvelope(int x, int y)
         {
-            if (PlatformUtils.IsMobile)
-                ScrollIfNearEdge(x, y);
-
             var env = EditEnvelope;
             int length = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
 
@@ -6239,37 +6236,28 @@ namespace FamiStudio
 
         private void ScrollIfNearEdge(int x, int y, bool scrollHorizontal = true, bool scrollVertical = false)
         {
-            // DROIDTODO : Tweak margins + handle case where piano is zero sized (invisible).
             if (scrollHorizontal)
             {
-                if ((x - pianoSizeX) < 0)
-                {
-                    var scrollAmount = Utils.Clamp((pianoSizeX - x) / (float)pianoSizeX, 0.0f, 1.0f);
-                    scrollX -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
-                    ClampScroll();
-                }
-                else if ((Width - x) < pianoSizeX)
-                {
-                    var scrollAmount = Utils.Clamp((x - (Width - pianoSizeX)) / (float)pianoSizeX, 0.0f, 1.0f);
-                    scrollX += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
-                    ClampScroll();
-                }
+                int posMinX = 0;
+                int posMaxX = PlatformUtils.IsDesktop ? Width + pianoSizeX : (IsLandscape ? Width + headerSizeY : Width);
+                int marginMinX = pianoSizeX;
+                int marginMaxX = PlatformUtils.IsDesktop ? pianoSizeX : headerSizeY;
+
+                scrollX += Utils.ComputeScrollAmount(x, posMinX, marginMinX, App.AverageTickRate * ScrollSpeedFactor, true);
+                scrollX += Utils.ComputeScrollAmount(x, posMaxX, marginMaxX, App.AverageTickRate * ScrollSpeedFactor, false);
+                ClampScroll();
             }
 
             if (scrollVertical)
             {
-                if ((y - headerAndEffectSizeY) < 0)
-                {
-                    var scrollAmount = Utils.Clamp((headerAndEffectSizeY - y) / (float)headerAndEffectSizeY, 0.0f, 1.0f);
-                    scrollY -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
-                    ClampScroll();
-                }
-                else if ((Height - y) < headerAndEffectSizeY)
-                {
-                    var scrollAmount = Utils.Clamp((y - (Height - headerAndEffectSizeY)) / (float)headerAndEffectSizeY, 0.0f, 1.0f);
-                    scrollY += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
-                    ClampScroll();
-                }
+                int posMinY = 0;
+                int posMaxY = PlatformUtils.IsMobile && !IsLandscape ? Height + headerSizeY : Height;
+                int marginMinY = headerSizeY;
+                int marginMaxY = headerSizeY;
+
+                scrollY += Utils.ComputeScrollAmount(y, posMinY, marginMinY, App.AverageTickRate * ScrollSpeedFactor, true);
+                scrollY += Utils.ComputeScrollAmount(y, posMaxY, marginMaxY, App.AverageTickRate * ScrollSpeedFactor, false);
+                ClampScroll();
             }
         }
 
@@ -6445,6 +6433,8 @@ namespace FamiStudio
         private void UpdateSlideNoteCreation(int x, int y, bool final)
         {
             Debug.Assert(captureNoteAbsoluteIdx >= 0);
+
+            ScrollIfNearEdge(x, y, false, true);
 
             var location = NoteLocation.FromAbsoluteNoteIndex(Song, captureNoteAbsoluteIdx);
             var channel = Song.Channels[editChannel];
@@ -7245,7 +7235,7 @@ namespace FamiStudio
 
             App.UndoRedoManager.RestoreTransaction(false);
 
-            ScrollIfNearEdge(x, y, true, PlatformUtils.IsMobile);
+            ScrollIfNearEdge(x, y, true, true);
             GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
             var resizeStart = captureOperation == CaptureOperation.ResizeNoteStart || captureOperation == CaptureOperation.ResizeSelectionNoteStart;
