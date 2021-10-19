@@ -200,7 +200,7 @@ namespace FamiStudio
 
             trackNameSizeX     = ScaleForMainWindow(DefaultTrackNameSizeX);
             headerSizeY        = ScaleForMainWindow(DefaultHeaderSizeY);
-            trackSizeY         = ScaleForMainWindow(ComputeDesiredTrackSizeY());
+            trackSizeY         = ScaleForMainWindow(ComputeDesiredChannelSizeY());
             scrollMargin       = ScaleForMainWindow(DefaultScrollMargin);
             barTextPosY        = ScaleForMainWindow(DefaultBarTextPosY);
             trackIconPosX      = ScaleForMainWindow(DefaultTrackIconPosX);
@@ -248,17 +248,17 @@ namespace FamiStudio
 
         private bool TrackSizeIsSmall()
         {
-            return ComputeDesiredTrackSizeY() < 24;
+            return ComputeDesiredChannelSizeY() < 24;
         }
 
-        private int ComputeDesiredTrackSizeY()
+        private int ComputeDesiredChannelSizeY()
         {
             if (PlatformUtils.IsMobile)
             {
                // Dont let the pattern become smaller than the header.
                // The division by 6 is simply to undo the base scaling for everything on Mobile
                // since this function is supposed to be done in unscaled coordinates.
-                return Math.Max(DefaultHeaderSizeY, (Height / 6 - DefaultHeaderSizeY) / GetChannelCount());
+                return Math.Max(DefaultHeaderSizeY, (Height / (int)MainWindowScaling - DefaultHeaderSizeY) / GetChannelCount());
             }
             else
             {
@@ -271,7 +271,7 @@ namespace FamiStudio
             var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
 
             // Does not include scaling.
-            return ComputeDesiredTrackSizeY() * GetChannelCount() + DefaultHeaderSizeY + scrollBarSize + 1;
+            return ComputeDesiredChannelSizeY() * GetChannelCount() + DefaultHeaderSizeY + scrollBarSize + 1;
         }
 
         public void LayoutChanged()
