@@ -436,6 +436,7 @@ namespace FamiStudio
 
         public void RefreshLayout()
         {
+            controls.Resize(glSurfaceView.Width, glSurfaceView.Height);
         }
 
         public void MarkDirty()
@@ -445,6 +446,7 @@ namespace FamiStudio
 
         public void Refresh()
         {
+            controls.MarkDirty();
         }
 
         public void RefreshCursor()

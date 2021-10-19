@@ -5440,11 +5440,14 @@ namespace FamiStudio
 
         private bool HandleTouchDownDPCMVolumeEnvelope(int x, int y)
         {
-            var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(x, y);
-            if (vertexIdx >= 0)
+            if (showEffectsPanel && IsPointInEffectPanel(x, y))
             {
-                StartDragWaveVolumeEnvelope(x, y, vertexIdx);
-                return true;
+                var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(x, y);
+                if (vertexIdx >= 0)
+                {
+                    StartDragWaveVolumeEnvelope(x, y, vertexIdx);
+                    return true;
+                }
             }
 
             return false;
@@ -5452,7 +5455,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownWaveSelection(int x, int y)
         {
-            if (IsPointInNoteArea(x, y) || IsPointInHeader(x, y))
+            if (IsPointInHeader(x, y))
             {
                 StartSelectWave(x, y);
                 return true;
