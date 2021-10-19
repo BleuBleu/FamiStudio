@@ -573,6 +573,8 @@ namespace FamiStudio
 
                 LayerDrawable windowBackground = new LayerDrawable(new Drawable[] { invisible, navBar });
                 windowBackground.SetLayerInsetTop(1, metrics.HeightPixels);
+                windowBackground.SetLayerWidth(1, contextMenuDialog.Behavior.MaxWidth);
+                windowBackground.SetLayerGravity(1, GravityFlags.Center);
                 contextMenuDialog.Window.SetBackgroundDrawable(windowBackground);
             }
 
