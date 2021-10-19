@@ -604,7 +604,7 @@ namespace FamiStudio
             var highlightedPatternRect = Rectangle.Empty;
 
             int patternCacheSizeY = trackSizeY - patternHeaderSizeY - 1;
-            patternCache.UpdateDesiredSize(patternCacheSizeY);
+            patternCache.Update(patternCacheSizeY);
 
             for (int p = minVisiblePattern; p < maxVisiblePattern; p++)
             {
@@ -2097,26 +2097,34 @@ namespace FamiStudio
         {
             if (scrollHorizontal)
             {
-                int posMinX = 0;
-                int posMaxX = PlatformUtils.IsDesktop ? Width + trackNameSizeX : (IsLandscape ? Width + headerSizeY : Width);
-                int marginMinX = trackNameSizeX;
-                int marginMaxX = PlatformUtils.IsDesktop ? trackNameSizeX : headerSizeY;
-
-                scrollX += Utils.ComputeScrollAmount(x, posMinX, marginMinX, App.AverageTickRate * ScrollSpeedFactor, true);
-                scrollX += Utils.ComputeScrollAmount(x, posMaxX, marginMaxX, App.AverageTickRate * ScrollSpeedFactor, false);
-                ClampScroll();
+                if ((x - trackNameSizeX) < 0)
+                {
+                    var scrollAmount = Utils.Clamp((trackNameSizeX - x) / (float)trackNameSizeX, 0.0f, 1.0f);
+                    scrollX -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
+                else if ((Width - x) < trackNameSizeX)
+                {
+                    var scrollAmount = Utils.Clamp((x - (Width - trackNameSizeX)) / (float)trackNameSizeX, 0.0f, 1.0f);
+                    scrollX += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
             }
 
             if (scrollVertical)
             {
-                int posMinY = 0;
-                int posMaxY = PlatformUtils.IsMobile && !IsLandscape || PlatformUtils.IsDesktop ? Height + headerSizeY : Height;
-                int marginMinY = headerSizeY;
-                int marginMaxY = headerSizeY;
-
-                scrollY += Utils.ComputeScrollAmount(y, posMinY, marginMinY, App.AverageTickRate * ScrollSpeedFactor, true);
-                scrollY += Utils.ComputeScrollAmount(y, posMaxY, marginMaxY, App.AverageTickRate * ScrollSpeedFactor, false);
-                ClampScroll();
+                if ((y - headerSizeY) < 0)
+                {
+                    var scrollAmount = Utils.Clamp((headerSizeY - y) / (float)headerSizeY, 0.0f, 1.0f);
+                    scrollY -= (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
+                else if ((Height - y) < headerSizeY)
+                {
+                    var scrollAmount = Utils.Clamp((y - (Height - headerSizeY)) / (float)headerSizeY, 0.0f, 1.0f);
+                    scrollY += (int)(App.AverageTickRate * ScrollSpeedFactor * scrollAmount);
+                    ClampScroll();
+                }
             }
         }
 
@@ -2647,13 +2655,6 @@ namespace FamiStudio
             UpdateCaptureOperation(mouseLastX, mouseLastY, 1.0f, true);
             UpdateFollowMode();
             TickFling(delta);
-            TickPatternCache();
-        }
-
-        private void TickPatternCache()
-        {
-            if (patternCache != null)
-                patternCache.Tick();
         }
 
         public void SongModified()

@@ -71,10 +71,10 @@ namespace FamiStudio
 
        public void SetActiveControl(GLControl ctrl, bool animate = true)
         {
-            Debug.Assert(transitionTimer == 0.0f && transitionControl == null);
-
             if (activeControl != ctrl)
             {
+                Debug.Assert(transitionTimer == 0.0f && transitionControl == null);
+
                 if (animate)
                 {
                     transitionControl = ctrl;

@@ -202,14 +202,10 @@ namespace FamiStudio
             }
         }
 
-        public void Tick()
+        public void Update(int patternSizeY)
         {
             frameIndex++;
-            CleanupStaleEntries();
-        }
 
-        public void UpdateDesiredSize(int patternSizeY)
-        { 
             if (desiredPatternCacheSizeY != patternSizeY)
             {
                 desiredPatternCacheSizeY = patternSizeY;
@@ -224,6 +220,10 @@ namespace FamiStudio
 
                 scaleFactorV = (clampedPatternCacheSizeY * factor) / (float)desiredPatternCacheSizeY;
                 Clear();
+            }
+            else
+            {
+                CleanupStaleEntries();
             }
         }
 
