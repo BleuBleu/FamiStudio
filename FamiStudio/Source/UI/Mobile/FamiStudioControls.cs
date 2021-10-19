@@ -63,7 +63,7 @@ namespace FamiStudio
             controls[4] = toolbar;
             controls[5] = mobilePiano;
 
-            activeControl = pianoRoll;
+            activeControl = sequencer;
 
             foreach (var ctrl in controls)
                 ctrl.ParentForm = parent;

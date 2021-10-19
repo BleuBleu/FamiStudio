@@ -152,7 +152,7 @@ namespace FamiStudio
 
             // Simply update the form if the app already exists.
             if (appAlreadyExists)
-                famistudio.SetMainForm(this);
+                famistudio.SetMainForm(this, true);
             else
                 famistudio.Initialize(null);
 

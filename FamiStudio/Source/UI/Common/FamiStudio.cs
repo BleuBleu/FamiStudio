@@ -154,11 +154,11 @@ namespace FamiStudio
 #endif
         }
 
-        public void SetMainForm(FamiStudioForm form)
+        public void SetMainForm(FamiStudioForm form, bool resuming = false)
         {
             mainForm = form;
 
-            SetActiveControl(PlatformUtils.IsDesktop ? (RenderControl)PianoRoll : Sequencer);
+            SetActiveControl(PlatformUtils.IsDesktop ? (RenderControl)PianoRoll : Sequencer, false);
 
             Sequencer.PatternClicked     += Sequencer_PatternClicked;
             Sequencer.PatternModified    += Sequencer_PatternModified;
@@ -190,6 +190,9 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleDeleted        += ProjectExplorer_DPCMSampleDeleted;
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
             ProjectExplorer.DPCMSampleMapped         += ProjectExplorer_DPCMSampleMapped;
+
+            if (resuming)
+                ResetEverything();
         }
 
         public LoopMode LoopMode 
@@ -354,10 +357,10 @@ namespace FamiStudio
             ForceDisplayChannelMask ^= (1 << idx);
         }
 
-        public void SetActiveControl(RenderControl ctrl)
+        public void SetActiveControl(RenderControl ctrl, bool animate = true)
         {
             Debug.Assert(ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer);
-            mainForm.SetActiveControl(ctrl);
+            mainForm.SetActiveControl(ctrl, animate);
         }
 
         public void ReplacePianoRollSelectionInstrument(Instrument inst)
