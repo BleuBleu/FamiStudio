@@ -867,9 +867,10 @@ namespace FamiStudio
 
         private ButtonImageIndices GetSnapRenderInfo(out string text, out Color tint)
         {
-            text = App.SnapEnabled ? SnapResolutionType.Names[App.SnapResolution] : "Off";
+            var snapEnabled = App.SnapEnabled;
+            text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] : "Off";
             tint = Theme.LightGreyFillColor1;
-            return ButtonImageIndices.SnapOn;
+            return snapEnabled ? ButtonImageIndices.SnapOn : ButtonImageIndices.SnapOff;
         }
 
         private ButtonImageIndices GetEffectRenderInfo(out string text, out Color tint)
