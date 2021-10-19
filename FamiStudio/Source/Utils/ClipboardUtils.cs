@@ -16,57 +16,14 @@ namespace FamiStudio
 
         readonly static char[] Seperators = new[] { ' ', '\t', '\r', '\n', ',', ';', '\0' };
 
-#if FAMISTUDIO_LINUX || FAMISTUDIO_ANDROID
-        static byte[] internalClipboardData; // Cant copy between FamiStudio instance on Linux.
-#endif
-
-        // TODO : Clean this up, move to PlatformUtils or some interface.
-        private static void SetClipboardDataInternal(byte[] data)
-        {
-#if FAMISTUDIO_WINDOWS
-            WinUtils.SetClipboardData(data);
-#elif FAMISTUDIO_MACOS
-            MacUtils.SetPasteboardData(data);
-#else
-            internalClipboardData = data;
-#endif
-        }
-
         private static byte[] GetClipboardDataInternal(uint magic, int maxSize = int.MaxValue)
         {
-            byte[] buffer = null;
-#if FAMISTUDIO_WINDOWS
-            buffer = WinUtils.GetClipboardData(maxSize);
-#elif FAMISTUDIO_MACOS
-            buffer = MacUtils.GetPasteboardData();
-#else
-            buffer = internalClipboardData;
-#endif
+            var buffer = PlatformUtils.GetClipboardData(maxSize);
 
             if (buffer == null || BitConverter.ToUInt32(buffer, 0) != magic)
                 return null;
 
             return buffer;
-        }
-
-        private static string GetClipboardString()
-        {
-#if FAMISTUDIO_WINDOWS
-            return WinUtils.GetClipboardString();
-#elif FAMISTUDIO_MACOS
-            return MacUtils.GetPasteboardString();
-#else
-            return null;
-#endif
-        }
-
-        private static void ClearClipboardString()
-        {
-#if FAMISTUDIO_WINDOWS
-            WinUtils.ClearClipboardString();
-#elif FAMISTUDIO_MACOS
-            MacUtils.ClearPasteboardString();
-#endif
         }
 
         public static bool ContainsNotes    => GetClipboardDataInternal(MagicNumberClipboardNotes,    4) != null;
@@ -75,7 +32,7 @@ namespace FamiStudio
 
         public static sbyte[] GetStringEnvelopeData()
         {
-            var str = GetClipboardString();
+            var str = PlatformUtils.GetClipboardString();
 
             if (!string.IsNullOrEmpty(str))
             {
@@ -447,7 +404,7 @@ namespace FamiStudio
         {
             if (notes == null)
             {
-                SetClipboardDataInternal(null);
+                PlatformUtils.SetClipboardData(null);
                 return;
             }
 
@@ -501,7 +458,7 @@ namespace FamiStudio
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardNotes));
             clipboardData.AddRange(buffer);
 
-            SetClipboardDataInternal(clipboardData.ToArray());
+            PlatformUtils.SetClipboardData(clipboardData.ToArray());
         }
 
         public static bool ContainsMissingSamples(Project project, bool notes)
@@ -561,8 +518,8 @@ namespace FamiStudio
             for (int i = 0; i < values.Length; i++)
                 clipboardData.Add((byte)values[i]);
 
-            ClearClipboardString();
-            SetClipboardDataInternal(clipboardData.ToArray());
+            PlatformUtils.ClearClipboardString();
+            PlatformUtils.SetClipboardData(clipboardData.ToArray());
         }
 
         public static sbyte[] LoadEnvelopeValues()
@@ -589,7 +546,7 @@ namespace FamiStudio
         {
             if (patterns == null)
             {
-                SetClipboardDataInternal(null);
+                PlatformUtils.SetClipboardData(null);
                 return;
             }
 
@@ -635,7 +592,7 @@ namespace FamiStudio
 
             if (uniquePatterns.Count == 0)
             {
-                SetClipboardDataInternal(null);
+                PlatformUtils.SetClipboardData(null);
                 return;
             }
 
@@ -683,7 +640,7 @@ namespace FamiStudio
             clipboardData.AddRange(BitConverter.GetBytes(MagicNumberClipboardPatterns));
             clipboardData.AddRange(buffer);
 
-            SetClipboardDataInternal(clipboardData.ToArray());
+            PlatformUtils.SetClipboardData(clipboardData.ToArray());
         }
 
         public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, bool createMissingArpeggios, bool createMissingSamples, out Song.PatternCustomSetting[] customSettings)
@@ -750,7 +707,7 @@ namespace FamiStudio
 
         public static void Reset()
         {
-            SetClipboardDataInternal(null);
+            PlatformUtils.SetClipboardData(null);
         }
     }
 }

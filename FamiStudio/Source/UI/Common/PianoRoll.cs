@@ -2112,8 +2112,10 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.DPCM)
                 DeleteSelectedWaveSection();
-            else
+            else if (editMode == EditionMode.Channel)
                 DeleteSelectedNotes();
+            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+                DeleteSelectedEnvelopeValues();
         }
 
         public void DeleteSpecial()
@@ -4214,9 +4216,9 @@ namespace FamiStudio
             });
         }
 
-        private void FlattenEnvelopeValues(int idx)
+        private void FlattenEnvelopeValues(int refValueIdx)
         {
-            var value = EditEnvelope.Values[idx];
+            var value = EditEnvelope.Values[refValueIdx];
 
             TransformEnvelopeValues(selectionMin, selectionMax, (val, idx) =>
             {

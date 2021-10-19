@@ -299,6 +299,26 @@ namespace FamiStudio
             SystemSounds.Beep.Play();
         }
 
+        public static void SetClipboardData(byte[] data)
+        {
+            WinUtils.SetClipboardData(data);
+        }
+
+        public static byte[] GetClipboardData(int maxSize)
+        {
+            return WinUtils.GetClipboardData(maxSize);
+        }
+
+        public static string GetClipboardString()
+        {
+            return WinUtils.GetClipboardString();
+        }
+
+        public static void ClearClipboardString()
+        {
+            WinUtils.ClearClipboardString();
+        }
+
         public const bool IsMobile  = false;
         public const bool IsAndroid = false;
         public const bool IsDesktop = true;

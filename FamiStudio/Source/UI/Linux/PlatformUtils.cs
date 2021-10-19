@@ -22,6 +22,8 @@ namespace FamiStudio
         [System.Runtime.InteropServices.DllImport("fontconfig.so.1", EntryPoint = "FcConfigAppFontAddFile")]
         static extern bool FcConfigAppFontAddFile1(System.IntPtr config, string fontPath);
 
+        private static byte[] internalClipboardData;
+
         public static string ApplicationVersion => System.Windows.Forms.Application.ProductVersion;
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
         public static string UserProjectsDirectory => null;
@@ -377,6 +379,25 @@ namespace FamiStudio
         public static void Beep()
         {
             SystemSounds.Beep.Play();
+        }
+
+        public static void SetClipboardData(byte[] data)
+        {
+            internalClipboardData = data;
+        }
+
+        public static byte[] GetClipboardData(int maxSize)
+        {
+            return internalClipboardData;
+        }
+
+        public static string GetClipboardString()
+        {
+            return null;
+        }
+
+        public static void ClearClipboardString()
+        {
         }
 
         public const bool IsMobile  = false;

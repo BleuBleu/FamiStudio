@@ -20,6 +20,8 @@ namespace FamiStudio
         private static Toast    lastToast;
         private static DateTime lastToastTime = DateTime.MinValue;
         private static string   lastToastText;
+        
+        private static byte[] internalClipboardData;
 
         private const int ToastShortDuration = 2000;
 
@@ -203,6 +205,25 @@ namespace FamiStudio
         public static void OpenUrl(string url)
         {
             FamiStudioForm.Instance.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(url)));
+        }
+
+        public static void SetClipboardData(byte[] data)
+        {
+            internalClipboardData = data;
+        }
+
+        public static byte[] GetClipboardData(int maxSize)
+        {
+            return internalClipboardData;
+        }
+
+        public static string GetClipboardString()
+        {
+            return null;
+        }
+
+        public static void ClearClipboardString()
+        {
         }
 
         public const bool IsMobile  = true;
