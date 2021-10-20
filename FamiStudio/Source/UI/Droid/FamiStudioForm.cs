@@ -830,6 +830,10 @@ namespace FamiStudio
                     callback(tempFile);
 
                     Console.WriteLine($"Callback done.");
+
+                    File.Delete(tempFile);
+
+                    Console.WriteLine($"File deleted.");
                 }
                 else
                 {
