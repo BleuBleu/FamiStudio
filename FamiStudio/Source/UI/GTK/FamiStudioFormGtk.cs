@@ -30,7 +30,7 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
         public MobilePiano MobilePiano => controls.MobilePiano;
-        public GLControl ActiveControl => null;
+        public GLControl ActiveControl => activeControl;
         public static FamiStudioForm Instance => instance;
 
         public bool IsLandscape => true;
@@ -50,6 +50,7 @@ namespace FamiStudio
         private Point lastClickPos = Point.Empty;
         private Point lastMousePos = Point.Empty;
         private bool forceCtrlDown = false;
+        private GLControl activeControl = null;
         private GLControl captureControl = null;
         private GLControl hoverControl = null;
         private System.Windows.Forms.MouseButtons captureButton   = System.Windows.Forms.MouseButtons.None;
@@ -332,7 +333,10 @@ namespace FamiStudio
                     lastButtonPress = e.Button;
 
                     if (ctrl != null)
+                    {
+                        SetActiveControl(ctrl);
                         ctrl.MouseDown(e);
+                    }
                 }
             }
         }
@@ -507,6 +511,12 @@ namespace FamiStudio
 
         public void SetActiveControl(GLControl ctrl, bool animate = true)
         {
+            if (ctrl != null && ctrl != activeControl && (ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer))
+            {
+                activeControl.MarkDirty();
+                activeControl = ctrl;
+                activeControl.MarkDirty();
+            }
         }
 
         public void ShowContextMenu(ContextMenuOption[] options)
