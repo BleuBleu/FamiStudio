@@ -184,9 +184,13 @@ namespace FamiStudio
 
         public void StartLoadFileActivityAsync(string mimeType, Action<string> callback)
         {
+            Console.WriteLine("StartLoadFileActivityAsync");
+
             Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new LoadDialogActivityInfo(callback);
             StopGLThread();
+
+            Console.WriteLine("GL thread is stopped");
 
             Intent intent = new Intent(Intent.ActionOpenDocument);
             intent.AddCategory(Intent.CategoryOpenable);
@@ -307,6 +311,8 @@ namespace FamiStudio
 
         public void FinishSaveFileActivityAsync(bool commit, Action callback)
         {
+            Console.WriteLine("FinishSaveFileActivityAsync");
+
             Debug.Assert(pendingFinishDialog != null);
             var saveInfo = pendingFinishDialog as SaveDialogActivityInfo;
             Debug.Assert(saveInfo != null);
@@ -346,9 +352,6 @@ namespace FamiStudio
             if (glThreadIsRunning)
             {
                 float deltaTime = (float)((frameTimeNanos - lastFrameTime) / 1000000000.0);
-
-                if (deltaTime > 0.03)
-                    Console.WriteLine($"FRAME SKIP!!!!!!!!!!!!!!!!!!!!!! {deltaTime}");
 
                 lock (renderLock)
                 {
@@ -789,6 +792,8 @@ namespace FamiStudio
         {
             if (code == Result.Ok)
             {
+                Console.WriteLine("LoadDialogActivityInfo.OnResult");
+
                 var filename = (string)null;
 
                 var c = main.ContentResolver.Query(data.Data, null, null, null);
@@ -804,6 +809,8 @@ namespace FamiStudio
                     var tempFile = Path.Combine(Path.GetTempPath(), filename);
                     var buffer = new byte[256 * 1024];
 
+                    Console.WriteLine($"Filename is {filename}, copying to tempFile.");
+
                     using (var streamIn = main.ContentResolver.OpenInputStream(data.Data))
                     {
                         using (var streamOut = File.OpenWrite(tempFile))
@@ -818,7 +825,15 @@ namespace FamiStudio
                         }
                     }
 
+                    Console.WriteLine($"Invoking callback.");
+
                     callback(tempFile);
+
+                    Console.WriteLine($"Callback done.");
+                }
+                else
+                {
+                    Console.WriteLine($"Received NULL filename.");
                 }
             }
         }
