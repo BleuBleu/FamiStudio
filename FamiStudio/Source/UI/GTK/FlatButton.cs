@@ -107,8 +107,8 @@ namespace FamiStudio
             var bgColor = Style.Backgrounds[(int)State];
             var fgColor = Style.Foregrounds[(int)State];
 
-            int imgWidth  = (int)(pixbuf.Width  / GLTheme.DialogScaling);
-            int imgHeight = (int)(pixbuf.Height / GLTheme.DialogScaling);
+            int imgWidth  = (int)(pixbuf.Width  / DpiScaling.Dialog);
+            int imgHeight = (int)(pixbuf.Height / DpiScaling.Dialog);
 
             int x = buttonText == null ? (width - imgWidth) / 2 : 5;
             int y = (height - imgHeight) / 2;
@@ -120,7 +120,7 @@ namespace FamiStudio
             CairoHelper.SetSourceColor(ctx, bgColor);
             ctx.Paint();
             ctx.Translate(x, y + yp);
-            ctx.Scale(1.0f / GLTheme.DialogScaling, 1.0f / GLTheme.DialogScaling);
+            ctx.Scale(1.0f / DpiScaling.Dialog, 1.0f / DpiScaling.Dialog);
             CairoHelper.SetSourcePixbuf(ctx, pixbuf, 0, 0);
             ctx.Paint();
 
@@ -129,8 +129,8 @@ namespace FamiStudio
                 CairoHelper.SetSourceColor(ctx, fgColor);
                 ctx.Scale(1.0f, 1.0f);
                 ctx.SelectFontFace("Quicksand", FontSlant.Normal, bold ? FontWeight.Bold : FontWeight.Normal);
-                ctx.SetFontSize(14 * GLTheme.DialogScaling);
-                ctx.MoveTo(20 * GLTheme.DialogScaling, 13 * GLTheme.DialogScaling);
+                ctx.SetFontSize(14 * DpiScaling.Dialog);
+                ctx.MoveTo(20 * DpiScaling.Dialog, 13 * DpiScaling.Dialog);
                 ctx.ShowText(buttonText);
             }
 

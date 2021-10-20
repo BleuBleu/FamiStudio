@@ -63,10 +63,10 @@ namespace FamiStudio
             return mainThread == Thread.CurrentThread;
         }
 
-        public static Size GetScreenResolution()
+        public static System.Drawing.Size GetScreenResolution()
         {
             Debug.Assert(false);
-            return Size.Empty;
+            return System.Drawing.Size.Empty;
         }
 
         public static int GetOutputAudioSampleSampleRate()
@@ -137,7 +137,7 @@ namespace FamiStudio
 
         public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
-            var filename = MacUtils.ShowBrowseFolderDialog(title, defaultPath);
+            var filename = MacUtils.ShowBrowseFolderDialog(title, ref defaultPath);
             if (!string.IsNullOrEmpty(filename))
             {
                 if (Directory.Exists(filename))

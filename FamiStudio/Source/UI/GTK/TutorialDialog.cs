@@ -5,7 +5,7 @@ using System.Resources;
 
 namespace FamiStudio
 {
-    public class TutorialDialog : Gtk.Dialog
+    public partial class TutorialDialog : Gtk.Dialog
     {
         private Label label;
         private Image image;
@@ -101,13 +101,13 @@ namespace FamiStudio
 
         private void SetPage(int idx)
         {
-            pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Messages.Length - 1);
-            image.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{TutorialMessages.Images[pageIndex]}").ScaleSimple(GtkUtils.ScaleGtkWidget(736), GtkUtils.ScaleGtkWidget(414), Gdk.InterpType.Bilinear);
-            label.Text = TutorialMessages.Messages[pageIndex];
+            pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Length - 1);
+            image.Pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{TutorialImages[pageIndex]}").ScaleSimple(GtkUtils.ScaleGtkWidget(736), GtkUtils.ScaleGtkWidget(414), Gdk.InterpType.Bilinear);
+            label.Text = TutorialMessages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
 
             var suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
-            buttonRight.Pixbuf = pageIndex == TutorialMessages.Messages.Length - 1 ?
+            buttonRight.Pixbuf = pageIndex == TutorialMessages.Length - 1 ?
                 Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.Yes{suffix}.png") :
                 Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.ArrowRight{suffix}.png");
         }
@@ -120,7 +120,7 @@ namespace FamiStudio
 
         void ButtonRight_ButtonPressEvent(object o, ButtonPressEventArgs args)
         {
-            if (pageIndex == TutorialMessages.Messages.Length - 1)
+            if (pageIndex == TutorialMessages.Length - 1)
             {
                 EndDialog(checkBoxDontShow.Active ? 
                     System.Windows.Forms.DialogResult.OK : 

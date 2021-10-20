@@ -752,7 +752,7 @@ namespace FamiStudio
             return null;
         }
 
-        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
+        public static string ShowBrowseFolderDialog(string title, ref string path)
         {
             var openPanel = SendIntPtr(clsNSOpenPanel, selOpenPanel);
             SendIntPtr(openPanel, selSetTitle, ToNSString(title));

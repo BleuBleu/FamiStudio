@@ -1,44 +1,45 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
     class Cursors
     {
-        public static IntPtr Default;
-        public static IntPtr SizeWE;
-        public static IntPtr SizeNS;
-        public static IntPtr DragCursor;
-        public static IntPtr CopyCursor;
-        public static IntPtr Eyedrop;
+        public static Gdk.Cursor Default    = null;
+        public static Gdk.Cursor SizeWE     = null;
+        public static Gdk.Cursor SizeNS     = null;
+        public static Gdk.Cursor DragCursor = null;
+        public static Gdk.Cursor CopyCursor = null;
+        public static Gdk.Cursor Eyedrop    = null;
+        public static Gdk.Cursor Move       = null;
 
-        private static IntPtr CreateCursorFromResource(string name, int x, int y)
+        private static Gdk.Cursor CreateCursorFromResource(string name, int x, int y)
         {
-            var suffix       = GLTheme.MainWindowScaling > 1 ? "@2x" : "";
-            var hotSpotScale = GLTheme.MainWindowScaling > 1 ? 2 : 1;
-
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{name}{suffix}.png"))
-            {
-                var buffer = new byte[stream.Length];
-                stream.Read(buffer, 0, buffer.Length);
-
-                return MacUtils.CreateCursorFromImage(buffer, x * hotSpotScale, y * hotSpotScale);
-            }
+            var pixbuf = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.{name}.png");
+            return new Gdk.Cursor(Gdk.Display.Default, pixbuf, x, y);
         }
 
+        private static unsafe Gdk.Cursor CreateMacOSNamedCursor(string name)
+        {
+            var nsCursor = MacUtils.GetCursorByName(name);
+            var gdkCursor = new Gdk.Cursor(Gdk.CursorType.Cross);
+
+            // HACK : Patch the Gdk internal struct with our NSCursor.
+            // struct is :
+            //   - 4 byte type
+            //   - 4 byte ref count
+            //   - 8 bytes NSCursor pointer.
+            IntPtr* p = (IntPtr*)gdkCursor.Handle.ToPointer();
+            p[1] = nsCursor;
+
+            return gdkCursor;
+        }
         public static void Initialize()
         {
-            Default    = MacUtils.GetCursorByName("arrowCursor");
-            SizeWE     = MacUtils.GetCursorByName("resizeLeftRightCursor");
-            SizeNS     = MacUtils.GetCursorByName("resizeUpDownCursor");
-            DragCursor = MacUtils.GetCursorByName("closedHandCursor");
-            CopyCursor = MacUtils.GetCursorByName("dragCopyCursor");
-            Eyedrop    = Default; // CreateCursorFromResource("EyedropCursor", 7, 24); Disabling for now, cant get hotspot to work.
+            DragCursor = CreateMacOSNamedCursor("closedHandCursor");
+            CopyCursor = CreateMacOSNamedCursor("dragCopyCursor");
+            SizeWE = new Gdk.Cursor(Gdk.CursorType.SbHDoubleArrow);
+            SizeNS = new Gdk.Cursor(Gdk.CursorType.SbVDoubleArrow);
+            Eyedrop = CreateCursorFromResource("EyedropCursor", 7, 24);
         }
     }
 }

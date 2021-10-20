@@ -268,9 +268,9 @@ namespace FamiStudio
 #else
             foreach (var prop in properties)
             {
-                if (prop.type == PropertyType.ColoredString)
+                if (prop.type == PropertyType.ColoredTextBox)
                 {
-                    prop.control.ModifyBase(StateType.Normal, ToGdkColor(ThemeBase.CustomColors[i, j]));
+                    prop.control.ModifyBase(StateType.Normal, ToGdkColor(Theme.CustomColors[i, j]));
                 }
             }
 #endif
@@ -508,13 +508,13 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddLabelCheckBox(string label, bool value, int margin = 0)
+        public int AddLabelCheckBox(string label, bool value, int margin = 0, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBox,
-                    control = CreateCheckBox(value, label),
+                    control = CreateCheckBox(value, label, tooltip),
                     leftMargin = margin
                 });
             return properties.Count - 1;

@@ -17,7 +17,7 @@ namespace FamiStudio
         public static int ScaleWindowCoord(int pos)
         {
 #if FAMISTUDIO_MACOS
-            return (int)(pos * GLTheme.MainWindowScaling);
+            return (int)(pos * DpiScaling.MainWindow);
 #else
             return pos;
 #endif
@@ -26,7 +26,7 @@ namespace FamiStudio
         public static int ScaleWindowCoord(double pos)
         {
 #if FAMISTUDIO_MACOS
-            return (int)(pos * GLTheme.MainWindowScaling);
+            return (int)(pos * DpiScaling.MainWindow);
 #else
             return (int)pos;
 #endif
@@ -35,7 +35,7 @@ namespace FamiStudio
         public static int UnscaleWindowCoord(int pos)
         {
 #if FAMISTUDIO_MACOS
-            return (int)(pos / GLTheme.MainWindowScaling);
+            return (int)(pos / DpiScaling.MainWindow);
 #else
             return pos;
 #endif
@@ -44,7 +44,7 @@ namespace FamiStudio
         public static int UnscaleWindowCoord(double pos)
         {
 #if FAMISTUDIO_MACOS
-            return (int)(pos / GLTheme.MainWindowScaling);
+            return (int)(pos / DpiScaling.MainWindow);
 #else
             return (int)pos;
 #endif
