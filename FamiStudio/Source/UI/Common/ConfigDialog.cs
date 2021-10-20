@@ -183,6 +183,7 @@ namespace FamiStudio
                     page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 7
                     page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope, ShowOscilloscopeTooltip); // 8
                     page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 9
+                    page.SetPropertyVisible(0, !PlatformUtils.IsMacOS); // No manual DPI selection on MacOS.
                     page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(8, PlatformUtils.IsDesktop);

@@ -53,10 +53,10 @@ namespace FamiStudio
         {
             if (PlatformUtils.IsWindows || PlatformUtils.IsLinux)
                 return new[] { 100, 150, 200 };
-            else if (PlatformUtils.IsMacOS)
-                return new[] { 100, 200 };
             else if (PlatformUtils.IsAndroid)
                 return new[] { 66, 100, 133 };
+            else if (PlatformUtils.IsMacOS)
+                return new int[0]; // Intentional, we dont allow to manually set the scaling on MacOS.
 
             Debug.Assert(false);
             return new int[] { };
