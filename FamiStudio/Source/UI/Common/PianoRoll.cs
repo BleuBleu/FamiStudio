@@ -21,7 +21,7 @@ namespace FamiStudio
         const float MinZoomY                = 0.25f;
         const float MaxZoomY                = 4.0f;
         const float MaxWaveZoom             = 256.0f;
-        const float DefaultChannelZoom      = PlatformUtils.IsMobile ? MinZoomOther : 1.0f;
+        const float DefaultChannelZoom      = MinZoomOther;
         const float DefaultEnvelopeZoom     = 4.0f;
         const float ContinuousFollowPercent = 0.75f;
         const float DefaultZoomWaveTime     = 0.25f;
