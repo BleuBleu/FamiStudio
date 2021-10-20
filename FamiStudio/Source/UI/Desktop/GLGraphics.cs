@@ -207,13 +207,18 @@ namespace FamiStudio
                         System.Drawing.Imaging.ImageLockMode.ReadOnly,
                         System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                 var ptr = bmpData.Scan0;
+                var stride = bmpData.Stride;
                 var format = PixelFormat.Bgra;
 #else
                 var ptr = bmp.Pixels;
+                var stride = bmp.Rowstride;
                 var format = PixelFormat.Rgba;
 #endif
 
+                Debug.Assert(stride == bmp.Width * 4);
+
                 GL.TexSubImage2D(TextureTarget.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, format, PixelType.UnsignedByte, ptr);
+
 #if FAMISTUDIO_WINDOWS
                 bmp.UnlockBits(bmpData);
 #endif
