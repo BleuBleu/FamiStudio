@@ -66,6 +66,7 @@ namespace FamiStudio
             Icon = Gdk.Pixbuf.LoadFromResource($"FamiStudio.Resources.FamiStudio_64.png");
 
             controls = new FamiStudioControls(this);
+            activeControl = controls.PianoRoll;
 
             WidthRequest  = GtkUtils.ScaleGtkWidget(640);
             HeightRequest = GtkUtils.ScaleGtkWidget(360);
