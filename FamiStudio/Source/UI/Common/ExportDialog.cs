@@ -307,15 +307,26 @@ namespace FamiStudio
                     break;
                 case ExportFormat.FamiTone2Music:
                 case ExportFormat.FamiStudioMusic:
-                    page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
-                    page.AddCheckBox("Separate Files :", false); // 1
-                    page.AddTextBox("Song Name Pattern :", "{project}_{song}"); // 2
-                    page.AddTextBox("DMC Name Pattern :", "{project}"); // 3
-                    page.AddCheckBox("Generate song list include :", false); // 4
-                    page.AddCheckBoxList(null, songNames, null); // 5
-                    page.SetPropertyEnabled(2, false);
-                    page.SetPropertyEnabled(3, false);
-                    page.PropertyChanged += SoundEngine_PropertyChanged;
+                    if (format == ExportFormat.FamiTone2Music && project.UsesAnyExpansionAudio)
+                    {
+                        page.AddLabel(null, "FamiTone2 does not support audio expansions.", true);
+                    }
+                    else if (format == ExportFormat.FamiStudioMusic && project.UsesMultipleExpansionAudios)
+                    {
+                        page.AddLabel(null, "The FamiStudio Sound Engine only supports a single expansion at a time. Limit yourself to a single expansion to enable export.", true);
+                    }
+                    else
+                    {
+                        page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
+                        page.AddCheckBox("Separate Files :", false); // 1
+                        page.AddTextBox("Song Name Pattern :", "{project}_{song}"); // 2
+                        page.AddTextBox("DMC Name Pattern :", "{project}"); // 3
+                        page.AddCheckBox("Generate song list include :", false); // 4
+                        page.AddCheckBoxList(null, songNames, null); // 5
+                        page.SetPropertyEnabled(2, false);
+                        page.SetPropertyEnabled(3, false);
+                        page.PropertyChanged += SoundEngine_PropertyChanged;
+                    }
                     break;
                 case ExportFormat.FamiTone2Sfx:
                 case ExportFormat.FamiStudioSfx:
@@ -489,6 +500,9 @@ namespace FamiStudio
         {
             var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
 
+            if (props.PropertyCount == 1)
+                return;
+
             Func<string, bool> ExportVideoAction = (filename) =>
             {
                 if (filename != null)
@@ -626,7 +640,6 @@ namespace FamiStudio
             var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
 
-            // DROIDTODO : Test this again on all platforms.
             if (songIds.Length > RomFileBase.MaxSongs)
             {
                 PlatformUtils.MessageBoxAsync($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
@@ -810,21 +823,26 @@ namespace FamiStudio
 
         private void ExportFamiTracker()
         {
-            if (!project.UsesMultipleExpansionAudios)
+            var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
+
+            if (props.PropertyCount == 1)
+                return;
+
+            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
+            if (filename != null)
             {
-                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
-                if (filename != null)
-                {
-                    var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
-                    new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
-                    lastExportFilename = filename;
-                }
+                new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
+                lastExportFilename = filename;
             }
         }
 
         private void ExportFamiTone2Music(bool famiStudio)
         {
             var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioMusic : (int)ExportFormat.FamiTone2Music);
+
+            if (props.PropertyCount == 1)
+                return;
+
             var separate = props.GetPropertyValue<bool>(1);
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
             var kernel = famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
@@ -967,7 +985,6 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    // dialog.Hide(); MATTT : Is this needed?
                     Export(false);
                     lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;
                 }

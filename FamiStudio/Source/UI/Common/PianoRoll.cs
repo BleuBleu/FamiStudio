@@ -5630,7 +5630,6 @@ namespace FamiStudio
             return false;
         }
 
-		// DROIDTODO : Cut this!
         private void ToggleSlideNote(NoteLocation location, Note note)
         {
             var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];

@@ -565,7 +565,6 @@ namespace FamiStudio
             // In portrait mode, add a bit of padding to cover the navigation bar.
             if (metrics.HeightPixels != glSurfaceView.Height)
             {
-                // DROIDTODO : When using gesture navigation, in landscape more, we draw a full-width bar.
                 // Needs to match the dialog.
                 GradientDrawable invisible = new GradientDrawable();
                 GradientDrawable navBar = new GradientDrawable();

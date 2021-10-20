@@ -48,8 +48,8 @@ namespace FamiStudio
 
         public void Resize(int w, int h)
         {
-            width  = w;
-            height = h;
+            width  = Math.Max(1, w);
+            height = Math.Max(1, h);
 
             int toolBarHeight        = DpiScaling.ScaleForMainWindow(40);
             int projectExplorerWidth = DpiScaling.ScaleForMainWindow(300);

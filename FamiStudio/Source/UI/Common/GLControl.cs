@@ -101,8 +101,8 @@ namespace FamiStudio
         {
             left = x;
             top = y;
-            width = w;
-            height = h;
+            width = Math.Max(1, w);
+            height = Math.Max(1, h);
 
             if (fireResizeEvent)
                 OnResize(EventArgs.Empty);

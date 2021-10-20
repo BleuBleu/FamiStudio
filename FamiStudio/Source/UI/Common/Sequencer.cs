@@ -2561,14 +2561,6 @@ namespace FamiStudio
             }
         }
 
-#if FALSE // MATTT FAMISTUDIO_WINDOWS
-        protected override void OnMouseCaptureChanged(EventArgs e)
-        {
-            AbortCaptureOperation();
-            base.OnMouseCaptureChanged(e);
-        }
-#endif
-
         protected override void OnMouseHorizontalWheel(MouseEventArgs e)
         {
             scrollX += e.Delta;

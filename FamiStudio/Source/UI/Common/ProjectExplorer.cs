@@ -1514,14 +1514,6 @@ namespace FamiStudio
             MarkDirty();
         }
 
-#if FALSE // // MATTT FAMISTUDIO_WINDOWS
-        protected override void OnMouseCaptureChanged(EventArgs e)
-        {
-            AbortCaptureOperation();
-            base.OnMouseCaptureChanged(e);
-        }
-#endif
-
         private void StartCaptureOperation(int x, int y, CaptureOperation op, int buttonIdx = -1, int buttonRelX = 0, int buttonRelY = 0)
         {
             Debug.Assert(captureOperation == CaptureOperation.None);

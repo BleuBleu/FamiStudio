@@ -192,7 +192,13 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleMapped         += ProjectExplorer_DPCMSampleMapped;
 
             if (resuming)
+            {
                 ResetEverything();
+
+                // Extra safety.
+                if (UndoRedoManager.HasTransactionInProgress)
+                    UndoRedoManager.AbortTransaction();
+            }
         }
 
         public LoopMode LoopMode 

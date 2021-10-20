@@ -145,6 +145,12 @@ namespace FamiStudio
             base.OnFormClosing(e);
         }
 
+        protected override void OnMouseCaptureChanged(EventArgs e)
+        {
+            Debug.WriteLine($"Capture is {Capture}");
+            base.OnMouseCaptureChanged(e);
+        }
+
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
