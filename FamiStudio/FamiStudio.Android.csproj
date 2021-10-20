@@ -64,6 +64,9 @@
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <BundleAssemblies>false</BundleAssemblies>
     <NoWarn>CS0162,CS0414,CS0067</NoWarn>
+    <AndroidPackageFormat>aab</AndroidPackageFormat>
+    <AndroidUseAapt2>true</AndroidUseAapt2>
+    <AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -624,9 +627,7 @@
     <EmbeddedResource Include="Rom\rom_pal.nes" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\Setup\Demo Songs\After The Rain (FamiTone2).fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Danger Streets (FamiTone2).fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Dedricil.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\DuckTales.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gimmick.fms" />
