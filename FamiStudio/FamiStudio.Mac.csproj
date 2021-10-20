@@ -162,7 +162,7 @@
     <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
     <Compile Include="Source\UI\Desktop\MobileClasses.cs" />
-    <Compile Include="Source\UI\Desktop\TutorialDialog.cs">
+    <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
     <Compile Include="Source\UI\GTK\CairoImage.cs" />
     <Compile Include="Source\UI\GTK\CellRendererButton.cs" />
     <Compile Include="Source\UI\GTK\CheckBoxList.cs" />
