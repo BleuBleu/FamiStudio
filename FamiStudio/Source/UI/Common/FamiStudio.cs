@@ -531,6 +531,7 @@ namespace FamiStudio
         private void ProjectExplorer_ProjectModified()
         {
             ResetEverything();
+            RefreshLayout();
         }
 
         private void ProjectExplorer_InstrumentDeleted(Instrument instrument)
@@ -1526,7 +1527,7 @@ namespace FamiStudio
 
                 if (sample.SourceDataIsWav)
                 {
-                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume);
+                    instrumentPlayer.PlayRawPcmSample(sample.SourceWavData.Samples, sample.SourceWavData.SampleRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
                     return;
                 }
                 else
@@ -1545,7 +1546,7 @@ namespace FamiStudio
             WaveUtils.DpcmToWave(dmcData, sample.DmcInitialValueDiv2, out short[] wave);
 
             if (wave.Length > 0)
-                instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume);
+                instrumentPlayer.PlayRawPcmSample(wave, playRate, NesApu.DPCMVolume * Utils.DbToAmplitude(Settings.GlobalVolume));
         }
 
         public bool PalPlayback

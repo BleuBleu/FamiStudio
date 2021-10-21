@@ -95,9 +95,10 @@ namespace FamiStudio
         private readonly string MetronomeVolumeTooltip          = "Volume of the metronome.";
 
         // Mixer
+        private readonly string GlobalVolumeTooltip             = "Global volume applied to all audio emulation, in db. When using multiple audio expansions, the volume can get very loud. You can use this to lower the overall volume and prevent clipping.";
         private readonly string ExpansionTooltip                = "Select the audio expansion for which you want to adjust the audio.";
-        private readonly string VolumeTooltip                   = "Volume adjustment, in db.";
-        private readonly string TrebleTooltip                   = "Treble adjustment, in db.";
+        private readonly string ExpansionVolumeTooltip          = "Volume adjustment for the selected expansion, in db.";
+        private readonly string ExpansionTrebleTooltip          = "Treble adjustment for the selected expansion, in db.";
 
         // MIDI
         private readonly string MidiDeviceTooltip               = "The MIDI device that will be used to input notes.";
@@ -201,12 +202,12 @@ namespace FamiStudio
                 }
                 case ConfigSection.Mixer:
                 {
-                    // TODO : Tooltips.
-                    page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 0
-                    page.AddSlider("Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", VolumeTooltip); // 1
-                    page.AddSlider("Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", TrebleTooltip); // 2
-                    page.AddButton(PlatformUtils.IsDesktop ? null : "Reset", "Reset to default", "Resets this expansion to the default settings."); // 3
-                    page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 4
+                    page.AddSlider("Global Volume:", Settings.GlobalVolume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", GlobalVolumeTooltip); // 0
+                    page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 1
+                    page.AddSlider("Expansion Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
+                    page.AddSlider("Expansion Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
+                    page.AddButton(PlatformUtils.IsDesktop ? null : "Reset", "Reset to default", "Resets this expansion to the default settings."); // 4
+                    page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 5
                     page.PropertyChanged += MixerPage_PropertyChanged;
                     page.PropertyClicked += MixerPage_PropertyClicked;
                     break;
@@ -402,9 +403,9 @@ namespace FamiStudio
 
         private void MixerPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (propIdx == 3 && click == ClickType.Button)
+            if (propIdx == 4 && click == ClickType.Button)
             {
-                var expansion = props.GetSelectedIndex(0);
+                var expansion = props.GetSelectedIndex(1);
                 expansionMixer[expansion] = Settings.DefaultExpansionMixerSettings[expansion];
                 RefreshMixerSettings();
             }
@@ -413,25 +414,25 @@ namespace FamiStudio
         private void RefreshMixerSettings()
         {
             var props = pages[(int)ConfigSection.Mixer];
-            var expansion = props.GetSelectedIndex(0);
+            var expansion = props.GetSelectedIndex(1);
 
-            props.SetPropertyValue(1, (double)expansionMixer[expansion].volume);
-            props.SetPropertyValue(2, (double)expansionMixer[expansion].treble);
+            props.SetPropertyValue(2, (double)expansionMixer[expansion].volume);
+            props.SetPropertyValue(3, (double)expansionMixer[expansion].treble);
         }
 
         private void MixerPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
             var expansion = props.GetSelectedIndex(0);
 
-            if (propIdx == 0)
+            if (propIdx == 1)
             {
                 RefreshMixerSettings();
             }
-            else if (propIdx == 1)
+            else if (propIdx == 2)
             {
                 expansionMixer[expansion].volume = (float)(double)value;
             }
-            else if (propIdx == 2)
+            else if (propIdx == 3)
             {
                 expansionMixer[expansion].treble = (float)(double)value;
             }

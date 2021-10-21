@@ -177,6 +177,8 @@ namespace FamiStudio
         public static int MetronomeVolume = 50;
 
         // Mixer section
+        public static float GlobalVolume = 0.0f; // in dB
+
         public struct ExpansionMix
         {
             public ExpansionMix(float v, float t)
@@ -264,6 +266,8 @@ namespace FamiStudio
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
             // Mixer.
+            GlobalVolume = ini.GetFloat("Mixer", "GlobalVolume", 0.0f);
+
             Array.Copy(DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
 
             for (int i = 0; i < ExpansionType.Count; i++)
@@ -381,6 +385,8 @@ namespace FamiStudio
             ini.SetInt("Audio", "MetronomeVolume", MetronomeVolume);
 
             // Mixer
+            ini.SetFloat("Mixer", "GlobalVolume", GlobalVolume);
+
             for (int i = 0; i < ExpansionType.Count; i++)
             {
                 var section = "Mixer" + ExpansionType.ShortNames[i];

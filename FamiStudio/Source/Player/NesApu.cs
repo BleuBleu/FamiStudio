@@ -195,7 +195,9 @@ namespace FamiStudio
         public const float FpsPAL  = 50.0070f;
         public const float FpsNTSC = 60.0988f;
 
-        // Volume set in Nes_Apu::volume for the DMC channel. 
+        // Volume set in Nes_Apu::volume for the DMC channel. This is simply to 
+        // make sure our preview of DPCM sample somewhat matches the volume of 
+        // the real emulated one.
         public const float DPCMVolume = 0.42545f;
 
         // Default "center" value for the DPCM channel. May be configurable one day.
@@ -367,7 +369,7 @@ namespace FamiStudio
             var apuSettings = Settings.ExpansionMixerSettings[NesApu.APU_EXPANSION_NONE];
 
             TrebleEq(apuIdx, NesApu.APU_EXPANSION_NONE, apuSettings.treble, sampleRate);
-            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.volume));
+            SetExpansionVolume(apuIdx, NesApu.APU_EXPANSION_NONE, Utils.DbToAmplitude(apuSettings.volume + Settings.GlobalVolume));
 
             if (expansions != APU_EXPANSION_MASK_NONE)
             {
@@ -378,7 +380,7 @@ namespace FamiStudio
                         var expSettings = Settings.ExpansionMixerSettings[expansion];
 
                         TrebleEq(apuIdx, expansion, expSettings.treble, sampleRate);
-                        SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.volume));
+                        SetExpansionVolume(apuIdx, expansion, Utils.DbToAmplitude(expSettings.volume + Settings.GlobalVolume));
 
                         switch (expansion)
                         {
