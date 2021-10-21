@@ -202,11 +202,11 @@ namespace FamiStudio
                 }
                 case ConfigSection.Mixer:
                 {
-                    page.AddSlider("Global Volume:", Settings.GlobalVolume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", GlobalVolumeTooltip); // 0
+                    page.AddSlider("Global Volume:", Settings.GlobalVolume, -10.0, 3.0, 0.1, 1, "{0:+0.0;-0.0} dB", GlobalVolumeTooltip); // 0
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 1
                     page.AddSlider("Expansion Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
                     page.AddSlider("Expansion Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
-                    page.AddButton(PlatformUtils.IsDesktop ? null : "Reset", "Reset to default", "Resets this expansion to the default settings."); // 4
+                    page.AddButton(PlatformUtils.IsDesktop ? null : "Reset", "Reset expansion to default", "Resets this expansion to the default settings."); // 4
                     page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 5
                     page.PropertyChanged += MixerPage_PropertyChanged;
                     page.PropertyClicked += MixerPage_PropertyClicked;
@@ -489,6 +489,7 @@ namespace FamiStudio
                     Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(4);
 
                     // Mixer.
+                    Settings.GlobalVolume = (float)pageMixer.GetPropertyValue<double>(0);
                     Array.Copy(expansionMixer, Settings.ExpansionMixerSettings, Settings.ExpansionMixerSettings.Length);
 
                     // MIDI
