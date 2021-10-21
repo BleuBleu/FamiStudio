@@ -76,9 +76,11 @@ nsf_mode: .res 1
     
     ldy nsf_song_table+0, x
 
-    ; First map the full 0x9000 - 0xf000 to song data.
+.ifndef FAMISTUDIO_MULTI_EXPANSION
+    ; First map the full 0x9000 - 0xf000 to song data. The multi-expansion NSF driver takes 2 pages.
     sty $5ff9
     iny
+.endif    
     sty $5ffa
     iny
     sty $5ffb

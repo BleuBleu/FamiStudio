@@ -105,7 +105,7 @@ namespace FamiStudio
                 var headerBytes = new byte[sizeof(NsfHeader)];
                 Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
 
-                List<byte> nsfBytes = new List<byte>();
+                var nsfBytes = new List<byte>();
 
                 string kernelBinary = "nsf";
                 if (kernel == FamiToneKernel.FamiStudio)
@@ -151,6 +151,8 @@ namespace FamiStudio
                 var nsfBinBuffer = new byte[nsfBinStream.Length - 128]; // Skip header.
                 nsfBinStream.Seek(128, SeekOrigin.Begin);
                 nsfBinStream.Read(nsfBinBuffer, 0, nsfBinBuffer.Length);
+
+                var driverSizeRounded = Utils.RoundUp(nsfBinBuffer.Length, NsfPageSize);
 
                 nsfBytes.AddRange(nsfBinBuffer);
 
@@ -211,9 +213,12 @@ namespace FamiStudio
                 for (int i = 0; i < project.Songs.Count; i++)
                 {
                     var song = project.Songs[i];
-                    var firstPage = nsfBytes.Count < NsfPageSize;
-                    int page = nsfBytes.Count / NsfPageSize + (firstPage ? 1 : 0);
-                    int addr = NsfMemoryStart + (firstPage ? 0 : NsfPageSize ) + (nsfBytes.Count & (NsfPageSize - 1));
+
+                    // If we are in the same page as the driver, the song will start in a 0x8000 address (0x9000 for multi)
+                    // so we need to increment the page by one so that the NSF driver correctly maps the subsequent pages.
+                    var samePageAsDriver = nsfBytes.Count < NsfPageSize;
+                    int page = nsfBytes.Count / NsfPageSize + (samePageAsDriver ? 1 : 0);
+                    int addr = NsfMemoryStart + (samePageAsDriver ? 0 : driverSizeRounded ) + (nsfBytes.Count & (NsfPageSize - 1));
                     var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBaseAddr, machine);
 
                     // If we introduced padding for the samples, we can try to squeeze a song in there.
