@@ -676,6 +676,7 @@ namespace FamiStudio
             slider.FormatValueEvent += Slider_FormatValueEvent;
             slider.ValueChangedEvent += Slider_ValueChangedEvent;
             slider.Font = font;
+            toolTip.SetToolTip(slider, SplitLongTooltip(tooltip));
             return slider;
         }
 
@@ -1040,7 +1041,6 @@ namespace FamiStudio
                 {
                     prop.label.Left    = margin;
                     prop.label.Top     = totalHeight;
-                    //prop.label.Width   = widthNoMargin / 2;
 
                     prop.control.Left  = maxLabelWidth + margin;
                     prop.control.Top   = totalHeight;
@@ -1057,18 +1057,24 @@ namespace FamiStudio
                     prop.control.Top   = totalHeight;
                     prop.control.Width = widthNoMargin;
 
-                    // HACK : For some multiline controls.
-                    if (prop.control is Label && prop.control.MaximumSize.Width != 0)
-                    {
-                        prop.control.MaximumSize = new Size(prop.control.Width, 0);
-                    }
-                    else if (prop.control is RadioButton)
-                    {
-                        prop.control.Height = GetRadioButtonHeight(prop.control.Text, prop.control.Width);
-                        marginScale = 0;
-                    }
-
                     Controls.Add(prop.control);
+                }
+
+                // HACK : For some multiline controls.
+                if (prop.control is Label && prop.control.MaximumSize.Width != 0)
+                {
+                    prop.control.MaximumSize = new Size(prop.control.Width, 0);
+                }
+                else if (prop.control is RadioButton)
+                {
+                    prop.control.Height = GetRadioButtonHeight(prop.control.Text, prop.control.Width);
+                    marginScale = 0;
+                }
+
+                if (prop.type == PropertyType.ColoredTextBox)
+                {
+                    (prop.control as TextBox).SelectAll();
+                    prop.control.Focus();
                 }
 
                 height = Math.Max(prop.control.Height, height);
