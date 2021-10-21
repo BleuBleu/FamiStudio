@@ -45,8 +45,8 @@ namespace FamiStudio
             buttonRight.Width  = DpiScaling.ScaleForDialog(buttonRight.Width);
             buttonRight.Height = DpiScaling.ScaleForDialog(buttonRight.Height);
 
-            buttonRight.Left  = Width  - buttonRight.Width  - 10;
-            buttonRight.Top   = Height - buttonRight.Height - 10;
+            buttonRight.Left  = ClientSize.Width  - buttonRight.Width  - 10;
+            buttonRight.Top   = ClientSize.Height - buttonRight.Height - 10;
             buttonLeft.Left   = buttonRight.Left - buttonLeft.Width - 10;
             buttonLeft.Top    = buttonRight.Top;
 
@@ -89,7 +89,6 @@ namespace FamiStudio
             checkBoxDontShow.Text = "Do not show again";
             checkBoxDontShow.UseVisualStyleBackColor = true;
 
-            buttonLeft.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             buttonLeft.FlatAppearance.BorderSize = 0;
             buttonLeft.FlatStyle = FlatStyle.Flat;
             buttonLeft.Location = new Point(676, 504);
@@ -97,7 +96,6 @@ namespace FamiStudio
             buttonLeft.UseVisualStyleBackColor = true;
             buttonLeft.Click += new EventHandler(buttonLeft_Click);
 
-            buttonRight.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             buttonRight.FlatAppearance.BorderSize = 0;
             buttonRight.FlatStyle = FlatStyle.Flat;
             buttonRight.Location = new Point(714, 504);
