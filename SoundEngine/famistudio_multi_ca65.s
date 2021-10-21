@@ -1028,6 +1028,7 @@ famistudio_init:
     lda famistudio_expansion_mask
     and #FAMISTUDIO_EXP_VRC7_MASK
     beq @init_mmc5
+    ; TODO : Potential conflict with S5B here. The VRC7 silence register overlaps the S5B data register.
     ; [MULTI] END
     lda #0
     sta FAMISTUDIO_VRC7_SILENCE ; Enable VRC7 audio.
@@ -2162,6 +2163,7 @@ famistudio_update_n163_channel_sound:
     rol @pitch_hi 
 
     ; Write pitch
+    ; TODO : The N163 ADDR register overlaps with there S5B data register. There is a potiential conflict. 
     lda famistudio_n163_reg_table_lo,y
     sta FAMISTUDIO_N163_ADDR
     lda @pitch+0
@@ -2192,6 +2194,7 @@ famistudio_update_n163_channel_sound:
 
 @update_volume:
     ; Write volume
+    ; TODO : The N163 ADDR register overlaps with there S5B data register. There is a potiential conflict. 
     lda famistudio_n163_vol_table,y
     sta FAMISTUDIO_N163_ADDR
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -3429,6 +3432,7 @@ famistudio_set_n163_instrument:
     lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
     beq @done
 
+    ; TODO : The N163 ADDR register overlaps with there S5B data register. There is a potiential conflict. 
     lda famistudio_n163_wave_table-FAMISTUDIO_N163_CH0_IDX, x
     sta FAMISTUDIO_N163_ADDR
     lda (@ptr),y
@@ -3455,6 +3459,7 @@ famistudio_set_n163_instrument:
     sta @wave_ptr+1
 
     ; N163 wave
+    ; TODO : The N163 ADDR register overlaps with there S5B data register. There is a potiential conflict. 
     lda @wave_pos
     ora #$80
     sta FAMISTUDIO_N163_ADDR
