@@ -29,9 +29,7 @@ namespace FamiStudio
             //   f000-ffff (data)
 
             if ((NesApu.GetAudioExpansions(apuIdx) & NesApu.APU_EXPANSION_MASK_SUNSOFT) != 0)
-            {
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_IO_A);
-            }
 
             WriteRegister(NesApu.N163_ADDR, reg);
             WriteRegister(NesApu.N163_DATA, data);
