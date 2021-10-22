@@ -73,7 +73,7 @@ private:
 
 inline void Nes_Fme7::volume( double v )
 {
-	synth.volume( 0.26 / amp_range * v ); // to do: fine-tune
+	synth.volume( 0.39 / amp_range * v ); // to do: fine-tune
 }
 
 inline void Nes_Fme7::treble_eq( blip_eq_t const& eq )

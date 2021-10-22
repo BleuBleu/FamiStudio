@@ -50,7 +50,7 @@ void Nes_Mmc5::reset()
 
 void Nes_Mmc5::volume(double v)
 {
-	square_synth.volume(0.1128 * v);
+	square_synth.volume(0.125 * v);
 }
 
 void Nes_Mmc5::treble_eq(blip_eq_t const& eq)
