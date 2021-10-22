@@ -39,7 +39,7 @@ namespace FamiStudio
             public int IconY;
             public int TextX;
             public int TextY;
-            public bool Visible = true;
+            public bool Visible = false;
             public bool IsNavButton = false;
             public RenderInfoDelegate GetRenderInfo;
             public EmptyDelegate Click;

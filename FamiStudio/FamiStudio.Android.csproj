@@ -128,6 +128,9 @@
     <PackageReference Include="Xamarin.Essentials" Version="1.7.0" />
   </ItemGroup>
   <ItemGroup>
+    <AndroidResource Include="Source\UI\Droid\Resources\color\light_grey.xml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>    
     <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand.xml">
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
     </AndroidResource>
@@ -161,8 +164,6 @@
     <AndroidResource Include="Source\UI\Droid\Resources\values\styles.xml" />
     <AndroidResource Include="Source\UI\Droid\Resources\xml\filepaths.xml" />
     <None Include="Properties\AndroidManifest.xml" />
-    <None Include="Source\UI\Droid\Assets\AboutAssets.txt" />
-    <None Include="Source\UI\Droid\Resources\AboutResources.txt" />
   </ItemGroup>
   <ItemGroup>
     <AndroidNativeLibrary Include="libs\arm64-v8a\libNesSndEmu.so">
@@ -276,12 +277,13 @@
     <Compile Include="Source\UI\Droid\DroidUtils.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
+    <Compile Include="Source\UI\Droid\MobileProjectDialog.cs" />
     <Compile Include="Source\UI\Droid\MultiPropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
     <Compile Include="Source\UI\Droid\PropertyDialog.cs" />
     <Compile Include="Source\UI\Droid\PropertyPage.cs" />
     <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />
-    <Compile Include="Source\UI\Droid\MobileProjectDialog.cs" />
+    <Compile Include="Source\UI\Droid\TutorialDialog.cs" />
     <Compile Include="Source\UI\Droid\WindowsForms.cs" />
     <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Mobile\LogDialog.cs" />
@@ -604,13 +606,6 @@
     <EmbeddedResource Include="Resources\Snap%402x.png" />
     <EmbeddedResource Include="Resources\Stop%402x.png" />
     <EmbeddedResource Include="Resources\Transform%402x.png" />
-    <EmbeddedResource Include="Resources\Tutorial0.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial1.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial2.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial3.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial4.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial5.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial6.jpg" />
     <EmbeddedResource Include="Resources\Undo%402x.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />
     <EmbeddedResource Include="Resources\Warning%404x.png" />
@@ -644,12 +639,26 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\Tutorial Song.fms" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Source\UI\Droid\Resources\drawable\" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Source\UI\Droid\Resources\color\light_grey.xml">
-      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
-    </AndroidResource>
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial1.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial1.png" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial10.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial10.png" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial2.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial2.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial3.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial3.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial4.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial4.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial5.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial5.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial6.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial6.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial7.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial7.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial8.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial8.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial9.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial9.html" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

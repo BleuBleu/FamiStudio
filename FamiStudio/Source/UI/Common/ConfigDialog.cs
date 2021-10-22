@@ -69,6 +69,7 @@ namespace FamiStudio
         
         // General
         private readonly string CheckUpdatesTooltip             = "When enabled, FamiStudio will check for updates every time you start the app.";
+        private readonly string ShowTutorialTooltip             = "When enabled, the first time tutorial will be displayed next time the app is started.";
         private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that this does not work well on Linux.";
         private readonly string ClearUndoRedoTooltip            = "When enabled, the undo/redo stack will be cleared every time you save. Disabling this can help keep the memory usage down.";
         private readonly string OpenLastTooltip                 = "When enabled, FamiStudio will open the last project you were working on when you last closed the app.";
@@ -130,7 +131,6 @@ namespace FamiStudio
                 CreatePropertyPage(page, section);
             }
 
-            dialog.SetPageVisible((int)ConfigSection.General, PlatformUtils.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.MacOS,   PlatformUtils.IsMacOS);
             dialog.SetPageVisible((int)ConfigSection.MIDI,    PlatformUtils.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.FFmpeg,  PlatformUtils.IsDesktop);
@@ -156,13 +156,20 @@ namespace FamiStudio
                 case ConfigSection.General:
                 {
                     page.AddCheckBox("Check for updates:", Settings.CheckUpdates, CheckUpdatesTooltip); // 0
-                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls, TrackpadControlsTooltip); // 1
-                    page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 2
-                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 3
-                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 4
-                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 4
+                    page.AddCheckBox("Show Tutorial at Startup:", Settings.ShowTutorial, ShowTutorialTooltip); // 1
+                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls, TrackpadControlsTooltip); // 2
+                    page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 3
+                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 4
+                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 5
+                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 6
                     page.PropertyClicked += PageGeneral_PropertyClicked;
                     page.PropertyChanged += PageGeneral_PropertyChanged;
+                    page.SetPropertyVisible(0, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(2, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(5, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(6, PlatformUtils.IsDesktop);
                     break;
                 }
 
@@ -440,7 +447,7 @@ namespace FamiStudio
 
         private void PageGeneral_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            if (props == pages[(int)ConfigSection.General] && propIdx == 1)
+            if (props == pages[(int)ConfigSection.General] && propIdx == 2)
             {
                 var macOsPage = pages[(int)ConfigSection.MacOS];
                 macOsPage.SetPropertyEnabled(0, (bool)value);
@@ -462,10 +469,11 @@ namespace FamiStudio
 
                     // General
                     Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(0);
-                    Settings.TrackPadControls = pageGeneral.GetPropertyValue<bool>(1);
-                    Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(2);
-                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(3);
-                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(4);
+                    Settings.ShowTutorial = pageGeneral.GetPropertyValue<bool>(1);
+                    Settings.TrackPadControls = pageGeneral.GetPropertyValue<bool>(2);
+                    Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(3);
+                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(4);
+                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(5);
 
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);

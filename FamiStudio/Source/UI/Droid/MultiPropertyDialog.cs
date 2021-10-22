@@ -22,8 +22,6 @@ namespace FamiStudio
 {
     public class MultiPropertyDialog
     {
-        public const int RequestCode = 1002;
-
         public class PropertyPageTab
         {
             public string text;

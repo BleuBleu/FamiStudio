@@ -2024,7 +2024,6 @@ namespace FamiStudio
 
         private void ConditionalShowTutorial()
         {
-#if !FAMISTUDIO_ANDROID // DROIDTODO
 #if FAMISTUDIO_WINDOWS
             // Edge case where we open a NSF from the command line and the open dialog is active.
             if (!mainForm.CanFocus)
@@ -2037,15 +2036,17 @@ namespace FamiStudio
                     if (Settings.ShowTutorial)
                     {
                         var dlg = new TutorialDialog();
-                        if (dlg.ShowDialog(mainForm) == DialogResult.OK)
+                        dlg.ShowDialogAsync(mainForm, (r) =>
                         {
-                            Settings.ShowTutorial = false;
-                            Settings.Save();
-                        }
+                            if (r == DialogResult.OK)
+                            {
+                                Settings.ShowTutorial = false;
+                                Settings.Save();
+                            }
+                        });
                     }
                 }
             }
-#endif
         }
 
         private bool AppNeedsRealTimeUpdate()

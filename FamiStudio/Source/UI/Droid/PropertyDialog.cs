@@ -22,8 +22,6 @@ namespace FamiStudio
 {
     public class PropertyDialog
     {
-        public const int RequestCode = 1001;
-
         private string title = "";
         private string verb = "Apply";
         private bool canAccept = true;

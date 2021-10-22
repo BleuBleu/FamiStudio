@@ -1,45 +1,24 @@
 3.2.0
 =====
 
-Polish (if time):
-- Android : Tutorial (post-beta?)
-	- Welcome to FamiStudio! Let's take a few seconds to review some of the basic controls to make sure you use the app to its fullest.
-	- A QUICK TAP will usually ADD stuff, like patterns and notes. 
-	- A QUICK TAP will also toggle the HIGHLIGHT around certain objets. Object with a WHITE HIGHLIGHT can be moved and/or interacted with in a special way.
-	- A SWIPE will usually PAN around.
-	- A SWIPE starting from the HIGHLIGHTED object may allow you to move it, or change some of its properties.
-	- You can PINCH TO ZOOM in the Piano Roll and the Sequencer.
-	- A LONG PRESS on some objects will reveal a CONTEXT MENU containing more advanced editing options. Try it everywhere and see what happens!
-	- For the complete DOCUMENTATION and a VIDEO TUTORIAL, please click on the big QUESTION MARK!
-	- Discord!
-
 Icon notes:
 - 46% zoom, start with 128x128 png.
 
-DPCM/Tri volume thing (from tromino)
-- Run more tests on NES, with more volumes + noise too.
-- Add a global 80% volume to match FamiTracker?
-- Channels will need to be rebalanced a bit since i bumped the squares.
-- Compare with old FamiStudio to see if old project will sound like ass.
-
 Testing
 =======
-- Android : Test light/dark modes.
-- Test export on all platform (removed that dialog.hide() thing.)
-- Add multi-exp unit test.
+- BUG : HH:MM:SSS from itch?
 - Test project/instrument merge (with expansions).
 - Re-test with various scaling (lots of cahnges to everything, zooming, etc.)
 - Test without snapping, i tested snapping a lot, but not witout.
-- Compare instrument colors (seq/piano roll) for all platforms
-- Re-test last open file.
-- From Perkka "when you try to quit no using cmd+q or the red close button in the corner of the windows you get a question if you want to save first so all fine and dandy, but if you rightclick on the application icon in the dock and chose quit you'll never get that question, it'll just quit and stuff will be lost"
+
+/ From Perkka "when you try to quit no using cmd+q or the red close button in the corner of the windows you get a question if you want to save first so all fine and dandy, but if you rightclick on the application icon in the dock and chose quit you'll never get that question, it'll just quit and stuff will be lost"
+	=> Probably not possible, the icon is for Mono.
 
 Packaging:
 ==========
-- Remove 2 famitone 2 songs.
-- Make download list vertical on website.
-- Update DLLs to VS 2019 + Package redist.
-- Recompile everything (ROM, NSF, etc). Make sure it says 3.2.0.
+/ Make download list vertical on website.
+- List dependencies in doc, list demo songs in doc.
+- Add link to discord in doc.
 
 Features missing from the Mobile version
 ========================================
@@ -103,6 +82,15 @@ MacOS notes
 	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
 - If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
+
+Android Notes
+=============
+Key Store
+- Alias : FamiStudio
+- Pass : Usual x2
+- 30 Years
+- Only full name entered.
+
 
 Trailer/scroll 
 ============== 

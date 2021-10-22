@@ -1308,28 +1308,19 @@ namespace FamiStudio
 
         protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
         {
-            var modeWidth = MeasureSpec.GetMode(widthMeasureSpec);
-            var modeHeight = MeasureSpec.GetMode(heightMeasureSpec);
-
             var width = MeasureSpec.GetSize(widthMeasureSpec);
             var height = MeasureSpec.GetSize(heightMeasureSpec);
 
-            //if (modeHeight != MeasureSpecMode.Exactly)
-            {
-                var ratio = Theme.CustomColors.GetLength(1) / (float)Theme.CustomColors.GetLength(0);
-                height = (int)(width * ratio);
+            var ratio = Theme.CustomColors.GetLength(1) / (float)Theme.CustomColors.GetLength(0);
+            height = (int)(width * ratio);
 
-                // Dont allow it to be more than 50% of the height of the screen. This prevent
-                // it from being HUGE in landscale mode.
-                //if (modeWidth != MeasureSpecMode.Exactly)
-                {
-                    var percentHeight = height / (float)Context.Resources.DisplayMetrics.HeightPixels;
-                    if (percentHeight > MaxHeightScreen)
-                    {
-                        height = (int)(Context.Resources.DisplayMetrics.HeightPixels * MaxHeightScreen);
-                        width  = (int)(height / ratio);
-                    }
-                }
+            // Dont allow it to be more than 50% of the height of the screen. This prevent
+            // it from being HUGE in landscale mode.
+            var percentHeight = height / (float)Context.Resources.DisplayMetrics.HeightPixels;
+            if (percentHeight > MaxHeightScreen)
+            {
+                height = (int)(Context.Resources.DisplayMetrics.HeightPixels * MaxHeightScreen);
+                width  = (int)(height / ratio);
             }
 
             SetMeasuredDimension(width, height);

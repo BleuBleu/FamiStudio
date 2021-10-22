@@ -228,6 +228,14 @@ namespace FamiStudio
             StartActivityForResult(new Intent(this, typeof(MultiPropertyDialogActivity)), activeDialog.RequestCode);
         }
 
+        public void StartTutorialDialogActivity(Action<DialogResult> callback, TutorialDialog dlg)
+        {
+            Debug.Assert(activeDialog == null);
+            activeDialog = new TutorialDialogActivityInfo(dlg, callback);
+            StopGLThread();
+            StartActivityForResult(new Intent(this, typeof(TutorialDialogActivity)), activeDialog.RequestCode);
+        }
+
         public void StartFileSharingActivity(string filename, Action callback)
         {
             Debug.Assert(activeDialog == null && pendingFinishDialog == null);
@@ -905,6 +913,26 @@ namespace FamiStudio
         }
     }
 
+    public class TutorialDialogActivityInfo : BaseDialogActivityInfo
+    {
+        protected TutorialDialog dialog;
+        protected Action<DialogResult> callback;
+        public TutorialDialog Dialog => dialog;
+        public override bool ShouldSuspend => false;
+
+        public TutorialDialogActivityInfo(TutorialDialog dlg, Action<DialogResult> cb)
+        {
+            requestCode = 2000;
+            dialog = dlg;
+            callback = cb;
+        }
+
+        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        {
+            callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
+        }
+    }
+
     public class PropertyDialogActivityInfo : BaseDialogActivityInfo
     {
         protected PropertyDialog dialog;
@@ -914,7 +942,7 @@ namespace FamiStudio
 
         public PropertyDialogActivityInfo(PropertyDialog dlg, Action<DialogResult> cb)
         {
-            requestCode = 2000;
+            requestCode = 2001;
             dialog = dlg;
             callback = cb;
         }
@@ -934,7 +962,7 @@ namespace FamiStudio
 
         public MultiPropertyDialogActivityInfo(MultiPropertyDialog dlg, Action<DialogResult> cb)
         {
-            requestCode = 2001;
+            requestCode = 2002;
             dialog = dlg;
             callback = cb;
         }
