@@ -167,6 +167,7 @@ namespace FamiStudio
         {
             if (pageIndex == TutorialMessages.Length - 1)
             {
+                SetResult(Result.Ok);
                 Finish();
             }
             else

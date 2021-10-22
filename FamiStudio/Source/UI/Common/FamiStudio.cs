@@ -41,7 +41,7 @@ namespace FamiStudio
         private int selectedChannelIndex;
         private int forceDisplayChannelMask = 0;
         private int lastMidiNote = -1;
-        private int tutorialCounter = 3;
+        private int tutorialCounter = PlatformUtils.IsDesktop ? 3 : 1;
         private int baseRecordingOctave = 3;
         private int lastTickCurrentFrame = -1;
         private int previewDPCMSampleId = -1;
