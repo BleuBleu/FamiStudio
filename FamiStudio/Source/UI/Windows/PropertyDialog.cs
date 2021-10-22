@@ -245,7 +245,7 @@ namespace FamiStudio
 
         public void ShowDialogAsync(IWin32Window parent, Action<DialogResult> callback)
         {
-            callback(ShowDialog());
+            callback(ShowDialog(parent));
         }
 
         public void ShowModal(FamiStudioForm form)

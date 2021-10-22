@@ -1092,7 +1092,7 @@ namespace FamiStudio
 
         public bool GetViewRange(ref int minNoteIdx, ref int maxNoteIdx, ref int channelIndex)
         {
-            if (editMode == EditionMode.Channel)
+            if (editMode == EditionMode.Channel && Width > pianoSizeX)
             {
                 minNoteIdx = Math.Max(GetAbsoluteNoteIndexForPixel(0), 0);
                 maxNoteIdx = Math.Min(GetAbsoluteNoteIndexForPixel(Width - pianoSizeX) + 1, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));

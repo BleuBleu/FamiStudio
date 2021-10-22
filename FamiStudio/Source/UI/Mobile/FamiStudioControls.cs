@@ -113,6 +113,11 @@ namespace FamiStudio
                 }
 
                 activeControl.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height - pianoLayoutSize);
+
+                // Always update the piano roll since we draw the view range in the sequencer and 
+                // it requires valid size to do that.
+                if (activeControl != pianoRoll)
+                    pianoRoll.Move(toolLayoutSize, 0, width - toolLayoutSize - quickAccessBarSize, height - pianoLayoutSize);
             }
             else
             {
@@ -122,7 +127,13 @@ namespace FamiStudio
                     quickAccessBar.Move(0, height - quickAccessBarSize - pianoLayoutSize, width, quickAccessBarSize);
                     mobilePiano.Move(0, height - pianoLayoutSize, width, pianoLayoutSize);
                 }
+
                 activeControl.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize - pianoLayoutSize);
+
+                // Always update the piano roll since we draw the view range in the sequencer and 
+                // it requires valid size to do that.
+                if (activeControl != pianoRoll)
+                    pianoRoll.Move(0, toolLayoutSize, width, height - toolLayoutSize - quickAccessBarSize - pianoLayoutSize);
             }
         }
 

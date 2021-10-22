@@ -69,7 +69,7 @@ namespace FamiStudio
             protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
             {
                 var width  = MeasureSpec.GetSize(widthMeasureSpec);
-                var ratio  = 540.0 / 1170; // MATTT;
+                var ratio  = 540.0 / 1100.0; 
                 var height = (int)(width * ratio);
 
                 const float MaxHeightScreen = 0.5f;

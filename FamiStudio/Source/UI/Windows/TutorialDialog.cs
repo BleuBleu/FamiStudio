@@ -170,5 +170,10 @@ namespace FamiStudio
         {
             buttonRight_Click(null, EventArgs.Empty);
         }
+
+        public void ShowDialogAsync(IWin32Window parent, Action<DialogResult> callback)
+        {
+            callback(ShowDialog(parent));
+        }
     }
 }

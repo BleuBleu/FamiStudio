@@ -157,5 +157,10 @@ namespace FamiStudio
             Hide();
             return result;
         }
+
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        {
+            callback(ShowDialog(parent));
+        }
     }
 }

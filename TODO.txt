@@ -7,6 +7,7 @@ Icon notes:
 Testing
 =======
 - BUG : HH:MM:SSS from itch?
+- BUG : Piano roll view range is invalid initially? (Line)
 - Test project/instrument merge (with expansions).
 - Re-test with various scaling (lots of cahnges to everything, zooming, etc.)
 - Test without snapping, i tested snapping a lot, but not witout.
@@ -18,7 +19,7 @@ Packaging:
 ==========
 / Make download list vertical on website.
 - List dependencies in doc, list demo songs in doc.
-- Add link to discord in doc.
+- Add link to discord in doc
 
 Features missing from the Mobile version
 ========================================
