@@ -1045,6 +1045,9 @@ famistudio_init:
     sta FAMISTUDIO_MMC5_PCM_MODE
     lda #$03
     sta FAMISTUDIO_MMC5_SND_CHN
+    lda #$80 ; Previous pulse period MSB, to not write it when not changed
+    sta famistudio_mmc5_pulse1_prev
+    sta famistudio_mmc5_pulse2_prev    
 .endif
 
 .if FAMISTUDIO_EXP_S5B
