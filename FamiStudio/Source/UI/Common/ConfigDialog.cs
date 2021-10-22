@@ -422,7 +422,7 @@ namespace FamiStudio
 
         private void MixerPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
         {
-            var expansion = props.GetSelectedIndex(0);
+            var expansion = props.GetSelectedIndex(1);
 
             if (propIdx == 1)
             {
