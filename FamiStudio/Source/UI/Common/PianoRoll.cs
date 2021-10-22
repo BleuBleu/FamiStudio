@@ -6675,8 +6675,10 @@ namespace FamiStudio
                         var note = channel.FindMusicalNoteAtLocation(ref location, noteValue);
                         if (note != null)
                         {
-                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, channel.PatternInstances[location.PatternIndex].Id);
+                            var pattern = channel.PatternInstances[location.PatternIndex];
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                             note.Instrument = instrument;
+                            MarkPatternDirty(pattern);
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
