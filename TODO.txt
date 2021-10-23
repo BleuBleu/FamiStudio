@@ -7,18 +7,15 @@ Icon notes:
 Testing
 =======
 - BUG : HH:MM:SSS from itch?
-- BUG : Piano roll view range is invalid initially? (Line)
 - Test project/instrument merge (with expansions).
 - Re-test with various scaling (lots of cahnges to everything, zooming, etc.)
 - Test without snapping, i tested snapping a lot, but not witout.
-
-/ From Perkka "when you try to quit no using cmd+q or the red close button in the corner of the windows you get a question if you want to save first so all fine and dandy, but if you rightclick on the application icon in the dock and chose quit you'll never get that question, it'll just quit and stuff will be lost"
-	=> Probably not possible, the icon is for Mono.
 
 Packaging:
 ==========
 / Make download list vertical on website.
 - List dependencies in doc, list demo songs in doc.
+- Two songs from mark
 - Add link to discord in doc
 
 Features missing from the Mobile version

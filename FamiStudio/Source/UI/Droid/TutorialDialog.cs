@@ -53,12 +53,12 @@ namespace FamiStudio
         private const int NextMenuItemId = 1010;
 
         private CoordinatorLayout coordLayout;
-        private TutorialDialog dlg;
         private TextView textView;
         private AppBarLayout appBarLayout;
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
         private MaxHeightWebView webView;
         private int pageIndex = 0;
+        private bool stoppedByUser;
 
         private class MaxHeightWebView : WebView
         {
@@ -153,6 +153,7 @@ namespace FamiStudio
         {
             if (pageIndex == 0)
             {
+                stoppedByUser = true;
                 SetResult(Result.Canceled);
                 Finish();
             }
@@ -167,6 +168,7 @@ namespace FamiStudio
         {
             if (pageIndex == TutorialMessages.Length - 1)
             {
+                stoppedByUser = true;
                 SetResult(Result.Ok);
                 Finish();
             }
@@ -191,6 +193,7 @@ namespace FamiStudio
             }
             else
             {
+                stoppedByUser = true;
                 base.OnBackPressed();
             }
         }
@@ -218,11 +221,11 @@ namespace FamiStudio
 
         protected override void OnPause()
         {
-            //// If we are being stopped, but not by the user closing the dialog,
-            //// it is likely that the user switched app. If the main activity isnt
-            //// running, lets suspend FamiStudio.
-            //if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
-            //    FamiStudio.StaticInstance.Suspend();
+            // If we are being stopped, but not by the user closing the dialog,
+            // it is likely that the user switched app. If the main activity isnt
+            // running, lets suspend FamiStudio.
+            if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
+                FamiStudio.StaticInstance.Suspend();
             base.OnPause();
         }
     }

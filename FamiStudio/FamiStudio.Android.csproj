@@ -464,6 +464,8 @@
     <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
     <EmbeddedResource Include="Resources\Maximize%402x.png" />
     <EmbeddedResource Include="Resources\MenuClearEnvelope.png" />
+    <EmbeddedResource Include="Resources\MenuClearEnvLoopPoint.png" />
+    <EmbeddedResource Include="Resources\MenuClearEnvRelease.png" />
     <EmbeddedResource Include="Resources\MenuClearSelection.png" />
     <EmbeddedResource Include="Resources\MenuCustomPatternSettings.png" />
     <EmbeddedResource Include="Resources\MenuDelete.png" />

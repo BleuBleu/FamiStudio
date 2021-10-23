@@ -3660,6 +3660,28 @@ namespace FamiStudio
             }
         }
 
+        private void EditDPCMSampleMappingProperties(Point pt, DPCMSampleMapping mapping)
+        {
+            var strings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
+
+            var dlg = new PropertyDialog("DPCM Key Properties", PointToScreen(pt), 280, false, pt.Y > Height / 2);
+            dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
+            dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
+            dlg.Properties.Build();
+
+            dlg.ShowDialogAsync(ParentForm, (r) =>
+            {
+                if (r == DialogResult.OK)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
+                    mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
+                    mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
+                    App.UndoRedoManager.EndTransaction();
+                    MarkDirty();
+                }
+            });
+        }
+
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             base.OnMouseDoubleClick(e);
@@ -3676,26 +3698,7 @@ namespace FamiStudio
 
                     var mapping = App.Project.GetDPCMMapping(noteValue);
                     if (left && mapping != null)
-                    {
-                        var strings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
-
-                        var dlg = new PropertyDialog("DPCM Key Properties", PointToScreen(new Point(e.X, e.Y)), 280, false, e.Y > Height / 2);
-                        dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
-                        dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
-                        dlg.Properties.Build();
-
-                        dlg.ShowDialogAsync(ParentForm, (r) =>
-                        {
-                            if (r == DialogResult.OK)
-                            {
-                                App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
-                                mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
-                                mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
-                                App.UndoRedoManager.EndTransaction();
-                                MarkDirty();
-                            }
-                        });
-                    }
+                        EditDPCMSampleMappingProperties(new Point(e.X, e.Y), mapping);
                 }
             }
             else if (editMode == EditionMode.Channel)
@@ -5857,6 +5860,23 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
+        private void ClearEnvelopeLoopRelease(bool release)
+        {
+            if (editMode == EditionMode.Enveloppe)
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+            else
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
+
+            var env = EditEnvelope;
+
+            if (release)
+                env.Release = -1;
+            else
+                env.Loop = -1;
+
+            App.UndoRedoManager.EndTransaction();
+        }
+
         private bool HandleTouchLongPressEnvelopeHeader(int x, int y)
         {
             if (IsPointInHeader(x, y))
@@ -5868,9 +5888,17 @@ namespace FamiStudio
                 if (editMode == EditionMode.Enveloppe && x < lastPixel)
                 {
                     if (env.CanLoop)
+                    {
                         menu.Add(new ContextMenuOption("MenuEnvLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }));
+                        if (env.Loop >= 0)
+                            menu.Add(new ContextMenuOption("MenuClearEnvLoopPoint", "Clear Loop Point", () => { ClearEnvelopeLoopRelease(false); }));
+                    }
                     if (env.CanRelease)
+                    {
                         menu.Add(new ContextMenuOption("MenuEnvRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
+                        if (env.Release >= 0)
+                            menu.Add(new ContextMenuOption("MenuClearEnvRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
+                    }
                 }
 
                 if (IsSelectionValid())
@@ -5927,9 +5955,12 @@ namespace FamiStudio
 
                 if (mapping != null)
                 {
+                    highlightDPCMSample = noteValue;
+
                     App.ShowContextMenu(new[]
                     {
                         new ContextMenuOption("MenuDelete", "Remove DPCM Sample", () => { ClearDPCMSampleMapping(noteValue); }),
+                        new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleMappingProperties(Point.Empty, mapping); }),
                     });
 
                     return true;
@@ -5951,7 +5982,6 @@ namespace FamiStudio
                 if (HandleTouchDownNoteGizmos(x, y)) goto Handled;
                 if (HandleTouchDownNoteEffectsGizmos(x, y)) goto Handled;
                 if (HandleTouchDownDragNote(x, y)) goto Handled;
-                if (HandleTouchDownPiano(x, y)) goto Handled;
             }
 
             if (editMode == EditionMode.Enveloppe ||
@@ -5971,6 +6001,11 @@ namespace FamiStudio
             if (editMode == EditionMode.DPCMMapping)
             {
                 if (HandleTouchDownDPCMMapping(x, y)) goto Handled;
+            }
+
+            if (pianoVisible)
+            {
+                if (HandleTouchDownPiano(x, y)) goto Handled;
             }
 
             if (HandleTouchDownPan(x, y)) goto Handled;
