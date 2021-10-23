@@ -177,7 +177,7 @@ namespace FamiStudio
         public static int MetronomeVolume = 50;
 
         // Mixer section
-        public static float GlobalVolume = -3.0f; // in dB
+        public static float GlobalVolume = -2.0f; // in dB
 
         public struct ExpansionMix
         {

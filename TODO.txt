@@ -4,6 +4,8 @@
 Icon notes:
 - 46% zoom, start with 128x128 png.
 
+- Add discord screen in desktop tutorial.
+
 Testing
 =======
 - BUG : HH:MM:SSS from itch?

@@ -869,7 +869,7 @@ namespace FamiStudio
         {
             var snapEnabled = App.SnapEnabled;
             text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] : "Off";
-            tint = Theme.LightGreyFillColor1;
+            tint = App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1;
             return snapEnabled ? ButtonImageIndices.SnapOn : ButtonImageIndices.SnapOff;
         }
 

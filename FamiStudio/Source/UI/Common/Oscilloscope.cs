@@ -11,7 +11,7 @@ namespace FamiStudio
 {
     public class Oscilloscope : IOscilloscope
     {
-        private const float SampleScale = 2.0f; 
+        private const float SampleScale = 1.9f; 
         private const int   NumSamples  = 1024;
 
         private Task task;
