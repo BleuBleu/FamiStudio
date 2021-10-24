@@ -1,6 +1,9 @@
 3.2.0
 =====
 
+Beta fixes:
+- Fix env editor rectangle rendering. 
+
 Icon notes:
 - 46% zoom, start with 128x128 png.
 
