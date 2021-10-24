@@ -18,6 +18,18 @@ Packaging:
 - Two songs from mark
 - Add link to discord in doc
 
+New Features in 3.2.0
+=====================
+Changes:
+- Multi-expansion support
+- Proper emulation of triangle/noise/DPCM volume interactions
+- Android app (free on Play Store)
+- Significant graphic optimizations, especially on lower-end machines or large projects.
+- Minor cosmetic UI changes (icons, envelope editor, coloring piano with DPCM colors, etc.)
+Behavior changes:
+- Snapping precision is now expressed in beats. So with the default settings, 1 means a quarter note.
+- Channel volumes have been slightly adjusted to match the NES hardware more closely.
+
 Features missing from the Mobile version
 ========================================
 - No MIDI import/export
