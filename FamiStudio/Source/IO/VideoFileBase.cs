@@ -63,10 +63,8 @@ namespace FamiStudio
                 }
             }
 
-            int lastIdx = -1;
             int oscLen = oscilloscope.GetLength(0);
 
-            // We simplified the rendering.
             Debug.Assert(oscLen == windowSize);
 
             for (int i = 0; i < oscLen; ++i)
@@ -79,8 +77,6 @@ namespace FamiStudio
 
                 oscilloscope[i, 0] = x;
                 oscilloscope[i, 1] = y;
-
-                lastIdx = idx;
             }
         }
 
