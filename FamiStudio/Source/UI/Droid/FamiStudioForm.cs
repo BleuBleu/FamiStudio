@@ -37,8 +37,6 @@ namespace FamiStudio
 
         // For property or multi-property dialogs.
         private bool glThreadIsRunning;
-        private bool glStopRequested;
-        private bool glStartRequested;
         private static bool activityRunning;
         private long lastFrameTime = -1;
         private object renderLock = new object();
@@ -184,13 +182,8 @@ namespace FamiStudio
 
         public void StartLoadFileActivityAsync(string mimeType, Action<string> callback)
         {
-            Console.WriteLine("StartLoadFileActivityAsync");
-
             Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new LoadDialogActivityInfo(callback);
-            StopGLThread();
-
-            Console.WriteLine("GL thread is stopped");
 
             Intent intent = new Intent(Intent.ActionOpenDocument);
             intent.AddCategory(Intent.CategoryOpenable);
@@ -202,7 +195,6 @@ namespace FamiStudio
         {
             Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new SaveDialogActivityInfo(callback);
-            StopGLThread();
 
             Intent intent = new Intent(Intent.ActionCreateDocument);
             intent.AddCategory(Intent.CategoryOpenable);
@@ -216,7 +208,6 @@ namespace FamiStudio
         {
             Debug.Assert(activeDialog == null);
             activeDialog = new PropertyDialogActivityInfo(dlg, callback);
-            StopGLThread();
             StartActivityForResult(new Intent(this, typeof(PropertyDialogActivity)), activeDialog.RequestCode);
         }
 
@@ -224,7 +215,6 @@ namespace FamiStudio
         {
             Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new MultiPropertyDialogActivityInfo(dlg, callback);
-            StopGLThread();
             StartActivityForResult(new Intent(this, typeof(MultiPropertyDialogActivity)), activeDialog.RequestCode);
         }
 
@@ -232,7 +222,6 @@ namespace FamiStudio
         {
             Debug.Assert(activeDialog == null);
             activeDialog = new TutorialDialogActivityInfo(dlg, callback);
-            StopGLThread();
             StartActivityForResult(new Intent(this, typeof(TutorialDialogActivity)), activeDialog.RequestCode);
         }
 
@@ -240,7 +229,6 @@ namespace FamiStudio
         {
             Debug.Assert(activeDialog == null && pendingFinishDialog == null);
             activeDialog = new ShareActivityInfo(callback);
-            StopGLThread();
 
             var uri = FileProvider.GetUriForFile(this, "org.famistudio.fileprovider", new Java.IO.File(filename), filename); 
 
@@ -250,23 +238,29 @@ namespace FamiStudio
             StartActivityForResult(Intent.CreateChooser(shareIntent, "Share File"), activeDialog.RequestCode);
         }
 
-        private void StartGLThread()
+        private void ResumeGLThread()
         {
-            Debug.Assert(!glStartRequested && !glStopRequested);
-            glStartRequested = true;
+            Console.WriteLine("ResumeGLThread");
+
+            if (!glThreadIsRunning)
+            {
+                RefreshLayout();
+                MarkDirty();
+                glSurfaceView.OnResume();
+                glThreadIsRunning = true;
+            }
         }
 
-        private void StopGLThread()
+        private void PauseGLThread()
         {
-            Debug.Assert(!glStartRequested && !glStopRequested);
-            glStopRequested = true;
-        }
+            Console.WriteLine("PauseGLThread");
 
-        private void ConditionalStartGLThread()
-        {
-            // If not more dialog are needed, restart GL thread.
-            if (activeDialog == null)
-                StartGLThread();
+            if (glThreadIsRunning)
+            {
+                glSurfaceView.OnPause();
+                lock (renderLock) { }; // Extra safety.
+                glThreadIsRunning = false;
+            }
         }
 
         // For debugging property pages.
@@ -313,21 +307,17 @@ namespace FamiStudio
 
             dialog.OnResult(this, resultCode, data);
 
-            ConditionalStartGLThread();
             base.OnActivityResult(requestCode, resultCode, data);
         }
 
         public void FinishSaveFileActivityAsync(bool commit, Action callback)
         {
-            Console.WriteLine("FinishSaveFileActivityAsync");
-
             Debug.Assert(pendingFinishDialog != null);
             var saveInfo = pendingFinishDialog as SaveDialogActivityInfo;
             Debug.Assert(saveInfo != null);
             pendingFinishDialog = null;
             saveInfo.Finish(commit, callback);
             Window.ClearFlags(WindowManagerFlags.KeepScreenOn);
-            ConditionalStartGLThread();
         }
 
         public void DoFrame(long frameTimeNanos)
@@ -335,29 +325,7 @@ namespace FamiStudio
             if (lastFrameTime < 0)
                 lastFrameTime = frameTimeNanos;
 
-            if (glStartRequested || glStopRequested)
-            {
-                Debug.Assert(glStartRequested ^ glStopRequested);
-
-                Choreographer.Instance.RemoveFrameCallback(this);
-
-                if (glStartRequested)
-                    glSurfaceView.OnResume();
-                else
-                    glSurfaceView.OnPause();
-
-                lock (renderLock) { }; // Extra safety.
-
-                glThreadIsRunning = glStartRequested;
-
-                if (glThreadIsRunning)
-                    MarkDirty();
-
-                glStartRequested = false;
-                glStopRequested  = false;
-            }
-
-            if (glThreadIsRunning)
+            if (glThreadIsRunning && !IsAsyncDialogInProgress)
             {
                 float deltaTime = (float)((frameTimeNanos - lastFrameTime) / 1000000000.0);
 
@@ -504,11 +472,10 @@ namespace FamiStudio
             // The property dialogs will handle this themselves.
             if (activeDialog == null || activeDialog.ShouldSuspend)
                 famistudio.Suspend();
+            else
+                famistudio.SaveWorkInProgress();
 
-            famistudio.SaveWorkInProgress();
-
-            if (glThreadIsRunning)
-                glSurfaceView.OnPause();
+            PauseGLThread();
 
             base.OnPause();
         }
@@ -522,8 +489,7 @@ namespace FamiStudio
 
             famistudio.Resume();
 
-            if (glThreadIsRunning)
-                glSurfaceView.OnResume();
+            ResumeGLThread();
 
             base.OnResume();
         }
@@ -800,8 +766,6 @@ namespace FamiStudio
         {
             if (code == Result.Ok)
             {
-                Console.WriteLine("LoadDialogActivityInfo.OnResult");
-
                 var filename = (string)null;
 
                 var c = main.ContentResolver.Query(data.Data, null, null, null);
@@ -817,8 +781,6 @@ namespace FamiStudio
                     var tempFile = Path.Combine(Path.GetTempPath(), filename);
                     var buffer = new byte[256 * 1024];
 
-                    Console.WriteLine($"Filename is {filename}, copying to tempFile.");
-
                     using (var streamIn = main.ContentResolver.OpenInputStream(data.Data))
                     {
                         using (var streamOut = File.OpenWrite(tempFile))
@@ -830,22 +792,16 @@ namespace FamiStudio
                                     break;
                                 streamOut.Write(buffer, 0, len);
                             }
-                        }
-                    }
 
-                    Console.WriteLine($"Invoking callback.");
+                            streamOut.Close();
+                        }
+
+                        streamIn.Close();
+                    }
 
                     callback(tempFile);
 
-                    Console.WriteLine($"Callback done.");
-
                     File.Delete(tempFile);
-
-                    Console.WriteLine($"File deleted.");
-                }
-                else
-                {
-                    Console.WriteLine($"Received NULL filename.");
                 }
             }
         }
@@ -898,7 +854,11 @@ namespace FamiStudio
                                     break;
                                 streamOut.Write(buffer, 0, len);
                             }
+
+                            streamOut.Close();
                         }
+
+                        streamIn.Close();
                     }
 
                     File.Delete(lastSaveTempFile);
