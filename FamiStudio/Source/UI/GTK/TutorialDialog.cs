@@ -158,7 +158,7 @@ namespace FamiStudio
             return result;
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<System.Windows.Forms.DialogResult> callback)
         {
             callback(ShowDialog(parent));
         }
