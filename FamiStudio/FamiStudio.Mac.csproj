@@ -526,6 +526,7 @@
     <EmbeddedResource Include="Resources\Tutorial4.jpg" />
     <EmbeddedResource Include="Resources\Tutorial5.jpg" />
     <EmbeddedResource Include="Resources\Tutorial6.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial7.jpg" />
     <EmbeddedResource Include="Resources\Undo%402x.png" />
     <EmbeddedResource Include="Resources\Undo.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />

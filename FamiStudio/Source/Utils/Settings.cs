@@ -14,7 +14,8 @@ namespace FamiStudio
         // Version 0-1 : Any FamiStudio < 3.0.0
         // Version 2   : FamiStudio 3.0.0
         // Version 3   : FamiStudio 3.1.0
-        public const int SettingsVersion = 3;
+        // Version 4   : FamiStudio 3.2.0
+        public const int SettingsVersion = 4;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -343,6 +344,10 @@ namespace FamiStudio
                         FFmpegExecutablePath = "ffmpeg"; // Hope for the best!
                 }
             }
+            
+            // At 3.2.0, we added a new Discord screen to the tutorial.
+            if (Version < 4)
+                ShowTutorial = true;
 
             // No deprecation at the moment.
             Version = SettingsVersion;
