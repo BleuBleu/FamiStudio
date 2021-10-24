@@ -48,7 +48,7 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugSymbols>true</DebugSymbols>
-    <NoWarn>CS0618</NoWarn>
+    <NoWarn>CS0618,CS0162</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
