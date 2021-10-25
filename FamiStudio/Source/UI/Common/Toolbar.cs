@@ -403,6 +403,18 @@ namespace FamiStudio
                 specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
                 specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
                 specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
+                specialCharacters["F1"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F2"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F3"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F4"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F5"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F6"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F7"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F8"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F9"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
+                specialCharacters["F10"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
+                specialCharacters["F11"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
+                specialCharacters["F12"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
                 specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = ScaleForMainWindow(2) };
                 specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = ScaleForMainWindow(2) };
                 specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = ScaleForMainWindow(2) };
