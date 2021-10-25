@@ -34,8 +34,12 @@ namespace FamiStudio
         public XAudio2Stream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             xaudio2 = new XAudio2();
+
             //xaudio2 = new XAudio2(XAudio2Version.Version27); // To simulate Windows 7 behavior.
             //xaudio2.CriticalError += Xaudio2_CriticalError;
+
+            // TODO : We need to decouple the number of emulated buffered frames and the 
+            // size of the low-level audio buffers.
             masteringVoice = new MasteringVoice(xaudio2);
             waveFormat = new WaveFormat(rate, 16, 2);
             audioBuffersRing = new AudioBuffer[numBuffers];
@@ -172,7 +176,7 @@ namespace FamiStudio
 
         public void PlayImmediate(short[] data, int sampleRate, float volume)
         {
-            Debug.Assert(Utils.IsInMainThread());
+            Debug.Assert(PlatformUtils.IsInMainThread());
 
             StopImmediate();
 
@@ -194,7 +198,7 @@ namespace FamiStudio
 
         public void StopImmediate()
         {
-            Debug.Assert(Utils.IsInMainThread());
+            Debug.Assert(PlatformUtils.IsInMainThread());
 
             if (immediateVoice != null)
             {

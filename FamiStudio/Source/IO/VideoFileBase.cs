@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderBitmap   = SharpDX.Direct2D1.Bitmap;
-    using RenderGraphics = FamiStudio.Direct2DOffscreenGraphics;
+using RenderBitmap   = FamiStudio.GLBitmap;
+using RenderGraphics = FamiStudio.GLOffscreenGraphics;
+
+#if FAMISTUDIO_ANDROID
+using VideoEncoder   = FamiStudio.VideoEncoderAndroid;
 #else
-    using RenderBitmap   = FamiStudio.GLBitmap;
-    using RenderGraphics = FamiStudio.GLOffscreenGraphics;
+using VideoEncoder   = FamiStudio.VideoEncoderFFmpeg;
 #endif
 
 namespace FamiStudio
@@ -25,6 +26,8 @@ namespace FamiStudio
 
         protected int videoResX = 1920;
         protected int videoResY = 1080;
+
+        protected VideoEncoder videoEncoder;
 
         // Mostly from : https://github.com/kometbomb/oscilloscoper/blob/master/src/Oscilloscope.cpp
         protected void GenerateOscilloscope(short[] wav, int position, int windowSize, int maxLookback, float scaleY, float minX, float minY, float maxX, float maxY, float[,] oscilloscope)
@@ -60,10 +63,8 @@ namespace FamiStudio
                 }
             }
 
-            int lastIdx = -1;
             int oscLen = oscilloscope.GetLength(0);
 
-            // We simplified the rendering.
             Debug.Assert(oscLen == windowSize);
 
             for (int i = 0; i < oscLen; ++i)
@@ -76,70 +77,18 @@ namespace FamiStudio
 
                 oscilloscope[i, 0] = x;
                 oscilloscope[i, 1] = y;
-
-                lastIdx = idx;
             }
         }
 
-        protected Process LaunchFFmpeg(string ffmpegExecutable, string commandLine, bool redirectStdIn, bool redirectStdOut)
-        {
-            var psi = new ProcessStartInfo(ffmpegExecutable, commandLine);
-
-            psi.UseShellExecute = false;
-            psi.WorkingDirectory = Path.GetDirectoryName(ffmpegExecutable);
-            psi.CreateNoWindow = true;
-            psi.WindowStyle = ProcessWindowStyle.Hidden;
-
-            if (redirectStdIn)
-            {
-                psi.RedirectStandardInput = true;
-            }
-
-            if (redirectStdOut)
-            {
-                psi.RedirectStandardOutput = true;
-            }
-
-            var process = Process.Start(psi);
-            process.PriorityClass = ProcessPriorityClass.BelowNormal;
-            return process;
-        }
-
-        protected bool DetectFFmpeg(string ffmpegExecutable)
-        {
-            try
-            {
-                var process = LaunchFFmpeg(ffmpegExecutable, $"-version", false, true);
-                var output = process.StandardOutput.ReadToEnd();
-
-                var ret = true;
-                if (!output.Contains("--enable-libx264") && 
-                    !output.Contains("--enable-libopenh264"))
-                {
-                    Log.LogMessage(LogSeverity.Error, "ffmpeg does not seem to be compiled with x264 or OpenH264 support. Make sure you have the GPL version if you want x264.");
-                    ret = false;
-                }
-
-                process.WaitForExit();
-                process.Dispose();
-
-                return ret;
-            }
-            catch
-            {
-                Log.LogMessage(LogSeverity.Error, "Error launching ffmpeg. Make sure the path is correct.");
-                return false;
-            }
-        }
-
-        protected bool Initialize(string ffmpegExecutable, int channelMask, int loopCount)
+        protected bool Initialize(int channelMask, int loopCount)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
 
             Log.LogMessage(LogSeverity.Info, "Detecting FFmpeg...");
 
-            if (!DetectFFmpeg(ffmpegExecutable))
+            videoEncoder = VideoEncoder.CreateInstance();
+            if (videoEncoder == null)
                 return false;
 
             return true;
@@ -174,6 +123,13 @@ namespace FamiStudio
             }
         }
 
+        protected void GetFrameRateInfo(Project project, bool half, out int numer, out int denom)
+        {
+            numer = project.PalMode ? 5000773 : 6009883;
+            if (half)
+                numer /= 2;
+            denom = 100000;
+        }
     }
 
     class VideoChannelState
@@ -290,10 +246,4 @@ namespace FamiStudio
             return Array.IndexOf(Names, str);
         }
     }
-
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-    class DummyGLControl : GLControl
-    {
-    };
-#endif
 }

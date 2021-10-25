@@ -114,7 +114,7 @@ namespace FamiStudio
                         if (convertedExp < 0)
                             return null;
 
-                        project.SetExpansionAudio(convertedExp);
+                        project.SetExpansionAudioMask(ExpansionType.GetMaskFromValue(convertedExp));
                     }
                     else if (line.StartsWith("MACHINE"))
                     {
@@ -124,7 +124,7 @@ namespace FamiStudio
                     else if (line.StartsWith("N163CHANNELS"))
                     {
                         var numExpChannels = int.Parse(line.Substring(12).Trim(' ', '"'));
-                        project.SetExpansionAudio(ExpansionType.N163, numExpChannels);
+                        project.SetExpansionAudioMask(ExpansionType.N163Mask, numExpChannels); 
                     }
                     else if (line.StartsWith("MACRO"))
                     {
@@ -247,11 +247,30 @@ namespace FamiStudio
                                 Log.LogMessage(LogSeverity.Warning, $"N163 instrument '{instrument.Name}' has more than 1 waveform ({wavCount}). All others will be ignored.");
                         }
 
+                        var usedEnvelopes = new bool[commonEnvelopes.Length];
+
                         for (int envTypeIdx = 0; envTypeIdx <= EnvelopeType.DutyCycle; envTypeIdx++)
                         {
                             int envIdx = commonEnvelopes[envTypeIdx];
                             if (envIdx >= 0 && instrument.IsEnvelopeActive(envTypeIdx) && envelopes[expansion, envTypeIdx].TryGetValue(envIdx, out var foundEnv) && foundEnv != null)
+                            {
                                 instrument.Envelopes[envTypeIdx] = envelopes[expansion, envTypeIdx][envIdx].ShallowClone();
+                                usedEnvelopes[envTypeIdx] = true;
+                            }
+                        }
+
+                        if (usedEnvelopes[EnvelopeType.Arpeggio] && usedEnvelopes[EnvelopeType.Pitch])
+                        {
+                            var arp = instrument.Envelopes[EnvelopeType.Arpeggio];
+                            if (arp.IsEmpty(EnvelopeType.Arpeggio) && arp.Length > 0 && arp.Loop >= 0)
+                            {
+                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{instrument.Name}' uses a looping null arpeggio envelope and a pitch envelopes. Assuming envelope should be 'Absolute'.");
+                                instrument.Envelopes[EnvelopeType.Pitch].Relative = false;
+                            }
+                            else
+                            {
+                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{instrument.Name}' uses both an arpeggio envelope and a pitch envelope. This instrument will likely require manual corrections due to the vastly different way FamiTracker/FamiStudio handles those.");
+                            }
                         }
 
                         instruments[idx] = instrument;
@@ -468,7 +487,7 @@ namespace FamiStudio
 
                                 var fx = new RowFxData();
 
-                                if (project.ExpansionAudio == ExpansionType.Fds && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
+                                if (project.UsesFdsExpansion && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
                                     fx.fx = (byte)fdsFx;
                                 else
                                     fx.fx = TextToEffectLookup[fxStr[0]];
@@ -661,6 +680,12 @@ namespace FamiStudio
 
         public bool Save(Project originalProject, string filename, int[] songIds)
         {
+            if (originalProject.UsesMultipleExpansionAudios)
+            {
+                Log.LogMessage(LogSeverity.Error, $"Project uses multiple audio expansions. The original FamiTracker did not support this.");
+                return false;
+            }
+
             var project = originalProject.DeepClone();
             project.DeleteAllSongsBut(songIds);
 
@@ -693,21 +718,21 @@ namespace FamiStudio
             lines.Add("# Global settings");
             lines.Add("MACHINE         " + (project.PalMode ? "1" : "0"));
             lines.Add("FRAMERATE       0");
-            lines.Add("EXPANSION       " + (project.ExpansionAudio != ExpansionType.None ? (1 << (project.ExpansionAudio - 1)) : 0));
+            lines.Add("EXPANSION       " + project.ExpansionAudioMask);
             lines.Add("VIBRATO         1");
             lines.Add("SPLIT           32");
             lines.Add("");
 
-            var realNumExpansionChannels = project.ExpansionNumChannels;
+            var realNumExpansionChannels = project.ExpansionNumN163Channels;
 
-            if (project.ExpansionAudio == ExpansionType.N163)
+            if (project.UsesN163Expansion)
             {
                 lines.Add("# Namco 163 global settings");
-                lines.Add($"N163CHANNELS    {project.ExpansionNumChannels}");
+                lines.Add($"N163CHANNELS    {project.ExpansionNumN163Channels}");
                 lines.Add("");
 
                 // The text format always export all 8 channels, even if there are less.
-                project.SetExpansionAudio(ExpansionType.N163, 8);
+                project.SetExpansionAudioMask(project.ExpansionAudioMask, 8);
             }
 
             lines.Add("# Macros");
@@ -721,10 +746,9 @@ namespace FamiStudio
                 }
             }
 
-            if (project.ExpansionAudio == ExpansionType.Vrc6 ||
-                project.ExpansionAudio == ExpansionType.N163)
+            if (project.UsesVrc6Expansion || project.UsesN163Expansion)
             {
-                var suffix = project.ExpansionAudio == ExpansionType.Vrc6 ? "VRC6" : "N163";
+                var suffix = project.UsesVrc6Expansion ? "VRC6" : "N163";
 
                 for (int i = 0; i < EnvelopeType.RegularCount; i++)
                 {
@@ -767,26 +791,33 @@ namespace FamiStudio
                 int pitEnvIdx = pitEnv != null && pitEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, EnvelopeType.Pitch],     instrument.Envelopes[EnvelopeType.Pitch])     : -1;
                 int dutEnvIdx = dutEnv != null && dutEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, EnvelopeType.DutyCycle], instrument.Envelopes[EnvelopeType.DutyCycle]) : -1;
 
-                if (instrument.ExpansionType == ExpansionType.None)
+                if (instrument.IsRegularInstrument)
                 {
                     lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
                 }
-                else if (instrument.ExpansionType == ExpansionType.Vrc6)
+                else if (instrument.IsVrc6Instrument)
                 {
                     lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
                 }
-                else if (instrument.ExpansionType == ExpansionType.Vrc7)
+                else if (instrument.IsVrc7Instrument)
                 {
                     lines.Add($"INSTVRC7{i,4}{instrument.Vrc7Patch,4} {String.Join(" ", instrument.Vrc7PatchRegs.Select(x => $"{x:X2}"))} \"{instrument.Name}\"");
+
+                    if (!instrument.IsEnvelopeEmpty(EnvelopeType.Volume) ||
+                        !instrument.IsEnvelopeEmpty(EnvelopeType.Pitch)  ||
+                        !instrument.IsEnvelopeEmpty(EnvelopeType.Arpeggio))
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"VRC7 Instrument '{instrument.Name}' uses a volume, pitch or arpeggio envelope. FamiTracker does not support this. Ignoring.");
+                    }
                 }
-                else if (instrument.ExpansionType == ExpansionType.N163)
+                else if (instrument.IsN163Instrument)
                 {
                     lines.Add($"INSTN163{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4}{instrument.N163WaveSize,4}{instrument.N163WavePos,4}{1,4} \"{instrument.Name}\"");
 
                     var wavEnv = instrument.Envelopes[EnvelopeType.N163Waveform];
                     lines.Add($"N163WAVE{i,4}{0,6} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");
                 }
-                else if (instrument.ExpansionType == ExpansionType.Fds)
+                else if (instrument.IsFdsInstrument)
                 {
                     lines.Add($"INSTFDS{i,5}{1,6}{instrument.FdsModSpeed,4}{instrument.FdsModDepth,4}{instrument.FdsModDelay,4} \"{instrument.Name}\"");
 
@@ -904,7 +935,7 @@ namespace FamiStudio
 
                                 // FamiTracker only has 12-pitches and doesnt change the octave when doing 
                                 // slides. This helps make the slides more compatible, but its not great.
-                                if (channel.IsVrc7FmChannel)
+                                if (channel.IsVrc7Channel)
                                 {
                                     while (noteValue >= 12 && slideTarget >= 12)
                                     {
@@ -918,7 +949,7 @@ namespace FamiStudio
                                 tempNote.SlideNoteTarget = slideTarget;
                                 channel.ComputeSlideNoteParams(tempNote, location, famitrackerSpeed, noteTable, false, false, out _, out _, out var stepSizeFloat);
 
-                                if (channel.IsN163WaveChannel)
+                                if (channel.IsN163Channel)
                                 {
                                     stepSizeFloat /= 4.0f;
                                 }
@@ -982,7 +1013,7 @@ namespace FamiStudio
                                     else
                                     {
                                         // Inverted channels.
-                                        if (channel.IsFdsWaveChannel || channel.IsN163WaveChannel)
+                                        if (channel.IsFdsChannel || channel.IsN163Channel)
                                             stepSizeFloat = -stepSizeFloat;
 
                                         var absFloorStepSize = Math.Abs(Utils.SignedCeil(stepSizeFloat));

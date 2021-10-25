@@ -17,18 +17,26 @@ namespace FamiStudio
         public int Type => type;
         public string Name => ChannelType.Names[type];
         public string ShortName => ChannelType.ShortNames[(int)type];
-        public string NameWithExpansion => IsExpansionChannel ? $"{Name} ({ExpansionType.ShortNames[song.Project.ExpansionAudio]})" : Name;
+        public string NameWithExpansion => ChannelType.GetNameWithExpansion(type);
         public Song Song => song;
         public Pattern[] PatternInstances => patternInstances;
         public List<Pattern> Patterns => patterns;
         public bool IsExpansionChannel => type >= ChannelType.ExpansionAudioStart;
+        public int Expansion => ChannelType.GetExpansionTypeForChannelType(type);
+        public int ExpansionChannelIndex => ChannelType.GetExpansionChannelIndexForChannelType(type);
+        public int Index => ChannelTypeToIndex(type, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels);
 
-        public bool IsFdsWaveChannel => type == ChannelType.FdsWave;
-        public bool IsN163WaveChannel => type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8;
-        public bool IsVrc7FmChannel => type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6;
+        public bool IsRegularChannel => Expansion == ExpansionType.None;
+        public bool IsFdsChannel     => Expansion == ExpansionType.Fds;
+        public bool IsN163Channel    => Expansion == ExpansionType.N163;
+        public bool IsVrc6Channel    => Expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Channel    => Expansion == ExpansionType.Vrc7;
+        public bool IsMmc5Channel    => Expansion == ExpansionType.Mmc5;
+        public bool IsS5BChannel     => Expansion == ExpansionType.S5B;
+        public bool IsNoiseChannel   => type == ChannelType.Noise;
+        public bool IsEPSMChannel     => Expansion == ExpansionType.EPSM;
         public bool IsEPSMFmChannel => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
         public bool IsEPSMRythmChannel => type >= ChannelType.EPSMrythm1 && type <= ChannelType.EPSMrythm6;
-        public bool IsNoiseChannel => type == ChannelType.Noise;
 
         public Channel(Song song, int type, int songLength)
         {
@@ -60,139 +68,46 @@ namespace FamiStudio
                 return type == ChannelType.Dpcm;
 
             if (type == ChannelType.Dpcm)
+                return instrument == null;
+
+            if (instrument.Expansion == ExpansionType.None && (IsRegularChannel || IsMmc5Channel))
                 return true;
 
-            if (instrument.ExpansionType == ExpansionType.None && type < ChannelType.ExpansionAudioStart)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.Vrc6 && type >= ChannelType.Vrc6Square1 && type <= ChannelType.Vrc6Saw)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.Vrc7 && type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.Fds && type == ChannelType.FdsWave)
-                return true;
-
-            if (type >= ChannelType.Mmc5Square1 && type <= ChannelType.Mmc5Square2)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.N163 && type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.S5B && type >= ChannelType.S5BSquare1 && type <= ChannelType.S5BSquare3)
-                return true;
-
-            if (instrument.ExpansionType == ExpansionType.EPSM && type >= ChannelType.EPSMSquare1 && type <= ChannelType.EPSMrythm6)
-                return true;
-
-            return false;
+            return instrument.Expansion == Expansion;
         }
 
-        public static int[] GetChannelsForExpansion(int expansion)
+        public static int[] GetChannelsForExpansionMask(int expansionMask, int numN163Channels = 1)
         {
-            var channels = new List<int>(); ;
+            var channels = new List<int>();
 
-            channels.Add(ChannelType.Square1);
-            channels.Add(ChannelType.Square2);
-            channels.Add(ChannelType.Triangle);
-            channels.Add(ChannelType.Noise);
-            channels.Add(ChannelType.Dpcm);
-
-            switch (expansion)
+            for (int i = 0; i < ChannelType.Count; i++)
             {
-                case ExpansionType.Vrc6:
-                    channels.Add(ChannelType.Vrc6Square1);
-                    channels.Add(ChannelType.Vrc6Square2);
-                    channels.Add(ChannelType.Vrc6Saw);
-                    break;
-                case ExpansionType.Vrc7:
-                    channels.Add(ChannelType.Vrc7Fm1);
-                    channels.Add(ChannelType.Vrc7Fm2);
-                    channels.Add(ChannelType.Vrc7Fm3);
-                    channels.Add(ChannelType.Vrc7Fm4);
-                    channels.Add(ChannelType.Vrc7Fm5);
-                    channels.Add(ChannelType.Vrc7Fm6);
-                    break;
-                case ExpansionType.Fds:
-                    channels.Add(ChannelType.FdsWave);
-                    break;
-                case ExpansionType.Mmc5:
-                    channels.Add(ChannelType.Mmc5Square1);
-                    channels.Add(ChannelType.Mmc5Square2);
-                    break;
-                case ExpansionType.N163:
-                    channels.Add(ChannelType.N163Wave1);
-                    channels.Add(ChannelType.N163Wave2);
-                    channels.Add(ChannelType.N163Wave3);
-                    channels.Add(ChannelType.N163Wave4);
-                    channels.Add(ChannelType.N163Wave5);
-                    channels.Add(ChannelType.N163Wave6);
-                    channels.Add(ChannelType.N163Wave7);
-                    channels.Add(ChannelType.N163Wave8);
-                    break;
-                case ExpansionType.S5B:
-                    channels.Add(ChannelType.S5BSquare1);
-                    channels.Add(ChannelType.S5BSquare2);
-                    channels.Add(ChannelType.S5BSquare3);
-                    break;
-                case ExpansionType.EPSM:
-                    channels.Add(ChannelType.EPSMSquare1);
-                    channels.Add(ChannelType.EPSMSquare2);
-                    channels.Add(ChannelType.EPSMSquare3);
-                    channels.Add(ChannelType.EPSMFm1);
-                    channels.Add(ChannelType.EPSMFm2);
-                    channels.Add(ChannelType.EPSMFm3);
-                    channels.Add(ChannelType.EPSMFm4);
-                    channels.Add(ChannelType.EPSMFm5);
-                    channels.Add(ChannelType.EPSMFm6);
-                    channels.Add(ChannelType.EPSMrythm1);
-                    channels.Add(ChannelType.EPSMrythm2);
-                    channels.Add(ChannelType.EPSMrythm3);
-                    channels.Add(ChannelType.EPSMrythm4);
-                    channels.Add(ChannelType.EPSMrythm5);
-                    channels.Add(ChannelType.EPSMrythm6);
-                    break;
+                if (Project.IsChannelActive(i, expansionMask, numN163Channels))
+                    channels.Add(i);
             }
 
             return channels.ToArray();
         }
 
-        public static int GetChannelCountForExpansion(int expansion)
+        public static int GetChannelCountForExpansionMask(int expansionMask, int numN163Channels = 1)
         {
             var count = 5;
 
-            switch (expansion)
-            {
-                case ExpansionType.Vrc6:
-                    count += 3;
-                    break;
-                case ExpansionType.Vrc7:
-                    count += 6;
-                    break;
-                case ExpansionType.Fds:
-                    count += 1;
-                    break;
-                case ExpansionType.Mmc5:
-                    count += 2;
-                    break;
-                case ExpansionType.N163:
-                    count += 8;
-                    break;
-                case ExpansionType.S5B:
-                    count += 3;
-                    break;
-                case ExpansionType.EPSM:
-                    count += 15;
-                    break;
-            }
+            if ((expansionMask & ExpansionType.Vrc6Mask) != 0) count += 3;
+            if ((expansionMask & ExpansionType.Vrc7Mask) != 0) count += 6;
+            if ((expansionMask & ExpansionType.FdsMask)  != 0) count += 1;
+            if ((expansionMask & ExpansionType.Mmc5Mask) != 0) count += 2;
+            if ((expansionMask & ExpansionType.N163Mask) != 0) count += numN163Channels;
+            if ((expansionMask & ExpansionType.S5BMask)  != 0) count += 3;
+            if ((expansionMask & ExpansionType.EPSMMask) != 0) count += 15;
 
             return count;
         }
 
-        public bool SupportsReleaseNotes => type != ChannelType.Dpcm;
-        public bool SupportsSlideNotes => type != ChannelType.Dpcm;
-        public bool SupportsArpeggios => type != ChannelType.Dpcm;
+        public bool SupportsReleaseNotes  => type != ChannelType.Dpcm;
+        public bool SupportsSlideNotes    => type != ChannelType.Dpcm;
+        public bool SupportsArpeggios     => type != ChannelType.Dpcm;
+        public bool SupportsNoAttackNotes => type != ChannelType.Dpcm;
 
         public bool SupportsEffect(int effect)
         {
@@ -356,7 +271,7 @@ namespace FamiStudio
         {
             foreach (var pat in patterns)
             {
-                pat.Color = ThemeBase.RandomCustomColor();
+                pat.Color = Theme.RandomCustomColor();
             }
         }
 
@@ -566,7 +481,7 @@ namespace FamiStudio
             var slideShift = 0;
 
             if (applyShifts)
-                GetShiftsForType(type, song.Project.ExpansionNumChannels, out _, out slideShift);
+                GetShiftsForType(type, song.Project.ExpansionNumN163Channels, out _, out slideShift);
 
             // Noise is special, no periods.
             if (type == ChannelType.Noise)
@@ -762,7 +677,7 @@ namespace FamiStudio
 
         public void InvalidateCumulativePatternCache(int startPatternIdx, int endPatternIdx)
         {
-            for (int idx = startPatternIdx; idx <= endPatternIdx && maxValidCacheIndex != -1; idx++)
+            for (int idx = startPatternIdx; idx <= endPatternIdx && idx < Song.MaxLength && maxValidCacheIndex != -1; idx++)
             {
                 var pattern = patternInstances[idx];
                 if (pattern != null)
@@ -861,37 +776,40 @@ namespace FamiStudio
             var startLocation = location;
 
             song.AdvanceNumberOfNotes(ref location, 1);
-            var pattern = patternInstances[location.PatternIndex];
-
-            // Look in current pattern.
-            if (pattern != null)
+            if (location.PatternIndex < patternInstances.Length)
             {
-                var idx = pattern.BinarySearchList(pattern.Notes.Keys, location.NoteIndex, true);
+                var pattern = patternInstances[location.PatternIndex];
 
-                if (idx >= 0)
+                // Look in current pattern.
+                if (pattern != null)
                 {
-                    for (; idx < pattern.Notes.Values.Count; idx++)
+                    var idx = pattern.BinarySearchList(pattern.Notes.Keys, location.NoteIndex, true);
+
+                    if (idx >= 0)
                     {
-                        var note = pattern.Notes.Values[idx];
-                        if (note.MatchesFilter(filter))
+                        for (; idx < pattern.Notes.Values.Count; idx++)
                         {
-                            location.NoteIndex = pattern.Notes.Keys[idx];
-                            return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
+                            var note = pattern.Notes.Values[idx];
+                            if (note.MatchesFilter(filter))
+                            {
+                                location.NoteIndex = pattern.Notes.Keys[idx];
+                                return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
+                            }
                         }
                     }
                 }
-            }
 
-            // Then look in the following patterns using the cache.
-            for (var p = location.PatternIndex + 1; p < song.Length; p++)
-            {
-                var firstNoteIdx = GetCachedFirstNoteIndex(p);
-                if (firstNoteIdx >= 0)
+                // Then look in the following patterns using the cache.
+                for (var p = location.PatternIndex + 1; p < song.Length; p++)
                 {
-                    var note = patternInstances[p].Notes[firstNoteIdx];
-                    location.PatternIndex = p;
-                    location.NoteIndex = firstNoteIdx;
-                    return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
+                    var firstNoteIdx = GetCachedFirstNoteIndex(p);
+                    if (firstNoteIdx >= 0)
+                    {
+                        var note = patternInstances[p].Notes[firstNoteIdx];
+                        location.PatternIndex = p;
+                        location.NoteIndex = firstNoteIdx;
+                        return Song.CountNotesBetween(startLocation, location) + (endAfterCutDelay && note.HasCutDelay ? 1 : 0);
+                    }
                 }
             }
 
@@ -1066,29 +984,31 @@ namespace FamiStudio
 
             InvalidateCumulativePatternCache();
         }
-
-        public static int ChannelTypeToIndex(int type)
+        
+        public unsafe static int ChannelTypeToIndex(int type, int activeExpansions, int numN163Channels)
         {
             if (type < ChannelType.ExpansionAudioStart)
                 return type;
-            if (type >= ChannelType.Vrc6Square1 && type <= ChannelType.Vrc6Saw)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.Vrc6Square1;
-            if (type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.Vrc7Fm1;
-            if (type == ChannelType.FdsWave)
-                return ChannelType.ExpansionAudioStart;
-            if (type >= ChannelType.Mmc5Square1 && type <= ChannelType.Mmc5Square2)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.Mmc5Square1;
-            if (type == ChannelType.Mmc5Dpcm)
-                return -1;
-            if (type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.N163Wave1;
-            if (type >= ChannelType.S5BSquare1 && type <= ChannelType.S5BSquare3)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.S5BSquare1;
-            if (type >= ChannelType.EPSMSquare1 && type <= ChannelType.EPSMrythm6)
-                return ChannelType.ExpansionAudioStart + type - ChannelType.EPSMSquare1;
-            Debug.Assert(false);
-            return -1;
+
+            var exp = ChannelType.GetExpansionTypeForChannelType(type);
+            var idx = 5 + ChannelType.GetExpansionChannelIndexForChannelType(type);
+
+            if (exp == ExpansionType.Vrc6) return idx;
+            if ((activeExpansions & ExpansionType.Vrc6Mask) != 0) idx += 3;
+            if (exp == ExpansionType.Vrc7) return idx;
+            if ((activeExpansions & ExpansionType.Vrc7Mask) != 0) idx += 6;
+            if (exp == ExpansionType.Fds)  return idx; 
+            if ((activeExpansions & ExpansionType.FdsMask)  != 0) idx += 1;
+            if (exp == ExpansionType.Mmc5) return idx;
+            if ((activeExpansions & ExpansionType.Mmc5Mask) != 0) idx += 2; // (We never use the DPCM)
+            if (exp == ExpansionType.N163) return idx;
+            if ((activeExpansions & ExpansionType.N163Mask) != 0) idx += numN163Channels;
+            if (exp == ExpansionType.S5B) return idx;
+            if ((activeExpansions & ExpansionType.S5BMask) != 0) idx += 3;
+
+            Debug.Assert((activeExpansions & ExpansionType.EPSMMask) != 0);
+
+            return idx; 
         }
 
 #if DEBUG
@@ -1708,51 +1628,165 @@ namespace FamiStudio
         // TODO: This is really UI specific, move somewhere else...
         public static readonly string[] Icons =
         {
-            "Square",
-            "Square",
-            "Triangle",
-            "Noise",
-            "DPCM",
-            "Square",
-            "Square",
-            "Saw",
-            "FM",
-            "FM",
-            "FM",
-            "FM",
-            "FM",
-            "FM",
-            "WaveTable",
-            "Square",
-            "Square",
-            "DPCM",
-            "WaveTable",
-            "WaveTable",
-            "WaveTable",
-            "WaveTable",
-            "WaveTable",
-            "WaveTable",
-            "WaveTable",
-            "WaveTable",
-            "Square",
-            "Square",
-            "Square",
-            "Square",
-            "Square",
-            "Square",
-            "FM",
-            "FM",
-            "FM",
-            "FM",
-            "FM",
-            "FM",
-            "Rythm",
-            "Rythm",
-            "Rythm",
-            "Rythm",
-            "Rythm",
-            "Rythm",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelTriangle",
+            "ChannelNoise",
+            "ChannelDPCM",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelSaw",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelWaveTable",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelDPCM",
+            "ChannelWaveTable",
+            "ChannelWaveTable",
+            "ChannelWaveTable",
+            "ChannelWaveTable",
+            "ChannelWaveTable",
+            "ChannelWaveTable",
+            "ChannelWaveTable",
+            "ChannelWaveTable",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelRythm",
+            "ChannelRythm",
+            "ChannelRythm",
+            "ChannelRythm",
+            "ChannelRythm",
+            "ChannelRythm",
         };
+
+        public static readonly int[] ExpansionTypes =
+        {
+            ExpansionType.None,
+            ExpansionType.None,
+            ExpansionType.None,
+            ExpansionType.None,
+            ExpansionType.None,
+            ExpansionType.Vrc6,
+            ExpansionType.Vrc6,
+            ExpansionType.Vrc6,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Vrc7,
+            ExpansionType.Fds,
+            ExpansionType.Mmc5,
+            ExpansionType.Mmc5,
+            ExpansionType.Mmc5,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.N163,
+            ExpansionType.S5B,
+            ExpansionType.S5B,
+            ExpansionType.S5B,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+        };
+
+        public static readonly int[] ExpansionChannelIndex =
+        {
+            0, // 2A03
+            1, // 2A03
+            2, // 2A03
+            3, // 2A03
+            4, // 2A03
+            0, // VRC6
+            1, // VRC6
+            2, // VRC6
+            0, // VRC7
+            1, // VRC7
+            2, // VRC7
+            3, // VRC7
+            4, // VRC7
+            5, // VRC7
+            0, // FDS
+            0, // MMC5
+            1, // MMC5
+            2, // MMC5
+            0, // N163
+            1, // N163
+            2, // N163
+            3, // N163
+            4, // N163
+            5, // N163
+            6, // N163
+            7, // N163
+            0, // S5B
+            1, // S5B
+            2, // S5B
+            0, // EPSM
+            1, // EPSM
+            2, // EPSM
+            3, // EPSM
+            4, // EPSM
+            5, // EPSM
+            6, // EPSM
+            7, // EPSM
+            8, // EPSM
+            9, // EPSM
+            10, // EPSM
+            11, // EPSM
+            12, // EPSM
+            13, // EPSM
+            14 // EPSM
+        };
+
+        public static string GetNameWithExpansion(int type)
+        {
+            var str = Names[type];
+            if (ExpansionTypes[type] != ExpansionType.None)
+                str += $" ({ExpansionType.ShortNames[ExpansionTypes[type]]})" ;
+            return str;
+        }
+
+        public static int GetExpansionTypeForChannelType(int type)
+        {
+            return ExpansionTypes[type];
+        }
+
+        public static int GetExpansionChannelIndexForChannelType(int type)
+        {
+            return ExpansionChannelIndex[type];
+        }
 
         public static int GetValueForName(string str)
         {

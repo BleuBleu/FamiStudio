@@ -28,7 +28,7 @@ namespace FamiStudio
         {
             this.id = id;
             this.name = name;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
 
             // Make a major chord by default.
             this.envelope.Values[0] = 0;

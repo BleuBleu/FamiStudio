@@ -5,6 +5,7 @@
 ..\bin\Release\FamiStudio.exe TestS5B.fms nsf-export TestS5B.nsf
 ..\bin\Release\FamiStudio.exe TestVRC6.fms nsf-export TestVRC6.nsf
 ..\bin\Release\FamiStudio.exe TestVRC7.fms nsf-export TestVRC7.nsf
+..\bin\Release\FamiStudio.exe TestMulti.fms nsf-export TestMulti.nsf
 ..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.fms nsf-export TestFamiTrackerTempo.nsf
 
 ..\bin\Release\FamiStudio.exe TestBase.nsf famistudio-txt-export TestBase_NsfTest.txt
@@ -14,6 +15,7 @@
 ..\bin\Release\FamiStudio.exe TestS5B.nsf famistudio-txt-export TestS5B_NsfTest.txt
 ..\bin\Release\FamiStudio.exe TestVRC6.nsf famistudio-txt-export TestVRC6_NsfTest.txt
 ..\bin\Release\FamiStudio.exe TestVRC7.nsf famistudio-txt-export TestVRC7_NsfTest.txt
+..\bin\Release\FamiStudio.exe TestMulti.nsf famistudio-txt-export TestMulti_NsfTest.txt -nsf-import-duration:250
 ..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.nsf famistudio-txt-export TestFamiTrackerTempo_NsfTest.txt
 
 fc TestBase_NsfTest.txt TestBase_NsfRef.txt > nul
@@ -29,6 +31,8 @@ fc TestS5B_NsfTest.txt TestS5B_NsfRef.txt > nul
 fc TestVRC6_NsfTest.txt TestVRC6_NsfRef.txt > nul
 @if errorlevel 1 goto error
 fc TestVRC7_NsfTest.txt TestVRC7_NsfRef.txt > nul
+@if errorlevel 1 goto error
+fc TestMulti_NsfTest.txt TestMulti_NsfRef.txt > nul
 @if errorlevel 1 goto error
 fc TestFamiTrackerTempo_NsfTest.txt TestFamiTrackerTempo_NsfRef.txt > nul
 @if errorlevel 1 goto error

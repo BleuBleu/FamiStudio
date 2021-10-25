@@ -1,79 +1,57 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using System;
+using System.Collections.Generic;
 
-#if FAMISTUDIO_WINDOWS
-    using RenderTheme = FamiStudio.Direct2DTheme;
-#else
-    using RenderTheme = FamiStudio.GLTheme;
-#endif
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace FamiStudio
 {
     class DeleteSpecialDialog
     {
         private PropertyDialog dialog;
-        private bool inPropertyChanged = false;
-        private Dictionary<int, int> propToEffect = new Dictionary<int, int>();
+        private List<int> checkToEffect = new List<int>();
 
         public unsafe DeleteSpecialDialog(Channel channel, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            dialog = new PropertyDialog(200);
-            dialog.Properties.AddLabelCheckBox("Delete Notes", notes);
-            dialog.Properties.AddLabelCheckBox("Delete Effects", effectsMask == Note.EffectAllMask);
+            dialog = new PropertyDialog("Delete Special", 260);
+            dialog.Properties.AddLabelCheckBox("Delete Notes", notes, 0, "When enabled, will delete the musical notes."); // 0
+            dialog.Properties.AddLabel(null, "Effects to paste:"); // 1
+
+            var effectList  = new List<string>();
+            var checkedList = new List<bool>();
 
             for (int i = 0; i < Note.EffectCount; i++)
             {
                 if (channel.ShouldDisplayEffect(i))
                 {
-                    propToEffect[dialog.Properties.PropertyCount] = i;
-                    dialog.Properties.AddLabelCheckBox(Note.EffectNames[i], (effectsMask & (1 << i)) != 0, (int)(24 * RenderTheme.DialogScaling));
+                    checkToEffect.Add(i);
+                    effectList.Add(Note.EffectNames[i]);
+                    checkedList.Add((effectsMask & (1 << i)) != 0);
                 }
             }
 
+
+            dialog.Properties.AddCheckBoxList(PlatformUtils.IsMobile ? "Effects to delete" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete."); // 2
+            dialog.Properties.AddButton(PlatformUtils.IsMobile ? "Select All Effects" : null, "Select All"); // 3
+            dialog.Properties.AddButton(PlatformUtils.IsMobile ? "De-select All Effects" : null, "Select None"); // 4
+            dialog.Properties.SetPropertyVisible(1, PlatformUtils.IsDesktop);
             dialog.Properties.Build();
-            dialog.Properties.PropertyChanged += Properties_PropertyChanged;
-            dialog.Name = "DeleteSpecialDialog";
+            dialog.Properties.PropertyClicked += Properties_PropertyClicked;
         }
 
-        private void Properties_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        private void Properties_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
-            if (inPropertyChanged)
-                return;
-
-            inPropertyChanged = true; // Prevent recursion.
-
-            if (propIdx == 1)
+            if (click == ClickType.Button && (propIdx == 3 || propIdx == 4))
             {
-                bool allEffects = (bool)value;
-
-                foreach (var kv in propToEffect)
-                {
-                    props.SetPropertyValue(kv.Key, allEffects);
-                }
+                var keys = new bool[checkToEffect.Count];
+                for (int i = 0; i < keys.Length; i++)
+                    keys[i] = propIdx == 3;
+                props.UpdateCheckBoxList(2, keys);
             }
-            else if (propToEffect.ContainsKey(propIdx))
-            {
-                bool allEffects = true;
-
-                foreach (var kv in propToEffect)
-                {
-                    if (!props.GetPropertyValue<bool>(kv.Key))
-                    {
-                        allEffects = false;
-                        break;
-                    }
-                }
-
-                props.SetPropertyValue(1, allEffects);
-            }
-
-            inPropertyChanged = false;
         }
 
-        public DialogResult ShowDialog(FamiStudioForm parent)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
         {
-            return dialog.ShowDialog(parent);
+            dialog.ShowDialogAsync(parent, callback);
         }
 
         public bool DeleteNotes => dialog.Properties.GetPropertyValue<bool>(0);
@@ -82,14 +60,12 @@ namespace FamiStudio
             get
             {
                 int mask = 0;
+                var checks = dialog.Properties.GetPropertyValue<bool[]>(2);
 
-                foreach (var kv in propToEffect)
+                for (int i = 0; i < checkToEffect.Count; i++)
                 {
-                    if (dialog.Properties.GetPropertyValue<bool>(kv.Key))
-                    {
-                        int effect = kv.Value;
-                        mask |= (1 << effect);
-                    }
+                    if (checks[i])
+                        mask |= (1 << checkToEffect[i]);
                 }
 
                 return mask;

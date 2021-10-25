@@ -10,7 +10,7 @@ namespace FamiStudio
     {
         private int id;
         private string name;
-        private int expansion = global::FamiStudio.ExpansionType.None;
+        private int expansion = ExpansionType.None;
         private Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         private Color color;
 
@@ -40,14 +40,23 @@ namespace FamiStudio
 
         public int Id => id;
         public string Name { get => name; set => name = value; }
+        public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.ShortNames[expansion]})");
         public Color Color { get => color; set => color = value; }
-        public int ExpansionType { get => expansion; set => expansion = value; }
-        public bool IsExpansionInstrument => expansion != global::FamiStudio.ExpansionType.None;
+        public int Expansion { get => expansion; set => expansion = value; }
+        public bool IsExpansionInstrument => expansion != ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
         public byte[] EpsmPatchRegs => epsmPatchRegs;
+
+        public bool IsRegularInstrument => expansion == ExpansionType.None;
+        public bool IsFdsInstrument     => expansion == ExpansionType.Fds;
+        public bool IsVrc6Instrument    => expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Instrument    => expansion == ExpansionType.Vrc7;
+        public bool IsN163Instrument    => expansion == ExpansionType.N163;
+        public bool IsS5BInstrument     => expansion == ExpansionType.S5B;
+        public bool IsEPSMInstrument    => expansion == ExpansionType.EPSM;
 
         public Instrument()
         {
@@ -58,23 +67,23 @@ namespace FamiStudio
             this.id = id;
             this.expansion = expansion;
             this.name = name;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
                 if (IsEnvelopeActive(i))
                     envelopes[i] = new Envelope(i);
             }
 
-            if (expansion == global::FamiStudio.ExpansionType.Fds)
+            if (expansion == ExpansionType.Fds)
             {
                 UpdateFdsWaveEnvelope();
                 UpdateFdsModulationEnvelope();
             }
-            else if (expansion == global::FamiStudio.ExpansionType.N163)
+            else if (expansion == ExpansionType.N163)
             {
                 UpdateN163WaveEnvelope();
             }
-            else if (expansion == global::FamiStudio.ExpansionType.Vrc7)
+            else if (expansion == ExpansionType.Vrc7)
             {
                 vrc7Patch = Vrc7InstrumentPatch.Bell;
                 Array.Copy(Vrc7InstrumentPatch.Infos[Vrc7InstrumentPatch.Bell].data, vrc7PatchRegs, 8);
@@ -96,21 +105,26 @@ namespace FamiStudio
             }
             else if (envelopeType == EnvelopeType.DutyCycle)
             {
-                return expansion == global::FamiStudio.ExpansionType.None ||
-                       expansion == global::FamiStudio.ExpansionType.Vrc6 ||
-                       expansion == global::FamiStudio.ExpansionType.Mmc5;
+                return expansion == ExpansionType.None ||
+                       expansion == ExpansionType.Vrc6 ||
+                       expansion == ExpansionType.Mmc5;
             }
             else if (envelopeType == EnvelopeType.FdsWaveform ||
                      envelopeType == EnvelopeType.FdsModulation)
             {
-                return expansion == global::FamiStudio.ExpansionType.Fds;
+                return expansion == ExpansionType.Fds;
             }
             else if (envelopeType == EnvelopeType.N163Waveform)
             {
-                return expansion == global::FamiStudio.ExpansionType.N163;
+                return expansion == ExpansionType.N163;
             }
 
             return false;
+        }
+
+        public bool IsEnvelopeEmpty(int envelopeType)
+        {
+            return envelopes[envelopeType].IsEmpty(envelopeType);
         }
 
         public byte FdsWavePreset
@@ -249,6 +263,9 @@ namespace FamiStudio
                 bool envelopeExists = envelopes[i] != null;
                 bool envelopeShouldExists = IsEnvelopeActive(i);
                 Debug.Assert(envelopeExists == envelopeShouldExists);
+
+                if (envelopeExists)
+                    Debug.Assert(envelopes[i].ValuesInValidRange(this, i));
             }
 #endif
         }
@@ -279,7 +296,7 @@ namespace FamiStudio
                 {
                     switch (expansion)
                     {
-                        case global::FamiStudio.ExpansionType.Fds:
+                        case ExpansionType.Fds:
                             buffer.Serialize(ref fdsMasterVolume);
                             buffer.Serialize(ref fdsWavPreset);
                             buffer.Serialize(ref fdsModPreset);
@@ -287,13 +304,13 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsModDepth); 
                             buffer.Serialize(ref fdsModDelay);
                             break;
-                        case global::FamiStudio.ExpansionType.N163:
+                        case ExpansionType.N163:
                             buffer.Serialize(ref n163WavePreset);
                             buffer.Serialize(ref n163WaveSize);
                             buffer.Serialize(ref n163WavePos);
                             break;
 
-                        case global::FamiStudio.ExpansionType.Vrc7:
+                        case ExpansionType.Vrc7:
                             buffer.Serialize(ref vrc7Patch);
                             buffer.Serialize(ref vrc7PatchRegs[0]);
                             buffer.Serialize(ref vrc7PatchRegs[1]);
@@ -383,6 +400,16 @@ namespace FamiStudio
                     envelopes[EnvelopeType.DutyCycle].Length = 1;
                     envelopes[EnvelopeType.DutyCycle].Values[0] = (sbyte)dutyCycle;
                 }
+            }
+
+            // At FamiStudio 3.2.0, we realized that we had some FDS envelopes (likely imported from NSF)
+            // with bad values. Also, some pitches as well.
+            if (buffer.Version < 12)
+            {
+                if (IsFdsInstrument)
+                    envelopes[EnvelopeType.FdsWaveform].ClampToValidRange(this, EnvelopeType.FdsWaveform);
+                if (IsVrc6Instrument)
+                    envelopes[EnvelopeType.Pitch].ClampToValidRange(this, EnvelopeType.Pitch);
             }
         }
     }

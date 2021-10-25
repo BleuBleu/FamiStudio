@@ -123,6 +123,8 @@ if "%rnd%"=="1" (
 	echo FAMISTUDIO_USE_DUTYCYCLE_EFFECT=1 >> test_defs.inc
 )
 
+type test_defs.inc
+
 :: Compile everything.
 ..\..\Tools\ca65 test_ca65.s -g -o test_ca65.o
 ..\..\Tools\ld65 -C test_ca65.cfg -o test_ca65.nes test_ca65.o --mapfile test_ca65.map --dbgfile test_ca65.dbg

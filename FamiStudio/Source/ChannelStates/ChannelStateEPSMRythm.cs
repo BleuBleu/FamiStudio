@@ -16,7 +16,7 @@ namespace FamiStudio
         }
         protected override void LoadInstrument(Instrument instrument)
         {
-            Debug.Assert(instrument.ExpansionType == ExpansionType.EPSM);
+            Debug.Assert(instrument.IsEPSMInstrument);
             opStereo[channelIdx] = instrument.EpsmPatchRegs[1] & 0xC0;
         }
 

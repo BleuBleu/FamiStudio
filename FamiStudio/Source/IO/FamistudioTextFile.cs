@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Globalization;
 
 namespace FamiStudio
@@ -35,14 +32,29 @@ namespace FamiStudio
 
             var lines = new List<string>();
 
-            var versionString = Application.ProductVersion.Substring(0, Application.ProductVersion.LastIndexOf('.'));
+            var versionString = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
             var projectLine = $"Project{GenerateAttribute("Version", versionString)}{GenerateAttribute("TempoMode", TempoType.Names[project.TempoMode])}";
 
             if (project.Name      != "")    projectLine += GenerateAttribute("Name", project.Name);
             if (project.Author    != "")    projectLine += GenerateAttribute("Author", project.Author);
             if (project.Copyright != "")    projectLine += GenerateAttribute("Copyright", project.Copyright);
-            if (project.UsesExpansionAudio) projectLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[project.ExpansionAudio]);
             if (project.PalMode)            projectLine += GenerateAttribute("PAL", true);
+
+            if (project.UsesAnyExpansionAudio)
+            {
+                var expansionStrings = new List<string>();
+
+                for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
+                {
+                    if (project.UsesExpansionAudio(i))
+                        expansionStrings.Add(ExpansionType.ShortNames[i]);
+                }
+
+                projectLine += GenerateAttribute("Expansions", string.Join(",", expansionStrings));
+
+                if (project.UsesN163Expansion)
+                    projectLine += GenerateAttribute("NumN163Channels", project.ExpansionNumN163Channels);
+            }
 
             lines.Add(projectLine);
 
@@ -82,28 +94,28 @@ namespace FamiStudio
                 var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
                 if (instrument.IsExpansionInstrument)
                 {
-                    instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[project.ExpansionAudio]);
+                   instrumentLine += GenerateAttribute("Expansion", ExpansionType.ShortNames[instrument.Expansion]);
 
-                    if (instrument.ExpansionType == ExpansionType.Fds)
+                    if (instrument.IsFdsInstrument)
                     {
                         instrumentLine += GenerateAttribute("FdsWavePreset", WavePresetType.Names[instrument.FdsWavePreset]);
-                        instrumentLine += GenerateAttribute("FdsModPreset", WavePresetType.Names[instrument.FdsModPreset]);
+                        instrumentLine += GenerateAttribute("FdsModPreset",  WavePresetType.Names[instrument.FdsModPreset]);
                         if (instrument.FdsMasterVolume != 0) instrumentLine += GenerateAttribute("FdsMasterVolume", instrument.FdsMasterVolume);
                         if (instrument.FdsModSpeed     != 0) instrumentLine += GenerateAttribute("FdsModSpeed", instrument.FdsModSpeed);
                         if (instrument.FdsModDepth     != 0) instrumentLine += GenerateAttribute("FdsModDepth", instrument.FdsModDepth);
                         if (instrument.FdsModDelay     != 0) instrumentLine += GenerateAttribute("FdsModDelay", instrument.FdsModDelay);
                     }
-                    else if (instrument.ExpansionType == ExpansionType.N163)
+                    else if (instrument.IsN163Instrument)
                     {
                         instrumentLine += GenerateAttribute("N163WavePreset", WavePresetType.Names[instrument.N163WavePreset]);
                         instrumentLine += GenerateAttribute("N163WaveSize", instrument.N163WaveSize);
                         instrumentLine += GenerateAttribute("N163WavePos", instrument.N163WavePos);
                     }
-                    else if (instrument.ExpansionType == ExpansionType.Vrc6)
+                    else if (instrument.IsVrc6Instrument)
                     {
                         instrumentLine += GenerateAttribute("Vrc6SawMasterVolume", Vrc6SawMasterVolumeType.Names[instrument.Vrc6SawMasterVolume]);
                     }
-                    else if (instrument.ExpansionType == ExpansionType.Vrc7)
+                    else if (instrument.IsVrc7Instrument)
                     {
                         instrumentLine += GenerateAttribute("Vrc7Patch", instrument.Vrc7Patch);
 
@@ -113,7 +125,7 @@ namespace FamiStudio
                                 instrumentLine += GenerateAttribute($"Vrc7Reg{i}", instrument.Vrc7PatchRegs[i]);
                         }
                     }
-                    else if (instrument.ExpansionType == ExpansionType.EPSM)
+                    else if (instrument.IsEPSMInstrument)
                     {
                         instrumentLine += GenerateAttribute("EpsmPatch", instrument.EpsmPatch);
 
@@ -344,10 +356,27 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Name", out var name)) project.Name = name;
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
-                            if (parameters.TryGetValue("Expansion", out var expansion)) project.SetExpansionAudio(ExpansionType.GetValueForShortName(expansion));
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
-                            if (!version.StartsWith("3.1"))
+                            if (parameters.TryGetValue("Expansions", out var expansions))
+                            {
+                                var expansionMask = 0;
+                                var expansionStrings = expansions.Split(',');
+
+                                foreach (var s in expansionStrings)
+                                {
+                                    var exp = ExpansionType.GetValueForShortName(s.Trim());
+                                    expansionMask |= ExpansionType.GetMaskFromValue(exp);
+                                }
+
+                                var numN163Channels = 1;
+                                if ((expansionMask & ExpansionType.N163Mask) != 0 && parameters.TryGetValue("NumN163Channels", out var numN163ChannelsStr))
+                                    numN163Channels = int.Parse(numN163ChannelsStr);
+
+                                project.SetExpansionAudioMask(expansionMask, numN163Channels);
+                            }
+
+                            if (!version.StartsWith("3.2"))
                             {
                                 Log.LogMessage(LogSeverity.Error, "File was created with an incompatible version of FamiStudio. The text format is only compatible with the current version.");
                                 return null;
@@ -374,9 +403,12 @@ namespace FamiStudio
                         }
                         case "Instrument":
                         {
-                            instrument = project.CreateInstrument(parameters.TryGetValue("Expansion", out _) ? project.ExpansionAudio : ExpansionType.None, parameters["Name"]);
+                            var instrumentExp = ExpansionType.None;
+                            if (parameters.TryGetValue("Expansion", out var instrumentExpStr))
+                                instrumentExp = ExpansionType.GetValueForShortName(instrumentExpStr);
+                            instrument = project.CreateInstrument(instrumentExp, parameters["Name"]);
 
-                            if (instrument.ExpansionType == ExpansionType.Fds)
+                            if (instrument.IsFdsInstrument)
                             {
                                 if (parameters.TryGetValue("FdsWavePreset",   out var wavPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                 if (parameters.TryGetValue("FdsModPreset",    out var modPresetStr))    instrument.FdsWavePreset   = (byte)WavePresetType.GetValueForName(modPresetStr);
@@ -385,17 +417,17 @@ namespace FamiStudio
                                 if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
                                 if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
                             }
-                            else if (instrument.ExpansionType == ExpansionType.N163)
+                            else if (instrument.IsN163Instrument)
                             {
                                  if (parameters.TryGetValue("N163WavePreset", out var wavPresetStr))    instrument.N163WavePreset = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                  if (parameters.TryGetValue("N163WaveSize",   out var n163WavSizeStr))  instrument.N163WaveSize   = byte.Parse(n163WavSizeStr);
                                  if (parameters.TryGetValue("N163WavePos",    out var n163WavPosStr))   instrument.N163WavePos    = byte.Parse(n163WavPosStr);
                             }
-                            else if (instrument.ExpansionType == ExpansionType.Vrc6)
+                            else if (instrument.IsVrc6Instrument)
                             {
                                  if (parameters.TryGetValue("Vrc6SawMasterVolume", out var vrc6SawVolumeStr)) instrument.Vrc6SawMasterVolume = (byte)Vrc6SawMasterVolumeType.GetValueForName(vrc6SawVolumeStr);
                             }
-                            else if (instrument.ExpansionType == ExpansionType.Vrc7)
+                            else if (instrument.IsVrc7Instrument)
                             {
                                 if (parameters.TryGetValue("Vrc7Patch", out var vrc7PatchStr)) instrument.Vrc7Patch = byte.Parse(vrc7PatchStr);
 
@@ -408,7 +440,7 @@ namespace FamiStudio
                                     }
                                 }
                             }
-                            else if (instrument.ExpansionType == ExpansionType.EPSM)
+                            else if (instrument.IsEPSMInstrument)
                             {
                                 if (parameters.TryGetValue("EpsmPatch", out var epsmPatchStr)) instrument.EpsmPatch = byte.Parse(epsmPatchStr);
 

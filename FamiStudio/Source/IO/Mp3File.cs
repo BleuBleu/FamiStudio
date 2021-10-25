@@ -14,6 +14,8 @@ namespace FamiStudio
         private const string ShineMp3Dll = "ShineMp3.dll";
 #elif FAMISTUDIO_MACOS
         private const string ShineMp3Dll = "ShineMp3.dylib";
+#elif FAMISTUDIO_ANDROID
+        private const string ShineMp3Dll = "libShineMp3.so";
 #else
         private const string ShineMp3Dll = "ShineMp3.so";
 #endif

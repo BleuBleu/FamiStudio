@@ -13,6 +13,6 @@ EXPORTS
 	NesApuStopSeeking        @11
 	NesApuIsSeeking          @12
 	NesApuTrebleEq           @13
-	NesApuGetAudioExpansion  @14
+	NesApuGetAudioExpansions @14
 	NesApuSetExpansionVolume @15
 	NesApuSkipCycles         @16

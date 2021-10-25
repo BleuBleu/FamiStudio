@@ -65,7 +65,7 @@ namespace FamiStudio
                     numN163Channels = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             }
 
-            project.SetExpansionAudio(expansion, numN163Channels);
+            project.SetExpansionAudioMask(ExpansionType.GetMaskFromValue(expansion), numN163Channels);
             project.PalMode = machine == 1;
 
             if (numChannels != project.GetActiveChannelCount())
@@ -121,6 +121,8 @@ namespace FamiStudio
         {
             idx += sizeof(int); // SEQ_COUNT
 
+            var usedEnvelopes = new bool[EnvelopeType.Count];
+
             for (int i = 0; i < SequenceCount; ++i)
             {
                 var enabled = bytes[idx++];
@@ -133,12 +135,31 @@ namespace FamiStudio
                     if (envType != EnvelopeType.Count)
                     {
                         if (instrument.Envelopes[envType] != null && envelopesArray[index, i] != null)
+                        {
                             instrument.Envelopes[envType] = envelopesArray[index, i];
+                            usedEnvelopes[envType] = true;
+                        }
                     }
                     else
                     {
                         Log.LogMessage(LogSeverity.Warning, $"Hi-pitch envelopes are unsupported (instrument {instIdx:X2}), ignoring.");
                     }
+                }
+            }
+
+            // When people use a single looping zero arpeggio, they are likely trying to fake an "absolute" pitch
+            // envelope, so let's give them that.
+            if (usedEnvelopes[EnvelopeType.Arpeggio] && usedEnvelopes[EnvelopeType.Pitch])
+            {
+                var arp = instrument.Envelopes[EnvelopeType.Arpeggio];
+                if (arp.IsEmpty(EnvelopeType.Arpeggio) && arp.Length > 0 && arp.Loop >= 0)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses a looping null arpeggio envelope and a pitch envelopes. Assuming envelope should be 'Absolute'.");
+                    instrument.Envelopes[EnvelopeType.Pitch].Relative = false;
+                }
+                else
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses both an arpeggio envelope and a pitch envelope. This instrument will likely require manual corrections due to the vastly different way FamiTracker/FamiStudio handles those.");
                 }
             }
         }
@@ -411,7 +432,7 @@ namespace FamiStudio
 
         private bool ReadSequencesVrc6(int idx)
         {
-            if (project.ExpansionAudio != ExpansionType.Vrc6)
+            if (!project.UsesVrc6Expansion)
                 return true;
 
             return ReadSequences2A03Vrc6(idx, envelopesExp);
@@ -419,8 +440,8 @@ namespace FamiStudio
 
         private bool ReadSequencesN163(int idx)
         {
-            if (project.ExpansionAudio != ExpansionType.N163)
-                return true;
+            if (!project.UsesN163Expansion)
+               return true;
 
             var count = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             var indices = new int[count];
@@ -550,7 +571,7 @@ namespace FamiStudio
                         if (volume != 16 && channel.SupportsEffect(Note.EffectVolume))
                             pattern.GetOrCreateNoteAt(n).Volume = (byte)(volume & 0x0f);
 
-                        if (blockVersion < 5 && project.ExpansionAudio == ExpansionType.Fds && channel.Type == ChannelType.FdsWave && octave < 6 && octave != 0)
+                        if (blockVersion < 5 && project.UsesFdsExpansion && channel.Type == ChannelType.FdsWave && octave < 6 && octave != 0)
                             octave += 2;
 
                         if (note == 13)

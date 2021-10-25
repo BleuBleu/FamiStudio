@@ -98,9 +98,9 @@ namespace FamiStudio
         private static int refCount = 0;
         private PaStreamCallback streamCallback;
 
-        private IntPtr  immediateStream = new IntPtr();
-        private short[] immediateStreamData = null;
-        private int     immediateStreamPosition = -1;
+        private IntPtr       immediateStream = new IntPtr();
+        private short[]      immediateStreamData = null;
+        private volatile int immediateStreamPosition = -1;
         private PaStreamCallback immediateStreamCallback;
 
         public PortAudioStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
@@ -213,7 +213,7 @@ namespace FamiStudio
 
         public unsafe void PlayImmediate(short[] data, int sampleRate, float volume)
         {
-            Debug.Assert(Utils.IsInMainThread());
+            Debug.Assert(PlatformUtils.IsInMainThread());
 
             StopImmediate();
 
@@ -235,7 +235,7 @@ namespace FamiStudio
 
         public void StopImmediate()
         {
-            Debug.Assert(Utils.IsInMainThread());
+            Debug.Assert(PlatformUtils.IsInMainThread());
 
             if (immediateStream != IntPtr.Zero)
             {

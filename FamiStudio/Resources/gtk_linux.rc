@@ -73,6 +73,14 @@ style "all"
     font_name = "Quicksand"
 }
 
+style "forcegreyfg"
+{
+    fg[NORMAL]      = "#C6CDDA" # LightGreyFillColor2
+    fg[PRELIGHT]    = "#C6CDDA" # LightGreyFillColor2
+    fg[ACTIVE]      = "#C6CDDA" # LightGreyFillColor2
+    fg[INSENSITIVE] = "#C6CDDA" # LightGreyFillColor2    
+}
+
 widget_class "*" style "all"
 widget_class "*GtkLabel*" style "label"
 widget_class "*Button*Label*" style "buttonlabel"
@@ -85,6 +93,7 @@ widget_class "*CairoImage*" style "flatbutton"
 widget_class "*Dialog" style "dialog"
 widget "*CheckBoxList*" style "check_list"
 widget "FamiStudioForm" style "dialog"
+widget "*ForceGreyFg*" style "forcegreyfg"
 
 style "text_is_fg_color_workaround" 
 {

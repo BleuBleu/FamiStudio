@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace FamiStudio
 {
-    public unsafe class Pattern
+    public class Pattern
     {
         public const int MaxLength = 2048;
 
@@ -21,7 +21,7 @@ namespace FamiStudio
         public int ChannelType => channelType;
         public Color Color { get => color; set => color = value; }
         public Song Song => song;
-        public Channel Channel => song.Channels[Channel.ChannelTypeToIndex(channelType)];
+        public Channel Channel => song.Channels[Channel.ChannelTypeToIndex(channelType, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels)];
         public SortedList<int, Note> Notes => notes;
 
         public Pattern()
@@ -35,7 +35,7 @@ namespace FamiStudio
             this.song = song;
             this.channelType = channelType;
             this.name = n;
-            this.color = ThemeBase.RandomCustomColor();
+            this.color = Theme.RandomCustomColor();
         }
         
         public string Name
@@ -363,7 +363,7 @@ namespace FamiStudio
             id = newId;
         }
 
-        public unsafe void SerializeState(ProjectBuffer buffer)
+        public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);

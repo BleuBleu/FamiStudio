@@ -2,5 +2,7 @@
 *.cs
 *.cpp
 *.h
+*.xml
 
 [SearchableFiles.ignore]
+obj/

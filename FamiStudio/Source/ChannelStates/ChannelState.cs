@@ -40,7 +40,7 @@ namespace FamiStudio
         protected byte noteValueBeforeSlide = 0;
         protected IPlayerInterface player;
 
-        public int GetChannelType() { return channelType; }
+        public int InnerChannelType => channelType; 
 
         public ChannelState(IPlayerInterface play, int apu, int type, bool pal, int numN163Channels = 1)
         {

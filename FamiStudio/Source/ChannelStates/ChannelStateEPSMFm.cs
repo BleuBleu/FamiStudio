@@ -43,7 +43,7 @@ namespace FamiStudio
 
         protected override void LoadInstrument(Instrument instrument)
         {
-            Debug.Assert(instrument.ExpansionType == ExpansionType.EPSM);
+            Debug.Assert(instrument.IsEPSMInstrument);
             int a1 = 0;
             if (channelIdx >= 3)
             {
@@ -59,7 +59,7 @@ namespace FamiStudio
             //opVolume[1 + 4 * channelIdx] = instrument.EpsmPatchRegs[3 + 7];
             //opVolume[2 + 4 * channelIdx] = instrument.EpsmPatchRegs[3 + 14];
             //opVolume[3 + 4 * channelIdx] = instrument.EpsmPatchRegs[3 + 21];
-            if (instrument.ExpansionType == ExpansionType.EPSM)
+            if (instrument.IsEPSMInstrument)
             {
                 channelAlgorithm[channelIdx] = instrument.EpsmPatchRegs[0];
                 WriteEPSMRegister(opRegisters[0] + channelIdxHigh, instrument.EpsmPatchRegs[0], a1);

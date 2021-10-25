@@ -1,0 +1,666 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B6032B13-111C-45DA-B627-AA9A711AB76B}</ProjectGuid>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TemplateGuid>{84dd83c5-0fe3-4294-9419-09e7c8ba324f}</TemplateGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>FamiStudio</RootNamespace>
+    <AssemblyName>FamiStudio.Android</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>True</Deterministic>
+    <AndroidApplication>True</AndroidApplication>
+    <AndroidResgenFile>Source\UI\Droid\Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
+    <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
+    <AndroidUseAapt2>true</AndroidUseAapt2>
+    <AndroidHttpClientHandlerType>Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>True</AndroidUseSharedRuntime>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <EmbedAssembliesIntoApk>False</EmbedAssembliesIntoApk>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AotAssemblies>false</AotAssemblies>
+    <EnableLLVM>false</EnableLLVM>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <BundleAssemblies>false</BundleAssemblies>
+    <Debugger>Xamarin</Debugger>
+    <NoWarn>CS0162,CS0414,CS0067</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidManagedSymbols>true</AndroidManagedSymbols>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
+    <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AotAssemblies>false</AotAssemblies>
+    <EnableLLVM>false</EnableLLVM>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <BundleAssemblies>false</BundleAssemblies>
+    <NoWarn>CS0162,CS0414,CS0067</NoWarn>
+    <AndroidPackageFormat>aab</AndroidPackageFormat>
+    <AndroidUseAapt2>true</AndroidUseAapt2>
+    <AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>portable</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>portable</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;FAMISTUDIO_ANDROID</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>portable</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>FAMISTUDIO_ANDROID</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>portable</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.3.1.1" />
+    <PackageReference Include="Xamarin.Google.Android.Material" Version="1.4.0.2" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Source\UI\Droid\Resources\color\light_grey.xml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>    
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand.xml">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand_bold.ttf">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
+    <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand_regular.ttf">
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\ic_launcher.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-anydpi-v26\ic_launcher_round.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-hdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-mdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-mdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-mdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xhdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xhdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xhdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxhdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxhdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxhdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher_foreground.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\mipmap-xxxhdpi\ic_launcher_round.png" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\colors.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\dimens.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\ic_launcher_background.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\strings.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\values\styles.xml" />
+    <AndroidResource Include="Source\UI\Droid\Resources\xml\filepaths.xml" />
+    <None Include="Properties\AndroidManifest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libNesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libShineMp3.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libShineMp3.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86\libNesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86\libShineMp3.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86_64\libNesSndEmu.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86_64\libShineMp3.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\ChannelStates\ChannelState.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateFds.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateMmc5Square.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateN163.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateNoise.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateS5B.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateSquare.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateTriangle.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateVrc6Square.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
+    <Compile Include="Source\IO\AudioExportUtils.cs" />
+    <Compile Include="Source\IO\FamistudioTextFile.cs" />
+    <Compile Include="Source\IO\FamitoneMusicFile.cs" />
+    <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />
+    <Compile Include="Source\IO\FamitrackerBaseFile.cs" />
+    <Compile Include="Source\IO\FamitrackerBinaryFile.cs" />
+    <Compile Include="Source\IO\FamitrackerInstrumentFile.cs" />
+    <Compile Include="Source\IO\FamitrackerTextFile.cs" />
+    <Compile Include="Source\IO\FdsFile.cs" />
+    <Compile Include="Source\IO\IniFile.cs" />
+    <Compile Include="Source\IO\MidiFile.cs" />
+    <Compile Include="Source\IO\Mp3File.cs" />
+    <Compile Include="Source\IO\NsfFile.cs" />
+    <Compile Include="Source\IO\ProjectBuffer.cs" />
+    <Compile Include="Source\IO\ProjectFile.cs" />
+    <Compile Include="Source\IO\RomFile.cs" />
+    <Compile Include="Source\IO\RomFileBase.cs" />
+    <Compile Include="Source\IO\VideoEncoderAndroid.cs" />
+    <Compile Include="Source\IO\VideoFileBase.cs" />
+    <Compile Include="Source\IO\VideoFileOscilloscope.cs" />
+    <Compile Include="Source\IO\VideoFilePianoRoll.cs" />
+    <Compile Include="Source\IO\VorbisFile.cs" />
+    <Compile Include="Source\IO\WaveFile.cs" />
+    <Compile Include="Source\Player\AndroidAudioStream.cs" />
+    <Compile Include="Source\Player\AudioPlayer.cs" />
+    <Compile Include="Source\Player\BasePlayer.cs" />
+    <Compile Include="Source\Player\InstrumentPlayer.cs" />
+    <Compile Include="Source\Player\MultiMediaNotifications.cs" />
+    <Compile Include="Source\Player\NesApu.cs" />
+    <Compile Include="Source\Player\OscilloscopeInterface.cs" />
+    <Compile Include="Source\Player\RegisterPlayer.cs" />
+    <Compile Include="Source\Player\SongPlayer.cs" />
+    <Compile Include="Source\Player\UnitTestPlayer.cs" />
+    <Compile Include="Source\Player\WavPlayer.cs" />
+    <Compile Include="Source\Project\Arpeggio.cs" />
+    <Compile Include="Source\Project\Channel.cs" />
+    <Compile Include="Source\Project\DPCMSample.cs" />
+    <Compile Include="Source\Project\Envelope.cs" />
+    <Compile Include="Source\Project\Instrument.cs" />
+    <Compile Include="Source\Project\Note.cs" />
+    <Compile Include="Source\Project\Pattern.cs" />
+    <Compile Include="Source\Project\Project.cs" />
+    <Compile Include="Source\Project\Song.cs" />
+    <Compile Include="Source\Project\UndoRedo.cs" />
+    <Compile Include="Source\UI\Common\CommonTooltips.cs" />
+    <Compile Include="Source\UI\Common\ConfigDialog.cs" />
+    <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\DpiScaling.cs" />
+    <Compile Include="Source\UI\Common\ExportDialog.cs" />
+    <Compile Include="Source\UI\Common\FamiStudio.cs" />
+    <Compile Include="Source\UI\Common\GLControl.cs" />
+    <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
+    <Compile Include="Source\UI\Common\Init.cs" />
+    <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
+    <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
+    <Compile Include="Source\UI\Common\Oscilloscope.cs" />
+    <Compile Include="Source\UI\Common\ParamProviders.cs" />
+    <Compile Include="Source\UI\Common\PasteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
+    <Compile Include="Source\UI\Common\PianoRoll.cs" />
+    <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
+    <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
+    <Compile Include="Source\UI\Common\Sequencer.cs" />
+    <Compile Include="Source\UI\Common\TempoProperties.cs" />
+    <Compile Include="Source\UI\Common\Theme.cs" />
+    <Compile Include="Source\UI\Common\ThemeRenderResources.cs" />
+    <Compile Include="Source\UI\Common\Toolbar.cs" />
+    <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Droid\Cursors.cs" />
+    <Compile Include="Source\UI\Droid\DroidUtils.cs" />
+    <Compile Include="Source\UI\Droid\FamiStudioForm.cs" />
+    <Compile Include="Source\UI\Droid\GLESGraphics.cs" />
+    <Compile Include="Source\UI\Droid\MobileProjectDialog.cs" />
+    <Compile Include="Source\UI\Droid\MultiPropertyDialog.cs" />
+    <Compile Include="Source\UI\Droid\PlatformUtils.cs" />
+    <Compile Include="Source\UI\Droid\PropertyDialog.cs" />
+    <Compile Include="Source\UI\Droid\PropertyPage.cs" />
+    <Compile Include="Source\UI\Droid\Resources\Resource.designer.cs" />
+    <Compile Include="Source\UI\Droid\TutorialDialog.cs" />
+    <Compile Include="Source\UI\Droid\WindowsForms.cs" />
+    <Compile Include="Source\UI\Mobile\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Mobile\LogDialog.cs" />
+    <Compile Include="Source\UI\Mobile\MobilePiano.cs" />
+    <Compile Include="Source\UI\Mobile\QuickAccessBar.cs" />
+    <Compile Include="Source\Utils\AndroidMidi.cs" />
+    <Compile Include="Source\Utils\ClipboardUtils.cs" />
+    <Compile Include="Source\Utils\Compression.cs" />
+    <Compile Include="Source\Utils\CRC32.cs" />
+    <Compile Include="Source\Utils\Log.cs" />
+    <Compile Include="Source\Utils\PerformanceCounter.cs" />
+    <Compile Include="Source\Utils\Settings.cs" />
+    <Compile Include="Source\Utils\TempoUtils.cs" />
+    <Compile Include="Source\Utils\Utils.cs" />
+    <Compile Include="Source\Utils\WaveUtils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_fds_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_mmc5_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_8ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_n163_8ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_pal.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_s5b_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_vrc6_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_vrc7_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_fds_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_mmc5_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_multi_n163_8ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_1ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_2ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_3ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_4ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_5ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_6ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_7ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_n163_8ch_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_pal.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_s5b_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc6_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_vrc7_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
+    <EmbeddedResource Include="Resources\Add%404x.png" />
+    <EmbeddedResource Include="Resources\ArrowLeft%402x.png" />
+    <EmbeddedResource Include="Resources\ArrowRight%402x.png" />
+    <EmbeddedResource Include="Resources\ButtonLeft%404x.png" />
+    <EmbeddedResource Include="Resources\ButtonRight%404x.png" />
+    <EmbeddedResource Include="Resources\ChannelDPCM%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelDPCM%404x.png" />
+    <EmbeddedResource Include="Resources\ChannelDPCM.png" />
+    <EmbeddedResource Include="Resources\ChannelFM%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelFM%404x.png" />
+    <EmbeddedResource Include="Resources\ChannelFM.png" />
+    <EmbeddedResource Include="Resources\ChannelNoise%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelNoise%404x.png" />
+    <EmbeddedResource Include="Resources\ChannelNoise.png" />
+    <EmbeddedResource Include="Resources\ChannelSaw%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelSaw%404x.png" />
+    <EmbeddedResource Include="Resources\ChannelSaw.png" />
+    <EmbeddedResource Include="Resources\ChannelSquare%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelSquare%404x.png" />
+    <EmbeddedResource Include="Resources\ChannelSquare.png" />
+    <EmbeddedResource Include="Resources\ChannelTriangle%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelTriangle%404x.png" />
+    <EmbeddedResource Include="Resources\ChannelTriangle.png" />
+    <EmbeddedResource Include="Resources\ChannelWaveTable%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelWaveTable%404x.png" />
+    <EmbeddedResource Include="Resources\ChannelWaveTable.png" />
+    <EmbeddedResource Include="Resources\Check.png" />
+    <EmbeddedResource Include="Resources\CheckBoxNo%402x.png" />
+    <EmbeddedResource Include="Resources\CheckBoxNo%404x.png" />
+    <EmbeddedResource Include="Resources\CheckBoxNo.png" />
+    <EmbeddedResource Include="Resources\CheckBoxYes%402x.png" />
+    <EmbeddedResource Include="Resources\CheckBoxYes%404x.png" />
+    <EmbeddedResource Include="Resources\CheckBoxYes.png" />
+    <EmbeddedResource Include="Resources\Clean%402x.png" />
+    <EmbeddedResource Include="Resources\Clean.png" />
+    <EmbeddedResource Include="Resources\CollapsedSmall%402x.png" />
+    <EmbeddedResource Include="Resources\Config%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigFFmpeg%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigGeneral%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMIDI%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMixer%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigQWERTY%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigSound%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigUserInterface%402x.png" />
+    <EmbeddedResource Include="Resources\Copy%402x.png" />
+    <EmbeddedResource Include="Resources\Cut%402x.png" />
+    <EmbeddedResource Include="Resources\Dash%404x.png" />
+    <EmbeddedResource Include="Resources\Dash.png" />
+    <EmbeddedResource Include="Resources\Delete%402x.png" />
+    <EmbeddedResource Include="Resources\Drag%402x.png" />
+    <EmbeddedResource Include="Resources\Duplicate%402x.png" />
+    <EmbeddedResource Include="Resources\DuplicateMove%402x.png" />
+    <EmbeddedResource Include="Resources\EffectCutDelay%402x.png" />
+    <EmbeddedResource Include="Resources\EffectDutyCycle%402x.png" />
+    <EmbeddedResource Include="Resources\EffectFrame%402x.png" />
+    <EmbeddedResource Include="Resources\EffectMod%402x.png" />
+    <EmbeddedResource Include="Resources\EffectNoteDelay%402x.png" />
+    <EmbeddedResource Include="Resources\EffectPitch%402x.png" />
+    <EmbeddedResource Include="Resources\EffectSpeed%402x.png" />
+    <EmbeddedResource Include="Resources\EffectVibrato%402x.png" />
+    <EmbeddedResource Include="Resources\EffectVolume%402x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeArpeggio%404x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeDuty%404x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeMod%404x.png" />
+    <EmbeddedResource Include="Resources\EnvelopePitch%404x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeVolume%404x.png" />
+    <EmbeddedResource Include="Resources\EnvelopeWave%404x.png" />
+    <EmbeddedResource Include="Resources\EnvResize%402x.png" />
+    <EmbeddedResource Include="Resources\EnvResize.png" />
+    <EmbeddedResource Include="Resources\ExpandedSmall%402x.png" />
+    <EmbeddedResource Include="Resources\Export%402x.png" />
+    <EmbeddedResource Include="Resources\ExportFamiStudioEngine%402x.png" />
+    <EmbeddedResource Include="Resources\ExportFamiTone2%402x.png" />
+    <EmbeddedResource Include="Resources\ExportFamiTracker%402x.png" />
+    <EmbeddedResource Include="Resources\ExportMIDI%402x.png" />
+    <EmbeddedResource Include="Resources\ExportNsf%402x.png" />
+    <EmbeddedResource Include="Resources\ExportRom%402x.png" />
+    <EmbeddedResource Include="Resources\ExportShare%402x.png" />
+    <EmbeddedResource Include="Resources\ExportText%402x.png" />
+    <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
+    <EmbeddedResource Include="Resources\ExportWav%402x.png" />
+    <EmbeddedResource Include="Resources\Eyedrop.cur" />
+    <EmbeddedResource Include="Resources\FamiStudio.ico" />
+    <EmbeddedResource Include="Resources\File%402x.png" />
+    <EmbeddedResource Include="Resources\Follow%402x.png" />
+    <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
+    <EmbeddedResource Include="Resources\GizmoResizeLeftRight.png" />
+    <EmbeddedResource Include="Resources\GizmoResizeUpDown.png" />
+    <EmbeddedResource Include="Resources\Help%402x.png" />
+    <EmbeddedResource Include="Resources\Instance%402x.png" />
+    <EmbeddedResource Include="Resources\Instrument%402x.png" />
+    <EmbeddedResource Include="Resources\Instrument@4x.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpand%404x.png" />
+    <EmbeddedResource Include="Resources\InstrumentExpanded%404x.png" />
+    <EmbeddedResource Include="Resources\InstrumentFds%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentFds@4x.png" />
+    <EmbeddedResource Include="Resources\InstrumentNamco%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentNamco@4x.png" />
+    <EmbeddedResource Include="Resources\InstrumentOpen%404x.png" />
+    <EmbeddedResource Include="Resources\InstrumentSunsoft%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentSunsoft@4x.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC6%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC6@4x.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC7%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentVRC7@4x.png" />
+    <EmbeddedResource Include="Resources\Loop%402x.png" />
+    <EmbeddedResource Include="Resources\LoopNone%402x.png" />
+    <EmbeddedResource Include="Resources\LoopPattern%402x.png" />
+    <EmbeddedResource Include="Resources\LoopSelection%402x.png" />
+    <EmbeddedResource Include="Resources\LoopSmallFill%402x.png" />
+    <EmbeddedResource Include="Resources\Maximize%402x.png" />
+    <EmbeddedResource Include="Resources\MenuClearEnvelope.png" />
+    <EmbeddedResource Include="Resources\MenuClearEnvLoopPoint.png" />
+    <EmbeddedResource Include="Resources\MenuClearEnvRelease.png" />
+    <EmbeddedResource Include="Resources\MenuClearSelection.png" />
+    <EmbeddedResource Include="Resources\MenuCustomPatternSettings.png" />
+    <EmbeddedResource Include="Resources\MenuDelete.png" />
+    <EmbeddedResource Include="Resources\MenuDeleteSelection.png" />
+    <EmbeddedResource Include="Resources\MenuDuplicate.png" />
+    <EmbeddedResource Include="Resources\MenuEnvLoopPoint.png" />
+    <EmbeddedResource Include="Resources\MenuEnvRelease.png" />
+    <EmbeddedResource Include="Resources\MenuExpandSelection.png" />
+    <EmbeddedResource Include="Resources\MenuEyedropper.png" />
+    <EmbeddedResource Include="Resources\MenuForceDisplay.png" />
+    <EmbeddedResource Include="Resources\MenuInstance.png" />
+    <EmbeddedResource Include="Resources\MenuLoopPoint.png" />
+    <EmbeddedResource Include="Resources\MenuMute.png" />
+    <EmbeddedResource Include="Resources\MenuPiano.png" />
+    <EmbeddedResource Include="Resources\MenuProperties.png" />
+    <EmbeddedResource Include="Resources\MenuReplaceSelection.png" />
+    <EmbeddedResource Include="Resources\MenuReset.png" />
+    <EmbeddedResource Include="Resources\MenuSolo.png" />
+    <EmbeddedResource Include="Resources\MenuStopNote.png" />
+    <EmbeddedResource Include="Resources\MenuToggleAttack.png" />
+    <EmbeddedResource Include="Resources\MenuToggleRelease.png" />
+    <EmbeddedResource Include="Resources\MenuToggleSlide.png" />
+    <EmbeddedResource Include="Resources\Metronome%402x.png" />
+    <EmbeddedResource Include="Resources\Metronome.wav" />
+    <EmbeddedResource Include="Resources\MinusSmall%402x.png" />
+    <EmbeddedResource Include="Resources\MobileArpeggio.png" />
+    <EmbeddedResource Include="Resources\MobileEffectVolume.png" />
+    <EmbeddedResource Include="Resources\MobileEffectVibrato.png" />
+    <EmbeddedResource Include="Resources\MobileEffectPitch.png" />
+    <EmbeddedResource Include="Resources\MobileEffectSpeed.png" />
+    <EmbeddedResource Include="Resources\MobileEffectMod.png" />
+    <EmbeddedResource Include="Resources\MobileEffectDutyCycle.png" />
+    <EmbeddedResource Include="Resources\MobileEffectNoteDelay.png" />
+    <EmbeddedResource Include="Resources\MobileEffectCutDelay.png" />
+    <EmbeddedResource Include="Resources\MobileEffectNone.png" />
+    <EmbeddedResource Include="Resources\MobilePianoDrag.png" />
+    <EmbeddedResource Include="Resources\MobilePianoRest.png" />
+    <EmbeddedResource Include="Resources\MobileSnapOff.png" />
+    <EmbeddedResource Include="Resources\MobileSnapOn.png" />
+    <EmbeddedResource Include="Resources\More%402x.png" />
+    <EmbeddedResource Include="Resources\MouseLeft%402x.png" />
+    <EmbeddedResource Include="Resources\MouseRight%402x.png" />
+    <EmbeddedResource Include="Resources\MouseWheel%402x.png" />
+    <EmbeddedResource Include="Resources\Music%404x.png" />
+    <EmbeddedResource Include="Resources\No%402x.png" />
+    <EmbeddedResource Include="Resources\NTSC%402x.png" />
+    <EmbeddedResource Include="Resources\NTSCToPAL%402x.png" />
+    <EmbeddedResource Include="Resources\Open%402x.png" />
+    <EmbeddedResource Include="Resources\PAL%402x.png" />
+    <EmbeddedResource Include="Resources\PALToNTSC%402x.png" />
+    <EmbeddedResource Include="Resources\Paste%402x.png" />
+    <EmbeddedResource Include="Resources\Pause%402x.png" />
+    <EmbeddedResource Include="Resources\Piano%402x.png" />
+    <EmbeddedResource Include="Resources\PianoRoll%402x.png" />
+    <EmbeddedResource Include="Resources\Play%402x.png" />
+    <EmbeddedResource Include="Resources\PlayHalf%402x.png" />
+    <EmbeddedResource Include="Resources\PlayQuarter%402x.png" />
+    <EmbeddedResource Include="Resources\PlaySource%404x.png" />
+    <EmbeddedResource Include="Resources\PlusSmall%402x.png" />
+    <EmbeddedResource Include="Resources\ProjectExplorer%402x.png" />
+    <EmbeddedResource Include="Resources\ProjectExplorer.png" />
+    <EmbeddedResource Include="Resources\Properties.png" />
+    <EmbeddedResource Include="Resources\Properties%404x.png" />
+    <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
+    <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
+    <EmbeddedResource Include="Resources\QuickSand8.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand8_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand8Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand8Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand10.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand10_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand10Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand12.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand12_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand12Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand12Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand16.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand16_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand16Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand16Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand20.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand20_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand20Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand20Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand24.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand24_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand24Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand24Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand28.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand28_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand30.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand30_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand30Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand30Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand32.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand32_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand32Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand32Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand36.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand36_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand36Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand36Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand40.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand40_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand40Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand40Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand48.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand48_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand48Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand48Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand56.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand56_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand56Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand56Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand60.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand60_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand60Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand60Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand64.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand64_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand80.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand80_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand80Bold.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand80Bold_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand84.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand84_0.png" />
+    <EmbeddedResource Include="Resources\QuickSand112.fnt" />
+    <EmbeddedResource Include="Resources\QuickSand112_0.png" />
+    <EmbeddedResource Include="Resources\QwertyPiano%402x.png" />
+    <EmbeddedResource Include="Resources\Rec%402x.png" />
+    <EmbeddedResource Include="Resources\Redo%402x.png" />
+    <EmbeddedResource Include="Resources\ReleaseSmallFill%402x.png" />
+    <EmbeddedResource Include="Resources\Reload%404x.png" />
+    <EmbeddedResource Include="Resources\Rewind%402x.png" />
+    <EmbeddedResource Include="Resources\Save%402x.png" />
+    <EmbeddedResource Include="Resources\SaveSmall%404x.png" />
+    <EmbeddedResource Include="Resources\Sequencer%402x.png" />
+    <EmbeddedResource Include="Resources\Slide%402x.png" />
+    <EmbeddedResource Include="Resources\Snap%402x.png" />
+    <EmbeddedResource Include="Resources\Stop%402x.png" />
+    <EmbeddedResource Include="Resources\Transform%402x.png" />
+    <EmbeddedResource Include="Resources\Undo%402x.png" />
+    <EmbeddedResource Include="Resources\VideoWatermark.png" />
+    <EmbeddedResource Include="Resources\Warning%404x.png" />
+    <EmbeddedResource Include="Resources\WarningGood%402x.png" />
+    <EmbeddedResource Include="Resources\WarningYellow%402x.png" />
+    <EmbeddedResource Include="Resources\WaveEdit%404x.png" />
+    <EmbeddedResource Include="Resources\YellowChecker.png" />
+    <EmbeddedResource Include="Resources\Yes%402x.png" />
+    <EmbeddedResource Include="Rom\fds.fds" />
+    <EmbeddedResource Include="Rom\fds_famitracker.fds" />
+    <EmbeddedResource Include="Rom\rom_famitracker_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_famitracker_pal.nes" />
+    <EmbeddedResource Include="Rom\rom_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_pal.nes" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Dedricil.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\DuckTales.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Gimmick.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Gradius 2.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Gyruss.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Journey To Silius.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Layla The Iris Missions.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 2.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\SFX.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Shatterhand.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Shovel Knight.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Silver Surfer.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Tower of Heaven.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Tutorial Song.fms" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial1.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial1.png" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial10.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial10.png" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial2.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial2.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial3.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial3.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial4.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial4.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial5.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial5.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial6.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial6.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial7.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial7.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial8.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial8.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial9.gif" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial9.html" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+</Project>

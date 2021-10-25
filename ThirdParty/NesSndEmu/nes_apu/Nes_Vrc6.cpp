@@ -44,8 +44,8 @@ void Nes_Vrc6::reset()
 
 void Nes_Vrc6::volume( double v )
 {
-	saw_synth.volume( v * 0.222 );
-	square_synth.volume( v * 0.1127 );
+	saw_synth.volume( v * 0.333 );
+	square_synth.volume( v * 0.169 );
 }
 
 void Nes_Vrc6::treble_eq( blip_eq_t const& eq )

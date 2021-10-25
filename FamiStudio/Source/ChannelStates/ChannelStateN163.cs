@@ -17,6 +17,20 @@ namespace FamiStudio
 
         private void WriteN163Register(int reg, int data)
         {
+            // HACK : There are conflicts between N163 registers and S5B register, a N163 addr write
+            // can be interpreted as a S5B data write. To prevent this, we select a dummy register 
+            // for S5B so that the write is discarded.
+            //
+            // N163: 
+            //   f800-ffff (addr)
+            //   4800-4fff (data)
+            // S5B:
+            //   c000-e000 (addr)
+            //   f000-ffff (data)
+
+            if ((NesApu.GetAudioExpansions(apuIdx) & NesApu.APU_EXPANSION_MASK_SUNSOFT) != 0)
+                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_IO_A);
+
             WriteRegister(NesApu.N163_ADDR, reg);
             WriteRegister(NesApu.N163_DATA, data);
         }
@@ -25,9 +39,9 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.ExpansionType == ExpansionType.N163);
+                Debug.Assert(instrument.IsN163Instrument);
 
-                if (instrument.ExpansionType == ExpansionType.N163)
+                if (instrument.IsN163Instrument)
                 {
                     // This can actually trigger if you tweak an instrument while playing a song.
                     //Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);

@@ -26,10 +26,10 @@ public:
 	void WriteToChip(uint8_t a, uint8_t d, cpu_time_t time);
 
 	enum { psg_clock = 4000000 };
-	enum { reg_select = 0xc000 };
-	enum { reg_write = 0xe000 };
-	enum { reg_select2 = 0xc002 };
-	enum { reg_write2 = 0xe002 };
+	enum { reg_select = 0x401c };
+	enum { reg_write = 0x401d };
+	enum { reg_select2 = 0x401e };
+	enum { reg_write2 = 0x401f };
 	enum { reg_range = 0x1 };
 
 	enum { shadow_internal_regs_count = 200 };

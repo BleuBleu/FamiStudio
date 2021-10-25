@@ -1,9 +1,54 @@
-3.1.2
+3.2.0
 =====
-- Test the ASM parsing thing a bit more
-- Square 2 volume issue.
 
-- Flatpak ffmpeg thing.
+Beta fixes:
+- Fix env editor rectangle rendering. 
+
+Icon notes:
+- 46% zoom, start with 128x128 png.
+
+Testing
+=======
+- BUG : HH:MM:SSS from itch?
+- Test project/instrument merge (with expansions).
+- Re-test with various scaling (lots of cahnges to everything, zooming, etc.)
+- Test without snapping, i tested snapping a lot, but not witout.
+
+Packaging:
+==========
+/ Make download list vertical on website.
+- List dependencies in doc, list demo songs in doc.
+- Two songs from mark
+- Add link to discord in doc
+
+New Features in 3.2.0
+=====================
+Changes:
+- Multi-expansion support
+- Proper emulation of triangle/noise/DPCM volume interactions
+- Android app (free on Play Store)
+- Significant graphic optimizations, especially on lower-end machines or large projects.
+- Minor cosmetic UI changes (icons, envelope editor, coloring piano with DPCM colors, etc.)
+Behavior changes:
+- Snapping precision is now expressed in beats. So with the default settings, 1 means a quarter note.
+- Channel volumes have been slightly adjusted to match the NES hardware more closely.
+
+Features missing from the Mobile version
+========================================
+- No MIDI import/export
+- No NSF import
+- No Sound Engine/Famitone 2 export
+- No FamiTracker text export
+- No FamiStudio text export
+- No FamiTracker FTI instrument import
+- No DPCM sample import from other projects (WAV/DMC only)
+- No DPCM sample data export
+- No MIDI controller support
+
+Videos:
+=======
+- Mobile tutorial? Or just a documentation page with a bunch of GIFs?
+- Tutorial for FamiTracker
 
 Linux notes 
 =========== 
@@ -51,6 +96,15 @@ MacOS notes
 - If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
 
+Android Notes
+=============
+Key Store
+- Alias : FamiStudio
+- Pass : Usual x2
+- 30 Years
+- Only full name entered.
+
+
 Trailer/scroll 
 ============== 
 - Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece. 
@@ -65,6 +119,12 @@ Discord
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
 
+Cartoon Tutorial
+================
+- Sketch
+- Hue: -180
+- Chroma: -20
+
 3.2.0
 =====
 - Overclocking (2x, 3x, 4x would be a good start).
@@ -78,6 +138,7 @@ Backlog:
 - Left/right pan with +/- (cubase style)?
 - TailWindz : CTRL + Scroll should do "something"
 - Hardware sweep (how to not conflict with smooth vibrato?)
+- Write delta counter (Zxx).
 - Scales
 - Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 

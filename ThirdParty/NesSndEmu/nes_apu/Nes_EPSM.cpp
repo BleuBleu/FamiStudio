@@ -102,17 +102,17 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 		reg = data;
 	}
 	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
-			if((addr == 0xE000) && (reg < 0x10)){
+			if((addr == 0x401d) && (reg < 0x10)){
 			}
 	}
 	int mask = 0;
 	switch(addr) {
-		case 0xC000:
-		case 0xC002:
+		case 0x401c:
+		case 0x401e:
 			currentRegister = data;
 			break;
-		case 0xE000:
-		case 0xE002:
+		case 0x401d:
+		case 0x401f:
 			if (currentRegister == 0x10) {
 				data = data & maskRythm;
 			}
@@ -130,8 +130,8 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	}
 
 
-	a0 = (addr & 0xF000) == 0xE000; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
-	a1 = !!(addr & 0xF); //const uint8_t a1 = !!(addr & 0xF);
+	a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
+	a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
 	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
 	if (!mask) dataWrite.push(data);
 	if (!mask) aWrite.push((a0 | (a1 << 1)));

@@ -1,68 +1,135 @@
-﻿using Microsoft.Win32;
-using System;
-using System.Diagnostics;
-using System.Net.Http;
+﻿using System;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using OpenTK.Graphics;
+using System.Drawing;
+using OpenTK.Graphics.OpenGL;
+
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    public partial class FamiStudioForm : Form
+    public partial class FamiStudioForm : GLForm
     {
         private FamiStudio famistudio;
+        private FamiStudioControls controls;
 
         public FamiStudio FamiStudio => famistudio;
-        public Toolbar ToolBar => toolbar;
-        public Sequencer Sequencer => sequencer;
-        public PianoRoll PianoRoll => pianoRoll;
-        public ProjectExplorer ProjectExplorer => projectExplorer;
+        public Toolbar ToolBar => controls.ToolBar;
+        public Sequencer Sequencer => controls.Sequencer;
+        public PianoRoll PianoRoll => controls.PianoRoll;
+        public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
+        public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
+        public MobilePiano MobilePiano => controls.MobilePiano;
+        public static FamiStudioForm Instance => null;
+        public new GLControl ActiveControl => activeControl;
 
+        public bool IsLandscape => true;
+        public bool IsAsyncDialogInProgress => false;
+        public bool MobilePianoVisible { get => false; set => value = false; }
+
+        private GLControl activeControl = null;
+        private GLControl captureControl = null;
+        private GLControl hoverControl = null;
+        private MouseButtons captureButton   = MouseButtons.None;
+        private MouseButtons lastButtonPress = MouseButtons.None;
         private Timer timer = new Timer();
-        private static bool mouseWheelRouting = false;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct NativeMessage
+        {
+            public IntPtr Handle;
+            public uint Message;
+            public IntPtr WParameter;
+            public IntPtr LParameter;
+            public uint Time;
+            public Point Location;
+        }
 
         [DllImport("USER32.dll")]
         private static extern short GetKeyState(int key);
 
+        [DllImport("user32.dll")]
+        public static extern int PeekMessage(out NativeMessage message, IntPtr window, uint filterMin, uint filterMax, uint remove);
+
         public FamiStudioForm(FamiStudio famistudio)
         {
+            this.famistudio = famistudio;
+
             Cursors.Initialize();
 
-            this.famistudio = famistudio;
+            controls = new FamiStudioControls(this);
+            activeControl = controls.PianoRoll;
 
             timer.Tick += timer_Tick;
             timer.Interval = 4;
-            timer.Start();
 
-            InitializeComponent();
+            InitForm();
 
-            var scaling = Direct2DTheme.MainWindowScaling;
+            DragDrop  += FamiStudioForm_DragDrop;
+            DragEnter += FamiStudioForm_DragEnter;
+            Application.Idle += Application_Idle;
+        }
 
-            toolbar.Height = (int)(toolbar.Height * scaling);
-            tableLayout.RowStyles[0].Height = (int)(tableLayout.RowStyles[0].Height * scaling);
-            projectExplorer.Width = (int)(projectExplorer.Width * scaling);
+        bool IsApplicationIdle()
+        {
+            NativeMessage msg;
+            return PeekMessage(out msg, IntPtr.Zero, 0, 0, 0) == 0;
+        }
 
-            try
+        private void Application_Idle(object sender, EventArgs e)
+        {
+            do
             {
-                using (RegistryKey key = Registry.CurrentUser.OpenSubKey("Control Panel\\Desktop"))
-                {
-                    if (key != null)
-                    {
-                        Object o = key.GetValue("MouseWheelRouting");
-                        if (o != null)
-                            mouseWheelRouting = (int)(o) != 0;
-                    }
-                }
+                TickAndRender();
             }
-            catch
-            {
-            }
+            while (IsApplicationIdle());
+        }
+
+        private void InitForm()
+        {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FamiStudioForm));
+
+            AutoScaleMode = AutoScaleMode.None;
+            WindowState = FormWindowState.Maximized;
+            BackColor = Color.FromArgb(33, 37, 41);
+            ClientSize = new Size(1264, 681);
+            Icon = new Icon(typeof(FamiStudioForm).Assembly.GetManifestResourceStream("FamiStudio.Resources.FamiStudio.ico"));
+            KeyPreview = true; 
+            Name = "FamiStudioForm";
+            Text = "FamiStudio";
+            AllowDrop = true;
         }
 
         private void timer_Tick(object sender, EventArgs e)
         {
+            TickAndRender();
+        }
+
+        private void TickAndRender()
+        {
             famistudio.Tick();
+
+            if (controls.AnyControlNeedsRedraw())
+                RenderFrameAndSwapBuffers();
+            else
+                System.Threading.Thread.Sleep(4); 
+        }
+
+        protected override void GraphicsContextInitialized()
+        {
+            GL.Disable(EnableCap.DepthTest);
+            GL.Viewport(0, 0, Width, Height);
+            GL.ClearColor(
+                Theme.DarkGreyFillColor2.R / 255.0f,
+                Theme.DarkGreyFillColor2.G / 255.0f,
+                Theme.DarkGreyFillColor2.B / 255.0f,
+                1.0f);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GraphicsContext.CurrentContext.SwapBuffers();
+
+            controls.InitializeGL();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -73,59 +140,258 @@ namespace FamiStudio
                 return;
             }
 
+            timer.Stop();
+
             base.OnFormClosing(e);
+        }
+
+        protected override void OnMouseCaptureChanged(EventArgs e)
+        {
+            Debug.WriteLine($"Capture is {Capture}");
+            base.OnMouseCaptureChanged(e);
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
+
+            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
+            if (ctrl != null)
+                ctrl.MouseWheel(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
         }
 
-        public bool ShouldIgnoreMouseWheel(Control ctrl, MouseEventArgs e)
+        protected override void RenderFrame(bool force = false)
         {
-            if (!mouseWheelRouting)
+            if (force)
+                controls.MarkDirty();
+            controls.Redraw();
+        }
+
+        public void CaptureMouse(GLControl ctrl)
+        {
+            if (lastButtonPress != System.Windows.Forms.MouseButtons.None)
             {
-                var pt = new System.Drawing.Point(e.X, e.Y);
-                var outsideClientRectangle = !ctrl.ClientRectangle.Contains(pt);
-                if (outsideClientRectangle)
-                {
-                    var controls = new Direct2DControl[]
-                    {
-                        toolbar,
-                        sequencer,
-                        pianoRoll,
-                        projectExplorer
-                    };
+                Debug.Assert(captureControl == null);
 
-                    foreach (var ctrl2 in controls)
-                    {
-                        if (ctrl2 != ctrl)
-                        {
-                            var pt2 = ctrl2.PointToClient(ctrl.PointToScreen(pt));
+                captureButton = lastButtonPress;
+                captureControl = ctrl;
+                Capture = true;
+            }
+        }
 
-                            if (ctrl2.ClientRectangle.Contains(pt2))
-                            {
-                                ctrl2.DoMouseWheel(new MouseEventArgs(e.Button, e.Clicks, pt2.X, pt2.Y, e.Delta));
-                                break;
-                            }
-                        }
-                    }
+        public void ReleaseMouse()
+        {
+            if (captureControl != null)
+            {
+                captureControl = null;
+                Capture = false;
+            }
+        }
 
-                    return true;
-                }
+        public Point PointToClient(GLControl ctrl, Point p)
+        {
+            p = PointToClient(p);
+            return new Point(p.X - ctrl.Left, p.Y - ctrl.Top);
+        }
+
+        public Point PointToScreen(GLControl ctrl, Point p)
+        {
+            p = new Point(p.X + ctrl.Left, p.Y + ctrl.Top);
+            return PointToScreen(p);
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            RefreshLayout();
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            if (captureControl != null)
+                return;
+
+            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
+            lastButtonPress = e.Button;
+            if (ctrl != null)
+            {
+                SetActiveControl(ctrl);
+                ctrl.MouseDown(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            int x;
+            int y;
+            GLControl ctrl = null;
+
+            if (captureControl != null)
+            {
+                ctrl = captureControl;
+                x = e.X - ctrl.Left;
+                y = e.Y - ctrl.Top;
+            }
+            else
+            {
+                ctrl = controls.GetControlAtCoord(e.X, e.Y, out x, out y);
             }
 
-            return false;
+            if (e.Button == captureButton)
+                ReleaseMouse();
+
+            if (ctrl != null)
+                ctrl.MouseUp(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
         }
 
-        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            base.OnMouseDoubleClick(e);
+
+            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
+            lastButtonPress = e.Button;
+            if (ctrl != null)
+                ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            int x;
+            int y;
+            GLControl ctrl = null;
+            GLControl hover = null;
+
+            if (captureControl != null)
+            {
+                ctrl = captureControl;
+                x = e.X - ctrl.Left;
+                y = e.Y - ctrl.Top;
+                hover = controls.GetControlAtCoord(e.X, e.Y, out _, out _);
+            }
+            else
+            {
+                ctrl = controls.GetControlAtCoord(e.X, e.Y, out x, out y);
+                hover = ctrl;
+            }
+
+            if (ctrl != null)
+            {
+                ctrl.MouseMove(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+                RefreshCursor(ctrl);
+            }
+
+            if (hover != hoverControl)
+            {
+                if (hoverControl != null)
+                    hoverControl.MouseLeave(EventArgs.Empty);
+                hoverControl = hover;
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            if (hoverControl != null)
+            {
+                hoverControl.MouseLeave(EventArgs.Empty);
+                hoverControl = null;
+            }
+
+            base.OnMouseLeave(e);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
+            {
+                var e = PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m);
+                var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
+
+                if (ctrl != null)
+                    ctrl.MouseHorizontalWheel(e);
+            }
+            else if (m.Msg == 0x0231) // WM_ENTERSIZEMOVE 
+            {
+                // We dont receive any messages during resize/move, so we rely on a timer.
+                timer.Start();
+            }
+            else if (m.Msg == 0x0232) // WM_EXITSIZEMOVE
+            {
+                timer.Stop();
+            }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             famistudio.KeyDown(e, (int)e.KeyCode);
+            foreach (var ctrl in controls.Controls)
+                ctrl.KeyDown(e);
+
+            base.OnKeyDown(e);
         }
 
-        private void Form1_KeyUp(object sender, KeyEventArgs e)
+        protected override void OnKeyUp(KeyEventArgs e)
         {
             famistudio.KeyUp(e, (int)e.KeyCode);
+            foreach (var ctrl in controls.Controls)
+                ctrl.KeyUp(e);
+
+            base.OnKeyUp(e);
+        }
+
+        public void RefreshLayout()
+        {
+            controls.Resize(ClientRectangle.Width, ClientRectangle.Height);
+            controls.MarkDirty();
+        }
+
+        public void MarkDirty()
+        {
+            controls.MarkDirty();
+        }
+
+        public Keys GetModifierKeys()
+        {
+            return ModifierKeys;
+        }
+
+        public Point GetCursorPosition()
+        {
+            return Cursor.Position;
+        }
+
+        public void RefreshCursor()
+        {
+            var pt = PointToClient(Cursor.Position);
+            RefreshCursor(controls.GetControlAtCoord(pt.X, pt.Y, out _, out _));
+        }
+
+        private void RefreshCursor(GLControl ctrl)
+        {
+            if (captureControl != null && captureControl != ctrl)
+                return;
+
+            if (ctrl != null)
+                Cursor = ctrl.Cursor.Current;
+        }
+
+        public void SetActiveControl(GLControl ctrl, bool animate = true)
+        {
+            if (ctrl != null && ctrl != activeControl && (ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer))
+            {
+                activeControl.MarkDirty();
+                activeControl = ctrl;
+                activeControl.MarkDirty();
+            }
+        }
+
+        public void ShowContextMenu(ContextMenuOption[] options)
+        {
         }
 
         public static bool IsKeyDown(Keys k)
@@ -141,7 +407,10 @@ namespace FamiStudio
                 keyData == Keys.Right ||
                 keyData == Keys.Tab)
             {
-                famistudio.KeyDown(new KeyEventArgs(keyData), (int)keyData);
+                var e = new KeyEventArgs(keyData);
+                famistudio.KeyDown(e, (int)keyData);
+                foreach (var ctrl in controls.Controls)
+                    ctrl.KeyDown(e);
                 return true;
             }
             else
@@ -167,17 +436,13 @@ namespace FamiStudio
             {
                 // Will likely fail on Win7/8.
             }
+
+            //timerTask = Task.Factory.StartNew(TimerThread, TaskCreationOptions.LongRunning);
         }
 
         public void Run()
         {
             Application.Run(this);
-        }
-
-        public void RefreshLayout()
-        {
-            tableLayout.RowStyles[0].Height = (int)(sequencer.ComputeDesiredSizeY() * Direct2DTheme.MainWindowScaling);
-            PianoRoll.Invalidate();
         }
 
         private void FamiStudioForm_DragEnter(object sender, DragEventArgs e)

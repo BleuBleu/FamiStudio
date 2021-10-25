@@ -77,7 +77,7 @@ private:
 	void run_until( cpu_time_t );
 };
 
-inline void Nes_Namco::volume( double v ) { synth.volume( 0.66 * v ); }
+inline void Nes_Namco::volume( double v ) { synth.volume( v ); }
 
 inline void Nes_Namco::treble_eq( const blip_eq_t& eq ) { synth.treble_eq( eq ); }
 
