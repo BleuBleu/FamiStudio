@@ -1063,7 +1063,7 @@ namespace FamiStudio
                 // HACK : For some multiline controls.
                 if (prop.control is Label && prop.control.MaximumSize.Width != 0)
                 {
-                    prop.control.MaximumSize = new Size(prop.control.Width, 0);
+                    prop.control.MaximumSize = new Size(widthNoMargin, 0);
                 }
                 else if (prop.control is RadioButton)
                 {

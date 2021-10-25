@@ -62,6 +62,7 @@ style "all"
 
 widget_class "*" style "all"
 widget_class "*GtkLabel*" style "label"
+widget_class "*HScale*" style "label"
 widget_class "*GtkCheckButton*Label*" style "check"
 widget "PasteSpecialDialog.*.GtkCheckButton*Label*" style "check_light"
 widget "DeleteSpecialDialog.*.GtkCheckButton*Label*" style "check_light"

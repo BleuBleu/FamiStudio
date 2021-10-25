@@ -2574,13 +2574,15 @@ namespace FamiStudio
             if (PlatformUtils.IsMobile && envTypeMaxValue == 63)
                 envTypeMaxValue++;
 
-            for (int i = 0; i <= (PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue); i++)
+            var lasti = PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue;
+
+            for (int i = 0; i <= lasti; i++)
             {
                 var value = PlatformUtils.IsMobile ? i + envTypeMinValue : i - midValue;
                 var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
                 r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
 
-                if ((value % spacing) == 0)
+                if ((value % spacing) == 0 || i == 0 || i == lasti)
                 {
                     if (lastRectangleValue >= envTypeMinValue && lastRectangleValue <= envTypeMaxValue)
                     {
