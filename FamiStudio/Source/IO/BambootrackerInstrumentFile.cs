@@ -86,10 +86,12 @@ namespace FamiStudio
             //// Needs to match the current expansion audio. Our enum happens to match (-1) for now.
             ////if (instType != ExpansionType.None && instType != project.ExpansionAudio)
             /*if (ExpansionType.EPSM != project.ExpansionAudio)
+             */
+            if (!project.UsesExpansionAudio(instType))
             {
                 Log.LogMessage(LogSeverity.Error, "Bambootracker import only supported by EPSM expansion");
                 return null;
-            }*/
+            }
 
             var offset = 36;
             var nameLen = BitConverter.ToInt32(bytes, offset); offset += 4;

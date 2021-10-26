@@ -14,7 +14,7 @@ more details. You should have received a copy of the GNU Lesser General
 Public License along with this module; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
 
-#define NONLINEAR_TND 0
+#define NONLINEAR_TND 1
 
 static int null_dmc_reader( void*, cpu_addr_t )
 {
@@ -297,6 +297,10 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 #if NONLINEAR_TND
 	assert(buf.samples_avail() == tnd.samples_avail());
 
+	sample_t outLeft[4096];
+	sample_t outRight[4096];
+	long samples = bufLeft.read_samples(outLeft, count, false);
+	bufRight.read_samples(outRight, count, false);
 	if (count)
 	{
 		// Apply non-linear mixing to the TND buffer.
@@ -304,7 +308,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 
 		long prev = nonlinearize(nonlinear_accum, tnd_volume);
 
-		for (unsigned n = count; n--; )
+		for (unsigned n = samples; n--; )
 		{
 			nonlinear_accum += (long)*p;
 			long entry = nonlinearize(nonlinear_accum, tnd_volume);
@@ -318,33 +322,36 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 
 		int lin_bass = lin.begin(buf);
 		int nonlin_bass = nonlin.begin(tnd);
-
-		for (int n = count; n--; )
+		
+		for (long i = 0; i < samples; ++i)
 		{
 			int s = lin.read() + nonlin.read();
 			lin.next(lin_bass);
 			nonlin.next(nonlin_bass);
-			*out++ = s;
+			//*out++ = s;
+			*out++ = (blip_sample_t)clamp((int)(s + outLeft[i]), -32767, 32767);
+			*out++ = (blip_sample_t)clamp((int)(s + outRight[i]), -32767, 32767);
 
-			if ((BOOST::int16_t) s != s)
+			if ((BOOST::int16_t)s != s) {
 				out[-1] = 0x7FFF - (s >> 24);
+				out[-2] = 0x7FFF - (s >> 24);
+			}
+				
 		}
 
 		lin.end(buf);
 		nonlin.end(tnd);
 
-		buf.remove_samples(count);
-		tnd.remove_samples(count);
+		buf.remove_samples(samples);
+		tnd.remove_samples(samples);
 	}
 
 #else
 	//buf.read_samples(out, count);
-#endif
-
-	sample_t outMono [4096];
+	sample_t outMono[4096];
 	sample_t outLeft[4096];
 	sample_t outRight[4096];
-	long samples =  buf.read_samples(outMono, count, false);
+	long samples = buf.read_samples(outMono, count, false);
 
 	//bufLeft.mix_samples(outMono, samples);
 	//bufRight.mix_samples(outMono, samples);
@@ -352,9 +359,11 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 	bufRight.read_samples(outRight, count, false);
 	for (long i = 0; i < samples; ++i)
 	{
-		*out++ = (blip_sample_t)clamp((int)(outMono[i]+ outLeft[i]),-32767, 32767);
-		*out++ = (blip_sample_t)clamp((int)(outMono[i]+ outRight[i]), -32767, 32767);
+		*out++ = (blip_sample_t)clamp((int)(outMono[i] + outLeft[i]), -32767, 32767);
+		*out++ = (blip_sample_t)clamp((int)(outMono[i] + outRight[i]), -32767, 32767);
 	}
+#endif
+
 
 	return count*2;
 
