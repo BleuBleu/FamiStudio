@@ -189,6 +189,9 @@
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMSquare.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMRythm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -496,8 +499,8 @@
     <EmbeddedResource Include="Resources\QuickSand8Bold_0.png" />
     <EmbeddedResource Include="Resources\InstrumentEPSM.png" />
     <EmbeddedResource Include="Resources\InstrumentEPSM%402x.png" />
-    <EmbeddedResource Include="Resources\Rythm.png" />
-    <EmbeddedResource Include="Resources\Rythm%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelRythm.png" />
+    <EmbeddedResource Include="Resources\ChannelRythm%402x.png" />
     <EmbeddedResource Include="Resources\Algorithm7.png" />
     <EmbeddedResource Include="Resources\Algorithm6%402x.png" />
     <EmbeddedResource Include="Resources\Algorithm6.png" />
