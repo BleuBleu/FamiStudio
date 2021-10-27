@@ -1310,16 +1310,27 @@ namespace FamiStudio
                         {
                             if (envelopeDragIdx == -1)
                             {
-                                PlatformUtils.MessageBoxAsync($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace instrument", MessageBoxButtons.YesNo, (r) =>
-                                {
-                                    if (r == DialogResult.Yes)
-                                    {
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                                        App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
-                                        App.UndoRedoManager.EndTransaction();
+                                const string label = "Which action do you wish to perform?";
 
-                                        InstrumentReplaced?.Invoke(instrumentDst);
-                                    }
+                                var messageDlg = new PropertyDialog("Copy or Replace?", 400, true, false);
+                                messageDlg.Properties.AddLabel(null, label, true); // 0
+                                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, $"Replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'.", true); // 1
+                                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, $"Copy all properties and envelopes of instrument '{instrumentSrc.Name}' on to instrument '{instrumentDst.Name}'.", false); // 2
+                                messageDlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
+                                messageDlg.Properties.Build();
+                                messageDlg.ShowDialogAsync(null, (r) =>
+                                {
+                                    var replace = messageDlg.Properties.GetPropertyValue<bool>(1);
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+
+                                    if (replace)
+                                        App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
+                                    else
+                                        App.Project.CopyInstrument(instrumentDst, instrumentSrc);
+
+                                    App.UndoRedoManager.EndTransaction();
+                                    RefreshButtons();
+                                    InstrumentReplaced?.Invoke(instrumentDst);
                                 });
                             }
                             else
