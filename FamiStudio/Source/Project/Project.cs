@@ -481,7 +481,9 @@ namespace FamiStudio
             instrumentSrc.SerializeState(saveSerializer);
             var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
             loadSerializer.RemapId(instrumentSrc.Id, instrumentDst.Id);
+            var oldName = instrumentDst.Name;
             instrumentDst.SerializeState(loadSerializer);
+            instrumentDst.Name = oldName;
 
             InvalidateCumulativePatternCache();
             ValidateIntegrity();
