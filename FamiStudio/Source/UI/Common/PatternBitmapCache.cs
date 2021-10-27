@@ -214,7 +214,7 @@ namespace FamiStudio
                 var factor = 1;
                 while (clampedPatternCacheSizeY > MaxPatternCacheSizeY)
                 {
-                    clampedPatternCacheSizeY = Utils.DivideAndRoundUp(clampedPatternCacheSizeY, 2);
+                    clampedPatternCacheSizeY = clampedPatternCacheSizeY / 2;
                     factor *= 2;
                 }
 
