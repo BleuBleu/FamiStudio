@@ -1728,7 +1728,7 @@ namespace FamiStudio
             }
             else if (ctrl && e.KeyCode == Keys.S)
             {
-                SaveProjectAsync();
+                SaveProjectAsync(shift);
             }
             else if (ctrl && e.KeyCode == Keys.E)
             {
