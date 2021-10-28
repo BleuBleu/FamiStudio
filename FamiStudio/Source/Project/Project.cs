@@ -474,6 +474,22 @@ namespace FamiStudio
             InvalidateCumulativePatternCache();
         }
 
+        public void CopyInstrument(Instrument instrumentDst, Instrument instrumentSrc)
+        {
+            Debug.Assert(instrumentDst != null && instrumentSrc != null && instrumentDst.Expansion == instrumentSrc.Expansion);
+
+            var saveSerializer = new ProjectSaveBuffer(this);
+            instrumentSrc.SerializeState(saveSerializer);
+            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
+            loadSerializer.RemapId(instrumentSrc.Id, instrumentDst.Id);
+            var oldName = instrumentDst.Name;
+            instrumentDst.SerializeState(loadSerializer);
+            instrumentDst.Name = oldName;
+
+            InvalidateCumulativePatternCache();
+            ValidateIntegrity();
+        }
+
         public void DeleteInstrument(Instrument instrument)
         {
             instruments.Remove(instrument);

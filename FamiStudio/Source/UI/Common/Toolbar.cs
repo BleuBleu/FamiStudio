@@ -246,8 +246,9 @@ namespace FamiStudio
             public float OffsetY;
         };
 
-        DateTime warningTime;
-        string warning = "";
+        DateTime notificationTime;
+        string notification = "";
+        bool notificationWarning;
 
         int lastButtonX = 500;
         bool redTooltip = false;
@@ -584,10 +585,11 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayWarning(string msg, bool beep)
+        public void DisplayNotification(string msg, bool warning, bool beep)
         {
-            warningTime = DateTime.Now;
-            warning = "{Warning} " + msg;
+            notificationTime = DateTime.Now;
+            notification = (warning ? "{Warning} " : "") + msg;
+            notificationWarning = warning;
             if (beep)
                 PlatformUtils.Beep();
         }
@@ -596,7 +598,7 @@ namespace FamiStudio
         {
             if (PlatformUtils.IsDesktop)
             {
-                if (!string.IsNullOrEmpty(warning))
+                if (!string.IsNullOrEmpty(notification))
                     MarkDirty();
             }
             else
@@ -998,19 +1000,19 @@ namespace FamiStudio
             var messageBrush = redTooltip ? warningBrush : ThemeResources.LightGreyFillBrush2;
             var messageFont = ThemeResources.FontMedium;
 
-            if (!string.IsNullOrEmpty(warning))
+            if (!string.IsNullOrEmpty(notification))
             {
-                var span = DateTime.Now - warningTime;
+                var span = DateTime.Now - notificationTime;
 
                 if (span.TotalMilliseconds >= 2000)
                 {
-                    warning = "";
+                    notification = "";
                 }
                 else
                 {
-                    message = (((((long)span.TotalMilliseconds) / 250) & 1) != 0) ? warning : "";
-                    messageBrush = warningBrush;
-                    messageFont = ThemeResources.FontMediumBold;
+                    message = (((((long)span.TotalMilliseconds) / 250) & 1) != 0) ? notification : "";
+                    messageBrush = notificationWarning ? warningBrush : ThemeResources.LightGreyFillBrush2;
+                    messageFont = notificationWarning ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
                 }
             }
 

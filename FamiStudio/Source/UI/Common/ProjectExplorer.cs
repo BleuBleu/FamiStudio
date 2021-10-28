@@ -745,6 +745,7 @@ namespace FamiStudio
                     c.PushTranslation(0, y);
 
                     var numButtonsInGroup = 1;
+                    var drawBackground = true;
 
                     if (button.type == ButtonType.ParamCheckbox ||
                         button.type == ButtonType.ParamSlider ||
@@ -768,14 +769,18 @@ namespace FamiStudio
                                 }
                             }
 
-                            c.FillAndDrawRectangle(0, 0, actualWidth, numButtonsInGroup * buttonSizeY, g.GetVerticalGradientBrush(button.color, numButtonsInGroup * buttonSizeY, 0.8f), ThemeResources.BlackBrush, 1);
                             firstParam = false;
                         }
+                        else
+                        {
+                            drawBackground = false;
+                        }
                     }
-                    else
-                        c.FillAndDrawRectangle(0, 0, actualWidth, buttonSizeY, g.GetVerticalGradientBrush(button.color, buttonSizeY, 0.8f), ThemeResources.BlackBrush, 1);
 
-
+                    if (drawBackground)
+                    {
+                        c.FillAndDrawRectangle(0, 0, actualWidth, numButtonsInGroup * buttonSizeY, g.GetVerticalGradientBrush(button.color, numButtonsInGroup * buttonSizeY, 0.8f), ThemeResources.BlackBrush, 1);
+                    }
 
                     if (button.type == ButtonType.Instrument)
                     {
@@ -1397,16 +1402,27 @@ namespace FamiStudio
                         {
                             if (envelopeDragIdx == -1)
                             {
-                                PlatformUtils.MessageBoxAsync($"Are you sure you want to replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'?", "Replace instrument", MessageBoxButtons.YesNo, (r) =>
-                                {
-                                    if (r == DialogResult.Yes)
-                                    {
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                                        App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
-                                        App.UndoRedoManager.EndTransaction();
+                                const string label = "Which action do you wish to perform?";
 
-                                        InstrumentReplaced?.Invoke(instrumentDst);
-                                    }
+                                var messageDlg = new PropertyDialog("Copy or Replace?", 400, true, false);
+                                messageDlg.Properties.AddLabel(null, label, true); // 0
+                                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, $"Replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'.", true); // 1
+                                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, $"Copy all properties and envelopes of instrument '{instrumentSrc.Name}' on to instrument '{instrumentDst.Name}'.", false); // 2
+                                messageDlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
+                                messageDlg.Properties.Build();
+                                messageDlg.ShowDialogAsync(null, (r) =>
+                                {
+                                    var replace = messageDlg.Properties.GetPropertyValue<bool>(1);
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+
+                                    if (replace)
+                                        App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
+                                    else
+                                        App.Project.CopyInstrument(instrumentDst, instrumentSrc);
+
+                                    App.UndoRedoManager.EndTransaction();
+                                    RefreshButtons();
+                                    InstrumentReplaced?.Invoke(instrumentDst);
                                 });
                             }
                             else
@@ -1443,7 +1459,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            App.DisplayWarning($"Incompatible audio expansion!"); ;
+                            App.DisplayNotification($"Incompatible audio expansion!"); ;
                         }
                     }
                 }
@@ -2244,7 +2260,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    App.DisplayWarning($"Cannot find source file '{sample.SourceFilename}'!"); ;
+                    App.DisplayNotification($"Cannot find source file '{sample.SourceFilename}'!"); ;
                 }
             }
         }

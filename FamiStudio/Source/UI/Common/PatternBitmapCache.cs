@@ -129,7 +129,7 @@ namespace FamiStudio
                 {
                     var note  = musicalNotes[i].Item2;
                     var time1 = musicalNotes[i].Item1;
-                    var time2 = i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : (int)ushort.MaxValue;
+                    var time2 = Math.Min(time1 + note.Duration, i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : ushort.MaxValue);
 
                     var scaledTime1 = (int)(time1 * scaleX);
                     var scaledTime2 = Math.Min((int)(time2 * scaleX), patternCacheSizeX);
@@ -214,7 +214,7 @@ namespace FamiStudio
                 var factor = 1;
                 while (clampedPatternCacheSizeY > MaxPatternCacheSizeY)
                 {
-                    clampedPatternCacheSizeY = Utils.DivideAndRoundUp(clampedPatternCacheSizeY, 2);
+                    clampedPatternCacheSizeY = clampedPatternCacheSizeY / 2;
                     factor *= 2;
                 }
 
