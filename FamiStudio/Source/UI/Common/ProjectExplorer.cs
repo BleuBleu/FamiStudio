@@ -1320,7 +1320,7 @@ namespace FamiStudio
                             {
                                 const string label = "Which action do you wish to perform?";
 
-                                var messageDlg = new PropertyDialog("Copy or Replace?", 400, true, false);
+                                var messageDlg = new PropertyDialog("Copy or Replace?", 400, true, true);
                                 messageDlg.Properties.AddLabel(null, label, true); // 0
                                 messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, $"Replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'.", true); // 1
                                 messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, $"Copy all properties and envelopes of instrument '{instrumentSrc.Name}' on to instrument '{instrumentDst.Name}'.", false); // 2
@@ -1328,17 +1328,20 @@ namespace FamiStudio
                                 messageDlg.Properties.Build();
                                 messageDlg.ShowDialogAsync(null, (r) =>
                                 {
-                                    var replace = messageDlg.Properties.GetPropertyValue<bool>(1);
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                                    if (r == DialogResult.OK)
+                                    {
+                                        var replace = messageDlg.Properties.GetPropertyValue<bool>(1);
+                                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
 
-                                    if (replace)
-                                        App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
-                                    else
-                                        App.Project.CopyInstrument(instrumentDst, instrumentSrc);
+                                        if (replace)
+                                            App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
+                                        else
+                                            App.Project.CopyInstrument(instrumentDst, instrumentSrc);
 
-                                    App.UndoRedoManager.EndTransaction();
-                                    RefreshButtons();
-                                    InstrumentReplaced?.Invoke(instrumentDst);
+                                        App.UndoRedoManager.EndTransaction();
+                                        RefreshButtons();
+                                        InstrumentReplaced?.Invoke(instrumentDst);
+                                    }
                                 });
                             }
                             else
