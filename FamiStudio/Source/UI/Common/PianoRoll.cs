@@ -1401,7 +1401,7 @@ namespace FamiStudio
 
         private bool GetDPCMKeyColor(int note, ref Color color)
         {
-            if (App.SelectedChannel.Type == ChannelType.Dpcm)
+            if (editMode != EditionMode.VideoRecording && App.SelectedChannel.Type == ChannelType.Dpcm)
             {
                 var mapping = Song.Project.GetDPCMMapping(note);
                 if (mapping != null)
