@@ -716,6 +716,7 @@ namespace FamiStudio
                     c.PushTranslation(0, y);
 
                     var numButtonsInGroup = 1;
+                    var drawBackground = true;
 
                     if (button.type == ButtonType.ParamCheckbox ||
                         button.type == ButtonType.ParamSlider ||
@@ -735,9 +736,16 @@ namespace FamiStudio
 
                             firstParam = false;
                         }
+                        else
+                        {
+                            drawBackground = false;
+                        }
                     }
 
-                    c.FillAndDrawRectangle(0, 0, actualWidth, numButtonsInGroup * buttonSizeY, g.GetVerticalGradientBrush(button.color, buttonSizeY, 0.8f), ThemeResources.BlackBrush, 1);
+                    if (drawBackground)
+                    {
+                        c.FillAndDrawRectangle(0, 0, actualWidth, numButtonsInGroup * buttonSizeY, g.GetVerticalGradientBrush(button.color, numButtonsInGroup * buttonSizeY, 0.8f), ThemeResources.BlackBrush, 1);
+                    }
 
                     if (button.type == ButtonType.Instrument)
                     {
