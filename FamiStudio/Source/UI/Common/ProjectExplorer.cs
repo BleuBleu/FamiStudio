@@ -1375,7 +1375,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            App.DisplayWarning($"Incompatible audio expansion!"); ;
+                            App.DisplayNotification($"Incompatible audio expansion!"); ;
                         }
                     }
                 }
@@ -2169,7 +2169,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    App.DisplayWarning($"Cannot find source file '{sample.SourceFilename}'!"); ;
+                    App.DisplayNotification($"Cannot find source file '{sample.SourceFilename}'!"); ;
                 }
             }
         }

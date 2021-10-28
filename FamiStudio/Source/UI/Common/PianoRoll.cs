@@ -4627,7 +4627,7 @@ namespace FamiStudio
 
         private void ShowInstrumentError()
         {
-            App.DisplayWarning("Selected instrument is incompatible with channel!");
+            App.DisplayNotification("Selected instrument is incompatible with channel!");
         }
 
         public void ToggleEffectPannel()
@@ -5124,7 +5124,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    App.DisplayWarning("DPCM samples are only allowed between C1 and D6");
+                    App.DisplayNotification("DPCM samples are only allowed between C1 and D6");
                 }
 
                 return true;
@@ -5204,7 +5204,7 @@ namespace FamiStudio
 
             if (!channel.SupportsInstrument(App.SelectedInstrument))
             {
-                App.DisplayWarning("Selected instrument is incompatible with channel!");
+                App.DisplayNotification("Selected instrument is incompatible with channel!");
                 return null;
             }
 
@@ -5537,7 +5537,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    App.DisplayWarning("DPCM samples are only allowed between C1 and D6");
+                    App.DisplayNotification("DPCM samples are only allowed between C1 and D6");
                 }
 
                 return true;

@@ -663,12 +663,12 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayWarning(string msg, bool beep = true)
+        public void DisplayNotification(string msg, bool warning = true, bool beep = true)
         {
             if (PlatformUtils.IsMobile)
                 PlatformUtils.ShowToast(msg);
             else
-                ToolBar.DisplayWarning(msg, beep);
+                ToolBar.DisplayNotification(msg, warning, beep);
         }
 
         private void UndoRedoManager_PreUndoRedo(TransactionScope scope, TransactionFlags flags)
@@ -1026,7 +1026,7 @@ namespace FamiStudio
                     undoRedoManager.Clear();
 
                 undoRedoManager.NotifySaved();
-                PlatformUtils.ShowToast("Project Saved!");
+                DisplayNotification("Project Saved!", false, false);
             }
             else
             {
@@ -1054,11 +1054,11 @@ namespace FamiStudio
         {
             if (exportDialog == null || !exportDialog.HasAnyPreviousExport)
             {
-                DisplayWarning("No last export to repeat");
+                DisplayNotification("No last export to repeat");
             }
             else if (!exportDialog.CanRepeatLastExport(project))
             {
-                DisplayWarning("Project has changed too much to repeat last export.");
+                DisplayNotification("Project has changed too much to repeat last export.");
                 FreeExportDialog();
             }
             else
@@ -1394,7 +1394,7 @@ namespace FamiStudio
                 else
                 {
                     if (showWarning)
-                        DisplayWarning("Selected instrument is incompatible with channel!", false);
+                        DisplayNotification("Selected instrument is incompatible with channel!", true, false);
                     return;
                 }
             }
