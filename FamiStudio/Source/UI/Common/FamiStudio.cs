@@ -1706,7 +1706,7 @@ namespace FamiStudio
                     SeekSong(0);
                 }
             }
-            if (!recordingMode && e.KeyCode >= Keys.F1 && e.KeyCode <= Keys.F12)
+            if (!recordingMode && e.KeyCode >= Keys.F1 && e.KeyCode <= Keys.F24)
             {
                 if (ctrl)
                     ForceDisplayChannelMask ^= (1 << (e.KeyCode - Keys.F1));
