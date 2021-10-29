@@ -48,7 +48,7 @@ You can find me:
 - On the [FamiStudio Discord](https://discord.gg/88UPmxh)
 
 ## Acknowledgments
-- [Shiru](https://shiru.untergrund.net/code.shtml) for the FamiTone2 library and the demo songs that are included (_After the Rain_ and _Danger Streets_)
+- [Shiru](https://shiru.untergrund.net/code.shtml) for the FamiTone2 library.
 - [Blargg](http://www.slack.net/~ant/) for Nes_Snd_Emu and the underlying Blip_Buffer. Also for it's Smooth Vibrato tech.
 - [RainWarrior](http://rainwarrior.ca) for NSFImport and other tools.
 - [Mitsutaka Okazaki](https://github.com/okaxaki) For emu2413 and emu2149 which are used for VRC7 and Sunsoft 5B emulation.
