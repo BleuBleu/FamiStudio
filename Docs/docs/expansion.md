@@ -42,7 +42,7 @@ Certain expansion instrument have parameters that are very different from standa
 
 VRC6 have a single extra parameter:
 
-* **Saw Master Volume** : The saw channel tends to be very loud and its volume ranges from 0 to 63 (altough FamiStudio always work in the 0 to 15 range).
+* **Saw Master Volume** : The saw channel tends to be very loud and its volume ranges from 0 to 63 (although FamiStudio always work in the 0 to 15 range).
     * **Full** : Maps the 0-15 range to the full 0-63 range, very loud.
     * **Half** : Maps the 0-15 range to the full 0-31 range, probably the best compromise.
     * **Quarter** : Use the 0-15 values as is, quiet.
@@ -82,8 +82,8 @@ The FDS instruments have 2 extra envelopes and a few extra parameter.
 
 The extra envelopes are:
 
-* **Waveform** : The waveform of the instrument. It has a fixed length of 64 and can be fully customized. You can also choose from one of the presets.
-* **Modulation Table** : The modulation table is used to modulate the waveform. It has a fixed length of 32 and can be fully customized. You can also choose from one of the presets. It has no effect if the modulation speed or depth is zero. Note that the way the modulation table is edited is very different from FamiTracker. All the internal complexity is hidden.
+* **Waveform** : The waveform of the instrument. It has a fixed length of 64 and can be fully customised. You can also choose from one of the presets.
+* **Modulation Table** : The modulation table is used to modulate the waveform. It has a fixed length of 32 and can be fully customised. You can also choose from one of the presets. It has no effect if the modulation speed or depth is zero. Note that the way the modulation table is edited is very different from FamiTracker. All the internal complexity is hidden.
 
 The parameters are:
 
@@ -104,13 +104,13 @@ The N163 instruments have an extra envelope and a few extra parameter. Note that
 
 Extra envelope:
 
-* **Waveform** : The waveform of the instrument. It will of a fixed length, as speficied by the "Wave Size" parameter.
+* **Waveform** : The waveform of the instrument. It will of a fixed length, as specified by the "Wave Size" parameter.
 
 The parameters are:
 
 * **Wave Preset** : A few preset that you can use to set the waveform envelope.
 * **Wave Size** : The N163 chip had only 128 of RAM to store all the waveforms used at any given time. For example, if you use waveforms of size 32, you can only use 4 unique instrument at any given time. Using more will result in channels using wrong instruments.
-* **Wave Position** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms dont overlap.
+* **Wave Position** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms don't overlap.
 
 ### EPSM
 
@@ -118,10 +118,10 @@ EPSM instruments are by far the ones with the most parameters.
 
 ![](images/EPSM.png#center)
 
-Roughly speaking, the chip generates a carier frequency, which is then modified by a modulator. To configure this properly, you should be familiar with the Attack-Decay-Sustain-Release (ADSR) way of generating sound.
+Roughly speaking, the chip generates a carrier frequency, which is then modified by a modulator. To configure this properly, you should be familiar with the Attack-Decay-Sustain-Release (ADSR) way of generating sound.
 
 * **Patch** : Allows you to select the FamiStudio default pre-defined patch, it will automatically change to custom when a parameter is changed.
-* **Algorithm** : Configuration of how the different operators affect eachother.
+* **Algorithm** : Configuration of how the different operators affect each-other.
 * **Feedback** : Audio feedback to OP1.
 * **Left** : Enable Left channel.
 * **Right** : Enable Right channel.
