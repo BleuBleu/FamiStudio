@@ -6,17 +6,19 @@ Expansion audio refers to extra hardware that were present on some Famicom cartr
 
 List of expansions supported:
 
-* **Konami VRC6**: Adds 2 square channels and a Sawtooth channel. The square channels are better quality than the stock square as they give more control over the duty cycle and don't suffer for the phase reset bug. 
+* **Konami VRC6**: Adds 2 square channels and a Sawtooth channel. The square channels are better quality than the stock square as they give more control over the duty cycle and don't suffer for the phase reset bug.
 
 * **Konami VRC7**: Adds 6 FM synthesis channels. It was based off the Yamaha YM2413 OPLL. Qualitatively, it sounds like an old SoundBlaster card from the 90s. It has 15 preset patches and a user-defined one. Since only 1 user-defined patch can be defined, one has to be careful not to use multiple custom patches at the same time from different channels.
 
-* **Famicom Disk System**: Adds an extra channel that uses a wavetable and a modulation unit to create a wide range of sound. 
+* **Famicom Disk System**: Adds an extra channel that uses a wavetable and a modulation unit to create a wide range of sound.
 
 * **Nintendo MMC5**: Adds 2 extra square channels. They are extremely similar to the regular square channels of the Famicom, and also suffer from the same phase reset issue. Unlike the stock square channels, the reset bug cannot be worked around.
 
-* **Namco 163**: Adds up to 8 wavetable channels. It has 128 bytes of RAM to store all the currently used waveforms. Waveforms can be 4, 8, 16 and 32 in size. Smaller waveforms will sound worse, but you can have more of them at any given time. FamiStudio will work at its best with a sample size of 16. Also, it should be noted that for technical reasons, the more channels you add, the worse the audio quality will be. It is recommanded that you use 4 channels or less, which is what most games using the expansion did. 
+* **Namco 163**: Adds up to 8 wavetable channels. It has 128 bytes of RAM to store all the currently used waveforms. Waveforms can be 4, 8, 16 and 32 in size. Smaller waveforms will sound worse, but you can have more of them at any given time. FamiStudio will work at its best with a sample size of 16. Also, it should be noted that for technical reasons, the more channels you add, the worse the audio quality will be. It is recommended that you use 4 channels or less, which is what most games using the expansion did.
 
 * **Sunsoft S5B**: Add 3 extra square channels. These channels are fixed at a duty cycle or 50%. It was based off the Yamaha YM2149F. While this expansion was extremely powerful, it was only ever used in one game (Gimmick!) and this game did not make use of any advanced features of the chip. For this reason, FamiStudio (and most emulator) only support a small subset of features.
+
+* **EPSM**: Add 3 extra square channels, 6 FM synthesis channels and 6 rhythm channels. The expansion is based off the Yamaha YMF288 chip. The square are fixed at a duty cycle or 50%. Those are essentially the same as Sunsoft S5B. The FM channels are 4-OP Channels that can be configured independently. The rhythm channels are 6 pre-defined drum samples.
 
 ## Enabling expansion audio
 
@@ -38,9 +40,9 @@ Certain expansion instrument have parameters that are very different from standa
 
 ### VRC6
 
-VRC6 have a single extra parameter: 
+VRC6 have a single extra parameter:
 
-* **Saw Master Volume** : The saw channel tends to be very loud and its volume ranges from 0 to 63 (altough FamiStudio always work in the 0 to 15 range). 
+* **Saw Master Volume** : The saw channel tends to be very loud and its volume ranges from 0 to 63 (altough FamiStudio always work in the 0 to 15 range).
     * **Full** : Maps the 0-15 range to the full 0-63 range, very loud.
     * **Half** : Maps the 0-15 range to the full 0-31 range, probably the best compromise.
     * **Quarter** : Use the 0-15 values as is, quiet.
@@ -50,14 +52,14 @@ VRC6 have a single extra parameter:
 
 ### VRC7
 
-VRC7 instruments are by far the ones with the most parameters.
+VRC7 instruments are by far the ones with the most parameters of the old expansions.
 
 ![](images/VRC7.png#center)
 
 Roughly speaking, the chip generates a carier frequency, which is then modified by a modulator. To configure this properly, you should be familiar with the Attack-Decay-Sustain-Release (ADSR) way of generating sound.
 
 * **Patch** : Allows you to select one of the built-in patch. Changing any parameter value will revert back to the "Custom" patch as it is the only one that can be configured.
-* **Carier** / **Modulator** : 
+* **Carier** / **Modulator** :
     * **Tremolo** : Toggle use of tremolo. The rate of the tremolo is fixed and cannot be changed.
     * **Vibrato** : Toggle use of vibrato. The rate of the vibrato is fixed and cannot be changed.
     * **Sustained** : Toggle use of sustain in the envelope.
@@ -85,7 +87,7 @@ The extra envelopes are:
 
 The parameters are:
 
-* **Master Volume** : At full volume the FDS can be significantly louder than the regular channels. The chip also supported 40%, 50% and 66% which makes the sound a lot more balanced. 
+* **Master Volume** : At full volume the FDS can be significantly louder than the regular channels. The chip also supported 40%, 50% and 66% which makes the sound a lot more balanced.
 * **Wave Preset** : A few preset that you can use to set the waveform envelope.
 * **Mod Preset** : A few preset that you can use to set the modulation envelope.
 * **Mod Speed** : The speed of the modulation.
@@ -110,4 +112,33 @@ The parameters are:
 * **Wave Size** : The N163 chip had only 128 of RAM to store all the waveforms used at any given time. For example, if you use waveforms of size 32, you can only use 4 unique instrument at any given time. Using more will result in channels using wrong instruments.
 * **Wave Position** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms dont overlap.
 
+### EPSM
 
+EPSM instruments are by far the ones with the most parameters.
+
+![](images/EPSM.png#center)
+
+Roughly speaking, the chip generates a carier frequency, which is then modified by a modulator. To configure this properly, you should be familiar with the Attack-Decay-Sustain-Release (ADSR) way of generating sound.
+
+* **Patch** : Allows you to select the FamiStudio default pre-defined patch, it will automatically change to custom when a parameter is changed.
+* **Algorithm** : Configuration of how the different operators affect eachother.
+* **Feedback** : Audio feedback to OP1.
+* **Left** : Enable Left channel.
+* **Right** : Enable Right channel.
+* **AMS** : Amplitude modulation sensitivity.
+* **PMS** : Period modulation sensitivity.
+* **LF Oscillator EN** : Enable low frequency oscillator
+* **LF Oscillator** : Low frequency oscillator rate
+* **OPx** :
+    * **Detune** : Detune is a parameter that gives cycle several gap slight in each slot as for frequency information made from F-Number.
+    * **Frequency Ratio** : Multiplier on the frequency.
+    * **Volume** : Operator volume.
+    * **Key Scale** : Affects the speed of the ADSR envelope speed.
+    * **Attack Rate** : Speed of the attack of note.
+    * **Amplitude Modulation** : Enable amplitude modulation for operator.
+    * **Decay Rate** : Speed of the decay to sustain level after attack.
+    * **Sustain Rate** : Sustain rate is a speed that attenuates from sustain level
+    * **Sustain Level** : Sustain level is the level (amount of attenuation) that changes from decay rate into sustain rate.
+    * **Release Rate** : The release rate is Key off speed of the following attenuation.
+    * **SSG Envelope EN** : Enable SSG Envelope.
+    * **SSG Envelope** : Selection of SSG Envelope type.
