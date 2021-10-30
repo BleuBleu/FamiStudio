@@ -125,16 +125,20 @@ namespace FamiStudio
                         musicalNotes.Add(new Tuple<int, Note>(time, note));
                 }
 
+                var lastScaledTime2 = 0;
+
                 for (int i = 0; i < musicalNotes.Count; i++)
                 {
                     var note  = musicalNotes[i].Item2;
                     var time1 = musicalNotes[i].Item1;
                     var time2 = Math.Min(time1 + note.Duration, i < musicalNotes.Count - 1 ? musicalNotes[i + 1].Item1 : ushort.MaxValue);
 
-                    var scaledTime1 = (int)(time1 * scaleX);
-                    var scaledTime2 = Math.Min((int)(time2 * scaleX), patternCacheSizeX);
+                    var scaledTime1 = Math.Max((int)(time1 * scaleX), lastScaledTime2);
+                    var scaledTime2 = Math.Min((int)Math.Round(time2 * scaleX), patternCacheSizeX);
 
                     DrawPatternBitmapNote(project, scaledTime1, scaledTime2, note, patternCacheSizeX, clampedPatternCacheSizeY, noteSizeY, minNote, maxNote, scaleY, pattern.ChannelType == ChannelType.Dpcm, data);
+
+                    lastScaledTime2 = scaledTime2;
                 }
             }
 
