@@ -18,7 +18,7 @@ The general command line syntax is:
 
 Examples:
 
-    FamiStudio music.fms wav-export music.wave -export-songs:2 -wav-export-rate:48000
+    FamiStudio music.fms wav-export music.wav -export-songs:2 -wav-export-rate:48000
     FamiStudio music.fms famitracker-txt-export music.txt -export-songs:0,1,2
     FamiStudio music.fms famitone2-export music.s -famitone2-format:ca65
 
