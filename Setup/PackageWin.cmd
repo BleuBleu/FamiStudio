@@ -30,4 +30,5 @@ cd Release
 tar -a -c -f ..\FamiStudio%Version%-WinInstaller.zip Setup.msi Setup.exe
 cd ..
 
+del ..\FamiStudio\bin\Release\FamiStudio.Android.dll
 tar -a -c -f FamiStudio%Version%-WinPortableExe.zip "Demo Songs\*.*" portable.txt -C ..\FamiStudio\bin\Release\ *.exe *.dll *.config FamiStudio.pdb
