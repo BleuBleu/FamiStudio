@@ -1,11 +1,20 @@
 3.2.0
 =====
 
-Beta fixes:
-- Fix env editor rectangle rendering. 
+- Oscilloscope stuck at end of song?
+- Project names that start with number export badly to ASM?
+	"And it's not the assembly file name, it's the project title starting with a number that causes an invalid label."
+- "I notice that if I audition the 2nd highest Bb while the splash screen is up the key gets stuck"
+- Are loop point really mandatory?
+- High VRC7 notes in smb1vrc7_6.ftm
+x Duty cycle range is note right when editing envelopes?
+x Play rate 1/2, 1/4.
 
-Icon notes:
-- 46% zoom, start with 128x128 png.
+Low Priority:
+- Chroma subsampling settings for android?
+
+Icon notes:-
+- 66% zoom, start with 128x128 png.
 
 Testing
 =======
@@ -17,9 +26,11 @@ Testing
 Packaging:
 ==========
 / Make download list vertical on website.
-- List dependencies in doc, list demo songs in doc.
-- Two songs from mark
+- Make sure no android DLL on windows.
+- Doc : List dependencies in doc, list demo songs in doc, mobile tutorial, move installation procedure to its own page.
+/ Two songs from mark
 - Add link to discord in doc
+- Thumbnail + desc for tutorial.
 
 New Features in 3.2.0
 =====================
@@ -28,10 +39,15 @@ Changes:
 - Proper emulation of triangle/noise/DPCM volume interactions
 - Android app (free on Play Store)
 - Significant graphic optimizations, especially on lower-end machines or large projects.
+- Minor quality of life features
 - Minor cosmetic UI changes (icons, envelope editor, coloring piano with DPCM colors, etc.)
 Behavior changes:
 - Snapping precision is now expressed in beats. So with the default settings, 1 means a quarter note.
 - Channel volumes have been slightly adjusted to match the NES hardware more closely.
+
+3.3.0
+=====
+- GTK 3.x? At least fix leak.
 
 Features missing from the Mobile version
 ========================================
@@ -125,26 +141,20 @@ Cartoon Tutorial
 - Hue: -180
 - Chroma: -20
 
-3.2.0
-=====
-- Overclocking (2x, 3x, 4x would be a good start).
-- Multi-expansions (dont want that garbage in the sound engine, would need to be a seperate NSF thing).
-
 Backlog: 
 =========
-- NSF import read DMC initial value.
+- Register viewer.
 - Volume/effect scaling?
+- Write delta counter (Zxx).
+- More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
+
+- Overclocking (2x, 3x, 4x would be a good start).
+- NSF import read DMC initial value.
 - Save snapping + qwerty settings + some export settings.
 - Left/right pan with +/- (cubase style)?
 - TailWindz : CTRL + Scroll should do "something"
 - Hardware sweep (how to not conflict with smooth vibrato?)
-- Write delta counter (Zxx).
 - Scales
 - Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
-- Sign exe/setup on Windows (EV cert is too expensive) + Sign/notarize on MacOS (dont want to pay for developper ID). 
-- Installer on Japanese machine? 
-- Square selection: Sort-of works, but problems are with stop notes. To know if a stop note is in the square
-  you need the previous note, but that note may just have been deleted (like in DeleteNotes), so its almost
-  impossible to do without caching the stop note values.

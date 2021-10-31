@@ -2568,21 +2568,21 @@ namespace FamiStudio
             var lastRectangleValue = int.MinValue;
             var lastRectangleY     = -1.0f;
             var oddRectangle       = false;
+
             var maxX = GetPixelForNote(env.Length);
+            var maxi = (PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue) + 1;
 
-            // HACK : Force the [-64,63] to be symmetric.
-            if (PlatformUtils.IsMobile && envTypeMaxValue == 63)
-                envTypeMaxValue++;
-
-            var lasti = PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue;
-
-            for (int i = 0; i <= lasti; i++)
+            for (int i = 0; i <= maxi; i++)
             {
                 var value = PlatformUtils.IsMobile ? i + envTypeMinValue : i - midValue;
                 var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
-                r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
+                
+                if (i != maxi)
+                    r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
 
-                if ((value % spacing) == 0 || i == 0 || i == lasti)
+                var drawLabel = i == maxi - 1;
+
+                if ((value % spacing) == 0 || i == 0 || i == maxi)
                 {
                     if (lastRectangleValue >= envTypeMinValue && lastRectangleValue <= envTypeMaxValue)
                     {
@@ -2592,10 +2592,11 @@ namespace FamiStudio
 
                     lastRectangleValue = value;
                     lastRectangleY = y;
-
-                    if (value >= envTypeMinValue - 1 && value <= envTypeMaxValue + 1)
-                        r.cb.DrawText(value.ToString(), ThemeResources.FontSmall, maxX + 4 * r.g.WindowScaling, y - envelopeValueSizeY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, envelopeValueSizeY);
+                    drawLabel |= value >= envTypeMinValue - 1 && value <= envTypeMaxValue + 1;
                 }
+
+                if (drawLabel)
+                    r.cb.DrawText(value.ToString(), ThemeResources.FontSmall, maxX + 4 * r.g.WindowScaling, y - envelopeValueSizeY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, envelopeValueSizeY);
             }
 
             DrawSelectionRect(r.cb, Height);
