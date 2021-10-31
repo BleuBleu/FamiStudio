@@ -64,7 +64,7 @@
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <BundleAssemblies>false</BundleAssemblies>
     <NoWarn>CS0162,CS0414,CS0067</NoWarn>
-    <AndroidPackageFormat>aab</AndroidPackageFormat>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidUseAapt2>true</AndroidUseAapt2>
     <AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
   </PropertyGroup>
@@ -130,7 +130,7 @@
   <ItemGroup>
     <AndroidResource Include="Source\UI\Droid\Resources\color\light_grey.xml">
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
-    </AndroidResource>    
+    </AndroidResource>
     <AndroidResource Include="Source\UI\Droid\Resources\font\quicksand.xml">
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
     </AndroidResource>
@@ -480,6 +480,9 @@
     <EmbeddedResource Include="Resources\MenuLoopPoint.png" />
     <EmbeddedResource Include="Resources\MenuMute.png" />
     <EmbeddedResource Include="Resources\MenuPiano.png" />
+    <EmbeddedResource Include="Resources\MenuPlay.png" />
+    <EmbeddedResource Include="Resources\MenuPlayHalf.png" />
+    <EmbeddedResource Include="Resources\MenuPlayQuarter.png" />
     <EmbeddedResource Include="Resources\MenuProperties.png" />
     <EmbeddedResource Include="Resources\MenuReplaceSelection.png" />
     <EmbeddedResource Include="Resources\MenuReset.png" />

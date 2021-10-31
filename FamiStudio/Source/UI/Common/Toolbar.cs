@@ -268,6 +268,7 @@ namespace FamiStudio
             public Point IconPos;
             public bool Visible = true;
             public bool CloseOnClick = true;
+            public bool VibrateOnLongPress = true;
             public string ToolTip;
             public ButtonImageIndices BmpAtlasIndex;
             public ButtonStatusDelegate Enabled;
@@ -331,7 +332,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.Redo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[(int)ButtonType.Transform] = new Button { BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
             buttons[(int)ButtonType.Config]    = new Button { BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig };
-            buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap };
+            buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, RightClick = PlatformUtils.IsMobile ? OnPlayWithRate : (EmptyDelegate)null, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap, VibrateOnLongPress = false };
             buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
             buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap, CloseOnClick = false };
@@ -750,6 +751,16 @@ namespace FamiStudio
                 App.StopSong();
             else
                 App.PlaySong();
+        }
+
+        private void OnPlayWithRate()
+        {
+            App.ShowContextMenu(new[]
+            {   
+                new ContextMenuOption("MenuPlay", "Play (Regular Speed)", () => { App.PlayRate = 1; App.PlaySong(); }),
+                new ContextMenuOption("MenuPlayHalf", "Play (Half Speed)", () => { App.PlayRate = 2; App.PlaySong(); }),
+                new ContextMenuOption("MenuPlayQuarter", "Play (Quarter Speed)", () => { App.PlayRate = 4; App.PlaySong(); })
+            });
         }
 
         private void OnPlayMouseWheel(int delta)
@@ -1240,7 +1251,8 @@ namespace FamiStudio
 
             if (btn != null && btn.RightClick != null)
             {
-                PlatformUtils.VibrateClick();
+                if (btn.VibrateOnLongPress)
+                    PlatformUtils.VibrateClick();
                 btn.RightClick();
                 MarkDirty();
                 if (btn.CloseOnClick && IsExpanded)
