@@ -333,7 +333,6 @@ namespace FamiStudio
                 case ChannelType.Vrc7Fm4:
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
-                    return NesApu.MaximumPeriod15Bit;
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:

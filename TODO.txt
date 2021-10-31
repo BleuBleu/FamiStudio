@@ -3,7 +3,7 @@
 
 - Project names that start with number export badly to ASM?
 	"And it's not the assembly file name, it's the project title starting with a number that causes an invalid label."
-- High VRC7 notes in smb1vrc7_6.ftm
+x High VRC7 notes in smb1vrc7_6.ftm
 x Are loop point really mandatory?
 x Duty cycle range is note right when editing envelopes?
 x Play rate 1/2, 1/4.
@@ -12,7 +12,7 @@ Low Priority:
 - "I notice that if I audition the 2nd highest Bb while the splash screen is up the key gets stuck"
 - Chroma subsampling settings for android?
 
-Icon notes:-
+Icon notes:
 - 66% zoom, start with 128x128 png.
 
 Testing
@@ -24,10 +24,10 @@ Testing
 
 Packaging:
 ==========
+x Make sure no android DLL on windows.
+x Two songs from mark
 / Make download list vertical on website.
-- Make sure no android DLL on windows.
 - Doc : List dependencies in doc, list demo songs in doc, mobile tutorial, move installation procedure to its own page.
-/ Two songs from mark
 - Add link to discord in doc
 - Thumbnail + desc for tutorial.
 
