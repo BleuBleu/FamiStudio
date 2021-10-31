@@ -1,11 +1,17 @@
 3.2.0
 =====
 
-x Project names that start with number export badly to ASM?
-x High VRC7 notes in smb1vrc7_6.ftm
-x Are loop point really mandatory?
-x Duty cycle range is note right when editing envelopes?
-x Play rate 1/2, 1/4.
+Beta 3 fixes:
+- Fixed thumbnail rendering issue in sequencer where short notes were missing
+- Fixed background rendering issue in envelope editor.
+- Made loop/release point creation more intuitive on mobile (thanks @DastardlyNun)
+- Added 1/2x, 1/4x play rate functionality on mobile (long press Play button)
+- Fixed oscilloscope getting stuck when ending a non-looping song (thanks @ThaCuber but evil >:)
+- Fixed note pitch on in the 7th octave of VRC7 (thanks @studsX🎃)
+- Fixed a crash after creating a new file after editing duty cycle.
+- Added a note about bluetooth latency in the first-time tutorial (thanks @Imagino1234).
+- Fixed issue with project names starting with a digit when exporting to ASM (thanks @mcgrew)
+- Gimmick! demo song improvements (thanks @marklincadet)
 
 Low Priority:
 - "I notice that if I audition the 2nd highest Bb while the splash screen is up the key gets stuck"
