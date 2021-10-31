@@ -40,6 +40,8 @@ namespace FamiStudio
         protected int numBufferedFrames = 3;
         protected IOscilloscope oscilloscope;
 
+        public bool IsOscilloscopeConnected => oscilloscope != null;
+
         protected AudioPlayer(int apuIndex, bool pal, int sampleRate, int numBuffers) : base(apuIndex, sampleRate)
         {
             int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short);

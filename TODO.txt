@@ -1,7 +1,6 @@
 3.2.0
 =====
 
-- Oscilloscope stuck at end of song?
 - Project names that start with number export badly to ASM?
 	"And it's not the assembly file name, it's the project title starting with a number that causes an invalid label."
 - "I notice that if I audition the 2nd highest Bb while the splash screen is up the key gets stuck"
