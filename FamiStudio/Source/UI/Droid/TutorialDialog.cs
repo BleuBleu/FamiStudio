@@ -47,7 +47,7 @@ namespace FamiStudio
             "(7/11) A LONG PRESS on some objects will reveal a CONTEXT MENU containing more advanced editing options. Try it everywhere and see what happens!",
             "(8/11) You can access the 3 main views (Sequencer, Piano Roll and Project Explorer) from the QUICK ACCESS BAR located on the right (or bottom in portrait mode).",
             "(9/11) For the complete DOCUMENTATION and a VIDEO TUTORIAL, please click on the big QUESTION MARK!",
-            "(10/11) Using BLUETOOTH adds a lot of LATENCY. There is unfortunately nothing FamiStudio can do about this. Wired headphones or speakers will have much lower LATENCY.",
+            "(10/11) Using BLUETOOTH adds a lot of LATENCY (delay in the audio). There is unfortunately nothing FamiStudio can do about this. Wired headphones or speakers will have much lower LATENCY.",
             "(11/11) Join us on DISCORD to meet other FamiStudio users and share your songs with them! Link in the documentation."
         };
 
