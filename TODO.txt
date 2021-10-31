@@ -3,13 +3,13 @@
 
 - Project names that start with number export badly to ASM?
 	"And it's not the assembly file name, it's the project title starting with a number that causes an invalid label."
-- "I notice that if I audition the 2nd highest Bb while the splash screen is up the key gets stuck"
-- Are loop point really mandatory?
 - High VRC7 notes in smb1vrc7_6.ftm
+x Are loop point really mandatory?
 x Duty cycle range is note right when editing envelopes?
 x Play rate 1/2, 1/4.
 
 Low Priority:
+- "I notice that if I audition the 2nd highest Bb while the splash screen is up the key gets stuck"
 - Chroma subsampling settings for android?
 
 Icon notes:-

@@ -5499,7 +5499,7 @@ namespace FamiStudio
         {
             if ((IsPointInHeader(x, y) || IsPointInNoteArea(x, y)) && x < GetPixelForNote(EditEnvelope.Length))
             {
-                var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1); ;
+                var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1);
                 highlightNoteAbsIndex = absIdx == highlightNoteAbsIndex ? -1 : absIdx;
                 return true;
             }
@@ -5856,9 +5856,18 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
 
             if (release)
+            {
+                Debug.Assert(idx > 0);
+                if (env.Loop < 0 || env.Loop >= idx)
+                    env.Loop = idx - 1;
                 env.Release = idx;
+            }
             else
+            {
+                if (env.Release > 0)
+                    env.Release = idx + 1;
                 env.Loop = idx;
+            }
 
             App.UndoRedoManager.EndTransaction();
         }
@@ -5887,6 +5896,7 @@ namespace FamiStudio
                 var env = EditEnvelope;
                 var lastPixel = GetPixelForNote(env.Length);
                 var menu = new List<ContextMenuOption>();
+                var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1);
 
                 if (editMode == EditionMode.Enveloppe && x < lastPixel)
                 {
@@ -5898,7 +5908,8 @@ namespace FamiStudio
                     }
                     if (env.CanRelease)
                     {
-                        menu.Add(new ContextMenuOption("MenuEnvRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
+                        if (absIdx > 0)
+                            menu.Add(new ContextMenuOption("MenuEnvRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
                         if (env.Release >= 0)
                             menu.Add(new ContextMenuOption("MenuClearEnvRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
                     }
