@@ -3763,7 +3763,9 @@ namespace FamiStudio
             captureSelectionMin = selectionMin;
             captureSelectionMax = selectionMax;
             canFling = false;
-            GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
+
+            if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+                GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
 
             captureMouseAbsoluteIdx = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
             if (allowSnap)
