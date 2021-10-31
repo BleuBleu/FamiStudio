@@ -649,6 +649,8 @@
     <AndroidAsset Include="Source\UI\Droid\Assets\tutorial1.png" />
     <AndroidAsset Include="Source\UI\Droid\Assets\tutorial10.html" />
     <AndroidAsset Include="Source\UI\Droid\Assets\tutorial10.png" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial11.html" />
+    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial11.png" />
     <AndroidAsset Include="Source\UI\Droid\Assets\tutorial2.gif" />
     <AndroidAsset Include="Source\UI\Droid\Assets\tutorial2.html" />
     <AndroidAsset Include="Source\UI\Droid\Assets\tutorial3.gif" />
