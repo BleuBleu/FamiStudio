@@ -31,9 +31,9 @@
 #define NUM_SONGS        2
 
 // data array for each of the exported songs
-extern unsigned char journey_to_silius_music_data[];
-extern unsigned char silver_surfer_c_stephen_ruddy_music_data[];
-extern unsigned char shatterhand_music_data[];
+extern unsigned char music_data_journey_to_silius[];
+extern unsigned char music_data_silver_surfer_c_stephen_ruddy[];
+extern unsigned char music_data_shatterhand[];
 
 // data array for the exported sound effects
 extern unsigned char sounds[];
@@ -63,15 +63,15 @@ void __fastcall__ play_song(unsigned char song_index) {
 
     switch (song_index) {
     case SILVER_SURFER:
-        song_address = &silver_surfer_c_stephen_ruddy_music_data;
+        song_address = &music_data_silver_surfer_c_stephen_ruddy;
         p0 = &song_title_silver_surfer;
         break;
     case JOURNEY_TO_SILAS:
-        song_address = &journey_to_silius_music_data;
+        song_address = &music_data_journey_to_silius;
         p0 = &song_title_jts;
         break;
     case SHATTERHAND:
-        song_address = &shatterhand_music_data;
+        song_address = &music_data_shatterhand;
         p0 = &song_title_shatterhand;
         break;
     }

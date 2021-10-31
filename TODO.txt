@@ -1,8 +1,7 @@
 3.2.0
 =====
 
-- Project names that start with number export badly to ASM?
-	"And it's not the assembly file name, it's the project title starting with a number that causes an invalid label."
+x Project names that start with number export badly to ASM?
 x High VRC7 notes in smb1vrc7_6.ftm
 x Are loop point really mandatory?
 x Duty cycle range is note right when editing envelopes?
