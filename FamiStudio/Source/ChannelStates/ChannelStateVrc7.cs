@@ -67,7 +67,7 @@ namespace FamiStudio
         private int GetOctave(ref int period)
         {
             var octave = 0;
-            while (period > 0x100)
+            while (period >= 0x200)
             {
                 period >>= 1;
                 octave++;

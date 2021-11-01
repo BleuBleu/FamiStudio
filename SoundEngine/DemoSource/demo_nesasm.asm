@@ -368,8 +368,8 @@ play_song:
         sta <.text_ptr+0
         lda #HIGH(song_title_silver_surfer)
         sta <.text_ptr+1
-        ldx #LOW(silver_surfer_c_stephen_ruddy_music_data)
-        ldy #HIGH(silver_surfer_c_stephen_ruddy_music_data)
+        ldx #LOW(music_data_silver_surfer_c_stephen_ruddy)
+        ldy #HIGH(music_data_silver_surfer_c_stephen_ruddy)
         jmp .play_song
 
     .journey_to_silius:
@@ -377,8 +377,8 @@ play_song:
         sta <.text_ptr+0
         lda #HIGH(song_title_jts)
         sta <.text_ptr+1
-        ldx #LOW(journey_to_silius_music_data)
-        ldy #HIGH(journey_to_silius_music_data)
+        ldx #LOW(music_data_journey_to_silius)
+        ldy #HIGH(music_data_journey_to_silius)
         jmp .play_song
 
     .shatterhand:
@@ -386,8 +386,8 @@ play_song:
         sta <.text_ptr+0
         lda #HIGH(song_title_shatterhand)
         sta <.text_ptr+1
-        ldx #LOW(shatterhand_music_data)
-        ldy #HIGH(shatterhand_music_data)
+        ldx #LOW(music_data_shatterhand)
+        ldy #HIGH(music_data_shatterhand)
         jmp .play_song
     
     .play_song:

@@ -91,12 +91,12 @@ namespace FamiStudio
                 // For some reason though, we can only rexport these symbols either before they are defined,
                 // or after all of the data is completely written.
                 lines.Add(".if FAMISTUDIO_CFG_C_BINDINGS");
-                lines.Add($".export _{name}_music_data={name}_music_data");
+                lines.Add($".export _music_data_{name}=music_data_{name}");
                 lines.Add(".endif");
                 lines.Add("");
             }
 
-            lines.Add($"{name}_music_data:");
+            lines.Add($"music_data_{name}:");
             lines.Add($"\t{db} {project.Songs.Count}");
             lines.Add($"\t{dw} {ll}instruments");
 
@@ -146,7 +146,7 @@ namespace FamiStudio
 
             if (assemblyFormat == AssemblyFormat.CA65)
             {
-                lines.Add($".export {name}_music_data");
+                lines.Add($".export music_data_{name}");
                 lines.Add($".global FAMISTUDIO_DPCM_PTR");
                 lines.Add("");
             }

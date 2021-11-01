@@ -2028,6 +2028,21 @@ namespace FamiStudio
             InitializeAudioPlayers();
         }
 
+        private void ConditionalReconnectOscilloscope()
+        {
+            // This can happen when a song with no loop point naturally ends. We dont get notified of 
+            // this (we probably should) and we end up not reconnecting the oscilloscope.
+            if (songPlayer != null &&
+                !songPlayer.IsPlaying && 
+                songPlayer.IsOscilloscopeConnected &&
+                instrumentPlayer != null &&
+                !instrumentPlayer.IsOscilloscopeConnected)
+            {
+                songPlayer.ConnectOscilloscope(null);
+                instrumentPlayer.ConnectOscilloscope(oscilloscope);
+            }
+        }
+
         private void ConditionalShowTutorial()
         {
 #if FAMISTUDIO_WINDOWS
@@ -2120,6 +2135,7 @@ namespace FamiStudio
             TickControls(deltaTime);
             ConditionalMarkControlsDirty();
             ConditionalShowTutorial();
+            ConditionalReconnectOscilloscope();
             CheckNewReleaseDone();
             HighlightPlayingInstrumentNote();
             CheckStopInstrumentNote(deltaTime);

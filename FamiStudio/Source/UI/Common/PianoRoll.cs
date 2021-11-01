@@ -2568,21 +2568,21 @@ namespace FamiStudio
             var lastRectangleValue = int.MinValue;
             var lastRectangleY     = -1.0f;
             var oddRectangle       = false;
+
             var maxX = GetPixelForNote(env.Length);
+            var maxi = (PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue) + 1;
 
-            // HACK : Force the [-64,63] to be symmetric.
-            if (PlatformUtils.IsMobile && envTypeMaxValue == 63)
-                envTypeMaxValue++;
-
-            var lasti = PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue;
-
-            for (int i = 0; i <= lasti; i++)
+            for (int i = 0; i <= maxi; i++)
             {
                 var value = PlatformUtils.IsMobile ? i + envTypeMinValue : i - midValue;
                 var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
-                r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
+                
+                if (i != maxi)
+                    r.cb.DrawLine(0, y, GetPixelForNote(env.Length), y, ThemeResources.DarkGreyLineBrush1, (value % spacing) == 0 ? 3 : 1);
 
-                if ((value % spacing) == 0 || i == 0 || i == lasti)
+                var drawLabel = i == maxi - 1;
+
+                if ((value % spacing) == 0 || i == 0 || i == maxi)
                 {
                     if (lastRectangleValue >= envTypeMinValue && lastRectangleValue <= envTypeMaxValue)
                     {
@@ -2592,10 +2592,11 @@ namespace FamiStudio
 
                     lastRectangleValue = value;
                     lastRectangleY = y;
-
-                    if (value >= envTypeMinValue - 1 && value <= envTypeMaxValue + 1)
-                        r.cb.DrawText(value.ToString(), ThemeResources.FontSmall, maxX + 4 * r.g.WindowScaling, y - envelopeValueSizeY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, envelopeValueSizeY);
+                    drawLabel |= value >= envTypeMinValue - 1 && value <= envTypeMaxValue + 1;
                 }
+
+                if (drawLabel)
+                    r.cb.DrawText(value.ToString(), ThemeResources.FontSmall, maxX + 4 * r.g.WindowScaling, y - envelopeValueSizeY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, envelopeValueSizeY);
             }
 
             DrawSelectionRect(r.cb, Height);
@@ -3762,7 +3763,9 @@ namespace FamiStudio
             captureSelectionMin = selectionMin;
             captureSelectionMax = selectionMax;
             canFling = false;
-            GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
+
+            if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+                GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
 
             captureMouseAbsoluteIdx = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
             if (allowSnap)
@@ -5224,7 +5227,8 @@ namespace FamiStudio
             var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
             note.Value = noteValue;
             note.Duration = SnapEnabled ? Math.Max(1, SnapNote(abs, true) - abs) : Song.GetPatternBeatLength(location.PatternIndex);
-            note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
+            note.Instrument = editChannel != ChannelType.Dpcm ? App.SelectedInstrument : null;
+            note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
 
             SetHighlightedNote(abs);
             MarkPatternDirty(pattern);
@@ -5498,7 +5502,7 @@ namespace FamiStudio
         {
             if ((IsPointInHeader(x, y) || IsPointInNoteArea(x, y)) && x < GetPixelForNote(EditEnvelope.Length))
             {
-                var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1); ;
+                var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1);
                 highlightNoteAbsIndex = absIdx == highlightNoteAbsIndex ? -1 : absIdx;
                 return true;
             }
@@ -5855,9 +5859,18 @@ namespace FamiStudio
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
 
             if (release)
+            {
+                Debug.Assert(idx > 0);
+                if (env.Loop < 0 || env.Loop >= idx)
+                    env.Loop = idx - 1;
                 env.Release = idx;
+            }
             else
+            {
+                if (env.Release > 0)
+                    env.Release = idx + 1;
                 env.Loop = idx;
+            }
 
             App.UndoRedoManager.EndTransaction();
         }
@@ -5886,6 +5899,7 @@ namespace FamiStudio
                 var env = EditEnvelope;
                 var lastPixel = GetPixelForNote(env.Length);
                 var menu = new List<ContextMenuOption>();
+                var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1);
 
                 if (editMode == EditionMode.Enveloppe && x < lastPixel)
                 {
@@ -5897,7 +5911,8 @@ namespace FamiStudio
                     }
                     if (env.CanRelease)
                     {
-                        menu.Add(new ContextMenuOption("MenuEnvRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
+                        if (absIdx > 0)
+                            menu.Add(new ContextMenuOption("MenuEnvRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
                         if (env.Release >= 0)
                             menu.Add(new ContextMenuOption("MenuClearEnvRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
                     }
@@ -6451,14 +6466,13 @@ namespace FamiStudio
                             pattern = channel.CreatePatternAndInstance(location.PatternIndex);
                         }
 
-                        SnapPatternNote(location.PatternIndex, ref location.NoteIndex);
+                        StartCaptureOperation(x, y, CaptureOperation.CreateSlideNote, true);
 
-                        note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+                        note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
                         note.Value = noteValue;
                         note.Duration = (ushort)Song.BeatLength;
-                        note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
-
-                        StartCaptureOperation(x, y, CaptureOperation.CreateSlideNote, true);
+                        note.Instrument = editChannel != ChannelType.Dpcm ? App.SelectedInstrument : null;
+                        note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
                     }
                     else
                     {
@@ -7155,15 +7169,6 @@ namespace FamiStudio
             else
             {
                 return absoluteNoteIndex;
-            }
-        }
-
-        private void SnapPatternNote(int patternIdx, ref int noteIdx)
-        {
-            if (SnapEnabled)
-            {
-                var noteLength = Song.GetPatternNoteLength(patternIdx);
-                noteIdx = (noteIdx / noteLength) * noteLength;
             }
         }
 

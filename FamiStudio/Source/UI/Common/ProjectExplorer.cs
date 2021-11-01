@@ -2822,7 +2822,7 @@ namespace FamiStudio
             else
             {
                 App.SelectedInstrument = button.instrument;
-                highlightedButtonIdx = highlightedButtonIdx == buttonIdx && subButtonType == SubButtonType.Max || button.instrument == null ? -1 : buttonIdx;
+                highlightedButtonIdx = highlightedButtonIdx == buttonIdx && subButtonType == SubButtonType.Max || button.instrument == null || subButtonType != SubButtonType.Max ? -1 : buttonIdx;
 
                 if (subButtonType == SubButtonType.Expand)
                 {

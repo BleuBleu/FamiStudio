@@ -427,8 +427,8 @@ update_title:
         sta @text_ptr+0
         lda #>song_title_silver_surfer
         sta @text_ptr+1
-        ldx #.lobyte(silver_surfer_c_stephen_ruddy_music_data)
-        ldy #.hibyte(silver_surfer_c_stephen_ruddy_music_data)
+        ldx #.lobyte(music_data_silver_surfer_c_stephen_ruddy)
+        ldy #.hibyte(music_data_silver_surfer_c_stephen_ruddy)
         jmp @play_song
 
     @journey_to_silius:
@@ -436,8 +436,8 @@ update_title:
         sta @text_ptr+0
         lda #>song_title_jts
         sta @text_ptr+1
-        ldx #.lobyte(journey_to_silius_music_data)
-        ldy #.hibyte(journey_to_silius_music_data)
+        ldx #.lobyte(music_data_journey_to_silius)
+        ldy #.hibyte(music_data_journey_to_silius)
         jmp @play_song
 
     @shatterhand:
@@ -445,8 +445,8 @@ update_title:
         sta @text_ptr+0
         lda #>song_title_shatterhand
         sta @text_ptr+1
-        ldx #.lobyte(shatterhand_music_data)
-        ldy #.hibyte(shatterhand_music_data)
+        ldx #.lobyte(music_data_shatterhand)
+        ldy #.hibyte(music_data_shatterhand)
         jmp @play_song
     
     @play_song:

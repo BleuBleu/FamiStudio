@@ -34,7 +34,7 @@ Assuming we agree on a feature to be developed, I expect:
 - All features needs to be implemented and tested on all 4 platforms (Windows, MacOS, Linux and Android). 
 - Testing must include Hi-DPI scaling on Windows (150% and 200%), Retina display on MacOS, 100%/200% on Linux as these have been know to break often.
 - Any feature that impacts the music needs to be integrated to all import/export format (FamiTracker, NSF, FTI, etc.)
-- Any new feature needs to be added to the NSF driver needs to be toggeable if it has a cost (RAM or CPU cycles).
+- Any new feature needs to be added to the NSF driver (including its multi-expansion chip variant) and needs to be toggeable if it has a cost (RAM or CPU cycles).
 - New features need to be integrated with any of the 3 unit tests that applies (Sound engine code similarity, NSF import/export and sound emulation tests).
 - Documentation needs to be updated as well.
 
@@ -48,7 +48,7 @@ You can find me:
 - On the [FamiStudio Discord](https://discord.gg/88UPmxh)
 
 ## Acknowledgments
-- [Shiru](https://shiru.untergrund.net/code.shtml) for the FamiTone2 library and the demo songs that are included (_After the Rain_ and _Danger Streets_)
+- [Shiru](https://shiru.untergrund.net/code.shtml) for the FamiTone2 library.
 - [Blargg](http://www.slack.net/~ant/) for Nes_Snd_Emu and the underlying Blip_Buffer. Also for it's Smooth Vibrato tech.
 - [RainWarrior](http://rainwarrior.ca) for NSFImport and other tools.
 - [Mitsutaka Okazaki](https://github.com/okaxaki) For emu2413 and emu2149 which are used for VRC7 and Sunsoft 5B emulation.
