@@ -87,6 +87,11 @@ namespace FamiStudio
             alert.Show();
         }
 
+        public static void DelayedMessageBoxAsync(string text, string title)
+        {
+            FamiStudioForm.Instance.QueueDelayedMessageBox(text, title);
+        }
+
         public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
         {
             FamiStudioForm.Instance.StartLoadFileActivityAsync(mimeType, callback);

@@ -311,6 +311,10 @@ namespace FamiStudio
             callback?.Invoke(res);
         }
 
+        public static void DelayedMessageBoxAsync(string text, string title)
+        {
+        }
+
         public static string KeyCodeToString(int keyval)
         {
             var str = char.ConvertFromUtf32((int)Gdk.Keyval.ToUnicode((uint)keyval));

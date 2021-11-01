@@ -11,7 +11,8 @@ namespace FamiStudio
     {
         Info,
         Warning,
-        Error
+        Error,
+        Count
     };
 
     public interface ILogOutput
@@ -34,11 +35,16 @@ namespace FamiStudio
         public static ILogOutput LogOutput;
         public static LogSeverity MinSeverity = LogSeverity.Info;
 
+        public static string[] lastMessage = new string[(int)LogSeverity.Count];
+
         public static void LogMessage(LogSeverity severity, string msg)
         {
             if ((int)severity >= (int)MinSeverity && LogOutput != null)
                 LogOutput.LogMessage(SeverityStrings[(int)severity] + msg);
+
             Debug.WriteLine(SeverityStrings[(int)severity] + msg);
+
+            lastMessage[(int)severity] = msg;
         }
 
         public static void SetLogOutput(ILogOutput log, LogSeverity minSeverity = LogSeverity.Info)
@@ -47,6 +53,16 @@ namespace FamiStudio
 
             LogOutput = log;
             MinSeverity = minSeverity;
+        }
+
+        public static string GetLastMessage(LogSeverity severity)
+        {
+            return lastMessage[(int)severity];
+        }
+
+        public static void ClearLastMessages()
+        {
+            lastMessage = new string[(int)LogSeverity.Count];
         }
 
         public static void ClearLogOutput()

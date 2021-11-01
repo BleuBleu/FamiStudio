@@ -44,6 +44,9 @@ namespace FamiStudio
         private BaseDialogActivityInfo pendingFinishDialog;
         private GLControl captureControl;
 
+        private string delayedMessage = null;
+        private string delayedMessageTitle = null;
+
         public static bool ActivityRunning => activityRunning;
         public static FamiStudioForm Instance { get; private set; }
         public BaseDialogActivityInfo ActiveDialog => activeDialog;
@@ -238,6 +241,23 @@ namespace FamiStudio
             StartActivityForResult(Intent.CreateChooser(shareIntent, "Share File"), activeDialog.RequestCode);
         }
 
+        public void QueueDelayedMessageBox(string msg, string title)
+        {
+            delayedMessage      = msg;
+            delayedMessageTitle = title;
+        }
+
+        private void ConditionalShowDelayedMessageBox()
+        {
+            if (delayedMessage != null)
+            {
+                PlatformUtils.MessageBoxAsync(delayedMessage, delayedMessageTitle, System.Windows.Forms.MessageBoxButtons.OK);
+
+                delayedMessage      = null;
+                delayedMessageTitle = null;
+            }
+        }
+
         private void ResumeGLThread()
         {
             Console.WriteLine("ResumeGLThread");
@@ -334,6 +354,8 @@ namespace FamiStudio
                     famistudio.Tick(deltaTime);
                     controls.Tick(deltaTime);
                 }
+
+                ConditionalShowDelayedMessageBox();
 
                 if (controls.NeedsRedraw())
                     glSurfaceView.RequestRender();

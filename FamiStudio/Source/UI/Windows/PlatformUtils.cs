@@ -150,6 +150,10 @@ namespace FamiStudio
             callback?.Invoke(res);
         }
 
+        public static void DelayedMessageBoxAsync(string text, string title)
+        {
+        }
+
         public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
         {
             // TODO: Test hi-dpi and things like this.

@@ -414,10 +414,17 @@ namespace FamiStudio
                 progressLogDialog = new LogProgressDialog(mainForm);
                 Log.SetLogOutput(progressLogDialog);
             }
-            else if (PlatformUtils.IsDesktop)
+            else 
             {
-                logDialog = new LogDialog(mainForm);
-                Log.SetLogOutput(logDialog);
+                if (PlatformUtils.IsDesktop)
+                {
+                    logDialog = new LogDialog(mainForm);
+                    Log.SetLogOutput(logDialog);
+                }
+                else
+                {
+                    Log.ClearLastMessages();
+                }
             }
         }
 
@@ -932,6 +939,20 @@ namespace FamiStudio
             });
         }
 
+        private void ConditionalShowFamiTrackerMobileWarning()
+        {
+            if (PlatformUtils.IsMobile && 
+                (Log.GetLastMessage(LogSeverity.Warning) != null ||
+                 Log.GetLastMessage(LogSeverity.Error)   != null))
+            {
+                PlatformUtils.DelayedMessageBoxAsync(
+                    "Warnings or errors were generated during the import of this FamiTracker module. " + 
+                    "The songs will likely not sound correct. Please open with the desktop version of " +
+                    "FamiStudio for the full list of warnings and check out the documention for the " +
+                    "full list of supported effects.", "Warning");
+            }
+        }
+
         public Project OpenProjectFile(string filename, bool allowComplexFormats = true)
         {
             var extension = Path.GetExtension(filename.ToLower());
@@ -968,13 +989,19 @@ namespace FamiStudio
                 else if (ftm)
                 {
                     project = new FamitrackerBinaryFile().Load(filename);
+                    ConditionalShowFamiTrackerMobileWarning();
                 }
                 else if (txt)
                 {
                     if (FamistudioTextFile.LooksLikeFamiStudioText(filename))
+                    {
                         project = new FamistudioTextFile().Load(filename);
+                    }
                     else
+                    {
                         project = new FamitrackerTextFile().Load(filename);
+                        ConditionalShowFamiTrackerMobileWarning();
+                    }
                 }
             }
 

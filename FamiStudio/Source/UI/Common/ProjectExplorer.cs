@@ -1711,6 +1711,11 @@ namespace FamiStudio
 
                                 App.UndoRedoManager.AbortOrEndTransaction(success);
                                 RefreshButtons();
+
+                                if (!success && PlatformUtils.IsMobile && Log.GetLastMessage(LogSeverity.Error) != null)
+                                {
+                                    PlatformUtils.DelayedMessageBoxAsync(Log.GetLastMessage(LogSeverity.Error), "Error");
+                                }
                             }
                         });
                     }
