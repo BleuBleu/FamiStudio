@@ -1,6 +1,10 @@
 3.2.0
 =====
 
+- Arpeggio buggy?
+- Osc jitter
+- Audio comparison
+
 Beta 3 fixes:
 - Fixed thumbnail rendering issue in sequencer where short notes were missing
 - Fixed background rendering issue in envelope editor.
@@ -12,6 +16,7 @@ Beta 3 fixes:
 - Added a note about bluetooth latency in the first-time tutorial (thanks @Imagino1234).
 - Fixed issue with project names starting with a digit when exporting to ASM (thanks @mcgrew)
 - Gimmick! demo song improvements (thanks @marklincadet)
+- Fixed bad snapping on slide note creation on desktop.
 
 Low Priority:
 - "I notice that if I audition the 2nd highest Bb while the splash screen is up the key gets stuck"

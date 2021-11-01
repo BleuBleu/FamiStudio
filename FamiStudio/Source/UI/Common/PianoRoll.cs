@@ -5227,7 +5227,8 @@ namespace FamiStudio
             var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
             note.Value = noteValue;
             note.Duration = SnapEnabled ? Math.Max(1, SnapNote(abs, true) - abs) : Song.GetPatternBeatLength(location.PatternIndex);
-            note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
+            note.Instrument = editChannel != ChannelType.Dpcm ? App.SelectedInstrument : null;
+            note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
 
             SetHighlightedNote(abs);
             MarkPatternDirty(pattern);
@@ -6465,14 +6466,13 @@ namespace FamiStudio
                             pattern = channel.CreatePatternAndInstance(location.PatternIndex);
                         }
 
-                        SnapPatternNote(location.PatternIndex, ref location.NoteIndex);
+                        StartCaptureOperation(x, y, CaptureOperation.CreateSlideNote, true);
 
-                        note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+                        note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
                         note.Value = noteValue;
                         note.Duration = (ushort)Song.BeatLength;
-                        note.Instrument = editChannel == ChannelType.Dpcm ? null : App.SelectedInstrument;
-
-                        StartCaptureOperation(x, y, CaptureOperation.CreateSlideNote, true);
+                        note.Instrument = editChannel != ChannelType.Dpcm ? App.SelectedInstrument : null;
+                        note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
                     }
                     else
                     {
@@ -7169,15 +7169,6 @@ namespace FamiStudio
             else
             {
                 return absoluteNoteIndex;
-            }
-        }
-
-        private void SnapPatternNote(int patternIdx, ref int noteIdx)
-        {
-            if (SnapEnabled)
-            {
-                var noteLength = Song.GetPatternNoteLength(patternIdx);
-                noteIdx = (noteIdx / noteLength) * noteLength;
             }
         }
 
