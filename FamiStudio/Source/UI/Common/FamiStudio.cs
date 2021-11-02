@@ -84,7 +84,7 @@ namespace FamiStudio
         public bool  MobilePianoVisible { get => mainForm.MobilePianoVisible; set => mainForm.MobilePianoVisible = value; }
         public int   CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int   ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : -1; set => songPlayer.ChannelMask = value; }
-        public int   PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { if (!IsPlaying) songPlayer.PlayRate = value; } }
+        public int   PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { if (!IsPlaying || PlatformUtils.IsMobile) songPlayer.PlayRate = value; } }
         public float AverageTickRate => averageTickRateMs;
         public int   EditEnvelopeType { get => PianoRoll.EditEnvelopeType; }
 
