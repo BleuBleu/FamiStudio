@@ -46,6 +46,8 @@ namespace FamiStudio
         const int DefaultBlackKeySizeY             = 14;
         const int DefaultSnapIconPosX              = 3;
         const int DefaultSnapIconPosY              = 3;
+        const int DefaultSnapIconDpcmPosX          = 0;
+        const int DefaultSnapIconDpcmPosY          = 0;
         const int DefaultEffectIconPosX            = 2;
         const int DefaultEffectIconPosY            = 2;
         const int DefaultEffectNamePosX            = 17;
@@ -483,8 +485,8 @@ namespace FamiStudio
             blackKeySizeY             = ScaleForMainWindow(DefaultBlackKeySizeY * zoomY);
             effectIconPosX            = ScaleForMainWindow(DefaultEffectIconPosX * effectIconsScale);
             effectIconPosY            = ScaleForMainWindow(DefaultEffectIconPosY * effectIconsScale);
-            headerIconsPosX           = ScaleForMainWindow(DefaultSnapIconPosX);
-            headerIconsPosY           = ScaleForMainWindow(DefaultSnapIconPosY);
+            headerIconsPosX           = ScaleForMainWindow(headerScale == 1 ? DefaultSnapIconDpcmPosX : DefaultSnapIconPosX);
+            headerIconsPosY           = ScaleForMainWindow(headerScale == 1 ? DefaultSnapIconDpcmPosY : DefaultSnapIconPosY);
             effectNamePosX            = ScaleForMainWindow(DefaultEffectNamePosX * effectIconsScale);
             beatTextPosX              = ScaleForMainWindow(DefaultBeatTextPosX);
             effectValuePosTextOffsetY = ScaleForFont(DefaultEffectValuePosTextOffsetY);
@@ -1329,17 +1331,17 @@ namespace FamiStudio
             r.cc.FillRectangle(0, 0, pianoSizeX, headerAndEffectSizeY, ThemeResources.DarkGreyFillBrush1);
             r.cc.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, headerAndEffectSizeY, ThemeResources.BlackBrush);
 
+            if (!PlatformUtils.IsMobile)
+            {
+                var maxRect = GetMaximizeButtonRect();
+                r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, maxRect.X, maxRect.Y, maximized ? 1.0f : 0.3f, 1.0f, Theme.LightGreyFillColor1);
+            }
+
             // Effect icons
             if (editMode == EditionMode.Channel)
             {
                 var toggleRect = GetToggleEffectPannelButtonRect();
                 r.cc.DrawBitmapAtlas(bmpMiscAtlas, showEffectsPanel ? (int)MiscImageIndices.EffectExpanded : (int)MiscImageIndices.EffectCollapsed, toggleRect.X, toggleRect.Y, 1.0f, bitmapScale, Theme.LightGreyFillColor1);
-
-                if (!PlatformUtils.IsMobile)
-                {
-                    var maxRect = GetMaximizeButtonRect();
-                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, maxRect.X, maxRect.Y, maximized ? 1.0f : 0.3f, 1.0f, Theme.LightGreyFillColor1);
-                }
 
                 if (SnapAllowed && !PlatformUtils.IsMobile)
                 {
@@ -5153,6 +5155,7 @@ namespace FamiStudio
             if (HandleMouseDownScrollbar(e)) goto Handled;
             if (HandleMouseDownPiano(e)) goto Handled;
             if (HandleMouseDownAltZoom(e)) goto Handled;
+            if (HandleMouseDownMaximizeButton(e)) goto Handled;
 
             if (editMode == EditionMode.Channel)
             {
@@ -5163,7 +5166,6 @@ namespace FamiStudio
                 if (HandleMouseDownClearEffectValue(e)) goto Handled;
                 if (HandleMouseDownSnapResolutionButton(e)) goto Handled;
                 if (HandleMouseDownSnapButton(e)) goto Handled;
-                if (HandleMouseDownMaximizeButton(e)) goto Handled;
                 if (HandleMouseDownChannelNote(e)) goto Handled;
             }
 
@@ -6869,7 +6871,7 @@ namespace FamiStudio
         private Rectangle GetMaximizeButtonRect()
         {
             var snapButtonSize = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Snap).Width;
-            var posX = pianoSizeX - (snapButtonSize + headerIconsPosX) * 1 - 1;
+            var posX = pianoSizeX - (snapButtonSize + headerIconsPosX) - 1;
             return new Rectangle(posX, headerIconsPosY, snapButtonSize, snapButtonSize);
         }
 
