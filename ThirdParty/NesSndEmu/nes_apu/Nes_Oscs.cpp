@@ -260,6 +260,7 @@ void Nes_Dmc::reset()
 {
 	address = 0;
 	dac = 0;
+	paused_dac = 0;
 	buf = 0;
 	bits_remain = 1;
 	bits = 0;
@@ -271,6 +272,19 @@ void Nes_Dmc::reset()
 
 	Nes_Osc::reset();
 	period = 0x1AC;
+}
+
+void Nes_Dmc::set_output(Blip_Buffer* out)
+{
+	if (out != output)
+	{
+		if (out)
+			last_amp = paused_dac;
+		else
+			paused_dac = dac;
+		
+		Nes_Osc::set_output(out);
+	}
 }
 
 void Nes_Dmc::recalc_irq()
@@ -393,15 +407,8 @@ void Nes_Dmc::fill_buffer()
 void Nes_Dmc::run( cpu_time_t time, cpu_time_t end_time )
 {
 	int delta = update_amp( dac );
-	if ( !output )
-	{
-		silence = true;
-	}
-	else
-	{
-		if ( delta )
-			synth.offset( time, delta, output );
-	}
+	if ( delta && output)
+		synth.offset( time, delta, output );
 	
 	time += delay;
 	if ( time < end_time )
@@ -428,7 +435,8 @@ void Nes_Dmc::run( cpu_time_t time, cpu_time_t end_time )
 					bits >>= 1;
 					if ( unsigned (dac + step) <= 0x7F ) {
 						dac += step;
-						synth.offset_inline(time, step, output);
+						if (output)
+							synth.offset_inline(time, step, output);
 					}
 				}
 				
