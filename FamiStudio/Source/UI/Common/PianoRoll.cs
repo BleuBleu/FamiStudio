@@ -1444,10 +1444,11 @@ namespace FamiStudio
                 r.cp.FillRectangle(GetKeyRectangle(dragOctave, dragNote), whiteKeyPressedBrush);
             }
 
+            var drawDpcmColorKeys = (editMode == EditionMode.Channel && Song.Channels[editChannel].Type == ChannelType.Dpcm) || editMode == EditionMode.DPCMMapping;
             var color = Color.Empty;
 
             // Early pass for DPCM white keys.
-            if ((editMode == EditionMode.Channel && Song.Channels[editChannel].Type == ChannelType.Dpcm) || editMode == EditionMode.DPCMMapping)
+            if (drawDpcmColorKeys)
             {
                 for (int i = r.minVisibleOctave; i < r.maxVisibleOctave; i++)
                 {
@@ -1472,7 +1473,7 @@ namespace FamiStudio
 
                     if (IsBlackKey(j))
                     {
-                        if (GetDPCMKeyColor(noteIdx + 1, ref color))
+                        if (drawDpcmColorKeys && GetDPCMKeyColor(noteIdx + 1, ref color))
                             r.cp.FillAndDrawRectangle(GetKeyRectangle(i, j), r.g.GetHorizontalGradientBrush(Theme.Darken(color, 40), Theme.Darken(color, 20), blackKeySizeX), ThemeResources.BlackBrush);
                         else
                             r.cp.FillRectangle(GetKeyRectangle(i, j), blackKeyBrush);
