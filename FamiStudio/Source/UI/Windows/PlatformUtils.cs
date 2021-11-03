@@ -35,6 +35,11 @@ namespace FamiStudio
             return mainThread == Thread.CurrentThread;
         }
 
+        public static int GetPixelDensity()
+        {
+            return 96; // Unused.
+        }
+
         public static Size GetScreenResolution()
         {
             return Screen.PrimaryScreen.Bounds.Size;

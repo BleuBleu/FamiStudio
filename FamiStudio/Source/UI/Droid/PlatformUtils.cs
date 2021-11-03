@@ -51,6 +51,12 @@ namespace FamiStudio
             return int.Parse(am.GetProperty(AudioManager.PropertyOutputSampleRate), CultureInfo.InvariantCulture);
         }
 
+        public static int GetPixelDensity()
+        {
+            var metrics = Platform.AppContext.Resources.DisplayMetrics;
+            return (int)Math.Min(metrics.Xdpi, metrics.Ydpi);
+        }
+
         public static Size GetScreenResolution()
         {
             var displayInfo = DeviceDisplay.MainDisplayInfo;

@@ -5,13 +5,12 @@ Beta4:
 - Fixed oscilloscope showing discontinuities and jittering
 - Added a few helpful error messages.
 - Maximize button on piano roll now always visible.
+- Using pixel density instead of resolution to detect scaling.
+- Fixing piano key color when having the DPCM instrument selected and editing envelopes.
+- Fixing distorted DPCM when muting/unmuting channel.
 
 TODO:
 - Text size in toolbar when using 66% on tablet.
-- Detect scaling with DPI, test tablet + small phones on emulator
-x DPCM key colors are shown when editing envelopes, on black keys only
-x DPCM distorted if you start muted, then unmuted.
-	=> Compile MacOS + Linux DLLs.
 
 Low Priority:
 - ~ key on other keyboards.
