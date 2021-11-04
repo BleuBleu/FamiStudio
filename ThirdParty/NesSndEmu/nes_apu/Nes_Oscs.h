@@ -33,6 +33,10 @@ struct Nes_Osc
 		last_amp = amp;
 		return delta;
 	}
+	virtual void set_output(Blip_Buffer* o)
+	{
+		output = o;
+	}
 };
 
 struct Nes_Envelope : Nes_Osc
@@ -126,6 +130,7 @@ struct Nes_Dmc : Nes_Osc
 	enum { loop_flag = 0x40 };
 	
 	int dac;
+	int paused_dac;
 	
 	cpu_time_t next_irq;
 	bool irq_enabled;
@@ -147,6 +152,7 @@ struct Nes_Dmc : Nes_Osc
 	void fill_buffer();
 	void reload_sample();
 	void reset();
+	virtual void set_output(Blip_Buffer* output) override;
 	int count_reads( cpu_time_t, cpu_time_t* ) const;
 	cpu_time_t next_read_time() const;
 };

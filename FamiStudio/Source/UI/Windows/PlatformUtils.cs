@@ -35,6 +35,11 @@ namespace FamiStudio
             return mainThread == Thread.CurrentThread;
         }
 
+        public static int GetPixelDensity()
+        {
+            return 96; // Unused.
+        }
+
         public static Size GetScreenResolution()
         {
             return Screen.PrimaryScreen.Bounds.Size;
@@ -148,6 +153,10 @@ namespace FamiStudio
         {
             var res = MessageBox(text, title, buttons);
             callback?.Invoke(res);
+        }
+
+        public static void DelayedMessageBoxAsync(string text, string title)
+        {
         }
 
         public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)

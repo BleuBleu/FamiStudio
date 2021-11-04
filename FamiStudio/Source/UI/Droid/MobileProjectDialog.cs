@@ -79,6 +79,7 @@ namespace FamiStudio
                 dialog.Properties.AddButton("Delete Selected Project", "Delete"); // 2
                 dialog.Properties.SetPropertyEnabled(1, true);
                 dialog.Properties.SetPropertyEnabled(2, false);
+                dialog.Properties.AddLabel("Note", "To export your project to your device's storage or to share them (email, messaging, etc.), please use the 'Share' option from the Export dialog."); // 3
             }
             else
             {

@@ -87,6 +87,11 @@ namespace FamiStudio
             return mainThread == Thread.CurrentThread;
         }
 
+        public static int GetPixelDensity()
+        {
+            return 96; // Unused.
+        }
+
         public static Size GetScreenResolution()
         {
             Debug.Assert(false);
@@ -309,6 +314,10 @@ namespace FamiStudio
         {
             var res = MessageBox(text, title, buttons);
             callback?.Invoke(res);
+        }
+
+        public static void DelayedMessageBoxAsync(string text, string title)
+        {
         }
 
         public static string KeyCodeToString(int keyval)

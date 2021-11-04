@@ -72,8 +72,7 @@ namespace FamiStudio
         {
             if (PlatformUtils.IsMobile)
             {
-                var screenRes = PlatformUtils.GetScreenResolution();
-                var minRes = Math.Min(screenRes.Width, screenRes.Height);
+                var density = PlatformUtils.GetPixelDensity();
 
                 if (Settings.DpiScaling != 0)
                 {
@@ -81,9 +80,9 @@ namespace FamiStudio
                 }
                 else
                 {
-                    if (minRes < 1000)
+                    if (density < 360)
                         mainWindowScaling = 0.666f;
-                    else if (minRes >= 1200)
+                    else if (density >= 480)
                         mainWindowScaling = 1.333f;
                     else
                         mainWindowScaling = 1.0f;

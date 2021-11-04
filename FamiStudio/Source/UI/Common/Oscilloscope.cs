@@ -18,7 +18,7 @@ namespace FamiStudio
         private ManualResetEvent stopEvent    = new ManualResetEvent(false);
         private AutoResetEvent   samplesEvent = new AutoResetEvent(false);
         private ConcurrentQueue<short[]> sampleQueue;
-        private int renderIdx = 0;
+        private int lastBufferPos = 0;
         private int numVertices = 128;
         private volatile float[,] geometry;
         private volatile bool hasNonZeroData = false;
@@ -99,13 +99,14 @@ namespace FamiStudio
                             bufferPos = batchSize2;
                         }
 
-                        bool updateGeometry = (bufferPos + sampleBuffer.Length - renderIdx) % sampleBuffer.Length >= NumSamples;
+                        var numSamplesSinceLastRender = (bufferPos + sampleBuffer.Length - lastBufferPos) % sampleBuffer.Length;
+                        var updateGeometry = numSamplesSinceLastRender >= NumSamples;
 
                         if (updateGeometry)
                         {
                             int lookback = 0;
-                            int maxLookback = NumSamples / 2;
-                            int centerIdx = (renderIdx + NumSamples / 2) % sampleBuffer.Length;
+                            int maxLookback = numSamplesSinceLastRender / 2;
+                            int centerIdx = (lastBufferPos + numSamplesSinceLastRender / 2) % sampleBuffer.Length;
                             int orig = sampleBuffer[centerIdx];
 
                             // If sample is negative, go back until positive.
@@ -153,6 +154,7 @@ namespace FamiStudio
                                 int avg = 0;
                                 for (int k = 0; k < samplesPerVertex; k++, j = (j + 1) % sampleBuffer.Length)
                                     avg += sampleBuffer[j];
+
                                 avg /= samplesPerVertex;
 
                                 vertices[i, 0] = i / (float)(numVertices - 1);
@@ -160,7 +162,7 @@ namespace FamiStudio
                                 newHasNonZeroData |= Math.Abs(avg) > 1024.0f;
                             }
 
-                            renderIdx = j;
+                            lastBufferPos = bufferPos;
                             geometry = vertices;
                             hasNonZeroData = newHasNonZeroData;
                         }
