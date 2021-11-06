@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Diagnostics;
 using System.Collections.Generic;
 
 using RenderFont     = FamiStudio.GLFont;
@@ -146,7 +147,7 @@ namespace FamiStudio
 
         public RenderFont GetBestMatchingFontByWidth(string text, int desiredWidth, bool bold)
         {
-            var foundIdx = 0;
+            // Get largest font that will fit.
             for (int i = 0; i < FontDefinitions.Length; i++)
             {
                 var def = FontDefinitions[i];
@@ -155,14 +156,21 @@ namespace FamiStudio
                 {
                     var width = fonts[i].MeasureString(text);
                     if (width > desiredWidth)
-                    {
-                        foundIdx = i - 1;
-                        break;
-                    }
+                        return fonts[Math.Max(0, i - 1)];
                 }
             }
 
-            return fonts[Math.Max(0, foundIdx)];
+            // Found nothing, return the largest font we have.
+            for (int i = FontDefinitions.Length - 1; i >= 0 ; i--)
+            {
+                var def = FontDefinitions[i];
+                if (def.Bold == bold)
+                    return fonts[i];
+            }
+
+            // We never get here.
+            Debug.Assert(false);
+            return fonts[0];
         }
 
         public RenderFont GetBestMatchingFontByHeight(RenderGraphics g, int desiredHeight, bool bold)

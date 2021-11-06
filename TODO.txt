@@ -8,24 +8,22 @@ Beta4:
 - Using pixel density instead of resolution to detect scaling.
 - Fixing piano key color when having the DPCM instrument selected and editing envelopes.
 - Fixing distorted DPCM when muting/unmuting channel.
+- Fixed small timecode font on some devices.
 
 TODO:
-- Text size in toolbar when using 66% on tablet.
+- Improve force display rendering 
+- ~ key on other keyboards.
 
 Low Priority:
-- ~ key on other keyboards.
 - Audio comparison from imagino
-- Chroma subsampling settings for android?
 
 Icon notes:
 - 66% zoom, start with 128x128 png.
 
 Testing
 =======
-- BUG : HH:MM:SSS from itch?
 - Test project/instrument merge (with expansions).
-- Re-test with various scaling (lots of cahnges to everything, zooming, etc.)
-- Test without snapping, i tested snapping a lot, but not witout.
+- Re-test all scalings (lots of cahnges to everything, zooming, etc.)
 
 Packaging:
 ==========
