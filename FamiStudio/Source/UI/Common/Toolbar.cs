@@ -402,6 +402,7 @@ namespace FamiStudio
                 specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
                 specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = ScaleForMainWindow(28) };
                 specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
+                specialCharacters["Tab"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
                 specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
                 specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
                 specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
