@@ -2183,20 +2183,22 @@ namespace FamiStudio
             }
         }
 
-        private Color GetNoteColor(Channel channel, int noteValue, Instrument instrument)
+        private Color GetNoteColor(Channel channel, int noteValue, Instrument instrument, float alphaDim = 1.0f)
         {
+            var color = Theme.LightGreyFillColor1;
+
             if (channel.Type == ChannelType.Dpcm)
             {
                 var mapping = channel.Song.Project.GetDPCMMapping(noteValue);
                 if (mapping != null)
-                    return mapping.Sample.Color;
+                    color = mapping.Sample.Color;
             }
             else if (instrument != null)
             {
-                return instrument.Color;
+                color = instrument.Color;
             }
 
-            return Theme.LightGreyFillColor1;
+            return alphaDim != 1.0f ? Color.FromArgb((int)(color.A * alphaDim), color) : color;
         }
 
         private bool ShouldDrawLines(Song song, int patternIdx, int numNotes)
@@ -2383,7 +2385,7 @@ namespace FamiStudio
                             }
                             else if (note.IsStop)
                             {
-                                RenderNoteReleaseOrStop(r, note, GetNoteColor(channel, lastNoteValue, lastInstrument), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, IsNoteSelected(it.Location, 1), true, released);
+                                RenderNoteReleaseOrStop(r, note, GetNoteColor(channel, lastNoteValue, lastInstrument, isActiveChannel ? 1.0f : 0.2f), it.Location.ToAbsoluteNoteIndex(Song), lastNoteValue, false, IsNoteSelected(it.Location, 1), isActiveChannel, true, released);
                             }
 
                             if (note.HasRelease && note.Release < Math.Min(note.Duration, it.DistanceToNextCut))
@@ -2400,7 +2402,7 @@ namespace FamiStudio
                             }
                             else if (highlightNote.IsStop)
                             {
-                                RenderNoteReleaseOrStop(r, highlightNote, GetNoteColor(channel, highlightLastNoteValue, highlightLastInstrument), highlightLocation.ToAbsoluteNoteIndex(Song), highlightLastNoteValue, true, false, true, highlightReleased);
+                                RenderNoteReleaseOrStop(r, highlightNote, GetNoteColor(channel, highlightLastNoteValue, highlightLastInstrument, isActiveChannel ? 1.0f : 0.2f), highlightLocation.ToAbsoluteNoteIndex(Song), highlightLastNoteValue, true, false, true, true, highlightReleased);
                             }
                         }
                     }
@@ -2765,6 +2767,7 @@ namespace FamiStudio
             int x = GetPixelForNote(time);
             int y = virtualSizeY - note.Value * noteSizeY - scrollY;
             int sy = released ? releaseNoteSizeY : noteSizeY;
+            int activeChannelInt = activeChannel ? 0 : 1;
 
             if (!outline && isFirstPart && slideDuration >= 0)
             {
@@ -2787,9 +2790,10 @@ namespace FamiStudio
             int noteTextPosX = attackIconPosX + 1;
 
             if (!outline)
-                r.cf.FillRectangle(0, 0, sx, sy, r.g.GetVerticalGradientBrush(color, sy, 0.8f));
-
-            r.cf.DrawRectangle(0, 0, sx, sy, outline ? highlightNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), selected || outline ? 2 : 1, selected || outline);
+                r.cf.FillRectangle(0, activeChannelInt, sx, sy, r.g.GetVerticalGradientBrush(color, sy, 0.8f));
+            
+            if (activeChannel)
+                r.cf.DrawRectangle(0, 0, sx, sy, outline ? highlightNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), selected || outline ? 2 : 1, selected || outline);
 
             if (!outline)
             {
@@ -2815,7 +2819,7 @@ namespace FamiStudio
                     foreach (var offset in offsets)
                     {
                         r.cf.PushTranslation(0, offset * -noteSizeY);
-                        r.cf.FillRectangle(0, 1, sx, sy, r.g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f));
+                        r.cf.FillRectangle(0, 1, sx, sy, r.g.GetSolidBrush(note.Arpeggio.Color, 1.0f, activeChannel ? 0.2f : 0.1f));
                         r.cf.PopTransform();
                     }
                 }
@@ -2824,7 +2828,7 @@ namespace FamiStudio
             r.cf.PopTransform();
         }
 
-        private void RenderNoteReleaseOrStop(RenderInfo r, Note note, Color color, int time, int value, bool outline, bool selected, bool stop, bool released)
+        private void RenderNoteReleaseOrStop(RenderInfo r, Note note, Color color, int time, int value, bool outline, bool selected, bool activeChannel, bool stop, bool released)
         {
             int x = GetPixelForNote(time);
             int y = virtualSizeY - value * noteSizeY - scrollY;
@@ -2833,8 +2837,9 @@ namespace FamiStudio
 
             r.cf.PushTransform(x, y, noteSizeX, 1);
             if (!outline)
-                r.cf.FillGeometry(geo[0], r.g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
-            r.cf.DrawGeometry(geo[0], outline ? highlightNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), outline || selected ? 2 : 1, true);
+                r.cf.FillGeometry(geo[activeChannel ? 0 : 1], r.g.GetVerticalGradientBrush(color, noteSizeY, 0.8f));
+            if (activeChannel)
+                r.cf.DrawGeometry(geo[0], outline ? highlightNoteBrush : (selected ? selectionNoteBrush : ThemeResources.BlackBrush), outline || selected ? 2 : 1, true);
             r.cf.PopTransform();
 
             r.cf.PushTranslation(x, y);
@@ -2844,7 +2849,7 @@ namespace FamiStudio
                 foreach (var offset in offsets)
                 {
                     r.cf.PushTransform(0, offset * -noteSizeY, noteSizeX, 1);
-                    r.cf.FillGeometry(geo[1], r.g.GetSolidBrush(note.Arpeggio.Color, 1.0f, 0.2f), true);
+                    r.cf.FillGeometry(geo[1], r.g.GetSolidBrush(note.Arpeggio.Color, 1.0f, activeChannel ? 0.2f : 0.1f), true);
                     r.cf.PopTransform();
                 }
             }
@@ -2862,11 +2867,8 @@ namespace FamiStudio
             var nextAbsoluteIndex = absoluteIndex + distanceToNextNote;
             var duration = Math.Min(distanceToNextNote, note.Duration);
             var slideDuration = note.IsSlideNote ? channel.GetSlideNoteDuration(location) : -1;
-            var color = GetNoteColor(channel, note.Value, note.Instrument);
+            var color = GetNoteColor(channel, note.Value, note.Instrument, isActiveChannel ? 1.0f : 0.2f);
             var selected = isActiveChannel && IsNoteSelected(location, duration);
-
-            if (!isActiveChannel)
-                color = Color.FromArgb((int)(color.A * 0.2f), color);
 
             // Draw first part, from start to release point.
             if (note.HasRelease)
@@ -2877,7 +2879,7 @@ namespace FamiStudio
 
                 if (duration > 0)
                 {
-                    RenderNoteReleaseOrStop(r, note, color, absoluteIndex, note.Value, highlighted, selected, false, released);
+                    RenderNoteReleaseOrStop(r, note, color, absoluteIndex, note.Value, highlighted, selected, isActiveChannel, false, released);
                     absoluteIndex++;
                     duration--;
                 }
@@ -2894,7 +2896,7 @@ namespace FamiStudio
 
                 if (drawImplicityStopNotes && absoluteIndex < nextAbsoluteIndex && !highlighted)
                 {
-                    RenderNoteReleaseOrStop(r, note, Color.FromArgb(128, color), absoluteIndex, note.Value, highlighted, selected, true, released);
+                    RenderNoteReleaseOrStop(r, note, Color.FromArgb(128, color), absoluteIndex, note.Value, highlighted, selected, isActiveChannel, true, released);
                 }
             }
         }
@@ -6684,8 +6686,19 @@ namespace FamiStudio
 
         private void CreateOrphanStopNote(NoteLocation location)
         {
-            var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+            var channel = Song.Channels[editChannel];
+            var pattern = channel.PatternInstances[location.PatternIndex];
+
+            if (pattern == null)
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                pattern = channel.CreatePatternAndInstance(location.PatternIndex);
+            }
+            else
+            {
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+            }
+
             var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
             note.Clear();
             note.Value = Note.NoteStop;

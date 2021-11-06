@@ -9,10 +9,9 @@ Beta4:
 - Fixing piano key color when having the DPCM instrument selected and editing envelopes.
 - Fixing distorted DPCM when muting/unmuting channel.
 - Fixed small timecode font on some devices.
-
-TODO:
-- Improve force display rendering 
-- ~ key on other keyboards.
+- Also allowing TAB and CTRL+TAB as a substitude for ~ and CTRL+~. Tilde doesnt work with international keyboards.
+- Improved force display rendering a bit.
+- Fixed crash when creating stop notes.
 
 Low Priority:
 - Audio comparison from imagino
