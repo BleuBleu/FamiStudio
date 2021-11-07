@@ -1211,7 +1211,7 @@ namespace FamiStudio
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            GetButtonAtCoord(e.X, e.Y)?.MouseWheel.Invoke(e.Delta);
+            GetButtonAtCoord(e.X, e.Y)?.MouseWheel?.Invoke(e.Delta);
             base.OnMouseWheel(e);
         }
 

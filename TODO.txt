@@ -1,19 +1,10 @@
 3.2.0
 =====
 
-Beta4:
-- Fixed oscilloscope showing discontinuities and jittering
-- Added a few helpful error messages.
-- Maximize button on piano roll now always visible.
-- Using pixel density instead of resolution to detect scaling.
-- Fixing piano key color when having the DPCM instrument selected and editing envelopes.
-- Fixing distorted DPCM when muting/unmuting channel.
-- Fixed small timecode font on some devices.
-- Also allowing TAB and CTRL+TAB as a substitude for ~ and CTRL+~. Tilde doesnt work with international keyboards.
-- Improved force display rendering a bit.
-- Fixed crash when creating stop notes.
-
-Low Priority:
+- Color + color
++ Crash mouse wheel
+- Command + tilde or tab on mac
+- Tweak minimum pattern size on mobile, (look at lagrange point demo song)
 - Audio comparison from imagino
 
 Icon notes:
@@ -23,6 +14,10 @@ Testing
 =======
 - Test project/instrument merge (with expansions).
 - Re-test all scalings (lots of cahnges to everything, zooming, etc.)
+
+3.2.0 Trailer
+=============
+- 
 
 Packaging:
 ==========

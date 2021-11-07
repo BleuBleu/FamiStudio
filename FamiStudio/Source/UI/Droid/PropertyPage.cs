@@ -196,7 +196,7 @@ namespace FamiStudio
 
         public int AddColoredTextBox(string value, System.Drawing.Color color)
         {
-            return AddTextBox("Color", value);
+            return AddTextBox("Name", value);
         }
 
         private LinearLayout CreateLinearLayout(bool vertical, bool matchParentWidth, bool matchParentHeight, int margin, bool radioGroup = false, float weight = 0.0f)
