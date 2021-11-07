@@ -262,7 +262,13 @@ namespace FamiStudio
             }
             else
             {
-                return Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
+                var sizeY = Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
+
+                // If we are using 150% scaling (windows/linux only), we need to make sure to pick an even value.
+                if (Utils.Frac(MainWindowScaling) != 0.0f)
+                    sizeY = (sizeY + 1) & (~1);
+
+                return sizeY;
             }
         }
 
