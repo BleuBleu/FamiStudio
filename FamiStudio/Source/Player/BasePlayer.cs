@@ -219,9 +219,6 @@ namespace FamiStudio
             {
                 var state = channelStates[i];
 
-                var exp = ChannelType.GetExpansionTypeForChannelType(state.InnerChannelType);
-                var idx = ChannelType.GetExpansionChannelIndexForChannelType(state.InnerChannelType);
-
                 EnableChannelType(state.InnerChannelType, (channelMask & (1 << i)) != 0);
             }
         }
@@ -271,7 +268,7 @@ namespace FamiStudio
             }
 
             playPosition = playLocation.ToAbsoluteNoteIndex(song);
-            UpdateBeat(true);
+            UpdateBeat();
 
             EndFrame();
 
@@ -351,7 +348,6 @@ namespace FamiStudio
         protected bool AdvanceSong(int songLength, LoopMode loopMode)
         {
             bool advancedPattern = false;
-            bool forceResetTempo = false;
 
             if (++playLocation.NoteIndex >= song.GetPatternLength(playLocation.PatternIndex))
             {
@@ -361,7 +357,6 @@ namespace FamiStudio
                 {
                     playLocation.PatternIndex++;
                     advancedPattern = true;
-                    forceResetTempo = playLocation.PatternIndex == song.LoopPoint;
                 }
                 else
                 {
@@ -383,7 +378,6 @@ namespace FamiStudio
                         {
                             playLocation.PatternIndex++;
                             advancedPattern = true;
-                            forceResetTempo = playLocation.PatternIndex == song.LoopPoint;
                         }
                     }
                 }
@@ -405,7 +399,6 @@ namespace FamiStudio
                         playLocation.PatternIndex = song.LoopPoint;
                         playLocation.NoteIndex = 0;
                         advancedPattern = true;
-                        forceResetTempo = true;
                     }
                     else 
                     {
@@ -417,7 +410,6 @@ namespace FamiStudio
                     playLocation.PatternIndex = Math.Max(0, song.LoopPoint);
                     playLocation.NoteIndex = 0;
                     advancedPattern = true;
-                    forceResetTempo = true;
                 }
                 else if (loopMode == LoopMode.None)
                 {
@@ -428,7 +420,7 @@ namespace FamiStudio
             if (advancedPattern)
                 ResetFamiStudioTempo();
 
-            UpdateBeat(false);
+            UpdateBeat();
 
             return true;
         }
@@ -438,7 +430,7 @@ namespace FamiStudio
             beat = false;
         }
 
-        private void UpdateBeat(bool first)
+        private void UpdateBeat()
         {
             if (!seeking)
             {

@@ -1331,7 +1331,7 @@ namespace FamiStudio
             r.cc.FillRectangle(0, 0, pianoSizeX, headerAndEffectSizeY, ThemeResources.DarkGreyFillBrush1);
             r.cc.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, headerAndEffectSizeY, ThemeResources.BlackBrush);
 
-            if (!PlatformUtils.IsMobile)
+            if (!PlatformUtils.IsMobile && editMode != EditionMode.VideoRecording)
             {
                 var maxRect = GetMaximizeButtonRect();
                 r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, maxRect.X, maxRect.Y, maximized ? 1.0f : 0.3f, 1.0f, Theme.LightGreyFillColor1);
