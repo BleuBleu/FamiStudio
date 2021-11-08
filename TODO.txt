@@ -1,31 +1,27 @@
 3.2.0
 =====
 
-Beta4:
-- Fixed oscilloscope showing discontinuities and jittering
-- Added a few helpful error messages.
-- Maximize button on piano roll now always visible.
-- Using pixel density instead of resolution to detect scaling.
-- Fixing piano key color when having the DPCM instrument selected and editing envelopes.
-- Fixing distorted DPCM when muting/unmuting channel.
-
-TODO:
-- Text size in toolbar when using 66% on tablet.
-
-Low Priority:
-- ~ key on other keyboards.
+x Color + color
+x Crash mouse wheel
+x Chopped last pattern windows 150%, mark
+x MIDI file bug from github
+x Tweak minimum pattern size on mobile, (look at lagrange point demo song)
+x Piano roll export broken?
+x Flicker hi-speed when opening NSF.
+- Command + tilde or tab on mac, change shortcut, fuck it.
 - Audio comparison from imagino
-- Chroma subsampling settings for android?
 
 Icon notes:
 - 66% zoom, start with 128x128 png.
 
 Testing
 =======
-- BUG : HH:MM:SSS from itch?
 - Test project/instrument merge (with expansions).
-- Re-test with various scaling (lots of cahnges to everything, zooming, etc.)
-- Test without snapping, i tested snapping a lot, but not witout.
+- Re-test all scalings (lots of cahnges to everything, zooming, etc.)
+
+3.2.0 Trailer
+=============
+- 
 
 Packaging:
 ==========
@@ -51,6 +47,7 @@ Behavior changes:
 
 3.3.0
 =====
+- Stereo export VS. TND?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Option to override DMC initial value on sample mapping
 - Fix GTK leak (GTK 3.x?), or 2.12.45

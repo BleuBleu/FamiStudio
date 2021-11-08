@@ -111,7 +111,7 @@ namespace FamiStudio
         {
             famistudio.Tick();
 
-            if (controls.AnyControlNeedsRedraw())
+            if (controls.AnyControlNeedsRedraw() && famistudio.Project != null)
                 RenderFrameAndSwapBuffers();
             else
                 System.Threading.Thread.Sleep(4); 
@@ -399,7 +399,8 @@ namespace FamiStudio
                 keyData == Keys.Down  ||
                 keyData == Keys.Left  ||
                 keyData == Keys.Right ||
-                keyData == Keys.Tab)
+                keyData == Keys.Tab   ||
+                keyData == Keys.F10)
             {
                 var e = new KeyEventArgs(keyData);
                 famistudio.KeyDown(e, (int)keyData);

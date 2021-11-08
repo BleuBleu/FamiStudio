@@ -255,14 +255,17 @@ namespace FamiStudio
         {
             if (PlatformUtils.IsMobile)
             {
-               // Dont let the pattern become smaller than the header.
-               // The division by 6 is simply to undo the base scaling for everything on Mobile
-               // since this function is supposed to be done in unscaled coordinates.
-                return Math.Max(DefaultHeaderSizeY, (Height / (int)MainWindowScaling - DefaultHeaderSizeY) / GetChannelCount());
+                return Math.Max((Height / (int)MainWindowScaling - DefaultHeaderSizeY) / GetChannelCount(), 20);
             }
             else
             {
-                return Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
+                var sizeY = Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
+
+                // If we are using 150% scaling (windows/linux only), we need to make sure to pick an even value.
+                if (Utils.Frac(MainWindowScaling) != 0.0f)
+                    sizeY = (sizeY + 1) & (~1);
+
+                return sizeY;
             }
         }
 

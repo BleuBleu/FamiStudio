@@ -1778,7 +1778,7 @@ namespace FamiStudio
             {
                 ToggleQwertyPiano();
             }
-            else if (e.KeyCode == Keys.Oem3)
+            else if (e.KeyCode == Keys.Oem3 || (e.KeyCode == Keys.Tab && !recordingMode)) // The tilde key is highly non standard, so accept tab too.
             {
                 if (ctrl)
                 {

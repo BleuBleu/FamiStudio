@@ -671,7 +671,7 @@ namespace FamiStudio
         {
             var tempos = FamiStudioTempoUtils.GetAvailableTempos(project.PalMode, notesPerBeat); 
 
-            var bestTempoDiff = 1000.0;
+            var bestTempoDiff = double.MaxValue;
             var bestTempo = (TempoInfo)null;
 
             foreach (var t in tempos)
