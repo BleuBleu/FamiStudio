@@ -100,7 +100,7 @@ namespace FamiStudio
         {
             if (AnyControlNeedsRedraw())
             {
-                // Tentative fix for a bug when NSF dialog is open that I can no longer repro.
+                // HACK : This happens when we have a dialog open, like the NSF dialog.
                 if (controls[0].App.Project == null)
                     return true;
 

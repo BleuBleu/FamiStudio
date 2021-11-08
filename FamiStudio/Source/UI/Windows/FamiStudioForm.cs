@@ -111,7 +111,7 @@ namespace FamiStudio
         {
             famistudio.Tick();
 
-            if (controls.AnyControlNeedsRedraw())
+            if (controls.AnyControlNeedsRedraw() && famistudio.Project != null)
                 RenderFrameAndSwapBuffers();
             else
                 System.Threading.Thread.Sleep(4); 
