@@ -284,7 +284,7 @@ inline long nonlinearize(long raw_sample, double volume)
 	const double tnd_scale = 202.0;
 
 	// Convert the raw fixed point sample to floating point + apply nonlinear approximation.
-	double sample_float = max(0.00001, raw_sample * sample_scale);
+	double sample_float = std::max(0.00001, raw_sample * sample_scale);
 	double sample_nonlinear = 163.67 / (24329.0 / (sample_float * tnd_scale) + 100.0);
 
 	// Rescale to the fixed point, blip buffer format.

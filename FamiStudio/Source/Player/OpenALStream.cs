@@ -110,7 +110,7 @@ namespace FamiStudio
                     {
                         int bufferId = initBufferIdx >= 0 ? buffers[initBufferIdx--] : AL.SourceUnqueueBuffer(source);
                         fixed (short* p = &data[0])
-                            AL.BufferData(bufferId, ALFormat.Mono16, new IntPtr(p), data.Length * sizeof(short), freq);
+                            AL.BufferData(bufferId, ALFormat.Stereo16, new IntPtr(p), data.Length * sizeof(short), freq);
                         AL.SourceQueueBuffer(source, bufferId);
                         i++;
                     }
