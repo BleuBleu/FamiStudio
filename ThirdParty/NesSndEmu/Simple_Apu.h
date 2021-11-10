@@ -88,19 +88,6 @@ public:
 	bool is_seeking() const { return seeking; }
 
 private:
-
-	//inline long nonlinearize(long raw_sample) const
-	//{
-	//	const int   sample_shift = blip_sample_bits - 16;
-	//	const float sample_scale = (float)(1 << sample_shift);
-
-	//	double sample_float = raw_sample / (1 << sample_shift);
-
-	//	float sample_202_range = (s / 65535.0f * 202.0f);
-	//	return (long)((163.67f / (24329.0f / sample_202_range + 100.0f)) * 65535.0f);
-	//}
-
-private:
 	bool pal_mode;
 	bool seeking;
 	double tnd_volume;
