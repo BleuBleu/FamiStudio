@@ -33,7 +33,7 @@ namespace FamiStudio
                 // MATTT : Update this message + link to 2019 runtime!
                 if (MessageBox.Show("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    PlatformUtils.OpenUrl("https://famistudio.org/doc/#windows");
+                    PlatformUtils.OpenUrl("https://famistudio.org/doc/install/#windows");
                 }
 
                 return;
@@ -43,7 +43,7 @@ namespace FamiStudio
             {
                 if (MessageBox.Show("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    PlatformUtils.OpenUrl("https://famistudio.org/doc/#windows");
+                    PlatformUtils.OpenUrl("https://famistudio.org/doc/install/#windows");
                 }
 
                 return;
