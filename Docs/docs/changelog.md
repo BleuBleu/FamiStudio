@@ -2,6 +2,27 @@
 
 Version history / release notes for each release.
 
+## Version 3.2.0
+
+Changes:
+
+* Android app (free on Play Store)
+* Multi-expansion support
+* Proper emulation of triangle/noise/DPCM volume interactions
+* Significant graphic optimizations, especially on lower-end machines or large projects.
+* Minor quality of life features
+* Minor cosmetic UI changes (icons, envelope editor, coloring piano with DPCM colors, etc.)
+
+Behavior changes:
+
+* Snapping precision is now expressed in beats. So with the default settings, 1 means a quarter note.
+* Channel volumes have been slightly adjusted to match the NES hardware more closely.
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/PYLEe_DLNQA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
+
 ## Version 3.1.1 (Hotfix)
 
 Fixes:

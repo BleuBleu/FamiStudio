@@ -21,7 +21,40 @@ Testing
 
 3.2.0 Trailer
 =============
-- 
+Many small features, but here are 2 main ones:
+
+1) Free Android App (~1 min)
+	- Download it right now on the Google Play Store!
+	- Completely redesigned touch interface.
+	- TAP to create notes, SWAP to move/resize them, LONG PRESS to see more advanced options.
+		=> Piano roll, do that.
+	- Works the same way for patterns.
+		=> Sequencer.
+	- New pop-up piano lets you preview instruments from anywhere inside the app, and record notes as well.
+		=> Show VRC7 instruments in P.E.
+		=> Then recording mode.
+	- Edit DPCM samples too
+		=> Show that
+	- Export to MP3 and render videos right from the app.
+	- Features of the desktop versions missing in the Mobile version:
+		- No MIDI import/export
+		- No NSF import
+		- No Sound Engine/Famitone 2 export
+		- No FamiTracker text export
+		- No FamiStudio text export
+		- No FamiTracker FTI instrument import
+		- No DPCM sample import from other projects (WAV/DMC only)
+		- No DPCM sample data export
+		- No MIDI controller support
+2) Multi-expansion support (~10 sec)
+	- Finally it is supported
+	- Simply enable the expansions you want in project settings
+	- Everything else will work the same (NSF import/export too).
+3) Other features not mentionned in this trailer: (~10 sec)
+	- Proper Triangle-Noise-DPCM volume emulation
+	- Minor cosmetic UI changes 
+  - Significant graphic optimizations, especially on lower-end machines or large projects.
+4) End screen.
 
 Packaging:
 ==========
@@ -54,17 +87,6 @@ Behavior changes:
 - Register viewer.
 - Volume/effect scaling
 
-Features missing from the Mobile version
-========================================
-- No MIDI import/export
-- No NSF import
-- No Sound Engine/Famitone 2 export
-- No FamiTracker text export
-- No FamiStudio text export
-- No FamiTracker FTI instrument import
-- No DPCM sample import from other projects (WAV/DMC only)
-- No DPCM sample data export
-- No MIDI controller support
 
 Videos:
 =======

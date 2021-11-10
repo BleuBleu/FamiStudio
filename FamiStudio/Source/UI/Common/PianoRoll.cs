@@ -6947,11 +6947,11 @@ namespace FamiStudio
             }
             else if (IsPointOnMaximizeButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Maximize/Minimize piano roll {~} or {Tab}";
+                tooltip = "{MouseLeft} Maximize/Minimize piano roll {1}";
             }
             else if (IsPointInTopLeftCorner(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Show/hide effect panel {Ctrl} {~} or {Ctrl} {Tab}";
+                tooltip = "{MouseLeft} Show/hide effect panel {Ctrl} {1}";
             }
             else if (IsPointInEffectList(e.X, e.Y))
             {

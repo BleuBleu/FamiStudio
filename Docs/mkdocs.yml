@@ -2,6 +2,7 @@ site_name: FamiStudio Documentation
 nav:
 - Welcome: index.md   
 - User Guide:
+  - "Installation": install.md
   - "Basics": basics.md
   - "Editing Notes": pianoroll.md
   - "Editing Patterns": sequencer.md
@@ -16,6 +17,7 @@ nav:
   - "Command-line Processing": cmdline.md
   - "NES/Famicom Sound Engine": soundengine.md
   - "Troubleshooting": troubleshooting.md
+  - "Acknowledgements": thanks.md
   - "Change Log": changelog.md
 extra_css:
     - css/extra.css    
