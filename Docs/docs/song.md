@@ -29,7 +29,7 @@ For example, a C-D-E-F scale where each note is stopped for 1 frame between each
 
 ![](images/TempoExampleFamiStudio.png#center) 
 
-FamiStudio tempo mode let's you simply choose a BPM value for the song (or an individual pattern) and will automatically choose the appropriate number of frames to make each notes. Some BPMs will require the use of a *groove" which is an uneven sequence of frames. 
+FamiStudio tempo mode let's you simply choose a BPM value for the song (or an individual pattern) and will automatically choose the appropriate number of frames to make each notes. Some BPMs will require the use of a *groove* which is an uneven sequence of frames. 
 
 For example, at 142 BPM (in NTSC), FamiStudio will know to use a 7-6-6 groove, which mean that the first note will be 7 frames long, then followed by two notes of 6 frames, and the whole thing will repeat until there is a tempo change in the song. But in order to keep the piano roll nice and even, FamiStudio will only only display the minimum values of the groove, 6 in our example. This mean that out of 19 frames in the groove, you only have control over 18. In other words, every 3rd note, FamiStudio will inject an empty frame for which you dont have any control. Effects, instrument envelopes & arpeggios will still advance on these empty frames, but otherwise no new note will be processed. You can tell FamiStudio *where* to inject this empty frame, by changing the **Groove Padding Mode** (Beginning, Middle or End).
 
