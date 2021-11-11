@@ -1,97 +1,25 @@
 3.2.0
 =====
-
-x Color + color
-x Crash mouse wheel
-x Chopped last pattern windows 150%, mark
-x MIDI file bug from github
-x Tweak minimum pattern size on mobile, (look at lagrange point demo song)
-x Piano roll export broken?
-x Flicker hi-speed when opening NSF.
-- Command + tilde or tab on mac, change shortcut, fuck it.
-- Audio comparison from imagino
-
-Icon notes:
-- 66% zoom, start with 128x128 png.
-
-Testing
-=======
-- Test project/instrument merge (with expansions).
-- Re-test all scalings (lots of cahnges to everything, zooming, etc.)
-
-3.2.0 Trailer
-=============
-Many small features, but here are 2 main ones:
-
-1) Free Android App (~1 min)
-	- Download it right now on the Google Play Store!
-	- Completely redesigned touch interface.
-	- TAP to create notes, SWAP to move/resize them, LONG PRESS to see more advanced options.
-		=> Piano roll, do that.
-	- Works the same way for patterns.
-		=> Sequencer.
-	- New pop-up piano lets you preview instruments from anywhere inside the app, and record notes as well.
-		=> Show VRC7 instruments in P.E.
-		=> Then recording mode.
-	- Edit DPCM samples too
-		=> Show that
-	- Export to MP3 and render videos right from the app.
-	- Features of the desktop versions missing in the Mobile version:
-		- No MIDI import/export
-		- No NSF import
-		- No Sound Engine/Famitone 2 export
-		- No FamiTracker text export
-		- No FamiStudio text export
-		- No FamiTracker FTI instrument import
-		- No DPCM sample import from other projects (WAV/DMC only)
-		- No DPCM sample data export
-		- No MIDI controller support
-2) Multi-expansion support (~10 sec)
-	- Finally it is supported
-	- Simply enable the expansions you want in project settings
-	- Everything else will work the same (NSF import/export too).
-3) Other features not mentionned in this trailer: (~10 sec)
-	- Proper Triangle-Noise-DPCM volume emulation
-	- Minor cosmetic UI changes 
-  - Significant graphic optimizations, especially on lower-end machines or large projects.
-4) End screen.
-
-Packaging:
-==========
-x Make sure no android DLL on windows.
-x Two songs from mark
-/ Make download list vertical on website.
-- Doc : List dependencies in doc, list demo songs in doc, mobile tutorial, move installation procedure to its own page.
-- Add link to discord in doc
-- Thumbnail + desc for tutorial.
-
-New Features in 3.2.0
-=====================
-Changes:
-- Multi-expansion support
-- Proper emulation of triangle/noise/DPCM volume interactions
-- Android app (free on Play Store)
-- Significant graphic optimizations, especially on lower-end machines or large projects.
-- Minor quality of life features
-- Minor cosmetic UI changes (icons, envelope editor, coloring piano with DPCM colors, etc.)
-Behavior changes:
-- Snapping precision is now expressed in beats. So with the default settings, 1 means a quarter note.
-- Channel volumes have been slightly adjusted to match the NES hardware more closely.
+- Update doc for mobile.
+		- Add more stuff for mobile:
+		- Piano roll: record a view gifs
+		- Seq:
+		- PE:
+- Add corrections to tutorial (snapping)
 
 3.3.0
 =====
 - Stereo export VS. TND?
-- Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
-- Option to override DMC initial value on sample mapping
+- Option to override DMC initial value on sample mapping.
+- Improve oscilloscope stability (min square norm?)
 - Fix GTK leak (GTK 3.x?), or 2.12.45
 - Register viewer.
 - Volume/effect scaling
-
+- Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 
 Videos:
 =======
-- Mobile tutorial? Or just a documentation page with a bunch of GIFs?
-- Tutorial for FamiTracker
+- Tutorial for FamiTracker users
 
 Linux notes 
 =========== 
@@ -147,7 +75,6 @@ Key Store
 - 30 Years
 - Only full name entered.
 
-
 Trailer/scroll 
 ============== 
 - Stashed in 5beed88a1bc487ec2cbc725b9d749a464e57dece. 
@@ -173,7 +100,6 @@ Backlog:
 - Volume/effect scaling?
 - Write delta counter (Zxx).
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
-
 - Overclocking (2x, 3x, 4x would be a good start).
 - NSF import read DMC initial value.
 - Save snapping + qwerty settings + some export settings.
