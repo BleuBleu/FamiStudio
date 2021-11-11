@@ -112,7 +112,7 @@ private:
 	Blip_Buffer bufRight;
 	blip_time_t time;
 	blip_time_t frame_length;
-	blip_time_t clock() { return time += 4; }
+	blip_time_t clock(blip_time_t t = 4) { return time += t; }
 };
 
 #endif

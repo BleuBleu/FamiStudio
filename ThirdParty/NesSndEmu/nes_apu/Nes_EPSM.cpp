@@ -43,7 +43,7 @@ void Nes_EPSM::reset_psg()
 	if (psg)
 		PSG_delete(psg);
 
-	psg = PSG_new(psg_clock, psg_clock / 16);
+	psg = PSG_new(psg_clock, psg_clock / 16.0 / (4000000.0/1789773.0));
 	PSG_reset(psg);
 }
 
@@ -135,15 +135,16 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
 	if (!mask) dataWrite.push(data);
 	if (!mask) aWrite.push((a0 | (a1 << 1)));
-
+	//if (!mask) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
+	//run_until(time);
 }
 
 
 
-void Nes_EPSM::end_frame(cpu_time_t time)
+long Nes_EPSM::run_until(cpu_time_t time)
 {
 	if (!output_buffer)
-		return;
+		return 0;
 
 	cpu_time_t t = last_time;
 
@@ -185,7 +186,15 @@ void Nes_EPSM::end_frame(cpu_time_t time)
 		t += 16;
 	}
 
-	last_time = t - time;
+	last_time = time;
+	return t;
+}
+
+void Nes_EPSM::end_frame(cpu_time_t time)
+{
+	if (time > last_time)
+	last_time = run_until(time) - time;
+	assert(last_time >= 0);
 }
 
 void Nes_EPSM::start_seeking()

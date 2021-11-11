@@ -7,7 +7,6 @@
 #include "Nes_Apu.h"
 #include "ym3438.h"
 #include <queue>
-#include <array>
 
 class Nes_EPSM {
 public:
@@ -46,6 +45,7 @@ private:
 
 	void reset_psg();
 	void reset_opn2();
+	long run_until(cpu_time_t);
 
 	int reg;
 	uint8_t a0;

@@ -173,7 +173,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			if (expansions & expansion_mask_mmc5) mmc5.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_namco) namco.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_sunsoft) sunsoft.write_register(clock(), addr, data);
-			if (expansions & expansion_mask_epsm) epsm.write_register(clock(), addr, data);
+			if (expansions & expansion_mask_epsm) epsm.write_register(clock(16), addr, data);
 		}
 	}
 }
@@ -284,7 +284,7 @@ inline long nonlinearize(long raw_sample, double volume)
 	const double tnd_scale = 202.0;
 
 	// Convert the raw fixed point sample to floating point + apply nonlinear approximation.
-	double sample_float = std::max(0.00001, raw_sample * sample_scale);
+	double sample_float = max(0.00001, raw_sample * sample_scale);
 	double sample_nonlinear = 163.67 / (24329.0 / (sample_float * tnd_scale) + 100.0);
 
 	// Rescale to the fixed point, blip buffer format.
@@ -332,10 +332,10 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			*out++ = (blip_sample_t)clamp((int)(s + outLeft[i]), -32767, 32767);
 			*out++ = (blip_sample_t)clamp((int)(s + outRight[i]), -32767, 32767);
 
-			if ((BOOST::int16_t)s != s) {
+			/*if ((BOOST::int16_t)s != s) {
 				out[-1] = 0x7FFF - (s >> 24);
 				out[-2] = 0x7FFF - (s >> 24);
-			}
+			}*/
 				
 		}
 
