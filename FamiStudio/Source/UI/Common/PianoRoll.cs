@@ -3074,7 +3074,7 @@ namespace FamiStudio
 
         private void RenderWaveform(RenderInfo r)
         {
-            if (editMode != EditionMode.DPCM)
+            if (editMode != EditionMode.DPCM || Width < pianoSizeX)
                 return;
 
             r.cb.PushTranslation(pianoSizeX, headerAndEffectSizeY);
