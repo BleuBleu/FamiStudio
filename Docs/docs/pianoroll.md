@@ -117,7 +117,7 @@ Snapping can be toggle by clicking the little magnet in the top-left corner of t
 
 ![](images/Snap.png#center)
 
-Using FamiStudio tempo mode will allow you to use both fractional snapping (1/4, 1/3, 1/2) and integer snapping (1, 2, 3, 4). FamiTracker tempo mode is limited to integer snapping since it does not give you full control over the individual frames. Fractional snapping will perform rounding when the number of frames in a note isnt exactly divisible by the precision.
+The snapping precision is expressed in *Beats* (which are numbered as x.1, x.2, x.3, etc. in the header). So with the default settings, a snapping precision of 1 will mean a quarter note.
 
 Adding, selecting and dragging of notes are currently the only actions affected by snapping. More might be added in future based on user feedback.
 

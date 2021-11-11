@@ -1,3 +1,7 @@
+<p style="border:3px; border-style:solid;border-color:#000000;padding:5px;background-color:#ffac7f;color:black;">
+	The FamiStudio documentation was mostly written for the desktop version. It is slowly being updated to include the mobile version. Thank you for your patience.
+</p>
+
 # Welcome
 
 Welcome to the FamiStudio documentation. Please use the __User Guide__ menu above to navigate the the various sections or use the Table of Contents below. Also, you can use the __Search__ button to search for a specific topic.

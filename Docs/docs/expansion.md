@@ -20,11 +20,13 @@ List of expansions supported:
 
 ## Enabling expansion audio
 
-The expansion audio used is set in the project properties, which you can access by double-clicking on the project name (first row in the Project Explorer).
+The audio expansion(s) used is set in the project properties, which you can access by double-clicking on the project name (first row in the Project Explorer).
 
 ![](images/EditProject.png#center)
 
-Enabling any kind of expansion audio will automatically disable PAL support.
+Enabling any kind of expansion audio will automatically disable PAL support since no audio expansion were ever available in PAL territories. 
+
+Note that while using multiple audio expansion(s) is supported in FamiStudio, no NES game has ever shipped with multiple expansions. This probably would not have been possible for multiple reasons (cost, competing compagnies, hardware conflicts, etc.). So be aware that you are bending the rules of reality when using multiple expanions.
 
 ## Expansion instruments
 

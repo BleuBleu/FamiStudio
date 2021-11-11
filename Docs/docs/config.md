@@ -77,7 +77,9 @@ The configuration dialog dialog is accessed from the toolbar.
 
 ![](images/ConfigMixer.png#center)
 
-This section allows adjusting the volume and treble of each audio expansion in the FamiStudio NES sound emulation. Audio expansion volume is a tricky subject since even different revisions of the Famicom had different resistor values which dramatically affected the volume of expansion audio. Here you can set any value you want.
+This section allows adjusting the global volume of FamiStudio and the volume/treble of each audio expansion in the FamiStudio NES sound emulation. The global audio volume may need to be lowered to avoid clipping when using a massive amount of audio expansions at the same time.
+
+Audio expansion volume is a tricky subject since even different revisions of the Famicom had different resistor values which dramatically affected the volume of expansion audio. Here you can set any value you want.
 
 The treble (low-pass filter) has a logarithmic rolloff to treble dB at half sampling rate. Negative values reduce treble, small positive values (0 to 5.0) increase treble. FamiStudio emulates audio at 44.1KHz.
 

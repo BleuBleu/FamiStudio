@@ -114,11 +114,15 @@ The sequencer is where you organize the high-level structure of the song: which 
 
 # Piano Roll
 
-The piano roll is where you editing the actual notes of the song, the instrument envelopes, as well as some special effects.
+The piano roll is where you editing the actual notes of the song, the instrument envelopes, as well as some special effects. 
 
 ![](images/PianoRoll.png#center)
 
 Please check out the [Editing Notes](pianoroll.md) section for more details.
+
+The piano roll can be maximized to full screen by pressing the little maximize button in the top right corner, or by pressing **1** on the keyboard.
+
+![](images/MaximizePianoRoll.gif#center)
 
 # Keyboard shortcuts
 
@@ -142,8 +146,11 @@ Here is a list of useful keyboard shortcuts:
 * **Shift+Q**: Toggle QWERTY keyboard input.
 * **Delete**: Delete selected patterns or notes.
 * **Escape**: Deselects patterns or notes, stops any sound that is stuck playing.
-* **F1...F5**: Changes the active channel (more than 5 if you have expansion audio enabled).
-* **Ctrl+F1...F5**: Force display a channel. (more than 5 if you have expansion audio enabled).
+* **F1...F24**: Changes the active channel (more than 5 if you have expansion audio enabled).
+* **Ctrl+F1...F24**: Force display a channel. (more than 5 if you have expansion audio enabled).
+* **1**: Toggle maximize the piano roll.
+* **Ctrl+1**: Toggle the effect panel.
+* **Shift+S**: Toggle snapping in the piano roll.
 
 Some keyboard shortcuts specific to the sequencer:
 
