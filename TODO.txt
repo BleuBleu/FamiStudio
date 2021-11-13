@@ -11,6 +11,7 @@
 =====
 - Stereo export VS. TND?
 - Option to override DMC initial value on sample mapping.
+- Rewrite that crazy ugly function in sound engine + figure out how to have more codes.
 - Improve oscilloscope stability (min square norm?)
 - Fix GTK leak (GTK 3.x?), or 2.12.45
 - Register viewer.
@@ -99,6 +100,7 @@ Backlog:
 =========
 - Volume/effect scaling?
 - Write delta counter (Zxx).
+- ROM export with expansion?
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
 - NSF import read DMC initial value.
