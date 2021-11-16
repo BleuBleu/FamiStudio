@@ -162,13 +162,13 @@ namespace FamiStudio
                                 {
                                     wavData = new short[dataSize / 1];
                                     for (int i = 0; i < dataSize; i++)
-                                        wavData[i] = (short)(bytes[dataOffset + i] << 8);
+                                        wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue);
                                 }
                                 else if (fmt.bitsPerSample == 24)
                                 {
                                     wavData = new short[dataSize / 3];
                                     for (int i = 0; i < dataSize; i += 3)
-                                        wavData[i] = (short)((bytes[dataOffset + i] << 8) | bytes[dataOffset + i + 1]);
+                                        wavData[i / 3] = (short)((bytes[dataOffset + i + 2] << 8) | bytes[dataOffset + i + 1]);
                                 }
                                 else
                                 {

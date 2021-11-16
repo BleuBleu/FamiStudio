@@ -1,11 +1,11 @@
 3.2.1
 =====
-- NSF issue from how2.
+x Option to disable vibration.
+x 8/24 bits wave files.
 x Too zoomed in in envelope editor
+- NSF issue from how2.
 - Effect panel vs. snapping.
 - "Seems some parameters on the instrument settings on the app take several taps to change", "The FM presets for sure"
-x Option to disable vibration.
-- 8/24 bits wave files.
 - Update doc for mobile.
 
 3.3.0
