@@ -393,6 +393,7 @@
     <EmbeddedResource Include="Resources\ConfigGeneral%402x.png" />
     <EmbeddedResource Include="Resources\ConfigMIDI%402x.png" />
     <EmbeddedResource Include="Resources\ConfigMixer%402x.png" />
+    <EmbeddedResource Include="Resources\ConfigMobile%402x.png" />
     <EmbeddedResource Include="Resources\ConfigQWERTY%402x.png" />
     <EmbeddedResource Include="Resources\ConfigSound%402x.png" />
     <EmbeddedResource Include="Resources\ConfigUserInterface%402x.png" />

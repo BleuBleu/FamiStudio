@@ -1,11 +1,12 @@
-3.2.0
+3.2.1
 =====
+- NSF issue from how2.
+- Too zoomed in in envelope editor
+- Effect panel vs. snapping.
+- "Seems some parameters on the instrument settings on the app take several taps to change", "The FM presets for sure"
+x Option to disable vibration.
+- 8/24 bits wave files.
 - Update doc for mobile.
-		- Add more stuff for mobile:
-		- Piano roll: record a view gifs
-		- Seq:
-		- PE:
-- Add corrections to tutorial (snapping)
 
 3.3.0
 =====

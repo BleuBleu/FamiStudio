@@ -216,6 +216,9 @@ namespace FamiStudio
         // Misc
         public static string FFmpegExecutablePath = "";
 
+        // Mobile section
+        public static bool AllowVibration = true;
+
         public static void Load()
         {
             var ini = new IniFile();
@@ -345,6 +348,9 @@ namespace FamiStudio
                 }
             }
             
+            // Mobile section
+            AllowVibration = ini.GetBool("Mobile", "AllowVibration", true);
+
             // At 3.2.0, we added a new Discord screen to the tutorial.
             if (Version < 4)
                 ShowTutorial = true;
@@ -434,6 +440,9 @@ namespace FamiStudio
                 if (QwertyKeys[idx, 1] >= 0)
                     ini.SetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
             }
+
+            // Mobile
+            ini.SetBool("Mobile", "AllowVibration", AllowVibration);
 
             Directory.CreateDirectory(GetConfigFilePath());
 
