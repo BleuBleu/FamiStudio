@@ -5628,6 +5628,8 @@ namespace FamiStudio
                 }
                 else
                 {
+                    absIdx = SnapNote(absIdx);
+                    location = NoteLocation.FromAbsoluteNoteIndex(Song, absIdx);
                     SetSingleEffectValue(x, y, location);
                     highlightNoteAbsIndex = absIdx;
                 }

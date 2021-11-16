@@ -3,8 +3,8 @@
 x Option to disable vibration.
 x 8/24 bits wave files.
 x Too zoomed in in envelope editor
+x Effect panel vs. snapping.
 - NSF issue from how2.
-- Effect panel vs. snapping.
 - "Seems some parameters on the instrument settings on the app take several taps to change", "The FM presets for sure"
 - Update doc for mobile.
 
