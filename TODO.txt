@@ -1,7 +1,7 @@
 3.2.1
 =====
 - NSF issue from how2.
-- Too zoomed in in envelope editor
+x Too zoomed in in envelope editor
 - Effect panel vs. snapping.
 - "Seems some parameters on the instrument settings on the app take several taps to change", "The FM presets for sure"
 x Option to disable vibration.
