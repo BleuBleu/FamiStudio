@@ -6,7 +6,7 @@ The project explorer displays the name of the project, the list of songs and ins
 
 ## Editing project properties
 
-Double-clicking on project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information is used when exporting to NSF, for example.
+Clicking on the little gear icon or double clicking on the project name (first button in the project explorer) will allow you to change its name, author and copyright information. This information is used when exporting to NSF, for example.
 
 ![](images/EditProject.png#center)
 
@@ -76,7 +76,7 @@ Songs from another project must use the same audio expansion and tempo mode. Als
 
 ## Editing song properties
 
-Double-clicking on the a song will allow you to change its name, color and other attributes. Names must be unique.
+Clicking the gear icon next to a song (or double-clicking on the song) will allow you to change its name, color and other attributes. Names must be unique.
 
 This dialog will look different depending on the **Tempo Mode** of the current project.
 

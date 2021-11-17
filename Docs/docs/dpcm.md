@@ -28,7 +28,7 @@ Samples are loaded by clicking the little folder icon next to the "DPCM Samples"
 
 It is also possible to import samples from another FamiStudio project. Note that doing this will not import the sample assignments to keys of the piano (DPCM Instrument). To import those as well, you mayb want to import the DPCM instrument in the Instrument section of the Project Explorer.
 
-Once loaded, you can rename a sample or change its color by double-clicking on this button. You can also play the sample by clicking the little play button next to it:
+Once loaded, you can rename a sample or change its color by clicking the gear icon (or double-clicking on it)button. You can also play the sample by clicking the little play button next to it:
 
 * Left-clicking will play the processed sample.
 * Right-clicking will play the source sample (DMC or WAV).

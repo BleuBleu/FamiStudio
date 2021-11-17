@@ -167,20 +167,26 @@ namespace FamiStudio
 
         public static void VibrateTick()
         {
-            var v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
-            var fx = Build.VERSION.SdkInt >= BuildVersionCodes.Q ?
-                VibrationEffect.CreatePredefined(VibrationEffect.EffectTick) :
-                VibrationEffect.CreateOneShot(20, 64);
-            v.Vibrate(fx);
+            if (Settings.AllowVibration)
+            {
+                var v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
+                var fx = Build.VERSION.SdkInt >= BuildVersionCodes.Q ?
+                    VibrationEffect.CreatePredefined(VibrationEffect.EffectTick) :
+                    VibrationEffect.CreateOneShot(20, 64);
+                v.Vibrate(fx);
+            }
         }
 
         public static void VibrateClick()
         {
-            Vibrator v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
-            var fx = Build.VERSION.SdkInt >= BuildVersionCodes.Q ?
-                VibrationEffect.CreatePredefined(VibrationEffect.EffectHeavyClick) :
-                VibrationEffect.CreateOneShot(20, 128);
-            v.Vibrate(fx);
+            if (Settings.AllowVibration)
+            {
+                Vibrator v = (Vibrator)Application.Context.GetSystemService(Context.VibratorService);
+                var fx = Build.VERSION.SdkInt >= BuildVersionCodes.Q ?
+                    VibrationEffect.CreatePredefined(VibrationEffect.EffectHeavyClick) :
+                    VibrationEffect.CreateOneShot(20, 128);
+                v.Vibrate(fx);
+            }
         }
 
         public static void ShowToast(string message)
