@@ -825,7 +825,7 @@ namespace FamiStudio
         {
             var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
 
-            if (props.PropertyCount == 1)
+            if (project.UsesMultipleExpansionAudios)
                 return;
 
             var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
