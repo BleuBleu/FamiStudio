@@ -17,7 +17,7 @@ For details on Expansion audio instruments please visit the [Expansion Audio sec
 
 ## Editing instrument properties
 
-Double-clicking on an instrument will show its properties. Like most things in FamiStudio, you can rename the instrument and change its color.
+Clicking on the little gear icon next to an instrument (or double-clicking on an instrument) will show its properties. Like most things in FamiStudio, you can rename the instrument and change its color.
 
 ![](images/EditInstrument.png#center)
 
@@ -89,7 +89,7 @@ Arpeggios are handled in a very similar way to instrument. You can add a new arp
 
 ![](images/EditArpeggio.png#center)
 
-You can also assign a name and a color to each arpeggio by double-clicking on an arpeggio. This color will be displayed in the piano roll when the arpeggio is used.
+You can also assign a name and a color to each arpeggio by clicking the little gear icon next to it (or double-clicking on the arpeggio). This color will be displayed in the piano roll when the arpeggio is used.
 
 ![](images/EditArpeggioProperties.png#center)
 

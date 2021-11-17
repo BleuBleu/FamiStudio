@@ -737,17 +737,11 @@ namespace FamiStudio
         private void CenterEnvelopeScroll(Envelope envelope, int envelopeType, Instrument instrument = null)
         {
             var baseNoteSizeX = ScaleForMainWindow(DefaultNoteSizeX);
+            var envelopeLength = Math.Max(PlatformUtils.IsMobile ? 8 : 4, envelope.Length);
 
-            if (envelope.Length == 0)
-            {
-                zoom = DefaultEnvelopeZoom;
-            }
-            else
-            {
-                zoom = minZoom;
-                while (zoom < maxZoom && envelope.Length * baseNoteSizeX * (zoom * 2.0f) < (Width - pianoSizeX))
-                    zoom *= 2.0f;
-            }
+            zoom = minZoom;
+            while (zoom < maxZoom && envelopeLength * baseNoteSizeX * (zoom * 2.0f) < (Width - pianoSizeX))
+                zoom *= 2.0f;
 
             if (PlatformUtils.IsMobile)
                 envelopeValueZoom = 1.0f;
@@ -3074,7 +3068,7 @@ namespace FamiStudio
 
         private void RenderWaveform(RenderInfo r)
         {
-            if (editMode != EditionMode.DPCM)
+            if (editMode != EditionMode.DPCM || Width < pianoSizeX)
                 return;
 
             r.cb.PushTranslation(pianoSizeX, headerAndEffectSizeY);
@@ -5634,6 +5628,8 @@ namespace FamiStudio
                 }
                 else
                 {
+                    absIdx = SnapNote(absIdx);
+                    location = NoteLocation.FromAbsoluteNoteIndex(Song, absIdx);
                     SetSingleEffectValue(x, y, location);
                     highlightNoteAbsIndex = absIdx;
                 }

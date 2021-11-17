@@ -155,11 +155,28 @@ namespace FamiStudio
                             var fmt = new FormatSubChunk();
                             Marshal.Copy(bytes, fmtOffset, new IntPtr(&fmt), FormatSubChunkSize);
 
-                            if (fmt.audioFormat == 1 && fmt.bitsPerSample == 16 && fmt.numChannels <= 2)
+                            if (fmt.audioFormat == 1 && fmt.numChannels <= 2 && (fmt.bitsPerSample == 8 || fmt.bitsPerSample == 16 || fmt.bitsPerSample == 24))
                             {
-                                short[] wavData = new short[dataSize / sizeof(short)];
-                                fixed (short* p = &wavData[0])
-                                    Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
+                                short[] wavData = null;
+
+                                if (fmt.bitsPerSample == 8)
+                                {
+                                    wavData = new short[dataSize / 1];
+                                    for (int i = 0; i < dataSize; i++)
+                                        wavData[i] = (short)((bytes[dataOffset + i] << 8) + short.MinValue);
+                                }
+                                else if (fmt.bitsPerSample == 24)
+                                {
+                                    wavData = new short[dataSize / 3];
+                                    for (int i = 0; i < dataSize; i += 3)
+                                        wavData[i / 3] = (short)((bytes[dataOffset + i + 2] << 8) | bytes[dataOffset + i + 1]);
+                                }
+                                else
+                                {
+                                    wavData = new short[dataSize / 2];
+                                    fixed (short* p = &wavData[0])
+                                        Marshal.Copy(bytes, dataOffset, new IntPtr(p), dataSize);
+                                }
 
                                 if (fmt.numChannels == 2)
                                 {

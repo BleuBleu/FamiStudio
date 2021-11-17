@@ -18,6 +18,7 @@ namespace FamiStudio
             FFmpeg,
             QWERTY,
             MacOS,
+            Mobile,
             Max
         };
 
@@ -31,6 +32,7 @@ namespace FamiStudio
             "FFmpeg",
             "QWERTY",
             "MacOS",
+            "Mobile",
             ""
         };
 
@@ -104,6 +106,9 @@ namespace FamiStudio
         // MIDI
         private readonly string MidiDeviceTooltip               = "The MIDI device that will be used to input notes.";
 
+        // Mobile
+        private readonly string AllowVibrationTooltip           = "When enabled, the phone will vibrate on long pressed, piano keys, etc.";
+
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
         private int[,] qwertyKeys; // We keep a copy here in case the user cancels.
@@ -135,6 +140,7 @@ namespace FamiStudio
             dialog.SetPageVisible((int)ConfigSection.MIDI,    PlatformUtils.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.FFmpeg,  PlatformUtils.IsDesktop);
             dialog.SetPageVisible((int)ConfigSection.QWERTY,  PlatformUtils.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.Mobile,  PlatformUtils.IsMobile);
         }
 
         private string[] BuildDpiScalingList()
@@ -266,6 +272,11 @@ namespace FamiStudio
                     page.SetPropertyEnabled(0, Settings.TrackPadControls);
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
                     page.SetPropertyEnabled(2, Settings.TrackPadControls);
+                    break;
+                }
+                case ConfigSection.Mobile:
+                { 
+                    page.AddCheckBox("Allow vibration:", Settings.AllowVibration, AllowVibrationTooltip); // 0
                     break;
                 }
             }
@@ -519,6 +530,10 @@ namespace FamiStudio
                     Settings.ReverseTrackPad   = pageMacOS.GetPropertyValue<bool>(0);
                     Settings.TrackPadMoveSensitity = pageMacOS.GetPropertyValue<int>(1);
                     Settings.TrackPadZoomSensitity = pageMacOS.GetPropertyValue<int>(2);
+
+                    // Mobile
+                    var pageMobile = pages[(int)ConfigSection.Mobile];
+                    Settings.AllowVibration = pageMobile.GetPropertyValue<bool>(0);
 
                     Settings.Save();
                 }
