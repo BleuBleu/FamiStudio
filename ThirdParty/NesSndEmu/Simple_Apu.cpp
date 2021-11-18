@@ -14,8 +14,6 @@ more details. You should have received a copy of the GNU Lesser General
 Public License along with this module; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
 
-#define NONLINEAR_TND 1
-
 static int null_dmc_reader( void*, cpu_addr_t )
 {
 	return 0x55; // causes dmc sample to be flat
@@ -25,6 +23,7 @@ Simple_Apu::Simple_Apu()
 {
 	pal_mode = false;
 	seeking = false; 
+	separate_tnd_mode = tnd_mode_single;
 	time = 0;
 	frame_length = 29780;
 	tnd_volume = 1.0;
@@ -42,15 +41,26 @@ void Simple_Apu::dmc_reader( int (*f)( void* user_data, cpu_addr_t ), void* p )
 	apu.dmc_reader( f, p );
 }
 
-blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
+blargg_err_t Simple_Apu::sample_rate( long rate, bool pal, int tnd_mode )
 {
 	pal_mode = pal;
+	separate_tnd_mode = tnd_mode;
+	separate_tnd_channel_enabled[0] = true;
+	separate_tnd_channel_enabled[1] = true;
+	separate_tnd_channel_enabled[2] = true;
 	frame_length = pal ? 33247 : 29780;
-#if NONLINEAR_TND
-	apu.output(&buf, &tnd);
-#else
-	apu.output(&buf, &buf);
-#endif
+
+	if (separate_tnd_mode)
+	{
+		apu.osc_output(2, &tnd[0]);
+		apu.osc_output(3, &tnd[1]);
+		apu.osc_output(4, &tnd[2]);
+	}
+	else
+	{
+		apu.output(&buf, &tnd[0]);
+	}
+
 	vrc6.output(&buf);
 	vrc7.output(&buf);
 	fds.output(&buf);
@@ -58,30 +68,36 @@ blargg_err_t Simple_Apu::sample_rate( long rate, bool pal)
 	namco.output(&buf);
 	sunsoft.output(&buf);
 	
-#if NONLINEAR_TND
-	tnd.clock_rate(pal ? 1662607 : 1789773);
+	tnd[0].clock_rate(pal ? 1662607 : 1789773);
+	tnd[1].clock_rate(pal ? 1662607 : 1789773);
+	tnd[2].clock_rate(pal ? 1662607 : 1789773);
 	buf.clock_rate(pal ? 1662607 : 1789773);
 
-	tnd.sample_rate(rate);
+	tnd[0].sample_rate(rate);
+	tnd[1].sample_rate(rate);
+	tnd[2].sample_rate(rate);
 	return buf.sample_rate( rate );
-#else
-	buf.clock_rate(pal ? 1662607 : 1789773);
-	return buf.sample_rate(rate);
-#endif
 }
 
 void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 {
 	if (expansion == 0)
 	{
-		#if NONLINEAR_TND
-			if (idx < 2)
-				apu.osc_output(idx, enable ? &buf : NULL);
-			else
-				apu.osc_output(idx, enable ? &tnd : NULL);
-		#else
+		if (idx < 2)
+		{
 			apu.osc_output(idx, enable ? &buf : NULL);
-		#endif
+		}
+		else
+		{
+			if (separate_tnd_mode)
+			{
+				separate_tnd_channel_enabled[idx - 2] = enable;
+			}
+			else
+			{
+				apu.osc_output(idx, enable ? &tnd[0] : NULL);
+			}
+		}
 	}
 	else
 	{
@@ -117,11 +133,7 @@ void Simple_Apu::set_expansion_volume(int exp, double volume)
 {
 	switch (exp)
 	{
-	#if NONLINEAR_TND
-		case expansion_none: apu.enable_nonlinear(volume); tnd_volume = volume; break;
-	#else
-		case expansion_none: apu.volume(volume); break;
-	#endif
+		case expansion_none: apu.enable_nonlinear(volume); tnd_volume = (float)volume; break;
 		case expansion_vrc6: vrc6.volume(volume); break;
 		case expansion_vrc7: vrc7.volume(volume); break;
 		case expansion_fds: fds.volume(volume); break;
@@ -223,18 +235,23 @@ void Simple_Apu::end_frame()
 	if (expansions & expansion_mask_sunsoft) sunsoft.end_frame(frame_length); 
 
 	buf.end_frame( frame_length );
-#if NONLINEAR_TND
-	tnd.end_frame( frame_length );
-#endif
+	tnd[0].end_frame( frame_length );
+
+	if (separate_tnd_mode)
+	{
+		tnd[1].end_frame(frame_length);
+		tnd[2].end_frame(frame_length);
+	}
 }
 
 void Simple_Apu::reset()
 {
-#if NONLINEAR_TND 
 	apu.enable_nonlinear(1.0);
-#endif
 	seeking = false;
-	nonlinear_accum = 0;
+	prev_nonlinear_tnd = 0;
+	tnd_accum[0] = 0;
+	tnd_accum[1] = 0;
+	tnd_accum[2] = 0;
 	apu.reset(pal_mode);
 	vrc6.reset();
 	vrc7.reset();
@@ -251,47 +268,112 @@ void Simple_Apu::set_audio_expansions(long exp)
 
 long Simple_Apu::samples_avail() const
 {
-#if NONLINEAR_TND
-	assert(buf.samples_avail() == tnd.samples_avail());
-#endif
+	assert(buf.samples_avail() == tnd[0].samples_avail());
+	assert(buf.samples_avail() == tnd[1].samples_avail() && separate_tnd_mode || tnd[1].samples_avail() == 0 && !separate_tnd_mode);
+	assert(buf.samples_avail() == tnd[2].samples_avail() && separate_tnd_mode || tnd[2].samples_avail() == 0 && !separate_tnd_mode);
+
 	return buf.samples_avail();
 }
 
-inline long nonlinearize(long raw_sample, double volume)
+const int    sample_shift     = blip_sample_bits - 16;
+const double sample_scale_inv = (1 << sample_shift) * 65535.0;
+const double sample_scale     = 1.0 / sample_scale_inv;
+
+// Using the 3 * tri (15) + 2 * noise (15) + dmc (127) approximation = maximum value is 202.
+const float tnd_scale = 202.0f;
+
+inline float unpack_sample(long raw_sample)
 {
-	const int    sample_shift     = blip_sample_bits - 16;
-	const double sample_scale_inv = (1 << sample_shift) * 65535.0;
-	const double sample_scale     = 1.0 / sample_scale_inv;
+	float sample_float = (float)(raw_sample * sample_scale);
+	// TODO : Investigate this. We sometimes have values that dips every so slightly in the negative range.
+	// It never goes below -0.01f so they are essentially zero, but not quite. Worrying.
+	// assert(sample_float >= 0.0f); 
+	return max(0.00001f, sample_float);
+}
 
-	// Using the 3 * tri (15) + 2 * noise (15) + dmc (127) approximation = maximum value is 202.
-	const double tnd_scale = 202.0;
+inline long pack_sample(float sample_float)
+{
+	// Same as above, but rescale to the fixed point, blip buffer format.
+	return (long)(sample_float * sample_scale_inv);
+}
 
-	// Convert the raw fixed point sample to floating point + apply nonlinear approximation.
-	double sample_float = max(0.00001, raw_sample * sample_scale);
-	double sample_nonlinear = 163.67 / (24329.0 / (sample_float * tnd_scale) + 100.0);
-
-	// Rescale to the fixed point, blip buffer format.
-	return (long)(sample_nonlinear * volume * sample_scale_inv);
+inline float nonlinearize(float sample_float)
+{
+	return 163.67f / (24329.0f / (sample_float * tnd_scale) + 100.0f);
 }
 
 long Simple_Apu::read_samples( sample_t* out, long count )
 {
-#if NONLINEAR_TND
-	assert(buf.samples_avail() == tnd.samples_avail());
+	assert(buf.samples_avail() == tnd[0].samples_avail());
+	assert(buf.samples_avail() == tnd[1].samples_avail() && separate_tnd_mode || tnd[1].samples_avail() == 0 && !separate_tnd_mode);
+	assert(buf.samples_avail() == tnd[2].samples_avail() && separate_tnd_mode || tnd[2].samples_avail() == 0 && !separate_tnd_mode);
 
 	if (count)
 	{
-		// Apply non-linear mixing to the TND buffer.
-		Blip_Buffer::buf_t_* p = tnd.buffer_;
-
-		long prev = nonlinearize(nonlinear_accum, tnd_volume);
-
-		for (unsigned n = count; n--; )
+		if (separate_tnd_mode)
 		{
-			nonlinear_accum += (long)*p;
-			long entry = nonlinearize(nonlinear_accum, tnd_volume);
-			*p++ = (entry - prev);
-			prev = entry;
+			Blip_Buffer::buf_t_* p[3];
+			p[0] = tnd[0].buffer_;
+			p[1] = tnd[1].buffer_;
+			p[2] = tnd[2].buffer_;
+
+			for (unsigned n = count; n--; )
+			{
+				// Sum all 3 channels, apply non-linear mixing.
+				tnd_accum[0] += (long)*p[0];
+				tnd_accum[1] += (long)*p[1];
+				tnd_accum[2] += (long)*p[2];
+				
+				float samples_float[3];
+				samples_float[0] = unpack_sample(tnd_accum[0]);
+				samples_float[1] = unpack_sample(tnd_accum[1]);
+				samples_float[2] = unpack_sample(tnd_accum[2]);
+
+				// When running in "TN only" mode and exporting only the DPCM channel
+				// ignore the contribution from the others. This is not correct but avoid
+				// having the triangle bleed in the DPCM channel.
+				if (separate_tnd_mode == tnd_mode_separate_tn_only &&
+					separate_tnd_channel_enabled[0] == false &&
+					separate_tnd_channel_enabled[1] == false &&
+					separate_tnd_channel_enabled[2] == true)
+				{
+					samples_float[0] = 0.0f;
+					samples_float[1] = 0.0f;
+				}
+
+				float samples_sum = samples_float[0] + samples_float[1] + samples_float[2];
+				float all_channels_nonlinear_mix = nonlinearize(samples_sum);
+
+				// Make sure the channels will sum up to the expected value.
+				float ratio = all_channels_nonlinear_mix / samples_sum;
+
+				float enabled_channels_non_linear_mix = 0.0f;
+				if (separate_tnd_channel_enabled[0]) enabled_channels_non_linear_mix += samples_float[0] * ratio;
+				if (separate_tnd_channel_enabled[1]) enabled_channels_non_linear_mix += samples_float[1] * ratio;
+				if (separate_tnd_channel_enabled[2]) enabled_channels_non_linear_mix += samples_float[2] * ratio;
+
+				long nonlinear_tnd = pack_sample(enabled_channels_non_linear_mix * tnd_volume);
+
+				// Write final result in tnd[0] so that the remaining code can proceed as usual.
+				*p[0]++ = (nonlinear_tnd - prev_nonlinear_tnd);
+				 p[1]++;
+				 p[2]++;
+
+				prev_nonlinear_tnd = nonlinear_tnd;
+			}
+		}
+		else
+		{
+			// Apply non-linear mixing to the TND buffer.
+			Blip_Buffer::buf_t_* p = tnd[0].buffer_;
+
+			for (unsigned n = count; n--; )
+			{
+				tnd_accum[0] += (long)*p;
+				long nonlinear_tnd = pack_sample(nonlinearize(unpack_sample(tnd_accum[0])) * tnd_volume);
+				*p++ = (nonlinear_tnd - prev_nonlinear_tnd);
+				prev_nonlinear_tnd = nonlinear_tnd;
+			}
 		}
 
 		// Then mix both blip buffers.
@@ -299,7 +381,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 		Blip_Reader nonlin;
 
 		int lin_bass = lin.begin(buf);
-		int nonlin_bass = nonlin.begin(tnd);
+		int nonlin_bass = nonlin.begin(tnd[0]);
 
 		for (int n = count; n--; )
 		{
@@ -308,20 +390,22 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			nonlin.next(nonlin_bass);
 			*out++ = s;
 
-			if ((BOOST::int16_t) s != s)
+			if ((BOOST::int16_t)s != s)
 				out[-1] = 0x7FFF - (s >> 24);
 		}
 
 		lin.end(buf);
-		nonlin.end(tnd);
+		nonlin.end(tnd[0]);
 
 		buf.remove_samples(count);
-		tnd.remove_samples(count);
-	}
+		tnd[0].remove_samples(count);
 
-#else
-	buf.read_samples(out, count);
-#endif
+		if (separate_tnd_mode)
+		{
+			tnd[1].remove_samples(count);
+			tnd[2].remove_samples(count);
+		}
+	}
 
 	return count;
 }
@@ -329,9 +413,13 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 void Simple_Apu::remove_samples(long s)
 {
 	buf.remove_samples(s);
-#if NONLINEAR_TND
-	tnd.remove_samples(s);
-#endif
+
+	tnd[0].remove_samples(s);
+	if (separate_tnd_mode)
+	{
+		tnd[1].remove_samples(s);
+		tnd[2].remove_samples(s);
+	}
 }
 
 void Simple_Apu::save_snapshot( apu_snapshot_t* out ) const

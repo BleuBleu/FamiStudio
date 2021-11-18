@@ -176,6 +176,7 @@ namespace FamiStudio
         public static bool SquareSmoothVibrato = true;
         public static bool NoDragSoungWhenPlaying = false;
         public static int MetronomeVolume = 50;
+        public static int SeparateChannelsExportTndMode = NesApu.TND_MODE_SINGLE;
 
         // Mixer section
         public static float GlobalVolume = -2.0f; // in dB
@@ -256,6 +257,7 @@ namespace FamiStudio
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
             MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
+            SeparateChannelsExportTndMode = ini.GetInt("Audio", "SeparateChannelsExportTndMode", NesApu.TND_MODE_SINGLE);
 
             // MIDI
             MidiDevice = ini.GetString("MIDI", "Device", "");
@@ -394,6 +396,7 @@ namespace FamiStudio
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
             ini.SetInt("Audio", "MetronomeVolume", MetronomeVolume);
+            ini.SetInt("Audio", "SeparateChannelsExportTndMode", SeparateChannelsExportTndMode);
 
             // Mixer
             ini.SetFloat("Mixer", "GlobalVolume", GlobalVolume);

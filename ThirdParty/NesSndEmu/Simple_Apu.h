@@ -35,6 +35,24 @@ public:
 	enum { expansion_mask_namco      = 1 << 4 };
 	enum { expansion_mask_sunsoft    = 1 << 5 };
 
+	// These mode are used for separate channel WAV export or stereo export.
+	// When exporting each channel individually, we don't get the volume interactions
+	// between the triangle-noise-dpcm channels. 
+	// 
+	// To overcome this, we have a "tnd_mode_separate" mode where 3 separate blip 
+	// buffers will be used to correctly split the intensity across the channels, 
+	// even when they are not audible. This create another problem where the triangle 
+	// may bleed in the DPCM channel (well, all 3 channels bleed in each other).
+	// This is a bit undesirable. 
+	//
+	// So we offer a 3rd mode "tnd_mode_separate_tn_only" where the DPCM will influence
+	// the noise/triangle channels, but not the other way around. This will not result
+	// in the exact correct intensity, but is often more desirable for people doing
+	// stereo exports. 
+	enum { tnd_mode_single           = 0 };
+	enum { tnd_mode_separate         = 1 };
+	enum { tnd_mode_separate_tn_only = 2 };
+
 	Simple_Apu();
 	~Simple_Apu();
 	
@@ -46,7 +64,7 @@ public:
 	void dmc_reader( int (*callback)( void* user_data, cpu_addr_t ), void* user_data = NULL );
 	
 	// Set output sample rate
-	blargg_err_t sample_rate( long rate, bool pal );
+	blargg_err_t sample_rate( long rate, bool pal, int tnd_mode );
 	
 	// Write to register (0x4000-0x4017, except 0x4014 and 0x4016)
 	void write_register( cpu_addr_t, int data );
@@ -90,9 +108,12 @@ public:
 private:
 	bool pal_mode;
 	bool seeking;
-	double tnd_volume;
+	float tnd_volume;
 	int  expansions;
-	long nonlinear_accum;
+	int  separate_tnd_mode;
+	bool separate_tnd_channel_enabled[3];
+	long tnd_accum[3];
+	long prev_nonlinear_tnd;
 	Nes_Apu apu;
 	Nes_Vrc6 vrc6;
 	Nes_Vrc7 vrc7;
@@ -102,7 +123,7 @@ private:
 	//Nes_Sunsoft sunsoft; // My version, based on emu2149
 	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
 	Blip_Buffer buf;
-	Blip_Buffer tnd;
+	Blip_Buffer tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.
 	blip_time_t time;
 	blip_time_t frame_length;
 	blip_time_t clock() { return time += 4; }

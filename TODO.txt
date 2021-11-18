@@ -4,20 +4,32 @@ x Option to disable vibration.
 x 8/24 bits wave files.
 x Too zoomed in in envelope editor
 x Effect panel vs. snapping.
+x Text export broken?	
 - NSF issue from how2.
 - "Seems some parameters on the instrument settings on the app take several taps to change", "The FM presets for sure"
+	=> Hitbox is too small.
 - Update doc for mobile.
+	=> Undocumented INI params.
+- Integrity asserts in Glisten.
+- DPCM dont play if seek bar is example on them.
+/ Stereo export VS. TND?
+	=> Recompile DLL on all platforms.
+- Weird snapping behavior when resizing/.
+- Draw note attacks for ghost notes?
 
 3.3.0
 =====
-- Stereo export VS. TND?
+- Right-click functionality.
+- Rewrite that crazy ugly function in sound engine + figure out how to have more  (change volume or double-special code for rare ones).
 - Option to override DMC initial value on sample mapping.
-- Rewrite that crazy ugly function in sound engine + figure out how to have more codes.
 - Improve oscilloscope stability (min square norm?)
 - Fix GTK leak (GTK 3.x?), or 2.12.45
 - Register viewer.
 - Volume/effect scaling
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
+- Way to temporarely disable snapping (FL studio does it with ALT).
+- Volume/effect scaling?
+
 
 Videos:
 =======
@@ -99,7 +111,6 @@ Cartoon Tutorial
 
 Backlog: 
 =========
-- Volume/effect scaling?
 - Write delta counter (Zxx).
 - ROM export with expansion?
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
