@@ -252,7 +252,7 @@ namespace FamiStudio
                 UpdateChannels();
                 UpdateTempo();
 
-                while (playLocation.ToAbsoluteNoteIndex(song) < startNote)
+                while (playLocation.ToAbsoluteNoteIndex(song) < startNote - 1)
                 {
                     if (!PlaySongFrameInternal(true))
                         break;

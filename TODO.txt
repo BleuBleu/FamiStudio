@@ -5,17 +5,17 @@ x 8/24 bits wave files.
 x Too zoomed in in envelope editor
 x Effect panel vs. snapping.
 x Text export broken?	
+x Draw note attacks for ghost notes?
+x DPCM dont play if seek bar is example on them.
 - NSF issue from how2.
 - "Seems some parameters on the instrument settings on the app take several taps to change", "The FM presets for sure"
 	=> Hitbox is too small.
 - Update doc for mobile.
 	=> Undocumented INI params.
 - Integrity asserts in Glisten.
-- DPCM dont play if seek bar is example on them.
 / Stereo export VS. TND?
 	=> Recompile DLL on all platforms.
-- Weird snapping behavior when resizing/.
-- Draw note attacks for ghost notes?
+- Weird snapping behavior when resizing. Is it like that on mobile too?
 
 3.3.0
 =====
