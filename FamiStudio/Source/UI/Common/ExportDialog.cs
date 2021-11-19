@@ -70,6 +70,10 @@ namespace FamiStudio
         private string lastExportFilename;
         private FamiStudio app;
 
+        private bool canExportToFamiTracker = true;
+        private bool canExportToSoundEngine = true;
+        private bool canExportToVideo       = true;
+
         public delegate void EmptyDelegate();
         public event EmptyDelegate Exporting;
 
@@ -182,9 +186,9 @@ namespace FamiStudio
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {
             // TODO : Make this part of the VideoEncoder.
-            var canExportVideo = (!PlatformUtils.IsDesktop || (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath)));
+            canExportToVideo = (!PlatformUtils.IsDesktop || (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath)));
 
-            if (canExportVideo)
+            if (canExportToVideo)
             {
                 page.AddDropDownList("Song :", songNames, songNames[0]); // 0
                 page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 1
@@ -301,19 +305,27 @@ namespace FamiStudio
                     break;
                 case ExportFormat.FamiTracker:
                     if (!project.UsesMultipleExpansionAudios)
+                    {
                         page.AddCheckBoxList(null, songNames, null); // 0
+                        canExportToFamiTracker = true;
+                    }
                     else
+                    {
                         page.AddLabel(null, "The original FamiTracker does not support multiple audio expansions. Limit yourself to a single expansion to enable export.", true);
+                        canExportToFamiTracker = false;
+                    }
                     break;
                 case ExportFormat.FamiTone2Music:
                 case ExportFormat.FamiStudioMusic:
                     if (format == ExportFormat.FamiTone2Music && project.UsesAnyExpansionAudio)
                     {
                         page.AddLabel(null, "FamiTone2 does not support audio expansions.", true);
+                        canExportToSoundEngine = false;
                     }
                     else if (format == ExportFormat.FamiStudioMusic && project.UsesMultipleExpansionAudios)
                     {
                         page.AddLabel(null, "The FamiStudio Sound Engine only supports a single expansion at a time. Limit yourself to a single expansion to enable export.", true);
+                        canExportToSoundEngine = false;
                     }
                     else
                     {
@@ -326,6 +338,7 @@ namespace FamiStudio
                         page.SetPropertyEnabled(2, false);
                         page.SetPropertyEnabled(3, false);
                         page.PropertyChanged += SoundEngine_PropertyChanged;
+                        canExportToSoundEngine = true;
                     }
                     break;
                 case ExportFormat.FamiTone2Sfx:
@@ -498,10 +511,10 @@ namespace FamiStudio
 
         private void ExportVideo(bool pianoRoll)
         {
-            var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
-
-            if (props.PropertyCount == 1)
+            if (!canExportToVideo)
                 return;
+
+            var props = dialog.GetPropertyPage(pianoRoll ? (int)ExportFormat.VideoPianoRoll : (int)ExportFormat.VideoOscilloscope);
 
             Func<string, bool> ExportVideoAction = (filename) =>
             {
@@ -823,10 +836,10 @@ namespace FamiStudio
 
         private void ExportFamiTracker()
         {
-            var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
-
-            if (project.UsesMultipleExpansionAudios)
+            if (!canExportToFamiTracker)
                 return;
+
+            var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
 
             var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
             if (filename != null)
@@ -838,10 +851,10 @@ namespace FamiStudio
 
         private void ExportFamiTone2Music(bool famiStudio)
         {
-            var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioMusic : (int)ExportFormat.FamiTone2Music);
-
-            if (props.PropertyCount == 1)
+            if (!canExportToSoundEngine)
                 return;
+
+            var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioMusic : (int)ExportFormat.FamiTone2Music);
 
             var separate = props.GetPropertyValue<bool>(1);
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));

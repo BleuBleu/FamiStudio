@@ -18,7 +18,7 @@ namespace FamiStudio
 #endif
 
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuInit")]
-        public extern static int Init(int apuIdx, int sampleRate, int pal, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
+        public extern static int Init(int apuIdx, int sampleRate, int pal, int seperateTnd, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuWriteRegister")]
         public extern static void WriteRegister(int apuIdx, int addr, int data);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSamplesAvailable")]
@@ -214,6 +214,11 @@ namespace FamiStudio
         public const int EPSM_REG_FM_LO_A = 0xA0;
         public const int EPSM_REG_FM_HI_A = 0xA4;
 
+        // See comment in Simple_Apu.h.
+        public const int TND_MODE_SINGLE           = 0;
+        public const int TND_MODE_SEPARATE         = 1;
+        public const int TND_MODE_SEPARATE_TN_ONLY = 2;
+
         // NES period was 11 bits.
         public const int MaximumPeriod11Bit = 0x7ff;
         public const int MaximumPeriod12Bit = 0xfff;
@@ -406,9 +411,9 @@ namespace FamiStudio
             return FamiStudio.StaticProject.GetSampleForAddress(addr - 0xc000);
         }
 
-        public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int expansions, int numNamcoChannels, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
+        public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int seperateTndMode, int expansions, int numNamcoChannels, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
         {
-            Init(apuIdx, sampleRate, pal ? 1 : 0, expansions, dmcCallback);
+            Init(apuIdx, sampleRate, pal ? 1 : 0, seperateTndMode, expansions, dmcCallback);
             Reset(apuIdx);
             WriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC
             WriteRegister(apuIdx, APU_TRI_LINEAR, 0x80); // disable triangle length counter

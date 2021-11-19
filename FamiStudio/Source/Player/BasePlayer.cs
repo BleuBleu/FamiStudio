@@ -37,6 +37,7 @@ namespace FamiStudio
         protected bool palPlayback = false;
         protected bool seeking = false;
         protected bool beat = false;
+        protected int  tndMode = NesApu.TND_MODE_SINGLE;
         protected int  beatIndex = -1;
         protected Song song;
         protected ChannelState[] channelStates;
@@ -235,7 +236,7 @@ namespace FamiStudio
             famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels, dmcCallback);
+            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels, dmcCallback);
 
             ResetFamiStudioTempo();
             UpdateChannelsMuting();
@@ -251,7 +252,7 @@ namespace FamiStudio
                 UpdateChannels();
                 UpdateTempo();
 
-                while (playLocation.ToAbsoluteNoteIndex(song) < startNote)
+                while (playLocation.ToAbsoluteNoteIndex(song) < startNote - 1)
                 {
                     if (!PlaySongFrameInternal(true))
                         break;

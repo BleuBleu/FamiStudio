@@ -23,7 +23,7 @@ namespace FamiStudio
                     var channelBit = 1 << channelIdx;
                     if ((channelBit & channelMask) != 0)
                     {
-                        var player = new WavPlayer(sampleRate, loopCount, channelMask);
+                        var player = new WavPlayer(sampleRate, loopCount, channelBit, Settings.SeparateChannelsExportTndMode);
                         var stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
 
                         var samples = new short[stereoSamples.Length / 2];
@@ -70,7 +70,7 @@ namespace FamiStudio
                         var channelBit = 1 << channelIdx;
                         if ((channelBit & channelMask) != 0)
                         {
-                            var player = new WavPlayer(sampleRate, loopCount, channelBit);
+                            var player = new WavPlayer(sampleRate, loopCount, channelBit, NesApu.TND_MODE_SEPARATE);
                             channelSamples[channelIdx] = player.GetSongSamples(song, project.PalMode, duration);
                             numStereoSamples = Math.Max(numStereoSamples, channelSamples[channelIdx].Length);
                         }

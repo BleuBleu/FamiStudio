@@ -140,6 +140,7 @@ namespace FamiStudio
         RenderBrush selectionNoteBrush;
         RenderBrush highlightNoteBrush;
         RenderBrush attackBrush;
+        RenderBrush attackBrushForceDisplay;
         RenderBrush iconTransparentBrush;
         RenderBrush invalidDpcmMappingBrush;
         RenderBrush volumeSlideBarFillBrush;
@@ -912,6 +913,7 @@ namespace FamiStudio
             selectionNoteBrush = g.CreateSolidBrush(Theme.LightGreyFillColor1);
             highlightNoteBrush = g.CreateSolidBrush(Theme.WhiteColor);
             attackBrush = g.CreateSolidBrush(Color.FromArgb(128, Theme.BlackColor));
+            attackBrushForceDisplay = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, Theme.DarkGreyLineColor2));
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
@@ -975,6 +977,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref selectionNoteBrush);
             Utils.DisposeAndNullify(ref highlightNoteBrush);
             Utils.DisposeAndNullify(ref attackBrush);
+            Utils.DisposeAndNullify(ref attackBrushForceDisplay);
             Utils.DisposeAndNullify(ref iconTransparentBrush);
             Utils.DisposeAndNullify(ref invalidDpcmMappingBrush);
             Utils.DisposeAndNullify(ref volumeSlideBarFillBrush);
@@ -2791,20 +2794,17 @@ namespace FamiStudio
 
             if (!outline)
             {
-                if (activeChannel)
+                if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + attackIconPosX * 2 + 2)
                 {
-                    if (isFirstPart && note.HasAttack && sx > noteAttackSizeX + attackIconPosX * 2 + 2)
-                    {
-                        r.cf.FillRectangle(attackIconPosX + 1, attackIconPosX + 1, attackIconPosX + noteAttackSizeX + 1, sy - attackIconPosX, attackBrush);
-                        noteTextPosX += noteAttackSizeX + attackIconPosX + 2;
-                    }
+                    r.cf.FillRectangle(attackIconPosX + 1, attackIconPosX + 1, attackIconPosX + noteAttackSizeX + 1, sy - attackIconPosX, activeChannel ? attackBrush : attackBrushForceDisplay);
+                    noteTextPosX += noteAttackSizeX + attackIconPosX + 2;
+                }
 
-                    if (Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && ThemeResources.FontSmall.Size < noteSizeY)
-                    {
-                        var label = note.FriendlyName;
-                        if ((sx - noteTextPosX) > (label.Length + 1) * fontSmallCharSizeX)
-                            r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, noteSizeY - 1);
-                    }
+                if (activeChannel && Settings.ShowNoteLabels && !released && editMode == EditionMode.Channel && note.IsMusical && ThemeResources.FontSmall.Size < noteSizeY)
+                {
+                    var label = note.FriendlyName;
+                    if ((sx - noteTextPosX) > (label.Length + 1) * fontSmallCharSizeX)
+                        r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, noteSizeY - 1);
                 }
 
                 if (note.Arpeggio != null)
