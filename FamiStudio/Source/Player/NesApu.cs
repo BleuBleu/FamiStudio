@@ -316,6 +316,8 @@ namespace FamiStudio
             DumpNoteTable(NoteTableN163[5], "N163");
             DumpNoteTable(NoteTableN163[6], "N163");
             DumpNoteTable(NoteTableN163[7], "N163");
+            DumpNoteTable(NoteTableEPSMFm, "EPSMFM");
+            DumpNoteTable(NoteTableEPSM, "EPSMSquare");
 #endif
         }
 
@@ -461,10 +463,8 @@ namespace FamiStudio
                             case APU_EXPANSION_SUNSOFT:
                                 WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
                                 WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
-                                Console.WriteLine($"writereg s5b");
                                 break;
                             case APU_EXPANSION_EPSM:
-                                Console.WriteLine($"writereg epsm");
                                 WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
                                 WriteRegister(apuIdx, EPSM_DATA0, 0x38); // No noise, just 3 tones for now.
                                 WriteRegister(apuIdx, EPSM_ADDR0, 0x29);
