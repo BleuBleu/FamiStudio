@@ -841,29 +841,28 @@ namespace FamiStudio
 
                 var processedPatterns = new HashSet<Pattern>();
 
-                foreach (var c in channels)
+                for (int p = 0; p < songLength; p++)
                 {
-                    for (int p = 0; p < songLength; p++)
+                    var localGroove        = GetPatternGroove(p);
+                    var localPatternLength = GetPatternLength(p);
+                    var localGroovePadMode = GetPatternGroovePaddingMode(p);
+
+                    foreach (var c in channels)
                     {
                         var pattern = c.PatternInstances[p];
 
                         if (pattern == null || processedPatterns.Contains(pattern))
                             continue;
 
-                        var groove = GetPatternGroove(p);
-                        var newPatternLength = GetPatternLength(p);
-                        var newBeatLength    = GetPatternBeatLength(p);
-                        
                         // Nothing to do for integral tempos.
-                        if (groove.Length > 1)
+                        if (localGroove.Length > 1)
                         {
-                            var groovePadMode  = GetPatternGroovePaddingMode(p);
                             var maxPatternLen = pattern.GetMaxInstanceLength();
                             var originalNotes = new SortedList<int, Note>(pattern.Notes);
 
                             pattern.Notes.Clear();
 
-                            var grooveIterator = new GrooveIterator(groove, groovePadMode);
+                            var grooveIterator = new GrooveIterator(localGroove, localGroovePadMode);
 
                             for (int i = 0; i < maxPatternLen; i++)
                             {
@@ -876,18 +875,15 @@ namespace FamiStudio
                                 // Advance groove.
                                 grooveIterator.Advance();
                             }
-
-                            newPatternLength = grooveIterator.FrameIndex;
-                            newBeatLength    = Utils.Sum(groove);
-                        }
-
-                        if (PatternHasCustomSettings(p))
-                        {
-                            GetPatternCustomSettings(p).patternLength = newPatternLength;
-                            GetPatternCustomSettings(p).beatLength    = newBeatLength;
                         }
 
                         processedPatterns.Add(pattern);
+                    }
+
+                    if (PatternHasCustomSettings(p))
+                    {
+                        GetPatternCustomSettings(p).patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(localPatternLength, localGroove, localGroovePadMode);
+                        GetPatternCustomSettings(p).beatLength    = Utils.Sum(localGroove);
                     }
                 }
 
