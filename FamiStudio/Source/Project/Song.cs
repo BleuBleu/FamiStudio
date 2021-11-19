@@ -872,7 +872,6 @@ namespace FamiStudio
                                 if (originalNotes.TryGetValue(i, out var note) && note != null)
                                     pattern.Notes.Add(grooveIterator.FrameIndex, note);
 
-                                // Advance groove.
                                 grooveIterator.Advance();
                             }
                         }
@@ -1231,44 +1230,6 @@ namespace FamiStudio
         {
             return p0.ChannelIndex != p1.ChannelIndex || p0.PatternIndex != p1.PatternIndex;
         }
-
-        /*
-        public static bool operator <(NoteLocation n0, NoteLocation n1)
-        {
-            if (n0.PatternIndex < n1.PatternIndex)
-                return true;
-            else if (n0.PatternIndex == n1.PatternIndex)
-                return n0.NoteIndex < n1.NoteIndex;
-            return false;
-        }
-
-        public static bool operator <=(NoteLocation n0, NoteLocation n1)
-        {
-            if (n0.PatternIndex < n1.PatternIndex)
-                return true;
-            else if (n0.PatternIndex == n1.PatternIndex)
-                return n0.NoteIndex <= n1.NoteIndex;
-            return false;
-        }
-
-        public static bool operator >(NoteLocation n0, NoteLocation n1)
-        {
-            if (n0.PatternIndex > n1.PatternIndex)
-                return true;
-            else if (n0.PatternIndex == n1.PatternIndex)
-                return n0.NoteIndex > n1.NoteIndex;
-            return false;
-        }
-
-        public static bool operator >=(NoteLocation n0, NoteLocation n1)
-        {
-            if (n0.PatternIndex > n1.PatternIndex)
-                return true;
-            else if (n0.PatternIndex == n1.PatternIndex)
-                return n0.NoteIndex >= n1.NoteIndex;
-            return false;
-        }
-        */
 
         public static PatternLocation Min(PatternLocation p0, PatternLocation p1)
         {
