@@ -10,7 +10,7 @@ x Creating new effect values will respect snapping on mobile.
 x Drawing note attacks for force display channel to help readability.
 x Correct emulation of Tri-Noise-DMC volumes when using stereo export.
 	=> Test a bit more.
-x Minor UI tweaks (hit boxes of buttons, zoom levels, etc.).
+x Minor UI tweaks (hit boxes of buttons, zoom levels, scroll bar issues, etc.).
 
 - Update doc for mobile.
 	=> Undocumented INI params.

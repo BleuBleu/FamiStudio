@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -7,13 +6,11 @@ using System.Diagnostics;
 
 using Color = System.Drawing.Color;
 
-using RenderBitmap      = FamiStudio.GLBitmap;
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderBrush       = FamiStudio.GLBrush;
 using RenderPath        = FamiStudio.GLGeometry;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -733,8 +730,8 @@ namespace FamiStudio
             // Scroll bar (optional)
             if (GetScrollBarParams(out var scrollBarPosX, out var scrollBarSizeX))
             {
-                cb.FillAndDrawRectangle(-1, actualSizeY, Width, Height, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
-                cb.FillAndDrawRectangle(scrollBarPosX - 1, actualSizeY, scrollBarPosX + scrollBarSizeX, Height, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
+                cb.FillAndDrawRectangle(-1, actualSizeY, Width, Height - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
+                cb.FillAndDrawRectangle(scrollBarPosX - 1, actualSizeY, scrollBarPosX + scrollBarSizeX, Height - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
             }
 
             cb.PopTransform();

@@ -2925,7 +2925,8 @@ namespace FamiStudio
         private void RenderWave(RenderInfo r, short[] data, float rate, RenderBrush brush, bool isSource, bool drawSamples)
         {
             var viewWidth     = Width - pianoSizeX;
-            var halfHeight    = (Height - headerAndEffectSizeY) / 2;
+            var viewHeight    = Height - headerAndEffectSizeY - scrollBarThickness;
+            var halfHeight    = viewHeight / 2;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
             var viewTime      = DefaultZoomWaveTime / zoom;
 
@@ -2980,8 +2981,8 @@ namespace FamiStudio
         private void RenderDmc(RenderInfo r, byte[] data, float rate, float baseTime, RenderBrush brush, bool isSource, bool drawSamples, int dmcInitialValue)
         {
             var viewWidth     = Width - pianoSizeX;
-            var realHeight    = Height - headerAndEffectSizeY;
-            var halfHeight    = realHeight / 2;
+            var viewHeight    = Height - headerAndEffectSizeY - scrollBarThickness;
+            var halfHeight    = viewHeight / 2;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
             var viewTime      = DefaultZoomWaveTime / zoom;
 
@@ -3079,13 +3080,14 @@ namespace FamiStudio
                 GetPixelForWaveTime(editSample.SourceDuration, scrollX), Height, ThemeResources.DarkGreyFillBrush1);
 
             // Horizontal center line
-            var sizeY   = Height - headerAndEffectSizeY;
-            var centerY = sizeY * 0.5f;
+            var actualHeight = Height - scrollBarThickness;
+            var sizeY        = actualHeight - headerAndEffectSizeY;
+            var centerY      = sizeY * 0.5f;
             r.cb.DrawLine(0, centerY, Width, centerY, ThemeResources.BlackBrush);
 
             // Top/bottom dash lines (limits);
             var topY    = waveDisplayPaddingY;
-            var bottomY = (Height - headerAndEffectSizeY) - waveDisplayPaddingY;
+            var bottomY = (actualHeight - headerAndEffectSizeY) - waveDisplayPaddingY;
             r.cb.DrawLine(0, topY,    Width, topY,    ThemeResources.DarkGreyLineBrush1, 1, false, true);
             r.cb.DrawLine(0, bottomY, Width, bottomY, ThemeResources.DarkGreyLineBrush1, 1, false, true);
 
@@ -3163,7 +3165,7 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip))
             {
-                r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
+                r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, actualHeight - tooltipTextPosY, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
             }
         }
 
