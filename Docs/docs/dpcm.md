@@ -49,11 +49,11 @@ Once a sample is loaded, it can be expanded by clicking the little arrow to reve
 
 	* **Unpadded** : The sample will be unpadded.
 
-	* **Pad to 16** : The sample will be padded with silence until a multiple of 16 bytes is reached. This is what most games did and will cause an extra by of garbage to be played every time the sample is played, but this is usucally not audible. 
+	* **Pad to 16** : The sample will be padded with silence until a multiple of 16 bytes is reached. This is what most games did and will cause an extra byte of garbage to be played every time the sample is played, but this is usucally not audible. 
 
 	* **Pad to 16 + 1** : The sample will be padded with silence until a multiple of 16 bytes (plus one) is reached. This is technically the best way to process samples and it will ensure that no extra garbage sample is played but will waste 15 bytes.
 
-	* **Round to 16** : The sample will be resampled in a way that the end of sample aligned to 16 bytes. This may affect the pitch slightly. This will cause an extra by of garbage to be played every time the sample is played, but this is usucally not audible. 
+	* **Round to 16** : The sample will be resampled in a way that the end of sample aligned to 16 bytes. This may affect the pitch slightly. This will cause an extra byte of garbage to be played every time the sample is played, but this is usucally not audible. 
 
 	* **Round to 16 + 1** : The sample will be resampled in a way that the end of sample aligned to 16 bytes (plus one). This may affect the pitch slightly. This is a good mode to create looping samples.
 

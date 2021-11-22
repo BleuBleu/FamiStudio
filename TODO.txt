@@ -1,21 +1,20 @@
 3.2.1
 =====
-x Option to disable vibration.
-x 8/24 bits wave files.
-x Too zoomed in in envelope editor
-x Effect panel vs. snapping.
-x Text export broken?	
-x Draw note attacks for ghost notes?
-x DPCM dont play if seek bar is example on them.
-x NSF issue from how2.
-x Stereo export VS. TND?
+x Added option to disable vibration (see "Mobile" section of Settings)
+x Added support for importing 8-bit and 24-bit WAV files for DPCM samples.
+x Added support for importing NSF2, if they dont use any of the advanced features.
+x Fixed FamiTracker text export not asking for a filename.
+x Fixed DPCM samples not playing if placing the seek bar exactly on their attack.
+x Fixed NSF export when using grooves in specific situations.
+x Creating new effect values will respect snapping on mobile.
+x Drawing note attacks for force display channel to help readability.
+x Correct emulation of Tri-Noise-DMC volumes when using stereo export.
 	=> Test a bit more.
-- "Seems some parameters on the instrument settings on the app take several taps to change", "The FM presets for sure"
-	=> Hitbox is too small.
+x Minor UI tweaks (hit boxes of buttons, zoom levels, etc.).
+
 - Update doc for mobile.
 	=> Undocumented INI params.
 - Integrity asserts in Glisten.
-x zaxolotl, NSF
 
 3.3.0
 =====
