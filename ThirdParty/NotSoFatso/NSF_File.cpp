@@ -101,7 +101,10 @@ int CNSFFile::LoadFile_NESM(FILE* file,BYTE needdata,BYTE ignoreversion)
 	//confirm the header
 	if(hdr.nHeader != HEADERTYPE_NESM)			return -1;
 	if(hdr.nHeaderExtra != 0x1A)				return -1;
-	if((!ignoreversion) && (hdr.nVersion != 1))	return -1; //stupid NSFs claim to be above version 1  >_>
+	if((!ignoreversion) && (hdr.nVersion > 2))	return -1; //stupid NSFs claim to be above version 1  >_>
+
+	// We support the NSF2 format, but none of its advanced features yet.
+	if (hdr.nVersion == 2 && hdr.nNSF2Features != 0) return -1;
 
 	//NESM is generally easier to work with (but limited!)
 	//  just move the data over from NESM_HEADER over to our member data

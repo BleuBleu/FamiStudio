@@ -800,7 +800,7 @@ namespace FamiStudio
         {
             var nsf = NsfOpen(filename);
 
-            if (nsf == null)
+            if (nsf == IntPtr.Zero)
                 return null;
 
             var trackCount = NsfGetTrackCount(nsf);
@@ -847,8 +847,11 @@ namespace FamiStudio
         {
             nsf = NsfOpen(filename);
 
-            if (nsf == null)
+            if (nsf == IntPtr.Zero)
+            {
+                Log.LogMessage(LogSeverity.Error, "Error opening NSF. File may be corrupted or may be a NSF2 using advanced features such as IRQ which are not supported at the moment.");
                 return null;
+            }
 
             var trackCount = NsfGetTrackCount(nsf);
 

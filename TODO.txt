@@ -15,7 +15,7 @@ x Stereo export VS. TND?
 - Update doc for mobile.
 	=> Undocumented INI params.
 - Integrity asserts in Glisten.
-- Weird snapping behavior when resizing. Is it like that on mobile too?
+x zaxolotl, NSF
 
 3.3.0
 =====
@@ -31,6 +31,7 @@ x Stereo export VS. TND?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Way to temporarely disable snapping (FL studio does it with ALT).
 - Volume/effect scaling?
+- Improve snapping.
 
 Videos:
 =======

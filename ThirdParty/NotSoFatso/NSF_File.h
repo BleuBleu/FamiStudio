@@ -56,7 +56,8 @@ struct NESM_HEADER
 	WORD			nSpeedPAL;
 	BYTE			nNTSC_PAL;
 	BYTE			nExtraChip;
-	BYTE			nExpansion[4];
+	UINT			nNSF2Features : 8;
+	UINT			nProgramLen : 24;
 };
 
 struct NSFE_INFOCHUNK
