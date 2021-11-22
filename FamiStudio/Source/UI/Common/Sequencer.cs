@@ -2016,6 +2016,7 @@ namespace FamiStudio
             }
 
             Song.InvalidateCumulativePatternCache();
+            Song.DeleteNotesPastMaxInstanceLength();
 
             if (trans)
             {
