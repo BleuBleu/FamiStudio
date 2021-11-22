@@ -13,6 +13,7 @@ using RenderFont        = FamiStudio.GLFont;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
 using RenderTheme       = FamiStudio.ThemeRenderResources;
+using RenderCommandList = FamiStudio.GLCommandList;
 
 namespace FamiStudio
 {
@@ -30,9 +31,9 @@ namespace FamiStudio
         const int DefaultScrollBarThickness1  = 10;
         const int DefaultScrollBarThickness2  = 16;
         const int DefaultButtonSizeY          = 21;
-        const int DefaultSliderPosX           = 100;
+        const int DefaultSliderPosX           = PlatformUtils.IsMobile ? 88 : 108;
         const int DefaultSliderPosY           = 3;
-        const int DefaultSliderSizeX          = 96;
+        const int DefaultSliderSizeX          = PlatformUtils.IsMobile ? 84 : 104;
         const int DefaultSliderSizeY          = 15;
         const int DefaultCheckBoxPosX         = 20;
         const int DefaultCheckBoxPosY         = 3;
@@ -687,6 +688,18 @@ namespace FamiStudio
             return false;
         }
 
+        private void RenderDebug(RenderGraphics g)
+        {
+#if DEBUG
+            if (PlatformUtils.IsMobile)
+            {
+                var c = g.CreateCommandList();
+                c.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, ThemeResources.WhiteBrush);
+                g.DrawCommandList(c);
+            }
+#endif
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList();
@@ -919,6 +932,8 @@ namespace FamiStudio
 
             g.Clear(Theme.DarkGreyFillColor1);
             g.DrawCommandList(c);
+
+            RenderDebug(g);
         }
 
         private bool GetScrollBarParams(out int posY, out int sizeY)
@@ -2441,7 +2456,7 @@ namespace FamiStudio
         private void ClickParamListButton(int x, int y, Button button, bool reset)
         {
             var actualWidth = Width - scrollBarThickness;
-            var buttonWidth = (int)bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width;
+            var buttonWidth = ScaleCustom(bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width, bitmapScale);
             var buttonX = x;
             var leftButton  = buttonX > (actualWidth - sliderPosX) && buttonX < (actualWidth - sliderPosX + buttonWidth);
             var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - buttonWidth) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
