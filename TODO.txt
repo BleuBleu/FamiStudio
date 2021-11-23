@@ -11,7 +11,7 @@ x Drawing note attacks for force display channel to help readability.
 x Correct emulation of Tri-Noise-DMC volumes when using stereo export (+hidden INI option to do so for seperate channels)
 	=> Test a bit more.
 x Minor UI tweaks (hit boxes of buttons, zoom levels, scroll bar issues, etc.).
-- Double click to delete on mobile?
+x Double click to delete on mobile?
 
 - Update doc for mobile.
 	=> Undocumented INI params.

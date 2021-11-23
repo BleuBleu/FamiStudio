@@ -358,6 +358,7 @@ namespace FamiStudio
         int highlightNoteAbsIndex = -1;
         int highlightDPCMSample = -1;
         NoteLocation captureNoteLocation;
+        DateTime lastNoteCreateTime = DateTime.Now;
 
         // Note dragging support.
         int dragFrameMin = -1;
@@ -5577,12 +5578,37 @@ namespace FamiStudio
                 if (note == null)
                 {
                     CreateSingleNote(x, y);
+                    lastNoteCreateTime = DateTime.Now;
                 }
                 else
                 {
                     var absIdx = noteLocation.ToAbsoluteNoteIndex(Song);
                     highlightNoteAbsIndex = highlightNoteAbsIndex == absIdx ? -1 : absIdx;
                 }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDoubleClickChannelNote(int x, int y)
+        {
+            if (Settings.DoubleClickDelete && GetLocationForCoord(x, y, out var mouseLocation, out byte noteValue))
+            {
+                if (mouseLocation.PatternIndex >= Song.Length)
+                    return true;
+
+                var channel = Song.Channels[editChannel];
+                var noteLocation = mouseLocation;
+                var note = channel.FindMusicalNoteAtLocation(ref noteLocation, noteValue);
+
+                if (note != null)
+                {
+                    DeleteSingleNote(noteLocation, mouseLocation, note);
+                }
+
+                return true;
             }
 
             return false;
@@ -6087,7 +6113,7 @@ namespace FamiStudio
 
             if (editMode == EditionMode.Channel)
             {
-                if (HandleTouchClickHeaderSeek(x, y)) goto Handled;
+                if (HandleTouchClickHeaderSeek(x, y))  goto Handled;
                 if (HandleTouchClickChannelNote(x, y)) goto Handled;
                 if (HandleTouchClickEffectPanel(x, y)) goto Handled;
             }
@@ -6107,6 +6133,27 @@ namespace FamiStudio
             if (editMode == EditionMode.DPCMMapping)
             {
                 if (HandleTouchClickDPCMMapping(x, y)) goto Handled;
+            }
+
+            return;
+
+        Handled:
+            MarkDirty();
+        }
+
+        protected override void OnTouchDoubleClick(int x, int y)
+        {
+            SetMouseLastPos(x, y);
+
+            // Ignore double tap if we handled a single tap recently.
+            if (captureOperation != CaptureOperation.None || (DateTime.Now - lastNoteCreateTime).TotalMilliseconds < 500)
+            {
+                return;
+            }
+
+            if (editMode == EditionMode.Channel)
+            {
+                if (HandleTouchDoubleClickChannelNote(x, y)) goto Handled;
             }
 
             return;

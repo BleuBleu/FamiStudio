@@ -219,6 +219,7 @@ namespace FamiStudio
 
         // Mobile section
         public static bool AllowVibration = true;
+        public static bool DoubleClickDelete = false;
 
         public static void Load()
         {
@@ -352,6 +353,7 @@ namespace FamiStudio
             
             // Mobile section
             AllowVibration = ini.GetBool("Mobile", "AllowVibration", true);
+            DoubleClickDelete = ini.GetBool("Mobile", "DoubleClickDelete", false);
 
             // At 3.2.0, we added a new Discord screen to the tutorial.
             if (Version < 4)
@@ -446,6 +448,7 @@ namespace FamiStudio
 
             // Mobile
             ini.SetBool("Mobile", "AllowVibration", AllowVibration);
+            ini.SetBool("Mobile", "DoubleClickDelete", DoubleClickDelete);
 
             Directory.CreateDirectory(GetConfigFilePath());
 

@@ -86,6 +86,7 @@ namespace FamiStudio
         PatternLocation selectionMin = PatternLocation.Invalid;
         PatternLocation selectionMax = PatternLocation.Invalid;
         PatternLocation highlightLocation = PatternLocation.Invalid;
+        DateTime lastPatternCreateTime = DateTime.Now;
 
         PatternBitmapCache patternCache;
 
@@ -1323,6 +1324,7 @@ namespace FamiStudio
                 {
                     CreateNewPattern(location);
                     SetHighlightedPattern(location);
+                    lastPatternCreateTime = DateTime.Now;
                 }
                 else 
                 {
@@ -1334,6 +1336,26 @@ namespace FamiStudio
 
                 // CreateNewPattern clears the selection. Ugh, call after.
                 SetSelection(location, location);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDoubleClickPatternArea(int x, int y)
+        {
+            bool inPatternZone = GetPatternForCoord(x, y, out var location, out var inPatternHeader);
+
+            if (Settings.DoubleClickDelete && inPatternZone)
+            {
+                var pattern = Song.GetPatternInstance(location);
+
+                if (pattern != null)
+                {
+                    DeletePattern(location);
+                    ClearHighlightedPatern();
+                }
 
                 return true;
             }
@@ -1518,6 +1540,24 @@ namespace FamiStudio
             if (HandleTouchClickChannelChange(x, y)) goto Handled;
             if (HandleTouchClickPatternHeader(x, y)) goto Handled;
             if (HandleTouchClickPatternArea(x, y)) goto Handled;
+
+            return;
+
+        Handled:
+            MarkDirty();
+        }
+
+        protected override void OnTouchDoubleClick(int x, int y)
+        {
+            SetMouseLastPos(x, y);
+
+            // Ignore double tap if we handled a single tap recently.
+            if (captureOperation != CaptureOperation.None || (DateTime.Now - lastPatternCreateTime).TotalMilliseconds < 500)
+            {
+                return;
+            }
+
+            if (HandleTouchDoubleClickPatternArea(x, y)) goto Handled;
 
             return;
 
