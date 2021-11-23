@@ -292,13 +292,15 @@ namespace FamiStudio
             {
                 var octave = (i - 1) / 12;
                 var freq = BaseFreq * Math.Pow(2.0, (i - 1) / 12.0);
-                double EPSMFmFreq = 0;
-                if(octave == 0) { EPSMFmFreq = 144 * (double)freq * 1048576 / 8000000; }
-                else { EPSMFmFreq = (((144 * (double)freq * 1048576 / 8000000) / Math.Pow(2, octave))); }
+                //double EPSMFmFreq = 0;
+                //if(octave == 0) { EPSMFmFreq = 144 * (double)freq * 1048576 / 8000000; }
+                //else { EPSMFmFreq = (((144 * (double)freq * 1048576 / 8000000) / Math.Pow(2, octave))); }
                 NoteTableNTSC[i]    = (ushort)(clockNtsc / freq - 0.5);
                 NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
                 NoteTableEPSM[i] = (ushort)(clockEPSM / freq - 0.5);
-                NoteTableEPSMFm[i] = (ushort)((ushort)EPSMFmFreq | (ushort)octave << 11);
+                //NoteTableEPSMFm[i] = (ushort)((ushort)EPSMFmFreq | (ushort)octave << 11);
+                NoteTableEPSMFm[i] = octave == 0 ? (ushort)((144 * (double)freq * 1048576 / 8000000)/4) : (ushort)((NoteTableEPSMFm[(i - 1) % 12 + 1]) << octave);
+                //NoteTableEPSMFm[i] = octave == 0 ? (ushort)(144 * (double)freq * 1048576 / 8000000) : (ushort)(NoteTableEPSMFm[(i - 1) % 12 + 1] | (ushort)octave << 11) ;
                 NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
                 NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
                 NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(NoteTableVrc7[(i - 1) % 12 + 1] << octave);

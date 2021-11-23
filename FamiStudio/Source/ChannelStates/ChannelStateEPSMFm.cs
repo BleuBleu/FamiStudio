@@ -80,7 +80,16 @@ namespace FamiStudio
             }
         }
 
-
+        private int GetOctave(ref int period)
+        {
+            var octave = 0;
+            while (period >= 0x200)
+            {
+                period >>= 1;
+                octave++;
+            }
+            return octave;
+        }
 
         public override void UpdateAPU()
         {
@@ -115,8 +124,13 @@ namespace FamiStudio
             else if (note.IsMusical)
             {
                 var period = GetPeriod();
-                var periodHi = (byte)(period >> 8);
-                var periodLo = (byte)(period & 0xff);
+                Console.WriteLine($"period {Convert.ToString(period, 2)}");
+                var octave = GetOctave(ref period);
+                //var periodHi = (byte)(period >> 8);
+                //var periodLo = (byte)(period & 0xff);
+
+                var periodLo = (byte)(period & 0xff) << 2;
+                var periodHi = (byte)(((octave & 0x7) << 3) | ((period >> 6) & 7));
                 var volume = GetVolume();
 
                 int steps = 16;
@@ -173,7 +187,7 @@ namespace FamiStudio
 
                 WriteRegister(ChannelAddr, 0xA4 + channelIdxHigh);
                 WriteRegister(ChannelData, periodHi);
-
+                Console.WriteLine($"periodHi octave {(periodHi >> 3):X4} periodHi fnum {(periodHi & 0x7):X4}");
                 WriteRegister(ChannelAddr, 0xA0 + channelIdxHigh);
                 WriteRegister(ChannelData, periodLo);
             }

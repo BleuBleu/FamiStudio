@@ -404,6 +404,12 @@ namespace FamiStudio
                 slideShift = 3;
                 pitchShift = 3;
             }
+            if (type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6)
+            {
+                // EPSM has large pitch values
+                slideShift = 3;
+                pitchShift = 3;
+            }
             else if (type >= ChannelType.N163Wave1 && type <= ChannelType.N163Wave8)
             {
                 // Every time we double the number of N163 channels, the pitch values double.
