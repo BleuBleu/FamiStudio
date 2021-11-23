@@ -101,6 +101,12 @@ namespace FamiStudio
                     famitrackerSpeed = newNote.Speed;
                 }
 
+                // Clear any pending release.
+                if (newNote.IsMusicalOrStop)
+                {
+                    releaseCounter = 0;
+                }
+
                 // Slide params needs to be computed right away since we wont have access to the play position/channel later.
                 int noteSlidePitch = 0;
                 int noteSlideStep  = 0;
