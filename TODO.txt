@@ -13,6 +13,7 @@
 - Volume/effect scaling?
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 - Fix GTK leak (GTK 3.x?), or 2.12.45
+- Make TimeFormat = 1 the default
 
 Videos:
 =======
