@@ -1,6 +1,6 @@
 3.2.1
 =====
-x Added option to disable vibration (see "Mobile" section of Settings)
+x Added option to disable vibration (new "Mobile" section of Settings)
 x Added support for importing 8-bit and 24-bit WAV files for DPCM samples.
 x Added support for importing NSF2, if they dont use any of the advanced features.
 x Fixed FamiTracker text export not asking for a filename.
@@ -8,13 +8,11 @@ x Fixed DPCM samples not playing if placing the seek bar exactly on their attack
 x Fixed NSF export tempo issue when using grooves in specific situations.
 x Creating new effect values will respect snapping on mobile.
 x Drawing note attacks for force display channel to help readability.
+x Fixed an issue with release note that are beyond the visual duration of the note.
 x Correct emulation of Tri-Noise-DMC volumes when using stereo export (+hidden INI option to do so for seperate channels)
 	=> Test a bit more.
+x Experimental "double-tap to delete patterns/note" option (off by default)
 x Minor UI tweaks (hit boxes of buttons, zoom levels, scroll bar issues, etc.).
-x Double click to delete on mobile?
-
-- Update doc for mobile.
-	=> Undocumented INI params.
 
 3.3.0
 =====

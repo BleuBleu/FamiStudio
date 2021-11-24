@@ -23,6 +23,8 @@ Note that the quality of the MP3 encoding may not going to be as good as full fl
 
 Channels can optionally be muted. This can be used, for example, to create stereo mix using and external application.
 
+OGG Vorbis is currently only available on the desktop version of FamiStudio.
+
 ## Video (Piano Roll and Oscilloscope)
 
 Video export is a great way to add a visual element to your songs when sharing them on YouTube/social media. For this to work, you will need to [manually download FFmpeg](ffmpeg.md) and extract it somewhere on your computer. 
@@ -77,7 +79,7 @@ For FDS export, the process is very similar and will output a FDS disk image ins
 
 ## MIDI
 
-Songs created using the FamiStudio tempo mode can be exported to MIDI. 
+Songs created using the FamiStudio tempo mode can be exported to MIDI. This is only available in the desktop version.
 
 ![](images/ExportMIDI.png#center)
 
@@ -90,7 +92,7 @@ At the bottom of the dialog is the instrument table. This is where you can assig
 
 ## FamiTracker Text
 
-You can export songs to FamiTracker using their Text Export format.
+You can export songs to FamiTracker using their Text Export format. This is only available in the desktop version.
 
 ![](images/ExportFamiTracker.png#center)
 
@@ -140,6 +142,8 @@ Exporting or importing using this format mostly lossless. These are the features
 * The custom colors assigned to songs, instruments, patterns, arpeggios and DPCM samples will not be preserved, they will be randomized every time you re-import the file.
 
 * Only the final processed data of DPCM samples will exported. The source data as well as any processing parameter will be lost. 
+
+Only the desktop version of FamiStudio supports exporting to this format.
 
 ### Format Specification
 
@@ -281,8 +285,13 @@ When exporting file in separate files, you can specific a name format template f
 
 When exporting as a single file (non-separate), you will be prompt to name the output assembly file. If any of the exported songs uses DPCM samples, a .dmc file of the same name will also be outputted.
 
+Only the desktop version of FamiStudio supports exporting to this format.
+
 ## FamiStudio / FamiTone2 SFX
 
 The same goes for sound effect export. In this mode, one song is one sound effect, so songs should be very short. Unlike the FamiStudio/FamiTone2 music format which only support a subset of all the FamiTracker/FamiStudio features, here any feature (except DPCM samples) can be used and the sound effect should export correctly.
 
 ![](images/ExportFamiTone2SFX.png#center)
+
+Only the desktop version of FamiStudio supports exporting to this format.
+

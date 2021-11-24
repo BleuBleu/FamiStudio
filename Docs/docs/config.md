@@ -102,3 +102,30 @@ FFMpeg is a video encoder required to enable video export. You can download it f
 ![](images/ConfigQWERTY.png#center)
 
 This section allows remapping the keyboard keys for keyboard-piano input. This allows FamiStudio to support AZERTY, QWERTZ or any other international keyboard. Up to 2 keys can be assigned to a note.
+
+## Mobile Configuration
+
+![](images/ConfigMobile.png#center)
+
+This section is only available on the Mobile version of FamiStudio.
+
+* **Allow vibration**: Toggle for all vibration effect in the app.
+* **Double-tap to delete**: Experimental option to delete pattern/notes with a double-tap.
+
+# Configuration File
+
+All FamiStudio settings are saved in "FamiStudio.ini". The location of this file will vary depending on the operating system. 
+
+* On Windows it will be in `AppData\Local\FamiStudio`, unless you are using the portable version, in which case it will be in the root folder.
+* On Linux it will be in `~/.config/FamiStudio`
+* On MacOS it will be in `~/Library/Application Support/FamiStudio`
+* On Android it is not user accessible.
+
+## Undocumented Settings
+
+Almost all settings are configurable through the user interface. This section will contain some settings that can only be changed directly in the INI file.
+
+Value | Description
+--- | ---
+SeparateChannelsExportTndMode | This define if the triangle-noise-DPCM volume interactions should be emulated when exporting to a WAV file using separate channels (1 WAV file per channel). Possible values are 0, 1 and 2. <br/>- 0 (default) will not emulate those at all<br/>- 1 will emulated them fully, which will give the correct triangle channel volume but will also make the three channels bleed into each other slightly.<br/>- 2 will allow the triangle/noise to be affected by the DPCM, but not the other way around. This will give the correct triangle volume, but will prevent bleeding into the DPCM channel.
+
