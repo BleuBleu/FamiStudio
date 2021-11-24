@@ -74,7 +74,9 @@ Dragging a pattern to a different channel will create a copy, but delete the ori
 
 ![](images/MovePatternDifferentChannel.png#center)
 
-On mobile, patterns can be moved in a similar way but they first must be tapped to be given the white highlight.
+On mobile, patterns can be moved in a similar way but they first must be tapped to be given the white highlight. To create copies/instances of one or multiple patterns, first make a selection, then long press where you want to copy them.
+
+![](images/MobileInstancePattern.gif#center)
 
 ## Copy & pasting patterns
 
