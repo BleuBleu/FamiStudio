@@ -358,6 +358,7 @@ namespace FamiStudio
         int highlightNoteAbsIndex = -1;
         int highlightDPCMSample = -1;
         NoteLocation captureNoteLocation;
+        DateTime lastNoteCreateTime = DateTime.Now;
 
         // Note dragging support.
         int dragFrameMin = -1;
@@ -2925,7 +2926,8 @@ namespace FamiStudio
         private void RenderWave(RenderInfo r, short[] data, float rate, RenderBrush brush, bool isSource, bool drawSamples)
         {
             var viewWidth     = Width - pianoSizeX;
-            var halfHeight    = (Height - headerAndEffectSizeY) / 2;
+            var viewHeight    = Height - headerAndEffectSizeY - scrollBarThickness;
+            var halfHeight    = viewHeight / 2;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
             var viewTime      = DefaultZoomWaveTime / zoom;
 
@@ -2980,8 +2982,8 @@ namespace FamiStudio
         private void RenderDmc(RenderInfo r, byte[] data, float rate, float baseTime, RenderBrush brush, bool isSource, bool drawSamples, int dmcInitialValue)
         {
             var viewWidth     = Width - pianoSizeX;
-            var realHeight    = Height - headerAndEffectSizeY;
-            var halfHeight    = realHeight / 2;
+            var viewHeight    = Height - headerAndEffectSizeY - scrollBarThickness;
+            var halfHeight    = viewHeight / 2;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
             var viewTime      = DefaultZoomWaveTime / zoom;
 
@@ -3079,13 +3081,14 @@ namespace FamiStudio
                 GetPixelForWaveTime(editSample.SourceDuration, scrollX), Height, ThemeResources.DarkGreyFillBrush1);
 
             // Horizontal center line
-            var sizeY   = Height - headerAndEffectSizeY;
-            var centerY = sizeY * 0.5f;
+            var actualHeight = Height - scrollBarThickness;
+            var sizeY        = actualHeight - headerAndEffectSizeY;
+            var centerY      = sizeY * 0.5f;
             r.cb.DrawLine(0, centerY, Width, centerY, ThemeResources.BlackBrush);
 
             // Top/bottom dash lines (limits);
             var topY    = waveDisplayPaddingY;
-            var bottomY = (Height - headerAndEffectSizeY) - waveDisplayPaddingY;
+            var bottomY = (actualHeight - headerAndEffectSizeY) - waveDisplayPaddingY;
             r.cb.DrawLine(0, topY,    Width, topY,    ThemeResources.DarkGreyLineBrush1, 1, false, true);
             r.cb.DrawLine(0, bottomY, Width, bottomY, ThemeResources.DarkGreyLineBrush1, 1, false, true);
 
@@ -3163,7 +3166,7 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip))
             {
-                r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
+                r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, actualHeight - tooltipTextPosY, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
             }
         }
 
@@ -5575,12 +5578,37 @@ namespace FamiStudio
                 if (note == null)
                 {
                     CreateSingleNote(x, y);
+                    lastNoteCreateTime = DateTime.Now;
                 }
                 else
                 {
                     var absIdx = noteLocation.ToAbsoluteNoteIndex(Song);
                     highlightNoteAbsIndex = highlightNoteAbsIndex == absIdx ? -1 : absIdx;
                 }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDoubleClickChannelNote(int x, int y)
+        {
+            if (Settings.DoubleClickDelete && GetLocationForCoord(x, y, out var mouseLocation, out byte noteValue))
+            {
+                if (mouseLocation.PatternIndex >= Song.Length)
+                    return true;
+
+                var channel = Song.Channels[editChannel];
+                var noteLocation = mouseLocation;
+                var note = channel.FindMusicalNoteAtLocation(ref noteLocation, noteValue);
+
+                if (note != null)
+                {
+                    DeleteSingleNote(noteLocation, mouseLocation, note);
+                }
+
+                return true;
             }
 
             return false;
@@ -6085,7 +6113,7 @@ namespace FamiStudio
 
             if (editMode == EditionMode.Channel)
             {
-                if (HandleTouchClickHeaderSeek(x, y)) goto Handled;
+                if (HandleTouchClickHeaderSeek(x, y))  goto Handled;
                 if (HandleTouchClickChannelNote(x, y)) goto Handled;
                 if (HandleTouchClickEffectPanel(x, y)) goto Handled;
             }
@@ -6105,6 +6133,27 @@ namespace FamiStudio
             if (editMode == EditionMode.DPCMMapping)
             {
                 if (HandleTouchClickDPCMMapping(x, y)) goto Handled;
+            }
+
+            return;
+
+        Handled:
+            MarkDirty();
+        }
+
+        protected override void OnTouchDoubleClick(int x, int y)
+        {
+            SetMouseLastPos(x, y);
+
+            // Ignore double tap if we handled a single tap recently.
+            if (captureOperation != CaptureOperation.None || (DateTime.Now - lastNoteCreateTime).TotalMilliseconds < 500)
+            {
+                return;
+            }
+
+            if (editMode == EditionMode.Channel)
+            {
+                if (HandleTouchDoubleClickChannelNote(x, y)) goto Handled;
             }
 
             return;

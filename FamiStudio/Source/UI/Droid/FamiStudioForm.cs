@@ -24,7 +24,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ResizeableActivity = false, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize)]
-    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
+    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, GestureDetector.IOnDoubleTapListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
     {
         private LinearLayout linearLayout;
         private GLSurfaceView glSurfaceView;
@@ -159,6 +159,7 @@ namespace FamiStudio
 
             detector = new GestureDetectorCompat(this, this);
             detector.IsLongpressEnabled = true;
+            detector.SetOnDoubleTapListener(this);
             scaleDetector = new ScaleGestureDetector(this, this);
             scaleDetector.QuickScaleEnabled = false;
 
@@ -753,6 +754,33 @@ namespace FamiStudio
                 lock (renderLock)
                     GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y)?.TouchScaleEnd(x, y);
             }
+        }
+
+        public bool OnDoubleTap(MotionEvent? e)
+        {
+            if (!IsAsyncDialogInProgress)
+            {
+                //Debug.WriteLine($"OnDoubleTap ({e.GetX()}, {e.GetY()})");
+                lock (renderLock)
+                    GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y)?.TouchDoubleClick(x, y);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool OnDoubleTapEvent(MotionEvent? e)
+        {
+            //Debug.WriteLine($"OnDoubleTapEvent ({e.GetX()}, {e.GetY()})");
+            return false;
+        }
+
+        public bool OnSingleTapConfirmed(MotionEvent? e)
+        {
+            //Debug.WriteLine($"OnSingleTapConfirmed ({e.GetX()}, {e.GetY()})");
+            return false;
         }
 
         private class ContextMenuTag : Java.Lang.Object

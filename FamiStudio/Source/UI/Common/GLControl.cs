@@ -45,6 +45,7 @@ namespace FamiStudio
         protected virtual void OnTouchUp(int x, int y) { }
         protected virtual void OnTouchMove(int x, int y) { }
         protected virtual void OnTouchClick(int x, int y) { }
+        protected virtual void OnTouchDoubleClick(int x, int y) { }
         protected virtual void OnTouchLongPress(int x, int y) { }
         protected virtual void OnTouchScaleBegin(int x, int y) { }
         protected virtual void OnTouchScale(int x, int y, float scale) { }
@@ -68,6 +69,7 @@ namespace FamiStudio
         public void TouchUp(int x, int y) { OnTouchUp(x, y); }
         public void TouchMove(int x, int y) { OnTouchMove(x, y); }
         public void TouchClick(int x, int y) { OnTouchClick(x, y); }
+        public void TouchDoubleClick(int x, int y) { OnTouchDoubleClick(x, y); }
         public void TouchLongPress(int x, int y) { OnTouchLongPress(x, y); }
         public void TouchScaleBegin(int x, int y) { OnTouchScaleBegin(x, y); }
         public void TouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }

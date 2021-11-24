@@ -108,6 +108,7 @@ namespace FamiStudio
 
         // Mobile
         private readonly string AllowVibrationTooltip           = "When enabled, the phone will vibrate on long pressed, piano keys, etc.";
+        private readonly string DoubleClickDeleteTooltip        = "When enabled, double tapping on a pattern or note will delete it (experimental).";
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
@@ -277,6 +278,7 @@ namespace FamiStudio
                 case ConfigSection.Mobile:
                 { 
                     page.AddCheckBox("Allow vibration:", Settings.AllowVibration, AllowVibrationTooltip); // 0
+                    page.AddCheckBox("Double-tap to delete:", Settings.DoubleClickDelete, DoubleClickDeleteTooltip); // 1
                     break;
                 }
             }
@@ -534,6 +536,7 @@ namespace FamiStudio
                     // Mobile
                     var pageMobile = pages[(int)ConfigSection.Mobile];
                     Settings.AllowVibration = pageMobile.GetPropertyValue<bool>(0);
+                    Settings.DoubleClickDelete = pageMobile.GetPropertyValue<bool>(1);
 
                     Settings.Save();
                 }

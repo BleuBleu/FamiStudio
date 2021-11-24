@@ -33,6 +33,12 @@ Left-clicking in the piano roll will add a note of the currently selected instru
 
 Right-clicking deletes a note.
 
+On mobile, notes are created by a quick tap.
+
+![](images/MobileCreateNote.gif#center)
+
+They are deleted by long pressing and selecting "Delete Note", or by making a selection and deleting it.
+
 ## Moving & resizing notes
 
 When moving the mouse around the piano roll, the note under the mouse cursor will be highlighted and the mouse cursor will change to reflect the type of action you can do :
@@ -44,6 +50,10 @@ Possible actions are:
 * Move one or multiple note(s)
 * Resize one or multiple note(s)
 * Move the release point of a note
+
+On mobile, notes must be first given a **white highlight** before being edited. Only they have that, you can move them or resize them. 
+
+![](images/MobileEditNote.gif#center)
 
 ## Note duration & priority
 
@@ -69,6 +79,10 @@ The following images shows all 3 techniques.
 
 Once notes are selected, then can be moved or resized all at once. They can also be moved or transposed using the keyboard array keys (up, down, left and right). Holding CTRL while doing so will make the notes move by larger increments.
 
+On mobile, there is just only way to select notes and it is done by swiping in the header of the piano roll. A long press in the background will allow you to clear the selection.
+
+![](images/MobileSelectNotes.gif#center)
+
 ## Release point
 
 Using Shift+click on an existing will add a release point on a note. Release points are shown as making the note thinner and triggers the envelope to jump to the release point. Release envelopes are useful to nicely fade out a note when its release, while preserving other effects like vibrato. There is no point to adding a release point to an instrument that does not have a release envelope.
@@ -76,6 +90,10 @@ Using Shift+click on an existing will add a release point on a note. Release poi
 Once a note has a release point, it can be moved by dragging. To remove a release point, you can right-click on it, or shift-click again.
 
 ![](images/ReleaseNote.gif#center)
+
+On mobile, the release point is toggled by long pressing on a note and selecting "Toggle Release". The default position of a release will be in the middle of the note but you can move it afterwards.
+
+![](images/MobileReleaseNote.gif#center)
 
 ## Stop notes
 
@@ -90,6 +108,8 @@ Using T+click will add a stop note. A stop note simple stops the sound and are d
 Holding **I** and clicking on a note will make the instrument of that note the current instrument. This is often known as the eye dropper or pipette tool in drawing software.
 
 ![](images/InstrumentPicker.png#center)
+
+On mobile, this is achieved by long pressing on a note and selecting "Make Instrument Current".
 
 ## Recording mode
 
@@ -111,6 +131,10 @@ There are a few other special keys that are enabled when recording mode is activ
 * **Tab**: Advances by 1 note (or snapping interval), not recording anything.
 * **Page Up/Down**: Moves the octave range that can be inputted using the QWERTY keyboard up/down.
 
+On mobile, recording mode will automatically pop-up the piano and each note played will be recorded. 
+
+![](images/MobileRecordingMode.png#center)
+
 ## Snapping
 
 Snapping can be toggle by clicking the little magnet in the top-left corner of the piano roll. **SHIFT+S** can also be used to quickly toggle snapping on/off. The precision of the snapping can be changed by left/right clicking the number of using the mousewheel over the number or magnet icon. 
@@ -121,9 +145,13 @@ The snapping precision is expressed in *Beats* (which are numbered as x.1, x.2, 
 
 Adding, selecting and dragging of notes are currently the only actions affected by snapping. More might be added in future based on user feedback.
 
+On mobile, the snapping precision is set from the Quick Access Bar, on the right size. 
+
+![](images/MobileSnap.png#center)
+
 ## Note attack
 
-By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. This can be toggled for a particular note by hold the A key and clicking on a note. Note that if a note does not use the same instrument as the previous one, the attack will still play, even if disabled. Also please note that this will generally not carry over to FamiTracker, besides specific use cases around slide notes.
+By default, notes will have an "attack" which mean they will restart their envelopes (volume, pitch, etc.) from the beginning. This is represented by the little dark rectangle on the left of each note. This can be toggled for a particular note by holding the A key and clicking on a note. Note that if a note does not use the same instrument as the previous one, the attack will still play, even if disabled. Also please note that this will generally not carry over to FamiTracker, besides specific use cases around slide notes.
 
 In this example, the first note will have an attack, while the second one will not.
 
@@ -133,6 +161,8 @@ Since envelopes are not resetted, this means that if a note was released, it wil
 
 ![](images/NoAttackReleased.png#center)
 
+On mobile, toggling the note attack is done by long pressing on a note and selecting "Toggle Attack".
+
 ## Slide notes
 
 Slide notes are notes that start at a given pitch (the pitch of the note) and slowly change to hit a target pitch which is represented by where the triangle ends. In this example, the attack of the second note has been disabled.
@@ -140,6 +170,8 @@ Slide notes are notes that start at a given pitch (the pitch of the note) and sl
 ![](images/SlideNote.png#center)
 
 Slide notes garantees that the target pitch will be reached by the end of the note (end of the triangle) but this might happen a bit earlier than the visual repesentation suggests. Especially in the higher pitches. This is due to the fact that the pitch calculations are all integer-based (with 1-bit of fraction) and it is often impossible to get the exact required slope to reach the pitch at the exact time. 
+
+On mobile, you can toggle the slide  by long pressing on a note and selecting "Toggle Slide Note".
 
 ## Arpeggios
 
@@ -156,6 +188,10 @@ If an instrument uses an arpeggio envelope and also uses an arpeggio chord, the 
 To replace the instrument used by a note, you can simply drag the instrument on the note. To replace multiple notes at a time, simply create a selection and drag the instrument on the selection.
 
 ![](images/ReplaceInstrument.gif#center)
+
+On mobile, you can replace an instrument or arpeggio by first making a selection, then long pressing on an instrument from the Quick Access Bar, then selecting "Replace Selection Instrument".
+
+![](images/MobileReplaceInstrument.gif#center)
 
 ## Copying & pasting notes
 
@@ -183,6 +219,10 @@ This can be used as a way of transfering instruments from one project to another
 
 * **Repeat** : You can repeat the same paste operation multiple times to quickly repeat a sequence of note/effect values mutiple times. The start of the next paste will be where the last one ended.
 
+On mobile, the same functionality is accessible by long pressing on the "Paste" icon of the toolbar. The dialog will look different by contains the same functionality.
+
+![](images/MobilePasteSpecial.png#center)
+
 ## Special delete
 
 Much like Special paste, "Special delete" is a more advanced form of deletion. You can bring up the special delete dialong by selecting a rango of notes and pressing CTRL+SHIFT+DELETE. 
@@ -192,6 +232,11 @@ Much like Special paste, "Special delete" is a more advanced form of deletion. Y
 * **Delete Notes** : If checked, will delete all the selected notes.
 
 * **Delete Effects** : You can choose here the list of effects to delete. All unchecked effects will be preserved.
+mes. The start of the next paste will be where the last one ended.
+
+On mobile, the same functionality is accessible by long pressing on the "Delete" icon of the toolbar. The dialog will look different by contains the same functionality.
+
+![](images/MobileDeleteSpecial.png#center)
 
 ## Editing volume & effects
 
@@ -223,6 +268,10 @@ The volume tracks dictates how loud the current channel should play. This volume
 The volume track is allowed to have slides to smoothly raise or lower the volume. They are created exactly like regular slide notes, by holding "S", clicking and dragging up or down. These slides use fixed point arithmetic and have limited precision. They will go up/down by 1 volume unit every 16 frames at most. Very slow/long slides may end earlier than their visual representation.
 
 ![](images/VolumeSlide.gif#center)
+
+On mobile, a volume slide is created by long pressing on a volume value and selecting "Toggle Volume Slide". 
+
+![](images/MobileVolumeSlide.gif#center)
 
 ### Vibrato depth & speed
 

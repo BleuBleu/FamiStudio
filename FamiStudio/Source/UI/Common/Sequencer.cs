@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -7,13 +6,11 @@ using System.Diagnostics;
 
 using Color = System.Drawing.Color;
 
-using RenderBitmap      = FamiStudio.GLBitmap;
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderBrush       = FamiStudio.GLBrush;
 using RenderPath        = FamiStudio.GLGeometry;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderTheme       = FamiStudio.ThemeRenderResources;
 
 namespace FamiStudio
 {
@@ -89,6 +86,7 @@ namespace FamiStudio
         PatternLocation selectionMin = PatternLocation.Invalid;
         PatternLocation selectionMax = PatternLocation.Invalid;
         PatternLocation highlightLocation = PatternLocation.Invalid;
+        DateTime lastPatternCreateTime = DateTime.Now;
 
         PatternBitmapCache patternCache;
 
@@ -733,8 +731,8 @@ namespace FamiStudio
             // Scroll bar (optional)
             if (GetScrollBarParams(out var scrollBarPosX, out var scrollBarSizeX))
             {
-                cb.FillAndDrawRectangle(-1, actualSizeY, Width, Height, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
-                cb.FillAndDrawRectangle(scrollBarPosX - 1, actualSizeY, scrollBarPosX + scrollBarSizeX, Height, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
+                cb.FillAndDrawRectangle(-1, actualSizeY, Width, Height - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
+                cb.FillAndDrawRectangle(scrollBarPosX - 1, actualSizeY, scrollBarPosX + scrollBarSizeX, Height - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
             }
 
             cb.PopTransform();
@@ -1326,6 +1324,7 @@ namespace FamiStudio
                 {
                     CreateNewPattern(location);
                     SetHighlightedPattern(location);
+                    lastPatternCreateTime = DateTime.Now;
                 }
                 else 
                 {
@@ -1337,6 +1336,26 @@ namespace FamiStudio
 
                 // CreateNewPattern clears the selection. Ugh, call after.
                 SetSelection(location, location);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchDoubleClickPatternArea(int x, int y)
+        {
+            bool inPatternZone = GetPatternForCoord(x, y, out var location, out var inPatternHeader);
+
+            if (Settings.DoubleClickDelete && inPatternZone)
+            {
+                var pattern = Song.GetPatternInstance(location);
+
+                if (pattern != null)
+                {
+                    DeletePattern(location);
+                    ClearHighlightedPatern();
+                }
 
                 return true;
             }
@@ -1521,6 +1540,24 @@ namespace FamiStudio
             if (HandleTouchClickChannelChange(x, y)) goto Handled;
             if (HandleTouchClickPatternHeader(x, y)) goto Handled;
             if (HandleTouchClickPatternArea(x, y)) goto Handled;
+
+            return;
+
+        Handled:
+            MarkDirty();
+        }
+
+        protected override void OnTouchDoubleClick(int x, int y)
+        {
+            SetMouseLastPos(x, y);
+
+            // Ignore double tap if we handled a single tap recently.
+            if (captureOperation != CaptureOperation.None || (DateTime.Now - lastPatternCreateTime).TotalMilliseconds < 500)
+            {
+                return;
+            }
+
+            if (HandleTouchDoubleClickPatternArea(x, y)) goto Handled;
 
             return;
 
@@ -2019,6 +2056,7 @@ namespace FamiStudio
             }
 
             Song.InvalidateCumulativePatternCache();
+            Song.DeleteNotesPastMaxInstanceLength();
 
             if (trans)
             {

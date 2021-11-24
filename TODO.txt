@@ -1,29 +1,9 @@
-3.2.1
-=====
-x Option to disable vibration.
-x 8/24 bits wave files.
-x Too zoomed in in envelope editor
-x Effect panel vs. snapping.
-x Text export broken?	
-x Draw note attacks for ghost notes?
-x DPCM dont play if seek bar is example on them.
-x NSF issue from how2.
-x Stereo export VS. TND?
-	=> Test a bit more.
-- "Seems some parameters on the instrument settings on the app take several taps to change", "The FM presets for sure"
-	=> Hitbox is too small.
-- Update doc for mobile.
-	=> Undocumented INI params.
-- Integrity asserts in Glisten.
-- Weird snapping behavior when resizing. Is it like that on mobile too?
-
 3.3.0
 =====
 - Right-click functionality.
 - Rewrite that crazy ugly function in sound engine + figure out how to have more  (change volume or double-special code for rare ones).
 - Option to override DMC initial value on sample mapping.
 - Improve oscilloscope stability (min square norm?)
-- Fix GTK leak (GTK 3.x?), or 2.12.45
 - Uncompressed envelopes
 - Improve no-attack.
 - Register viewer.
@@ -31,6 +11,9 @@ x Stereo export VS. TND?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Way to temporarely disable snapping (FL studio does it with ALT).
 - Volume/effect scaling?
+- Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
+- Fix GTK leak (GTK 3.x?), or 2.12.45
+- Make TimeFormat = 1 the default
 
 Videos:
 =======

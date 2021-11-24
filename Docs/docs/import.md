@@ -38,7 +38,7 @@ When importing from FamiTracker, all possible slide effects (1xx, 2xx, 3xx, Qxx 
 
 ## MIDI
 
-Standard MIDI files can be imported. 
+Standard MIDI files can be imported with the desktop version of FamiStudio. 
 
 Notes, time signature and tempo changes will be imported. Only blank instruments, named after their GM instrument, will be created. Users should not expect the imported song to sound anything like the original. 
 
@@ -74,7 +74,7 @@ The FamiStudio text format is support, please see the documentation above for th
 
 ## Nintendo Sound Format
 
-NSF (and NSFE) files can be imported in FamiStudio. This includes NSF with expansion audio. When opening and NSF file, you will be presented a dialog box.
+NSF (and NSFE) files can be imported in the desktop version of FamiStudio. This includes NSF with expansion audio. When opening and NSF file, you will be presented a dialog box.
 
 ![](images/ImportNsf.png#center)
 
@@ -102,3 +102,5 @@ Only features that are supported by FamiStudio will be imported. Things like har
 When importing/exporting from/to specific format, an error log may appear providing a list of warnings/errors that occured during the process. Please pay attention to these as they may explain why your song sound differently than intended.
 
 ![](images/ErrorLog.png#center)
+
+The mobile version does not display these types of errors. So if you encounter a weird behavior, opening the file with the desktop version may help diagnose the issue.

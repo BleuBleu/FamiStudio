@@ -61,6 +61,10 @@ The loop point of an envelope can be set by right-clicking in the timeline. Volu
 
 ![](images/EditEnvelopeRelease.png#center)
 
+On mobile, you can editing envelope values individually by tapping them. But a much more natural way of drawing envelope is by first long pressing, waiting for the prompt, and then drawing the shape of the envelope. 
+
+![](images/MobileDrawEnvelope.gif#center)
+
 ## Copying envelope values
 
 Right-clicking on the numbers on the header of the envelope editor allows for range selection of envelope values. These can then be copy and pasted elsewhere.

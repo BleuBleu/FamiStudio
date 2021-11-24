@@ -16,7 +16,9 @@ Clicking on a channel will make it the active one. Alternatively, you can press 
 
 ## Muting & soloing channels
 
-Left-clicking on the icon of a channel (Square, triangle, noise, DPCM) will toggle mute. Right-clicking will toggle solo.
+Left-clicking on the icon of a channel (Square, triangle, noise, DPCM) will toggle mute. Right-clicking will toggle solo. 
+
+On mobile, this is done by long pressing on a channel name, either here in the sequencer, or in the Quick Access Bar.
 
 ## Force display channel
 
@@ -30,6 +32,8 @@ Channels that are force displayed and are not the current channel will appear di
 
 This can also achieved with the keyboard by pressing Ctrl + F1...F5 (the number of the channel).
 
+On mobile, this is done by long pressing on a channel name, either here in the sequencer, or in the Quick Access Bar.
+
 ## Adding & removing patterns
 
 You can add a new pattern by left-clicking on an empty space. Right-clicking deletes.
@@ -40,6 +44,8 @@ Clicking a pattern selects it and opens the piano roll for the current channel a
 
 ![](images/EditPattern.png#center)
 
+On mobile, this is achieved by long pressing on a pattern and selecting "Pattern Properties...".
+
 ## Selecting patterns
 
 You can select multiple patterns by right-cliking and dragging in the header bar of the Sequencer or in an empty space in the sequencer. To un-select everything, simply press Esc. When multiple patterns are selected, only the color can be edited.
@@ -49,6 +55,10 @@ You can select multiple patterns by right-cliking and dragging in the header bar
 You can select multiple patterns in a rectangular grid by holding SHIFT and right clicking to create a selection.
 
 ![](images/SelectPatternsRect.gif#center)
+
+On mobile, you can select full columns of patterns by swiping from the header. You can do rectangular selection by first selecting a single pattern, then long pressing somewhere else and selecting "Expand Selection".
+
+![](images/MobileSelectPatterns.gif#center)
 
 ## Moving & copying patterns
 
@@ -63,6 +73,10 @@ Holding CTRL+SHIFT while dragging will create a completely independant copy of t
 Dragging a pattern to a different channel will create a copy, but delete the original. This is because internally, patterns cannot be shared accross different channels. The pattern may be renamed in the processs. Holding CTRL+SHIFT will preserve the original (create a copy). 
 
 ![](images/MovePatternDifferentChannel.png#center)
+
+On mobile, patterns can be moved in a similar way but they first must be tapped to be given the white highlight. To create copies/instances of one or multiple patterns, first make a selection, then long press where you want to copy them.
+
+![](images/MobileInstancePattern.gif#center)
 
 ## Copy & pasting patterns
 
@@ -86,6 +100,10 @@ Pressing CTRL+SHIFT+V will open the **Paste Special** dialog which gives more op
 * **Extend song** : Will extend the song duration to accomodate the newly inserted patterns (Only available when Insert is enabled).
 * **Repeat** : Allows pasting the copied patterns multiple times in a row.
 
+On mobile, the same functionality is accessible by long pressing the "Paste" button while in the Sequencer.
+
+![](images/MobilePasteSpecialSequencer.png#center)
+
 ## Setting the loop point
 
 The **Loop point** is where the song will repeat once it reaches the end and is represented by a little arrow. 
@@ -93,6 +111,8 @@ The **Loop point** is where the song will repeat once it reaches the end and is 
 ![](images/LoopPoint.png#center)
 
 You can move the loop point around by holding the **L** key and clicking at a location in the Sequencer. The loop point is optional and can be toggle by re-setting it to the current location.
+
+On mobile, you can set the loop point by long pressing the header of the sequencer, and selecting "Set Loop Point".
 
 ## Custom pattern settings
 
@@ -109,3 +129,7 @@ FamiStudio Tempo | FamiTracker tempo
 Enabling **Custom Pattern** will allow you to change the values. Once a pattern has any kind of custom setting, it will no longer take its values from the Song's properties and will be display with a **asterisk (\*)** next to its index in the Sequencer.
 
 The parameters here are the same as when editing the [Song properties](song.md), but are localized to a column of patterns.
+
+On mobile, the same functionality is accessible by long pressing in the sequencer header and selecting "Custom Pattern Settings".
+
+![](images/MobileCustomPatternSettings.gif#center)
