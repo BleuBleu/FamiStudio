@@ -65,7 +65,7 @@ namespace FamiStudio
                 var newChannelCount = Channel.GetChannelCountForExpansionMask(expansionMask, 8);
                 var oldChannelCount = channelSources.Length;
 
-                var maxChannelIndex = 3;
+                var maxChannelIndex = 2;
                 for (int i = 0; i < oldChannelCount; i++)
                 {
                     if (channelSources[i].type == MidiSourceType.Channel && channelSources[i].index != 9)
@@ -76,7 +76,9 @@ namespace FamiStudio
 
                 for (int i = oldChannelCount; i < newChannelCount; i++)
                 {
-                    channelSources[i] = new MidiFileReader.MidiSource() { index = maxChannelIndex++ };
+                    maxChannelIndex = Math.Min(maxChannelIndex + 1, 15);
+                    if (maxChannelIndex == 9) maxChannelIndex++;
+                    channelSources[i] = new MidiFileReader.MidiSource() { index = maxChannelIndex };
                 }
 
                 UpdateListView();
