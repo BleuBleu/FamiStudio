@@ -128,7 +128,7 @@ namespace FamiStudio
                 //var periodHi = (byte)(period >> 8);
                 //var periodLo = (byte)(period & 0xff);
 
-                var periodLo = (byte)(period & 0x3f) << 2;
+                var periodLo = (byte)(period << 2) & 0xff;
                 var periodHi = (byte)(((octave & 0x7) << 3) | ((period >> 6) & 7));
                 var volume = GetVolume();
 
