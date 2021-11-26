@@ -71,12 +71,12 @@ void Nes_Mmc5::osc_output(int index, Blip_Buffer* buf)
 
 void Nes_Mmc5::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 {
-	require(addr > 0x20); // addr must be actual address (i.e. 0x40xx)
-	require((unsigned)data <= 0xff);
-
 	// Ignore addresses outside range
 	if (addr < start_addr || end_addr < addr)
 		return;
+
+	require(addr > 0x20); // addr must be actual address (i.e. 0x40xx)
+	require((unsigned)data <= 0xff);
 
 	run_until(time);
 

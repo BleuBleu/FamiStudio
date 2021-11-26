@@ -124,12 +124,11 @@ namespace FamiStudio
             else if (note.IsMusical)
             {
                 var period = GetPeriod();
-                Console.WriteLine($"period {Convert.ToString(period, 2)}");
                 var octave = GetOctave(ref period);
                 //var periodHi = (byte)(period >> 8);
                 //var periodLo = (byte)(period & 0xff);
 
-                var periodLo = (byte)(period & 0xff) << 2;
+                var periodLo = (byte)(period & 0x3f) << 2;
                 var periodHi = (byte)(((octave & 0x7) << 3) | ((period >> 6) & 7));
                 var volume = GetVolume();
 
@@ -187,7 +186,6 @@ namespace FamiStudio
 
                 WriteRegister(ChannelAddr, 0xA4 + channelIdxHigh);
                 WriteRegister(ChannelData, periodHi);
-                Console.WriteLine($"periodHi octave {(periodHi >> 3):X4} periodHi fnum {(periodHi & 0x7):X4}");
                 WriteRegister(ChannelAddr, 0xA0 + channelIdxHigh);
                 WriteRegister(ChannelData, periodLo);
             }
