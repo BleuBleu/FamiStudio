@@ -1,3 +1,7 @@
+3.2.2
+=====
+x MIDI crash when looooots of channels on MacOS/Linux (grid)
+
 3.3.0
 =====
 - Right-click functionality.
@@ -12,9 +16,11 @@
 - Way to temporarely disable snapping (FL studio does it with ALT).
 - Volume/effect scaling?
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
-- Fix GTK leak (GTK 3.x?), or 2.12.45
 - Make TimeFormat = 1 the default
-
+- Scroll bar in sequencer
+- Piano roll scale on desktop?
+- LOW PRIORITY :  Fix GTK leak (GTK 3.x?), or 2.12.45
+ 
 Videos:
 =======
 - Tutorial for FamiTracker users
