@@ -1,6 +1,10 @@
 3.2.2
 =====
 x MIDI crash when looooots of channels on MacOS/Linux (grid)
+- C0 is hidden by scroll bars
+- FDS modulation is broken on Android? => aaaaaaaa.fms
+- Hitbox for toolbar button for piano?
+- 
 
 3.3.0
 =====
