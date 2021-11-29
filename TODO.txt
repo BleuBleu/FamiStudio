@@ -2,6 +2,7 @@
 =====
 x MIDI crash when looooots of channels on MacOS/Linux (grid)
 - C0 is hidden by scroll bars
+- C0 is hidden in piano roll video
 - FDS modulation is broken on Android? => aaaaaaaa.fms
 - Hitbox for toolbar button for piano?
 - 
