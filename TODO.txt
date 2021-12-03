@@ -2,10 +2,10 @@
 =====
 x MIDI crash when looooots of channels on MacOS/Linux (grid)
 x Fixing effect values OOB
+x Perf problem? GPU usage IS high.
+x FDS modulation is broken on Android? => aaaaaaaa.fms
 - C0 is hidden by scroll bars
 - C0 is hidden in piano roll video
-- FDS modulation is broken on Android? => aaaaaaaa.fms
-- Perf problem? GPU usage IS high.
 
 3.3.0
 =====
