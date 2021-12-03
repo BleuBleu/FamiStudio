@@ -74,6 +74,7 @@ namespace FamiStudio
                 graphicsContext.MakeCurrent(windowInfo);
                 graphicsContext.LoadAll();
                 graphicsContext.SwapInterval = 1;
+                vsyncEnabled = graphicsContext.SwapInterval > 0;
 
                 GraphicsContextInitialized();
             }
