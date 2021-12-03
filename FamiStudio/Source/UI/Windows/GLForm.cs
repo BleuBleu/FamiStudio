@@ -73,16 +73,7 @@ namespace FamiStudio
                 graphicsContext = new GraphicsContext(graphicsMode, windowInfo, 1, 2, GraphicsContextFlags.Default);
                 graphicsContext.MakeCurrent(windowInfo);
                 graphicsContext.LoadAll();
-
-                // This is an extension, so might fail.
-                try
-                {
-                    OpenTK.Platform.Windows.Wgl.Ext.SwapInterval(1);
-                    vsyncEnabled = OpenTK.Platform.Windows.Wgl.Ext.GetSwapInterval() > 0;
-                }
-                catch
-                {
-                }
+                graphicsContext.SwapInterval = 1;
 
                 GraphicsContextInitialized();
             }

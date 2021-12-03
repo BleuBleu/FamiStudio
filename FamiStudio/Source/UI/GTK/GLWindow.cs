@@ -226,6 +226,7 @@ namespace Gtk
                 // GraphicsContext
                 graphicsContext = new GraphicsContext(graphicsMode, windowInfo, GlVersionMajor, GlVersionMinor, graphicsContextFlags);
                 graphicsContext.MakeCurrent(windowInfo);
+                graphicsContext.SwapInterval = 1;
 
                 if (GraphicsContext.ShareContexts)
                 {
