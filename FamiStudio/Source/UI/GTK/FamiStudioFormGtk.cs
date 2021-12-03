@@ -615,9 +615,7 @@ namespace FamiStudio
             if (needRedraw)
                 GraphicsContext.CurrentContext.SwapBuffers();
 
-            // Sleep a bit if there is nothing to do or if there is no vsync.
-            if (!needRedraw || !VSyncEnabled)
-                System.Threading.Thread.Sleep(4);
+            System.Threading.Thread.Sleep(4);
         }
 
         public void CaptureMouse(GLControl ctrl)
