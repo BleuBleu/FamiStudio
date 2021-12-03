@@ -112,9 +112,15 @@ namespace FamiStudio
             famistudio.Tick();
 
             if (controls.AnyControlNeedsRedraw() && famistudio.Project != null)
+            {
+                // Here we hit a vsync if its enabled. 
                 RenderFrameAndSwapBuffers();
-            else
-                System.Threading.Thread.Sleep(4); 
+            }
+
+            // Always sleep, in case people turn off vsync. This avoid rendering 
+            // is a super tight loop. We could check "VSyncEnabled" but its an extension
+            // and I dont trust it. Let's take a break either way.
+            System.Threading.Thread.Sleep(4); 
         }
 
         protected override void GraphicsContextInitialized()

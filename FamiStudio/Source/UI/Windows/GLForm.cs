@@ -8,8 +8,12 @@ namespace FamiStudio
     public class GLForm : Form
     {
         protected GLGraphics glGraphics;
-        IWindowInfo windowInfo;
-        IGraphicsContext graphicsContext;
+
+        private IWindowInfo windowInfo;
+        private IGraphicsContext graphicsContext;
+        private bool vsyncEnabled = true;
+
+        public bool VSyncEnabled => vsyncEnabled;
 
         public GLForm()
         {
@@ -70,6 +74,16 @@ namespace FamiStudio
                 graphicsContext.MakeCurrent(windowInfo);
                 graphicsContext.LoadAll();
 
+                // This is an extension, so might fail.
+                try
+                {
+                    OpenTK.Platform.Windows.Wgl.Ext.SwapInterval(1);
+                    vsyncEnabled = OpenTK.Platform.Windows.Wgl.Ext.GetSwapInterval() > 0;
+                }
+                catch
+                {
+                }
+
                 GraphicsContextInitialized();
             }
         }
@@ -105,7 +119,6 @@ namespace FamiStudio
 
         public void RenderFrameAndSwapBuffers(bool force = false)
         {
-            graphicsContext.MakeCurrent(windowInfo);
             RenderFrame(force);
             graphicsContext.SwapBuffers();
         }
