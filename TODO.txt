@@ -1,11 +1,11 @@
 3.2.2
 =====
 x MIDI crash when looooots of channels on MacOS/Linux (grid)
+x Fixing effect values OOB
 - C0 is hidden by scroll bars
 - C0 is hidden in piano roll video
 - FDS modulation is broken on Android? => aaaaaaaa.fms
-- Hitbox for toolbar button for piano?
-- 
+- Perf problem?
 
 3.3.0
 =====
@@ -17,15 +17,15 @@ x MIDI crash when looooots of channels on MacOS/Linux (grid)
 - Improve no-attack.
 - Register viewer.
 - Volume/effect scaling
-- Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Way to temporarely disable snapping (FL studio does it with ALT).
-- Volume/effect scaling?
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 - Make TimeFormat = 1 the default
 - Scroll bar in sequencer
-- Piano roll scale on desktop?
-- LOW PRIORITY :  Fix GTK leak (GTK 3.x?), or 2.12.45
- 
+- CTRL+A to select all? Or drag an instrument on sequencer to replace instrument on pattern?
+- LOW PRIORITY : Piano roll scale on desktop?
+- LOW PRIORITY : Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
+- LOW PRIORITY : Fix GTK leak (GTK 3.x?), or 2.12.45
+
 Videos:
 =======
 - Tutorial for FamiTracker users
