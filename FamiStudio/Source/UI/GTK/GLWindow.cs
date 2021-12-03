@@ -15,6 +15,7 @@ namespace Gtk
     {
         IGraphicsContext graphicsContext;
         static int graphicsContextCount;
+        bool vsyncEnabled = true;
 
         /// <summary>Use a single buffer versus a double buffer.</summary>
         [Browsable(true)]
@@ -45,6 +46,8 @@ namespace Gtk
 
         /// <summary>The minor version of OpenGL to use.</summary>
         public int GlVersionMinor { get; set; }
+
+        public bool VSyncEnabled => vsyncEnabled;
 
 #if FAMISTUDIO_MACOS
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
@@ -227,6 +230,7 @@ namespace Gtk
                 graphicsContext = new GraphicsContext(graphicsMode, windowInfo, GlVersionMajor, GlVersionMinor, graphicsContextFlags);
                 graphicsContext.MakeCurrent(windowInfo);
                 graphicsContext.SwapInterval = 1;
+                vsyncEnabled = graphicsContext.SwapInterval > 0;
 
                 if (GraphicsContext.ShareContexts)
                 {

@@ -610,14 +610,14 @@ namespace FamiStudio
             if (force)
                 MarkDirty();
 
-            if (glInit && GdkWindow != null && controls.Redraw())
-            {
+            bool needRedraw = glInit && GdkWindow != null && controls.Redraw();
+
+            if (needRedraw)
                 GraphicsContext.CurrentContext.SwapBuffers();
-            }
-            else
-            {
+
+            // Sleep a bit if there is nothing to do or if there is no vsync.
+            if (!needRedraw || !VSyncEnabled)
                 System.Threading.Thread.Sleep(4);
-            }
         }
 
         public void CaptureMouse(GLControl ctrl)
