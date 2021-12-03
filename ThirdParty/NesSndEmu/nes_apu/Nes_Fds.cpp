@@ -86,7 +86,7 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 				break;
 			case 8:
 				// TODO: Ring buffer? I cant imagine that's of the hardware does it.
-				memcpy(&osc.modt[0], &osc.modt[2], modt_count - 2); 
+				memmove(&osc.modt[0], &osc.modt[2], modt_count - 2); 
 				osc.modt[modt_count - 2] = data;
 				osc.modt[modt_count - 1] = data;
 				break;

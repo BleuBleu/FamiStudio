@@ -1,3 +1,12 @@
+3.2.2
+=====
+x MIDI crash when looooots of channels on MacOS/Linux (grid)
+x Fixing effect values OOB
+x Perf problem? GPU usage IS high.
+x FDS modulation is broken on Android? => aaaaaaaa.fms
+- C0 is hidden by scroll bars
+- C0 is hidden in piano roll video
+
 3.3.0
 =====
 - Right-click functionality.
@@ -8,12 +17,14 @@
 - Improve no-attack.
 - Register viewer.
 - Volume/effect scaling
-- Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Way to temporarely disable snapping (FL studio does it with ALT).
-- Volume/effect scaling?
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
-- Fix GTK leak (GTK 3.x?), or 2.12.45
 - Make TimeFormat = 1 the default
+- Scroll bar in sequencer
+- CTRL+A to select all? Or drag an instrument on sequencer to replace instrument on pattern?
+- LOW PRIORITY : Piano roll scale on desktop?
+- LOW PRIORITY : Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
+- LOW PRIORITY : Fix GTK leak (GTK 3.x?), or 2.12.45
 
 Videos:
 =======

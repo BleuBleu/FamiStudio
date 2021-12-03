@@ -8,8 +8,12 @@ namespace FamiStudio
     public class GLForm : Form
     {
         protected GLGraphics glGraphics;
-        IWindowInfo windowInfo;
-        IGraphicsContext graphicsContext;
+
+        private IWindowInfo windowInfo;
+        private IGraphicsContext graphicsContext;
+        private bool vsyncEnabled = true;
+
+        public bool VSyncEnabled => vsyncEnabled;
 
         public GLForm()
         {
@@ -69,6 +73,8 @@ namespace FamiStudio
                 graphicsContext = new GraphicsContext(graphicsMode, windowInfo, 1, 2, GraphicsContextFlags.Default);
                 graphicsContext.MakeCurrent(windowInfo);
                 graphicsContext.LoadAll();
+                graphicsContext.SwapInterval = 1;
+                vsyncEnabled = graphicsContext.SwapInterval > 0;
 
                 GraphicsContextInitialized();
             }
@@ -105,7 +111,6 @@ namespace FamiStudio
 
         public void RenderFrameAndSwapBuffers(bool force = false)
         {
-            graphicsContext.MakeCurrent(windowInfo);
             RenderFrame(force);
             graphicsContext.SwapBuffers();
         }

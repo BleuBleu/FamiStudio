@@ -3449,7 +3449,7 @@ namespace FamiStudio
                 for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, Note.GetFilterForEffect(selectedEffectIdx)); !it.Done; it.Next())
                 {
                     var value = it.Note.GetEffectValue(selectedEffectIdx);
-                    it.Note.SetEffectValue(selectedEffectIdx, value + delta);
+                    it.Note.SetEffectValue(selectedEffectIdx, Utils.Clamp(value + delta, minValue, maxValue));
                 }
 
                 channel.InvalidateCumulativePatternCache(minLocation.PatternIndex, maxLocation.PatternIndex);
@@ -3457,7 +3457,7 @@ namespace FamiStudio
             else
             {
                 var value = note.GetEffectValue(selectedEffectIdx);
-                note.SetEffectValue(selectedEffectIdx, value + delta);
+                note.SetEffectValue(selectedEffectIdx, Utils.Clamp(value + delta, minValue, maxValue));
 
                 channel.InvalidateCumulativePatternCache(pattern);
             }
