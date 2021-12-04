@@ -1890,7 +1890,7 @@ namespace FamiStudio
         {
             StopRecording();
 
-            if (!songPlayer.IsPlaying)
+            if (songPlayer != null && !songPlayer.IsPlaying)
             {
                 instrumentPlayer.ConnectOscilloscope(null);
                 songPlayer.ConnectOscilloscope(oscilloscope);
