@@ -2,6 +2,14 @@
 
 Version history / release notes for each release.
 
+## Version 3.2.2 (Hotfix)
+
+Fixes/Changes:
+* Fixed issue where some effect values could go beyond their intended range, and lead to crashes desktop.
+* Fixed FDS modulation on Mobile.
+* Fixed crash in MIDI import dialog when lots of channels are present (desktop only)
+* Potential CPU/GPU usage reduction on some computers (desktop only)
+
 ## Version 3.2.1 (Hotfix)
 
 Fixes/Changes:
