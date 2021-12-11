@@ -361,8 +361,9 @@ namespace FamiStudio
                 var instrument = project.Instruments[i];
 
                 if (!instrument.IsFdsInstrument  && 
-                    !instrument.IsN163Instrument && 
-                    !instrument.IsVrc7Instrument)
+                    !instrument.IsN163Instrument &&
+                    !instrument.IsVrc7Instrument &&
+                    !instrument.IsEPSMInstrument)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                     var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -395,7 +396,8 @@ namespace FamiStudio
             // FDS, N163 and VRC7 instruments are special.
             if (project.UsesFdsExpansion  || 
                 project.UsesN163Expansion || 
-                project.UsesVrc7Expansion)
+                project.UsesVrc7Expansion ||
+                project.UsesEPSMExpansion)
             {
                 lines.Add($"{ll}instruments_exp:");
 
@@ -404,8 +406,9 @@ namespace FamiStudio
                     var instrument = project.Instruments[i];
 
                     if (instrument.IsFdsInstrument  || 
-                        instrument.IsVrc7Instrument || 
-                        instrument.IsN163Instrument)
+                        instrument.IsVrc7Instrument ||
+                        instrument.IsN163Instrument ||
+                        instrument.IsEPSMInstrument)
                     {
                         var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                         var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -438,7 +441,8 @@ namespace FamiStudio
                         else if (instrument.IsEPSMInstrument)
                         {
                             lines.Add($"\t{db} ${(instrument.EpsmPatch << 4):x2}, $00");
-                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Select(r => $"${r:x2}"))}");
+                            // Add 8 bytes of padding to keep this instrument size at 16
+                            lines.Add($"\t{db} $00, $00, $00, $00, $00, $00, $00, $00");
                         }
 
                         size += 16;
@@ -446,6 +450,27 @@ namespace FamiStudio
                     }
                 }
 
+                lines.Add("");
+            }
+
+            // EPSM instruments don't fit in the 16 bytes allotted for expansion instruments so we store the extra data
+            // for them after all the instrument data
+            if (project.UsesFdsExpansion ||
+                project.UsesN163Expansion ||
+                project.UsesVrc7Expansion ||
+                project.UsesEPSMExpansion)
+            {
+                lines.Add($"{ll}instruments_exp_extra:");
+
+                for (int i = 0, j = 0; i < project.Instruments.Count; i++)
+                {
+                    var instrument = project.Instruments[i];
+                    if (instrument.IsEPSMInstrument)
+                    {
+                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Select(r => $"${r:x2}"))}");
+                        size += 31;
+                    }
+                }
                 lines.Add("");
             }
 
