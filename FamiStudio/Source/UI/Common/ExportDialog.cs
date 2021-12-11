@@ -320,7 +320,7 @@ namespace FamiStudio
                     if (format == ExportFormat.FamiTone2Music && project.UsesAnyExpansionAudio)
                     {
                         page.AddLabel(null, "FamiTone2 does not support audio expansions.", true);
-                        canExportToSoundEngine = false;
+                        //canExportToSoundEngine = false;
                     }
                     else if (format == ExportFormat.FamiStudioMusic && project.UsesMultipleExpansionAudios)
                     {
