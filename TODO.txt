@@ -4,6 +4,7 @@
 3.3.0
 =====
 - Right-click functionality.
+- N163 : Write address location in the waveform editor (how2 idea)
 - Rewrite that crazy ugly function in sound engine + figure out how to have more  (change volume or double-special code for rare ones).
 - Option to override DMC initial value on sample mapping.
 - Improve oscilloscope stability (min square norm?)
