@@ -1,15 +1,10 @@
 3.2.2
 =====
-x MIDI crash when looooots of channels on MacOS/Linux (grid)
-x Fixing effect values OOB
-x Perf problem? GPU usage IS high.
-x FDS modulation is broken on Android? => aaaaaaaa.fms
-- C0 is hidden by scroll bars
-- C0 is hidden in piano roll video
 
 3.3.0
 =====
 - Right-click functionality.
+- N163 : Write address location in the waveform editor (how2 idea)
 - Rewrite that crazy ugly function in sound engine + figure out how to have more  (change volume or double-special code for rare ones).
 - Option to override DMC initial value on sample mapping.
 - Improve oscilloscope stability (min square norm?)
@@ -17,11 +12,14 @@ x FDS modulation is broken on Android? => aaaaaaaa.fms
 - Improve no-attack.
 - Register viewer.
 - Volume/effect scaling
+- Paste special, option to rename patterns.
 - Way to temporarely disable snapping (FL studio does it with ALT).
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 - Make TimeFormat = 1 the default
 - Scroll bar in sequencer
 - CTRL+A to select all? Or drag an instrument on sequencer to replace instrument on pattern?
+- C0 is hidden by scroll bars
+- C0 is hidden in piano roll video
 - LOW PRIORITY : Piano roll scale on desktop?
 - LOW PRIORITY : Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - LOW PRIORITY : Fix GTK leak (GTK 3.x?), or 2.12.45

@@ -120,17 +120,17 @@ namespace FamiStudio
                     if (project.UsesSingleExpansionAudio)
                     {
                         kernelBinary += $"_{ExpansionType.ShortNames[project.SingleExpansion].ToLower()}";
+                    
+                        if (project.UsesN163Expansion)
+                            kernelBinary += $"_{project.ExpansionNumN163Channels}ch";
                     }
                     else if (project.UsesMultipleExpansionAudios)
                     {
+                        var numN163Channels = project.UsesN163Expansion ? project.ExpansionNumN163Channels : 1;
+
                         kernelBinary += $"_multi";
-
-                        if (project.UsesN163Expansion)
-                            kernelBinary += $"_n163";
+                        kernelBinary += $"_n163_{numN163Channels}ch";
                     }
-
-                    if (project.UsesN163Expansion)
-                        kernelBinary += $"_{project.ExpansionNumN163Channels}ch";
                 }
                 else
                 {
