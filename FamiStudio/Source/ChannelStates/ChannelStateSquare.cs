@@ -7,6 +7,7 @@ namespace FamiStudio
     {
         int regOffset = 0;
         int prevPeriodHi = 1000;
+        bool[] isStop = { false, false, false };
 
         public ChannelStateSquare(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
@@ -17,14 +18,15 @@ namespace FamiStudio
         {
             var duty = GetDuty();
 
-            if (note.IsStop)
+            if (note.IsStop && !isStop[apuIdx])
             {
                 WriteRegister(NesApu.APU_PL1_VOL + regOffset, (duty << 6) | (0x30) | 0);
+                isStop[apuIdx] = true;
             }
             else if (note.IsMusical)
             {
                 //Debug.WriteLine(note.FriendlyName);
-
+                isStop[apuIdx] = false;
                 var period = GetPeriod();
                 var volume = GetVolume();
 

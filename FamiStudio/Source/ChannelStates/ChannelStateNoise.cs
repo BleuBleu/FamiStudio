@@ -4,18 +4,21 @@ namespace FamiStudio
 {
     public class ChannelStateNoise : ChannelState
     {
+        bool isStop = false;
         public ChannelStateNoise(IPlayerInterface player, int apuIdx, int channelIdx, bool pal) : base(player, apuIdx, channelIdx, pal)
         {
         }
 
         public override void UpdateAPU()
         {
-            if (note.IsStop)
+            if (note.IsStop && !isStop)
             {
                 WriteRegister(NesApu.APU_NOISE_VOL, 0xf0);
+                isStop = true;
             }
             else if (note.IsMusical)
             {
+                isStop = false;
                 var slide  = slideShift < 0 ? (slidePitch >> -slideShift) : (slidePitch << slideShift); // Remove the fraction part.
                 var volume = GetVolume();
                 var duty   = GetDuty();

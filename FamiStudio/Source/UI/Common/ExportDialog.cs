@@ -19,6 +19,7 @@ namespace FamiStudio
             Nsf,
             Rom,
             Midi,
+            CommandLog,
             Text,
             FamiTracker,
             FamiStudioMusic,
@@ -37,6 +38,7 @@ namespace FamiStudio
             "NSF",
             "ROM / FDS",
             "MIDI",
+            "Command Log / VGM",
             "FamiStudio Text",
             "FamiTracker Text",
             "FamiStudio Music Code",
@@ -54,6 +56,7 @@ namespace FamiStudio
             "ExportVideo",
             "ExportNsf",
             "ExportRom",
+            "ExportMIDI",
             "ExportMIDI",
             "ExportText",
             "ExportFamiTracker",
@@ -348,6 +351,10 @@ namespace FamiStudio
                     page.AddCheckBox("Generate SFX list include :", false); // 2
                     page.AddCheckBoxList(null, songNames, null); // 3
                     break;
+                case ExportFormat.CommandLog:
+                    page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                    page.AddDropDownList("Filetype :", new[] { "Command Log", "VGM"}, "VGM"); // 1
+                    break;
                 case ExportFormat.Share:
                     page.AddRadioButtonList("Sharing mode", new[] { "Copy to Storage", "Share" }, 0, "Copy the FamiStudio project to your phone's storage, or share it to another application.");
                     break;
@@ -475,7 +482,6 @@ namespace FamiStudio
                                      break;
                              }
                          });
-
                     lastExportFilename = filename;
                 }
             };
@@ -834,6 +840,26 @@ namespace FamiStudio
             }
         }
 
+        private void ExportCommandLog()
+        {
+            var props = dialog.GetPropertyPage((int)ExportFormat.CommandLog);
+            var songName = props.GetPropertyValue<string>(0);
+            var ext = "asm";
+            var exportText = "Command Log";
+            var filetype = props.GetPropertyValue<string>(1) == "VGM" ? 1 : 0;
+            if(filetype == 1)
+            {
+                ext = "vgm";
+                exportText = "VGM";
+            }
+            var song = project.GetSong(songName);
+            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog($"Export {exportText}", $"{exportText} File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
+            if (filename != null)
+            {
+                VgmExport.Save(song, filename, filetype);
+                lastExportFilename = filename;
+            }
+        }
         private void ExportFamiTracker()
         {
             if (!canExportToFamiTracker)
@@ -985,6 +1011,7 @@ namespace FamiStudio
                 case ExportFormat.FamiStudioMusic: ExportFamiTone2Music(true); break;
                 case ExportFormat.FamiTone2Sfx: ExportFamiTone2Sfx(false); break;
                 case ExportFormat.FamiStudioSfx: ExportFamiTone2Sfx(true); break;
+                case ExportFormat.CommandLog: ExportCommandLog(); break;
                 case ExportFormat.Share: ExportShare(); break;
             }
 
