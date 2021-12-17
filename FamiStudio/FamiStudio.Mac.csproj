@@ -192,6 +192,7 @@
     <Compile Include="Source\ChannelStates\ChannelStateEPSMSquare.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateEPSMRythm.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
+    <Compile Include="Source\IO\VgmFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
