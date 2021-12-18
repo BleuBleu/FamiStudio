@@ -1,10 +1,13 @@
 3.2.2
 =====
+- CanExportToSoundEngine broken.
+- 
 
 3.3.0
 =====
 - Right-click functionality.
 - Rewrite that crazy ugly function in sound engine + figure out how to have more  (change volume or double-special code for rare ones).
+- ffmpeg path on Linux should work on path (Puna on CC discord).
 - Option to override DMC initial value on sample mapping.
 - Improve oscilloscope stability (min square norm?)
 - Uncompressed envelopes

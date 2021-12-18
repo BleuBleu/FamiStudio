@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Platform;
 
@@ -64,6 +65,8 @@ namespace FamiStudio
             {
                 DoubleBuffered = false;
                 ResizeRedraw = true;
+
+                Toolkit.Init(new ToolkitOptions() { Backend = PlatformBackend.PreferNative });
 
                 ColorFormat colorBufferColorFormat = new ColorFormat(24);
                 GraphicsMode graphicsMode = new GraphicsMode(colorBufferColorFormat, 0, 0, 0, ColorFormat.Empty, 2, false);
