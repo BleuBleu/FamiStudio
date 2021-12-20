@@ -156,7 +156,7 @@ long Nes_EPSM::run_until(cpu_time_t time)
 			dataWrite.pop();
 			aWrite.pop();
 		}
-		int sample = PSG_calc(psg)/2.3;
+		int sample = PSG_calc(psg)/1.8;
 		int sampleRight;
 		sample = clamp(sample, -7710, 7710);
 		sampleRight = clamp(sample, -7710, 7710);
@@ -165,10 +165,10 @@ long Nes_EPSM::run_until(cpu_time_t time)
 		while (t2 < 12)
 		{
 			OPN2_Clock(&opn2, samples);
-			sample += (samples[0]) * 16;
-			sample += samples[2];
-			sampleRight += (samples[1]) * 16;
-			sampleRight += samples[3];
+			sample += (samples[0]) * 12;
+			sample += samples[2]*1.1;
+			sampleRight += (samples[1]) * 12;
+			sampleRight += samples[3]*1.1;
 			t2++;
 		}
 		int delta = sample - last_amp;

@@ -120,7 +120,7 @@ namespace FamiStudio
 
                 if (filetype == 1)
                 {
-                    var fileLenght = sizeof(VgmHeader) + 36 - 4 +29 + 1; //headerbytes + init bytes (36)  - offset (4bytes)  + extraheader (29bytes) + audio stop 1byte
+                    var fileLenght = sizeof(VgmHeader) + 39 - 4 +29 + 1; //headerbytes + init bytes (39)  - offset (4bytes)  + extraheader (29bytes) + audio stop 1byte
                     int frameNumber = 0;
                     foreach (var reg in writes)
                     {
@@ -170,11 +170,11 @@ namespace FamiStudio
 
                     file.Write(BitConverter.GetBytes(0x07), 0, 1); //chip id ym2608
                     file.Write(BitConverter.GetBytes(0x00), 0, 1); // flags
-                    file.Write(BitConverter.GetBytes(0x0200), 0, 2); //volume bit 7 for absolute 8.8 fixed point
+                    file.Write(BitConverter.GetBytes(0x0140), 0, 2); //volume bit 7 for absolute 8.8 fixed point
 
                     file.Write(BitConverter.GetBytes(0x87), 0, 1); //chip id ym2608ssg
                     file.Write(BitConverter.GetBytes(0x00), 0, 1); // flags
-                    file.Write(BitConverter.GetBytes(0x8100), 0, 2); //volume bit 7 for absolute 8.8 fixed point
+                    file.Write(BitConverter.GetBytes(0x8140), 0, 2); //volume bit 7 for absolute 8.8 fixed point
 
 
                     //sampledata
@@ -220,8 +220,8 @@ namespace FamiStudio
                     file.Write(BitConverter.GetBytes(0xA0), 0, sizeof(byte));
                     file.Write(BitConverter.GetBytes(0x07), 0, sizeof(byte));
                     file.Write(BitConverter.GetBytes(0x38), 0, sizeof(byte));
-                    //epsm
                     file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
+                    //epsm
                     file.Write(BitConverter.GetBytes(0x07), 0, sizeof(byte));
                     file.Write(BitConverter.GetBytes(0x38), 0, sizeof(byte));
                     file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
@@ -230,6 +230,9 @@ namespace FamiStudio
                     file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
                     file.Write(BitConverter.GetBytes(0x27), 0, sizeof(byte));
                     file.Write(BitConverter.GetBytes(0x00), 0, sizeof(byte));
+                    file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
+                    file.Write(BitConverter.GetBytes(0x11), 0, sizeof(byte));
+                    file.Write(BitConverter.GetBytes(0x3f), 0, sizeof(byte));
                     foreach (var reg in writes)
                     {
                         while (frameNumber < reg.FrameNumber)
@@ -337,7 +340,7 @@ namespace FamiStudio
                     int frameNumber = 0;
                     int chipData = 0;
                     sr.WriteLine("WAITFRAME = 1");
-                    sr.WriteLine("2A03_WRITE = 2");
+                    sr.WriteLine("APU_WRITE = 2");
                     sr.WriteLine("EPSM_A0_WRITE = 3");
                     sr.WriteLine("EPSM_A1_WRITE = 4");
                     sr.WriteLine("S5B_WRITE = 5");
@@ -351,8 +354,15 @@ namespace FamiStudio
                     {
                         while (frameNumber < reg.FrameNumber)
                         {
+                            if (lastReg != 0)
+                            {
+                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                writeByteStream = "";
+                                writeCommandByte = ";start";
+                            }
                             frameNumber++;
                             sr.WriteLine(".byte WAITFRAME");
+                            lastReg = 0;
                         }
                         if ((reg.Register == 0x401c) || (reg.Register == 0x401e) || (reg.Register == 0x9010) || (reg.Register == 0xC000) || (reg.Register == 0xF800))
                         {
@@ -360,88 +370,88 @@ namespace FamiStudio
                         }
                         else if (reg.Register == 0x401d)
                         {
-                            if (lastReg == reg.Register)
+                            if (lastReg == reg.Register && repeatingReg < 1)
                             {
                                 writeByteStream = writeByteStream + $", ${chipData:X2}, ${reg.Value:X2}";
-                                repeatingReg += 2;
+                                repeatingReg++;
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"{repeatingReg:X2}" + writeByteStream);
+                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte EPSM_A0_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
-                                repeatingReg = 2;
+                                repeatingReg = 1;
                             }
                             //sr.WriteLine($".byte EPSM_A0_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                             //sr.WriteLine($".byte ${((chipData & 0xF0) | 0x2):x2} ,${((chipData & 0x0F) << 4):x2} ,${((reg.Value & 0xF0) | 0xA):x2} ,${((reg.Value & 0x0F) << 4):x2}");
                         }
                         else if (reg.Register == 0x401f)
                         {
-                            if (lastReg == reg.Register)
+                            if (lastReg == reg.Register && repeatingReg < 1)
                             {
                                 writeByteStream = writeByteStream + $", ${chipData:X2}, ${reg.Value:X2}";
-                                repeatingReg += 2;
+                                repeatingReg++;
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"{repeatingReg:X2}" + writeByteStream);
+                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte EPSM_A1_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
-                                repeatingReg = 2;
+                                repeatingReg = 1;
                             }
                             //sr.WriteLine($".byte EPSM_A1_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                             //sr.WriteLine($".byte ${((chipData & 0xF0) | 0x6):x2} ,${((chipData & 0x0F) << 4):x2} ,${((reg.Value & 0xF0) | 0xE):x2} ,${((reg.Value & 0x0F) << 4):x2}");
                         }
                         else if (reg.Register == 0x9030)
                         {
-                            if (lastReg == reg.Register)
+                            if (lastReg == reg.Register && repeatingReg < 255)
                             {
                                 writeByteStream = writeByteStream + $", ${chipData:X2}, ${reg.Value:X2}";
-                                repeatingReg += 2;
+                                repeatingReg++;
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"{repeatingReg:X2}" + writeByteStream);
+                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte VRC7_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
-                                repeatingReg = 2;
+                                repeatingReg = 1;
                             }
                             //sr.WriteLine($".byte VRC7_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                         }
                         else if (reg.Register == 0xE000)
                         {
-                            if (lastReg == reg.Register)
+                            if (lastReg == reg.Register && repeatingReg < 255)
                             {
                                 writeByteStream = writeByteStream + $", ${chipData:X2}, ${reg.Value:X2}";
-                                repeatingReg += 2;
+                                repeatingReg++;
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"{repeatingReg:X2}" + writeByteStream);
+                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte S5B_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
-                                repeatingReg = 2;
+                                repeatingReg = 1;
                             }
                             //sr.WriteLine($".byte S5B_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                         }
                         else if (reg.Register == 0x4800)
                         {
-                            if (lastReg == reg.Register)
+                            if (lastReg == reg.Register && repeatingReg < 255)
                             {
                                 writeByteStream = writeByteStream + $", ${chipData:X2}, ${reg.Value:X2}";
-                                repeatingReg += 2;
+                                repeatingReg++;
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"{repeatingReg:X2}" + writeByteStream);
+                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte S5B_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
-                                repeatingReg = 2;
+                                repeatingReg = 1;
                             }
                             //sr.WriteLine($".byte S5B_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                         }
@@ -450,20 +460,20 @@ namespace FamiStudio
                             if (lastReg == 0x2a03)
                             {
                                 writeByteStream = writeByteStream + $", ${(reg.Register & 0xff):X2}, ${reg.Value:X2}";
-                                repeatingReg += 2;
+                                repeatingReg++;
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"{repeatingReg:X2}" + writeByteStream);
-                                writeCommandByte = ".byte 2A03_WRITE,";
+                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                writeCommandByte = ".byte APU_WRITE,";
                                 writeByteStream = $", ${(reg.Register & 0xff):X2}, ${reg.Value:X2}";
                                 lastReg = 0x2a03;
-                                repeatingReg = 2;
+                                repeatingReg = 1;
                             }
-                            //sr.WriteLine($".byte 2A03_WRITE, $02, ${(reg.Register & 0xff):X2}, ${reg.Value:X2}");
+                            //sr.WriteLine($".byte APU_WRITE, $02, ${(reg.Register & 0xff):X2}, ${reg.Value:X2}");
                         }
                     }
-                    sr.WriteLine($" .segment DPCM");
+                    sr.WriteLine($" .segment \"DPCM\"");
                     var i = 0;
                     string dpcmData = "";
                     foreach(var sample in sampleData)
