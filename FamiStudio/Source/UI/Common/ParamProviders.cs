@@ -135,6 +135,16 @@ namespace FamiStudio
                 case ExpansionType.Vrc7:
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 15, 1, null, true)
                        { GetValue = () => { return instrument.Vrc7Patch; }, GetValueString = () => { return Instrument.GetVrc7PatchName(instrument.Vrc7Patch); }, SetValue = (v) => { instrument.Vrc7Patch = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Carrier Settings", 0, 0, 0)
+                    { GetValue = () => { return 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Carrier Tremolo", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Carrier Vibrato", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
@@ -157,6 +167,16 @@ namespace FamiStudio
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Carrier Release", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Modulator Settings", 0, 0, 0)
+                    { GetValue = () => { return 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                    { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Modulator Tremolo", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Modulator Vibrato", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x40) >> 6)
@@ -191,13 +211,13 @@ namespace FamiStudio
                     //paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 186, 1, null, false)//set number of patches
                     //{ GetValue = () => { return instrument.EpsmPatch; }, GetValueString = () => { return Instrument.GetEpsmPatchName(instrument.EpsmPatch); }, SetValue = (v) => { instrument.EpsmPatch = (byte)v; } });
 
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
                     { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
                     { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
                     { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "AlgImage", 0, 0, 0)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
                     { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
 
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Algorithm", 0, 7, (EPSMInstrumentPatch.Infos[1].data[0] & 0x07) >> 0)
@@ -229,6 +249,15 @@ namespace FamiStudio
                         int i2 = ((7 * i) - 7);
                         paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Settings", 0, 0, 0)
                         { GetValue = () => { return 0; }, SetValue = (v) => { } });
+
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
+                        paramInfos.Add(new InstrumentParamInfo(instrument, "Spacer", 0, 0, 0)
+                        { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { } });
 
                         paramInfos.Add(new InstrumentParamInfo(instrument, "OP" + (i) + " Detune", 0, 7, (EPSMInstrumentPatch.Infos[1].data[2 + (6 * i) - 6] & 0x70) >> 4)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[(2 + i2)] & 0x70) >> 4; }, SetValue = (v) => { instrument.EpsmPatchRegs[(2 + i2)] = (byte)((instrument.EpsmPatchRegs[(2 + i2)] & (~0x70)) | ((v << 4) & 0x70)); instrument.EpsmPatch = 0; } });
