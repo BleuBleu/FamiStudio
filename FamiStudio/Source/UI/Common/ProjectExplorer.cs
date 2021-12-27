@@ -265,18 +265,6 @@ namespace FamiStudio
             "Algorithm7",
         };
 
-
-        class operatorGraph
-        {
-            public int op1AttackRate;
-            public int op1DecayRate;
-            public int op1SustainRate;
-            public int op1SustainLevel;
-            public int op1ReleaseRate;
-            public int op1Volume;
-        }
-
-
         class Button
         {
             public string text;
@@ -843,85 +831,93 @@ namespace FamiStudio
                         //button.font = ThemeBase.FontMediumBoldCenter;
                         //g.DrawText(button.Text, ThemeBase.FontMediumBoldCenter, buttonTextNoIconPosX, buttonTextPosY, button.textBrush, actualWidth - buttonTextNoIconPosX * 2);
                         c.DrawText(button.Text, ThemeResources.FontMediumBold, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, RenderTextFlags.MiddleCenter | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextPosX, buttonSizeY);
-
-                        if(button.instrument.IsVrc7Instrument)
+                        if (button.instrument.IsVrc7Instrument || button.instrument.IsEPSMInstrument)
                         {
-                            int opAttackRate = buttons[i + 12].param.GetValue(); //15
-                            int opDecayRate = buttons[i + 13].param.GetValue(); //15
-                            int opSustainRate = buttons[i + 7].param.GetValue(); //15
-                            int opSustainLevel = buttons[i + 14].param.GetValue(); //15
-                            int opReleaseRate = buttons[i + 15].param.GetValue(); //15
-                            int opVolume = buttons[i + 16].param.GetValue(); //127
-                            int graphHeight = ScaleForMainWindow(100) + buttonIconPosY;
-                            int graphWidth = ScaleForMainWindow(293);
-                            c.FillAndDrawRectangle(buttonIconPosX, buttonIconPosY + 20, buttonIconPosX + graphWidth, graphHeight, graphFillBrush, ThemeResources.BlackBrush);
-                            int opDecayStartX = ScaleForMainWindow(buttonIconPosX - opAttackRate * 6 + 90 + 2);
-                            int opDecayStartY = ScaleForMainWindow((63 - opVolume));
+                            int graphHeight     = ScaleForMainWindow(100) + buttonIconPosY;
+                            int graphWidth      = ScaleForMainWindow(293) - scrollBarThickness;
+                            int graphPaddingTop = ScaleForMainWindow(20);
+                            int maxValue15      = ScaleForMainWindow(15);
+                            int maxValue31      = ScaleForMainWindow(31);
+                            int maxValue63      = ScaleForMainWindow(63);
+                            int maxValue127     = ScaleForMainWindow(127);
+                            int opDecayStartX   = 0;
+                            int opDecayStartY   = 0;
+                            int opSustainStartX = 0;
+                            int opSustainStartY = 0;
+                            int opReleaseStartX = 0;
+                            int opReleaseStartY = 0;
+                            int opReleaseEndX   = 0;
+                            int opReleaseEndY   = 0;
 
-                            int opSustainStartX = ScaleForMainWindow(opDecayStartX - opDecayRate * 4 + 60);
-                            int opSustainStartY = ScaleForMainWindow((int)((double)opDecayStartY / 15 * (15 - opSustainLevel)));
-                            if (opDecayRate == 0)
+
+                            if (button.instrument.IsVrc7Instrument)
                             {
-                                opSustainStartY = ScaleForMainWindow(opDecayStartY);
+                                int opAttackRate    = buttons[i + 12].param.GetValue(); //15
+                                int opDecayRate     = buttons[i + 13].param.GetValue(); //15
+                                int opSustainRate   = buttons[i + 7].param.GetValue(); //15
+                                int opSustainLevel  = buttons[i + 14].param.GetValue(); //15
+                                int opReleaseRate   = buttons[i + 15].param.GetValue(); //15
+                                int opVolume        = buttons[i + 16].param.GetValue(); //127
+                                opDecayStartX       = ScaleForMainWindow(-opAttackRate * 6) + maxValue15 * 6 + 2 + buttonIconPosX;
+                                opDecayStartY       = ScaleForMainWindow((63 - opVolume));
+
+                                opSustainStartX     = ScaleForMainWindow(-opDecayRate * 4) + maxValue15 * 4 + opDecayStartX;
+                                opSustainStartY     = (int)((double)opDecayStartY / 15 * (15 - opSustainLevel));
+                                if (opDecayRate == 0)
+                                {
+                                    opSustainStartY = opDecayStartY;
+                                }
+
+                                opReleaseStartX     = ScaleForMainWindow(maxValue15 * 4) + opSustainStartX;
+                                opReleaseStartY     = opSustainStartY / 2;
+
+                                if (opSustainRate == 1)
+                                {
+                                    opReleaseStartY = opSustainStartY;
+                                }
+                                opReleaseEndX       = ScaleForMainWindow(-opReleaseRate * 4) + maxValue15 * 4 + opReleaseStartX;
+                                opReleaseEndY       = 0;
+                                if (opReleaseRate == 0)
+                                {
+                                    opReleaseEndY   = opReleaseStartY;
+                                    opReleaseEndX   = ScaleForMainWindow(graphWidth) + buttonIconPosX;
+                                }
                             }
-
-                            int opReleaseStartX = ScaleForMainWindow(opSustainStartX + 60);
-                            int opReleaseStartY = ScaleForMainWindow(opSustainStartY/2);
-
-                            if (opSustainRate == 1)
+                            if (button.instrument.IsEPSMInstrument)
                             {
-                                opReleaseStartY = ScaleForMainWindow(opSustainStartY);
-                            }
-                            int opReleaseEndX = ScaleForMainWindow(opReleaseStartX - opReleaseRate * 4 + 60);
-                            int opReleaseEndY = 0;
-                            if (opReleaseRate == 0)
-                            {
-                                opReleaseEndY = ScaleForMainWindow(opReleaseStartY);
-                                opReleaseEndX = ScaleForMainWindow(graphWidth) + buttonIconPosX;
-                            }
+                                int opAttackRate    = buttons[i + 9].param.GetValue(); //31
+                                int opDecayRate     = buttons[i + 11].param.GetValue(); //31
+                                int opSustainRate   = buttons[i + 12].param.GetValue(); //31
+                                int opSustainLevel  = buttons[i + 13].param.GetValue(); //15
+                                int opReleaseRate   = buttons[i + 14].param.GetValue(); //15
+                                int opVolume        = buttons[i + 7].param.GetValue(); //127
+                                opDecayStartX       = ScaleForMainWindow(-opAttackRate * 3) + maxValue31 * 3 + 2 + buttonIconPosX;
+                                opDecayStartY       = ScaleForMainWindow((127 - opVolume) / 2);
+                                opSustainStartX     = ScaleForMainWindow(-opDecayRate * 2) + maxValue31 * 2 + opDecayStartX;
+                                opSustainStartY     = (int)((double)opDecayStartY / 15 * (15 - opSustainLevel));
+                                if (opDecayRate == 0)
+                                {
+                                    opSustainStartY = opDecayStartY;
+                                }
 
-                            c.DrawLine(buttonIconPosX + 2, graphHeight, opDecayStartX, graphHeight - opDecayStartY, ThemeResources.WhiteBrush, 2, true);
-                            c.DrawLine(opDecayStartX, graphHeight - opDecayStartY, opSustainStartX, graphHeight - opSustainStartY, ThemeResources.LightGreyFillBrush2, 2, true);
-                            c.DrawLine(opSustainStartX, graphHeight - opSustainStartY, opReleaseStartX, graphHeight - opReleaseStartY, ThemeResources.LightGreyFillBrush1, 2, true);
-                            c.DrawLine(opReleaseStartX, graphHeight - opReleaseStartY, opReleaseEndX, graphHeight - opReleaseEndY, ThemeResources.MediumGreyFillBrush1, 2, true);
-                        }
-                        if (button.instrument.IsEPSMInstrument)
-                        {
-                            int opAttackRate = buttons[i + 9].param.GetValue(); //31
-                            int opDecayRate = buttons[i + 11].param.GetValue(); //31
-                            int opSustainRate = buttons[i + 12].param.GetValue(); //31
-                            int opSustainLevel = buttons[i + 13].param.GetValue(); //15
-                            int opReleaseRate = buttons[i + 14].param.GetValue(); //15
-                            int opVolume = buttons[i + 7].param.GetValue(); //127
-                            int graphHeight = ScaleForMainWindow(100) + buttonIconPosY;
-                            int graphWidth = ScaleForMainWindow(293);
-                            c.FillAndDrawRectangle(buttonIconPosX, buttonIconPosY + 20, buttonIconPosX + graphWidth, graphHeight, graphFillBrush, ThemeResources.BlackBrush);
-                            int opDecayStartX = ScaleForMainWindow(buttonIconPosX - opAttackRate * 3 + 93 + 2);
-                            int opDecayStartY = ScaleForMainWindow((127 - opVolume) / 2);
+                                opReleaseStartX     = ScaleForMainWindow(-opSustainRate * 2) + maxValue31 * 2 + opSustainStartX;
+                                opReleaseStartY     = (opSustainStartY) / 2;
 
-                            int opSustainStartX = ScaleForMainWindow(opDecayStartX - opDecayRate * 2 + 62);
-                            int opSustainStartY = ScaleForMainWindow((int)((double)opDecayStartY / 15 * (15 - opSustainLevel)));
-                            if (opDecayRate == 0)
-                            {
-                                opSustainStartY = ScaleForMainWindow(opDecayStartY);
+                                if (opSustainRate == 0)
+                                {
+                                    opReleaseStartY = opSustainStartY;
+                                    opReleaseStartX = ScaleForMainWindow(62) + opSustainStartX;
+                                }
+                                opReleaseEndX       = ScaleForMainWindow(-opReleaseRate * 4) + maxValue15 * 4 + opReleaseStartX;
+                                opReleaseEndY       = 0;
+                                if (opReleaseRate == 0)
+                                {
+                                    opReleaseEndY   = opReleaseStartY;
+                                    opReleaseEndX   = ScaleForMainWindow(graphWidth) + buttonIconPosX;
+                                }
+
                             }
-
-                            int opReleaseStartX = ScaleForMainWindow(opSustainStartX - opSustainRate * 2 + 62);
-                            int opReleaseStartY = ScaleForMainWindow((opSustainStartY) / 2);
-
-                            if (opSustainRate == 0)
-                            {
-                                opReleaseStartY = ScaleForMainWindow(opSustainStartY);
-                                opReleaseStartX = ScaleForMainWindow(opSustainStartX + 62);
-                            }
-                            int opReleaseEndX = ScaleForMainWindow(opReleaseStartX - opReleaseRate * 4 + 60);
-                            int opReleaseEndY = 0;
-                            if (opReleaseRate == 0)
-                            {
-                                opReleaseEndY = ScaleForMainWindow(opReleaseStartY);
-                                opReleaseEndX = ScaleForMainWindow(graphWidth) + buttonIconPosX;
-                            }
-
+                            c.FillAndDrawRectangle(buttonIconPosX, buttonIconPosY + graphPaddingTop, buttonIconPosX + graphWidth, graphHeight, graphFillBrush, ThemeResources.BlackBrush);
                             c.DrawLine(buttonIconPosX + 2, graphHeight, opDecayStartX, graphHeight - opDecayStartY, ThemeResources.WhiteBrush, 2, true);
                             c.DrawLine(opDecayStartX, graphHeight - opDecayStartY, opSustainStartX, graphHeight - opSustainStartY, ThemeResources.LightGreyFillBrush2, 2, true);
                             c.DrawLine(opSustainStartX, graphHeight - opSustainStartY, opReleaseStartX, graphHeight - opReleaseStartY, ThemeResources.LightGreyFillBrush1, 2, true);
