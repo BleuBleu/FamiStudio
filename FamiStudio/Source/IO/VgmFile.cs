@@ -352,17 +352,23 @@ namespace FamiStudio
                     int repeatingReg = 0;
                     foreach (var reg in writes)
                     {
-                        while (frameNumber < reg.FrameNumber)
+                        if (frameNumber < reg.FrameNumber)
                         {
                             if (lastReg != 0)
                             {
                                 sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeByteStream = "";
                                 writeCommandByte = ";start";
+                                repeatingReg = 0;
                             }
-                            frameNumber++;
-                            sr.WriteLine(".byte WAITFRAME");
+                            while (frameNumber < reg.FrameNumber)
+                            {
+                                frameNumber++;
+                                repeatingReg++;
+                            }
+                            sr.WriteLine($".byte WAITFRAME, ${repeatingReg:X2}");
                             lastReg = 0;
+                            repeatingReg = 0;
                         }
                         if ((reg.Register == 0x401c) || (reg.Register == 0x401e) || (reg.Register == 0x9010) || (reg.Register == 0xC000) || (reg.Register == 0xF800))
                         {
@@ -370,14 +376,15 @@ namespace FamiStudio
                         }
                         else if (reg.Register == 0x401d)
                         {
-                            if (lastReg == reg.Register && repeatingReg < 1)
+                            if (lastReg == reg.Register && repeatingReg < 255)
                             {
                                 writeByteStream = writeByteStream + $", ${chipData:X2}, ${reg.Value:X2}";
                                 repeatingReg++;
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                if(lastReg!=0)
+                                    sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte EPSM_A0_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
@@ -388,14 +395,15 @@ namespace FamiStudio
                         }
                         else if (reg.Register == 0x401f)
                         {
-                            if (lastReg == reg.Register && repeatingReg < 1)
+                            if (lastReg == reg.Register && repeatingReg < 255)
                             {
                                 writeByteStream = writeByteStream + $", ${chipData:X2}, ${reg.Value:X2}";
                                 repeatingReg++;
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                if (lastReg != 0)
+                                    sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte EPSM_A1_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
@@ -413,7 +421,8 @@ namespace FamiStudio
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                if (lastReg != 0)
+                                    sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte VRC7_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
@@ -430,7 +439,8 @@ namespace FamiStudio
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                if (lastReg != 0)
+                                    sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte S5B_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
@@ -447,7 +457,8 @@ namespace FamiStudio
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                if (lastReg != 0)
+                                    sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte S5B_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
@@ -464,7 +475,8 @@ namespace FamiStudio
                             }
                             else
                             {
-                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                if (lastReg != 0)
+                                    sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                                 writeCommandByte = ".byte APU_WRITE,";
                                 writeByteStream = $", ${(reg.Register & 0xff):X2}, ${reg.Value:X2}";
                                 lastReg = 0x2a03;
@@ -473,6 +485,7 @@ namespace FamiStudio
                             //sr.WriteLine($".byte APU_WRITE, $02, ${(reg.Register & 0xff):X2}, ${reg.Value:X2}");
                         }
                     }
+                    sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
                     sr.WriteLine($" .segment \"DPCM\"");
                     var i = 0;
                     string dpcmData = "";

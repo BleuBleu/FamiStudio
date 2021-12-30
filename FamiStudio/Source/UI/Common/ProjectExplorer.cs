@@ -933,9 +933,13 @@ namespace FamiStudio
                         //g.DrawText(button.Text, button.Font, buttonTextNoIconPosX, buttonTextPosY, button.textBrush, actualWidth - buttonTextNoIconPosX * 2);
                         c.DrawText(button.Text, button.Font, buttonTextNoIconPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextPosX, buttonSizeY);
 
+                        int graphHeight = ScaleForMainWindow(120) + buttonIconPosY;
+                        int graphWidth = ScaleForMainWindow(287) - scrollBarThickness;
+                        int graphPaddingTop = ScaleForMainWindow(20);
+                        c.FillAndDrawRectangle(buttonIconPosX - leftPadding, -(5 * buttonSizeY), graphWidth, -2, graphFillBrush, ThemeResources.BlackBrush);
 
                         if (atlas != null)
-                            c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, -(4* buttonSizeY), 1.0f, bitmapScale);
+                            c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, -(5* buttonSizeY)+1, 1.0f, bitmapScale);
                     }
                     else
                     {
