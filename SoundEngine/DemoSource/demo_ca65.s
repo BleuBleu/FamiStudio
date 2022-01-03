@@ -22,6 +22,7 @@ FAMISTUDIO_DEMO_USE_C = 0
 .exportzp _gamepad_pressed=gamepad_pressed, _p0=p0
 .exportzp sp
 .export _song_title_silver_surfer=song_title_silver_surfer
+.export _song_title_doom_eternal=song_title_doom_eternal
 .export _song_title_jts=song_title_jts
 .export _song_title_shatterhand=song_title_shatterhand
 .export _update_title=update_title
@@ -102,7 +103,7 @@ FAMISTUDIO_CFG_C_BINDINGS = 1
 .define FAMISTUDIO_CA65_RAM_SEGMENT  RAM
 .define FAMISTUDIO_CA65_CODE_SEGMENT CODE
 
-.include "..\famistudio_ca65.s"
+.include "../famistudio_ca65.s"
 
 ; Our single screen.
 screen_data_rle:
@@ -112,19 +113,27 @@ default_palette:
 .incbin "demo.pal"
 .incbin "demo.pal"
 
+.include "charmap.inc"
 ; Silver Surfer - BGM 2
 song_title_silver_surfer:
-    .byte $ff, $ff, $ff, $12, $22, $25, $2f, $1e, $2b, $ff, $12, $2e, $2b, $1f, $1e, $2b, $ff, $4c, $ff, $01, $06, $0c, $ff, $36, $ff, $ff, $ff, $ff
+    .byte "   Silver Surfer - BGM 2    "
+    ;$ff, $ff, $ff, $12, $22, $25, $2f, $1e, $2b, $ff, $12, $2e, $2b, $1f, $1e, $2b, $ff, $4c, $ff, $01, $06, $0c, $ff, $36, $ff, $ff, $ff, $ff
 
 ; Journey To Silius - Menu
 song_title_jts:
-    .byte $ff, $ff, $09, $28, $2e, $2b, $27, $1e, $32, $ff, $13, $28, $ff, $12, $22, $25, $22, $2e, $2c, $ff, $4c, $ff, $0c, $1e, $27, $2e, $ff, $ff
+    .byte "  Journey To Silius - Menu  "
+    ;$ff, $ff, $09, $28, $2e, $2b, $27, $1e, $32, $ff, $13, $28, $ff, $12, $22, $25, $22, $2e, $2c, $ff, $4c, $ff, $0c, $1e, $27, $2e, $ff, $ff
 
 ; Shatterhand - Final Area
 song_title_shatterhand:
-    .byte $ff, $ff, $12, $21, $1a, $2d, $2d, $1e, $2b, $21, $1a, $27, $1d, $ff, $4c, $ff, $05, $22, $27, $1a, $25, $ff, $00, $2b, $1e, $1a, $ff, $ff
+    .byte "  Shatterhand - Final Area  "
+    ;$ff, $ff, $12, $21, $1a, $2d, $2d, $1e, $2b, $21, $1a, $27, $1d, $ff, $4c, $ff, $05, $22, $27, $1a, $25, $ff, $00, $2b, $1e, $1a, $ff, $ff
 
-NUM_SONGS = 3
+; Doom Eternal - The Only Thing They Fear Is You
+song_title_doom_eternal:
+    .byte " Doom Eternal - The Only... "
+
+NUM_SONGS = 4
 
 _exit:
 reset:
@@ -816,6 +825,10 @@ song_journey_to_silius:
 .segment "SONG3"
 song_shatterhand:
 .include "song_shatterhand_ca65.s"
+
+.segment "SONG4"
+song_doom_eternal:
+.include "song_doom_eternal_ca65.s"
 
 .segment "DPCM"
 .incbin "song_journey_to_silius_ca65.dmc"
