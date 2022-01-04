@@ -2,6 +2,7 @@
 =====
 - CanExportToSoundEngine broken.
 - How2 weird file that wont save.
+- SDL2.dll issue. 
 
 3.3.0
 =====
