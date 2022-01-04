@@ -346,6 +346,8 @@ namespace FamiStudio
                     sr.WriteLine("S5B_WRITE = 5");
                     sr.WriteLine("VRC7_WRITE = 6");
                     sr.WriteLine("N163_WRITE = 7");
+                    sr.WriteLine("MMC5_WRITE = 8");
+                    sr.WriteLine("LOOP_VGM = 9");
                     string writeByteStream = "";
                     string writeCommandByte = ";start";
                     int lastReg = 0;
@@ -374,7 +376,14 @@ namespace FamiStudio
                         {
                             chipData = reg.Value;
                         }
-                        else if (reg.Register == 0x401d)
+                        /*else if ((lastReg != reg.Register && lastReg != 0x2a03) || (((reg.Register <= 0x401F) || (reg.Register <= 0x407f && reg.Register >= 0x4040)) && lastReg != 0x2a03))
+                        {
+                            if (lastReg != 0)
+                            {
+                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                            }
+                        }*/
+                        if (reg.Register == 0x401d)
                         {
                             if (lastReg == reg.Register && repeatingReg < 255)
                             {
@@ -459,14 +468,14 @@ namespace FamiStudio
                             {
                                 if (lastReg != 0)
                                     sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
-                                writeCommandByte = ".byte S5B_WRITE,";
+                                writeCommandByte = ".byte N163_WRITE,";
                                 writeByteStream = $", ${chipData:X2}, ${reg.Value:X2}";
                                 lastReg = reg.Register;
                                 repeatingReg = 1;
                             }
                             //sr.WriteLine($".byte S5B_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                         }
-                        else if ((reg.Register <= 0x401F) || (reg.Register <= 0x407f && reg.Register >= 0x4040))
+                        else if ((reg.Register <= 0x401B) || (reg.Register <= 0x407f && reg.Register >= 0x4040))
                         {
                             if (lastReg == 0x2a03)
                             {
@@ -480,6 +489,24 @@ namespace FamiStudio
                                 writeCommandByte = ".byte APU_WRITE,";
                                 writeByteStream = $", ${(reg.Register & 0xff):X2}, ${reg.Value:X2}";
                                 lastReg = 0x2a03;
+                                repeatingReg = 1;
+                            }
+                            //sr.WriteLine($".byte APU_WRITE, $02, ${(reg.Register & 0xff):X2}, ${reg.Value:X2}");
+                        }
+                        else if (reg.Register >= 0x5000 && reg.Register <= 0x5020)
+                        {
+                            if (lastReg == 0x5000)
+                            {
+                                writeByteStream = writeByteStream + $", ${(reg.Register & 0xff):X2}, ${reg.Value:X2}";
+                                repeatingReg++;
+                            }
+                            else
+                            {
+                                if (lastReg != 0)
+                                    sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                                writeCommandByte = ".byte MMC5_WRITE,";
+                                writeByteStream = $", ${(reg.Register & 0xff):X2}, ${reg.Value:X2}";
+                                lastReg = 0x5000;
                                 repeatingReg = 1;
                             }
                             //sr.WriteLine($".byte APU_WRITE, $02, ${(reg.Register & 0xff):X2}, ${reg.Value:X2}");
