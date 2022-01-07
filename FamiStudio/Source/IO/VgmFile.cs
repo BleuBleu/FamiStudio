@@ -129,20 +129,16 @@ namespace FamiStudio
                             frameNumber++;
                             fileLenght++;
                         }
-                        if (reg.Register == 0x401c)
+                        switch (reg.Register)
                         {
+                            case 0x401d:
+                            case 0x401f:
+                            case 0x9030:
+                            case 0xE000:
+                            case int expression when (reg.Register < 0x401c) || (reg.Register < 0x409f && reg.Register > 0x401F):
+                                fileLenght = fileLenght + 3;
+                                break;
                         }
-                        else if (reg.Register == 0x401e)
-                        {
-                        }
-                        else if (reg.Register == 0x9010)
-                        {
-                        }
-                        else if (reg.Register == 0xC000)
-                        {
-                        }
-                        else
-                        fileLenght = fileLenght + 3;
                     }
                     fileLenght = fileLenght + sampleData.Length + 9;
                     header.gd3Offset = fileLenght - 16;
