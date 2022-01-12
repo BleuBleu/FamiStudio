@@ -20,6 +20,7 @@
 - Paste special, option to rename patterns.
 - Way to temporarely disable snapping (FL studio does it with ALT).
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
+- Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
 - Make TimeFormat = 1 the default
 - Scroll bar in sequencer
 - CTRL+A to select all? Or drag an instrument on sequencer to replace instrument on pattern?
