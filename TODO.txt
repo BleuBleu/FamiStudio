@@ -4,6 +4,7 @@
 - How2 weird file that wont save.
 - SDL2.dll issue. 
 - Tutorial snap
+- fod_pancake FTM file that doesnt sound the same when exporting to NSF.
 
 3.3.0
 =====
