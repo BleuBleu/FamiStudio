@@ -19,7 +19,7 @@
 - Improve no-attack.
 - Register viewer.
 - Volume/effect scaling
-- CLI only EXE.
+- CLI only EXE (Linux only).
 - Paste special, option to rename patterns.
 - Way to temporarely disable snapping (FL studio does it with ALT).
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
