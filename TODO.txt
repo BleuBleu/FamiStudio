@@ -5,6 +5,7 @@
 - SDL2.dll issue. 
 - Tutorial snap
 - fod_pancake FTM file that doesnt sound the same when exporting to NSF.
+- Remembe snap settings?
 
 3.3.0
 =====
