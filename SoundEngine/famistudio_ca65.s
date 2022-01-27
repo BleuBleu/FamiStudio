@@ -1369,6 +1369,10 @@ famistudio_music_play:
         bpl @clear_vrc7_loop 
 .endif
 
+.if FAMISTUDIO_EXP_EPSM
+    ; play song (init expansion variables)
+.endif
+
 .if FAMISTUDIO_EXP_VRC6
     lda #0
     sta famistudio_vrc6_saw_volume
@@ -2297,7 +2301,7 @@ famistudio_update_row:
 .else
     bcc @base_instrument
 .endif
-.if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163
+.if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_EPSM
     beq @dpcm
     .if FAMISTUDIO_EXP_FDS
     @fds_instrument:
@@ -2312,6 +2316,10 @@ famistudio_update_row:
     .if FAMISTUDIO_EXP_N163
     @n163_instrument:
         jsr famistudio_set_n163_instrument
+        jmp @new_note
+    .endif
+    .if FAMISTUDIO_EXP_EPSM
+        jsr famistudio_set_epsm_instrument
         jmp @new_note
     .endif
 .endif
@@ -2813,6 +2821,16 @@ famistudio_update:
         bne @vrc7_channel_loop
 .endif
 
+.if FAMISTUDIO_EXP_EPSM
+@update_epsm_sound:
+    ldy #0
+    @epsm_channel_loop:
+        jsr famistudio_update_epsm_channel_sound
+        iny
+        cpy #6
+        bne @epsm_channel_loop
+.endif
+
 .if FAMISTUDIO_EXP_N163
 @update_n163_sound:
     ldy #0
@@ -3174,6 +3192,52 @@ famistudio_set_instrument:
 ;======================================================================================================================
 
 famistudio_set_vrc7_instrument:
+
+    @ptr      = famistudio_ptr0
+    @chan_idx = famistudio_r1
+
+    famistudio_set_exp_instrument
+
+    lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
+    beq @done
+
+    lda (@ptr),y
+    sta famistudio_chn_vrc7_patch-FAMISTUDIO_VRC7_CH0_IDX, x
+    bne @done
+
+    @read_custom_patch:
+    ldx #0
+    iny
+    iny
+    @read_patch_loop:
+        stx FAMISTUDIO_VRC7_REG_SEL
+        jsr famistudio_vrc7_wait_reg_select
+        lda (@ptr),y
+        iny
+        sta FAMISTUDIO_VRC7_REG_WRITE
+        jsr famistudio_vrc7_wait_reg_write
+        inx
+        cpx #8
+        bne @read_patch_loop
+
+    @done:
+    ldx @chan_idx
+    rts
+.endif
+
+.if FAMISTUDIO_EXP_EPSM
+
+;======================================================================================================================
+; FAMISTUDIO_SET_EPSM_INSTRUMENT (internal)
+;
+; Internal function to set a EPSM instrument for a given channel
+;
+; [in] x: first envelope index for this channel.
+; [in] y: channel index
+; [in] a: instrument index.
+;======================================================================================================================
+
+famistudio_set_epsm_instrument:
 
     @ptr      = famistudio_ptr0
     @chan_idx = famistudio_r1
