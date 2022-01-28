@@ -27,7 +27,7 @@ FAMISTUDIO_DEMO_USE_C = 0
 .export _song_title_shatterhand=song_title_shatterhand
 .export _update_title=update_title
 .endif
-
+FAMISTUDIO_EXP_EPSM = 1
 .segment "HEADER"
 INES_MAPPER = 0 ; 0 = NROM
 INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
@@ -114,6 +114,9 @@ default_palette:
 .incbin "demo.pal"
 
 .include "charmap.inc"
+; Doom Eternal - The Only Thing They Fear Is You
+song_title_doom_eternal:
+    .byte " Doom Eternal - The Only... "
 ; Silver Surfer - BGM 2
 song_title_silver_surfer:
     .byte "   Silver Surfer - BGM 2    "
@@ -129,9 +132,6 @@ song_title_shatterhand:
     .byte "  Shatterhand - Final Area  "
     ;$ff, $ff, $12, $21, $1a, $2d, $2d, $1e, $2b, $21, $1a, $27, $1d, $ff, $4c, $ff, $05, $22, $27, $1a, $25, $ff, $00, $2b, $1e, $1a, $ff, $ff
 
-; Doom Eternal - The Only Thing They Fear Is You
-song_title_doom_eternal:
-    .byte " Doom Eternal - The Only... "
 
 NUM_SONGS = 4
 
@@ -426,6 +426,8 @@ update_title:
     beq @journey_to_silius
     cmp #2
     beq @shatterhand
+    cmp #3
+    beq @doom_eternal
 
     ; Here since both of our songs came from different FamiStudio projects, 
     ; they are actually 3 different song data, with a single song in each.
@@ -458,6 +460,16 @@ update_title:
         ldy #.hibyte(music_data_shatterhand)
         jmp @play_song
     
+    @doom_eternal:
+        lda #<song_title_doom_eternal
+        sta @text_ptr+0
+        lda #>song_title_doom_eternal
+        sta @text_ptr+1
+        ldx #.lobyte(music_data_doom_eternal)
+        ldy #.hibyte(music_data_doom_eternal)
+        jmp @play_song	
+	
+	
     @play_song:
     lda #1 ; NTSC
     jsr famistudio_init
@@ -812,8 +824,8 @@ setup_background:
     rts
 
 .segment "SONG1"
-song_silver_surfer:
-.include "song_silver_surfer_ca65.s"
+song_doom_eternal:
+.include "song_doom_eternal_ca65.s"
 
 sfx_data:
 .include "sfx_ca65.s"
@@ -827,8 +839,8 @@ song_shatterhand:
 .include "song_shatterhand_ca65.s"
 
 .segment "SONG4"
-song_doom_eternal:
-.include "song_doom_eternal_ca65.s"
+song_silver_surfer:
+.include "song_silver_surfer_ca65.s"
 
 .segment "DPCM"
 .incbin "song_journey_to_silius_ca65.dmc"
