@@ -2397,17 +2397,26 @@ famistudio_update_epsm_fm_channel_sound:
         sta @pitch+1
         ror @pitch+0
         inx
+		stx famistudio_epsm_dummy
         jmp @compute_octave_loop
 
     @octave_done:
 
+	@check_channel_id:
+		stx #0
+		tya
+		cmp #3
+		bcc @check_channel_done
+		stx #2
+	@check_channel_done:
+
     ; Write pitch (lo)
     lda famistudio_epsm_reg_table_lo,y
-    sta FAMISTUDIO_EPSM_REG_SEL
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
     jsr famistudio_epsm_wait_reg_select
 
     lda @pitch+0
-    sta FAMISTUDIO_EPSM_REG_WRITE
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
     jsr famistudio_epsm_wait_reg_write
 
     ; Un-trigger previous note if needed.
@@ -2431,15 +2440,15 @@ famistudio_update_epsm_fm_channel_sound:
 
     ; Write pitch (hi)
     lda famistudio_epsm_reg_table_hi,y
-    sta FAMISTUDIO_EPSM_REG_SEL
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
     jsr famistudio_epsm_wait_reg_select
 
-    txa
+    lda famistudio_epsm_dummy
     asl
     ora #$30
     ora @pitch+1
     sta famistudio_chn_epsm_prev_hi, y
-    sta FAMISTUDIO_EPSM_REG_WRITE
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
     jsr famistudio_epsm_wait_reg_write
 
     ; Read/multiply volume
