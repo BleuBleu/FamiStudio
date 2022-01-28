@@ -449,6 +449,7 @@ FAMISTUDIO_CH2_ENVS = 6
 FAMISTUDIO_CH3_ENVS = 8
 
 FAMISTUDIO_EXPANSION_CH0_IDX = 5
+FAMISTUDIO_EXPANSION_CH3_IDX = 8
 
 .if FAMISTUDIO_EXP_VRC6
     FAMISTUDIO_VRC6_CH0_PITCH_ENV_IDX = 3
@@ -630,6 +631,7 @@ FAMISTUDIO_ENV_NOTE_OFF   = 1
 FAMISTUDIO_ENV_DUTY_OFF   = 2
 
 FAMISTUDIO_VRC7_PITCH_SHIFT = 3
+FAMISTUDIO_EPSM_PITCH_SHIFT = 3
 
 .if (FAMISTUDIO_EXP_N163_CHN_CNT > 4)
     FAMISTUDIO_N163_PITCH_SHIFT = 5
@@ -647,14 +649,15 @@ FAMISTUDIO_VRC7_PITCH_SHIFT = 3
 .if FAMISTUDIO_EXP_VRC7
     FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_VRC7_PITCH_SHIFT
 .else
-.if FAMISTUDIO_EXP_EPSM
-    FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_EPSM_PITCH_SHIFT
-.else
-    .if FAMISTUDIO_EXP_N163
-        FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_N163_PITCH_SHIFT
-    .else
-        FAMISTUDIO_PITCH_SHIFT = 0
-    .endif    
+	.if FAMISTUDIO_EXP_EPSM
+		FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_EPSM_PITCH_SHIFT
+	.else
+		.if FAMISTUDIO_EXP_N163
+			FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_N163_PITCH_SHIFT
+		.else
+			FAMISTUDIO_PITCH_SHIFT = 0
+		.endif    
+	.endif
 .endif
 
 .if FAMISTUDIO_EXP_N163
@@ -1610,7 +1613,6 @@ famistudio_music_pause:
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH12_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH13_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_EPSM_CH14_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
-    sta famistudio_env_value+FAMISTUDIO_EPSM_CH15_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
 .endif
 .if FAMISTUDIO_EXP_FDS
     sta famistudio_env_value+FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
@@ -2322,7 +2324,6 @@ famistudio_update_epsm_square_channel_sound:
     .endif
     rts
 
-.endif
 
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_CHANNEL_SOUND (internal)
@@ -2403,11 +2404,11 @@ famistudio_update_epsm_fm_channel_sound:
     @octave_done:
 
 	@check_channel_id:
-		stx #0
+		ldx #0
 		tya
 		cmp #3
 		bcc @check_channel_done
-		stx #2
+		ldx #2
 	@check_channel_done:
 
     ; Write pitch (lo)
@@ -2472,7 +2473,7 @@ famistudio_update_epsm_fm_channel_sound:
 
     ; Write volume
     lda famistudio_epsm_vol_table,y
-    sta FAMISTUDIO_EPSM_REG_SEL
+;    sta FAMISTUDIO_EPSM_REG_SEL
     jsr famistudio_epsm_wait_reg_select
     .if FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_volume_table,x
@@ -2480,12 +2481,13 @@ famistudio_update_epsm_fm_channel_sound:
     .endif
     lda famistudio_epsm_invert_vol_table,x
     ora famistudio_chn_epsm_patch,y
-    sta FAMISTUDIO_EPSM_REG_WRITE
+;    sta FAMISTUDIO_EPSM_REG_WRITE
     jsr famistudio_epsm_wait_reg_write
 
     rts
 
 .endif
+
 
 .if FAMISTUDIO_EXP_N163
 
@@ -3267,7 +3269,7 @@ ldy #0
 @update_epsm_rythm_sound:
     ldy #0
     @epsm_rythm_channel_loop:
-        jsr famistudio_update_epsm_rythm_channel_sound
+        ;jsr famistudio_update_epsm_rythm_channel_sound
         iny
         cpy #6
         bne @epsm_rythm_channel_loop
@@ -3700,11 +3702,11 @@ famistudio_set_epsm_instrument:
     @read_patch_loop:
 		lda famistudio_epsm_register_order,x
         sta FAMISTUDIO_EPSM_REG_SEL0
-        jsr famistudio_vrc7_wait_reg_select ;probably safe to remove
+        ;jsr famistudio_vrc7_wait_reg_select ;probably safe to remove
         lda (@ptr),y
         iny
         sta FAMISTUDIO_EPSM_REG_WRITE0
-        jsr famistudio_vrc7_wait_reg_write ;probably safe to remove
+        ;jsr famistudio_vrc7_wait_reg_write ;probably safe to remove
         inx
         cpx #31
         bne @read_patch_loop
