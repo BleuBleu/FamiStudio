@@ -21,8 +21,8 @@ FAMISTUDIO_DEMO_USE_C = 0
 ; so re-export the necessary ones here
 .exportzp _gamepad_pressed=gamepad_pressed, _p0=p0
 .exportzp sp
-.export _song_title_silver_surfer=song_title_silver_surfer
 .export _song_title_doom_eternal=song_title_doom_eternal
+.export _song_title_silver_surfer=song_title_silver_surfer
 .export _song_title_jts=song_title_jts
 .export _song_title_shatterhand=song_title_shatterhand
 .export _update_title=update_title
@@ -427,20 +427,12 @@ update_title:
     cmp #2
     beq @shatterhand
     cmp #3
-    beq @doom_eternal
+    beq @silver_surfer
 
     ; Here since both of our songs came from different FamiStudio projects, 
     ; they are actually 3 different song data, with a single song in each.
     ; For a real game, if would be preferable to export all songs together
     ; so that instruments shared across multiple songs are only exported once.
-    @silver_surfer:
-        lda #<song_title_silver_surfer
-        sta @text_ptr+0
-        lda #>song_title_silver_surfer
-        sta @text_ptr+1
-        ldx #.lobyte(music_data_silver_surfer_c_stephen_ruddy)
-        ldy #.hibyte(music_data_silver_surfer_c_stephen_ruddy)
-        jmp @play_song
 
     @journey_to_silius:
         lda #<song_title_jts
@@ -469,6 +461,14 @@ update_title:
         ldy #.hibyte(music_data_doom_eternal)
         jmp @play_song	
 	
+    @silver_surfer:
+        lda #<song_title_silver_surfer
+        sta @text_ptr+0
+        lda #>song_title_silver_surfer
+        sta @text_ptr+1
+        ldx #.lobyte(music_data_silver_surfer_c_stephen_ruddy)
+        ldy #.hibyte(music_data_silver_surfer_c_stephen_ruddy)
+        jmp @play_song
 	
     @play_song:
     lda #1 ; NTSC

@@ -1156,7 +1156,7 @@ famistudio_init:
 
 
 .if FAMISTUDIO_EXP_EPSM
-@init_s5b:
+@init_epsm:
     lda #FAMISTUDIO_EPSM_REG_TONE
     sta FAMISTUDIO_EPSM_ADDR
     lda #$38 ; No noise, just 3 tones for now.
@@ -2245,6 +2245,14 @@ famistudio_epsm_register_order:
     .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22
 famistudio_epsm_channel_key_table:
     .byte $f0, $f1, $f2, $f4, $f5, $f6
+famistudio_epsm_square_reg_table_lo:
+    .byte FAMISTUDIO_EPSM_REG_LO_A, FAMISTUDIO_EPSM_REG_LO_B, FAMISTUDIO_EPSM_REG_LO_C
+famistudio_epsm_square_reg_table_hi:
+    .byte FAMISTUDIO_EPSM_REG_HI_A, FAMISTUDIO_EPSM_REG_HI_B, FAMISTUDIO_EPSM_REG_HI_C
+famistudio_epsm_square_vol_table:
+    .byte FAMISTUDIO_EPSM_REG_VOL_A, FAMISTUDIO_EPSM_REG_VOL_B, FAMISTUDIO_EPSM_REG_VOL_C
+famistudio_epsm_square_env_table:
+    .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS
 
 ; From nesdev wiki.
 famistudio_epsm_wait_reg_write:
@@ -2281,7 +2289,7 @@ famistudio_update_epsm_square_channel_sound:
     
     ; Read note, apply arpeggio 
     clc
-    ldx famistudio_epsm_env_table,y
+    ldx famistudio_epsm_square_env_table,y
     adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
     tax
 
@@ -2289,17 +2297,17 @@ famistudio_update_epsm_square_channel_sound:
     famistudio_get_note_pitch_macro FAMISTUDIO_EPSM_CH0_PITCH_ENV_IDX, 0, famistudio_epsm_square_note_table_lsb, famistudio_epsm_square_note_table_msb
 
     ; Write pitch
-    lda famistudio_epsm_reg_table_lo,y
+    lda famistudio_epsm_square_reg_table_lo,y
     sta FAMISTUDIO_EPSM_ADDR
     lda @pitch+0
     sta FAMISTUDIO_EPSM_DATA
-    lda famistudio_epsm_reg_table_hi,y
+    lda famistudio_epsm_square_reg_table_hi,y
     sta FAMISTUDIO_EPSM_ADDR
     lda @pitch+1
     sta FAMISTUDIO_EPSM_DATA
 
     ; Read/multiply volume
-    ldx famistudio_epsm_env_table,y
+    ldx famistudio_epsm_square_env_table,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_chn_volume_track+FAMISTUDIO_EPSM_CH0_IDX, y
         .if FAMISTUDIO_USE_VOLUME_SLIDES
@@ -2314,7 +2322,7 @@ famistudio_update_epsm_square_channel_sound:
 
 @update_volume:
     ; Write volume
-    lda famistudio_epsm_vol_table,y
+    lda famistudio_epsm_square_vol_table,y
     sta FAMISTUDIO_EPSM_ADDR
     .if FAMISTUDIO_USE_VOLUME_TRACK    
         lda famistudio_volume_table,x 
@@ -2346,7 +2354,7 @@ famistudio_update_epsm_fm_channel_sound:
 @release:
    
     ; Untrigger note.  
-    lda FAMISTUDIO_EPSM_REG_KEY
+    lda #$28 ;FAMISTUDIO_EPSM_REG_KEY
     sta FAMISTUDIO_EPSM_REG_SEL0
     jsr famistudio_epsm_wait_reg_select
 
@@ -2360,12 +2368,12 @@ famistudio_update_epsm_fm_channel_sound:
 
 @check_cut:
 
-    lda famistudio_chn_note+FAMISTUDIO_EPSM_CH0_IDX,y
+    lda famistudio_chn_note+FAMISTUDIO_EPSM_CH3_IDX,y
     bne @nocut
 
 @cut:  
     ; Untrigger note.  
-    lda FAMISTUDIO_EPSM_REG_KEY
+    lda #$28 ;FAMISTUDIO_EPSM_REG_KEY
     sta FAMISTUDIO_EPSM_REG_SEL0
     jsr famistudio_epsm_wait_reg_select
 	;todo mute channel
