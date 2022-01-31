@@ -434,6 +434,16 @@ update_title:
     ; For a real game, if would be preferable to export all songs together
     ; so that instruments shared across multiple songs are only exported once.
 
+    
+    @doom_eternal:
+        lda #<song_title_doom_eternal
+        sta @text_ptr+0
+        lda #>song_title_doom_eternal
+        sta @text_ptr+1
+        ldx #.lobyte(music_data_doom_eternal)
+        ldy #.hibyte(music_data_doom_eternal)
+        jmp @play_song	
+
     @journey_to_silius:
         lda #<song_title_jts
         sta @text_ptr+0
@@ -451,15 +461,6 @@ update_title:
         ldx #.lobyte(music_data_shatterhand)
         ldy #.hibyte(music_data_shatterhand)
         jmp @play_song
-    
-    @doom_eternal:
-        lda #<song_title_doom_eternal
-        sta @text_ptr+0
-        lda #>song_title_doom_eternal
-        sta @text_ptr+1
-        ldx #.lobyte(music_data_doom_eternal)
-        ldy #.hibyte(music_data_doom_eternal)
-        jmp @play_song	
 	
     @silver_surfer:
         lda #<song_title_silver_surfer
