@@ -154,12 +154,6 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -179,6 +173,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_0D7C1A588111F6EFF08D8F8E770AD734"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -841,15 +841,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
-        "ProductCode" = "8:{C4752C48-97C6-4E84-88F8-7BCDD044E1D8}"
-        "PackageCode" = "8:{55D9F1B6-9D0B-4363-A09D-269971D28938}"
+        "ProductCode" = "8:{17D39056-6243-40FE-AF9E-F285269FDBC0}"
+        "PackageCode" = "8:{48FBE58B-C313-4AC8-A991-2164BCE97B76}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.2.2"
+        "ProductVersion" = "8:3.2.3"
         "Manufacturer" = "8:BleuBleu"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

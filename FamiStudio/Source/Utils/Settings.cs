@@ -15,7 +15,8 @@ namespace FamiStudio
         // Version 2   : FamiStudio 3.0.0
         // Version 3   : FamiStudio 3.1.0
         // Version 4   : FamiStudio 3.2.0
-        public const int SettingsVersion = 4;
+        // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
+        public const int SettingsVersion = 5;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -356,7 +357,8 @@ namespace FamiStudio
             DoubleClickDelete = ini.GetBool("Mobile", "DoubleClickDelete", false);
 
             // At 3.2.0, we added a new Discord screen to the tutorial.
-            if (Version < 4)
+            // At 3.2.3, we added a new snapping tutorial screen.
+            if (Version < 4 || (Version < 5 && PlatformUtils.IsDesktop))
                 ShowTutorial = true;
 
             // No deprecation at the moment.

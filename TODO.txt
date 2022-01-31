@@ -107,7 +107,7 @@ Discord
 
 Cartoon Tutorial
 ================
-- Sketch
+- Stamp
 - Hue: -180
 - Chroma: -20
 
