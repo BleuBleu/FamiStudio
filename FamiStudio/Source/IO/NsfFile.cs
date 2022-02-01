@@ -228,7 +228,7 @@ namespace FamiStudio
                 {
                     var song = project.Songs[i];
 
-                    // If we are in the same page as the driver, the song will start in a 0x8000 address (0x9000 for multi)
+                    // If we are in the same page as the driver, the song will start in a 0x8000 address (0x9000 for multi and epsm)
                     // so we need to increment the page by one so that the NSF driver correctly maps the subsequent pages.
                     var samePageAsDriver = nsfBytes.Count < NsfPageSize;
                     int page = nsfBytes.Count / NsfPageSize + (samePageAsDriver ? 1 : 0);
