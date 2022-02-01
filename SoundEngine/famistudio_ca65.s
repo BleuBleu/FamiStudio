@@ -1121,6 +1121,16 @@ famistudio_init:
         sta famistudio_exp_instrument_hi
         iny
     .endif
+	
+	    ; Expansions instrument address (currently incorrect?)
+    .if FAMISTUDIO_EXP_EPSM
+        lda (@music_data_ptr),y
+        sta famistudio_exp_instrument_lo
+        iny
+        lda (@music_data_ptr),y
+        sta famistudio_exp_instrument_hi
+        iny
+    .endif
 
     ; Sample list address
     lda (@music_data_ptr),y
@@ -2746,7 +2756,7 @@ famistudio_update_row:
     lda famistudio_chn_instrument,y
 
     cpy #4 ; TODO: If samples are disabled, there is no point in doing this test most of the time.
-.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_S5B || FAMISTUDIO_EXP_EPSM
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_MMC5 || FAMISTUDIO_EXP_S5B
     bne @base_instrument
 .else
     bcc @base_instrument
