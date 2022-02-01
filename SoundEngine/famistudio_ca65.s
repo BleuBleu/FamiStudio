@@ -1330,34 +1330,35 @@ famistudio_music_play:
     rts ; Invalid song index.
 
 @valid_song:
+; Multiple the song index by 2 * NUM_CHANNEL + 4
 .if FAMISTUDIO_NUM_CHANNELS = 5
     asl
-    sta @tmp
+    sta @tmp ; tmp = a*2
     asl
-    tax
-    asl
-    adc @tmp
+    tax ; x = a*4
+    asl ; a = a*8
+    adc @tmp 
     stx @tmp
-    adc @tmp
+    adc @tmp ; a = 14a
 .elseif FAMISTUDIO_NUM_CHANNELS = 6
     asl
     asl
     asl
-    asl
+    asl ; a = 16a
 .elseif FAMISTUDIO_NUM_CHANNELS = 7
     asl
     sta @tmp
     asl
     asl
     asl
-    adc @tmp  
+    adc @tmp ; a = 18a
 .elseif FAMISTUDIO_NUM_CHANNELS = 8
     asl
     asl
-    sta @tmp
+    sta @tmp ; tmp = 4a
     asl
     asl
-    adc @tmp
+    adc @tmp ; 20a
 .elseif FAMISTUDIO_NUM_CHANNELS = 9
     asl
     sta @tmp
@@ -1405,6 +1406,17 @@ famistudio_music_play:
     sec
     sbc @tmp
     clc
+.elseif FAMISTUDIO_NUM_CHANNELS = 20 ; EPSM = 32 + 8 + 4 = 2 * 20 + 4
+    asl
+    asl
+    sta @tmp
+    asl
+    tax
+    asl
+    asl
+    adc @tmp
+    stx @tmp
+    adc @tmp
 .elseif FAMISTUDIO_NUM_CHANNELS = 28 ; This is only used by the multiple expansion version.
     asl
     asl
