@@ -136,6 +136,7 @@ namespace FamiStudio
             InitializeMetronome();
             InitializeMidi();
             InitializeMultiMediaNotifications();
+            ApplySettings();
 
             if (string.IsNullOrEmpty(filename) && PlatformUtils.IsDesktop && Settings.OpenLastProjectOnStart && !string.IsNullOrEmpty(Settings.LastProjectFile) && File.Exists(Settings.LastProjectFile))
                 filename = Settings.LastProjectFile;
@@ -190,6 +191,8 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleDeleted        += ProjectExplorer_DPCMSampleDeleted;
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
             ProjectExplorer.DPCMSampleMapped         += ProjectExplorer_DPCMSampleMapped;
+
+            
 
             if (resuming)
             {
@@ -1158,11 +1161,23 @@ namespace FamiStudio
 
                 StopEverything();
                 ShutdownAudioPlayers();
+                SaveSettings();
 
                 close = true;
             });
 
             return close;
+        }
+
+        private void ApplySettings()
+        {
+            PianoRoll.ApplySettings();
+        }
+
+        private void SaveSettings()
+        {
+            PianoRoll.SaveSettings();
+            Settings.Save();
         }
 
         private void RefreshLayout()
@@ -1307,9 +1322,11 @@ namespace FamiStudio
 
                 SaveProjectCopy(WipProject);
                 SaveWipSettings();
-                Settings.Save();
             }
+
+            SaveSettings();
         }
+
         private void LoadWipSettings()
         {
             var ini = new IniFile();
@@ -2083,7 +2100,7 @@ namespace FamiStudio
                             if (r == DialogResult.OK)
                             {
                                 Settings.ShowTutorial = false;
-                                Settings.Save();
+                                SaveSettings();
                             }
                         });
                     }

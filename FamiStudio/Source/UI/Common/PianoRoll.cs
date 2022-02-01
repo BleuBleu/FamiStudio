@@ -664,6 +664,18 @@ namespace FamiStudio
             OnRenderTerminated();
         }
 
+        public void ApplySettings()
+        {
+            snapResolution = Settings.SnapResolution;
+            SnapEnabled = Settings.SnapEnabled;
+        }
+
+        public void SaveSettings()
+        {
+            Settings.SnapResolution = snapResolution;
+            Settings.SnapEnabled = SnapEnabled;
+        }
+
         public void SaveChannelScroll()
         {
             if (PlatformUtils.IsMobile && editMode == EditionMode.Channel)
