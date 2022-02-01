@@ -1049,6 +1049,19 @@ namespace FamiStudio
                 s.Process();
             }
 
+            foreach (var inst in project.Instruments)
+            {
+                for (int i = 0; i < EnvelopeType.Count; i++)
+                {
+                    var env = inst.Envelopes[i];
+                    if (env != null && !env.ValuesInValidRange(inst, i))
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Envelope '{EnvelopeType.Names[i]}' of instrument '{inst.Name}' have values outside of the supported range, clamping.");
+                        env.ClampToValidRange(inst, i);
+                    }
+                }
+            }
+
             foreach (var s in project.Songs)
             {
                 foreach (var c in s.Channels)
