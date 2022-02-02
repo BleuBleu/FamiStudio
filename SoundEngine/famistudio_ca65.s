@@ -2266,6 +2266,8 @@ famistudio_update_vrc7_channel_sound:
 
 .if FAMISTUDIO_EXP_EPSM
 
+famistudio_channel_epsm_chan_table:
+    .byte $00, $01, $02, $00, $01, $02
 famistudio_epsm_rhythm_key_table:
     .byte $01,$02,$04,$08,$10,$20
 famistudio_epsm_rythm_env_table:
@@ -2477,7 +2479,7 @@ famistudio_update_epsm_fm_channel_sound:
     beq @write_hi_period
     @untrigger_prev_note:
 		; Untrigger note.  
-		lda FAMISTUDIO_EPSM_REG_KEY
+		lda #$28;FAMISTUDIO_EPSM_REG_KEY
 		sta FAMISTUDIO_EPSM_REG_SEL0
 		jsr famistudio_epsm_wait_reg_select
 
@@ -2487,6 +2489,13 @@ famistudio_update_epsm_fm_channel_sound:
 		jsr famistudio_epsm_wait_reg_write   
 
     @write_hi_period:
+		lda #$28;FAMISTUDIO_EPSM_REG_KEY
+		sta FAMISTUDIO_EPSM_REG_SEL0
+		jsr famistudio_epsm_wait_reg_select
+
+		lda famistudio_epsm_channel_key_table, y
+		sta FAMISTUDIO_EPSM_REG_WRITE0
+		jsr famistudio_epsm_wait_reg_write   
 
     ; Write pitch (hi)
     lda famistudio_epsm_reg_table_hi,y
@@ -3821,13 +3830,50 @@ famistudio_set_epsm_instrument:
     ; lda (@ptr),y
     ; sta famistudio_chn_epsm_patch-FAMISTUDIO_EPSM_CH3_IDX, x
     ; bne @done
-
-    @read_custom_patch:
+	@check_channel_id:
+		lda @chan_idx
+		cmp #3
+		bcc @check_channel_done
+		
+    @read_custom_patch2:
+    ldx #0
+    ; iny
+    ; iny
+    @read_patch_loop2:
+		lda famistudio_epsm_register_order,x
+		;clc 
+		;adc famistudio_channel_epsm_chan_table,y
+        sta FAMISTUDIO_EPSM_REG_SEL1
+        lda (@ptr),y
+        iny
+        sta FAMISTUDIO_EPSM_REG_WRITE1
+        inx
+        cpx #8
+        bne @read_patch_loop2
+    ; reset y to zero and start reading the extra patch data from the pointer
+    ldy #0
+    @read_extra_loop2:        
+		lda famistudio_epsm_register_order,x
+		;clc 
+		;adc famistudio_channel_epsm_chan_table,y
+        sta FAMISTUDIO_EPSM_REG_SEL1
+        lda (@ex_patch),y
+        iny
+        sta FAMISTUDIO_EPSM_REG_WRITE1
+        inx
+        cpx #30
+        bne @read_extra_loop2
+		jmp @lfo
+	@check_channel_done:
+	
+	    @read_custom_patch:
     ldx #0
     ; iny
     ; iny
     @read_patch_loop:
 		lda famistudio_epsm_register_order,x
+		;clc 
+		;adc famistudio_channel_epsm_chan_table,y
         sta FAMISTUDIO_EPSM_REG_SEL0
         lda (@ptr),y
         iny
@@ -3839,13 +3885,26 @@ famistudio_set_epsm_instrument:
     ldy #0
     @read_extra_loop:        
 		lda famistudio_epsm_register_order,x
+		;clc 
+		;adc famistudio_channel_epsm_chan_table,y
         sta FAMISTUDIO_EPSM_REG_SEL0
         lda (@ex_patch),y
         iny
         sta FAMISTUDIO_EPSM_REG_WRITE0
         inx
-        cpx #31
+        cpx #30
         bne @read_extra_loop
+	
+	
+	@lfo:
+		lda famistudio_epsm_register_order,x
+		;clc 
+		;adc famistudio_channel_epsm_chan_table,y
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda (@ex_patch),y
+        iny
+        sta FAMISTUDIO_EPSM_REG_WRITE0
+        inx
 
     @done:
     ldx @chan_idx
