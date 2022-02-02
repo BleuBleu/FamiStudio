@@ -440,9 +440,9 @@ namespace FamiStudio
                         }
                         else if (instrument.IsEPSMInstrument)
                         {
-                            lines.Add($"\t{db} ${(instrument.EpsmPatch << 4):x2}, $00");
-                            // Add 8 bytes of padding to keep this instrument size at 16
-                            lines.Add($"\t{db} $00, $00, $00, $00, $00, $00, $00, $00");
+                            lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
+                            // we can fit the first 8 bytes of data here to avoid needing to add padding
+                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Take(8).Select(r => $"${r:x2}"))}");
                         }
 
                         size += 16;
@@ -455,20 +455,16 @@ namespace FamiStudio
 
             // EPSM instruments don't fit in the 16 bytes allotted for expansion instruments so we store the extra data
             // for them after all the instrument data
-            if (project.UsesFdsExpansion ||
-                project.UsesN163Expansion ||
-                project.UsesVrc7Expansion ||
-                project.UsesEPSMExpansion)
+            if (project.UsesEPSMExpansion)
             {
-                lines.Add($"{ll}instruments_exp_extra:");
-
                 for (int i = 0, j = 0; i < project.Instruments.Count; i++)
                 {
                     var instrument = project.Instruments[i];
                     if (instrument.IsEPSMInstrument)
                     {
-                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Select(r => $"${r:x2}"))}");
-                        size += 31;
+                        lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
+                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(8).Select(r => $"${r:x2}"))}");
+                        size += 23;
                     }
                 }
                 lines.Add("");
