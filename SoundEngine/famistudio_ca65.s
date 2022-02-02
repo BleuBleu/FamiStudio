@@ -526,17 +526,20 @@ FAMISTUDIO_EXPANSION_CH3_IDX = 8
     FAMISTUDIO_EPSM_CH1_IDX = 6
     FAMISTUDIO_EPSM_CH2_IDX = 7
     FAMISTUDIO_EPSM_CH3_IDX = 8
+    FAMISTUDIO_EPSM_CHAN_SQUARE_MAX = FAMISTUDIO_EPSM_CH2_IDX + 1
     FAMISTUDIO_EPSM_CH4_IDX = 9
     FAMISTUDIO_EPSM_CH5_IDX = 10
     FAMISTUDIO_EPSM_CH6_IDX = 11
     FAMISTUDIO_EPSM_CH7_IDX = 12
     FAMISTUDIO_EPSM_CH8_IDX = 13
+    FAMISTUDIO_EPSM_CHAN_FM_MAX = FAMISTUDIO_EPSM_CH8_IDX + 1
     FAMISTUDIO_EPSM_CH9_IDX = 14
     FAMISTUDIO_EPSM_CH10_IDX = 15
     FAMISTUDIO_EPSM_CH11_IDX = 16
     FAMISTUDIO_EPSM_CH12_IDX = 17
     FAMISTUDIO_EPSM_CH13_IDX = 18
     FAMISTUDIO_EPSM_CH14_IDX = 19
+    FAMISTUDIO_EPSM_CHAN_RHYTHM_MAX = 20
 .endif
 .if FAMISTUDIO_EXP_FDS
     FAMISTUDIO_FDS_CH0_IDX  = 5
@@ -3806,12 +3809,42 @@ famistudio_set_vrc7_instrument:
 ; [in] y: channel index
 ; [in] a: instrument index.
 ;======================================================================================================================
-
+.macro famistudio_epsm_write_patch_registers select, write
+    ldx #0
+    :
+        lda famistudio_epsm_register_order,x
+        clc
+        adc @reg_offset
+        sta select
+        lda (@ptr),y
+        sta write
+        iny
+        inx
+        ; we have 8 bytes in the instrument_exp instead of padding. The rest is in ex_patch
+        cpx #8
+        bne :-
+    ; load bytes 8-30 from the extra patch data pointer
+    ldy #0
+    :
+        lda famistudio_epsm_register_order,x
+        clc
+        adc @reg_offset
+        sta select
+        lda (@ex_patch),y
+        sta write
+        iny
+        inx
+        cpx #30
+        bne :-
+    
+.endmacro
 famistudio_set_epsm_instrument:
 
-    @ptr      = famistudio_ptr0
-    @ex_patch = famistudio_ptr1
-    @chan_idx = famistudio_r1
+    @ptr        = famistudio_ptr0
+    @ex_patch   = famistudio_ptr1
+    @reg_offset = famistudio_r0
+    @chan_idx   = famistudio_r1
+    @cmp_x      = famistudio_r2
 
     famistudio_set_exp_instrument
 
@@ -3823,89 +3856,40 @@ famistudio_set_epsm_instrument:
     sta @ex_patch+1
     iny
 
-    ; TODO Do these square channels not need patches?
-    ; lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x
-    ; beq @done
+    ; channels 0-2 (square) do not need any further handling since they do not support patches
+    lda @chan_idx
+    cmp #FAMISTUDIO_EPSM_CHAN_SQUARE_MAX
+    bpl @not_square_channel
+        rts
+    @not_square_channel:
 
-    ; lda (@ptr),y
-    ; sta famistudio_chn_epsm_patch-FAMISTUDIO_EPSM_CH3_IDX, x
-    ; bne @done
-	@check_channel_id:
-		lda @chan_idx
-		cmp #3
-		bcc @check_channel_done
-		
-    @read_custom_patch2:
-    ldx #0
-    ; iny
-    ; iny
-    @read_patch_loop2:
-		lda famistudio_epsm_register_order,x
-		;clc 
-		;adc famistudio_channel_epsm_chan_table,y
-        sta FAMISTUDIO_EPSM_REG_SEL1
-        lda (@ptr),y
-        iny
-        sta FAMISTUDIO_EPSM_REG_WRITE1
-        inx
-        cpx #8
-        bne @read_patch_loop2
-    ; reset y to zero and start reading the extra patch data from the pointer
-    ldy #0
-    @read_extra_loop2:        
-		lda famistudio_epsm_register_order,x
-		;clc 
-		;adc famistudio_channel_epsm_chan_table,y
-        sta FAMISTUDIO_EPSM_REG_SEL1
-        lda (@ex_patch),y
-        iny
-        sta FAMISTUDIO_EPSM_REG_WRITE1
-        inx
-        cpx #30
-        bne @read_extra_loop2
-		jmp @lfo
-	@check_channel_done:
-	
-	    @read_custom_patch:
-    ldx #0
-    ; iny
-    ; iny
-    @read_patch_loop:
-		lda famistudio_epsm_register_order,x
-		;clc 
-		;adc famistudio_channel_epsm_chan_table,y
-        sta FAMISTUDIO_EPSM_REG_SEL0
-        lda (@ptr),y
-        iny
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-        inx
-        cpx #8
-        bne @read_patch_loop
-    ; reset y to zero and start reading the extra patch data from the pointer
-    ldy #0
-    @read_extra_loop:        
-		lda famistudio_epsm_register_order,x
-		;clc 
-		;adc famistudio_channel_epsm_chan_table,y
-        sta FAMISTUDIO_EPSM_REG_SEL0
-        lda (@ex_patch),y
-        iny
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-        inx
-        cpx #30
-        bne @read_extra_loop
-	
-	
-	@lfo:
-		lda famistudio_epsm_register_order,x
-		;clc 
-		;adc famistudio_channel_epsm_chan_table,y
-        sta FAMISTUDIO_EPSM_REG_SEL0
-        lda (@ex_patch),y
-        iny
-        sta FAMISTUDIO_EPSM_REG_WRITE0
-        inx
+    ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
+    ; if we are an FM instrument then there is a offset we need to apply to the register select
+    cmp #FAMISTUDIO_EPSM_CHAN_FM_MAX
+    bmi :+
+        ; Rhythm channel has a fixed offset of 2 and writes to reg_set_0
+        lda #2
+        sta @reg_offset
+        bpl @reg_set_0 ; unconditional branch
+    :
+    ; FM channel 1-6, we need to look up the register select offset from the table
+    sec
+    sbc #FAMISTUDIO_EPSM_CH3_IDX
+    tax
+    lda famistudio_channel_epsm_chan_table,x
+    sta @reg_offset
+    ; Now if we are channels 1-3 then we use @reg_set_0, otherwise for 4-6 its reg set 1
+    lda @chan_idx
+    cmp #FAMISTUDIO_EPSM_CH6_IDX
+    bpl @reg_set_1
 
+    @reg_set_0:
+        famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL0, FAMISTUDIO_EPSM_REG_WRITE0
+    jmp @done
+    
+    @reg_set_1:
+        famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
+    
     @done:
     ldx @chan_idx
     rts
