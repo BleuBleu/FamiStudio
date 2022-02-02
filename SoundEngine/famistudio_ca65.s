@@ -398,8 +398,9 @@ FAMISTUDIO_DPCM_PTR = (FAMISTUDIO_DPCM_OFF & $3fff) >> 6
     FAMISTUDIO_NUM_DUTY_CYCLES      = 3
 .endif
 .if FAMISTUDIO_EXP_EPSM
-    FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2+2+2+2+2+2+2+2+2+2+2+2+2+2+2
-    FAMISTUDIO_NUM_PITCH_ENVELOPES  = 12
+    FAMISTUDIO_EXP_EPSM_CHANNELS    = 15
+    FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+(FAMISTUDIO_EXP_EPSM_CHANNELS*2)
+    FAMISTUDIO_NUM_PITCH_ENVELOPES  = 18
     FAMISTUDIO_NUM_CHANNELS         = 20
     FAMISTUDIO_NUM_DUTY_CYCLES      = 3
 .endif
@@ -3711,7 +3712,7 @@ famistudio_set_instrument:
     dex
     dex ; Noise + DPCM dont have pitch envelopes             
     lda #1
-    sta famistudio_pitch_env_ptr,x ; Reset pitch envelope pointert to 1 (pitch envelope have relative/absolute flag in the first byte)
+    sta famistudio_pitch_env_ptr,x ; Reset pitch envelope pointer to 1 (pitch envelope have relative/absolute flag in the first byte)
     lda #0
     sta famistudio_pitch_env_repeat,x
     sta famistudio_pitch_env_value_lo,x
@@ -3790,32 +3791,51 @@ famistudio_set_vrc7_instrument:
 famistudio_set_epsm_instrument:
 
     @ptr      = famistudio_ptr0
+    @ex_patch = famistudio_ptr1
     @chan_idx = famistudio_r1
 
     famistudio_set_exp_instrument
 
-    lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x
-    beq @done
-
+    ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
     lda (@ptr),y
-    sta famistudio_chn_epsm_patch-FAMISTUDIO_EPSM_CH3_IDX, x
-    bne @done
+    sta @ex_patch
+    iny
+    lda (@ptr),y
+    sta @ex_patch+1
+    iny
+
+    ; TODO Do these square channels not need patches?
+    ; lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x
+    ; beq @done
+
+    ; lda (@ptr),y
+    ; sta famistudio_chn_epsm_patch-FAMISTUDIO_EPSM_CH3_IDX, x
+    ; bne @done
 
     @read_custom_patch:
     ldx #0
-    iny
-    iny
+    ; iny
+    ; iny
     @read_patch_loop:
 		lda famistudio_epsm_register_order,x
         sta FAMISTUDIO_EPSM_REG_SEL0
-        ;jsr famistudio_vrc7_wait_reg_select ;probably safe to remove
         lda (@ptr),y
         iny
         sta FAMISTUDIO_EPSM_REG_WRITE0
-        ;jsr famistudio_vrc7_wait_reg_write ;probably safe to remove
+        inx
+        cpx #8
+        bne @read_patch_loop
+    ; reset y to zero and start reading the extra patch data from the pointer
+    ldy #0
+    @read_extra_loop:        
+		lda famistudio_epsm_register_order,x
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda (@ex_patch),y
+        iny
+        sta FAMISTUDIO_EPSM_REG_WRITE0
         inx
         cpx #31
-        bne @read_patch_loop
+        bne @read_extra_loop
 
     @done:
     ldx @chan_idx
