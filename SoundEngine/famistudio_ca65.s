@@ -2466,9 +2466,9 @@ famistudio_update_epsm_fm_channel_sound:
     ; Check if the channel needs to stop the note
 
     ; Un-trigger previous note if needed.
-    lda famistudio_chn_epsm_prev_hi,y
-    and #$10 ; set trigger.
-    beq @write_hi_period
+ ;   lda famistudio_chn_epsm_prev_hi,y
+ ;   and #$10 ; set trigger.
+ ;   beq @write_hi_period
     lda famistudio_chn_epsm_trigger,y
     beq @write_hi_period
     @untrigger_prev_note:
@@ -2479,7 +2479,7 @@ famistudio_update_epsm_fm_channel_sound:
 		lda famistudio_epsm_channel_key_table, y
 		and #$0f ; remove trigger
 		sta FAMISTUDIO_EPSM_REG_WRITE0
-        rts
+;        rts
 
     @write_hi_period:
 		lda #FAMISTUDIO_EPSM_REG_KEY
@@ -2563,7 +2563,9 @@ famistudio_update_epsm_rhythm_channel_sound:
     ;adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
     ;tax
 
-
+    lda famistudio_chn_epsm_rhythm_key,y
+	cmp #$10
+	beq @noupdate
     ; Write pitch
 
 	lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
@@ -2581,9 +2583,7 @@ famistudio_update_epsm_rhythm_channel_sound:
     .endif
     tax
 
-    lda famistudio_chn_epsm_rhythm_key,y
-	cmp #$10
-	beq @noupdate
+
     lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
 	sta famistudio_chn_epsm_rhythm_key,y
     sta FAMISTUDIO_EPSM_ADDR
@@ -4521,10 +4521,10 @@ famistudio_channel_update:
     sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set trigger flag for VRC7
 .endif
 .if FAMISTUDIO_EXP_EPSM
-    cpx #FAMISTUDIO_EPSM_CH0_IDX
+    cpx #FAMISTUDIO_EPSM_CH3_IDX
     bcc @sec_and_done
     lda #1
-    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CH0_IDX,x ; Set trigger flag for EPSM
+    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CH3_IDX,x ; Set trigger flag for EPSM
 .endif
 @sec_and_done:
     sec ; New note flag is set
