@@ -747,6 +747,7 @@ famistudio_chn_epsm_prev_hi:      .res 6
 famistudio_chn_epsm_patch:        .res 6
 famistudio_chn_epsm_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:   .res 6
+famistudio_chn_epsm_rhythm_stereo:.res 6
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_len:     .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -2600,7 +2601,7 @@ famistudio_update_epsm_rhythm_channel_sound:
 		txa
     .endif
 		rol
-		adc #$c0
+		adc famistudio_chn_epsm_rhythm_stereo
         sta FAMISTUDIO_EPSM_DATA
 @noupdate:
     rts
@@ -3852,9 +3853,9 @@ famistudio_set_epsm_instrument:
     cmp #FAMISTUDIO_EPSM_CHAN_FM_MAX
     bmi :+
         ; Rhythm channel has a fixed offset of 2 and writes to reg_set_0
-        lda #2
-        sta @reg_offset
-        bpl @reg_set_0 ; unconditional branch
+        ;lda #2
+        ;sta @reg_offset
+        bpl @not_fm_channel ; unconditional branch
     :
     ; FM channel 1-6, we need to look up the register select offset from the table
     sec
@@ -3869,14 +3870,32 @@ famistudio_set_epsm_instrument:
 
     @reg_set_0:
         famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL0, FAMISTUDIO_EPSM_REG_WRITE0
-    jmp @done
+    jmp @last_reg
 
     @reg_set_1:
         famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
     
-    @done:
+    @last_reg:
+	    lda famistudio_epsm_register_order,x
+        clc
+        adc @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda (@ex_patch),y
+        sta FAMISTUDIO_EPSM_REG_WRITE0
+		
     ldx @chan_idx
     rts
+	
+	@not_fm_channel:
+		lda @chan_idx
+		sbc #FAMISTUDIO_EPSM_CHAN_FM_MAX
+		tax
+		iny
+        lda (@ptr),y
+		and #$c0
+        sta famistudio_chn_epsm_rhythm_stereo,x
+        bne :-
+	rts
 .endif
 
 .if FAMISTUDIO_EXP_FDS
