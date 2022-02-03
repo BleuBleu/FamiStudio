@@ -2601,7 +2601,7 @@ famistudio_update_epsm_rhythm_channel_sound:
 		txa
     .endif
 		rol
-		adc famistudio_chn_epsm_rhythm_stereo
+		adc famistudio_chn_epsm_rhythm_stereo,y
         sta FAMISTUDIO_EPSM_DATA
 @noupdate:
     rts
