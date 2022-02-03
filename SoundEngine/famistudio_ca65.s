@@ -747,7 +747,7 @@ famistudio_chn_epsm_prev_hi:      .res 6
 famistudio_chn_epsm_patch:        .res 6
 famistudio_chn_epsm_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:   .res 6
-famistudio_chn_epsm_rhythm_stereo:.res 6
+famistudio_chn_epsm_rhythm_stereo: .res 6
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_len:     .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -3894,7 +3894,8 @@ famistudio_set_epsm_instrument:
         lda (@ptr),y
 		and #$c0
         sta famistudio_chn_epsm_rhythm_stereo,x
-        bne :-
+
+	ldx @chan_idx	
 	rts
 .endif
 
