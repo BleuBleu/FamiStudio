@@ -742,10 +742,11 @@ famistudio_chn_vrc7_patch:        .res 6
 famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 .endif
 .if FAMISTUDIO_EXP_EPSM
+famistudio_chn_epsm_prev_lo:      .res 6
 famistudio_chn_epsm_prev_hi:      .res 6
 famistudio_chn_epsm_patch:        .res 6
 famistudio_chn_epsm_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
-famistudio_chn_epsm_rythm_key:    .res 6
+famistudio_chn_epsm_rhythm_key:   .res 6
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_len:     .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -797,10 +798,6 @@ famistudio_fds_override_flags:    .res 1 ; Bit 7 = mod speed overriden, bit 6 mo
 
 .if FAMISTUDIO_EXP_VRC7
 famistudio_vrc7_dummy:            .res 1 ; TODO: Find a dummy address i can simply write to without side effects.
-.endif
-
-.if FAMISTUDIO_EXP_EPSM
-famistudio_epsm_dummy:            .res 1 ; TODO: Find a dummy address i can simply write to without side effects.
 .endif
 
 ; FDS, N163 and VRC7 have very different instrument layout and are 16-bytes, so we keep them seperate.
@@ -2273,7 +2270,7 @@ famistudio_channel_epsm_chan_table:
     .byte $00, $01, $02, $00, $01, $02
 famistudio_epsm_rhythm_key_table:
     .byte $01,$02,$04,$08,$10,$20
-famistudio_epsm_rythm_env_table:
+famistudio_epsm_rhythm_env_table:
     .byte FAMISTUDIO_EPSM_CH9_ENVS, FAMISTUDIO_EPSM_CH10_ENVS, FAMISTUDIO_EPSM_CH11_ENVS, FAMISTUDIO_EPSM_CH12_ENVS, FAMISTUDIO_EPSM_CH13_ENVS, FAMISTUDIO_EPSM_CH14_ENVS
 famistudio_epsm_rhythm_reg_table:
     .byte FAMISTUDIO_EPSM_REG_RHY_BD, FAMISTUDIO_EPSM_REG_RHY_SD, FAMISTUDIO_EPSM_REG_RHY_TC, FAMISTUDIO_EPSM_REG_RHY_HH, FAMISTUDIO_EPSM_REG_RHY_TOM, FAMISTUDIO_EPSM_REG_RHY_RIM
@@ -2299,20 +2296,6 @@ famistudio_epsm_square_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_A, FAMISTUDIO_EPSM_REG_VOL_B, FAMISTUDIO_EPSM_REG_VOL_C
 famistudio_epsm_square_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS
-
-; From nesdev wiki.
-famistudio_epsm_wait_reg_write:
-    stx famistudio_epsm_dummy
-    ldx #$08
-    @wait_loop:
-        dex
-        bne @wait_loop
-        ldx famistudio_epsm_dummy
-    rts
-
-; From nesdev wiki.
-famistudio_epsm_wait_reg_select:
-    rts
 	
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_SQUARE_CHANNEL_SOUND (internal)
@@ -2389,10 +2372,21 @@ famistudio_update_epsm_square_channel_sound:
 
 famistudio_update_epsm_fm_channel_sound:
 
-    @pitch = famistudio_ptr1
+    @pitch      = famistudio_ptr1
+    @reg_offset = famistudio_r1
 
     lda #0
     sta famistudio_chn_inst_changed,y
+
+    ; If the writes are done to channels 0-2, use FAMISTUDIO_EPSM_REG_SEL0 if 3-5 use FAMISTUDIO_EPSM_REG_SEL1
+    ; This reg_offset stores the difference so we can later load it into x and do sta FAMISTUDIO_EPSM_REG_SEL0, x
+    ; to account for the difference
+    lda #0
+    cpy #3
+    bcc :+
+        lda #2
+    :
+    sta @reg_offset
 
     lda famistudio_chn_epsm_trigger,y
     bpl @check_cut
@@ -2400,15 +2394,13 @@ famistudio_update_epsm_fm_channel_sound:
 @release:
    
     ; Untrigger note.  
-    lda #$28 ;FAMISTUDIO_EPSM_REG_KEY
+    lda #FAMISTUDIO_EPSM_REG_KEY
     sta FAMISTUDIO_EPSM_REG_SEL0
-    jsr famistudio_epsm_wait_reg_select
 
     lda famistudio_epsm_channel_key_table, y
     and #$0f ; remove trigger
     sta famistudio_chn_epsm_prev_hi, y
     sta FAMISTUDIO_EPSM_REG_WRITE0
-    jsr famistudio_epsm_wait_reg_write   
 
     rts
 
@@ -2419,99 +2411,96 @@ famistudio_update_epsm_fm_channel_sound:
 
 @cut:  
     ; Untrigger note.  
-    lda #$28 ;FAMISTUDIO_EPSM_REG_KEY
+    lda #FAMISTUDIO_EPSM_REG_KEY
     sta FAMISTUDIO_EPSM_REG_SEL0
-    jsr famistudio_epsm_wait_reg_select
 	;todo mute channel
     lda famistudio_epsm_channel_key_table, y
     and #$0f ; remove trigger
     sta famistudio_chn_epsm_prev_hi, y
     sta FAMISTUDIO_EPSM_REG_WRITE0
-    jsr famistudio_epsm_wait_reg_write   
-
     rts
 
 @nocut:
 
-    ; Read note, apply arpeggio 
+    ; Read note, apply arpeggio
     clc
     ldx famistudio_epsm_env_table,y    
     adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
     tax
 
     ; Apply pitch envelope, fine pitch & slides
-    famistudio_get_note_pitch_macro FAMISTUDIO_EPSM_CH0_PITCH_ENV_IDX, FAMISTUDIO_EPSM_PITCH_SHIFT, famistudio_epsm_note_table_lsb, famistudio_epsm_note_table_msb
+    famistudio_get_note_pitch_macro FAMISTUDIO_EPSM_CH3_PITCH_ENV_IDX, FAMISTUDIO_EPSM_PITCH_SHIFT, famistudio_epsm_note_table_lsb, famistudio_epsm_note_table_msb
 
     ; Compute octave by dividing by 2 until we are <= 512 (0x100).
     ldx #0
+
+    lda @pitch+1
+    cmp #$02 ; check if shifted the pitch to a 9 bit number yet.
+    bcc @octave_done
     @compute_octave_loop:
-        lda @pitch+1
-        cmp #2
-        bcc @octave_done
-        lsr
-        sta @pitch+1
-        ror @pitch+0
         inx
-		stx famistudio_epsm_dummy
-        jmp @compute_octave_loop
-
+        lsr
+        ror @pitch+0
+        cmp #$02
+        bcc @octave_done
+		bcs @compute_octave_loop ;unconditional
     @octave_done:
+    sta @pitch+1
 
-	@check_channel_id:
-		ldx #0
-		tya
-		cmp #3
-		bcc @check_channel_done
-		ldx #2
-	@check_channel_done:
-
-    ; Write pitch (lo)
-    lda famistudio_epsm_reg_table_lo,y
-    sta FAMISTUDIO_EPSM_REG_SEL0,x
-    jsr famistudio_epsm_wait_reg_select
-
+    ; 9 bit pitch * 4 to get the pitch back to an 11 bit number
+    ; the final 16 bit pitch will look like 00ooohhh llllllll where o = octave, h = pitch bits 8-11, l = pitch bits 0-8
     lda @pitch+0
-    sta FAMISTUDIO_EPSM_REG_WRITE0,x
-    jsr famistudio_epsm_wait_reg_write
+    asl
+    rol @pitch+1
+    asl
+    rol @pitch+1
+    sta @pitch+0
+
+    txa ; x holds the 3 bit octave information. octave = log2(pitch_hi)
+    asl
+    asl
+    asl
+    ora @pitch+1
+    sta @pitch+1
+    
+    ; Check if the channel needs to stop the note
 
     ; Un-trigger previous note if needed.
-    lda famistudio_chn_epsm_prev_hi, y
+    lda famistudio_chn_epsm_prev_hi,y
     and #$10 ; set trigger.
     beq @write_hi_period
     lda famistudio_chn_epsm_trigger,y
     beq @write_hi_period
     @untrigger_prev_note:
 		; Untrigger note.  
-		lda #$28;FAMISTUDIO_EPSM_REG_KEY
+		lda #FAMISTUDIO_EPSM_REG_KEY
 		sta FAMISTUDIO_EPSM_REG_SEL0
-		jsr famistudio_epsm_wait_reg_select
 
 		lda famistudio_epsm_channel_key_table, y
 		and #$0f ; remove trigger
 		sta FAMISTUDIO_EPSM_REG_WRITE0
-		jsr famistudio_epsm_wait_reg_write   
+        rts
 
     @write_hi_period:
-		lda #$28;FAMISTUDIO_EPSM_REG_KEY
+		lda #FAMISTUDIO_EPSM_REG_KEY
 		sta FAMISTUDIO_EPSM_REG_SEL0
-		jsr famistudio_epsm_wait_reg_select
 
 		lda famistudio_epsm_channel_key_table, y
 		sta FAMISTUDIO_EPSM_REG_WRITE0
-		jsr famistudio_epsm_wait_reg_write   
 
     ; Write pitch (hi)
+    ldx @reg_offset
     lda famistudio_epsm_reg_table_hi,y
     sta FAMISTUDIO_EPSM_REG_SEL0,x
-    jsr famistudio_epsm_wait_reg_select
-
-    lda famistudio_epsm_dummy
-    asl
-    ora #$30
-    ora @pitch+1
+    lda @pitch+1
     sta famistudio_chn_epsm_prev_hi, y
     sta FAMISTUDIO_EPSM_REG_WRITE0,x
-    jsr famistudio_epsm_wait_reg_write
+
+    ; Write pitch (lo)
+    lda famistudio_epsm_reg_table_lo,y
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
+    lda @pitch+0
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
 
     ; Read/multiply volume
     ldx famistudio_epsm_env_table,y
@@ -2525,25 +2514,27 @@ famistudio_update_epsm_fm_channel_sound:
     .else
         lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
+    pha ; store the volume table offset on the stack temporarily
+
+        lda #0
+        sta famistudio_chn_epsm_trigger,y
+
+    @update_volume:
+
+        ; Write volume
+        lda famistudio_epsm_vol_table,y
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0
+    pla ; and then pop it and move it to x
     tax
-
-    lda #0
-    sta famistudio_chn_epsm_trigger,y
-
-@update_volume:
-
-    ; Write volume
-    lda famistudio_epsm_vol_table,y
-;    sta FAMISTUDIO_EPSM_REG_SEL
-    jsr famistudio_epsm_wait_reg_select
     .if FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_volume_table,x
         tax
     .endif
     lda famistudio_epsm_invert_vol_table,x
-    ora famistudio_chn_epsm_patch,y
-;    sta FAMISTUDIO_EPSM_REG_WRITE
-    jsr famistudio_epsm_wait_reg_write
+    ; ora famistudio_chn_epsm_patch,y
+    ldx @reg_offset
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
 
     rts
 
@@ -2555,14 +2546,14 @@ famistudio_update_epsm_fm_channel_sound:
 ; [in] y: EPSM channel idx (0,1,2,3,4,5)
 ;======================================================================================================================
 
-famistudio_update_epsm_rythm_channel_sound:
+famistudio_update_epsm_rhythm_channel_sound:
     
     @pitch = famistudio_ptr1
 
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
     ;bne @note
     bne @nocut
-	sta famistudio_chn_epsm_rythm_key,y
+	sta famistudio_chn_epsm_rhythm_key,y
     ldx #0 ; This will fetch volume 0.
     beq @noupdate
 @nocut:
@@ -2577,7 +2568,7 @@ famistudio_update_epsm_rythm_channel_sound:
 
 	lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
     ; Read/multiply volume
-    ldx famistudio_epsm_rythm_env_table,y
+    ldx famistudio_epsm_rhythm_env_table,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
         lda famistudio_chn_volume_track+FAMISTUDIO_EPSM_CH9_IDX, y
         .if FAMISTUDIO_USE_VOLUME_SLIDES
@@ -2590,11 +2581,11 @@ famistudio_update_epsm_rythm_channel_sound:
     .endif
     tax
 
-    lda famistudio_chn_epsm_rythm_key,y
+    lda famistudio_chn_epsm_rhythm_key,y
 	cmp #$10
 	beq @noupdate
     lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
-	sta famistudio_chn_epsm_rythm_key,y
+	sta famistudio_chn_epsm_rhythm_key,y
     sta FAMISTUDIO_EPSM_ADDR
     lda famistudio_epsm_rhythm_key_table,y
     sta FAMISTUDIO_EPSM_DATA
@@ -3381,27 +3372,21 @@ famistudio_update:
 .endif
 
 .if FAMISTUDIO_EXP_EPSM
-@update_epsm_square_sound:
-ldy #0
+    ldy #2
 	@epsm_square_channel_loop:
 		jsr famistudio_update_epsm_square_channel_sound
-		iny
-		cpy #3
-		bne @epsm_square_channel_loop
-@update_epsm_sound:
-    ldy #0
+		dey
+		bpl @epsm_square_channel_loop
+    ldy #5
     @epsm_fm_channel_loop:
         jsr famistudio_update_epsm_fm_channel_sound
-        iny
-        cpy #6
-        bne @epsm_fm_channel_loop
-@update_epsm_rythm_sound:
-    ldy #0
-    @epsm_rythm_channel_loop:
-        jsr famistudio_update_epsm_rythm_channel_sound
-        iny
-        cpy #6
-        bne @epsm_rythm_channel_loop
+        dey
+        bpl @epsm_fm_channel_loop
+    ldy #5
+    @epsm_rhythm_channel_loop:
+        jsr famistudio_update_epsm_rhythm_channel_sound
+        dey
+        bpl @epsm_rhythm_channel_loop
 .endif
 
 .if FAMISTUDIO_EXP_N163
@@ -3844,7 +3829,6 @@ famistudio_set_epsm_instrument:
     @ex_patch   = famistudio_ptr1
     @reg_offset = famistudio_r0
     @chan_idx   = famistudio_r1
-    @cmp_x      = famistudio_r2
 
     famistudio_set_exp_instrument
 
@@ -3886,7 +3870,7 @@ famistudio_set_epsm_instrument:
     @reg_set_0:
         famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL0, FAMISTUDIO_EPSM_REG_WRITE0
     jmp @done
-    
+
     @reg_set_1:
         famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
     
