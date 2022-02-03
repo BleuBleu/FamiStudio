@@ -2524,7 +2524,7 @@ famistudio_update_epsm_fm_channel_sound:
         ; Write volume
         lda famistudio_epsm_vol_table,y
         ldx @reg_offset
-        sta FAMISTUDIO_EPSM_REG_SEL0
+        ;sta FAMISTUDIO_EPSM_REG_SEL0
     pla ; and then pop it and move it to x
     tax
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -2534,7 +2534,7 @@ famistudio_update_epsm_fm_channel_sound:
     lda famistudio_epsm_invert_vol_table,x
     ; ora famistudio_chn_epsm_patch,y
     ldx @reg_offset
-    sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    ;sta FAMISTUDIO_EPSM_REG_WRITE0,x
 
     rts
 
