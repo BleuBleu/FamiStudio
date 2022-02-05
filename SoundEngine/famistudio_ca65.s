@@ -744,10 +744,15 @@ famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = n
 .if FAMISTUDIO_EXP_EPSM
 famistudio_chn_epsm_prev_lo:      .res 6
 famistudio_chn_epsm_prev_hi:      .res 6
-famistudio_chn_epsm_patch:        .res 6
+famistudio_chn_epsm_patch:        .res 6 ;unused
 famistudio_chn_epsm_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:   .res 6
 famistudio_chn_epsm_rhythm_stereo: .res 6
+famistudio_chn_epsm_alg:          .res 6
+famistudio_chn_epsm_vol_op1:      .res 6
+famistudio_chn_epsm_vol_op2:      .res 6
+famistudio_chn_epsm_vol_op3:      .res 6
+famistudio_chn_epsm_vol_op4:      .res 6
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_len:     .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -2266,7 +2271,16 @@ famistudio_update_vrc7_channel_sound:
 .endif
 
 .if FAMISTUDIO_EXP_EPSM
-
+famistudio_epsm_vol_table_op1:
+    .byte FAMISTUDIO_EPSM_REG_TL, FAMISTUDIO_EPSM_REG_TL+1, FAMISTUDIO_EPSM_REG_TL+2
+famistudio_epsm_vol_table_op2:
+    .byte FAMISTUDIO_EPSM_REG_TL+8, FAMISTUDIO_EPSM_REG_TL+1+8, FAMISTUDIO_EPSM_REG_TL+2+8
+famistudio_epsm_vol_table_op3:
+    .byte FAMISTUDIO_EPSM_REG_TL+4, FAMISTUDIO_EPSM_REG_TL+1+4, FAMISTUDIO_EPSM_REG_TL+2+4
+famistudio_epsm_vol_table_op4:
+    .byte FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12
+famistudio_epsm_fm_vol_table:
+    .byte $7e, $65, $50, $3f, $32, $27, $1e, $17, $12, $0d, $09, $06, $04, $02, $01, $00
 famistudio_channel_epsm_chan_table:
     .byte $00, $01, $02, $00, $01, $02
 famistudio_epsm_rhythm_key_table:
@@ -2522,20 +2536,64 @@ famistudio_update_epsm_fm_channel_sound:
 
     @update_volume:
 
-        ; Write volume
-        lda famistudio_epsm_vol_table,y
-        ldx @reg_offset
-        ;sta FAMISTUDIO_EPSM_REG_SEL0
     pla ; and then pop it and move it to x
     tax
-    .if FAMISTUDIO_USE_VOLUME_TRACK
-        lda famistudio_volume_table,x
-        tax
-    .endif
-    lda famistudio_epsm_invert_vol_table,x
-    ; ora famistudio_chn_epsm_patch,y
-    ldx @reg_offset
-    ;sta FAMISTUDIO_EPSM_REG_WRITE0,x
+
+
+	lda famistudio_chn_epsm_alg,y
+	cmp #6
+	bpl @op_1_2_3_4
+	cmp #4
+	bpl @op_2_3_4
+	cmp #3
+	bpl @op_2_4
+	jmp @op_4
+	
+	; todo
+	; add each needed [famistudio_chn_epsm_vol_opX,y] volume with [famistudio_epsm_fm_vol_table,x] and write to chip
+	@op_1_2_3_4:
+		;write volume 
+        lda famistudio_epsm_vol_table_op1,y
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0,x
+		;pla ; and then pop it and move it to x
+		;tax
+		;lda famistudio_epsm_fm_vol_table,x
+		lda famistudio_chn_epsm_vol_op1,y
+		ldx @reg_offset
+		sta FAMISTUDIO_EPSM_REG_WRITE0,x
+	@op_2_3_4:
+        lda famistudio_epsm_vol_table_op3,y
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0,x
+		;pla ; and then pop it and move it to x
+		;tax
+		;lda famistudio_epsm_fm_vol_table,x
+		lda famistudio_chn_epsm_vol_op3,y
+		ldx @reg_offset
+		sta FAMISTUDIO_EPSM_REG_WRITE0,x
+	@op_2_4:
+        lda famistudio_epsm_vol_table_op2,y
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0,x
+		;pla ; and then pop it and move it to x
+		;tax
+		;lda famistudio_epsm_fm_vol_table,x
+		lda famistudio_chn_epsm_vol_op2,y
+		ldx @reg_offset
+		sta FAMISTUDIO_EPSM_REG_WRITE0,x
+	@op_4:
+        ; Write volume
+        lda famistudio_epsm_vol_table_op4,y
+        ldx @reg_offset
+        sta FAMISTUDIO_EPSM_REG_SEL0,x
+		;pla ; and then pop it and move it to x
+		;tax
+		;lda famistudio_epsm_fm_vol_table,x
+		lda famistudio_chn_epsm_vol_op4,y
+		ldx @reg_offset
+		sta FAMISTUDIO_EPSM_REG_WRITE0,x
+
 
     rts
 
@@ -3796,6 +3854,14 @@ famistudio_set_vrc7_instrument:
 ; [in] a: instrument index.
 ;======================================================================================================================
 .macro famistudio_epsm_write_patch_registers select, write
+		iny
+		iny
+		iny
+		lda (@ptr),y
+		sta famistudio_chn_epsm_vol_op1,x
+		dey
+		dey
+		dey
     ldx #0
     :
         lda famistudio_epsm_register_order,x
@@ -3855,7 +3921,7 @@ famistudio_set_epsm_instrument:
         ; Rhythm channel has a fixed offset of 2 and writes to reg_set_0
         ;lda #2
         ;sta @reg_offset
-        bpl @not_fm_channel ; unconditional branch
+        jmp @not_fm_channel ; unconditional branch
     :
     ; FM channel 1-6, we need to look up the register select offset from the table
     sec
@@ -3882,6 +3948,23 @@ famistudio_set_epsm_instrument:
         sta FAMISTUDIO_EPSM_REG_SEL0
         lda (@ex_patch),y
         sta FAMISTUDIO_EPSM_REG_WRITE0
+		
+		
+		lda @chan_idx	
+		sbc #7
+		tax
+		lda (@ptr),y
+		and #$07
+		sta famistudio_chn_epsm_alg,x ;store algorithm
+		ldy #2
+		lda (@ex_patch),y
+		sta famistudio_chn_epsm_vol_op3,x
+		ldy #9
+		lda (@ex_patch),y
+		sta famistudio_chn_epsm_vol_op2,x
+		ldy #16 
+		lda (@ex_patch),y
+		sta famistudio_chn_epsm_vol_op4,x
 		
     ldx @chan_idx
     rts
