@@ -2,6 +2,16 @@
 
 Version history / release notes for each release.
 
+## Version 3.2.3 (Desktop-only Hotfix)
+
+Fixes/Changes:
+* Fixed OpenGL crash at startup when SDL2.dll is found
+* Fixed export to sound engine when using an audio expansion
+* Fixed release of wrong instrument being played when editing envelopes
+* Clamping pitch values to the range supported by FamiStudio (-64...63) when importing Famitracker files 
+* Added a new tutorial about snapping
+* Saving snap settings to INI file
+
 ## Version 3.2.2 (Hotfix)
 
 Fixes/Changes:
