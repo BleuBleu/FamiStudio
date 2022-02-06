@@ -2724,7 +2724,9 @@ namespace FamiStudio
 
                 r.cf.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
 
-                if (editEnvelope == EnvelopeType.Arpeggio && App.SelectedArpeggio != null)
+                if (App.SelectedInstrument != editInstrument)
+                    r.cf.DrawText($"Warning : Instrument is currently not selected. Selected instrument '{App.SelectedInstrument.Name}' will be heard when playing the piano.", ThemeResources.FontMedium, bigTextPosX, bigTextPosY + ThemeResources.FontVeryLarge.LineHeight, ThemeResources.LightRedFillBrush);
+                else if (editEnvelope == EnvelopeType.Arpeggio && App.SelectedArpeggio != null)
                     r.cf.DrawText($"Warning : Arpeggio envelope currently overridden by selected arpeggio '{App.SelectedArpeggio.Name}'", ThemeResources.FontMedium, bigTextPosX, bigTextPosY + ThemeResources.FontVeryLarge.LineHeight, ThemeResources.LightRedFillBrush);
             }
             else

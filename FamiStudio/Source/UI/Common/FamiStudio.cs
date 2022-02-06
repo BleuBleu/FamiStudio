@@ -1443,12 +1443,6 @@ namespace FamiStudio
                 }
             }
 
-            // HACK : These should simply be pass as parameters.
-            if (PianoRoll.IsEditingInstrument && PianoRoll.EditInstrument != null && song.Channels[channel].SupportsInstrument(PianoRoll.EditInstrument))
-                note.Instrument = PianoRoll.EditInstrument;
-            if (PianoRoll.IsEditingArpeggio && song.Channels[channel].SupportsArpeggios)
-                note.Arpeggio = PianoRoll.EditArpeggio;
-
             instrumentPlayer.PlayNote(channel, note);
 
             if (allowRecording && recordingMode)
