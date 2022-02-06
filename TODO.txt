@@ -1,11 +1,6 @@
-3.2.3
-=====
-x CanExportToSoundEngine broken.
-x Tutorial snap
-x SDL2.dll issue. 
-x Remember snap settings?
-x fod_pancake FTM file that doesnt sound the same when exporting to NSF.
-x How2 selected instrument vs release.
+3.2.4?
+======
+- Two joshop issues from github.
 
 3.3.0
 =====

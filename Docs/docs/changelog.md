@@ -5,6 +5,7 @@ Version history / release notes for each release.
 ## Version 3.2.3 (Hotfix)
 
 Fixes/Changes:
+
 * Fixed OpenGL crash at startup when SDL2.dll is found
 * Fixed export to sound engine when using an audio expansion
 * Fixed release of wrong instrument being played when editing envelopes
@@ -16,6 +17,7 @@ Fixes/Changes:
 ## Version 3.2.2 (Hotfix)
 
 Fixes/Changes:
+
 * Fixed issue where some effect values could go beyond their intended range, and lead to crashes desktop.
 * Fixed FDS modulation on Mobile.
 * Fixed crash in MIDI import dialog when lots of channels are present (desktop only)
