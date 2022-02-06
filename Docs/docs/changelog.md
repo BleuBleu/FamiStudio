@@ -2,7 +2,7 @@
 
 Version history / release notes for each release.
 
-## Version 3.2.3 (Desktop-only Hotfix)
+## Version 3.2.3 (Hotfix)
 
 Fixes/Changes:
 * Fixed OpenGL crash at startup when SDL2.dll is found

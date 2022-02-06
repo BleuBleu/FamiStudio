@@ -610,6 +610,7 @@
     <EmbeddedResource Include="Resources\Sequencer%402x.png" />
     <EmbeddedResource Include="Resources\Slide%402x.png" />
     <EmbeddedResource Include="Resources\Snap%402x.png" />
+    <EmbeddedResource Include="Resources\SnapOff%402x.png" />
     <EmbeddedResource Include="Resources\Stop%402x.png" />
     <EmbeddedResource Include="Resources\Transform%402x.png" />
     <EmbeddedResource Include="Resources\Undo%402x.png" />
