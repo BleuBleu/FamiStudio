@@ -2279,16 +2279,16 @@ famistudio_update_vrc7_channel_sound:
 
 .if FAMISTUDIO_EXP_EPSM
 famistudio_epsm_vol_table_op1:
-    .byte FAMISTUDIO_EPSM_REG_TL, FAMISTUDIO_EPSM_REG_TL+1, FAMISTUDIO_EPSM_REG_TL+2
+    .byte FAMISTUDIO_EPSM_REG_TL, FAMISTUDIO_EPSM_REG_TL+1, FAMISTUDIO_EPSM_REG_TL+2,FAMISTUDIO_EPSM_REG_TL, FAMISTUDIO_EPSM_REG_TL+1, FAMISTUDIO_EPSM_REG_TL+2
 famistudio_epsm_vol_table_op2:
-    .byte FAMISTUDIO_EPSM_REG_TL+8, FAMISTUDIO_EPSM_REG_TL+1+8, FAMISTUDIO_EPSM_REG_TL+2+8
+    .byte FAMISTUDIO_EPSM_REG_TL+8, FAMISTUDIO_EPSM_REG_TL+1+8, FAMISTUDIO_EPSM_REG_TL+2+8,FAMISTUDIO_EPSM_REG_TL+8, FAMISTUDIO_EPSM_REG_TL+1+8, FAMISTUDIO_EPSM_REG_TL+2+8
 famistudio_epsm_vol_table_op3:
-    .byte FAMISTUDIO_EPSM_REG_TL+4, FAMISTUDIO_EPSM_REG_TL+1+4, FAMISTUDIO_EPSM_REG_TL+2+4
+    .byte FAMISTUDIO_EPSM_REG_TL+4, FAMISTUDIO_EPSM_REG_TL+1+4, FAMISTUDIO_EPSM_REG_TL+2+4,FAMISTUDIO_EPSM_REG_TL+4, FAMISTUDIO_EPSM_REG_TL+1+4, FAMISTUDIO_EPSM_REG_TL+2+4
 famistudio_epsm_vol_table_op4:
-    .byte FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12
+    .byte FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12,FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12
 famistudio_epsm_fm_vol_table:
-    ;.byte $7e, $65, $50, $3f, $32, $27, $1e, $17, $12, $0d, $09, $06, $04, $02, $01, $00
-	.byte $00,$01,$02,$04,$06,$09,$0d,$12,$17,$1e,$27,$32,$3f,$50,$65,$7e
+    .byte $7e, $65, $50, $3f, $32, $27, $1e, $17, $12, $0d, $09, $06, $04, $02, $01, $00
+	;.byte $00,$01,$02,$04,$06,$09,$0d,$12,$17,$1e,$27,$32,$3f,$50,$65,$7e
 famistudio_channel_epsm_chan_table:
     .byte $00, $01, $02, $00, $01, $02
 famistudio_epsm_rhythm_key_table:
@@ -2303,8 +2303,8 @@ famistudio_epsm_reg_table_hi:
     .byte FAMISTUDIO_EPSM_REG_FN_HI, FAMISTUDIO_EPSM_REG_FN_HI2, FAMISTUDIO_EPSM_REG_FN_HI3, FAMISTUDIO_EPSM_REG_FN_HI, FAMISTUDIO_EPSM_REG_FN_HI2, FAMISTUDIO_EPSM_REG_FN_HI3
 famistudio_epsm_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_1, FAMISTUDIO_EPSM_REG_VOL_2, FAMISTUDIO_EPSM_REG_VOL_3, FAMISTUDIO_EPSM_REG_VOL_4, FAMISTUDIO_EPSM_REG_VOL_5, FAMISTUDIO_EPSM_REG_VOL_6
-famistudio_epsm_env_table:
-    .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS, FAMISTUDIO_EPSM_CH3_ENVS, FAMISTUDIO_EPSM_CH4_ENVS, FAMISTUDIO_EPSM_CH5_ENVS 
+famistudio_epsm_fm_env_table:
+    .byte FAMISTUDIO_EPSM_CH3_ENVS, FAMISTUDIO_EPSM_CH4_ENVS, FAMISTUDIO_EPSM_CH5_ENVS, FAMISTUDIO_EPSM_CH6_ENVS, FAMISTUDIO_EPSM_CH7_ENVS, FAMISTUDIO_EPSM_CH8_ENVS 
 famistudio_epsm_register_order:
     .byte $B0, $B4, $30, $40, $50, $60, $70, $80, $90, $38, $48, $58, $68, $78, $88, $98, $34, $44, $54, $64, $74, $84, $94, $3c, $4c, $5c, $6c, $7c, $8c, $9c, $22
 famistudio_epsm_channel_key_table:
@@ -2446,7 +2446,7 @@ famistudio_update_epsm_fm_channel_sound:
 
     ; Read note, apply arpeggio
     clc
-    ldx famistudio_epsm_env_table,y    
+    ldx famistudio_epsm_fm_env_table,y    
     adc famistudio_env_value+FAMISTUDIO_ENV_NOTE_OFF,x
     tax
 
@@ -2535,9 +2535,9 @@ famistudio_update_epsm_fm_channel_sound:
     sta FAMISTUDIO_EPSM_REG_WRITE0,x
 
     ; Read/multiply volume
-    ldx famistudio_epsm_env_table,y
+    ldx famistudio_epsm_fm_env_table,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
-        lda famistudio_chn_volume_track+FAMISTUDIO_EPSM_CH0_IDX, y
+        lda famistudio_chn_volume_track+FAMISTUDIO_EPSM_CH3_IDX, y
         .if FAMISTUDIO_USE_VOLUME_SLIDES
             ; During a slide, the lower 4 bits are fraction.
             and #$f0
@@ -2546,7 +2546,13 @@ famistudio_update_epsm_fm_channel_sound:
     .else
         lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
-    pha ; store the volume table offset on the stack temporarily
+	
+    .if FAMISTUDIO_USE_VOLUME_TRACK
+        tax
+        lda famistudio_volume_table,x
+    .endif	
+		sta @vol_offset
+
 	
 	;sta @vol_offset
         lda #0
@@ -2554,17 +2560,13 @@ famistudio_update_epsm_fm_channel_sound:
 
     @update_volume:
 
-    pla ; and then pop it and move it to x
-    tax
-	lda famistudio_volume_table,x
-		sta @vol_offset
 
 	lda famistudio_chn_epsm_alg,y
-	cmp #6
+	cmp #7
 	bpl @op_1_2_3_4
-	cmp #4
+	cmp #5
 	bpl @op_2_3_4
-	cmp #3
+	cmp #4
 	bpl @op_2_4
 	jmp @op_4
 	
@@ -3897,14 +3899,6 @@ famistudio_set_vrc7_instrument:
 ; [in] a: instrument index.
 ;======================================================================================================================
 .macro famistudio_epsm_write_patch_registers select, write
-		iny
-		iny
-		iny
-		lda (@ptr),y
-		sta famistudio_chn_epsm_vol_op1,x
-		dey
-		dey
-		dey
     ldx #0
     :
         lda famistudio_epsm_register_order,x
@@ -3978,6 +3972,18 @@ famistudio_set_epsm_instrument:
     tax
     lda famistudio_channel_epsm_chan_table,x
     sta @reg_offset
+	; Now we need to store the algorithm and 1st operator volume for later use
+		lda (@ptr),y
+		and #$07
+		sta famistudio_chn_epsm_alg,x ;store algorithm
+		iny
+		iny
+		iny
+		lda (@ptr),y
+		sta famistudio_chn_epsm_vol_op1,x
+		dey
+		dey
+		dey
     ; Now if we are channels 1-3 then we use @reg_set_0, otherwise for 4-6 its reg set 1
     lda @chan_idx
     cmp #FAMISTUDIO_EPSM_CH6_IDX
@@ -4002,9 +4008,6 @@ famistudio_set_epsm_instrument:
 		lda @chan_idx	
 		sbc #7
 		tax
-		lda (@ptr),y
-		and #$07
-		sta famistudio_chn_epsm_alg,x ;store algorithm
 		ldy #2
 		lda (@ex_patch),y
 		sta famistudio_chn_epsm_vol_op3,x
