@@ -1564,7 +1564,14 @@ famistudio_music_play:
 .endif
 
 .if FAMISTUDIO_EXP_EPSM
-    ; play song (init expansion variables)
+    lda #0
+    ldx #5
+    @clear_epsm_loop:
+        sta famistudio_chn_epsm_prev_hi, x
+        sta famistudio_chn_epsm_patch, x
+        sta famistudio_chn_epsm_trigger,x
+        dex
+        bpl @clear_epsm_loop 
 .endif
 
 .if FAMISTUDIO_EXP_VRC6
@@ -2494,11 +2501,21 @@ famistudio_update_epsm_fm_channel_sound:
 		lda famistudio_epsm_channel_key_table, y
 		and #$0f ; remove trigger
 		sta FAMISTUDIO_EPSM_REG_WRITE0
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
 ;        rts
 
     @write_hi_period:
 		lda #FAMISTUDIO_EPSM_REG_KEY
 		sta FAMISTUDIO_EPSM_REG_SEL0
+		nop
+		nop
+		nop
+		nop
 
 		lda famistudio_epsm_channel_key_table, y
 		sta FAMISTUDIO_EPSM_REG_WRITE0
@@ -4740,10 +4757,10 @@ famistudio_channel_update:
     @apu_channel:
 .endif    
 .if FAMISTUDIO_EXP_EPSM
-    cpx #FAMISTUDIO_EPSM_CH0_IDX
+    cpx #FAMISTUDIO_EPSM_CH3_IDX
     bcc @apu_channel
     lda #$80
-    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CH0_IDX,x ; Set release flag for EPSM
+    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CH3_IDX,x ; Set release flag for EPSM
     @apu_channel:
 .endif    
 
