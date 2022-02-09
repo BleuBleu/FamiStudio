@@ -727,8 +727,11 @@ famistudio_chn_env_override:      .res FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, 
 famistudio_chn_note_delay:        .res FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_cut_delay:         .res FAMISTUDIO_NUM_CHANNELS
 .endif
-.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_EPSM || FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
 famistudio_chn_inst_changed:      .res FAMISTUDIO_NUM_CHANNELS-5
+.endif
+.if FAMISTUDIO_EXP_EPSM
+famistudio_chn_inst_changed:      .res FAMISTUDIO_NUM_CHANNELS-14
 .endif
 .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .res FAMISTUDIO_NUM_CHANNELS
@@ -750,7 +753,6 @@ famistudio_chn_epsm_vol_op1:      .res 6
 famistudio_chn_epsm_vol_op2:      .res 6
 famistudio_chn_epsm_vol_op3:      .res 6
 famistudio_chn_epsm_vol_op4:      .res 6
-famistudio_epsm_dummy:            .res 1
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_wave_len:     .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -1584,9 +1586,18 @@ famistudio_music_play:
     sta famistudio_fds_override_flags
 .endif
 
-.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_EPSM || FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
     lda #0
     ldx #(FAMISTUDIO_NUM_CHANNELS-5)
+    @clear_inst_changed_loop:
+        sta famistudio_chn_inst_changed, x
+        dex
+        bpl @clear_inst_changed_loop 
+.endif
+
+.if FAMISTUDIO_EXP_EPSM
+    lda #0
+    ldx #(FAMISTUDIO_NUM_CHANNELS-14)
     @clear_inst_changed_loop:
         sta famistudio_chn_inst_changed, x
         dex
@@ -2501,15 +2512,7 @@ famistudio_update_epsm_fm_channel_sound:
 ;        rts
 
     @write_hi_period:
-		lda #FAMISTUDIO_EPSM_REG_KEY
-		sta FAMISTUDIO_EPSM_REG_SEL0
-		nop
-		nop
-		nop
-		nop
 
-		lda famistudio_epsm_channel_key_table, y
-		sta FAMISTUDIO_EPSM_REG_WRITE0
 
     ; Write pitch (hi)
     ldx @reg_offset
@@ -2549,7 +2552,6 @@ famistudio_update_epsm_fm_channel_sound:
         sta famistudio_chn_epsm_trigger,y
 
     @update_volume:
-
 
 	lda famistudio_chn_epsm_alg,y
 	cmp #7
@@ -2614,7 +2616,15 @@ famistudio_update_epsm_fm_channel_sound:
 	@save_op4:
 		ldx @reg_offset
 		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-
+		nop
+		nop
+		nop
+		nop
+		nop
+		lda #FAMISTUDIO_EPSM_REG_KEY
+		sta FAMISTUDIO_EPSM_REG_SEL0
+		lda famistudio_epsm_channel_key_table, y
+		sta FAMISTUDIO_EPSM_REG_WRITE0
 
     rts
 
@@ -2648,7 +2658,7 @@ famistudio_update_epsm_rhythm_channel_sound:
 	beq @noupdate
     ; Write pitch
 
-	lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
+	;lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
     ; Read/multiply volume
     ldx famistudio_epsm_rhythm_env_table,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -3909,17 +3919,9 @@ famistudio_set_epsm_instrument:
     @ex_patch   = famistudio_ptr1
     @reg_offset = famistudio_r0
     @chan_idx   = famistudio_r1
-	@inst_idx   = famistudio_r2
-	sty famistudio_epsm_dummy
     famistudio_set_exp_instrument
 	
-	
-	lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
-    bne @continue
-	    ldx @chan_idx
-    rts
-	
-@continue:
+
     ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
     lda (@ptr),y
     sta @ex_patch
@@ -3951,7 +3953,14 @@ famistudio_set_epsm_instrument:
 		rts
     :
 	
+		
+	lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x
+    bne @continue
+	    ldx @chan_idx
+		rts
 	
+@continue:
+	lda @chan_idx
     ; FM channel 1-6, we need to look up the register select offset from the table
     sec
     sbc #FAMISTUDIO_EPSM_CH3_IDX
@@ -3959,12 +3968,11 @@ famistudio_set_epsm_instrument:
     lda famistudio_channel_epsm_chan_table,x
     sta @reg_offset
 	
-;		lda #FAMISTUDIO_EPSM_REG_KEY
-;		sta FAMISTUDIO_EPSM_REG_SEL0
-;
-;		lda famistudio_epsm_channel_key_table, x
-;		and #$0f ; remove trigger
-;		sta FAMISTUDIO_EPSM_REG_WRITE0
+		lda #FAMISTUDIO_EPSM_REG_KEY
+		sta FAMISTUDIO_EPSM_REG_SEL0
+		lda famistudio_epsm_channel_key_table, x
+		and #$0f ; remove trigger
+		sta FAMISTUDIO_EPSM_REG_WRITE0
 
 	
 	; Now we need to store the algorithm and 1st operator volume for later use
@@ -4005,10 +4013,10 @@ famistudio_set_epsm_instrument:
 		tax
 		ldy #2
 		lda (@ex_patch),y
-		sta famistudio_chn_epsm_vol_op3,x
+		sta famistudio_chn_epsm_vol_op2,x
 		ldy #9
 		lda (@ex_patch),y
-		sta famistudio_chn_epsm_vol_op2,x
+		sta famistudio_chn_epsm_vol_op3,x
 		ldy #16 
 		lda (@ex_patch),y
 		sta famistudio_chn_epsm_vol_op4,x
@@ -4685,11 +4693,20 @@ famistudio_channel_update:
     asl a
     sta famistudio_chn_instrument,x ; Store instrument number*4
 
-.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_EPSM || FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
     cpx #5
     bcc @regular_channel
         lda #1
         sta famistudio_chn_inst_changed-5, x
+    @regular_channel:
+.endif
+.if FAMISTUDIO_EXP_EPSM
+    cpx #8
+    bcc @regular_channel
+    cpx #15
+    bcs @regular_channel
+        lda #1
+        sta famistudio_chn_inst_changed-8, x
     @regular_channel:
 .endif
     jmp @read_byte 
