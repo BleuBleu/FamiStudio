@@ -742,7 +742,6 @@ famistudio_chn_vrc7_patch:        .res 6
 famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 .endif
 .if FAMISTUDIO_EXP_EPSM
-famistudio_chn_epsm_patch:        .res 6
 famistudio_chn_epsm_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:   .res 6
 famistudio_chn_epsm_rhythm_stereo: .res 6
@@ -1566,7 +1565,6 @@ famistudio_music_play:
     lda #0
     ldx #5
     @clear_epsm_loop:
-        sta famistudio_chn_epsm_patch, x
         sta famistudio_chn_epsm_trigger,x
         dex
         bpl @clear_epsm_loop 
@@ -3915,6 +3913,13 @@ famistudio_set_epsm_instrument:
 	sty famistudio_epsm_dummy
     famistudio_set_exp_instrument
 	
+	
+	lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
+    bne @continue
+	    ldx @chan_idx
+    rts
+	
+@continue:
     ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
     lda (@ptr),y
     sta @ex_patch
@@ -3954,21 +3959,13 @@ famistudio_set_epsm_instrument:
     lda famistudio_channel_epsm_chan_table,x
     sta @reg_offset
 	
-		lda #FAMISTUDIO_EPSM_REG_KEY
-		sta FAMISTUDIO_EPSM_REG_SEL0
+;		lda #FAMISTUDIO_EPSM_REG_KEY
+;		sta FAMISTUDIO_EPSM_REG_SEL0
+;
+;		lda famistudio_epsm_channel_key_table, x
+;		and #$0f ; remove trigger
+;		sta FAMISTUDIO_EPSM_REG_WRITE0
 
-		lda famistudio_epsm_channel_key_table, x
-		and #$0f ; remove trigger
-		sta FAMISTUDIO_EPSM_REG_WRITE0
-	;---------------
-	lda famistudio_epsm_dummy
-	cmp famistudio_chn_epsm_patch,x
-	bne @continue
-	    ldx @chan_idx
-	rts
-	@continue:
-	;tya
-	sta famistudio_chn_epsm_patch,x
 	
 	; Now we need to store the algorithm and 1st operator volume for later use
 		lda (@ptr),y
@@ -4015,7 +4012,7 @@ famistudio_set_epsm_instrument:
 		ldy #16 
 		lda (@ex_patch),y
 		sta famistudio_chn_epsm_vol_op4,x
-		
+    @done:		
     ldx @chan_idx
     rts
 	
