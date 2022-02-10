@@ -12,6 +12,8 @@ namespace FamiStudio
         {
             var project = song.Project;
             var introDuration = separateIntro ? GetIntroDuration(song, sampleRate) : 0;
+            introDuration = introDuration * 2; //Stereo
+            duration = duration * 2; //Stereo
 
             if (channelMask == 0)
                 return;

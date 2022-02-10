@@ -574,6 +574,8 @@
     <EmbeddedResource Include="Rom\rom_famitracker_pal.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_epsm_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="libportaudio.2.dylib"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
