@@ -1777,7 +1777,7 @@ namespace FamiStudio
             "MMC5",
             "N163",
             "S5B",
-            "EPSM (Experimental)"
+            "EPSM"
         };
 
         // TODO: This is really UI specific, move somewhere else...

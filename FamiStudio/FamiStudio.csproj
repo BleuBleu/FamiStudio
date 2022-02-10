@@ -73,6 +73,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_epsm_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

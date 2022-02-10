@@ -57,13 +57,14 @@ namespace PrintCodeSize
 
         static void Main(string[] args)
         {
-            var expansionDefines = new string[14][]
+            var expansionDefines = new string[15][]
             {
                 new string [] { },
                 new [] { "FAMISTUDIO_EXP_MMC5=1" },
                 new [] { "FAMISTUDIO_EXP_S5B=1"  },
                 new [] { "FAMISTUDIO_EXP_VRC6=1" },
                 new [] { "FAMISTUDIO_EXP_VRC7=1" },
+                new [] { "FAMISTUDIO_EXP_EPSM=1" },
                 new [] { "FAMISTUDIO_EXP_FDS=1"  },
                 new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=1" },
                 new [] { "FAMISTUDIO_EXP_N163=1", "FAMISTUDIO_EXP_N163_CHN_CNT=2" },
@@ -82,6 +83,7 @@ namespace PrintCodeSize
                 "S5B",
                 "VRC6",
                 "VRC7",
+                "EPSM",
                 "FDS",
                 "N163 (1 channels)",
                 "N163 (2 channels)",

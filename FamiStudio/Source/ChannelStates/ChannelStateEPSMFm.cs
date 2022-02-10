@@ -87,7 +87,10 @@ namespace FamiStudio
 
             }
         }
-
+        public static int Clamp(int value, int min, int max)
+        {
+            return (value < min) ? min : (value > max) ? max : value;
+        }
         private int GetOctave(ref int period)
         {
             var octave = 0;
@@ -150,7 +153,9 @@ namespace FamiStudio
                 int adjustment = 5;
                 //Logarithmic volume adjustment
                 var step = (Math.Log(127+adjustment) - Math.Log(adjustment)) / (steps - 1);
-                volume = 127-(int)((Math.Exp(Math.Log(adjustment) + (15-volume) * step)) - adjustment);
+                //for(int i = 0; i<16;i++)
+                //    Console.WriteLine($"volume hex {(int)((Math.Exp(Math.Log(adjustment) + (15 - i) * step)) - adjustment):X4} volume dec {(int)((Math.Exp(Math.Log(adjustment) + (15 - i) * step)) - adjustment)} ");
+                /*volume = 127-(int)((Math.Exp(Math.Log(adjustment) + (15-volume) * step)) - adjustment);
                 int[] channelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
                 if(newInstrument[channelIdx] == 1 || lastVolume[channelIdx] != volume){
                     lastVolume[channelIdx] = volume; 
@@ -180,6 +185,42 @@ namespace FamiStudio
                             WriteEPSMRegister(0x44 + channelIdxHigh, opVolume[1 + 4 * channelIdx], a1);
                             WriteEPSMRegister(0x48 + channelIdxHigh, opVolume[2 + 4 * channelIdx], a1);
                             WriteEPSMRegister(0x4c + channelIdxHigh, 127 - (int)((127 - (float)opVolume[3 + 4 * channelIdx]) / 127 * volume), a1);
+                            break;
+
+                    }
+                }*/
+
+                volume = (int)((Math.Exp(Math.Log(adjustment) + (15 - volume) * step)) - adjustment);
+                int[] channelAlgorithmMask = { 0x8, 0x8, 0x8, 0x8, 0xC, 0xE, 0xE, 0xF };
+                if (newInstrument[channelIdx] == 1 || lastVolume[channelIdx] != volume)
+                {
+                    lastVolume[channelIdx] = volume;
+                    newInstrument[channelIdx] = 0;
+                    switch (channelAlgorithmMask[channelAlgorithm[channelIdx] & 0x7])
+                    {
+                        case 0xF:
+                            WriteEPSMRegister(0x40 + channelIdxHigh, Clamp(opVolume[0 + 4 * channelIdx] + volume,0,127), a1);
+                            WriteEPSMRegister(0x44 + channelIdxHigh, Clamp(opVolume[1 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x48 + channelIdxHigh, Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x4c + channelIdxHigh, Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
+                            break;
+                        case 0xE:
+                            WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
+                            WriteEPSMRegister(0x44 + channelIdxHigh, Clamp(opVolume[1 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x48 + channelIdxHigh, Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x4c + channelIdxHigh, Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
+                            break;
+                        case 0xC:
+                            WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
+                            WriteEPSMRegister(0x44 + channelIdxHigh, opVolume[1 + 4 * channelIdx], a1);
+                            WriteEPSMRegister(0x48 + channelIdxHigh, Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x4c + channelIdxHigh, Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
+                            break;
+                        case 0x8:
+                            WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
+                            WriteEPSMRegister(0x44 + channelIdxHigh, opVolume[1 + 4 * channelIdx], a1);
+                            WriteEPSMRegister(0x48 + channelIdxHigh, opVolume[2 + 4 * channelIdx], a1);
+                            WriteEPSMRegister(0x4c + channelIdxHigh, Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
                             break;
 
                     }
