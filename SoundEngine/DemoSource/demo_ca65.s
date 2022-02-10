@@ -21,13 +21,12 @@ FAMISTUDIO_DEMO_USE_C = 0
 ; so re-export the necessary ones here
 .exportzp _gamepad_pressed=gamepad_pressed, _p0=p0
 .exportzp sp
-.export _song_title_doom_eternal=song_title_doom_eternal
 .export _song_title_silver_surfer=song_title_silver_surfer
 .export _song_title_jts=song_title_jts
 .export _song_title_shatterhand=song_title_shatterhand
 .export _update_title=update_title
 .endif
-FAMISTUDIO_EXP_EPSM = 1
+
 .segment "HEADER"
 INES_MAPPER = 0 ; 0 = NROM
 INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
@@ -103,7 +102,7 @@ FAMISTUDIO_CFG_C_BINDINGS = 1
 .define FAMISTUDIO_CA65_RAM_SEGMENT  RAM
 .define FAMISTUDIO_CA65_CODE_SEGMENT CODE
 
-.include "../famistudio_ca65.s"
+.include "..\famistudio_ca65.s"
 
 ; Our single screen.
 screen_data_rle:
@@ -113,27 +112,19 @@ default_palette:
 .incbin "demo.pal"
 .incbin "demo.pal"
 
-.include "charmap.inc"
-; Doom Eternal - The Only Thing They Fear Is You
-song_title_doom_eternal:
-    .byte " Doom Eternal - The Only... "
 ; Silver Surfer - BGM 2
 song_title_silver_surfer:
-    .byte "   Silver Surfer - BGM 2    "
-    ;$ff, $ff, $ff, $12, $22, $25, $2f, $1e, $2b, $ff, $12, $2e, $2b, $1f, $1e, $2b, $ff, $4c, $ff, $01, $06, $0c, $ff, $36, $ff, $ff, $ff, $ff
+    .byte $ff, $ff, $ff, $12, $22, $25, $2f, $1e, $2b, $ff, $12, $2e, $2b, $1f, $1e, $2b, $ff, $4c, $ff, $01, $06, $0c, $ff, $36, $ff, $ff, $ff, $ff
 
 ; Journey To Silius - Menu
 song_title_jts:
-    .byte "  Journey To Silius - Menu  "
-    ;$ff, $ff, $09, $28, $2e, $2b, $27, $1e, $32, $ff, $13, $28, $ff, $12, $22, $25, $22, $2e, $2c, $ff, $4c, $ff, $0c, $1e, $27, $2e, $ff, $ff
+    .byte $ff, $ff, $09, $28, $2e, $2b, $27, $1e, $32, $ff, $13, $28, $ff, $12, $22, $25, $22, $2e, $2c, $ff, $4c, $ff, $0c, $1e, $27, $2e, $ff, $ff
 
 ; Shatterhand - Final Area
 song_title_shatterhand:
-    .byte "  Shatterhand - Final Area  "
-    ;$ff, $ff, $12, $21, $1a, $2d, $2d, $1e, $2b, $21, $1a, $27, $1d, $ff, $4c, $ff, $05, $22, $27, $1a, $25, $ff, $00, $2b, $1e, $1a, $ff, $ff
+    .byte $ff, $ff, $12, $21, $1a, $2d, $2d, $1e, $2b, $21, $1a, $27, $1d, $ff, $4c, $ff, $05, $22, $27, $1a, $25, $ff, $00, $2b, $1e, $1a, $ff, $ff
 
-
-NUM_SONGS = 4
+NUM_SONGS = 3
 
 _exit:
 reset:
@@ -426,23 +417,19 @@ update_title:
     beq @journey_to_silius
     cmp #2
     beq @shatterhand
-    cmp #3
-    beq @silver_surfer
 
     ; Here since both of our songs came from different FamiStudio projects, 
     ; they are actually 3 different song data, with a single song in each.
     ; For a real game, if would be preferable to export all songs together
     ; so that instruments shared across multiple songs are only exported once.
-
-    
-    @doom_eternal:
-        lda #<song_title_doom_eternal
+    @silver_surfer:
+        lda #<song_title_silver_surfer
         sta @text_ptr+0
-        lda #>song_title_doom_eternal
+        lda #>song_title_silver_surfer
         sta @text_ptr+1
-        ldx #.lobyte(music_data_doom_eternal)
-        ldy #.hibyte(music_data_doom_eternal)
-        jmp @play_song	
+        ldx #.lobyte(music_data_silver_surfer_c_stephen_ruddy)
+        ldy #.hibyte(music_data_silver_surfer_c_stephen_ruddy)
+        jmp @play_song
 
     @journey_to_silius:
         lda #<song_title_jts
@@ -461,16 +448,7 @@ update_title:
         ldx #.lobyte(music_data_shatterhand)
         ldy #.hibyte(music_data_shatterhand)
         jmp @play_song
-	
-    @silver_surfer:
-        lda #<song_title_silver_surfer
-        sta @text_ptr+0
-        lda #>song_title_silver_surfer
-        sta @text_ptr+1
-        ldx #.lobyte(music_data_silver_surfer_c_stephen_ruddy)
-        ldy #.hibyte(music_data_silver_surfer_c_stephen_ruddy)
-        jmp @play_song
-	
+    
     @play_song:
     lda #1 ; NTSC
     jsr famistudio_init
@@ -825,8 +803,8 @@ setup_background:
     rts
 
 .segment "SONG1"
-song_doom_eternal:
-.include "song_doom_eternal_ca65.s"
+song_silver_surfer:
+.include "song_silver_surfer_ca65.s"
 
 sfx_data:
 .include "sfx_ca65.s"
@@ -838,10 +816,6 @@ song_journey_to_silius:
 .segment "SONG3"
 song_shatterhand:
 .include "song_shatterhand_ca65.s"
-
-.segment "SONG4"
-song_silver_surfer:
-.include "song_silver_surfer_ca65.s"
 
 .segment "DPCM"
 .incbin "song_journey_to_silius_ca65.dmc"
