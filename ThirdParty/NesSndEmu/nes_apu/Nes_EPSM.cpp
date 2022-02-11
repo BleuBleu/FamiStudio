@@ -205,8 +205,7 @@ void Nes_EPSM::start_seeking()
 
 void Nes_EPSM::stop_seeking(blip_time_t& clock)
 {
-
-	for (int i = array_count(shadow_internal_regs)-1; i >= 0; i--)
+	for (int i = 0; i < array_count(shadow_internal_regs); i++)
 	{
 		if (shadow_internal_regs[i] >= 0)
 		{

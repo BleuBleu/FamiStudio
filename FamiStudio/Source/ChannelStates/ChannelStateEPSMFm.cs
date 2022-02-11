@@ -242,14 +242,14 @@ namespace FamiStudio
                     WriteRegister(NesApu.EPSM_DATA0, 0xF0 + ChannelKey);
                     WriteEPSMRegister(opRegisters[1] + channelIdxHigh, opStereo[channelIdx], a1);
                 }
-                if (lastPeriod[channelIdx] != (periodLo + periodHi))
-                {
+                // if (lastPeriod[channelIdx] != (periodLo + periodHi))
+                //{
                     lastPeriod[channelIdx] = (periodLo + periodHi);
                     WriteRegister(ChannelAddr, 0xA4 + channelIdxHigh);
                     WriteRegister(ChannelData, periodHi);
                     WriteRegister(ChannelAddr, 0xA0 + channelIdxHigh);
                     WriteRegister(ChannelData, periodLo);
-                }
+                //}
             }
 
             base.UpdateAPU();
