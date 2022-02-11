@@ -83,17 +83,20 @@ namespace FamiStudio
             using (var file = new FileStream(filename, FileMode.Create))
             {
                 var header = new VgmHeader();
-
                 header.Vgm[0] = (byte)'V';
                 header.Vgm[1] = (byte)'g';
                 header.Vgm[2] = (byte)'m';
                 header.Vgm[3] = (byte)' ';
                 header.version = 0x00000170;
-                header.ym2413clock = 3579545 + 0x80000000;
-                header.YM2608clock = 8000000;
-                header.NESAPUclock = 1789772 + 0x80000000;
-                header.AY8910clock = 1789772;
-                header.AY8910ChipType = 0x10;
+                if (project.UsesVrc7Expansion) { header.ym2413clock = 3579545 + 0x80000000; }
+                    
+                if (project.UsesEPSMExpansion) { header.YM2608clock = 8000000; }
+                if (project.UsesFdsExpansion) { header.NESAPUclock = 1789772 + 0x80000000; }
+                else { header.NESAPUclock = 1789772; }
+                if (project.UsesS5BExpansion) {
+                    header.AY8910clock = 1789772;
+                    header.AY8910ChipType = 0x10;
+                }
                 header.vgmDataOffset = 0x8C+29;
                 header.totalSamples = lastWrite.FrameNumber*735;
                 //header.vgmDataOffset = 0xBA;
