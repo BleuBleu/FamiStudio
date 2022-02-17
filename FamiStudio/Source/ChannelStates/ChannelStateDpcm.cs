@@ -2,21 +2,18 @@
 {
     public class ChannelStateDpcm : ChannelState
     {
-        bool isStop = false;
         public ChannelStateDpcm(IPlayerInterface player, int apuIdx, int channelIdx, bool pal) : base(player, apuIdx, channelIdx, pal)
         {
         }
 
         public override void UpdateAPU()
         {
-            if (note.IsStop && !isStop)
+            if (note.IsStop)
             {
-                isStop = true;
                 WriteRegister(NesApu.APU_SND_CHN, 0x0f);
             }
             else if (note.IsMusical && noteTriggered)
             {
-                isStop = false;
                 WriteRegister(NesApu.APU_SND_CHN, 0x0f);
 
                 var mapping = FamiStudio.StaticProject.GetDPCMMapping(note.Value);

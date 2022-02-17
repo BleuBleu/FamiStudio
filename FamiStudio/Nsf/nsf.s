@@ -1,3 +1,4 @@
+
 .ifdef FAMISTUDIO
 
     ; Enable all features.
@@ -25,6 +26,10 @@
     .endif
     .ifdef FAMISTUDIO_USE_FAMITRACKER_TEMPO
         FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS=1
+    .endif
+
+    .ifdef FAMISTUDIO_EXP_EPSM
+        FAMISTUDIO_USE_EPSM=1
     .endif
 
     .ifdef FAMISTUDIO_MULTI_EXPANSION
@@ -76,7 +81,7 @@ nsf_mode: .res 1
     
     ldy nsf_song_table+0, x
 
-.if .not(.defined(FAMISTUDIO_MULTI_EXPANSION) || .defined(FAMISTUDIO_EXP_EPSM))
+.if .not(.defined(FAMISTUDIO_MULTI_EXPANSION) || .defined(FAMISTUDIO_USE_EPSM))
     ; First map the full 0x9000 - 0xf000 to song data. The multi-expansion NSF driver takes 2 pages.
     sty $5ff9
     iny

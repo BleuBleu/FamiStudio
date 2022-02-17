@@ -4,21 +4,18 @@ namespace FamiStudio
 {
     public class ChannelStateTriangle : ChannelState
     {
-        bool isStop = false;
         public ChannelStateTriangle(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
         {
         }
 
         public override void UpdateAPU()
         {
-            if (note.IsStop && !isStop)
+            if (note.IsStop)
             {
-                isStop = true;
                 WriteRegister(NesApu.APU_TRI_LINEAR, 0x80);
             }
             else if (note.IsMusical)
             {
-                isStop = false;
                 var period = GetPeriod();
                 var volume = GetVolume();
 

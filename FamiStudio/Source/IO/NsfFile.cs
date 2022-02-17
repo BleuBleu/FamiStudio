@@ -521,7 +521,7 @@ namespace FamiStudio
                     {
                         var instrument = project.CreateInstrument(ExpansionType.EPSM, name);
                         instrument.EpsmPatch = patch;
-                        Array.Copy(patchRegs, instrument.EpsmPatchRegs, 8);
+                        Array.Copy(patchRegs, instrument.EpsmPatchRegs,31);
                         return instrument;
                     }
                 }
@@ -679,11 +679,11 @@ namespace FamiStudio
                     volume = 15 - volume;
                 }
 
-                var hasOctave  = channel.IsVrc7Channel;
+                var hasOctave  = channel.IsVrc7Channel || channel.IsEPSMChannel;
                 var hasVolume  = channel.Type != ChannelType.Triangle;
                 var hasPitch   = channel.Type != ChannelType.Noise;
                 var hasDuty    = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise || channel.Type == ChannelType.Vrc6Square1 || channel.Type == ChannelType.Vrc6Square2 || channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
-                var hasTrigger = channel.IsVrc7Channel;
+                var hasTrigger = channel.IsVrc7Channel || channel.IsEPSMChannel;
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
@@ -833,7 +833,8 @@ namespace FamiStudio
                             regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_EPSMPATCHREG, i);
                     }
 
-                    instrument = GetEpsmInstrument(patch, regs);
+                    //instrument = GetEpsmInstrument(patch, regs);
+                    instrument = GetEPSMInstrument();
                 }
                 else 
                 {
@@ -984,6 +985,13 @@ namespace FamiStudio
 
             // Our expansion mask is the same as NSF.
             var expansionMask = NsfGetExpansion(nsf);
+            if(((byte)expansionMask & 0x80) != 0)//EPSM uses 0x80 in NSF but 0x40 in FS
+            {
+                //Log.LogMessage(LogSeverity.Error, "EPSM NSF Import is currently not supported");
+                //NsfClose(nsf);
+                //return null;
+                expansionMask = ((byte)expansionMask & 0x3f)+ExpansionType.EPSMMask;
+            }
 
             // The 2 upper bits of the mask need to be zero, we dont support these.
             if (expansionMask != (expansionMask & ExpansionType.AllMask))

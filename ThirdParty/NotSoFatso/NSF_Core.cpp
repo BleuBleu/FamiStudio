@@ -2521,6 +2521,25 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			}
 			break;
 		}
+		case CHANNEL_EPSMFM1:
+		case CHANNEL_EPSMFM2:
+		case CHANNEL_EPSMFM3:
+		case CHANNEL_EPSMFM4:
+		case CHANNEL_EPSMFM5:
+		case CHANNEL_EPSMFM6:
+		{
+			int idx = channel - CHANNEL_EPSMFM1;
+			switch (state)
+			{
+			case STATE_PERIOD:       return ((EPSMChan[1][idx] & 1) << 8) | (VRC7Chan[0][idx]);
+			case STATE_VOLUME:       return (EPSMChan[2][idx] >> 0) & 0xF;
+			case STATE_EPSMPATCH:    return (EPSMChan[2][idx] >> 4) & 0xF;
+			case STATE_EPSMPATCHREG: return (EPSMInstrument[0][sub]);
+			case STATE_EPSMOCTAVE:   return (EPSMChan[1][idx] >> 1) & 0x07;
+			case STATE_EPSMTRIGGER:  return (EPSMTriggered[idx]);
+			case STATE_EPSMSUSTAIN:  return (EPSMChan[1][idx] >> 5) & 0x01;
+			}
+		}
 	}
 
 	return 0;
