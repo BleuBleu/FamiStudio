@@ -42,7 +42,7 @@ namespace FamiStudio
 
         private bool ReadParams(int idx)
         {
-            Debug.Assert(blockVersion >= 4);
+            Debug.Assert(blockVersion >= 3);
 
             var expansion = ConvertExpansionAudio(bytes[idx++]);
             if (expansion < 0)
@@ -587,7 +587,7 @@ namespace FamiStudio
                             if (instrument < MaxInstruments && channel.SupportsInstrument(instruments[instrument]))
                                 pattern.GetOrCreateNoteAt(n).Instrument = instruments[instrument];
                             if (channel.Type == ChannelType.Noise)
-                                pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note + 15);
+                                pattern.GetOrCreateNoteAt(n).Value = (byte)(((octave * 12 + note + 15) & 0x0f) + 32);
                             else
                                 pattern.GetOrCreateNoteAt(n).Value = (byte)(octave * 12 + note);
                         }

@@ -275,6 +275,11 @@ namespace FamiStudio
             id = newId;
         }
 
+        public override string ToString()
+        {
+            return name;
+        }
+
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref id, true);

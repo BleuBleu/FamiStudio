@@ -15,7 +15,8 @@ namespace FamiStudio
         // Version 2   : FamiStudio 3.0.0
         // Version 3   : FamiStudio 3.1.0
         // Version 4   : FamiStudio 3.2.0
-        public const int SettingsVersion = 4;
+        // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
+        public const int SettingsVersion = 5;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -222,6 +223,10 @@ namespace FamiStudio
         public static bool AllowVibration = true;
         public static bool DoubleClickDelete = false;
 
+        // Piano roll stuff
+        public static int SnapResolution = SnapResolutionType.OneBeat;
+        public static bool SnapEnabled = true;
+
         public static void Load()
         {
             var ini = new IniFile();
@@ -356,8 +361,13 @@ namespace FamiStudio
             AllowVibration = ini.GetBool("Mobile", "AllowVibration", true);
             DoubleClickDelete = ini.GetBool("Mobile", "DoubleClickDelete", false);
 
+            // Piano roll section
+            SnapResolution = Utils.Clamp(ini.GetInt("PianoRoll", "SnapResolution", SnapResolutionType.OneBeat), SnapResolutionType.Min, SnapResolutionType.Max);
+            SnapEnabled = ini.GetBool("PianoRoll", "SnapEnabled", true);
+
             // At 3.2.0, we added a new Discord screen to the tutorial.
-            if (Version < 4)
+            // At 3.2.3, we added a new snapping tutorial screen.
+            if (Version < 4 || (Version < 5 && PlatformUtils.IsDesktop))
                 ShowTutorial = true;
 
             // No deprecation at the moment.
@@ -450,6 +460,10 @@ namespace FamiStudio
             // Mobile
             ini.SetBool("Mobile", "AllowVibration", AllowVibration);
             ini.SetBool("Mobile", "DoubleClickDelete", DoubleClickDelete);
+
+            // Piano roll section
+            ini.SetInt("PianoRoll", "SnapResolution", SnapResolution);
+            ini.SetBool("PianoRoll", "SnapEnabled", SnapEnabled);
 
             Directory.CreateDirectory(GetConfigFilePath());
 

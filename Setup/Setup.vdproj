@@ -141,6 +141,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_DCA09AB06FBF4E9F909471B12CC75DF0"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_DE3E8B106B034CAAB62B9E55201E4619"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -149,12 +155,6 @@
         {
         "MsmKey" = "8:_EFD705BE398D4A4594B4EA0ABA4691E2"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -179,6 +179,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_0D7C1A588111F6EFF08D8F8E770AD734"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -700,6 +706,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DCA09AB06FBF4E9F909471B12CC75DF0"
+            {
+            "SourcePath" = "8:Demo Songs\\City.fms"
+            "TargetName" = "8:City.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DE3E8B106B034CAAB62B9E55201E4619"
             {
             "SourcePath" = "8:Demo Songs\\Shatterhand.fms"
@@ -841,15 +867,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
-        "ProductCode" = "8:{C4752C48-97C6-4E84-88F8-7BCDD044E1D8}"
-        "PackageCode" = "8:{55D9F1B6-9D0B-4363-A09D-269971D28938}"
+        "ProductCode" = "8:{17D39056-6243-40FE-AF9E-F285269FDBC0}"
+        "PackageCode" = "8:{48FBE58B-C313-4AC8-A991-2164BCE97B76}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.2.2"
+        "ProductVersion" = "8:3.2.3"
         "Manufacturer" = "8:BleuBleu"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

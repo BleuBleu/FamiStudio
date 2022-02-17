@@ -171,6 +171,7 @@ namespace FamiStudio
             EffectCollapsed,
             Maximize,
             Snap,
+            SnapOff,
             Count
         };
 
@@ -189,6 +190,7 @@ namespace FamiStudio
             "CollapsedSmall",
             "Maximize",
             "Snap",
+            "SnapOff",
         };
 
         readonly string[] EffectImageNames = new string[]
@@ -660,6 +662,18 @@ namespace FamiStudio
         public void EndVideoRecording()
         {
             OnRenderTerminated();
+        }
+
+        public void ApplySettings()
+        {
+            snapResolution = Settings.SnapResolution;
+            SnapEnabled = Settings.SnapEnabled;
+        }
+
+        public void SaveSettings()
+        {
+            Settings.SnapResolution = snapResolution;
+            Settings.SnapEnabled = SnapEnabled;
         }
 
         public void SaveChannelScroll()
@@ -1332,7 +1346,7 @@ namespace FamiStudio
             if (!PlatformUtils.IsMobile && editMode != EditionMode.VideoRecording)
             {
                 var maxRect = GetMaximizeButtonRect();
-                r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, maxRect.X, maxRect.Y, maximized ? 1.0f : 0.3f, 1.0f, Theme.LightGreyFillColor1);
+                r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Maximize, maxRect.X, maxRect.Y, 1.0f, 1.0f, maximized ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1);
             }
 
             // Effect icons
@@ -1346,8 +1360,8 @@ namespace FamiStudio
                     var snapBtnRect = GetSnapButtonRect();
                     var snapResRect = GetSnapResolutionRect();
 
-                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.Snap, snapBtnRect.X, snapBtnRect.Y, SnapEnabled || App.IsRecording ? 1.0f : 0.3f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1);
-                    r.cc.DrawText(SnapResolutionType.Names[snapResolution], ThemeResources.FontSmall, snapResRect.X, snapResRect.Y, App.IsRecording ? ThemeResources.DarkRedFillBrush : ThemeResources.LightGreyFillBrush2, RenderTextFlags.Right | RenderTextFlags.Middle, snapResRect.Width, snapResRect.Height);
+                    r.cc.DrawBitmapAtlas(bmpMiscAtlas, SnapEnabled || App.IsRecording ? (int)MiscImageIndices.Snap : (int)MiscImageIndices.SnapOff, snapBtnRect.X, snapBtnRect.Y, 1.0f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : (SnapEnabled ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1));
+                    r.cc.DrawText(SnapResolutionType.Names[snapResolution], ThemeResources.FontSmall, snapResRect.X, snapResRect.Y, App.IsRecording ? ThemeResources.DarkRedFillBrush : (SnapEnabled ? ThemeResources.LightGreyFillBrush2 : ThemeResources.MediumGreyFillBrush1), RenderTextFlags.Right | RenderTextFlags.Middle, snapResRect.Width, snapResRect.Height);
                 }
 
                 if (showEffectsPanel)
@@ -2710,7 +2724,9 @@ namespace FamiStudio
 
                 r.cf.DrawText($"Editing Instrument {editInstrument.Name} ({envelopeString})", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
 
-                if (editEnvelope == EnvelopeType.Arpeggio && App.SelectedArpeggio != null)
+                if (App.SelectedInstrument != editInstrument)
+                    r.cf.DrawText($"Warning : Instrument is currently not selected. Selected instrument '{App.SelectedInstrument.Name}' will be heard when playing the piano.", ThemeResources.FontMedium, bigTextPosX, bigTextPosY + ThemeResources.FontVeryLarge.LineHeight, ThemeResources.LightRedFillBrush);
+                else if (editEnvelope == EnvelopeType.Arpeggio && App.SelectedArpeggio != null)
                     r.cf.DrawText($"Warning : Arpeggio envelope currently overridden by selected arpeggio '{App.SelectedArpeggio.Name}'", ThemeResources.FontMedium, bigTextPosX, bigTextPosY + ThemeResources.FontVeryLarge.LineHeight, ThemeResources.LightRedFillBrush);
             }
             else

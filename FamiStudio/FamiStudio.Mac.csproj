@@ -542,6 +542,8 @@
     <EmbeddedResource Include="Resources\Slide.png" />
     <EmbeddedResource Include="Resources\Snap%402x.png" />
     <EmbeddedResource Include="Resources\Snap.png" />
+    <EmbeddedResource Include="Resources\SnapOff%402x.png" />
+    <EmbeddedResource Include="Resources\SnapOff.png" />
     <EmbeddedResource Include="Resources\Stop%402x.png" />
     <EmbeddedResource Include="Resources\Stop.png" />
     <EmbeddedResource Include="Resources\Transform%402x.png" />
@@ -554,6 +556,7 @@
     <EmbeddedResource Include="Resources\Tutorial5.jpg" />
     <EmbeddedResource Include="Resources\Tutorial6.jpg" />
     <EmbeddedResource Include="Resources\Tutorial7.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial8.jpg" />
     <EmbeddedResource Include="Resources\Undo%402x.png" />
     <EmbeddedResource Include="Resources\Undo.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />

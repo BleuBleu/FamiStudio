@@ -74,6 +74,7 @@ namespace FamiStudio
         private FamiStudio app;
 
         private bool canExportToFamiTracker = true;
+        private bool canExportToFamiTone2   = true;
         private bool canExportToSoundEngine = true;
         private bool canExportToVideo       = true;
 
@@ -120,7 +121,7 @@ namespace FamiStudio
         }
 
         private string[] GetChannelNames()
-        {   
+        {
             var channelTypes = project.GetActiveChannelList();
             var channelNames = new string[channelTypes.Length];
             for (int i = 0; i < channelTypes.Length; i++)
@@ -323,7 +324,7 @@ namespace FamiStudio
                     if (format == ExportFormat.FamiTone2Music && project.UsesAnyExpansionAudio)
                     {
                         page.AddLabel(null, "FamiTone2 does not support audio expansions.", true);
-                        //canExportToSoundEngine = false;
+                        canExportToFamiTone2 = false;
                     }
                     else if (format == ExportFormat.FamiStudioMusic && project.UsesMultipleExpansionAudios)
                     {
@@ -341,7 +342,6 @@ namespace FamiStudio
                         page.SetPropertyEnabled(2, false);
                         page.SetPropertyEnabled(3, false);
                         page.PropertyChanged += SoundEngine_PropertyChanged;
-                        canExportToSoundEngine = true;
                     }
                     break;
                 case ExportFormat.FamiTone2Sfx:
@@ -877,7 +877,7 @@ namespace FamiStudio
 
         private void ExportFamiTone2Music(bool famiStudio)
         {
-            if (!canExportToSoundEngine)
+            if ((famiStudio && !canExportToSoundEngine) || (!famiStudio && !canExportToFamiTone2))
                 return;
 
             var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioMusic : (int)ExportFormat.FamiTone2Music);

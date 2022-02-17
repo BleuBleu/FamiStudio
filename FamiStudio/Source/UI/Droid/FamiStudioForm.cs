@@ -756,7 +756,7 @@ namespace FamiStudio
             }
         }
 
-        public bool OnDoubleTap(MotionEvent? e)
+        public bool OnDoubleTap(MotionEvent e)
         {
             if (!IsAsyncDialogInProgress)
             {
@@ -771,13 +771,13 @@ namespace FamiStudio
             }
         }
 
-        public bool OnDoubleTapEvent(MotionEvent? e)
+        public bool OnDoubleTapEvent(MotionEvent e)
         {
             //Debug.WriteLine($"OnDoubleTapEvent ({e.GetX()}, {e.GetY()})");
             return false;
         }
 
-        public bool OnSingleTapConfirmed(MotionEvent? e)
+        public bool OnSingleTapConfirmed(MotionEvent e)
         {
             //Debug.WriteLine($"OnSingleTapConfirmed ({e.GetX()}, {e.GetY()})");
             return false;
