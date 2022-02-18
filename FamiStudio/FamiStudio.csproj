@@ -79,6 +79,8 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <EmbeddedResource Include="Rom\rom_epsm_famitracker_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

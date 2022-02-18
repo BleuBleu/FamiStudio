@@ -19,7 +19,9 @@ namespace FamiStudio
         const int RomSongDataStart    = 0x8000;
         const int RomBankSize         = 0x2000; // MMC3 has 8KB banks.
         const int RomCodeAndTocSize   = 0x1400; // 5KB of code + TOC + vectors. 
+        const int RomEPSMCodeAndTocSize   = 0x1900; // 6.4KB of code + TOC + vectors. 
         const int RomTocOffset        = 0x1200; // Table of content is right after the code at FE00
+        const int RomEPSMTocOffset        = 0x1700; // Table of content is right after the code at FE00
         const int RomTileSize         = 0x2000; // 8KB CHR data.
         const int MaxSongSize         = 0x4000; // 16KB max per song.
         const int RomMinNumberBanks   = 2;
@@ -28,6 +30,7 @@ namespace FamiStudio
         const int RomHeaderPrgOffset  = 4;      // Offset of the PRG bank count in INES header.
         const int RomDpcmStart        = 0xc000;
         const int MaxDpcmSize         = 0x2c00; // 11KB
+        const int MaxEPSMDpcmSize         = 0x2700; // 10KB
 
         public unsafe bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
@@ -45,13 +48,22 @@ namespace FamiStudio
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
-                project.SetExpansionAudioMask(ExpansionType.NoneMask);
+                if (project.UsesEPSMExpansion)
+                    project.SetExpansionAudioMask(ExpansionType.EPSMMask);
+                else
+                    project.SetExpansionAudioMask(ExpansionType.NoneMask);
+
+                var usingRomCodeAndTocSize = project.UsesEPSMExpansion ? RomEPSMCodeAndTocSize : RomCodeAndTocSize;
+                var usingRomTocOffset = project.UsesEPSMExpansion ? RomEPSMTocOffset : RomTocOffset;
+                var usingMaxDpcmSize = project.UsesEPSMExpansion ? MaxEPSMDpcmSize : MaxDpcmSize;
 
                 var headerBytes = new byte[RomHeaderLength];
-                var codeBytes   = new byte[RomCodeAndTocSize + RomTileSize];
+                var codeBytes   = new byte[usingRomCodeAndTocSize + RomTileSize];
 
                 // Load ROM header (16 bytes) + code/tiles (12KB).
                 string romName = "FamiStudio.Rom.rom";
+                if (project.UsesEPSMExpansion)
+                    romName += "_epsm";
                 if (project.UsesFamiTrackerTempo)
                     romName += "_famitracker";
                 romName += pal ? "_pal" : "_ntsc";
@@ -59,8 +71,8 @@ namespace FamiStudio
 
                 var romBinStream = typeof(RomFile).Assembly.GetManifestResourceStream(romName);
                 romBinStream.Read(headerBytes, 0, RomHeaderLength);
-                romBinStream.Seek(-RomCodeAndTocSize - RomTileSize, SeekOrigin.End);
-                romBinStream.Read(codeBytes, 0, RomCodeAndTocSize + RomTileSize);
+                romBinStream.Seek(-usingRomCodeAndTocSize - RomTileSize, SeekOrigin.End);
+                romBinStream.Read(codeBytes, 0, usingRomCodeAndTocSize + RomTileSize);
 
                 Log.LogMessage(LogSeverity.Info, $"ROM code and graphics size: {codeBytes.Length} bytes.");
 
@@ -161,12 +173,12 @@ namespace FamiStudio
                     Array.Copy(songBanks[i].ToArray(), 0, songBanksBytes, i * RomBankSize, songBanks[i].Count);
 
                 // Patch in code (project info and song table are after the code, 0xf000).
-                Marshal.Copy(new IntPtr(&projectInfo), codeBytes, RomTocOffset, sizeof(RomProjectInfo));
+                Marshal.Copy(new IntPtr(&projectInfo), codeBytes, usingRomTocOffset, sizeof(RomProjectInfo));
 
                 for (int i = 0; i < MaxSongs; i++)
                 {
                     fixed (RomSongEntry* songEntry = &songTable[i])
-                        Marshal.Copy(new IntPtr(songEntry), codeBytes, RomTocOffset + sizeof(RomProjectInfo) + i * sizeof(RomSongEntry), sizeof(RomSongEntry));
+                        Marshal.Copy(new IntPtr(songEntry), codeBytes, usingRomTocOffset + sizeof(RomProjectInfo) + i * sizeof(RomSongEntry), sizeof(RomSongEntry));
                 }
 
                 // Patch header (iNES header always counts in 16KB banks, MMC3 counts in 8KB banks)
@@ -185,17 +197,17 @@ namespace FamiStudio
 
                     Log.LogMessage(LogSeverity.Info, $"DPCM size: {dpcmBytes.Length} bytes.");
 
-                    if (dpcmBytes.Length > MaxDpcmSize)
-                        Log.LogMessage(LogSeverity.Warning, $"DPCM samples size ({dpcmBytes.Length}) is larger than the maximum allowed for ROM export ({MaxDpcmSize}). Truncating.");
+                    if (dpcmBytes.Length > usingMaxDpcmSize)
+                        Log.LogMessage(LogSeverity.Warning, $"DPCM samples size ({dpcmBytes.Length}) is larger than the maximum allowed for ROM export ({usingMaxDpcmSize}). Truncating.");
 
                     // Always allocate the full 11KB of samples.
-                    Array.Resize(ref dpcmBytes, MaxDpcmSize);
+                    Array.Resize(ref dpcmBytes, usingMaxDpcmSize);
 
                     romBytes.AddRange(dpcmBytes);
                 }
                 else
                 {
-                    romBytes.AddRange(new byte[MaxDpcmSize]);
+                    romBytes.AddRange(new byte[usingMaxDpcmSize]);
                 }
 
                 romBytes.AddRange(codeBytes);
