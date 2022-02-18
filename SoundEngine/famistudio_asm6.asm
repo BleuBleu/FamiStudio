@@ -2638,12 +2638,6 @@ famistudio_update_epsm_rhythm_channel_sound:
     tax
 
 
-    lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
-	sta famistudio_chn_epsm_rhythm_key,y
-    sta FAMISTUDIO_EPSM_ADDR
-    lda famistudio_epsm_rhythm_key_table,y
-    sta FAMISTUDIO_EPSM_DATA
-
 @update_volume:
     ; Write volume
     lda famistudio_epsm_rhythm_reg_table,y
@@ -2656,6 +2650,15 @@ famistudio_update_epsm_rhythm_channel_sound:
 		rol
 		adc famistudio_chn_epsm_rhythm_stereo,y
         sta FAMISTUDIO_EPSM_DATA
+	
+	
+    lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
+	sta famistudio_chn_epsm_rhythm_key,y
+    sta FAMISTUDIO_EPSM_ADDR
+    lda famistudio_epsm_rhythm_key_table,y
+    sta FAMISTUDIO_EPSM_DATA
+	
+	
 @noupdate:
     rts
 
