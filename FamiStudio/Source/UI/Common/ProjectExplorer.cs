@@ -3405,7 +3405,16 @@ namespace FamiStudio
 
                     if (changedExpansion || changedNumChannels)
                     {
-                        if (!expansionRemoved || PlatformUtils.IsMobile || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        var numExpansionsSelected = 0;
+
+                        for (int i = 0; i < selectedExpansions.Length; i++)
+                        {
+                            if (selectedExpansions[i])
+                                numExpansionsSelected++;
+                        }
+                        if (numExpansionsSelected > 1 && ((expansionMask & ExpansionType.EPSMMask) != 0))
+                            PlatformUtils.MessageBox($"EPSM is not supported with other expansions enabled", "", MessageBoxButtons.OK);
+                        else if (!expansionRemoved || PlatformUtils.IsMobile || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
                             project.SetExpansionAudioMask(expansionMask, numChannels);
@@ -3462,8 +3471,10 @@ namespace FamiStudio
                     numExpansionsSelected++;
             }
 
-            if (numExpansionsSelected > 1)
-                props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to the FamiStudio Sound Engine or FamiTracker.");
+            if (selectedExpansions.Length >= ExpansionType.EPSM && selectedExpansions[ExpansionType.EPSM-1] && numExpansionsSelected > 1)
+                props.SetPropertyWarning(6, CommentType.Warning, "EPSM Is unsupported with other expansions enabled.");
+            else if (numExpansionsSelected > 1)
+                props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to FamiTracker.");
             else
                 props.SetPropertyWarning(6, CommentType.Good, "");
         }
