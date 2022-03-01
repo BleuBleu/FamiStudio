@@ -8,7 +8,7 @@ Patterns are laid out on one of the five channels that NES support (more if you 
 
 ## Seeking
 
-Clicking in the timeline (header) of the sequencer will move the play position. You can also drag the seek back to more it more accurately.
+Clicking in the timeline (header) of the sequencer will move the play position. You can also drag the seek back to move it more accurately.
 
 ## Changing the active channel
 

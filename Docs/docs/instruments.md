@@ -33,7 +33,7 @@ Parameter(s) that is available on most instruments:
      
 ## Adding instruments
 
-You can an instrument by pressing the "+" sign, and you can one by right-clicking on it. Deleting an instrument will delete all notes used by that instrument.
+You can add an instrument by pressing the "+" sign, and you can delete one by right-clicking on it. Deleting an instrument will delete all notes used by that instrument.
 
 ## Replacing an instrument by another
 
@@ -71,7 +71,7 @@ Right-clicking on the numbers on the header of the envelope editor allows for ra
 
 ![](images/CopyEnvelopeValues.png#center)
 
-It is also possible to paste envelope values coming for raw text. Any series of number that is space, tab, comma, semicolon or newline separated can be pasted in the envelope editor. 
+It is also possible to paste envelope values coming from raw text. Any series of number that is space, tab, comma, semicolon or newline separated can be pasted in the envelope editor. 
 
 ## Copying envelopes
 
