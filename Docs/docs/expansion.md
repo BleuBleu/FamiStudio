@@ -56,7 +56,7 @@ VRC7 instruments are by far the ones with the most parameters.
 
 ![](images/VRC7.png#center)
 
-Roughly speaking, the chip generates a carier frequency, which is then modified by a modulator. To configure this properly, you should be familiar with the Attack-Decay-Sustain-Release (ADSR) way of generating sound.
+Roughly speaking, the chip generates a carier frequency, which is then modified by a modulator. To configure this properly, you should be familiar with the [Attack-Decay-Sustain-Release (ADSR)](https://en.wikipedia.org/wiki/Envelope_(music)#ADSR) way of generating sound.
 
 * **Patch** : Allows you to select one of the built-in patch. Changing any parameter value will revert back to the "Custom" patch as it is the only one that can be configured.
 * **Carier** / **Modulator** : 
