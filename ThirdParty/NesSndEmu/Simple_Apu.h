@@ -128,8 +128,8 @@ private:
 	Nes_EPSM epsm;
 	Blip_Buffer buf;
 	Blip_Buffer tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.
-	Blip_Buffer bufLeft;
-	Blip_Buffer bufRight;
+	Blip_Buffer buf_left;
+	Blip_Buffer buf_right;
 	blip_time_t time;
 	blip_time_t frame_length;
 	blip_time_t clock(blip_time_t t = 4) { return time += t; }

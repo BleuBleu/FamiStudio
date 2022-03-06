@@ -40,8 +40,8 @@ private:
 	// noncopyable
 	Nes_EPSM(const Nes_EPSM&);
 	Nes_EPSM& operator = (const Nes_EPSM&);
-	std::queue<int> dataWrite;
-	std::queue<int> aWrite;
+	std::queue<int> data_write;
+	std::queue<int> a_write;
 
 	void reset_psg();
 	void reset_opn2();
@@ -50,20 +50,20 @@ private:
 	int reg;
 	uint8_t a0;
 	uint8_t a1;
-	uint8_t currentRegister;
-	uint8_t maskFm;
+	uint8_t current_register;
+	uint8_t mask_fm;
 	uint8_t maskRythm;
 	double vol;
 	struct __PSG* psg;
 	ym3438_t opn2;
 
 	Blip_Buffer* output_buffer;
-	Blip_Buffer* output_bufferRight;
+	Blip_Buffer* output_buffer_right;
 	cpu_time_t last_time;
 	int last_amp;
-	int last_ampRight;
+	int last_amp_right;
 	Blip_Synth<blip_med_quality, 15420> synth;
-	Blip_Synth<blip_med_quality, 15420> synthRight;
+	Blip_Synth<blip_med_quality, 15420> synth_right;
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 	short shadow_internal_regs2[shadow_internal_regs_count];

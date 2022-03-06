@@ -96,6 +96,11 @@ namespace FamiStudio
                 playbackRate = value;
             }
         }
+        
+        public bool UsesStereo
+        {
+            get { return song.Project.UsesEPSMExpansion; }
+        }
 
         public void SetSelectionRange(int min, int max)
         {

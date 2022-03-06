@@ -67,11 +67,11 @@ blargg_err_t Simple_Apu::sample_rate( long rate, bool pal, int tnd_mode )
 	mmc5.output(&buf);
 	namco.output(&buf);
 	sunsoft.output(&buf);
-	epsm.output(&bufLeft, &bufRight);
-	bufLeft.clock_rate(pal ? 1662607 : 1789773);
-	bufLeft.sample_rate(rate);
-	bufRight.clock_rate(pal ? 1662607 : 1789773);
-	bufRight.sample_rate(rate);
+	epsm.output(&buf_left, &buf_right);
+	buf_left.clock_rate(pal ? 1662607 : 1789773);
+	buf_left.sample_rate(rate);
+	buf_right.clock_rate(pal ? 1662607 : 1789773);
+	buf_right.sample_rate(rate);
 	
 	tnd[0].clock_rate(pal ? 1662607 : 1789773);
 	tnd[1].clock_rate(pal ? 1662607 : 1789773);
@@ -249,8 +249,8 @@ void Simple_Apu::end_frame()
 	if (expansions & expansion_mask_epsm) epsm.end_frame(frame_length); 
 
 	buf.end_frame( frame_length );
-	bufLeft.end_frame(frame_length);
-	bufRight.end_frame(frame_length);
+	buf_left.end_frame(frame_length);
+	buf_right.end_frame(frame_length);
 	tnd[0].end_frame( frame_length );
 
 	if (separate_tnd_mode)
@@ -328,8 +328,8 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 
 	sample_t outLeft[4096];
 	sample_t outRight[4096];
-	long samples = bufLeft.read_samples(outLeft, count, false);
-	bufRight.read_samples(outRight, count, false);
+	long samples = buf_left.read_samples(outLeft, count, false);
+	buf_right.read_samples(outRight, count, false);
 	if (count)
 	{
 		if (separate_tnd_mode)
@@ -439,8 +439,8 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 void Simple_Apu::remove_samples(long s)
 {
 	buf.remove_samples(s);
-	bufLeft.remove_samples(s);
-	bufRight.remove_samples(s);
+	buf_left.remove_samples(s);
+	buf_right.remove_samples(s);
 
 	tnd[0].remove_samples(s);
 	if (separate_tnd_mode)

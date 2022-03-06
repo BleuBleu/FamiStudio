@@ -7,7 +7,7 @@
 #include <iostream>
 #include BLARGG_SOURCE_BEGIN
 
-Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL), output_bufferRight(NULL)
+Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL), output_buffer_right(NULL)
 {
 	output(NULL,NULL);
 	volume(1.0);
@@ -33,7 +33,7 @@ void Nes_EPSM::reset()
 void Nes_EPSM::volume(double v)
 {
 	synth.volume(v);
-	synthRight.volume(v);
+	synth_right.volume(v);
 }
 
 
@@ -53,10 +53,10 @@ void Nes_EPSM::reset_opn2()
 	OPN2_SetChipType(0);
 }
 
-void Nes_EPSM::output(Blip_Buffer* buf, Blip_Buffer* bufRight)
+void Nes_EPSM::output(Blip_Buffer* buf, Blip_Buffer* buf_right)
 {
 	output_buffer = buf;
-	output_bufferRight = bufRight;
+	output_buffer_right = buf_right;
 
 	if (output_buffer && (!psg || output_buffer->sample_rate() != psg->rate))
 		reset_psg();
@@ -65,7 +65,7 @@ void Nes_EPSM::output(Blip_Buffer* buf, Blip_Buffer* bufRight)
 void Nes_EPSM::treble_eq(blip_eq_t const& eq)
 {
 	synth.treble_eq(eq);
-	synthRight.treble_eq(eq);
+	synth_right.treble_eq(eq);
 }
 
 void Nes_EPSM::enable_channel(int idx, bool enabled)
@@ -83,9 +83,9 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 	if (idx < 9 && idx > 2)
 	{
 		if (enabled)
-		maskFm = maskFm | (1 << (idx-3));
+		mask_fm = mask_fm | (1 << (idx-3));
 		else
-		maskFm = maskFm & ~(1 << (idx-3));
+		mask_fm = mask_fm & ~(1 << (idx-3));
 	}
 	if (idx > 8)
 	{
@@ -109,21 +109,21 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	switch(addr) {
 		case 0x401c:
 		case 0x401e:
-			currentRegister = data;
+			current_register = data;
 			break;
 		case 0x401d:
 		case 0x401f:
-			if (currentRegister == 0x10) {
+			if (current_register == 0x10) {
 				data = data & maskRythm;
 			}
 				//currentRegister = data;
-			else if (currentRegister == 0x28) {
-				if(!(maskFm & 0x1) && ((data & 0x7)) == 0){ mask = 1; }
-				else if (!(maskFm & 0x2) && ((data & 0x7)) == 1) { mask = 1; }
-				else if (!(maskFm & 0x4) && ((data & 0x7)) == 2) { mask = 1; }
-				else if (!(maskFm & 0x8) && ((data & 0x7)) == 4) { mask = 1; }
-				else if (!(maskFm & 0x10) && ((data & 0x7)) == 5) { mask = 1; }
-				else if (!(maskFm & 0x20) && ((data & 0x7)) == 6) { mask = 1; }
+			else if (current_register == 0x28) {
+				if(!(mask_fm & 0x1) && ((data & 0x7)) == 0){ mask = 1; }
+				else if (!(mask_fm & 0x2) && ((data & 0x7)) == 1) { mask = 1; }
+				else if (!(mask_fm & 0x4) && ((data & 0x7)) == 2) { mask = 1; }
+				else if (!(mask_fm & 0x8) && ((data & 0x7)) == 4) { mask = 1; }
+				else if (!(mask_fm & 0x10) && ((data & 0x7)) == 5) { mask = 1; }
+				else if (!(mask_fm & 0x20) && ((data & 0x7)) == 6) { mask = 1; }
 				//std::cout << "fm" << std::endl;
 			}
 			break;
@@ -133,8 +133,8 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
 	a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
 	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
-	if (!mask) dataWrite.push(data);
-	if (!mask) aWrite.push((a0 | (a1 << 1)));
+	if (!mask) data_write.push(data);
+	if (!mask) a_write.push((a0 | (a1 << 1)));
 	//if (!mask) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
 	//run_until(time);
 }
@@ -150,16 +150,16 @@ long Nes_EPSM::run_until(cpu_time_t time)
 
 	while (t < time)
 	{
-		if (!dataWrite.empty() && !aWrite.empty() && !(t % 1))
+		if (!data_write.empty() && !a_write.empty() && !(t % 1))
 		{
-			OPN2_Write(&opn2, aWrite.front(), dataWrite.front());
-			dataWrite.pop();
-			aWrite.pop();
+			OPN2_Write(&opn2, a_write.front(), data_write.front());
+			data_write.pop();
+			a_write.pop();
 		}
 		int sample = PSG_calc(psg)/1.8;
-		int sampleRight;
+		int sample_right;
 		sample = clamp(sample, -7710, 7710);
-		sampleRight = clamp(sample, -7710, 7710);
+		sample_right = clamp(sample, -7710, 7710);
 		int t2 = 0;
 		int16_t samples[4];
 		while (t2 < 12)
@@ -167,21 +167,21 @@ long Nes_EPSM::run_until(cpu_time_t time)
 			OPN2_Clock(&opn2, samples);
 			sample += (samples[0]) * 12;
 			sample += samples[2]*1.1;
-			sampleRight += (samples[1]) * 12;
-			sampleRight += samples[3]*1.1;
+			sample_right += (samples[1]) * 12;
+			sample_right += samples[3]*1.1;
 			t2++;
 		}
 		int delta = sample - last_amp;
-		int deltaRight = sampleRight - last_ampRight;
+		int delta_right = sample_right - last_amp_right;
 		if (delta)
 		{
 			synth.offset(t, delta, output_buffer);
 			last_amp = sample;
 		}
-		if (deltaRight)
+		if (delta_right)
 		{
-			synthRight.offset(t, deltaRight, output_bufferRight);
-			last_ampRight = sampleRight;
+			synth_right.offset(t, delta_right, output_buffer_right);
+			last_amp_right = sample_right;
 		}
 		t += 16;
 	}

@@ -99,7 +99,6 @@ namespace FamiStudio
                 }
                 header.vgmDataOffset = 0x8C+29;
                 header.totalSamples = lastWrite.FrameNumber*735;
-                //header.vgmDataOffset = 0xBA;
                 header.rate = 60;
                 header.ExtraHeaderOffset = 0x4;
                 
@@ -109,13 +108,6 @@ namespace FamiStudio
                 string systemName = "NES/Famicom FamiStudio Export\0";
                 string author = song.Project.Author + "\0";
                 int gd3Lenght = gd3.Length + (songName.Length * 2) + (gameName.Length * 2) + (systemName.Length * 2) + (author.Length * 2) + 2 + 2 + 2 + 2 + 2 + 4 + 4 + 4;
-
-                // ntsc wait 0x62 735 samples
-                // pal wait 0x63 882 samples
-                // 0x67 data block
-                // 0x66 end of data
-                //header.totalSamples = (waits* 882 or 735)
-
 
                 var sampleData = project.GetPackedSampleData();
 
@@ -327,8 +319,6 @@ namespace FamiStudio
                     file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
                     file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
                     file.Write(BitConverter.GetBytes(0), 0, sizeof(short));
-                    //var howManyBytes = test.Length * sizeof(Char);
-                    //sr.WriteLine($" ;end of file");
                     sr.Flush();
                     sr.Close();
                 }
@@ -375,13 +365,6 @@ namespace FamiStudio
                         {
                             chipData = reg.Value;
                         }
-                        /*else if ((lastReg != reg.Register && lastReg != 0x2a03) || (((reg.Register <= 0x401F) || (reg.Register <= 0x407f && reg.Register >= 0x4040)) && lastReg != 0x2a03))
-                        {
-                            if (lastReg != 0)
-                            {
-                                sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
-                            }
-                        }*/
                         if (reg.Register == 0x401d)
                         {
                             if (lastReg == reg.Register && repeatingReg < 255)
@@ -398,8 +381,6 @@ namespace FamiStudio
                                 lastReg = reg.Register;
                                 repeatingReg = 1;
                             }
-                            //sr.WriteLine($".byte EPSM_A0_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
-                            //sr.WriteLine($".byte ${((chipData & 0xF0) | 0x2):x2} ,${((chipData & 0x0F) << 4):x2} ,${((reg.Value & 0xF0) | 0xA):x2} ,${((reg.Value & 0x0F) << 4):x2}");
                         }
                         else if (reg.Register == 0x401f)
                         {
@@ -417,8 +398,6 @@ namespace FamiStudio
                                 lastReg = reg.Register;
                                 repeatingReg = 1;
                             }
-                            //sr.WriteLine($".byte EPSM_A1_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
-                            //sr.WriteLine($".byte ${((chipData & 0xF0) | 0x6):x2} ,${((chipData & 0x0F) << 4):x2} ,${((reg.Value & 0xF0) | 0xE):x2} ,${((reg.Value & 0x0F) << 4):x2}");
                         }
                         else if (reg.Register == 0x9030)
                         {
@@ -436,7 +415,6 @@ namespace FamiStudio
                                 lastReg = reg.Register;
                                 repeatingReg = 1;
                             }
-                            //sr.WriteLine($".byte VRC7_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                         }
                         else if (reg.Register == 0xE000)
                         {
@@ -454,7 +432,6 @@ namespace FamiStudio
                                 lastReg = reg.Register;
                                 repeatingReg = 1;
                             }
-                            //sr.WriteLine($".byte S5B_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                         }
                         else if (reg.Register == 0x4800)
                         {
@@ -472,7 +449,6 @@ namespace FamiStudio
                                 lastReg = reg.Register;
                                 repeatingReg = 1;
                             }
-                            //sr.WriteLine($".byte S5B_WRITE, $02, ${chipData:X2}, ${reg.Value:X2}");
                         }
                         else if ((reg.Register <= 0x401B) || (reg.Register <= 0x407f && reg.Register >= 0x4040))
                         {
@@ -490,7 +466,6 @@ namespace FamiStudio
                                 lastReg = 0x2a03;
                                 repeatingReg = 1;
                             }
-                            //sr.WriteLine($".byte APU_WRITE, $02, ${(reg.Register & 0xff):X2}, ${reg.Value:X2}");
                         }
                         else if (reg.Register >= 0x5000 && reg.Register <= 0x5020)
                         {
@@ -508,7 +483,6 @@ namespace FamiStudio
                                 lastReg = 0x5000;
                                 repeatingReg = 1;
                             }
-                            //sr.WriteLine($".byte APU_WRITE, $02, ${(reg.Register & 0xff):X2}, ${reg.Value:X2}");
                         }
                     }
                     sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
