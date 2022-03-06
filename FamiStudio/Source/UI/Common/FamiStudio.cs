@@ -1727,7 +1727,7 @@ namespace FamiStudio
                         SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
                     else if (shift)
                         SeekSong(0);
-                    else if (ctrl && !PlatformUtils.IsMacOS) // CMD + Space is spotlight search on MacOS :(
+                    else if (ctrl) 
                         SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition)));
 
                     PlaySong();
