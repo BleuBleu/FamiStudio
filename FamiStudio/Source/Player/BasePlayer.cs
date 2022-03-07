@@ -99,7 +99,7 @@ namespace FamiStudio
         
         public bool UsesStereo
         {
-            get { return song.Project.UsesEPSMExpansion; }
+            get { return true /*song.Project.UsesEPSMExpansion*/; }
         }
 
         public void SetSelectionRange(int min, int max)
@@ -241,7 +241,7 @@ namespace FamiStudio
             famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels, dmcCallback);
+            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, UsesStereo, song.Project.ExpansionNumN163Channels, dmcCallback);
 
             ResetFamiStudioTempo();
             UpdateChannelsMuting();

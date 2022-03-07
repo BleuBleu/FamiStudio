@@ -47,7 +47,9 @@ namespace FamiStudio
             int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short)*2;
             numBufferedFrames = numBuffers;
             bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
-            audioStream = new AudioStream(sampleRate, bufferSize, numBufferedFrames, AudioBufferFillCallback);
+            int channels = UsesStereo ? 2 : 1;
+
+            audioStream = new AudioStream(sampleRate, bufferSize, numBufferedFrames, AudioBufferFillCallback, channels);
         }
 
         protected short[] MixSamples(short[] emulation, short[] metronome, int metronomeIndex, float pitch, float volume)

@@ -12,8 +12,12 @@ namespace FamiStudio
         {
             var project = song.Project;
             var introDuration = separateIntro ? GetIntroDuration(song, sampleRate) : 0;
-            introDuration = introDuration * 2; //Stereo
-            duration = duration * 2; //Stereo
+            bool usesStereo = song.Project.UsesEPSMExpansion;
+            if (usesStereo)
+            {
+                introDuration = introDuration * 2; //Stereo
+                duration = duration * 2; //Stereo
+            }
 
             if (channelMask == 0)
                 return;
@@ -28,12 +32,14 @@ namespace FamiStudio
                         var player = new WavPlayer(sampleRate, loopCount, channelBit, Settings.SeparateChannelsExportTndMode);
                         var stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
 
-                        var samples = new short[stereoSamples.Length / 2];
-
-                        for (int i = 0; i < samples.Length; i++)
+                        var samples = usesStereo ? new short[stereoSamples.Length / 2] : stereoSamples;
+                        if (usesStereo)
                         {
-                            if (i % 2 == 0)
-                                samples[i] = (short)((stereoSamples[i * 2] + stereoSamples[i * 2 + 1]) / 2);
+                            for (int i = 0; i < samples.Length; i++)
+                            {
+                                if (i % 2 == 0)
+                                    samples[i] = (short)((stereoSamples[i * 2] + stereoSamples[i * 2 + 1]) / 2);
+                            }
                         }
                         if (introDuration > 0)
                         {
@@ -79,7 +85,7 @@ namespace FamiStudio
                     }
 
                     // Mix and interleave samples.
-                    samples = new short[numStereoSamples];
+                    samples = usesStereo ? new short[numStereoSamples] : new short[numStereoSamples * 2];
 
                     for (int i = 0; i < numStereoSamples; i++)
                     {
@@ -98,10 +104,18 @@ namespace FamiStudio
                             }
                         }
 
-                        if(i%2 == 0)
-                        samples[i] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
+                        if (usesStereo)
+                        {
+                            if (i % 2 == 0)
+                                samples[i] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
+                            else
+                                samples[i] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
+                        }
                         else
-                        samples[i] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
+                        {
+                            samples[i * 2 + 0] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
+                            samples[i * 2 + 1] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
+                        }
                     }
 
                     numChannels = 2;
@@ -112,12 +126,15 @@ namespace FamiStudio
                     var player = new WavPlayer(sampleRate, loopCount, channelMask);
                     stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
 
-                    samples = new short[stereoSamples.Length/2];
+                    samples = usesStereo ? new short[stereoSamples.Length/2] : stereoSamples;
 
-                    for (int i = 0; i < samples.Length; i++)
+                    if (usesStereo)
                     {
-                        if(i%2 == 0)
-                        samples[i] = (short)((stereoSamples[i * 2] + stereoSamples[i * 2 + 1])/2);
+                        for (int i = 0; i < samples.Length; i++)
+                        {
+                            if (i % 2 == 0)
+                                samples[i] = (short)((stereoSamples[i * 2] + stereoSamples[i * 2 + 1]) / 2);
+                        }
                     }
                 }
 

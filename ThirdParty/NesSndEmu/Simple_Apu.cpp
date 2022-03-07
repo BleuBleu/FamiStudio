@@ -29,6 +29,7 @@ Simple_Apu::Simple_Apu()
 	tnd_volume = 1.0;
 	expansions = expansion_mask_none;
 	apu.dmc_reader( null_dmc_reader, NULL );
+	stereo = false;
 }
 
 Simple_Apu::~Simple_Apu()
@@ -283,13 +284,20 @@ void Simple_Apu::set_audio_expansions(long exp)
 	expansions = exp;
 }
 
+void Simple_Apu::set_stereo(bool ste)
+{
+	stereo = ste;
+}
+
 long Simple_Apu::samples_avail() const
 {
 	assert(buf.samples_avail() == tnd[0].samples_avail());
 	assert(buf.samples_avail() == tnd[1].samples_avail() && separate_tnd_mode || tnd[1].samples_avail() == 0 && !separate_tnd_mode);
 	assert(buf.samples_avail() == tnd[2].samples_avail() && separate_tnd_mode || tnd[2].samples_avail() == 0 && !separate_tnd_mode);
-
-	return (buf.samples_avail()*2);
+	if (stereo)
+		return (buf.samples_avail()*2);
+	else
+		return buf.samples_avail();
 }
 
 const int    sample_shift     = blip_sample_bits - 16;
@@ -326,10 +334,10 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 	assert(buf.samples_avail() == tnd[1].samples_avail() && separate_tnd_mode || tnd[1].samples_avail() == 0 && !separate_tnd_mode);
 	assert(buf.samples_avail() == tnd[2].samples_avail() && separate_tnd_mode || tnd[2].samples_avail() == 0 && !separate_tnd_mode);
 
-	sample_t outLeft[4096];
-	sample_t outRight[4096];
-	long samples = buf_left.read_samples(outLeft, count, false);
-	buf_right.read_samples(outRight, count, false);
+	sample_t out_left[4096];
+	sample_t out_right[4096];
+	long samples = buf_left.read_samples(out_left, count, false);
+	buf_right.read_samples(out_right, count, false);
 	if (count)
 	{
 		if (separate_tnd_mode)
@@ -409,14 +417,20 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			int s = lin.read() + nonlin.read();
 			lin.next(lin_bass);
 			nonlin.next(nonlin_bass);
-			//*out++ = s;
-			*out++ = (blip_sample_t)clamp((int)(s + outLeft[i]), -32767, 32767);
-			*out++ = (blip_sample_t)clamp((int)(s + outRight[i]), -32767, 32767);
 
-			/*if ((BOOST::int16_t)s != s) {
-				out[-1] = 0x7FFF - (s >> 24);
-				out[-2] = 0x7FFF - (s >> 24);
-			}*/
+			if (stereo) 
+			{
+				*out++ = (blip_sample_t)clamp((int)(s + out_left[i]), -32767, 32767);
+				*out++ = (blip_sample_t)clamp((int)(s + out_right[i]), -32767, 32767);
+			}
+			else 
+			{
+				*out++ = s;
+				if ((BOOST::int16_t)s != s) {
+					out[-1] = 0x7FFF - (s >> 24);
+					out[-2] = 0x7FFF - (s >> 24);
+				}
+			}
 				
 		}
 

@@ -83,6 +83,7 @@ public:
 	void reset();
 
 	void set_audio_expansions(long exp);
+	void set_stereo(bool ste);
 	int get_audio_expansions() const { return expansions; }
 
 	// Number of samples in buffer
@@ -113,6 +114,7 @@ private:
 	bool seeking;
 	float tnd_volume;
 	int  expansions;
+	bool stereo;
 	int  separate_tnd_mode;
 	bool separate_tnd_channel_enabled[3];
 	long tnd_accum[3];
