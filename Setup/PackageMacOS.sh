@@ -19,13 +19,18 @@ cp ../FamiStudio/bin/Release/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
 version=`cat Version.txt`
 filename=FamiStudio$version-MacOS.zip
 
-# Using ditto to preserve permissions and xattr.
-rm $filename
-rm -r tmp
+# Prepare for package creation
+[ -f "$filename" ] && rm "$filename"
+[ -d tmp ] && rm -r tmp
 mkdir tmp
-cp -R Demo\ Songs tmp/
+
+# Create a package
+cp -R "Demo Songs" tmp/
 cp -R FamiStudio.app tmp/
 cd tmp
+# Using ditto to preserve permissions and xattr.
 ditto -c -k -X --rsrc . ../$filename
 cd ..
+
+# Clean up after package creation
 rm -r tmp
