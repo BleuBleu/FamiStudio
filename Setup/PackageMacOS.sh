@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Make the whole script fail if any of its commands fail 
+set -e
+# Print executed commands
+set -x
+
 # IMPORTANT : This does not update info.plist! Still needs to be done manually.
 
 # Build
