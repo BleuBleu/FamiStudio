@@ -32,6 +32,9 @@ FamiStudio/FamiStudio.args.json
 *.ilk
 .vscode
 
+# JetBrains Rider IDE (and other IDEs from the same family): project configuration
+/.idea/
+
 # This file is generated from the C file
 SoundEngine/DemoSource/demo_cc65.s
 
