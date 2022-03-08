@@ -212,7 +212,6 @@ Some keyboard shortcuts specific to the piano roll:
 * **A+Click**: Toggles the attack of a note.
 * **I+Click**: Instrument picker
 * **T+Click**: Adds an orphan stop note.
-* **~ (Tilde)**: Expand/collapse the effect panel.
 * **Shift+S**: Toggles snapping.
 
 When QWERTY keyboard input is active, some of the keys will be overriden to support piano input. This is default layout for an en-US keyboard. The [Configuration Dialog](config.md) allows re-mapping the keys for other types of keyboards.
