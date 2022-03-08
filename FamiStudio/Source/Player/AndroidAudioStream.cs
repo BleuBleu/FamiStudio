@@ -20,7 +20,7 @@ namespace FamiStudio
         private AudioTrack audioTrackImmediate;
         private Task playingTask;
 
-        public AndroidAudioStream(int rate, int bufferSizeInBytes, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public AndroidAudioStream(int rate, int bufferSizeInBytes, int numBuffers, GetBufferDataCallback bufferFillCallback, int channels)
         {
             // Probably not needed, but i've seen things about effects in the log that
             // worries me. Doesnt hurt.
@@ -29,14 +29,26 @@ namespace FamiStudio
 
             bufferFill = bufferFillCallback;
 
-            audioTrack = new AudioTrack.Builder()
-                .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
-                .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(rate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(ChannelOut.Mono).Build())
-                .SetTransferMode(AudioTrackMode.Stream)
-                .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
-                .SetBufferSizeInBytes(bufferSizeInBytes).Build();
+            if (channels == 1)
+            {
+                audioTrack = new AudioTrack.Builder()
+                    .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
+                    .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(rate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(ChannelOut.Mono).Build())
+                    .SetTransferMode(AudioTrackMode.Stream)
+                    .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
+                    .SetBufferSizeInBytes(bufferSizeInBytes).Build();
+            }
+            else
+            {
+                audioTrack = new AudioTrack.Builder()
+                    .SetAudioAttributes(new AudioAttributes.Builder().SetContentType(AudioContentType.Music).SetUsage(AudioUsageKind.Media).Build())
+                    .SetAudioFormat(new AudioFormat.Builder().SetSampleRate(rate).SetEncoding(Encoding.Pcm16bit).SetChannelMask(ChannelOut.Stereo).Build())
+                    .SetTransferMode(AudioTrackMode.Stream)
+                    .SetPerformanceMode(AudioTrackPerformanceMode.LowLatency)
+                    .SetBufferSizeInBytes(bufferSizeInBytes).Build();
+            }
 
-            Debug.Assert(audioTrack.PerformanceMode == AudioTrackPerformanceMode.LowLatency);
+                Debug.Assert(audioTrack.PerformanceMode == AudioTrackPerformanceMode.LowLatency);
         }
 
         public void Start()
