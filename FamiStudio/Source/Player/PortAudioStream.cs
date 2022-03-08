@@ -96,6 +96,7 @@ namespace FamiStudio
         private bool playing = false;
         private GetBufferDataCallback bufferFill;
         private static int refCount = 0;
+        private int audioChannels = 1;
         private PaStreamCallback streamCallback;
 
         private IntPtr       immediateStream = new IntPtr();
@@ -103,17 +104,17 @@ namespace FamiStudio
         private volatile int immediateStreamPosition = -1;
         private PaStreamCallback immediateStreamCallback;
 
-        public PortAudioStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public PortAudioStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback, int channels)
         {
             if (refCount == 0)
                 Pa_Initialize();
 
             refCount++;
-
+            audioChannels = channels;
             streamCallback = new PaStreamCallback(StreamCallback);
             immediateStreamCallback = new PaStreamCallback(ImmediateStreamCallback);
 
-            Pa_OpenDefaultStream(out stream, 0, 2, PaSampleFormat.Int16, rate, 0, streamCallback, IntPtr.Zero);
+            Pa_OpenDefaultStream(out stream, 0, channels, PaSampleFormat.Int16, rate, 0, streamCallback, IntPtr.Zero);
             bufferFill = bufferFillCallback;
         }
 
@@ -159,7 +160,7 @@ namespace FamiStudio
         PaStreamCallbackResult StreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData)
         {
             var outPtr = output;
-            frameCount = frameCount*2;
+            frameCount = frameCount*(uint)audioChannels;
             do
             {
                 if (lastSamplesOffset == 0)
