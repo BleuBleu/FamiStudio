@@ -1,3 +1,6 @@
+# macOS package created by script
+/Setup/FamiStudio*-MacOS.zip
+
 *.o
 *.obj
 *.gch
