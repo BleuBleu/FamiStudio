@@ -54,7 +54,7 @@ namespace FamiStudio
         public int DashTextureSize => dashedBitmap.Size.Width;
         public GLTransform Transform => transform;
 
-        protected const int MaxAtlasResolution = 2048;
+        protected const int MaxAtlasResolution = 4096;
         protected const int MaxVertexCount = (PlatformUtils.IsDesktop ? 128 : 64) * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
