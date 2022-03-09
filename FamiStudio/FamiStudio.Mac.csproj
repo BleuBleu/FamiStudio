@@ -358,6 +358,8 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportMIDI%402x.png" />
     <EmbeddedResource Include="Resources\ExportMIDI.png" />
+    <EmbeddedResource Include="Resources\ExportVGM%402x.png" />
+    <EmbeddedResource Include="Resources\ExportVGM.png" />
     <EmbeddedResource Include="Resources\ExportNsf%402x.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportRom%402x.png" />

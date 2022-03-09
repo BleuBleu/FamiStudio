@@ -465,6 +465,7 @@
     <EmbeddedResource Include="Resources\ExportFamiTone2%402x.png" />
     <EmbeddedResource Include="Resources\ExportFamiTracker%402x.png" />
     <EmbeddedResource Include="Resources\ExportMIDI%402x.png" />
+    <EmbeddedResource Include="Resources\ExportVGM%402x.png" />
     <EmbeddedResource Include="Resources\ExportNsf%402x.png" />
     <EmbeddedResource Include="Resources\ExportRom%402x.png" />
     <EmbeddedResource Include="Resources\ExportShare%402x.png" />

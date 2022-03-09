@@ -57,7 +57,7 @@ namespace FamiStudio
             "ExportNsf",
             "ExportRom",
             "ExportMIDI",
-            "ExportMIDI",
+            "ExportVGM",
             "ExportText",
             "ExportFamiTracker",
             "ExportFamiStudioEngine",
