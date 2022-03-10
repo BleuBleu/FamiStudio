@@ -363,7 +363,7 @@ namespace FamiStudio
                 if (!instrument.IsFdsInstrument  && 
                     !instrument.IsN163Instrument &&
                     !instrument.IsVrc7Instrument &&
-                    !instrument.IsEPSMInstrument)
+                    !instrument.IsEpsmInstrument)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                     var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -408,7 +408,7 @@ namespace FamiStudio
                     if (instrument.IsFdsInstrument  || 
                         instrument.IsVrc7Instrument ||
                         instrument.IsN163Instrument ||
-                        instrument.IsEPSMInstrument)
+                        instrument.IsEpsmInstrument)
                     {
                         var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                         var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -438,7 +438,7 @@ namespace FamiStudio
                             lines.Add($"\t{db} ${(instrument.Vrc7Patch << 4):x2}, $00");
                             lines.Add($"\t{db} {String.Join(",", instrument.Vrc7PatchRegs.Select(r => $"${r:x2}"))}");
                         }
-                        else if (instrument.IsEPSMInstrument)
+                        else if (instrument.IsEpsmInstrument)
                         {
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
                             // we can fit the first 8 bytes of data here to avoid needing to add padding
@@ -460,7 +460,7 @@ namespace FamiStudio
                 for (int i = 0, j = 0; i < project.Instruments.Count; i++)
                 {
                     var instrument = project.Instruments[i];
-                    if (instrument.IsEPSMInstrument)
+                    if (instrument.IsEpsmInstrument)
                     {
                         lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
                         lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(8).Select(r => $"${r:x2}"))}");

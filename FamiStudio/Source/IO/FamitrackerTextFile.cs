@@ -299,7 +299,7 @@ namespace FamiStudio
                         var instrument = CreateUniquelyNamedInstrument(ExpansionType.EPSM, param[param.Length - 1]);
 
                         instrument.EpsmPatch = byte.Parse(param[1]);
-                        if (instrument.EpsmPatch == EPSMInstrumentPatch.Custom)
+                        if (instrument.EpsmPatch == EpsmInstrumentPatch.Custom)
                         {
                             for (int j = 0; j < 30; j++)
                                 instrument.EpsmPatchRegs[j] = Convert.ToByte(param[2 + j], 16);
@@ -826,7 +826,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Warning, $"VRC7 Instrument '{instrument.Name}' uses a volume, pitch or arpeggio envelope. FamiTracker does not support this. Ignoring.");
                     }
                 }
-                else if (instrument.IsEPSMInstrument)
+                else if (instrument.IsEpsmInstrument)
                 {
                     lines.Add($"INSTEPSM{i,4}{instrument.EpsmPatch,4} {String.Join(" ", instrument.EpsmPatchRegs.Select(x => $"{x:X2}"))} \"{instrument.Name}\"");
 

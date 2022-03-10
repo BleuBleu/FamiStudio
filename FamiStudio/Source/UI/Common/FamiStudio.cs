@@ -1460,7 +1460,7 @@ namespace FamiStudio
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);
             }
             if (selectedInstrument != null &&
-                (selectedInstrument.HasReleaseEnvelope || selectedInstrument.IsEPSMInstrument) &&
+                (selectedInstrument.HasReleaseEnvelope || selectedInstrument.IsEpsmInstrument) &&
                 song.Channels[selectedChannelIndex].SupportsInstrument(selectedInstrument) && (song.Channels[selectedChannelIndex].IsEPSMFmChannel || song.Channels[selectedChannelIndex].IsEPSMRythmChannel))
             {
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);

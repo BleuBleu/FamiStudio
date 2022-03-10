@@ -831,7 +831,7 @@ namespace FamiStudio
                         //button.font = ThemeBase.FontMediumBoldCenter;
                         //g.DrawText(button.Text, ThemeBase.FontMediumBoldCenter, buttonTextNoIconPosX, buttonTextPosY, button.textBrush, actualWidth - buttonTextNoIconPosX * 2);
                         c.DrawText(button.Text, ThemeResources.FontMediumBold, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, RenderTextFlags.MiddleCenter | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextPosX, buttonSizeY);
-                        if (button.instrument.IsVrc7Instrument || button.instrument.IsEPSMInstrument)
+                        if (button.instrument.IsVrc7Instrument || button.instrument.IsEpsmInstrument)
                         {
                             int graphHeight     = ScaleForMainWindow(100) + buttonIconPosY;
                             int graphWidth      = ScaleForMainWindow(293) - scrollBarThickness;
@@ -883,7 +883,7 @@ namespace FamiStudio
                                     opReleaseEndX   = ScaleForMainWindow(graphWidth) + buttonIconPosX;
                                 }
                             }
-                            if (button.instrument.IsEPSMInstrument)
+                            if (button.instrument.IsEpsmInstrument)
                             {
                                 int opAttackRate    = buttons[i + 9].param.GetValue(); //31
                                 int opDecayRate     = buttons[i + 11].param.GetValue(); //31

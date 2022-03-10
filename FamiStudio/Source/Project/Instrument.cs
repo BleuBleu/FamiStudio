@@ -35,7 +35,7 @@ namespace FamiStudio
         private byte[] vrc7PatchRegs = new byte[8];
 
         // EPSM
-        private byte epsmPatch = EPSMInstrumentPatch.Default;
+        private byte epsmPatch = EpsmInstrumentPatch.Default;
         private byte[] epsmPatchRegs = new byte[31];
 
         public int Id => id;
@@ -56,7 +56,7 @@ namespace FamiStudio
         public bool IsVrc7Instrument    => expansion == ExpansionType.Vrc7;
         public bool IsN163Instrument    => expansion == ExpansionType.N163;
         public bool IsS5BInstrument     => expansion == ExpansionType.S5B;
-        public bool IsEPSMInstrument    => expansion == ExpansionType.EPSM;
+        public bool IsEpsmInstrument    => expansion == ExpansionType.EPSM;
 
         public Instrument()
         {
@@ -90,8 +90,8 @@ namespace FamiStudio
             }
             else if (expansion == global::FamiStudio.ExpansionType.EPSM)
             {
-                epsmPatch = EPSMInstrumentPatch.Default;
-                Array.Copy(EPSMInstrumentPatch.Infos[EPSMInstrumentPatch.Default].data, epsmPatchRegs, 31);
+                epsmPatch = EpsmInstrumentPatch.Default;
+                Array.Copy(EpsmInstrumentPatch.Infos[EpsmInstrumentPatch.Default].data, epsmPatchRegs, 31);
             }
         }
 
@@ -204,7 +204,7 @@ namespace FamiStudio
             {
                 epsmPatch = value;
                 if (epsmPatch != 0)
-                    Array.Copy(EPSMInstrumentPatch.Infos[epsmPatch].data, epsmPatchRegs, 31);
+                    Array.Copy(EpsmInstrumentPatch.Infos[epsmPatch].data, epsmPatchRegs, 31);
             }
         }
 
@@ -236,7 +236,7 @@ namespace FamiStudio
 
         public static string GetEpsmPatchName(int preset)
         {
-            return EPSMInstrumentPatch.Infos[preset].name;
+            return EpsmInstrumentPatch.Infos[preset].name;
         }
 
         public uint ComputeCRC(uint crc = 0)
@@ -466,21 +466,21 @@ namespace FamiStudio
     }
 
 
-    public static class EPSMInstrumentPatch
+    public static class EpsmInstrumentPatch
     {
         public const byte Custom = 0;
         public const byte Default = 1;
 
-        public struct EPSMPatchInfo
+        public struct EpsmPatchInfo
         {
             public string name;
             public byte[] data;
         };
 
-        public static readonly EPSMPatchInfo[] Infos = new[]
+        public static readonly EpsmPatchInfo[] Infos = new[]
         {
-            new EPSMPatchInfo() { name = "Custom",       data = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Custom  
-            new EPSMPatchInfo() { name = "Default",      data = new byte[] { 0x04, 0xc0, 0x00, 0x20, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x20, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00 } }, // Default
+            new EpsmPatchInfo() { name = "Custom",       data = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Custom  
+            new EpsmPatchInfo() { name = "Default",      data = new byte[] { 0x04, 0xc0, 0x00, 0x20, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x20, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00 } }, // Default
                                                                            //0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 -- Register order
 
         };

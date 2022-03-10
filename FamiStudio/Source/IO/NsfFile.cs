@@ -502,12 +502,12 @@ namespace FamiStudio
 
         private Instrument GetEpsmInstrument(byte patch, byte[] patchRegs)
         {
-            if (patch == EPSMInstrumentPatch.Custom)
+            if (patch == EpsmInstrumentPatch.Custom)
             {
                 // Custom instrument, look for a match.
                 foreach (var inst in project.Instruments)
                 {
-                    if (inst.IsEPSMInstrument)
+                    if (inst.IsEpsmInstrument)
                     {
                         if (inst.EpsmPatch == 0 && inst.EpsmPatchRegs.SequenceEqual(patchRegs))
                             return inst;
@@ -589,7 +589,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.IsEPSMInstrument)
+                if (inst.IsEpsmInstrument)
                     return inst;
             }
 

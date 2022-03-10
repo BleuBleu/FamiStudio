@@ -125,11 +125,11 @@ namespace FamiStudio
                                 instrumentLine += GenerateAttribute($"Vrc7Reg{i}", instrument.Vrc7PatchRegs[i]);
                         }
                     }
-                    else if (instrument.IsEPSMInstrument)
+                    else if (instrument.IsEpsmInstrument)
                     {
                         instrumentLine += GenerateAttribute("EpsmPatch", instrument.EpsmPatch);
 
-                        if (instrument.EpsmPatch == EPSMInstrumentPatch.Custom)
+                        if (instrument.EpsmPatch == EpsmInstrumentPatch.Custom)
                         {
                             for (int i = 0; i < 31; i++)
                                 instrumentLine += GenerateAttribute($"EpsmReg{i}", instrument.EpsmPatchRegs[i]);
@@ -440,11 +440,11 @@ namespace FamiStudio
                                     }
                                 }
                             }
-                            else if (instrument.IsEPSMInstrument)
+                            else if (instrument.IsEpsmInstrument)
                             {
                                 if (parameters.TryGetValue("EpsmPatch", out var epsmPatchStr)) instrument.EpsmPatch = byte.Parse(epsmPatchStr);
 
-                                if (instrument.EpsmPatch == EPSMInstrumentPatch.Custom)
+                                if (instrument.EpsmPatch == EpsmInstrumentPatch.Custom)
                                 {
                                     for (int i = 0; i < 31; i++)
                                     {
