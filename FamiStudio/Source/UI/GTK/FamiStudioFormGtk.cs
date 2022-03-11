@@ -146,6 +146,8 @@ namespace FamiStudio
         {
             IntPtr windowHandle = MacUtils.NSWindowFromGdkWindow(GdkWindow.Handle);
             MacUtils.Initialize(windowHandle);
+            MacUtils.FileOpen += Handle_FileOpen;
+            
             DpiScaling.Initialize();
 
             // Hijack GDK main event loop so we can handle some more events.
@@ -153,6 +155,11 @@ namespace FamiStudio
             OldPollFunctionPtr = Marshal.GetDelegateForFunctionPointer<GLibPollFunctionDelegate>(pollFunc);
             NewPollFunctionPtr = GLibPollFunction;
             g_main_context_set_poll_func(IntPtr.Zero, Marshal.GetFunctionPointerForDelegate(NewPollFunctionPtr));
+        }
+        
+        private void Handle_FileOpen(string filename)
+        {
+            famistudio.OpenProject(filename);
         }
 
         private void HandleScrollWheelEvent(IntPtr e)
