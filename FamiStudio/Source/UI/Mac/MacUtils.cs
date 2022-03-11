@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -116,6 +117,60 @@ namespace FamiStudio
 
         [DllImport("/usr/lib/system/libsystem_c.dylib")]
         internal static extern int usleep(uint microseconds);
+
+        // The follow code (most AppleEvent/CoreFoundattion interop) was taken from
+        // MonoDevelop. https://github.com/mono/monodevelop
+        internal delegate int EventDelegate(IntPtr callRef, IntPtr eventRef, IntPtr userData);
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon")]
+        static extern IntPtr GetApplicationEventTarget();
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon")]
+        static extern int InstallEventHandler(IntPtr target, EventDelegate handler, uint count, CarbonEventTypeSpec[] types, IntPtr user_data, out IntPtr handlerRef);
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon")]
+        static extern int GetEventParameter(IntPtr eventRef, uint name, uint desiredType, uint zero, uint size, uint zero2, IntPtr dataBuffer);
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon")]
+        static extern int AEGetNthPtr(ref AEDesc descList, int index, int desiredType, uint keyword, uint zero, IntPtr buffer, int bufferSize, int zero2);
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon")]
+        static extern int AECountItems(ref AEDesc descList, out int count); //return an OSErr
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon")]
+        static extern int AEDisposeDesc(ref AEDesc desc);
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon")]
+        extern static IntPtr CFURLCreateFromFSRef(IntPtr allocator, ref FSRef fsref);
+
+        [DllImport("/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation")]
+        extern static IntPtr CFURLCopyFileSystemPath(IntPtr urlRef, int pathStyle);
+
+        [DllImport("/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation")]
+        extern static int CFStringGetLength(IntPtr handle);
+
+        [DllImport("/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation")]
+        public static extern void CFRelease(IntPtr cfRef);
+
+        [DllImport("/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation", CharSet = CharSet.Unicode)]
+        extern static IntPtr CFStringGetCharactersPtr(IntPtr handle);
+
+        [DllImport("/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation", CharSet = CharSet.Unicode)]
+        extern static IntPtr CFStringGetCharacters(IntPtr handle, CFRange range, IntPtr buffer);
+
+        const int EventParamDirectObject = 757935405; // '----'
+        const int EventParamAEPosition = 1802530675; // 'kpos'
+        const int EventParamTypeAEList = 1818850164; // 'list'
+        const int EventParamTypeChar = 1413830740; // 'TEXT'
+        const int EventParamTypeFSRef = 1718841958; // 'fsrf' 
+        const int EventClassAppleEvent = 1634039412; // 'aevt'
+        const int EventOpenDocuments = 1868853091; // 'odoc'
+        const int EventHandled = 0;
+        const int EventNotHandled = -9874;
+        // End MonoDevelop code.
+
+        public delegate void FileOpenDelegate(string filename);
+        public static event FileOpenDelegate FileOpen;
 
         const int NSOKButton = 1;
         const int NSWindowZoomButton = 2;
@@ -243,7 +298,58 @@ namespace FamiStudio
             famiStudioPasteboard = SendIntPtr(clsNSPasteboard, selPasteboardWithName, ToNSString("FamiStudio"));
             nsApplication = SendIntPtr(clsNSApplication, selSharedApplication);
 
+            CarbonEventTypeSpec eventType;
+            eventType.EventClass = EventClassAppleEvent;
+            eventType.EventKind = EventOpenDocuments;
+
+            Console.WriteLine("TOTO");
+            InstallEventHandler(GetApplicationEventTarget(), HandleOpenDocuments, 1, new CarbonEventTypeSpec[] { eventType }, IntPtr.Zero, out _);
+
             CreateMenu();
+        }
+        
+        [StructLayout(LayoutKind.Sequential, Pack = 2)]
+        struct CarbonEventTypeSpec
+        {
+            public uint EventClass;
+            public uint EventKind;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 2)]
+        struct AEDesc
+        {
+            public uint descriptorType;
+            public IntPtr dataHandle;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct SelectionRange
+        {
+            public short unused1; // 0 (not used)
+            public short lineNum; // line to select (<0 to specify range)
+            public int startRange; // start of selection range (if line < 0)
+            public int endRange; // end of selection range (if line < 0)
+            public int unused2; // 0 (not used)
+            public int theDate; // modification date/time
+        }
+
+        struct CFRange
+        {
+            public IntPtr Location, Length;
+            public CFRange(int l, int len)
+            {
+                Location = (IntPtr)l;
+                Length = (IntPtr)len;
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 2, Size = 80)]
+        struct FSRef
+        {
+            //this is an 80-char opaque byte array
+            #pragma warning disable 0169
+            private byte hidden;
+            #pragma warning restore 0169
         }
 
         public static void CreateMenu()
@@ -880,5 +986,159 @@ namespace FamiStudio
         {
             SendVoid(generalPasteboard, selClearContents);
         }
+
+        // The follow code (most AppleEvent/CoreFoundattion interop) was taken from
+        // MonoDevelop. https://github.com/mono/monodevelop
+        static T GetEventParameter<T>(IntPtr eventRef, uint name, uint desiredType) where T : struct
+        {
+            int len = Marshal.SizeOf(typeof(T));
+            IntPtr bufferPtr = Marshal.AllocHGlobal(len);
+            GetEventParameter(eventRef, name, desiredType, 0, (uint)len, 0, bufferPtr);
+            T val = (T)Marshal.PtrToStructure(bufferPtr, typeof(T));
+            Marshal.FreeHGlobal(bufferPtr);
+            return val;
+        }
+
+        static T AEGetNthPtr<T>(ref AEDesc descList, int index, int desiredType) where T : struct
+        {
+            int len = Marshal.SizeOf(typeof(T));
+            IntPtr bufferPtr = Marshal.AllocHGlobal(len);
+            try
+            {
+                AEGetNthPtr(ref descList, index, desiredType, 0, 0, bufferPtr, len, 0);
+                T val = (T)Marshal.PtrToStructure(bufferPtr, typeof(T));
+                return val;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(bufferPtr);
+            }
+        }
+
+        public static string FetchString(IntPtr handle)
+        {
+            if (handle == IntPtr.Zero)
+                return null;
+
+            string str;
+
+            int l = CFStringGetLength(handle);
+            IntPtr u = CFStringGetCharactersPtr(handle);
+            IntPtr buffer = IntPtr.Zero;
+            if (u == IntPtr.Zero)
+            {
+                CFRange r = new CFRange(0, l);
+                buffer = Marshal.AllocCoTaskMem(l * 2);
+                CFStringGetCharacters(handle, r, buffer);
+                u = buffer;
+            }
+            unsafe
+            {
+                str = new string((char*)u, 0, l);
+            }
+
+            if (buffer != IntPtr.Zero)
+                Marshal.FreeCoTaskMem(buffer);
+
+            return str;
+        }
+
+        static string FSRefToString(ref FSRef fsref)
+        {
+            IntPtr url = IntPtr.Zero;
+            IntPtr str = IntPtr.Zero;
+            try
+            {
+                url = CFURLCreateFromFSRef(IntPtr.Zero, ref fsref);
+                if (url == IntPtr.Zero)
+                    return null;
+                str = CFURLCopyFileSystemPath(url, 0);
+                if (str == IntPtr.Zero)
+                    return null;
+                return FetchString(str);
+            }
+            finally
+            {
+                if (url != IntPtr.Zero)
+                    CFRelease(url);
+                if (str != IntPtr.Zero)
+                    CFRelease(str);
+            }
+        }
+
+        delegate T AEDescValueSelector<TRef, T>(ref TRef desc);
+
+        static T[] GetListFromAEDesc<T, TRef>(ref AEDesc list, AEDescValueSelector<TRef, T> sel, int type) where TRef : struct
+        {
+            AECountItems(ref list, out var count);
+            T[] arr = new T[count];
+            for (int i = 1; i <= count; i++)
+            {
+                TRef r = AEGetNthPtr<TRef>(ref list, i, type);
+                arr[i - 1] = sel(ref r);
+            }
+            return arr;
+        }
+
+        static Dictionary<string, int> GetFileListFromEventRef(IntPtr eventRef)
+        {
+            AEDesc list = GetEventParameter<AEDesc>(eventRef, EventParamDirectObject, EventParamTypeAEList);
+
+            try
+            {
+                int line;
+                try
+                {
+                    SelectionRange range = GetEventParameter<SelectionRange>(eventRef, EventParamAEPosition, EventParamTypeChar);
+                    line = range.lineNum + 1;
+                }
+                catch (Exception)
+                {
+                    line = 0;
+                }
+
+                var arr = GetListFromAEDesc<string, FSRef>(ref list, FSRefToString, EventParamTypeFSRef);
+                var files = new Dictionary<string, int>();
+                foreach (var s in arr)
+                {
+                    if (!string.IsNullOrEmpty(s))
+                        files[s] = line;
+                }
+                return files;
+            }
+            finally
+            {
+                AEDisposeDesc(ref list);
+            }
+
+            return null;
+        }
+
+        static int HandleOpenDocuments(IntPtr callRef, IntPtr eventRef, IntPtr user_data)
+        {
+            try
+            {
+
+                var docs = GetFileListFromEventRef(eventRef);
+
+                if (docs != null)
+                {
+                    foreach (var kv in docs)
+                    {
+                        FileOpen?.Invoke(kv.Key);
+                        break;
+                    }
+                }
+
+                return EventHandled;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex);
+            }
+
+            return EventNotHandled;
+        }
+        // End MonoDevelop code.
     };
 }
