@@ -302,7 +302,6 @@ namespace FamiStudio
             eventType.EventClass = EventClassAppleEvent;
             eventType.EventKind = EventOpenDocuments;
 
-            Console.WriteLine("TOTO");
             InstallEventHandler(GetApplicationEventTarget(), HandleOpenDocuments, 1, new CarbonEventTypeSpec[] { eventType }, IntPtr.Zero, out _);
 
             CreateMenu();
