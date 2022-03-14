@@ -1204,6 +1204,20 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
+            if (right)
+            {
+                App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
+                {
+                    new ContextMenuOption("Drag", "Item 1", () => { }),
+                    new ContextMenuOption("MouseLeft", "Item 2", () => { }),
+                    new ContextMenuOption("MouseRight", "Item 3", () => { }),
+                    new ContextMenuOption("MouseRight", "Item 4", () => { }, true),
+                    new ContextMenuOption("MouseWheel", "Item 5", () => { }),
+                    new ContextMenuOption("Warning", "Item 6", () => { }),
+                });
+            }
+            return;
+
             if (captureOperation != CaptureOperation.None && (left || right))
                 return;
 

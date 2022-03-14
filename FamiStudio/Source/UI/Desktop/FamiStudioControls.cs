@@ -18,6 +18,7 @@ namespace FamiStudio
         private ProjectExplorer projectExplorer;
         private QuickAccessBar quickAccessBar;
         private MobilePiano mobilePiano;
+        private ContextMenu contextMenu;
 
         public Toolbar ToolBar => toolbar;
         public Sequencer Sequencer => sequencer;
@@ -25,6 +26,11 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => projectExplorer;
         public QuickAccessBar QuickAccessBar => quickAccessBar;
         public MobilePiano MobilePiano => mobilePiano;
+        public ContextMenu ContextMenu => contextMenu;
+
+        DateTime lastRender = DateTime.Now;
+        bool  contextMenuVisible;
+        float contextMenuOpacity;
 
         public GLControl[] Controls => controls;
 
@@ -36,6 +42,7 @@ namespace FamiStudio
             projectExplorer = new ProjectExplorer();
             quickAccessBar = new QuickAccessBar();
             mobilePiano = new MobilePiano();
+            contextMenu = new ContextMenu();
 
             controls[0] = toolbar;
             controls[1] = sequencer;
@@ -82,6 +89,28 @@ namespace FamiStudio
             return null;
         }
 
+        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
+        {
+            contextMenu.Initialize(gfx, options);
+
+            // Keep the menu inside the bounds of the window.
+            var alignX = x + contextMenu.Width  > width;
+            var alignY = y + contextMenu.Height > height;
+
+            contextMenu.Move(
+                alignX ? x - contextMenu.Width  : x,
+                alignY ? y - contextMenu.Height : y);
+
+            contextMenuVisible = true;
+            contextMenuOpacity = Math.Max(0.001f, contextMenuOpacity);
+        }
+
+        public void HideContextMenu()
+        {
+            contextMenuVisible = false;
+            contextMenuOpacity = Math.Min(0.999f, contextMenuOpacity);
+        }
+
         public void MarkDirty()
         {
             foreach (var ctrl in controls)
@@ -90,7 +119,7 @@ namespace FamiStudio
 
         public bool AnyControlNeedsRedraw()
         {
-            bool anyNeedsRedraw = false;
+            bool anyNeedsRedraw = contextMenuOpacity > 0.0f;
             foreach (var control in controls)
                 anyNeedsRedraw |= control.NeedsRedraw;
             return anyNeedsRedraw;
@@ -98,6 +127,10 @@ namespace FamiStudio
 
         public unsafe bool Redraw()
         {
+            var now = DateTime.Now;
+            var deltaTime = (float)(now - lastRender).TotalSeconds;
+            lastRender = now;
+
             if (AnyControlNeedsRedraw())
             {
                 // HACK : This happens when we have a dialog open, like the NSF dialog.
@@ -108,9 +141,39 @@ namespace FamiStudio
 
                 foreach (var control in controls)
                 {
-                    gfx.BeginDrawControl(new System.Drawing.Rectangle(control.Left, control.Top, control.Width, control.Height), height);
+                    gfx.BeginDrawControl(control.Rectangle, height);
                     control.Render(gfx);
                     control.ClearDirtyFlag();
+                }
+
+                if (contextMenuOpacity > 0.0f && 
+                    contextMenuOpacity <= 1.0f)
+                {
+                    if (contextMenuVisible)
+                    {
+                        contextMenuOpacity = Math.Min(1.0f, contextMenuOpacity + deltaTime * 6.0f); // MATTT
+                    }
+                    else
+                    {
+                        contextMenuOpacity = Math.Max(0.0f, contextMenuOpacity - deltaTime * 6.0f); // MATTT
+                    }
+
+                    if (contextMenuOpacity > 0.0f &&
+                        contextMenuOpacity <= 1.0f)
+                    {
+                        var r = new System.Drawing.Rectangle(0, 0, width, height);
+                        var c = gfx.CreateCommandList();
+
+                        gfx.BeginDrawControl(r, height);
+                        c.FillRectangle(r, gfx.GetSolidBrush(System.Drawing.Color.Black, 1, contextMenuOpacity * 0.4f));
+                        gfx.DrawCommandList(c);
+                    }
+                }
+
+                if (contextMenuVisible)
+                {
+                    gfx.BeginDrawControl(contextMenu.Rectangle, height);
+                    contextMenu.Render(gfx);
                 }
 
                 gfx.EndDrawFrame();
@@ -132,6 +195,10 @@ namespace FamiStudio
                 ctrl.SetThemeRenderResource(res);
                 ctrl.RenderInitialized(gfx);
             }
+
+            contextMenu.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+            contextMenu.SetThemeRenderResource(res);
+            contextMenu.RenderInitialized(gfx);
         }
     }
 }

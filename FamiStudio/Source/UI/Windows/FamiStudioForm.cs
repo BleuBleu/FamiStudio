@@ -22,6 +22,7 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
         public MobilePiano MobilePiano => controls.MobilePiano;
+        public new ContextMenu ContextMenu => controls.ContextMenu;
         public static FamiStudioForm Instance => null;
         public new GLControl ActiveControl => activeControl;
 
@@ -390,8 +391,9 @@ namespace FamiStudio
             }
         }
 
-        public void ShowContextMenu(ContextMenuOption[] options)
+        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
+            controls.ShowContextMenu(x, y, options);
         }
 
         public static bool IsKeyDown(Keys k)

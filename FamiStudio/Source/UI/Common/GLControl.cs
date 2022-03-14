@@ -19,10 +19,10 @@ namespace FamiStudio
         private CursorInfo cursorInfo;
         private FamiStudioForm parentForm;
         private ThemeRenderResources themeRes;
-        private int left = 0;
-        private int top = 0;
-        private int width = 100;
-        private int height = 100;
+        protected int left = 0;
+        protected int top = 0;
+        protected int width = 100;
+        protected int height = 100;
         private float mainWindowScaling = 1.0f;
         private float fontScaling = 1.0f;
         private bool dirty = true;
@@ -77,9 +77,11 @@ namespace FamiStudio
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void Focus() { }
 
+        public System.Drawing.Point ClientToParent(System.Drawing.Point p) { return PointToClient(PointToScreen(p)); }
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
         public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
+        public System.Drawing.Rectangle Rectangle => new System.Drawing.Rectangle(left, top, width, height);
         public System.Drawing.Size ParentFormSize => parentForm.Size;
         public bool IsLandscape => parentForm.IsLandscape;
         public int Left => left;
@@ -98,6 +100,15 @@ namespace FamiStudio
         public void ClearDirtyFlag() { dirty = false; }
         public void SetDpiScales(float main, float font) { mainWindowScaling = main; fontScaling = font; }
         public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
+
+        public void Move(int x, int y, bool fireResizeEvent = true)
+        {
+            left = x;
+            top = y;
+
+            if (fireResizeEvent)
+                OnResize(EventArgs.Empty);
+        }
 
         public void Move(int x, int y, int w, int h, bool fireResizeEvent = true)
         {

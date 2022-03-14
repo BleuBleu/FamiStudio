@@ -597,9 +597,14 @@ namespace FamiStudio
             mainForm.Run();
         }
 
+        // Only used on mobile.
         public void ShowContextMenu(ContextMenuOption[] options)
         {
-            mainForm.ShowContextMenu(options);
+        }
+
+        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
+        {
+            mainForm.ShowContextMenu(x, y, options);
         }
 
         private void InitializeMultiMediaNotifications()
@@ -2329,18 +2334,21 @@ namespace FamiStudio
         }
     }
 
-    // Move this to a common class
+    // Move these to a common class
     public class ContextMenuOption
     {
         public string Image { get; private set; }
         public string Text { get; private set; }
         public Action Callback { get; private set; }
+        public bool Separator { get; private set; }
 
-        public ContextMenuOption(string img, string text, Action callback)
+        public ContextMenuOption(string img, string text, Action callback, bool separator = false)
         {
             Image = img;
             Text = text;
             Callback = callback;
+            Separator = separator;
         }
     }
 }
+
