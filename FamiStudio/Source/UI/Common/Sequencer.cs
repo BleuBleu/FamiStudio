@@ -139,7 +139,7 @@ namespace FamiStudio
         static readonly bool[] captureNeedsThreshold = new[]
         {
             false, // None
-            PlatformUtils.IsMobile, // Select
+            true,  // Select
             true,  // DragSelection
             false, // AltZoom
             false, // DragSeekBar
@@ -1162,7 +1162,6 @@ namespace FamiStudio
             if (IsMouseInHeader(e) && e.Button.HasFlag(MouseButtons.Right))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.Select);
-                UpdateSelection(e.X, e.Y, true);
                 return true;
             }
 
@@ -1243,7 +1242,6 @@ namespace FamiStudio
                 else if (right)
                 {
                     StartCaptureOperation(e.X, e.Y, CaptureOperation.Select);
-                    UpdateSelection(e.X, e.Y, true);
                     return true;
                 }
             }
@@ -2435,6 +2433,8 @@ namespace FamiStudio
         {
             const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
 
+            var captureThresholdJustMet = false;
+
             if (captureOperation != CaptureOperation.None)
             {
                 if (!captureThresholdMet)
@@ -2443,6 +2443,7 @@ namespace FamiStudio
                         Math.Abs(y - captureMouseY) >= CaptureThreshold)
                     {
                         captureThresholdMet = true;
+                        captureThresholdJustMet = true;
                     }
                 }
 
@@ -2454,7 +2455,7 @@ namespace FamiStudio
                 switch (captureOperation)
                 {
                     case CaptureOperation.Select:
-                        UpdateSelection(x, y);
+                        UpdateSelection(x, y, captureThresholdJustMet);
                         break;
                     case CaptureOperation.AltZoom:
                         UpdateAltZoom(x, y);

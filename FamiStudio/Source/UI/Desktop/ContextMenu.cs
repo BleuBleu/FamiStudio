@@ -202,7 +202,7 @@ namespace FamiStudio
                 var iconIndex = Array.IndexOf(ContextMenuIconsNames, option.Image);
                 var iconSize = contextMenuIconsAtlas.GetElementSize(iconIndex);
 
-                c.DrawBitmapAtlas(contextMenuIconsAtlas, iconIndex, iconPos, iconPos, 1, 1, hover ? Theme.DarkGreyFillColor2 : Theme.DarkGreyFillColor1);
+                c.DrawBitmapAtlas(contextMenuIconsAtlas, iconIndex, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
                 c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
             }
