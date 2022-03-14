@@ -13,6 +13,10 @@
 P0:
 - Register viewer.
 - Right-click functionality.
+	- Tooltips
+	- Icons
+	- Selection will need to start when the capture threshold is met, not immediately.
+	- 
 P1:
 - N163 : Write address location in the waveform editor (how2 idea)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

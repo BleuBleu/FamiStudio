@@ -597,14 +597,18 @@ namespace FamiStudio
             mainForm.Run();
         }
 
-        // Only used on mobile.
-        public void ShowContextMenu(ContextMenuOption[] options)
+        public void ShowMobileContextMenu(ContextMenuOption[] options)
         {
         }
 
-        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
+        public void ShowDesktopContextMenu(int x, int y, ContextMenuOption[] options)
         {
             mainForm.ShowContextMenu(x, y, options);
+        }
+
+        public void HideDesktopContextMenu()
+        {
+            mainForm.HideContextMenu();
         }
 
         private void InitializeMultiMediaNotifications()

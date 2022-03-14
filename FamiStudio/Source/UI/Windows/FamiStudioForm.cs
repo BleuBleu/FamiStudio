@@ -218,6 +218,8 @@ namespace FamiStudio
             lastButtonPress = e.Button;
             if (ctrl != null)
             {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
                 SetActiveControl(ctrl);
                 ctrl.MouseDown(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
             }
@@ -329,18 +331,32 @@ namespace FamiStudio
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            famistudio.KeyDown(e, (int)e.KeyCode);
-            foreach (var ctrl in controls.Controls)
-                ctrl.KeyDown(e);
+            if (controls.IsContextMenuActive)
+            {
+                controls.ContextMenu.KeyDown(e);
+            }
+            else
+            {
+                famistudio.KeyDown(e, (int)e.KeyCode);
+                foreach (var ctrl in controls.Controls)
+                    ctrl.KeyDown(e);
+            }
 
             base.OnKeyDown(e);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            famistudio.KeyUp(e, (int)e.KeyCode);
-            foreach (var ctrl in controls.Controls)
-                ctrl.KeyUp(e);
+            if (controls.IsContextMenuActive)
+            {
+                controls.ContextMenu.KeyUp(e);
+            }
+            else
+            {
+                famistudio.KeyUp(e, (int)e.KeyCode);
+                foreach (var ctrl in controls.Controls)
+                    ctrl.KeyUp(e);
+            }
 
             base.OnKeyUp(e);
         }
@@ -396,6 +412,11 @@ namespace FamiStudio
             controls.ShowContextMenu(x, y, options);
         }
 
+        public void HideContextMenu()
+        {
+            controls.HideContextMenu();
+        }
+
         public static bool IsKeyDown(Keys k)
         {
             return (GetKeyState((int)k) & 0x8000) != 0;
@@ -411,9 +432,18 @@ namespace FamiStudio
                 keyData == Keys.F10)
             {
                 var e = new KeyEventArgs(keyData);
-                famistudio.KeyDown(e, (int)keyData);
-                foreach (var ctrl in controls.Controls)
-                    ctrl.KeyDown(e);
+
+                if (controls.IsContextMenuActive)
+                {
+                    controls.ContextMenu.KeyDown(e);
+                }
+                else
+                {
+                    famistudio.KeyDown(e, (int)keyData);
+                    foreach (var ctrl in controls.Controls)
+                        ctrl.KeyDown(e);
+                }
+
                 return true;
             }
             else

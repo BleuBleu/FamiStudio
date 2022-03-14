@@ -27,10 +27,10 @@ namespace FamiStudio
         public QuickAccessBar QuickAccessBar => quickAccessBar;
         public MobilePiano MobilePiano => mobilePiano;
         public ContextMenu ContextMenu => contextMenu;
+        public bool IsContextMenuActive => contextMenuVisible;
 
         DateTime lastRender = DateTime.Now;
         bool  contextMenuVisible;
-        float contextMenuOpacity;
 
         public GLControl[] Controls => controls;
 
@@ -51,6 +51,8 @@ namespace FamiStudio
 
             foreach (var ctrl in controls)
                 ctrl.ParentForm = parent;
+
+            contextMenu.ParentForm = parent;
         }
 
         public void Resize(int w, int h)
@@ -70,6 +72,21 @@ namespace FamiStudio
 
         public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
+            // Don't send any events if the context menu is visible.
+            if (contextMenuVisible)
+            {
+                ctrlX = formX - contextMenu.Left;
+                ctrlY = formY - contextMenu.Top;
+
+                if (ctrlX >= 0 &&
+                    ctrlY >= 0 &&
+                    ctrlX < contextMenu.Width &&
+                    ctrlY < contextMenu.Height)
+                {
+                    return contextMenu;
+                }
+            }
+
             foreach (var ctrl in controls)
             {
                 ctrlX = formX - ctrl.Left;
@@ -102,13 +119,13 @@ namespace FamiStudio
                 alignY ? y - contextMenu.Height : y);
 
             contextMenuVisible = true;
-            contextMenuOpacity = Math.Max(0.001f, contextMenuOpacity);
+            MarkDirty();
         }
 
         public void HideContextMenu()
         {
             contextMenuVisible = false;
-            contextMenuOpacity = Math.Min(0.999f, contextMenuOpacity);
+            MarkDirty();
         }
 
         public void MarkDirty()
@@ -119,9 +136,11 @@ namespace FamiStudio
 
         public bool AnyControlNeedsRedraw()
         {
-            bool anyNeedsRedraw = contextMenuOpacity > 0.0f;
+            bool anyNeedsRedraw = false;
             foreach (var control in controls)
                 anyNeedsRedraw |= control.NeedsRedraw;
+            if (contextMenuVisible)
+                anyNeedsRedraw |= contextMenu.NeedsRedraw;
             return anyNeedsRedraw;
         }
 
@@ -144,30 +163,6 @@ namespace FamiStudio
                     gfx.BeginDrawControl(control.Rectangle, height);
                     control.Render(gfx);
                     control.ClearDirtyFlag();
-                }
-
-                if (contextMenuOpacity > 0.0f && 
-                    contextMenuOpacity <= 1.0f)
-                {
-                    if (contextMenuVisible)
-                    {
-                        contextMenuOpacity = Math.Min(1.0f, contextMenuOpacity + deltaTime * 6.0f); // MATTT
-                    }
-                    else
-                    {
-                        contextMenuOpacity = Math.Max(0.0f, contextMenuOpacity - deltaTime * 6.0f); // MATTT
-                    }
-
-                    if (contextMenuOpacity > 0.0f &&
-                        contextMenuOpacity <= 1.0f)
-                    {
-                        var r = new System.Drawing.Rectangle(0, 0, width, height);
-                        var c = gfx.CreateCommandList();
-
-                        gfx.BeginDrawControl(r, height);
-                        c.FillRectangle(r, gfx.GetSolidBrush(System.Drawing.Color.Black, 1, contextMenuOpacity * 0.4f));
-                        gfx.DrawCommandList(c);
-                    }
                 }
 
                 if (contextMenuVisible)

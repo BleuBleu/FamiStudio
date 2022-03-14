@@ -48,6 +48,7 @@ namespace FamiStudio
             "Warning"
         };
 
+        int hoveredItemIndex = -1;
         RenderBitmapAtlas contextMenuIconsAtlas;
         ContextMenuOption[] menuOptions;
 
@@ -92,6 +93,86 @@ namespace FamiStudio
             height = sizeY;
         }
 
+        protected int GetIndexAtCoord(int x, int y)
+        {
+            var idx = -1;
+
+            if (x >= 0 && 
+                y >= 0 &&
+                x < Width &&
+                y < Height)
+            {
+                idx = Math.Min(y / itemSizeY, menuOptions.Length - 1);;
+            }
+
+            return idx;
+        }
+
+        // MATTT : Shortcut support too, display in toolbar!
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            var itemIndex = GetIndexAtCoord(e.X, e.Y);
+
+            if (itemIndex != hoveredItemIndex)
+            {
+                hoveredItemIndex = itemIndex;
+                MarkDirty();
+            }
+
+            if (hoveredItemIndex >= 0)
+            {
+                App.HideDesktopContextMenu();
+                MarkDirty();
+                menuOptions[hoveredItemIndex].Callback();
+            }
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            var itemIndex = GetIndexAtCoord(e.X, e.Y);
+
+            if (itemIndex != hoveredItemIndex)
+            {
+                hoveredItemIndex = itemIndex;
+                MarkDirty();
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            if (hoveredItemIndex != -1)
+            {
+                hoveredItemIndex = -1;
+                MarkDirty();
+            }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                App.HideDesktopContextMenu();
+            }
+            else if (hoveredItemIndex >= 0)
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    App.HideDesktopContextMenu();
+                    MarkDirty();
+                    menuOptions[hoveredItemIndex].Callback();
+                }
+                else if (e.KeyCode == Keys.Up)
+                {
+                    hoveredItemIndex = Math.Max(0, hoveredItemIndex - 1);
+                }
+                else if (e.KeyCode == Keys.Down)
+                {
+                    hoveredItemIndex = Math.Min(menuOptions.Length - 1, hoveredItemIndex + 1);
+                }
+            }
+        }
+
         public void Tick(float delta)
         {
         }
@@ -110,14 +191,19 @@ namespace FamiStudio
 
                 c.PushTranslation(0, y);
 
+                var hover = i == hoveredItemIndex;
+
+                if (hover)
+                    c.FillRectangle(0, 0, Width, itemSizeY, ThemeResources.MediumGreyFillBrush1);
+
                 if (option.Separator) 
                     c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyFillBrush1);
 
                 var iconIndex = Array.IndexOf(ContextMenuIconsNames, option.Image);
                 var iconSize = contextMenuIconsAtlas.GetElementSize(iconIndex);
 
-                c.DrawBitmapAtlas(contextMenuIconsAtlas, iconIndex, iconPos, iconPos);
-                c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, Width, itemSizeY);
+                c.DrawBitmapAtlas(contextMenuIconsAtlas, iconIndex, iconPos, iconPos, 1, 1, hover ? Theme.DarkGreyFillColor2 : Theme.DarkGreyFillColor1);
+                c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
             }
 

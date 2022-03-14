@@ -757,7 +757,7 @@ namespace FamiStudio
 
         private void OnPlayWithRate()
         {
-            App.ShowContextMenu(new[]
+            App.ShowMobileContextMenu(new[]
             {   
                 new ContextMenuOption("MenuPlay", "Play (Regular Speed)", () => { App.PlayRate = 1; App.PlaySong(); }),
                 new ContextMenuOption("MenuPlayHalf", "Play (Half Speed)", () => { App.PlayRate = 2; App.PlaySong(); }),
