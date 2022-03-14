@@ -1,37 +1,42 @@
 3.2.4?
 ======
 - Two joshop issues from github.
+- Attack issue from how2 (Mario_NSF.mp3 DM)
+- Import Alternative_Fuel_192pl.nsf. Not right speed.
+- Mario.nsf from how2, import, attacks arent right apparently.
 
 3.3.0
 =====
+- Update dedricil songs
+- Eclipse demo song.
+
+P0:
 - Register viewer.
 - Right-click functionality.
-- Rewrite that crazy ugly function in sound engine + figure out how to have more  (change volume or double-special code for rare ones).
+P1:
 - N163 : Write address location in the waveform editor (how2 idea)
+- Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
+- Make TimeFormat = 1 the default
+- CTRL+A to select all? Or drag an instrument on sequencer to replace instrument on pattern?
+- Rewrite that crazy ugly function in sound engine + figure out how to have more  (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Option to override DMC initial value on sample mapping.
 - Improve oscilloscope stability (min square norm?)
 - Uncompressed envelopes
 - Improve no-attack.
+- Export selected song by default
+P2:
 - Volume/effect scaling
 - CLI only EXE (Linux only).
 - Paste special, option to rename patterns.
 - Way to temporarely disable snapping (FL studio does it with ALT).
-- Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 - Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
-- Make TimeFormat = 1 the default
 - Scroll bar in sequencer
-- CTRL+A to select all? Or drag an instrument on sequencer to replace instrument on pattern?
 - C0 is hidden by scroll bars
 - C0 is hidden in piano roll video
-- Export selected song by default
-- LOW PRIORITY : Piano roll scale on desktop?
-- LOW PRIORITY : Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
-- LOW PRIORITY : Fix GTK leak (GTK 3.x?), or 2.12.45
-
-Videos:
-=======
-- Tutorial for FamiTracker users
+- Piano roll scale on desktop?
+- Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
+- Fix GTK leak (GTK 3.x?), or 2.12.45
 
 Linux notes 
 =========== 
