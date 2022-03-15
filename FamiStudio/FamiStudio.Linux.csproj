@@ -111,6 +111,7 @@
     <Compile Include="Source\IO\VideoFileOscilloscope.cs" />
     <Compile Include="Source\IO\VideoFilePianoRoll.cs" />
     <Compile Include="Source\IO\VorbisFile.cs" />
+    <Compile Include="Source\IO\VgmFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
