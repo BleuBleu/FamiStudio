@@ -573,7 +573,7 @@ namespace FamiStudio
             if (!ValidateExtension(filename, ".txt"))
                 return;
 
-            new UnitTestPlayer().GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
+            new UnitTestPlayer(project.OutputsStereoAudio).GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
         }
 
         public bool Run()

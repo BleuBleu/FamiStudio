@@ -60,13 +60,15 @@ namespace FamiStudio
         public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
         public bool UsesMultipleExpansionAudios => (Utils.NumberOfSetBits(expansionMask) > 1);
         
-        public bool UsesFdsExpansion  => (expansionMask  & ExpansionType.FdsMask)  != 0;
-        public bool UsesN163Expansion => (expansionMask  & ExpansionType.N163Mask) != 0;
-        public bool UsesVrc6Expansion => (expansionMask  & ExpansionType.Vrc6Mask) != 0;
-        public bool UsesVrc7Expansion => (expansionMask  & ExpansionType.Vrc7Mask) != 0;
-        public bool UsesMmc5Expansion => (expansionMask  & ExpansionType.Mmc5Mask) != 0;
-        public bool UsesS5BExpansion  => (expansionMask  & ExpansionType.S5BMask)  != 0;
+        public bool UsesFdsExpansion  => (expansionMask & ExpansionType.FdsMask)  != 0;
+        public bool UsesN163Expansion => (expansionMask & ExpansionType.N163Mask) != 0;
+        public bool UsesVrc6Expansion => (expansionMask & ExpansionType.Vrc6Mask) != 0;
+        public bool UsesVrc7Expansion => (expansionMask & ExpansionType.Vrc7Mask) != 0;
+        public bool UsesMmc5Expansion => (expansionMask & ExpansionType.Mmc5Mask) != 0;
+        public bool UsesS5BExpansion  => (expansionMask & ExpansionType.S5BMask)  != 0;
         public bool UsesEPSMExpansion => (expansionMask & ExpansionType.EPSMMask) != 0;
+
+        public bool OutputsStereoAudio => UsesEPSMExpansion;
 
         public string Filename    { get => filename;  set => filename  = value; }
         public string Name        { get => name;      set => name      = value; }

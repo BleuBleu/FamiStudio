@@ -42,12 +42,12 @@ namespace FamiStudio
 
         public bool IsOscilloscopeConnected => oscilloscope != null;
 
-        protected AudioPlayer(int apuIndex, bool pal, int sampleRate, int numBuffers) : base(apuIndex, sampleRate)
+        protected AudioPlayer(int apuIndex, bool pal, int sampleRate, bool stereo, int numBuffers) : base(apuIndex, stereo, sampleRate)
         {
             int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short)*2;
             numBufferedFrames = numBuffers;
             bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
-            int channels = UsesStereo ? 2 : 1;
+            int channels = stereo ? 2 : 1;
 
             audioStream = new AudioStream(sampleRate, bufferSize, numBufferedFrames, AudioBufferFillCallback, channels);
         }

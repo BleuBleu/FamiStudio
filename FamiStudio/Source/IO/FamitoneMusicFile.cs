@@ -457,7 +457,7 @@ namespace FamiStudio
             // for them after all the instrument data
             if (project.UsesEPSMExpansion)
             {
-                for (int i = 0, j = 0; i < project.Instruments.Count; i++)
+                for (int i = 0; i < project.Instruments.Count; i++)
                 {
                     var instrument = project.Instruments[i];
                     if (instrument.IsEpsmInstrument)

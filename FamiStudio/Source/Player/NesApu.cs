@@ -410,7 +410,6 @@ namespace FamiStudio
 
         public static void InitAndReset(int apuIdx, int sampleRate, bool pal, int seperateTndMode, int expansions, bool stereo, int numNamcoChannels, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback)
         {
-            
             Init(apuIdx, sampleRate, pal ? 1 : 0, seperateTndMode, expansions, stereo, dmcCallback);
             Reset(apuIdx);
             WriteRegister(apuIdx, APU_SND_CHN,    0x0f); // enable channels, stop DMC

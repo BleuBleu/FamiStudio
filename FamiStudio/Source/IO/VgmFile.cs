@@ -76,7 +76,7 @@ namespace FamiStudio
         public unsafe static void Save(Song song, string filename, int filetype)
         {
             var project = song.Project;
-            var regPlayer = new RegisterPlayer();
+            var regPlayer = new RegisterPlayer(song.Project.OutputsStereoAudio);
             var writes = regPlayer.GetRegisterValues(song, project.PalMode);
             var lastWrite = writes.Last();
 

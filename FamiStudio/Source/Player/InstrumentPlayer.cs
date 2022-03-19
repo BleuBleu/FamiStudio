@@ -23,7 +23,7 @@ namespace FamiStudio
 
         public int PlayingNote => playingNote;
 
-        public InstrumentPlayer(bool pal, int sampleRate) : base(NesApu.APU_INSTRUMENT, pal, sampleRate, Settings.NumBufferedAudioFrames)
+        public InstrumentPlayer(bool pal, int sampleRate, bool stereo) : base(NesApu.APU_INSTRUMENT, pal, sampleRate, stereo, Settings.NumBufferedAudioFrames)
         {
         }
 
@@ -106,7 +106,7 @@ namespace FamiStudio
 
                 var waitEvents = new WaitHandle[] { stopEvent, bufferSemaphore };
 
-                NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, NesApu.TND_MODE_SINGLE, expansionMask, UsesStereo, numN163Channels, dmcCallback);
+                NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, NesApu.TND_MODE_SINGLE, expansionMask, stereo, numN163Channels, dmcCallback);
                 for (int i = 0; i < channelStates.Length; i++)
                     EnableChannelType(channelStates[i].InnerChannelType, false);
 

@@ -37,6 +37,7 @@ namespace FamiStudio
         protected bool palPlayback = false;
         protected bool seeking = false;
         protected bool beat = false;
+        protected bool stereo = false;
         protected int  tndMode = NesApu.TND_MODE_SINGLE;
         protected int  beatIndex = -1;
         protected Song song;
@@ -58,11 +59,12 @@ namespace FamiStudio
         protected int tempoEnvelopeIndex;
         protected int tempoEnvelopeCounter;
 
-        protected BasePlayer(int apu, int rate = 44100)
+        protected BasePlayer(int apu, bool stereo, int rate = 44100)
         {
-            apuIndex = apu;
-            sampleRate = rate;
-            dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
+            this.apuIndex = apu;
+            this.sampleRate = rate;
+            this.dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
+            this.stereo = stereo;
         }
 
         public virtual void Shutdown()
@@ -97,11 +99,6 @@ namespace FamiStudio
             }
         }
         
-        public bool UsesStereo
-        {
-            get { return true /*song.Project.UsesEPSMExpansion*/; }
-        }
-
         public void SetSelectionRange(int min, int max)
         {
             minSelectedPattern = min;
@@ -241,7 +238,9 @@ namespace FamiStudio
             famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, UsesStereo, song.Project.ExpansionNumN163Channels, dmcCallback);
+            Debug.Assert(song.Project.OutputsStereoAudio == stereo);
+
+            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, stereo, song.Project.ExpansionNumN163Channels, dmcCallback);
 
             ResetFamiStudioTempo();
             UpdateChannelsMuting();

@@ -339,7 +339,7 @@ namespace FamiStudio
                 state.songChannelIndex = i;
                 state.channel = song.Channels[i];
                 state.channelText = state.channel.NameWithExpansion;
-                state.wav = new WavPlayer(SampleRate, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1);
+                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1);
                 state.graphics = RenderGraphics.Create(channelResX, channelResY, false);
                 state.bitmap = videoGraphics.CreateBitmapFromOffscreenGraphics(state.graphics);
 
@@ -371,7 +371,7 @@ namespace FamiStudio
                 s.bmpIcon = videoGraphics.CreateBitmapFromResource(ChannelType.Icons[s.channel.Type] + bmpSuffix);
 
             // Generate the metadata for the video so we know what's happening at every frame
-            var metadata = new VideoMetadataPlayer(SampleRate, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
+            var metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;

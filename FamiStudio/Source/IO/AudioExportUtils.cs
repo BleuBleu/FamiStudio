@@ -12,8 +12,9 @@ namespace FamiStudio
         {
             var project = song.Project;
             var introDuration = separateIntro ? GetIntroDuration(song, sampleRate) : 0;
-            bool usesStereo = song.Project.UsesEPSMExpansion;
-            if (usesStereo)
+
+            bool outputsStereo = song.Project.OutputsStereoAudio;
+            if (outputsStereo)
             {
                 introDuration = introDuration * 2; //Stereo
                 duration = duration * 2; //Stereo
@@ -29,11 +30,11 @@ namespace FamiStudio
                     var channelBit = 1 << channelIdx;
                     if ((channelBit & channelMask) != 0)
                     {
-                        var player = new WavPlayer(sampleRate, loopCount, channelBit, Settings.SeparateChannelsExportTndMode);
+                        var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, Settings.SeparateChannelsExportTndMode);
                         var stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
 
-                        var samples = usesStereo ? new short[stereoSamples.Length / 2] : stereoSamples;
-                        if (usesStereo)
+                        var samples = outputsStereo ? new short[stereoSamples.Length / 2] : stereoSamples;
+                        if (outputsStereo)
                         {
                             for (int i = 0; i < samples.Length; i++)
                             {
@@ -78,14 +79,14 @@ namespace FamiStudio
                         var channelBit = 1 << channelIdx;
                         if ((channelBit & channelMask) != 0)
                         {
-                            var player = new WavPlayer(sampleRate, loopCount, channelBit, NesApu.TND_MODE_SEPARATE);
+                            var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, NesApu.TND_MODE_SEPARATE);
                             channelSamples[channelIdx] = player.GetSongSamples(song, project.PalMode, duration);
                             numStereoSamples = Math.Max(numStereoSamples, channelSamples[channelIdx].Length);
                         }
                     }
 
                     // Mix and interleave samples.
-                    samples = usesStereo ? new short[numStereoSamples] : new short[numStereoSamples * 2];
+                    samples = outputsStereo ? new short[numStereoSamples] : new short[numStereoSamples * 2];
 
                     for (int i = 0; i < numStereoSamples; i++)
                     {
@@ -104,7 +105,7 @@ namespace FamiStudio
                             }
                         }
 
-                        if (usesStereo)
+                        if (outputsStereo)
                         {
                             if (i % 2 == 0)
                                 samples[i] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
@@ -123,12 +124,12 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var player = new WavPlayer(sampleRate, loopCount, channelMask);
+                    var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelMask);
                     stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
 
-                    samples = usesStereo ? new short[stereoSamples.Length/2] : stereoSamples;
+                    samples = outputsStereo ? new short[stereoSamples.Length/2] : stereoSamples;
 
-                    if (usesStereo)
+                    if (outputsStereo)
                     {
                         for (int i = 0; i < samples.Length; i++)
                         {
@@ -168,7 +169,7 @@ namespace FamiStudio
 
                 clonedSong.SetLength(song.LoopPoint);
 
-                var player = new WavPlayer(sampleRate, 1, 0x7fffffff);
+                var player = new WavPlayer(sampleRate, song.Project.OutputsStereoAudio, 1, 0x7fffffff);
                 var samples = player.GetSongSamples(clonedSong, song.Project.PalMode, -1);
 
                 return samples.Length;

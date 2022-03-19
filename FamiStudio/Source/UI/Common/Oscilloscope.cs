@@ -12,7 +12,7 @@ namespace FamiStudio
     public class Oscilloscope : IOscilloscope
     {
         private const float SampleScale = 1.9f; 
-        private const int   NumSamples  = 2048;
+        private const int   NumSamples  = 1024;
 
         private Task task;
         private ManualResetEvent stopEvent    = new ManualResetEvent(false);
@@ -20,15 +20,17 @@ namespace FamiStudio
         private ConcurrentQueue<short[]> sampleQueue;
         private int lastBufferPos = 0;
         private int numVertices = 128;
+        private bool stereo;
         private volatile float[,] geometry;
         private volatile bool hasNonZeroData = false;
 
         private int bufferPos = 0;
         private short[] sampleBuffer = new short[NumSamples * 2];
 
-        public Oscilloscope(int scaling)
+        public Oscilloscope(int scaling, bool stereo)
         {
-            numVertices *= Math.Min(2, scaling);
+            this.numVertices *= Math.Min(2, scaling);
+            this.stereo = stereo;
         }
 
         public void Start()
@@ -80,6 +82,15 @@ namespace FamiStudio
                 {
                     if (sampleQueue.TryDequeue(out var samples))
                     {
+                        // Mixdown stereo immediately.
+                        // TODO : Use a static buffer for mixing down instead of allocating.
+                        if (stereo)
+                        {
+                            var mixdown = new short[samples.Length / 2];
+                            WaveUtils.MixDown(samples, mixdown);
+                            samples = mixdown;
+                        }
+
                         Debug.Assert(samples.Length <= NumSamples);
 
                         // Append to circular buffer.
