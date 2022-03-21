@@ -2852,7 +2852,7 @@ namespace FamiStudio
 
         private bool HandleTouchLongPressProjectSettings(int x, int y)
         {    
-            App.ShowMobileContextMenu(new[]
+            App.ShowContextMenu(new[]
             {
                 new ContextMenuOption("MenuProperties", "Project Properties...", () => { EditProjectProperties(Point.Empty); })
             });
@@ -2866,7 +2866,7 @@ namespace FamiStudio
             menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(Point.Empty, button.song); }));
             if (App.Project.Songs.Count > 1)
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
-            App.ShowMobileContextMenu(menu.ToArray());
+            App.ShowContextMenu(menu.ToArray());
             return true;
         }
 
@@ -2883,7 +2883,7 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption("MenuClearEnvelope", "Clear Envelope", () => { ClearInstrumentEnvelope(button.instrument, (int)subButtonType); }));
             }
             if (menu.Count > 0)
-                App.ShowMobileContextMenu(menu.ToArray());
+                App.ShowContextMenu(menu.ToArray());
             return true;
         }
 
@@ -2896,13 +2896,13 @@ namespace FamiStudio
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }));
             }
             if (menu.Count > 0)
-                App.ShowMobileContextMenu(menu.ToArray());
+                App.ShowContextMenu(menu.ToArray());
             return true;
         }
 
         private bool HandleTouchLongPressDpcmButton(int x, int y, Button button)
         {
-            App.ShowMobileContextMenu(new[]
+            App.ShowContextMenu(new[]
             {
                 new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(Point.Empty, button.sample); }),
                 new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); })
@@ -2921,7 +2921,7 @@ namespace FamiStudio
 
         private bool HandleTouchLongPressParamButton(int x, int y, Button button)
         {
-            App.ShowMobileContextMenu(new[]
+            App.ShowContextMenu(new[]
             {
                 new ContextMenuOption("MenuReset", "Reset Default Value", () => { ResetParamButtonDefaultValue(button); })
             });

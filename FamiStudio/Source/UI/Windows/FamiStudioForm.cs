@@ -158,7 +158,11 @@ namespace FamiStudio
 
             var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             if (ctrl != null)
+            {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
                 ctrl.MouseWheel(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            }
         }
 
         protected override void RenderFrame(bool force = false)
@@ -248,7 +252,11 @@ namespace FamiStudio
                 ReleaseMouse();
 
             if (ctrl != null)
+            {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
                 ctrl.MouseUp(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            }
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -258,7 +266,11 @@ namespace FamiStudio
             var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             lastButtonPress = e.Button;
             if (ctrl != null)
+            {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
                 ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -316,7 +328,11 @@ namespace FamiStudio
                 var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
 
                 if (ctrl != null)
+                {
+                    if (ctrl != ContextMenu)
+                        controls.HideContextMenu();
                     ctrl.MouseHorizontalWheel(e);
+                }
             }
             else if (m.Msg == 0x0231) // WM_ENTERSIZEMOVE 
             {

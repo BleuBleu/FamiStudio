@@ -14,14 +14,25 @@ P0:
 - Register viewer.
 - Right-click functionality.
 	- Tooltips
+	- Tooltips where a context menu can appear.
 	- Icons
-	- Selection will need to start when the capture threshold is met, not immediately.
-	- 
+	- Unify ShowMobileContextMenu/ShowDesktopContextMenu
+
+	- Toolbar
+		- On mobile, replace the right click by context menus.
+	- Sequencer :
+		- Pattern area.
+	- Piano roll
+		-
+	- PE
+		- 
+
 P1:
 - N163 : Write address location in the waveform editor (how2 idea)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 - Make TimeFormat = 1 the default
-- CTRL+A to select all? Or drag an instrument on sequencer to replace instrument on pattern?
+- CTRL+A to select all? 
+- Drag an instrument on sequencer to replace instrument on pattern?
 - Rewrite that crazy ugly function in sound engine + figure out how to have more  (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Option to override DMC initial value on sample mapping.

@@ -258,7 +258,7 @@ namespace FamiStudio
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
         private delegate void MouseWheelDelegate(int delta);
-        private delegate void EmptyDelegate();
+        private delegate void MouseClickDelegate(int x, int y);
         private delegate ButtonStatus ButtonStatusDelegate();
         private delegate ButtonImageIndices BitmapDelegate(ref Color tint);
 
@@ -272,8 +272,8 @@ namespace FamiStudio
             public string ToolTip;
             public ButtonImageIndices BmpAtlasIndex;
             public ButtonStatusDelegate Enabled;
-            public EmptyDelegate Click;
-            public EmptyDelegate RightClick;
+            public MouseClickDelegate Click;
+            public MouseClickDelegate RightClick;
             public MouseWheelDelegate MouseWheel;
             public BitmapDelegate GetBitmap;
         };
@@ -324,7 +324,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
             buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen };
             buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
-            buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = PlatformUtils.IsDesktop ? OnRepeatLastExport : (EmptyDelegate)null };
+            buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = PlatformUtils.IsDesktop ? OnRepeatLastExport : (MouseClickDelegate)null };
             buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
             buttons[(int)ButtonType.Cut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
             buttons[(int)ButtonType.Paste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
@@ -332,7 +332,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.Redo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[(int)ButtonType.Transform] = new Button { BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
             buttons[(int)ButtonType.Config]    = new Button { BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig };
-            buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, RightClick = PlatformUtils.IsMobile ? OnPlayWithRate : (EmptyDelegate)null, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap, VibrateOnLongPress = false };
+            buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, RightClick = OnPlayWithRate, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap, VibrateOnLongPress = false };
             buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
             buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap, CloseOnClick = false };
@@ -637,37 +637,37 @@ namespace FamiStudio
             redTooltip = false;
         }
 
-        private void OnNew()
+        private void OnNew(int x, int y)
         {
             App.NewProject();
         }
 
-        private void OnOpen()
+        private void OnOpen(int x, int y)
         {
             App.OpenProject();
         }
 
-        private void OnSave()
+        private void OnSave(int x, int y)
         {
             App.SaveProjectAsync();
         }
 
-        private void OnSaveAs()
+        private void OnSaveAs(int x, int y)
         {
             App.SaveProjectAsync(true);
         }
 
-        private void OnExport()
+        private void OnExport(int x, int y)
         {
             App.Export();
         }
 
-        private void OnRepeatLastExport()
+        private void OnRepeatLastExport(int x, int y)
         {
             App.RepeatLastExport();
         }
 
-        private void OnCut()
+        private void OnCut(int x, int y)
         {
             App.Cut();
         }
@@ -677,7 +677,7 @@ namespace FamiStudio
             return App.CanCopy ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnCopy()
+        private void OnCopy(int x, int y)
         {
             App.Copy();
         }
@@ -687,12 +687,12 @@ namespace FamiStudio
             return App.CanCopy ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnPaste()
+        private void OnPaste(int x, int y)
         {
             App.Paste();
         }
 
-        private void OnPasteSpecial()
+        private void OnPasteSpecial(int x, int y)
         {
             App.PasteSpecial();
         }
@@ -702,12 +702,12 @@ namespace FamiStudio
             return App.CanPaste ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnDelete()
+        private void OnDelete(int x, int y)
         {
             App.Delete();
         }
 
-        private void OnDeleteSpecial()
+        private void OnDeleteSpecial(int x, int y)
         {
             App.DeleteSpecial();
         }
@@ -717,7 +717,7 @@ namespace FamiStudio
             return App.CanDelete ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnUndo()
+        private void OnUndo(int x, int y)
         {
             App.UndoRedoManager.Undo();
         }
@@ -727,7 +727,7 @@ namespace FamiStudio
             return App.UndoRedoManager != null && App.UndoRedoManager.UndoScope != TransactionScope.Max ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnRedo()
+        private void OnRedo(int x, int y)
         {
             App.UndoRedoManager.Redo();
         }
@@ -737,17 +737,17 @@ namespace FamiStudio
             return App.UndoRedoManager != null && App.UndoRedoManager.RedoScope != TransactionScope.Max ? ButtonStatus.Enabled : ButtonStatus.Disabled;
         }
 
-        private void OnTransform()
+        private void OnTransform(int x, int y)
         {
             App.OpenTransformDialog();
         }
 
-        private void OnConfig()
+        private void OnConfig(int x, int y)
         {
             App.OpenConfigDialog();
         }
 
-        private void OnPlay()
+        private void OnPlay(int x, int y)
         {
             if (App.IsPlaying)
                 App.StopSong();
@@ -755,10 +755,10 @@ namespace FamiStudio
                 App.PlaySong();
         }
 
-        private void OnPlayWithRate()
+        private void OnPlayWithRate(int x, int y)
         {
-            App.ShowMobileContextMenu(new[]
-            {   
+            App.ShowContextMenu(left + x, top + y, new[]
+            {
                 new ContextMenuOption("MenuPlay", "Play (Regular Speed)", () => { App.PlayRate = 1; App.PlaySong(); }),
                 new ContextMenuOption("MenuPlayHalf", "Play (Half Speed)", () => { App.PlayRate = 2; App.PlaySong(); }),
                 new ContextMenuOption("MenuPlayQuarter", "Play (Quarter Speed)", () => { App.PlayRate = 4; App.PlaySong(); })
@@ -794,7 +794,7 @@ namespace FamiStudio
             }
         }
 
-        private void OnRewind()
+        private void OnRewind(int x, int y)
         {
             App.StopSong();
             App.SeekSong(0);
@@ -807,17 +807,17 @@ namespace FamiStudio
             return ButtonImageIndices.Rec; 
         }
 
-        private void OnRecord()
+        private void OnRecord(int x, int y)
         {
             App.ToggleRecording();
         }
 
-        private void OnLoop()
+        private void OnLoop(int x, int y)
         {
             App.LoopMode = App.LoopMode == LoopMode.LoopPoint ? LoopMode.Pattern : LoopMode.LoopPoint;
         }
 
-        private void OnQwerty()
+        private void OnQwerty(int x, int y)
         {
             App.ToggleQwertyPiano();
         }
@@ -827,7 +827,7 @@ namespace FamiStudio
             return App.IsQwertyPianoEnabled ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
-        private void OnMetronome()
+        private void OnMetronome(int x, int y)
         {
             App.ToggleMetronome();
         }
@@ -848,12 +848,12 @@ namespace FamiStudio
             }
         }
 
-        private void OnMachine()
+        private void OnMachine(int x, int y)
         {
             App.PalPlayback = !App.PalPlayback;
         }
 
-        private void OnFollow()
+        private void OnFollow(int x, int y)
         {
             App.FollowModeEnabled = !App.FollowModeEnabled;
         }
@@ -887,7 +887,7 @@ namespace FamiStudio
             }
         }
 
-        private void OnHelp()
+        private void OnHelp(int x, int y)
         {
             App.ShowHelp();
         }
@@ -898,7 +898,7 @@ namespace FamiStudio
             closing   = expandRatio > 0.0f;
         }
 
-        private void OnMore()
+        private void OnMore(int x, int y)
         {
             if (expanding || closing)
             {
@@ -914,7 +914,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void OnMobilePiano()
+        private void OnMobilePiano(int x, int y)
         {
             App.MobilePianoVisible = !App.MobilePianoVisible;
         }
@@ -1239,9 +1239,9 @@ namespace FamiStudio
         protected override void OnMouseDown(MouseEventArgs e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            //bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if (left || right)
+            if (left)
             {
                 if (e.X > timecodePosX && e.X < timecodePosX + timecodeOscSizeX &&
                     e.Y > timecodePosY && e.Y < Height - timecodePosY)
@@ -1255,16 +1255,32 @@ namespace FamiStudio
 
                     if (btn != null)
                     {
-                        if (left)
-                            btn.Click?.Invoke();
-                        else
-                            btn.RightClick?.Invoke();
+                        //if (left)
+                            btn.Click?.Invoke(e.X, e.Y);
+                        //else
+                        //    btn.RightClick?.Invoke(); // MATTT : Make sure everything works on desktop + mobile. (Need to add mobile context menus).
                         MarkDirty();
                     }
                 }
             }
 
             base.OnMouseDown(e);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            bool right = e.Button.HasFlag(MouseButtons.Right);
+
+            if (right)
+            {
+                var btn = GetButtonAtCoord(e.X, e.Y);
+
+                if (btn != null)
+                {
+                    btn.RightClick?.Invoke(e.X, e.Y);
+                    MarkDirty();
+                }
+            }
         }
 
         protected override void OnTouchLongPress(int x, int y)
@@ -1275,7 +1291,7 @@ namespace FamiStudio
             {
                 if (btn.VibrateOnLongPress)
                     PlatformUtils.VibrateClick();
-                btn.RightClick();
+                btn.RightClick(x, y);
                 MarkDirty();
                 if (btn.CloseOnClick && IsExpanded)
                     StartClosing();
@@ -1288,7 +1304,7 @@ namespace FamiStudio
             if (btn != null)
             {
                 PlatformUtils.VibrateTick();
-                btn.Click?.Invoke();
+                btn.Click?.Invoke(x, y);
                 MarkDirty();
                 if (!btn.CloseOnClick)
                     return;

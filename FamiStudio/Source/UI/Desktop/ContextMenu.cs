@@ -122,7 +122,7 @@ namespace FamiStudio
 
             if (hoveredItemIndex >= 0)
             {
-                App.HideDesktopContextMenu();
+                App.HideContextMenu();
                 MarkDirty();
                 menuOptions[hoveredItemIndex].Callback();
             }
@@ -152,13 +152,13 @@ namespace FamiStudio
         {
             if (e.KeyCode == Keys.Escape)
             {
-                App.HideDesktopContextMenu();
+                App.HideContextMenu();
             }
             else if (hoveredItemIndex >= 0)
             {
                 if (e.KeyCode == Keys.Enter)
                 {
-                    App.HideDesktopContextMenu();
+                    App.HideContextMenu();
                     MarkDirty();
                     menuOptions[hoveredItemIndex].Callback();
                 }

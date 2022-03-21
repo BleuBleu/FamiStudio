@@ -5830,7 +5830,7 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowMobileContextMenu(menu.ToArray());
+                    App.ShowContextMenu(menu.ToArray());
 
                 return true;
             }
@@ -5872,7 +5872,7 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowMobileContextMenu(menu.ToArray());
+                    App.ShowContextMenu(menu.ToArray());
 
                 return true;
             }
@@ -5972,7 +5972,7 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowMobileContextMenu(menu.ToArray());
+                    App.ShowContextMenu(menu.ToArray());
 
                 return true;
             }
@@ -6004,7 +6004,7 @@ namespace FamiStudio
             }
 
             if (menu.Count > 0)
-                App.ShowMobileContextMenu(menu.ToArray());
+                App.ShowContextMenu(menu.ToArray());
 
             return true;
         }
@@ -6019,7 +6019,7 @@ namespace FamiStudio
                 {
                     highlightDPCMSample = noteValue;
 
-                    App.ShowMobileContextMenu(new[]
+                    App.ShowContextMenu(new[]
                     {
                         new ContextMenuOption("MenuDelete", "Remove DPCM Sample", () => { ClearDPCMSampleMapping(noteValue); }),
                         new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleMappingProperties(Point.Empty, mapping); }),

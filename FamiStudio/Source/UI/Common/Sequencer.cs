@@ -1090,7 +1090,7 @@ namespace FamiStudio
                 var channelIdx = GetChannelIndexForCoord(e.Y);
 
                 // MATTT : Icons + shortcuts!
-                App.ShowDesktopContextMenu(Left + e.X, Top + e.Y, new[]
+                App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
                 {
                     new ContextMenuOption("MouseWheel", "Toggle Mute Channel", () => { App.ToggleChannelActive(channelIdx); }),
                     new ContextMenuOption("MouseWheel", "Toggle Solo Channel", () => { App.ToggleChannelSolo(channelIdx); }),
@@ -1112,7 +1112,7 @@ namespace FamiStudio
                 if (patternIdx >= 0)
                 {
                     // MATTT : Icons + shortcuts!
-                    App.ShowDesktopContextMenu(Left + e.X, Top + e.Y, new[]
+                    App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
                     {
                         new ContextMenuOption("MouseWheel", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
                         new ContextMenuOption("MouseWheel", "Custom Pattern Settings...", () => { EditPatternCustomSettings(new Point(e.X, e.Y), patternIdx); } )
@@ -1422,7 +1422,7 @@ namespace FamiStudio
             {
                 var channelIdx = GetChannelIndexForCoord(y);
                
-                App.ShowMobileContextMenu(new[]
+                App.ShowContextMenu(new[]
                 {
                     new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(channelIdx); }),
                     new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(channelIdx); }),
@@ -1443,7 +1443,7 @@ namespace FamiStudio
 
                 if (patternIdx >= 0)
                 {
-                    App.ShowMobileContextMenu(new[]
+                    App.ShowContextMenu(new[]
                     {
                         new ContextMenuOption("MenuLoopPoint", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
                         new ContextMenuOption("MenuCustomPatternSettings", "Custom Pattern Settings...", () => { EditPatternCustomSettings(Point.Empty, patternIdx); } )
@@ -1510,7 +1510,7 @@ namespace FamiStudio
                     menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedPatern(); }));
                 }
 
-                App.ShowMobileContextMenu(menu.ToArray());
+                App.ShowContextMenu(menu.ToArray());
                 return true;
             }
 
