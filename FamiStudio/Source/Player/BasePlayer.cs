@@ -240,7 +240,7 @@ namespace FamiStudio
 
             Debug.Assert(song.Project.OutputsStereoAudio == stereo);
 
-            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, stereo, song.Project.ExpansionNumN163Channels, dmcCallback);
+            NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels, dmcCallback);
 
             ResetFamiStudioTempo();
             UpdateChannelsMuting();
@@ -541,7 +541,7 @@ namespace FamiStudio
             NesApu.EndFrame(apuIndex);
 
             int numTotalSamples = NesApu.SamplesAvailable(apuIndex);
-            short[] samples = new short[numTotalSamples];
+            short[] samples = new short[numTotalSamples * (stereo ? 2 : 1)];
 
             fixed (short* ptr = &samples[0])
             {

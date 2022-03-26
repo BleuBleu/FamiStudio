@@ -29,7 +29,6 @@ Simple_Apu::Simple_Apu()
 	tnd_volume = 1.0;
 	expansions = expansion_mask_none;
 	apu.dmc_reader( null_dmc_reader, NULL );
-	stereo = false;
 }
 
 Simple_Apu::~Simple_Apu()
@@ -68,11 +67,11 @@ blargg_err_t Simple_Apu::sample_rate( long rate, bool pal, int tnd_mode )
 	mmc5.output(&buf);
 	namco.output(&buf);
 	sunsoft.output(&buf);
-	epsm.output(&buf_left, &buf_right);
-	buf_left.clock_rate(pal ? 1662607 : 1789773);
-	buf_left.sample_rate(rate);
-	buf_right.clock_rate(pal ? 1662607 : 1789773);
-	buf_right.sample_rate(rate);
+	epsm.output(&buf_epsm_left, &buf_epsm_right);
+	buf_epsm_left.clock_rate(pal ? 1662607 : 1789773);
+	buf_epsm_left.sample_rate(rate);
+	buf_epsm_right.clock_rate(pal ? 1662607 : 1789773);
+	buf_epsm_right.sample_rate(rate);
 	
 	tnd[0].clock_rate(pal ? 1662607 : 1789773);
 	tnd[1].clock_rate(pal ? 1662607 : 1789773);
@@ -250,9 +249,13 @@ void Simple_Apu::end_frame()
 	if (expansions & expansion_mask_epsm) epsm.end_frame(frame_length); 
 
 	buf.end_frame( frame_length );
-	buf_left.end_frame(frame_length);
-	buf_right.end_frame(frame_length);
 	tnd[0].end_frame( frame_length );
+
+	if ((expansions & expansion_mask_epsm) != 0)
+	{
+		buf_epsm_left.end_frame(frame_length);
+		buf_epsm_right.end_frame(frame_length);
+	}
 
 	if (separate_tnd_mode)
 	{
@@ -284,20 +287,13 @@ void Simple_Apu::set_audio_expansions(long exp)
 	expansions = exp;
 }
 
-void Simple_Apu::set_stereo(bool ste)
-{
-	stereo = ste;
-}
-
 long Simple_Apu::samples_avail() const
 {
 	assert(buf.samples_avail() == tnd[0].samples_avail());
 	assert(buf.samples_avail() == tnd[1].samples_avail() && separate_tnd_mode || tnd[1].samples_avail() == 0 && !separate_tnd_mode);
 	assert(buf.samples_avail() == tnd[2].samples_avail() && separate_tnd_mode || tnd[2].samples_avail() == 0 && !separate_tnd_mode);
-	if (stereo)
-		return (buf.samples_avail()*2);
-	else
-		return buf.samples_avail();
+
+	return buf.samples_avail();
 }
 
 const int    sample_shift     = blip_sample_bits - 16;
@@ -334,10 +330,22 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 	assert(buf.samples_avail() == tnd[1].samples_avail() && separate_tnd_mode || tnd[1].samples_avail() == 0 && !separate_tnd_mode);
 	assert(buf.samples_avail() == tnd[2].samples_avail() && separate_tnd_mode || tnd[2].samples_avail() == 0 && !separate_tnd_mode);
 
-	sample_t out_left[4096];
-	sample_t out_right[4096];
-	long samples = buf_left.read_samples(out_left, count, false);
-	buf_right.read_samples(out_right, count, false);
+	sample_t out_left[1024];
+	sample_t out_right[1024];
+
+	if (expansions & expansion_mask_epsm)
+	{
+		long count_l = buf_epsm_left.read_samples(out_left, count, false);
+		long count_r = buf_epsm_right.read_samples(out_right, count, false);
+
+		assert(count_l == count);
+		assert(count_r == count);
+	}
+	else
+	{
+		assert(buf.samples_avail() == count);
+	}
+
 	if (count)
 	{
 		if (separate_tnd_mode)
@@ -347,7 +355,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			p[1] = tnd[1].buffer_;
 			p[2] = tnd[2].buffer_;
 
-			for (unsigned n = samples; n--; )
+			for (unsigned n = count; n--; )
 			{
 				// Sum all 3 channels, apply non-linear mixing.
 				tnd_accum[0] += (long)*p[0];
@@ -397,7 +405,7 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			// Apply non-linear mixing to the TND buffer.
 			Blip_Buffer::buf_t_* p = tnd[0].buffer_;
 
-			for (unsigned n = samples; n--; )
+			for (unsigned n = count; n--; )
 			{
 				tnd_accum[0] += (long)*p;
 				long nonlinear_tnd = pack_sample(nonlinearize(unpack_sample(tnd_accum[0])) * tnd_volume);
@@ -412,49 +420,57 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 
 		int lin_bass = lin.begin(buf);
 		int nonlin_bass = nonlin.begin(tnd[0]);
-		for (long i = 0; i < samples; ++i)
-		{
-			int s = lin.read() + nonlin.read();
-			lin.next(lin_bass);
-			nonlin.next(nonlin_bass);
 
-			if (stereo) 
+		if (expansions & expansion_mask_epsm)
+		{
+			for (int i = 0; i < count; i++)
 			{
-				*out++ = (blip_sample_t)clamp((int)(s + out_left[i]), -32767, 32767);
-				*out++ = (blip_sample_t)clamp((int)(s + out_right[i]), -32767, 32767);
+				int s = lin.read() + nonlin.read();
+				lin.next(lin_bass);
+				nonlin.next(nonlin_bass);
+				*out++ = (blip_sample_t)clamp((int)(s + out_left[i]),  -32768, 32767);
+				*out++ = (blip_sample_t)clamp((int)(s + out_right[i]), -32768, 32767);
 			}
-			else 
+		}
+		else
+		{
+			for (int n = count; n--; )
 			{
+				int s = lin.read() + nonlin.read();
+				lin.next(lin_bass);
+				nonlin.next(nonlin_bass);
 				*out++ = s;
-				if ((BOOST::int16_t)s != s) {
+
+				if ((BOOST::int16_t)s != s)
 					out[-1] = 0x7FFF - (s >> 24);
-					out[-2] = 0x7FFF - (s >> 24);
-				}
 			}
-				
 		}
 
 		lin.end(buf);
 		nonlin.end(tnd[0]);
 
-		buf.remove_samples(samples);
-		tnd[0].remove_samples(samples);
+		buf.remove_samples(count);
+		tnd[0].remove_samples(count);
 
 		if (separate_tnd_mode)
 		{
-			tnd[1].remove_samples(samples);
-			tnd[2].remove_samples(samples);
+			tnd[1].remove_samples(count);
+			tnd[2].remove_samples(count);
 		}
 	}
 
-	return samples*2;
+	return count;
 }
 
 void Simple_Apu::remove_samples(long s)
 {
 	buf.remove_samples(s);
-	buf_left.remove_samples(s);
-	buf_right.remove_samples(s);
+
+	if (expansions & expansion_mask_epsm)
+	{
+		buf_epsm_left.remove_samples(s);
+		buf_epsm_right.remove_samples(s);
+	}
 
 	tnd[0].remove_samples(s);
 	if (separate_tnd_mode)

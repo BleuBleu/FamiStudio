@@ -83,7 +83,6 @@ public:
 	void reset();
 
 	void set_audio_expansions(long exp);
-	void set_stereo(bool ste);
 	int get_audio_expansions() const { return expansions; }
 
 	// Number of samples in buffer
@@ -130,8 +129,8 @@ private:
 	Nes_EPSM epsm;
 	Blip_Buffer buf;
 	Blip_Buffer tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.
-	Blip_Buffer buf_left;
-	Blip_Buffer buf_right;
+	Blip_Buffer buf_epsm_left;
+	Blip_Buffer buf_epsm_right;
 	blip_time_t time;
 	blip_time_t frame_length;
 	blip_time_t clock(blip_time_t t = 4) { return time += t; }

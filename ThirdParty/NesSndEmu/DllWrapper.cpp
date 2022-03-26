@@ -10,14 +10,13 @@
 
 static Simple_Apu apu[3];
 
-extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int pal, int seperate_tnd, int expansions, bool stereo, int (__cdecl *dmcReadFunc)(void* user_data, cpu_addr_t))
+extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int pal, int seperate_tnd, int expansions, int (__cdecl *dmcReadFunc)(void* user_data, cpu_addr_t))
 {
 	if (apu[apuIdx].sample_rate(sampleRate, pal, seperate_tnd))
 		return -1;
 
 	apu[apuIdx].set_audio_expansions(expansions);
 	apu[apuIdx].dmc_reader(dmcReadFunc, NULL);
-	apu[apuIdx].set_stereo(stereo);
 
 	return 0;
 }
