@@ -172,6 +172,9 @@ namespace FamiStudio
                 state.channelText = state.channel.NameWithExpansion;
                 state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1);
 
+                if (song.Project.OutputsStereoAudio)
+                    state.wav = WaveUtils.MixDown(state.wav);
+
                 channelStates.Add(state);
                 channelIndex++;
 

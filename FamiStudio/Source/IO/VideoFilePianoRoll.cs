@@ -343,6 +343,9 @@ namespace FamiStudio
                 state.graphics = RenderGraphics.Create(channelResX, channelResY, false);
                 state.bitmap = videoGraphics.CreateBitmapFromOffscreenGraphics(state.graphics);
 
+                if (song.Project.OutputsStereoAudio)
+                    state.wav = WaveUtils.MixDown(state.wav);
+
                 channelStates.Add(state);
                 channelIndex++;
 

@@ -210,7 +210,7 @@ namespace FamiStudio
 
         protected override short[] EndFrame()
         {
-            numSamples += base.EndFrame().Length;
+            numSamples += base.EndFrame().Length / (stereo ? 2 : 1);
             return null;
         }
     }
