@@ -3413,7 +3413,10 @@ namespace FamiStudio
                                 numExpansionsSelected++;
                         }
                         if (numExpansionsSelected > 1 && ((expansionMask & ExpansionType.EPSMMask) != 0))
-                            PlatformUtils.MessageBox($"EPSM is not supported with other expansions enabled", "", MessageBoxButtons.OK);
+                        {
+                            // TODO : Test this on mobile. We are in an async dialog here.
+                            PlatformUtils.MessageBoxAsync($"EPSM is not supported with other expansions enabled", "Incompatible expansions", MessageBoxButtons.OK);
+                        }
                         else if (!expansionRemoved || PlatformUtils.IsMobile || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
