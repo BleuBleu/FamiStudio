@@ -43,7 +43,7 @@ void Nes_EPSM::reset_psg()
 	if (psg)
 		PSG_delete(psg);
 
-	psg = PSG_new(psg_clock, psg_clock / 16.0 / (4000000.0/1789773.0));
+	psg = PSG_new(psg_clock, (uint32_t)(psg_clock / 16.0 / (4000000.0/1789773.0)));
 	PSG_reset(psg);
 }
 
@@ -156,7 +156,7 @@ long Nes_EPSM::run_until(cpu_time_t time)
 			data_write.pop();
 			a_write.pop();
 		}
-		int sample = PSG_calc(psg)/1.8;
+		int sample = (int)(PSG_calc(psg)/1.8);
 		int sample_right;
 		sample = clamp(sample, -7710, 7710);
 		sample_right = clamp(sample, -7710, 7710);
@@ -165,8 +165,8 @@ long Nes_EPSM::run_until(cpu_time_t time)
 		while (t2 < 12)
 		{
 			OPN2_Clock(&opn2, samples);
-			sample += (samples[0]) * 12;
-			sample += samples[2]*1.1;
+			sample += (int)(samples[0] * 12);
+			sample += (int)(samples[2]*1.1);
 			sample_right += (samples[1]) * 12;
 			sample_right += samples[3]*1.1;
 			t2++;
