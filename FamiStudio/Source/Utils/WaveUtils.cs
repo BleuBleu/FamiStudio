@@ -421,5 +421,12 @@ namespace FamiStudio
                 mono[i / 2] = (short)((stereo[i + 0] + stereo[i + 1]) / 2);
             }
         }
+
+        public static short[] MixDown(short[] stereo)
+        {
+            var mono = new short[stereo.Length / 2];
+            MixDown(stereo, mono);
+            return mono;
+        }
     }
 }

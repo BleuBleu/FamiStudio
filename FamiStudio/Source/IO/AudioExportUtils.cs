@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,13 +13,10 @@ namespace FamiStudio
         {
             var project = song.Project;
             var introDuration = separateIntro ? GetIntroDuration(song, sampleRate) : 0;
+            var outputsStereo = song.Project.OutputsStereoAudio;
 
-            bool outputsStereo = song.Project.OutputsStereoAudio;
-            if (outputsStereo)
-            {
-                introDuration = introDuration * 2; //Stereo
-                duration = duration * 2; //Stereo
-            }
+            // We will enforce stereo export if the chip outputs stereo.
+            Debug.Assert(!outputsStereo || stereo);
 
             if (channelMask == 0)
                 return;
@@ -31,17 +29,9 @@ namespace FamiStudio
                     if ((channelBit & channelMask) != 0)
                     {
                         var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, Settings.SeparateChannelsExportTndMode);
-                        var stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
+                        var samples = player.GetSongSamples(song, project.PalMode, duration);
+                        var numChannels = outputsStereo ? 2 : 1;
 
-                        var samples = outputsStereo ? new short[stereoSamples.Length / 2] : stereoSamples;
-                        if (outputsStereo)
-                        {
-                            for (int i = 0; i < samples.Length; i++)
-                            {
-                                if (i % 2 == 0)
-                                    samples[i] = (short)((stereoSamples[i * 2] + stereoSamples[i * 2 + 1]) / 2);
-                            }
-                        }
                         if (introDuration > 0)
                         {
                             var loopSamples = new short[samples.Length - introDuration];
@@ -51,13 +41,13 @@ namespace FamiStudio
                             var channelIntroFileName = Utils.AddFileSuffix(filename, "_" + song.Channels[channelIdx].ShortName + "_Intro");
                             var channelLoopFileName = Utils.AddFileSuffix(filename, "_" + song.Channels[channelIdx].ShortName);
 
-                            function(samples, 1, channelIntroFileName);
-                            function(loopSamples, 1, channelLoopFileName);
+                            function(samples, numChannels, channelIntroFileName);
+                            function(loopSamples, numChannels, channelLoopFileName);
                         }
                         else
                         {
                             var channelFileName = Utils.AddFileSuffix(filename, "_" + song.Channels[channelIdx].ShortName);
-                            function(samples, 1, channelFileName);
+                            function(samples, numChannels, channelFileName);
                         }
                     }
                 }
@@ -97,7 +87,7 @@ namespace FamiStudio
                         {
                             if (channelSamples[j] != null)
                             {
-                                float sl = 1.0f - Utils.Clamp(2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
+                                float sl = 1.0f - Utils.Clamp( 2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
                                 float sr = 1.0f - Utils.Clamp(-2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
 
                                 l += channelSamples[j][i] * sl;
@@ -120,7 +110,9 @@ namespace FamiStudio
                     }
 
                     numChannels = 2;
-                    introDuration *= 2;
+                    
+                    if (!outputsStereo)
+                        introDuration *= 2;
                 }
                 else
                 {

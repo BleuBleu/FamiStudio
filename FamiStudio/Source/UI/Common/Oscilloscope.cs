@@ -83,12 +83,10 @@ namespace FamiStudio
                     if (sampleQueue.TryDequeue(out var samples))
                     {
                         // Mixdown stereo immediately.
-                        // TODO : Use a static buffer for mixing down instead of allocating.
                         if (stereo)
                         {
-                            var mixdown = new short[samples.Length / 2];
-                            WaveUtils.MixDown(samples, mixdown);
-                            samples = mixdown;
+                            // TODO : Use a static buffer for mixing down instead of allocating.
+                            samples = WaveUtils.MixDown(samples);
                         }
 
                         Debug.Assert(samples.Length <= NumSamples);

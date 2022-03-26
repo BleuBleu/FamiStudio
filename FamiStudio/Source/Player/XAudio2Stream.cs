@@ -31,7 +31,7 @@ namespace FamiStudio
 
         public delegate short[] GetBufferDataCallback();
 
-        public XAudio2Stream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback, int channels)
+        public XAudio2Stream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             xaudio2 = new XAudio2();
 
@@ -41,7 +41,7 @@ namespace FamiStudio
             // TODO : We need to decouple the number of emulated buffered frames and the 
             // size of the low-level audio buffers.
             masteringVoice = new MasteringVoice(xaudio2);
-            waveFormat = new WaveFormat(rate, 16, channels);
+            waveFormat = new WaveFormat(rate, 16, stereo ? 2 : 1);
             audioBuffersRing = new AudioBuffer[numBuffers];
             memBuffers = new DataPointer[audioBuffersRing.Length];
 

@@ -228,7 +228,7 @@ namespace FamiStudio
                     page.AddNumericUpDown("Duration (sec):", 120, 1, 1000); // 6
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
-                    page.AddCheckBox("Stereo", false); // 9
+                    page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 9
                     if (PlatformUtils.IsDesktop)
                         page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
                     else
@@ -238,7 +238,8 @@ namespace FamiStudio
                     page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // No separate files on mobile.
                     page.SetPropertyVisible(8, PlatformUtils.IsDesktop); // No separate files on mobile.
                     page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // No stereo on mobile.
-                    page.SetColumnEnabled(10, 2, false);
+                    page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                    page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
                     page.PropertyChanged += WavMp3_PropertyChanged;
                     page.PropertyClicked += WavMp3_PropertyClicked;
                     break;
@@ -246,13 +247,14 @@ namespace FamiStudio
                     if (AddCommonVideoProperties(page, songNames)) // 0-5
                     {
                         page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
-                        page.AddCheckBox("Stereo", false); // 7
+                        page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 7
                         if (PlatformUtils.IsDesktop)
                             page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 8
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 8
-                        page.SetColumnEnabled(8, 2, false);
                         page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // Stereo on mobile.
+                        page.SetPropertyEnabled(7, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        page.SetColumnEnabled(8, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
@@ -262,13 +264,14 @@ namespace FamiStudio
                         page.AddNumericUpDown("Oscilloscope Columns :", 1, 1, 5); // 6
                         page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 4); // 7
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
-                        page.AddCheckBox("Stereo", false); // 9
+                        page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 9
                         if (PlatformUtils.IsDesktop)
                             page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
-                        page.SetColumnEnabled(10, 2, false);
                         page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // Stereo on mobile.
+                        page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
+                        page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
                     }
                     break;
@@ -388,11 +391,11 @@ namespace FamiStudio
             {
                 var separateChannels = (bool)value;
 
-                props.SetPropertyEnabled(9, !separateChannels);
+                props.SetPropertyEnabled(9, !separateChannels && !project.OutputsStereoAudio);
                 if (separateChannels)
-                    props.SetPropertyValue(9, false);
+                    props.SetPropertyValue(9, project.OutputsStereoAudio);
 
-                props.SetColumnEnabled(10, 2, props.GetPropertyValue<bool>(9));
+                props.SetColumnEnabled(10, 2, props.GetPropertyValue<bool>(9) && !separateChannels);
             }
             else if (propIdx == 9)
             {
@@ -437,7 +440,7 @@ namespace FamiStudio
                     var duration = props.GetPropertyValue<string>(4) == "Duration" ? props.GetPropertyValue<int>(6) : -1;
                     var separateFiles = props.GetPropertyValue<bool>(7);
                     var separateIntro = props.GetPropertyValue<bool>(8);
-                    var stereo = props.GetPropertyValue<bool>(9) && !separateFiles;
+                    var stereo = props.GetPropertyValue<bool>(9) && (!separateFiles || project.OutputsStereoAudio);
                     var song = project.GetSong(songName);
 
                     var channelCount = project.GetActiveChannelCount();
@@ -482,6 +485,7 @@ namespace FamiStudio
                                      break;
                              }
                          });
+
                     lastExportFilename = filename;
                 }
             };
@@ -860,6 +864,7 @@ namespace FamiStudio
                 lastExportFilename = filename;
             }
         }
+		
         private void ExportFamiTracker()
         {
             if (!canExportToFamiTracker)
