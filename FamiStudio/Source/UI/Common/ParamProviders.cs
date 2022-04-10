@@ -146,10 +146,10 @@ namespace FamiStudio
                     break;
 
                 case ExpansionType.Vrc7:
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
-                        { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 15, 1, null, true)
                         { GetValue = () => { return instrument.Vrc7Patch; }, GetValueString = () => { return Instrument.GetVrc7PatchName(instrument.Vrc7Patch); }, SetValue = (v) => { instrument.Vrc7Patch = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
+                        { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Tremolo", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Vibrato", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
