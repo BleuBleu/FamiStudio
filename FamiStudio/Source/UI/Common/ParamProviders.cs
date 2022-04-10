@@ -296,18 +296,18 @@ namespace FamiStudio
 
             if (instrument.IsVrc7Instrument)
             {
-                /*
+                
                 int opAttackRate   = (instrument.Vrc7PatchRegs[op + 4] & 0xf0) >> 4; // "Carrier Attack"
                 int opDecayRate    = (instrument.Vrc7PatchRegs[op + 4] & 0x0f) >> 0; // "Carrier Decay"
                 int opSustainRate  = (instrument.Vrc7PatchRegs[op + 0] & 0x20) >> 5; // "Carrier Sustained"
                 int opSustainLevel = (instrument.Vrc7PatchRegs[op + 6] & 0xf0) >> 4; // "Carrier Sustain"
                 int opReleaseRate  = (instrument.Vrc7PatchRegs[op + 6] & 0x0f) >> 0; // "Carrier Release"
-                int opVolume       = 0; // MATTT buttons[i + 16].param.GetValue(); //127 ???
+                int opVolume       = (op == 0)?(instrument.Vrc7PatchRegs[op + 2] & 0x3f) >> 0: 0; // "Level"/"Volume" ???
 
-                opDecayStartX = ScaleForMainWindow(-opAttackRate * 6) + maxValue15 * 6 + 2 + buttonIconPosX;
-                opDecayStartY = ScaleForMainWindow((63 - opVolume));
+                opDecayStartX = (-opAttackRate * 6) + 15 * 6  ;
+                opDecayStartY = ((63 - opVolume));
 
-                opSustainStartX = ScaleForMainWindow(-opDecayRate * 4) + maxValue15 * 4 + opDecayStartX;
+                opSustainStartX = (-opDecayRate * 4) + 15 * 4 + opDecayStartX;
                 opSustainStartY = (int)((double)opDecayStartY / 15 * (15 - opSustainLevel));
 
                 if (opDecayRate == 0)
@@ -315,7 +315,7 @@ namespace FamiStudio
                     opSustainStartY = opDecayStartY;
                 }
 
-                opReleaseStartX = ScaleForMainWindow(maxValue15 * 4) + opSustainStartX;
+                opReleaseStartX = (15 * 4) + opSustainStartX;
                 opReleaseStartY = opSustainStartY / 2;
 
                 if (opSustainRate == 1)
@@ -323,50 +323,50 @@ namespace FamiStudio
                     opReleaseStartY = opSustainStartY;
                 }
 
-                opReleaseEndX = ScaleForMainWindow(-opReleaseRate * 4) + maxValue15 * 4 + opReleaseStartX;
+                opReleaseEndX = (-opReleaseRate * 4) + 15 * 4 + opReleaseStartX;
                 opReleaseEndY = 0;
                 if (opReleaseRate == 0)
                 {
                     opReleaseEndY = opReleaseStartY;
-                    opReleaseEndX = ScaleForMainWindow(graphWidth) + buttonIconPosX;
+                    opReleaseEndX = (graphWidth);
                 }
-                */
+                
             }
             else if (instrument.IsEpsmInstrument)
             {
-                /*
-                int opAttackRate   = buttons[i + 9].param.GetValue();  //31
-                int opDecayRate    = buttons[i + 11].param.GetValue(); //31
-                int opSustainRate  = buttons[i + 12].param.GetValue(); //31
-                int opSustainLevel = buttons[i + 13].param.GetValue(); //15
-                int opReleaseRate  = buttons[i + 14].param.GetValue(); //15
-                int opVolume       = buttons[i + 7].param.GetValue(); //127
 
-                opDecayStartX = ScaleForMainWindow(-opAttackRate * 3) + maxValue31 * 3 + 2 + buttonIconPosX;
-                opDecayStartY = ScaleForMainWindow((127 - opVolume) / 2);
-                opSustainStartX = ScaleForMainWindow(-opDecayRate * 2) + maxValue31 * 2 + opDecayStartX;
+                int opAttackRate   = (instrument.EpsmPatchRegs[7*op + 4] & 0x1f); //31
+                int opDecayRate    = (instrument.EpsmPatchRegs[7*op + 5] & 0x1f); //31
+                int opSustainRate  = (instrument.EpsmPatchRegs[7*op + 6] & 0x1f); //31
+                int opSustainLevel = (instrument.EpsmPatchRegs[7*op + 7] & 0xf0) >> 4; //15
+                int opReleaseRate  = (instrument.EpsmPatchRegs[7*op + 7] & 0x0f); //15
+                int opVolume       = (instrument.EpsmPatchRegs[7*op + 3] & 0x7f); //127
+
+                opDecayStartX = (-opAttackRate * 3) + 31 * 3;
+                opDecayStartY = ((127 - opVolume) / 2);
+                opSustainStartX = (-opDecayRate * 2) + 31 * 2 + opDecayStartX;
                 opSustainStartY = (int)((double)opDecayStartY / 15 * (15 - opSustainLevel));
                 if (opDecayRate == 0)
                 {
                     opSustainStartY = opDecayStartY;
                 }
 
-                opReleaseStartX = ScaleForMainWindow(-opSustainRate * 2) + maxValue31 * 2 + opSustainStartX;
+                opReleaseStartX = (-opSustainRate * 2) + 31 * 2 + opSustainStartX;
                 opReleaseStartY = (opSustainStartY) / 2;
 
                 if (opSustainRate == 0)
                 {
                     opReleaseStartY = opSustainStartY;
-                    opReleaseStartX = ScaleForMainWindow(62) + opSustainStartX;
+                    opReleaseStartX = (62) + opSustainStartX;
                 }
-                opReleaseEndX = ScaleForMainWindow(-opReleaseRate * 4) + maxValue15 * 4 + opReleaseStartX;
+                opReleaseEndX = (-opReleaseRate * 4) + 15 * 4 + opReleaseStartX;
                 opReleaseEndY = 0;
                 if (opReleaseRate == 0)
                 {
                     opReleaseEndY = opReleaseStartY;
-                    opReleaseEndX = ScaleForMainWindow(graphWidth) + buttonIconPosX;
+                    opReleaseEndX = (graphWidth);
                 }
-                */
+                
             }
 
             c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, c.Graphics.GetSolidBrush(Color.Black, 1, 0.3f), res.BlackBrush);
