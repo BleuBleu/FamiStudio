@@ -294,11 +294,11 @@ namespace FamiStudio
             if (instrument.IsVrc7Instrument)
             {
                 /*
-                int opAttackRate   = (Vrc7InstrumentPatch.Infos[1].data[5] & 0xf0) >> 4; // "Carrier Attack"
-                int opDecayRate    = (Vrc7InstrumentPatch.Infos[1].data[5] & 0x0f) >> 0; // "Carrier Decay"
-                int opSustainRate  = (Vrc7InstrumentPatch.Infos[1].data[1] & 0x20) >> 5; // "Carrier Sustained"
-                int opSustainLevel = (Vrc7InstrumentPatch.Infos[1].data[7] & 0xf0) >> 4; // "Carrier Sustain"
-                int opReleaseRate  = (Vrc7InstrumentPatch.Infos[1].data[7] & 0x0f) >> 0; // "Carrier Release"
+                int opAttackRate   = (instrument.Vrc7PatchRegs[5] & 0xf0) >> 4; // "Carrier Attack"
+                int opDecayRate    = (instrument.Vrc7PatchRegs[5] & 0x0f) >> 0; // "Carrier Decay"
+                int opSustainRate  = (instrument.Vrc7PatchRegs[1] & 0x20) >> 5; // "Carrier Sustained"
+                int opSustainLevel = (instrument.Vrc7PatchRegs[7] & 0xf0) >> 4; // "Carrier Sustain"
+                int opReleaseRate  = (instrument.Vrc7PatchRegs[7] & 0x0f) >> 0; // "Carrier Release"
                 int opVolume       = 0; // MATTT buttons[i + 16].param.GetValue(); //127 ???
 
                 opDecayStartX = ScaleForMainWindow(-opAttackRate * 6) + maxValue15 * 6 + 2 + buttonIconPosX;
