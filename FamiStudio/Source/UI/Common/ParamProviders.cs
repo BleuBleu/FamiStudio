@@ -149,7 +149,7 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 15, 1, null, true)
                         { GetValue = () => { return instrument.Vrc7Patch; }, GetValueString = () => { return Instrument.GetVrc7PatchName(instrument.Vrc7Patch); }, SetValue = (v) => { instrument.Vrc7Patch = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
-                        { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument });
+                        { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = 1, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Tremolo", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[1] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[1] = (byte)((instrument.Vrc7PatchRegs[1] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Vibrato", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[1] & 0x40) >> 6)
@@ -172,6 +172,8 @@ namespace FamiStudio
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0xf0) >> 4; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0xf0)) | ((v << 4) & 0xf0)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Release", 0, 15, (Vrc7InstrumentPatch.Infos[1].data[7] & 0x0f) >> 0)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[7] & 0x0f) >> 0; }, SetValue = (v) => { instrument.Vrc7PatchRegs[7] = (byte)((instrument.Vrc7PatchRegs[7] & (~0x0f)) | ((v << 0) & 0x0f)); instrument.Vrc7Patch = 0; }, TabName = "Carrier" });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
+                        { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawAdsrGraph, CustomHeight = 4, CustomUserData1 = instrument, CustomUserData2 = 0, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Tremolo", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x80) >> 7)
                         { GetValue = () => { return (instrument.Vrc7PatchRegs[0] & 0x80) >> 7; }, SetValue = (v) => { instrument.Vrc7PatchRegs[0] = (byte)((instrument.Vrc7PatchRegs[0] & (~0x80)) | ((v << 7) & 0x80)); instrument.Vrc7Patch = 0; }, TabName = "Modulator" });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Vibrato", 0, 1, (Vrc7InstrumentPatch.Infos[1].data[0] & 0x40) >> 6)
@@ -277,6 +279,7 @@ namespace FamiStudio
         {
             var g = c.Graphics;
             var instrument = userData1 as Instrument;
+            var op = (int)userData2;
 
             var graphWidth  = rect.Width;
             var graphHeight = rect.Height;
@@ -294,11 +297,11 @@ namespace FamiStudio
             if (instrument.IsVrc7Instrument)
             {
                 /*
-                int opAttackRate   = (instrument.Vrc7PatchRegs[5] & 0xf0) >> 4; // "Carrier Attack"
-                int opDecayRate    = (instrument.Vrc7PatchRegs[5] & 0x0f) >> 0; // "Carrier Decay"
-                int opSustainRate  = (instrument.Vrc7PatchRegs[1] & 0x20) >> 5; // "Carrier Sustained"
-                int opSustainLevel = (instrument.Vrc7PatchRegs[7] & 0xf0) >> 4; // "Carrier Sustain"
-                int opReleaseRate  = (instrument.Vrc7PatchRegs[7] & 0x0f) >> 0; // "Carrier Release"
+                int opAttackRate   = (instrument.Vrc7PatchRegs[op + 4] & 0xf0) >> 4; // "Carrier Attack"
+                int opDecayRate    = (instrument.Vrc7PatchRegs[op + 4] & 0x0f) >> 0; // "Carrier Decay"
+                int opSustainRate  = (instrument.Vrc7PatchRegs[op + 0] & 0x20) >> 5; // "Carrier Sustained"
+                int opSustainLevel = (instrument.Vrc7PatchRegs[op + 6] & 0xf0) >> 4; // "Carrier Sustain"
+                int opReleaseRate  = (instrument.Vrc7PatchRegs[op + 6] & 0x0f) >> 0; // "Carrier Release"
                 int opVolume       = 0; // MATTT buttons[i + 16].param.GetValue(); //127 ???
 
                 opDecayStartX = ScaleForMainWindow(-opAttackRate * 6) + maxValue15 * 6 + 2 + buttonIconPosX;
@@ -332,8 +335,6 @@ namespace FamiStudio
             else if (instrument.IsEpsmInstrument)
             {
                 /*
-                var op = (int)userData2;
-
                 int opAttackRate   = buttons[i + 9].param.GetValue();  //31
                 int opDecayRate    = buttons[i + 11].param.GetValue(); //31
                 int opSustainRate  = buttons[i + 12].param.GetValue(); //31
