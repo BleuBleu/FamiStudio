@@ -303,11 +303,12 @@ namespace FamiStudio
                 int opSustainLevel = (instrument.Vrc7PatchRegs[op + 6] & 0xf0) >> 4; // "Carrier Sustain"
                 int opReleaseRate  = (instrument.Vrc7PatchRegs[op + 6] & 0x0f) >> 0; // "Carrier Release"
                 int opVolume       = (op == 0)?(instrument.Vrc7PatchRegs[op + 2] & 0x3f) >> 0: 0; // "Level"/"Volume" ???
+                var volumeScale    = (float)(63 - opVolume) / 63;
 
-                opDecayStartX = (-opAttackRate * 6) + 15 * 6  ;
-                opDecayStartY = ((63 - opVolume));
+                opDecayStartX = (int)((float)(15 - opAttackRate) / 15 * 0.25 * graphWidth * volumeScale);
+                opDecayStartY = (int)(((float)(63 - opVolume) / 63) * (graphHeight - graphPaddingTop-2))+1;
 
-                opSustainStartX = (-opDecayRate * 4) + 15 * 4 + opDecayStartX;
+                opSustainStartX = (int)((float)(15 - opDecayRate) / 15 * 0.25 * graphWidth * volumeScale) + opDecayStartX;
                 opSustainStartY = (int)((double)opDecayStartY / 15 * (15 - opSustainLevel));
 
                 if (opDecayRate == 0)
@@ -315,7 +316,7 @@ namespace FamiStudio
                     opSustainStartY = opDecayStartY;
                 }
 
-                opReleaseStartX = (15 * 4) + opSustainStartX;
+                opReleaseStartX = (int)(graphWidth * 0.25* volumeScale) + opSustainStartX;
                 opReleaseStartY = opSustainStartY / 2;
 
                 if (opSustainRate == 1)
@@ -323,7 +324,7 @@ namespace FamiStudio
                     opReleaseStartY = opSustainStartY;
                 }
 
-                opReleaseEndX = (-opReleaseRate * 4) + 15 * 4 + opReleaseStartX;
+                opReleaseEndX = (int)((float)(15 - opReleaseRate) / 15.0 * 0.25 * graphWidth * volumeScale) + opReleaseStartX;
                 opReleaseEndY = 0;
                 if (opReleaseRate == 0)
                 {
@@ -341,25 +342,26 @@ namespace FamiStudio
                 int opSustainLevel = (instrument.EpsmPatchRegs[7*op + 7] & 0xf0) >> 4; //15
                 int opReleaseRate  = (instrument.EpsmPatchRegs[7*op + 7] & 0x0f); //15
                 int opVolume       = (instrument.EpsmPatchRegs[7*op + 3] & 0x7f); //127
+                var volumeScale    = (float)(127 - opVolume) / 127;
 
-                opDecayStartX = (-opAttackRate * 3) + 31 * 3;
-                opDecayStartY = ((127 - opVolume) / 2);
-                opSustainStartX = (-opDecayRate * 2) + 31 * 2 + opDecayStartX;
+                opDecayStartX = (int)((float)(31-opAttackRate)/31.0*0.25*graphWidth * volumeScale);
+                opDecayStartY = (int)(((float)(127-opVolume)/127) * (graphHeight - graphPaddingTop-2))+1;
+                opSustainStartX = (int)((float)(31 - opDecayRate) / 31.0 * 0.25 * graphWidth * volumeScale) + opDecayStartX;
                 opSustainStartY = (int)((double)opDecayStartY / 15 * (15 - opSustainLevel));
                 if (opDecayRate == 0)
                 {
                     opSustainStartY = opDecayStartY;
                 }
 
-                opReleaseStartX = (-opSustainRate * 2) + 31 * 2 + opSustainStartX;
+                opReleaseStartX = (int)((float)(31 - opSustainRate) / 31.0 * 0.25 * graphWidth * volumeScale) + opSustainStartX;
                 opReleaseStartY = (opSustainStartY) / 2;
 
                 if (opSustainRate == 0)
                 {
                     opReleaseStartY = opSustainStartY;
-                    opReleaseStartX = (62) + opSustainStartX;
+                    opReleaseStartX = (int)(graphWidth*0.25 * volumeScale) + opSustainStartX;
                 }
-                opReleaseEndX = (-opReleaseRate * 4) + 15 * 4 + opReleaseStartX;
+                opReleaseEndX = (int)((float)(15 - opReleaseRate) / 15.0 * 0.25 * graphWidth * volumeScale) + opReleaseStartX;
                 opReleaseEndY = 0;
                 if (opReleaseRate == 0)
                 {
@@ -370,10 +372,10 @@ namespace FamiStudio
             }
 
             c.FillAndDrawRectangle(0, graphPaddingTop, graphWidth, graphHeight, c.Graphics.GetSolidBrush(Color.Black, 1, 0.3f), res.BlackBrush);
-            c.DrawLine(0, graphHeight, opDecayStartX, graphHeight - opDecayStartY, res.WhiteBrush, 2, true);
-            c.DrawLine(opDecayStartX, graphHeight - opDecayStartY, opSustainStartX, graphHeight - opSustainStartY, res.LightGreyFillBrush2, 2, true);
-            c.DrawLine(opSustainStartX, graphHeight - opSustainStartY, opReleaseStartX, graphHeight - opReleaseStartY, res.LightGreyFillBrush1, 2, true);
-            c.DrawLine(opReleaseStartX, graphHeight - opReleaseStartY, opReleaseEndX, graphHeight - opReleaseEndY, res.MediumGreyFillBrush1, 2, true);
+            c.DrawLine(0, graphHeight, opDecayStartX, graphHeight - opDecayStartY, res.WhiteBrush, 1, true);
+            c.DrawLine(opDecayStartX, graphHeight - opDecayStartY, opSustainStartX, graphHeight - opSustainStartY, res.LightGreyFillBrush2, 1, true);
+            c.DrawLine(opSustainStartX, graphHeight - opSustainStartY, opReleaseStartX, graphHeight - opReleaseStartY, res.LightGreyFillBrush1, 1, true);
+            c.DrawLine(opReleaseStartX, graphHeight - opReleaseStartY, opReleaseEndX, graphHeight - opReleaseEndY, res.MediumGreyFillBrush1, 1, true);
         }
 
         public static void CustomDrawEpsmAlgorithm(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
