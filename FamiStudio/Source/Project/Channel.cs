@@ -1575,12 +1575,12 @@ namespace FamiStudio
             "FM 4", // EPSM
             "FM 5", // EPSM
             "FM 6", // EPSM
-            "Bass Drum", // EPSM
-            "Snare Drum", // EPSM
-            "Top Cymbal", // EPSM
+            "Kick", // EPSM
+            "Snare", // EPSM
+            "Cymbal", // EPSM
             "Hi-hat", // EPSM
             "Tom", // EPSM
-            "Rim shot", // EPSM
+            "Rimshot", // EPSM
         };
 
         public static readonly string[] ShortNames =
