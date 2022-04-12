@@ -13,21 +13,6 @@
 
 P0:
 - EPSM:
-	- Stereo stuff :
-		/ Regular audio (all platforms)
-			x Test Win
-			- Test Linux
-			- Test Android
-			- Test Mac
-		/ Audio export
-		/ Video export
-		x Seperate TND vs. Stereo?
-		- Test DPCM preview
-			x Win
-			- Linux
-			- Andoird
-			- Mac
-		x Other players? Look ok.
 	x Bump version.
 	/ Redraw EPSM icon. ALiasing. Should it be an E?
 	/ Green hill demo song.
@@ -35,6 +20,22 @@ P0:
 	- Test:
 		- Tabs on android.
 		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
+		- Stereo stuff :
+			/ Regular audio (all platforms)
+				x Test Win
+				- Test Linux
+				- Test Android
+				- Test Mac
+			/ Audio export
+			/ Video export
+			x Seperate TND vs. Stereo?
+			- Test DPCM preview
+				x Win
+				- Linux
+				- Andoird
+				- Mac
+			x Other players? Look ok.
+==============
 
 - Register viewer.
 - Right-click functionality.
