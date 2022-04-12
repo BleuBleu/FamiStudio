@@ -32,11 +32,12 @@ P0:
 	- Test tabs on android.
 	- Other
 		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
-	- Bump version.
+	x Bump version.
 	- Redraw EPSM icon. ALiasing.
 	- Cleanup projects (sort filenames, etc.)
 	- MATTT
-	- Green hill demo song.
+	/ Green hill demo song.
+		- Add to Android + Windows Setup
 	
 VRC7
 		buttons[i + 12].param.Name	"Carrier Attack"	string
