@@ -14,7 +14,8 @@ namespace FamiStudio
             ExpansionType.Vrc7,  // INST_VRC7
             ExpansionType.Fds,   // INST_FDS
             ExpansionType.N163,  // INST_N163
-            ExpansionType.S5B    // INST_S5B
+            ExpansionType.S5B,   // INST_S5B
+            ExpansionType.EPSM   // INST_EPSM
         };
 
         readonly static int[] EnvelopeTypeLookup =

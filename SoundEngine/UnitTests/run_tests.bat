@@ -69,6 +69,10 @@ if "%rnd%"=="0" (
 						echo FAMISTUDIO_EXP_N163=1 >> test_defs.inc
 						set /a rnd=%random% %%8+1
 						echo FAMISTUDIO_EXP_N163_CHN_CNT=%rnd% >> test_defs.inc
+						) else (
+						if "%rnd%"=="6" (
+							echo FAMISTUDIO_EXP_EPSM=1 >> test_defs.inc
+						)
 					)
 				)
 			)

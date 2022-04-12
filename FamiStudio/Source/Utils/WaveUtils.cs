@@ -413,5 +413,20 @@ namespace FamiStudio
 
             wave = filteredWave;
         }
+
+        public static void MixDown(short[] stereo, short[] mono)
+        {
+            for (int i = 0; i < stereo.Length; i += 2)
+            {
+                mono[i / 2] = (short)((stereo[i + 0] + stereo[i + 1]) / 2);
+            }
+        }
+
+        public static short[] MixDown(short[] stereo)
+        {
+            var mono = new short[stereo.Length / 2];
+            MixDown(stereo, mono);
+            return mono;
+        }
     }
 }

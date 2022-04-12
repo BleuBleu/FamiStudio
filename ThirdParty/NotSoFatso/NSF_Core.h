@@ -126,6 +126,21 @@ struct NSF_ADVANCEDOPTIONS
 #define S5B_SQUARE1              26
 #define S5B_SQUARE2              27
 #define S5B_SQUARE3              28
+#define EPSM_SQUARE1             29
+#define EPSM_SQUARE2             30
+#define EPSM_SQUARE3             31
+#define CHANNEL_EPSMFM1          32
+#define CHANNEL_EPSMFM2          33
+#define CHANNEL_EPSMFM3          34
+#define CHANNEL_EPSMFM4          35
+#define CHANNEL_EPSMFM5          36
+#define CHANNEL_EPSMFM6          37
+#define CHANNEL_EPSMRYTHM1       38
+#define CHANNEL_EPSMRYTHM2       39
+#define CHANNEL_EPSMRYTHM3       40
+#define CHANNEL_EPSMRYTHM4       41
+#define CHANNEL_EPSMRYTHM5       42
+#define CHANNEL_EPSMRYTHM6       43
 							     
 #define STATE_VOLUME             0
 #define STATE_PERIOD             1
@@ -149,6 +164,11 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_N163WAVESIZE       19
 #define STATE_N163WAVE           20
 #define STATE_N163NUMCHANNELS    21
+#define STATE_EPSMPATCH          22
+#define STATE_EPSMPATCHREG       23
+#define STATE_EPSMOCTAVE         24
+#define STATE_EPSMTRIGGER        25
+#define STATE_EPSMSUSTAIN        26
 
 #include <math.h>
 
@@ -393,6 +413,19 @@ protected:
 	void		VRC7_RecalcMultiplier(BYTE chan);
 	void		VRC7_ChangeInversion(BYTE chan,BYTE inv);
 	void		VRC7_ChangeInversionFreq();
+
+	/*
+	 *	EPSM stuffs
+	 */
+
+	BYTE		nEPSMAddress;			//address written to the EPSM port
+	BYTE*		pEPSMBuffer;			//pointer to the position to write EPSM samples
+	void*		pFMOPN;
+	BYTE		EPSMChan[3][15];
+	char		EPSMTriggered[15];       // 0 = nothing, 1 = triggered, -1 = released.
+	BYTE		bEPSM_FadeChanged;
+	BYTE		bEPSMInv[15];
+	BYTE		EPSMInstrument[1][31];
 
 	/*
 	 *	Timing and Counters

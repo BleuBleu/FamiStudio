@@ -64,9 +64,10 @@ namespace FamiStudio
         public const int APU_EXPANSION_MMC5    = 4;
         public const int APU_EXPANSION_NAMCO   = 5;
         public const int APU_EXPANSION_SUNSOFT = 6;
+        public const int APU_EXPANSION_EPSM    = 7;
 
         public const int APU_EXPANSION_FIRST   = 1;
-        public const int APU_EXPANSION_LAST    = 6;
+        public const int APU_EXPANSION_LAST    = 7;
 
         public const int APU_EXPANSION_MASK_NONE    = 0;
         public const int APU_EXPANSION_MASK_VRC6    = 1 << 0;
@@ -75,6 +76,7 @@ namespace FamiStudio
         public const int APU_EXPANSION_MASK_MMC5    = 1 << 3;
         public const int APU_EXPANSION_MASK_NAMCO   = 1 << 4;
         public const int APU_EXPANSION_MASK_SUNSOFT = 1 << 5;
+        public const int APU_EXPANSION_MASK_EPSM    = 1 << 6;
 
         public const int APU_PL1_VOL        = 0x4000;
         public const int APU_PL1_SWEEP      = 0x4001;
@@ -165,7 +167,7 @@ namespace FamiStudio
         public const int N163_REG_PHASE_HI  = 0x7d;
         public const int N163_REG_WAVE      = 0x7e;
         public const int N163_REG_VOLUME    = 0x7f;
-
+        
         public const int S5B_ADDR           = 0xc000;
         public const int S5B_DATA           = 0xe000;
                                             
@@ -185,6 +187,32 @@ namespace FamiStudio
         public const int S5B_REG_SHAPE      = 0x0d;
         public const int S5B_REG_IO_A       = 0x0e;
         public const int S5B_REG_IO_B       = 0x0f;
+
+        public const int EPSM_ADDR0         = 0x401c;
+        public const int EPSM_DATA0         = 0x401d;
+        public const int EPSM_ADDR1         = 0x401e;
+        public const int EPSM_DATA1         = 0x401f;
+
+        public const int EPSM_REG_LO_A = 0x00;
+        public const int EPSM_REG_HI_A = 0x01;
+        public const int EPSM_REG_LO_B = 0x02;
+        public const int EPSM_REG_HI_B = 0x03;
+        public const int EPSM_REG_LO_C = 0x04;
+        public const int EPSM_REG_HI_C = 0x05;
+        public const int EPSM_REG_NOISE = 0x06;
+        public const int EPSM_REG_TONE = 0x07;
+        public const int EPSM_REG_VOL_A = 0x08;
+        public const int EPSM_REG_VOL_B = 0x09;
+        public const int EPSM_REG_VOL_C = 0x0a;
+        public const int EPSM_REG_ENV_LO = 0x0b;
+        public const int EPSM_REG_ENV_HI = 0x0c;
+        public const int EPSM_REG_SHAPE = 0x0d;
+        public const int EPSM_REG_IO_A = 0x0e;
+        public const int EPSM_REG_IO_B = 0x0f;
+        public const int EPSM_REG_RYTHM = 0x10;
+        public const int EPSM_REG_RYTHM_LEVEL = 0x18;
+        public const int EPSM_REG_FM_LO_A = 0xA0;
+        public const int EPSM_REG_FM_HI_A = 0xA4;
 
         // See comment in Simple_Apu.h.
         public const int TND_MODE_SINGLE           = 0;
@@ -217,6 +245,8 @@ namespace FamiStudio
         public static readonly ushort[]   NoteTableVrc6Saw = new ushort[97];
         public static readonly ushort[]   NoteTableVrc7    = new ushort[97];
         public static readonly ushort[]   NoteTableFds     = new ushort[97];
+        public static readonly ushort[]   NoteTableEPSM    = new ushort[97];
+        public static readonly ushort[]   NoteTableEPSMFm  = new ushort[97];
         public static readonly ushort[][] NoteTableN163    = new ushort[8][]
         {
             new ushort[97], 
@@ -256,14 +286,16 @@ namespace FamiStudio
 
             double clockNtsc = 1789773 / 16.0;
             double clockPal  = 1662607 / 16.0;
+            double clockEPSM = 8000000 / 32.0;
 
             for (int i = 1; i < NoteTableNTSC.Length; ++i)
             {
                 var octave = (i - 1) / 12;
                 var freq = BaseFreq * Math.Pow(2.0, (i - 1) / 12.0);
-
                 NoteTableNTSC[i]    = (ushort)(clockNtsc / freq - 0.5);
                 NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
+                NoteTableEPSM[i] = (ushort)(clockEPSM / freq - 0.5);
+                NoteTableEPSMFm[i] = octave == 0 ? (ushort)((144 * (double)freq * 1048576 / 8000000)/4) : (ushort)((NoteTableEPSMFm[(i - 1) % 12 + 1]) << octave);
                 NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
                 NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
                 NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(NoteTableVrc7[(i - 1) % 12 + 1] << octave);
@@ -286,6 +318,8 @@ namespace FamiStudio
             DumpNoteTable(NoteTableN163[5], "N163");
             DumpNoteTable(NoteTableN163[6], "N163");
             DumpNoteTable(NoteTableN163[7], "N163");
+            DumpNoteTable(NoteTableEPSMFm, "EPSMFM");
+            DumpNoteTable(NoteTableEPSM, "EPSMSquare");
 #endif
         }
 
@@ -318,6 +352,17 @@ namespace FamiStudio
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
                     return NoteTableVrc7;
+                case ChannelType.EPSMSquare1:
+                case ChannelType.EPSMSquare2:
+                case ChannelType.EPSMSquare3:
+                    return NoteTableEPSM;
+                case ChannelType.EPSMFm1:
+                case ChannelType.EPSMFm2:
+                case ChannelType.EPSMFm3:
+                case ChannelType.EPSMFm4:
+                case ChannelType.EPSMFm5:
+                case ChannelType.EPSMFm6:
+                    return NoteTableEPSMFm;
                 default:
                     return pal ? NoteTablePAL : NoteTableNTSC;
             }
@@ -338,6 +383,12 @@ namespace FamiStudio
                 case ChannelType.Vrc7Fm4:
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
+                case ChannelType.EPSMFm1:
+                case ChannelType.EPSMFm2:
+                case ChannelType.EPSMFm3:
+                case ChannelType.EPSMFm4:
+                case ChannelType.EPSMFm5:
+                case ChannelType.EPSMFm6:
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:
@@ -414,6 +465,16 @@ namespace FamiStudio
                             case APU_EXPANSION_SUNSOFT:
                                 WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
                                 WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
+                                break;
+                            case APU_EXPANSION_EPSM:
+                                WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x38); // No noise, just 3 tones for now.
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x29);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x80);
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x27);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x00);
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x11);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x3f);
                                 break;
                         }
                     }

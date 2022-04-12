@@ -7,7 +7,7 @@ namespace FamiStudio
     {
         List<short> samples;
 
-        public WavPlayer(int sampleRate, int maxLoop, int mask, int tnd = NesApu.TND_MODE_SINGLE) : base(NesApu.APU_WAV_EXPORT, sampleRate)
+        public WavPlayer(int sampleRate, bool stereo, int maxLoop, int mask, int tnd = NesApu.TND_MODE_SINGLE) : base(NesApu.APU_WAV_EXPORT, stereo, sampleRate)
         {
             maxLoopCount = maxLoop;
             channelMask = mask;

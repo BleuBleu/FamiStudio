@@ -189,6 +189,10 @@
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMSquare.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMRythm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
+    <Compile Include="Source\IO\VgmFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
@@ -354,6 +358,8 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportMIDI%402x.png" />
     <EmbeddedResource Include="Resources\ExportMIDI.png" />
+    <EmbeddedResource Include="Resources\ExportVGM%402x.png" />
+    <EmbeddedResource Include="Resources\ExportVGM.png" />
     <EmbeddedResource Include="Resources\ExportNsf%402x.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportRom%402x.png" />
@@ -496,6 +502,27 @@
     <EmbeddedResource Include="Resources\QuickSand8_0.png" />
     <EmbeddedResource Include="Resources\QuickSand8Bold.fnt" />
     <EmbeddedResource Include="Resources\QuickSand8Bold_0.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelRythm.png" />
+    <EmbeddedResource Include="Resources\ChannelRythm%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm7.png" />
+    <EmbeddedResource Include="Resources\Algorithm6%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm6.png" />
+    <EmbeddedResource Include="Resources\Algorithm5%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm5.png" />
+    <EmbeddedResource Include="Resources\Algorithm4%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm4.png" />
+    <EmbeddedResource Include="Resources\Algorithm3%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm3.png" />
+    <EmbeddedResource Include="Resources\Algorithm2%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm2.png" />
+    <EmbeddedResource Include="Resources\Algorithm1%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm0.png" />
+    <EmbeddedResource Include="Resources\Algorithm0%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm1.png" />
+    <EmbeddedResource Include="Resources\Algorithm7%402x.png" />
+    <Compile Include="Source\IO\BambootrackerInstrumentFile.cs" />
     <EmbeddedResource Include="Resources\QwertyPiano%402x.png" />
     <EmbeddedResource Include="Resources\QwertyPiano.png" />
     <EmbeddedResource Include="Resources\Rec%402x.png" />
@@ -552,6 +579,10 @@
     <EmbeddedResource Include="Rom\rom_famitracker_pal.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_pal.nes" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_epsm_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
+    <EmbeddedResource Include="Rom\rom_epsm_famitracker_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="libportaudio.2.dylib"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>

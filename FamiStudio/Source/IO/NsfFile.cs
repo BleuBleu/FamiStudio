@@ -54,6 +54,20 @@ namespace FamiStudio
             public fixed byte programSize[3];
         };
 
+        byte GetNsfExtensionFlags(int mask)
+        {
+            byte flags = 0;
+
+            if ((mask & ExpansionType.Vrc6Mask) != 0) flags |= 0x01;
+            if ((mask & ExpansionType.Vrc7Mask) != 0) flags |= 0x02;
+            if ((mask & ExpansionType.FdsMask)  != 0) flags |= 0x04;
+            if ((mask & ExpansionType.Mmc5Mask) != 0) flags |= 0x08;
+            if ((mask & ExpansionType.N163Mask) != 0) flags |= 0x10;
+            if ((mask & ExpansionType.S5BMask)  != 0) flags |= 0x20;
+            if ((mask & ExpansionType.EPSMMask) != 0) flags |= 0x80;
+
+            return flags;
+        }
         public unsafe bool Save(Project originalProject, int kernel, string filename, int[] songIds, string name, string author, string copyright, int machine)
         {
 #if !DEBUG
@@ -84,7 +98,7 @@ namespace FamiStudio
                 header.playSpeedNTSC = 16639;
                 header.playSpeedPAL = 19997;
                 header.palNtscFlags = (byte)machine;
-                header.extensionFlags = (byte)(project.UsesAnyExpansionAudio ? project.ExpansionAudioMask : 0);
+                header.extensionFlags = GetNsfExtensionFlags((byte)(project.UsesAnyExpansionAudio ? project.ExpansionAudioMask : 0));
                 header.banks[0] = 0;
                 header.banks[1] = 1;
                 header.banks[2] = 2;
@@ -214,7 +228,7 @@ namespace FamiStudio
                 {
                     var song = project.Songs[i];
 
-                    // If we are in the same page as the driver, the song will start in a 0x8000 address (0x9000 for multi)
+                    // If we are in the same page as the driver, the song will start in a 0x8000 address (0x9000 for multi and epsm)
                     // so we need to increment the page by one so that the NSF driver correctly maps the subsequent pages.
                     var samePageAsDriver = nsfBytes.Count < NsfPageSize;
                     int page = nsfBytes.Count / NsfPageSize + (samePageAsDriver ? 1 : 0);
@@ -308,6 +322,7 @@ namespace FamiStudio
         const int EXTSOUND_MMC5  = 0x08;
         const int EXTSOUND_N163  = 0x10;
         const int EXTSOUND_S5B   = 0x20;
+        const int EXTSOUND_EPSM  = 0x80;
 
         const int STATE_VOLUME             = 0;
         const int STATE_PERIOD             = 1;
@@ -331,6 +346,11 @@ namespace FamiStudio
         const int STATE_N163WAVESIZE       = 19;
         const int STATE_N163WAVE           = 20;
         const int STATE_N163NUMCHANNELS    = 21;
+        const int STATE_EPSMPATCH          = 22;
+        const int STATE_EPSMPATCHREG       = 23;
+        const int STATE_EPSMOCTAVE         = 24;
+        const int STATE_EPSMTRIGGER        = 25;
+        const int STATE_EPSMSUSTAIN        = 26;
 
         class ChannelState
         {
@@ -480,6 +500,48 @@ namespace FamiStudio
             }
         }
 
+        private Instrument GetEpsmInstrument(byte patch, byte[] patchRegs)
+        {
+            if (patch == EpsmInstrumentPatch.Custom)
+            {
+                // Custom instrument, look for a match.
+                foreach (var inst in project.Instruments)
+                {
+                    if (inst.IsEpsmInstrument)
+                    {
+                        if (inst.EpsmPatch == 0 && inst.EpsmPatchRegs.SequenceEqual(patchRegs))
+                            return inst;
+                    }
+                }
+
+                for (int i = 1; ; i++)
+                {
+                    var name = $"EPSM Custom {i}";
+                    if (project.IsInstrumentNameUnique(name))
+                    {
+                        var instrument = project.CreateInstrument(ExpansionType.EPSM, name);
+                        instrument.EpsmPatch = patch;
+                        Array.Copy(patchRegs, instrument.EpsmPatchRegs,31);
+                        return instrument;
+                    }
+                }
+            }
+            else
+            {
+                // Built-in patch, simply find by name.
+                var name = $"EPSM {Instrument.GetEpsmPatchName(patch)}";
+                var instrument = project.GetInstrument(name);
+
+                if (instrument == null)
+                {
+                    instrument = project.CreateInstrument(ExpansionType.EPSM, name);
+                    instrument.EpsmPatch = patch;
+                }
+
+                return instrument;
+            }
+        }
+
         private Instrument GetN163Instrument(sbyte[] waveData, byte wavePos)
         {
             foreach (var inst in project.Instruments)
@@ -522,7 +584,18 @@ namespace FamiStudio
 
             return project.CreateInstrument(ExpansionType.S5B, "S5B");
         }
-        
+
+        private Instrument GetEPSMInstrument()
+        {
+            foreach (var inst in project.Instruments)
+            {
+                if (inst.IsEpsmInstrument)
+                    return inst;
+            }
+
+            return project.CreateInstrument(ExpansionType.EPSM, "EPSM");
+        }
+
         private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
@@ -601,12 +674,16 @@ namespace FamiStudio
                 {
                     volume = 15 - volume;
                 }
+                else if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
+                {
+                    volume = 15 - volume;
+                }
 
-                var hasOctave  = channel.IsVrc7Channel;
+                var hasOctave  = channel.IsVrc7Channel || channel.IsEPSMChannel;
                 var hasVolume  = channel.Type != ChannelType.Triangle;
                 var hasPitch   = channel.Type != ChannelType.Noise;
                 var hasDuty    = channel.Type == ChannelType.Square1 || channel.Type == ChannelType.Square2 || channel.Type == ChannelType.Noise || channel.Type == ChannelType.Vrc6Square1 || channel.Type == ChannelType.Vrc6Square2 || channel.Type == ChannelType.Mmc5Square1 || channel.Type == ChannelType.Mmc5Square2;
-                var hasTrigger = channel.IsVrc7Channel;
+                var hasTrigger = channel.IsVrc7Channel || channel.IsEPSMChannel;
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
@@ -629,6 +706,28 @@ namespace FamiStudio
                     }
 
                     octave = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
+                }
+                else if (channel.Type >= ChannelType.EPSMFm1 && channel.Type <= ChannelType.EPSMFm6)
+                {
+                    var trigger = NsfGetState(nsf, channel.Type, STATE_EPSMTRIGGER, 0);
+                    var sustain = NsfGetState(nsf, channel.Type, STATE_EPSMSUSTAIN, 0) != 0;
+
+                    var newState = state.state;
+
+                    if (trigger == 0)
+                        attack = false;
+                    else
+                        newState = trigger > 0 ? ChannelState.Triggered : (sustain ? ChannelState.Released : ChannelState.Stopped);
+
+                    if (newState != state.state)
+                    {
+                        stop = newState == ChannelState.Stopped;
+                        release = newState == ChannelState.Released;
+                        state.state = newState;
+                        force |= true;
+                    }
+
+                    octave = NsfGetState(nsf, channel.Type, STATE_EPSMOCTAVE, 0);
                 }
                 else
                 {
@@ -722,6 +821,20 @@ namespace FamiStudio
                 else if (channel.Type >= ChannelType.S5BSquare1 && channel.Type <= ChannelType.S5BSquare3)
                 {
                     instrument = GetS5BInstrument();
+                }
+                else if (channel.Type >= ChannelType.EPSMSquare1 && channel.Type <= ChannelType.EPSMrythm6)
+                {
+                    var patch = (byte)NsfGetState(nsf, channel.Type, STATE_EPSMPATCH, 0);
+                    var regs = new byte[31];
+
+                    if (patch == 0)
+                    {
+                        for (int i = 0; i < 31; i++)
+                            regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_EPSMPATCHREG, i);
+                    }
+
+                    //instrument = GetEpsmInstrument(patch, regs);
+                    instrument = GetEPSMInstrument();
                 }
                 else 
                 {
@@ -872,6 +985,13 @@ namespace FamiStudio
 
             // Our expansion mask is the same as NSF.
             var expansionMask = NsfGetExpansion(nsf);
+            if(((byte)expansionMask & 0x80) != 0)//EPSM uses 0x80 in NSF but 0x40 in FS
+            {
+                //Log.LogMessage(LogSeverity.Error, "EPSM NSF Import is currently not supported");
+                //NsfClose(nsf);
+                //return null;
+                expansionMask = ((byte)expansionMask & 0x3f)+ExpansionType.EPSMMask;
+            }
 
             // The 2 upper bits of the mask need to be zero, we dont support these.
             if (expansionMask != (expansionMask & ExpansionType.AllMask))

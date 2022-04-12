@@ -73,10 +73,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_epsm_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <EmbeddedResource Include="Rom\rom_epsm_famitracker_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -102,7 +106,11 @@
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Square.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMRythm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMSquare.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
     <Compile Include="Source\IO\AudioExportUtils.cs" />
+    <Compile Include="Source\IO\BambootrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />
@@ -124,6 +132,7 @@
     <Compile Include="Source\IO\VideoFileOscilloscope.cs" />
     <Compile Include="Source\IO\VideoFilePianoRoll.cs" />
     <Compile Include="Source\IO\VorbisFile.cs" />
+    <Compile Include="Source\IO\VgmFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
@@ -288,6 +297,26 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Add%402x.png" />
     <EmbeddedResource Include="Resources\Add.png" />
+    <EmbeddedResource Include="Resources\ChannelRythm.png" />
+    <EmbeddedResource Include="Resources\ChannelRythm%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM.png" />
+    <EmbeddedResource Include="Resources\Algorithm0%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm0.png" />
+    <EmbeddedResource Include="Resources\Algorithm1%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm1.png" />
+    <EmbeddedResource Include="Resources\Algorithm2%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm2.png" />
+    <EmbeddedResource Include="Resources\Algorithm3%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm3.png" />
+    <EmbeddedResource Include="Resources\Algorithm4%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm4.png" />
+    <EmbeddedResource Include="Resources\Algorithm5%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm5.png" />
+    <EmbeddedResource Include="Resources\Algorithm6%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm6.png" />
+    <EmbeddedResource Include="Resources\Algorithm7%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm7.png" />
     <EmbeddedResource Include="Resources\ArrowLeft%402x.png" />
     <EmbeddedResource Include="Resources\ArrowLeft.png" />
     <EmbeddedResource Include="Resources\ArrowRight%402x.png" />
@@ -396,6 +425,8 @@
     <EmbeddedResource Include="Resources\ExportFamiTracker.png" />
     <EmbeddedResource Include="Resources\ExportMIDI%402x.png" />
     <EmbeddedResource Include="Resources\ExportMIDI.png" />
+    <EmbeddedResource Include="Resources\ExportVGM%402x.png" />
+    <EmbeddedResource Include="Resources\ExportVGM.png" />
     <EmbeddedResource Include="Resources\ExportNsf%402x.png" />
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportRom%402x.png" />

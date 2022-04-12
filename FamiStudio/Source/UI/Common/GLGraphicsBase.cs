@@ -35,6 +35,42 @@ namespace FamiStudio
             }
         }
 
+        protected class BitmapAtlasKey
+        {
+            private string[] BitmapNames;
+
+            public BitmapAtlasKey(string[] names)
+            {
+                BitmapNames = names;
+            }
+
+            public override int GetHashCode()
+            {
+                var hash = 0;
+
+                for (int i = 0; i < BitmapNames.Length; i++)
+                    hash = Utils.HashCombine(BitmapNames[i].GetHashCode(), hash);
+
+                return hash;
+            }
+
+            public override bool Equals(object obj)
+            {
+                var other = obj as BitmapAtlasKey;
+
+                if (other == null)
+                    return false;
+
+                for (int i = 0; i < BitmapNames.Length; i++)
+                {
+                    if (BitmapNames[i] != other.BitmapNames[i])
+                        return false;
+                }
+
+                return true;
+            }
+        }
+
         protected float windowScaling = 1.0f;
         protected float fontScaling = 1.0f;
         protected int windowSizeY;
@@ -48,13 +84,14 @@ namespace FamiStudio
         protected Dictionary<GradientCacheKey, GLBrush> verticalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
         protected Dictionary<GradientCacheKey, GLBrush> horizontalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
         protected Dictionary<Color, GLBrush> solidGradientCache = new Dictionary<Color, GLBrush>();
+        protected Dictionary<BitmapAtlasKey, GLBitmapAtlas> bitmapAtlasesCache = new Dictionary<BitmapAtlasKey, GLBitmapAtlas>();
 
         public float FontScaling => fontScaling;
         public float WindowScaling => windowScaling;
         public int DashTextureSize => dashedBitmap.Size.Width;
         public GLTransform Transform => transform;
 
-        protected const int MaxAtlasResolution = 512;
+        protected const int MaxAtlasResolution = 4096;
         protected const int MaxVertexCount = (PlatformUtils.IsDesktop ? 128 : 64) * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
@@ -115,6 +152,8 @@ namespace FamiStudio
         public virtual void EndDrawControl()
         {
         }
+
+        public abstract GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names);
 
         public void SetLineBias(int bias)
         {
@@ -187,6 +226,18 @@ namespace FamiStudio
             solidGradientCache[color] = brush;
 
             return brush;
+        }
+
+        public GLBitmapAtlas GetBitmapAtlas(string[] imageNames)
+        {
+            var key = new BitmapAtlasKey(imageNames);
+            
+            if (bitmapAtlasesCache.TryGetValue(key, out var atlas))
+                return atlas;
+
+            atlas = CreateBitmapAtlasFromResources(imageNames);
+            bitmapAtlasesCache[key] = atlas;
+            return atlas;
         }
 
         public GLBrush GetVerticalGradientBrush(Color color0, int sizeY, float dimming)
@@ -333,6 +384,19 @@ namespace FamiStudio
 
         public virtual void Dispose()
         {
+            foreach (var b in verticalGradientCache.Values)
+                b.Dispose();
+            foreach (var b in horizontalGradientCache.Values)
+                b.Dispose();
+            foreach (var b in solidGradientCache.Values)
+                b.Dispose();
+            foreach (var b in bitmapAtlasesCache.Values)
+                b.Dispose();
+
+            verticalGradientCache.Clear();
+            horizontalGradientCache.Clear();
+            solidGradientCache.Clear();
+            bitmapAtlasesCache.Clear();
         }
 
         public float[] GetVertexArray()

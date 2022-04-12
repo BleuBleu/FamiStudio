@@ -324,7 +324,7 @@ namespace FamiStudio
             var sampleRate = ParseOption($"{extension}-export-rate", 44100);
             var loopCount  = ParseOption($"{extension}-export-loop", 1);
             var duration   = ParseOption($"{extension}-export-duration", 0);
-            var mask       = ParseOption($"{extension}-export-channels", 0xff, true);
+            var mask       = ParseOption($"{extension}-export-channels", 0xffffff, true);
             var separate   = HasOption($"{extension}-export-separate-channels");
             var intro      = HasOption($"{extension}-export-separate-intro");
             var bitrate    = ParseOption($"{extension}-export-bitrate", 192);
@@ -335,9 +335,21 @@ namespace FamiStudio
             else
                 loopCount = Math.Max(1, loopCount);
 
+            // TODO : Add a stereo flag on the command line.
+            var stereo = project.OutputsStereoAudio;
+            var pan = (float[])null;
+
+            if (stereo)
+            {
+                var channelCount = project.GetActiveChannelCount(); 
+                pan = new float[channelCount];
+                for (int i = 0; i < channelCount; i++)
+                    pan[i] = 0.5f;
+            }
+
             if (song != null)
             {
-                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro, false, null,
+                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro, stereo, pan,
                      (samples, samplesChannels, fn) =>
                      {
                          switch (format)
@@ -573,7 +585,7 @@ namespace FamiStudio
             if (!ValidateExtension(filename, ".txt"))
                 return;
 
-            new UnitTestPlayer().GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
+            new UnitTestPlayer(project.OutputsStereoAudio).GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
         }
 
         public bool Run()

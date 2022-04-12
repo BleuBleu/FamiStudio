@@ -34,16 +34,21 @@ namespace FamiStudio
         private byte vrc7Patch = Vrc7InstrumentPatch.Bell;
         private byte[] vrc7PatchRegs = new byte[8];
 
+        // EPSM
+        private byte epsmPatch = EpsmInstrumentPatch.Default;
+        private byte[] epsmPatchRegs = new byte[31];
+
         public int Id => id;
         public string Name { get => name; set => name = value; }
         public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.ShortNames[expansion]})");
         public Color Color { get => color; set => color = value; }
-        public int Expansion => expansion;
+        public int Expansion { get => expansion; set => expansion = value; }
         public bool IsExpansionInstrument => expansion != ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
+        public byte[] EpsmPatchRegs => epsmPatchRegs;
 
         public bool IsRegularInstrument => expansion == ExpansionType.None;
         public bool IsFdsInstrument     => expansion == ExpansionType.Fds;
@@ -51,6 +56,7 @@ namespace FamiStudio
         public bool IsVrc7Instrument    => expansion == ExpansionType.Vrc7;
         public bool IsN163Instrument    => expansion == ExpansionType.N163;
         public bool IsS5BInstrument     => expansion == ExpansionType.S5B;
+        public bool IsEpsmInstrument    => expansion == ExpansionType.EPSM;
 
         public Instrument()
         {
@@ -81,6 +87,11 @@ namespace FamiStudio
             {
                 vrc7Patch = Vrc7InstrumentPatch.Bell;
                 Array.Copy(Vrc7InstrumentPatch.Infos[Vrc7InstrumentPatch.Bell].data, vrc7PatchRegs, 8);
+            }
+            else if (expansion == global::FamiStudio.ExpansionType.EPSM)
+            {
+                epsmPatch = EpsmInstrumentPatch.Default;
+                Array.Copy(EpsmInstrumentPatch.Infos[EpsmInstrumentPatch.Default].data, epsmPatchRegs, 31);
             }
         }
 
@@ -186,6 +197,17 @@ namespace FamiStudio
             }
         }
 
+        public byte EpsmPatch
+        {
+            get { return epsmPatch; }
+            set
+            {
+                epsmPatch = value;
+                if (epsmPatch != 0)
+                    Array.Copy(EpsmInstrumentPatch.Infos[epsmPatch].data, epsmPatchRegs, 31);
+            }
+        }
+
         public ushort FdsModSpeed     { get => fdsModSpeed;     set => fdsModSpeed = value; }
         public byte   FdsModDepth     { get => fdsModDepth;     set => fdsModDepth = value; }
         public byte   FdsModDelay     { get => fdsModDelay;     set => fdsModDelay = value; } 
@@ -210,6 +232,11 @@ namespace FamiStudio
         public static string GetVrc7PatchName(int preset)
         {
             return Vrc7InstrumentPatch.Infos[preset].name;
+        }
+
+        public static string GetEpsmPatchName(int preset)
+        {
+            return EpsmInstrumentPatch.Infos[preset].name;
         }
 
         public uint ComputeCRC(uint crc = 0)
@@ -299,7 +326,42 @@ namespace FamiStudio
                             buffer.Serialize(ref vrc7PatchRegs[6]);
                             buffer.Serialize(ref vrc7PatchRegs[7]);
                             break;
-                        case ExpansionType.Vrc6:
+
+                        case global::FamiStudio.ExpansionType.EPSM:
+                            buffer.Serialize(ref epsmPatch);
+                            buffer.Serialize(ref epsmPatchRegs[0]);
+                            buffer.Serialize(ref epsmPatchRegs[1]);
+                            buffer.Serialize(ref epsmPatchRegs[2]);
+                            buffer.Serialize(ref epsmPatchRegs[3]);
+                            buffer.Serialize(ref epsmPatchRegs[4]);
+                            buffer.Serialize(ref epsmPatchRegs[5]);
+                            buffer.Serialize(ref epsmPatchRegs[6]);
+                            buffer.Serialize(ref epsmPatchRegs[7]);
+                            buffer.Serialize(ref epsmPatchRegs[8]);
+                            buffer.Serialize(ref epsmPatchRegs[9]);
+                            buffer.Serialize(ref epsmPatchRegs[10]);
+                            buffer.Serialize(ref epsmPatchRegs[11]);
+                            buffer.Serialize(ref epsmPatchRegs[12]);
+                            buffer.Serialize(ref epsmPatchRegs[13]);
+                            buffer.Serialize(ref epsmPatchRegs[14]);
+                            buffer.Serialize(ref epsmPatchRegs[15]);
+                            buffer.Serialize(ref epsmPatchRegs[16]);
+                            buffer.Serialize(ref epsmPatchRegs[17]);
+                            buffer.Serialize(ref epsmPatchRegs[18]);
+                            buffer.Serialize(ref epsmPatchRegs[19]);
+                            buffer.Serialize(ref epsmPatchRegs[20]);
+                            buffer.Serialize(ref epsmPatchRegs[21]);
+                            buffer.Serialize(ref epsmPatchRegs[22]);
+                            buffer.Serialize(ref epsmPatchRegs[23]);
+                            buffer.Serialize(ref epsmPatchRegs[24]);
+                            buffer.Serialize(ref epsmPatchRegs[25]);
+                            buffer.Serialize(ref epsmPatchRegs[26]);
+                            buffer.Serialize(ref epsmPatchRegs[27]);
+                            buffer.Serialize(ref epsmPatchRegs[28]);
+                            buffer.Serialize(ref epsmPatchRegs[29]);
+                            buffer.Serialize(ref epsmPatchRegs[30]);
+                            break;
+                        case global::FamiStudio.ExpansionType.Vrc6:
                             // At version 10 (FamiStudio 3.0.0) we added a master volume to the VRC6 saw.
                             if (buffer.Version >= 10)
                                 buffer.Serialize(ref vrc6SawMasterVolume);
@@ -400,6 +462,27 @@ namespace FamiStudio
             new Vrc7PatchInfo() { name = "BassGuitar",   data = new byte[] { 0x01, 0x02, 0xd3, 0x05, 0xc9, 0x95, 0x03, 0x02 } }, // BassGuitar  
             new Vrc7PatchInfo() { name = "Synthesizer",  data = new byte[] { 0x61, 0x63, 0x0c, 0x00, 0x94, 0xC0, 0x33, 0xf6 } }, // Synthesizer 
             new Vrc7PatchInfo() { name = "Chorus",       data = new byte[] { 0x21, 0x72, 0x0d, 0x00, 0xc1, 0xd5, 0x56, 0x06 } }  // Chorus      
+        };
+    }
+
+
+    public static class EpsmInstrumentPatch
+    {
+        public const byte Custom = 0;
+        public const byte Default = 1;
+
+        public struct EpsmPatchInfo
+        {
+            public string name;
+            public byte[] data;
+        };
+
+        public static readonly EpsmPatchInfo[] Infos = new[]
+        {
+            new EpsmPatchInfo() { name = "Custom",       data = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }, // Custom  
+            new EpsmPatchInfo() { name = "Default",      data = new byte[] { 0x04, 0xc0, 0x00, 0x20, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x20, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x07, 0x00, 0x00 } }, // Default
+                                                                           //0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 -- Register order
+
         };
     }
 

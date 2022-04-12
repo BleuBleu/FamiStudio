@@ -100,7 +100,7 @@ namespace FamiStudio
             lines.Add($"\t{db} {project.Songs.Count}");
             lines.Add($"\t{dw} {ll}instruments");
 
-            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion)
+            if (project.UsesFdsExpansion || project.UsesN163Expansion || project.UsesVrc7Expansion || project.UsesEPSMExpansion)
             {
                 lines.Add($"\t{dw} {ll}instruments_exp");
                 size += 2;
@@ -361,8 +361,9 @@ namespace FamiStudio
                 var instrument = project.Instruments[i];
 
                 if (!instrument.IsFdsInstrument  && 
-                    !instrument.IsN163Instrument && 
-                    !instrument.IsVrc7Instrument)
+                    !instrument.IsN163Instrument &&
+                    !instrument.IsVrc7Instrument &&
+                    !instrument.IsEpsmInstrument)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                     var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -395,7 +396,8 @@ namespace FamiStudio
             // FDS, N163 and VRC7 instruments are special.
             if (project.UsesFdsExpansion  || 
                 project.UsesN163Expansion || 
-                project.UsesVrc7Expansion)
+                project.UsesVrc7Expansion ||
+                project.UsesEPSMExpansion)
             {
                 lines.Add($"{ll}instruments_exp:");
 
@@ -404,8 +406,9 @@ namespace FamiStudio
                     var instrument = project.Instruments[i];
 
                     if (instrument.IsFdsInstrument  || 
-                        instrument.IsVrc7Instrument || 
-                        instrument.IsN163Instrument)
+                        instrument.IsVrc7Instrument ||
+                        instrument.IsN163Instrument ||
+                        instrument.IsEpsmInstrument)
                     {
                         var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                         var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -435,12 +438,35 @@ namespace FamiStudio
                             lines.Add($"\t{db} ${(instrument.Vrc7Patch << 4):x2}, $00");
                             lines.Add($"\t{db} {String.Join(",", instrument.Vrc7PatchRegs.Select(r => $"${r:x2}"))}");
                         }
+                        else if (instrument.IsEpsmInstrument)
+                        {
+                            lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
+                            // we can fit the first 8 bytes of data here to avoid needing to add padding
+                            lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Take(8).Select(r => $"${r:x2}"))}");
+                        }
 
                         size += 16;
                         instrumentIndices[instrument] = j++;
                     }
                 }
 
+                lines.Add("");
+            }
+
+            // EPSM instruments don't fit in the 16 bytes allotted for expansion instruments so we store the extra data
+            // for them after all the instrument data
+            if (project.UsesEPSMExpansion)
+            {
+                for (int i = 0; i < project.Instruments.Count; i++)
+                {
+                    var instrument = project.Instruments[i];
+                    if (instrument.IsEpsmInstrument)
+                    {
+                        lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
+                        lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(8).Select(r => $"${r:x2}"))}");
+                        size += 23;
+                    }
+                }
                 lines.Add("");
             }
 
@@ -1455,8 +1481,8 @@ namespace FamiStudio
             {
                 Debug.Assert(kernel == FamiToneKernel.FamiStudio);
 
-                // The sound engine for multiple expansion always has all expansion enabled.
-                project.SetExpansionAudioMask(ExpansionType.AllMask, 8);
+                // The sound engine for multiple expansion always has all expansion enabled.(except EPSM for now)
+                project.SetExpansionAudioMask(ExpansionType.AllMask & 0x3f, 8);
             }
         }
 

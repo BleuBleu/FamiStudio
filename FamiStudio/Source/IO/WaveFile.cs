@@ -97,7 +97,8 @@ namespace FamiStudio
 
                 // So lame.
                 foreach (var s in samples)
-                    file.Write(BitConverter.GetBytes(s), 0, sizeof(short));
+                    file.Write(BitConverter.GetBytes(s), 0, sizeof(short)); 
+
             }
         }
 

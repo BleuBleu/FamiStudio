@@ -16,6 +16,7 @@ namespace FamiStudio
         private int freq;
         private bool quit;
         private Task playingTask;
+        private int audioChannels = 1;
 
         int source;
         int[] buffers;
@@ -23,14 +24,14 @@ namespace FamiStudio
         int   immediateSource = -1;
         int[] immediateBuffers;
 
-        public OpenALStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public OpenALStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback, int channels)
         {
             if (context == null)
             {
                 context = new AudioContext();
                 Console.WriteLine($"Default OpenAL audio device is '{AudioContext.DefaultDevice}'");
             }
-
+            audioChannels = channels;
             // TODO : We need to decouple the number of emulated buffered frames and the 
             // size of the low-level audio buffers.
             freq = rate;
@@ -108,11 +109,22 @@ namespace FamiStudio
                     var data = bufferFill();
                     if (data != null)
                     {
-                        int bufferId = initBufferIdx >= 0 ? buffers[initBufferIdx--] : AL.SourceUnqueueBuffer(source);
-                        fixed (short* p = &data[0])
-                            AL.BufferData(bufferId, ALFormat.Mono16, new IntPtr(p), data.Length * sizeof(short), freq);
-                        AL.SourceQueueBuffer(source, bufferId);
-                        i++;
+                        if (audioChannels == 2)
+                        {
+                            int bufferId = initBufferIdx >= 0 ? buffers[initBufferIdx--] : AL.SourceUnqueueBuffer(source);
+                            fixed (short* p = &data[0])
+                                AL.BufferData(bufferId, ALFormat.Stereo16, new IntPtr(p), data.Length * sizeof(short), freq);
+                            AL.SourceQueueBuffer(source, bufferId);
+                            i++;
+                        }
+                        else
+                        {
+                            int bufferId = initBufferIdx >= 0 ? buffers[initBufferIdx--] : AL.SourceUnqueueBuffer(source);
+                            fixed (short* p = &data[0])
+                                AL.BufferData(bufferId, ALFormat.Mono16, new IntPtr(p), data.Length * sizeof(short), freq);
+                            AL.SourceQueueBuffer(source, bufferId);
+                            i++;
+                        }
                     }
                     else
                     {

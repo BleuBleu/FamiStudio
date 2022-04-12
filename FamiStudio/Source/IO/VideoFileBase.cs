@@ -161,7 +161,7 @@ namespace FamiStudio
         int prevNumSamples = 0;
         List<VideoFrameMetadata> metadata;
 
-        public VideoMetadataPlayer(int sampleRate, int maxLoop) : base(NesApu.APU_WAV_EXPORT, sampleRate)
+        public VideoMetadataPlayer(int sampleRate, bool stereo, int maxLoop) : base(NesApu.APU_WAV_EXPORT, stereo, sampleRate)
         {
             maxLoopCount = maxLoop;
             metadata = new List<VideoFrameMetadata>();
@@ -210,7 +210,7 @@ namespace FamiStudio
 
         protected override short[] EndFrame()
         {
-            numSamples += base.EndFrame().Length;
+            numSamples += base.EndFrame().Length / (stereo ? 2 : 1);
             return null;
         }
     }

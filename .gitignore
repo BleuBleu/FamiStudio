@@ -41,3 +41,4 @@ FamiStudio/FamiStudio.args.json
 # This file is generated from the C file
 SoundEngine/DemoSource/demo_cc65.s
 
+SoundEngine/Tools/tmp.bin

@@ -1459,6 +1459,12 @@ namespace FamiStudio
             {
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);
             }
+            if (selectedInstrument != null &&
+                (selectedInstrument.HasReleaseEnvelope || selectedInstrument.IsEpsmInstrument) &&
+                song.Channels[selectedChannelIndex].SupportsInstrument(selectedInstrument) && (song.Channels[selectedChannelIndex].IsEPSMFmChannel || song.Channels[selectedChannelIndex].IsEPSMRythmChannel))
+            {
+                instrumentPlayer.ReleaseNote(selectedChannelIndex);
+            }
             else
             {
                 instrumentPlayer.StopAllNotes();
@@ -1481,7 +1487,7 @@ namespace FamiStudio
         {
             Debug.Assert(songPlayer == null);
             Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
-            songPlayer = new SongPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate());
+            songPlayer = new SongPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio);
             songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
         }
@@ -1489,7 +1495,7 @@ namespace FamiStudio
         private void InitializeInstrumentPlayer()
         {
             Debug.Assert(instrumentPlayer == null);
-            instrumentPlayer = new InstrumentPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate());
+            instrumentPlayer = new InstrumentPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio);
             instrumentPlayer.Start(project, palPlayback);
         }
 
@@ -1520,7 +1526,7 @@ namespace FamiStudio
 
             if (Settings.ShowOscilloscope)
             {
-                oscilloscope = new Oscilloscope((int)DpiScaling.MainWindow);
+                oscilloscope = new Oscilloscope((int)DpiScaling.MainWindow, project.OutputsStereoAudio);
                 oscilloscope.Start();
 
                 if (instrumentPlayer != null)

@@ -136,7 +136,9 @@
     <ClInclude Include="nes_apu\Blip_Synth.h" />
     <ClInclude Include="nes_apu\emu2149.h" />
     <ClInclude Include="nes_apu\emu2413.h" />
+    <ClInclude Include="nes_apu\fmopn_2608rom.h" />
     <ClInclude Include="nes_apu\Nes_Apu.h" />
+    <ClInclude Include="nes_apu\Nes_EPSM.h" />
     <ClInclude Include="nes_apu\Nes_Fds.h" />
     <ClInclude Include="nes_apu\Nes_Fme7.h" />
     <ClInclude Include="nes_apu\Nes_Mmc5.h" />
@@ -145,6 +147,7 @@
     <ClInclude Include="nes_apu\Nes_Sunsoft.h" />
     <ClInclude Include="nes_apu\Nes_Vrc6.h" />
     <ClInclude Include="nes_apu\Nes_Vrc7.h" />
+    <ClInclude Include="nes_apu\ym3438.h" />
     <ClInclude Include="Simple_Apu.h" />
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +157,7 @@
     <ClCompile Include="nes_apu\emu2149.c" />
     <ClCompile Include="nes_apu\emu2413.c" />
     <ClCompile Include="nes_apu\Nes_Apu.cpp" />
+    <ClCompile Include="nes_apu\Nes_EPSM.cpp" />
     <ClCompile Include="nes_apu\Nes_Fds.cpp" />
     <ClCompile Include="nes_apu\Nes_Fme7.cpp" />
     <ClCompile Include="nes_apu\Nes_Mmc5.cpp" />
@@ -162,6 +166,7 @@
     <ClCompile Include="nes_apu\Nes_Sunsoft.cpp" />
     <ClCompile Include="nes_apu\Nes_Vrc6.cpp" />
     <ClCompile Include="nes_apu\Nes_Vrc7.cpp" />
+    <ClCompile Include="nes_apu\ym3438.cpp" />
     <ClCompile Include="Simple_Apu.cpp" />
   </ItemGroup>
   <ItemGroup>

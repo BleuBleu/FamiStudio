@@ -14,7 +14,7 @@ namespace FamiStudio
     {
         List<RegisterWrite> registerWrites;
 
-        public RegisterPlayer() : base(NesApu.APU_WAV_EXPORT)
+        public RegisterPlayer(bool stereo) : base(NesApu.APU_WAV_EXPORT, stereo)
         {
             loopMode = LoopMode.None;
         }

@@ -40,7 +40,7 @@ namespace FamiStudio
 
         private RegisterWrite[] GetRegisterWrites(Song song, bool pal)
         {
-            var regPlayer = new RegisterPlayer();
+            var regPlayer = new RegisterPlayer(song.Project.OutputsStereoAudio);
 
             // HACK: Need to disable smooth vibrato since sweep registers are not supported.
             // TODO: Make smooth vibrato a bool in the channel state.
