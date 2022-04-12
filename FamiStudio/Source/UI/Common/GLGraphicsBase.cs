@@ -1227,6 +1227,28 @@ namespace FamiStudio
             }
         }
 
+        public void DrawLine(float[,] points, GLBrush brush, int width = 1, bool smooth = false)
+        {
+            width += lineWidthBias;
+
+            var x0 = points[0, 0];
+            var y0 = points[0, 1];
+
+            xform.TransformPoint(ref x0, ref y0);
+
+            for (int i = 1; i < points.GetLength(0); i++)
+            {
+                var x1 = points[i, 0];
+                var y1 = points[i, 1];
+
+                xform.TransformPoint(ref x1, ref y1);
+                DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, false);
+
+                x0 = x1;
+                y0 = y1;
+            }
+        }
+
         public void DrawGeometry(float[,] points, GLBrush brush, int width = 1, bool smooth = false)
         {
             width += lineWidthBias;

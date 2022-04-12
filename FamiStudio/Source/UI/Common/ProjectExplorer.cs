@@ -541,7 +541,7 @@ namespace FamiStudio
             UpdateRenderCoords();
         }
 
-        private void UpdateRenderCoords()
+        private void UpdateRenderCoords(bool updateVirtualSizeY = true)
         {
             expandButtonSizeX    = ScaleForMainWindow(DefaultExpandButtonSizeX);
             buttonIconPosX       = ScaleForMainWindow(DefaultButtonIconPosX);      
@@ -563,23 +563,26 @@ namespace FamiStudio
             draggedLineSizeY     = ScaleForMainWindow(DefaultDraggedLineSizeY);
             scrollAreaSizeY      = Height;
 
-            if (App != null && App.Project != null)
+            if (updateVirtualSizeY)
             {
-                virtualSizeY = 0;
-                foreach (var btn in buttons)
-                    virtualSizeY += btn.height;
-            }
-            else
-            {
-                virtualSizeY = Height;
-            }
+                if (App != null && App.Project != null)
+                {
+                    virtualSizeY = 0;
+                    foreach (var btn in buttons)
+                        virtualSizeY += btn.height;
+                }
+                else
+                {
+                    virtualSizeY = Height;
+                }
 
-            needsScrollBar = virtualSizeY > scrollAreaSizeY;
+                needsScrollBar = virtualSizeY > scrollAreaSizeY;
 
-            if (needsScrollBar)
-                scrollBarThickness = ScaleForMainWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
-            else
-                scrollBarThickness = 0;
+                if (needsScrollBar)
+                    scrollBarThickness = ScaleForMainWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
+                else
+                    scrollBarThickness = 0;
+            }
         }
 
         public void Reset()
@@ -616,6 +619,8 @@ namespace FamiStudio
         public void RefreshButtons(bool invalidate = true)
         {
             Debug.Assert(captureOperation != CaptureOperation.MoveSlider);
+
+            UpdateRenderCoords(false);
 
             buttons.Clear();
             var project = App.Project;
@@ -854,8 +859,8 @@ namespace FamiStudio
 
                     if (showExpandButton && leftAligned)
                     {
-                        c.PushTranslation(1 + expandButtonSizeX, 0);
-                        leftPadding = expandButtonSizeX;
+                        leftPadding = 1 + expandButtonSizeX;
+                        c.PushTranslation(leftPadding, 0);
                     }
 
                     var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
@@ -863,7 +868,7 @@ namespace FamiStudio
 
                     if (button.type == ButtonType.ParamCustomDraw)
                     {
-                        button.param.CustomDraw(c, ThemeResources, new Rectangle(0, 0, actualWidth - leftPadding - paramRightPadX, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
+                        button.param.CustomDraw(c, ThemeResources, new Rectangle(0, 0, actualWidth - leftPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
                     }
                     else
                     {
