@@ -1625,6 +1625,21 @@ namespace FamiStudio
                 ClearMappingsWithNullSamples();
         }
 
+        private void RemoveImpossibleInstruments()
+        {
+            for (int i = 0; i < instruments.Count;)
+            {
+                if ((ExpansionType.GetMaskFromValue(instruments[i].Expansion) & expansionMask) == 0)
+                {
+                    instruments.RemoveAt(i);
+                }
+                else
+                {
+                    i++;
+                }
+            }
+        }
+
         public void SerializeInstrumentState(ProjectBuffer buffer)
         {
             int instrumentCount = instruments.Count;
@@ -1632,6 +1647,8 @@ namespace FamiStudio
             buffer.InitializeList(ref instruments, instrumentCount);
             foreach (var instrument in instruments)
                 instrument.SerializeState(buffer);
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+                RemoveImpossibleInstruments();
         }
 
         public void SerializeArpeggioState(ProjectBuffer buffer)
