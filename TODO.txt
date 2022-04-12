@@ -32,9 +32,6 @@ P0:
 		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
 	x Bump version.
 	/ Redraw EPSM icon. ALiasing. Should it be an E?
-	- Cleanup projects (sort filenames, etc.)
-		- Make sure only right resolutions are in projects (@4x, etc.)
-	- MATTT
 	/ Green hill demo song.
 		- Add to Android + Windows Setup
 	- Test:
