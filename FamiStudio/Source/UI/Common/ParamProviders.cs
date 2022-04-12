@@ -206,7 +206,7 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Patch", 0, 1, 1, null, true)//set number of patches
                         { GetValue = () => { return instrument.EpsmPatch; }, GetValueString = () => { return Instrument.GetEpsmPatchName(instrument.EpsmPatch); }, SetValue = (v) => { instrument.EpsmPatch = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "", 0, 0, 0)
-                        { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawEpsmAlgorithm, CustomHeight = 5, CustomUserData1 = instrument });
+                        { GetValue = () => { return 0; }, GetValueString = () => { return ""; }, CustomDraw = CustomDrawEpsmAlgorithm, CustomHeight = 4, CustomUserData1 = instrument });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Algorithm", 0, 7, (EpsmInstrumentPatch.Infos[1].data[0] & 0x07) >> 0)
                         { GetValue = () => { return (instrument.EpsmPatchRegs[0] & 0x07) >> 0; }, SetValue = (v) => { instrument.EpsmPatchRegs[0] = (byte)((instrument.EpsmPatchRegs[0] & (~0x07)) | ((v << 0) & 0x07)); instrument.EpsmPatch = 0; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Feedback", 0, 7, (EpsmInstrumentPatch.Infos[1].data[0] & 0x38) >> 3)
