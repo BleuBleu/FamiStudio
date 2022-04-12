@@ -28,16 +28,17 @@ P0:
 			- Andoird
 			- Mac
 		x Other players? Look ok.
-	- Test tabs on android.
 	- Other
 		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
 	x Bump version.
-	- Redraw EPSM icon. ALiasing.
+	/ Redraw EPSM icon. ALiasing. Should it be an E?
 	- Cleanup projects (sort filenames, etc.)
 		- Make sure only right resolutions are in projects (@4x, etc.)
 	- MATTT
 	/ Green hill demo song.
 		- Add to Android + Windows Setup
+	- Test:
+		- Tabs on android.
 
 - Register viewer.
 - Right-click functionality.

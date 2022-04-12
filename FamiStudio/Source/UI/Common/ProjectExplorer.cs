@@ -1407,7 +1407,7 @@ namespace FamiStudio
         {
             if (final)
             {
-                var buttonIdx = GetButtonAtCoord(x, y - buttonSizeY / 2, out _); // MATTT
+                var buttonIdx = GetButtonAtCoord(x, y - buttonSizeY / 2, out _);
 
                 if (buttonIdx >= 0)
                 {

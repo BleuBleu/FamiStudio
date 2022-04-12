@@ -30,7 +30,6 @@ namespace FamiStudio
 
             if (!PlatformUtils.IsVS2015RuntimeInstalled())
             {
-                // MATTT : Update this message + link to 2019 runtime!
                 if (MessageBox.Show("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     PlatformUtils.OpenUrl("https://famistudio.org/doc/install/#windows");

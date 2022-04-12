@@ -1777,7 +1777,7 @@ namespace FamiStudio
             "Nintendo MMC5",
             "Namco 163",
             "Sunsoft 5B",
-            "EPSM (Experimental)"
+            "EPSM"
         };
 
         public static readonly string[] ShortNames =
