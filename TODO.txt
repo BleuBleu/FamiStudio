@@ -28,13 +28,13 @@ P0:
 			- Andoird
 			- Mac
 		x Other players? Look ok.
-	/ Project explorer: only ADSR left.
 	- Test tabs on android.
 	- Other
 		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
 	x Bump version.
 	- Redraw EPSM icon. ALiasing.
 	- Cleanup projects (sort filenames, etc.)
+		- Make sure only right resolutions are in projects (@4x, etc.)
 	- MATTT
 	/ Green hill demo song.
 		- Add to Android + Windows Setup

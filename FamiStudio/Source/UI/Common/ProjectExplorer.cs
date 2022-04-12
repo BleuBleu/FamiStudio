@@ -669,7 +669,7 @@ namespace FamiStudio
                         {
                             if (!tabCreated && param.HasTab)
                             {
-                                buttons.Add(new Button(this) { type = ButtonType.ParamTabs, param = param, tabNames = tabNames.ToArray() });
+                                buttons.Add(new Button(this) { type = ButtonType.ParamTabs, param = param, color = instrument.Color, tabNames = tabNames.ToArray() });
                                 tabCreated = true;
                             }
 
@@ -929,7 +929,6 @@ namespace FamiStudio
                                 var tabSelect    = tabName == selectedInstrumentTab;
                                 var tabFont      = tabSelect ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
                                 var tabLineBrush = tabSelect ? ThemeResources.BlackBrush : g.GetSolidBrush(Color.Black, 1.0f, 0.5f);
-                                var tabFillBrush = g.GetSolidBrush(Color.Black, 1.0f, tabSelect ? 0.3f : 0.1f);
                                 var tabLine      = tabSelect ? 3 : 1;
 
                                 c.PushTranslation(leftPadding + tabWidth * j, 0);
@@ -3430,8 +3429,8 @@ namespace FamiStudio
                     numExpansionsSelected++;
             }
 
-            if (selectedExpansions.Length >= ExpansionType.EPSM && selectedExpansions[ExpansionType.EPSM-1] && numExpansionsSelected > 1)
-                props.SetPropertyWarning(6, CommentType.Warning, "EPSM Is unsupported with other expansions enabled.");
+            if (selectedExpansions[ExpansionType.EPSM - 1] && numExpansionsSelected > 1)
+                props.SetPropertyWarning(6, CommentType.Error, "EPSM is unsupported with other expansions enabled.");
             else if (numExpansionsSelected > 1)
                 props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to FamiTracker.");
             else
