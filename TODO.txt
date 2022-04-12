@@ -38,22 +38,6 @@ P0:
 	- MATTT
 	/ Green hill demo song.
 		- Add to Android + Windows Setup
-	
-VRC7
-		buttons[i + 12].param.Name	"Carrier Attack"	string
-		buttons[i + 13].param.Name	"Carrier Decay"	string
-		buttons[i + 7].param.Name	"Carrier Sustained"	string
-		buttons[i + 14].param.Name	"Carrier Sustain"	string
-		buttons[i + 15].param.Name	"Carrier Release"	string
-		buttons[i + 16].param.Name	"Modulator Settings"	string ??????
-
-EPSM
-		buttons[i + 9].param.Name	"OP1 Attack Rate"	string
-		buttons[i + 11].param.Name	"OP1 Decay Rate"	string
-		buttons[i + 12].param.Name	"OP1 Sustain Rate"	string
-		buttons[i + 13].param.Name	"OP1 Sustain Level"	string
-		buttons[i + 14].param.Name	"OP1 Release Rate"	string
-		buttons[i + 7].param.Name	"OP1 Volume"	string
 
 - Register viewer.
 - Right-click functionality.
