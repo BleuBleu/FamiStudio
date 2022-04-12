@@ -1645,9 +1645,8 @@ namespace FamiStudio
 
         private void FixupEpsm(int version)
         {
-            // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. Since people
-            // have been working with a forked version and may try to, we explicitely
-            // open file made with it, we explicitly wipe the EPSM bit.
+            // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. We
+            // don't allow these files to be open with the mainline version.
             if (version < 13)
                 SetExpansionAudioMask(expansionMask & (~ExpansionType.EPSMMask));
         }
