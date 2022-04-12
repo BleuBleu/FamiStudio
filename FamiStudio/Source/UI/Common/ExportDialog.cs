@@ -38,7 +38,7 @@ namespace FamiStudio
             "NSF",
             "ROM / FDS",
             "MIDI",
-            "Command Log / VGM",
+            "VGM / Command Log",
             "FamiStudio Text",
             "FamiTracker Text",
             "FamiStudio Music Code",

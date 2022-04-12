@@ -28,14 +28,13 @@ P0:
 			- Andoird
 			- Mac
 		x Other players? Look ok.
-	- Other
-		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
 	x Bump version.
 	/ Redraw EPSM icon. ALiasing. Should it be an E?
 	/ Green hill demo song.
 		- Add to Android + Windows Setup
 	- Test:
 		- Tabs on android.
+		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
 
 - Register viewer.
 - Right-click functionality.
