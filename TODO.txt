@@ -34,6 +34,7 @@ P0:
 		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
 	- Bump version.
 	- Redraw EPSM icon. ALiasing.
+	- Cleanup projects (sort filenames, etc.)
 	- MATTT
 	- Green hill demo song.
 	
