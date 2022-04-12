@@ -19,7 +19,8 @@ namespace FamiStudio
         // Version 10 = FamiStudio 3.0.0 (VRC6 saw master volume, groove, song sorting)
         // Version 11 = FamiStudio 3.1.0 (Volume slides, DPCM fine pitch)
         // Version 12 = FamiStudio 3.2.0 (Multiple expansions, overclocking)
-        public static int Version = 12;
+        // Version 13 = FamiStudio 3.3.0 (EPSM)
+        public static int Version = 13;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
 
@@ -1671,6 +1672,12 @@ namespace FamiStudio
                 // At version 11 (FamiStudio 3.1.0) we added support for multiple audio expansions.
                 if (buffer.Version < 12)
                     expansionMask = ExpansionType.GetMaskFromValue(expansionMask);
+
+                // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. Since people
+                // have been working with a forked version and may try to, we explicitely
+                // open file made with it, we explicitly wipe the EPSM bit.
+                if (buffer.Version < 13)
+                    expansionMask &= (~ExpansionType.EPSMMask);
             }
 
             // At version 5 (FamiStudio 2.0.0) we added support for Namco 163 and advanced tempo mode.

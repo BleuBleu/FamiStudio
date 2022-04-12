@@ -327,7 +327,7 @@ namespace FamiStudio
                             buffer.Serialize(ref vrc7PatchRegs[7]);
                             break;
 
-                        case global::FamiStudio.ExpansionType.EPSM:
+                        case ExpansionType.EPSM:
                             buffer.Serialize(ref epsmPatch);
                             buffer.Serialize(ref epsmPatchRegs[0]);
                             buffer.Serialize(ref epsmPatchRegs[1]);
@@ -361,7 +361,7 @@ namespace FamiStudio
                             buffer.Serialize(ref epsmPatchRegs[29]);
                             buffer.Serialize(ref epsmPatchRegs[30]);
                             break;
-                        case global::FamiStudio.ExpansionType.Vrc6:
+                        case ExpansionType.Vrc6:
                             // At version 10 (FamiStudio 3.0.0) we added a master volume to the VRC6 saw.
                             if (buffer.Version >= 10)
                                 buffer.Serialize(ref vrc6SawMasterVolume);
