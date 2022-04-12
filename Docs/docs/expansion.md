@@ -18,7 +18,7 @@ List of expansions supported:
 
 * **Sunsoft S5B**: Add 3 extra square channels. These channels are fixed at a duty cycle or 50%. It was based off the Yamaha YM2149F. While this expansion was extremely powerful, it was only ever used in one game (Gimmick!) and this game did not make use of any advanced features of the chip. For this reason, FamiStudio (and most emulator) only support a small subset of features.
 
-* **EPSM**: Add 3 extra square channels, 6 FM synthesis channels and 6 rhythm channels. The expansion is based off the Yamaha YMF288 chip. The square are fixed at a duty cycle or 50%. Those are essentially the same as Sunsoft S5B. The FM channels are 4-OP Channels that can be configured independently. The rhythm channels are 6 pre-defined drum samples.
+* **EPSM**: EPSM is not an audio expansion that ever used, or even existed in the lifetime of the NES, but rather the pet project of [Perkka](https://github.com/Perkka2/EPSM) who designed a small circuit board that can be plugged in the expansion port of the NES and controlled by it to produce sound. The expansion is based off the Yamaha YMF288 chip and adds 3 extra square channels, 6 FM synthesis channels and 6 rhythm channels. The square are fixed at a duty cycle or 50%. Those are essentially the same as Sunsoft S5B. The FM channels are 4-OP Channels that can be configured independently. The rhythm channels are 6 pre-defined drum samples.
 
 ## Enabling expansion audio
 
