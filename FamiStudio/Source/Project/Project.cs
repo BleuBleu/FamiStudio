@@ -1625,21 +1625,6 @@ namespace FamiStudio
                 ClearMappingsWithNullSamples();
         }
 
-        private void RemoveImpossibleInstruments()
-        {
-            for (int i = 0; i < instruments.Count;)
-            {
-                if ((ExpansionType.GetMaskFromValue(instruments[i].Expansion) & expansionMask) == 0)
-                {
-                    instruments.RemoveAt(i);
-                }
-                else
-                {
-                    i++;
-                }
-            }
-        }
-
         public void SerializeInstrumentState(ProjectBuffer buffer)
         {
             int instrumentCount = instruments.Count;
@@ -1647,8 +1632,6 @@ namespace FamiStudio
             buffer.InitializeList(ref instruments, instrumentCount);
             foreach (var instrument in instruments)
                 instrument.SerializeState(buffer);
-            if (buffer.IsReading && !buffer.IsForUndoRedo)
-                RemoveImpossibleInstruments();
         }
 
         public void SerializeArpeggioState(ProjectBuffer buffer)
@@ -1658,6 +1641,15 @@ namespace FamiStudio
             buffer.InitializeList(ref arpeggios, arpeggioCount);
             foreach (var arp in arpeggios)
                 arp.SerializeState(buffer);
+        }
+
+        private void FixupEpsm(int version)
+        {
+            // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. Since people
+            // have been working with a forked version and may try to, we explicitely
+            // open file made with it, we explicitly wipe the EPSM bit.
+            if (version < 13)
+                SetExpansionAudioMask(expansionMask & (~ExpansionType.EPSMMask));
         }
 
         public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)
@@ -1689,12 +1681,6 @@ namespace FamiStudio
                 // At version 11 (FamiStudio 3.1.0) we added support for multiple audio expansions.
                 if (buffer.Version < 12)
                     expansionMask = ExpansionType.GetMaskFromValue(expansionMask);
-
-                // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. Since people
-                // have been working with a forked version and may try to, we explicitely
-                // open file made with it, we explicitly wipe the EPSM bit.
-                if (buffer.Version < 13)
-                    expansionMask &= (~ExpansionType.EPSMMask);
             }
 
             // At version 5 (FamiStudio 2.0.0) we added support for Namco 163 and advanced tempo mode.
@@ -1742,6 +1728,7 @@ namespace FamiStudio
 
                 // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
                 SortEverything(buffer.Version < 10);
+                FixupEpsm(buffer.Version);
             }
         }
 
