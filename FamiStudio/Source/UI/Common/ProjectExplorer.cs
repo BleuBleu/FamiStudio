@@ -933,7 +933,7 @@ namespace FamiStudio
 
                                 c.PushTranslation(leftPadding + tabWidth * j, 0);
                                 c.DrawText(tabName, tabFont, 0, 0, tabLineBrush, RenderTextFlags.MiddleCenter, tabWidth, button.height);
-                                c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, tabLine);
+                                c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, ScaleLineForMainWindow(tabLine));
                                 c.PopTransform();
 
                             }

@@ -362,7 +362,7 @@ namespace FamiStudio
             {
                 buttons[(int)ButtonType.Qwerty] = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
 
-                timecodePosY = ScaleForMainWindow(DefaultTimecodePosY);
+                timecodePosY            = ScaleForMainWindow(DefaultTimecodePosY);
                 oscilloscopePosY        = ScaleForMainWindow(DefaultTimecodePosY);
                 timecodeOscSizeX        = ScaleForMainWindow(DefaultTimecodeSizeX);
                 tooltipSingleLinePosY   = ScaleForMainWindow(DefaultTooltipSingleLinePosY);

@@ -121,6 +121,7 @@ namespace FamiStudio
         public float ScaleForFontFloat      (float val) { return (val * fontScaling); }
         public int   ScaleCustom            (float val, float scale) { return (int)Math.Round(val * scale); }
         public float ScaleCustomFloat       (float val, float scale) { return (val * scale); }
+        public int   ScaleLineForMainWindow (int width) { return width == 1 ? 1 : (int)Math.Round(width * mainWindowScaling) | 1; }
     }
 
     public class CursorInfo
