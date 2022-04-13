@@ -290,6 +290,9 @@ namespace FamiStudio
         public extern static int NsfIsPal(IntPtr nsf);
 
         [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
+        public extern static int NsfGetClockSpeed(IntPtr nsf);
+
+        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
         public extern static int NsfGetExpansion(IntPtr nsf);
 
         [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
@@ -876,6 +879,14 @@ namespace FamiStudio
 
             var palSource = (NsfIsPal(nsf) & 1) == 1;
             var numFrames = duration * (palSource ? 50 : 60);
+            var clockSpeed = NsfGetClockSpeed(nsf);
+
+            // Clock speed sanity check.
+            if (( palSource && Math.Abs(clockSpeed - 19997) > 100) ||
+                (!palSource && Math.Abs(clockSpeed - 16639) > 100))
+            {
+                Log.LogMessage(LogSeverity.Warning, "NSF uses non-standard clock speed and will play at the wrong speed.");
+            }
 
             project = new Project();
 

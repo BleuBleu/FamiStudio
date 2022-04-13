@@ -12,4 +12,5 @@ EXPORTS
 	NsfSetTrack      @10
 	NsfRunFrame      @11
 	NsfGetState      @12
+	NsfGetClockSpeed @13
 

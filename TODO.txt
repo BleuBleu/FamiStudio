@@ -1,28 +1,41 @@
 3.2.4?
 ======
-- Two joshop issues from github.
-- Attack issue from how2 (Mario_NSF.mp3 DM)
-- Import Alternative_Fuel_192pl.nsf. Not right speed.
-- Mario.nsf from how2, import, attacks arent right apparently.
 
 3.3.0
 =====
+Testing + Packaging
+===================
 - Update dedricil songs
 - Eclipse demo song.
 - Sonic demo song.
+- Recompile all roms, NSF, etc.
+- Bump sound engine version.
+- Run + generate unit tests.
+- Recompile NotSoFatso on all platforms.
+/ Green hill demo song.
+	- Add to Android + Windows Setup (how2 need to fix volume first)
+- Test Stereo stuff :
+	/ Audio export
+	/ Video export
+	- Test DPCM preview on Mac
+- Remove EPSM code from nsf import.
 
-P0:
-- EPSM:
-	/ Green hill demo song.
-		- Add to Android + Windows Setup (how2 need to fix volume first)
-	- Test Stereo stuff :
-		/ Audio export
-		/ Video export
-		- Test DPCM preview
-			- Mac
-==============
-
+Small fixes:
+============
+x Attack issue from how2 (Mario_NSF.mp3 DM)
+x Import Alternative_Fuel_192pl.nsf. Not right speed.
+- Two joshop issues from github.
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value
+- N163 : Write address location in the waveform editor (how2 idea)
+- Make TimeFormat = 1 the default
+- CTRL+A to select all? 
+- Drag an instrument on sequencer to replace instrument on pattern?
+- Export selected song by default
+- Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
 - Register viewer.
+
+3.4.0
+=====
 - Right-click functionality.
 	- Tooltips
 	- Tooltips where a context menu can appear.
@@ -37,24 +50,18 @@ P0:
 	- PE
 		- 
 P1:
-- N163 : Write address location in the waveform editor (how2 idea)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
-- Make TimeFormat = 1 the default
-- CTRL+A to select all? 
-- Drag an instrument on sequencer to replace instrument on pattern?
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Option to override DMC initial value on sample mapping.
 - Improve oscilloscope stability (min square norm?)
 - Uncompressed envelopes
 - Improve no-attack.
-- Export selected song by default
 P2:
 - Volume/effect scaling
 - CLI only EXE (Linux only).
 - Paste special, option to rename patterns.
 - Way to temporarely disable snapping (FL studio does it with ALT).
-- Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
 - Scroll bar in sequencer
 - C0 is hidden by scroll bars
 - C0 is hidden in piano roll video
