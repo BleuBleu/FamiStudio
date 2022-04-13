@@ -2098,6 +2098,10 @@ namespace FamiStudio
                     CancelDragSelection();
                     DeleteSelection();
                 }
+                else if (e.KeyCode == Keys.A && ctrl && IsActiveControl)
+                {
+                    SetSelection(new PatternLocation(0, 0), new PatternLocation(Song.Channels.Length - 1, Song.Length - 1), true);
+                }
             }
 
             if (captureOperation == CaptureOperation.DragSelection)

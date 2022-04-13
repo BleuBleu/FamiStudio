@@ -4436,6 +4436,18 @@ namespace FamiStudio
                 ClearSelection();
                 MarkDirty();
             }
+            else if (e.KeyCode == Keys.A && ctrl && IsActiveControl)
+            {
+                if (editMode == EditionMode.Arpeggio ||
+                    editMode == EditionMode.Enveloppe)
+                {
+                    SetSelection(0, EditEnvelope.Length - 1);
+                }
+                else if (editMode == EditionMode.Channel)
+                {
+                    SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
+                }
+            }
             else if (e.KeyCode == Keys.S && shift)
             {
                 if (SnapAllowed)
