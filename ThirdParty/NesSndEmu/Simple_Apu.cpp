@@ -308,7 +308,7 @@ inline float unpack_sample(long raw_sample)
 	// TODO : Investigate this. We sometimes have values that dips every so slightly in the negative range.
 	// It never goes below -0.01f so they are essentially zero, but not quite. Worrying.
 	// assert(sample_float >= 0.0f); 
-	return max(0.00001f, sample_float);
+	return sample_float < 0.00001f ? 0.00001f : sample_float;
 }
 
 inline long pack_sample(float sample_float)
