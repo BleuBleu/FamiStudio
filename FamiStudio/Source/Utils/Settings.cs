@@ -16,7 +16,8 @@ namespace FamiStudio
         // Version 3   : FamiStudio 3.1.0
         // Version 4   : FamiStudio 3.2.0
         // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
-        public const int SettingsVersion = 5;
+        // Version 6   : FamiStudio 3.3.0
+        public const int SettingsVersion = 6;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -47,7 +48,7 @@ namespace FamiStudio
 
         // User Interface section
         public static int DpiScaling = 0;
-        public static int TimeFormat = 0;
+        public static int TimeFormat = 1;
         public static bool ShowPianoRollViewRange = true;
         public static bool ReverseTrackPad = false;
         public static int TrackPadMoveSensitity = 1;
@@ -369,6 +370,10 @@ namespace FamiStudio
             // At 3.2.3, we added a new snapping tutorial screen.
             if (Version < 4 || (Version < 5 && PlatformUtils.IsDesktop))
                 ShowTutorial = true;
+
+            // Re-force time format to the MM:SS:mmm
+            if (Version < 6)
+                TimeFormat = 1;
 
             // No deprecation at the moment.
             Version = SettingsVersion;
