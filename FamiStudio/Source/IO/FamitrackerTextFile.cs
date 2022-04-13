@@ -291,22 +291,6 @@ namespace FamiStudio
 
                         instruments[idx] = instrument;
                     }
-                    else if (line.StartsWith("INSTEPSM"))
-                    {
-                        var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
-
-                        int idx = int.Parse(param[0]);
-                        var instrument = CreateUniquelyNamedInstrument(ExpansionType.EPSM, param[param.Length - 1]);
-
-                        instrument.EpsmPatch = byte.Parse(param[1]);
-                        if (instrument.EpsmPatch == EpsmInstrumentPatch.Custom)
-                        {
-                            for (int j = 0; j < 30; j++)
-                                instrument.EpsmPatchRegs[j] = Convert.ToByte(param[2 + j], 16);
-                        }
-
-                        instruments[idx] = instrument;
-                    }
                     else if (line.StartsWith("INSTFDS"))
                     {
                         var param = SplitStringKeepQuotes(line.Substring(line.IndexOf(' ')));
@@ -824,17 +808,6 @@ namespace FamiStudio
                         !instrument.IsEnvelopeEmpty(EnvelopeType.Arpeggio))
                     {
                         Log.LogMessage(LogSeverity.Warning, $"VRC7 Instrument '{instrument.Name}' uses a volume, pitch or arpeggio envelope. FamiTracker does not support this. Ignoring.");
-                    }
-                }
-                else if (instrument.IsEpsmInstrument)
-                {
-                    lines.Add($"INSTEPSM{i,4}{instrument.EpsmPatch,4} {String.Join(" ", instrument.EpsmPatchRegs.Select(x => $"{x:X2}"))} \"{instrument.Name}\"");
-
-                    if (!instrument.IsEnvelopeEmpty(EnvelopeType.Volume) ||
-                        !instrument.IsEnvelopeEmpty(EnvelopeType.Pitch) ||
-                        !instrument.IsEnvelopeEmpty(EnvelopeType.Arpeggio))
-                    {
-                        Log.LogMessage(LogSeverity.Warning, $"EPSM Instrument '{instrument.Name}' uses a volume, pitch or arpeggio envelope. FamiTracker does not support this. Ignoring.");
                     }
                 }
                 else if (instrument.IsN163Instrument)

@@ -837,6 +837,7 @@ namespace FamiStudio
 
             if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.EPSM)
                 return (expansionMask & ExpansionType.EPSMMask) != 0;
+				
             Debug.Assert(false);
 
             return false;

@@ -42,7 +42,7 @@ namespace FamiStudio
         public string Name { get => name; set => name = value; }
         public string NameWithExpansion => Name + (expansion == ExpansionType.None ? "" : $" ({ExpansionType.ShortNames[expansion]})");
         public Color Color { get => color; set => color = value; }
-        public int Expansion { get => expansion; set => expansion = value; }
+        public int Expansion => expansion;
         public bool IsExpansionInstrument => expansion != ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
         public int NumActiveEnvelopes => envelopes.Count(e => e != null);
@@ -88,7 +88,7 @@ namespace FamiStudio
                 vrc7Patch = Vrc7InstrumentPatch.Bell;
                 Array.Copy(Vrc7InstrumentPatch.Infos[Vrc7InstrumentPatch.Bell].data, vrc7PatchRegs, 8);
             }
-            else if (expansion == global::FamiStudio.ExpansionType.EPSM)
+            else if (expansion == ExpansionType.EPSM)
             {
                 epsmPatch = EpsmInstrumentPatch.Default;
                 Array.Copy(EpsmInstrumentPatch.Infos[EpsmInstrumentPatch.Default].data, epsmPatchRegs, 31);

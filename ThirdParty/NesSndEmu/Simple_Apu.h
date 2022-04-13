@@ -113,7 +113,6 @@ private:
 	bool seeking;
 	float tnd_volume;
 	int  expansions;
-	bool stereo;
 	int  separate_tnd_mode;
 	bool separate_tnd_channel_enabled[3];
 	long tnd_accum[3];
@@ -124,8 +123,8 @@ private:
 	Nes_Fds fds;
 	Nes_Mmc5 mmc5;
 	Nes_Namco namco;
-	Nes_Sunsoft sunsoft; // My version, based on emu2149
-	//Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
+	//Nes_Sunsoft sunsoft; // My version, based on emu2149
+	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
 	Nes_EPSM epsm;
 	Blip_Buffer buf;
 	Blip_Buffer tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.

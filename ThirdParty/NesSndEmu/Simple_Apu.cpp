@@ -113,9 +113,8 @@ void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 			case expansion_fds: fds.output(enable ? &buf : NULL); break;
 			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
 			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-			//case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.enable_channel(idx, enable ? &buf : NULL); break;
-			case expansion_epsm: epsm.enable_channel(idx, enable ? &buf : NULL); break;
+			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_epsm: epsm.enable_channel(idx, enable); break;
 		}
 	}
 }
@@ -309,7 +308,6 @@ inline float unpack_sample(long raw_sample)
 	// TODO : Investigate this. We sometimes have values that dips every so slightly in the negative range.
 	// It never goes below -0.01f so they are essentially zero, but not quite. Worrying.
 	// assert(sample_float >= 0.0f); 
-	using std::max;
 	return max(0.00001f, sample_float);
 }
 

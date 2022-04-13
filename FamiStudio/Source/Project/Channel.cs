@@ -26,16 +26,16 @@ namespace FamiStudio
         public int ExpansionChannelIndex => ChannelType.GetExpansionChannelIndexForChannelType(type);
         public int Index => ChannelTypeToIndex(type, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels);
 
-        public bool IsRegularChannel => Expansion == ExpansionType.None;
-        public bool IsFdsChannel     => Expansion == ExpansionType.Fds;
-        public bool IsN163Channel    => Expansion == ExpansionType.N163;
-        public bool IsVrc6Channel    => Expansion == ExpansionType.Vrc6;
-        public bool IsVrc7Channel    => Expansion == ExpansionType.Vrc7;
-        public bool IsMmc5Channel    => Expansion == ExpansionType.Mmc5;
-        public bool IsS5BChannel     => Expansion == ExpansionType.S5B;
-        public bool IsNoiseChannel   => type == ChannelType.Noise;
-        public bool IsEPSMChannel     => Expansion == ExpansionType.EPSM;
-        public bool IsEPSMFmChannel => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
+        public bool IsRegularChannel   => Expansion == ExpansionType.None;
+        public bool IsFdsChannel       => Expansion == ExpansionType.Fds;
+        public bool IsN163Channel      => Expansion == ExpansionType.N163;
+        public bool IsVrc6Channel      => Expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Channel      => Expansion == ExpansionType.Vrc7;
+        public bool IsMmc5Channel      => Expansion == ExpansionType.Mmc5;
+        public bool IsS5BChannel       => Expansion == ExpansionType.S5B;
+        public bool IsNoiseChannel     => type == ChannelType.Noise;
+        public bool IsEPSMChannel      => Expansion == ExpansionType.EPSM;
+        public bool IsEPSMFmChannel    => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
         public bool IsEPSMRythmChannel => type >= ChannelType.EPSMrythm1 && type <= ChannelType.EPSMrythm6;
 
         public Channel(Song song, int type, int songLength)
