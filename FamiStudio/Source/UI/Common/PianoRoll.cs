@@ -1238,9 +1238,10 @@ namespace FamiStudio
                     }
                     if (n != env.Length)
                     {
-                        var label = n.ToString();
-                        if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                            r.ch.DrawText(label, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
+                        var label = editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos + n : n;
+                        var labelString = label.ToString();
+                        if (labelString.Length * fontSmallCharSizeX + 2 < noteSizeX)
+                            r.ch.DrawText(labelString, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
                     }
                 }
 
