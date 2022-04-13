@@ -15,8 +15,8 @@ P0:
 - EPSM:
 	x Bump version.
 	/ Redraw EPSM icon. ALiasing. Should it be an E?
-	- Recompare all code. FamiTracker stuff is still there.
-	- Revert to old sunsoft implementation.
+	x Recompare all code. FamiTracker stuff is still there.
+	x Revert to old sunsoft implementation.
 	/ Green hill demo song.
 		- Add to Android + Windows Setup
 	- Test:
