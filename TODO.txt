@@ -13,30 +13,13 @@
 
 P0:
 - EPSM:
-	x Bump version.
-	/ Redraw EPSM icon. ALiasing. Should it be an E?
-	x Recompare all code. FamiTracker stuff is still there.
-	x Revert to old sunsoft implementation.
 	/ Green hill demo song.
-		- Add to Android + Windows Setup
-	- Test:
-		- Tabs on android.
-		- Message box in project settings needs to be async. PlatformUtils.MessageBoxAsync
-		- Stereo stuff :
-			/ Regular audio (all platforms)
-				x Test Win
-				- Test Linux
-				- Test Android
-				- Test Mac
-			/ Audio export
-			/ Video export
-			x Seperate TND vs. Stereo?
-			- Test DPCM preview
-				x Win
-				- Linux
-				- Andoird
-				- Mac
-			x Other players? Look ok.
+		- Add to Android + Windows Setup (how2 need to fix volume first)
+	- Test Stereo stuff :
+		/ Audio export
+		/ Video export
+		- Test DPCM preview
+			- Mac
 ==============
 
 - Register viewer.

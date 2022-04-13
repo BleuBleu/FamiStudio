@@ -3367,10 +3367,13 @@ namespace FamiStudio
                             if (selectedExpansions[i])
                                 numExpansionsSelected++;
                         }
+
                         if (numExpansionsSelected > 1 && ((expansionMask & ExpansionType.EPSMMask) != 0))
                         {
-                            // TODO : Test this on mobile. We are in an async dialog here.
-                            PlatformUtils.MessageBoxAsync($"EPSM is not supported with other expansions enabled", "Incompatible expansions", MessageBoxButtons.OK);
+                            if (PlatformUtils.IsDesktop)
+                                PlatformUtils.MessageBox($"EPSM is not supported with other expansions enabled", "Incompatible expansions", MessageBoxButtons.OK);
+                            else
+                                PlatformUtils.ShowToast($"EPSM is not supported with other expansions enabled, expansion change was ignored.");
                         }
                         else if (!expansionRemoved || PlatformUtils.IsMobile || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
@@ -3419,7 +3422,6 @@ namespace FamiStudio
 
         private void UpdateProjectPropertiesWarnings(PropertyPage props)
         {
-            var famiStudioTempo = props.GetPropertyValue<string>(3) == "FamiStudio";
             var selectedExpansions = props.GetPropertyValue<bool[]>(6);
             var numExpansionsSelected = 0;
 
