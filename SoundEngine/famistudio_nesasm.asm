@@ -1,6 +1,6 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (3.2.0)
-; Copyright (c) 2019-2021 Mathieu Gauthier
+; FAMISTUDIO SOUND ENGINE (3.3.0)
+; Copyright (c) 2019-2022 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
 ; modification, are permitted in any medium without royalty provided
@@ -131,6 +131,9 @@ FAMISTUDIO_NESASM_CODE_ORG     = $8000
 ; Namco 163 (between 1 and 8 extra wavetable channels) + number of channels.
 ; FAMISTUDIO_EXP_N163          = 1 
 ; FAMISTUDIO_EXP_N163_CHN_CNT  = 4
+
+; EPSM (Expansion Port Sound Module)
+; FAMISTUDIO_EXP_EPSM          = 1
 
 ;======================================================================================================================
 ; 3) GLOBAL ENGINE CONFIGURATION
