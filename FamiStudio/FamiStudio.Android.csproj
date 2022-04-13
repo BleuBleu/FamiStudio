@@ -656,6 +656,7 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\DuckTales.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gimmick.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gradius 2.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Green Hill.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gyruss.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Journey To Silius.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Lagrange Point.fms" />

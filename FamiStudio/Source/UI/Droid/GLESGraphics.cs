@@ -180,7 +180,7 @@ namespace FamiStudio
             return new GLBitmap(CreateTexture(bmp, true), bmp.Width, bmp.Height, true, true);
         }
 
-        public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
+        public override GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
         {
             var bitmaps = new Bitmap[names.Length];
             var elementSizeX = 0;
