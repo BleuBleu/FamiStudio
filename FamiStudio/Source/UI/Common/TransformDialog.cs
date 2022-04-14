@@ -207,6 +207,12 @@ namespace FamiStudio
                     app.Project.DeleteUnusedArpeggios();
                 }
 
+                // The selected instrument/arpeggio may get deleted.
+                if (!app.Project.InstrumentExists(app.SelectedInstrument))
+                    app.SelectedInstrument = app.Project.Instruments.Count > 0 ? app.Project.Instruments[0] : null;
+                if (!app.Project.ArpeggioExists(app.SelectedArpeggio))
+                    app.SelectedArpeggio = app.Project.Arpeggios.Count > 0 ? app.Project.Arpeggios[0] : null; ;
+
                 app.UndoRedoManager.EndTransaction();
             }
         }
