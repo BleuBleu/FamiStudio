@@ -104,6 +104,7 @@ namespace FamiStudio
             return count;
         }
 
+        public bool SupportsStopNotes     => true;
         public bool SupportsReleaseNotes  => type != ChannelType.Dpcm;
         public bool SupportsSlideNotes    => type != ChannelType.Dpcm;
         public bool SupportsArpeggios     => type != ChannelType.Dpcm;

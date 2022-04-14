@@ -182,6 +182,7 @@ namespace FamiStudio
         {
             var channel = Channel;
             var foundAnyUnsupportedFeature = false;
+            var notesToRemove = (HashSet<int>)null;
 
             foreach (var kv in notes)
             {
@@ -197,6 +198,22 @@ namespace FamiStudio
                     }
                 }
 
+                if (note.IsStop && !channel.SupportsStopNotes)
+                {
+                    if (!checkOnly)
+                    {
+                        if (notesToRemove == null)
+                            notesToRemove = new HashSet<int>();
+                        notesToRemove.Add(kv.Key);
+                    }
+                    foundAnyUnsupportedFeature = true;
+                }
+                if (note.HasRelease && !channel.SupportsReleaseNotes)
+                {
+                    if (!checkOnly)
+                        note.Release = 0;
+                    foundAnyUnsupportedFeature = true;
+                }
                 if (note.IsSlideNote && !channel.SupportsSlideNotes)
                 {
                     if (!checkOnly)
@@ -215,6 +232,12 @@ namespace FamiStudio
                         note.Instrument = null;
                     foundAnyUnsupportedFeature = true;
                 }
+            }
+
+            if (notesToRemove != null)
+            {
+                foreach (var n in notesToRemove)
+                    notes.Remove(n);
             }
 
             return foundAnyUnsupportedFeature;

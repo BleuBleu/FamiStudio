@@ -1951,6 +1951,9 @@ namespace FamiStudio
                         }
                         else if (note.IsStop)
                         {
+                            if (!channel.SupportsStopNotes)
+                                return null;
+
                             note.Duration = 1;
                         }
                     }
@@ -5825,8 +5828,8 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuToggleRelease", $"Toggle {(selection ? "Selection" : "")} Release", () => { ToggleNoteRelease(noteLocation, note); }));
                         if (channel.Type != ChannelType.Dpcm)
                             menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
-
-                        menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
+                        if (channel.SupportsStopNotes)
+                            menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
                     }
                     
                     menu.Add(new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
@@ -6763,22 +6766,25 @@ namespace FamiStudio
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
 
-            if (pattern == null)
+            if (channel.SupportsStopNotes)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-                pattern = channel.CreatePatternAndInstance(location.PatternIndex);
-            }
-            else
-            {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-            }
+                if (pattern == null)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                    pattern = channel.CreatePatternAndInstance(location.PatternIndex);
+                }
+                else
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                }
 
-            var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
-            note.Clear();
-            note.Value = Note.NoteStop;
-            note.Duration = 1;
-            MarkPatternDirty(location.PatternIndex);
-            App.UndoRedoManager.EndTransaction();
+                var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+                note.Clear();
+                note.Value = Note.NoteStop;
+                note.Duration = 1;
+                MarkPatternDirty(location.PatternIndex);
+                App.UndoRedoManager.EndTransaction();
+            }
         }
 
         private void Eyedrop(Note note)
@@ -7115,7 +7121,8 @@ namespace FamiStudio
                         }
                         else 
                         {
-                            tooltipList.Add("{T} {MouseLeft} Add stop note");
+                            if (channel.SupportsStopNotes)
+                                tooltipList.Add("{T} {MouseLeft} Add stop note");
                             tooltipList.Add("{MouseRight} {MouseRight} Select entire note");
                         }
 
