@@ -804,8 +804,13 @@ namespace FamiStudio
 
                             for (int i = 0; i < Note.EffectCount; i++)
                             {
-                                if (note.HasValidEffectValue(i) && !channel.SupportsEffect(i))
-                                    note.ClearEffectValue(i);
+                                if (note.HasValidEffectValue(i))
+                                {
+                                    if (channel.SupportsEffect(i))
+                                        note.SetEffectValue(i, Note.ClampEffectValue(this, channel, i, note.GetEffectValue(i)));
+                                    else
+                                        note.ClearEffectValue(i);
+                                }
                             }
                         }
                     }
