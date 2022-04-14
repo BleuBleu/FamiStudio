@@ -208,6 +208,7 @@ namespace FamiStudio
         protected Project project;
         protected Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
         protected Dictionary<Pattern, int> patternLengths = new Dictionary<Pattern, int>();
+        protected Dictionary<Song, int> songDurations = new Dictionary<Song, int>();
         protected int barLength = -1;
 
         protected int ConvertExpansionAudio(int exp)
@@ -293,7 +294,7 @@ namespace FamiStudio
             return arp;
         }
 
-        protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, Dictionary<Pattern, int> patternLengths, bool allowSongEffects)
+        protected void ApplySimpleEffects(RowFxData fx, Pattern pattern, int n, bool allowSongEffects)
         {
             Note note = null;
 
@@ -307,6 +308,15 @@ namespace FamiStudio
                     {
                         pattern.Song.SetLoopPoint(fx.param);
                         patternLengths[pattern] = n + 1;
+
+                        // This will be used to shorten the songs, removing unreachable patterns.
+                        var lastIdx = Array.LastIndexOf(pattern.Channel.PatternInstances, pattern) + 1;
+                        Debug.Assert(lastIdx >= 0);
+
+                        if (songDurations.TryGetValue(pattern.Song, out var currentLastIdx))
+                            lastIdx = Math.Max(currentLastIdx, lastIdx);
+
+                        songDurations[pattern.Song] = lastIdx;
                     }
                     return;
                 case Effect_Skip:
@@ -1105,6 +1115,13 @@ namespace FamiStudio
                     s.SetBeatLength(barLength);
 
                 ApplyHaltEffect(s, patternFxData);
+
+                // See if we should truncate the sound because of jumps.
+                if (songDurations.TryGetValue(s, out var duration) && duration < s.Length)
+                {
+                    s.SetLength(duration);
+                    Log.LogMessage(LogSeverity.Warning, $"Patterns at end of song '{s.Name}' are unreachable due to a previous jump (Bxx), truncating.");
+                }
 
                 s.DeleteNotesPastMaxInstanceLength();
                 s.UpdatePatternStartNotes();

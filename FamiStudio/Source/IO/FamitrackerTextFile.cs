@@ -495,7 +495,7 @@ namespace FamiStudio
                                 fx.param = Convert.ToByte(fxStr.Substring(1), 16);
                                 patternFxData[pattern][n, k] = fx;
 
-                                ApplySimpleEffects(fx, pattern, n, patternLengths, true);
+                                ApplySimpleEffects(fx, pattern, n, true);
                             }
                         }
                     }
