@@ -28,7 +28,8 @@ x N163 : Write address location in the waveform editor (how2 idea)
 x CTRL+A to select all? 
 x Make TimeFormat = 1 the default
 x Drag an instrument on sequencer to replace instrument on pattern?
-- Two joshop issues from github.
+/ Two joshop issues from github.
+- Integrity issue : Open the VRC6 ftm with lots of song. Delete a bunch + do cleanup.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value
 - Export selected song by default
 - Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.

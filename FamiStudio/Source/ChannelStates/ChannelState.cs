@@ -481,7 +481,9 @@ namespace FamiStudio
             var noteVal = Utils.Clamp(note.Value + envelopeValues[EnvelopeType.Arpeggio], 0, noteTable.Length - 1);
             var pitch = (note.FinePitch + envelopeValues[EnvelopeType.Pitch]) << pitchShift;
             var slide = slideShift < 0 ? (slidePitch >> -slideShift) : (slidePitch << slideShift); // Remove the fraction part.
-            return Utils.Clamp(noteTable[noteVal] + pitch + slide, 0, maximumPeriod);
+            var period = noteTable[noteVal] + pitch + slide;
+
+            return Settings.ClampPeriods ? Utils.Clamp(period, 0, maximumPeriod) : (period & maximumPeriod);
         }
 
         protected int GetVolume()
