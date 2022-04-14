@@ -474,7 +474,7 @@ namespace FamiStudio
                                 WriteRegister(apuIdx, EPSM_ADDR0, 0x27);
                                 WriteRegister(apuIdx, EPSM_DATA0, 0x00);
                                 WriteRegister(apuIdx, EPSM_ADDR0, 0x11);
-                                WriteRegister(apuIdx, EPSM_DATA0, 0x3f);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x37);
                                 break;
                         }
                     }
