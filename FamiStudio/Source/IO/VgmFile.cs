@@ -223,7 +223,7 @@ namespace FamiStudio
                     file.Write(BitConverter.GetBytes(0x00), 0, sizeof(byte));
                     file.Write(BitConverter.GetBytes(0x56), 0, sizeof(byte));
                     file.Write(BitConverter.GetBytes(0x11), 0, sizeof(byte));
-                    file.Write(BitConverter.GetBytes(0x3f), 0, sizeof(byte));
+                    file.Write(BitConverter.GetBytes(0x37), 0, sizeof(byte));
                     foreach (var reg in writes)
                     {
                         while (frameNumber < reg.FrameNumber)

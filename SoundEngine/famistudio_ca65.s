@@ -1203,7 +1203,7 @@ famistudio_init:
     sta FAMISTUDIO_EPSM_DATA
     lda #$11
     sta FAMISTUDIO_EPSM_ADDR
-    lda #$3f 
+    lda #$37 
     sta FAMISTUDIO_EPSM_DATA
 .endif
 
