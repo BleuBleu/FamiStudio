@@ -575,6 +575,12 @@ namespace FamiStudio
                 PianoRoll.ReplaceSelectionInstrument(instrument, pianoRollPos);
                 PianoRoll.Focus();
             }
+            var sequencerPos = Sequencer.PointToClient(pos);
+            if (Sequencer.ClientRectangle.Contains(sequencerPos))
+            {
+                Sequencer.ReplaceSelectionInstrument(instrument, sequencerPos);
+                Sequencer.Focus();
+            }
         }
 
         private void ProjectExplorer_ArpeggioDroppedOutside(Arpeggio arpeggio, Point pos)
@@ -584,6 +590,12 @@ namespace FamiStudio
             {
                 PianoRoll.ReplaceSelectionArpeggio(arpeggio, pianoRollPos);
                 PianoRoll.Focus();
+            }
+            var sequencerPos = Sequencer.PointToClient(pos);
+            if (Sequencer.ClientRectangle.Contains(sequencerPos))
+            {
+                Sequencer.ReplaceSelectionArpeggio(arpeggio, sequencerPos);
+                Sequencer.Focus();
             }
         }
 

@@ -789,6 +789,92 @@ namespace FamiStudio
             RenderDebug(g);
         }
 
+        private void ReplaceSelectionUtil(Point pos, bool forceInSelection, Func<Channel, bool> channelValid, Action<Pattern> action)
+        {
+            Debug.Assert(!forceInSelection || IsSelectionValid());
+
+            if (GetPatternForCoord(pos.X, pos.Y, out var location, out _))
+            {
+                // If we drag on selection, we process the whole selection, otherwise
+                // just the pattern under the mouse.
+                if (IsPatternSelected(location))
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                    var replacedAnything = false;
+
+                    for (int i = selectionMin.ChannelIndex; i <= selectionMax.ChannelIndex; i++)
+                    {
+                        var channel = Song.Channels[i];
+                        if (channelValid(channel))
+                        {
+                            for (int j = selectionMin.PatternIndex; j <= selectionMax.PatternIndex; j++)
+                            {
+                                var pattern = channel.PatternInstances[j];
+                                if (pattern != null)
+                                {
+                                    action(pattern);
+                                    NotifyPatternChange(pattern);
+                                    replacedAnything = true;
+                                }
+                            }
+
+                            channel.InvalidateCumulativePatternCache();
+                        }
+                    }
+
+                    App.UndoRedoManager.AbortOrEndTransaction(replacedAnything);
+                    MarkDirty();
+                }
+                else
+                {
+                    var channel = Song.Channels[location.ChannelIndex];
+                    if (channelValid(channel))
+                    {
+                        var pattern = channel.PatternInstances[location.PatternIndex];
+                        if (pattern != null)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                            action(pattern);
+                            NotifyPatternChange(pattern);
+                            channel.InvalidateCumulativePatternCache(pattern);
+                            App.UndoRedoManager.EndTransaction();
+                            MarkDirty();
+                        }
+                    }
+                }
+            }
+        }
+
+        public void ReplaceSelectionInstrument(Instrument instrument, Point pos, bool forceInSelection = false)
+        {
+            ReplaceSelectionUtil(
+                pos, forceInSelection,
+                (channel) => channel.SupportsInstrument(instrument),
+                (pattern) =>
+                {
+                    foreach (var n in pattern.Notes.Values)
+                    {
+                        if (n.IsMusical)
+                            n.Instrument = instrument;
+                    }
+                });
+        }
+
+        public void ReplaceSelectionArpeggio(Arpeggio arpeggio, Point pos, bool forceInSelection = false)
+        {
+            ReplaceSelectionUtil(
+                pos, forceInSelection,
+                (channel) => channel.SupportsArpeggios,
+                (pattern) =>
+                {
+                    foreach (var n in pattern.Notes.Values)
+                    {
+                        if (n.IsMusical)
+                            n.Arpeggio = arpeggio;
+                    }
+                });
+        }
+
         private bool GetScrollBarParams(out int posX, out int sizeX)
         {
             if (scrollBarThickness > 0)

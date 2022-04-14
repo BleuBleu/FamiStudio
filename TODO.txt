@@ -27,9 +27,9 @@ x Import Alternative_Fuel_192pl.nsf. Not right speed.
 x N163 : Write address location in the waveform editor (how2 idea)
 x CTRL+A to select all? 
 x Make TimeFormat = 1 the default
+x Drag an instrument on sequencer to replace instrument on pattern?
 - Two joshop issues from github.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value
-- Drag an instrument on sequencer to replace instrument on pattern?
 - Export selected song by default
 - Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
 - Register viewer.
