@@ -747,6 +747,7 @@ namespace FamiStudio
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
+                    var periodLimit = NesApu.GetPitchLimitForChannelType(channel.Type);
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
@@ -767,6 +768,7 @@ namespace FamiStudio
                                 octave++;
                             }
                             note += octave * 12;
+                            note = Math.Min(note, noteTable.Length - 1);
                             finePitch = period - noteTable[note];
                         }
                     }
