@@ -1844,6 +1844,7 @@ famistudio_get_note_pitch_vrc6_saw:
     .local @done
 
     ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
+    and #7 ; Clamp hi-period to sane range, breaks smooth vibrato otherwise.
     tax ; X = new hi-period
     sec
     sbc pulse_prev ; A = signed hi-period delta.

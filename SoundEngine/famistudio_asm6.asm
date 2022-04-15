@@ -1817,6 +1817,7 @@ famistudio_get_note_pitch_vrc6_saw:
 .macro famistudio_smooth_vibrato pulse_lo, pulse_prev, reg_hi, reg_lo, reg_sweep
 
     ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
+    and #7 ; Clamp hi-period to sane range, breaks smooth vibrato otherwise.
     tax ; X = new hi-period
     sec
     sbc pulse_prev ; A = signed hi-period delta.

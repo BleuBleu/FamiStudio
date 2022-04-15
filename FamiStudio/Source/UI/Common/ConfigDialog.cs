@@ -94,7 +94,7 @@ namespace FamiStudio
         private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
         private readonly string StopInstrumentTooltip           = "Number of secondes to wait before stopping instruments that have a release part in their volume envelopes.";
         private readonly string PreventPoppingTooltip           = "When enabled, FamiStudio will use the sweep unit to prevent popping around certain notes on the 2 main square channels. Also known as 'Blargg's Smooth Vibrato' technique.";
-        private readonly string ClampPeriodsTooltip             = "When enabled, FamiStudio will clamp periods to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods can sometimes wrap-around.";
+        private readonly string ClampPeriodsTooltip             = "When enabled, FamiStudio will clamp periods and note values to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods and notes can sometimes wrap-around.";
         private readonly string NoDragSoundTooltip              = "When enabled, FamiStudio wil not emit sounds when dragging notes in the Piano Roll if the song is playing.";
         private readonly string MetronomeVolumeTooltip          = "Volume of the metronome.";
 
@@ -211,7 +211,7 @@ namespace FamiStudio
                     page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16, NumBufferedFramesTooltip); // 0
                     page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10, StopInstrumentTooltip); // 1
                     page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 2
-                    page.AddCheckBox("Clamp Periods:", Settings.ClampPeriods, ClampPeriodsTooltip); // 3
+                    page.AddCheckBox("Clamp periods and notes:", Settings.ClampPeriods, ClampPeriodsTooltip); // 3
                     page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 4
                     page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 5
                     break;

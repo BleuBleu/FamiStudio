@@ -1854,6 +1854,7 @@ reg_sweep\@ = \5
 pulse_lo_is_zp\@ = \6
 
     ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
+    and #7 ; Clamp hi-period to sane range, breaks smooth vibrato otherwise.
     tax ; X = new hi-period
     sec
     sbc pulse_prev\@ ; A = signed hi-period delta.
