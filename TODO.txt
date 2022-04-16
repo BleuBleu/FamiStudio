@@ -1,17 +1,12 @@
-3.2.4?
-======
-
 3.3.0
 =====
 Testing + Packaging
 ===================
 - Update dedricil songs
 - Eclipse demo song.
-- Sonic demo song.
+- Sonic demo song (TODO fix, will be corrupted).
 - Recompile all roms, NSF, etc.
-- Bump sound engine version.
 - Run + generate unit tests (dmc will likely break something in there).
-- Recompile NotSoFatso on all platforms.
 / Green hill demo song.
 	- Add to Android + Windows Setup (how2 need to fix volume first)
 - Test Stereo stuff :
@@ -25,7 +20,6 @@ Small fixes:
 - BUG : MacOS : "If you make the window fill the screen (by double clicking the top bar), then go into fullscreen, the mouse is inaccurate."
 - Export selected song by default
 - Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
-- Zxx : Recompile DLLs on all platforms (NotSoFatso changed)
 - Register viewer.
 
 3.4.0

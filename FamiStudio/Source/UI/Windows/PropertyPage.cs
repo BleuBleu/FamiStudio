@@ -366,6 +366,7 @@ namespace FamiStudio
             cb.Text = value;
             cb.Font = font;
             cb.Enabled = values.Length > 0;
+            cb.FlatStyle = FlatStyle.Flat;
             cb.SelectedIndexChanged += Cb_SelectedIndexChanged;
             toolTip.SetToolTip(cb, SplitLongTooltip(tooltip));
 
