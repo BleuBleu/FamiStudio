@@ -85,7 +85,14 @@ namespace FamiStudio
                 var mapping = project.SamplesMapping[i];
 
                 if (mapping != null)
-                    lines.Add($"\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(i + Note.DPCMNoteMin))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}");
+                {
+                    var mappingStr = $"\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(i + Note.DPCMNoteMin))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}";
+
+                    if (mapping.OverrideDmcInitialValue)
+                        mappingStr += $"{GenerateAttribute("DmcInitialValue", mapping.DmcInitialValueDiv2)}";
+
+                    lines.Add(mappingStr);
+                }
             }
 
             // Instruments
@@ -239,17 +246,18 @@ namespace FamiStudio
                                     }
                                 }
 
-                                if (!note.HasAttack)     noteLine += GenerateAttribute("Attack", false);
-                                if (note.HasVolume)      noteLine += GenerateAttribute("Volume", note.Volume);
-                                if (note.HasVolumeSlide) noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
-                                if (note.HasVibrato)     noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
-                                if (note.HasSpeed)       noteLine += GenerateAttribute("Speed", note.Speed);
-                                if (note.HasFinePitch)   noteLine += GenerateAttribute("FinePitch", note.FinePitch);
-                                if (note.HasFdsModSpeed) noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
-                                if (note.HasFdsModDepth) noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
-                                if (note.HasDutyCycle)   noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
-                                if (note.HasNoteDelay)   noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
-                                if (note.HasCutDelay)    noteLine += GenerateAttribute("CutDelay", note.CutDelay);
+                                if (!note.HasAttack)      noteLine += GenerateAttribute("Attack", false);
+                                if (note.HasVolume)       noteLine += GenerateAttribute("Volume", note.Volume);
+                                if (note.HasVolumeSlide)  noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
+                                if (note.HasVibrato)      noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
+                                if (note.HasSpeed)        noteLine += GenerateAttribute("Speed", note.Speed);
+                                if (note.HasFinePitch)    noteLine += GenerateAttribute("FinePitch", note.FinePitch);
+                                if (note.HasFdsModSpeed)  noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
+                                if (note.HasFdsModDepth)  noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
+                                if (note.HasDutyCycle)    noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
+                                if (note.HasNoteDelay)    noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
+                                if (note.HasCutDelay)     noteLine += GenerateAttribute("CutDelay", note.CutDelay);
+                                if (note.HasDeltaCounter) noteLine += GenerateAttribute("DeltaCounter", note.DeltaCounterDiv2);
 
                                 lines.Add(noteLine);
                             }
@@ -398,7 +406,12 @@ namespace FamiStudio
                             var loop = false;
                             if (parameters.TryGetValue("Pitch", out var pitchStr)) pitch = int.Parse(pitchStr);
                             if (parameters.TryGetValue("Loop", out var loopStr)) loop = bool.Parse(loopStr);
-                            project.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop);
+                            var mapping = project.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop);
+                            if (parameters.TryGetValue("DmcInitialValue", out var dmcInitialStr))
+                            {
+                                mapping.OverrideDmcInitialValue = true;
+                                mapping.DmcInitialValueDiv2 = byte.Parse(dmcInitialStr);
+                            }
                             break;
                         }
                         case "Instrument":
@@ -605,6 +618,8 @@ namespace FamiStudio
                                 note.NoteDelay = byte.Parse(noteDelayStr);
                             if (parameters.TryGetValue("CutDelay", out var cutDelayStr) && channel.SupportsEffect(Note.EffectCutDelay))
                                 note.CutDelay = byte.Parse(cutDelayStr);
+                            if (parameters.TryGetValue("DeltaCounter", out var deltaCounterStr) && channel.SupportsEffect(Note.EffectDeltaCounter))
+                                note.DeltaCounterDiv2 = byte.Parse(deltaCounterStr);
 
                             break;
                         }

@@ -492,7 +492,7 @@ namespace FamiStudio
                             sampleSize = mapping.Sample.ProcessedData.Length >> 4;
                             sampleName = $"({mapping.Sample.Name})";
                             samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
-                            sampleInitialDmcValue = mapping.Sample.DmcInitialValueDiv2 * 2;
+                            sampleInitialDmcValue = mapping.OverrideDmcInitialValue ? mapping.DmcInitialValueDiv2 * 2 : mapping.Sample.DmcInitialValueDiv2 * 2;
                         }
 
                         if (kernel == FamiToneKernel.FamiStudio)
@@ -976,6 +976,14 @@ namespace FamiStudio
                             usesDelayedNotesOrCuts = true;
                         }
 
+                        if (note.HasDeltaCounter)
+                        {
+                            // Use hi-bit to flag if we need to apply it immediately (no samples playing this frame)
+                            //or a bit later (when playing the sample, overriding the initial DMC value).
+                            songData.Add($"${0x6f:x2}+");
+                            songData.Add($"${((note.IsMusical ? 0x00 : 0x80) | (note.DeltaCounterDiv2 * 2)):x2}");
+                        }
+
                         if (note.IsValid)
                         {
                             // Instrument change.
@@ -1080,15 +1088,16 @@ namespace FamiStudio
 
                                 // TODO: Change this, this is a shit show.
                                 if (numEmptyNotes >= maxRepeatCount || 
-                                    note.IsValid        ||
-                                    note.HasVolume      || 
-                                    note.HasVibrato     ||
-                                    note.HasFinePitch   ||
-                                    note.HasDutyCycle   ||
-                                    note.HasFdsModSpeed || 
-                                    note.HasFdsModDepth ||
-                                    note.HasNoteDelay   ||
-                                    note.HasCutDelay    ||
+                                    note.IsValid         ||
+                                    note.HasVolume       || 
+                                    note.HasVibrato      ||
+                                    note.HasFinePitch    ||
+                                    note.HasDutyCycle    ||
+                                    note.HasFdsModSpeed  || 
+                                    note.HasFdsModDepth  ||
+                                    note.HasNoteDelay    ||
+                                    note.HasCutDelay     ||
+                                    note.HasDeltaCounter ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;
@@ -1395,16 +1404,17 @@ namespace FamiStudio
                                 if (note.IsRelease)
                                     note.Value = Note.NoteInvalid;
 
-                                note.HasAttack      = true;
-                                note.HasVibrato     = false;
-                                note.HasVolume      = false;
-                                note.HasVolumeSlide = false;
-                                note.IsSlideNote    = false;
-                                note.HasFinePitch   = false;
-                                note.HasDutyCycle   = false;
-                                note.HasNoteDelay   = false;
-                                note.HasCutDelay    = false;
-                                note.Arpeggio       = null;
+                                note.HasAttack       = true;
+                                note.HasVibrato      = false;
+                                note.HasVolume       = false;
+                                note.HasVolumeSlide  = false;
+                                note.IsSlideNote     = false;
+                                note.HasFinePitch    = false;
+                                note.HasDutyCycle    = false;
+                                note.HasNoteDelay    = false;
+                                note.HasCutDelay     = false;
+                                note.HasDeltaCounter = false;
+                                note.Arpeggio        = null;
                             }
                             else
                             {

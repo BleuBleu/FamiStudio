@@ -10,7 +10,7 @@ Testing + Packaging
 - Sonic demo song.
 - Recompile all roms, NSF, etc.
 - Bump sound engine version.
-- Run + generate unit tests.
+- Run + generate unit tests (dmc will likely break something in there).
 - Recompile NotSoFatso on all platforms.
 / Green hill demo song.
 	- Add to Android + Windows Setup (how2 need to fix volume first)
@@ -18,25 +18,14 @@ Testing + Packaging
 	/ Audio export
 	/ Video export
 	- Test DPCM preview on Mac
-- Remove EPSM code from nsf import.
 
 Small fixes:
 ============
-x Attack issue from how2 (Mario_NSF.mp3 DM)
-x Import Alternative_Fuel_192pl.nsf. Not right speed.
-x N163 : Write address location in the waveform editor (how2 idea)
-x CTRL+A to select all? 
-x Make TimeFormat = 1 the default
-x Drag an instrument on sequencer to replace instrument on pattern?
-x Two joshop issues from github.
-x Integrity issue : Open the VRC6 ftm with lots of song. Delete a bunch + do cleanup.
-x BUG : Science song NSF import.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value
 - BUG : MacOS : "If you make the window fill the screen (by double clicking the top bar), then go into fullscreen, the mouse is inaccurate."
 - Export selected song by default
 - Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
-- Z effect (i had done it before i think)
-- Option to override DMC initial value on sample mapping.
+- Zxx : Recompile DLLs on all platforms (NotSoFatso changed)
 - Register viewer.
 
 3.4.0

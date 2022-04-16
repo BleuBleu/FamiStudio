@@ -334,20 +334,21 @@ namespace FamiStudio
         const int STATE_DPCMSAMPLEDATA     = 5;
         const int STATE_DPCMLOOP           = 6;
         const int STATE_DPCMPITCH          = 7;
-        const int STATE_FDSWAVETABLE       = 8;
-        const int STATE_FDSMODULATIONTABLE = 9;
-        const int STATE_FDSMODULATIONDEPTH = 10;
-        const int STATE_FDSMODULATIONSPEED = 11;
-        const int STATE_FDSMASTERVOLUME    = 12;
-        const int STATE_VRC7PATCH          = 13;
-        const int STATE_VRC7PATCHREG       = 14;
-        const int STATE_VRC7OCTAVE         = 15;
-        const int STATE_VRC7TRIGGER        = 16;
-        const int STATE_VRC7SUSTAIN        = 17;
-        const int STATE_N163WAVEPOS        = 18;
-        const int STATE_N163WAVESIZE       = 19;
-        const int STATE_N163WAVE           = 20;
-        const int STATE_N163NUMCHANNELS    = 21;
+        const int STATE_DPCMCOUNTER        = 8;
+        const int STATE_FDSWAVETABLE       = 9;
+        const int STATE_FDSMODULATIONTABLE = 10;
+        const int STATE_FDSMODULATIONDEPTH = 11;
+        const int STATE_FDSMODULATIONSPEED = 12;
+        const int STATE_FDSMASTERVOLUME    = 13;
+        const int STATE_VRC7PATCH          = 14;
+        const int STATE_VRC7PATCHREG       = 15;
+        const int STATE_VRC7OCTAVE         = 16;
+        const int STATE_VRC7TRIGGER        = 17;
+        const int STATE_VRC7SUSTAIN        = 18;
+        const int STATE_N163WAVEPOS        = 19;
+        const int STATE_N163WAVESIZE       = 20;
+        const int STATE_N163WAVE           = 21;
+        const int STATE_N163NUMCHANNELS    = 22;
 
         class ChannelState
         {
@@ -361,6 +362,7 @@ namespace FamiStudio
             public int  volume  = 15;
             public int  octave  = -1;
             public int  state   = Stopped;
+            public int  dmc     = 0;
 
             public int fdsModDepth = 0;
             public int fdsModSpeed = 0;
@@ -548,6 +550,7 @@ namespace FamiStudio
 
             if (channel.Type == ChannelType.Dpcm)
             {
+                var dmc = NsfGetState(nsf, channel.Type, STATE_DPCMCOUNTER, 0) / 2;
                 var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0);
 
                 if (len > 0) 
@@ -573,25 +576,36 @@ namespace FamiStudio
                     var loop  = NsfGetState(nsf, channel.Type, STATE_DPCMLOOP, 0) != 0;
                     var pitch = NsfGetState(nsf, channel.Type, STATE_DPCMPITCH, 0);
 
-                    var note = project.FindDPCMSampleMapping(sample, pitch, loop);
-                    if (note == -1)
+                    var noteValue = project.FindDPCMSampleMapping(sample, pitch, loop);
+                    if (noteValue == -1)
                     {
                         for (int i = Note.DPCMNoteMin + 1; i <= Note.DPCMNoteMax; i++)
                         {
                             if (project.GetDPCMMapping(i) == null)
                             {
-                                note = i;
+                                noteValue = i;
                                 project.MapDPCMSample(i, sample, pitch, loop);
                                 break;
                             }
                         }
                     }
 
-                    if (note != -1)
+                    if (noteValue != -1)
                     {
-                        var pattern = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).Value = (byte)note;
+                        var note = GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n);
+                        note.Value = (byte)noteValue;
+                        if (state.dmc != dmc)
+                        {
+                            note.DeltaCounterDiv2 = (byte)dmc;
+                            state.dmc = dmc;
+                        }
                         hasNote = true;
                     }
+                }
+                else if (dmc != state.dmc)
+                {
+                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).DeltaCounterDiv2 = (byte)dmc;
+                    state.dmc = dmc;
                 }
             }
             else
