@@ -48,6 +48,7 @@ namespace FamiStudio
         private bool usesArpeggio = false;
         private bool usesDutyCycleEffect = false;
         private bool usesDelayedNotesOrCuts = false;
+        private bool usesDeltaCounter = false;
 
         public FamitoneMusicFile(int kernel, bool outputLog)
         {
@@ -982,6 +983,7 @@ namespace FamiStudio
                             //or a bit later (when playing the sample, overriding the initial DMC value).
                             songData.Add($"${0x6f:x2}+");
                             songData.Add($"${((note.IsMusical ? 0x00 : 0x80) | (note.DeltaCounterDiv2 * 2)):x2}");
+                            usesDeltaCounter = true;
                         }
 
                         if (note.IsValid)
@@ -1598,6 +1600,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.");
                     if (usesDutyCycleEffect)
                         Log.LogMessage(LogSeverity.Info, "Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
+                    if (usesDeltaCounter)
+                        Log.LogMessage(LogSeverity.Info, "DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
                 }
             }
 
