@@ -797,11 +797,7 @@ namespace FamiStudio
 
         public int[] GetActiveExpansions()
         {
-            if (!UsesAnyExpansionAudio)
-                return null;
 
-            var idx = 0;
-            var expansions = new int[Utils.NumberOfSetBits(expansionMask)];
 
             for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
             {
@@ -1648,8 +1644,8 @@ namespace FamiStudio
         {
             // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. We
             // don't allow these files to be open with the mainline version.
-            if (version < 13)
-                SetExpansionAudioMask(expansionMask & (~ExpansionType.EPSMMask));
+            if (version < 13 && (expansionMask & ExpansionType.EPSMMask) != 0)
+                SetExpansionAudioMask(expansionMask & (~ExpansionType.EPSMMask), expansionNumN163Channels);
         }
 
         public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)
