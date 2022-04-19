@@ -430,7 +430,7 @@ namespace FamiStudio
                         {
                             var n163WaveIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.N163Waveform]]);
 
-                            lines.Add($"\t{db} ${instrument.N163WavePos / 2:x2}, ${instrument.N163WaveSize / 2:x2}");
+                            lines.Add($"\t{db} ${instrument.N163WavePos:x2}, ${instrument.N163WaveSize:x2}");
                             lines.Add($"\t{dw} {ll}env{n163WaveIdx}");
                             lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
                         }

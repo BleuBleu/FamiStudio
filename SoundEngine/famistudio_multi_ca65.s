@@ -3453,13 +3453,14 @@ famistudio_set_n163_instrument:
 
     famistudio_set_exp_instrument
 
-    ; Wave position
     lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
     beq @done
 
     ; TODO : The N163 ADDR register overlaps with there S5B data register. There is a potiential conflict. 
     lda famistudio_n163_wave_table-FAMISTUDIO_N163_CH0_IDX, x
     sta FAMISTUDIO_N163_ADDR
+
+    ; Wave position
     lda (@ptr),y
     sta @wave_pos
     sta FAMISTUDIO_N163_DATA
@@ -3467,12 +3468,12 @@ famistudio_set_n163_instrument:
 
     ; Wave length
     lda (@ptr),y
+    lsr
     sta @wave_len
-    lda #$00 ; 256 - wave length
+    lda #$80 ; (128 - wave length / 2) * 2 == 256 - wave length
     sec
     sbc @wave_len
-    sec
-    sbc @wave_len
+    asl
     sta famistudio_chn_n163_wave_len-FAMISTUDIO_N163_CH0_IDX, x
     iny
 
@@ -3486,6 +3487,7 @@ famistudio_set_n163_instrument:
     ; N163 wave
     ; TODO : The N163 ADDR register overlaps with there S5B data register. There is a potiential conflict. 
     lda @wave_pos
+    lsr 
     ora #$80
     sta FAMISTUDIO_N163_ADDR
     ldy #0
