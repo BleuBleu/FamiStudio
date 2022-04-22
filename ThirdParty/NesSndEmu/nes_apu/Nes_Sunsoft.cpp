@@ -22,6 +22,7 @@ Nes_Sunsoft::~Nes_Sunsoft()
 void Nes_Sunsoft::reset()
 {
 	reset_psg();
+	memset(&ages[0], 0, array_count(ages));
 	last_time = 0;
 	last_amp = 0;
 }
@@ -67,9 +68,14 @@ void Nes_Sunsoft::enable_channel(int idx, bool enabled)
 void Nes_Sunsoft::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 {
 	if (addr >= reg_select && addr < (reg_select + reg_range))
+	{
 		reg = data;
+	}
 	else if (addr >= reg_write && addr < (reg_write + reg_range))
+	{
 		PSG_writeReg(psg, reg, data);
+		ages[reg] = 0;
+	}
 }
 
 void Nes_Sunsoft::end_frame(cpu_time_t time)
@@ -121,3 +127,14 @@ void Nes_Sunsoft::write_shadow_register(int addr, int data)
 	else if (addr >= reg_write && addr < (reg_write + reg_range))
 		shadow_internal_regs[reg] = data;
 }
+
+//void Nes_Sunsoft::get_register_values(struct s5b_register_values* regs)
+//{
+//	for (int i = 0; i < array_count(regs->regs); i++)
+//	{
+//		regs->regs[i] = psg->reg[i];
+//		regs->ages[i] = ages[i];
+//
+//		ages[i] = increment_saturate(ages[i]);
+//	}
+//}

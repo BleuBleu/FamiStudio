@@ -31,6 +31,7 @@ namespace FamiStudio
         const int DefaultScrollBarThickness1  = 10;
         const int DefaultScrollBarThickness2  = 16;
         const int DefaultButtonSizeY          = 21;
+        const int DefaultRegisterSizeY        = 14;
         const int DefaultSliderPosX           = PlatformUtils.IsMobile ? 88 : 108;
         const int DefaultSliderPosY           = 3;
         const int DefaultSliderSizeX          = PlatformUtils.IsMobile ? 84 : 104;
@@ -39,6 +40,7 @@ namespace FamiStudio
         const int DefaultCheckBoxPosY         = 3;
         const int DefaultDraggedLineSizeY     = 5;
         const int DefaultParamRightPadX       = 4;
+        const int DefaultRegisterLabelSizeX   = 60;
         const float ScrollSpeedFactor         = PlatformUtils.IsMobile ? 2.0f : 1.0f;
 
         int expandButtonSizeX;
@@ -62,10 +64,409 @@ namespace FamiStudio
         int scrollAreaSizeY;
         int scrollBarThickness;
         int draggedLineSizeY;
+        int registerLabelSizeX;
         bool needsScrollBar;
+
+        enum TabType
+        {
+            Project,
+            Registers,
+            Max
+        };
+
+        string[] TabNames =
+        {
+            "Project",
+            "Registers"
+        };
+
+        delegate object GetRegisterValueDelegate();
+        delegate void   DrawRegisterDelegate(RenderCommandList c, ThemeRenderResources res, Rectangle rect);
+
+        public static readonly string[] NoteNamesPadded =
+{
+            "C-",
+            "C#",
+            "D-",
+            "D#",
+            "E-",
+            "F-",
+            "F#",
+            "G-",
+            "G#",
+            "A-",
+            "A#",
+            "B-"
+        };
+
+        //private static double N163PeriodToFreq(int cpuFreq, int period, int waveLen)
+        //{
+        //    return cpuFreq / 983040.0 * period / waveLen / 4;
+        //}
+
+        private static double NoteFromFreq(double f)
+        {
+            return 12.0 * Math.Log(f / NesApu.FreqC0, 2.0);
+        }
+
+        private static string GetNoteString(int value)
+        {
+            int octave = (value - 1) / 12;
+            int note = (value - 1) % 12;
+
+            return $"{NoteNamesPadded[note]}{octave}";
+        }
+
+        private static string GetPitchString(int period, double frequency)
+        {
+            if (period == 0)
+            {
+                return "N/A";
+            }
+            else
+            {
+                var noteFloat = NoteFromFreq(frequency);
+
+                if (noteFloat < 0.0f)
+                {
+                    Debug.WriteLine("");
+                }
+
+                var note = (int)Math.Round(noteFloat);
+                var cents = (int)Math.Round((noteFloat - note) * 100.0);
+
+                return $"{GetNoteString(note + 1),-3}{(cents < 0 ? "-" : "+")}{Math.Abs(cents):00} ({frequency,7:0.00}Hz)";
+            }
+        }
+
+        class RegisterViewerRow
+        {
+            public string Label;
+            public int Height = DefaultRegisterSizeY;
+            public int AddStart;
+            public int AddEnd;
+            public int SubStart;
+            public int SubEnd;
+            public bool Monospace;
+            public GetRegisterValueDelegate GetValue;
+            public DrawRegisterDelegate CustomDraw;
+
+            // Address range.
+            public RegisterViewerRow(string label, int addStart, int addEnd)
+            {
+                Label = label;
+                AddStart = addStart;
+                AddEnd = addEnd;
+            }
+
+            // Address range (for internal registers)
+            public RegisterViewerRow(string label, int address, int subStart, int subEnd)
+            {
+                Label = label;
+                AddStart = address;
+                AddEnd = address;
+                SubStart = subStart;
+                SubEnd = subEnd;
+            }
+
+            // Text label.
+            public RegisterViewerRow(string label, GetRegisterValueDelegate value, bool mono = false)
+            {
+                Label = label;
+                GetValue = value;
+                Monospace = mono;
+            }
+
+            // Custom draw.
+            public RegisterViewerRow(string label, DrawRegisterDelegate draw, int height = DefaultRegisterSizeY)
+            {
+                Label = label;
+                Height = height;
+                CustomDraw = draw;
+            }
+        };
+
+        class ExpansionRegisterViewer
+        {
+            public RegisterViewerRow[]   ExpansionRows { get; internal set; }
+            public RegisterViewerRow[][] ChannelRows { get; internal set; }
+        }
+
+        class ApuRegisterViewer : ExpansionRegisterViewer
+        {
+            ApuRegisterInterpreter i;
+
+            public ApuRegisterViewer(NesApu.NesRegisterValues r)
+            {
+                i = new ApuRegisterInterpreter(r);
+                ExpansionRows = new[]
+                {
+                    new RegisterViewerRow("$4000", 0x4000, 0x4003),
+                    new RegisterViewerRow("$4004", 0x4004, 0x4007),
+                    new RegisterViewerRow("$4008", 0x4008, 0x400b),
+                    new RegisterViewerRow("$400C", 0x400c, 0x400f),
+                    new RegisterViewerRow("$4010", 0x4010, 0x4013)
+                };
+                ChannelRows = new RegisterViewerRow[5][];
+                ChannelRows[0] = new[]
+                {
+                    new RegisterViewerRow("Pitch",      () => GetPitchString(i.GetSquarePeriod(0), i.GetSquareFrequency(0)), true),
+                    new RegisterViewerRow("Volume",     () => i.GetSquareVolume(0).ToString("00"), true),
+                    new RegisterViewerRow("Duty",       () => i.GetSquareDuty(0), true)
+                };                                      
+                ChannelRows[1] = new[]                  
+                {                                       
+                    new RegisterViewerRow("Pitch",      () => GetPitchString(i.GetSquarePeriod(1), i.GetSquareFrequency(1)), true),
+                    new RegisterViewerRow("Volume",     () => i.GetSquareVolume(1).ToString("00"), true),
+                    new RegisterViewerRow("Duty",       () => i.GetSquareDuty(1), true)
+                };                                      
+                ChannelRows[2] = new[]                  
+                {                                       
+                    new RegisterViewerRow("Pitch",      () => GetPitchString(i.TrianglePeriod, i.TriangleFrequency), true),
+                };                                      
+                ChannelRows[3] = new[]                  
+                {                                       
+                    new RegisterViewerRow("Pitch",      () => i.NoisePeriod.ToString("X"), true),
+                    new RegisterViewerRow("Volume",     () => i.NoiseVolume.ToString("00"), true),
+                    new RegisterViewerRow("Mode",       () => i.NoiseMode, true)
+                };
+                ChannelRows[4] = new[]
+                {
+                    new RegisterViewerRow("Frequency",  () => DPCMSampleRate.GetString(false, r.Pal, true, true, i.DpcmFrequency), true),
+                    new RegisterViewerRow("Loop",       () => i.DpcmLoop ? "Loop" : "Once", false),
+                    new RegisterViewerRow("Size",       () => i.DpcmSize, true),
+                    new RegisterViewerRow("Bytes Left", () => i.DpcmBytesLeft, true),
+                    new RegisterViewerRow("DAC",        () => i.DpcmDac, true)
+                };
+            }
+        }
+
+        class Vrc6RegisterViewer : ExpansionRegisterViewer
+        {
+            Vrc6RegisterInterpreter i;
+
+            public Vrc6RegisterViewer(NesApu.NesRegisterValues r)
+            {
+                i = new Vrc6RegisterInterpreter(r);
+                ExpansionRows = new[]
+                {
+                    new RegisterViewerRow("$9000", 0x9000, 0x9002),
+                    new RegisterViewerRow("$A000", 0xA000, 0xA002),
+                    new RegisterViewerRow("$B000", 0xB000, 0xB002)
+                };
+                ChannelRows = new RegisterViewerRow[3][];
+                ChannelRows[0] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetSquarePeriod(0), i.GetSquareFrequency(0)), true),
+                    new RegisterViewerRow("Volume", () => i.GetSquareVolume(0).ToString("00"), true),
+                    new RegisterViewerRow("Duty",   () => i.GetSquareDuty(0), true)
+                };
+                ChannelRows[1] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetSquarePeriod(1), i.GetSquareFrequency(1)), true),
+                    new RegisterViewerRow("Volume", () => i.GetSquareVolume(1).ToString("00"), true),
+                    new RegisterViewerRow("Duty",   () => i.GetSquareDuty(1), true)
+                };
+                ChannelRows[2] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetSawPeriod(), i.GetSawPeriod()), true),
+                    new RegisterViewerRow("Volume", () => i.GetSawVolume().ToString("00"), true),
+                };
+            }
+        }
+
+        class Vrc7RegisterViewer : ExpansionRegisterViewer
+        {
+            Vrc7RegisterIntepreter i;
+
+            public Vrc7RegisterViewer(NesApu.NesRegisterValues r)
+            {
+                i = new Vrc7RegisterIntepreter(r);
+                ExpansionRows = new[]
+                {
+                    new RegisterViewerRow("$10", 0x9030, 0x10, 0x15),
+                    new RegisterViewerRow("$20", 0x9030, 0x20, 0x25),
+                    new RegisterViewerRow("$30", 0x9030, 0x30, 0x35)
+                };
+                ChannelRows = new RegisterViewerRow[6][];
+                for (int c = 0; c < 6; c++)
+                {
+                    ChannelRows[c] = new[]
+                    {
+                        new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                        new RegisterViewerRow("Volume", () => i.GetVolume(c).ToString("00"), true),
+                        new RegisterViewerRow("Patch",  () => i.GetPatch(c), true),
+                    };
+                }
+            }
+        }
+
+        class FdsRegisterViewer : ExpansionRegisterViewer
+        {
+            FdsRegisterIntepreter i;
+
+            public FdsRegisterViewer(NesApu.NesRegisterValues r)
+            {
+                i = new FdsRegisterIntepreter(r);
+                ExpansionRows = new[]
+                {
+                    new RegisterViewerRow("$4080", 0x4080, 0x4083),
+                    new RegisterViewerRow("$4084", 0x4084, 0x4087),
+                    new RegisterViewerRow("$4088", 0x4088, 0x408b),
+                };
+                ChannelRows = new RegisterViewerRow[1][];
+                ChannelRows[0] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.Period, i.Frequency), true),
+                    new RegisterViewerRow("Volume", () => i.Volume.ToString("00"), true),
+                };
+                // MATTT : Mod table!
+            }
+        }
+
+        class Mmc5RegisterViewer : ExpansionRegisterViewer
+        {
+            Mmc5RegisterIntepreter i;
+
+            public Mmc5RegisterViewer(NesApu.NesRegisterValues r)
+            {
+                i = new Mmc5RegisterIntepreter(r);
+                ExpansionRows = new[]
+                {
+                    new RegisterViewerRow("$5000", 0x5000, 0x5003),
+                    new RegisterViewerRow("$5004", 0x5004, 0x5007),
+                };
+                ChannelRows = new RegisterViewerRow[2][];
+                ChannelRows[0] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetSquarePeriod(0), i.GetSquareFrequency(0)), true),
+                    new RegisterViewerRow("Volume", () => i.GetSquareVolume(0).ToString("00"), true),
+                    new RegisterViewerRow("Duty",   () => i.GetSquareDuty(0), true)
+                };
+                ChannelRows[1] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetSquarePeriod(1), i.GetSquareFrequency(1)), true),
+                    new RegisterViewerRow("Volume", () => i.GetSquareVolume(1).ToString("00"), true),
+                    new RegisterViewerRow("Duty",   () => i.GetSquareDuty(1), true)
+                };
+
+            }
+        }
+
+        class N163RegisterViewer : ExpansionRegisterViewer
+        {
+            N163RegisterIntepreter i;
+
+            public N163RegisterViewer(NesApu.NesRegisterValues r)
+            {
+                i = new N163RegisterIntepreter(r);
+                ExpansionRows = new[]
+                {
+                    new RegisterViewerRow("$00", 0x4800, 0x00, 0x07 ),
+                    new RegisterViewerRow("$08", 0x4800, 0x08, 0x0f ),
+                    new RegisterViewerRow("$10", 0x4800, 0x10, 0x17 ),
+                    new RegisterViewerRow("$18", 0x4800, 0x18, 0x1f ),
+                    new RegisterViewerRow("$20", 0x4800, 0x20, 0x27 ),
+                    new RegisterViewerRow("$28", 0x4800, 0x28, 0x2f ),
+                    new RegisterViewerRow("$30", 0x4800, 0x30, 0x37 ),
+                    new RegisterViewerRow("$38", 0x4800, 0x38, 0x3f ),
+                    new RegisterViewerRow("$40", 0x4800, 0x40, 0x47 ),
+                    new RegisterViewerRow("$48", 0x4800, 0x48, 0x4f ),
+                    new RegisterViewerRow("$50", 0x4800, 0x50, 0x57 ),
+                    new RegisterViewerRow("$58", 0x4800, 0x58, 0x5f ),
+                    new RegisterViewerRow("$60", 0x4800, 0x60, 0x67 ),
+                    new RegisterViewerRow("$68", 0x4800, 0x68, 0x6f ),
+                    new RegisterViewerRow("$70", 0x4800, 0x70, 0x77 ),
+                    new RegisterViewerRow("$78", 0x4800, 0x78, 0x7f ),
+                    new RegisterViewerRow("RAM", DrawN163RamMap, 32),
+                };
+                ChannelRows = new RegisterViewerRow[8][];
+                for (int c = 0; c < 8; c++)
+                {
+                    ChannelRows[c] = new[]
+                    {
+                        new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                        new RegisterViewerRow("Volume", () => i.GetVolume(c).ToString("00"), true),
+                    };
+                }
+            }
+
+            void DrawN163RamMap(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
+            {
+                var sx = rect.Width  / 128;
+                var sy = rect.Height / 15.0f;
+                var h  = rect.Height;
+
+                int ramSize = 128 - i.NumActiveChannels * 8;
+
+                for (int x = 0; x < ramSize; x++)
+                {
+                    var val = i.Registers.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, x);
+                    var lo = ((val >> 0) & 0xf) * sy;
+                    var hi = ((val >> 4) & 0xf) * sy;
+                    
+                    // If if the RAM address matches any of the instrument.
+                    // This isnt very accurate since we dont actually know
+                    // which instrument last wrote to RAM at the moment.
+                    var channelIndex = -1;
+                    for (int j = 0; j < i.NumActiveChannels; j++)
+                    {
+                        if (x * 2 >= i.Registers.N163InstrumentRanges[j].Position &&
+                            x * 2 <  i.Registers.N163InstrumentRanges[j].Position + i.Registers.N163InstrumentRanges[j].Size)
+                        {
+                            channelIndex = j;
+                            break;
+                        }
+                    }
+
+                    var color = channelIndex >= 0 ? i.Registers.InstrumentColors[ChannelType.N163Wave1 + channelIndex] : Theme.LightGreyFillColor2;
+                    var brush = c.Graphics.GetSolidBrush(color);
+
+                    c.FillRectangle((x * 2 + 0) * sx, h - lo, (x * 2 + 1) * sx, h, brush);
+                    c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, brush);
+                }
+
+                c.FillRectangle(ramSize * sx, 0, 128 * sx, rect.Height, res.DarkGreyLineBrush3);
+                c.DrawLine(128 * sx, 0, 128 * sx, rect.Height, res.BlackBrush);
+            }
+        }
+
+        class S5BRegisterViewer : ExpansionRegisterViewer
+        {
+            S5BRegisterIntepreter i;
+
+            public S5BRegisterViewer(NesApu.NesRegisterValues r)
+            {
+                i = new S5BRegisterIntepreter(r);
+                ExpansionRows = new[]
+                {
+                    new RegisterViewerRow("$00", 0xE000, 0x00, 0x01),
+                    new RegisterViewerRow("$02", 0xE000, 0x02, 0x03),
+                    new RegisterViewerRow("$04", 0xE000, 0x04, 0x05),
+                    new RegisterViewerRow("$08", 0xE000, 0x08, 0x0a),
+                };
+                ChannelRows = new RegisterViewerRow[3][];
+                ChannelRows[0] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(0), i.GetFrequency(0)), true),
+                    new RegisterViewerRow("Volume", () => i.GetVolume(0).ToString("00"), true),
+                };
+                ChannelRows[1] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(1), i.GetFrequency(1)), true),
+                    new RegisterViewerRow("Volume", () => i.GetVolume(1).ToString("00"), true),
+                };
+                ChannelRows[2] = new[]
+                {
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(2), i.GetFrequency(2)), true),
+                    new RegisterViewerRow("Volume", () => i.GetVolume(2).ToString("00"), true),
+                };
+            }
+        }
 
         enum ButtonType
         {
+            // Project explorer buttons.
             ProjectSettings,
             SongHeader,
             Song,
@@ -80,7 +481,14 @@ namespace FamiStudio
             ParamSlider,
             ParamList,
             ParamCustomDraw,
-            Max
+
+            // Register viewer buttons.
+            RegisterExpansionHeader,
+            RegisterChannelHeader,
+            ExpansionRegistersFirst, // One type per expansion for raw registers.
+            ChannelStateFirst = RegisterChannelHeader + ExpansionType.Count, // One type per channel for status.
+
+            Max = ChannelStateFirst + ChannelType.Count
         };
 
         enum SubButtonType
@@ -173,6 +581,8 @@ namespace FamiStudio
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
         bool canFling = false;
+        bool showTabs = PlatformUtils.IsDesktop;
+        TabType selectedTab = TabType.Project;
         Button sliderDragButton = null;
         CaptureOperation captureOperation = CaptureOperation.None;
         Instrument draggedInstrument = null;
@@ -184,12 +594,17 @@ namespace FamiStudio
         Song draggedSong = null;
         List<Button> buttons = new List<Button>();
 
+        // Register viewer stuff
+        NesApu.NesRegisterValues registerValues;
+        ExpansionRegisterViewer[] registerViewers = new ExpansionRegisterViewer[ExpansionType.Count];
+
         RenderBrush sliderFillBrush;
-        RenderBrush graphFillBrush;
-        RenderBrush disabledBrush;
+        RenderBrush   disabledBrush;
+        RenderBrush[] registerBrushes = new RenderBrush[11];
         RenderBitmapAtlas bmpMiscAtlas;
         RenderBitmapAtlas bmpExpansionsAtlas;
         RenderBitmapAtlas bmpEnvelopesAtlas;
+        RenderBitmapAtlas bmpAtlasChannels;
 
         enum MiscImageIndices
         {
@@ -259,12 +674,15 @@ namespace FamiStudio
         {
             public string text;
             public Color color = Theme.DarkGreyFillColor2;
+            public Color imageTint = Color.Black;
             public RenderBrush textBrush;
             public RenderBrush textDisabledBrush;
             public RenderBitmapAtlas atlas;
             public int atlasIdx;
             public int height;
+            public bool gradient = true;
             public string[] tabNames;
+            public RegisterViewerRow[] regs;
 
             public ButtonType type;
             public Song song;
@@ -276,11 +694,6 @@ namespace FamiStudio
             public ParamInfo param;
             public TransactionScope paramScope;
             public int paramObjectId;
-
-            public delegate string StringGetDelegate();
-            public delegate int IntGetDelegate();
-            public delegate int IntGetSetDelegate(int value);
-            public delegate void IntSetDelegate(int value);
 
             public Button(ProjectExplorer pe)
             {
@@ -423,11 +836,13 @@ namespace FamiStudio
                         return projectExplorer.ThemeResources.FontMediumBold;
                     }
                     else if (
-                        type == ButtonType.ProjectSettings  ||
-                        type == ButtonType.SongHeader       ||
-                        type == ButtonType.InstrumentHeader ||
-                        type == ButtonType.DpcmHeader       ||
-                        type == ButtonType.ArpeggioHeader)
+                        type == ButtonType.ProjectSettings         ||
+                        type == ButtonType.SongHeader              ||
+                        type == ButtonType.InstrumentHeader        ||
+                        type == ButtonType.DpcmHeader              ||
+                        type == ButtonType.ArpeggioHeader          ||
+                        type == ButtonType.RegisterExpansionHeader ||
+                        type == ButtonType.RegisterChannelHeader)
                     {
                         return projectExplorer.ThemeResources.FontMediumBold;
                     }
@@ -539,6 +954,15 @@ namespace FamiStudio
         public ProjectExplorer()
         {
             UpdateRenderCoords();
+
+            registerValues = new NesApu.NesRegisterValues();
+            registerViewers[ExpansionType.None] = new ApuRegisterViewer(registerValues);
+            registerViewers[ExpansionType.Vrc6] = new Vrc6RegisterViewer(registerValues);
+            registerViewers[ExpansionType.Vrc7] = new Vrc7RegisterViewer(registerValues);
+            registerViewers[ExpansionType.Fds]  = new FdsRegisterViewer(registerValues);
+            registerViewers[ExpansionType.Mmc5] = new Mmc5RegisterViewer(registerValues);
+            registerViewers[ExpansionType.N163] = new N163RegisterViewer(registerValues);
+            registerViewers[ExpansionType.S5B]  = new S5BRegisterViewer(registerValues);
         }
 
         private void UpdateRenderCoords(bool updateVirtualSizeY = true)
@@ -561,6 +985,7 @@ namespace FamiStudio
             checkBoxPosY         = ScaleForMainWindow(DefaultCheckBoxPosY);
             paramRightPadX       = ScaleForMainWindow(DefaultParamRightPadX);
             draggedLineSizeY     = ScaleForMainWindow(DefaultDraggedLineSizeY);
+            registerLabelSizeX   = ScaleForMainWindow(DefaultRegisterLabelSizeX);
             scrollAreaSizeY      = Height;
 
             if (updateVirtualSizeY)
@@ -616,6 +1041,14 @@ namespace FamiStudio
             return widgetType;
         }
 
+        private int GetHeightForRegisterRows(RegisterViewerRow[] regs)
+        {
+            var h = 0;
+            for (int i = 0; i < regs.Length; i++)
+                h += ScaleForMainWindow(regs[i].Height);
+            return h;
+        }
+
         public void RefreshButtons(bool invalidate = true)
         {
             Debug.Assert(captureOperation != CaptureOperation.MoveSlider);
@@ -628,95 +1061,129 @@ namespace FamiStudio
             if (!IsRenderInitialized || project == null)
                 return;
 
-            var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
-
-            buttons.Add(new Button(this) { type = ButtonType.ProjectSettings, text = projectText });
-            buttons.Add(new Button(this) { type = ButtonType.SongHeader, text = "Songs" });
-
-            foreach (var song in project.Songs)
-                buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.Song, textBrush = ThemeResources.BlackBrush });
-
-            buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments" });
-            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = ExpansionType.None });
-
-            foreach (var instrument in project.Instruments)
+            if (false) // MATTT (selectedTab == TabType.Project)
+            //if (selectedTab == TabType.Project)
             {
-                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = instrument.Expansion });
+	            var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
 
-                if (instrument != null && instrument == expandedInstrument)
+	            buttons.Add(new Button(this) { type = ButtonType.ProjectSettings, text = projectText });
+	            buttons.Add(new Button(this) { type = ButtonType.SongHeader, text = "Songs" });
+
+	            foreach (var song in project.Songs)
+	                buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.Song, textBrush = ThemeResources.BlackBrush });
+
+	            buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments" });
+	            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = ExpansionType.None });
+
+	            foreach (var instrument in project.Instruments)
+	            {
+	                buttons.Add(new Button(this) { type = ButtonType.Instrument, instrument = instrument, text = instrument.Name, color = instrument.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpExpansionsAtlas, atlasIdx = instrument.Expansion });
+
+	                if (instrument != null && instrument == expandedInstrument)
+	                {
+	                    var instrumentParams = InstrumentParamProvider.GetParams(instrument);
+
+	                    if (instrumentParams != null)
+	                    {
+	                        List<string> tabNames = null;
+
+	                        foreach (var param in instrumentParams)
+	                        {
+	                            if (param.HasTab)
+	                            {
+	                                if (tabNames == null)
+	                                    tabNames = new List<string>();
+
+	                                if (!tabNames.Contains(param.TabName))
+	                                    tabNames.Add(param.TabName);
+	                            }
+	                        }
+
+	                        var tabCreated = false;
+
+	                        foreach (var param in instrumentParams)
+	                        {
+	                            if (!tabCreated && param.HasTab)
+	                            {
+	                                buttons.Add(new Button(this) { type = ButtonType.ParamTabs, param = param, color = instrument.Color, tabNames = tabNames.ToArray() });
+	                                tabCreated = true;
+	                            }
+
+	                            if (param.HasTab)
+	                            {
+	                                if (string.IsNullOrEmpty(selectedInstrumentTab) || selectedInstrumentTab == param.TabName)
+	                                {
+	                                    selectedInstrumentTab = param.TabName;
+	                                }
+
+	                                if (param.TabName != selectedInstrumentTab)
+	                                {
+	                                    continue;
+	                                }
+	                            }
+
+	                            var sizeY = param.CustomHeight > 0 ? param.CustomHeight * buttonSizeY : buttonSizeY;
+	                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = ThemeResources.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, height = sizeY });
+	                        }
+	                    }
+	                }
+	            }
+
+	            buttons.Add(new Button(this) { type = ButtonType.DpcmHeader });
+	            foreach (var sample in project.Samples)
+	            {
+	                buttons.Add(new Button(this) { type = ButtonType.Dpcm, sample = sample, color = sample.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.DPCM });
+
+	                if (sample == expandedSample)
+	                {
+	                    var sampleParams = DPCMSampleParamProvider.GetParams(sample);
+
+	                    foreach (var param in sampleParams)
+	                    {
+	                        buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, sample = sample, color = sample.Color, text = param.Name, textBrush = ThemeResources.BlackBrush, paramScope = TransactionScope.DPCMSample, paramObjectId = sample.Id });
+	                    }
+	                }
+	            }
+
+	            buttons.Add(new Button(this) { type = ButtonType.ArpeggioHeader, text = "Arpeggios" });
+	            buttons.Add(new Button(this) { type = ButtonType.Arpeggio, text = "None", color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush });
+
+	            foreach (var arpeggio in project.Arpeggios)
+	            {
+	                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpEnvelopesAtlas, atlasIdx = EnvelopeType.Arpeggio });
+	            }
+            }
+            else
+            {
+                var expansions = project.GetActiveExpansions();
+                foreach (var e in expansions)
                 {
-                    var instrumentParams = InstrumentParamProvider.GetParams(instrument);
+                    var expRegs = registerViewers[e];
 
-                    if (instrumentParams != null)
+                    if (expRegs != null)
                     {
-                        List<string> tabNames = null;
+                        var expName = e == ExpansionType.None ? "2A03" : ExpansionType.Names[e];
+                        buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = $"{expName} Registers", atlas = bmpExpansionsAtlas, atlasIdx = e, imageTint = Theme.LightGreyFillColor2 });
+                        buttons.Add(new Button(this) { type = ButtonType.ExpansionRegistersFirst + e, height = GetHeightForRegisterRows(expRegs.ExpansionRows), regs = expRegs.ExpansionRows, gradient = false });
 
-                        foreach (var param in instrumentParams)
+                        var channels = Channel.GetChannelsForExpansionMask(ExpansionType.GetMaskFromValue(e), project.ExpansionNumN163Channels);
+                        var firstChannel = e == ExpansionType.None ? 0 : ChannelType.ExpansionAudioStart;
+                        for (int i = firstChannel; i < channels.Length; i++)
                         {
-                            if (param.HasTab)
+                            var c = channels[i];
+                            var idx = channels[i] - channels[firstChannel]; // Assumes contiguous channels.
+                            var chanRegs = expRegs.ChannelRows[idx];
+
+                            if (chanRegs != null && chanRegs.Length > 0)
                             {
-                                if (tabNames == null)
-                                    tabNames = new List<string>();
-
-                                if (!tabNames.Contains(param.TabName))
-                                    tabNames.Add(param.TabName);
+                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = ChannelType.Names[c], atlas = bmpAtlasChannels, atlasIdx = c, imageTint = Theme.LightGreyFillColor2 });
+                                buttons.Add(new Button(this) { type = ButtonType.ChannelStateFirst + c, height = GetHeightForRegisterRows(chanRegs), regs = chanRegs, gradient = false });
                             }
-                        }
-
-                        var tabCreated = false;
-
-                        foreach (var param in instrumentParams)
-                        {
-                            if (!tabCreated && param.HasTab)
-                            {
-                                buttons.Add(new Button(this) { type = ButtonType.ParamTabs, param = param, color = instrument.Color, tabNames = tabNames.ToArray() });
-                                tabCreated = true;
-                            }
-
-                            if (param.HasTab)
-                            {
-                                if (string.IsNullOrEmpty(selectedInstrumentTab) || selectedInstrumentTab == param.TabName)
-                                {
-                                    selectedInstrumentTab = param.TabName;
-                                }
-
-                                if (param.TabName != selectedInstrumentTab)
-                                {
-                                    continue;
-                                }
-                            }
-
-                            var sizeY = param.CustomHeight > 0 ? param.CustomHeight * buttonSizeY : buttonSizeY;
-                            buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, instrument = instrument, color = instrument.Color, text = param.Name, textBrush = ThemeResources.BlackBrush, paramScope = TransactionScope.Instrument, paramObjectId = instrument.Id, height = sizeY });
                         }
                     }
                 }
             }
-
-            buttons.Add(new Button(this) { type = ButtonType.DpcmHeader });
-            foreach (var sample in project.Samples)
-            {
-                buttons.Add(new Button(this) { type = ButtonType.Dpcm, sample = sample, color = sample.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpMiscAtlas, atlasIdx = (int)MiscImageIndices.DPCM });
-
-                if (sample == expandedSample)
-                {
-                    var sampleParams = DPCMSampleParamProvider.GetParams(sample);
-
-                    foreach (var param in sampleParams)
-                    {
-                        buttons.Add(new Button(this) { type = GetButtonTypeForParam(param), param = param, sample = sample, color = sample.Color, text = param.Name, textBrush = ThemeResources.BlackBrush, paramScope = TransactionScope.DPCMSample, paramObjectId = sample.Id });
-                    }
-                }
-            }
-
-            buttons.Add(new Button(this) { type = ButtonType.ArpeggioHeader, text = "Arpeggios" });
-            buttons.Add(new Button(this) { type = ButtonType.Arpeggio, text = "None", color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush });
-
-            foreach (var arpeggio in project.Arpeggios)
-            {
-                buttons.Add(new Button(this) { type = ButtonType.Arpeggio, arpeggio = arpeggio, text = arpeggio.Name, color = arpeggio.Color, textBrush = ThemeResources.BlackBrush, atlas = bmpEnvelopesAtlas, atlasIdx = EnvelopeType.Arpeggio });
-            }
-
+			
             flingVelY = 0.0f;
             highlightedButtonIdx = -1;
 
@@ -733,11 +1200,48 @@ namespace FamiStudio
             Debug.Assert(EnvelopesImageNames.Length == (int)EnvelopesImageIndices.Count);
 
             sliderFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
-            graphFillBrush = g.CreateSolidBrush(Color.FromArgb(128, Color.Black));
             disabledBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
             bmpMiscAtlas = g.CreateBitmapAtlasFromResources(MiscImageNames);
             bmpExpansionsAtlas = g.CreateBitmapAtlasFromResources(ExpansionType.Icons);
             bmpEnvelopesAtlas = g.CreateBitmapAtlasFromResources(EnvelopesImageNames);
+            bmpAtlasChannels = g.CreateBitmapAtlasFromResources(ChannelType.Icons);
+
+            var color0 = Theme.LightGreyFillColor2; // Grey
+            var color1 = Theme.CustomColors[14, 5]; // Orange
+            var color2 = Theme.CustomColors[0,  5]; // Red
+
+            for (int i = 0; i < registerBrushes.Length; i++)
+            {
+                var alpha = i / (float)(registerBrushes.Length - 1);
+                var color = Color.FromArgb(
+                    (int)Utils.Lerp(color2.R, color0.R, alpha),
+                    (int)Utils.Lerp(color2.G, color0.G, alpha),
+                    (int)Utils.Lerp(color2.B, color0.B, alpha));
+                registerBrushes[i] = g.CreateSolidBrush(color);
+
+
+                /*
+                if (alpha < 0.5f)
+                {
+                    alpha *= 2.0f;
+                    var color = Color.FromArgb(
+                        (int)Utils.Lerp(color2.R, color1.R, alpha),
+                        (int)Utils.Lerp(color2.G, color1.G, alpha),
+                        (int)Utils.Lerp(color2.B, color1.B, alpha));
+                    registerBrushes[i] = g.CreateSolidBrush(color);
+
+                }
+                else
+                {
+                    alpha = (alpha - 0.5f) * 2.0f;
+                    var color = Color.FromArgb(
+                        (int)Utils.Lerp(color1.R, color0.R, alpha),
+                        (int)Utils.Lerp(color1.G, color0.G, alpha),
+                        (int)Utils.Lerp(color1.B, color0.B, alpha));
+                    registerBrushes[i] = g.CreateSolidBrush(color);
+                }
+                */
+            }
 
             if (PlatformUtils.IsMobile)
                 bitmapScale = g.WindowScaling * 0.25f;
@@ -748,11 +1252,14 @@ namespace FamiStudio
         protected override void OnRenderTerminated()
         {
             Utils.DisposeAndNullify(ref sliderFillBrush);
-            Utils.DisposeAndNullify(ref graphFillBrush);
             Utils.DisposeAndNullify(ref disabledBrush);
             Utils.DisposeAndNullify(ref bmpMiscAtlas);
             Utils.DisposeAndNullify(ref bmpExpansionsAtlas);
             Utils.DisposeAndNullify(ref bmpEnvelopesAtlas);
+            Utils.DisposeAndNullify(ref bmpAtlasChannels);
+
+            for (int i = 0; i < registerBrushes.Length; i++)
+                Utils.DisposeAndNullify(ref registerBrushes[i]);
         }
 
         protected bool ShowExpandButtons()
@@ -781,9 +1288,107 @@ namespace FamiStudio
 #endif
         }
 
+        private void RenderTabs(RenderCommandList c)
+        {
+            var numTabs = (int)TabType.Max;
+            var tabSizeX = Width / numTabs;
+
+            for (int i = 0; i < numTabs; i++)
+            {
+                var activeTab = i == 0;
+                var tabColor  = activeTab ? Theme.DarkGreyFillColor1 : Theme.Darken(Theme.DarkGreyFillColor1);
+                var textBrush = activeTab ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1;
+                var textFont  = activeTab ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
+                var x0 = (i + 0) * tabSizeX;
+                var x1 = (i + 1) * tabSizeX;
+                c.FillAndDrawRectangle(x0, 0, x1, buttonSizeY, c.Graphics.GetVerticalGradientBrush(tabColor, buttonSizeY, 0.8f), ThemeResources.BlackBrush, 1);
+                c.DrawText(TabNames[i], textFont, x0, 0, textBrush, RenderTextFlags.MiddleCenter, tabSizeX, buttonSizeY);
+            }
+        }
+
+        private void RenderRegisterRows(NesApu.NesRegisterValues regValues, RenderCommandList c, Button button, int actualWidth, int exp = -1)
+        {
+            int y = 0;
+
+            for (int i = 0; i < button.regs.Length; i++)
+            {
+                var reg = button.regs[i];
+                var regSizeY = ScaleForMainWindow(reg.Height);
+
+                c.PushTranslation(0, y);
+
+                if (i != 0)
+                    c.DrawLine(0, -1, actualWidth, -1, ThemeResources.BlackBrush);
+
+                if (reg.CustomDraw != null)
+                {
+                    var label = reg.Label;
+                    c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, regSizeY);
+
+                    c.PushTranslation(registerLabelSizeX + 1, 0);
+                    reg.CustomDraw(c, ThemeResources, new Rectangle(0, 0, actualWidth - registerLabelSizeX - 1, regSizeY));
+                    c.PopTransform();
+                }
+                else if (reg.GetValue != null)
+                {
+                    var label = reg.Label;
+                    var value = reg.GetValue().ToString();
+                    var flags = reg.Monospace ? RenderTextFlags.Middle | RenderTextFlags.Monospace : RenderTextFlags.Middle;
+
+                    c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, regSizeY);
+                    c.DrawText(value, ThemeResources.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, ThemeResources.LightGreyFillBrush2, flags, 0, regSizeY);
+                }
+                else
+                {
+                    Debug.Assert(exp >= 0);
+
+                    c.DrawText(reg.Label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, regSizeY);
+
+                    var flags = RenderTextFlags.Monospace | RenderTextFlags.Middle;
+                    var x = buttonTextNoIconPosX + registerLabelSizeX;
+
+                    for (var r = reg.AddStart; r <= reg.AddEnd; r++)
+                    {
+                        for (var s = reg.SubStart; s <= reg.SubEnd; s++)
+                        {
+                            var val = regValues.GetRegisterValue(exp, r, out var age, s);
+                            var str = $"${val:X2} ";
+                            var brush = registerBrushes[Math.Min(age, registerBrushes.Length - 1)];
+
+                            c.DrawText(str, ThemeResources.FontSmall, x, 0, brush, flags, 0, regSizeY);
+                            x += (int)c.Graphics.MeasureString(str, ThemeResources.FontSmall, true);
+                        }
+                    }
+                }
+
+                c.PopTransform();
+                y += ScaleForMainWindow(regSizeY);
+            }
+
+            c.DrawLine(registerLabelSizeX, 0, registerLabelSizeX, button.height, ThemeResources.BlackBrush);
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList();
+            RenderCommandList ct = null;
+            RenderCommandList c = null;
+
+            if (showTabs)
+            {
+                ct = g.CreateCommandList();
+                RenderTabs(ct);
+                c = g.CreateCommandList();
+                c.PushTranslation(0, buttonSizeY);
+            }
+            else
+            {
+                c = g.CreateCommandList();
+            }
+
+            //if (selectedTab == TabType.Registers) MATTT
+            {
+                App.ActivePlayer.GetRegisterValues(registerValues);
+            }
 
             c.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
 
@@ -834,7 +1439,7 @@ namespace FamiStudio
 
                     if (drawBackground)
                     {
-                        c.FillAndDrawRectangle(0, 0, actualWidth, groupSizeY, g.GetVerticalGradientBrush(button.color, groupSizeY, 0.8f), ThemeResources.BlackBrush, 1);
+                        c.FillAndDrawRectangle(0, 0, actualWidth, groupSizeY, button.gradient ? g.GetVerticalGradientBrush(button.color, groupSizeY, 0.8f) : g.GetSolidBrush(button.color), ThemeResources.BlackBrush, 1);
                     }
 
                     if (button.type == ButtonType.Instrument)
@@ -865,10 +1470,19 @@ namespace FamiStudio
 
                     var enabled = button.param == null || button.param.IsEnabled == null || button.param.IsEnabled();
                     var ellipsisFlag = button.TextEllipsis ? RenderTextFlags.Ellipsis : RenderTextFlags.None;
+                    var player = App.ActivePlayer;
 
                     if (button.type == ButtonType.ParamCustomDraw)
                     {
                         button.param.CustomDraw(c, ThemeResources, new Rectangle(0, 0, actualWidth - leftPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
+                    }
+                    else if (button.type >= ButtonType.ExpansionRegistersFirst && button.type < ButtonType.ChannelStateFirst)
+                    {
+                        RenderRegisterRows(registerValues, c, button, actualWidth, button.type - ButtonType.ExpansionRegistersFirst);
+                    }
+                    else if (button.type >= ButtonType.ChannelStateFirst)
+                    {
+                        RenderRegisterRows(registerValues, c, button, actualWidth);
                     }
                     else
                     {
@@ -879,7 +1493,7 @@ namespace FamiStudio
 
                         if (atlas != null)
                         {
-                            c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(atlas, atlasIdx, buttonIconPosX, buttonIconPosY, 1.0f, bitmapScale, button.imageTint);
                             if (highlighted)
                                 c.DrawRectangle(buttonIconPosX, buttonIconPosY, buttonIconPosX + iconSize - 4, buttonIconPosY + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
                         }
@@ -981,7 +1595,7 @@ namespace FamiStudio
                 if (captureOperation == CaptureOperation.DragSong)
                 {
                     var pt = PlatformUtils.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
-                    var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
+                    var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _); // MATTT
 
                     if (buttonIdx >= 0)
                     {
@@ -990,8 +1604,8 @@ namespace FamiStudio
                         if (button.type == ButtonType.Song ||
                             button.type == ButtonType.SongHeader)
                         {
-                            var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
-                            c.DrawLine(0, lineY, Width - scrollBarThickness, lineY, g.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                            var lineY = (buttonIdx + 1) * buttonSizeY - scrollY; // MATTT
+                            c.DrawLine(0, lineY, Width - scrollBarThickness, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
                         }
                     }
                 }
@@ -1016,12 +1630,12 @@ namespace FamiStudio
                         }
                         else
                         {
-                            var minY = (captureOperation == CaptureOperation.DragInstrument ? minInstIdx : minArpIdx) * buttonSizeY - scrollY;
-                            var maxY = (captureOperation == CaptureOperation.DragInstrument ? maxInstIdx : maxArpIdx) * buttonSizeY - scrollY;
+                            var minY = (captureOperation == CaptureOperation.DragInstrument ? minInstIdx : minArpIdx) * buttonSizeY - scrollY; // MATTT
+                            var maxY = (captureOperation == CaptureOperation.DragInstrument ? maxInstIdx : maxArpIdx) * buttonSizeY - scrollY; // MATTT
                             var color = (captureOperation == CaptureOperation.DragInstrument ? draggedInstrument.Color : draggedArpeggio.Color);
                             var dragY = Utils.Clamp(pt.Y - captureButtonRelY, minY, maxY);
 
-                            c.FillRectangle(0, dragY, actualWidth, dragY + buttonSizeY, g.GetSolidBrush(color, 1, 0.5f));
+                            c.FillRectangle(0, dragY, actualWidth, dragY + buttonSizeY, c.Graphics.GetSolidBrush(color, 1, 0.5f)); // MATTT
                         }
                     }
                 }
@@ -1037,7 +1651,13 @@ namespace FamiStudio
             }
 
             g.Clear(Theme.DarkGreyFillColor1);
-            g.DrawCommandList(c);
+            g.DrawCommandList(ct);
+
+            if (showTabs)
+            {
+                c.PopTransform();
+                g.DrawCommandList(c, new Rectangle(0, buttonSizeY, Width, Height));
+            }
 
             RenderDebug(g);
         }
@@ -1103,7 +1723,7 @@ namespace FamiStudio
 
             var absY = y + scrollY;
             var buttonIndex = -1;
-            var buttonBaseY = 0;
+            var buttonBaseY = showTabs ? buttonSizeY : 0;
 
             for (int i = 0; i < buttons.Count; i++)
             {
@@ -1407,7 +2027,7 @@ namespace FamiStudio
         {
             if (final)
             {
-                var buttonIdx = GetButtonAtCoord(x, y - buttonSizeY / 2, out _);
+                var buttonIdx = GetButtonAtCoord(x, y - buttonSizeY / 2, out _); // MATTT
 
                 if (buttonIdx >= 0)
                 {
@@ -2196,7 +2816,7 @@ namespace FamiStudio
                 expNames.Add(ExpansionType.Names[ExpansionType.None]);
                 dlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? "Select audio expansion" : null, expNames[0], true);
 
-                for (int i = 0; i < activeExpansions.Length; i++)
+                for (int i = 1; i < activeExpansions.Length; i++)
                 {
                     if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
                     {

@@ -9,6 +9,8 @@ Testing + Packaging
 - Run + generate unit tests (dmc will likely break something in there).
 / Green hill demo song.
 	- Add to Android + Windows Setup (how2 need to fix volume first)
+- Update doc.
+- Retest instrument/arpeggio drag. I think the button height thing will break it.
 - Test Stereo stuff :
 	/ Audio export
 	/ Video export
@@ -16,11 +18,23 @@ Testing + Packaging
 
 Small fixes:
 ============
+x BUG: Metronome pitch is wrong in stereo.
+- BUG: MacOS : "If you make the window fill the screen (by double clicking the top bar), then go into fullscreen, the mouse is inaccurate."
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value
-- BUG : MacOS : "If you make the window fill the screen (by double clicking the top bar), then go into fullscreen, the mouse is inaccurate."
 - Export selected song by default
 - Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
 - Register viewer.
+	x Test custom draw.
+	- Then real register logic.
+		- Test PAL frequencies.
+		- Must have a master switch for register viewer (in reset).
+		- NesSndEmu must maintaint write frame number for all registers
+		- Each time EndFrame() is called, we copy the register values.
+		- The base player reads back the register values after end frame.
+		- The player has a function to access this (need a lock there)
+	- Tab : Make it work + consistent with other tabs
+	- Make sure it works with scrolling => DOESNT SCROLL ALL THE WAY DOWN!
+	- Make only work for SongPlayer for now.
 
 3.4.0
 =====

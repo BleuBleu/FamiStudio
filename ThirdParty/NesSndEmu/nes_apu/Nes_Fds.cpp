@@ -23,6 +23,7 @@ void Nes_Fds::reset()
 	memset(&osc.wave, 0, sizeof(osc.wave));
 	memset(&osc.modt, 0, sizeof(osc.modt));
 	memset(&osc.regs, 0, sizeof(osc.regs));
+	memset(&osc.ages, 0, sizeof(osc.ages));
 	osc.mod_pos = 0;
 	osc.mod_phase = 0;
 	osc.mod_pos = 0;
@@ -93,6 +94,7 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			}
 
 			osc.regs[reg] = data;
+			osc.ages[reg] = 0;
 		}
 	}
 }
@@ -251,4 +253,18 @@ void Nes_Fds::write_shadow_register(int addr, int data)
 			shadow_regs[addr - regs_addr] = data;
 		}
 	}
+}
+
+void Nes_Fds::get_register_values(struct fds_register_values* regs)
+{
+	for (int i = 0; i < regs_count; i++)
+	{
+		regs->regs[i] = osc.regs[i];
+		regs->ages[i] = osc.ages[i];
+
+		osc.ages[i] = increment_saturate(osc.ages[i]);
+	}
+
+	memcpy(&regs->wave[0], &osc.wave[0], wave_count);
+	memcpy(&regs->modt[0], &osc.modt[0], modt_count);
 }

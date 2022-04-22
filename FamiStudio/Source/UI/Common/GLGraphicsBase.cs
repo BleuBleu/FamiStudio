@@ -175,9 +175,9 @@ namespace FamiStudio
             return new Rectangle(rc.Left, windowSizeY - rc.Top - rc.Height, rc.Width, rc.Height);
         }
 
-        public float MeasureString(string text, GLFont font)
+        public float MeasureString(string text, GLFont font, bool mono = false)
         {
-            font.MeasureString(text, out int minX, out int maxX);
+            font.MeasureString(text, mono, out int minX, out int maxX);
             return maxX - minX;
         }
 
@@ -564,36 +564,55 @@ namespace FamiStudio
             return false;
         }
 
-        public void MeasureString(string text, out int minX, out int maxX)
+        public void MeasureString(string text, bool mono, out int minX, out int maxX)
         {
             minX = 0;
             maxX = 0;
 
             int x = 0;
 
-            for (int i = 0; i < text.Length; i++)
+            if (mono)
             {
-                var c0 = text[i];
-                var info = GetCharInfo(c0);
+                var info = GetCharInfo('0');
 
-                int x0 = x + info.xoffset;
-                int x1 = x0 + info.width;
-
-                minX = Math.Min(minX, x0);
-                maxX = Math.Max(maxX, x1);
-
-                x += info.xadvance;
-                if (i != text.Length - 1)
+                for (int i = 0; i < text.Length; i++)
                 {
-                    char c1 = text[i + 1];
-                    x += GetKerning(c0, c1);
+                    var c0 = text[i];
+                    int x0 = x + info.xoffset;
+                    int x1 = x0 + info.width;
+
+                    minX = Math.Min(minX, x0);
+                    maxX = Math.Max(maxX, x1);
+
+                    x += info.xadvance;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < text.Length; i++)
+                {
+                    var c0 = text[i];
+                    var info = GetCharInfo(c0);
+
+                    int x0 = x + info.xoffset;
+                    int x1 = x0 + info.width;
+
+                    minX = Math.Min(minX, x0);
+                    maxX = Math.Max(maxX, x1);
+
+                    x += info.xadvance;
+                    if (i != text.Length - 1)
+                    {
+                        char c1 = text[i + 1];
+                        x += GetKerning(c0, c1);
+                    }
                 }
             }
         }
 
-        public int MeasureString(string text)
+        public int MeasureString(string text, bool mono)
         {
-            MeasureString(text, out var minX, out var maxX);
+            MeasureString(text, mono, out var minX, out var maxX);
             return maxX - minX;
         }
     }
@@ -860,8 +879,9 @@ namespace FamiStudio
         BottomCenter = Bottom | Center,
         BottomRight  = Bottom | Right,
 
-        Clip     = 1 << 7,
-        Ellipsis = 1 << 8
+        Clip      = 1 << 7,
+        Ellipsis  = 1 << 8,
+        Monospace = 1 << 9
     }
 
     // This is common to both OGL, it only does data packing, no GL calls.
@@ -1590,6 +1610,8 @@ namespace FamiStudio
         public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, RenderTextFlags flags = RenderTextFlags.None, float width = 0, float height = 0)
         {
             Debug.Assert(!flags.HasFlag(RenderTextFlags.Clip) || !flags.HasFlag(RenderTextFlags.Ellipsis));
+            Debug.Assert(!flags.HasFlag(RenderTextFlags.Monospace) || !flags.HasFlag(RenderTextFlags.Ellipsis));
+            Debug.Assert(!flags.HasFlag(RenderTextFlags.Monospace) || !flags.HasFlag(RenderTextFlags.Clip));
             Debug.Assert(!flags.HasFlag(RenderTextFlags.Ellipsis) || width > 0);
             Debug.Assert((flags & RenderTextFlags.HorizontalAlignMask) == RenderTextFlags.Left || width  > 0);
             Debug.Assert((flags & RenderTextFlags.VerticalAlignMask)   == RenderTextFlags.Top  || height > 0);
@@ -1769,10 +1791,11 @@ namespace FamiStudio
                 {
                     var alignmentOffsetX = 0;
                     var alignmentOffsetY = font.OffsetY;
+                    var mono = inst.flags.HasFlag(RenderTextFlags.Monospace);
 
                     if (inst.flags.HasFlag(RenderTextFlags.Ellipsis))
                     {
-                        font.MeasureString("...", out var dotsMinX, out var dotsMaxX);
+                        font.MeasureString("...", mono, out var dotsMinX, out var dotsMaxX);
                         var ellipsisSizeX = (dotsMaxX - dotsMinX) * 2; // Leave some padding.
                         if (font.TruncateString(ref inst.text, (int)(inst.rect.Width - ellipsisSizeX)))
                             inst.text += "...";
@@ -1780,7 +1803,7 @@ namespace FamiStudio
 
                     if (inst.flags != RenderTextFlags.TopLeft)
                     {
-                        font.MeasureString(inst.text, out var minX, out var maxX);
+                        font.MeasureString(inst.text, mono, out var minX, out var maxX);
 
                         var halign = inst.flags & RenderTextFlags.HorizontalAlignMask;
                         var valign = inst.flags & RenderTextFlags.VerticalAlignMask;
@@ -1821,9 +1844,54 @@ namespace FamiStudio
 
                     int x = (int)(inst.rect.X + alignmentOffsetX);
                     int y = (int)(inst.rect.Y + alignmentOffsetY);
+                    
+                    if (mono)
+                    {
+                        var infoMono = font.GetCharInfo('0');
 
-                    // Slow path when there is clipping.
-                    if (inst.flags.HasFlag(RenderTextFlags.Clip))
+                        for (int i = 0; i < inst.text.Length; i++)
+                        {
+                            var c0 = inst.text[i];
+                            var info = font.GetCharInfo(c0);
+
+                            var monoAjustX = (infoMono.width  - info.width  + 1) / 2;
+                            var monoAjustY = (infoMono.height - info.height + 1) / 2;
+
+                            var x0 = x + info.xoffset + monoAjustX;
+                            var y0 = y + info.yoffset;
+                            var x1 = x0 + info.width;
+                            var y1 = y0 + info.height;
+
+                            vtxArray[vtxIdx++] = x0;
+                            vtxArray[vtxIdx++] = y0;
+                            vtxArray[vtxIdx++] = x1;
+                            vtxArray[vtxIdx++] = y0;
+                            vtxArray[vtxIdx++] = x1;
+                            vtxArray[vtxIdx++] = y1;
+                            vtxArray[vtxIdx++] = x0;
+                            vtxArray[vtxIdx++] = y1;
+
+                            texArray[texIdx++] = info.u0;
+                            texArray[texIdx++] = info.v0;
+                            texArray[texIdx++] = info.u1;
+                            texArray[texIdx++] = info.v0;
+                            texArray[texIdx++] = info.u1;
+                            texArray[texIdx++] = info.v1;
+                            texArray[texIdx++] = info.u0;
+                            texArray[texIdx++] = info.v1;
+
+                            colArray[colIdx++] = packedColor;
+                            colArray[colIdx++] = packedColor;
+                            colArray[colIdx++] = packedColor;
+                            colArray[colIdx++] = packedColor;
+
+                            x += infoMono.xadvance;
+                        }
+
+                        idxIdx += inst.text.Length * 6;
+                        draw.count += inst.text.Length * 6;
+                    }
+                    else if (inst.flags.HasFlag(RenderTextFlags.Clip)) // Slow path when there is clipping.
                     {
                         var clipMinX = (int)(inst.rect.X);
                         var clipMaxX = (int)(inst.rect.X + inst.rect.Width);

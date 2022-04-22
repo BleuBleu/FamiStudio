@@ -107,6 +107,7 @@ namespace FamiStudio
         public MobilePiano     MobilePiano     => mainForm.MobilePiano;
         public RenderControl   ActiveControl   => mainForm.ActiveControl;
         public FamiStudioForm  MainForm        => mainForm;
+        public BasePlayer      ActivePlayer    => IsPlaying ? (BasePlayer)songPlayer : (BasePlayer)instrumentPlayer;
 
         public bool IsSequencerActive          => ActiveControl == Sequencer;
         public bool IsPianoRollActive          => ActiveControl == PianoRoll;
