@@ -52,7 +52,7 @@
     <DebugSymbols>true</DebugSymbols>
     <NoWarn>CS0162,CS0649</NoWarn>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7</LangVersion>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
