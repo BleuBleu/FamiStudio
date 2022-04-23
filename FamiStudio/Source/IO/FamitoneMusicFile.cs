@@ -48,6 +48,7 @@ namespace FamiStudio
         private bool usesArpeggio = false;
         private bool usesDutyCycleEffect = false;
         private bool usesDelayedNotesOrCuts = false;
+        private bool usesDeltaCounter = false;
 
         public FamitoneMusicFile(int kernel, bool outputLog)
         {
@@ -429,7 +430,7 @@ namespace FamiStudio
                         {
                             var n163WaveIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.N163Waveform]]);
 
-                            lines.Add($"\t{db} ${instrument.N163WavePos / 2:x2}, ${instrument.N163WaveSize / 2:x2}");
+                            lines.Add($"\t{db} ${instrument.N163WavePos:x2}, ${instrument.N163WaveSize:x2}");
                             lines.Add($"\t{dw} {ll}env{n163WaveIdx}");
                             lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
                         }
@@ -492,7 +493,7 @@ namespace FamiStudio
                             sampleSize = mapping.Sample.ProcessedData.Length >> 4;
                             sampleName = $"({mapping.Sample.Name})";
                             samplePitchAndLoop = mapping.Pitch | ((mapping.Loop ? 1 : 0) << 6);
-                            sampleInitialDmcValue = mapping.Sample.DmcInitialValueDiv2 * 2;
+                            sampleInitialDmcValue = mapping.OverrideDmcInitialValue ? mapping.DmcInitialValueDiv2 * 2 : mapping.Sample.DmcInitialValueDiv2 * 2;
                         }
 
                         if (kernel == FamiToneKernel.FamiStudio)
@@ -976,6 +977,15 @@ namespace FamiStudio
                             usesDelayedNotesOrCuts = true;
                         }
 
+                        if (note.HasDeltaCounter)
+                        {
+                            // Use hi-bit to flag if we need to apply it immediately (no samples playing this frame)
+                            //or a bit later (when playing the sample, overriding the initial DMC value).
+                            songData.Add($"${0x6f:x2}+");
+                            songData.Add($"${((note.IsMusical ? 0x00 : 0x80) | (note.DeltaCounterDiv2 * 2)):x2}");
+                            usesDeltaCounter = true;
+                        }
+
                         if (note.IsValid)
                         {
                             // Instrument change.
@@ -1080,15 +1090,16 @@ namespace FamiStudio
 
                                 // TODO: Change this, this is a shit show.
                                 if (numEmptyNotes >= maxRepeatCount || 
-                                    note.IsValid        ||
-                                    note.HasVolume      || 
-                                    note.HasVibrato     ||
-                                    note.HasFinePitch   ||
-                                    note.HasDutyCycle   ||
-                                    note.HasFdsModSpeed || 
-                                    note.HasFdsModDepth ||
-                                    note.HasNoteDelay   ||
-                                    note.HasCutDelay    ||
+                                    note.IsValid         ||
+                                    note.HasVolume       || 
+                                    note.HasVibrato      ||
+                                    note.HasFinePitch    ||
+                                    note.HasDutyCycle    ||
+                                    note.HasFdsModSpeed  || 
+                                    note.HasFdsModDepth  ||
+                                    note.HasNoteDelay    ||
+                                    note.HasCutDelay     ||
+                                    note.HasDeltaCounter ||
                                     (isSpeedChannel && FindEffectParam(song, p, time, Note.EffectSpeed) >= 0))
                                 {
                                     break;
@@ -1131,105 +1142,113 @@ namespace FamiStudio
 
             // Number of bytes to hash to start searching.
             const int HashNumBytes = 4;
+            const bool DisableCompression = false; // For debugging
 
             var refs = new HashSet<int>();
             var jumpToRefs = new HashSet<int>();
             var patterns = new Dictionary<uint, List<int>>();
             var compressedData = new List<string>();
 
-            for (int i = 0; i < data.Count;)
+            if (DisableCompression)
             {
-                var crc = 0u;
-                var compressible = IsOpcode(data[i]); // Cant only compress at the start of an opcode
-
-                if (compressible)
+                compressedData = data;
+            }
+            else
+            {
+                for (int i = 0; i < data.Count;)
                 {
-                    // Look ahead 4 bytes and compute hash.
-                    for (int k = i; k < data.Count && k < i + HashNumBytes; k++)
-                    {
-                        var b = data[k];
+                    var crc = 0u;
+                    var compressible = IsOpcode(data[i]); // Cant only compress at the start of an opcode
 
-                        if (IsLabelOrRef(b))
+                    if (compressible)
+                    {
+                        // Look ahead 4 bytes and compute hash.
+                        for (int k = i; k < data.Count && k < i + HashNumBytes; k++)
                         {
-                            compressible = false;
-                            break;
+                            var b = data[k];
+
+                            if (IsLabelOrRef(b))
+                            {
+                                compressible = false;
+                                break;
+                            }
+
+                            crc = CRC32.Compute(b, crc);
                         }
 
-                        crc = CRC32.Compute(b, crc);
-                    }
-
-                    // Look at all the patterns matching the hash, take the longest.
-                    if (compressible && patterns.TryGetValue(crc, out var matchingPatterns))
-                    {
-                        var bestPatternIdx = -1;
-                        var bestPatternLen = -1;
-                        var bestPatternNumNotes = -1;
-
-                        foreach (var idx in matchingPatterns)
+                        // Look at all the patterns matching the hash, take the longest.
+                        if (compressible && patterns.TryGetValue(crc, out var matchingPatterns))
                         {
-                            var lastNoteIdx = -1;
-                            var numNotes = 0;
+                            var bestPatternIdx = -1;
+                            var bestPatternLen = -1;
+                            var bestPatternNumNotes = -1;
 
-                            for (int j = idx, k = i; j < compressedData.Count && k < data.Count && numNotes < 250; j++, k++)
+                            foreach (var idx in matchingPatterns)
                             {
-                                if (compressedData[j] != data[k] || IsLabelOrRef(compressedData[j]))
-                                    break;
+                                var lastNoteIdx = -1;
+                                var numNotes = 0;
 
-                                if (IsNote(compressedData[j]))
+                                for (int j = idx, k = i; j < compressedData.Count && k < data.Count && numNotes < 250; j++, k++)
                                 {
-                                    numNotes++;
-                                    lastNoteIdx = j;
+                                    if (compressedData[j] != data[k] || IsLabelOrRef(compressedData[j]))
+                                        break;
+
+                                    if (IsNote(compressedData[j]))
+                                    {
+                                        numNotes++;
+                                        lastNoteIdx = j;
+                                    }
+                                }
+
+                                if (numNotes >= minNotesForJump)
+                                {
+                                    var matchLen = lastNoteIdx - idx + 1;
+                                    if (matchLen > bestPatternLen)
+                                    {
+                                        bestPatternIdx = idx;
+                                        bestPatternLen = matchLen;
+                                        bestPatternNumNotes = numNotes;
+                                    }
                                 }
                             }
 
-                            if (numNotes >= minNotesForJump)
+                            // Output a jump to a ref if we found a good match.
+                            if (bestPatternIdx > 0)
                             {
-                                var matchLen = lastNoteIdx - idx + 1;
-                                if (matchLen > bestPatternLen)
-                                {
-                                    bestPatternIdx = idx;
-                                    bestPatternLen = matchLen;
-                                    bestPatternNumNotes = numNotes;
-                                }
+                                refs.Add(bestPatternIdx);
+                                jumpToRefs.Add(compressedData.Count);
+
+                                compressedData.Add("$ff");
+                                compressedData.Add($"${bestPatternNumNotes:x2}");
+                                compressedData.Add($"{ll}song{songIdx}ref{bestPatternIdx}");
+
+                                i += bestPatternLen;
+
+                                // No point of hashing jumps, we will never want to reuse those.
+                                continue;
                             }
                         }
-
-                        // Output a jump to a ref if we found a good match.
-                        if (bestPatternIdx > 0)
-                        {
-                            refs.Add(bestPatternIdx);
-                            jumpToRefs.Add(compressedData.Count);
-
-                            compressedData.Add("$ff");
-                            compressedData.Add($"${bestPatternNumNotes:x2}");
-                            compressedData.Add($"{ll}song{songIdx}ref{bestPatternIdx}");
-
-                            i += bestPatternLen;
-
-                            // No point of hashing jumps, we will never want to reuse those.
-                            continue;
-                        }
                     }
-                }
 
-                compressedData.Add(data[i++]);
+                    compressedData.Add(data[i++]);
 
-                // Keep hash of compressed data.
-                if (compressedData.Count >= HashNumBytes)
-                {
-                    crc = 0u;
-
-                    var startHashIdx = compressedData.Count - HashNumBytes;
-                    for (int j = startHashIdx; j < compressedData.Count; j++)
-                        crc = CRC32.Compute(compressedData[j], crc);
-
-                    if (!patterns.TryGetValue(crc, out var list))
+                    // Keep hash of compressed data.
+                    if (compressedData.Count >= HashNumBytes)
                     {
-                        list = new List<int>();
-                        patterns.Add(crc, list);
-                    }
+                        crc = 0u;
 
-                    list.Add(startHashIdx);
+                        var startHashIdx = compressedData.Count - HashNumBytes;
+                        for (int j = startHashIdx; j < compressedData.Count; j++)
+                            crc = CRC32.Compute(compressedData[j], crc);
+
+                        if (!patterns.TryGetValue(crc, out var list))
+                        {
+                            list = new List<int>();
+                            patterns.Add(crc, list);
+                        }
+
+                        list.Add(startHashIdx);
+                    }
                 }
             }
 
@@ -1387,16 +1406,17 @@ namespace FamiStudio
                                 if (note.IsRelease)
                                     note.Value = Note.NoteInvalid;
 
-                                note.HasAttack      = true;
-                                note.HasVibrato     = false;
-                                note.HasVolume      = false;
-                                note.HasVolumeSlide = false;
-                                note.IsSlideNote    = false;
-                                note.HasFinePitch   = false;
-                                note.HasDutyCycle   = false;
-                                note.HasNoteDelay   = false;
-                                note.HasCutDelay    = false;
-                                note.Arpeggio       = null;
+                                note.HasAttack       = true;
+                                note.HasVibrato      = false;
+                                note.HasVolume       = false;
+                                note.HasVolumeSlide  = false;
+                                note.IsSlideNote     = false;
+                                note.HasFinePitch    = false;
+                                note.HasDutyCycle    = false;
+                                note.HasNoteDelay    = false;
+                                note.HasCutDelay     = false;
+                                note.HasDeltaCounter = false;
+                                note.Arpeggio        = null;
                             }
                             else
                             {
@@ -1580,6 +1600,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.");
                     if (usesDutyCycleEffect)
                         Log.LogMessage(LogSeverity.Info, "Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
+                    if (usesDeltaCounter)
+                        Log.LogMessage(LogSeverity.Info, "DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
                 }
             }
 

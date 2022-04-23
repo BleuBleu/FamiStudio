@@ -89,12 +89,13 @@ namespace FamiStudio
         private readonly string ShowFamitrackerStopNotesTooltip = "When enabled, partially transparent stop notes will be displayed whenever a note ends, when using FamiTracker tempo mode. This can help you to visually align note delays with stop notes.";
         private readonly string ShowOscilloscopeTooltip         = "When enabled, the oscilloscope will be visible in the toolbar. Disabling it can help performances on low-end systems.";
         private readonly string CompactSequencerTooltip         = "When enabled, the Sequencer will always try to keep its size as small as possible.";
+        private readonly string ShowRegisterViewerTooltip       = "When enabled, the 'Register' tab will be visible in the Project Explorer.";
 
         // Sound
         private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
         private readonly string StopInstrumentTooltip           = "Number of secondes to wait before stopping instruments that have a release part in their volume envelopes.";
         private readonly string PreventPoppingTooltip           = "When enabled, FamiStudio will use the sweep unit to prevent popping around certain notes on the 2 main square channels. Also known as 'Blargg's Smooth Vibrato' technique.";
-        private readonly string ClampPeriodsTooltip             = "When enabled, FamiStudio will clamp periods to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods can sometimes wrap-around.";
+        private readonly string ClampPeriodsTooltip             = "When enabled, FamiStudio will clamp periods and note values to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods and notes can sometimes wrap-around.";
         private readonly string NoDragSoundTooltip              = "When enabled, FamiStudio wil not emit sounds when dragging notes in the Piano Roll if the song is playing.";
         private readonly string MetronomeVolumeTooltip          = "Volume of the metronome.";
 
@@ -198,20 +199,22 @@ namespace FamiStudio
                     page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels, ShowNoteLabelsTooltip); // 6
                     page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 7
                     page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope, ShowOscilloscopeTooltip); // 8
-                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 9
+                    page.AddCheckBox("Show Register Viewer Tab:", Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 9
+                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 10
                     page.SetPropertyVisible(0, !PlatformUtils.IsMacOS); // No manual DPI selection on MacOS.
                     page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(8, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(9, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(10, PlatformUtils.IsDesktop);
                     break;
-                    }
+                }
                 case ConfigSection.Sound:
                 {
                     page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16, NumBufferedFramesTooltip); // 0
                     page.AddNumericUpDown("Stop instruments after (sec):", Settings.InstrumentStopTime, 0, 10, StopInstrumentTooltip); // 1
                     page.AddCheckBox("Prevent popping on square channels:", Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 2
-                    page.AddCheckBox("Clamp Periods:", Settings.ClampPeriods, ClampPeriodsTooltip); // 3
+                    page.AddCheckBox("Clamp periods and notes:", Settings.ClampPeriods, ClampPeriodsTooltip); // 3
                     page.AddCheckBox("Mute drag sounds during playback:", Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 4
                     page.AddSlider("Metronome volume:", Settings.MetronomeVolume, 1.0, 200.0, 1.0, 0, null, MetronomeVolumeTooltip); // 5
                     break;
@@ -502,7 +505,8 @@ namespace FamiStudio
                     Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
                     Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(7);
                     Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(8);
-                    Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(9);
+                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(9);
+                    Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(10);
 
                     // Sound
                     Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);

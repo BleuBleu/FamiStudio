@@ -48,6 +48,7 @@ namespace FamiStudio
             numBufferedFrames = numBuffers;
             bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
             audioStream = new AudioStream(sampleRate, stereo, bufferSize, numBufferedFrames, AudioBufferFillCallback);
+            registerValues.SetPalMode(pal);
         }
 
         protected short[] MixSamples(short[] emulation, short[] metronome, int metronomeIndex, float pitch, float volume)
@@ -59,8 +60,20 @@ namespace FamiStudio
                 var i = 0;
                 var j = (float)metronomeIndex;
 
-                for (; i < newSamples.Length && (int)j < metronome.Length; i++, j += pitch)
-                    newSamples[i] = (short)Utils.Clamp((int)(emulation[i] + metronome[(int)j] * volume), short.MinValue, short.MaxValue);
+                if (stereo)
+                {
+                    Debug.Assert((newSamples.Length & 1) == 0);
+                    for (; i < newSamples.Length && (int)j < metronome.Length; i += 2, j += pitch)
+                    {
+                        newSamples[i + 0] = (short)Utils.Clamp((int)(emulation[i + 0] + metronome[(int)j] * volume), short.MinValue, short.MaxValue);
+                        newSamples[i + 1] = (short)Utils.Clamp((int)(emulation[i + 1] + metronome[(int)j] * volume), short.MinValue, short.MaxValue);
+                    }
+                }
+                else
+                {
+                    for (; i < newSamples.Length && (int)j < metronome.Length; i++, j += pitch)
+                        newSamples[i] = (short)Utils.Clamp((int)(emulation[i] + metronome[(int)j] * volume), short.MinValue, short.MaxValue);
+                }
 
                 if (i != newSamples.Length)
                     Array.Copy(emulation, i, newSamples, i, newSamples.Length - i);

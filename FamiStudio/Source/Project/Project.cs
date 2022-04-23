@@ -19,7 +19,7 @@ namespace FamiStudio
         // Version 10 = FamiStudio 3.0.0 (VRC6 saw master volume, groove, song sorting)
         // Version 11 = FamiStudio 3.1.0 (Volume slides, DPCM fine pitch)
         // Version 12 = FamiStudio 3.2.0 (Multiple expansions, overclocking)
-        // Version 13 = FamiStudio 3.3.0 (EPSM)
+        // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
         public static int Version = 13;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
@@ -797,11 +797,10 @@ namespace FamiStudio
 
         public int[] GetActiveExpansions()
         {
-            if (!UsesAnyExpansionAudio)
-                return null;
+            var idx = 1;
+            var expansions = new int[Utils.NumberOfSetBits(expansionMask) + 1];
 
-            var idx = 0;
-            var expansions = new int[Utils.NumberOfSetBits(expansionMask)];
+            expansions[0] = ExpansionType.None;
 
             for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
             {
@@ -1648,8 +1647,8 @@ namespace FamiStudio
         {
             // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. We
             // don't allow these files to be open with the mainline version.
-            if (version < 13)
-                SetExpansionAudioMask(expansionMask & (~ExpansionType.EPSMMask));
+            if (version < 13 && (expansionMask & ExpansionType.EPSMMask) != 0)
+                SetExpansionAudioMask(expansionMask & (~ExpansionType.EPSMMask), expansionNumN163Channels);
         }
 
         public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)

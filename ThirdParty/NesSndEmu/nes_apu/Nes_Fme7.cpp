@@ -150,3 +150,15 @@ void Nes_Fme7::write_shadow_register(int addr, int data)
 	else if (addr >= data_addr)
 		shadow_internal_regs[latch] = data;
 }
+
+void Nes_Fme7::get_register_values(struct s5b_register_values* r)
+{
+	for (int i = 0; i < reg_count; i++)
+	{
+		r->regs[i] = regs[i];
+		r->ages[i] = ages[i];
+
+		ages[i] = increment_saturate(ages[i]);
+	}
+}
+

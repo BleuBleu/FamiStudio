@@ -206,6 +206,7 @@ namespace FamiStudio
             "EffectNoteDelay",
             "EffectCutDelay",
             "EffectVolume",
+            "EffectDutyCycle",
             "EffectFrame" // Special background rectangle image.
         };
 
@@ -932,7 +933,7 @@ namespace FamiStudio
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, Theme.DarkGreyLineColor2));
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
-            fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
+            fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0", false) : 1;
 
             if (editMode != EditionMode.VideoRecording)
             {
@@ -2523,6 +2524,7 @@ namespace FamiStudio
 
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
+                        if (mapping.OverrideDmcInitialValue) text += $" , DMC Initial value = {mapping.DmcInitialValueDiv2}";
 
                         r.cf.DrawText(text, ThemeResources.FontSmall, dpcmTextPosX, 0, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft, 0, noteSizeY);
                         r.cf.PopTransform();
@@ -3692,7 +3694,11 @@ namespace FamiStudio
             var dlg = new PropertyDialog("DPCM Key Properties", PointToScreen(pt), 280, false, pt.Y > Height / 2);
             dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
             dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
+            dlg.Properties.AddCheckBox("Override DMC Initial Value :", mapping.OverrideDmcInitialValue); // 2
+            dlg.Properties.AddNumericUpDown("DMC Initial Value :", mapping.DmcInitialValueDiv2, 0, 63); // 3
             dlg.Properties.Build();
+            dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
+            dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
@@ -3701,10 +3707,20 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                     mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
                     mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
+                    mapping.OverrideDmcInitialValue = dlg.Properties.GetPropertyValue<bool>(2);
+                    mapping.DmcInitialValueDiv2 = dlg.Properties.GetPropertyValue<int>(3);
                     App.UndoRedoManager.EndTransaction();
                     MarkDirty();
                 }
             });
+        }
+
+        private void DPCMSampleMapping_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        {
+            if (propIdx == 2)
+            {
+                props.SetPropertyEnabled(3, (bool)value);
+            }
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)

@@ -304,6 +304,7 @@ void FASTCALL CNSFCore::WriteMemory_pAPU(WORD a,BYTE v)
 		}
 		else
 			mWave_TND.nDMCOutput = v;
+		mWave_TND.bDMCLastDeltaWrite = v;
 		break;
 
 	case 0x4012:
@@ -1058,7 +1059,7 @@ CNSFCore::CNSFCore()
 
 	SetPlaybackOptions(nSampleRate,nMonoStereo);
 
-	bDMCPopReducer = 1;
+	bDMCPopReducer = 0;
 
 	for(i = 0; i < 8; i++)
 		mWave_N106.fFrequencyLookupTable[i] = (((i + 1) * 45 * 0x40000) / (float)NES_FREQUENCY) * (float)NTSC_FREQUENCY;
@@ -2407,6 +2408,10 @@ int CNSFCore::GetState(int channel, int state, int sub)
 						bank = (bank + 1) & 0x07;
 					}
 					return mWave_TND.pDMCDMAPtr[bank][addr];
+				}
+				case STATE_DPCMCOUNTER:
+				{
+					return mWave_TND.bDMCLastDeltaWrite;
 				}
 			}
 			break;

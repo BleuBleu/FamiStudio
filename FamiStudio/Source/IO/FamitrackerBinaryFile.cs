@@ -254,22 +254,6 @@ namespace FamiStudio
             }
         }
 
-        private void ReadInstrumentEPSM(Instrument instrument, int instIdx, ref int idx)
-        {
-            ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopesExp);
-            instrument.EpsmPatch = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-
-            if (instrument.EpsmPatch == 0)
-            {
-                for (int i = 0; i < 31; ++i)
-                    instrument.EpsmPatchRegs[i] = bytes[idx++];
-            }
-            else
-            {
-                idx += 31;
-            }
-        }
-
         private void ReadInstrumentFds(Instrument instrument, int instIdx, ref int idx)
         {
             var wavEnv = instrument.Envelopes[EnvelopeType.FdsWaveform];
@@ -322,7 +306,6 @@ namespace FamiStudio
             ReadCommonEnvelopes(instrument, instIdx, ref idx, envelopesExp);
         }
 
-
         private bool ReadInstruments(int idx)
         {
             var instrumentCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
@@ -347,7 +330,6 @@ namespace FamiStudio
                     case ExpansionType.Fds:  ReadInstrumentFds(instrument,  index, ref idx); break;
                     case ExpansionType.N163: ReadInstrumentN163(instrument, index, ref idx); break;
                     case ExpansionType.S5B:  ReadInstrumentS5B(instrument,  index, ref idx); break;
-                    case ExpansionType.EPSM: ReadInstrumentEPSM(instrument, index, ref idx); break;
                     default:
                         return false;
                 }

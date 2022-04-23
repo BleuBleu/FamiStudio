@@ -35,7 +35,8 @@ public:
 	void write_addr( int );
 
 	void write_register( cpu_time_t, int addr, int data );
-	
+	void get_register_values(struct n163_register_values* regs);
+
 	// to do: implement save/restore
 	void save_snapshot( namco_snapshot_t* out );
 	void load_snapshot( namco_snapshot_t const& );
@@ -68,6 +69,7 @@ private:
 	
 	enum { reg_count = 0x80 };
 	BOOST::uint8_t reg [reg_count];
+	BOOST::uint8_t age [reg_count];
 	Blip_Synth<blip_good_quality,225> synth;
 	Blip_Buffer* buffer;
 
@@ -75,6 +77,14 @@ private:
 
 	BOOST::uint8_t& access();
 	void run_until( cpu_time_t );
+};
+
+// Must match the definition in NesApu.cs.
+struct n163_register_values
+{
+	// $4800 (Internal registers 0 to 127).
+	unsigned char regs[128];
+	unsigned char ages[128];
 };
 
 inline void Nes_Namco::volume( double v ) { synth.volume( v ); }
@@ -95,6 +105,7 @@ inline void Nes_Namco::write_data( cpu_time_t time, int data )
 {
 	if (time > last_time)
 		run_until( time );
+	age[addr_reg & 0x7f] = 0;
 	access() = data;
 }
 

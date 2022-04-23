@@ -14,6 +14,7 @@ class Nes_Apu;
 struct Nes_Osc
 {
 	unsigned char regs [4];
+	unsigned char ages [4];
 	bool reg_written [4];
 	Blip_Buffer* output;
 	int length_counter;// length counter (0 if unused by oscillator)
@@ -27,6 +28,7 @@ struct Nes_Osc
 	void reset() {
 		delay = 0;
 		last_amp = 0;
+		memset(ages, 0, sizeof(ages));
 	}
 	int update_amp( int amp ) {
 		int delta = amp - last_amp;
@@ -155,6 +157,18 @@ struct Nes_Dmc : Nes_Osc
 	virtual void set_output(Blip_Buffer* output) override;
 	int count_reads( cpu_time_t, cpu_time_t* ) const;
 	cpu_time_t next_read_time() const;
+};
+
+// Must match the definition in NesApu.cs.
+struct apu_register_values
+{
+	// $4000 to $4013
+	unsigned char regs[20];
+	unsigned char ages[20];
+
+	// Extra internal states.
+	unsigned char dpcm_bytes_left;
+	unsigned char dpcm_dac;
 };
 
 #endif

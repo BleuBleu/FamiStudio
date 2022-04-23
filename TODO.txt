@@ -1,39 +1,19 @@
-3.2.4?
-======
-
 3.3.0
 =====
 Testing + Packaging
 ===================
 - Update dedricil songs
 - Eclipse demo song.
-- Sonic demo song.
+- Sonic demo song (TODO fix, will be corrupted).
 - Recompile all roms, NSF, etc.
-- Bump sound engine version.
-- Run + generate unit tests.
-- Recompile NotSoFatso on all platforms.
+- Run + generate unit tests (dmc will likely break something in there).
 / Green hill demo song.
 	- Add to Android + Windows Setup (how2 need to fix volume first)
+- Update doc.
+- Retest instrument/arpeggio drag. I think the button height thing will break it.
 - Test Stereo stuff :
 	/ Audio export
 	/ Video export
-	- Test DPCM preview on Mac
-- Remove EPSM code from nsf import.
-
-Small fixes:
-============
-x Attack issue from how2 (Mario_NSF.mp3 DM)
-x Import Alternative_Fuel_192pl.nsf. Not right speed.
-x N163 : Write address location in the waveform editor (how2 idea)
-x CTRL+A to select all? 
-x Make TimeFormat = 1 the default
-x Drag an instrument on sequencer to replace instrument on pattern?
-x Two joshop issues from github.
-x Integrity issue : Open the VRC6 ftm with lots of song. Delete a bunch + do cleanup.
-- Android : Starting scroll on a slider (in vrc7 instrument) changes the value
-- Export selected song by default
-- Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
-- Register viewer.
 
 3.4.0
 =====
@@ -51,10 +31,13 @@ x Integrity issue : Open the VRC6 ftm with lots of song. Delete a bunch + do cle
 	- PE
 		- 
 P1:
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value
+- Export selected song by default
+- Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
+- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
-- Option to override DMC initial value on sample mapping.
 - Improve oscilloscope stability (min square norm?)
 - Uncompressed envelopes
 - Improve no-attack.

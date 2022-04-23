@@ -194,6 +194,11 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 ; Must be enabled if any song uses the "Duty Cycle" effect (equivalent of FamiTracker Vxx, also called "Timbre").  
 ; FAMISTUDIO_USE_DUTYCYCLE_EFFECT  = 1
 
+; Must be enabled if any song uses the DPCM delta counter. Only makes sense if DPCM samples
+; are enabled (FAMISTUDIO_CFG_DPCM_SUPPORT).
+; More information at: (TODO)
+; FAMISTUDIO_USE_DELTA_COUNTER     = 1
+
 .endif
 
 ; Memory location of the DPCM samples. Must be between $c000 and $ffc0, and a multiple of 64.
@@ -326,6 +331,10 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
     FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 0
 .endif
 
+.ifndef FAMISTUDIO_USE_DELTA_COUNTER
+    FAMISTUDIO_USE_DELTA_COUNTER = 0
+.endif
+
 .ifndef FAMISTUDIO_CFG_THREAD
     FAMISTUDIO_CFG_THREAD = 0
 .endif
@@ -361,6 +370,10 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 
 .if FAMISTUDIO_EXP_N163 && ((FAMISTUDIO_EXP_N163_CHN_CNT < 1) || (FAMISTUDIO_EXP_N163_CHN_CNT > 8))
     .error "N163 only supports between 1 and 8 channels."
+.endif
+
+.if FAMISTUDIO_USE_DELTA_COUNTER && (FAMISTUDIO_CFG_DPCM_SUPPORT = 0)
+    .error "Delta counter only makes sense if DPCM samples are enabled."
 .endif
 
 .ifndef FAMISTUDIO_ASM6_ZP_ENUM
@@ -734,6 +747,9 @@ famistudio_chn_inst_changed:      .dsb FAMISTUDIO_NUM_CHANNELS-14
 .endif
 .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .dsb FAMISTUDIO_NUM_CHANNELS
+.endif
+.if FAMISTUDIO_USE_DELTA_COUNTER
+famistudio_dmc_delta_counter:     .dsb 1
 .endif
 .if FAMISTUDIO_EXP_VRC6
 famistudio_vrc6_saw_volume:       .dsb 1 ; -1 = 1/4, 0 = 1/2, 1 = Full
@@ -1562,6 +1578,11 @@ famistudio_music_play:
     sta famistudio_vrc6_saw_volume
 .endif
 
+.if FAMISTUDIO_USE_DELTA_COUNTER
+    lda #$ff
+    sta famistudio_dmc_delta_counter
+.endif
+
 .if FAMISTUDIO_EXP_FDS
     lda #0
     sta famistudio_fds_mod_speed+0
@@ -1817,6 +1838,7 @@ famistudio_get_note_pitch_vrc6_saw:
 .macro famistudio_smooth_vibrato pulse_lo, pulse_prev, reg_hi, reg_lo, reg_sweep
 
     ; Blaarg's smooth vibrato technique, only used if high period delta is 1 or -1.
+    and #7 ; Clamp hi-period to sane range, breaks smooth vibrato otherwise.
     tax ; X = new hi-period
     sec
     sbc pulse_prev ; A = signed hi-period delta.
@@ -4146,12 +4168,13 @@ famistudio_set_n163_instrument:
 
     famistudio_set_exp_instrument
 
-    ; Wave position
     lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH0_IDX,x
     beq @done
 
     lda famistudio_n163_wave_table-FAMISTUDIO_N163_CH0_IDX, x
     sta FAMISTUDIO_N163_ADDR
+
+    ; Wave position
     lda (ptr),y
     sta wave_pos
     sta FAMISTUDIO_N163_DATA
@@ -4159,12 +4182,12 @@ famistudio_set_n163_instrument:
 
     ; Wave length
     lda (ptr),y
+    lsr
     sta wave_len
-    lda #$00 ; 256 - wave length
+    lda #$80 ; (128 - wave length / 2) * 2 == 256 - wave length
     sec
     sbc wave_len
-    sec
-    sbc wave_len
+    asl
     sta famistudio_chn_n163_wave_len-FAMISTUDIO_N163_CH0_IDX, x
     iny
 
@@ -4177,6 +4200,7 @@ famistudio_set_n163_instrument:
 
     ; N163 wave
     lda wave_pos
+    lsr 
     ora #$80
     sta FAMISTUDIO_N163_ADDR
     ldy #0
@@ -4337,6 +4361,21 @@ famistudio_channel_update:
     sta famistudio_chn_volume_slide_target, x
     famistudio_add_16_8 channel_data_ptr, #2
     dey
+    jmp @read_byte 
+.endif
+
+.if FAMISTUDIO_USE_DELTA_COUNTER
+@special_dmc_counter:
+    lda (channel_data_ptr),y
+    bmi @set_immediately
+@store_for_later:
+    sta famistudio_dmc_delta_counter
+    bpl @inc_and_return
+@set_immediately:
+    and #$7f
+    sta FAMISTUDIO_APU_DMC_RAW
+@inc_and_return:
+    famistudio_inc_16 channel_data_ptr
     jmp @read_byte 
 .endif
 
@@ -4855,6 +4894,11 @@ famistudio_channel_update:
 .else
     .byte <@invalid_opcode                            ; $6e
 .endif
+.if FAMISTUDIO_USE_DELTA_COUNTER
+    .byte <@special_dmc_counter                       ; $6f
+.else
+    .byte <@invalid_opcode                            ; $6f
+.endif
 
 @famistudio_special_code_jmp_hi:
 .if FAMISTUDIO_USE_SLIDE_NOTES
@@ -4913,6 +4957,11 @@ famistudio_channel_update:
     .byte >@special_code_volume_slide                 ; $6e
 .else
     .byte >@invalid_opcode                            ; $6e
+.endif
+.if FAMISTUDIO_USE_DELTA_COUNTER
+    .byte >@special_dmc_counter                       ; $6f
+.else
+    .byte >@invalid_opcode                            ; $6f
 .endif
 
 ;======================================================================================================================
@@ -4973,9 +5022,21 @@ sample_play:
     lda (sample_data_ptr),y ; Pitch and loop
     sta FAMISTUDIO_APU_DMC_FREQ
     iny
+
+.if FAMISTUDIO_USE_DELTA_COUNTER
+    lda famistudio_dmc_delta_counter
+    bmi @read_dmc_initial_value
+    sta FAMISTUDIO_APU_DMC_RAW
+    lda #$ff
+    sta famistudio_dmc_delta_counter
+    bmi @start_dmc
+@read_dmc_initial_value:
+.endif    
+
     lda (sample_data_ptr),y ; Initial DMC counter
     sta FAMISTUDIO_APU_DMC_RAW
 
+@start_dmc:
     lda #%00011111 ; Start DMC
     sta FAMISTUDIO_APU_SND_CHN
 

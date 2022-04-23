@@ -11,6 +11,7 @@ struct fme7_apu_state_t
 {
 	enum { reg_count = 14 };
 	BOOST::uint8_t regs [reg_count];
+	BOOST::uint8_t ages [reg_count];
 	BOOST::uint8_t phases [3]; // 0 or 1
 	BOOST::uint8_t latch;
 	BOOST::uint16_t delays [3]; // a, b, c
@@ -35,6 +36,7 @@ public:
 	enum { latch_addr = 0xC000 };
 	
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
+	void get_register_values(struct s5b_register_values* regs);
 
 	// (addr & addr_mask) == latch_addr
 	void write_latch( int );
@@ -114,6 +116,7 @@ inline void Nes_Fme7::write_data( blip_time_t time, int data )
 	
 	run_until( time );
 	regs [latch] = data;
+	ages [latch] = 0;
 }
 
 inline void Nes_Fme7::end_frame( blip_time_t time )
@@ -136,5 +139,13 @@ inline void Nes_Fme7::load_state( fme7_apu_state_t const& in )
 	fme7_apu_state_t* state = this;
 	*state = in;
 }
+
+// Must match the definition in NesApu.cs.
+struct s5b_register_values
+{
+	// e000 (Internal registers 0 to f).
+	unsigned char regs[16];
+	unsigned char ages[16];
+};
 
 #endif

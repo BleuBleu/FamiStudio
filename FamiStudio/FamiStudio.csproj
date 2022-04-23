@@ -39,7 +39,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0649</NoWarn>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7</LangVersion>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -52,7 +52,7 @@
     <DebugSymbols>true</DebugSymbols>
     <NoWarn>CS0162,CS0649</NoWarn>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7</LangVersion>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
@@ -145,6 +145,7 @@
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Player\XAudio2Stream.cs" />
+    <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\Project\Channel.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
