@@ -1095,6 +1095,9 @@ namespace FamiStudio
         {
             Debug.Assert(captureOperation != CaptureOperation.MoveSlider);
 
+            if (selectedTab == TabType.Registers && !Settings.ShowRegisterViewer)
+                selectedTab = TabType.Project;
+
             UpdateRenderCoords(false);
 
             buttons.Clear();
@@ -1332,7 +1335,7 @@ namespace FamiStudio
         private void RenderTabs(RenderCommandList c)
         {
             var numTabs = (int)TabType.Count;
-            var tabSizeX = contentSizeX / numTabs;
+            var tabSizeX = Width / numTabs;
 
             for (int i = 0; i < numTabs; i++)
             {
@@ -1426,7 +1429,7 @@ namespace FamiStudio
                 c = g.CreateCommandList();
             }
 
-            //if (selectedTab == TabType.Registers) MATTT
+            if (selectedTab == TabType.Registers)
             {
                 App.ActivePlayer.GetRegisterValues(registerValues);
             }
@@ -1635,7 +1638,7 @@ namespace FamiStudio
                 if (captureOperation == CaptureOperation.DragSong)
                 {
                     var pt = PlatformUtils.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
-                    var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _); // MATTT
+                    var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
 
                     if (buttonIdx >= 0)
                     {
@@ -1644,7 +1647,7 @@ namespace FamiStudio
                         if (button.type == ButtonType.Song ||
                             button.type == ButtonType.SongHeader)
                         {
-                            var lineY = (buttonIdx + 1) * buttonSizeY - scrollY; // MATTT
+                            var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
                             c.DrawLine(0, lineY, contentSizeX, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
                         }
                     }
@@ -1658,7 +1661,7 @@ namespace FamiStudio
                         {
                             var button = buttons[captureButtonIdx];
                             var bx = pt.X - captureButtonRelX;
-                            var by = pt.Y - captureButtonRelY;
+                            var by = pt.Y - captureButtonRelY - topTabSizeY;
 
                             if (envelopeDragIdx >= 0)
                                 c.DrawBitmapAtlas(bmpEnvelopesAtlas, envelopeDragIdx, bx, by, 0.5f, bitmapScale, Color.Black);
@@ -1670,12 +1673,12 @@ namespace FamiStudio
                         }
                         else
                         {
-                            var minY = (captureOperation == CaptureOperation.DragInstrument ? minInstIdx : minArpIdx) * buttonSizeY - scrollY; // MATTT
-                            var maxY = (captureOperation == CaptureOperation.DragInstrument ? maxInstIdx : maxArpIdx) * buttonSizeY - scrollY; // MATTT
+                            var minY = (captureOperation == CaptureOperation.DragInstrument ? minInstIdx : minArpIdx) * buttonSizeY - scrollY + topTabSizeY;
+                            var maxY = (captureOperation == CaptureOperation.DragInstrument ? maxInstIdx : maxArpIdx) * buttonSizeY - scrollY + topTabSizeY;
                             var color = (captureOperation == CaptureOperation.DragInstrument ? draggedInstrument.Color : draggedArpeggio.Color);
-                            var dragY = Utils.Clamp(pt.Y - captureButtonRelY, minY, maxY);
+                            var dragY = Utils.Clamp(pt.Y - captureButtonRelY, minY, maxY) - topTabSizeY;
 
-                            c.FillRectangle(0, dragY, contentSizeX, dragY + buttonSizeY, c.Graphics.GetSolidBrush(color, 1, 0.5f)); // MATTT
+                            c.FillRectangle(0, dragY, contentSizeX, dragY + buttonSizeY, c.Graphics.GetSolidBrush(color, 1, 0.5f));
                         }
                     }
                 }
@@ -2071,7 +2074,7 @@ namespace FamiStudio
         {
             if (final)
             {
-                var buttonIdx = GetButtonAtCoord(x, y - buttonSizeY / 2, out _); // MATTT
+                var buttonIdx = GetButtonAtCoord(x, y - buttonSizeY / 2, out _);
 
                 if (buttonIdx >= 0)
                 {
@@ -3435,9 +3438,9 @@ namespace FamiStudio
 
         private bool HandleMouseDownTopTabs(MouseEventArgs e)
         {
-            if (topTabSizeY > 0 && e.Y < topTabSizeY && e.X < contentSizeX)
+            if (topTabSizeY > 0 && e.Y < topTabSizeY)
             {
-                selectedTab = e.X < contentSizeX / 2 ? TabType.Project : TabType.Registers;
+                selectedTab = e.X < Width / 2 ? TabType.Project : TabType.Registers;
                 RefreshButtons();
                 return true;
             }
