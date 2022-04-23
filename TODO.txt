@@ -20,7 +20,7 @@ Small fixes:
 ============
 x BUG: Metronome pitch is wrong in stereo.
 - BUG: MacOS : "If you make the window fill the screen (by double clicking the top bar), then go into fullscreen, the mouse is inaccurate."
-- Recompile NesSndEmu on all platforms.
+- Recompile NesSndEmu on all platforms + fix project.
 
 3.4.0
 =====

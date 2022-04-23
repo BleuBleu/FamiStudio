@@ -126,6 +126,7 @@
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
+    <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\Project\Channel.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
