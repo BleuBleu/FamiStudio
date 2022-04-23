@@ -286,13 +286,14 @@ namespace FamiStudio
                 i = new Vrc7RegisterIntepreter(r);
                 ExpansionRows = new[]
                 {
-                    new RegisterViewerRow("$10", 0x9030, 0x10, 0x15),
-                    new RegisterViewerRow("$20", 0x9030, 0x20, 0x25),
-                    new RegisterViewerRow("$30", 0x9030, 0x30, 0x35)
+                    new RegisterViewerRow("$10", 0x9030, 0x10, 0x16),
+                    new RegisterViewerRow("$20", 0x9030, 0x20, 0x26),
+                    new RegisterViewerRow("$30", 0x9030, 0x30, 0x36)
                 };
                 ChannelRows = new RegisterViewerRow[6][];
-                for (int c = 0; c < 6; c++)
+                for (int j = 0; j < 6; j++)
                 {
+                    var c = j; // Important, need to make a copy for the lambda.
                     ChannelRows[c] = new[]
                     {
                         new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
@@ -420,8 +421,9 @@ namespace FamiStudio
                     new RegisterViewerRow("RAM", DrawRamMap, 32),
                 };
                 ChannelRows = new RegisterViewerRow[8][];
-                for (int c = 0; c < 8; c++)
+                for (int j = 0; j < 8; j++)
                 {
+                    var c = j; // Important, need to make a copy for the lambda.
                     ChannelRows[c] = new[]
                     {
                         new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
@@ -432,11 +434,12 @@ namespace FamiStudio
 
             void DrawRamMap(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
             {
-                var sx = rect.Width  / 128;
+                var ramSize   = 128 - i.NumActiveChannels * 8;
+                var numValues = ramSize * 2;
+
+                var sx = rect.Width  / numValues;
                 var sy = rect.Height / 15.0f;
                 var h  = rect.Height;
-
-                int ramSize = 128 - i.NumActiveChannels * 8;
 
                 for (int x = 0; x < ramSize; x++)
                 {
@@ -444,9 +447,10 @@ namespace FamiStudio
                     var lo = ((val >> 0) & 0xf) * sy;
                     var hi = ((val >> 4) & 0xf) * sy;
                     
-                    // If if the RAM address matches any of the instrument.
-                    // This isnt very accurate since we dont actually know
-                    // which instrument last wrote to RAM at the moment.
+                    // See if the RAM address matches any of the instrument.
+                    // This isn't very accurate since we don't actually know
+                    // which instrument last wrote to RAM at the moment, but
+                    // it will work when there is no overlap.
                     var channelIndex = -1;
                     for (int j = 0; j < i.NumActiveChannels; j++)
                     {
@@ -465,8 +469,8 @@ namespace FamiStudio
                     c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, brush);
                 }
 
-                c.FillRectangle(ramSize * sx, 0, 128 * sx, rect.Height, res.DarkGreyLineBrush3);
-                c.DrawLine(128 * sx, 0, 128 * sx, rect.Height, res.BlackBrush);
+                c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, res.DarkGreyLineBrush3);
+                c.DrawLine(256 * sx, 0, 256 * sx, rect.Height, res.BlackBrush);
             }
         }
 
@@ -485,21 +489,15 @@ namespace FamiStudio
                     new RegisterViewerRow("$08", 0xE000, 0x08, 0x0a),
                 };
                 ChannelRows = new RegisterViewerRow[3][];
-                ChannelRows[0] = new[]
+                for (int j = 0; j < 3; j++)
                 {
-                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(0), i.GetFrequency(0)), true),
-                    new RegisterViewerRow("Volume", () => i.GetVolume(0).ToString("00"), true),
-                };
-                ChannelRows[1] = new[]
-                {
-                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(1), i.GetFrequency(1)), true),
-                    new RegisterViewerRow("Volume", () => i.GetVolume(1).ToString("00"), true),
-                };
-                ChannelRows[2] = new[]
-                {
-                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(2), i.GetFrequency(2)), true),
-                    new RegisterViewerRow("Volume", () => i.GetVolume(2).ToString("00"), true),
-                };
+                    var c = j; // Important, need to make a copy for the lambda.
+                    ChannelRows[c] = new[]
+                    {
+                        new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                        new RegisterViewerRow("Volume", () => i.GetVolume(c).ToString("00"), true),
+                    };
+                }
             }
         }
 
@@ -1692,6 +1690,8 @@ namespace FamiStudio
                 c.FillAndDrawRectangle(contentSizeX, 0, Width - 1, Height, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
                 c.FillAndDrawRectangle(contentSizeX, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
             }
+
+            c.DrawLine(0, 0, Width, 0, ThemeResources.BlackBrush);
 
             g.Clear(Theme.DarkGreyFillColor1);
 
