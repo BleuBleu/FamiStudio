@@ -48,6 +48,7 @@ namespace FamiStudio
             numBufferedFrames = numBuffers;
             bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
             audioStream = new AudioStream(sampleRate, stereo, bufferSize, numBufferedFrames, AudioBufferFillCallback);
+            registerValues.SetPalMode(pal);
         }
 
         protected short[] MixSamples(short[] emulation, short[] metronome, int metronomeIndex, float pitch, float volume)

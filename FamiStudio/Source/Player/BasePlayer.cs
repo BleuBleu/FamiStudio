@@ -238,7 +238,6 @@ namespace FamiStudio
             frameNumber = 0;
             famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
-            registerValues.SetPalMode(pal);
 
             Debug.Assert(song.Project.OutputsStereoAudio == stereo);
 

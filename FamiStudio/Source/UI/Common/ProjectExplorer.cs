@@ -128,11 +128,7 @@ namespace FamiStudio
             else
             {
                 var noteFloat = NoteFromFreq(frequency);
-
-                if (noteFloat < 0.0f)
-                {
-                    Debug.WriteLine("");
-                }
+                Debug.Assert(noteFloat >= 0);
 
                 var note = (int)Math.Round(noteFloat);
                 var cents = (int)Math.Round((noteFloat - note) * 100.0);
@@ -271,8 +267,8 @@ namespace FamiStudio
                 };
                 ChannelRows[2] = new[]
                 {
-                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetSawPeriod(), i.GetSawPeriod()), true),
-                    new RegisterViewerRow("Volume", () => i.GetSawVolume().ToString("00"), true),
+                    new RegisterViewerRow("Pitch",  () => GetPitchString(i.SawPeriod, i.SawFrequency), true),
+                    new RegisterViewerRow("Volume", () => i.SawVolume.ToString("00"), true),
                 };
             }
         }
@@ -1404,7 +1400,7 @@ namespace FamiStudio
                 }
 
                 c.PopTransform();
-                y += ScaleForMainWindow(regSizeY);
+                y += regSizeY;
             }
 
             c.DrawLine(registerLabelSizeX, 0, registerLabelSizeX, button.height, ThemeResources.BlackBrush);
@@ -2425,8 +2421,7 @@ namespace FamiStudio
             var buttonIdx = buttons.IndexOf(button);
             Debug.Assert(buttonIdx >= 0);
 
-            bool shift = ModifierKeys.HasFlag(Keys.Shift);
-
+            var shift = ModifierKeys.HasFlag(Keys.Shift);
             var buttonTopY = 0;
 
             foreach (var b in buttons)
@@ -2438,7 +2433,7 @@ namespace FamiStudio
             }
 
             var buttonX = x;
-            var buttonY = y + scrollY - buttonTopY;
+            var buttonY = y + scrollY - buttonTopY - topTabSizeY;
 
             bool insideSlider = (buttonX > (contentSizeX - sliderPosX) &&
                                  buttonX < (contentSizeX - sliderPosX + sliderSizeX) &&

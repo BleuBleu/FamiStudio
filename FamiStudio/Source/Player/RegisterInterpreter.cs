@@ -89,20 +89,9 @@ namespace FamiStudio
             return (regs.GetRegisterValue(ExpansionType.Vrc6, NesApu.VRC6_PL1_VOL + i * 0x1000) >> 4) & 0x7;
         }
 
-        public int GetSawPeriod()
-        {
-            return regs.GetMergedRegisterValue(ExpansionType.Vrc6, NesApu.VRC6_SAW_LO, NesApu.VRC6_SAW_HI, 0xf);
-        }
-
-        public double GetSawFrequency()
-        {
-            return NesPeriodToFreq(GetSawPeriod(), 14);
-        }
-
-        public int GetSawVolume()
-        {
-            return regs.GetRegisterValue(ExpansionType.Vrc6, NesApu.VRC6_SAW_VOL) & 0x3f;
-        }
+        public int    SawPeriod    => regs.GetMergedRegisterValue(ExpansionType.Vrc6, NesApu.VRC6_SAW_LO, NesApu.VRC6_SAW_HI, 0xf);
+        public double SawFrequency => NesPeriodToFreq(SawPeriod, 14);
+        public int    SawVolume    => regs.GetRegisterValue(ExpansionType.Vrc6, NesApu.VRC6_SAW_VOL) & 0x3f;
     }
 
     public class Vrc7RegisterIntepreter
@@ -116,7 +105,7 @@ namespace FamiStudio
 
         private static double Vrc7PeriodToFrequency(int period, int octave)
         {
-            return 49716.0 * period / (1 << (19 - octave));
+            return 49715.0 * period / (1 << (18 - octave));
         }
 
         public int GetPeriod(int i)
@@ -232,9 +221,9 @@ namespace FamiStudio
 
         public int NumActiveChannels => (regs.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, 0x7f) >> 4) + 1;
 
-        private double N163PeriodToFreq(int period, int waveLen)
+        private double N163PeriodToFreq(int period, int waveLen, int numChannels)
         {
-            return regs.CpuFrequency / 983040.0 * period / waveLen / 4;
+            return period / (double)waveLen * regs.CpuFrequency / 983040.0 / numChannels;
         }
 
         public int GetPeriod(int i)
@@ -249,7 +238,7 @@ namespace FamiStudio
 
         public double GetFrequency(int i)
         {
-            return N163PeriodToFreq(GetPeriod(i), GetWaveLength(i));
+            return N163PeriodToFreq(GetPeriod(i), GetWaveLength(i), NumActiveChannels);
         }
 
         public int GetVolume(int i)

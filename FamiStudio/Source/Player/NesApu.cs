@@ -437,6 +437,7 @@ namespace FamiStudio
                 other.Mmc5 = Mmc5;
                 other.N163 = N163;
                 other.S5B  = S5B;
+                other.pal  = pal;
 
                 Array.Copy(InstrumentColors, other.InstrumentColors, InstrumentColors.Length);
                 Array.Copy(N163InstrumentRanges, other.N163InstrumentRanges, N163InstrumentRanges.Length);
@@ -511,9 +512,9 @@ namespace FamiStudio
                 if (reg <= NesApu.VRC6_CTRL)
                     idx = reg - NesApu.VRC6_PL1_VOL;
                 else if (reg <= NesApu.VRC6_PL2_HI)
-                    idx = reg - NesApu.VRC6_PL2_VOL + 4;
+                    idx = reg - NesApu.VRC6_PL2_VOL + 3;
                 else
-                    idx = reg - NesApu.VRC6_SAW_VOL + 4;
+                    idx = reg - NesApu.VRC6_SAW_VOL + 6;
 
                 age = Vrc6.Ages[idx];
                 return Vrc6.Regs[idx];
