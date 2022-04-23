@@ -96,3 +96,7 @@ extern "C" void __stdcall NesApuSkipCycles(int apuIdx, int cycles)
 	apu[apuIdx].skip_cycles(cycles);
 }
 
+extern "C" void __stdcall NesApuGetRegisterValues(int apuIdx, int exp, void* regs)
+{
+	apu[apuIdx].get_register_values(exp, regs);
+}

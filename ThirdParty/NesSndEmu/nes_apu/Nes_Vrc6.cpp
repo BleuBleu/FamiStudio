@@ -34,7 +34,10 @@ void Nes_Vrc6::reset()
 	{
 		Vrc6_Osc& osc = oscs [i];
 		for ( int j = 0; j < reg_count; j++ )
+		{
 			osc.regs [j] = 0;
+			osc.ages [j] = 0;
+		}
 		osc.delay = 0;
 		osc.last_amp = 0;
 		osc.phase = 1;
@@ -76,6 +79,7 @@ void Nes_Vrc6::write_osc( cpu_time_t time, int osc_index, int reg, int data )
 	
 	run_until( time );
 	oscs [osc_index].regs [reg] = data;
+	oscs [osc_index].ages [reg] = 0;
 }
 
 void Nes_Vrc6::write_register(cpu_time_t time, cpu_addr_t addr, int data)
@@ -269,6 +273,22 @@ void Nes_Vrc6::write_shadow_register(int addr, int data)
 		{
 			shadow_regs[i * reg_count + (addr - osc_base_addr)] = data;
 			return;
+		}
+	}
+}
+
+void Nes_Vrc6::get_register_values(struct vrc6_register_values* regs)
+{
+	for (int i = 0; i < osc_count; i++)
+	{
+		Vrc6_Osc* osc = &oscs[i];
+
+		for (int j = 0; j < 3; j++)
+		{
+			regs->regs[i * 3 + j] = osc->regs[j];
+			regs->ages[i * 3 + j] = osc->ages[j];
+
+			osc->ages[j] = increment_saturate(osc->ages[j]);
 		}
 	}
 }

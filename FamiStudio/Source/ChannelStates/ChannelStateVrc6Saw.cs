@@ -19,8 +19,6 @@ namespace FamiStudio
             {
                 var period = GetPeriod();
                 var volume = GetVolume();
-                var duty   = GetDuty();
-
                 var sawMasterVolume = Vrc6SawMasterVolumeType.Full;
 
                 if (note.Instrument != null)

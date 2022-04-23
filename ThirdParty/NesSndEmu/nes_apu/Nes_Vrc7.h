@@ -19,6 +19,7 @@ public:
 	void enable_channel(int idx, bool enabled);
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
+	void get_register_values(struct vrc7_register_values* regs);
 
 	enum { shadow_regs_count = 1 };
 	enum { shadow_internal_regs_count = 54 };
@@ -39,6 +40,8 @@ private:
 	void reset_opll();
 
 	bool silence;
+	BOOST::uint8_t silence_age;
+	BOOST::uint8_t regs_age[54];
 	int reg;
 	struct __OPLL* opll;
 	Blip_Buffer* output_buffer;
@@ -49,6 +52,18 @@ private:
 	short shadow_regs[shadow_regs_count];
 	short shadow_internal_regs[shadow_internal_regs_count];
 
+};
+
+// Must match the definition in NesApu.cs.
+struct vrc7_register_values
+{  
+	// $e000 
+	unsigned char regs[1];
+	unsigned char ages[1];
+
+	// $9030 (Internal registers $10 to $35)
+	unsigned char internal_regs[54];
+	unsigned char internal_ages[54];
 };
 
 #endif

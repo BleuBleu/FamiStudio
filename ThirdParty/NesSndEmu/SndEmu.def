@@ -16,3 +16,4 @@ EXPORTS
 	NesApuGetAudioExpansions @14
 	NesApuSetExpansionVolume @15
 	NesApuSkipCycles         @16
+	NesApuGetRegisterValues  @17

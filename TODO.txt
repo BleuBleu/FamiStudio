@@ -9,6 +9,8 @@ Testing + Packaging
 - Run + generate unit tests (dmc will likely break something in there).
 / Green hill demo song.
 	- Add to Android + Windows Setup (how2 need to fix volume first)
+- Update doc.
+- Retest instrument/arpeggio drag. I think the button height thing will break it.
 - Test Stereo stuff :
 	/ Audio export
 	/ Video export
@@ -16,11 +18,9 @@ Testing + Packaging
 
 Small fixes:
 ============
-- Android : Starting scroll on a slider (in vrc7 instrument) changes the value
-- BUG : MacOS : "If you make the window fill the screen (by double clicking the top bar), then go into fullscreen, the mouse is inaccurate."
-- Export selected song by default
-- Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
-- Register viewer.
+x BUG: Metronome pitch is wrong in stereo.
+- BUG: MacOS : "If you make the window fill the screen (by double clicking the top bar), then go into fullscreen, the mouse is inaccurate."
+- Recompile NesSndEmu on all platforms.
 
 3.4.0
 =====
@@ -38,6 +38,9 @@ Small fixes:
 	- PE
 		- 
 P1:
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value
+- Export selected song by default
+- Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).

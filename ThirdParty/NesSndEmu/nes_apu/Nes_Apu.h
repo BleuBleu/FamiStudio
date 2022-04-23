@@ -37,7 +37,8 @@ public:
 	enum { start_addr = 0x4000 };
 	enum { end_addr   = 0x4017 };
 	void write_register( cpu_time_t, cpu_addr_t, int data );
-	
+	void get_register_values(struct apu_register_values* regs);
+
 	// Read from status register at 0x4015
 	enum { status_addr = 0x4015 };
 	int read_status( cpu_time_t );

@@ -36,7 +36,7 @@ public:
 	enum { expansion_mask_mmc5       = 1 << 3 };
 	enum { expansion_mask_namco      = 1 << 4 };
 	enum { expansion_mask_sunsoft    = 1 << 5 };
-	enum { expansion_mask_epsm    = 1 << 6 };
+	enum { expansion_mask_epsm       = 1 << 6 };
 
 	// These mode are used for separate channel WAV export or stereo export.
 	// When exporting each channel individually, we don't get the volume interactions
@@ -71,7 +71,8 @@ public:
 	
 	// Write to register (0x4000-0x4017, except 0x4014 and 0x4016)
 	void write_register( cpu_addr_t, int data );
-	
+	void get_register_values(int exp, void* regs);
+
 	// Read from status register at 0x4015
 	int read_status();
 	

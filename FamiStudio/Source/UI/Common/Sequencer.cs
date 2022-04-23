@@ -101,7 +101,7 @@ namespace FamiStudio
         RenderPath  seekGeometry;
 
         RenderBitmapAtlas bmpAtlasExpansions;
-        RenderBitmapAtlas bmpAtlasTracks;
+        RenderBitmapAtlas bmpAtlasChannels;
         RenderBitmapAtlas bmpAtlasMisc;
 
         enum MiscImageIndices
@@ -373,7 +373,7 @@ namespace FamiStudio
             patternCache = new PatternBitmapCache(g);
 
             bmpAtlasExpansions = g.CreateBitmapAtlasFromResources(ExpansionType.Icons);
-            bmpAtlasTracks     = g.CreateBitmapAtlasFromResources(ChannelType.Icons);
+            bmpAtlasChannels   = g.CreateBitmapAtlasFromResources(ChannelType.Icons);
             bmpAtlasMisc       = g.CreateBitmapAtlasFromResources(MiscImageNames);
 
             seekBarBrush = g.CreateSolidBrush(Theme.SeekBarColor);
@@ -402,7 +402,7 @@ namespace FamiStudio
         protected override void OnRenderTerminated()
         {
             Utils.DisposeAndNullify(ref bmpAtlasExpansions);
-            Utils.DisposeAndNullify(ref bmpAtlasTracks);
+            Utils.DisposeAndNullify(ref bmpAtlasChannels);
             Utils.DisposeAndNullify(ref bmpAtlasMisc);
             Utils.DisposeAndNullify(ref seekBarBrush);
             Utils.DisposeAndNullify(ref seekBarRecBrush);
@@ -485,7 +485,7 @@ namespace FamiStudio
 
             // Icons
             var showExpIcons = showExpansionIcons && Song.Project.UsesAnyExpansionAudio;
-            var atlas = showExpIcons ? bmpAtlasExpansions : bmpAtlasTracks;
+            var atlas = showExpIcons ? bmpAtlasExpansions : bmpAtlasChannels;
 
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
@@ -498,7 +498,7 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
                 var font = i == selectedChannelIndex ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
-                var iconHeight = bmpAtlasTracks.GetElementSize(0).Height * channelBitmapScale;
+                var iconHeight = bmpAtlasChannels.GetElementSize(0).Height * channelBitmapScale;
                 cc.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackIconPosY, ThemeResources.LightGreyFillBrush2, RenderTextFlags.MiddleLeft, 0, iconHeight);
             }
 

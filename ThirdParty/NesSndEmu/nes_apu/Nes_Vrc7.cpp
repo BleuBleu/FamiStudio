@@ -25,6 +25,8 @@ void Nes_Vrc7::reset()
 	last_amp = 0;
 	last_time = 0;
 	silence = false;
+	silence_age = 0;
+	memset(&regs_age[0], 0, array_count(regs_age));
 	reset_opll();
 }
 
@@ -83,12 +85,14 @@ void Nes_Vrc7::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	{
 	case reg_silence:
 		silence = (data & 0x40) != 0;
+		silence_age = 0;
 		break;
 	case reg_select:
 		reg = data;
 		break;
 	case reg_write:
 		OPLL_writeReg(opll, reg, data);
+		regs_age[reg] = 0;
 		break;
 	}
 }
@@ -153,4 +157,20 @@ void Nes_Vrc7::write_shadow_register(int addr, int data)
 		case reg_select:  reg = data; break;
 		case reg_write:   shadow_internal_regs[reg] = data; break;
 	}
+}
+
+void Nes_Vrc7::get_register_values(struct vrc7_register_values* regs)
+{
+	for (int i = 0; i < array_count(regs->internal_regs); i++)
+	{
+		regs->internal_regs[i] = opll->reg[i];
+		regs->internal_ages[i] = regs_age[i];
+
+		regs_age[i] = increment_saturate(regs_age[i]);
+	}
+
+	regs->regs[0] = silence;
+	regs->ages[0] = silence_age;
+
+	silence_age = increment_saturate(silence_age);
 }

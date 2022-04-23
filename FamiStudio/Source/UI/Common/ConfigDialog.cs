@@ -89,6 +89,7 @@ namespace FamiStudio
         private readonly string ShowFamitrackerStopNotesTooltip = "When enabled, partially transparent stop notes will be displayed whenever a note ends, when using FamiTracker tempo mode. This can help you to visually align note delays with stop notes.";
         private readonly string ShowOscilloscopeTooltip         = "When enabled, the oscilloscope will be visible in the toolbar. Disabling it can help performances on low-end systems.";
         private readonly string CompactSequencerTooltip         = "When enabled, the Sequencer will always try to keep its size as small as possible.";
+        private readonly string ShowRegisterViewerTooltip       = "When enabled, the 'Register' tab will be visible in the Project Explorer.";
 
         // Sound
         private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
@@ -198,14 +199,16 @@ namespace FamiStudio
                     page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels, ShowNoteLabelsTooltip); // 6
                     page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 7
                     page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope, ShowOscilloscopeTooltip); // 8
-                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 9
+                    page.AddCheckBox("Show Register Viewer Tab:", Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 9
+                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 10
                     page.SetPropertyVisible(0, !PlatformUtils.IsMacOS); // No manual DPI selection on MacOS.
                     page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(8, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(9, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(10, PlatformUtils.IsDesktop);
                     break;
-                    }
+                }
                 case ConfigSection.Sound:
                 {
                     page.AddNumericUpDown("Number of buffered frames:", Settings.NumBufferedAudioFrames, 2, 16, NumBufferedFramesTooltip); // 0
@@ -502,7 +505,8 @@ namespace FamiStudio
                     Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
                     Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(7);
                     Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(8);
-                    Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(9);
+                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(9);
+                    Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(10);
 
                     // Sound
                     Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);

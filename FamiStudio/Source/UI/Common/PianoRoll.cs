@@ -933,7 +933,7 @@ namespace FamiStudio
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, Theme.DarkGreyLineColor2));
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
-            fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
+            fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0", false) : 1;
 
             if (editMode != EditionMode.VideoRecording)
             {

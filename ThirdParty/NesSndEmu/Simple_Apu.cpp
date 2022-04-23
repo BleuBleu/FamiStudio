@@ -189,6 +189,22 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 	}
 }
 
+void Simple_Apu::get_register_values(int exp, void* regs)
+{
+	assert(!seeking);
+
+	switch (exp)
+	{
+		case expansion_none: apu.get_register_values((apu_register_values*)regs); break;
+		case expansion_vrc6: vrc6.get_register_values((vrc6_register_values*)regs); break;
+		case expansion_vrc7: vrc7.get_register_values((vrc7_register_values*)regs); break;
+		case expansion_fds: fds.get_register_values((fds_register_values*)regs); break;
+		case expansion_mmc5: mmc5.get_register_values((mmc5_register_values*)regs); break;
+		case expansion_namco: namco.get_register_values((n163_register_values*)regs); break;
+		case expansion_sunsoft: sunsoft.get_register_values((s5b_register_values*)regs); break;
+		//case expansion_epsm: epsm.get_register_values(); break;
+	}}
+
 void Simple_Apu::start_seeking()
 {
 	seeking = true;

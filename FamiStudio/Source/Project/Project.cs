@@ -797,7 +797,10 @@ namespace FamiStudio
 
         public int[] GetActiveExpansions()
         {
+            var idx = 1;
+            var expansions = new int[Utils.NumberOfSetBits(expansionMask) + 1];
 
+            expansions[0] = ExpansionType.None;
 
             for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
             {
