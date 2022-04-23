@@ -22,7 +22,14 @@ public:
 	void end_frame(cpu_time_t);
 	void mix_samples(blip_sample_t* sample_buffer, long sample_cnt);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
+	void get_register_values(struct epsm_register_values* regs);
 	void WriteToChip(uint8_t a, uint8_t d, cpu_time_t time);
+
+
+	unsigned char regs_a0[183];
+	unsigned char ages_a0[183];
+	unsigned char regs_a1[183];
+	unsigned char ages_a1[183];
 
 	enum { psg_clock = 4000000 };
 	enum { reg_select = 0x401c };
@@ -69,4 +76,14 @@ private:
 	short shadow_internal_regs2[shadow_internal_regs_count];
 };
 
+
+// Must match the definition in NesApu.cs.
+struct epsm_register_values
+{
+	// $9030 (Internal registers $10 to $35)
+	unsigned char regs_a0[183];
+	unsigned char ages_a0[183];
+	unsigned char regs_a1[183];
+	unsigned char ages_a1[183];
+};
 #endif

@@ -276,4 +276,34 @@ namespace FamiStudio
             return regs.GetRegisterValue(ExpansionType.S5B, NesApu.S5B_DATA, NesApu.S5B_REG_VOL_A + i * 2) & 0xf;
         }
     }
+
+    public class EpsmRegisterIntepreter
+    {
+        NesApu.NesRegisterValues regs;
+
+        public EpsmRegisterIntepreter(NesApu.NesRegisterValues r)
+        {
+            regs = r;
+        }
+
+        protected double NesPeriodToFreq(int period, int length)
+        {
+            return regs.CpuFrequency / (period + 1.0) / length;
+        }
+
+        public int GetPeriod(int i)
+        {
+            return regs.GetMergedSubRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_LO_A + i * 2, NesApu.EPSM_REG_HI_A + i * 2, 0xf);
+        }
+
+        public double GetFrequency(int i)
+        {
+            return NesPeriodToFreq(GetPeriod(i), 16);
+        }
+
+        public int GetVolume(int i)
+        {
+            return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + i * 2) & 0xf;
+        }
+    }
 }

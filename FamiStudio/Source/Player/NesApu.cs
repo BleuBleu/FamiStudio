@@ -402,6 +402,15 @@ namespace FamiStudio
             public fixed byte Ages[16];
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct EpsmRegisterValues
+        {
+            // (Internal registers 0 to B4).
+            public fixed byte Regs_A0[16];
+            public fixed byte Ages_A0[16];
+            public fixed byte Regs_A1[16];
+            public fixed byte Ages_A1[16];
+        }
 
         public struct N163InstrumentRange
         {
@@ -418,6 +427,7 @@ namespace FamiStudio
             public Mmc5RegisterValues Mmc5;
             public N163RegisterValues N163;
             public S5bRegisterValues  S5B;
+            public EpsmRegisterValues  Epsm;
 
             // Extra information for the register viewer.
             public System.Drawing.Color[] InstrumentColors = new System.Drawing.Color[ChannelType.Count];
@@ -437,6 +447,7 @@ namespace FamiStudio
                 other.Mmc5 = Mmc5;
                 other.N163 = N163;
                 other.S5B  = S5B;
+                other.Epsm = Epsm;
                 other.pal  = pal;
 
                 Array.Copy(InstrumentColors, other.InstrumentColors, InstrumentColors.Length);
@@ -486,11 +497,11 @@ namespace FamiStudio
                         NesApu.GetRegisterValues(apuIdx, ExpansionType.S5B, p);
                 }
 
-                //if ((expansionMask & ExpansionType.EPSMMask) != 0)
-                //{
-                //    fixed (void* p = &EPSM)
-                //        NesApu.GetRegisterValues(apuIdx, ExpansionType.EPSM, p);
-                //}
+                if ((expansionMask & ExpansionType.EPSMMask) != 0)
+                {
+                    fixed (void* p = &Epsm)
+                        NesApu.GetRegisterValues(apuIdx, ExpansionType.EPSM, p);
+                }
             }
 
             public void SetPalMode(bool p)
@@ -579,6 +590,22 @@ namespace FamiStudio
                 return S5B.Regs[sub];
             }
 
+            private byte GetEpsmRegisterValue_A0(int reg, int sub, out byte age)
+            {
+                Debug.Assert(reg == NesApu.EPSM_DATA0);
+
+                age = Epsm.Ages_A0[sub];
+                return Epsm.Regs_A0[sub];
+            }
+
+            private byte GetEpsmRegisterValue_A1(int reg, int sub, out byte age)
+            {
+                Debug.Assert(reg == NesApu.EPSM_DATA1);
+
+                age = Epsm.Ages_A1[sub];
+                return Epsm.Regs_A1[sub];
+            }
+
             public byte GetRegisterValue(int exp, int reg, out byte age, int sub = -1)
             {
                 switch (exp)
@@ -590,6 +617,7 @@ namespace FamiStudio
                     case ExpansionType.Mmc5: return GetMmc5RegisterValue(reg, out age);
                     case ExpansionType.N163: return GetN163RegisterValue(reg, sub, out age);
                     case ExpansionType.S5B:  return GetS5BRegisterValue(reg, sub, out age);
+                    case ExpansionType.EPSM: return GetEpsmRegisterValue_A0(reg, sub, out age);
                 }
 
                 Debug.Assert(false);

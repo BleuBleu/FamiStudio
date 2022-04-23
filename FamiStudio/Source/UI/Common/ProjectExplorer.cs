@@ -497,6 +497,33 @@ namespace FamiStudio
             }
         }
 
+        class EpsmRegisterViewer : ExpansionRegisterViewer
+        {
+            EpsmRegisterIntepreter i;
+
+            public EpsmRegisterViewer(NesApu.NesRegisterValues r)
+            {
+                i = new EpsmRegisterIntepreter(r);
+                ExpansionRows = new[]
+                {
+                    new RegisterViewerRow("$00", 0xE000, 0x00, 0x01),
+                    new RegisterViewerRow("$02", 0xE000, 0x02, 0x03),
+                    new RegisterViewerRow("$04", 0xE000, 0x04, 0x05),
+                    new RegisterViewerRow("$08", 0xE000, 0x08, 0x0a),
+                };
+                ChannelRows = new RegisterViewerRow[15][];
+                for (int j = 0; j < 15; j++)
+                {
+                    var c = j; // Important, need to make a copy for the lambda.
+                    ChannelRows[c] = new[]
+                    {
+                        new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                        new RegisterViewerRow("Volume", () => i.GetVolume(c).ToString("00"), true),
+                    };
+                }
+            }
+        }
+
         enum ButtonType
         {
             // Project explorer buttons.
@@ -995,6 +1022,7 @@ namespace FamiStudio
             registerViewers[ExpansionType.Mmc5] = new Mmc5RegisterViewer(registerValues);
             registerViewers[ExpansionType.N163] = new N163RegisterViewer(registerValues);
             registerViewers[ExpansionType.S5B]  = new S5BRegisterViewer(registerValues);
+            registerViewers[ExpansionType.EPSM] = new EpsmRegisterViewer(registerValues);
         }
 
         private void UpdateRenderCoords(bool updateVirtualSizeY = true)
