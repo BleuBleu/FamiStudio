@@ -539,12 +539,12 @@ namespace FamiStudio
             {
                 if (reg < NesApu.FDS_VOL_ENV)
                 {
-                    age = 0xff; // MATTT
-                    return Fds.Wave[sub];
+                    age = 0xff;
+                    return Fds.Wave[reg - NesApu.FDS_WAV_START];
                 }
                 else if (reg == NesApu.FDS_MOD_TABLE && sub >= 0) // Hacky wait to access the mod table.
                 {
-                    age = 0xff; // MATTT
+                    age = 0xff;
                     return Fds.Mod[sub];
                 }
                 else

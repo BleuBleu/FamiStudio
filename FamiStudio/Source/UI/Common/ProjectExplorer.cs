@@ -319,8 +319,45 @@ namespace FamiStudio
                 {
                     new RegisterViewerRow("Pitch",  () => GetPitchString(i.Period, i.Frequency), true),
                     new RegisterViewerRow("Volume", () => i.Volume.ToString("00"), true),
+                    new RegisterViewerRow("Wave", DrawWaveTable, 32),
+                    new RegisterViewerRow("Mod", DrawModTable, 32),
                 };
-                // MATTT : Mod table!
+            }
+
+            void DrawInternal(RenderCommandList c, ThemeRenderResources res, Rectangle rect, byte[] vals, int maxVal, bool signed)
+            {
+                var sx = rect.Width  / 64;
+                var sy = rect.Height / (float)maxVal;
+                var h = rect.Height;
+
+                for (int x = 0; x < 64; x++)
+                {
+                    var y = vals[x] * sy;
+                    var color = i.Registers.InstrumentColors[ChannelType.FdsWave];
+
+                    if (color.A == 0)
+                        color = Theme.LightGreyFillColor2;
+
+                    var brush = c.Graphics.GetSolidBrush(color);
+
+                    if (signed)
+                        c.FillRectangle(x * sx, h - y, (x + 1) * sx, h / 2, brush);
+                    else
+                        c.FillRectangle(x * sx, h - y, (x + 1) * sx, h, brush);
+                }
+
+                c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, res.DarkGreyLineBrush3);
+                c.DrawLine(64 * sx, 0, 64 * sx, rect.Height, res.BlackBrush);
+            }
+
+            void DrawWaveTable(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
+            {
+                DrawInternal(c, res, rect, i.GetWaveTable(), 63, true);
+            }
+
+            void DrawModTable(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
+            {
+                DrawInternal(c, res, rect, i.GetModTable(), 7, false);
             }
         }
 
@@ -378,7 +415,7 @@ namespace FamiStudio
                     new RegisterViewerRow("$68", 0x4800, 0x68, 0x6f ),
                     new RegisterViewerRow("$70", 0x4800, 0x70, 0x77 ),
                     new RegisterViewerRow("$78", 0x4800, 0x78, 0x7f ),
-                    new RegisterViewerRow("RAM", DrawN163RamMap, 32),
+                    new RegisterViewerRow("RAM", DrawRamMap, 32),
                 };
                 ChannelRows = new RegisterViewerRow[8][];
                 for (int c = 0; c < 8; c++)
@@ -391,7 +428,7 @@ namespace FamiStudio
                 }
             }
 
-            void DrawN163RamMap(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
+            void DrawRamMap(RenderCommandList c, ThemeRenderResources res, Rectangle rect)
             {
                 var sx = rect.Width  / 128;
                 var sy = rect.Height / 15.0f;
@@ -581,7 +618,6 @@ namespace FamiStudio
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
         bool canFling = false;
-        bool showTabs = PlatformUtils.IsDesktop;
         TabType selectedTab = TabType.Project;
         Button sliderDragButton = null;
         CaptureOperation captureOperation = CaptureOperation.None;
@@ -1061,8 +1097,7 @@ namespace FamiStudio
             if (!IsRenderInitialized || project == null)
                 return;
 
-            if (false) // MATTT (selectedTab == TabType.Project)
-            //if (selectedTab == TabType.Project)
+            if (false) // (selectedTab == TabType.Project)
             {
 	            var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
 
@@ -1373,7 +1408,7 @@ namespace FamiStudio
             RenderCommandList ct = null;
             RenderCommandList c = null;
 
-            if (showTabs)
+            if (Settings.ShowRegisterViewer)
             {
                 ct = g.CreateCommandList();
                 RenderTabs(ct);
@@ -1651,12 +1686,16 @@ namespace FamiStudio
             }
 
             g.Clear(Theme.DarkGreyFillColor1);
-            g.DrawCommandList(ct);
 
-            if (showTabs)
+            if (Settings.ShowRegisterViewer)
             {
                 c.PopTransform();
+                g.DrawCommandList(ct);
                 g.DrawCommandList(c, new Rectangle(0, buttonSizeY, Width, Height));
+            }
+            else
+            {
+                g.DrawCommandList(c);
             }
 
             RenderDebug(g);
@@ -1723,7 +1762,7 @@ namespace FamiStudio
 
             var absY = y + scrollY;
             var buttonIndex = -1;
-            var buttonBaseY = showTabs ? buttonSizeY : 0;
+            var buttonBaseY = Settings.ShowRegisterViewer ? buttonSizeY : 0;
 
             for (int i = 0; i < buttons.Count; i++)
             {

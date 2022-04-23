@@ -581,27 +581,29 @@ namespace FamiStudio
 
         protected void ReadBackRegisterValues()
         {
-            // MATTT : Make this optional!!! + Only song player for now.
-            lock (registerValues)
+            if (Settings.ShowRegisterViewer)
             {
-                registerValues.ReadRegisterValues(apuIndex);
-
-                // Read some additionnal information that we may need for the
-                // register viewer, such as instrument colors, etc.
-                for (int i = 0; i < channelStates.Length; i++)
+                lock (registerValues)
                 {
-                    var state = channelStates[i];
-                    var note = state.CurrentNote;
-                    var instrument = note != null ? note.Instrument : null;
+                    registerValues.ReadRegisterValues(apuIndex);
 
-                    registerValues.InstrumentColors[state.InnerChannelType] = instrument != null ? instrument.Color : System.Drawing.Color.Transparent;
-
-                    if (state.InnerChannelType >= ChannelType.N163Wave1 &&
-                        state.InnerChannelType <= ChannelType.N163Wave8)
+                    // Read some additionnal information that we may need for the
+                    // register viewer, such as instrument colors, etc.
+                    for (int i = 0; i < channelStates.Length; i++)
                     {
-                        var idx = state.InnerChannelType - ChannelType.N163Wave1;
-                        registerValues.N163InstrumentRanges[idx].Position = instrument != null ? instrument.N163WavePos  : (byte)0;
-                        registerValues.N163InstrumentRanges[idx].Size     = instrument != null ? instrument.N163WaveSize : (byte)0;
+                        var state = channelStates[i];
+                        var note = state.CurrentNote;
+                        var instrument = note != null ? note.Instrument : null;
+
+                        registerValues.InstrumentColors[state.InnerChannelType] = instrument != null ? instrument.Color : System.Drawing.Color.Transparent;
+
+                        if (state.InnerChannelType >= ChannelType.N163Wave1 &&
+                            state.InnerChannelType <= ChannelType.N163Wave8)
+                        {
+                            var idx = state.InnerChannelType - ChannelType.N163Wave1;
+                            registerValues.N163InstrumentRanges[idx].Position = instrument != null ? instrument.N163WavePos : (byte)0;
+                            registerValues.N163InstrumentRanges[idx].Size = instrument != null ? instrument.N163WaveSize : (byte)0;
+                        }
                     }
                 }
             }

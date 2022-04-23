@@ -151,15 +151,38 @@ namespace FamiStudio
     public class FdsRegisterIntepreter
     {
         NesApu.NesRegisterValues regs;
+        public NesApu.NesRegisterValues Registers => regs;
 
         public FdsRegisterIntepreter(NesApu.NesRegisterValues r)
         {
             regs = r;
         }
 
-        public int    Period    => regs.GetMergedRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_LO, NesApu.FDS_FREQ_HI, 0xf);
-        public double Frequency => 123.45f; // MATTT
-        public int    Volume    => regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_VOL_ENV) & 0x1f;
+        private double FdsPeriodToFrequency(int period)
+        {
+            return regs.CpuFrequency * (period / 1048576.0);
+        }
+
+        public bool   WaveEnabled => (regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_HI) & 0x80) == 0;
+        public int    Period      => regs.GetMergedRegisterValue(ExpansionType.Fds, NesApu.FDS_FREQ_LO, NesApu.FDS_FREQ_HI, 0xf);
+        public int    Volume      => regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_VOL_ENV) & 0x1f;
+        public double Frequency   => WaveEnabled ? FdsPeriodToFrequency(Period) : 0;
+
+        public byte[] GetWaveTable()
+        {
+            var wav = new byte[64];
+            for (int i = 0; i < 64; i++)
+                wav[i] = (byte)(regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_WAV_START + i) + 0x20);
+            return wav;
+        }
+
+        public byte[] GetModTable()
+        {
+            var mod = new byte[64];
+            for (int i = 0; i < 64; i++)
+                mod[i] = regs.GetRegisterValue(ExpansionType.Fds, NesApu.FDS_MOD_TABLE, i);
+            return mod;
+        }
     }
 
     public class Mmc5RegisterIntepreter
