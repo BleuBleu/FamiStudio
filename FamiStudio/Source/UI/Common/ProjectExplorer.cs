@@ -65,13 +65,15 @@ namespace FamiStudio
         int scrollBarThickness;
         int draggedLineSizeY;
         int registerLabelSizeX;
+        int contentSizeX;
+        int topTabSizeY;
         bool needsScrollBar;
 
         enum TabType
         {
             Project,
             Registers,
-            Max
+            Count
         };
 
         string[] TabNames =
@@ -1022,7 +1024,9 @@ namespace FamiStudio
             paramRightPadX       = ScaleForMainWindow(DefaultParamRightPadX);
             draggedLineSizeY     = ScaleForMainWindow(DefaultDraggedLineSizeY);
             registerLabelSizeX   = ScaleForMainWindow(DefaultRegisterLabelSizeX);
-            scrollAreaSizeY      = Height;
+            topTabSizeY          = Settings.ShowRegisterViewer ? buttonSizeY : 0;
+            scrollAreaSizeY      = Height - topTabSizeY;
+            contentSizeX         = Width;
 
             if (updateVirtualSizeY)
             {
@@ -1043,6 +1047,8 @@ namespace FamiStudio
                     scrollBarThickness = ScaleForMainWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
                 else
                     scrollBarThickness = 0;
+
+                contentSizeX = Width - scrollBarThickness;
             }
         }
 
@@ -1097,7 +1103,7 @@ namespace FamiStudio
             if (!IsRenderInitialized || project == null)
                 return;
 
-            if (false) // (selectedTab == TabType.Project)
+            if (selectedTab == TabType.Project)
             {
 	            var projectText = string.IsNullOrEmpty(project.Author) ? $"{project.Name}" : $"{project.Name} ({project.Author})";
 
@@ -1325,12 +1331,12 @@ namespace FamiStudio
 
         private void RenderTabs(RenderCommandList c)
         {
-            var numTabs = (int)TabType.Max;
-            var tabSizeX = Width / numTabs;
+            var numTabs = (int)TabType.Count;
+            var tabSizeX = contentSizeX / numTabs;
 
             for (int i = 0; i < numTabs; i++)
             {
-                var activeTab = i == 0;
+                var activeTab = i == (int)selectedTab;
                 var tabColor  = activeTab ? Theme.DarkGreyFillColor1 : Theme.Darken(Theme.DarkGreyFillColor1);
                 var textBrush = activeTab ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1;
                 var textFont  = activeTab ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
@@ -1341,7 +1347,7 @@ namespace FamiStudio
             }
         }
 
-        private void RenderRegisterRows(NesApu.NesRegisterValues regValues, RenderCommandList c, Button button, int actualWidth, int exp = -1)
+        private void RenderRegisterRows(NesApu.NesRegisterValues regValues, RenderCommandList c, Button button, int exp = -1)
         {
             int y = 0;
 
@@ -1353,7 +1359,7 @@ namespace FamiStudio
                 c.PushTranslation(0, y);
 
                 if (i != 0)
-                    c.DrawLine(0, -1, actualWidth, -1, ThemeResources.BlackBrush);
+                    c.DrawLine(0, -1, contentSizeX, -1, ThemeResources.BlackBrush);
 
                 if (reg.CustomDraw != null)
                 {
@@ -1361,7 +1367,7 @@ namespace FamiStudio
                     c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, regSizeY);
 
                     c.PushTranslation(registerLabelSizeX + 1, 0);
-                    reg.CustomDraw(c, ThemeResources, new Rectangle(0, 0, actualWidth - registerLabelSizeX - 1, regSizeY));
+                    reg.CustomDraw(c, ThemeResources, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY));
                     c.PopTransform();
                 }
                 else if (reg.GetValue != null)
@@ -1428,7 +1434,6 @@ namespace FamiStudio
             c.DrawLine(0, 0, 0, Height, ThemeResources.BlackBrush);
 
             var showExpandButton = ShowExpandButtons();
-            var actualWidth = Width - scrollBarThickness;
             var firstParam = true;
             var y = -scrollY;
             var iconSize = ScaleCustom(bmpEnvelopesAtlas.GetElementSize(0).Width, bitmapScale);
@@ -1474,7 +1479,7 @@ namespace FamiStudio
 
                     if (drawBackground)
                     {
-                        c.FillAndDrawRectangle(0, 0, actualWidth, groupSizeY, button.gradient ? g.GetVerticalGradientBrush(button.color, groupSizeY, 0.8f) : g.GetSolidBrush(button.color), ThemeResources.BlackBrush, 1);
+                        c.FillAndDrawRectangle(0, 0, contentSizeX, groupSizeY, button.gradient ? g.GetVerticalGradientBrush(button.color, groupSizeY, 0.8f) : g.GetSolidBrush(button.color), ThemeResources.BlackBrush, 1);
                     }
 
                     if (button.type == ButtonType.Instrument)
@@ -1509,21 +1514,21 @@ namespace FamiStudio
 
                     if (button.type == ButtonType.ParamCustomDraw)
                     {
-                        button.param.CustomDraw(c, ThemeResources, new Rectangle(0, 0, actualWidth - leftPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
+                        button.param.CustomDraw(c, ThemeResources, new Rectangle(0, 0, contentSizeX - leftPadding - paramRightPadX - 1, button.height), button.param.CustomUserData1, button.param.CustomUserData2);
                     }
                     else if (button.type >= ButtonType.ExpansionRegistersFirst && button.type < ButtonType.ChannelStateFirst)
                     {
-                        RenderRegisterRows(registerValues, c, button, actualWidth, button.type - ButtonType.ExpansionRegistersFirst);
+                        RenderRegisterRows(registerValues, c, button, button.type - ButtonType.ExpansionRegistersFirst);
                     }
                     else if (button.type >= ButtonType.ChannelStateFirst)
                     {
-                        RenderRegisterRows(registerValues, c, button, actualWidth);
+                        RenderRegisterRows(registerValues, c, button);
                     }
                     else
                     {
                         if (button.Text != null)
                         {
-                            c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, actualWidth - buttonTextPosX, buttonSizeY);
+                            c.DrawText(button.Text, button.Font, atlas == null ? buttonTextNoIconPosX : buttonTextPosX, 0, enabled ? button.textBrush : disabledBrush, button.TextAlignment | ellipsisFlag | RenderTextFlags.Middle, contentSizeX - buttonTextPosX, buttonSizeY);
                         }
 
                         if (atlas != null)
@@ -1546,7 +1551,7 @@ namespace FamiStudio
                         {
                             var valSizeX = (int)Math.Round((paramVal - button.param.MinValue) / (float)(button.param.MaxValue - button.param.MinValue) * sliderSizeX);
 
-                            c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
+                            c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
                             c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
                             c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1);
                             c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
@@ -1554,7 +1559,7 @@ namespace FamiStudio
                         }
                         else if (button.type == ButtonType.ParamCheckbox)
                         {
-                            c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, actualWidth - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(bmpMiscAtlas, paramVal == 0 ? (int)MiscImageIndices.CheckBoxNo : (int)MiscImageIndices.CheckBoxYes, contentSizeX - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale, Color.Black);
                         }
                         else if (button.type == ButtonType.ParamList)
                         {
@@ -1562,7 +1567,7 @@ namespace FamiStudio
                             var paramNext = button.param.SnapAndClampValue(paramVal + 1);
                             var buttonWidth = ScaleCustom(bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width, bitmapScale);
 
-                            c.PushTranslation(actualWidth - sliderPosX, sliderPosY);
+                            c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
                             c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
                             c.DrawBitmapAtlas(bmpMiscAtlas, (int)MiscImageIndices.ButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
                             c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter, sliderSizeX, button.height);
@@ -1570,7 +1575,7 @@ namespace FamiStudio
                         }
                         else if (button.type == ButtonType.ParamTabs)
                         {
-                            var tabWidth = Utils.DivideAndRoundUp(actualWidth - leftPadding - paramRightPadX, button.tabNames.Length);
+                            var tabWidth = Utils.DivideAndRoundUp(contentSizeX - leftPadding - paramRightPadX, button.tabNames.Length);
 
                             for (var j = 0; j < button.tabNames.Length; j++)
                             {
@@ -1595,7 +1600,7 @@ namespace FamiStudio
 
                         if (subButtons != null)
                         {
-                            for (int j = 0, x = actualWidth - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
+                            for (int j = 0, x = contentSizeX - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
                             {
                                 atlas = button.GetIcon(subButtons[j], out atlasIdx);
 
@@ -1640,7 +1645,7 @@ namespace FamiStudio
                             button.type == ButtonType.SongHeader)
                         {
                             var lineY = (buttonIdx + 1) * buttonSizeY - scrollY; // MATTT
-                            c.DrawLine(0, lineY, Width - scrollBarThickness, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                            c.DrawLine(0, lineY, contentSizeX, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
                         }
                     }
                 }
@@ -1670,7 +1675,7 @@ namespace FamiStudio
                             var color = (captureOperation == CaptureOperation.DragInstrument ? draggedInstrument.Color : draggedArpeggio.Color);
                             var dragY = Utils.Clamp(pt.Y - captureButtonRelY, minY, maxY);
 
-                            c.FillRectangle(0, dragY, actualWidth, dragY + buttonSizeY, c.Graphics.GetSolidBrush(color, 1, 0.5f)); // MATTT
+                            c.FillRectangle(0, dragY, contentSizeX, dragY + buttonSizeY, c.Graphics.GetSolidBrush(color, 1, 0.5f)); // MATTT
                         }
                     }
                 }
@@ -1681,8 +1686,8 @@ namespace FamiStudio
                 int scrollBarSizeY = (int)Math.Round(scrollAreaSizeY * (scrollAreaSizeY / (float)virtualSizeY));
                 int scrollBarPosY = (int)Math.Round(scrollAreaSizeY * (scrollY / (float)virtualSizeY));
 
-                c.FillAndDrawRectangle(actualWidth, 0, Width - 1, Height, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
-                c.FillAndDrawRectangle(actualWidth, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
+                c.FillAndDrawRectangle(contentSizeX, 0, Width - 1, Height, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
+                c.FillAndDrawRectangle(contentSizeX, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
             }
 
             g.Clear(Theme.DarkGreyFillColor1);
@@ -1757,12 +1762,12 @@ namespace FamiStudio
             buttonRelX = 0;
             buttonRelY = 0;
 
-            if (needsScrollBar && x >= Width - scrollBarThickness)
+            if (needsScrollBar && x >= contentSizeX)
                 return -1;
 
             var absY = y + scrollY;
             var buttonIndex = -1;
-            var buttonBaseY = Settings.ShowRegisterViewer ? buttonSizeY : 0;
+            var buttonBaseY = topTabSizeY;
 
             for (int i = 0; i < buttons.Count; i++)
             {
@@ -1798,7 +1803,7 @@ namespace FamiStudio
                         if (subButtons[i] == SubButtonType.Expand)
                             continue;
 
-                        int sx = Width - scrollBarThickness - subButtonSpacingX * (i + 1);
+                        int sx = contentSizeX - subButtonSpacingX * (i + 1);
                         int sy = subButtonPosY;
                         int dx = x - sx;
                         int dy = y - sy;
@@ -1892,7 +1897,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamCheckbox)
                 {
-                    if (x >= Width - scrollBarThickness - checkBoxPosX)
+                    if (x >= contentSizeX - checkBoxPosX)
                     {
                         tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
                     }
@@ -1903,7 +1908,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamSlider)
                 {
-                    if (x >= Width - scrollBarThickness - sliderPosX)
+                    if (x >= contentSizeX - sliderPosX)
                     {
                         tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
                     }
@@ -1914,7 +1919,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamList)
                 {
-                    if (x >= Width - scrollBarThickness - sliderPosX)
+                    if (x >= contentSizeX - sliderPosX)
                     {
                         tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
                     }
@@ -1999,7 +2004,7 @@ namespace FamiStudio
                     }
                 }
             }
-            else if (needsScrollBar && x > Width - scrollBarThickness)
+            else if (needsScrollBar && x > contentSizeX)
             {
                 tooltip = "{MouseLeft} {Drag} Scroll";
             }
@@ -2419,7 +2424,6 @@ namespace FamiStudio
 
             bool shift = ModifierKeys.HasFlag(Keys.Shift);
 
-            var actualWidth = Width - scrollBarThickness;
             var buttonTopY = 0;
 
             foreach (var b in buttons)
@@ -2433,8 +2437,8 @@ namespace FamiStudio
             var buttonX = x;
             var buttonY = y + scrollY - buttonTopY;
 
-            bool insideSlider = (buttonX > (actualWidth - sliderPosX) &&
-                                 buttonX < (actualWidth - sliderPosX + sliderSizeX) &&
+            bool insideSlider = (buttonX > (contentSizeX - sliderPosX) &&
+                                 buttonX < (contentSizeX - sliderPosX + sliderSizeX) &&
                                  buttonY > (sliderPosY) &&
                                  buttonY < (sliderPosY + sliderSizeY));
 
@@ -2454,7 +2458,7 @@ namespace FamiStudio
             }
             else
             {
-                paramVal = (int)Math.Round(Utils.Lerp(button.param.MinValue, button.param.MaxValue, Utils.Clamp((buttonX - (actualWidth - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
+                paramVal = (int)Math.Round(Utils.Lerp(button.param.MinValue, button.param.MaxValue, Utils.Clamp((buttonX - (contentSizeX - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
                 captureMouseX = x;
             }
 
@@ -3054,7 +3058,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownScrollbar(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && needsScrollBar && e.X > Width - scrollBarThickness && GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY))
+            if (e.Button.HasFlag(MouseButtons.Left) && needsScrollBar && e.X > contentSizeX && GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY))
             {
                 if (e.Y < scrollBarPosY)
                 {
@@ -3229,9 +3233,7 @@ namespace FamiStudio
 
         private void ClickParamCheckbox(int x, int y, Button button, bool reset)
         {
-            var actualWidth = Width - scrollBarThickness;
-
-            if (x >= actualWidth - checkBoxPosX)
+            if (x >= contentSizeX - checkBoxPosX)
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
 
@@ -3252,11 +3254,10 @@ namespace FamiStudio
 
         private void ClickParamListButton(int x, int y, Button button, bool reset)
         {
-            var actualWidth = Width - scrollBarThickness;
             var buttonWidth = ScaleCustom(bmpMiscAtlas.GetElementSize((int)MiscImageIndices.ButtonLeft).Width, bitmapScale);
             var buttonX = x;
-            var leftButton  = buttonX > (actualWidth - sliderPosX) && buttonX < (actualWidth - sliderPosX + buttonWidth);
-            var rightButton = buttonX > (actualWidth - sliderPosX + sliderSizeX - buttonWidth) && buttonX < (actualWidth - sliderPosX + sliderSizeX);
+            var leftButton  = buttonX > (contentSizeX - sliderPosX) && buttonX < (contentSizeX - sliderPosX + buttonWidth);
+            var rightButton = buttonX > (contentSizeX - sliderPosX + sliderSizeX - buttonWidth) && buttonX < (contentSizeX - sliderPosX + sliderSizeX);
             var delta = leftButton ? -1 : (rightButton ? 1 : 0);
 
             if (!reset && (leftButton || rightButton))
@@ -3275,7 +3276,7 @@ namespace FamiStudio
                 App.UndoRedoManager.EndTransaction();
                 MarkDirty();
             }
-            else if (reset && buttonX > (actualWidth - sliderPosX))
+            else if (reset && buttonX > (contentSizeX - sliderPosX))
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
                 button.param.SetValue(button.param.DefaultValue);
@@ -3286,8 +3287,7 @@ namespace FamiStudio
 
         private void ClickParamTabsButton(int x, int y, Button button)
         {
-            var actualWidth = Width - scrollBarThickness;
-            var tabWidth = Utils.DivideAndRoundUp(actualWidth - expandButtonSizeX - paramRightPadX, button.tabNames.Length);
+            var tabWidth = Utils.DivideAndRoundUp(contentSizeX - expandButtonSizeX - paramRightPadX, button.tabNames.Length);
             var tabIndex = Utils.Clamp((x - expandButtonSizeX) / tabWidth, 0, button.tabNames.Length - 1);
 
             selectedInstrumentTab = button.tabNames[tabIndex];
@@ -3433,6 +3433,18 @@ namespace FamiStudio
             return true;
         }
 
+        private bool HandleMouseDownTopTabs(MouseEventArgs e)
+        {
+            if (topTabSizeY > 0 && e.Y < topTabSizeY && e.X < contentSizeX)
+            {
+                selectedTab = e.X < contentSizeX / 2 ? TabType.Project : TabType.Registers;
+                RefreshButtons();
+                return true;
+            }
+
+            return false;
+        }
+
         private bool HandleMouseDownButtons(MouseEventArgs e)
         {
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType, out var buttonRelX, out var buttonRelY);
@@ -3486,6 +3498,7 @@ namespace FamiStudio
 
             if (HandleMouseDownPan(e)) goto Handled;
             if (HandleMouseDownScrollbar(e)) goto Handled;
+            if (HandleMouseDownTopTabs(e)) goto Handled;
             if (HandleMouseDownButtons(e)) goto Handled;
             return;
 

@@ -1154,10 +1154,16 @@ namespace FamiStudio
                 {
                     RecreateAudioPlayers();
                     RefreshLayout();
+                    RefreshProjectExplorerButtons();
                     InitializeMidi();
                     MarkEverythingDirty();
                 }
             });
+        }
+
+        private void RefreshProjectExplorerButtons()
+        {
+            ProjectExplorer.RefreshButtons();
         }
 
         public bool TryClosing()
