@@ -135,6 +135,18 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
 	if (!mask) data_write.push(data);
 	if (!mask) a_write.push((a0 | (a1 << 1)));
+	if (!mask) {
+		switch (addr) {
+		case 0x401d:
+			regs_a0[current_register] = data;
+			ages_a0[current_register] = 0;
+			break;
+		case 0x401f:
+			regs_a1[current_register] = data;
+			ages_a1[current_register] = 0;
+			break;
+		}
+	}
 	//if (!mask) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
 	//run_until(time);
 }
@@ -251,4 +263,20 @@ void Nes_EPSM::write_shadow_register(int addr, int data)
 
 		shadow_internal_regs2[reg] = data;
 	}
+}
+
+void Nes_EPSM::get_register_values(struct epsm_register_values* r)
+{
+
+	for (int i = 0; i < 184; i++)
+	{
+		r->regs_a0[i] = regs_a0[i];
+		r->ages_a0[i] = ages_a0[i];
+		ages_a0[i] = increment_saturate(ages_a0[i]);
+
+		r->regs_a1[i] = regs_a1[i];
+		r->ages_a1[i] = ages_a1[i];
+		ages_a1[i] = increment_saturate(ages_a1[i]);
+	}
+
 }
