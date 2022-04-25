@@ -257,7 +257,7 @@ namespace FamiStudio
                                 if (note.HasDutyCycle)    noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
                                 if (note.HasNoteDelay)    noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
                                 if (note.HasCutDelay)     noteLine += GenerateAttribute("CutDelay", note.CutDelay);
-                                if (note.HasDeltaCounter) noteLine += GenerateAttribute("DeltaCounter", note.DeltaCounterDiv2);
+                                if (note.HasDeltaCounter) noteLine += GenerateAttribute("DeltaCounter", note.DeltaCounter);
 
                                 lines.Add(noteLine);
                             }
@@ -619,7 +619,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("CutDelay", out var cutDelayStr) && channel.SupportsEffect(Note.EffectCutDelay))
                                 note.CutDelay = byte.Parse(cutDelayStr);
                             if (parameters.TryGetValue("DeltaCounter", out var deltaCounterStr) && channel.SupportsEffect(Note.EffectDeltaCounter))
-                                note.DeltaCounterDiv2 = byte.Parse(deltaCounterStr);
+                                note.DeltaCounter = byte.Parse(deltaCounterStr);
 
                             break;
                         }

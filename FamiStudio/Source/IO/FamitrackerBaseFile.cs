@@ -339,7 +339,7 @@ namespace FamiStudio
                     if (pattern.Channel.SupportsEffect(Note.EffectDeltaCounter))
                     {
                         note = pattern.GetOrCreateNoteAt(n);
-                        note.DeltaCounterDiv2 = (byte)((fx.param & 0x7f) / 2);
+                        note.DeltaCounter = (byte)(fx.param & 0x7f);
                     }
                     return;
                 case Effect_FdsModSpeedHi:

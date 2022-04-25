@@ -69,6 +69,8 @@ void Nes_Square::clock_sweep( int negative_adjust )
 				// rewrite period
 				regs [2] = period & 0xff;
 				regs [3] = (regs [3] & ~7) | ((period >> 8) & 7);
+				ages [2] = 0;
+				ages [3] = 0;
 			}
 		}
 	}

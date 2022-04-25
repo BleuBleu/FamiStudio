@@ -1091,7 +1091,7 @@ namespace FamiStudio
                             if (note.HasCutDelay)
                                 effectString += $" S{note.CutDelay:X2}";
                             if (note.HasDeltaCounter)
-                                effectString += $" Z{note.DeltaCounterDiv2 * 2:X2}";
+                                effectString += $" Z{note.DeltaCounter * 2:X2}";
 
                             if (note.IsMusical && note.Arpeggio != prevArpeggio)
                             {

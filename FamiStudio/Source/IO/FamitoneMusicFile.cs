@@ -982,7 +982,7 @@ namespace FamiStudio
                             // Use hi-bit to flag if we need to apply it immediately (no samples playing this frame)
                             //or a bit later (when playing the sample, overriding the initial DMC value).
                             songData.Add($"${0x6f:x2}+");
-                            songData.Add($"${((note.IsMusical ? 0x00 : 0x80) | (note.DeltaCounterDiv2 * 2)):x2}");
+                            songData.Add($"${((note.IsMusical ? 0x00 : 0x80) | (note.DeltaCounter)):x2}");
                             usesDeltaCounter = true;
                         }
 

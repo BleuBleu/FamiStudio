@@ -550,7 +550,7 @@ namespace FamiStudio
 
             if (channel.Type == ChannelType.Dpcm)
             {
-                var dmc = NsfGetState(nsf, channel.Type, STATE_DPCMCOUNTER, 0) / 2;
+                var dmc = NsfGetState(nsf, channel.Type, STATE_DPCMCOUNTER, 0);
                 var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0);
 
                 if (len > 0) 
@@ -596,7 +596,7 @@ namespace FamiStudio
                         note.Value = (byte)noteValue;
                         if (state.dmc != dmc)
                         {
-                            note.DeltaCounterDiv2 = (byte)dmc;
+                            note.DeltaCounter = (byte)dmc;
                             state.dmc = dmc;
                         }
                         hasNote = true;
@@ -604,7 +604,7 @@ namespace FamiStudio
                 }
                 else if (dmc != state.dmc)
                 {
-                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).DeltaCounterDiv2 = (byte)dmc;
+                    GetOrCreatePattern(channel, p).GetOrCreateNoteAt(n).DeltaCounter = (byte)dmc;
                     state.dmc = dmc;
                 }
             }

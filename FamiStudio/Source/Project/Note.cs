@@ -376,7 +376,7 @@ namespace FamiStudio
             set { cutDelay = (byte)Utils.Clamp(value, 0, 31); HasCutDelay = true; }
         }
 
-        public byte DeltaCounterDiv2
+        public byte DeltaCounter
         {
             get { Debug.Assert(HasDeltaCounter); return dmcCounter; }
             set { dmcCounter = (byte)Utils.Clamp(value, 0, 127); HasDeltaCounter = true; }
@@ -683,7 +683,7 @@ namespace FamiStudio
                 case EffectDutyCycle    : return DutyCycle;
                 case EffectNoteDelay    : return NoteDelay;
                 case EffectCutDelay     : return CutDelay;
-                case EffectDeltaCounter : return DeltaCounterDiv2;
+                case EffectDeltaCounter : return DeltaCounter;
             }
 
             return 0;
@@ -704,7 +704,7 @@ namespace FamiStudio
                 case EffectDutyCycle    : DutyCycle         = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
                 case EffectNoteDelay    : NoteDelay         = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
                 case EffectCutDelay     : CutDelay          = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
-                case EffectDeltaCounter : DeltaCounterDiv2  = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
+                case EffectDeltaCounter : DeltaCounter      = (byte)Utils.Clamp(val, byte.MinValue, byte.MaxValue); break;
             }
         }
         
@@ -766,7 +766,7 @@ namespace FamiStudio
                 case EffectDutyCycle    : return channel.IsVrc6Channel ? 7 : 3;
                 case EffectNoteDelay    : return 31;
                 case EffectCutDelay     : return 31;
-                case EffectDeltaCounter : return 63;
+                case EffectDeltaCounter : return 127;
             }
 
             return 0;
