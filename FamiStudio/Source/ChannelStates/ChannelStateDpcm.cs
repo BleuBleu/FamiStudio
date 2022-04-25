@@ -33,7 +33,7 @@
                         // Override with effect, if present.
                         if (note.HasDeltaCounter)
                         {
-                            dmcInitialValue = note.DeltaCounterDiv2 * 2;
+                            dmcInitialValue = note.DeltaCounter;
                             note.HasDeltaCounter = false; // HACK : Clear so we don't set multiple times.
                         }
 
@@ -50,7 +50,7 @@
             
             if (note.HasDeltaCounter && !setCounter)
             {
-                WriteRegister(NesApu.APU_DMC_RAW, note.DeltaCounterDiv2);
+                WriteRegister(NesApu.APU_DMC_RAW, note.DeltaCounter);
                 note.HasDeltaCounter = false; // HACK : Clear so we don't set multiple times.
             }
 

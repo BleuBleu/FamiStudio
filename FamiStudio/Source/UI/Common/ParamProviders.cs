@@ -430,7 +430,7 @@ namespace FamiStudio
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.SampleRate); }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Padding Mode", 0, 4, DPCMPaddingType.PadTo16Bytes, "Padding method for the processed DMC data", true)
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, "DMC Initial Value", 0, 63, NesApu.DACDefaultValueDiv2, "Initial value of the DMC counter before any volume adjustment.\nThis is actually half of the value used in hardware.")
+                new DPCMSampleParamInfo(sample, "DMC Initial Value (÷2)", 0, 63, NesApu.DACDefaultValueDiv2, "Initial value of the DMC counter before any volume adjustment.\nThis is actually half of the value used in hardware.")
                     { GetValue = () => { return sample.DmcInitialValueDiv2; }, SetValue = (v) => { sample.DmcInitialValueDiv2 = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, "Volume Adjust", 0, 200, 100, "Volume adjustment (%)")
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },

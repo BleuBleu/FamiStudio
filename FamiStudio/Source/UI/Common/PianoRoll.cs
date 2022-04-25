@@ -3695,7 +3695,7 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
             dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
             dlg.Properties.AddCheckBox("Override DMC Initial Value :", mapping.OverrideDmcInitialValue); // 2
-            dlg.Properties.AddNumericUpDown("DMC Initial Value :", mapping.DmcInitialValueDiv2, 0, 63); // 3
+            dlg.Properties.AddNumericUpDown("DMC Initial Value (÷2) :", mapping.DmcInitialValueDiv2, 0, 63); // 3
             dlg.Properties.Build();
             dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
             dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;

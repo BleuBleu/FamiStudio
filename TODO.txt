@@ -17,6 +17,7 @@ Testing + Packaging
 
 3.4.0
 =====
+P0:
 - Right-click functionality.
 	- Tooltips
 	- Tooltips where a context menu can appear.
@@ -27,9 +28,7 @@ Testing + Packaging
 	- Sequencer :
 		- Pattern area.
 	- Piano roll
-		-
 	- PE
-		- 
 P1:
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value
 - Export selected song by default
