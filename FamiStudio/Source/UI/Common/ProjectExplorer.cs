@@ -512,6 +512,7 @@ namespace FamiStudio
                     new RegisterViewerRow("$08", 0x401d, 0x08, 0x0a),
                     new RegisterViewerRow("$10", 0x401d, 0x10, 0x12),
                     new RegisterViewerRow("$18", 0x401d, 0x18, 0x1d),
+                    new RegisterViewerRow("$22", 0x401d, 0x22, 0x22),
                     new RegisterViewerRow("$28", 0x401d, 0x28, 0x28),
                     new RegisterViewerRow("$30 A0", 0x401d, 0x30, 0x37),
                     new RegisterViewerRow("$30 A0", 0x401d, 0x38, 0x3f),
