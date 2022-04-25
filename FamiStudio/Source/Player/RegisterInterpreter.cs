@@ -293,17 +293,93 @@ namespace FamiStudio
 
         public int GetPeriod(int i)
         {
-            return regs.GetMergedSubRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_LO_A + i * 2, NesApu.EPSM_REG_HI_A + i * 2, 0xf);
+            if (i < 3)
+                return regs.GetMergedSubRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_LO_A + i * 2, NesApu.EPSM_REG_HI_A + i * 2, 0xf);
+            if (i >= 3 && i < 6)
+            {
+                var periodLo = regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0xA0 + i-3);
+                var periodHi = regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0xA4 + i-3);
+                return ((periodHi & 7) << 8) | periodLo;
+            }
+            if (i >= 6 && i < 9)
+            {
+                var periodLo = regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA1, 0xA0 + i-6);
+                var periodHi = regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA1, 0xA4 + i-6);
+                return ((periodHi & 7) << 8) | periodLo;
+            }
+            else
+                return 0;
         }
 
         public double GetFrequency(int i)
         {
-            return NesPeriodToFreq(GetPeriod(i), 16);
+            if (i < 3)
+                return NesPeriodToFreq(GetPeriod(i), 16);
+            else
+                return EpsmPeriodToFrequency(GetPeriod(i), GetOctave(i));
         }
 
-        public int GetVolume(int i)
+        public int GetVolume(int i,int op = 0)
         {
-            return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + i * 2) & 0xf;
+            if(i < 3)
+                return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, NesApu.EPSM_REG_VOL_A + i * 2) & 0xf;
+            if (i >= 3 && i < 6)
+                return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0x40 + (i-3) + op * 4) & 0x7f;
+            if (i >= 6 && i < 9)
+                return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA1, 0x40 + (i-6) + op * 4) & 0x7f;
+            else
+                return regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0x18 + i-9) & 0x1f;
         }
+
+        public string GetStereo(int i)
+        {
+            if (i < 3)
+                return "";
+            if (i >= 3 && i < 6)
+            {
+                string left = ((regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0xb4 + i - 3) & 0x80) != 0) ? "L" : "-";
+                string right = ((regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0xb4 + i - 3) & 0x40) != 0) ? "R" : "-";
+                return left + right;
+
+            }
+            if (i >= 6 && i < 9)
+            {
+                string left = ((regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA1, 0xb4 + i - 6) & 0x80) != 0) ? "L" : "-";
+                string right = ((regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA1, 0xb4 + i - 6) & 0x40) != 0) ? "R" : "-";
+                return left + right;
+
+            }
+            else
+            {
+                string left = ((regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0x18 + i - 9) & 0x80) != 0) ? "L" : "-";
+                string right = ((regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0x18 + i - 9) & 0x40) != 0) ? "R" : "-";
+                return left + right;
+
+            }
+        }
+
+
+        public int GetOctave(int i)
+        {
+            if (i >= 3 && i < 6)
+            {
+                var periodHi = regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA0, 0xA4 + i - 3);
+                return ((periodHi & 0x38) >> 3);
+            }
+            if (i >= 6 && i < 9)
+            {
+                var periodHi = regs.GetRegisterValue(ExpansionType.EPSM, NesApu.EPSM_DATA1, 0xA4 + i - 6);
+                return ((periodHi & 0x38) >> 3);
+            }
+            else
+                return 0;
+        }
+
+        private static double EpsmPeriodToFrequency(int period, int octave)
+        {
+            //adjusted by 1.002 to have the value closer to the notes intended
+            return period * 1.002 / 144 / 1048576.0 * 8000000 * (1 << octave);
+        }
+
     }
 }

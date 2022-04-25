@@ -506,20 +506,73 @@ namespace FamiStudio
                 i = new EpsmRegisterIntepreter(r);
                 ExpansionRows = new[]
                 {
-                    new RegisterViewerRow("$00", 0xE000, 0x00, 0x01),
-                    new RegisterViewerRow("$02", 0xE000, 0x02, 0x03),
-                    new RegisterViewerRow("$04", 0xE000, 0x04, 0x05),
-                    new RegisterViewerRow("$08", 0xE000, 0x08, 0x0a),
+                    new RegisterViewerRow("$00", 0x401d, 0x00, 0x01),
+                    new RegisterViewerRow("$02", 0x401d, 0x02, 0x03),
+                    new RegisterViewerRow("$04", 0x401d, 0x04, 0x05),
+                    new RegisterViewerRow("$08", 0x401d, 0x08, 0x0a),
+                    new RegisterViewerRow("$10", 0x401d, 0x10, 0x12),
+                    new RegisterViewerRow("$18", 0x401d, 0x18, 0x1d),
+                    new RegisterViewerRow("$28", 0x401d, 0x28, 0x28),
+                    new RegisterViewerRow("$30 A0", 0x401d, 0x30, 0x37),
+                    new RegisterViewerRow("$30 A0", 0x401d, 0x38, 0x3f),
+                    new RegisterViewerRow("$40 A0", 0x401d, 0x40, 0x47),
+                    new RegisterViewerRow("$40 A0", 0x401d, 0x48, 0x4f),
+                    new RegisterViewerRow("$50 A0", 0x401d, 0x50, 0x57),
+                    new RegisterViewerRow("$50 A0", 0x401d, 0x58, 0x5f),
+                    new RegisterViewerRow("$60 A0", 0x401d, 0x60, 0x67),
+                    new RegisterViewerRow("$60 A0", 0x401d, 0x68, 0x6f),
+                    new RegisterViewerRow("$70 A0", 0x401d, 0x70, 0x77),
+                    new RegisterViewerRow("$70 A0", 0x401d, 0x78, 0x7f),
+                    new RegisterViewerRow("$80 A0", 0x401d, 0x80, 0x87),
+                    new RegisterViewerRow("$80 A0", 0x401d, 0x88, 0x8f),
+                    new RegisterViewerRow("$90 A0", 0x401d, 0x90, 0x97),
+                    new RegisterViewerRow("$90 A0", 0x401d, 0x98, 0x9f),
+                    new RegisterViewerRow("$A0 A0", 0x401d, 0xa0, 0xa7),
+                    new RegisterViewerRow("$B0 A0", 0x401d, 0xb0, 0xb7),
+                    new RegisterViewerRow("$30 A1", 0x401f, 0x30, 0x37),
+                    new RegisterViewerRow("$30 A1", 0x401f, 0x38, 0x3f),
+                    new RegisterViewerRow("$40 A1", 0x401f, 0x40, 0x47),
+                    new RegisterViewerRow("$40 A1", 0x401f, 0x48, 0x4f),
+                    new RegisterViewerRow("$50 A1", 0x401f, 0x50, 0x57),
+                    new RegisterViewerRow("$50 A1", 0x401f, 0x58, 0x5f),
+                    new RegisterViewerRow("$60 A1", 0x401f, 0x60, 0x67),
+                    new RegisterViewerRow("$60 A1", 0x401f, 0x68, 0x6f),
+                    new RegisterViewerRow("$70 A1", 0x401f, 0x70, 0x77),
+                    new RegisterViewerRow("$70 A1", 0x401f, 0x78, 0x7f),
+                    new RegisterViewerRow("$80 A1", 0x401f, 0x80, 0x87),
+                    new RegisterViewerRow("$80 A1", 0x401f, 0x88, 0x8f),
+                    new RegisterViewerRow("$90 A1", 0x401f, 0x90, 0x97),
+                    new RegisterViewerRow("$90 A1", 0x401f, 0x98, 0x9f),
+                    new RegisterViewerRow("$A0 A1", 0x401f, 0xa0, 0xa7),
+                    new RegisterViewerRow("$B0 A1", 0x401f, 0xb0, 0xb7),
                 };
                 ChannelRows = new RegisterViewerRow[15][];
                 for (int j = 0; j < 15; j++)
                 {
                     var c = j; // Important, need to make a copy for the lambda.
-                    ChannelRows[c] = new[]
-                    {
-                        new RegisterViewerRow("Pitch",  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
-                        new RegisterViewerRow("Volume", () => i.GetVolume(c).ToString("00"), true),
-                    };
+                    if (j < 3)
+                        ChannelRows[c] = new[]
+                        {
+                            new RegisterViewerRow("Pitch", () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                            new RegisterViewerRow("Volume", () => i.GetVolume(c).ToString("00"), true),
+                        };
+                    if (j >= 3 && j < 9)
+                        ChannelRows[c] = new[]
+                        {
+                            new RegisterViewerRow("Pitch", () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                            //new RegisterViewerRow("Pitch", () =>  i.GetFrequency(c), true),
+                            new RegisterViewerRow("Stereo", () => i.GetStereo(c), true),
+                            new RegisterViewerRow("Vol OP1", () => i.GetVolume(c,0).ToString("00"), true),
+                            new RegisterViewerRow("Vol OP2", () => i.GetVolume(c,2).ToString("00"), true),
+                            new RegisterViewerRow("Vol OP3", () => i.GetVolume(c,1).ToString("00"), true),
+                            new RegisterViewerRow("Vol OP4", () => i.GetVolume(c,3).ToString("00"), true),
+                        };
+                    if (j >= 9 )
+                        ChannelRows[c] = new[]
+                        {
+                            new RegisterViewerRow("Stereo", () => i.GetStereo(c), true),
+                            new RegisterViewerRow("Volume", () => i.GetVolume(c).ToString("00"), true),
+                        };
                 }
             }
         }
@@ -546,7 +599,7 @@ namespace FamiStudio
             RegisterExpansionHeader,
             RegisterChannelHeader,
             ExpansionRegistersFirst, // One type per expansion for raw registers.
-            ChannelStateFirst = RegisterChannelHeader + ExpansionType.Count, // One type per channel for status.
+            ChannelStateFirst = ExpansionRegistersFirst + ExpansionType.Count, // One type per channel for status.
 
             Max = ChannelStateFirst + ChannelType.Count
         };

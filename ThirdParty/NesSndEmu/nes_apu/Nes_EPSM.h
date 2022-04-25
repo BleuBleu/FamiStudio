@@ -26,10 +26,10 @@ public:
 	void WriteToChip(uint8_t a, uint8_t d, cpu_time_t time);
 
 
-	unsigned char regs_a0[183];
-	unsigned char ages_a0[183];
-	unsigned char regs_a1[183];
-	unsigned char ages_a1[183];
+	unsigned char regs_a0[184];
+	unsigned char ages_a0[184];
+	unsigned char regs_a1[184];
+	unsigned char ages_a1[184];
 
 	enum { psg_clock = 4000000 };
 	enum { reg_select = 0x401c };
@@ -81,9 +81,9 @@ private:
 struct epsm_register_values
 {
 	// $9030 (Internal registers $10 to $35)
-	unsigned char regs_a0[183];
-	unsigned char ages_a0[183];
-	unsigned char regs_a1[183];
-	unsigned char ages_a1[183];
+	unsigned char regs_a0[184];
+	unsigned char ages_a0[184];
+	unsigned char regs_a1[184];
+	unsigned char ages_a1[184];
 };
 #endif

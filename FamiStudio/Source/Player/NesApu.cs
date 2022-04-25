@@ -406,10 +406,10 @@ namespace FamiStudio
         public unsafe struct EpsmRegisterValues
         {
             // (Internal registers 0 to B4).
-            public fixed byte Regs_A0[16];
-            public fixed byte Ages_A0[16];
-            public fixed byte Regs_A1[16];
-            public fixed byte Ages_A1[16];
+            public fixed byte Regs_A0[184];
+            public fixed byte Ages_A0[184];
+            public fixed byte Regs_A1[184];
+            public fixed byte Ages_A1[184];
         }
 
         public struct N163InstrumentRange
@@ -427,7 +427,7 @@ namespace FamiStudio
             public Mmc5RegisterValues Mmc5;
             public N163RegisterValues N163;
             public S5bRegisterValues  S5B;
-            public EpsmRegisterValues  Epsm;
+            public EpsmRegisterValues Epsm;
 
             // Extra information for the register viewer.
             public System.Drawing.Color[] InstrumentColors = new System.Drawing.Color[ChannelType.Count];
@@ -592,18 +592,17 @@ namespace FamiStudio
 
             private byte GetEpsmRegisterValue_A0(int reg, int sub, out byte age)
             {
-                Debug.Assert(reg == NesApu.EPSM_DATA0);
-
-                age = Epsm.Ages_A0[sub];
-                return Epsm.Regs_A0[sub];
-            }
-
-            private byte GetEpsmRegisterValue_A1(int reg, int sub, out byte age)
-            {
-                Debug.Assert(reg == NesApu.EPSM_DATA1);
-
-                age = Epsm.Ages_A1[sub];
-                return Epsm.Regs_A1[sub];
+                //Debug.Assert(reg == NesApu.EPSM_DATA0 || reg == NesApu.EPSM_DATA1);
+                if (reg == NesApu.EPSM_DATA0)
+                {
+                    age = Epsm.Ages_A0[sub];
+                    return Epsm.Regs_A0[sub];
+                }
+                else
+                {
+                    age = Epsm.Ages_A1[sub];
+                    return Epsm.Regs_A1[sub];
+                }
             }
 
             public byte GetRegisterValue(int exp, int reg, out byte age, int sub = -1)

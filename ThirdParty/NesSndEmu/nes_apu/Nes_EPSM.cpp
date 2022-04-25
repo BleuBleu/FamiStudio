@@ -268,7 +268,7 @@ void Nes_EPSM::write_shadow_register(int addr, int data)
 void Nes_EPSM::get_register_values(struct epsm_register_values* r)
 {
 
-	for (int i = 0; i < 183; i++)
+	for (int i = 0; i < 184; i++)
 	{
 		r->regs_a0[i] = regs_a0[i];
 		r->ages_a0[i] = ages_a0[i];
