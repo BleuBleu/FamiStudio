@@ -93,7 +93,7 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 
 		long freq = ((osc_reg[4] & 3) << 16) | (osc_reg[2] << 8) | osc_reg[0];
 		int volume = osc_reg[7] & 15;
-		int wave_size = 256 - osc_reg[4];
+		int wave_size = 256 - (osc_reg[4] & 0xfc);
 
 		// This is not very accurate. We always do the entire 15-cycle channel update.
 		// We should only update until end_time. This will fail to emulate mid-update

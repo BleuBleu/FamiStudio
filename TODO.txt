@@ -2,12 +2,9 @@
 =====
 Testing + Packaging
 ===================
-- Demo songs:
+/ Demo songs:
 	- Sonic demo song (how2 will need to fix volumes).
-	- Update dedricil songs
-	- Eclipse demo song.
-	- Add to Android + Windows Setup (how2 need to fix volume first)
-- Run + generate unit tests (dmc will likely break something in there).
+- Run + generate unit tests + add DMC. (dmc will likely break something in there).
 - Update doc.
 - Retest instrument/arpeggio drag. I think the button height thing will break it.
 - Test Stereo stuff :
