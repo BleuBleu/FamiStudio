@@ -4,12 +4,25 @@ Testing + Packaging
 ===================
 / Demo songs:
 	- Sonic demo song (how2 will need to fix volumes).
-- Run + generate unit tests + add DMC. (dmc will likely break something in there).
+- NotSoFatso recompile linux/mac
+- Unit test
+	- DMC values of both samples arent the same, weird.
 - Update doc.
 - Retest instrument/arpeggio drag. I think the button height thing will break it.
 - Test Stereo stuff :
 	/ Audio export
 	/ Video export
+
+Feature list:
+- EPSM support
+- Register viewer (desktop version only)
+- Delta Counter (Zxx) effect support
+- Ability to override initial DMC value for each sample assignment
+- VGM export
+- Bamboo Tracker instruments import (desktop version only)
+- Option not to clamp periods/notes to make the app behave more like the NSF driver
+- Minor cosmetic changes (ADSR diagrams, tabs in instrument editor, etc.)
+- Multiple bugfixes
 
 3.4.0
 =====

@@ -8,15 +8,15 @@
 ..\bin\Release\FamiStudio.exe TestMulti.fms nsf-export TestMulti.nsf
 ..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.fms nsf-export TestFamiTrackerTempo.nsf
 
-..\bin\Release\FamiStudio.exe TestBase.nsf famistudio-txt-export TestBase_NsfTest.txt
-..\bin\Release\FamiStudio.exe TestFDS.nsf famistudio-txt-export TestFDS_NsfTest.txt
-..\bin\Release\FamiStudio.exe TestMMC5.nsf famistudio-txt-export TestMMC5_NsfTest.txt
-..\bin\Release\FamiStudio.exe TestN163.nsf famistudio-txt-export TestN163_NsfTest.txt
-..\bin\Release\FamiStudio.exe TestS5B.nsf famistudio-txt-export TestS5B_NsfTest.txt
-..\bin\Release\FamiStudio.exe TestVRC6.nsf famistudio-txt-export TestVRC6_NsfTest.txt
-..\bin\Release\FamiStudio.exe TestVRC7.nsf famistudio-txt-export TestVRC7_NsfTest.txt
-..\bin\Release\FamiStudio.exe TestMulti.nsf famistudio-txt-export TestMulti_NsfTest.txt -nsf-import-duration:250
-..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.nsf famistudio-txt-export TestFamiTrackerTempo_NsfTest.txt
+..\bin\Release\FamiStudio.exe TestBase.nsf famistudio-txt-export TestBase_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestFDS.nsf famistudio-txt-export TestFDS_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestMMC5.nsf famistudio-txt-export TestMMC5_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestN163.nsf famistudio-txt-export TestN163_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestS5B.nsf famistudio-txt-export TestS5B_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestVRC6.nsf famistudio-txt-export TestVRC6_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestVRC7.nsf famistudio-txt-export TestVRC7_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestMulti.nsf famistudio-txt-export TestMulti_NsfTest.txt -nsf-import-pattern-length:160 -nsf-import-duration:250 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.nsf famistudio-txt-export TestFamiTrackerTempo_NsfTest.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
 
 fc TestBase_NsfTest.txt TestBase_NsfRef.txt > nul
 @if errorlevel 1 goto error

@@ -23,7 +23,7 @@ namespace FamiStudio
             CultureInfo.CurrentCulture = oldCulture;
         }
 
-        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData)
+        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData, bool noVersion = false)
         {
             var project = originalProject.DeepClone();
             project.DeleteAllSongsBut(songIds, deleteUnusedData);
@@ -33,7 +33,10 @@ namespace FamiStudio
             var lines = new List<string>();
 
             var versionString = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
-            var projectLine = $"Project{GenerateAttribute("Version", versionString)}{GenerateAttribute("TempoMode", TempoType.Names[project.TempoMode])}";
+            var projectLine = $"Project";
+            if (!noVersion)
+                projectLine += $"{GenerateAttribute("Version", versionString)}";
+            projectLine += $"{GenerateAttribute("TempoMode", TempoType.Names[project.TempoMode])}";
 
             if (project.Name      != "")    projectLine += GenerateAttribute("Name", project.Name);
             if (project.Author    != "")    projectLine += GenerateAttribute("Author", project.Author);
@@ -359,8 +362,11 @@ namespace FamiStudio
                     {
                         case "Project":
                         {
+                            var currentVersion = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
+
                             project = new Project();
-                            parameters.TryGetValue("Version", out var version);
+                            if (!parameters.TryGetValue("Version", out var version))
+                                version = currentVersion;
                             if (parameters.TryGetValue("Name", out var name)) project.Name = name;
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
@@ -384,7 +390,7 @@ namespace FamiStudio
                                 project.SetExpansionAudioMask(expansionMask, numN163Channels);
                             }
 
-                            if (!version.StartsWith("3.2"))
+                            if (!version.StartsWith(currentVersion.Substring(0, 3)))
                             {
                                 Log.LogMessage(LogSeverity.Error, "File was created with an incompatible version of FamiStudio. The text format is only compatible with the current version.");
                                 return null;

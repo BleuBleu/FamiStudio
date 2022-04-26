@@ -482,9 +482,10 @@ namespace FamiStudio
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
             {
-                var cleanup = HasOption("famistudio-txt-cleanup");
+                var cleanup   = HasOption("famistudio-txt-cleanup");
+                var noVersion = HasOption("famistudio-txt-noversion");
 
-                new FamistudioTextFile().Save(project, filename, exportSongIds, cleanup);
+                new FamistudioTextFile().Save(project, filename, exportSongIds, cleanup, noVersion);
             }
         }
 
@@ -584,6 +585,10 @@ namespace FamiStudio
         {
             if (!ValidateExtension(filename, ".txt"))
                 return;
+
+            // HACK: For consistency.
+            Settings.ClampPeriods = true;
+            Settings.SquareSmoothVibrato = true;
 
             new UnitTestPlayer(project.OutputsStereoAudio).GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
         }
