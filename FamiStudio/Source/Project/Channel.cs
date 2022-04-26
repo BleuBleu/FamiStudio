@@ -116,9 +116,9 @@ namespace FamiStudio
             {
                 case Note.EffectVolume:
                 case Note.EffectVolumeSlide: return type != ChannelType.Dpcm;
-                case Note.EffectFinePitch: return type != ChannelType.Noise && type != ChannelType.Dpcm && type != ChannelType.EPSMrythm1 && type != ChannelType.EPSMrythm2 && type != ChannelType.EPSMrythm3 && type != ChannelType.EPSMrythm4 && type != ChannelType.EPSMrythm5 && type != ChannelType.EPSMrythm6;
-                case Note.EffectVibratoSpeed: return type != ChannelType.Noise && type != ChannelType.Dpcm && type != ChannelType.EPSMrythm1 && type != ChannelType.EPSMrythm2 && type != ChannelType.EPSMrythm3 && type != ChannelType.EPSMrythm4 && type != ChannelType.EPSMrythm5 && type != ChannelType.EPSMrythm6;
-                case Note.EffectVibratoDepth: return type != ChannelType.Noise && type != ChannelType.Dpcm && type != ChannelType.EPSMrythm1 && type != ChannelType.EPSMrythm2 && type != ChannelType.EPSMrythm3 && type != ChannelType.EPSMrythm4 && type != ChannelType.EPSMrythm5 && type != ChannelType.EPSMrythm6;
+                case Note.EffectFinePitch: return type != ChannelType.Noise && type != ChannelType.Dpcm && !IsEPSMRythmChannel;
+                case Note.EffectVibratoSpeed: return type != ChannelType.Noise && type != ChannelType.Dpcm && !IsEPSMRythmChannel;
+                case Note.EffectVibratoDepth: return type != ChannelType.Noise && type != ChannelType.Dpcm && !IsEPSMRythmChannel;
                 case Note.EffectFdsModDepth: return type == ChannelType.FdsWave;
                 case Note.EffectFdsModSpeed: return type == ChannelType.FdsWave;
                 case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
