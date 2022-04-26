@@ -133,9 +133,10 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
 	a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
 	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
-	if (!mask) data_write.push(data);
-	if (!mask) a_write.push((a0 | (a1 << 1)));
-	if (!mask) {
+	if (!mask) 
+	{	
+		queue.push(a0 | (a1 << 1), data);
+	
 		switch (addr) {
 		case 0x401d:
 			regs_a0[current_register] = data;
@@ -162,11 +163,10 @@ long Nes_EPSM::run_until(cpu_time_t time)
 
 	while (t < time)
 	{
-		if (!data_write.empty() && !a_write.empty() && !(t % 1))
+		if (!queue.empty() && !(t % 1))
 		{
-			OPN2_Write(&opn2, a_write.front(), data_write.front());
-			data_write.pop();
-			a_write.pop();
+			epsm_write write = queue.pop();
+			OPN2_Write(&opn2, write.addr, write.data);
 		}
 		int sample = (int)(PSG_calc(psg)/1.8);
 		int sample_right;
