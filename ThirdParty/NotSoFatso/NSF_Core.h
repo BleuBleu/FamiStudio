@@ -262,7 +262,7 @@ protected:
 	void FASTCALL		WriteMemory_ExRAM(WORD a,BYTE v);
 	void FASTCALL		WriteMemory_SRAM(WORD a,BYTE v)		{ pSRAM[a & 0x1FFF] = v; }
 	void FASTCALL		WriteMemory_pAPU(WORD a,BYTE v);
-	void FASTCALL		WriteMemory_FDSRAM(WORD a,BYTE v)	{ pROM[(a >> 12) - 6][a & 0x0FFF] = v; }
+	void FASTCALL		WriteMemory_FDSRAM(WORD a,BYTE v)	{ if (a >= 0x6000 && (a < 0x8000 || nExternalSound == EXTSOUND_FDS)) pROM[(a >> 12) - 6][a & 0x0FFF] = v; } // Dont allow changing the ROM if multiple expansions, i dont care.
 	void FASTCALL		WriteMemory_Default(WORD a,BYTE v)	{ }
 
 	void FASTCALL		WriteMemory_VRC6(WORD a,BYTE v);
