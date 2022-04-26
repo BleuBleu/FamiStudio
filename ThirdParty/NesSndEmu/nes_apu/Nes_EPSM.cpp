@@ -4,7 +4,6 @@
 #include "Nes_EPSM.h"
 #include "emu2149.h"
 #include "ym3438.h"
-#include <iostream>
 #include BLARGG_SOURCE_BEGIN
 
 Nes_EPSM::Nes_EPSM() : psg(NULL), output_buffer(NULL), output_buffer_right(NULL)
@@ -267,7 +266,6 @@ void Nes_EPSM::write_shadow_register(int addr, int data)
 
 void Nes_EPSM::get_register_values(struct epsm_register_values* r)
 {
-
 	for (int i = 0; i < 184; i++)
 	{
 		r->regs_a0[i] = regs_a0[i];
@@ -278,5 +276,5 @@ void Nes_EPSM::get_register_values(struct epsm_register_values* r)
 		r->ages_a1[i] = ages_a1[i];
 		ages_a1[i] = increment_saturate(ages_a1[i]);
 	}
-
 }
+
