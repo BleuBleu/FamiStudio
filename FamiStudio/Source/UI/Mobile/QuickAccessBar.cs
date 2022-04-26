@@ -453,7 +453,7 @@ namespace FamiStudio
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                var size = textPosTop + ThemeResources.FontMediumBold.MeasureString(item.Text) * 5 / 4;
+                var size = textPosTop + ThemeResources.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
 
                 if (item.ExtraImageIndex >= 0)
                     size += ScaleCustom(bmpButtonAtlas.GetElementSize(item.ExtraImageIndex).Width, iconScaleFloat);

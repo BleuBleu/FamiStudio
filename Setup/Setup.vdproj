@@ -39,6 +39,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_10AC375DF6BF4B2E8414009FE67686F6"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2AAD30D158BD4EFF9A5A4A89AD731B5F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -99,7 +105,13 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_808532ED14044DC8948BA6D7AFAA6A6D"
+        "MsmKey" = "8:_846C43071F8545D89DB53296E1A02ED9"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_91F75EFBC418414FA0AC9F949A923E11"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -141,13 +153,13 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_DCA09AB06FBF4E9F909471B12CC75DF0"
+        "MsmKey" = "8:_DE3E8B106B034CAAB62B9E55201E4619"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_DE3E8B106B034CAAB62B9E55201E4619"
+        "MsmKey" = "8:_E06C1478A59946E3AB46830133F79763"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -342,6 +354,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_10AC375DF6BF4B2E8414009FE67686F6"
+            {
+            "SourcePath" = "8:Demo Songs\\Dedrecil.fms"
+            "TargetName" = "8:Dedrecil.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2AAD30D158BD4EFF9A5A4A89AD731B5F"
@@ -566,10 +598,30 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_808532ED14044DC8948BA6D7AFAA6A6D"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_846C43071F8545D89DB53296E1A02ED9"
             {
-            "SourcePath" = "8:Demo Songs\\Dedricil.fms"
-            "TargetName" = "8:Dedricil.fms"
+            "SourcePath" = "8:Demo Songs\\Another Winter.fms"
+            "TargetName" = "8:Another Winter.fms"
+            "Tag" = "8:"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_91F75EFBC418414FA0AC9F949A923E11"
+            {
+            "SourcePath" = "8:Demo Songs\\Nice.fms"
+            "TargetName" = "8:Nice.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -706,10 +758,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DCA09AB06FBF4E9F909471B12CC75DF0"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DE3E8B106B034CAAB62B9E55201E4619"
             {
-            "SourcePath" = "8:Demo Songs\\City.fms"
-            "TargetName" = "8:City.fms"
+            "SourcePath" = "8:Demo Songs\\Shatterhand.fms"
+            "TargetName" = "8:Shatterhand.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -726,10 +778,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DE3E8B106B034CAAB62B9E55201E4619"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E06C1478A59946E3AB46830133F79763"
             {
-            "SourcePath" = "8:Demo Songs\\Shatterhand.fms"
-            "TargetName" = "8:Shatterhand.fms"
+            "SourcePath" = "8:Demo Songs\\Green Hill.fms"
+            "TargetName" = "8:Green Hill.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -868,7 +920,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:FamiStudio"
         "ProductCode" = "8:{17D39056-6243-40FE-AF9E-F285269FDBC0}"
-        "PackageCode" = "8:{48FBE58B-C313-4AC8-A991-2164BCE97B76}"
+        "PackageCode" = "8:{18DE50F9-EE35-4606-B504-E18EEF9BCF39}"
         "UpgradeCode" = "8:{B82EE4DC-4ECE-46C8-A464-1B7CAE09B938}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -1417,7 +1469,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_02EAA2AD59C5483CB557FE728242DD43"
             {
-            "SourcePath" = "8:..\\FamiStudio\\obj\\Debug\\FamiStudio.exe"
+            "SourcePath" = "8:..\\FamiStudio\\obj\\Release\\FamiStudio.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"

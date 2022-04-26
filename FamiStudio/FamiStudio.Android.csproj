@@ -652,8 +652,9 @@
     <EmbeddedResource Include="Rom\rom_pal.nes" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\Setup\Demo Songs\Another Winter.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Castlevania 2.fms" />
-    <EmbeddedResource Include="..\Setup\Demo Songs\Dedricil.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Dedrecil.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\DuckTales.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gimmick.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Gradius 2.fms" />
@@ -664,6 +665,7 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\Layla The Iris Missions.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Mega Man 2.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Megami Tensei II.fms" />
+    <EmbeddedResource Include="..\Setup\Demo Songs\Nice.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\SFX.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Shatterhand.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Shovel Knight.fms" />
