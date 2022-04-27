@@ -5,9 +5,6 @@ Testing + Packaging
 / Demo songs:
 	- Sonic demo song (how2 will need to fix volumes).
 	- Instrument packages
-- EPSM Unit test
-	- Add to batch files
-	- Fix Linux/Mac
 - Update doc.
 - Retest instrument/arpeggio drag. I think the button height thing will break it.
 - Test Stereo stuff :
