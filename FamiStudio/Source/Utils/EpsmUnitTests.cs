@@ -14,6 +14,7 @@ namespace FamiStudio
         private static int addr1 = 0;
         private static byte[] regs0 = new byte[184];
         private static byte[] regs1 = new byte[184];
+        private static NotSoFatso.WriteRegisterDelegate regCallback;
 
         private static void ApuRegisterWriteDeledate(int addr, int data)
         {
@@ -57,11 +58,11 @@ namespace FamiStudio
                 return;
             }
             
-            var regCallback = new NotSoFatso.WriteRegisterDelegate(ApuRegisterWriteDeledate);
-            var lines = new List<string>();
-
+            regCallback = new NotSoFatso.WriteRegisterDelegate(ApuRegisterWriteDeledate);
             NotSoFatso.NsfSetApuWriteCallback(nsf, regCallback);
             NotSoFatso.NsfSetTrack(nsf, 0);
+
+            var lines = new List<string>();
 
             const int NumFrames = 12320; // Matches duration of TestEPSM.fms.
 
