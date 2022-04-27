@@ -2519,6 +2519,11 @@ int CNSFCore::GetState(int channel, int state, int sub)
 	return 0;
 }
 
+void CNSFCore::SetApuWriteCallback(ApuRegWriteCallback callback)
+{
+	apuRegWriteCallback = callback;
+}
+
 int CNSFCore::GetSamples(BYTE* buffer,int buffersize)
 {
 	if(!buffer)								return 0;

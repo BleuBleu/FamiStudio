@@ -171,7 +171,7 @@ class CNSFFile;
 
 typedef BYTE (FASTCALL CNSFCore::*ReadProc)(WORD);
 typedef void (FASTCALL CNSFCore::*WriteProc)(WORD,BYTE);
-typedef void (CDECL *ApuRegWriteCallback)(WORD addr, BYTE data);
+typedef void (CDECL* ApuRegWriteCallback)(int addr, int data);
 
 class CNSFCore
 {
@@ -199,7 +199,12 @@ public:
 	//
 	int		GetSamples(BYTE* buffer, int buffersize);	//fill a buffer with samples
 	int		RunOneFrame();
+
+	//
+	//  FamiStudio Stuff
+	//
 	int		GetState(int channel, int state, int sub);
+	void	SetApuWriteCallback(ApuRegWriteCallback callback);
 
 	//
 	//	Playback options

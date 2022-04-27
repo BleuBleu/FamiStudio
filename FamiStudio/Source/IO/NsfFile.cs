@@ -272,84 +272,6 @@ namespace FamiStudio
             return true;
         }
 
-#if FAMISTUDIO_WINDOWS
-        private const string NotSoFatsoDll = "NotSoFatso.dll";
-#elif FAMISTUDIO_MACOS
-        private const string NotSoFatsoDll = "NotSoFatso.dylib";
-#else
-        private const string NotSoFatsoDll = "NotSoFatso.so";
-#endif
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static IntPtr NsfOpen(string file);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NsfGetTrackCount(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NsfIsPal(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NsfGetClockSpeed(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NsfGetExpansion(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static IntPtr NsfGetTitle(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static IntPtr NsfGetArtist(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static IntPtr NsfGetCopyright(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static IntPtr NsfGetTrackName(IntPtr nsf, int track);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NsfClose(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static void NsfSetTrack(IntPtr nsf, int track);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NsfRunFrame(IntPtr nsf);
-
-        [DllImport(NotSoFatsoDll, CallingConvention = CallingConvention.StdCall)]
-        public extern static int NsfGetState(IntPtr nsf, int channel, int state, int sub);
-
-        const int EXTSOUND_VRC6  = 0x01;
-        const int EXTSOUND_VRC7  = 0x02;
-        const int EXTSOUND_FDS   = 0x04;
-        const int EXTSOUND_MMC5  = 0x08;
-        const int EXTSOUND_N163  = 0x10;
-        const int EXTSOUND_S5B   = 0x20;
-
-        const int STATE_VOLUME             = 0;
-        const int STATE_PERIOD             = 1;
-        const int STATE_DUTYCYCLE          = 2;
-        const int STATE_DPCMSAMPLELENGTH   = 3;
-        const int STATE_DPCMSAMPLEADDR     = 4;
-        const int STATE_DPCMSAMPLEDATA     = 5;
-        const int STATE_DPCMLOOP           = 6;
-        const int STATE_DPCMPITCH          = 7;
-        const int STATE_DPCMCOUNTER        = 8;
-        const int STATE_FDSWAVETABLE       = 9;
-        const int STATE_FDSMODULATIONTABLE = 10;
-        const int STATE_FDSMODULATIONDEPTH = 11;
-        const int STATE_FDSMODULATIONSPEED = 12;
-        const int STATE_FDSMASTERVOLUME    = 13;
-        const int STATE_VRC7PATCH          = 14;
-        const int STATE_VRC7PATCHREG       = 15;
-        const int STATE_VRC7OCTAVE         = 16;
-        const int STATE_VRC7TRIGGER        = 17;
-        const int STATE_VRC7SUSTAIN        = 18;
-        const int STATE_N163WAVEPOS        = 19;
-        const int STATE_N163WAVESIZE       = 20;
-        const int STATE_N163WAVE           = 21;
-        const int STATE_N163NUMCHANNELS    = 22;
-
         class ChannelState
         {
             public const int Triggered = 1;
@@ -550,8 +472,8 @@ namespace FamiStudio
 
             if (channel.Type == ChannelType.Dpcm)
             {
-                var dmc = NsfGetState(nsf, channel.Type, STATE_DPCMCOUNTER, 0);
-                var len = NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLELENGTH, 0);
+                var dmc = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMCOUNTER, 0);
+                var len = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMSAMPLELENGTH, 0);
 
                 if (len > 0) 
                 {
@@ -567,14 +489,14 @@ namespace FamiStudio
 
                     var sampleData = new byte[len];
                     for (int i = 0; i < len; i++)
-                        sampleData[i] = (byte)NsfGetState(nsf, channel.Type, STATE_DPCMSAMPLEDATA, i);
+                        sampleData[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMSAMPLEDATA, i);
 
                     var sample = project.FindMatchingSample(sampleData);
                     if (sample == null)
                         sample = project.CreateDPCMSampleFromDmcData($"Sample {project.Samples.Count + 1}", sampleData);
 
-                    var loop  = NsfGetState(nsf, channel.Type, STATE_DPCMLOOP, 0) != 0;
-                    var pitch = NsfGetState(nsf, channel.Type, STATE_DPCMPITCH, 0);
+                    var loop  = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMLOOP, 0) != 0;
+                    var pitch = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DPCMPITCH, 0);
 
                     var noteValue = project.FindDPCMSampleMapping(sample, pitch, loop);
                     if (noteValue == -1)
@@ -610,9 +532,9 @@ namespace FamiStudio
             }
             else
             {
-                var period  = NsfGetState(nsf, channel.Type, STATE_PERIOD, 0);
-                var volume  = NsfGetState(nsf, channel.Type, STATE_VOLUME, 0);
-                var duty    = NsfGetState(nsf, channel.Type, STATE_DUTYCYCLE, 0);
+                var period  = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_PERIOD, 0);
+                var volume  = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VOLUME, 0);
+                var duty    = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_DUTYCYCLE, 0);
                 var force   = false;
                 var stop    = false;
                 var release = false;
@@ -641,8 +563,8 @@ namespace FamiStudio
 
                 if (channel.Type >= ChannelType.Vrc7Fm1 && channel.Type <= ChannelType.Vrc7Fm6)
                 {
-                    var trigger = NsfGetState(nsf, channel.Type, STATE_VRC7TRIGGER, 0);
-                    var sustain = NsfGetState(nsf, channel.Type, STATE_VRC7SUSTAIN, 0) != 0;
+                    var trigger = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7TRIGGER, 0);
+                    var sustain = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7SUSTAIN, 0) != 0;
 
                     var newState = state.state;
 
@@ -659,7 +581,7 @@ namespace FamiStudio
                         force |= true;
                     }
 
-                    octave = NsfGetState(nsf, channel.Type, STATE_VRC7OCTAVE, 0);
+                    octave = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7OCTAVE, 0);
                 }
                 else
                 {
@@ -694,18 +616,18 @@ namespace FamiStudio
                     var modEnv = new sbyte[32];
 
                     for (int i = 0; i < 64; i++)
-                        wavEnv[i] = (sbyte)(NsfGetState(nsf, channel.Type, STATE_FDSWAVETABLE, i) & 0x3f);
+                        wavEnv[i] = (sbyte)(NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSWAVETABLE, i) & 0x3f);
                     for (int i = 0; i < 32; i++)
-                        modEnv[i] = (sbyte)(NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONTABLE, i));
+                        modEnv[i] = (sbyte)(NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONTABLE, i));
 
                     Envelope.ConvertFdsModulationToAbsolute(modEnv);
 
-                    var masterVolume = (byte)NsfGetState(nsf, channel.Type, STATE_FDSMASTERVOLUME, 0);
+                    var masterVolume = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMASTERVOLUME, 0);
 
                     instrument = GetFdsInstrument(wavEnv, modEnv, masterVolume);
 
-                    int modDepth = NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONDEPTH, 0);
-                    int modSpeed = NsfGetState(nsf, channel.Type, STATE_FDSMODULATIONSPEED, 0);
+                    int modDepth = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONDEPTH, 0);
+                    int modSpeed = NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_FDSMODULATIONSPEED, 0);
 
                     if (state.fdsModDepth != modDepth)
                     {
@@ -722,14 +644,14 @@ namespace FamiStudio
                 else if (channel.Type >= ChannelType.N163Wave1 &&
                          channel.Type <= ChannelType.N163Wave8)
                 {
-                    var wavePos = (byte)NsfGetState(nsf, channel.Type, STATE_N163WAVEPOS,  0);
-                    var waveLen = (byte)NsfGetState(nsf, channel.Type, STATE_N163WAVESIZE, 0);
+                    var wavePos = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_N163WAVEPOS,  0);
+                    var waveLen = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_N163WAVESIZE, 0);
 
                     if (waveLen > 0)
                     {
                         var waveData = new sbyte[waveLen];
                         for (int i = 0; i < waveLen; i++)
-                            waveData[i] = (sbyte)NsfGetState(nsf, channel.Type, STATE_N163WAVE, wavePos + i);
+                            waveData[i] = (sbyte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_N163WAVE, wavePos + i);
 
                         instrument = GetN163Instrument(waveData, wavePos);
                     }
@@ -739,13 +661,13 @@ namespace FamiStudio
                 else if (channel.Type >= ChannelType.Vrc7Fm1 &&
                          channel.Type <= ChannelType.Vrc7Fm6)
                 {
-                    var patch = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCH, 0);
+                    var patch = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7PATCH, 0);
                     var regs = new byte[8];
 
                     if (patch == 0)
                     {
                         for (int i = 0; i < 8; i++)
-                            regs[i] = (byte)NsfGetState(nsf, channel.Type, STATE_VRC7PATCHREG, i);
+                            regs[i] = (byte)NotSoFatso.NsfGetState(nsf, channel.Type, NotSoFatso.STATE_VRC7PATCHREG, i);
                     }
 
                     instrument = GetVrc7Instrument(patch, regs);
@@ -831,17 +753,17 @@ namespace FamiStudio
 
         public static string[] GetSongNames(string filename)
         {
-            var nsf = NsfOpen(filename);
+            var nsf = NotSoFatso.NsfOpen(filename);
 
             if (nsf == IntPtr.Zero)
                 return null;
 
-            var trackCount = NsfGetTrackCount(nsf);
+            var trackCount = NotSoFatso.NsfGetTrackCount(nsf);
             var trackNames = new string[trackCount];
 
             for (int i = 0; i < trackCount; i++)
             {
-                var name = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, i));
+                var name = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetTrackName(nsf, i));
                 if (string.IsNullOrEmpty(name))
                 {
                     trackNames[i] = $"Song {i+1}";
@@ -852,33 +774,33 @@ namespace FamiStudio
                 }
             }
 
-            NsfClose(nsf);
+            NotSoFatso.NsfClose(nsf);
 
             return trackNames;
         }
 
         private int GetNumNamcoChannels(string filename, int songIndex, int numFrames)
         {
-            var tmpNsf = NsfOpen(filename);
+            var tmpNsf = NotSoFatso.NsfOpen(filename);
 
-            NsfSetTrack(tmpNsf, songIndex);
+            NotSoFatso.NsfSetTrack(tmpNsf, songIndex);
 
             int numNamcoChannels = 1;
             for (int i = 0; i < numFrames; i++)
             {
-                var playCalled = NsfRunFrame(tmpNsf);
+                var playCalled = NotSoFatso.NsfRunFrame(tmpNsf);
                 if (playCalled != 0)
-                    numNamcoChannels = Math.Max(numNamcoChannels, NsfGetState(tmpNsf, ChannelType.N163Wave1, STATE_N163NUMCHANNELS, 0));
+                    numNamcoChannels = Math.Max(numNamcoChannels, NotSoFatso.NsfGetState(tmpNsf, ChannelType.N163Wave1, NotSoFatso.STATE_N163NUMCHANNELS, 0));
             }
 
-            NsfClose(tmpNsf);
+            NotSoFatso.NsfClose(tmpNsf);
 
             return numNamcoChannels;
         }
 
         public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence, bool reverseDpcm, bool preserveDpcmPad)
         {
-            nsf = NsfOpen(filename);
+            nsf = NotSoFatso.NsfOpen(filename);
 
             if (nsf == IntPtr.Zero)
             {
@@ -886,16 +808,16 @@ namespace FamiStudio
                 return null;
             }
 
-            var trackCount = NsfGetTrackCount(nsf);
+            var trackCount = NotSoFatso.NsfGetTrackCount(nsf);
 
             if (songIndex < 0 || songIndex > trackCount)
                 return null;
 
             preserveDpcmPadding = preserveDpcmPad;
 
-            var palSource = (NsfIsPal(nsf) & 1) == 1;
+            var palSource = (NotSoFatso.NsfIsPal(nsf) & 1) == 1;
             var numFrames = duration * (palSource ? 50 : 60);
-            var clockSpeed = NsfGetClockSpeed(nsf);
+            var clockSpeed = NotSoFatso.NsfGetClockSpeed(nsf);
 
             // Clock speed sanity check.
             if (( palSource && Math.Abs(clockSpeed - 19997) > 100) ||
@@ -906,31 +828,31 @@ namespace FamiStudio
 
             project = new Project();
 
-            project.Name      = Marshal.PtrToStringAnsi(NsfGetTitle(nsf));
-            project.Author    = Marshal.PtrToStringAnsi(NsfGetArtist(nsf));
-            project.Copyright = Marshal.PtrToStringAnsi(NsfGetCopyright(nsf));
+            project.Name      = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetTitle(nsf));
+            project.Author    = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetArtist(nsf));
+            project.Copyright = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetCopyright(nsf));
             project.PalMode   = palSource;
 
             // Our expansion mask is the same as NSF.
-            var expansionMask = NsfGetExpansion(nsf);
+            var expansionMask = NotSoFatso.NsfGetExpansion(nsf);
 
             // The 2 upper bits of the mask need to be zero, we dont support these.
             if (expansionMask != (expansionMask & ExpansionType.AllMask))
             {
                 Log.LogMessage(LogSeverity.Error, "NSF uses unknown or unsupported expansion chips, aborting.");
-                NsfClose(nsf);
+                NotSoFatso.NsfClose(nsf);
                 return null;
             }
 
             var numN163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? GetNumNamcoChannels(filename, songIndex, numFrames) : 1;
             project.SetExpansionAudioMask(expansionMask, numN163Channels);
 
-            var songName = Marshal.PtrToStringAnsi(NsfGetTrackName(nsf, songIndex));
+            var songName = Marshal.PtrToStringAnsi(NotSoFatso.NsfGetTrackName(nsf, songIndex));
 
             song = project.CreateSong(string.IsNullOrEmpty(songName) ? $"Song {songIndex + 1}" : songName);
             channelStates = new ChannelState[song.Channels.Length];
 
-            NsfSetTrack(nsf, songIndex);
+            NotSoFatso.NsfSetTrack(nsf, songIndex);
 
             song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
             song.SetDefaultPatternLength(patternLength);
@@ -956,12 +878,12 @@ namespace FamiStudio
                 var waitFrameCount = 0;
                 do
                 {
-                    playCalled = NsfRunFrame(nsf);
+                    playCalled = NotSoFatso.NsfRunFrame(nsf);
 
                     if (++waitFrameCount == 1000)
                     {
                         Log.LogMessage(LogSeverity.Error, "NSF did not call PLAY after 1000 frames, aborting.");
-                        NsfClose(nsf);
+                        NotSoFatso.NsfClose(nsf);
                         return null;
                     }
                 }
@@ -986,7 +908,7 @@ namespace FamiStudio
 
             song.SetLength(p + 1);
 
-            NsfClose(nsf);
+            NotSoFatso.NsfClose(nsf);
 
             var factors = Utils.GetFactors(song.PatternLength, FamiStudioTempoUtils.MaxNoteLength);
             if (factors.Length > 0)

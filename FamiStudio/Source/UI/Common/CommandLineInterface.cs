@@ -593,11 +593,29 @@ namespace FamiStudio
             new UnitTestPlayer(project.OutputsStereoAudio).GenerateUnitTestOutput(project.Songs[0], filename, HasOption("pal"));
         }
 
+        private void RunEpsmUnitTest(string nsf, string filename)
+        {
+            if (!ValidateExtension(filename, ".txt"))
+                return;
+
+            InitializeConsole();
+            Log.SetLogOutput(this);
+            EpsmUnitTest.DumpEpsmRegs(nsf, filename);
+            ShutdownConsole();
+        }
+
         public bool Run()
         {
             if (HasOption("?") || HasOption("help"))
             {
                 DisplayHelp();
+                return true;
+            }
+
+            // Super hacky EPSM unit tests.
+            if (args.Length == 3 && args[1].ToLower().Trim() == "unit-test-epsm")
+            {
+                RunEpsmUnitTest(args[0], args[2]);
                 return true;
             }
 

@@ -102,3 +102,8 @@ extern "C" int __stdcall NsfGetState(void* nsfPtr, int channel, int state, int s
 {
 	return ((NsfCoreFile*)nsfPtr)->core.GetState(channel, state, sub);
 }
+
+extern "C" void __stdcall NsfSetApuWriteCallback(void* nsfPtr, ApuRegWriteCallback callback)
+{
+	return ((NsfCoreFile*)nsfPtr)->core.SetApuWriteCallback(callback);
+}
