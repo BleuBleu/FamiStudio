@@ -7,6 +7,7 @@
 ..\bin\Release\FamiStudio.exe TestVRC7.fms nsf-export TestVRC7.nsf
 ..\bin\Release\FamiStudio.exe TestMulti.fms nsf-export TestMulti.nsf
 ..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.fms nsf-export TestFamiTrackerTempo.nsf
+..\bin\Release\FamiStudio.exe TestEPSM.fms nsf-export TestEPSM.nsf
 
 ..\bin\Release\FamiStudio.exe TestBase.nsf famistudio-txt-export TestBase_NsfRef.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
 ..\bin\Release\FamiStudio.exe TestFDS.nsf famistudio-txt-export TestFDS_NsfRef.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
@@ -17,5 +18,6 @@
 ..\bin\Release\FamiStudio.exe TestVRC7.nsf famistudio-txt-export TestVRC7_NsfRef.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
 ..\bin\Release\FamiStudio.exe TestMulti.nsf famistudio-txt-export TestMulti_NsfRef.txt -nsf-import-pattern-length:160 -nsf-import-duration:250 -famistudio-txt-noversion
 ..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.nsf famistudio-txt-export TestFamiTrackerTempo_NsfRef.txt -nsf-import-pattern-length:160 -famistudio-txt-noversion
+..\bin\Release\FamiStudio.exe TestEPSM.nsf unit-test-epsm TestEPSM_NsfRef.txt
 
 del /q *.nsf
