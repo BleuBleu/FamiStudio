@@ -689,6 +689,12 @@ FAMISTUDIO_EPSM_PITCH_SHIFT = 3
     FAMISTUDIO_SFX_CH3 = FAMISTUDIO_SFX_STRUCT_SIZE * 3
 .endif
 
+.if FAMISTUDIO_EXP_EPSM
+    FAMISTUDIO_FIRST_EXP_INST_CHANNEL = 14
+.else
+    FAMISTUDIO_FIRST_EXP_INST_CHANNEL = 5
+.endif
+
 ;======================================================================================================================
 ; RAM VARIABLES (You should not have to play with these)
 ;======================================================================================================================
@@ -739,11 +745,8 @@ famistudio_chn_env_override:      .dsb FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, 
 famistudio_chn_note_delay:        .dsb FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_cut_delay:         .dsb FAMISTUDIO_NUM_CHANNELS
 .endif
-.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
-famistudio_chn_inst_changed:      .dsb FAMISTUDIO_NUM_CHANNELS-5
-.endif
-.if FAMISTUDIO_EXP_EPSM
-famistudio_chn_inst_changed:      .dsb FAMISTUDIO_NUM_CHANNELS-14
+.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_EPSM
+famistudio_chn_inst_changed:      .dsb FAMISTUDIO_NUM_CHANNELS - FAMISTUDIO_FIRST_EXP_INST_CHANNEL
 .endif
 .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .dsb FAMISTUDIO_NUM_CHANNELS
@@ -1592,18 +1595,9 @@ famistudio_music_play:
     sta famistudio_fds_override_flags
 .endif
 
-.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
+.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_EPSM
     lda #0
-    ldx #(FAMISTUDIO_NUM_CHANNELS-5)
-    @clear_inst_changed_loop:
-        sta famistudio_chn_inst_changed, x
-        dex
-        bpl @clear_inst_changed_loop 
-.endif
-
-.if FAMISTUDIO_EXP_EPSM
-    lda #0
-    ldx #(FAMISTUDIO_NUM_CHANNELS-14)
+    ldx #(FAMISTUDIO_NUM_CHANNELS - FAMISTUDIO_FIRST_EXP_INST_CHANNEL - 1)
     @clear_inst_changed_loop:
         sta famistudio_chn_inst_changed, x
         dex
@@ -1612,7 +1606,7 @@ famistudio_music_play:
 
 .if FAMISTUDIO_EXP_N163
     lda #0
-    ldx #FAMISTUDIO_EXP_N163_CHN_CNT
+    ldx #(FAMISTUDIO_EXP_N163_CHN_CNT - 1)
     @clear_n163_loop:
         sta famistudio_chn_n163_wave_len, x
         dex

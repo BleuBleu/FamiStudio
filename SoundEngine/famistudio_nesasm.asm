@@ -692,6 +692,12 @@ FAMISTUDIO_SFX_CH2 = FAMISTUDIO_SFX_STRUCT_SIZE * 2
 FAMISTUDIO_SFX_CH3 = FAMISTUDIO_SFX_STRUCT_SIZE * 3
     .endif
 
+    .if FAMISTUDIO_EXP_EPSM
+FAMISTUDIO_FIRST_EXP_INST_CHANNEL = 14
+    .else
+FAMISTUDIO_FIRST_EXP_INST_CHANNEL = 5
+    .endif
+
 ;======================================================================================================================
 ; RAM VARIABLES (You should not have to play with these)
 ;======================================================================================================================
@@ -747,11 +753,8 @@ famistudio_chn_env_override:      .rs FAMISTUDIO_NUM_CHANNELS ; bit 7 = pitch, b
 famistudio_chn_note_delay:        .rs FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_cut_delay:         .rs FAMISTUDIO_NUM_CHANNELS
     .endif
-    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0)
-famistudio_chn_inst_changed:      .rs FAMISTUDIO_NUM_CHANNELS-5
-    .endif
-    .if (FAMISTUDIO_EXP_EPSM != 0)
-famistudio_chn_inst_changed:      .rs FAMISTUDIO_NUM_CHANNELS-14
+    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_EPSM != 0)
+famistudio_chn_inst_changed:      .rs FAMISTUDIO_NUM_CHANNELS - FAMISTUDIO_FIRST_EXP_INST_CHANNEL
     .endif
     .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .rs FAMISTUDIO_NUM_CHANNELS
@@ -1620,26 +1623,18 @@ famistudio_music_play:
     sta famistudio_fds_override_flags
     .endif
 
-    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0)
+    .if (FAMISTUDIO_EXP_N163 != 0) | (FAMISTUDIO_EXP_VRC7 != 0) | (FAMISTUDIO_EXP_FDS != 0) | (FAMISTUDIO_EXP_EPSM != 0)
     lda #0
-    ldx #(FAMISTUDIO_NUM_CHANNELS-5)
+    ldx #(FAMISTUDIO_NUM_CHANNELS - FAMISTUDIO_FIRST_EXP_INST_CHANNEL - 1)
     .clear_inst_changed_loop:
         sta famistudio_chn_inst_changed, x
         dex
         bpl .clear_inst_changed_loop 
     .endif
 
-    .if (FAMISTUDIO_EXP_EPSM != 0)
-    lda #0
-    ldx #(FAMISTUDIO_NUM_CHANNELS-14)
-    .clear_inst_changed_loop:
-        sta famistudio_chn_inst_changed, x
-        dex
-        bpl .clear_inst_changed_loop 
-    .endif
     .if FAMISTUDIO_EXP_N163
     lda #0
-    ldx #FAMISTUDIO_EXP_N163_CHN_CNT
+    ldx #(FAMISTUDIO_EXP_N163_CHN_CNT - 1)
     .clear_n163_loop:
         sta famistudio_chn_n163_wave_len, x
         dex
@@ -3982,7 +3977,7 @@ famistudio_set_epsm_instrument:
     ; Now we are dealing with either a FM or Rhythm instrument. a = channel index
     ; if we are an FM instrument then there is a offset we need to apply to the register select
     cmp #FAMISTUDIO_EPSM_CHAN_FM_MAX
-    bmi .fm_chan
+    bmi .fm_channel
 		lda <.chan_idx
 		sbc #FAMISTUDIO_EPSM_CHAN_FM_MAX
 		tax
@@ -3993,7 +3988,7 @@ famistudio_set_epsm_instrument:
 
 		ldx <.chan_idx	
 		rts
-    .fm_chan:
+    .fm_channel:
 	
 		
 	lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x

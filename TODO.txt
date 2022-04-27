@@ -5,8 +5,6 @@ Testing + Packaging
 / Demo songs:
 	- Sonic demo song (how2 will need to fix volumes).
 - NotSoFatso recompile linux/mac
-- Unit test
-	- DMC values of both samples arent the same, weird.
 - Update doc.
 - Retest instrument/arpeggio drag. I think the button height thing will break it.
 - Test Stereo stuff :

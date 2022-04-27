@@ -614,6 +614,8 @@ FAMISTUDIO_VRC7_PITCH_SHIFT = 3
     FAMISTUDIO_SFX_CH3 = FAMISTUDIO_SFX_STRUCT_SIZE * 3
 .endif
 
+FAMISTUDIO_FIRST_EXP_INST_CHANNEL = 5
+
 ;======================================================================================================================
 ; RAM VARIABLES (You should not have to play with these)
 ;======================================================================================================================
@@ -665,7 +667,7 @@ famistudio_chn_note_delay:        .res FAMISTUDIO_NUM_CHANNELS
 famistudio_chn_cut_delay:         .res FAMISTUDIO_NUM_CHANNELS
 .endif
 .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
-famistudio_chn_inst_changed:      .res FAMISTUDIO_NUM_CHANNELS-5
+famistudio_chn_inst_changed:      .res FAMISTUDIO_NUM_CHANNELS - FAMISTUDIO_FIRST_EXP_INST_CHANNEL
 .endif
 .if FAMISTUDIO_CFG_EQUALIZER
 famistudio_chn_note_counter:      .res FAMISTUDIO_NUM_CHANNELS
@@ -1428,7 +1430,7 @@ famistudio_music_play:
 
 .if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
     lda #0
-    ldx #(FAMISTUDIO_NUM_CHANNELS-5)
+    ldx #(FAMISTUDIO_NUM_CHANNELS - FAMISTUDIO_FIRST_EXP_INST_CHANNEL - 1)
     @clear_inst_changed_loop:
         sta famistudio_chn_inst_changed, x
         dex
@@ -1437,7 +1439,7 @@ famistudio_music_play:
 
 .if FAMISTUDIO_EXP_N163
     lda #0
-    ldx #FAMISTUDIO_EXP_N163_CHN_CNT
+    ldx #(FAMISTUDIO_EXP_N163_CHN_CNT - 1)
     @clear_n163_loop:
         sta famistudio_chn_n163_wave_len, x
         dex
