@@ -104,6 +104,7 @@
     <Compile Include="Source\IO\IniFile.cs" />
     <Compile Include="Source\IO\MidiFile.cs" />
     <Compile Include="Source\IO\Mp3File.cs" />
+    <Compile Include="Source\IO\NotSoFatso.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
@@ -187,6 +188,7 @@
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
+    <Compile Include="Source\Utils\EpsmUnitTests.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\PerformanceCounter.cs" />
     <Compile Include="Source\Utils\RtMidi.cs" />
