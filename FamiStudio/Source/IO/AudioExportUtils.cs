@@ -9,10 +9,10 @@ namespace FamiStudio
 {
     static class AudioExportUtils
     {
-        public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, int channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, Action<short[], int, string> function)
+        public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, int channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, bool log, Action<short[], int, string> function)
         {
             var project = song.Project;
-            var introDuration = separateIntro ? GetIntroDuration(song, sampleRate) : 0;
+            var introDuration = separateIntro ? GetIntroDuration(song, sampleRate, log) : 0;
             var outputsStereo = song.Project.OutputsStereoAudio;
 
             // We will enforce stereo export if the chip outputs stereo.
@@ -21,10 +21,17 @@ namespace FamiStudio
             if (channelMask == 0)
                 return;
 
+            if (log)
+            {
+                Log.ReportProgress(0.0f);
+                Log.LogMessage(LogSeverity.Info, "Rendering audio...");
+            }
+
             var centerPan = pan == null;
 
             if (pan != null)
             {
+                centerPan = true;
                 for (int i = 0; i < pan.Length; i++)
                 {
                     if (pan[i] != 0.5f)
@@ -34,14 +41,20 @@ namespace FamiStudio
 
             if (separateFiles)
             {
-                for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
+                for (int channelIdx = 0, channelCount = 0; channelIdx < song.Channels.Length; channelIdx++)
                 {
                     var channelBit = 1 << channelIdx;
                     if ((channelBit & channelMask) != 0)
                     {
+                        if (log)
+                            Log.LogMessage(LogSeverity.Info, $"Rendering audio for channel {song.Channels[channelIdx].Name} ({channelCount} / {Utils.NumberOfSetBits(channelMask)})...");
+
                         var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, Settings.SeparateChannelsExportTndMode);
-                        var samples = player.GetSongSamples(song, project.PalMode, duration);
+                        var samples = player.GetSongSamples(song, project.PalMode, duration, log);
                         var numChannels = outputsStereo ? 2 : 1;
+
+                        if (Log.ShouldAbortOperation)
+                            return;
 
                         if (introDuration > 0)
                         {
@@ -60,6 +73,8 @@ namespace FamiStudio
                             var channelFileName = Utils.AddFileSuffix(filename, "_" + song.Channels[channelIdx].ShortName);
                             function(samples, numChannels, channelFileName);
                         }
+
+                        channelCount++;
                     }
                 }
             }
@@ -76,23 +91,31 @@ namespace FamiStudio
                     if (centerPan && outputsStereo)
                     {
                         var player = new WavPlayer(sampleRate, outputsStereo, loopCount, -1, NesApu.TND_MODE_SEPARATE);
-                        samples = player.GetSongSamples(song, project.PalMode, duration);
+                        samples = player.GetSongSamples(song, project.PalMode, duration, log);
                         numChannels = 2;
                     }
                     else
                     {
+                        if (log)
+                            Log.LogMessage(LogSeverity.Info, $"Custom panning used, exporting channels individually...");
+
                         // Get all the samples for all channels.
                         var channelSamples = new short[song.Channels.Length][];
                         var numStereoSamples = 0;
 
-                        for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
+                        for (int channelIdx = 0, channelCount = 0; channelIdx < song.Channels.Length; channelIdx++)
                         {
                             var channelBit = 1 << channelIdx;
                             if ((channelBit & channelMask) != 0)
                             {
+                                if (log)
+                                    Log.LogMessage(LogSeverity.Info, $"Rendering audio for channel {song.Channels[channelIdx].Name} ({channelCount} / {Utils.NumberOfSetBits(channelMask)})...");
                                 var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, NesApu.TND_MODE_SEPARATE);
-                                channelSamples[channelIdx] = player.GetSongSamples(song, project.PalMode, duration);
+                                channelSamples[channelIdx] = player.GetSongSamples(song, project.PalMode, duration, log);
                                 numStereoSamples = Math.Max(numStereoSamples, channelSamples[channelIdx].Length);
+                                if (Log.ShouldAbortOperation)
+                                    return;
+                                channelCount++;
                             }
                         }
 
@@ -139,7 +162,7 @@ namespace FamiStudio
                 else
                 {
                     var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelMask);
-                    var stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
+                    var stereoSamples = player.GetSongSamples(song, project.PalMode, duration, log);
 
                     samples = outputsStereo ? new short[stereoSamples.Length/2] : stereoSamples;
 
@@ -172,10 +195,13 @@ namespace FamiStudio
             }
         }
 
-        public static int GetIntroDuration(Song song, int sampleRate)
+        public static int GetIntroDuration(Song song, int sampleRate, bool log)
         {
             if (song.LoopPoint > 0)
             {
+                if (log)
+                    Log.LogMessage(LogSeverity.Info, $"Calculating intro duration...");
+
                 // Create a shorter version of the song.
                 var songIndex = song.Project.Songs.IndexOf(song);
                 var clonedProject = song.Project.DeepClone();
@@ -184,7 +210,7 @@ namespace FamiStudio
                 clonedSong.SetLength(song.LoopPoint);
 
                 var player = new WavPlayer(sampleRate, song.Project.OutputsStereoAudio, 1, -1);
-                var samples = player.GetSongSamples(clonedSong, song.Project.PalMode, -1);
+                var samples = player.GetSongSamples(clonedSong, song.Project.PalMode, -1, log);
 
                 return samples.Length;
             }

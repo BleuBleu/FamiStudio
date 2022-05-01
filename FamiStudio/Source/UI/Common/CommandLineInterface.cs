@@ -349,7 +349,7 @@ namespace FamiStudio
 
             if (song != null)
             {
-                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro, stereo, pan,
+                AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, mask, separate, intro, stereo, pan, true,
                      (samples, samplesChannels, fn) =>
                      {
                          switch (format)

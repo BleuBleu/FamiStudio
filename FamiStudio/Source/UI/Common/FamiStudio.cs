@@ -409,13 +409,13 @@ namespace FamiStudio
             ToolBar.SetToolTip(msg, red);
         }
 
-        public void BeginLogTask(bool progress = false)
+        public void BeginLogTask(bool progress = false, string title = null, string text = null)
         {
             Debug.Assert(logDialog == null && progressLogDialog == null);
 
             if (progress)
             {
-                progressLogDialog = new LogProgressDialog(mainForm);
+                progressLogDialog = new LogProgressDialog(mainForm, title, text);
                 Log.SetLogOutput(progressLogDialog);
             }
             else 
@@ -1515,7 +1515,7 @@ namespace FamiStudio
         {
             Debug.Assert(instrumentPlayer == null);
             instrumentPlayer = new InstrumentPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio);
-            instrumentPlayer.Start(project, palPlayback);
+            //instrumentPlayer.Start(project, palPlayback);
         }
 
         private void ShutdownSongPlayer()

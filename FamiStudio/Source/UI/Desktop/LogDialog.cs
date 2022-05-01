@@ -51,7 +51,7 @@ namespace FamiStudio
         private FamiStudioForm parentForm;
         private bool hasMessages = false;
 
-        public unsafe LogProgressDialog(FamiStudioForm parentForm)
+        public unsafe LogProgressDialog(FamiStudioForm parentForm, string title = null, string text = null)
         {
             this.parentForm = parentForm;
 

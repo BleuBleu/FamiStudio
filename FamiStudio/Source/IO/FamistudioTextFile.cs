@@ -638,6 +638,10 @@ namespace FamiStudio
                     }
                 }
 
+                // Cant have EPSM with other expansions.
+                if (project.UsesMultipleExpansionAudios && project.UsesEPSMExpansion)
+                   project.SetExpansionAudioMask(project.ExpansionAudioMask & (~ExpansionType.EPSMMask), project.ExpansionNumN163Channels);
+
                 project.SortEverything(false);
                 ResetCulture();
 

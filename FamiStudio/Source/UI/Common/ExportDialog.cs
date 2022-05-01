@@ -469,7 +469,7 @@ namespace FamiStudio
                         }
                     }
 
-                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan,
+                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, PlatformUtils.IsMobile || project.UsesEPSMExpansion,
                          (samples, samplesChannels, fn) =>
                          {
                              switch (format)
@@ -495,8 +495,22 @@ namespace FamiStudio
                 var songName = props.GetPropertyValue<string>(0);
                 PlatformUtils.StartMobileSaveFileOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
                 {
-                    ExportWavMp3Action(f);
-                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("Audio Export Successful!"); });
+                    new Thread(() =>
+                    {
+                        app.BeginLogTask(true, "Exporting Audio", "Export long songs with lots of channels may take a while.");
+
+                        ExportWavMp3Action(f);
+                        
+                        Log.ReportProgress(1.0f);
+                        Log.LogMessage(LogSeverity.Info, "Writing to storage...");
+
+                        PlatformUtils.FinishMobileSaveFileOperationAsync(true, () =>
+                        {
+                            var aborted = Log.ShouldAbortOperation;
+                            app.EndLogTask();
+                            PlatformUtils.ShowToast($"Audio Export {(!aborted ? "Successful" : "Failed")}!");
+                        });
+                    }).Start();
                 });
             }
             else
@@ -599,7 +613,12 @@ namespace FamiStudio
                 {
                     new Thread(() =>
                     {
-                        app.BeginLogTask(true);
+                        app.BeginLogTask(true, "Exporting Video", 
+                            "Exporting videos may take a very long time, especially at high resolutions. " +
+                            "Make sure FamiStudio remains open, clicking BACK or closing this window will abort the operation. " +
+                            "FamiStudio is currently preventing the screen from going to sleep.\n\n" +
+                            "Also please note that for reasons outside of our control, the video encoding quality on mobile " +
+                            "is inferior to the desktop version of FamiStudio.");
                         var success = ExportVideoAction(f);
 
                         PlatformUtils.FinishMobileSaveFileOperationAsync(success, () =>

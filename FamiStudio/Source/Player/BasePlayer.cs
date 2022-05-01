@@ -33,6 +33,7 @@ namespace FamiStudio
         protected int playbackRateCounter = 1;
         protected int minSelectedPattern = -1;
         protected int maxSelectedPattern = -1;
+        protected int numPlayedPatterns = 0;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
         protected bool seeking = false;
@@ -424,7 +425,10 @@ namespace FamiStudio
             }
 
             if (advancedPattern)
+            {
+                numPlayedPatterns++;
                 ResetFamiStudioTempo();
+            }
 
             UpdateBeat();
 

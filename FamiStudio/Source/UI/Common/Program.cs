@@ -15,6 +15,9 @@ namespace FamiStudio
 #if FAMISTUDIO_WINDOWS
         [DllImport("SHCore.dll", SetLastError = true)]
         private static extern bool SetProcessDpiAwareness(int awareness);
+        [DllImport("kernel32.dll")]
+        static extern bool AttachConsole(int dwProcessId);
+        private const int ATTACH_PARENT_PROCESS = -1;
 #endif
 
         [STAThread]
@@ -66,6 +69,8 @@ namespace FamiStudio
 
             if (!cli.Run())
             {
+                //AttachConsole(ATTACH_PARENT_PROCESS);
+
                 var famiStudio = new FamiStudio();
                 famiStudio.Initialize(args.Length > 0 ? args[0] : null);
                 famiStudio.Run();

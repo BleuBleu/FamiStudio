@@ -122,15 +122,14 @@ namespace FamiStudio
 
             ExtendSongForLooping(song, loopCount);
 
-            Log.ReportProgress(0.0f);
-
             // Save audio to temporary file.
-            Log.LogMessage(LogSeverity.Info, "Exporting audio...");
-
             var tempFolder = Utils.GetTemporaryDiretory();
             var tempAudioFile = Path.Combine(tempFolder, "temp.wav");
 
-            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+
+            if (Log.ShouldAbortOperation)
+                return false;
 
             // Start encoder, must be done before any GL calls on Android.
             GetFrameRateInfo(song.Project, halfFrameRate, out var frameRateNumer, out var frameRateDenom);
@@ -151,9 +150,6 @@ namespace FamiStudio
                 return false;
             }
 
-            var themeResources = new ThemeRenderResources(videoGraphics);
-            var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
-
             // Generate WAV data for each individual channel for the oscilloscope.
             var channelStates = new List<VideoChannelState>();
             var maxAbsSample = 0;
@@ -167,13 +163,17 @@ namespace FamiStudio
                 var pattern = channel.PatternInstances[0];
                 var state = new VideoChannelState();
 
-                Log.LogMessage(LogSeverity.Info, $"Initializing {channel.Name} channel...");
+                Log.LogMessage(LogSeverity.Info, $"Initializing channel {channel.Name} ({channelIndex} / {Utils.NumberOfSetBits(channelMask)})...");
+                Log.ReportProgress(i / (float)song.Channels.Length);
 
                 state.videoChannelIndex = channelIndex;
                 state.songChannelIndex = i;
                 state.channel = song.Channels[i];
                 state.channelText = state.channel.NameWithExpansion;
-                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1);
+                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1, true);
+
+                if (Log.ShouldAbortOperation)
+                    return false;
 
                 if (song.Project.OutputsStereoAudio)
                     state.wav = WaveUtils.MixDown(state.wav);
@@ -184,7 +184,14 @@ namespace FamiStudio
                 // Find maximum absolute value to rescale the waveform.
                 foreach (int s in state.wav)
                     maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
+            }
 
+            // Create graphics resources.
+            var themeResources = new ThemeRenderResources(videoGraphics);
+            var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
+
+            foreach (var state in channelStates)
+            {
                 // Measure the longest text.
                 longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, themeResources.FontVeryLarge));
             }

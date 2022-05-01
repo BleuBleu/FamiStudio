@@ -14,18 +14,33 @@ namespace FamiStudio
             tndMode = tnd;
         }
 
-        public short[] GetSongSamples(Song song, bool pal, int duration)
+        public short[] GetSongSamples(Song song, bool pal, int duration, bool log = false)
         {
             int maxSample = int.MaxValue;
 
             if (duration > 0)
                 maxSample = duration * sampleRate;
 
+            var loopPoint = Math.Max(0, song.LoopPoint);
+            var totalNumPatterns = loopPoint + (song.Length - loopPoint) * maxLoopCount;
+                
             samples = new List<short>();
 
             if (BeginPlaySong(song, pal, 0))
             {
-                while (PlaySongFrame() && samples.Count < maxSample);
+                while (PlaySongFrame() && samples.Count < maxSample)
+                {
+                    if (log)
+                    {
+                        if (duration > 0)
+                            Log.ReportProgress(samples.Count / (float)maxSample);
+                        else
+                            Log.ReportProgress(numPlayedPatterns / (float)totalNumPatterns);
+
+                        if (Log.ShouldAbortOperation)
+                            return new short[0];
+                    }
+                }
             }
 
             if (samples.Count > maxSample)
