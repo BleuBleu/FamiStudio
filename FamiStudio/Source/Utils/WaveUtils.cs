@@ -428,5 +428,13 @@ namespace FamiStudio
             MixDown(stereo, mono);
             return mono;
         }
+
+        public static int GetMaxAbsValue(short[] samples)
+        {
+            var maxAbsSample = 0;
+            foreach (int s in samples)
+                maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
+            return maxAbsSample;
+        }
     }
 }

@@ -501,9 +501,6 @@ namespace FamiStudio
 
                         ExportWavMp3Action(f);
                         
-                        Log.ReportProgress(1.0f);
-                        Log.LogMessage(LogSeverity.Info, "Writing to storage...");
-
                         PlatformUtils.FinishMobileSaveFileOperationAsync(true, () =>
                         {
                             var aborted = Log.ShouldAbortOperation;
@@ -619,6 +616,7 @@ namespace FamiStudio
                             "FamiStudio is currently preventing the screen from going to sleep.\n\n" +
                             "Also please note that for reasons outside of our control, the video encoding quality on mobile " +
                             "is inferior to the desktop version of FamiStudio.");
+                        
                         var success = ExportVideoAction(f);
 
                         PlatformUtils.FinishMobileSaveFileOperationAsync(success, () =>

@@ -6,10 +6,10 @@ Testing + Packaging
 	- Sonic demo song (how2 will need to fix volumes).
 	- Instrument packages
 - Update doc.
-- Retest instrument/arpeggio drag. I think the button height thing will break it.
-- Test Stereo stuff :
-	/ Audio export
-	/ Video export
+- MT export
+	- Review all new WavPlayer() params.
+	- separateFiles, do it.
+- 
 
 Feature list:
 - EPSM support
@@ -20,7 +20,8 @@ Feature list:
 - Bamboo Tracker instruments import (desktop version only)
 - Option not to clamp periods/notes to make the app behave more like the NSF driver
 - Minor cosmetic changes (ADSR diagrams, tabs in instrument editor, etc.)
-- Multiple bugfixes
+- CTRL+A selects all patterns/notes in sequencer/piano roll.
+- Tons of small bugfixes
 
 3.4.0
 =====

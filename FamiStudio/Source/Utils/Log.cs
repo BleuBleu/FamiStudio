@@ -47,6 +47,12 @@ namespace FamiStudio
             lastMessage[(int)severity] = msg;
         }
 
+        public static void LogMessageConditional(bool condition, LogSeverity severity, string msg)
+        {
+            if (condition)
+                LogMessage(severity, msg);
+        }
+
         public static void SetLogOutput(ILogOutput log, LogSeverity minSeverity = LogSeverity.Info)
         {
             Debug.Assert(LogOutput == null);

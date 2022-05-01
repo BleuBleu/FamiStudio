@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -7,14 +8,16 @@ namespace FamiStudio
     {
         List<short> samples;
 
-        public WavPlayer(int sampleRate, bool stereo, int maxLoop, int mask, int tnd = NesApu.TND_MODE_SINGLE) : base(NesApu.APU_WAV_EXPORT, stereo, sampleRate)
+        public WavPlayer(int sampleRate, bool stereo, int maxLoop, int mask, int threadIndex = 0, int tnd = NesApu.TND_MODE_SINGLE) : base(NesApu.APU_WAV_EXPORT + threadIndex, stereo, sampleRate)
         {
+            Debug.Assert(threadIndex < NesApu.NUM_WAV_EXPORT_APU);
+
             maxLoopCount = maxLoop;
             channelMask = mask;
             tndMode = tnd;
         }
 
-        public short[] GetSongSamples(Song song, bool pal, int duration, bool log = false)
+        public short[] GetSongSamples(Song song, bool pal, int duration, bool log = false, bool allowAbort = false)
         {
             int maxSample = int.MaxValue;
 
@@ -36,9 +39,11 @@ namespace FamiStudio
                             Log.ReportProgress(samples.Count / (float)maxSample);
                         else
                             Log.ReportProgress(numPlayedPatterns / (float)totalNumPatterns);
+                    }
 
-                        if (Log.ShouldAbortOperation)
-                            return new short[0];
+                    if (allowAbort && Log.ShouldAbortOperation)
+                    { 
+                        return new short[0];
                     }
                 }
             }

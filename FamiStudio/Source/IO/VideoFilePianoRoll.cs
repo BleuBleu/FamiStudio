@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 
 using RenderGraphics = FamiStudio.GLOffscreenGraphics;
 
@@ -305,14 +306,9 @@ namespace FamiStudio
                 return false;
             }
 
+            // Create the channel states.
             var numChannels = Utils.NumberOfSetBits(channelMask);
-            var channelResXFloat = videoResX / (float)numChannels;
-            var channelResX = videoResY;
-            var channelResY = (int)channelResXFloat;
-            var longestChannelName = 0.0f;
-
-            // Generate WAV data for each individual channel for the oscilloscope.
-            var channelStates = new List<VideoChannelState>();
+            var channelStates = new VideoChannelState[numChannels];
             var maxAbsSample = 0;
 
             for (int i = 0, channelIndex = 0; i < song.Channels.Length; i++)
@@ -324,14 +320,24 @@ namespace FamiStudio
                 var pattern = channel.PatternInstances[0];
                 var state = new VideoChannelState();
 
-                Log.LogMessage(LogSeverity.Info, $"Initializing channel {channel.Name} ({channelIndex} / {Utils.NumberOfSetBits(channelMask)})...");
-                Log.ReportProgress(i / (float)song.Channels.Length);
-
                 state.videoChannelIndex = channelIndex;
                 state.songChannelIndex = i;
                 state.channel = song.Channels[i];
                 state.channelText = state.channel.NameWithExpansion;
-                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1, true);
+
+                channelStates[channelIndex] = state;
+                channelIndex++;
+            }
+
+            // Spawn threads to generate the WAV data for the oscilloscopes.
+            Log.LogMessage(LogSeverity.Info, "Building channel oscilloscopes...");
+
+            var counter = new ThreadSafeCounter();
+
+            Utils.NonBlockingParallelFor(channelStates.Length, NesApu.NUM_WAV_EXPORT_APU, counter, (stateIndex, threadIndex) =>
+            {
+                var state = channelStates[stateIndex];
+                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << state.songChannelIndex, threadIndex).GetSongSamples(song, song.Project.PalMode, -1, false, true);
 
                 if (Log.ShouldAbortOperation)
                     return false;
@@ -339,12 +345,17 @@ namespace FamiStudio
                 if (song.Project.OutputsStereoAudio)
                     state.wav = WaveUtils.MixDown(state.wav);
 
-                channelStates.Add(state);
-                channelIndex++;
+                maxAbsSample = WaveUtils.GetMaxAbsValue(state.wav);
+                return true;
+            });
 
-                // Find maximum absolute value to rescale the waveform.
-                foreach (int s in state.wav)
-                    maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
+            while (counter.Value != channelStates.Length)
+            {
+                Log.ReportProgress(counter.Value / (float)channelStates.Length);
+                Thread.Sleep(50);
+
+                if (Log.ShouldAbortOperation)
+                    return false;
             }
 
             // Create graphics resources.
@@ -356,6 +367,10 @@ namespace FamiStudio
                 return false;
             }
 
+            var channelResXFloat = videoResX / (float)numChannels;
+            var channelResX = videoResY;
+            var channelResY = (int)channelResXFloat;
+            var longestChannelName = 0.0f;
             var themeResources = new ThemeRenderResources(videoGraphics);
             var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
@@ -404,7 +419,7 @@ namespace FamiStudio
                 SmoothFamiStudioScrolling(metadata, song);
 
             var oscWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
-            var oscNumVertices = Math.Min(channelResY, 64000 / channelStates.Count); // We have a hard limit on vertices in our OpenGL renderer.
+            var oscNumVertices = Math.Min(channelResY, 64000 / channelStates.Length); // We have a hard limit on vertices in our OpenGL renderer.
 
             var videoImage   = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscNumVertices, 2];

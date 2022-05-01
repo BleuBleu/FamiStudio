@@ -55,9 +55,11 @@ namespace FamiStudio
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
 
-        public const int APU_SONG         = 0;
-        public const int APU_INSTRUMENT   = 1;
-        public const int APU_WAV_EXPORT   = 2;
+        public const int APU_SONG           = 0;
+        public const int APU_INSTRUMENT     = 1;
+        public const int APU_WAV_EXPORT     = 2;
+
+        public const int NUM_WAV_EXPORT_APU = 8;
 
         public const int APU_EXPANSION_NONE    = 0;
         public const int APU_EXPANSION_VRC6    = 1;

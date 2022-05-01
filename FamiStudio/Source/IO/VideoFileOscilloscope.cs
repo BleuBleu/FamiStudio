@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Collections.Generic;
+using System.Threading;
+
 
 using RenderGraphics = FamiStudio.GLOffscreenGraphics;
 
@@ -9,7 +10,7 @@ namespace FamiStudio
 {
     class VideoFileOscilloscope : VideoFileBase
     {
-        private void BuildChannelColors(Song song, List<VideoChannelState> channels, VideoFrameMetadata[] meta, int colorMode)
+        private void BuildChannelColors(Song song, VideoChannelState[] channels, VideoFrameMetadata[] meta, int colorMode)
         {
             Color[,] colors = new Color[meta.Length, meta[0].channelNotes.Length];
 
@@ -20,7 +21,7 @@ namespace FamiStudio
 
                 m.channelColors = new Color[m.channelNotes.Length];
 
-                for (int j = 0; j < channels.Count; j++)
+                for (int j = 0; j < channels.Length; j++)
                 {
                     var note = m.channelNotes[channels[j].songChannelIndex];
 
@@ -140,18 +141,9 @@ namespace FamiStudio
                 return false;
             }
 
+            // Create the channel states.
             var numChannels = Utils.NumberOfSetBits(channelMask);
-            var longestChannelName = 0.0f;
-            var videoGraphics = RenderGraphics.Create(videoResX, videoResY, true);
-
-            if (videoGraphics == null)
-            {
-                Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
-                return false;
-            }
-
-            // Generate WAV data for each individual channel for the oscilloscope.
-            var channelStates = new List<VideoChannelState>();
+            var channelStates = new VideoChannelState[numChannels];
             var maxAbsSample = 0;
 
             for (int i = 0, channelIndex = 0; i < song.Channels.Length; i++)
@@ -163,14 +155,24 @@ namespace FamiStudio
                 var pattern = channel.PatternInstances[0];
                 var state = new VideoChannelState();
 
-                Log.LogMessage(LogSeverity.Info, $"Initializing channel {channel.Name} ({channelIndex} / {Utils.NumberOfSetBits(channelMask)})...");
-                Log.ReportProgress(i / (float)song.Channels.Length);
-
                 state.videoChannelIndex = channelIndex;
                 state.songChannelIndex = i;
                 state.channel = song.Channels[i];
                 state.channelText = state.channel.NameWithExpansion;
-                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1, true);
+
+                channelStates[channelIndex] = state;
+                channelIndex++;
+            }
+
+            // Spawn threads to generate the WAV data for the oscilloscopes.
+            Log.LogMessage(LogSeverity.Info, "Building channel oscilloscopes...");
+
+            var counter = new ThreadSafeCounter();
+
+            Utils.NonBlockingParallelFor(channelStates.Length, NesApu.NUM_WAV_EXPORT_APU, counter, (stateIndex, threadIndex) => 
+            {
+                var state = channelStates[stateIndex];
+                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << state.songChannelIndex, threadIndex).GetSongSamples(song, song.Project.PalMode, -1, false, true);
 
                 if (Log.ShouldAbortOperation)
                     return false;
@@ -178,27 +180,34 @@ namespace FamiStudio
                 if (song.Project.OutputsStereoAudio)
                     state.wav = WaveUtils.MixDown(state.wav);
 
-                channelStates.Add(state);
-                channelIndex++;
+                maxAbsSample = WaveUtils.GetMaxAbsValue(state.wav);
+                return true;
+            });
 
-                // Find maximum absolute value to rescale the waveform.
-                foreach (int s in state.wav)
-                    maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
+            while (counter.Value != channelStates.Length)
+            {
+                Log.ReportProgress(counter.Value / (float)channelStates.Length);
+                Thread.Sleep(50);
+
+                if (Log.ShouldAbortOperation)
+                    return false;
             }
 
             // Create graphics resources.
+            var videoGraphics = RenderGraphics.Create(videoResX, videoResY, true);
+
+            if (videoGraphics == null)
+            {
+                Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
+                return false;
+            }
+
             var themeResources = new ThemeRenderResources(videoGraphics);
             var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
-            foreach (var state in channelStates)
-            {
-                // Measure the longest text.
-                longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, themeResources.FontVeryLarge));
-            }
+            numColumns = Math.Min(numColumns, channelStates.Length);
 
-            numColumns = Math.Min(numColumns, channelStates.Count);
-
-            var numRows = (int)Math.Ceiling(channelStates.Count / (float)numColumns);
+            var numRows = (int)Math.Ceiling(channelStates.Length / (float)numColumns);
 
             var channelResXFloat = videoResX / (float)numColumns;
             var channelResYFloat = videoResY / (float)numRows;
@@ -227,7 +236,7 @@ namespace FamiStudio
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
             var oscWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
-            var oscNumVertices = Math.Min(channelResX, 64000 / channelStates.Count); // We have a hard limit on vertices in our OpenGL renderer.
+            var oscNumVertices = Math.Min(channelResX, 64000 / channelStates.Length); // We have a hard limit on vertices in our OpenGL renderer.
 
             BuildChannelColors(song, channelStates, metadata, colorMode);
 
@@ -273,7 +282,7 @@ namespace FamiStudio
                     }
 
                     // Channel names + oscilloscope
-                    for (int i = 0; i < channelStates.Count; i++)
+                    for (int i = 0; i < channelStates.Length; i++)
                     {
                         var s = channelStates[i];
 
