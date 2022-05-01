@@ -1450,11 +1450,11 @@ void OPN2_SetChipType(Bit32u type)
     chip_type = type;
 }
 
-void OPN2_Clock(ym3438_t *chip, Bit16s *buffer)
+void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
 {
     Bit32u slot = chip->cycles;
-	 Bit16s* rhythml = &chip->rhythml[chip->channel];
-	 Bit16s* rhythmr = &chip->rhythmr[chip->channel];
+    Bit16s* rhythml = &chip->rhythml[chip->channel];
+    Bit16s* rhythmr = &chip->rhythmr[chip->channel];
     chip->lfo_inc = chip->mode_test_21[1];
     chip->pg_read >>= 1;
     chip->eg_read[1] >>= 1;
@@ -1521,28 +1521,33 @@ void OPN2_Clock(ym3438_t *chip, Bit16s *buffer)
         chip->eg_cycle_stop = 0;
     }
 
-    OPN2_DoIO(chip);
 
-    OPN2_DoTimerA(chip);
-    OPN2_DoTimerB(chip);
-    OPN2_KeyOn(chip);
+        OPN2_DoIO(chip);
+    if (misc) {
+        OPN2_DoTimerA(chip);
+        OPN2_DoTimerB(chip);
+    }
+    if (fm){
+        OPN2_KeyOn(chip);
 
-    OPN2_ChOutput(chip);
-    OPN2_ChGenerate(chip);
+        OPN2_ChOutput(chip);
+        OPN2_ChGenerate(chip);
 
-    OPN2_FMPrepare(chip);
-    OPN2_FMGenerate(chip);
+        OPN2_FMPrepare(chip);
+        OPN2_FMGenerate(chip);
+    }
+    if (rythm) {
+        OPNmod_RhythmGenerate(chip);
+    }
+    if (fm) {
+        OPN2_PhaseGenerate(chip);
+        OPN2_PhaseCalcIncrement(chip);
 
-	 OPNmod_RhythmGenerate(chip);
-
-    OPN2_PhaseGenerate(chip);
-    OPN2_PhaseCalcIncrement(chip);
-
-    OPN2_EnvelopeADSR(chip);
-    OPN2_EnvelopeGenerate(chip);
-    OPN2_EnvelopeSSGEG(chip);
-    OPN2_EnvelopePrepare(chip);
-
+        OPN2_EnvelopeADSR(chip);
+        OPN2_EnvelopeGenerate(chip);
+        OPN2_EnvelopeSSGEG(chip);
+        OPN2_EnvelopePrepare(chip);
+    }
     /* Prepare fnum & block */
     if (chip->mode_ch3)
     {
