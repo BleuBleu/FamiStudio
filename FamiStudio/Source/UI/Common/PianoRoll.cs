@@ -5848,8 +5848,7 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
                     }
 
-                    // MATTT icon!
-                    menu.Add(new ContextMenuOption("MenuDelete", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
+                    menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
                     menu.Add(new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
                 }
                 else
@@ -5857,7 +5856,7 @@ namespace FamiStudio
                     note = channel.FindMusicalNoteAtLocation(ref noteLocation, -1);
 
                     if (note != null)
-                        menu.Add(new ContextMenuOption("MenuDelete", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
+                        menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
                 }
 
                 if (IsNoteSelected(mouseLocation))
@@ -5889,9 +5888,8 @@ namespace FamiStudio
                 {
                     App.ShowContextMenu(new[]
                     {
-                        // MATTT icons!
-                        new ContextMenuOption("MenuDelete", "Select Pattern", () => { SelectPattern(location.PatternIndex); }),
-                        new ContextMenuOption("MenuDelete", "Select All", () => { SelectAll(); }),
+                        new ContextMenuOption("MenuSelectPattern", "Select Pattern", () => { SelectPattern(location.PatternIndex); }),
+                        new ContextMenuOption("MenuSelectAll", "Select All", () => { SelectAll(); }),
                     });
                 }
             }

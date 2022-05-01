@@ -511,6 +511,9 @@
     <EmbeddedResource Include="Resources\MenuProperties.png" />
     <EmbeddedResource Include="Resources\MenuReplaceSelection.png" />
     <EmbeddedResource Include="Resources\MenuReset.png" />
+    <EmbeddedResource Include="Resources\MenuSelectAll.png" />
+    <EmbeddedResource Include="Resources\MenuSelectNote.png" />
+    <EmbeddedResource Include="Resources\MenuSelectPattern.png" />
     <EmbeddedResource Include="Resources\MenuSolo.png" />
     <EmbeddedResource Include="Resources\MenuStopNote.png" />
     <EmbeddedResource Include="Resources\MenuToggleAttack.png" />
