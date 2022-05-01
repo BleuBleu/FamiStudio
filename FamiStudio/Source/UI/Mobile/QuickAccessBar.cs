@@ -144,7 +144,8 @@ namespace FamiStudio
             ButtonImageIndices.EffectDutyCycle, // Duty Cycle
             ButtonImageIndices.EffectNoteDelay, // Note Delay
             ButtonImageIndices.EffectCutDelay,  // Cut Delay
-            ButtonImageIndices.EffectVolume     // Volume Slide
+            ButtonImageIndices.EffectVolume,    // Volume Slide
+            ButtonImageIndices.EffectDutyCycle, // Delta Counter
         };
 
         readonly ButtonImageIndices[] EnvelopeImageIndices = new ButtonImageIndices[]

@@ -5847,8 +5847,17 @@ namespace FamiStudio
                         if (channel.SupportsStopNotes)
                             menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
                     }
-                    
+
+                    // MATTT icon!
+                    menu.Add(new ContextMenuOption("MenuDelete", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
                     menu.Add(new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
+                }
+                else
+                {
+                    note = channel.FindMusicalNoteAtLocation(ref noteLocation, -1);
+
+                    if (note != null)
+                        menu.Add(new ContextMenuOption("MenuDelete", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
                 }
 
                 if (IsNoteSelected(mouseLocation))
@@ -5865,6 +5874,26 @@ namespace FamiStudio
                     App.ShowContextMenu(menu.ToArray());
 
                 return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchLongPressChannelHeader(int x, int y)
+        {
+            if (IsPointInHeader(x, y))
+            {
+                GetLocationForCoord(x, y, out var location, out _);
+
+                if (location.IsInSong(Song))
+                {
+                    App.ShowContextMenu(new[]
+                    {
+                        // MATTT icons!
+                        new ContextMenuOption("MenuDelete", "Select Pattern", () => { SelectPattern(location.PatternIndex); }),
+                        new ContextMenuOption("MenuDelete", "Select All", () => { SelectAll(); }),
+                    });
+                }
             }
 
             return false;
@@ -6221,6 +6250,7 @@ namespace FamiStudio
             {
                 if (HandleTouchLongPressChannelNote(x, y)) goto Handled;
                 if (HandleTouchLongPressEffectPanel(x, y)) goto Handled;
+                if (HandleTouchLongPressChannelHeader(x, y)) goto Handled;
             }
 
             if (editMode == EditionMode.Enveloppe ||
@@ -6733,6 +6763,24 @@ namespace FamiStudio
                 highlightDPCMSample = -1;
             App.UndoRedoManager.EndTransaction();
             DPCMSampleUnmapped?.Invoke(noteValue);
+        }
+
+        private void SelectSingleNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
+        {
+            var channel = Song.Channels[editChannel];
+            var absoluteNoteIndex = noteLocation.ToAbsoluteNoteIndex(Song);
+            SetSelection(absoluteNoteIndex, absoluteNoteIndex + Math.Min(note.Duration, channel.GetDistanceToNextNote(noteLocation)) - 1);
+        }
+
+        private void SelectPattern(int p)
+        {
+            SetSelection(Song.GetPatternStartAbsoluteNoteIndex(p),
+                         Song.GetPatternStartAbsoluteNoteIndex(p + 1));
+        }
+
+        private void SelectAll()
+        {
+            SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
         }
 
         private void DeleteSingleNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)

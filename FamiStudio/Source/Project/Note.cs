@@ -34,7 +34,7 @@ namespace FamiStudio
             "Note Delay",
             "Cut Delay",
             "Volume Slide",
-            "Delta Counter"
+            "DAC"
         };
 
         public const int VolumeMax       = 0x0f;

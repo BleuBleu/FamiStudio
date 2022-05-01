@@ -1268,7 +1268,7 @@ namespace FamiStudio
 
         public bool IsInSong(Song s)
         {
-            return PatternIndex < s.Length;
+            return PatternIndex >= 0 && PatternIndex < s.Length;
         }
 
         public int ToAbsoluteNoteIndex(Song s)
