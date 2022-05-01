@@ -260,7 +260,7 @@ namespace FamiStudio
             TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
             TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
             ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", PlatformUtils.IsDesktop);
-            ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", true);
+            ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", PlatformUtils.IsDesktop);
 
             // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);

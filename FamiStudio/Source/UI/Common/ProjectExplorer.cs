@@ -3,8 +3,8 @@ using System.IO;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using Color = System.Drawing.Color;
 using System.Diagnostics;
+using Color = System.Drawing.Color;
 
 using RenderBrush       = FamiStudio.GLBrush;
 using RenderBitmap      = FamiStudio.GLBitmap;
