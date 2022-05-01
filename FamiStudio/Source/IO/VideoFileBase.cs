@@ -63,20 +63,32 @@ namespace FamiStudio
                 }
             }
 
-            int oscLen = oscilloscope.GetLength(0);
 
-            Debug.Assert(oscLen == windowSize);
+            int lastIdx = -1;
+            int oscLen = oscilloscope.GetLength(0);
 
             for (int i = 0; i < oscLen; ++i)
             {
-                var idx = Utils.Clamp(position - windowSize / 2 + i, 0, wav.Length - 1);
-                var sample = Utils.Clamp((int)(wav[idx] * scaleY), short.MinValue, short.MaxValue);
+                var idx = Utils.Clamp(position - windowSize / 2 + i * windowSize / oscLen, 0, wav.Length - 1);
+                var avg = (float)wav[idx];
+                var cnt = 1;
+
+                if (lastIdx >= 0)
+                {
+                    for (int j = lastIdx + 1; j < idx; j++, cnt++)
+                        avg += wav[j];
+                    avg /= cnt;
+                }
+
+                var sample = Utils.Clamp((int)(avg * scaleY), short.MinValue, short.MaxValue);
 
                 var x = Utils.Lerp(minX, maxX, i / (float)(oscLen - 1));
                 var y = Utils.Lerp(minY, maxY, (sample - short.MinValue) / (float)(ushort.MaxValue));
 
                 oscilloscope[i, 0] = x;
                 oscilloscope[i, 1] = y;
+
+                lastIdx = idx;
             }
         }
 

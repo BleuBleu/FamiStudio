@@ -92,7 +92,7 @@ namespace FamiStudio
         public GLTransform Transform => transform;
 
         protected const int MaxAtlasResolution = 4096;
-        protected const int MaxVertexCount = (PlatformUtils.IsDesktop ? 128 : 64) * 1024;
+        protected const int MaxVertexCount = 128 * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
         protected float[] vtxArray = new float[MaxVertexCount * 2];

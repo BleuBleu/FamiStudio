@@ -21,6 +21,17 @@ namespace FamiStudio
             if (channelMask == 0)
                 return;
 
+            var centerPan = pan == null;
+
+            if (pan != null)
+            {
+                for (int i = 0; i < pan.Length; i++)
+                {
+                    if (pan[i] != 0.5f)
+                        centerPan = false;
+                }
+            }
+
             if (separateFiles)
             {
                 for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
@@ -55,69 +66,80 @@ namespace FamiStudio
             else
             {
                 var numChannels = 1;
-                var stereoSamples = (short[])null;
                 var samples = (short[])null;
 
                 if (stereo)
                 {
-                    // Get all the samples for all channels.
-                    var channelSamples = new short[song.Channels.Length][];
-                    var numStereoSamples = 0;
-
-                    for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
+                    // Optimization : If the project already outputs stereo and
+                    // we dont have any panning to do, we can simply take the
+                    // raw result of the emulation.
+                    if (centerPan && outputsStereo)
                     {
-                        var channelBit = 1 << channelIdx;
-                        if ((channelBit & channelMask) != 0)
-                        {
-                            var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, NesApu.TND_MODE_SEPARATE);
-                            channelSamples[channelIdx] = player.GetSongSamples(song, project.PalMode, duration);
-                            numStereoSamples = Math.Max(numStereoSamples, channelSamples[channelIdx].Length);
-                        }
+                        var player = new WavPlayer(sampleRate, outputsStereo, loopCount, -1, NesApu.TND_MODE_SEPARATE);
+                        samples = player.GetSongSamples(song, project.PalMode, duration);
+                        numChannels = 2;
                     }
-
-                    // Mix and interleave samples.
-                    samples = outputsStereo ? new short[numStereoSamples] : new short[numStereoSamples * 2];
-
-                    for (int i = 0; i < numStereoSamples; i++)
+                    else
                     {
-                        float l = 0;
-                        float r = 0;
+                        // Get all the samples for all channels.
+                        var channelSamples = new short[song.Channels.Length][];
+                        var numStereoSamples = 0;
 
-                        for (int j = 0; j < channelSamples.Length; j++)
+                        for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
                         {
-                            if (channelSamples[j] != null)
+                            var channelBit = 1 << channelIdx;
+                            if ((channelBit & channelMask) != 0)
                             {
-                                float sl = 1.0f - Utils.Clamp( 2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
-                                float sr = 1.0f - Utils.Clamp(-2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
-
-                                l += channelSamples[j][i] * sl;
-                                r += channelSamples[j][i] * sr;
+                                var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, NesApu.TND_MODE_SEPARATE);
+                                channelSamples[channelIdx] = player.GetSongSamples(song, project.PalMode, duration);
+                                numStereoSamples = Math.Max(numStereoSamples, channelSamples[channelIdx].Length);
                             }
                         }
 
-                        if (outputsStereo)
-                        {
-                            if (i % 2 == 0)
-                                samples[i] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
-                            else
-                                samples[i] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
-                        }
-                        else
-                        {
-                            samples[i * 2 + 0] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
-                            samples[i * 2 + 1] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
-                        }
-                    }
+                        // Mix and interleave samples.
+                        samples = outputsStereo ? new short[numStereoSamples] : new short[numStereoSamples * 2];
 
-                    numChannels = 2;
-                    
-                    if (!outputsStereo)
-                        introDuration *= 2;
+                        for (int i = 0; i < numStereoSamples; i++)
+                        {
+                            float l = 0;
+                            float r = 0;
+
+                            for (int j = 0; j < channelSamples.Length; j++)
+                            {
+                                if (channelSamples[j] != null)
+                                {
+                                    float sl = 1.0f - Utils.Clamp(2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
+                                    float sr = 1.0f - Utils.Clamp(-2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
+
+                                    l += channelSamples[j][i] * sl;
+                                    r += channelSamples[j][i] * sr;
+                                }
+                            }
+
+                            if (outputsStereo)
+                            {
+                                if (i % 2 == 0)
+                                    samples[i] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
+                                else
+                                    samples[i] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
+                            }
+                            else
+                            {
+                                samples[i * 2 + 0] = (short)Utils.Clamp((int)Math.Round(l), short.MinValue, short.MaxValue);
+                                samples[i * 2 + 1] = (short)Utils.Clamp((int)Math.Round(r), short.MinValue, short.MaxValue);
+                            }
+                        }
+
+                        numChannels = 2;
+
+                        if (!outputsStereo)
+                            introDuration *= 2;
+                    }
                 }
                 else
                 {
                     var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelMask);
-                    stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
+                    var stereoSamples = player.GetSongSamples(song, project.PalMode, duration);
 
                     samples = outputsStereo ? new short[stereoSamples.Length/2] : stereoSamples;
 
@@ -161,7 +183,7 @@ namespace FamiStudio
 
                 clonedSong.SetLength(song.LoopPoint);
 
-                var player = new WavPlayer(sampleRate, song.Project.OutputsStereoAudio, 1, 0x7fffffff);
+                var player = new WavPlayer(sampleRate, song.Project.OutputsStereoAudio, 1, -1);
                 var samples = player.GetSongSamples(clonedSong, song.Project.PalMode, -1);
 
                 return samples.Length;

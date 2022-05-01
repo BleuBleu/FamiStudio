@@ -122,6 +122,8 @@ namespace FamiStudio
 
             ExtendSongForLooping(song, loopCount);
 
+            Log.ReportProgress(0.0f);
+
             // Save audio to temporary file.
             Log.LogMessage(LogSeverity.Info, "Exporting audio...");
 
@@ -133,13 +135,11 @@ namespace FamiStudio
             // Start encoder, must be done before any GL calls on Android.
             GetFrameRateInfo(song.Project, halfFrameRate, out var frameRateNumer, out var frameRateDenom);
 
-            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, tempAudioFile, filename))
+            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, stereo, tempAudioFile, filename))
             {
                 Log.LogMessage(LogSeverity.Error, "Error starting video encoder, aborting.");
                 return false;
             }
-
-            Log.LogMessage(LogSeverity.Info, "Initializing channels...");
 
             var numChannels = Utils.NumberOfSetBits(channelMask);
             var longestChannelName = 0.0f;
@@ -163,8 +163,11 @@ namespace FamiStudio
                 if ((channelMask & (1 << i)) == 0)
                     continue;
 
-                var pattern = song.Channels[i].PatternInstances[0];
+                var channel = song.Channels[i];
+                var pattern = channel.PatternInstances[0];
                 var state = new VideoChannelState();
+
+                Log.LogMessage(LogSeverity.Info, $"Initializing {channel.Name} channel...");
 
                 state.videoChannelIndex = channelIndex;
                 state.songChannelIndex = i;
@@ -184,8 +187,6 @@ namespace FamiStudio
 
                 // Measure the longest text.
                 longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, themeResources.FontVeryLarge));
-
-                Log.ReportProgress(0.0f);
             }
 
             numColumns = Math.Min(numColumns, channelStates.Count);
@@ -219,11 +220,12 @@ namespace FamiStudio
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
             var oscWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
+            var oscNumVertices = Math.Min(channelResX, 64000 / channelStates.Count); // We have a hard limit on vertices in our OpenGL renderer.
 
             BuildChannelColors(song, channelStates, metadata, colorMode);
 
             var videoImage = new byte[videoResY * videoResX * 4];
-            var oscilloscope = new float[oscWindowSize, 2];
+            var oscilloscope = new float[oscNumVertices, 2];
             var success = true;
 
 #if !DEBUG
