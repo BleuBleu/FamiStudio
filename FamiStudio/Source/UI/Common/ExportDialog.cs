@@ -194,7 +194,7 @@ namespace FamiStudio
 
             if (canExportToVideo)
             {
-                page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
                 page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 1
                 page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 2
                 page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
@@ -219,7 +219,7 @@ namespace FamiStudio
             switch (format)
             {
                 case ExportFormat.WavMp3:
-                    page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
                     page.AddDropDownList("Format :", AudioFormatType.Names, AudioFormatType.Names[0]); // 1
                     page.AddDropDownList("Sample Rate :", new[] { "11025", "22050", "44100", "48000" }, "44100"); // 2
                     page.AddDropDownList("Bit Rate :", new[] { "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
@@ -298,7 +298,7 @@ namespace FamiStudio
                     page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     break;
                 case ExportFormat.Midi:
-                    page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
                     page.AddCheckBox("Export volume as velocity :", true); // 1
                     page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
                     page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24); // 3
@@ -355,7 +355,7 @@ namespace FamiStudio
                     page.AddCheckBoxList(null, songNames, null); // 3
                     break;
                 case ExportFormat.CommandLog:
-                    page.AddDropDownList("Song :", songNames, songNames[0]); // 0
+                    page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
                     page.AddDropDownList("Filetype :", new[] { "Command Log", "VGM"}, "VGM"); // 1
                     break;
                 case ExportFormat.Share:
