@@ -1515,7 +1515,7 @@ namespace FamiStudio
         {
             Debug.Assert(instrumentPlayer == null);
             instrumentPlayer = new InstrumentPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio);
-            //instrumentPlayer.Start(project, palPlayback);
+            instrumentPlayer.Start(project, palPlayback);
         }
 
         private void ShutdownSongPlayer()
