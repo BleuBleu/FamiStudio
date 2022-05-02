@@ -1643,12 +1643,11 @@ namespace FamiStudio
                 arp.SerializeState(buffer);
         }
 
-        private void FixupEpsm(int version)
+        public void DisableEpsmMultipleExpansions()
         {
-            // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. We
-            // don't allow these files to be open with the mainline version.
-            if (version < 13 && (expansionMask & ExpansionType.EPSMMask) != 0)
-                SetExpansionAudioMask(expansionMask & (~ExpansionType.EPSMMask), expansionNumN163Channels);
+            // Cant have EPSM with other expansions.
+            if (UsesMultipleExpansionAudios && UsesEPSMExpansion)
+                SetExpansionAudioMask(ExpansionAudioMask & (~ExpansionType.EPSMMask), ExpansionNumN163Channels);
         }
 
         public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)
@@ -1727,7 +1726,8 @@ namespace FamiStudio
 
                 // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
                 SortEverything(buffer.Version < 10);
-                FixupEpsm(buffer.Version);
+
+                DisableEpsmMultipleExpansions();
             }
         }
 
