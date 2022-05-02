@@ -175,7 +175,7 @@ long Nes_EPSM::run_until(cpu_time_t time)
 		int16_t samples[4];
 		while (t2 < 12)
 		{
-			OPN2_Clock(&opn2, samples);
+			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
 			sample += (int)(samples[0] * 12);
 			sample += (int)(samples[2]*1.1);
 			sample_right += (int)(samples[1]) * 12;

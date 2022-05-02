@@ -213,7 +213,7 @@ typedef struct __ym3438_t
 
 void OPN2_Reset(ym3438_t *chip);
 void OPN2_SetChipType(Bit32u type);
-void OPN2_Clock(ym3438_t *chip, Bit16s *buffer);
+void OPN2_Clock(ym3438_t *chip, Bit16s *buffer, bool fm = 1, bool rythm = 1, bool misc = 1);
 void OPN2_Write(ym3438_t *chip, Bit32u port, Bit8u data);
 void OPN2_SetTestPin(ym3438_t *chip, Bit32u value);
 ym3438_t *OPN_New();
