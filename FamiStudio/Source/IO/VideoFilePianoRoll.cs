@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Threading;
 
 using RenderGraphics = FamiStudio.GLOffscreenGraphics;
 
@@ -195,9 +194,6 @@ namespace FamiStudio
             for (int f = 0; f < numFrames; )
             {
                 var thisFrame = frames[f];
-
-                var currentPlayPattern = thisFrame.playPattern;
-                var currentPlayNote    = thisFrame.playNote;
 
                 // Keep moving forward until we see that we have advanced by 1 row.
                 int nf = f + 1;

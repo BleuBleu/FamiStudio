@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Threading;
-
-
-using RenderGraphics = FamiStudio.GLOffscreenGraphics;
 
 namespace FamiStudio
 {
