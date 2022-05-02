@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using RenderBitmap   = FamiStudio.GLBitmap;
@@ -27,7 +28,15 @@ namespace FamiStudio
         protected int videoResX = 1920;
         protected int videoResY = 1080;
 
+        protected string tempAudioFile;
+        protected int maxAbsSample = 0;
+
+        protected Project project;
+        protected Song song;
+        protected RenderGraphics videoGraphics;
         protected VideoEncoder videoEncoder;
+        protected VideoChannelState[] channelStates;
+        protected ThemeRenderResources themeResources;
 
         // Mostly from : https://github.com/kometbomb/oscilloscoper/blob/master/src/Oscilloscope.cpp
         protected void GenerateOscilloscope(short[] wav, int position, int windowSize, int maxLookback, float scaleY, float minX, float minY, float maxX, float maxY, float[,] oscilloscope)
@@ -92,7 +101,7 @@ namespace FamiStudio
             }
         }
 
-        protected bool Initialize(int channelMask, int loopCount)
+        protected bool Initialize(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -102,6 +111,91 @@ namespace FamiStudio
             videoEncoder = VideoEncoder.CreateInstance();
             if (videoEncoder == null)
                 return false;
+
+            videoResX = resX;
+            videoResY = resY;
+
+            project = originalProject.DeepClone();
+            song = project.GetSong(songId);
+
+            ExtendSongForLooping(song, loopCount);
+
+            // Save audio to temporary file.
+            tempAudioFile = Path.Combine(Utils.GetTemporaryDiretory(), "temp.wav");
+            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+
+            if (Log.ShouldAbortOperation)
+                return false;
+
+            // Start encoder, must be done before any GL calls on Android.
+            GetFrameRateInfo(song.Project, halfFrameRate, out var frameRateNumer, out var frameRateDenom);
+
+            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, stereo, tempAudioFile, filename))
+            {
+                Log.LogMessage(LogSeverity.Error, "Error starting video encoder, aborting.");
+                return false;
+            }
+
+            // Create the channel states.
+            channelStates = new VideoChannelState[Utils.NumberOfSetBits(channelMask)];
+
+            for (int i = 0, channelIndex = 0; i < song.Channels.Length; i++)
+            {
+                if ((channelMask & (1 << i)) == 0)
+                    continue;
+
+                var channel = song.Channels[i];
+                var pattern = channel.PatternInstances[0];
+                var state = new VideoChannelState();
+
+                state.videoChannelIndex = channelIndex;
+                state.songChannelIndex = i;
+                state.channel = song.Channels[i];
+                state.channelText = state.channel.NameWithExpansion;
+
+                channelStates[channelIndex] = state;
+                channelIndex++;
+            }
+
+            // Spawn threads to generate the WAV data for the oscilloscopes.
+            Log.LogMessage(LogSeverity.Info, "Building channel oscilloscopes...");
+
+            var counter = new ThreadSafeCounter();
+
+            Utils.NonBlockingParallelFor(channelStates.Length, NesApu.NUM_WAV_EXPORT_APU, counter, (stateIndex, threadIndex) =>
+            {
+                var state = channelStates[stateIndex];
+                state.wav = new WavPlayer(SampleRate, song.Project.OutputsStereoAudio, 1, 1 << state.songChannelIndex, threadIndex).GetSongSamples(song, song.Project.PalMode, -1, false, true);
+
+                if (Log.ShouldAbortOperation)
+                    return false;
+
+                if (song.Project.OutputsStereoAudio)
+                    state.wav = WaveUtils.MixDown(state.wav);
+
+                maxAbsSample = WaveUtils.GetMaxAbsValue(state.wav);
+                return true;
+            });
+
+            while (counter.Value != channelStates.Length)
+            {
+                Log.ReportProgress(counter.Value / (float)channelStates.Length);
+                Thread.Sleep(50);
+
+                if (Log.ShouldAbortOperation)
+                    return false;
+            }
+
+            // Create graphics resources.
+            videoGraphics = RenderGraphics.Create(videoResX, videoResY, true);
+
+            if (videoGraphics == null)
+            {
+                Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
+                return false;
+            }
+
+            themeResources = new ThemeRenderResources(videoGraphics);
 
             return true;
         }

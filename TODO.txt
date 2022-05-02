@@ -6,10 +6,7 @@ Testing + Packaging
 	- Sonic demo song (how2 will need to fix volumes).
 	- Instrument packages
 - Update doc.
-- MT export
-	- Review all new WavPlayer() params.
-	- separateFiles, do it.
-- 
+
 
 Feature list:
 - EPSM support
