@@ -11,7 +11,7 @@ namespace FamiStudio
     {
         StreamWriter file;
 
-        public UnitTestPlayer() : base(NesApu.APU_WAV_EXPORT)
+        public UnitTestPlayer(bool stereo) : base(NesApu.APU_WAV_EXPORT, stereo)
         {
             loopMode = LoopMode.None;
         }

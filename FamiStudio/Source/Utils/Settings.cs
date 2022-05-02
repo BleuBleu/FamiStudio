@@ -16,7 +16,8 @@ namespace FamiStudio
         // Version 3   : FamiStudio 3.1.0
         // Version 4   : FamiStudio 3.2.0
         // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
-        public const int SettingsVersion = 5;
+        // Version 6   : FamiStudio 3.3.0
+        public const int SettingsVersion = 6;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -47,7 +48,7 @@ namespace FamiStudio
 
         // User Interface section
         public static int DpiScaling = 0;
-        public static int TimeFormat = 0;
+        public static int TimeFormat = 1;
         public static bool ShowPianoRollViewRange = true;
         public static bool ReverseTrackPad = false;
         public static int TrackPadMoveSensitity = 1;
@@ -59,6 +60,7 @@ namespace FamiStudio
         public static bool ShowOscilloscope = true;
         public static bool ForceCompactSequencer = false;
         public static bool ShowImplicitStopNotes = true;
+        public static bool ShowRegisterViewer = PlatformUtils.IsDesktop;
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
 #if FAMISTUDIO_WINDOWS
@@ -175,6 +177,7 @@ namespace FamiStudio
         public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
         public static int InstrumentStopTime = 1;
         public static bool SquareSmoothVibrato = true;
+        public static bool ClampPeriods = true;
         public static bool NoDragSoungWhenPlaying = false;
         public static int MetronomeVolume = 50;
         public static int SeparateChannelsExportTndMode = NesApu.TND_MODE_SINGLE;
@@ -203,7 +206,8 @@ namespace FamiStudio
             new ExpansionMix(0.0f, -15.0f), // Fds
             new ExpansionMix(0.0f,  -5.0f), // Mmc5
             new ExpansionMix(0.0f, -15.0f), // N163
-            new ExpansionMix(0.0f,  -5.0f)  // S5B
+            new ExpansionMix(0.0f,  -5.0f), // S5B
+            new ExpansionMix(0.0f,  -5.0f)  // EPSM
         };
 
         // MIDI section
@@ -255,12 +259,14 @@ namespace FamiStudio
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
             TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
             TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
-            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", true);
+            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", PlatformUtils.IsDesktop);
+            ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", PlatformUtils.IsDesktop);
 
             // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
             InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
+            ClampPeriods = ini.GetBool("Audio", "ClampPeriods", true);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
             MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
             SeparateChannelsExportTndMode = ini.GetInt("Audio", "SeparateChannelsExportTndMode", NesApu.TND_MODE_SINGLE);
@@ -369,6 +375,10 @@ namespace FamiStudio
             if (Version < 4 || (Version < 5 && PlatformUtils.IsDesktop))
                 ShowTutorial = true;
 
+            // Re-force time format to the MM:SS:mmm
+            if (Version < 6)
+                TimeFormat = 1;
+
             // No deprecation at the moment.
             Version = SettingsVersion;
         }
@@ -401,11 +411,13 @@ namespace FamiStudio
             ini.SetInt("UI", "TrackPadZoomSensitity", TrackPadZoomSensitity);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
             ini.SetBool("UI", "ShowImplicitStopNotes", ShowImplicitStopNotes);
+            ini.SetBool("UI", "ShowRegisterViewer", ShowRegisterViewer);
 
             // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
             ini.SetInt("Audio", "InstrumentStopTime", InstrumentStopTime);
             ini.SetBool("Audio", "SquareSmoothVibrato", SquareSmoothVibrato);
+            ini.SetBool("Audio", "ClampPeriods", ClampPeriods);
             ini.SetBool("Audio", "NoDragSoungWhenPlaying", NoDragSoungWhenPlaying);
             ini.SetInt("Audio", "MetronomeVolume", MetronomeVolume);
             ini.SetInt("Audio", "SeparateChannelsExportTndMode", SeparateChannelsExportTndMode);

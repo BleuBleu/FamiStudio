@@ -67,6 +67,11 @@ blargg_err_t Simple_Apu::sample_rate( long rate, bool pal, int tnd_mode )
 	mmc5.output(&buf);
 	namco.output(&buf);
 	sunsoft.output(&buf);
+	epsm.output(&buf_epsm_left, &buf_epsm_right);
+	buf_epsm_left.clock_rate(pal ? 1662607 : 1789773);
+	buf_epsm_left.sample_rate(rate);
+	buf_epsm_right.clock_rate(pal ? 1662607 : 1789773);
+	buf_epsm_right.sample_rate(rate);
 	
 	tnd[0].clock_rate(pal ? 1662607 : 1789773);
 	tnd[1].clock_rate(pal ? 1662607 : 1789773);
@@ -103,12 +108,13 @@ void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 	{
 		switch (expansion)
 		{
-		case expansion_vrc6: vrc6.osc_output(idx, enable ? &buf : NULL); break;
-		case expansion_vrc7: vrc7.enable_channel(idx, enable); break;
-		case expansion_fds: fds.output(enable ? &buf : NULL); break;
-		case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
-		case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-		case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_vrc6: vrc6.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_vrc7: vrc7.enable_channel(idx, enable); break;
+			case expansion_fds: fds.output(enable ? &buf : NULL); break;
+			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_sunsoft: sunsoft.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_epsm: epsm.enable_channel(idx, enable); break;
 		}
 	}
 }
@@ -126,6 +132,7 @@ void Simple_Apu::treble_eq(int exp, double treble, int sample_rate)
 		case expansion_mmc5: mmc5.treble_eq(eq); break;
 		case expansion_namco: namco.treble_eq(eq); break;
 		case expansion_sunsoft: sunsoft.treble_eq(eq); break;
+		case expansion_epsm: epsm.treble_eq(eq); break;
 	}
 }
 
@@ -140,6 +147,7 @@ void Simple_Apu::set_expansion_volume(int exp, double volume)
 		case expansion_mmc5: mmc5.volume(volume); break;
 		case expansion_namco: namco.volume(volume); break;
 		case expansion_sunsoft: sunsoft.volume(volume); break;
+		case expansion_epsm: epsm.volume(volume); break;
 	}
 }
 
@@ -159,6 +167,7 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			if (expansions & expansion_mask_mmc5) mmc5.write_shadow_register(addr, data);
 			if (expansions & expansion_mask_namco) namco.write_shadow_register(addr, data);
 			if (expansions & expansion_mask_sunsoft) sunsoft.write_shadow_register(addr, data); 
+			if (expansions & expansion_mask_epsm) epsm.write_shadow_register(addr, data); 
 		}
 	}
 	else
@@ -175,9 +184,26 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 			if (expansions & expansion_mask_mmc5) mmc5.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_namco) namco.write_register(clock(), addr, data);
 			if (expansions & expansion_mask_sunsoft) sunsoft.write_register(clock(), addr, data);
+			if (expansions & expansion_mask_epsm) epsm.write_register(clock(16), addr, data);
 		}
 	}
 }
+
+void Simple_Apu::get_register_values(int exp, void* regs)
+{
+	assert(!seeking);
+
+	switch (exp)
+	{
+		case expansion_none: apu.get_register_values((apu_register_values*)regs); break;
+		case expansion_vrc6: vrc6.get_register_values((vrc6_register_values*)regs); break;
+		case expansion_vrc7: vrc7.get_register_values((vrc7_register_values*)regs); break;
+		case expansion_fds: fds.get_register_values((fds_register_values*)regs); break;
+		case expansion_mmc5: mmc5.get_register_values((mmc5_register_values*)regs); break;
+		case expansion_namco: namco.get_register_values((n163_register_values*)regs); break;
+		case expansion_sunsoft: sunsoft.get_register_values((s5b_register_values*)regs); break;
+		case expansion_epsm: epsm.get_register_values((epsm_register_values*)regs); break;
+	}}
 
 void Simple_Apu::start_seeking()
 {
@@ -190,6 +216,7 @@ void Simple_Apu::start_seeking()
 	if (expansions & expansion_mask_mmc5) mmc5.start_seeking();
 	if (expansions & expansion_mask_namco) namco.start_seeking();
 	if (expansions & expansion_mask_sunsoft) sunsoft.start_seeking();
+	if (expansions & expansion_mask_epsm) epsm.start_seeking();
 }
 
 void Simple_Apu::stop_seeking()
@@ -202,6 +229,7 @@ void Simple_Apu::stop_seeking()
 	if (expansions & expansion_mask_mmc5) mmc5.stop_seeking(time);
 	if (expansions & expansion_mask_namco) namco.stop_seeking(time);
 	if (expansions & expansion_mask_sunsoft) sunsoft.stop_seeking(time);
+	if (expansions & expansion_mask_epsm) epsm.stop_seeking(time);
 
 	seeking = false;
 }
@@ -233,9 +261,16 @@ void Simple_Apu::end_frame()
 	if (expansions & expansion_mask_mmc5) mmc5.end_frame(frame_length); 
 	if (expansions & expansion_mask_namco) namco.end_frame(frame_length); 
 	if (expansions & expansion_mask_sunsoft) sunsoft.end_frame(frame_length); 
+	if (expansions & expansion_mask_epsm) epsm.end_frame(frame_length); 
 
 	buf.end_frame( frame_length );
 	tnd[0].end_frame( frame_length );
+
+	if ((expansions & expansion_mask_epsm) != 0)
+	{
+		buf_epsm_left.end_frame(frame_length);
+		buf_epsm_right.end_frame(frame_length);
+	}
 
 	if (separate_tnd_mode)
 	{
@@ -259,6 +294,7 @@ void Simple_Apu::reset()
 	mmc5.reset();
 	namco.reset();
 	sunsoft.reset();
+	epsm.reset();
 }
 
 void Simple_Apu::set_audio_expansions(long exp)
@@ -288,7 +324,7 @@ inline float unpack_sample(long raw_sample)
 	// TODO : Investigate this. We sometimes have values that dips every so slightly in the negative range.
 	// It never goes below -0.01f so they are essentially zero, but not quite. Worrying.
 	// assert(sample_float >= 0.0f); 
-	return max(0.00001f, sample_float);
+	return max(sample_float, 0.00001f);
 }
 
 inline long pack_sample(float sample_float)
@@ -307,6 +343,22 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 	assert(buf.samples_avail() == tnd[0].samples_avail());
 	assert(buf.samples_avail() == tnd[1].samples_avail() && separate_tnd_mode || tnd[1].samples_avail() == 0 && !separate_tnd_mode);
 	assert(buf.samples_avail() == tnd[2].samples_avail() && separate_tnd_mode || tnd[2].samples_avail() == 0 && !separate_tnd_mode);
+
+	sample_t out_left[1024];
+	sample_t out_right[1024];
+
+	if (expansions & expansion_mask_epsm)
+	{
+		long count_l = buf_epsm_left.read_samples(out_left, count, false);
+		long count_r = buf_epsm_right.read_samples(out_right, count, false);
+
+		assert(count_l == count);
+		assert(count_r == count);
+	}
+	else
+	{
+		assert(buf.samples_avail() == count);
+	}
 
 	if (count)
 	{
@@ -383,15 +435,29 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 		int lin_bass = lin.begin(buf);
 		int nonlin_bass = nonlin.begin(tnd[0]);
 
-		for (int n = count; n--; )
+		if (expansions & expansion_mask_epsm)
 		{
-			int s = lin.read() + nonlin.read();
-			lin.next(lin_bass);
-			nonlin.next(nonlin_bass);
-			*out++ = s;
+			for (int i = 0; i < count; i++)
+			{
+				int s = lin.read() + nonlin.read();
+				lin.next(lin_bass);
+				nonlin.next(nonlin_bass);
+				*out++ = (blip_sample_t)clamp((int)(s + out_left[i]),  -32768, 32767);
+				*out++ = (blip_sample_t)clamp((int)(s + out_right[i]), -32768, 32767);
+			}
+		}
+		else
+		{
+			for (int n = count; n--; )
+			{
+				int s = lin.read() + nonlin.read();
+				lin.next(lin_bass);
+				nonlin.next(nonlin_bass);
+				*out++ = s;
 
-			if ((BOOST::int16_t)s != s)
-				out[-1] = 0x7FFF - (s >> 24);
+				if ((BOOST::int16_t)s != s)
+					out[-1] = 0x7FFF - (s >> 24);
+			}
 		}
 
 		lin.end(buf);
@@ -414,6 +480,12 @@ void Simple_Apu::remove_samples(long s)
 {
 	buf.remove_samples(s);
 
+	if (expansions & expansion_mask_epsm)
+	{
+		buf_epsm_left.remove_samples(s);
+		buf_epsm_right.remove_samples(s);
+	}
+
 	tnd[0].remove_samples(s);
 	if (separate_tnd_mode)
 	{
@@ -431,4 +503,3 @@ void Simple_Apu::load_snapshot( apu_snapshot_t const& in )
 {
 	apu.load_snapshot( in );
 }
-

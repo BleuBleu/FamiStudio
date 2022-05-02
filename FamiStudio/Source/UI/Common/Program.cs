@@ -15,6 +15,9 @@ namespace FamiStudio
 #if FAMISTUDIO_WINDOWS
         [DllImport("SHCore.dll", SetLastError = true)]
         private static extern bool SetProcessDpiAwareness(int awareness);
+        [DllImport("kernel32.dll")]
+        static extern bool AttachConsole(int dwProcessId);
+        private const int ATTACH_PARENT_PROCESS = -1;
 #endif
 
         [STAThread]
@@ -30,7 +33,6 @@ namespace FamiStudio
 
             if (!PlatformUtils.IsVS2015RuntimeInstalled())
             {
-                // MATTT : Update this message + link to 2019 runtime!
                 if (MessageBox.Show("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     PlatformUtils.OpenUrl("https://famistudio.org/doc/install/#windows");
@@ -67,6 +69,8 @@ namespace FamiStudio
 
             if (!cli.Run())
             {
+                //AttachConsole(ATTACH_PARENT_PROCESS);
+
                 var famiStudio = new FamiStudio();
                 famiStudio.Initialize(args.Length > 0 ? args[0] : null);
                 famiStudio.Run();

@@ -107,6 +107,7 @@ namespace FamiStudio
         public MobilePiano     MobilePiano     => mainForm.MobilePiano;
         public RenderControl   ActiveControl   => mainForm.ActiveControl;
         public FamiStudioForm  MainForm        => mainForm;
+        public BasePlayer      ActivePlayer    => IsPlaying ? (BasePlayer)songPlayer : (BasePlayer)instrumentPlayer;
 
         public bool IsSequencerActive          => ActiveControl == Sequencer;
         public bool IsPianoRollActive          => ActiveControl == PianoRoll;
@@ -408,13 +409,13 @@ namespace FamiStudio
             ToolBar.SetToolTip(msg, red);
         }
 
-        public void BeginLogTask(bool progress = false)
+        public void BeginLogTask(bool progress = false, string title = null, string text = null)
         {
             Debug.Assert(logDialog == null && progressLogDialog == null);
 
             if (progress)
             {
-                progressLogDialog = new LogProgressDialog(mainForm);
+                progressLogDialog = new LogProgressDialog(mainForm, title, text);
                 Log.SetLogOutput(progressLogDialog);
             }
             else 
@@ -575,6 +576,12 @@ namespace FamiStudio
                 PianoRoll.ReplaceSelectionInstrument(instrument, pianoRollPos);
                 PianoRoll.Focus();
             }
+            var sequencerPos = Sequencer.PointToClient(pos);
+            if (Sequencer.ClientRectangle.Contains(sequencerPos))
+            {
+                Sequencer.ReplaceSelectionInstrument(instrument, sequencerPos);
+                Sequencer.Focus();
+            }
         }
 
         private void ProjectExplorer_ArpeggioDroppedOutside(Arpeggio arpeggio, Point pos)
@@ -584,6 +591,12 @@ namespace FamiStudio
             {
                 PianoRoll.ReplaceSelectionArpeggio(arpeggio, pianoRollPos);
                 PianoRoll.Focus();
+            }
+            var sequencerPos = Sequencer.PointToClient(pos);
+            if (Sequencer.ClientRectangle.Contains(sequencerPos))
+            {
+                Sequencer.ReplaceSelectionArpeggio(arpeggio, sequencerPos);
+                Sequencer.Focus();
             }
         }
 
@@ -1141,10 +1154,16 @@ namespace FamiStudio
                 {
                     RecreateAudioPlayers();
                     RefreshLayout();
+                    RefreshProjectExplorerButtons();
                     InitializeMidi();
                     MarkEverythingDirty();
                 }
             });
+        }
+
+        private void RefreshProjectExplorerButtons()
+        {
+            ProjectExplorer.RefreshButtons();
         }
 
         public bool TryClosing()
@@ -1459,6 +1478,12 @@ namespace FamiStudio
             {
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);
             }
+            if (selectedInstrument != null &&
+                (selectedInstrument.HasReleaseEnvelope || selectedInstrument.IsEpsmInstrument) &&
+                song.Channels[selectedChannelIndex].SupportsInstrument(selectedInstrument) && (song.Channels[selectedChannelIndex].IsEPSMFmChannel || song.Channels[selectedChannelIndex].IsEPSMRythmChannel))
+            {
+                instrumentPlayer.ReleaseNote(selectedChannelIndex);
+            }
             else
             {
                 instrumentPlayer.StopAllNotes();
@@ -1481,7 +1506,7 @@ namespace FamiStudio
         {
             Debug.Assert(songPlayer == null);
             Sequencer.GetPatternTimeSelectionRange(out var min, out var max);
-            songPlayer = new SongPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate());
+            songPlayer = new SongPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio);
             songPlayer.SetMetronomeSound(metronome ? metronomeSound : null);
             songPlayer.SetSelectionRange(min, max);
         }
@@ -1489,7 +1514,7 @@ namespace FamiStudio
         private void InitializeInstrumentPlayer()
         {
             Debug.Assert(instrumentPlayer == null);
-            instrumentPlayer = new InstrumentPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate());
+            instrumentPlayer = new InstrumentPlayer(palPlayback, PlatformUtils.GetOutputAudioSampleSampleRate(), project.OutputsStereoAudio);
             instrumentPlayer.Start(project, palPlayback);
         }
 
@@ -1520,7 +1545,7 @@ namespace FamiStudio
 
             if (Settings.ShowOscilloscope)
             {
-                oscilloscope = new Oscilloscope((int)DpiScaling.MainWindow);
+                oscilloscope = new Oscilloscope((int)DpiScaling.MainWindow, project.OutputsStereoAudio);
                 oscilloscope.Start();
 
                 if (instrumentPlayer != null)
@@ -1727,7 +1752,7 @@ namespace FamiStudio
                         SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
                     else if (shift)
                         SeekSong(0);
-                    else if (ctrl && !PlatformUtils.IsMacOS) // CMD + Space is spotlight search on MacOS :(
+                    else if (ctrl) 
                         SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition)));
 
                     PlaySong();

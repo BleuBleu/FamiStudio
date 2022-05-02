@@ -478,10 +478,29 @@ namespace FamiStudio
 
         protected int GetPeriod()
         {
-            var noteVal = Utils.Clamp(note.Value + envelopeValues[EnvelopeType.Arpeggio], 0, noteTable.Length - 1);
+            var noteVal = note.Value + envelopeValues[EnvelopeType.Arpeggio];
+
+            var outsideNoteTable = false;
+
+            if (Settings.ClampPeriods)
+            {
+                noteVal = Utils.Clamp(noteVal, 0, noteTable.Length - 1);
+            }
+            else if (noteVal >= noteTable.Length || noteVal < 0)
+            {
+                outsideNoteTable = true;
+            }
+
             var pitch = (note.FinePitch + envelopeValues[EnvelopeType.Pitch]) << pitchShift;
             var slide = slideShift < 0 ? (slidePitch >> -slideShift) : (slidePitch << slideShift); // Remove the fraction part.
-            return Utils.Clamp(noteTable[noteVal] + pitch + slide, 0, maximumPeriod);
+
+            // When clamping is disabled, we return a random period if we are outside
+            // the note table. This will simulate the hardware reading random code/data 
+            // and should help debug these issues.
+            var notePeriod = outsideNoteTable ? (noteVal & 0xff) * 251 + 293 : noteTable[noteVal];
+            var finalPeriod = notePeriod + pitch + slide;
+
+            return Settings.ClampPeriods ? Utils.Clamp(finalPeriod, 0, maximumPeriod) : (finalPeriod & maximumPeriod);
         }
 
         protected int GetVolume()

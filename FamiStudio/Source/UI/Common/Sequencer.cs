@@ -101,7 +101,7 @@ namespace FamiStudio
         RenderPath  seekGeometry;
 
         RenderBitmapAtlas bmpAtlasExpansions;
-        RenderBitmapAtlas bmpAtlasTracks;
+        RenderBitmapAtlas bmpAtlasChannels;
         RenderBitmapAtlas bmpAtlasMisc;
 
         enum MiscImageIndices
@@ -373,7 +373,7 @@ namespace FamiStudio
             patternCache = new PatternBitmapCache(g);
 
             bmpAtlasExpansions = g.CreateBitmapAtlasFromResources(ExpansionType.Icons);
-            bmpAtlasTracks     = g.CreateBitmapAtlasFromResources(ChannelType.Icons);
+            bmpAtlasChannels   = g.CreateBitmapAtlasFromResources(ChannelType.Icons);
             bmpAtlasMisc       = g.CreateBitmapAtlasFromResources(MiscImageNames);
 
             seekBarBrush = g.CreateSolidBrush(Theme.SeekBarColor);
@@ -402,7 +402,7 @@ namespace FamiStudio
         protected override void OnRenderTerminated()
         {
             Utils.DisposeAndNullify(ref bmpAtlasExpansions);
-            Utils.DisposeAndNullify(ref bmpAtlasTracks);
+            Utils.DisposeAndNullify(ref bmpAtlasChannels);
             Utils.DisposeAndNullify(ref bmpAtlasMisc);
             Utils.DisposeAndNullify(ref seekBarBrush);
             Utils.DisposeAndNullify(ref seekBarRecBrush);
@@ -485,7 +485,7 @@ namespace FamiStudio
 
             // Icons
             var showExpIcons = showExpansionIcons && Song.Project.UsesAnyExpansionAudio;
-            var atlas = showExpIcons ? bmpAtlasExpansions : bmpAtlasTracks;
+            var atlas = showExpIcons ? bmpAtlasExpansions : bmpAtlasChannels;
 
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
@@ -498,7 +498,7 @@ namespace FamiStudio
             for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
             {
                 var font = i == selectedChannelIndex ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
-                var iconHeight = bmpAtlasTracks.GetElementSize(0).Height * channelBitmapScale;
+                var iconHeight = bmpAtlasChannels.GetElementSize(0).Height * channelBitmapScale;
                 cc.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackIconPosY, ThemeResources.LightGreyFillBrush2, RenderTextFlags.MiddleLeft, 0, iconHeight);
             }
 
@@ -787,6 +787,92 @@ namespace FamiStudio
             RenderChannelNames(g);
             RenderPatternArea(g);
             RenderDebug(g);
+        }
+
+        private void ReplaceSelectionUtil(Point pos, bool forceInSelection, Func<Channel, bool> channelValid, Action<Pattern> action)
+        {
+            Debug.Assert(!forceInSelection || IsSelectionValid());
+
+            if (GetPatternForCoord(pos.X, pos.Y, out var location, out _))
+            {
+                // If we drag on selection, we process the whole selection, otherwise
+                // just the pattern under the mouse.
+                if (IsPatternSelected(location))
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                    var replacedAnything = false;
+
+                    for (int i = selectionMin.ChannelIndex; i <= selectionMax.ChannelIndex; i++)
+                    {
+                        var channel = Song.Channels[i];
+                        if (channelValid(channel))
+                        {
+                            for (int j = selectionMin.PatternIndex; j <= selectionMax.PatternIndex; j++)
+                            {
+                                var pattern = channel.PatternInstances[j];
+                                if (pattern != null)
+                                {
+                                    action(pattern);
+                                    NotifyPatternChange(pattern);
+                                    replacedAnything = true;
+                                }
+                            }
+
+                            channel.InvalidateCumulativePatternCache();
+                        }
+                    }
+
+                    App.UndoRedoManager.AbortOrEndTransaction(replacedAnything);
+                    MarkDirty();
+                }
+                else
+                {
+                    var channel = Song.Channels[location.ChannelIndex];
+                    if (channelValid(channel))
+                    {
+                        var pattern = channel.PatternInstances[location.PatternIndex];
+                        if (pattern != null)
+                        {
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                            action(pattern);
+                            NotifyPatternChange(pattern);
+                            channel.InvalidateCumulativePatternCache(pattern);
+                            App.UndoRedoManager.EndTransaction();
+                            MarkDirty();
+                        }
+                    }
+                }
+            }
+        }
+
+        public void ReplaceSelectionInstrument(Instrument instrument, Point pos, bool forceInSelection = false)
+        {
+            ReplaceSelectionUtil(
+                pos, forceInSelection,
+                (channel) => channel.SupportsInstrument(instrument),
+                (pattern) =>
+                {
+                    foreach (var n in pattern.Notes.Values)
+                    {
+                        if (n.IsMusical)
+                            n.Instrument = instrument;
+                    }
+                });
+        }
+
+        public void ReplaceSelectionArpeggio(Arpeggio arpeggio, Point pos, bool forceInSelection = false)
+        {
+            ReplaceSelectionUtil(
+                pos, forceInSelection,
+                (channel) => channel.SupportsArpeggios,
+                (pattern) =>
+                {
+                    foreach (var n in pattern.Notes.Values)
+                    {
+                        if (n.IsMusical)
+                            n.Arpeggio = arpeggio;
+                    }
+                });
         }
 
         private bool GetScrollBarParams(out int posX, out int sizeX)
@@ -2097,6 +2183,10 @@ namespace FamiStudio
                 {
                     CancelDragSelection();
                     DeleteSelection();
+                }
+                else if (e.KeyCode == Keys.A && ctrl && IsActiveControl)
+                {
+                    SetSelection(new PatternLocation(0, 0), new PatternLocation(Song.Channels.Length - 1, Song.Length - 1), true);
                 }
             }
 

@@ -23,7 +23,7 @@ namespace FamiStudio
             CultureInfo.CurrentCulture = oldCulture;
         }
 
-        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData)
+        public bool Save(Project originalProject, string filename, int[] songIds, bool deleteUnusedData, bool noVersion = false)
         {
             var project = originalProject.DeepClone();
             project.DeleteAllSongsBut(songIds, deleteUnusedData);
@@ -33,7 +33,10 @@ namespace FamiStudio
             var lines = new List<string>();
 
             var versionString = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
-            var projectLine = $"Project{GenerateAttribute("Version", versionString)}{GenerateAttribute("TempoMode", TempoType.Names[project.TempoMode])}";
+            var projectLine = $"Project";
+            if (!noVersion)
+                projectLine += $"{GenerateAttribute("Version", versionString)}";
+            projectLine += $"{GenerateAttribute("TempoMode", TempoType.Names[project.TempoMode])}";
 
             if (project.Name      != "")    projectLine += GenerateAttribute("Name", project.Name);
             if (project.Author    != "")    projectLine += GenerateAttribute("Author", project.Author);
@@ -85,7 +88,14 @@ namespace FamiStudio
                 var mapping = project.SamplesMapping[i];
 
                 if (mapping != null)
-                    lines.Add($"\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(i + Note.DPCMNoteMin))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}");
+                {
+                    var mappingStr = $"\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(i + Note.DPCMNoteMin))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}";
+
+                    if (mapping.OverrideDmcInitialValue)
+                        mappingStr += $"{GenerateAttribute("DmcInitialValue", mapping.DmcInitialValueDiv2)}";
+
+                    lines.Add(mappingStr);
+                }
             }
 
             // Instruments
@@ -123,6 +133,16 @@ namespace FamiStudio
                         {
                             for (int i = 0; i < 8; i++)
                                 instrumentLine += GenerateAttribute($"Vrc7Reg{i}", instrument.Vrc7PatchRegs[i]);
+                        }
+                    }
+                    else if (instrument.IsEpsmInstrument)
+                    {
+                        instrumentLine += GenerateAttribute("EpsmPatch", instrument.EpsmPatch);
+
+                        if (instrument.EpsmPatch == EpsmInstrumentPatch.Custom)
+                        {
+                            for (int i = 0; i < 31; i++)
+                                instrumentLine += GenerateAttribute($"EpsmReg{i}", instrument.EpsmPatchRegs[i]);
                         }
                     }
                 }
@@ -229,17 +249,18 @@ namespace FamiStudio
                                     }
                                 }
 
-                                if (!note.HasAttack)     noteLine += GenerateAttribute("Attack", false);
-                                if (note.HasVolume)      noteLine += GenerateAttribute("Volume", note.Volume);
-                                if (note.HasVolumeSlide) noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
-                                if (note.HasVibrato)     noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
-                                if (note.HasSpeed)       noteLine += GenerateAttribute("Speed", note.Speed);
-                                if (note.HasFinePitch)   noteLine += GenerateAttribute("FinePitch", note.FinePitch);
-                                if (note.HasFdsModSpeed) noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
-                                if (note.HasFdsModDepth) noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
-                                if (note.HasDutyCycle)   noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
-                                if (note.HasNoteDelay)   noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
-                                if (note.HasCutDelay)    noteLine += GenerateAttribute("CutDelay", note.CutDelay);
+                                if (!note.HasAttack)      noteLine += GenerateAttribute("Attack", false);
+                                if (note.HasVolume)       noteLine += GenerateAttribute("Volume", note.Volume);
+                                if (note.HasVolumeSlide)  noteLine += GenerateAttribute("VolumeSlideTarget", note.VolumeSlideTarget);
+                                if (note.HasVibrato)      noteLine += $"{GenerateAttribute("VibratoSpeed", note.VibratoSpeed)}{GenerateAttribute("VibratoDepth", note.VibratoDepth)}";
+                                if (note.HasSpeed)        noteLine += GenerateAttribute("Speed", note.Speed);
+                                if (note.HasFinePitch)    noteLine += GenerateAttribute("FinePitch", note.FinePitch);
+                                if (note.HasFdsModSpeed)  noteLine += GenerateAttribute("FdsModSpeed", note.FdsModSpeed);
+                                if (note.HasFdsModDepth)  noteLine += GenerateAttribute("FdsModDepth", note.FdsModDepth);
+                                if (note.HasDutyCycle)    noteLine += GenerateAttribute("DutyCycle", note.DutyCycle);
+                                if (note.HasNoteDelay)    noteLine += GenerateAttribute("NoteDelay", note.NoteDelay);
+                                if (note.HasCutDelay)     noteLine += GenerateAttribute("CutDelay", note.CutDelay);
+                                if (note.HasDeltaCounter) noteLine += GenerateAttribute("DeltaCounter", note.DeltaCounter);
 
                                 lines.Add(noteLine);
                             }
@@ -341,8 +362,11 @@ namespace FamiStudio
                     {
                         case "Project":
                         {
+                            var currentVersion = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
+
                             project = new Project();
-                            parameters.TryGetValue("Version", out var version);
+                            if (!parameters.TryGetValue("Version", out var version))
+                                version = currentVersion;
                             if (parameters.TryGetValue("Name", out var name)) project.Name = name;
                             if (parameters.TryGetValue("Author", out var author)) project.Author = author;
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
@@ -366,7 +390,7 @@ namespace FamiStudio
                                 project.SetExpansionAudioMask(expansionMask, numN163Channels);
                             }
 
-                            if (!version.StartsWith("3.2"))
+                            if (!version.StartsWith(currentVersion.Substring(0, 3)))
                             {
                                 Log.LogMessage(LogSeverity.Error, "File was created with an incompatible version of FamiStudio. The text format is only compatible with the current version.");
                                 return null;
@@ -388,7 +412,12 @@ namespace FamiStudio
                             var loop = false;
                             if (parameters.TryGetValue("Pitch", out var pitchStr)) pitch = int.Parse(pitchStr);
                             if (parameters.TryGetValue("Loop", out var loopStr)) loop = bool.Parse(loopStr);
-                            project.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop);
+                            var mapping = project.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop);
+                            if (parameters.TryGetValue("DmcInitialValue", out var dmcInitialStr))
+                            {
+                                mapping.OverrideDmcInitialValue = true;
+                                mapping.DmcInitialValueDiv2 = byte.Parse(dmcInitialStr);
+                            }
                             break;
                         }
                         case "Instrument":
@@ -427,6 +456,19 @@ namespace FamiStudio
                                     {
                                         if (parameters.TryGetValue($"Vrc7Reg{i}", out var regStr))
                                            instrument.Vrc7PatchRegs[i] = byte.Parse(regStr);
+                                    }
+                                }
+                            }
+                            else if (instrument.IsEpsmInstrument)
+                            {
+                                if (parameters.TryGetValue("EpsmPatch", out var epsmPatchStr)) instrument.EpsmPatch = byte.Parse(epsmPatchStr);
+
+                                if (instrument.EpsmPatch == EpsmInstrumentPatch.Custom)
+                                {
+                                    for (int i = 0; i < 31; i++)
+                                    {
+                                        if (parameters.TryGetValue($"EpsmReg{i}", out var regStr))
+                                           instrument.EpsmPatchRegs[i] = byte.Parse(regStr);
                                     }
                                 }
                             }
@@ -582,6 +624,8 @@ namespace FamiStudio
                                 note.NoteDelay = byte.Parse(noteDelayStr);
                             if (parameters.TryGetValue("CutDelay", out var cutDelayStr) && channel.SupportsEffect(Note.EffectCutDelay))
                                 note.CutDelay = byte.Parse(cutDelayStr);
+                            if (parameters.TryGetValue("DeltaCounter", out var deltaCounterStr) && channel.SupportsEffect(Note.EffectDeltaCounter))
+                                note.DeltaCounter = byte.Parse(deltaCounterStr);
 
                             break;
                         }
@@ -593,6 +637,10 @@ namespace FamiStudio
                         }
                     }
                 }
+
+                // Cant have EPSM with other expansions.
+                if (project.UsesMultipleExpansionAudios && project.UsesEPSMExpansion)
+                   project.SetExpansionAudioMask(project.ExpansionAudioMask & (~ExpansionType.EPSMMask), project.ExpansionNumN163Channels);
 
                 project.SortEverything(false);
                 ResetCulture();

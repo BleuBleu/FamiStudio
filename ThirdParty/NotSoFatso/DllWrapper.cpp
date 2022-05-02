@@ -51,6 +51,12 @@ extern "C" int __stdcall NsfIsPal(void* nsfPtr)
 	return ((NsfCoreFile*)nsfPtr)->file.nIsPal;
 }
 
+extern "C" int __stdcall NsfGetClockSpeed(void* nsfPtr)
+{
+	NsfCoreFile* f = (NsfCoreFile*)nsfPtr;
+	return f->file.nIsPal ? f->file.nPAL_PlaySpeed : f->file.nNTSC_PlaySpeed;
+}
+
 extern "C" int __stdcall NsfGetExpansion(void* nsfPtr)
 {
 	return ((NsfCoreFile*)nsfPtr)->file.nChipExtensions;
@@ -95,4 +101,9 @@ extern "C" int __stdcall NsfRunFrame(void* nsfPtr)
 extern "C" int __stdcall NsfGetState(void* nsfPtr, int channel, int state, int sub)
 {
 	return ((NsfCoreFile*)nsfPtr)->core.GetState(channel, state, sub);
+}
+
+extern "C" void __stdcall NsfSetApuWriteCallback(void* nsfPtr, ApuRegWriteCallback callback)
+{
+	return ((NsfCoreFile*)nsfPtr)->core.SetApuWriteCallback(callback);
 }

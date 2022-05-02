@@ -206,6 +206,7 @@ namespace FamiStudio
             "EffectNoteDelay",
             "EffectCutDelay",
             "EffectVolume",
+            "EffectDutyCycle",
             "EffectFrame" // Special background rectangle image.
         };
 
@@ -932,7 +933,7 @@ namespace FamiStudio
             iconTransparentBrush = g.CreateSolidBrush(Color.FromArgb(92, Theme.DarkGreyLineColor2));
             invalidDpcmMappingBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.BlackColor));
             volumeSlideBarFillBrush = g.CreateSolidBrush(Color.FromArgb(64, Theme.LightGreyFillColor1));
-            fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0") : 1;
+            fontSmallCharSizeX = ThemeResources != null ? ThemeResources.FontSmall.MeasureString("0", false) : 1;
 
             if (editMode != EditionMode.VideoRecording)
             {
@@ -1238,9 +1239,10 @@ namespace FamiStudio
                     }
                     if (n != env.Length)
                     {
-                        var label = n.ToString();
-                        if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                            r.ch.DrawText(label, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
+                        var label = editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos + n : n;
+                        var labelString = label.ToString();
+                        if (labelString.Length * fontSmallCharSizeX + 2 < noteSizeX)
+                            r.ch.DrawText(labelString, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
                     }
                 }
 
@@ -1950,6 +1952,9 @@ namespace FamiStudio
                         }
                         else if (note.IsStop)
                         {
+                            if (!channel.SupportsStopNotes)
+                                return null;
+
                             note.Duration = 1;
                         }
                     }
@@ -2519,6 +2524,7 @@ namespace FamiStudio
 
                         string text = $"{mapping.Sample.Name} - Pitch: {DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, true, mapping.Pitch)}";
                         if (mapping.Loop) text += ", Looping";
+                        if (mapping.OverrideDmcInitialValue) text += $" , DMC Initial value = {mapping.DmcInitialValueDiv2}";
 
                         r.cf.DrawText(text, ThemeResources.FontSmall, dpcmTextPosX, 0, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft, 0, noteSizeY);
                         r.cf.PopTransform();
@@ -3688,7 +3694,11 @@ namespace FamiStudio
             var dlg = new PropertyDialog("DPCM Key Properties", PointToScreen(pt), 280, false, pt.Y > Height / 2);
             dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
             dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
+            dlg.Properties.AddCheckBox("Override DMC Initial Value :", mapping.OverrideDmcInitialValue); // 2
+            dlg.Properties.AddNumericUpDown("DMC Initial Value (÷2) :", mapping.DmcInitialValueDiv2, 0, 63); // 3
             dlg.Properties.Build();
+            dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
+            dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
@@ -3697,10 +3707,20 @@ namespace FamiStudio
                     App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                     mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
                     mapping.Loop = dlg.Properties.GetPropertyValue<bool>(1);
+                    mapping.OverrideDmcInitialValue = dlg.Properties.GetPropertyValue<bool>(2);
+                    mapping.DmcInitialValueDiv2 = dlg.Properties.GetPropertyValue<int>(3);
                     App.UndoRedoManager.EndTransaction();
                     MarkDirty();
                 }
             });
+        }
+
+        private void DPCMSampleMapping_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        {
+            if (propIdx == 2)
+            {
+                props.SetPropertyEnabled(3, (bool)value);
+            }
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -4434,6 +4454,18 @@ namespace FamiStudio
             {
                 ClearSelection();
                 MarkDirty();
+            }
+            else if (e.KeyCode == Keys.A && ctrl && IsActiveControl)
+            {
+                if (editMode == EditionMode.Arpeggio ||
+                    editMode == EditionMode.Enveloppe)
+                {
+                    SetSelection(0, EditEnvelope.Length - 1);
+                }
+                else if (editMode == EditionMode.Channel)
+                {
+                    SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
+                }
             }
             else if (e.KeyCode == Keys.S && shift)
             {
@@ -5812,11 +5844,19 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuToggleRelease", $"Toggle {(selection ? "Selection" : "")} Release", () => { ToggleNoteRelease(noteLocation, note); }));
                         if (channel.Type != ChannelType.Dpcm)
                             menu.Add(new ContextMenuOption("MenuEyedropper", $"Make Instrument Current", () => { Eyedrop(note); }));
-
-                        menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
+                        if (channel.SupportsStopNotes)
+                            menu.Add(new ContextMenuOption("MenuStopNote", $"Make Stop Note", () => { ConvertToStopNote(noteLocation, note); }));
                     }
-                    
+
+                    menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
                     menu.Add(new ContextMenuOption("MenuDelete", "Delete Note", () => { DeleteSingleNote(noteLocation, mouseLocation, note); }));
+                }
+                else
+                {
+                    note = channel.FindMusicalNoteAtLocation(ref noteLocation, -1);
+
+                    if (note != null)
+                        menu.Add(new ContextMenuOption("MenuSelectNote", "Select Note Range", () => { SelectSingleNote(noteLocation, mouseLocation, note); }));
                 }
 
                 if (IsNoteSelected(mouseLocation))
@@ -5833,6 +5873,25 @@ namespace FamiStudio
                     App.ShowContextMenu(menu.ToArray());
 
                 return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchLongPressChannelHeader(int x, int y)
+        {
+            if (IsPointInHeader(x, y))
+            {
+                GetLocationForCoord(x, y, out var location, out _);
+
+                if (location.IsInSong(Song))
+                {
+                    App.ShowContextMenu(new[]
+                    {
+                        new ContextMenuOption("MenuSelectPattern", "Select Pattern", () => { SelectPattern(location.PatternIndex); }),
+                        new ContextMenuOption("MenuSelectAll", "Select All", () => { SelectAll(); }),
+                    });
+                }
             }
 
             return false;
@@ -6189,6 +6248,7 @@ namespace FamiStudio
             {
                 if (HandleTouchLongPressChannelNote(x, y)) goto Handled;
                 if (HandleTouchLongPressEffectPanel(x, y)) goto Handled;
+                if (HandleTouchLongPressChannelHeader(x, y)) goto Handled;
             }
 
             if (editMode == EditionMode.Enveloppe ||
@@ -6703,6 +6763,24 @@ namespace FamiStudio
             DPCMSampleUnmapped?.Invoke(noteValue);
         }
 
+        private void SelectSingleNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
+        {
+            var channel = Song.Channels[editChannel];
+            var absoluteNoteIndex = noteLocation.ToAbsoluteNoteIndex(Song);
+            SetSelection(absoluteNoteIndex, absoluteNoteIndex + Math.Min(note.Duration, channel.GetDistanceToNextNote(noteLocation)) - 1);
+        }
+
+        private void SelectPattern(int p)
+        {
+            SetSelection(Song.GetPatternStartAbsoluteNoteIndex(p),
+                         Song.GetPatternStartAbsoluteNoteIndex(p + 1));
+        }
+
+        private void SelectAll()
+        {
+            SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
+        }
+
         private void DeleteSingleNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
         {
             var pattern = Song.Channels[editChannel].PatternInstances[noteLocation.PatternIndex];
@@ -6750,22 +6828,25 @@ namespace FamiStudio
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
 
-            if (pattern == null)
+            if (channel.SupportsStopNotes)
             {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
-                pattern = channel.CreatePatternAndInstance(location.PatternIndex);
-            }
-            else
-            {
-                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-            }
+                if (pattern == null)
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
+                    pattern = channel.CreatePatternAndInstance(location.PatternIndex);
+                }
+                else
+                {
+                    App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                }
 
-            var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
-            note.Clear();
-            note.Value = Note.NoteStop;
-            note.Duration = 1;
-            MarkPatternDirty(location.PatternIndex);
-            App.UndoRedoManager.EndTransaction();
+                var note = pattern.GetOrCreateNoteAt(location.NoteIndex);
+                note.Clear();
+                note.Value = Note.NoteStop;
+                note.Duration = 1;
+                MarkPatternDirty(location.PatternIndex);
+                App.UndoRedoManager.EndTransaction();
+            }
         }
 
         private void Eyedrop(Note note)
@@ -7102,7 +7183,8 @@ namespace FamiStudio
                         }
                         else 
                         {
-                            tooltipList.Add("{T} {MouseLeft} Add stop note");
+                            if (channel.SupportsStopNotes)
+                                tooltipList.Add("{T} {MouseLeft} Add stop note");
                             tooltipList.Add("{MouseRight} {MouseRight} Select entire note");
                         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -353,6 +354,46 @@ namespace FamiStudio
             var dotIdx = version.LastIndexOf('.');
             betaNumber = int.Parse(version.Substring(dotIdx + 1), CultureInfo.InvariantCulture);
             return version.Substring(0, dotIdx);
+        }
+
+        public static void NonBlockingParallelFor(int numItems, int maxThreads, ThreadSafeCounter counter, Func<int, int, bool> action)
+        {
+            var queue = new ConcurrentQueue<int>();
+
+            for (int i = 0; i < numItems; i++)
+                queue.Enqueue(i);
+
+            for (int i = 0; i < NesApu.NUM_WAV_EXPORT_APU; i++)
+            {
+                var threadIndex = i; // Important, need to copy for lambda below.
+                new Thread(() =>
+                {
+                    while (true)
+                    {
+                        if (!queue.TryDequeue(out var itemIndex))
+                            break;
+
+                        var keepGoing = action(itemIndex, threadIndex);
+                        
+                        Thread.MemoryBarrier(); // Extra safety, the increment below should generate a barrier tho.
+                        counter.Increment();
+                        
+                        if (!keepGoing)
+                            break;
+                    }
+                    
+                }).Start();
+            }
+        }
+    }
+
+    public class ThreadSafeCounter
+    {
+        private int value = 0;
+        public int Value => value;
+        public void Increment()
+        {
+            Interlocked.Increment(ref value);
         }
     }
 }

@@ -16723,6 +16723,7 @@ Frame 2700 Register 4000 30
 Frame 2700 Register 4004 30
 Frame 2700 Register 4008 80
 Frame 2700 Register 400C F0
+Frame 2700 Register 4011 00
 Frame 2701 Register 4000 30
 Frame 2701 Register 4004 30
 Frame 2701 Register 4008 80
@@ -16763,6 +16764,7 @@ Frame 2710 Register 4000 30
 Frame 2710 Register 4004 30
 Frame 2710 Register 4008 80
 Frame 2710 Register 400C F0
+Frame 2710 Register 4011 7F
 Frame 2711 Register 4000 30
 Frame 2711 Register 4004 30
 Frame 2711 Register 4008 80

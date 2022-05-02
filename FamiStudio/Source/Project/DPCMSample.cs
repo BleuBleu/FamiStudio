@@ -480,17 +480,27 @@ namespace FamiStudio
     {
         private DPCMSample sample;
         private bool loop = false;
+        private bool overrideDmcInitialValue = false;
         private int pitch = 15;
+        private int dmcInitialValueDiv2 = NesApu.DACDefaultValueDiv2;
 
         public DPCMSample Sample { get => sample; set => sample = value; }
-        public bool Loop { get => loop;  set => loop  = value; }
-        public int Pitch { get => pitch; set => pitch = value; }
+        public bool Loop                    { get => loop;  set => loop  = value; }
+        public int  Pitch                   { get => pitch; set => pitch = value; }
+        public bool OverrideDmcInitialValue { get => overrideDmcInitialValue; set => overrideDmcInitialValue = value; }
+        public int  DmcInitialValueDiv2     { get => dmcInitialValueDiv2;     set => dmcInitialValueDiv2 = value; }
 
         public void SerializeState(ProjectBuffer buffer)
         {
             buffer.Serialize(ref sample);
             buffer.Serialize(ref loop);
             buffer.Serialize(ref pitch);
+
+            if (buffer.Version >= 13)
+            {
+                buffer.Serialize(ref overrideDmcInitialValue);
+                buffer.Serialize(ref dmcInitialValueDiv2);
+            }
         }
 
         public void ValidateIntegrity(Project project, Dictionary<int, object> idMap)

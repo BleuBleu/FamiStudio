@@ -34,6 +34,7 @@ public:
 	enum { addr_step = 0x1000 };
 	void write_osc( cpu_time_t, int osc, int reg, int data );
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
+	void get_register_values(struct vrc6_register_values* regs);
 
 	enum { shadow_regs_count = 9 };
 	void start_seeking();
@@ -48,6 +49,7 @@ private:
 	struct Vrc6_Osc
 	{
 		BOOST::uint8_t regs [3];
+		BOOST::uint8_t ages [3];
 		Blip_Buffer* output;
 		int delay;
 		int last_amp;
@@ -88,6 +90,16 @@ inline void Nes_Vrc6::osc_output( int i, Blip_Buffer* buf )
 	assert( (unsigned) i < osc_count );
 	oscs [i].output = buf;
 }
+
+// Must match the definition in NesApu.cs.
+struct vrc6_register_values
+{
+	// $9000 to $9002
+	// $A000 to $A002
+	// $B000 to $B002
+	unsigned char regs[9];
+	unsigned char ages[9];
+};
 
 #endif
 

@@ -13,19 +13,21 @@
 #include "nes_apu/Nes_Mmc5.h"
 #include "nes_apu/Nes_Namco.h"
 #include "nes_apu/Nes_Sunsoft.h"
+#include "nes_apu/Nes_EPSM.h"
 #include "nes_apu/Nes_Fme7.h"
 #include "nes_apu/Blip_Buffer.h"
 
 class Simple_Apu {
 public:
 
-	enum { expansion_none = 0 };
-	enum { expansion_vrc6 = 1 };
-	enum { expansion_vrc7 = 2 };
-	enum { expansion_fds = 3 };
-	enum { expansion_mmc5 = 4 };
-	enum { expansion_namco = 5 };
-	enum { expansion_sunsoft = 6 };
+	enum { expansion_none       = 0 };
+	enum { expansion_vrc6       = 1 };
+	enum { expansion_vrc7       = 2 };
+	enum { expansion_fds        = 3 };
+	enum { expansion_mmc5       = 4 };
+	enum { expansion_namco      = 5 };
+	enum { expansion_sunsoft    = 6 };
+	enum { expansion_epsm		= 7 };
 
 	enum { expansion_mask_none       = 0 };
 	enum { expansion_mask_vrc6       = 1 << 0 };
@@ -34,6 +36,7 @@ public:
 	enum { expansion_mask_mmc5       = 1 << 3 };
 	enum { expansion_mask_namco      = 1 << 4 };
 	enum { expansion_mask_sunsoft    = 1 << 5 };
+	enum { expansion_mask_epsm       = 1 << 6 };
 
 	// These mode are used for separate channel WAV export or stereo export.
 	// When exporting each channel individually, we don't get the volume interactions
@@ -68,7 +71,8 @@ public:
 	
 	// Write to register (0x4000-0x4017, except 0x4014 and 0x4016)
 	void write_register( cpu_addr_t, int data );
-	
+	void get_register_values(int exp, void* regs);
+
 	// Read from status register at 0x4015
 	int read_status();
 	
@@ -122,11 +126,14 @@ private:
 	Nes_Namco namco;
 	//Nes_Sunsoft sunsoft; // My version, based on emu2149
 	Nes_Fme7 sunsoft; // Blaarg's version from Game_Music_Emu.
+	Nes_EPSM epsm;
 	Blip_Buffer buf;
 	Blip_Buffer tnd[3]; // [0] is used normally, [0][1][2] are only used in "separate_tnd_mode", for stereo/separate channels export.
+	Blip_Buffer buf_epsm_left;
+	Blip_Buffer buf_epsm_right;
 	blip_time_t time;
 	blip_time_t frame_length;
-	blip_time_t clock() { return time += 4; }
+	blip_time_t clock(blip_time_t t = 4) { return time += t; }
 };
 
 #endif

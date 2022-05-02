@@ -92,6 +92,7 @@ public:
 	BYTE		bDMCIRQEnabled;
 	BYTE		bDMCIRQPending;
 	BYTE		bDMCTriggered;
+	BYTE		bDMCLastDeltaWrite;
 
 	///////////////////////////////////
 	// Address / DMA

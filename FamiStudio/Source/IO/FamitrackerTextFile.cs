@@ -495,7 +495,7 @@ namespace FamiStudio
                                 fx.param = Convert.ToByte(fxStr.Substring(1), 16);
                                 patternFxData[pattern][n, k] = fx;
 
-                                ApplySimpleEffects(fx, pattern, n, patternLengths, true);
+                                ApplySimpleEffects(fx, pattern, n, true);
                             }
                         }
                     }
@@ -1090,6 +1090,8 @@ namespace FamiStudio
                                 effectString += $" G{note.NoteDelay:X2}";
                             if (note.HasCutDelay)
                                 effectString += $" S{note.CutDelay:X2}";
+                            if (note.HasDeltaCounter)
+                                effectString += $" Z{note.DeltaCounter:X2}";
 
                             if (note.IsMusical && note.Arpeggio != prevArpeggio)
                             {

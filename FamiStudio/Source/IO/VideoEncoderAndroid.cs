@@ -28,6 +28,7 @@ namespace FamiStudio
         private int frameIndex;
         private int frameRateNumer;
         private int frameRateDenom;
+        private int numAudioChannels;
         private bool muxerStarted;
         private bool abortAudioEncoding;
         private ManualResetEvent muxerStartEvent = new ManualResetEvent(false);
@@ -64,13 +65,14 @@ namespace FamiStudio
 
         // https://github.com/lanhq147/SampleMediaFrame/blob/e2f20ff9eef73318e5a9b4de15458c5c2eb0fd46/app/src/main/java/com/google/android/exoplayer2/video/av/HWRecorder.java
 
-        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, string audioFile, string outputFile)
+        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
         {
             videoBufferInfo = new MediaCodec.BufferInfo();
             audioBufferInfo = new MediaCodec.BufferInfo();
 
             frameRateNumer = rateNumer;
             frameRateDenom = rateDenom;
+            numAudioChannels = stereo ? 2 : 1;
 
             MediaFormat videoFormat = MediaFormat.CreateVideoFormat(VideoMimeType, resX, resY);
             videoFormat.SetInteger(MediaFormat.KeyColorFormat, (int)MediaCodecCapabilities.Formatsurface);
@@ -84,8 +86,8 @@ namespace FamiStudio
             videoEncoder.Configure(videoFormat, null, null, MediaCodecConfigFlags.Encode);
             surface = videoEncoder.CreateInputSurface();
             videoEncoder.Start();
-
-            MediaFormat audioFormat = MediaFormat.CreateAudioFormat(AudioMimeType, 44100, 1);
+            
+            MediaFormat audioFormat = MediaFormat.CreateAudioFormat(AudioMimeType, 44100, numAudioChannels);
             audioFormat.SetInteger(MediaFormat.KeyAacProfile, (int)MediaCodecProfileType.Aacobjectlc);
             audioFormat.SetInteger(MediaFormat.KeyBitRate, audioBitRate * 1000);
 
@@ -153,7 +155,7 @@ namespace FamiStudio
                 buffer.Clear();
                 buffer.Put(audioData, audioDataIdx, len);
 
-                long presentationTime = (audioDataIdx * SecondsToMicroSeconds) / (44100 * 2);
+                long presentationTime = (audioDataIdx * SecondsToMicroSeconds) / (44100 * 2 * numAudioChannels);
                 audioDataIdx += len;
 
                 var done = audioDataIdx == audioData.Length;

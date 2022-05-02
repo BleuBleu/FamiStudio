@@ -21,7 +21,7 @@ In FamiTracker tempo mode, you do not have access to the individual frames, so t
 
 ## Seeking
 
-Clicking in the timeline (header) of the piano roll will move the play position. You can also drag the seek back to more it more accurately.
+Clicking in the timeline (header) of the piano roll will move the play position. You can also drag the seek back to move it more accurately.
 
 ## Adding & deleting notes
 
@@ -59,7 +59,7 @@ On mobile, notes must be first given a **white highlight** before being edited. 
 
 FamiStudio is a monophonic app, in other words, only one note can play at a time on a given channel. 
 
-The general rule is that the latest/newest note (the one that is rightmost on the timeline) always has priority, this mean that it can interrupt a previous note, making it sorted than it would normally be. 
+The general rule is that the latest/newest note (the one that is rightmost on the timeline) always has priority, this mean that it can interrupt a previous note, making it shorter than it would normally be. 
 
 As you can see, in the following example, even through i am trying to resize the left note, I cannot go beyond the right note. If I move the right now back, it is still interrupting the left note. Only when I move the right now far enough to the right we can see the real duration of the left note.
 
@@ -71,7 +71,7 @@ There are three main wars of selecting notes, selected notes will appear with a 
 
 * You can select notes by right-clicking and dragging in the header of the piano roll or anywhere in the background of the piano roll (where there is no note). 
 * You can select an entire pattern by double right clicking in the header of a pattern.
-* You can select the duration of a note by double right clicking in the above or below a now.
+* You can select the duration of a note by double right clicking in the above or below a note.
 
 The following images shows all 3 techniques.
 
@@ -231,8 +231,7 @@ Much like Special paste, "Special delete" is a more advanced form of deletion. Y
 
 * **Delete Notes** : If checked, will delete all the selected notes.
 
-* **Delete Effects** : You can choose here the list of effects to delete. All unchecked effects will be preserved.
-mes. The start of the next paste will be where the last one ended.
+* **Delete Effects** : You can choose here the list of effects to delete. All unchecked effects will be preserved. The start of the next paste will be where the last one ended.
 
 On mobile, the same functionality is accessible by long pressing on the "Delete" icon of the toolbar. The dialog will look different by contains the same functionality.
 

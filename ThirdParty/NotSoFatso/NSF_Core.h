@@ -135,20 +135,21 @@ struct NSF_ADVANCEDOPTIONS
 #define STATE_DPCMSAMPLEDATA     5
 #define STATE_DPCMLOOP           6
 #define STATE_DPCMPITCH          7
-#define STATE_FDSWAVETABLE       8
-#define STATE_FDSMODULATIONTABLE 9
-#define STATE_FDSMODULATIONDEPTH 10
-#define STATE_FDSMODULATIONSPEED 11
-#define STATE_FDSMASTERVOLUME    12
-#define STATE_VRC7PATCH          13
-#define STATE_VRC7PATCHREG       14
-#define STATE_VRC7OCTAVE         15
-#define STATE_VRC7TRIGGER        16
-#define STATE_VRC7SUSTAIN        17
-#define STATE_N163WAVEPOS        18
-#define STATE_N163WAVESIZE       19
-#define STATE_N163WAVE           20
-#define STATE_N163NUMCHANNELS    21
+#define STATE_DPCMCOUNTER        8
+#define STATE_FDSWAVETABLE       9
+#define STATE_FDSMODULATIONTABLE 10
+#define STATE_FDSMODULATIONDEPTH 11
+#define STATE_FDSMODULATIONSPEED 12
+#define STATE_FDSMASTERVOLUME    13
+#define STATE_VRC7PATCH          14
+#define STATE_VRC7PATCHREG       15
+#define STATE_VRC7OCTAVE         16
+#define STATE_VRC7TRIGGER        17
+#define STATE_VRC7SUSTAIN        18
+#define STATE_N163WAVEPOS        19
+#define STATE_N163WAVESIZE       20
+#define STATE_N163WAVE           21
+#define STATE_N163NUMCHANNELS    22
 
 #include <math.h>
 
@@ -170,7 +171,7 @@ class CNSFFile;
 
 typedef BYTE (FASTCALL CNSFCore::*ReadProc)(WORD);
 typedef void (FASTCALL CNSFCore::*WriteProc)(WORD,BYTE);
-typedef void (CDECL *ApuRegWriteCallback)(WORD addr, BYTE data);
+typedef void (CDECL* ApuRegWriteCallback)(int addr, int data);
 
 class CNSFCore
 {
@@ -198,7 +199,12 @@ public:
 	//
 	int		GetSamples(BYTE* buffer, int buffersize);	//fill a buffer with samples
 	int		RunOneFrame();
+
+	//
+	//  FamiStudio Stuff
+	//
 	int		GetState(int channel, int state, int sub);
+	void	SetApuWriteCallback(ApuRegWriteCallback callback);
 
 	//
 	//	Playback options
@@ -261,7 +267,7 @@ protected:
 	void FASTCALL		WriteMemory_ExRAM(WORD a,BYTE v);
 	void FASTCALL		WriteMemory_SRAM(WORD a,BYTE v)		{ pSRAM[a & 0x1FFF] = v; }
 	void FASTCALL		WriteMemory_pAPU(WORD a,BYTE v);
-	void FASTCALL		WriteMemory_FDSRAM(WORD a,BYTE v)	{ pROM[(a >> 12) - 6][a & 0x0FFF] = v; }
+	void FASTCALL		WriteMemory_FDSRAM(WORD a,BYTE v)	{ if (a >= 0x6000 && (a < 0x8000 || nExternalSound == EXTSOUND_FDS)) pROM[(a >> 12) - 6][a & 0x0FFF] = v; } // Dont allow changing the ROM if multiple expansions, i dont care.
 	void FASTCALL		WriteMemory_Default(WORD a,BYTE v)	{ }
 
 	void FASTCALL		WriteMemory_VRC6(WORD a,BYTE v);

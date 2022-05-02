@@ -39,7 +39,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0649</NoWarn>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7</LangVersion>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -52,7 +52,7 @@
     <DebugSymbols>true</DebugSymbols>
     <NoWarn>CS0162,CS0649</NoWarn>
     <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7</LangVersion>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
@@ -73,10 +73,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_epsm_ntsc.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <EmbeddedResource Include="Rom\rom_epsm_famitracker_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -92,6 +96,9 @@
     </Compile>
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMRythm.cs" />
+    <Compile Include="Source\ChannelStates\ChannelStateEPSMSquare.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateFds.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateMmc5Square.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateN163.cs" />
@@ -103,6 +110,7 @@
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Square.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
     <Compile Include="Source\IO\AudioExportUtils.cs" />
+    <Compile Include="Source\IO\BambootrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
     <Compile Include="Source\IO\FamitoneMusicFile.cs" />
     <Compile Include="Source\IO\FamitoneSoundEffectFile.cs" />
@@ -114,11 +122,13 @@
     <Compile Include="Source\IO\IniFile.cs" />
     <Compile Include="Source\IO\MidiFile.cs" />
     <Compile Include="Source\IO\Mp3File.cs" />
+    <Compile Include="Source\IO\NotSoFatso.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
     <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\RomFileBase.cs" />
+    <Compile Include="Source\IO\VgmFile.cs" />
     <Compile Include="Source\IO\VideoEncoderFFmpeg.cs" />
     <Compile Include="Source\IO\VideoFileBase.cs" />
     <Compile Include="Source\IO\VideoFileOscilloscope.cs" />
@@ -136,6 +146,7 @@
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Player\XAudio2Stream.cs" />
+    <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\Project\Channel.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
@@ -183,6 +194,7 @@
     <Compile Include="Source\UI\Windows\AutoScrollTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Source\UI\Windows\Cursors.cs" />
     <Compile Include="Source\UI\Windows\FamiStudioForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -201,6 +213,7 @@
     <Compile Include="Source\UI\Windows\NoInterpolationPictureBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Source\UI\Windows\PlatformUtils.cs" />
     <Compile Include="Source\UI\Windows\PropertyDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -216,12 +229,11 @@
     <Compile Include="Source\UI\Windows\TutorialDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Source\UI\Windows\Cursors.cs" />
-    <Compile Include="Source\UI\Windows\PlatformUtils.cs" />
     <Compile Include="Source\UI\Windows\WinUtils.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
+    <Compile Include="Source\Utils\EpsmUnitTests.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\Utils\PerformanceCounter.cs" />
@@ -288,6 +300,22 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Add%402x.png" />
     <EmbeddedResource Include="Resources\Add.png" />
+    <EmbeddedResource Include="Resources\Algorithm0%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm0.png" />
+    <EmbeddedResource Include="Resources\Algorithm1%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm1.png" />
+    <EmbeddedResource Include="Resources\Algorithm2%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm2.png" />
+    <EmbeddedResource Include="Resources\Algorithm3%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm3.png" />
+    <EmbeddedResource Include="Resources\Algorithm4%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm4.png" />
+    <EmbeddedResource Include="Resources\Algorithm5%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm5.png" />
+    <EmbeddedResource Include="Resources\Algorithm6%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm6.png" />
+    <EmbeddedResource Include="Resources\Algorithm7%402x.png" />
+    <EmbeddedResource Include="Resources\Algorithm7.png" />
     <EmbeddedResource Include="Resources\ArrowLeft%402x.png" />
     <EmbeddedResource Include="Resources\ArrowLeft.png" />
     <EmbeddedResource Include="Resources\ArrowRight%402x.png" />
@@ -303,6 +331,8 @@
     <EmbeddedResource Include="Resources\ChannelNoise%4015x.png" />
     <EmbeddedResource Include="Resources\ChannelNoise%402x.png" />
     <EmbeddedResource Include="Resources\ChannelNoise.png" />
+    <EmbeddedResource Include="Resources\ChannelRythm%402x.png" />
+    <EmbeddedResource Include="Resources\ChannelRythm.png" />
     <EmbeddedResource Include="Resources\ChannelSaw%402x.png" />
     <EmbeddedResource Include="Resources\ChannelSaw.png" />
     <EmbeddedResource Include="Resources\ChannelSquare%402x.png" />
@@ -400,10 +430,12 @@
     <EmbeddedResource Include="Resources\ExportNsf.png" />
     <EmbeddedResource Include="Resources\ExportRom%402x.png" />
     <EmbeddedResource Include="Resources\ExportRom.png" />
-    <EmbeddedResource Include="Resources\ExportShare.png" />
     <EmbeddedResource Include="Resources\ExportShare%402x.png" />
+    <EmbeddedResource Include="Resources\ExportShare.png" />
     <EmbeddedResource Include="Resources\ExportText%402x.png" />
     <EmbeddedResource Include="Resources\ExportText.png" />
+    <EmbeddedResource Include="Resources\ExportVGM%402x.png" />
+    <EmbeddedResource Include="Resources\ExportVGM.png" />
     <EmbeddedResource Include="Resources\ExportVideo%402x.png" />
     <EmbeddedResource Include="Resources\ExportVideo.png" />
     <EmbeddedResource Include="Resources\ExportWav%402x.png" />
@@ -424,6 +456,8 @@
     <EmbeddedResource Include="Resources\Instance.png" />
     <EmbeddedResource Include="Resources\Instrument%402x.png" />
     <EmbeddedResource Include="Resources\Instrument.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM%402x.png" />
+    <EmbeddedResource Include="Resources\InstrumentEPSM.png" />
     <EmbeddedResource Include="Resources\InstrumentExpand%402x.png" />
     <EmbeddedResource Include="Resources\InstrumentExpand.png" />
     <EmbeddedResource Include="Resources\InstrumentExpanded%402x.png" />
@@ -483,8 +517,8 @@
     <EmbeddedResource Include="Resources\Paste.png" />
     <EmbeddedResource Include="Resources\Pause%402x.png" />
     <EmbeddedResource Include="Resources\Pause.png" />
-    <EmbeddedResource Include="Resources\Piano.png" />
     <EmbeddedResource Include="Resources\Piano%402x.png" />
+    <EmbeddedResource Include="Resources\Piano.png" />
     <EmbeddedResource Include="Resources\Play%402x.png" />
     <EmbeddedResource Include="Resources\Play.png" />
     <EmbeddedResource Include="Resources\PlayHalf%402x.png" />
@@ -495,8 +529,8 @@
     <EmbeddedResource Include="Resources\PlaySource.png" />
     <EmbeddedResource Include="Resources\PlusSmall%402x.png" />
     <EmbeddedResource Include="Resources\PlusSmall.png" />
-    <EmbeddedResource Include="Resources\Properties.png" />
     <EmbeddedResource Include="Resources\Properties%402x.png" />
+    <EmbeddedResource Include="Resources\Properties.png" />
     <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
     <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
     <EmbeddedResource Include="Resources\QuickSand10.fnt" />

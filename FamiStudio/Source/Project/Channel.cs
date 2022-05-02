@@ -26,14 +26,17 @@ namespace FamiStudio
         public int ExpansionChannelIndex => ChannelType.GetExpansionChannelIndexForChannelType(type);
         public int Index => ChannelTypeToIndex(type, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels);
 
-        public bool IsRegularChannel => Expansion == ExpansionType.None;
-        public bool IsFdsChannel     => Expansion == ExpansionType.Fds;
-        public bool IsN163Channel    => Expansion == ExpansionType.N163;
-        public bool IsVrc6Channel    => Expansion == ExpansionType.Vrc6;
-        public bool IsVrc7Channel    => Expansion == ExpansionType.Vrc7;
-        public bool IsMmc5Channel    => Expansion == ExpansionType.Mmc5;
-        public bool IsS5BChannel     => Expansion == ExpansionType.S5B;
-        public bool IsNoiseChannel   => type == ChannelType.Noise;
+        public bool IsRegularChannel   => Expansion == ExpansionType.None;
+        public bool IsFdsChannel       => Expansion == ExpansionType.Fds;
+        public bool IsN163Channel      => Expansion == ExpansionType.N163;
+        public bool IsVrc6Channel      => Expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Channel      => Expansion == ExpansionType.Vrc7;
+        public bool IsMmc5Channel      => Expansion == ExpansionType.Mmc5;
+        public bool IsS5BChannel       => Expansion == ExpansionType.S5B;
+        public bool IsNoiseChannel     => type == ChannelType.Noise;
+        public bool IsEPSMChannel      => Expansion == ExpansionType.EPSM;
+        public bool IsEPSMFmChannel    => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
+        public bool IsEPSMRythmChannel => type >= ChannelType.EPSMrythm1 && type <= ChannelType.EPSMrythm6;
 
         public Channel(Song song, int type, int songLength)
         {
@@ -96,10 +99,12 @@ namespace FamiStudio
             if ((expansionMask & ExpansionType.Mmc5Mask) != 0) count += 2;
             if ((expansionMask & ExpansionType.N163Mask) != 0) count += numN163Channels;
             if ((expansionMask & ExpansionType.S5BMask)  != 0) count += 3;
+            if ((expansionMask & ExpansionType.EPSMMask) != 0) count += 15;
 
             return count;
         }
 
+        public bool SupportsStopNotes     => true;
         public bool SupportsReleaseNotes  => type != ChannelType.Dpcm;
         public bool SupportsSlideNotes    => type != ChannelType.Dpcm;
         public bool SupportsArpeggios     => type != ChannelType.Dpcm;
@@ -111,15 +116,16 @@ namespace FamiStudio
             {
                 case Note.EffectVolume:
                 case Note.EffectVolumeSlide: return type != ChannelType.Dpcm;
-                case Note.EffectFinePitch: return type != ChannelType.Noise && type != ChannelType.Dpcm;
-                case Note.EffectVibratoSpeed: return type != ChannelType.Noise && type != ChannelType.Dpcm;
-                case Note.EffectVibratoDepth: return type != ChannelType.Noise && type != ChannelType.Dpcm;
+                case Note.EffectFinePitch: return type != ChannelType.Noise && type != ChannelType.Dpcm && !IsEPSMRythmChannel;
+                case Note.EffectVibratoSpeed: return type != ChannelType.Noise && type != ChannelType.Dpcm && !IsEPSMRythmChannel;
+                case Note.EffectVibratoDepth: return type != ChannelType.Noise && type != ChannelType.Dpcm && !IsEPSMRythmChannel;
                 case Note.EffectFdsModDepth: return type == ChannelType.FdsWave;
                 case Note.EffectFdsModSpeed: return type == ChannelType.FdsWave;
                 case Note.EffectSpeed: return song.UsesFamiTrackerTempo;
                 case Note.EffectDutyCycle: return type == ChannelType.Square1 || type == ChannelType.Square2 || type == ChannelType.Mmc5Square1 || type == ChannelType.Mmc5Square2 || type == ChannelType.Vrc6Square1 || type == ChannelType.Vrc6Square2 || type == ChannelType.Noise;
                 case Note.EffectNoteDelay: return song.UsesFamiTrackerTempo;
                 case Note.EffectCutDelay: return song.UsesFamiTrackerTempo;
+                case Note.EffectDeltaCounter: return type == ChannelType.Dpcm;
             }
 
             return true;
@@ -397,6 +403,12 @@ namespace FamiStudio
             if (type >= ChannelType.Vrc7Fm1 && type <= ChannelType.Vrc7Fm6)
             {
                 // VRC7 has large pitch values
+                slideShift = 3;
+                pitchShift = 3;
+            }
+            else if (type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6)
+            {
+                // EPSM has large pitch values
                 slideShift = 3;
                 pitchShift = 3;
             }
@@ -999,8 +1011,10 @@ namespace FamiStudio
             if ((activeExpansions & ExpansionType.Mmc5Mask) != 0) idx += 2; // (We never use the DPCM)
             if (exp == ExpansionType.N163) return idx;
             if ((activeExpansions & ExpansionType.N163Mask) != 0) idx += numN163Channels;
+            if (exp == ExpansionType.S5B) return idx;
+            if ((activeExpansions & ExpansionType.S5BMask) != 0) idx += 3;
 
-            Debug.Assert((activeExpansions & ExpansionType.S5BMask) != 0);
+            Debug.Assert((activeExpansions & ExpansionType.EPSMMask) != 0);
 
             return idx; 
         }
@@ -1506,7 +1520,22 @@ namespace FamiStudio
         public const int S5BSquare1 = 26;
         public const int S5BSquare2 = 27;
         public const int S5BSquare3 = 28;
-        public const int Count = 29;
+        public const int EPSMSquare1 = 29;
+        public const int EPSMSquare2 = 30;
+        public const int EPSMSquare3 = 31;
+        public const int EPSMFm1 = 32;
+        public const int EPSMFm2 = 33;
+        public const int EPSMFm3 = 34;
+        public const int EPSMFm4 = 35;
+        public const int EPSMFm5 = 36;
+        public const int EPSMFm6 = 37;
+        public const int EPSMrythm1 = 38;
+        public const int EPSMrythm2 = 39;
+        public const int EPSMrythm3 = 40;
+        public const int EPSMrythm4 = 41;
+        public const int EPSMrythm5 = 42;
+        public const int EPSMrythm6 = 43;
+        public const int Count = 44;
 
         public static readonly string[] Names =
         {
@@ -1539,6 +1568,21 @@ namespace FamiStudio
             "Square 1", // S5B
             "Square 2", // S5B
             "Square 3", // S5B
+            "Square 1", // EPSM
+            "Square 2", // EPSM
+            "Square 3", // EPSM
+            "FM 1", // EPSM
+            "FM 2", // EPSM
+            "FM 3", // EPSM
+            "FM 4", // EPSM
+            "FM 5", // EPSM
+            "FM 6", // EPSM
+            "Kick", // EPSM
+            "Snare", // EPSM
+            "Cymbal", // EPSM
+            "Hi-hat", // EPSM
+            "Tom", // EPSM
+            "Rimshot", // EPSM
         };
 
         public static readonly string[] ShortNames =
@@ -1572,6 +1616,21 @@ namespace FamiStudio
             "S5BSquare1", // S5B
             "S5BSquare2", // S5B
             "S5BSquare3", // S5B
+            "EPSMSquare1", // EPSM
+            "EPSMSquare2", // EPSM
+            "EPSMSquare3", // EPSM
+            "EPSMFM1", // EPSM
+            "EPSMFM2", // EPSM
+            "EPSMFM3", // EPSM
+            "EPSMFM4", // EPSM
+            "EPSMFM5", // EPSM
+            "EPSMFM6", // EPSM
+            "EPSMRythm1", // EPSM
+            "EPSMRythm2", // EPSM
+            "EPSMRythm3", // EPSM
+            "EPSMRythm4", // EPSM
+            "EPSMRythm5", // EPSM
+            "EPSMRythm6", // EPSM
         };
 
         // TODO: This is really UI specific, move somewhere else...
@@ -1605,7 +1664,22 @@ namespace FamiStudio
             "ChannelWaveTable",
             "ChannelSquare",
             "ChannelSquare",
-            "ChannelSquare"
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelSquare",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelFM",
+            "ChannelRythm",
+            "ChannelRythm",
+            "ChannelRythm",
+            "ChannelRythm",
+            "ChannelRythm",
+            "ChannelRythm",
         };
 
         public static readonly int[] ExpansionTypes =
@@ -1638,7 +1712,22 @@ namespace FamiStudio
             ExpansionType.N163,
             ExpansionType.S5B,
             ExpansionType.S5B,
-            ExpansionType.S5B
+            ExpansionType.S5B,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
+            ExpansionType.EPSM,
         };
 
         public static readonly int[] ExpansionChannelIndex =
@@ -1671,7 +1760,22 @@ namespace FamiStudio
             7, // N163
             0, // S5B
             1, // S5B
-            2  // S5B
+            2, // S5B
+            0, // EPSM
+            1, // EPSM
+            2, // EPSM
+            3, // EPSM
+            4, // EPSM
+            5, // EPSM
+            6, // EPSM
+            7, // EPSM
+            8, // EPSM
+            9, // EPSM
+            10, // EPSM
+            11, // EPSM
+            12, // EPSM
+            13, // EPSM
+            14 // EPSM
         };
 
         public static string GetNameWithExpansion(int type)

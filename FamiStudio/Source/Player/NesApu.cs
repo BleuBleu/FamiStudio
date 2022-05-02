@@ -49,13 +49,17 @@ namespace FamiStudio
         public extern static int GetAudioExpansions(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSetExpansionVolume")]
         public extern static int SetExpansionVolume(int apuIdx, int expansion, double volume);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetRegisterValues")]
+        public extern unsafe static void GetRegisterValues(int apuIdx, int exp, void* regs);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);
 
-        public const int APU_SONG         = 0;
-        public const int APU_INSTRUMENT   = 1;
-        public const int APU_WAV_EXPORT   = 2;
+        public const int APU_SONG           = 0;
+        public const int APU_INSTRUMENT     = 1;
+        public const int APU_WAV_EXPORT     = 2;
+
+        public const int NUM_WAV_EXPORT_APU = 8;
 
         public const int APU_EXPANSION_NONE    = 0;
         public const int APU_EXPANSION_VRC6    = 1;
@@ -64,9 +68,10 @@ namespace FamiStudio
         public const int APU_EXPANSION_MMC5    = 4;
         public const int APU_EXPANSION_NAMCO   = 5;
         public const int APU_EXPANSION_SUNSOFT = 6;
+        public const int APU_EXPANSION_EPSM    = 7;
 
         public const int APU_EXPANSION_FIRST   = 1;
-        public const int APU_EXPANSION_LAST    = 6;
+        public const int APU_EXPANSION_LAST    = 7;
 
         public const int APU_EXPANSION_MASK_NONE    = 0;
         public const int APU_EXPANSION_MASK_VRC6    = 1 << 0;
@@ -75,6 +80,7 @@ namespace FamiStudio
         public const int APU_EXPANSION_MASK_MMC5    = 1 << 3;
         public const int APU_EXPANSION_MASK_NAMCO   = 1 << 4;
         public const int APU_EXPANSION_MASK_SUNSOFT = 1 << 5;
+        public const int APU_EXPANSION_MASK_EPSM    = 1 << 6;
 
         public const int APU_PL1_VOL        = 0x4000;
         public const int APU_PL1_SWEEP      = 0x4001;
@@ -165,7 +171,7 @@ namespace FamiStudio
         public const int N163_REG_PHASE_HI  = 0x7d;
         public const int N163_REG_WAVE      = 0x7e;
         public const int N163_REG_VOLUME    = 0x7f;
-
+        
         public const int S5B_ADDR           = 0xc000;
         public const int S5B_DATA           = 0xe000;
                                             
@@ -186,6 +192,32 @@ namespace FamiStudio
         public const int S5B_REG_IO_A       = 0x0e;
         public const int S5B_REG_IO_B       = 0x0f;
 
+        public const int EPSM_ADDR0         = 0x401c;
+        public const int EPSM_DATA0         = 0x401d;
+        public const int EPSM_ADDR1         = 0x401e;
+        public const int EPSM_DATA1         = 0x401f;
+
+        public const int EPSM_REG_LO_A = 0x00;
+        public const int EPSM_REG_HI_A = 0x01;
+        public const int EPSM_REG_LO_B = 0x02;
+        public const int EPSM_REG_HI_B = 0x03;
+        public const int EPSM_REG_LO_C = 0x04;
+        public const int EPSM_REG_HI_C = 0x05;
+        public const int EPSM_REG_NOISE = 0x06;
+        public const int EPSM_REG_TONE = 0x07;
+        public const int EPSM_REG_VOL_A = 0x08;
+        public const int EPSM_REG_VOL_B = 0x09;
+        public const int EPSM_REG_VOL_C = 0x0a;
+        public const int EPSM_REG_ENV_LO = 0x0b;
+        public const int EPSM_REG_ENV_HI = 0x0c;
+        public const int EPSM_REG_SHAPE = 0x0d;
+        public const int EPSM_REG_IO_A = 0x0e;
+        public const int EPSM_REG_IO_B = 0x0f;
+        public const int EPSM_REG_RYTHM = 0x10;
+        public const int EPSM_REG_RYTHM_LEVEL = 0x18;
+        public const int EPSM_REG_FM_LO_A = 0xA0;
+        public const int EPSM_REG_FM_HI_A = 0xA4;
+
         // See comment in Simple_Apu.h.
         public const int TND_MODE_SINGLE           = 0;
         public const int TND_MODE_SEPARATE         = 1;
@@ -199,6 +231,13 @@ namespace FamiStudio
 
         public const float FpsPAL  = 50.0070f;
         public const float FpsNTSC = 60.0988f;
+
+        // NesSndEmu assumes the same values.
+        public const int FreqNtsc = 1789773;
+        public const int FreqPal  = 1662607;
+        public const int FreqEPSM = 8000000;
+
+        public const double FreqC0 = 32.7032; 
 
         // Volume set in Nes_Apu::volume for the DMC channel. This is simply to 
         // make sure our preview of DPCM sample somewhat matches the volume of 
@@ -217,6 +256,8 @@ namespace FamiStudio
         public static readonly ushort[]   NoteTableVrc6Saw = new ushort[97];
         public static readonly ushort[]   NoteTableVrc7    = new ushort[97];
         public static readonly ushort[]   NoteTableFds     = new ushort[97];
+        public static readonly ushort[]   NoteTableEPSM    = new ushort[97];
+        public static readonly ushort[]   NoteTableEPSMFm  = new ushort[97];
         public static readonly ushort[][] NoteTableN163    = new ushort[8][]
         {
             new ushort[97], 
@@ -252,18 +293,18 @@ namespace FamiStudio
         // Taken from FamiTracker 
         private static void InitializeNoteTables()
         {
-            const double BaseFreq = 32.7032; /// C0
-
-            double clockNtsc = 1789773 / 16.0;
-            double clockPal  = 1662607 / 16.0;
+            double clockNtsc = FreqNtsc / 16.0;
+            double clockPal  = FreqPal  / 16.0;
+            double clockEPSM = FreqEPSM / 32.0;
 
             for (int i = 1; i < NoteTableNTSC.Length; ++i)
             {
                 var octave = (i - 1) / 12;
-                var freq = BaseFreq * Math.Pow(2.0, (i - 1) / 12.0);
-
+                var freq = FreqC0 * Math.Pow(2.0, (i - 1) / 12.0);
                 NoteTableNTSC[i]    = (ushort)(clockNtsc / freq - 0.5);
                 NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
+                NoteTableEPSM[i]    = (ushort)(clockEPSM / freq - 0.5);
+                NoteTableEPSMFm[i]  = octave == 0 ? (ushort)((144 * (double)freq * 1048576 / 8000000)/4) : (ushort)((NoteTableEPSMFm[(i - 1) % 12 + 1]) << octave);
                 NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
                 NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
                 NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(NoteTableVrc7[(i - 1) % 12 + 1] << octave);
@@ -286,8 +327,335 @@ namespace FamiStudio
             DumpNoteTable(NoteTableN163[5], "N163");
             DumpNoteTable(NoteTableN163[6], "N163");
             DumpNoteTable(NoteTableN163[7], "N163");
+            DumpNoteTable(NoteTableEPSMFm, "EPSMFM");
+            DumpNoteTable(NoteTableEPSM, "EPSMSquare");
 #endif
         }
+
+        // These structs must perfectly match the ones in NesSndEmu.
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct ApuRegisterValues
+        {
+            // $4000 to $4013
+            public fixed byte Regs[20];
+            public fixed byte Ages[20];
+
+            // Extra internal states.
+            public byte DpcmBytesLeft;
+            public byte DpcmDac;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct Vrc6RegisterValues
+        {
+            // $9000 to $9002
+            // $A000 to $A002
+            // $B000 to $B002
+            public fixed byte Regs[9];
+            public fixed byte Ages[9];
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct Vrc7RegisterValues
+        {
+            // $e000 
+            public fixed byte Regs[1];
+            public fixed byte Ages[1];
+
+            // $9030 (Internal registers $00 to $35)
+            public fixed byte InternalRegs[54];
+            public fixed byte InternalAges[54];
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct FdsRegisterValues
+        {
+            // $4080 to $408A
+            public fixed byte Regs[11];
+            public fixed byte Ages[11];
+
+            // Waveform + modulation
+            public fixed byte Wave[64];
+            public fixed byte Mod [64];
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct Mmc5RegisterValues
+        {
+            // $5000 to $5007
+            // $5015
+            public fixed byte Regs[9];
+            public fixed byte Ages[9];
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct N163RegisterValues
+        {
+            // $4800 (Internal registers 0 to 127).
+            public fixed byte Regs[128];
+            public fixed byte Ages[128];
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct S5bRegisterValues
+        {
+            // e000 (Internal registers 0 to f).
+            public fixed byte Regs[16];
+            public fixed byte Ages[16];
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public unsafe struct EpsmRegisterValues
+        {
+            // (Internal registers 0 to B4).
+            public fixed byte Regs_A0[184];
+            public fixed byte Ages_A0[184];
+            public fixed byte Regs_A1[184];
+            public fixed byte Ages_A1[184];
+        }
+
+        public struct N163InstrumentRange
+        {
+            public byte Position;
+            public byte Size;
+        }
+
+        public unsafe class NesRegisterValues
+        {
+            public ApuRegisterValues  Apu;
+            public Vrc6RegisterValues Vrc6;
+            public Vrc7RegisterValues Vrc7;
+            public FdsRegisterValues  Fds;
+            public Mmc5RegisterValues Mmc5;
+            public N163RegisterValues N163;
+            public S5bRegisterValues  S5B;
+            public EpsmRegisterValues Epsm;
+
+            // Extra information for the register viewer.
+            public System.Drawing.Color[] InstrumentColors = new System.Drawing.Color[ChannelType.Count];
+            public N163InstrumentRange[]  N163InstrumentRanges = new N163InstrumentRange[8];
+
+            private bool pal = false;
+
+            public bool Pal => pal;
+            public int  CpuFrequency => pal ? FreqPal : FreqNtsc;
+
+            public void CopyTo(NesRegisterValues other)
+            {
+                other.Apu  = Apu;
+                other.Vrc6 = Vrc6;
+                other.Vrc7 = Vrc7;
+                other.Fds  = Fds;
+                other.Mmc5 = Mmc5;
+                other.N163 = N163;
+                other.S5B  = S5B;
+                other.Epsm = Epsm;
+                other.pal  = pal;
+
+                Array.Copy(InstrumentColors, other.InstrumentColors, InstrumentColors.Length);
+                Array.Copy(N163InstrumentRanges, other.N163InstrumentRanges, N163InstrumentRanges.Length);
+            }
+
+            public void ReadRegisterValues(int apuIdx)
+            {
+                var expansionMask = NesApu.GetAudioExpansions(apuIdx);
+
+                fixed (void* p = &Apu)
+                    NesApu.GetRegisterValues(apuIdx, ExpansionType.None, p);
+
+                if ((expansionMask & ExpansionType.Vrc6Mask) != 0)
+                {
+                    fixed (void* p = &Vrc6)
+                        NesApu.GetRegisterValues(apuIdx, ExpansionType.Vrc6, p);
+                }
+
+                if ((expansionMask & ExpansionType.Vrc7Mask) != 0)
+                {
+                    fixed (void* p = &Vrc7)
+                        NesApu.GetRegisterValues(apuIdx, ExpansionType.Vrc7, p);
+                }
+
+                if ((expansionMask & ExpansionType.FdsMask) != 0)
+                {
+                    fixed (void* p = &Fds)
+                        NesApu.GetRegisterValues(apuIdx, ExpansionType.Fds, p);
+                }
+
+                if ((expansionMask & ExpansionType.Mmc5Mask) != 0)
+                {
+                    fixed (void* p = &Mmc5)
+                        NesApu.GetRegisterValues(apuIdx, ExpansionType.Mmc5, p);
+                }
+
+                if ((expansionMask & ExpansionType.N163Mask) != 0)
+                {
+                    fixed (void* p = &N163)
+                        NesApu.GetRegisterValues(apuIdx, ExpansionType.N163, p);
+                }
+
+                if ((expansionMask & ExpansionType.S5BMask) != 0)
+                {
+                    fixed (void* p = &S5B)
+                        NesApu.GetRegisterValues(apuIdx, ExpansionType.S5B, p);
+                }
+
+                if ((expansionMask & ExpansionType.EPSMMask) != 0)
+                {
+                    fixed (void* p = &Epsm)
+                        NesApu.GetRegisterValues(apuIdx, ExpansionType.EPSM, p);
+                }
+            }
+
+            public void SetPalMode(bool p)
+            {
+                pal = p;
+            }
+
+            private byte GetApuRegisterValue(int reg, out byte age)
+            {
+                var idx = reg - NesApu.APU_PL1_VOL;
+                age = Apu.Ages[idx];
+                return Apu.Regs[idx];
+            }
+
+            private byte GetVrc6RegisterValue(int reg, out byte age)
+            {
+                int idx;
+
+                if (reg <= NesApu.VRC6_CTRL)
+                    idx = reg - NesApu.VRC6_PL1_VOL;
+                else if (reg <= NesApu.VRC6_PL2_HI)
+                    idx = reg - NesApu.VRC6_PL2_VOL + 3;
+                else
+                    idx = reg - NesApu.VRC6_SAW_VOL + 6;
+
+                age = Vrc6.Ages[idx];
+                return Vrc6.Regs[idx];
+            }
+
+            private byte GetVrc7RegisterValue(int reg, int sub, out byte age)
+            {
+                Debug.Assert(reg == NesApu.VRC7_REG_WRITE || reg == NesApu.VRC7_SILENCE);
+
+                if (reg == NesApu.VRC7_SILENCE)
+                {
+                    age = Vrc7.Ages[0];
+                    return Vrc7.Regs[0];
+                }
+                else
+                {
+                    age = Vrc7.InternalAges[sub];
+                    return Vrc7.InternalRegs[sub];
+                }
+            }
+
+            private byte GetFdsRegisterValue(int reg, int sub, out byte age)
+            {
+                if (reg < NesApu.FDS_VOL_ENV)
+                {
+                    age = 0xff;
+                    return Fds.Wave[reg - NesApu.FDS_WAV_START];
+                }
+                else if (reg == NesApu.FDS_MOD_TABLE && sub >= 0) // Hacky wait to access the mod table.
+                {
+                    age = 0xff;
+                    return Fds.Mod[sub];
+                }
+                else
+                {
+                    var idx = reg - NesApu.FDS_VOL_ENV;
+                    age = Fds.Ages[idx];
+                    return Fds.Regs[idx];
+                }
+            }
+
+            private byte GetN163RegisterValue(int reg, int sub, out byte age)
+            {
+                Debug.Assert(reg == NesApu.N163_DATA);
+
+                age = N163.Ages[sub];
+                return N163.Regs[sub];
+            }
+
+            private byte GetMmc5RegisterValue(int reg, out byte age)
+            {
+                var idx = reg == NesApu.MMC5_SND_CHN ? 8 : reg - NesApu.MMC5_PL1_VOL;
+                age = Mmc5.Ages[idx];
+                return Mmc5.Regs[idx];
+            }
+
+            private byte GetS5BRegisterValue(int reg, int sub, out byte age)
+            {
+                Debug.Assert(reg == NesApu.S5B_DATA);
+
+                age = S5B.Ages[sub];
+                return S5B.Regs[sub];
+            }
+
+            private byte GetEpsmRegisterValue_A0(int reg, int sub, out byte age)
+            {
+                //Debug.Assert(reg == NesApu.EPSM_DATA0 || reg == NesApu.EPSM_DATA1);
+                if (reg == NesApu.EPSM_DATA0)
+                {
+                    age = Epsm.Ages_A0[sub];
+                    return Epsm.Regs_A0[sub];
+                }
+                else
+                {
+                    age = Epsm.Ages_A1[sub];
+                    return Epsm.Regs_A1[sub];
+                }
+            }
+
+            public byte GetRegisterValue(int exp, int reg, out byte age, int sub = -1)
+            {
+                switch (exp)
+                {
+                    case ExpansionType.None: return GetApuRegisterValue(reg, out age);
+                    case ExpansionType.Vrc6: return GetVrc6RegisterValue(reg, out age);
+                    case ExpansionType.Vrc7: return GetVrc7RegisterValue(reg, sub, out age);
+                    case ExpansionType.Fds:  return GetFdsRegisterValue(reg, sub, out age);
+                    case ExpansionType.Mmc5: return GetMmc5RegisterValue(reg, out age);
+                    case ExpansionType.N163: return GetN163RegisterValue(reg, sub, out age);
+                    case ExpansionType.S5B:  return GetS5BRegisterValue(reg, sub, out age);
+                    case ExpansionType.EPSM: return GetEpsmRegisterValue_A0(reg, sub, out age);
+                }
+
+                Debug.Assert(false);
+                age = 0;
+                return 0;
+            }
+
+            public byte GetRegisterValue(int exp, int reg, int sub = -1)
+            {
+                return GetRegisterValue(exp, reg, out _, sub);
+            }
+
+            public int GetMergedRegisterValue(int exp, int regLo, int regHi, int maskHi)
+            {
+                var periodLo = GetRegisterValue(exp, regLo);
+                var periodHi = GetRegisterValue(exp, regHi) & maskHi;
+
+                return (periodHi << 8) | periodLo;
+            }
+
+            public int GetMergedSubRegisterValue(int exp, int reg, int subLo, int subHi, int maskHi)
+            {
+                var periodLo = GetRegisterValue(exp, reg, subLo);
+                var periodHi = GetRegisterValue(exp, reg, subHi) & maskHi;
+
+                return (periodHi << 8) | periodLo;
+            }
+
+            public int GetMergedSubRegisterValue(int exp, int reg, int subLo, int subMi, int subHi, int maskHi)
+            {
+                var periodLo = GetRegisterValue(exp, reg, subLo);
+                var periodMd = GetRegisterValue(exp, reg, subMi);
+                var periodHi = GetRegisterValue(exp, reg, subHi) & maskHi;
+
+                return (periodHi << 16) | (periodMd << 8) | periodLo;
+            }
+        };
 
         public static void Initialize()
         {
@@ -318,6 +686,17 @@ namespace FamiStudio
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
                     return NoteTableVrc7;
+                case ChannelType.EPSMSquare1:
+                case ChannelType.EPSMSquare2:
+                case ChannelType.EPSMSquare3:
+                    return NoteTableEPSM;
+                case ChannelType.EPSMFm1:
+                case ChannelType.EPSMFm2:
+                case ChannelType.EPSMFm3:
+                case ChannelType.EPSMFm4:
+                case ChannelType.EPSMFm5:
+                case ChannelType.EPSMFm6:
+                    return NoteTableEPSMFm;
                 default:
                     return pal ? NoteTablePAL : NoteTableNTSC;
             }
@@ -338,6 +717,12 @@ namespace FamiStudio
                 case ChannelType.Vrc7Fm4:
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
+                case ChannelType.EPSMFm1:
+                case ChannelType.EPSMFm2:
+                case ChannelType.EPSMFm3:
+                case ChannelType.EPSMFm4:
+                case ChannelType.EPSMFm5:
+                case ChannelType.EPSMFm6:
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:
@@ -414,6 +799,16 @@ namespace FamiStudio
                             case APU_EXPANSION_SUNSOFT:
                                 WriteRegister(apuIdx, S5B_ADDR, S5B_REG_TONE);
                                 WriteRegister(apuIdx, S5B_DATA, 0x38); // No noise, just 3 tones for now.
+                                break;
+                            case APU_EXPANSION_EPSM:
+                                WriteRegister(apuIdx, EPSM_ADDR0, EPSM_REG_TONE);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x38); // No noise, just 3 tones for now.
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x29);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x80);
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x27);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x00);
+                                WriteRegister(apuIdx, EPSM_ADDR0, 0x11);
+                                WriteRegister(apuIdx, EPSM_DATA0, 0x37);
                                 break;
                         }
                     }

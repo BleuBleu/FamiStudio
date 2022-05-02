@@ -19,7 +19,7 @@ namespace FamiStudio
         const int MaxBufferSize = 128 * 1024;
 
         const int MinBufferSizeLog2 = 4;
-        const int MaxBufferSizeLog2 = 17;
+        const int MaxBufferSizeLog2 = 18;
         const int NumBufferSizes    = MaxBufferSizeLog2 - MinBufferSizeLog2 + 1;
 
         // Index [0] is MaxBufferSize
@@ -180,7 +180,7 @@ namespace FamiStudio
             return new GLBitmap(CreateTexture(bmp, true), bmp.Width, bmp.Height, true, true);
         }
 
-        public GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
+        public override GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
         {
             var bitmaps = new Bitmap[names.Length];
             var elementSizeX = 0;

@@ -180,6 +180,7 @@ const blargg_err_t blargg_success = 0;
 #define max(a, b) (((a) > (b) ? (a) : (b)))
 #define clamp(x, a, b) ((x) < (a) ? (a) : ((x) > (b) ? (b) : (x)))
 #define array_count(x) (sizeof(x) / sizeof(x[0]))
+#define increment_saturate(x) ((unsigned char)min(255, (int)x + 1))
 
 #endif
 

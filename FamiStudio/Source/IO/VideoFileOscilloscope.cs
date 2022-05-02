@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Collections.Generic;
-
-using RenderGraphics = FamiStudio.GLOffscreenGraphics;
 
 namespace FamiStudio
 {
     class VideoFileOscilloscope : VideoFileBase
     {
-        private void BuildChannelColors(Song song, List<VideoChannelState> channels, VideoFrameMetadata[] meta, int colorMode)
+        private void BuildChannelColors(Song song, VideoChannelState[] channels, VideoFrameMetadata[] meta, int colorMode)
         {
             Color[,] colors = new Color[meta.Length, meta[0].channelNotes.Length];
 
@@ -20,7 +17,7 @@ namespace FamiStudio
 
                 m.channelColors = new Color[m.channelNotes.Length];
 
-                for (int j = 0; j < channels.Count; j++)
+                for (int j = 0; j < channels.Length; j++)
                 {
                     var note = m.channelNotes[channels[j].songChannelIndex];
 
@@ -111,83 +108,13 @@ namespace FamiStudio
 
         public bool Save(Project originalProject, int songId, int loopCount, int colorMode, int numColumns, int lineThickness, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
-            if (!Initialize(channelMask, loopCount))
+            if (!Initialize(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan))
                 return false;
 
-            videoResX = resX;
-            videoResY = resY;
-
-            var project = originalProject.DeepClone();
-            var song = project.GetSong(songId);
-
-            ExtendSongForLooping(song, loopCount);
-
-            // Save audio to temporary file.
-            Log.LogMessage(LogSeverity.Info, "Exporting audio...");
-
-            var tempFolder = Utils.GetTemporaryDiretory();
-            var tempAudioFile = Path.Combine(tempFolder, "temp.wav");
-
-            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, channelMask, false, false, stereo, pan, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
-
-            // Start encoder, must be done before any GL calls on Android.
-            GetFrameRateInfo(song.Project, halfFrameRate, out var frameRateNumer, out var frameRateDenom);
-
-            if (!videoEncoder.BeginEncoding(videoResX, videoResY, frameRateNumer, frameRateDenom, videoBitRate, audioBitRate, tempAudioFile, filename))
-            {
-                Log.LogMessage(LogSeverity.Error, "Error starting video encoder, aborting.");
-                return false;
-            }
-
-            Log.LogMessage(LogSeverity.Info, "Initializing channels...");
-
-            var numChannels = Utils.NumberOfSetBits(channelMask);
-            var longestChannelName = 0.0f;
-            var videoGraphics = RenderGraphics.Create(videoResX, videoResY, true);
-
-            if (videoGraphics == null)
-            {
-                Log.LogMessage(LogSeverity.Error, "Error initializing off-screen graphics, aborting.");
-                return false;
-            }
-
-            var themeResources = new ThemeRenderResources(videoGraphics);
             var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
-            // Generate WAV data for each individual channel for the oscilloscope.
-            var channelStates = new List<VideoChannelState>();
-            var maxAbsSample = 0;
-
-            for (int i = 0, channelIndex = 0; i < song.Channels.Length; i++)
-            {
-                if ((channelMask & (1 << i)) == 0)
-                    continue;
-
-                var pattern = song.Channels[i].PatternInstances[0];
-                var state = new VideoChannelState();
-
-                state.videoChannelIndex = channelIndex;
-                state.songChannelIndex = i;
-                state.channel = song.Channels[i];
-                state.channelText = state.channel.NameWithExpansion;
-                state.wav = new WavPlayer(SampleRate, 1, 1 << i).GetSongSamples(song, song.Project.PalMode, -1);
-
-                channelStates.Add(state);
-                channelIndex++;
-
-                // Find maximum absolute value to rescale the waveform.
-                foreach (int s in state.wav)
-                    maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
-
-                // Measure the longest text.
-                longestChannelName = Math.Max(longestChannelName, videoGraphics.MeasureString(state.channelText, themeResources.FontVeryLarge));
-
-                Log.ReportProgress(0.0f);
-            }
-
-            numColumns = Math.Min(numColumns, channelStates.Count);
-
-            var numRows = (int)Math.Ceiling(channelStates.Count / (float)numColumns);
+            numColumns = Math.Min(numColumns, channelStates.Length);
+            var numRows = (int)Math.Ceiling(channelStates.Length / (float)numColumns);
 
             var channelResXFloat = videoResX / (float)numColumns;
             var channelResYFloat = videoResY / (float)numRows;
@@ -211,16 +138,17 @@ namespace FamiStudio
             var gradientBrush = videoGraphics.CreateVerticalGradientBrush(0, gradientSizeY, Color.Black, Color.FromArgb(0, Color.Black));
 
             // Generate the metadata for the video so we know what's happening at every frame
-            var metadata = new VideoMetadataPlayer(SampleRate, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
+            var metadata = new VideoMetadataPlayer(SampleRate, song.Project.OutputsStereoAudio, 1).GetVideoMetadata(song, song.Project.PalMode, -1);
 
             var oscScale = maxAbsSample != 0 ? short.MaxValue / (float)maxAbsSample : 1.0f;
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
             var oscWindowSize = (int)Math.Round(SampleRate * OscilloscopeWindowSize);
+            var oscNumVertices = Math.Min(channelResX, 64000 / channelStates.Length); // We have a hard limit on vertices in our OpenGL renderer.
 
             BuildChannelColors(song, channelStates, metadata, colorMode);
 
             var videoImage = new byte[videoResY * videoResX * 4];
-            var oscilloscope = new float[oscWindowSize, 2];
+            var oscilloscope = new float[oscNumVertices, 2];
             var success = true;
 
 #if !DEBUG
@@ -261,7 +189,7 @@ namespace FamiStudio
                     }
 
                     // Channel names + oscilloscope
-                    for (int i = 0; i < channelStates.Count; i++)
+                    for (int i = 0; i < channelStates.Length; i++)
                     {
                         var s = channelStates[i];
 

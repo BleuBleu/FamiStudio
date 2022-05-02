@@ -18,6 +18,7 @@ public:
 	void output(Blip_Buffer*);
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
+	void get_register_values(struct fds_register_values* regs);
 
 	enum { shadow_regs_count = 11 };
 	void start_seeking();
@@ -40,6 +41,7 @@ private:
 		BOOST::int8_t  wave[wave_count];
 		BOOST::uint8_t modt[modt_count];
 		BOOST::uint8_t regs[regs_count];
+		BOOST::uint8_t ages[regs_count];
 		Blip_Buffer* output;
 		unsigned int mod_pos;
 		int mod_phase;
@@ -70,6 +72,18 @@ private:
 
 	void run_until(cpu_time_t);
 	void run_fds(cpu_time_t end_time);
+};
+
+// Must match the definition in NesApu.cs.
+struct fds_register_values
+{
+	// $4080 to $408A
+	unsigned char regs[11];
+	unsigned char ages[11];
+
+	// Waveform + modulation
+	unsigned char wave[64];
+	unsigned char modt[64];
 };
 
 #endif

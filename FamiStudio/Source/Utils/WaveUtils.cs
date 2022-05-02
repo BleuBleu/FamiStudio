@@ -413,5 +413,28 @@ namespace FamiStudio
 
             wave = filteredWave;
         }
+
+        public static void MixDown(short[] stereo, short[] mono)
+        {
+            for (int i = 0; i < stereo.Length; i += 2)
+            {
+                mono[i / 2] = (short)((stereo[i + 0] + stereo[i + 1]) / 2);
+            }
+        }
+
+        public static short[] MixDown(short[] stereo)
+        {
+            var mono = new short[stereo.Length / 2];
+            MixDown(stereo, mono);
+            return mono;
+        }
+
+        public static int GetMaxAbsValue(short[] samples)
+        {
+            var maxAbsSample = 0;
+            foreach (int s in samples)
+                maxAbsSample = Math.Max(maxAbsSample, Math.Abs(s));
+            return maxAbsSample;
+        }
     }
 }

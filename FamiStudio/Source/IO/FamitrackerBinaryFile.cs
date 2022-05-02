@@ -585,7 +585,7 @@ namespace FamiStudio
                         if (n < song.PatternLength)
                             fxData[n, j] = fx;
 
-                        ApplySimpleEffects(fx, pattern, n, patternLengths, !dummy);
+                        ApplySimpleEffects(fx, pattern, n, !dummy);
                     }
                 }
             }

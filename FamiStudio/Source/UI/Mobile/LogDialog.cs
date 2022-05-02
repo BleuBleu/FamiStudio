@@ -36,20 +36,15 @@ namespace FamiStudio
         private PropertyDialog dialog;
         private FamiStudioForm parentForm;
 
-        public unsafe LogProgressDialog(FamiStudioForm parentForm)
+        public unsafe LogProgressDialog(FamiStudioForm parentForm, string title, string text)
         {
             this.parentForm = parentForm;
 
             MainThread.InvokeOnMainThreadAsync(() =>
             {
                 // HACK : We only use this for video export on mobile.
-                dialog = new PropertyDialog("Exporting Video", 100, false);
-                dialog.Properties.AddProgressBar("Export progress", 0.0f, 
-                    "Exporting videos may take a very long time, especially at high resolutions. " +
-                    "Make sure FamiStudio remains open, clicking BACK or closing this window will abort the operation. " + 
-                    "FamiStudio is currently preventing the screen from going to sleep.\n\n" + 
-                    "Also please note that for reasons outside of our control, the video encoding quality on mobile " +
-                    "is inferior to the desktop version of FamiStudio."); // 0
+                dialog = new PropertyDialog(title, 100, false);
+                dialog.Properties.AddProgressBar("Export progress", 0.0f, text); // 0
                 dialog.Properties.AddLabel("Current Step", ""); // 1
                 dialog.Properties.Build();
             });

@@ -4,6 +4,29 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>fms</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>application/famistudio</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>FamiStudio Project</string>
+			<key>CFBundleTypeIconFile</key>
+			<string>FamiStudio</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSIsAppleDefaultForType</key>
+			<true/>
+		</dict>
+	</array>
 	<key>CFBundleIdentifier</key>
 	<string>com.BleuBleu.FamiStudio</string>
 	<key>CFBundleInfoDictionaryVersion</key>

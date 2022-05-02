@@ -8,7 +8,13 @@
 #define __cdecl
 #endif
 
-static Simple_Apu apu[3];
+// Must match NesApu.cs.
+#define NUM_WAV_EXPORT_APU 8 
+
+// 0  = Song player
+// 1  = Instrument player
+// 2+ = WAV/Video export, one for each potential thread.
+static Simple_Apu apu[2 + NUM_WAV_EXPORT_APU];
 
 extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int pal, int seperate_tnd, int expansions, int (__cdecl *dmcReadFunc)(void* user_data, cpu_addr_t))
 {
@@ -96,3 +102,7 @@ extern "C" void __stdcall NesApuSkipCycles(int apuIdx, int cycles)
 	apu[apuIdx].skip_cycles(cycles);
 }
 
+extern "C" void __stdcall NesApuGetRegisterValues(int apuIdx, int exp, void* regs)
+{
+	apu[apuIdx].get_register_values(exp, regs);
+}

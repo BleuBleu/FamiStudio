@@ -235,7 +235,7 @@ namespace FamiStudio
         {
             try
             {
-                Process.Start("open", url);
+                Process.Start("open", $"\"{url}\"");
             }
             catch { }
         }

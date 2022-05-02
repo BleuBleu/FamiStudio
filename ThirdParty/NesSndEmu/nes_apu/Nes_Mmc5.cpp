@@ -71,12 +71,12 @@ void Nes_Mmc5::osc_output(int index, Blip_Buffer* buf)
 
 void Nes_Mmc5::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 {
-	require(addr > 0x20); // addr must be actual address (i.e. 0x40xx)
-	require((unsigned)data <= 0xff);
-
 	// Ignore addresses outside range
 	if (addr < start_addr || end_addr < addr)
 		return;
+
+	require(addr > 0x20); // addr must be actual address (i.e. 0x40xx)
+	require((unsigned)data <= 0xff);
 
 	run_until(time);
 
@@ -102,6 +102,7 @@ void Nes_Mmc5::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			return;
 
 		osc->regs[reg] = data;
+		osc->ages[reg] = 0;
 		osc->reg_written[reg] = true;
 
 		if (reg == 3)
@@ -179,3 +180,21 @@ void Nes_Mmc5::write_shadow_register(int addr, int data)
 		shadow_regs[addr - start_addr] = data;
 }
 
+void Nes_Mmc5::get_register_values(struct mmc5_register_values* regs)
+{
+	for (int i = 0; i < osc_count; i++)
+	{
+		Nes_Osc* osc = oscs[i];
+
+		for (int j = 0; j < 4; j++)
+		{
+			regs->regs[i * 4 + j] = osc->regs[j];
+			regs->ages[i * 4 + j] = osc->ages[j];
+
+			osc->ages[j] = increment_saturate(osc->ages[j]);
+		}
+	}
+
+	regs->regs[8] = osc_enables;
+	regs->regs[8] = 0xff; // TODO : Keep track of that one too.
+}

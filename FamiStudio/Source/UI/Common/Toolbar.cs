@@ -362,7 +362,7 @@ namespace FamiStudio
             {
                 buttons[(int)ButtonType.Qwerty] = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
 
-                timecodePosY = ScaleForMainWindow(DefaultTimecodePosY);
+                timecodePosY            = ScaleForMainWindow(DefaultTimecodePosY);
                 oscilloscopePosY        = ScaleForMainWindow(DefaultTimecodePosY);
                 timecodeOscSizeX        = ScaleForMainWindow(DefaultTimecodeSizeX);
                 tooltipSingleLinePosY   = ScaleForMainWindow(DefaultTooltipSingleLinePosY);
@@ -387,7 +387,7 @@ namespace FamiStudio
                 buttons[(int)ButtonType.Redo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
                 buttons[(int)ButtonType.Transform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
                 buttons[(int)ButtonType.Config].ToolTip    = "{MouseLeft} Edit Application Settings";
-                buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {Ctrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
+                buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {ForceCtrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
                 buttons[(int)ButtonType.Rewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
                 buttons[(int)ButtonType.Rec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
                 buttons[(int)ButtonType.Loop].ToolTip      = "{MouseLeft} Toggle Loop Mode (Song, Pattern/Selection)";
@@ -401,6 +401,7 @@ namespace FamiStudio
                 specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
                 specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
                 specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = ScaleForMainWindow(28) };
+                specialCharacters["ForceCtrl"]  = new TooltipSpecialCharacter { Width = ScaleForMainWindow(28) };
                 specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
                 specialCharacters["Tab"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
                 specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
@@ -1053,7 +1054,27 @@ namespace FamiStudio
                             }
                             else
                             {
+                                // Solution used here is an easy workaround for macOS Spotlight being attached to Cmd+Space by default.
+                                //
+                                // We use `Keys.Control` flag detection to determine whether Ctrl was pressed or not. On macOS that
+                                // flag is present for both Ctrl *and* Cmd keys, which means Ctrl+Space and Cmd+Space are equivalent. 
+                                // In other words user can use Ctrl+Space instead of Cmd+Space to avoid Spotlight shortcut clash.
+                                //
+                                // Then why do we introduce "{ForceCtrl}" monikers in tooltips?
+                                //
+                                // The problem is we render "{Ctrl}" moniker as "Cmd" button on macOS. It would be more accurate to
+                                // render it as "Ctrl/Cmd" button, but we don't have UI space to spare for such longer button being
+                                // used in multiple places in tooltips. We could also render "{Ctrl}" moniker as "⌃ or ⌘" which is
+                                // short, but introduces a risk of users not being aware what those symbols stand for.
+                                //
+                                // In such case we decided to distinguish those cases where we want to give user a hint to use Ctrl
+                                // instead of Cmd (even if Cmd would still work, if not for a Spotlight shortcut clash). And this is
+                                // what `{ForceCtrl}` stands for – it "forces" tooltip rendering to render `{Ctrl}` on macOS as "Ctrl"
+                                // instead of "Cmd". 
+                                //
                                 if (PlatformUtils.IsMacOS && str == "Ctrl") str = "Cmd";
+                                if (str == "ForceCtrl") str = "Ctrl";
+                                
                                 posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                                 c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush);
                                 c.DrawText(str, messageFont, posX, posY, messageBrush, RenderTextFlags.Center, specialCharacter.Width);

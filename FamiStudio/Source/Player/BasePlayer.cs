@@ -33,10 +33,12 @@ namespace FamiStudio
         protected int playbackRateCounter = 1;
         protected int minSelectedPattern = -1;
         protected int maxSelectedPattern = -1;
+        protected int numPlayedPatterns = 0;
         protected bool famitrackerTempo = true;
         protected bool palPlayback = false;
         protected bool seeking = false;
         protected bool beat = false;
+        protected bool stereo = false;
         protected int  tndMode = NesApu.TND_MODE_SINGLE;
         protected int  beatIndex = -1;
         protected Song song;
@@ -45,6 +47,7 @@ namespace FamiStudio
         protected volatile int channelMask = -1;
         protected volatile int playPosition = 0;
         protected NoteLocation playLocation = new NoteLocation(0, 0);
+        protected NesApu.NesRegisterValues registerValues = new NesApu.NesRegisterValues();
 
         // Only used by FamiTracker tempo.
         protected int famitrackerTempoCounter = 0;
@@ -58,11 +61,12 @@ namespace FamiStudio
         protected int tempoEnvelopeIndex;
         protected int tempoEnvelopeCounter;
 
-        protected BasePlayer(int apu, int rate = 44100)
+        protected BasePlayer(int apu, bool stereo, int rate = 44100)
         {
-            apuIndex = apu;
-            sampleRate = rate;
-            dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
+            this.apuIndex = apu;
+            this.sampleRate = rate;
+            this.dmcCallback = new NesApu.DmcReadDelegate(NesApu.DmcReadCallback);
+            this.stereo = stereo;
         }
 
         public virtual void Shutdown()
@@ -96,7 +100,7 @@ namespace FamiStudio
                 playbackRate = value;
             }
         }
-
+        
         public void SetSelectionRange(int min, int max)
         {
             minSelectedPattern = min;
@@ -235,6 +239,8 @@ namespace FamiStudio
             frameNumber = 0;
             famitrackerTempoCounter = 0;
             channelStates = CreateChannelStates(this, song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
+
+            Debug.Assert(song.Project.OutputsStereoAudio == stereo);
 
             NesApu.InitAndReset(apuIndex, sampleRate, palPlayback, tndMode, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels, dmcCallback);
 
@@ -419,7 +425,10 @@ namespace FamiStudio
             }
 
             if (advancedPattern)
+            {
+                numPlayedPatterns++;
                 ResetFamiStudioTempo();
+            }
 
             UpdateBeat();
 
@@ -490,6 +499,24 @@ namespace FamiStudio
                 case ChannelType.S5BSquare2:
                 case ChannelType.S5BSquare3:
                     return new ChannelStateS5B(this, apuIdx, channelType, pal);
+                case ChannelType.EPSMSquare1:
+                case ChannelType.EPSMSquare2:
+                case ChannelType.EPSMSquare3:
+                    return new ChannelStateEPSMSquare(this, apuIdx, channelType, pal);
+                case ChannelType.EPSMFm1:
+                case ChannelType.EPSMFm2:
+                case ChannelType.EPSMFm3:
+                case ChannelType.EPSMFm4:
+                case ChannelType.EPSMFm5:
+                case ChannelType.EPSMFm6:
+                    return new ChannelStateEPSMFm(this, apuIdx, channelType, pal);
+                case ChannelType.EPSMrythm1:
+                case ChannelType.EPSMrythm2:
+                case ChannelType.EPSMrythm3:
+                case ChannelType.EPSMrythm4:
+                case ChannelType.EPSMrythm5:
+                case ChannelType.EPSMrythm6:
+                    return new ChannelStateEPSMRythm(this, apuIdx, channelType, pal);
             }
 
             Debug.Assert(false);
@@ -519,12 +546,14 @@ namespace FamiStudio
             NesApu.EndFrame(apuIndex);
 
             int numTotalSamples = NesApu.SamplesAvailable(apuIndex);
-            short[] samples = new short[numTotalSamples];
+            short[] samples = new short[numTotalSamples * (stereo ? 2 : 1)];
 
             fixed (short* ptr = &samples[0])
             {
                 NesApu.ReadSamples(apuIndex, new IntPtr(ptr), numTotalSamples);
             }
+
+            ReadBackRegisterValues();
 
             return samples;
         }
@@ -551,6 +580,44 @@ namespace FamiStudio
 
         public virtual void NotifyRegisterWrite(int apuIndex, int reg, int data)
         {
+        }
+
+        protected void ReadBackRegisterValues()
+        {
+            if (Settings.ShowRegisterViewer)
+            {
+                lock (registerValues)
+                {
+                    registerValues.ReadRegisterValues(apuIndex);
+
+                    // Read some additionnal information that we may need for the
+                    // register viewer, such as instrument colors, etc.
+                    for (int i = 0; i < channelStates.Length; i++)
+                    {
+                        var state = channelStates[i];
+                        var note = state.CurrentNote;
+                        var instrument = note != null ? note.Instrument : null;
+
+                        registerValues.InstrumentColors[state.InnerChannelType] = instrument != null ? instrument.Color : System.Drawing.Color.Transparent;
+
+                        if (state.InnerChannelType >= ChannelType.N163Wave1 &&
+                            state.InnerChannelType <= ChannelType.N163Wave8)
+                        {
+                            var idx = state.InnerChannelType - ChannelType.N163Wave1;
+                            registerValues.N163InstrumentRanges[idx].Position = instrument != null ? instrument.N163WavePos : (byte)0;
+                            registerValues.N163InstrumentRanges[idx].Size = instrument != null ? instrument.N163WaveSize : (byte)0;
+                        }
+                    }
+                }
+            }
+        }
+
+        public void GetRegisterValues(NesApu.NesRegisterValues values)
+        {
+            lock (registerValues)
+            {
+                registerValues.CopyTo(values);
+            }
         }
     };
 }

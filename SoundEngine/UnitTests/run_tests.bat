@@ -44,9 +44,13 @@ if "%rnd%"=="1" (
 	echo FAMISTUDIO_CFG_SMOOTH_VIBRATO=1 >> test_defs.inc
 )
 
-set /a rnd=%random% %%2
+set /a rnd=%random% %%3
 if "%rnd%"=="1" (
 	echo FAMISTUDIO_CFG_DPCM_SUPPORT=1 >> test_defs.inc
+	set /a rnd=%random% %%2
+	if "%rnd%"=="1" (
+		echo FAMISTUDIO_USE_DELTA_COUNTER=1 >> test_defs.inc
+	)
 )
 
 set /a rnd=%random% %%7
@@ -69,6 +73,10 @@ if "%rnd%"=="0" (
 						echo FAMISTUDIO_EXP_N163=1 >> test_defs.inc
 						set /a rnd=%random% %%8+1
 						echo FAMISTUDIO_EXP_N163_CHN_CNT=%rnd% >> test_defs.inc
+						) else (
+						if "%rnd%"=="6" (
+							echo FAMISTUDIO_EXP_EPSM=1 >> test_defs.inc
+						)
 					)
 				)
 			)

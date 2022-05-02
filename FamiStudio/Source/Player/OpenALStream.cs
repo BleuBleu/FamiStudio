@@ -16,6 +16,7 @@ namespace FamiStudio
         private int freq;
         private bool quit;
         private Task playingTask;
+        private bool stereo;
 
         int source;
         int[] buffers;
@@ -23,14 +24,14 @@ namespace FamiStudio
         int   immediateSource = -1;
         int[] immediateBuffers;
 
-        public OpenALStream(int rate, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        public OpenALStream(int rate, bool inStereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
             if (context == null)
             {
                 context = new AudioContext();
                 Console.WriteLine($"Default OpenAL audio device is '{AudioContext.DefaultDevice}'");
             }
-
+            stereo = inStereo;
             // TODO : We need to decouple the number of emulated buffered frames and the 
             // size of the low-level audio buffers.
             freq = rate;
@@ -110,7 +111,7 @@ namespace FamiStudio
                     {
                         int bufferId = initBufferIdx >= 0 ? buffers[initBufferIdx--] : AL.SourceUnqueueBuffer(source);
                         fixed (short* p = &data[0])
-                            AL.BufferData(bufferId, ALFormat.Mono16, new IntPtr(p), data.Length * sizeof(short), freq);
+                            AL.BufferData(bufferId, stereo ? ALFormat.Stereo16 : ALFormat.Mono16, new IntPtr(p), data.Length * sizeof(short), freq);
                         AL.SourceQueueBuffer(source, bufferId);
                         i++;
                     }

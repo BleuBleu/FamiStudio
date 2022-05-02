@@ -273,6 +273,7 @@ void Nes_Apu::write_register( cpu_time_t time, cpu_addr_t addr, int data )
 		int reg = addr & 3;
 		osc->regs [reg] = data;
 		osc->reg_written [reg] = true;
+		osc->ages [reg] = 0;
 		
 		if ( osc_index == 4 )
 		{
@@ -377,4 +378,23 @@ void Nes_Apu::write_shadow_register(int addr, int data)
 {
 	if (addr >= start_addr && addr < start_addr + shadow_regs_count)
 		shadow_regs[addr - start_addr] = data;
+}
+
+void Nes_Apu::get_register_values(struct apu_register_values* regs)
+{
+	for (int i = 0; i < osc_count; i++)
+	{
+		Nes_Osc* osc = oscs[i];
+
+		for (int j = 0; j < 4; j++)
+		{
+			regs->regs[i * 4 + j] = osc->regs[j];
+			regs->ages[i * 4 + j] = osc->ages[j];
+
+			osc->ages[j] = increment_saturate(osc->ages[j]);
+		}
+
+		regs->dpcm_bytes_left = dmc.length_counter;
+		regs->dpcm_dac        = dmc.last_amp;
+	}
 }

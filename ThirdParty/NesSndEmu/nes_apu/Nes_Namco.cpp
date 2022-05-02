@@ -37,7 +37,10 @@ void Nes_Namco::reset()
 	
 	int i;
 	for ( i = 0; i < reg_count; i++ )
+	{
 		reg [i] = 0;
+		age [i] = 0;
+	}
 	
 	for ( i = 0; i < osc_count; i++ )
 	{
@@ -86,10 +89,11 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 		Namco_Osc& osc = oscs[active_osc];
 
 		BOOST::uint8_t* osc_reg = &reg[active_osc * 8 + 0x40];
+		BOOST::uint8_t* osc_age = &age[active_osc * 8 + 0x40];
 
 		long freq = ((osc_reg[4] & 3) << 16) | (osc_reg[2] << 8) | osc_reg[0];
 		int volume = osc_reg[7] & 15;
-		int wave_size = 256 - osc_reg[4];
+		int wave_size = 256 - (osc_reg[4] & 0xfc);
 
 		// This is not very accurate. We always do the entire 15-cycle channel update.
 		// We should only update until end_time. This will fail to emulate mid-update
@@ -111,6 +115,9 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 			osc_reg[5] = (phase >> 16) & 0xff;
 			osc_reg[3] = (phase >>  8) & 0xff;
 			osc_reg[1] = (phase >>  0) & 0xff;
+			osc_age[5] = 0;
+			osc_age[3] = 0;
+			osc_age[1] = 0;
 		}
 		else
 		{
@@ -163,6 +170,15 @@ void Nes_Namco::write_shadow_register(int addr, int data)
 		addr_reg = data;
 	else if (addr >= data_reg_addr && addr < (data_reg_addr + reg_range))
 		shadow_internal_regs[addr_reg] = data;
+}
+
+void Nes_Namco::get_register_values(struct n163_register_values* regs)
+{
+	memcpy(regs->regs, reg, reg_count);
+	memcpy(regs->ages, age, reg_count);
+
+	for (int i = 0; i < reg_count; i++)
+		age[i] = increment_saturate(age[i]);
 }
 
 

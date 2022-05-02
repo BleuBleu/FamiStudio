@@ -102,12 +102,14 @@ namespace FamiStudio
             ChannelSquare,
             ChannelTriangle,
             ChannelWaveTable,
+            ChannelRythm,
             Instrument,
             InstrumentFds,
             InstrumentNamco,
             InstrumentSunsoft,
             InstrumentVRC6,
             InstrumentVRC7,
+            InstrumentEPSM,
             EnvelopeVolume,
             EnvelopeArpeggio,
             EnvelopePitch,
@@ -142,7 +144,8 @@ namespace FamiStudio
             ButtonImageIndices.EffectDutyCycle, // Duty Cycle
             ButtonImageIndices.EffectNoteDelay, // Note Delay
             ButtonImageIndices.EffectCutDelay,  // Cut Delay
-            ButtonImageIndices.EffectVolume     // Volume Slide
+            ButtonImageIndices.EffectVolume,    // Volume Slide
+            ButtonImageIndices.EffectDutyCycle, // Delta Counter
         };
 
         readonly ButtonImageIndices[] EnvelopeImageIndices = new ButtonImageIndices[]
@@ -170,12 +173,14 @@ namespace FamiStudio
             "ChannelSquare",
             "ChannelTriangle",
             "ChannelWaveTable",
+            "ChannelRythm",
             "Instrument",
             "InstrumentFds",
             "InstrumentNamco",
             "InstrumentSunsoft",
             "InstrumentVRC6",
             "InstrumentVRC7",
+            "InstrumentEPSM",
             "EnvelopeVolume",
             "EnvelopeArpeggio",
             "EnvelopePitch",
@@ -449,7 +454,7 @@ namespace FamiStudio
             for (int i = 0; i < items.Length; i++)
             {
                 var item = items[i];
-                var size = textPosTop + ThemeResources.FontMediumBold.MeasureString(item.Text) * 5 / 4;
+                var size = textPosTop + ThemeResources.FontMediumBold.MeasureString(item.Text, false) * 5 / 4;
 
                 if (item.ExtraImageIndex >= 0)
                     size += ScaleCustom(bmpButtonAtlas.GetElementSize(item.ExtraImageIndex).Width, iconScaleFloat);

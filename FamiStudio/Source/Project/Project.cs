@@ -19,7 +19,8 @@ namespace FamiStudio
         // Version 10 = FamiStudio 3.0.0 (VRC6 saw master volume, groove, song sorting)
         // Version 11 = FamiStudio 3.1.0 (Volume slides, DPCM fine pitch)
         // Version 12 = FamiStudio 3.2.0 (Multiple expansions, overclocking)
-        public static int Version = 12;
+        // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
+        public static int Version = 13;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
 
@@ -60,12 +61,15 @@ namespace FamiStudio
         public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
         public bool UsesMultipleExpansionAudios => (Utils.NumberOfSetBits(expansionMask) > 1);
         
-        public bool UsesFdsExpansion  => (expansionMask  & ExpansionType.FdsMask)  != 0;
-        public bool UsesN163Expansion => (expansionMask  & ExpansionType.N163Mask) != 0;
-        public bool UsesVrc6Expansion => (expansionMask  & ExpansionType.Vrc6Mask) != 0;
-        public bool UsesVrc7Expansion => (expansionMask  & ExpansionType.Vrc7Mask) != 0;
-        public bool UsesMmc5Expansion => (expansionMask  & ExpansionType.Mmc5Mask) != 0;
-        public bool UsesS5BExpansion  => (expansionMask  & ExpansionType.S5BMask)  != 0;
+        public bool UsesFdsExpansion  => (expansionMask & ExpansionType.FdsMask)  != 0;
+        public bool UsesN163Expansion => (expansionMask & ExpansionType.N163Mask) != 0;
+        public bool UsesVrc6Expansion => (expansionMask & ExpansionType.Vrc6Mask) != 0;
+        public bool UsesVrc7Expansion => (expansionMask & ExpansionType.Vrc7Mask) != 0;
+        public bool UsesMmc5Expansion => (expansionMask & ExpansionType.Mmc5Mask) != 0;
+        public bool UsesS5BExpansion  => (expansionMask & ExpansionType.S5BMask)  != 0;
+        public bool UsesEPSMExpansion => (expansionMask & ExpansionType.EPSMMask) != 0;
+
+        public bool OutputsStereoAudio => UsesEPSMExpansion;
 
         public string Filename    { get => filename;  set => filename  = value; }
         public string Name        { get => name;      set => name      = value; }
@@ -793,11 +797,10 @@ namespace FamiStudio
 
         public int[] GetActiveExpansions()
         {
-            if (!UsesAnyExpansionAudio)
-                return null;
+            var idx = 1;
+            var expansions = new int[Utils.NumberOfSetBits(expansionMask) + 1];
 
-            var idx = 0;
-            var expansions = new int[Utils.NumberOfSetBits(expansionMask)];
+            expansions[0] = ExpansionType.None;
 
             for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
             {
@@ -831,6 +834,9 @@ namespace FamiStudio
             if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.S5B)
                 return (expansionMask & ExpansionType.S5BMask) != 0;
 
+            if (ChannelType.GetExpansionTypeForChannelType(channelType) == ExpansionType.EPSM)
+                return (expansionMask & ExpansionType.EPSMMask) != 0;
+				
             Debug.Assert(false);
 
             return false;
@@ -1637,6 +1643,14 @@ namespace FamiStudio
                 arp.SerializeState(buffer);
         }
 
+        private void FixupEpsm(int version)
+        {
+            // At version 13 (FamiStudio 3.3.0) we merge the EPSM stuff. We
+            // don't allow these files to be open with the mainline version.
+            if (version < 13 && (expansionMask & ExpansionType.EPSMMask) != 0)
+                SetExpansionAudioMask(expansionMask & (~ExpansionType.EPSMMask), expansionNumN163Channels);
+        }
+
         public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)
         {
             if (!buffer.IsForUndoRedo)
@@ -1713,6 +1727,7 @@ namespace FamiStudio
 
                 // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
                 SortEverything(buffer.Version < 10);
+                FixupEpsm(buffer.Version);
             }
         }
 
@@ -1737,9 +1752,10 @@ namespace FamiStudio
         public const int Mmc5  = 4;
         public const int N163  = 5;
         public const int S5B   = 6;
+        public const int EPSM  = 7;
         public const int Start = 1;
-        public const int End   = 6;
-        public const int Count = 7;
+        public const int End   = 7;
+        public const int Count = 8;
 
         public const int NoneMask = 0;
         public const int Vrc6Mask = (1 << 0);
@@ -1748,8 +1764,9 @@ namespace FamiStudio
         public const int Mmc5Mask = (1 << 3);
         public const int N163Mask = (1 << 4);
         public const int S5BMask  = (1 << 5);
+        public const int EPSMMask = (1 << 6);
 
-        public const int AllMask  = Vrc6Mask | Vrc7Mask | FdsMask | Mmc5Mask | N163Mask | S5BMask;
+        public const int AllMask  = Vrc6Mask | Vrc7Mask | FdsMask | Mmc5Mask | N163Mask | S5BMask | EPSMMask;
 
         public static readonly string[] Names =
         {
@@ -1759,7 +1776,8 @@ namespace FamiStudio
             "Famicom Disk System",
             "Nintendo MMC5",
             "Namco 163",
-            "Sunsoft 5B"
+            "Sunsoft 5B",
+            "EPSM"
         };
 
         public static readonly string[] ShortNames =
@@ -1770,7 +1788,8 @@ namespace FamiStudio
             "FDS",
             "MMC5",
             "N163",
-            "S5B"
+            "S5B",
+            "EPSM"
         };
 
         // TODO: This is really UI specific, move somewhere else...
@@ -1782,12 +1801,13 @@ namespace FamiStudio
             "InstrumentFds",
             "Instrument",
             "InstrumentNamco",
-            "InstrumentSunsoft"
+            "InstrumentSunsoft",
+            "InstrumentEPSM"
         };
 
         public static bool NeedsExpansionInstrument(int value)
         {
-            return value == Fds || value == N163 || value == Vrc6 || value == Vrc7 || value == S5B;
+            return value == Fds || value == N163 || value == Vrc6 || value == Vrc7 || value == S5B || value == EPSM;
         }
 
         // Makes sure all the bits set in "sub" are also set in "reference".
@@ -1813,6 +1833,7 @@ namespace FamiStudio
             if ((mask & ExpansionType.Mmc5Mask) != 0) return Mmc5;
             if ((mask & ExpansionType.N163Mask) != 0) return N163;
             if ((mask & ExpansionType.S5BMask)  != 0) return S5B;
+            if ((mask & ExpansionType.EPSMMask) != 0) return EPSM;
 
             return None;
         }

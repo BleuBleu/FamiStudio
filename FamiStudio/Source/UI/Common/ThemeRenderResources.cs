@@ -154,7 +154,7 @@ namespace FamiStudio
 
                 if (def.Bold == bold)
                 {
-                    var width = fonts[i].MeasureString(text);
+                    var width = fonts[i].MeasureString(text, false);
                     if (width > desiredWidth)
                         return fonts[Math.Max(0, i - 1)];
                 }

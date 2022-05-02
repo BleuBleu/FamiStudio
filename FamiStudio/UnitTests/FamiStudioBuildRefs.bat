@@ -5,6 +5,7 @@
 ..\bin\Release\FamiStudio.exe TestS5B.fms unit-test TestS5B_FamiStudioRef.txt
 ..\bin\Release\FamiStudio.exe TestVRC6.fms unit-test TestVRC6_FamiStudioRef.txt
 ..\bin\Release\FamiStudio.exe TestVRC7.fms unit-test TestVRC7_FamiStudioRef.txt
+..\bin\Release\FamiStudio.exe TestEPSM.fms unit-test TestEPSM_FamiStudioRef.txt
 ..\bin\Release\FamiStudio.exe TestMulti.fms unit-test TestMulti_FamiStudioRef.txt
 ..\bin\Release\FamiStudio.exe TestFamiTrackerTempo.fms unit-test TestFamiTrackerTempo_FamiStudioRef.txt
 

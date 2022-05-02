@@ -19,6 +19,7 @@ public:
 	void osc_output(int index, Blip_Buffer*);
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
+	void get_register_values(struct mmc5_register_values* regs);
 
 	enum { start_addr = 0x5000 };
 	enum { end_addr   = 0x5015 };
@@ -53,6 +54,15 @@ private:
 	short shadow_regs[shadow_regs_count];
 
 	void run_until(cpu_time_t);
+};
+
+// Must match the definition in NesApu.cs.
+struct mmc5_register_values
+{
+	// $5000 to $5007
+	// $5015
+	unsigned char regs[9];
+	unsigned char ages[9];
 };
 
 #endif
