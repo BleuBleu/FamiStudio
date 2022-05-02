@@ -121,9 +121,9 @@ namespace FamiStudio
 
         private static string GetPitchString(int period, double frequency)
         {
-            if (period == 0)
+            if (period == 0 || frequency < NesApu.FreqC0)
             {
-                return "N/A";
+                return $"---+{Math.Abs(0):00} ({0,7:0.00}Hz)";
             }
             else
             {
