@@ -88,7 +88,7 @@ namespace FamiStudio
                     // raw result of the emulation.
                     if (centerPan && outputsStereo)
                     {
-                        var player = new WavPlayer(sampleRate, outputsStereo, loopCount, -1, 0, NesApu.TND_MODE_SEPARATE);
+                        var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelMask, 0, NesApu.TND_MODE_SEPARATE);
                         samples = player.GetSongSamples(song, project.PalMode, duration, log);
                         numChannels = 2;
                     }
