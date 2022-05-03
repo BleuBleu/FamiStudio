@@ -10,7 +10,7 @@ namespace FamiStudio
 {
     static class AudioExportUtils
     {
-         public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, int channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, bool log, Action<short[], int, string> function)
+        public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, int channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, bool log, Action<short[], int, string> function)
         {
             var project = song.Project;
             var introDuration = separateIntro ? GetIntroDuration(song, sampleRate, log) : 0;
@@ -63,7 +63,7 @@ namespace FamiStudio
                             Array.Resize(ref samples, introDuration);
 
                             var channelIntroFileName = Utils.AddFileSuffix(filename, "_" + song.Channels[channelIdx].ShortName + "_Intro");
-                            var channelLoopFileName  = Utils.AddFileSuffix(filename, "_" + song.Channels[channelIdx].ShortName);
+                            var channelLoopFileName = Utils.AddFileSuffix(filename, "_" + song.Channels[channelIdx].ShortName);
 
                             function(samples, numChannels, channelIntroFileName);
                             function(loopSamples, numChannels, channelLoopFileName);
@@ -97,7 +97,7 @@ namespace FamiStudio
                         Log.LogMessageConditional(log, LogSeverity.Info, $"Exporting channels individually due to custom panning, this will take longer...");
 
                         var channelSamples = GetIndividualChannelSamples(song, outputsStereo, channelMask, sampleRate, loopCount, project.PalMode, duration, log);
-                        
+
                         var numGeneratedSamples = 0;
                         for (int i = 0; i < channelSamples.Length; i++)
                         {
@@ -153,7 +153,7 @@ namespace FamiStudio
                     var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelMask);
                     var stereoSamples = player.GetSongSamples(song, project.PalMode, duration, log);
 
-                    samples = outputsStereo ? new short[stereoSamples.Length/2] : stereoSamples;
+                    samples = outputsStereo ? new short[stereoSamples.Length / 2] : stereoSamples;
 
                     if (outputsStereo)
                     {
