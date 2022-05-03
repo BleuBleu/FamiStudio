@@ -110,7 +110,7 @@ namespace FamiStudio
 
         // Mobile
         private readonly string AllowVibrationTooltip           = "When enabled, the phone will vibrate on long pressed, piano keys, etc.";
-        private readonly string DoubleClickDeleteTooltip        = "When enabled, double tapping on a pattern or note will delete it (experimental).";
+        private readonly string DoubleClickDeleteTooltip        = "When enabled, double tapping on a pattern or note will delete it.";
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;

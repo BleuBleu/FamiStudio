@@ -32,7 +32,7 @@ int __stdcall ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples
 
 	for (int i = 0; i < wav_num_samples; i += samples_per_pass * wav_channels)
 	{
-		int batch_size = (wav_num_samples - i) * sizeof(short) * wav_channels;
+		int batch_size = (wav_num_samples - i) * sizeof(short);
 
 		if (batch_size >= wav_buffer_size)
 		{

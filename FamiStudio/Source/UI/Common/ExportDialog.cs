@@ -497,7 +497,7 @@ namespace FamiStudio
                 {
                     new Thread(() =>
                     {
-                        app.BeginLogTask(true, "Exporting Audio", "Export long songs with lots of channels may take a while.");
+                        app.BeginLogTask(true, "Exporting Audio", "Exporting long songs with lots of channels may take a while.");
 
                         ExportWavMp3Action(f);
                         

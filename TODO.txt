@@ -7,6 +7,13 @@ Testing + Packaging
 	- Instrument packages
 - Update doc.
 
+Testing
+/ Crash when exporting MP3?
+	=> Compile on linux/macos.
+- Crash copy pasting?
+- Copy paste something at pattern 257
+- 
+
 
 Feature list:
 - EPSM support
@@ -18,6 +25,7 @@ Feature list:
 - Option not to clamp periods/notes to make the app behave more like the NSF driver
 - Minor cosmetic changes (ADSR diagrams, tabs in instrument editor, etc.)
 - CTRL+A selects all patterns/notes in sequencer/piano roll.
+- File associations on MacOS
 - Tons of small bugfixes
 
 3.4.0
