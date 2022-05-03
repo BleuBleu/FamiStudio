@@ -98,20 +98,20 @@ namespace FamiStudio
 
                         var channelSamples = GetIndividualChannelSamples(song, outputsStereo, channelMask, sampleRate, loopCount, project.PalMode, duration, log);
                         
-                        var numStereoSamples = 0;
+                        var numGeneratedSamples = 0;
                         for (int i = 0; i < channelSamples.Length; i++)
                         {
                             if (channelSamples[i] != null)
                             {
-                                numStereoSamples = channelSamples[i].Length;
+                                numGeneratedSamples = channelSamples[i].Length;
                                 break;
                             }
                         }
 
                         // Mix and interleave samples.
-                        samples = outputsStereo ? new short[numStereoSamples] : new short[numStereoSamples * 2];
+                        samples = outputsStereo ? new short[numGeneratedSamples] : new short[numGeneratedSamples * 2];
 
-                        for (int i = 0; i < numStereoSamples; i++)
+                        for (int i = 0; i < numGeneratedSamples; i++)
                         {
                             float l = 0;
                             float r = 0;
@@ -120,7 +120,7 @@ namespace FamiStudio
                             {
                                 if (channelSamples[j] != null)
                                 {
-                                    float sl = 1.0f - Utils.Clamp(2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
+                                    float sl = 1.0f - Utils.Clamp( 2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
                                     float sr = 1.0f - Utils.Clamp(-2.0f * (pan[j] - 0.5f), 0.0f, 1.0f);
 
                                     l += channelSamples[j][i] * sl;
