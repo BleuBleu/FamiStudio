@@ -259,7 +259,8 @@ namespace FamiStudio
 
         public void ClearPatternCustomSettings(int patternIdx)
         {
-            patternCustomSettings[patternIdx].Clear();
+            if (patternIdx < songLength)
+                patternCustomSettings[patternIdx].Clear();
             InvalidateCumulativePatternCache();
             UpdatePatternStartNotes();
         }
