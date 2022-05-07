@@ -208,6 +208,16 @@ namespace FamiStudio
                     }
                     foundAnyUnsupportedFeature = true;
                 }
+                if (note.IsRelease && !channel.SupportsReleaseNotes)
+                {
+                    if (!checkOnly)
+                    {
+                        if (notesToRemove == null)
+                            notesToRemove = new HashSet<int>();
+                        notesToRemove.Add(kv.Key);
+                    }
+                    foundAnyUnsupportedFeature = true;
+                }
                 if (note.HasRelease && !channel.SupportsReleaseNotes)
                 {
                     if (!checkOnly)
