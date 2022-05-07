@@ -7,14 +7,6 @@ Testing + Packaging
 	- Instrument packages
 - Update doc.
 
-Testing
-/ Crash when exporting MP3?
-	=> Compile on linux/macos.
-- Crash copy pasting?
-- Copy paste something at pattern 257
-- 
-
-
 Feature list:
 - EPSM support
 - Register viewer (desktop version only)
@@ -22,11 +14,10 @@ Feature list:
 - Ability to override initial DMC value for each sample assignment
 - VGM export
 - Bamboo Tracker instruments import (desktop version only)
-- Option not to clamp periods/notes to make the app behave more like the NSF driver
 - Minor cosmetic changes (ADSR diagrams, tabs in instrument editor, etc.)
-- CTRL+A selects all patterns/notes in sequencer/piano roll.
-- File associations on MacOS
-- Tons of small bugfixes
+- CTRL+A selects all patterns/notes in sequencer/piano roll
+- Option not to clamp periods/notes to make the app behave more like the NSF driver
+- Tons of small bugfixes (N163 tuning, crashes, etc.)
 
 3.4.0
 =====
@@ -44,7 +35,6 @@ P0:
 	- PE
 P1:
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value
-- Export selected song by default
 - Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
