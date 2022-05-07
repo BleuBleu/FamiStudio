@@ -236,6 +236,27 @@ namespace FamiStudio
                 numer /= 2;
             denom = 100000;
         }
+
+        protected string GetTimeLeftString(ref DateTime lastTime, int numFramesRendered, int numFramesTotal, int batchCount)
+        {
+            var currTime = DateTime.Now;
+            var str = "";
+
+            if (numFramesRendered > 0)
+            {
+                var fps = batchCount / (currTime - lastTime).TotalSeconds;
+                var timeLeft = (int)Math.Round((numFramesTotal - numFramesRendered) / fps);
+
+                // We dont have the room to display FPS on Mobile.
+                if (PlatformUtils.IsDesktop)
+                    str = $" ({fps:0.0} FPS, {timeLeft} sec left)";
+                else
+                    str = $" ({timeLeft} sec left)";
+            }
+
+            lastTime = currTime;
+            return str;
+        }
     }
 
     class VideoChannelState

@@ -150,6 +150,7 @@ namespace FamiStudio
             var videoImage = new byte[videoResY * videoResX * 4];
             var oscilloscope = new float[oscNumVertices, 2];
             var success = true;
+            var lastTime = DateTime.Now;
 
 #if !DEBUG
             try
@@ -165,7 +166,7 @@ namespace FamiStudio
                     }
 
                     if ((f % 100) == 0)
-                        Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}");
+                        Log.LogMessage(LogSeverity.Info, $"Rendering frame {f} / {metadata.Length}{GetTimeLeftString(ref lastTime, f, metadata.Length, 100)}");
 
                     Log.ReportProgress(f / (float)(metadata.Length - 1));
 
