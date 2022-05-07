@@ -1429,6 +1429,20 @@ namespace FamiStudio
             mainForm.Text = title;
         }
 
+        public void ShowInstrumentError(Channel channel, bool beep)
+        {
+            var message = "Selected instrument is incompatible with channel!";
+            if (channel != null)
+            {
+                var newLine = PlatformUtils.IsDesktop ? "\n" : " ";
+                if (channel.Type == ChannelType.Dpcm)
+                    message += $"{newLine}Only the 'DPCM Instrument' can be used on the DPCM channel.";
+                else if (channel.IsExpansionChannel)
+                    message += $"{newLine}Expansion channels require using the correct instrument type.";
+            }
+            DisplayNotification(message, true, beep);
+        }
+
         public void PlayInstrumentNote(int n, bool showWarning, bool allowRecording, bool custom = false, Instrument customInstrument = null, Arpeggio customArpeggio = null, float stopDelay = 0.0f)
         {
             Note note = new Note(n);
@@ -1457,7 +1471,7 @@ namespace FamiStudio
                 else
                 {
                     if (showWarning)
-                        DisplayNotification("Selected instrument is incompatible with channel!", true, false);
+                        ShowInstrumentError(song.Channels[channel], false);
                     return;
                 }
             }

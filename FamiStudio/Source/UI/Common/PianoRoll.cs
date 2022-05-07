@@ -4678,11 +4678,6 @@ namespace FamiStudio
             }
         }
 
-        private void ShowInstrumentError()
-        {
-            App.DisplayNotification("Selected instrument is incompatible with channel!");
-        }
-
         public void ToggleEffectPannel()
         {
             if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM)
@@ -5257,7 +5252,7 @@ namespace FamiStudio
 
             if (!channel.SupportsInstrument(App.SelectedInstrument))
             {
-                App.DisplayNotification("Selected instrument is incompatible with channel!");
+                App.ShowInstrumentError(channel, true);
                 return null;
             }
 
@@ -6602,7 +6597,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        ShowInstrumentError();
+                        App.ShowInstrumentError(channel, true);
                         return;
                     }
                 }
@@ -6894,7 +6889,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    ShowInstrumentError();
+                    App.ShowInstrumentError(channel, true);
                 }
             }
         }
@@ -7332,8 +7327,10 @@ namespace FamiStudio
         }
 
         private void StartNoteCreation(MouseEventArgs e, NoteLocation location, byte noteValue)
-        {
-            if (Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument))
+        { 
+            var channel = Song.Channels[editChannel];
+
+            if (channel.SupportsInstrument(App.SelectedInstrument))
             {
                 App.PlayInstrumentNote(noteValue, false, false);
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.CreateNote, true);
@@ -7341,7 +7338,7 @@ namespace FamiStudio
             }
             else
             {
-                ShowInstrumentError();
+                App.ShowInstrumentError(channel, true);
             }
         }
 
@@ -7632,7 +7629,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    ShowInstrumentError();
+                    App.ShowInstrumentError(channel, true);
                 }
             }
 
