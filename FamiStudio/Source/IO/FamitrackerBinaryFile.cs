@@ -347,11 +347,25 @@ namespace FamiStudio
 
         private bool ReadSequences2A03Vrc6(int idx, Envelope[,] envelopeArray)
         {
+            // Version 5 had a serialization error, im not handling this.
+            if (blockVersion == 5)
+            {
+                Log.LogMessage(LogSeverity.Error, $"Unsupported block version, please open the FTM file with FamiTracker 0.4.6 and re-save it to fix the issue.");
+                return false;
+            }
+
             var count = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
             var indices = new int[count];
             var types = new int[count];
             var loops = new int[count];
+            var releases = new int[count];
+            var settings = new int[count];
 
+            for (int i = 0; i < count; ++i)
+            {
+                releases[i] = -1;
+            }
+            
             for (int i = 0; i < count; ++i)
             {
                 var index = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
@@ -362,6 +376,13 @@ namespace FamiStudio
                 indices[i] = index;
                 types[i] = type;
                 loops[i] = loopPoint;
+
+                // Version 4 had the release/settings here.
+                if (blockVersion == 4)
+                {
+                    releases[i] = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                    settings[i] = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                }
 
                 var env = new Envelope(EnvelopeTypeLookup[type]);
 
@@ -374,11 +395,20 @@ namespace FamiStudio
                     env.Values[j] = (sbyte)bytes[idx++];
             }
 
+            if (blockVersion == 6)
+            {
+                for (int i = 0; i < count; ++i)
+                {
+                    releases[i] = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                    settings[i] = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                }
+            }
+
             for (int i = 0; i < count; ++i)
             {
                 var loopPoint = loops[i];
-                var releasePoint = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
-                var setting = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
+                var releasePoint = releases[i];
+                var setting = settings[i];
                 var type = types[i];
 
                 var env = envelopeArray[indices[i], types[i]];
