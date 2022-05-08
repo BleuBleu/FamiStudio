@@ -15,8 +15,10 @@ Feature list:
 - VGM export
 - Bamboo Tracker instruments import (desktop version only)
 - Minor cosmetic changes (ADSR diagrams, tabs in instrument editor, etc.)
-- CTRL+A selects all patterns/notes in sequencer/piano roll
+- CTRL+A selects all patterns/notes in sequencer/piano roll on desktop
+- Additional selection options on mobile (select note/pattern/all)
 - Option not to clamp periods/notes to make the app behave more like the NSF driver
+- Experimental file association on MacOS (Thanks beetrootpaul!)
 - Tons of small bugfixes (N163 tuning, crashes, etc.)
 
 3.4.0

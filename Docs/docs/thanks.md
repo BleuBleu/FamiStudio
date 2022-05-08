@@ -23,10 +23,12 @@ Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis
 
 A few demo songs are also provided with FamiStudio. Unless mentionned, the demo songs are my re-creations, done by reverse-engineering the NSF.
 
-* City (by <a href='https://www.youtube.com/channel/UCakSA488ft0bMgWoJmnnT8Q'>How2Bboss</a>. Thanks!!!)
-* Dedricil - Full Soundtrack (by <a href='https://www.youtube.com/channel/UCakSA488ft0bMgWoJmnnT8Q'>How2Bboss</a>. Thanks!!!)
+* Another Winter - Anamanagughi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
+* Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Layla : The Iris Missions - Iris (by Supper, my approximate recreation)
 * Tower of Heaven - Indignant Divinity (Flashygoodness, cover by <a href='https://www.youtube.com/watch?v=0qV4dSBOH5s'>Danooct1</a>. Thanks!!!)
+* Green Hill Zone Theme - Sonic (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>. Thanks!!!)
 * Mega Man 2 - Stage Select & Dr. Wily's Castle
 * Journey To Silius - Intro
 * DuckTales! - The Moon

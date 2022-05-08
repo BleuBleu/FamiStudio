@@ -2,6 +2,28 @@
 
 Version history / release notes for each release.
 
+## Version 3.3.0
+
+Changes:
+
+* EPSM support (Thanks Perkka!)
+* Register viewer (desktop version only)
+* Delta Counter (Zxx) effect support
+* Ability to override initial DMC value for each sample assignment
+* VGM export (Thanks Perkka!)
+* Bamboo Tracker instruments import (desktop version only) (Thanks Perkka!)
+* Minor cosmetic changes (ADSR diagrams, tabs in instrument editor, etc.)
+* CTRL+A selects all patterns/notes in sequencer/piano roll on desktop
+* Additional selection options on mobile (select note/pattern/all)
+* Option not to clamp periods/notes to make the app behave more like the NSF driver
+* Experimental file association on MacOS (Thanks beetrootpaul!)
+* Tons of small bugfixes (N163 tuning, crashes, etc.)
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/n1sOtT-s65A" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
+
 ## Version 3.2.3 (Hotfix)
 
 Fixes/Changes:
