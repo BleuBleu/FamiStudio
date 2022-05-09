@@ -184,6 +184,7 @@
     <Compile Include="Source\UI\Common\ThemeRenderResources.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
+    <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />

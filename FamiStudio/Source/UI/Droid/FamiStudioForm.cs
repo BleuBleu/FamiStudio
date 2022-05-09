@@ -535,7 +535,7 @@ namespace FamiStudio
             {
                 var opt = options[i];
 
-                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{opt.Image}.png", true)); 
+                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.Mobile{opt.Image}.png", true)); 
                 bmp.SetBounds(0, 0, imageSize, imageSize);
 
                 var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));

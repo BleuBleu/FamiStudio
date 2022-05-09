@@ -22,6 +22,7 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
         public MobilePiano MobilePiano => controls.MobilePiano;
+        public new ContextMenu ContextMenu => controls.ContextMenu;
         public static FamiStudioForm Instance => null;
         public new GLControl ActiveControl => activeControl;
 
@@ -157,7 +158,11 @@ namespace FamiStudio
 
             var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             if (ctrl != null)
+            {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
                 ctrl.MouseWheel(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            }
         }
 
         protected override void RenderFrame(bool force = false)
@@ -217,6 +222,8 @@ namespace FamiStudio
             lastButtonPress = e.Button;
             if (ctrl != null)
             {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
                 SetActiveControl(ctrl);
                 ctrl.MouseDown(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
             }
@@ -245,7 +252,11 @@ namespace FamiStudio
                 ReleaseMouse();
 
             if (ctrl != null)
+            {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
                 ctrl.MouseUp(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            }
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -255,7 +266,11 @@ namespace FamiStudio
             var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
             lastButtonPress = e.Button;
             if (ctrl != null)
+            {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
                 ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -313,7 +328,11 @@ namespace FamiStudio
                 var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
 
                 if (ctrl != null)
+                {
+                    if (ctrl != ContextMenu)
+                        controls.HideContextMenu();
                     ctrl.MouseHorizontalWheel(e);
+                }
             }
             else if (m.Msg == 0x0231) // WM_ENTERSIZEMOVE 
             {
@@ -328,18 +347,32 @@ namespace FamiStudio
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            famistudio.KeyDown(e, (int)e.KeyCode);
-            foreach (var ctrl in controls.Controls)
-                ctrl.KeyDown(e);
+            if (controls.IsContextMenuActive)
+            {
+                controls.ContextMenu.KeyDown(e);
+            }
+            else
+            {
+                famistudio.KeyDown(e, (int)e.KeyCode);
+                foreach (var ctrl in controls.Controls)
+                    ctrl.KeyDown(e);
+            }
 
             base.OnKeyDown(e);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            famistudio.KeyUp(e, (int)e.KeyCode);
-            foreach (var ctrl in controls.Controls)
-                ctrl.KeyUp(e);
+            if (controls.IsContextMenuActive)
+            {
+                controls.ContextMenu.KeyUp(e);
+            }
+            else
+            {
+                famistudio.KeyUp(e, (int)e.KeyCode);
+                foreach (var ctrl in controls.Controls)
+                    ctrl.KeyUp(e);
+            }
 
             base.OnKeyUp(e);
         }
@@ -390,8 +423,14 @@ namespace FamiStudio
             }
         }
 
-        public void ShowContextMenu(ContextMenuOption[] options)
+        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
+            controls.ShowContextMenu(x, y, options);
+        }
+
+        public void HideContextMenu()
+        {
+            controls.HideContextMenu();
         }
 
         public static bool IsKeyDown(Keys k)
@@ -409,9 +448,18 @@ namespace FamiStudio
                 keyData == Keys.F10)
             {
                 var e = new KeyEventArgs(keyData);
-                famistudio.KeyDown(e, (int)keyData);
-                foreach (var ctrl in controls.Controls)
-                    ctrl.KeyDown(e);
+
+                if (controls.IsContextMenuActive)
+                {
+                    controls.ContextMenu.KeyDown(e);
+                }
+                else
+                {
+                    famistudio.KeyDown(e, (int)keyData);
+                    foreach (var ctrl in controls.Controls)
+                        ctrl.KeyDown(e);
+                }
+
                 return true;
             }
             else

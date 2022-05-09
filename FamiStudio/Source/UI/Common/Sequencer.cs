@@ -80,6 +80,7 @@ namespace FamiStudio
         bool canFling = false;
         bool continuouslyFollowing = false;
         bool captureThresholdMet = false;
+        bool mouseMovedDuringCapture = false;
         bool captureRealTimeUpdate = false;
         bool showExpansionIcons = false;
         bool timeOnlySelection = false;
@@ -138,7 +139,7 @@ namespace FamiStudio
         static readonly bool[] captureNeedsThreshold = new[]
         {
             false, // None
-            PlatformUtils.IsMobile, // Select
+            true,  // Select
             true,  // DragSelection
             false, // AltZoom
             false, // DragSeekBar
@@ -1041,6 +1042,7 @@ namespace FamiStudio
             canFling = false;
             captureOperation = op;
             captureThresholdMet = !captureNeedsThreshold[(int)op];
+            mouseMovedDuringCapture = false;
             captureRealTimeUpdate = captureWantsRealTimeUpdate[(int)op];
             GetClampedPatternForCoord(x, y, out captureChannelIdx, out capturePatternIdx);
         }
@@ -1138,27 +1140,79 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if ((left || right) && e.X < trackNameSizeX)
+            if (e.X < trackNameSizeX)
             {
-                var trackIcon = GetTrackIconForPos(e);
-                var ghostIcon = GetTrackGhostForPos(e);
-
-                if (trackIcon >= 0)
+                if (left)
                 {
-                    if (left)
-                        App.ToggleChannelActive(trackIcon);
-                    else
-                        App.ToggleChannelSolo(trackIcon);
+                    var trackIcon = GetTrackIconForPos(e);
+                    var ghostIcon = GetTrackGhostForPos(e);
 
-                    return true;
+                    if (trackIcon >= 0)
+                    {
+                        // MATTT : I guess we dont have solo shortcut anymore.
+                        //if (left)
+                            App.ToggleChannelActive(trackIcon);
+                        //else
+                        //    App.ToggleChannelSolo(trackIcon);
+
+                        return true;
+                    }
+                    else if (ghostIcon >= 0)
+                    {
+                        App.ToggleChannelForceDisplay(ghostIcon);
+                        return true;
+                    }
                 }
-                else if (ghostIcon >= 0)
-                {
-                    App.ToggleChannelForceDisplay(ghostIcon);
-                    return true;
-                }
+
             }
 
+            return false;
+        }
+
+        private bool HandleMouseUpChannelName(MouseEventArgs e)
+        {
+            if (e.X < trackNameSizeX && e.Button.HasFlag(MouseButtons.Right))
+            {
+                var channelIdx = GetChannelIndexForCoord(e.Y);
+
+                // MATTT : Icons + shortcuts!
+                App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
+                {
+                    new ContextMenuOption("MouseWheel", "Toggle Mute Channel", () => { App.ToggleChannelActive(channelIdx); }),
+                    new ContextMenuOption("MouseWheel", "Toggle Solo Channel", () => { App.ToggleChannelSolo(channelIdx); }),
+                    new ContextMenuOption("MouseWheel", "Force Display Channel", () => { App.ToggleChannelForceDisplay(channelIdx); })
+                });
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleMouseUpHeader(MouseEventArgs e)
+        {
+            if (IsMouseInHeader(e) && e.Button.HasFlag(MouseButtons.Right))
+            {
+                var patternIdx = GetPatternIndexForCoord(e.X);
+
+                if (patternIdx >= 0)
+                {
+                    // MATTT : Icons + shortcuts!
+                    App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
+                    {
+                        new ContextMenuOption("MouseWheel", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
+                        new ContextMenuOption("MouseWheel", "Custom Pattern Settings...", () => { EditPatternCustomSettings(new Point(e.X, e.Y), patternIdx); } )
+                    });
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleMouseUpPatternArea(MouseEventArgs e)
+        {
             return false;
         }
 
@@ -1194,7 +1248,6 @@ namespace FamiStudio
             if (IsMouseInHeader(e) && e.Button.HasFlag(MouseButtons.Right))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.Select);
-                UpdateSelection(e.X, e.Y, true);
                 return true;
             }
 
@@ -1275,7 +1328,6 @@ namespace FamiStudio
                 else if (right)
                 {
                     StartCaptureOperation(e.X, e.Y, CaptureOperation.Select);
-                    UpdateSelection(e.X, e.Y, true);
                     return true;
                 }
             }
@@ -1304,6 +1356,7 @@ namespace FamiStudio
             if (HandleMouseDownChannelChange(e)) goto Handled;
             if (HandleMouseDownAltZoom(e)) goto Handled;
             if (HandleMouseDownPatternArea(e)) goto Handled;
+
             return;
 
         Handled:
@@ -2070,13 +2123,29 @@ namespace FamiStudio
             base.OnMouseUp(e);
 
             bool middle = e.Button.HasFlag(MouseButtons.Middle);
+            bool doMouseUp = false;
 
             if (middle)
+            {
                 panning = false;
+            }
             else
+            {
+                doMouseUp = captureOperation == CaptureOperation.None || !mouseMovedDuringCapture;
                 EndCaptureOperation(e.X, e.Y);
+            }
 
             UpdateCursor();
+
+            if (doMouseUp)
+            {
+                if (HandleMouseUpChannelName(e)) goto Handled;
+                if (HandleMouseUpHeader(e)) goto Handled;
+                if (HandleMouseUpPatternArea(e)) goto Handled;
+                return;
+                Handled:
+                    MarkDirty();
+            }
         }
 
         private void AbortCaptureOperation()
@@ -2454,13 +2523,21 @@ namespace FamiStudio
         {
             const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
 
-            if (captureOperation != CaptureOperation.None && !captureThresholdMet)
+            var captureThresholdJustMet = false;
+
+            if (captureOperation != CaptureOperation.None)
             {
-                if (Math.Abs(x - captureMouseX) >= CaptureThreshold ||
-                    Math.Abs(y - captureMouseY) >= CaptureThreshold)
+                if (!captureThresholdMet)
                 {
-                    captureThresholdMet = true;
+                    if (Math.Abs(x - captureMouseX) >= CaptureThreshold ||
+                        Math.Abs(y - captureMouseY) >= CaptureThreshold)
+                    {
+                        captureThresholdMet = true;
+                        captureThresholdJustMet = true;
+                    }
                 }
+
+                mouseMovedDuringCapture |= (x != captureMouseX || y != captureMouseY);
             }
 
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
@@ -2468,7 +2545,7 @@ namespace FamiStudio
                 switch (captureOperation)
                 {
                     case CaptureOperation.Select:
-                        UpdateSelection(x, y);
+                        UpdateSelection(x, y, captureThresholdJustMet);
                         break;
                     case CaptureOperation.AltZoom:
                         UpdateAltZoom(x, y);
