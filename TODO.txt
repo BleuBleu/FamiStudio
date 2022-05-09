@@ -1,25 +1,6 @@
-3.3.0
+3.3.1
 =====
-Testing + Packaging
-===================
-/ Demo songs:
-	- Sonic demo song (how2 will need to fix volumes).
-	- Instrument packages
-- Update doc.
-
-Feature list:
-- EPSM support
-- Register viewer (desktop version only)
-- Delta Counter (Zxx) effect support
-- Ability to override initial DMC value for each sample assignment
-- VGM export
-- Bamboo Tracker instruments import (desktop version only)
-- Minor cosmetic changes (ADSR diagrams, tabs in instrument editor, etc.)
-- CTRL+A selects all patterns/notes in sequencer/piano roll on desktop
-- Additional selection options on mobile (select note/pattern/all)
-- Option not to clamp periods/notes to make the app behave more like the NSF driver
-- Experimental file association on MacOS (Thanks beetrootpaul!)
-- Tons of small bugfixes (N163 tuning, crashes, etc.)
+- Include Demo instruments!!
 
 3.4.0
 =====
