@@ -611,15 +611,15 @@
     <EmbeddedResource Include="Resources\Stop.png" />
     <EmbeddedResource Include="Resources\Transform%402x.png" />
     <EmbeddedResource Include="Resources\Transform.png" />
-    <EmbeddedResource Include="Resources\Tutorial0.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial1.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial2.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial3.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial4.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial5.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial6.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial7.jpg" />
-    <EmbeddedResource Include="Resources\Tutorial8.jpg" />
+    <EmbeddedResource Include="Resources\Tutorial0.gif" />
+    <EmbeddedResource Include="Resources\Tutorial1.gif" />
+    <EmbeddedResource Include="Resources\Tutorial2.gif" />
+    <EmbeddedResource Include="Resources\Tutorial3.gif" />
+    <EmbeddedResource Include="Resources\Tutorial4.gif" />
+    <EmbeddedResource Include="Resources\Tutorial5.gif" />
+    <EmbeddedResource Include="Resources\Tutorial6.gif" />
+    <EmbeddedResource Include="Resources\Tutorial7.gif" />
+    <EmbeddedResource Include="Resources\Tutorial8.gif" />
     <EmbeddedResource Include="Resources\Undo%402x.png" />
     <EmbeddedResource Include="Resources\Undo.png" />
     <EmbeddedResource Include="Resources\VideoWatermark.png" />
@@ -634,6 +634,7 @@
     <EmbeddedResource Include="Resources\YellowChecker.png" />
     <EmbeddedResource Include="Resources\Yes%402x.png" />
     <EmbeddedResource Include="Resources\Yes.png" />
+    <EmbeddedResource Include="Resources\test.gif" />
     <EmbeddedResource Include="Rom\fds.fds" />
     <EmbeddedResource Include="Rom\fds_famitracker.fds" />
     <EmbeddedResource Include="Rom\rom_famitracker_ntsc.nes" />
@@ -642,6 +643,9 @@
     <EmbeddedResource Include="Rom\rom_pal.nes" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="GifDec.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="NesSndEmu.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

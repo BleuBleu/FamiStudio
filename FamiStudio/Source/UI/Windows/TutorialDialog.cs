@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -15,6 +18,12 @@ namespace FamiStudio
         private Label label1;
         private CheckBox checkBoxDontShow;
         private ToolTip toolTip;
+
+        private Timer gifTimer = new Timer();
+        private IntPtr gif;
+        private Bitmap gifBmp;
+        private byte[] gifData;
+        private GCHandle gifHandle;
 
         public TutorialDialog()
         {
@@ -53,6 +62,9 @@ namespace FamiStudio
             toolTip.SetToolTip(buttonRight, "Next");
             toolTip.SetToolTip(buttonLeft, "Previous");
 
+            gifTimer.Interval = 10;
+            gifTimer.Tick += GifTimer_Tick;
+
             try
             {
                 label1.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 10.0f, FontStyle.Regular);
@@ -61,6 +73,11 @@ namespace FamiStudio
             catch {}
 
             SetPage(0);
+        }
+
+        private void GifTimer_Tick(object sender, EventArgs e)
+        {
+            UpdateGif();
         }
 
         private void InitializeComponent()
@@ -125,12 +142,64 @@ namespace FamiStudio
             ResumeLayout(true);
         }
 
+        private void OpenGif(string filename)
+        {
+            if (gif != IntPtr.Zero)
+            {
+                CloseGif();
+            }
+
+            // GifDec works only with files, create a copy.
+            // TODO : Change it to take a buffer as input.
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{filename}"))
+            {
+                gifData = new byte[stream.Length];
+                stream.Read(gifData, 0, (int)stream.Length);
+                stream.Close();
+            }
+
+            gifHandle = GCHandle.Alloc(gifData, GCHandleType.Pinned);
+            
+            gif = GifOpen(gifHandle.AddrOfPinnedObject(), 1);
+
+            var width  = GifGetWidth(gif);
+            var height = GifGetHeight(gif);
+
+            gifBmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            pictureBox1.Image = gifBmp;
+        }
+
+        private void CloseGif()
+        {
+            if (gif != IntPtr.Zero)
+            {
+                gifData = null;
+                gifHandle.Free();
+                gifTimer.Stop();
+                GifClose(gif);
+                gif = IntPtr.Zero;
+                gifBmp = null;
+            }
+        }
+
+        private void UpdateGif()
+        {
+            var data = gifBmp.LockBits(new Rectangle(0, 0, gifBmp.Width, gifBmp.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            GifAdvanceFrame(gif, data.Scan0, data.Stride);
+            gifTimer.Interval = GifGetFrameDelay(gif);
+            gifTimer.Start();
+            gifBmp.UnlockBits(data);
+            pictureBox1.Invalidate();
+        }
+
         private void SetPage(int idx)
         {
             pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Length - 1);
-            pictureBox1.Image = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{TutorialImages[pageIndex]}"));
             label1.Text = TutorialMessages[pageIndex];
             buttonLeft.Visible = pageIndex != 0;
+
+            OpenGif(TutorialImages[pageIndex]);
+            UpdateGif();
 
             string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
             buttonRight.Image = pageIndex == TutorialMessages.Length - 1 ?
