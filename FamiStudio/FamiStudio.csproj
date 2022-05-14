@@ -634,7 +634,6 @@
     <EmbeddedResource Include="Resources\YellowChecker.png" />
     <EmbeddedResource Include="Resources\Yes%402x.png" />
     <EmbeddedResource Include="Resources\Yes.png" />
-    <EmbeddedResource Include="Resources\test.gif" />
     <EmbeddedResource Include="Rom\fds.fds" />
     <EmbeddedResource Include="Rom\fds_famitracker.fds" />
     <EmbeddedResource Include="Rom\rom_famitracker_ntsc.nes" />
