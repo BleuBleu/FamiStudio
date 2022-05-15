@@ -6,16 +6,28 @@
 =====
 P0:
 - Right-click functionality.
-	- Tooltips
+  - FIrst click when menu is open should just close it, ignore the click itself.
+  - MouseMove still seems to be sent when menu is open. Toolbar highlights?
+	/ Tooltips
 	- Tooltips where a context menu can appear.
+	x Offpixel ctx menu by 1 pixel, otherwise double click chooses first item.
 	- Icons
 	- Unify ShowMobileContextMenu/ShowDesktopContextMenu
 	- Toolbar
-		- On mobile, replace the right click by context menus.
+		- Play rate should just change the rate, not necessarely start playing.
+		- On mobile, replace the right click by context menus. => Not sure what that mean? Diff with master.
+		- Add recent files on desktop.
+		- 
 	- Sequencer :
-		- Pattern area.
+		/ Pattern area.
+		x Use double-click for solo channel
+		x Double-click delete pattern
+		- Review pattenr header click, not sure i like it.
+		- No shift for square selection.
 	- Piano roll
+		- The whole thing
 	- PE
+		- The whole thing.
 P1:
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value
 - Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
@@ -27,7 +39,7 @@ P1:
 - Uncompressed envelopes
 - Improve no-attack.
 P2:
-- Volume/effect scaling
+- Volume/effect scaling, easy one we have context menus.
 - CLI only EXE (Linux only).
 - Paste special, option to rename patterns.
 - Way to temporarely disable snapping (FL studio does it with ALT).

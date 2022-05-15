@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,7 +32,8 @@ namespace FamiStudio
         protected virtual void OnRenderInitialized(GLGraphics g) { }
         protected virtual void OnRenderTerminated() { }
         protected virtual void OnRender(GLGraphics g) { }
-        protected virtual void OnMouseDown(System.Windows.Forms.MouseEventArgs e) { }
+        protected virtual void OnMouseDown(MouseEventArgsEx e) { }
+        protected virtual void OnMouseDownDelayed(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnMouseUp(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnMouseDoubleClick(System.Windows.Forms.MouseEventArgs e) { }
         protected virtual void OnResize(EventArgs e) { }
@@ -56,7 +58,8 @@ namespace FamiStudio
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
         public void Render(GLGraphics g) { OnRender(g); }
-        public void MouseDown(System.Windows.Forms.MouseEventArgs e) { OnMouseDown(e); }
+        public void MouseDown(MouseEventArgsEx e) { OnMouseDown(e); }
+        public void MouseDownDelayed(System.Windows.Forms.MouseEventArgs e) { OnMouseDownDelayed(e); }
         public void MouseUp(System.Windows.Forms.MouseEventArgs e) { OnMouseUp(e); }
         public void MouseDoubleClick(System.Windows.Forms.MouseEventArgs e) { OnMouseDoubleClick(e); }
         public void MouseMove(System.Windows.Forms.MouseEventArgs e) { OnMouseMove(e); }
@@ -121,18 +124,18 @@ namespace FamiStudio
                 OnResize(EventArgs.Empty);
         }
 
-        public System.Windows.Forms.Keys ModifierKeys => parentForm.GetModifierKeys(); 
-        public FamiStudio App => parentForm?.FamiStudio; 
-        public CursorInfo Cursor => cursorInfo; 
+        public System.Windows.Forms.Keys ModifierKeys => parentForm.GetModifierKeys();
+        public FamiStudio App => parentForm?.FamiStudio;
+        public CursorInfo Cursor => cursorInfo;
         public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
 
-        public int   ScaleForMainWindow     (float val) { return (int)Math.Round(val * mainWindowScaling); }
+        public int ScaleForMainWindow(float val) { return (int)Math.Round(val * mainWindowScaling); }
         public float ScaleForMainWindowFloat(float val) { return (val * mainWindowScaling); }
-        public int   ScaleForFont           (float val) { return (int)Math.Round(val * fontScaling); }
-        public float ScaleForFontFloat      (float val) { return (val * fontScaling); }
-        public int   ScaleCustom            (float val, float scale) { return (int)Math.Round(val * scale); }
-        public float ScaleCustomFloat       (float val, float scale) { return (val * scale); }
-        public int   ScaleLineForMainWindow (int width) { return width == 1 ? 1 : (int)Math.Round(width * mainWindowScaling) | 1; }
+        public int ScaleForFont(float val) { return (int)Math.Round(val * fontScaling); }
+        public float ScaleForFontFloat(float val) { return (val * fontScaling); }
+        public int ScaleCustom(float val, float scale) { return (int)Math.Round(val * scale); }
+        public float ScaleCustomFloat(float val, float scale) { return (val * scale); }
+        public int ScaleLineForMainWindow(int width) { return width == 1 ? 1 : (int)Math.Round(width * mainWindowScaling) | 1; }
     }
 
     public class CursorInfo
@@ -146,6 +149,28 @@ namespace FamiStudio
         {
             get { return cursor; }
             set { cursor = value; parentControl.ParentForm.RefreshCursor(); }
+        }
+    }
+
+    public class MouseEventArgsEx : System.Windows.Forms.MouseEventArgs
+    {
+        private bool delay = false;
+        public  bool IsRightClickDelayed => delay;
+
+        public MouseEventArgsEx(System.Windows.Forms.MouseEventArgs e) :
+            base(e.Button, e.Clicks, e.X, e.Y, e.Delta)
+        {
+        }
+
+        public MouseEventArgsEx(System.Windows.Forms.MouseButtons button, int clicks, int x, int y, int delta) :
+            base(button, clicks, x, y, delta)
+        {
+        }
+
+        public void DelayRightClick()
+        {
+            Debug.Assert(Button.HasFlag(System.Windows.Forms.MouseButtons.Right));
+            delay = true;
         }
     }
 }

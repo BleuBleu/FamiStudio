@@ -12,6 +12,9 @@ namespace FamiStudio
 {
     public partial class FamiStudioForm : GLForm
     {
+        private const int DelayedRightClickTimeMs = 250;
+        private const int DelayedRightClickPixelTolerance = 2;
+
         private FamiStudio famistudio;
         private FamiStudioControls controls;
 
@@ -36,6 +39,10 @@ namespace FamiStudio
         private MouseButtons captureButton   = MouseButtons.None;
         private MouseButtons lastButtonPress = MouseButtons.None;
         private Timer timer = new Timer();
+
+        private DateTime       delayedRightClickStartTime = DateTime.MinValue;
+        private MouseEventArgs delayedRightClickArgs      = null;
+        private GLControl      delayedRightClickControl   = null;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct NativeMessage
@@ -121,7 +128,9 @@ namespace FamiStudio
             // Always sleep, in case people turn off vsync. This avoid rendering 
             // is a super tight loop. We could check "VSyncEnabled" but its an extension
             // and I dont trust it. Let's take a break either way.
-            System.Threading.Thread.Sleep(4); 
+            System.Threading.Thread.Sleep(4);
+
+            ConditionalEmitDelayedRightClick();
         }
 
         protected override void GraphicsContextInitialized()
@@ -211,9 +220,63 @@ namespace FamiStudio
             RefreshLayout();
         }
 
+        protected void DelayRightClick(GLControl ctrl, MouseEventArgsEx e)
+        {
+            Debug.WriteLine($"DelayRightClick {ctrl}");
+
+            delayedRightClickControl = ctrl;
+            delayedRightClickStartTime = DateTime.Now;
+            delayedRightClickArgs = e;
+        }
+
+        protected void ClearDelayedRightClick()
+        {
+            if (delayedRightClickControl != null)
+                Debug.WriteLine($"ClearDelayedRightClick {delayedRightClickControl}");
+
+            delayedRightClickArgs = null;
+            delayedRightClickControl = null;
+            delayedRightClickStartTime = DateTime.MinValue;
+        }
+
+        protected void ConditionalEmitDelayedRightClick(bool checkTime = true, bool forceClear = false, GLControl checkCtrl = null)
+        {
+            var deltaMs = (DateTime.Now - delayedRightClickStartTime).TotalMilliseconds;
+            var clear = forceClear;
+
+            if (delayedRightClickArgs != null && (deltaMs > DelayedRightClickTimeMs || !checkTime) && (checkCtrl == delayedRightClickControl || checkCtrl == null))
+            {
+                Debug.WriteLine($"ConditionalEmitDelayedRightClick delayedRightClickControl={delayedRightClickControl} checkTime={checkTime} deltaMs={deltaMs} forceClear={forceClear}");
+                delayedRightClickControl.MouseDownDelayed(delayedRightClickArgs);
+                clear = true;
+            }
+
+            if (clear)
+                ClearDelayedRightClick();
+        }
+
+        protected bool ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(MouseEventArgs e, int x, int y, GLControl checkCtrl)
+        {
+            // Surprisingly is pretty common to move by 1 pixel between a right click
+            // mouse down/up. Add a small tolerance.
+            if (delayedRightClickArgs != null && checkCtrl == delayedRightClickControl && e.Button.HasFlag(MouseButtons.Right))
+            {
+                Debug.WriteLine($"ShouldIgnoreMouseMoveBecauseOfDelayedRightClick dx={Math.Abs(x - delayedRightClickArgs.X)} dy={Math.Abs(y - delayedRightClickArgs.Y)}");
+
+                if (Math.Abs(x - delayedRightClickArgs.X) <= DelayedRightClickPixelTolerance &&
+                    Math.Abs(y - delayedRightClickArgs.Y) <= DelayedRightClickPixelTolerance)
+                {
+                    return true;
+                }
+            }
+
+            return false;            
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+            Debug.WriteLine($"OnMouseDown {e.X} {e.Y}");
 
             if (captureControl != null)
                 return;
@@ -225,13 +288,17 @@ namespace FamiStudio
                 if (ctrl != ContextMenu)
                     controls.HideContextMenu();
                 SetActiveControl(ctrl);
-                ctrl.MouseDown(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+                var ex = new MouseEventArgsEx(e.Button, e.Clicks, x, y, e.Delta);
+                ctrl.MouseDown(ex);
+                if (ex.IsRightClickDelayed)
+                    DelayRightClick(ctrl, ex);
             }
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            base.OnMouseDown(e);
+            base.OnMouseUp(e);
+            Debug.WriteLine($"OnMouseUp {e.X} {e.Y}");
 
             int x;
             int y;
@@ -253,8 +320,12 @@ namespace FamiStudio
 
             if (ctrl != null)
             {
+                if (e.Button.HasFlag(MouseButtons.Right))
+                    ConditionalEmitDelayedRightClick(true, true, ctrl);
+
                 if (ctrl != ContextMenu)
                     controls.HideContextMenu();
+
                 ctrl.MouseUp(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
             }
         }
@@ -279,6 +350,7 @@ namespace FamiStudio
             int y;
             GLControl ctrl = null;
             GLControl hover = null;
+            Debug.WriteLine($"OnMouseMove {e.X} {e.Y}");
 
             if (captureControl != null)
             {
@@ -293,7 +365,13 @@ namespace FamiStudio
                 hover = ctrl;
             }
 
-            if (ctrl != null)
+            if (ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(e, x, y, ctrl))
+                return;
+
+            ConditionalEmitDelayedRightClick(false, true, ctrl);
+
+            // Dont forward move mouse when a context menu is active.
+            if (ctrl != null && (!controls.IsContextMenuActive || ctrl == ContextMenu))
             {
                 ctrl.MouseMove(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
                 RefreshCursor(ctrl);
@@ -301,7 +379,7 @@ namespace FamiStudio
 
             if (hover != hoverControl)
             {
-                if (hoverControl != null)
+                if (hoverControl != null && (!controls.IsContextMenuActive || hoverControl == ContextMenu))
                     hoverControl.MouseLeave(EventArgs.Empty);
                 hoverControl = hover;
             }
@@ -309,7 +387,7 @@ namespace FamiStudio
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            if (hoverControl != null)
+            if (hoverControl != null && (!controls.IsContextMenuActive || hoverControl == ContextMenu))
             {
                 hoverControl.MouseLeave(EventArgs.Empty);
                 hoverControl = null;

@@ -3725,8 +3725,6 @@ namespace FamiStudio
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
-            base.OnMouseDoubleClick(e);
-
             bool left = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
@@ -5181,10 +5179,8 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnMouseDown(MouseEventArgsEx e)
         {
-            base.OnMouseDown(e);
-
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
@@ -7887,8 +7883,6 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            base.OnMouseMove(e);
-
             bool left   = e.Button.HasFlag(MouseButtons.Left);
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
@@ -7908,8 +7902,6 @@ namespace FamiStudio
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            base.OnMouseUp(e);
-
             UpdateCursor();
 
             bool middle = e.Button.HasFlag(MouseButtons.Middle);
@@ -7976,8 +7968,6 @@ namespace FamiStudio
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            base.OnMouseWheel(e);
-
             if (e.X > pianoSizeX)
             {
                 if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))

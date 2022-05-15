@@ -17,7 +17,9 @@ namespace FamiStudio
         // Version 4   : FamiStudio 3.2.0
         // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
         // Version 6   : FamiStudio 3.3.0
-        public const int SettingsVersion = 6;
+        // Version 7   : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files)
+        public const int SettingsVersion = 7;
+        public const int NumRecentFiles = 10;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -219,6 +221,9 @@ namespace FamiStudio
         public static string LastSampleFolder = "";
         public static string LastExportFolder = "";
 
+        // Recent files history.
+        public static List<string> RecentFiles = new List<string>();
+
         // Misc
         public static string FFmpegExecutablePath = "";
 
@@ -279,6 +284,14 @@ namespace FamiStudio
             LastInstrumentFolder = ini.GetString("Folders", "LastInstrumentFolder", "");
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
             LastExportFolder = ini.GetString("Folders", "LastExportFolder", "");
+
+            // Recent files.
+            for (int i = 0; i < NumRecentFiles; i++)
+            {
+                var recentFile = ini.GetString("RecentFiles", $"RecentFile{i}", "");
+                if (!string.IsNullOrEmpty(recentFile) && File.Exists(recentFile))
+                    RecentFiles.Add(recentFile);
+            }
 
             // FFmpeg
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
@@ -372,7 +385,8 @@ namespace FamiStudio
 
             // At 3.2.0, we added a new Discord screen to the tutorial.
             // At 3.2.3, we added a new snapping tutorial screen.
-            if (Version < 4 || (Version < 5 && PlatformUtils.IsDesktop))
+            // At 4.0.0, we changed the controls and need to re-show tutorials.
+            if (Version < 4 || (Version < 7 && PlatformUtils.IsDesktop))
                 ShowTutorial = true;
 
             // Re-force time format to the MM:SS:mmm
@@ -440,6 +454,10 @@ namespace FamiStudio
             ini.SetString("Folders", "LastInstrumentFolder", LastInstrumentFolder);
             ini.SetString("Folders", "LastSampleFolder", LastSampleFolder);
             ini.SetString("Folders", "LastExportFolder", LastExportFolder);
+            
+            // Recent files.
+            for (int i = 0; i < RecentFiles.Count; i++)
+                ini.SetString("RecentFiles", $"RecentFile{i}", RecentFiles[i]);
 
             // FFmpeg
             ini.SetString("FFmpeg", "ExecutablePath", FFmpegExecutablePath);
@@ -495,6 +513,15 @@ namespace FamiStudio
                 if (k1 >= 0)
                     KeyCodeToNoteMap[k1] = idx;
             }
+        }
+
+        public static void AddRecentFile(string file)
+        {
+            RecentFiles.Remove(file);
+            RecentFiles.Insert(0, file);
+
+            while (RecentFiles.Count > NumRecentFiles)
+                RecentFiles.RemoveAt(RecentFiles.Count - 1);
         }
 
         public static string GetAutoSaveFilePath()

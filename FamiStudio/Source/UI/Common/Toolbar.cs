@@ -322,7 +322,7 @@ namespace FamiStudio
             timeCodeFont = ThemeResources.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
-            buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen };
+            buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = PlatformUtils.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
             buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
             buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = PlatformUtils.IsDesktop ? OnRepeatLastExport : (MouseClickDelegate)null };
             buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
@@ -332,7 +332,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.Redo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Redo, Click = OnRedo, Enabled = OnRedoEnabled };
             buttons[(int)ButtonType.Transform] = new Button { BmpAtlasIndex = ButtonImageIndices.Transform, Click = OnTransform };
             buttons[(int)ButtonType.Config]    = new Button { BmpAtlasIndex = ButtonImageIndices.Config, Click = OnConfig };
-            buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, RightClick = OnPlayWithRate, MouseWheel = OnPlayMouseWheel, GetBitmap = OnPlayGetBitmap, VibrateOnLongPress = false };
+            buttons[(int)ButtonType.Play]      = new Button { Click = OnPlay, RightClick = OnPlayWithRate, GetBitmap = OnPlayGetBitmap, VibrateOnLongPress = false };
             buttons[(int)ButtonType.Rec]       = new Button { GetBitmap = OnRecordGetBitmap, Click = OnRecord };
             buttons[(int)ButtonType.Rewind]    = new Button { BmpAtlasIndex = ButtonImageIndices.Rewind, Click = OnRewind };
             buttons[(int)ButtonType.Loop]      = new Button { Click = OnLoop, GetBitmap = OnLoopGetBitmap, CloseOnClick = false };
@@ -378,16 +378,16 @@ namespace FamiStudio
 
                 buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
                 buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
-                buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S}\n{MouseRight} Save As...";
-                buttons[(int)ButtonType.Export].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} Repeat last export {Ctrl} {Shift} {E}";
+                buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S}\n{MouseRight} More Options...";
+                buttons[(int)ButtonType.Export].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} More Options...";
                 buttons[(int)ButtonType.Copy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
                 buttons[(int)ButtonType.Cut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
-                buttons[(int)ButtonType.Paste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} Paste Special... {Ctrl} {Shift} {V}";
+                buttons[(int)ButtonType.Paste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} More Options...";
                 buttons[(int)ButtonType.Undo].ToolTip      = "{MouseLeft} Undo {Ctrl} {Z}";
                 buttons[(int)ButtonType.Redo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
                 buttons[(int)ButtonType.Transform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
                 buttons[(int)ButtonType.Config].ToolTip    = "{MouseLeft} Edit Application Settings";
-                buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseWheel} Change play rate - Play from start of pattern {ForceCtrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
+                buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseRight} More Options... - Play from start of pattern {ForceCtrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
                 buttons[(int)ButtonType.Rewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
                 buttons[(int)ButtonType.Rec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
                 buttons[(int)ButtonType.Loop].ToolTip      = "{MouseLeft} Toggle Loop Mode (Song, Pattern/Selection)";
@@ -647,6 +647,23 @@ namespace FamiStudio
             App.OpenProject();
         }
 
+        private void OnOpenRecent(int x, int y)
+        {
+            if (Settings.RecentFiles.Count > 0)
+            {
+                var options = new ContextMenuOption[Settings.RecentFiles.Count];
+
+                // MATTT : Icons
+                for (int i = 0; i < Settings.RecentFiles.Count; i++)
+                {
+                    var j = i; // Important, copy for lambda below.
+                    options[i] = new ContextMenuOption("Instrument", Settings.RecentFiles[i], () => App.OpenProject(Settings.RecentFiles[j]));
+                }
+
+                App.ShowContextMenu(left + x, top + y, options);
+            }
+        }
+
         private void OnSave(int x, int y)
         {
             App.SaveProjectAsync();
@@ -654,7 +671,11 @@ namespace FamiStudio
 
         private void OnSaveAs(int x, int y)
         {
-            App.SaveProjectAsync(true);
+            // MATTT : Icon (MOBILE + DESKTOP!)
+            App.ShowContextMenu(left + x, top + y, new[]
+            {
+                new ContextMenuOption("Instrument", "Save As...", () => { App.SaveProjectAsync(true); }),
+            });
         }
 
         private void OnExport(int x, int y)
@@ -664,7 +685,11 @@ namespace FamiStudio
 
         private void OnRepeatLastExport(int x, int y)
         {
-            App.RepeatLastExport();
+            // MATTT : Icon
+            App.ShowContextMenu(left + x, top + y, new[]
+            {
+                new ContextMenuOption("Instrument", "Repeast Last Export", "Repeats the previous export {Ctrl} {Shift} {E}", () => { App.RepeatLastExport(); }),
+            });
         }
 
         private void OnCut(int x, int y)
@@ -694,7 +719,11 @@ namespace FamiStudio
 
         private void OnPasteSpecial(int x, int y)
         {
-            App.PasteSpecial();
+            // MATTT : Icon (desktop + mobile)
+            App.ShowContextMenu(left + x, top + y, new[]
+            {
+                new ContextMenuOption("Instrument", "Paste Special...", "Paste with advanced options {Ctrl} {Shift} {V}", () => { App.PasteSpecial(); }),
+            });
         }
 
         private ButtonStatus OnPasteEnabled()
@@ -709,7 +738,11 @@ namespace FamiStudio
 
         private void OnDeleteSpecial(int x, int y)
         {
-            App.DeleteSpecial();
+            // MATTT : Icon (desktop + mobile)
+            App.ShowContextMenu(left + x, top + y, new[]
+            {
+                new ContextMenuOption("Instrument", "Delete Special...", () => { App.DeleteSpecial(); }),
+            });
         }
 
         private ButtonStatus OnDeleteEnabled()
@@ -757,24 +790,13 @@ namespace FamiStudio
 
         private void OnPlayWithRate(int x, int y)
         {
+            // MATTT : On desktop, make this something we can change on the fly.
             App.ShowContextMenu(left + x, top + y, new[]
             {
                 new ContextMenuOption("MenuPlay", "Play (Regular Speed)", () => { App.PlayRate = 1; App.PlaySong(); }),
                 new ContextMenuOption("MenuPlayHalf", "Play (Half Speed)", () => { App.PlayRate = 2; App.PlaySong(); }),
                 new ContextMenuOption("MenuPlayQuarter", "Play (Quarter Speed)", () => { App.PlayRate = 4; App.PlaySong(); })
             });
-        }
-
-        private void OnPlayMouseWheel(int delta)
-        {
-            int rate = App.PlayRate;
-
-            if (delta < 0)
-                App.PlayRate = Utils.Clamp(rate * 2, 1, 4);
-            else
-                App.PlayRate = Utils.Clamp(rate / 2, 1, 4);
-
-            MarkDirty();
         }
 
         private ButtonImageIndices OnPlayGetBitmap(ref Color tint)
@@ -1236,10 +1258,9 @@ namespace FamiStudio
             base.OnMouseWheel(e);
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnMouseDown(MouseEventArgsEx e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
-            //bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (left)
             {
@@ -1263,8 +1284,6 @@ namespace FamiStudio
                     }
                 }
             }
-
-            base.OnMouseDown(e);
         }
 
         protected override void OnMouseUp(MouseEventArgs e)

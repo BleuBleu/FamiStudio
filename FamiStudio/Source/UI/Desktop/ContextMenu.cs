@@ -19,7 +19,7 @@ namespace FamiStudio
     public class ContextMenu : RenderControl
     {
         const int DefaultItemSizeY    = 21;
-        const int DefaultIconPos      = 4;
+        const int DefaultIconPos      = 3;
         const int DefaultTextPosX     = 20;
         const int DefaultMenuMinSizeX = 100;
 
@@ -36,6 +36,7 @@ namespace FamiStudio
             MouseRight,
             MouseWheel,
             Warning,
+            Instrument, // TEST!
             Count
         };
 
@@ -45,7 +46,8 @@ namespace FamiStudio
             "MouseLeft",
             "MouseRight",
             "MouseWheel",
-            "Warning"
+            "Warning",
+            "Instrument"
         };
 
         int hoveredItemIndex = -1;
@@ -87,9 +89,12 @@ namespace FamiStudio
 
                 sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, ThemeResources.FontMedium));
                 sizeY += itemSizeY;
+
+                //option.Image = "Instrument";
+                Debug.Assert(Array.IndexOf(ContextMenuIconsNames, option.Image) >= 0);
             }
 
-            width  = Math.Max(minSizeX, sizeX + textPosX); 
+            width  = Math.Max(minSizeX, sizeX + textPosX) + iconPos; 
             height = sizeY;
         }
 
@@ -110,15 +115,11 @@ namespace FamiStudio
 
         // MATTT : Shortcut support too, display in toolbar!
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnMouseDown(MouseEventArgsEx e)
         {
             var itemIndex = GetIndexAtCoord(e.X, e.Y);
 
-            if (itemIndex != hoveredItemIndex)
-            {
-                hoveredItemIndex = itemIndex;
-                MarkDirty();
-            }
+            SetHoveredItemIndex(itemIndex);
 
             if (hoveredItemIndex >= 0)
             {
@@ -131,21 +132,12 @@ namespace FamiStudio
         protected override void OnMouseMove(MouseEventArgs e)
         {
             var itemIndex = GetIndexAtCoord(e.X, e.Y);
-
-            if (itemIndex != hoveredItemIndex)
-            {
-                hoveredItemIndex = itemIndex;
-                MarkDirty();
-            }
+            SetHoveredItemIndex(itemIndex);
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            if (hoveredItemIndex != -1)
-            {
-                hoveredItemIndex = -1;
-                MarkDirty();
-            }
+            SetHoveredItemIndex(-1);
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -164,13 +156,28 @@ namespace FamiStudio
                 }
                 else if (e.KeyCode == Keys.Up)
                 {
-                    hoveredItemIndex = Math.Max(0, hoveredItemIndex - 1);
+                    SetHoveredItemIndex(Math.Max(0, hoveredItemIndex - 1));
                 }
                 else if (e.KeyCode == Keys.Down)
                 {
-                    hoveredItemIndex = Math.Min(menuOptions.Length - 1, hoveredItemIndex + 1);
+                    SetHoveredItemIndex(Math.Min(menuOptions.Length - 1, hoveredItemIndex + 1));
                 }
             }
+        }
+
+        protected void SetHoveredItemIndex(int idx)
+        {
+            if (idx != hoveredItemIndex)
+            {
+                hoveredItemIndex = idx;
+                UpdateTooltip();
+                MarkDirty();
+            }
+        }
+
+        protected void UpdateTooltip()
+        {
+            App.SetToolTip(hoveredItemIndex >= 0 ? menuOptions[hoveredItemIndex].ToolTip : null);
         }
 
         public void Tick(float delta)

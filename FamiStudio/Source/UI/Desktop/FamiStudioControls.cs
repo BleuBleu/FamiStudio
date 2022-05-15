@@ -115,8 +115,8 @@ namespace FamiStudio
             var alignY = y + contextMenu.Height > height;
 
             contextMenu.Move(
-                alignX ? x - contextMenu.Width  : x,
-                alignY ? y - contextMenu.Height : y);
+                alignX ? x - contextMenu.Width  - 1 : x + 1,
+                alignY ? y - contextMenu.Height - 1 : y + 1);
 
             contextMenuVisible = true;
             MarkDirty();

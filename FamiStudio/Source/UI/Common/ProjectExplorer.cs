@@ -2381,8 +2381,6 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            base.OnMouseMove(e);
-
             bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
@@ -2402,14 +2400,11 @@ namespace FamiStudio
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            base.OnMouseLeave(e);
             App.SequencerShowExpansionIcons = false;
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            base.OnMouseUp(e);
-
             EndCaptureOperation(e.X, e.Y);
             UpdateCursor();
             MarkDirty();
@@ -3569,10 +3564,8 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDown(MouseEventArgs e)
+        protected override void OnMouseDown(MouseEventArgsEx e)
         {
-            base.OnMouseDown(e);
-
             if (captureOperation != CaptureOperation.None)
                 return;
 
@@ -4360,8 +4353,6 @@ namespace FamiStudio
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
-            base.OnMouseDoubleClick(e);
-
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
             if (buttonIdx >= 0)

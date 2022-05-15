@@ -1031,6 +1031,12 @@ namespace FamiStudio
                 }
             }
 
+            if (PlatformUtils.IsDesktop && allowComplexFormats)
+            {
+                Settings.AddRecentFile(filename);
+                Settings.Save();
+            }
+
             return project;
         }
 
@@ -2383,12 +2389,24 @@ namespace FamiStudio
     {
         public string Image { get; private set; }
         public string Text { get; private set; }
+        public string ToolTip { get; private set; }
         public Action Callback { get; private set; }
         public bool Separator { get; private set; }
 
         public ContextMenuOption(string img, string text, Action callback, bool separator = false)
         {
-            Image = img;
+            //Image = img;
+            Image = "Instrument"; // MATTT
+            Text = text;
+            Callback = callback;
+            Separator = separator;
+        }
+
+        public ContextMenuOption(string img, string text, string tooltip, Action callback, bool separator = false)
+        {
+            //Image = img;
+            Image = "Instrument"; // MATTT
+            ToolTip = tooltip;
             Text = text;
             Callback = callback;
             Separator = separator;
