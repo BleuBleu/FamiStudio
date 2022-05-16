@@ -12,7 +12,7 @@ using Android.App;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("BleuBleu")]
 [assembly: AssemblyProduct("FamiStudio")]
-[assembly: AssemblyCopyright("Copyright © 2019-2021")]
+[assembly: AssemblyCopyright("Copyright © 2019-2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

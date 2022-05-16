@@ -2403,11 +2403,36 @@ namespace FamiStudio
             App.SequencerShowExpansionIcons = false;
         }
 
+        protected bool HandleMouseUpButtons(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Right))
+            {
+                return HandleContextMenuButtons(e.X, e.Y);
+            }
+
+            return false;
+        }
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            EndCaptureOperation(e.X, e.Y);
+            bool middle = e.Button.HasFlag(MouseButtons.Middle);
+            bool doMouseUp = false;
+
+            if (!middle)
+            {
+                doMouseUp = captureOperation == CaptureOperation.None;
+                EndCaptureOperation(e.X, e.Y);
+            }
+
             UpdateCursor();
-            MarkDirty();
+
+            if (doMouseUp)
+            {
+                if (HandleMouseUpButtons(e)) goto Handled;
+                return;
+            Handled:
+                MarkDirty();
+            }
         }
 
         private void StartCaptureOperation(int x, int y, CaptureOperation op, int buttonIdx = -1, int buttonRelX = 0, int buttonRelY = 0)
@@ -3185,7 +3210,6 @@ namespace FamiStudio
         private bool HandleMouseDownSongButton(MouseEventArgs e, Button button, int buttonIdx, SubButtonType subButtonType)
         {
             var left  = e.Button.HasFlag(MouseButtons.Left);
-            var right = e.Button.HasFlag(MouseButtons.Right);
 
             if (left && subButtonType == SubButtonType.Properties)
             {
@@ -3196,10 +3220,6 @@ namespace FamiStudio
                 App.SelectedSong = button.song;
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSong, buttonIdx);
                 draggedSong = button.song;
-            }
-            else if (right && App.Project.Songs.Count > 1)
-            {
-                AskDeleteSong(button.song);
             }
 
             return true;
@@ -3253,13 +3273,6 @@ namespace FamiStudio
                     envelopeDragIdx = (int)subButtonType;
                 }
             }
-            else if (e.Button.HasFlag(MouseButtons.Right) && button.instrument != null)
-            {
-                if (subButtonType < SubButtonType.EnvelopeMax)
-                    ClearInstrumentEnvelope(button.instrument, (int)subButtonType);
-                else if (subButtonType == SubButtonType.Max)
-                    AskDeleteInstrument(button.instrument);
-            }
 
             return true;
         }
@@ -3286,9 +3299,8 @@ namespace FamiStudio
         private bool HandleMouseDownParamSliderButton(MouseEventArgs e, Button button, int buttonIdx)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if (left || right)
+            if (left)
             {
                 if (left)
                 {
@@ -3373,10 +3385,9 @@ namespace FamiStudio
         private bool HandleMouseDownParamCheckboxButton(MouseEventArgs e, Button button)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if (left || right)
-                ClickParamCheckbox(e.X, e.Y, button, right);
+            if (left)
+                ClickParamCheckbox(e.X, e.Y, button, false);
 
             return true;
         }
@@ -3384,10 +3395,9 @@ namespace FamiStudio
         private bool HandleMouseDownParamListButton(MouseEventArgs e, Button button)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            if (left || right)
-                ClickParamListButton(e.X, e.Y, button, right);
+            if (left)
+                ClickParamListButton(e.X, e.Y, button, false);
 
             return true;
         }
@@ -3395,7 +3405,6 @@ namespace FamiStudio
         private bool HandleMouseDownParamTabs(MouseEventArgs e, Button button)
         {
             bool left = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (left)
                 ClickParamTabsButton(e.X, e.Y, button);
@@ -3435,10 +3444,6 @@ namespace FamiStudio
                     envelopeDragIdx = (int)subButtonType;
                     App.StartEditArpeggio(button.arpeggio);
                 }
-            }
-            else if (e.Button.HasFlag(MouseButtons.Right) && button.arpeggio != null) 
-            {
-                AskDeleteArpeggio(button.arpeggio);
             }
 
             return true;
@@ -3493,15 +3498,13 @@ namespace FamiStudio
             {
                 if (subButtonType == SubButtonType.Play)
                 {
+                    // MATTT : Add a context menu here?
                     App.PreviewDPCMSample(button.sample, true);
                 }
                 else if (subButtonType == SubButtonType.Save)
                 {
+                    // MATTT : Context menu here, for sure.
                     ExportDPCMSampleSourceData(button.sample);
-                }
-                else if (subButtonType == SubButtonType.Max)
-                {
-                    AskDeleteDPCMSample(button.sample);
                 }
             }
 
@@ -3582,7 +3585,7 @@ namespace FamiStudio
         private bool HandleTouchClickProjectSettingsButton(int x, int y, SubButtonType subButtonType)
         {
             if (subButtonType == SubButtonType.Properties)
-                EditProjectProperties(Point.Empty);
+                EditProjectProperties(new Point(x, y));
 
             return true;
         }
@@ -3611,7 +3614,7 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.Properties)
             {
-                EditSongProperties(Point.Empty, button.song);
+                EditSongProperties(new Point(x, y), button.song);
             }
             else
             {
@@ -3628,7 +3631,7 @@ namespace FamiStudio
             if (subButtonType == SubButtonType.Properties)
             {
                 if (button.instrument != null)
-                    EditInstrumentProperties(Point.Empty, button.instrument);
+                    EditInstrumentProperties(new Point(x, y), button.instrument);
             }
             else
             {
@@ -3663,7 +3666,7 @@ namespace FamiStudio
         {
             if (subButtonType == SubButtonType.Properties)
             {
-                EditArpeggioProperties(Point.Empty, button.arpeggio);
+                EditArpeggioProperties(new Point(x, y), button.arpeggio);
             }
             else
             {
@@ -3694,7 +3697,7 @@ namespace FamiStudio
             }
             else if (subButtonType == SubButtonType.Properties)
             {
-                EditDPCMSampleProperties(Point.Empty, button.sample);
+                EditDPCMSampleProperties(new Point(x, y), button.sample);
             }
             else if (subButtonType == SubButtonType.Expand)
             {
@@ -3765,62 +3768,62 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchLongPressProjectSettings(int x, int y)
+        private bool HandleContextMenuProjectSettings(int x, int y)
         {    
-            App.ShowContextMenu(new[]
+            App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuProperties", "Project Properties...", () => { EditProjectProperties(Point.Empty); })
+                new ContextMenuOption("MenuProperties", "Project Properties...", () => { EditProjectProperties(new Point(x, y)); })
             });
 
             return true;
         }
 
-        private bool HandleTouchLongPressSongButton(int x, int y, Button button)
+        private bool HandleContextMenuSongButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
-            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(Point.Empty, button.song); }));
             if (App.Project.Songs.Count > 1)
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
-            App.ShowContextMenu(menu.ToArray());
+            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(new Point(x, y), button.song); }, App.Project.Songs.Count > 1));
+            App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
         }
 
-        private bool HandleTouchLongPressInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        private bool HandleContextMenuInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
             var menu = new List<ContextMenuOption>();
-            if (button.instrument != null)
-            {
-                menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(Point.Empty, button.instrument); })); 
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }));
-            }
             if (subButtonType < SubButtonType.EnvelopeMax)
             {
                 menu.Add(new ContextMenuOption("MenuClearEnvelope", "Clear Envelope", () => { ClearInstrumentEnvelope(button.instrument, (int)subButtonType); }));
             }
+            if (button.instrument != null)
+            {
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }, subButtonType < SubButtonType.EnvelopeMax));
+                menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(new Point(x, y), button.instrument); }));
+            }
             if (menu.Count > 0)
-                App.ShowContextMenu(menu.ToArray());
+                App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
         }
 
-        private bool HandleTouchLongPressArpeggioButton(int x, int y, Button button)
+        private bool HandleContextMenuArpeggioButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
             if (button.arpeggio != null)
             {
-                menu.Add(new ContextMenuOption("MenuProperties", "Arpeggio Properties...", () => { EditArpeggioProperties(Point.Empty, button.arpeggio); }));
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }));
+                menu.Add(new ContextMenuOption("MenuProperties", "Arpeggio Properties...", () => { EditArpeggioProperties(new Point(x, y), button.arpeggio); }));
             }
             if (menu.Count > 0)
-                App.ShowContextMenu(menu.ToArray());
+                App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
         }
 
-        private bool HandleTouchLongPressDpcmButton(int x, int y, Button button)
+        private bool HandleContextMenuDpcmButton(int x, int y, Button button)
         {
-            App.ShowContextMenu(new[]
+            App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(Point.Empty, button.sample); }),
-                new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); })
+                new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }),
+                new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); })
             });
 
             return true;
@@ -3834,9 +3837,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleTouchLongPressParamButton(int x, int y, Button button)
+        private bool HandleContextMenuParamButton(int x, int y, Button button)
         {
-            App.ShowContextMenu(new[]
+            App.ShowContextMenu(left + x, top + y, new[]
             {
                 new ContextMenuOption("MenuReset", "Reset Default Value", () => { ResetParamButtonDefaultValue(button); })
             });
@@ -3844,7 +3847,7 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleTouchLongPressButtons(int x, int y)
+        private bool HandleContextMenuButtons(int x, int y)
         {
             var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
 
@@ -3855,25 +3858,30 @@ namespace FamiStudio
                 switch (button.type)
                 {
                     case ButtonType.ProjectSettings:
-                        return HandleTouchLongPressProjectSettings(x, y);
+                        return HandleContextMenuProjectSettings(x, y);
                     case ButtonType.Song:
-                        return HandleTouchLongPressSongButton(x, y, button);
+                        return HandleContextMenuSongButton(x, y, button);
                     case ButtonType.Instrument:
-                        return HandleTouchLongPressInstrumentButton(x, y, button, subButtonType, buttonIdx);
+                        return HandleContextMenuInstrumentButton(x, y, button, subButtonType, buttonIdx);
                     case ButtonType.ParamSlider:
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamList:
-                        return HandleTouchLongPressParamButton(x, y, button);
+                        return HandleContextMenuParamButton(x, y, button);
                     case ButtonType.Arpeggio:
-                        return HandleTouchLongPressArpeggioButton(x, y, button);
+                        return HandleContextMenuArpeggioButton(x, y, button);
                     case ButtonType.Dpcm:
-                        return HandleTouchLongPressDpcmButton(x, y, button);
+                        return HandleContextMenuDpcmButton(x, y, button);
                 }
 
                 return true;
             }
 
             return false;
+        }
+
+        private bool HandleTouchLongPressButtons(int x, int y)
+        {
+            return HandleContextMenuButtons(x, y);
         }
 
         private bool HandleTouchDownParamSliderButton(int x, int y)

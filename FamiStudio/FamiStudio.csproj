@@ -487,6 +487,12 @@
     <EmbeddedResource Include="Resources\LoopSmallFill.png" />
     <EmbeddedResource Include="Resources\Maximize%402x.png" />
     <EmbeddedResource Include="Resources\Maximize.png" />
+    <EmbeddedResource Include="Resources\MenuCheckOff.png" />
+    <EmbeddedResource Include="Resources\MenuCheckOff@2x.png" />
+    <EmbeddedResource Include="Resources\MenuCheckOn.png" />
+    <EmbeddedResource Include="Resources\MenuCheckOn@2x.png" />
+    <EmbeddedResource Include="Resources\MenuRadio.png" />
+    <EmbeddedResource Include="Resources\MenuRadio@2x.png" />
     <EmbeddedResource Include="Resources\Metronome%402x.png" />
     <EmbeddedResource Include="Resources\Metronome.png" />
     <EmbeddedResource Include="Resources\Metronome.wav" />

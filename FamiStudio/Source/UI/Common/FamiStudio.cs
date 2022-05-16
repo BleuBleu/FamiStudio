@@ -2384,14 +2384,23 @@ namespace FamiStudio
         }
     }
 
+    public enum ContextMenuCheckState
+    {
+        None,
+        Unchecked,
+        Checked,
+        Radio
+    }
+
     // Move these to a common class
     public class ContextMenuOption
     {
-        public string Image { get; private set; }
-        public string Text { get; private set; }
-        public string ToolTip { get; private set; }
-        public Action Callback { get; private set; }
-        public bool Separator { get; private set; }
+        public string Image;
+        public string Text;
+        public string ToolTip;
+        public Func<ContextMenuCheckState> CheckState;
+        public Action Callback;
+        public bool Separator;
 
         public ContextMenuOption(string img, string text, Action callback, bool separator = false)
         {
@@ -2400,6 +2409,7 @@ namespace FamiStudio
             Text = text;
             Callback = callback;
             Separator = separator;
+            CheckState = () => ContextMenuCheckState.None;
         }
 
         public ContextMenuOption(string img, string text, string tooltip, Action callback, bool separator = false)
@@ -2410,6 +2420,16 @@ namespace FamiStudio
             Text = text;
             Callback = callback;
             Separator = separator;
+            CheckState = () => ContextMenuCheckState.None;
+        }
+
+        public ContextMenuOption(string text, string tooltip, Action callback, Func<ContextMenuCheckState> checkState, bool separator = false)
+        {
+            ToolTip = tooltip;
+            Text = text;
+            Callback = callback;
+            Separator = separator;
+            CheckState = checkState;
         }
     }
 }

@@ -4962,24 +4962,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSnapResolutionButton(MouseEventArgs e)
-        {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
-
-            if ((left || right) && IsPointOnSnapResolution(e.X, e.Y))
-            {
-                snapResolution = Utils.Clamp(snapResolution + (left ? 1 : -1), SnapResolutionType.Min, SnapResolutionType.Max);
-                MarkDirty();
-                return true;
-            }
-
-            return false;
-        }
-
         private bool HandleMouseDownSnapButton(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointOnSnapButton(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && (IsPointOnSnapButton(e.X, e.Y) || IsPointOnSnapResolution(e.X, e.Y)))
             {
                 snap = !snap;
                 MarkDirty();
@@ -5203,7 +5188,6 @@ namespace FamiStudio
                 if (HandleMouseDownEffectList(e)) goto Handled;
                 if (HandleMouseDownChangeEffectValue(e)) goto Handled;
                 if (HandleMouseDownClearEffectValue(e)) goto Handled;
-                if (HandleMouseDownSnapResolutionButton(e)) goto Handled;
                 if (HandleMouseDownSnapButton(e)) goto Handled;
                 if (HandleMouseDownChannelNote(e)) goto Handled;
             }
@@ -7068,15 +7052,11 @@ namespace FamiStudio
             }
             else if (IsPointInPiano(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan\n{MouseLeft} {MouseLeft} Configure scales";
+                tooltip = "{MouseLeft} Play piano - {MouseWheel} Pan";
             }
-            else if (IsPointOnSnapResolution(e.X, e.Y))
+            else if (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Next snap precision {MouseRight} Previous snap precision {MouseWheel} Change snap precision";
-            }
-            else if (IsPointOnSnapButton(e.X, e.Y))
-            {
-                tooltip = "{MouseLeft} Toggle snapping {Shift} {S} {MouseWheel} Change snap precision";
+                tooltip = "{MouseLeft} Toggle snapping {Shift} {S} {MouseWheel} Change snap precision\n{MouseRight} More Options...";
             }
             else if (IsPointOnMaximizeButton(e.X, e.Y))
             {
@@ -7900,16 +7880,51 @@ namespace FamiStudio
             App.SequencerShowExpansionIcons = false;
         }
 
+        protected bool HandleMouseUpSnapResolution(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Right) && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
+            { 
+                var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 2];
+
+                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping the specified number of\nbeats in the piano roll", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked , false );
+
+                for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
+                {
+                    var j = i; // Important, copy for lamdba.
+                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]} Beats", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0);
+                }
+
+                App.ShowContextMenu(left + e.X, top + e.Y, options);
+                return true;
+            }
+
+            return false;
+        }
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            UpdateCursor();
-
             bool middle = e.Button.HasFlag(MouseButtons.Middle);
+            bool doMouseUp = false;
 
             if (middle)
+            {
                 panning = false;
+            }
             else
+            {
+                doMouseUp = captureOperation == CaptureOperation.None;
                 EndCaptureOperation(e.X, e.Y);
+            }
+
+            UpdateCursor();
+
+            if (doMouseUp)
+            {
+                if (HandleMouseUpSnapResolution(e)) goto Handled;
+                return;
+            Handled:
+                MarkDirty();
+            }
         }
 
         private void ZoomAtLocation(int x, float scale)

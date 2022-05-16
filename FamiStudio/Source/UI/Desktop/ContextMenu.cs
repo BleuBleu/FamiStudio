@@ -28,20 +28,11 @@ namespace FamiStudio
         int textPosX;
         int minSizeX;
 
-        // MATTT
-        enum ContextMenuIconsIndices
-        {
-            Drag,
-            MouseLeft,
-            MouseRight,
-            MouseWheel,
-            Warning,
-            Instrument, // TEST!
-            Count
-        };
-
         readonly string[] ContextMenuIconsNames = new string[]
         {
+            "MenuCheckOff",
+            "MenuCheckOn",
+            "MenuRadio",
             "Drag",
             "MouseLeft",
             "MouseRight",
@@ -56,7 +47,6 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
-            Debug.Assert((int)ContextMenuIconsIndices.Count == ContextMenuIconsNames.Length);
             contextMenuIconsAtlas = g.CreateBitmapAtlasFromResources(ContextMenuIconsNames);
         }
 
@@ -91,7 +81,7 @@ namespace FamiStudio
                 sizeY += itemSizeY;
 
                 //option.Image = "Instrument";
-                Debug.Assert(Array.IndexOf(ContextMenuIconsNames, option.Image) >= 0);
+                Debug.Assert(string.IsNullOrEmpty(option.Image) || Array.IndexOf(ContextMenuIconsNames, option.Image) >= 0);
             }
 
             width  = Math.Max(minSizeX, sizeX + textPosX) + iconPos; 
@@ -206,10 +196,25 @@ namespace FamiStudio
                 if (option.Separator) 
                     c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyFillBrush1);
 
-                var iconIndex = Array.IndexOf(ContextMenuIconsNames, option.Image);
-                var iconSize = contextMenuIconsAtlas.GetElementSize(iconIndex);
+                var imageName = option.Image;
 
-                c.DrawBitmapAtlas(contextMenuIconsAtlas, iconIndex, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
+                if (string.IsNullOrEmpty(imageName))
+                {
+                    var checkState = option.CheckState();
+                    switch (checkState)
+                    {
+                        case ContextMenuCheckState.Checked:   imageName = "MenuCheckOn";  break;
+                        case ContextMenuCheckState.Unchecked: imageName = "MenuCheckOff"; break;
+                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio";    break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(imageName))
+                {
+                    var iconIndex = Array.IndexOf(ContextMenuIconsNames, imageName);
+                    c.DrawBitmapAtlas(contextMenuIconsAtlas, iconIndex, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
+                }
+
                 c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
             }
