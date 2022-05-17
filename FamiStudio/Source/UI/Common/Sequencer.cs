@@ -1162,16 +1162,17 @@ namespace FamiStudio
 
         private bool HandleMouseUpChannelName(MouseEventArgs e)
         {
+            // MATTT : Unify with mobile.
             if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInTrackName(e))
             {
                 var channelIdx = GetChannelIndexForCoord(e.Y);
 
-                // MATTT : Icons + shortcuts!
+                // MATTT : Do we want to specify {MouseLeft} every time?
                 App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
                 {
-                    new ContextMenuOption("MouseWheel", "Toggle Mute Channel", "{MouseLeft} Toggle channel mute", () => { App.ToggleChannelActive(channelIdx); }),
-                    new ContextMenuOption("MouseWheel", "Toggle Solo Channel", "{MouseLeft} Toggle channel solo", () => { App.ToggleChannelSolo(channelIdx); }),
-                    new ContextMenuOption("MouseWheel", "Force Display Channel", "{MouseLeft} Force displaying the channel in the\npiano roll, even when not selected", () => { App.ToggleChannelForceDisplay(channelIdx); })
+                    new ContextMenuOption("MenuMute", "Toggle Mute Channel", "{MouseLeft} Toggle channel mute", () => { App.ToggleChannelActive(channelIdx); }),
+                    new ContextMenuOption("MenuSolo", "Toggle Solo Channel", "{MouseLeft} Toggle channel solo", () => { App.ToggleChannelSolo(channelIdx); }),
+                    new ContextMenuOption("MenuForceDisplay", "Toggle Force Display Channel", "{MouseLeft} Force displaying the channel in the\npiano roll, even when not selected", () => { App.ToggleChannelForceDisplay(channelIdx); })
                 });
 
                 return true;
@@ -1182,17 +1183,18 @@ namespace FamiStudio
 
         private bool HandleMouseUpHeader(MouseEventArgs e)
         {
+            // MATTT : Unify with mobile.
             if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInHeader(e))
             {
                 var patternIdx = GetPatternIndexForCoord(e.X);
 
                 if (patternIdx >= 0)
                 {
-                    // MATTT : Icons + shortcuts!
+                    // MATTT : tooltip!
                     App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
                     {
-                        new ContextMenuOption("MouseWheel", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
-                        new ContextMenuOption("MouseWheel", "Custom Pattern Settings...", () => { EditPatternCustomSettings(new Point(e.X, e.Y), patternIdx); } )
+                        new ContextMenuOption("MenuLoopPoint", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
+                        new ContextMenuOption("MenuCustomPatternSettings", "Custom Pattern Settings...", () => { EditPatternCustomSettings(new Point(e.X, e.Y), patternIdx); } )
                     });
                 }
 
@@ -1204,6 +1206,7 @@ namespace FamiStudio
 
         private bool HandleMouseUpPatternArea(MouseEventArgs e)
         {
+            // MATTT : Unify with mobile.
             if (e.Button.HasFlag(MouseButtons.Right))
             {
                 bool inPatternZone = GetPatternForCoord(e.X, e.Y, out var location);
@@ -1216,22 +1219,22 @@ namespace FamiStudio
                     {
                         if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
                         {
-                            // MATTT : Icons + shortcuts!
+                            // MATTT : tooltips!
                             App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
                             {
-                                new ContextMenuOption("MouseWheel", "Delete Selected Patterns", () => { DeleteSelection(true); } ),
-                                new ContextMenuOption("MouseWheel", "Selected Patterns Properties...", () => { EditPatternProperties(new Point(e.X, e.Y), pattern, true); } )
+                                new ContextMenuOption("MenuDelete", "Delete Selected Patterns", () => { DeleteSelection(true); } ),
+                                new ContextMenuOption("MenuProperties", "Selected Patterns Properties...", () => { EditPatternProperties(new Point(e.X, e.Y), pattern, true); } )
                             });
                         }
                         else
                         {
                             SetSelection(location, location);
 
-                            // MATTT : Icons + shortcuts!
+                            // MATTT : tooltips!
                             App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
                             {
-                                new ContextMenuOption("MouseWheel", "Delete Pattern", () => { DeletePattern(location); }),
-                                new ContextMenuOption("MouseWheel", "Pattern Properties...", () => { EditPatternProperties(new Point(e.X, e.Y), pattern, false); }),
+                                new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }),
+                                new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(new Point(e.X, e.Y), pattern, false); }),
                             });
                         }
 

@@ -18,9 +18,9 @@ namespace FamiStudio
 {
     public class ContextMenu : RenderControl
     {
-        const int DefaultItemSizeY    = 21;
-        const int DefaultIconPos      = 3;
-        const int DefaultTextPosX     = 20;
+        const int DefaultItemSizeY    = 22;
+        const int DefaultIconPos      = 4;
+        const int DefaultTextPosX     = 22;
         const int DefaultMenuMinSizeX = 100;
 
         int itemSizeY;
@@ -28,32 +28,49 @@ namespace FamiStudio
         int textPosX;
         int minSizeX;
 
+        // TODO : This is super lame, find a way to build the atlas
+        // on the fly as we get more and more images.
         readonly string[] ContextMenuIconsNames = new string[]
         {
             "MenuCheckOff",
             "MenuCheckOn",
+            "MenuClearSelection",
+            "MenuCustomPatternSettings",
+            "MenuDelete",
+            "MenuDeleteSelection",
+            "MenuEyedropper",
+            "MenuForceDisplay",
+            "MenuLoopPoint",
+            "MenuMute", 
+            "MenuProperties",
             "MenuRadio",
-            "Drag",
-            "MouseLeft",
-            "MouseRight",
-            "MouseWheel",
-            "Warning",
-            "Instrument"
+            "MenuSelectAll",
+            "MenuSelectNote",
+            "MenuSelectPattern",
+            "MenuSolo", 
+            "MenuStopNote",
+            "MenuToggleAttack",
+            "MenuToggleRelease",
+            "MenuToggleSlide",
         };
 
         int hoveredItemIndex = -1;
         RenderBitmapAtlas contextMenuIconsAtlas;
+        RenderBitmapAtlas expansionAtlas;
         ContextMenuOption[] menuOptions;
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             contextMenuIconsAtlas = g.CreateBitmapAtlasFromResources(ContextMenuIconsNames);
+            expansionAtlas = g.CreateBitmapAtlasFromResources(ExpansionType.Icons);
         }
 
         protected override void OnRenderTerminated()
         {
             Utils.DisposeAndNullify(ref contextMenuIconsAtlas);
+            Utils.DisposeAndNullify(ref expansionAtlas);
         }
+
         private void UpdateRenderCoords()
         {
             itemSizeY = ScaleForMainWindow(DefaultItemSizeY);
@@ -80,8 +97,7 @@ namespace FamiStudio
                 sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, ThemeResources.FontMedium));
                 sizeY += itemSizeY;
 
-                //option.Image = "Instrument";
-                Debug.Assert(string.IsNullOrEmpty(option.Image) || Array.IndexOf(ContextMenuIconsNames, option.Image) >= 0);
+                Debug.Assert(string.IsNullOrEmpty(option.Image) || GetAtlasAndIndex(option.Image, out _) >= 0);
             }
 
             width  = Math.Max(minSizeX, sizeX + textPosX) + iconPos; 
@@ -174,6 +190,20 @@ namespace FamiStudio
         {
         }
 
+        private int GetAtlasAndIndex(string image, out RenderBitmapAtlas atlas)
+        {
+            atlas = contextMenuIconsAtlas;
+            var idx = Array.IndexOf(ContextMenuIconsNames, image);
+
+            if (idx < 0)
+            {
+                atlas = expansionAtlas;
+                idx = Array.IndexOf(ExpansionType.Icons, image);
+            }
+
+            return idx;
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
@@ -211,8 +241,8 @@ namespace FamiStudio
 
                 if (!string.IsNullOrEmpty(imageName))
                 {
-                    var iconIndex = Array.IndexOf(ContextMenuIconsNames, imageName);
-                    c.DrawBitmapAtlas(contextMenuIconsAtlas, iconIndex, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
+                    var iconIndex = GetAtlasAndIndex(imageName, out var atlas);
+                    c.DrawBitmapAtlas(atlas, iconIndex, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
                 }
 
                 c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, Width, itemSizeY);

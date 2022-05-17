@@ -2404,8 +2404,7 @@ namespace FamiStudio
 
         public ContextMenuOption(string img, string text, Action callback, bool separator = false)
         {
-            //Image = img;
-            Image = "Instrument"; // MATTT
+            Image = img;
             Text = text;
             Callback = callback;
             Separator = separator;
@@ -2414,8 +2413,7 @@ namespace FamiStudio
 
         public ContextMenuOption(string img, string text, string tooltip, Action callback, bool separator = false)
         {
-            //Image = img;
-            Image = "Instrument"; // MATTT
+            Image = img;
             ToolTip = tooltip;
             Text = text;
             Callback = callback;

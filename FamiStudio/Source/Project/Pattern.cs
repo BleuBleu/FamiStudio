@@ -166,6 +166,11 @@ namespace FamiStudio
             return maxInstanceLength;
         }
 
+        public bool TryGetNoteWithEffectAt(int time, int fx, out Note note)
+        {
+            return notes.TryGetValue(time, out note) && note != null && note.HasValidEffectValue(fx);
+        }
+
         public Pattern ShallowClone(Channel newChannel = null)
         {
             var channel = newChannel == null ? song.GetChannelByType(channelType) : newChannel;

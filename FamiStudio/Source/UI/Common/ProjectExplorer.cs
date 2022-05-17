@@ -3814,7 +3814,7 @@ namespace FamiStudio
                 var activeExpansions = App.Project.GetActiveExpansions();
 
                 List<ContextMenuOption> options = new List<ContextMenuOption>();
-                options.Add(new ContextMenuOption("Instrument", $"Add New Regular Instrument", () => { AddInstrument(ExpansionType.None); }));
+                options.Add(new ContextMenuOption(ExpansionType.Icons[0], $"Add New Regular Instrument", () => { AddInstrument(ExpansionType.None); }));
 
                 for (int i = 1; i < activeExpansions.Length; i++)
                 {
@@ -3822,7 +3822,7 @@ namespace FamiStudio
                     {
                         var j = i; // Important, copy for lambda.
                         var expName = ExpansionType.Names[activeExpansions[i]];
-                        options.Add(new ContextMenuOption("Instrument", $"Add New {expName} Instrument", () => { AddInstrument(activeExpansions[j]); }));
+                        options.Add(new ContextMenuOption(ExpansionType.Icons[activeExpansions[i]], $"Add New {expName} Instrument", () => { AddInstrument(activeExpansions[j]); }));
                     }
                 }
 

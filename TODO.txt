@@ -15,8 +15,15 @@ P0:
 	- Icons
 	- Unify ShowMobileContextMenu/ShowDesktopContextMenu
 	- Toolbar
+		- File icon for recent
+		- Disk icon save as
+		- Repeat last export icon
+		- 
 		- On mobile, replace the right click by context menus. => Not sure what that mean? Diff with master.
 	/ Sequencer :
+		- Unify more with mobile (add the clear selections if they were there on movile)
+		- Select all there too?
+		- Tooltips/MATTT
 	- Piano roll
 		x Snap resolution
 		/ Channel mode
