@@ -7061,7 +7061,7 @@ namespace FamiStudio
 
         private bool IsPointWhereCanResizeEnvelope(int x, int y)
         {
-            var pixel0 = GetPixelForNote(EditEnvelope.Length);
+            var pixel0 = GetPixelForNote(EditEnvelope.Length) + pianoSizeX;
             var pixel1 = pixel0 + bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Resize).Width;
 
             return IsPointInHeaderTopPart(x, y) && x > pixel0 && x <= pixel1;
