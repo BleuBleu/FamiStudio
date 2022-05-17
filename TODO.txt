@@ -2,11 +2,12 @@
 =====
 - Include Demo instruments!!
 
-3.4.0
+4.0.0
 =====
 P0:
 - Right-click functionality.
-  - FIrst click when menu is open should just close it, ignore the click itself.
+  - First click when menu is open should just close it, ignore the click itself.
+  	-> Also make sure right clicking on a menu option works.
   - MouseMove still seems to be sent when menu is open. Toolbar highlights?
 	/ Tooltips
 	- Tooltips where a context menu can appear.
@@ -14,23 +15,27 @@ P0:
 	- Icons
 	- Unify ShowMobileContextMenu/ShowDesktopContextMenu
 	- Toolbar
-		- Play rate should just change the rate, not necessarely start playing.
 		- On mobile, replace the right click by context menus. => Not sure what that mean? Diff with master.
-		- Add recent files on desktop.
-		- 
-	- Sequencer :
-		/ Pattern area.
-		x Use double-click for solo channel
-		x Double-click delete pattern
-		- Review pattenr header click, not sure i like it.
-		- No shift for square selection.
+	/ Sequencer :
 	- Piano roll
-		- Snap resolution
-		- Select all/pattern
-		- Notes
+		x Snap resolution
+		/ Channel mode
+			x Channel notes
+			x Effect panel
+			x Channel header
+		- Env/arp
+			- Envelope header
+			- Make envelope resize only work at end of envelope. Cursor too.
+		- DPCM
+			- Reset envelope
+		- DPCM Mapping
+			- Delete/props
+		- Double-click deletes notes, dpcm mapping, effect values, etc.
+		- Slide + volume slide gizmos.
 		- 
-	- PE
-		- The whole thing.
+	/ PE
+		x Right click on "+" to add instrument should display the expansion
+		- 
 P1:
 - Validation errors in JTS when deleting some instruments.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value

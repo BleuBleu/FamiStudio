@@ -791,12 +791,24 @@ namespace FamiStudio
         private void OnPlayWithRate(int x, int y)
         {
             // MATTT : On desktop, make this something we can change on the fly.
-            App.ShowContextMenu(left + x, top + y, new[]
+            if (PlatformUtils.IsDesktop)
             {
-                new ContextMenuOption("MenuPlay", "Play (Regular Speed)", () => { App.PlayRate = 1; App.PlaySong(); }),
-                new ContextMenuOption("MenuPlayHalf", "Play (Half Speed)", () => { App.PlayRate = 2; App.PlaySong(); }),
-                new ContextMenuOption("MenuPlayQuarter", "Play (Quarter Speed)", () => { App.PlayRate = 4; App.PlaySong(); })
-            });
+                App.ShowContextMenu(left + x, top + y, new[]
+                {
+                    new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                    new ContextMenuOption("Half Speed",     "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                    new ContextMenuOption("Quarter Speed",  "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                });
+            }
+            else
+            {
+                App.ShowContextMenu(left + x, top + y, new[]
+                {
+                    new ContextMenuOption("MenuPlay", "Play (Regular Speed)", () => { App.PlayRate = 1; App.PlaySong(); }),
+                    new ContextMenuOption("MenuPlayHalf", "Play (Half Speed)", () => { App.PlayRate = 2; App.PlaySong(); }),
+                    new ContextMenuOption("MenuPlayQuarter", "Play (Quarter Speed)", () => { App.PlayRate = 4; App.PlaySong(); })
+                });
+            }
         }
 
         private ButtonImageIndices OnPlayGetBitmap(ref Color tint)
@@ -1258,14 +1270,19 @@ namespace FamiStudio
             base.OnMouseWheel(e);
         }
 
+        protected bool IsPointInTimeCode(int x, int y)
+        {
+            return x > timecodePosX && x < timecodePosX + timecodeOscSizeX &&
+                   y > timecodePosY && y < Height - timecodePosY;
+        }
+
         protected override void OnMouseDown(MouseEventArgsEx e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
 
             if (left)
             {
-                if (e.X > timecodePosX && e.X < timecodePosX + timecodeOscSizeX &&
-                    e.Y > timecodePosY && e.Y < Height - timecodePosY)
+                if (IsPointInTimeCode(e.X, e.Y))
                 {
                     Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
                     MarkDirty();
@@ -1329,8 +1346,7 @@ namespace FamiStudio
                     return;
             }
 
-            if (x > timecodePosX && x < timecodePosX + timecodeOscSizeX &&
-                y > timecodePosY && y < Height - timecodePosY)
+            if (IsPointInTimeCode(x, y))
             {
                 Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
                 PlatformUtils.VibrateTick();

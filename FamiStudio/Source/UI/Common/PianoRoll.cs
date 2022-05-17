@@ -4563,7 +4563,7 @@ namespace FamiStudio
             return Note.NoteInvalid;
         }
 
-        protected bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
+        private bool EnsureSeekBarVisible(float percent = ContinuousFollowPercent)
         {
             var seekX = GetPixelForNote(App.CurrentFrame);
             var minX = 0;
@@ -4787,22 +4787,22 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownHeaderSelection(MouseEventArgs e)
+        private bool HandleMouseDownHeaderSelection(MouseEventArgsEx e)
         {
             if (e.Button.HasFlag(MouseButtons.Right) && IsPointInHeader(e.X, e.Y))
             {
-                StartSelection(e.X, e.Y);
+                e.DelayRightClick(); // Need to wait and see if its a context menu click or not.
                 return true;
             }
 
             return false;
         }
 
-        private bool HandleMouseDownEnvelopeSelection(MouseEventArgs e)
+        private bool HandleMouseDownEnvelopeSelection(MouseEventArgsEx e)
         {
             if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
-                StartSelection(e.X, e.Y);
+                e.DelayRightClick(); // Need to wait and see if its a context menu click or not.
                 return true;
             }
 
@@ -4850,7 +4850,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEnvelopeResize(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInHeaderTopPart(e.X, e.Y) && EditEnvelope.CanResize)
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointWhereCanResizeEnvelope(e.X, e.Y) && EditEnvelope.CanResize)
             {
                 StartResizeEnvelope(e.X, e.Y);
                 return true;
@@ -4904,11 +4904,14 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownChangeEffectValue(MouseEventArgs e)
+        private bool HandleMouseDownEffectPanel(MouseEventArgsEx e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInEffectPanel(e.X, e.Y) && selectedEffectIdx >= 0)
+            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool right = e.Button.HasFlag(MouseButtons.Right);
+
+            if (selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
             {
-                if (GetEffectNoteForCoord(e.X, e.Y, out var location))
+                if (left)
                 {
                     var slide = FamiStudioForm.IsKeyDown(Keys.S);
 
@@ -4920,6 +4923,24 @@ namespace FamiStudio
                     {
                         StartChangeEffectValue(e.X, e.Y, location);
                     }
+
+                    return true;
+                }
+                else if (right)
+                {
+                    var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+
+                    if (pattern != null && pattern.Notes.TryGetValue(location.NoteIndex, out var note) && note != null && note.HasValidEffectValue(selectedEffectIdx))
+                    {
+                        // MATTT : Remap to double click!
+                        //ClearEffectValue(location, note);
+                    }
+                    else
+                    {
+                        e.DelayRightClick(); // Wait to see if its a context menu or selection.
+                    }
+
+                    return true;
                 }
             }
 
@@ -5018,7 +5039,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownChannelNote(MouseEventArgs e)
+        private bool HandleMouseDownChannelNote(MouseEventArgsEx e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
@@ -5093,11 +5114,12 @@ namespace FamiStudio
                 {
                     if (note != null)
                     {
-                        DeleteSingleNote(noteLocation, mouseLocation, note);
+                        // MATTT : Remap to double-click.
+                        //DeleteSingleNote(noteLocation, mouseLocation, note);
                     }
                     else
                     {
-                        StartSelection(e.X, e.Y);
+                        e.DelayRightClick(); // Need to wait to tell if its a context menu or selection.
                     }
                 }
 
@@ -5108,26 +5130,6 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownClearEffectValue(MouseEventArgs e)
-        {
-            if (e.Button.HasFlag(MouseButtons.Right) && GetEffectNoteForCoord(e.X, e.Y, out var location) && selectedEffectIdx >= 0)
-            {
-                var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
-
-                if (pattern != null && pattern.Notes.TryGetValue(location.NoteIndex, out var note) && note != null && note.HasValidEffectValue(selectedEffectIdx))
-                {
-                    ClearEffectValue(location, note);
-                }
-                else
-                {
-                    StartSelection(e.X, e.Y);
-                }
-
-                return true;
-            }
-
-            return false;
-        }
 
         private bool HandleMouseDownDPCMMapping(MouseEventArgs e)
         {
@@ -5186,8 +5188,7 @@ namespace FamiStudio
                 if (HandleMouseDownSeekBar(e)) goto Handled;
                 if (HandleMouseDownHeaderSelection(e)) goto Handled;
                 if (HandleMouseDownEffectList(e)) goto Handled;
-                if (HandleMouseDownChangeEffectValue(e)) goto Handled;
-                if (HandleMouseDownClearEffectValue(e)) goto Handled;
+                if (HandleMouseDownEffectPanel(e)) goto Handled;
                 if (HandleMouseDownSnapButton(e)) goto Handled;
                 if (HandleMouseDownChannelNote(e)) goto Handled;
             }
@@ -5220,6 +5221,83 @@ namespace FamiStudio
             return;
 
         Handled: 
+            MarkDirty();
+        }
+
+        private bool HandleMouseDownDelayedChannelNotes(MouseEventArgs e)
+        {
+            bool right = e.Button.HasFlag(MouseButtons.Right);
+
+            if (right && GetLocationForCoord(e.X, e.Y, out var mouseLocation, out byte noteValue) && mouseLocation.PatternIndex < Song.Length)
+            {
+                var channel = Song.Channels[editChannel];
+                var noteLocation = mouseLocation;
+                var note = channel.FindMusicalNoteAtLocation(ref noteLocation, noteValue);
+
+                if (note == null)
+                    StartSelection(e.X, e.Y);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleMouseDownDelayedHeaderSelection(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Right) && IsPointInHeader(e.X, e.Y))
+            {
+                StartSelection(e.X, e.Y);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleMouseDownDelayedEffectPanel(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Right) && selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
+            {
+                var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
+
+                if (pattern == null || !pattern.Notes.TryGetValue(location.NoteIndex, out var note) || note == null || !note.HasValidEffectValue(selectedEffectIdx))
+                    StartSelection(e.X, e.Y);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleMouseDownDelayedEnvelopeSelection(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
+            {
+                StartSelection(e.X, e.Y);
+                return true;
+            }
+
+            return false;
+        }
+
+        protected override void OnMouseDownDelayed(MouseEventArgs e)
+        {
+            if (editMode == EditionMode.Channel)
+            {
+                if (HandleMouseDownDelayedChannelNotes(e)) goto Handled;
+                if (HandleMouseDownDelayedHeaderSelection(e)) goto Handled;
+                if (HandleMouseDownDelayedEffectPanel(e)) goto Handled;
+            }
+
+            if (editMode == EditionMode.Enveloppe ||
+                editMode == EditionMode.Arpeggio)
+            {
+                if (HandleMouseDownDelayedEnvelopeSelection(e)) goto Handled;
+            }
+
+            return;
+
+        Handled:
             MarkDirty();
         }
 
@@ -5791,7 +5869,7 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
-        private bool HandleTouchLongPressChannelNote(int x, int y)
+        private bool HandleContextMenuChannelNote(int x, int y)
         {
             if (GetLocationForCoord(x, y, out var mouseLocation, out byte noteValue))
             {
@@ -5812,7 +5890,7 @@ namespace FamiStudio
                     if (note.IsMusical)
                     {
                         if (channel.SupportsNoAttackNotes)
-                            menu.Add(new ContextMenuOption("MenuToggleAttack", $"Toggle {(selection ? "Selection" : "")} Note Attack", () => { ToggleNoteAttack(noteLocation, note); } ));
+                            menu.Add(new ContextMenuOption("MenuToggleAttack", $"Toggle {(selection ? "Selection" : "")} Note Attack", () => { ToggleNoteAttack(noteLocation, note); }));
                         if (channel.SupportsSlideNotes)
                             menu.Add(new ContextMenuOption("MenuToggleSlide", $"Toggle {(selection ? "Selection" : "")} Slide Note", () => { ToggleSlideNote(noteLocation, note); }));
                         if (channel.SupportsReleaseNotes)
@@ -5845,7 +5923,7 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowContextMenu(menu.ToArray());
+                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
                 return true;
             }
@@ -5853,7 +5931,12 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchLongPressChannelHeader(int x, int y)
+        private bool HandleTouchLongPressChannelNote(int x, int y)
+        {
+            return HandleContextMenuChannelNote(x, y);
+        }
+
+        private bool HandleContextMenuChannelHeader(int x, int y)
         {
             if (IsPointInHeader(x, y))
             {
@@ -5861,7 +5944,7 @@ namespace FamiStudio
 
                 if (location.IsInSong(Song))
                 {
-                    App.ShowContextMenu(new[]
+                    App.ShowContextMenu(left + x, top + y, new[]
                     {
                         new ContextMenuOption("MenuSelectPattern", "Select Pattern", () => { SelectPattern(location.PatternIndex); }),
                         new ContextMenuOption("MenuSelectAll", "Select All", () => { SelectAll(); }),
@@ -5872,7 +5955,12 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchLongPressEffectPanel(int x, int y)
+        private bool HandleTouchLongPressChannelHeader(int x, int y)
+        {
+            return HandleContextMenuChannelHeader(x, y);
+        }
+
+        private bool HandleContextMenuEffectPanel(int x, int y)
         {
             if (showEffectsPanel && selectedEffectIdx >= 0 && IsPointInEffectPanel(x, y) && GetEffectNoteForCoord(x, y, out var location))
             {
@@ -5906,12 +5994,17 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowContextMenu(menu.ToArray());
+                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
                 return true;
             }
 
             return false;
+        }
+
+        private bool HandleTouchLongPressEffectPanel(int x, int y)
+        {
+            return HandleContextMenuEffectPanel(x, y);
         }
 
         private bool HandleTouchLongPressDrawEnvelope(int x, int y)
@@ -5971,7 +6064,7 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
-        private bool HandleTouchLongPressEnvelopeHeader(int x, int y)
+        private bool HandleContextMenuEnvelopeHeader(int x, int y)
         {
             if (IsPointInHeader(x, y))
             {
@@ -6006,12 +6099,17 @@ namespace FamiStudio
                 }
 
                 if (menu.Count > 0)
-                    App.ShowContextMenu(menu.ToArray());
+                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
                 return true;
             }
 
             return false;
+        }
+
+        private bool HandleTouchLongPressEnvelopeHeader(int x, int y)
+        {
+            return HandleContextMenuEnvelopeHeader(x, y);
         }
 
         private void ResetVolumeEnvelope()
@@ -6038,7 +6136,7 @@ namespace FamiStudio
             }
 
             if (menu.Count > 0)
-                App.ShowContextMenu(menu.ToArray());
+                App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
             return true;
         }
@@ -6053,7 +6151,7 @@ namespace FamiStudio
                 {
                     highlightDPCMSample = noteValue;
 
-                    App.ShowContextMenu(new[]
+                    App.ShowContextMenu(left + x, top + y, new[]
                     {
                         new ContextMenuOption("MenuDelete", "Remove DPCM Sample", () => { ClearDPCMSampleMapping(noteValue); }),
                         new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleMappingProperties(Point.Empty, mapping); }),
@@ -6364,8 +6462,8 @@ namespace FamiStudio
 
         private void SetHighlightedNote(int absNoteIndex)
         {
-            Debug.Assert(PlatformUtils.IsMobile);
-            highlightNoteAbsIndex = absNoteIndex;
+            if (PlatformUtils.IsMobile)
+                highlightNoteAbsIndex = absNoteIndex;
         }
 
         private void ClearHighlightedNote()
@@ -6376,7 +6474,7 @@ namespace FamiStudio
 
         private bool HasHighlightedNote()
         {
-            return highlightNoteAbsIndex >= 0;
+            return PlatformUtils.IsMobile && highlightNoteAbsIndex >= 0;
         }
 
         private bool IsHighlightedNoteSelected()
@@ -6961,6 +7059,14 @@ namespace FamiStudio
             return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && x > pianoSizeX && y >= headerSizeY / 2 && y < headerSizeY;
         }
 
+        private bool IsPointWhereCanResizeEnvelope(int x, int y)
+        {
+            var pixel0 = GetPixelForNote(EditEnvelope.Length);
+            var pixel1 = pixel0 + bmpMiscAtlas.GetElementSize((int)MiscImageIndices.Resize).Width;
+
+            return IsPointInHeaderTopPart(x, y) && x > pixel0 && x <= pixel1;
+        }
+
         private bool IsPointInPiano(int x, int y)
         {
             return x < pianoSizeX && y > headerAndEffectSizeY;
@@ -7044,7 +7150,10 @@ namespace FamiStudio
             }
             else if (IsPointInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
-                tooltip = "{MouseLeft} Resize envelope\n{MouseRight} Select";
+                if (IsPointWhereCanResizeEnvelope(e.X, e.Y))
+                    tooltip = "{MouseLeft} Resize envelope\n";
+                else
+                    tooltip = "{MouseRight} Select";
             }
             else if (IsPointInHeaderBottomPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
@@ -7797,7 +7906,7 @@ namespace FamiStudio
         {
             var pt = PointToClient(Cursor.Position);
 
-            if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && EditEnvelope.CanResize && (pt.X > pianoSizeX && pt.Y < headerSizeY && captureOperation != CaptureOperation.Select) || captureOperation == CaptureOperation.ResizeEnvelope)
+            if (EditEnvelope != null && EditEnvelope.CanResize && IsPointWhereCanResizeEnvelope(pt.X, pt.Y) && captureOperation != CaptureOperation.Select || captureOperation == CaptureOperation.ResizeEnvelope)
             {
                 Cursor.Current = Cursors.SizeWE;
             }
@@ -7880,7 +7989,7 @@ namespace FamiStudio
             App.SequencerShowExpansionIcons = false;
         }
 
-        protected bool HandleMouseUpSnapResolution(MouseEventArgs e)
+        private bool HandleMouseUpSnapResolution(MouseEventArgs e)
         {
             if (e.Button.HasFlag(MouseButtons.Right) && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
             { 
@@ -7891,7 +8000,7 @@ namespace FamiStudio
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
                 {
                     var j = i; // Important, copy for lamdba.
-                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]} Beats", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0);
+                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]} {(SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat")}", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0);
                 }
 
                 App.ShowContextMenu(left + e.X, top + e.Y, options);
@@ -7899,6 +8008,26 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        private bool HandleMouseUpChannelNote(MouseEventArgs e)
+        {
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuChannelNote(e.X, e.Y);
+        }
+
+        private bool HandleMouseUpChannelHeader(MouseEventArgs e)
+        {
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuChannelHeader(e.X, e.Y);
+        }
+
+        private bool HandleMouseUpEffectPanel(MouseEventArgs e)
+        {
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuEffectPanel(e.X, e.Y);
+        }
+
+        private bool HandleMouseUpEnvelopeHeader(MouseEventArgs e)
+        {
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuEnvelopeHeader(e.X, e.Y);
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -7920,8 +8049,22 @@ namespace FamiStudio
 
             if (doMouseUp)
             {
-                if (HandleMouseUpSnapResolution(e)) goto Handled;
+                if (editMode == EditionMode.Channel)
+                {
+                    if (HandleMouseUpSnapResolution(e)) goto Handled;
+                    if (HandleMouseUpChannelNote(e)) goto Handled;
+                    if (HandleMouseUpEffectPanel(e)) goto Handled;
+                    if (HandleMouseUpChannelHeader(e)) goto Handled;
+                }
+
+                if (editMode == EditionMode.Enveloppe ||
+                    editMode == EditionMode.Arpeggio)
+                {
+                    if (HandleMouseUpEnvelopeHeader(e)) goto Handled;
+                }
+
                 return;
+
             Handled:
                 MarkDirty();
             }
@@ -7981,7 +8124,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        private bool HandleMouseWheelZoom(MouseEventArgs e)
         {
             if (e.X > pianoSizeX)
             {
@@ -7993,18 +8136,38 @@ namespace FamiStudio
                         scrollY -= e.Delta;
 
                     ClampScroll();
-                    MarkDirty();
+                    return true;
                 }
                 else if (editMode != EditionMode.DPCMMapping)
                 {
                     ZoomAtLocation(e.X, e.Delta < 0.0f ? 0.5f : 2.0f);
+                    return true;
                 }
             }
-            else if (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
+
+            return false;
+        }
+
+        private bool HandleMouseWheelSnapResolution(MouseEventArgs e)
+        {
+            if (editMode == EditionMode.Channel && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
             {
                 snapResolution = Utils.Clamp(snapResolution + (e.Delta > 0 ? 1 : -1), SnapResolutionType.Min, SnapResolutionType.Max);
-                MarkDirty();
+                return true;
             }
+
+            return false;
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            if (HandleMouseWheelZoom(e)) goto Handled;
+            if (HandleMouseWheelSnapResolution(e)) goto Handled;
+
+            return;
+
+        Handled:
+            MarkDirty();
         }
 
         protected override void OnMouseHorizontalWheel(MouseEventArgs e)

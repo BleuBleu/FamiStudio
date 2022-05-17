@@ -1952,6 +1952,8 @@ namespace FamiStudio
                     if (subButtonType == SubButtonType.Add)
                     {
                         tooltip = "{MouseLeft} Add new instrument";
+                        if (App.Project.NeedsExpansionInstruments)
+                            tooltip += " - {MouseRight} More Options....";
                     }
                     else if (subButtonType == SubButtonType.Load)
                     {
@@ -3804,6 +3806,32 @@ namespace FamiStudio
                 App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
         }
+        
+        private bool HandleContextMenuInstrumentHeaderButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
+        {
+            if (App.Project.NeedsExpansionInstruments && subButtonType == SubButtonType.Add)
+            {
+                var activeExpansions = App.Project.GetActiveExpansions();
+
+                List<ContextMenuOption> options = new List<ContextMenuOption>();
+                options.Add(new ContextMenuOption("Instrument", $"Add New Regular Instrument", () => { AddInstrument(ExpansionType.None); }));
+
+                for (int i = 1; i < activeExpansions.Length; i++)
+                {
+                    if (ExpansionType.NeedsExpansionInstrument(activeExpansions[i]))
+                    {
+                        var j = i; // Important, copy for lambda.
+                        var expName = ExpansionType.Names[activeExpansions[i]];
+                        options.Add(new ContextMenuOption("Instrument", $"Add New {expName} Instrument", () => { AddInstrument(activeExpansions[j]); }));
+                    }
+                }
+
+                App.ShowContextMenu(left + x, top + y, options.ToArray());
+                return true;
+            }
+
+            return false;
+        }
 
         private bool HandleContextMenuArpeggioButton(int x, int y, Button button)
         {
@@ -3863,6 +3891,8 @@ namespace FamiStudio
                         return HandleContextMenuSongButton(x, y, button);
                     case ButtonType.Instrument:
                         return HandleContextMenuInstrumentButton(x, y, button, subButtonType, buttonIdx);
+                    case ButtonType.InstrumentHeader:
+                        return HandleContextMenuInstrumentHeaderButton(x, y, button, subButtonType, buttonIdx);
                     case ButtonType.ParamSlider:
                     case ButtonType.ParamCheckbox:
                     case ButtonType.ParamList:
