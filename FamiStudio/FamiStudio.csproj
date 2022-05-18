@@ -449,6 +449,10 @@
     <EmbeddedResource Include="Resources\Follow.png" />
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
     <EmbeddedResource Include="Resources\GhostSmall.png" />
+    <EmbeddedResource Include="Resources\GizmoResizeLeftRight.png" /> 
+    <EmbeddedResource Include="Resources\GizmoResizeLeftRight@2x.png" />       
+    <EmbeddedResource Include="Resources\GizmoResizeUpDown.png" /> 
+    <EmbeddedResource Include="Resources\GizmoResizeUpDown@2x.png" />         
     <EmbeddedResource Include="Resources\gtk_linux.rc" />
     <EmbeddedResource Include="Resources\gtk_mac.rc" />
     <EmbeddedResource Include="Resources\Help%402x.png" />

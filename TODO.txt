@@ -34,7 +34,8 @@ P0:
 			x Delete/props
 		- Double-click deletes notes, dpcm mapping, effect values, etc.
 		- Slide + volume slide gizmos.
-		- 
+	- Gizmo
+		- Make them black on desktop unless we hover over them.
 	/ PE
 P1:
 - Validation errors in JTS when deleting some instruments.
@@ -57,6 +58,11 @@ P2:
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 - Fix GTK leak (GTK 3.x?), or 2.12.45
+
+Testing:
+========
+- Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
+- 
 
 Linux notes 
 =========== 
