@@ -493,6 +493,10 @@
     <EmbeddedResource Include="Resources\MenuCheckOn@2x.png" />
     <EmbeddedResource Include="Resources\MenuClearEnvelope.png" />
     <EmbeddedResource Include="Resources\MenuClearEnvelope@2x.png" />
+    <EmbeddedResource Include="Resources\MenuClearLoopPoint.png" />
+    <EmbeddedResource Include="Resources\MenuClearLoopPoint@2x.png" />
+    <EmbeddedResource Include="Resources\MenuClearRelease.png" />
+    <EmbeddedResource Include="Resources\MenuClearRelease@2x.png" />
     <EmbeddedResource Include="Resources\MenuClearSelection.png" />
     <EmbeddedResource Include="Resources\MenuClearSelection@2x.png" />
     <EmbeddedResource Include="Resources\MenuCustomPatternSettings.png" />
@@ -501,6 +505,8 @@
     <EmbeddedResource Include="Resources\MenuDelete@2x.png" />
     <EmbeddedResource Include="Resources\MenuDeleteSelection.png" />
     <EmbeddedResource Include="Resources\MenuDeleteSelection@2x.png" />
+    <EmbeddedResource Include="Resources\MenuRelease.png" />
+    <EmbeddedResource Include="Resources\MenuRelease@2x.png" />
     <EmbeddedResource Include="Resources\MenuEyedropper.png" />
     <EmbeddedResource Include="Resources\MenuEyedropper@2x.png" />
     <EmbeddedResource Include="Resources\MenuForceDisplay.png" />

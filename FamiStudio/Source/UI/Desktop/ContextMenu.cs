@@ -34,7 +34,10 @@ namespace FamiStudio
         {
             "MenuCheckOff",
             "MenuCheckOn",
+            "MenuClearEnvelope",
             "MenuClearSelection",
+            "MenuClearLoopPoint",
+            "MenuClearRelease",
             "MenuCustomPatternSettings",
             "MenuDelete",
             "MenuDeleteSelection",
@@ -44,6 +47,7 @@ namespace FamiStudio
             "MenuMute", 
             "MenuProperties",
             "MenuRadio",
+            "MenuRelease",
             "MenuSelectAll",
             "MenuSelectNote",
             "MenuSelectPattern",

@@ -39,6 +39,7 @@ namespace FamiStudio
         private MouseButtons captureButton   = MouseButtons.None;
         private MouseButtons lastButtonPress = MouseButtons.None;
         private Timer timer = new Timer();
+        private Point contextMenuPoint = Point.Empty;
 
         private DateTime       delayedRightClickStartTime = DateTime.MinValue;
         private MouseEventArgs delayedRightClickArgs      = null;
@@ -285,9 +286,15 @@ namespace FamiStudio
             lastButtonPress = e.Button;
             if (ctrl != null)
             {
-                if (ctrl != ContextMenu)
-                    controls.HideContextMenu();
                 SetActiveControl(ctrl);
+                
+                // Ignore the first click.
+                if (controls.IsContextMenuActive && ctrl != ContextMenu)
+                {
+                    controls.HideContextMenu();
+                    return;
+                }
+
                 var ex = new MouseEventArgsEx(e.Button, e.Clicks, x, y, e.Delta);
                 ctrl.MouseDown(ex);
                 if (ex.IsRightClickDelayed)
@@ -340,6 +347,7 @@ namespace FamiStudio
             {
                 if (ctrl != ContextMenu)
                     controls.HideContextMenu();
+
                 ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
             }
         }
@@ -473,7 +481,8 @@ namespace FamiStudio
 
         public Point GetCursorPosition()
         {
-            return Cursor.Position;
+            // Pretend the mouse is fixed when a context menu is active.
+            return controls.IsContextMenuActive ? contextMenuPoint : Cursor.Position;
         }
 
         public void RefreshCursor()
@@ -503,6 +512,7 @@ namespace FamiStudio
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
+            contextMenuPoint = PointToScreen(new Point(x, y));
             controls.ShowContextMenu(x, y, options);
         }
 

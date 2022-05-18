@@ -4916,7 +4916,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownEffectPanel(MouseEventArgsEx e)
         {
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
             if (selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
@@ -4969,6 +4969,7 @@ namespace FamiStudio
                     }
                     else
                     {
+                        // MATTT : How do we want to handle this on desktop?
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
                         editSample.VolumeEnvelope[vertexIdx].volume = 1.0f;
                         editSample.Process();
@@ -5029,6 +5030,7 @@ namespace FamiStudio
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
+            // MATTT : Any context menus to worry about here?
             if ((left || right) && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
             {
                 StartSelectWave(e.X, e.Y);
@@ -5123,26 +5125,21 @@ namespace FamiStudio
 
         private bool HandleMouseDownDPCMMapping(MouseEventArgs e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool left = e.Button.HasFlag(MouseButtons.Left);
 
-            if ((left || right) && GetLocationForCoord(e.X, e.Y, out var location, out var noteValue))
+            if (left && GetLocationForCoord(e.X, e.Y, out var location, out var noteValue))
             {
                 if (App.Project.NoteSupportsDPCM(noteValue))
                 {
                     var mapping = App.Project.GetDPCMMapping(noteValue);
 
-                    if (left && mapping == null)
+                    if (mapping == null)
                     {
                         MapDPCMSample(noteValue);
                     }
-                    else if (left && mapping != null)
+                    else 
                     {
                         StartDragDPCMSampleMapping(e.X, e.Y, noteValue);
-                    }
-                    else if (right && mapping != null)
-                    {
-                        ClearDPCMSampleMapping(noteValue);
                     }
                 }
                 else
@@ -6068,16 +6065,16 @@ namespace FamiStudio
                 {
                     if (env.CanLoop)
                     {
-                        menu.Add(new ContextMenuOption("MenuEnvLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }));
+                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }));
                         if (env.Loop >= 0)
-                            menu.Add(new ContextMenuOption("MenuClearEnvLoopPoint", "Clear Loop Point", () => { ClearEnvelopeLoopRelease(false); }));
+                            menu.Add(new ContextMenuOption("MenuClearLoopPoint", "Clear Loop Point", () => { ClearEnvelopeLoopRelease(false); }));
                     }
                     if (env.CanRelease)
                     {
                         if (absIdx > 0)
-                            menu.Add(new ContextMenuOption("MenuEnvRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
+                            menu.Add(new ContextMenuOption("MenuRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
                         if (env.Release >= 0)
-                            menu.Add(new ContextMenuOption("MenuClearEnvRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
+                            menu.Add(new ContextMenuOption("MenuClearRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
                     }
                 }
 
@@ -6132,7 +6129,7 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleTouchLongPressDPCMMapping(int x, int y)
+        private bool HandleContextMenuDPCMMapping(int x, int y)
         {
             if (GetLocationForCoord(x, y, out _, out var noteValue))
             {
@@ -6140,12 +6137,13 @@ namespace FamiStudio
 
                 if (mapping != null)
                 {
-                    highlightDPCMSample = noteValue;
+                    if (PlatformUtils.IsMobile)
+                        highlightDPCMSample = noteValue;
 
                     App.ShowContextMenu(left + x, top + y, new[]
                     {
                         new ContextMenuOption("MenuDelete", "Remove DPCM Sample", () => { ClearDPCMSampleMapping(noteValue); }),
-                        new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleMappingProperties(Point.Empty, mapping); }),
+                        new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleMappingProperties(new Point(x, y), mapping); }),
                     });
 
                     return true;
@@ -6153,6 +6151,11 @@ namespace FamiStudio
             }
 
             return true;
+        }
+
+        private bool HandleTouchLongPressDPCMMapping(int x, int y)
+        {
+            return HandleContextMenuDPCMMapping(x, y);
         }
 
         protected override void OnTouchDown(int x, int y)
@@ -7976,6 +7979,11 @@ namespace FamiStudio
             return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuEnvelope(e.X, e.Y);
         }
 
+        private bool HandleMouseUpDPCMMapping(MouseEventArgs e)
+        {
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuDPCMMapping(e.X, e.Y);
+        }
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
             bool middle = e.Button.HasFlag(MouseButtons.Middle);
@@ -8007,6 +8015,11 @@ namespace FamiStudio
                     editMode == EditionMode.Arpeggio)
                 {
                     if (HandleMouseUpEnvelope(e)) goto Handled;
+                }
+
+                if (editMode == EditionMode.DPCMMapping)
+                {
+                    if (HandleMouseUpDPCMMapping(e)) goto Handled;
                 }
 
                 return;
