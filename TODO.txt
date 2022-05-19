@@ -5,29 +5,11 @@
 4.0.0
 =====
 P0:
-- Right-click functionality.
-	/ Tooltips
+- Context menu polish:.
+	- Review all tooltips (lots of {MouseRight} left for delete, etc.)
 	- Tooltips where a context menu can appear.
-	/ Sequencer :
-		- Unify more with mobile (add the clear selections if they were there on movile)
-		- Select all there too?
-		- Tooltips/MATTT
-	- Piano roll
-		x Snap resolution
-		/ Channel mode
-			x Channel notes
-			x Effect panel
-			x Channel header
-		- Env/arp
-			- Envelope header
-			- Make envelope resize only work at end of envelope. Cursor too.
-		- DPCM
-			- Reset envelope
-		/ DPCM Mapping
-			x Delete/props
-		- Double-click deletes notes, dpcm mapping, effect values, etc.
-		x Slide + volume slide gizmos.
-	/ PE
+	- When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
+	- Sequencer : Add select all there too?
 P1:
 - Validation errors in JTS when deleting some instruments.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value

@@ -2407,12 +2407,7 @@ namespace FamiStudio
 
         protected bool HandleMouseUpButtons(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right))
-            {
-                return HandleContextMenuButtons(e.X, e.Y);
-            }
-
-            return false;
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuButtons(e.X, e.Y);
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -3500,13 +3495,7 @@ namespace FamiStudio
             {
                 if (subButtonType == SubButtonType.Play)
                 {
-                    // MATTT : Add a context menu here?
                     App.PreviewDPCMSample(button.sample, true);
-                }
-                else if (subButtonType == SubButtonType.Save)
-                {
-                    // MATTT : Context menu here, for sure.
-                    ExportDPCMSampleSourceData(button.sample);
                 }
             }
 
@@ -3846,13 +3835,24 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleContextMenuDpcmButton(int x, int y, Button button)
+        private bool HandleContextMenuDpcmButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
-            App.ShowContextMenu(left + x, top + y, new[]
+            if (PlatformUtils.IsDesktop && subButtonType == SubButtonType.Save)
             {
-                new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }),
-                new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); })
-            });
+                App.ShowContextMenu(left + x, top + y, new[]
+                {
+                    new ContextMenuOption("MenuSave", "Export Processed DMC Data...", () => { ExportDPCMSampleProcessedData(button.sample); }),
+                    new ContextMenuOption("MenuSave", "Export Source Data...", () => { ExportDPCMSampleSourceData(button.sample); })
+                });
+            }
+            else
+            {
+                App.ShowContextMenu(left + x, top + y, new[]
+                {
+                    new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }),
+                    new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); })
+                });
+            }
 
             return true;
         }
@@ -3900,7 +3900,7 @@ namespace FamiStudio
                     case ButtonType.Arpeggio:
                         return HandleContextMenuArpeggioButton(x, y, button);
                     case ButtonType.Dpcm:
-                        return HandleContextMenuDpcmButton(x, y, button);
+                        return HandleContextMenuDpcmButton(x, y, button, subButtonType, buttonIdx);
                 }
 
                 return true;

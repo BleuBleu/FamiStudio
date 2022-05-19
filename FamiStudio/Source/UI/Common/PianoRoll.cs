@@ -3764,12 +3764,30 @@ namespace FamiStudio
 
         }
 
+        private bool HandleDoubleClickDPCMMapping(MouseEventArgs e)
+        {
+            if (GetLocationForCoord(e.X, e.Y, out _, out var noteValue))
+            {
+                var mapping = App.Project.GetDPCMMapping(noteValue);
+                if (mapping != null)
+                    ClearDPCMSampleMapping(noteValue);
+                return true;
+            }
+
+            return true;
+        }
+
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             if (editMode == EditionMode.Channel)
             {
                 if (HandleDoubleClickChannelNote(e)) goto Handled;
                 if (HandleDoubleClickEffectPanel(e)) goto Handled;
+            }
+
+            if (editMode == EditionMode.DPCMMapping)
+            {
+                if (HandleDoubleClickDPCMMapping(e)) goto Handled;
             }
 
             return;
@@ -5506,12 +5524,6 @@ namespace FamiStudio
         private bool HandleTouchDownNoteGizmos(int x, int y)
         {
             return HandleNoteGizmos(x, y);
-        }
-
-        private void GetRectangleCenter(Rectangle r, out int x, out int y)
-        {
-            x = (r.Left + r.Right)  / 2;
-            y = (r.Top  + r.Bottom) / 2;
         }
 
         private int GetEffectCoordY(int effect, int value)

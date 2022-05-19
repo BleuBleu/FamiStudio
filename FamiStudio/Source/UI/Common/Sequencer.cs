@@ -1163,87 +1163,17 @@ namespace FamiStudio
 
         private bool HandleMouseUpChannelName(MouseEventArgs e)
         {
-            // MATTT : Unify with mobile.
-            if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInTrackName(e))
-            {
-                var channelIdx = GetChannelIndexForCoord(e.Y);
-
-                App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
-                {
-                    new ContextMenuOption("MenuMute", "Toggle Mute Channel", "Toggle channel mute", () => { App.ToggleChannelActive(channelIdx); }),
-                    new ContextMenuOption("MenuSolo", "Toggle Solo Channel", "Toggle channel solo", () => { App.ToggleChannelSolo(channelIdx); }),
-                    new ContextMenuOption("MenuForceDisplay", "Toggle Force Display Channel", "Force displaying the channel in the\npiano roll, even when not selected", () => { App.ToggleChannelForceDisplay(channelIdx); })
-                });
-
-                return true;
-            }
-
-            return false;
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuChannelName(e.X, e.Y);
         }
 
         private bool HandleMouseUpHeader(MouseEventArgs e)
         {
-            // MATTT : Unify with mobile.
-            if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInHeader(e))
-            {
-                var patternIdx = GetPatternIndexForCoord(e.X);
-
-                if (patternIdx >= 0)
-                {
-                    // MATTT : tooltip!
-                    App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
-                    {
-                        new ContextMenuOption("MenuLoopPoint", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
-                        new ContextMenuOption("MenuCustomPatternSettings", "Custom Pattern Settings...", () => { EditPatternCustomSettings(new Point(e.X, e.Y), patternIdx); } )
-                    });
-                }
-
-                return true;
-            }
-
-            return false;
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuHeader(e.X, e.Y);
         }
 
         private bool HandleMouseUpPatternArea(MouseEventArgs e)
         {
-            // MATTT : Unify with mobile.
-            if (e.Button.HasFlag(MouseButtons.Right))
-            {
-                bool inPatternZone = GetPatternForCoord(e.X, e.Y, out var location);
-
-                if (inPatternZone)
-                {
-                    var pattern = Song.GetPatternInstance(location);
-
-                    if (pattern != null)
-                    {
-                        if (IsPatternSelected(location) && SelectionContainsMultiplePatterns())
-                        {
-                            // MATTT : tooltips!
-                            App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
-                            {
-                                new ContextMenuOption("MenuDelete", "Delete Selected Patterns", () => { DeleteSelection(true); } ),
-                                new ContextMenuOption("MenuProperties", "Selected Patterns Properties...", () => { EditPatternProperties(new Point(e.X, e.Y), pattern, true); } )
-                            });
-                        }
-                        else
-                        {
-                            SetSelection(location, location);
-
-                            // MATTT : tooltips!
-                            App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
-                            {
-                                new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }),
-                                new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(new Point(e.X, e.Y), pattern, false); }),
-                            });
-                        }
-
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuPatternArea(e.X, e.Y);
         }
 
         private bool HandleMouseDownSetLoopPoint(MouseEventArgs e)
@@ -1558,13 +1488,13 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchLongPressChannelName(int x, int y)
+        private bool HandleContextMenuChannelName(int x, int y)
         {
             if (IsPointInChannelArea(x, y))
             {
                 var channelIdx = GetChannelIndexForCoord(y);
                
-                App.ShowContextMenu(new[]
+                App.ShowContextMenu(left + x, top + y, new[]
                 {
                     new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(channelIdx); }),
                     new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(channelIdx); }),
@@ -1577,7 +1507,12 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchLongPressHeader(int x, int y)
+        private bool HandleTouchLongPressChannelName(int x, int y)
+        {
+            return HandleContextMenuChannelName(x, y);
+        }
+
+        private bool HandleContextMenuHeader(int x, int y)
         {
             if (IsPointInHeader(x, y))
             {
@@ -1585,7 +1520,7 @@ namespace FamiStudio
 
                 if (patternIdx >= 0)
                 {
-                    App.ShowContextMenu(new[]
+                    App.ShowContextMenu(left + x, top + y, new[]
                     {
                         new ContextMenuOption("MenuLoopPoint", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
                         new ContextMenuOption("MenuCustomPatternSettings", "Custom Pattern Settings...", () => { EditPatternCustomSettings(Point.Empty, patternIdx); } )
@@ -1596,6 +1531,11 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        private bool HandleTouchLongPressHeader(int x, int y)
+        {
+            return HandleContextMenuHeader(x, y);
         }
 
         private void GotoPianoRoll(PatternLocation location)
@@ -1611,7 +1551,7 @@ namespace FamiStudio
             MoveCopyOrDuplicateSelection(channelDeltaIdx, patternDeltaIdx, true, copy);
         }
 
-        private bool HandleTouchLongPressPatternArea(int x, int y)
+        private bool HandleContextMenuPatternArea(int x, int y)
         {
             bool inPatternZone = GetPatternForCoord(x, y, out var location);
 
@@ -1623,7 +1563,7 @@ namespace FamiStudio
 
                 var menu = new List<ContextMenuOption>(); ;
 
-                if (IsSelectionValid() && !IsPatternSelected(location))
+                if (PlatformUtils.IsMobile && IsSelectionValid() && !IsPatternSelected(location))
                 {
                     menu.Add(new ContextMenuOption("MenuExpandSelection", "Expand Selection", () => { EnsureSelectionInclude(location); }));
                     if (selectionMin.ChannelIndex == location.ChannelIndex)
@@ -1640,23 +1580,34 @@ namespace FamiStudio
                     }
                     else
                     {
+                        if (PlatformUtils.IsDesktop)
+                            SetSelection(location, location);
+
                         menu.Add(new ContextMenuOption("MenuDelete", "Delete Pattern", () => { DeletePattern(location); }));
                         menu.Add(new ContextMenuOption("MenuProperties", "Pattern Properties...", () => { EditPatternProperties(Point.Empty, pattern, false); }));
                     }
                 }
 
-                menu.Add(new ContextMenuOption("MenuPiano", "Go To Piano Roll", () => { GotoPianoRoll(location); }));
+                if (PlatformUtils.IsMobile)
+                {
+                    menu.Add(new ContextMenuOption("MenuPiano", "Go To Piano Roll", () => { GotoPianoRoll(location); }));
+                }
 
                 if (IsSelectionValid())
                 {
                     menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedPatern(); }));
                 }
 
-                App.ShowContextMenu(menu.ToArray());
+                App.ShowContextMenu(left + x, top + y, menu.ToArray());
                 return true;
             }
 
             return false;
+        }
+
+        private bool HandleTouchLongPressPatternArea(int x, int y)
+        {
+            return HandleContextMenuPatternArea(x, y);
         }
 
         protected override void OnTouchDown(int x, int y)
@@ -2736,23 +2687,6 @@ namespace FamiStudio
             });
         }
 
-        protected bool HandleMouseDoubleClickHeader(MouseEventArgs e)
-        {
-            var left = (e.Button & MouseButtons.Left) != 0;
-
-            if (left && IsMouseInHeader(e))
-            {
-                GetPatternForCoord(e.X, e.Y, out var location);
-                if (location.IsValid)
-                {
-                    EditPatternCustomSettings(new Point(e.X, e.Y), location.PatternIndex);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         protected bool HandleMouseDoubleClickPatternArea(MouseEventArgs e)
         {
             var left = (e.Button & MouseButtons.Left) != 0;
@@ -2789,7 +2723,6 @@ namespace FamiStudio
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             if (HandleMouseDoubleClickChannelName(e)) goto Handled;
-            if (HandleMouseDoubleClickHeader(e)) goto Handled;
             if (HandleMouseDoubleClickPatternArea(e)) goto Handled;
 
             return;
