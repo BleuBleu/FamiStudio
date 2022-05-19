@@ -3774,7 +3774,7 @@ namespace FamiStudio
             var menu = new List<ContextMenuOption>();
             if (App.Project.Songs.Count > 1)
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
-            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(new Point(x, y), button.song); }, App.Project.Songs.Count > 1));
+            menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(new Point(x, y), button.song); }));
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
         }

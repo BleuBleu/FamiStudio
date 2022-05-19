@@ -10,20 +10,21 @@ P0:
 	- Tooltips where a context menu can appear.
 	- When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
 	- Sequencer : Add select all there too?
+- GLFW?
 P1:
 - Validation errors in JTS when deleting some instruments.
-- Android : Starting scroll on a slider (in vrc7 instrument) changes the value
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
-- Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
-- ffmpeg path on Linux should work on path (Puna on CC discord).
 - Improve oscilloscope stability (min square norm?)
 - Improve no-attack.
 - Scroll bar in sequencer (option to limit seq size to xx%)
 - Volume/effect scaling, easy one we have context menus.
 P2:
+- Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
+- ffmpeg path on Linux should work on path (Puna on CC discord).
 - Uncompressed envelopes
 - CLI only EXE (Linux only).
 - Paste special, option to rename patterns.
