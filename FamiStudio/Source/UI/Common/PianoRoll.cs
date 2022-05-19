@@ -332,6 +332,7 @@ namespace FamiStudio
         int captureScrollY = 0;
         int captureSelectionMin = -1;
         int captureSelectionMax = -1;
+        int captureOffsetY = 0;
         int playingNote = -1;
         int highlightNote = Note.NoteInvalid;
         int selectionMin = -1;
@@ -415,8 +416,7 @@ namespace FamiStudio
 
         private class Gizmo
         {
-            public Rectangle DrawRect;
-            public Rectangle HitRect;
+            public Rectangle Rect;
             public int FillImageIndex = -1;
             public int ImageIndex;
             public GizmoAction Action;
@@ -1797,10 +1797,10 @@ namespace FamiStudio
                             // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
                             var lineColor = IsGizmoHighlighted(g, headerSizeY) ? Color.White : Color.Black;
 
-                            r.cz.PushTransform(g.DrawRect.X + 1, g.DrawRect.Y + 1, g.DrawRect.Width - 2, g.DrawRect.Height - 2);
+                            r.cz.PushTransform(g.Rect.X + 1, g.Rect.Y + 1, g.Rect.Width - 2, g.Rect.Height - 2);
                             r.cz.FillGeometry(circleGeo, ThemeResources.LightGreyFillBrush1);
                             r.cz.PopTransform();
-                            r.cz.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
+                            r.cz.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                         }
                     }
                 }
@@ -2213,10 +2213,11 @@ namespace FamiStudio
             {
                 var pt = PointToClient(Cursor.Position);
 
-                if (g.HitRect.Contains(pt.X - pianoSizeX, pt.Y - offsetY))
+                if (g.Rect.Contains(pt.X - pianoSizeX, pt.Y - offsetY))
                     return true;
 
-                if (g.Action == GizmoAction.MoveSlide && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo)
+                if (g.Action == GizmoAction.MoveSlide && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo ||
+                    g.Action == GizmoAction.MoveVolumeSlideValue && captureOperation == CaptureOperation.DragVolumeSlideTargetGizmo)
                     return true;
             }
             return false;
@@ -2507,10 +2508,10 @@ namespace FamiStudio
                             var fillColor = GetNoteColor(Song.Channels[editChannel], gizmoNote.Value, gizmoNote.Instrument);
                             var lineColor = IsGizmoHighlighted(g, headerAndEffectSizeY) ? Color.White : Color.Black;
 
-                            r.cg.PushTransform(g.DrawRect.X + 1, g.DrawRect.Y + 1, g.DrawRect.Width - 2, g.DrawRect.Height - 2);
+                            r.cg.PushTransform(g.Rect.X + 1, g.Rect.Y + 1, g.Rect.Width - 2, g.Rect.Height - 2);
                             r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(fillColor));
                             r.cg.PopTransform();
-                            r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
+                            r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                         }
                     }
                 }
@@ -2769,10 +2770,10 @@ namespace FamiStudio
                     // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
                     var lineColor = IsGizmoHighlighted(g, 0) ? Color.White : Color.Black;
 
-                    r.cg.PushTransform(g.DrawRect.X + 1, g.DrawRect.Y + 1, g.DrawRect.Width - 2, g.DrawRect.Height - 2);
+                    r.cg.PushTransform(g.Rect.X + 1, g.Rect.Y + 1, g.Rect.Width - 2, g.Rect.Height - 2);
                     r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(color));
                     r.cg.PopTransform();
-                    r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
+                    r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                 }
             }
         }
@@ -3531,12 +3532,13 @@ namespace FamiStudio
             pattern.InvalidateCumulativeCache();
         }
 
-        void StartDragVolumeSlideGizmo(int x, int y, NoteLocation location)
+        void StartDragVolumeSlideGizmo(int x, int y, Note note, NoteLocation location)
         {
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
+            var offsetY = GetEffectCoordY(Note.EffectVolumeSlide, note.VolumeSlideTarget) - y;
 
-            StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTargetGizmo, false, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTargetGizmo, false, location.ToAbsoluteNoteIndex(Song), offsetY);
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
         }
 
@@ -3802,7 +3804,7 @@ namespace FamiStudio
             Capture = true;
         }
 
-        private void StartCaptureOperation(int x, int y, CaptureOperation op, bool allowSnap = false, int noteIdx = -1)
+        private void StartCaptureOperation(int x, int y, CaptureOperation op, bool allowSnap = false, int noteIdx = -1, int offsetY = 0)
         {
 #if DEBUG
             Debug.Assert(captureOperation == CaptureOperation.None);
@@ -3819,6 +3821,7 @@ namespace FamiStudio
             captureNoteValue = NumNotes - Utils.Clamp((y + scrollY - headerAndEffectSizeY) / noteSizeY, 0, NumNotes);
             captureSelectionMin = selectionMin;
             captureSelectionMax = selectionMax;
+            captureOffsetY = offsetY;
             canFling = false;
 
             if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
@@ -3874,6 +3877,8 @@ namespace FamiStudio
 
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
             {
+                y += captureOffsetY;
+
                 switch (captureOperation)
                 {
                     case CaptureOperation.DragLoop:
@@ -4028,6 +4033,8 @@ namespace FamiStudio
         {
             if (captureOperation != CaptureOperation.None)
             {
+                y += captureOffsetY;
+
                 switch (captureOperation)
                 {
                     case CaptureOperation.PlayPiano:
@@ -4399,8 +4406,7 @@ namespace FamiStudio
                 Gizmo resizeGizmo = new Gizmo();
                 resizeGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeLeftRight;
                 resizeGizmo.Action = GizmoAction.ResizeNote;
-                resizeGizmo.DrawRect = new Rectangle(x, y, gizmoSize, gizmoSize);
-                resizeGizmo.HitRect = resizeGizmo.DrawRect;
+                resizeGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(resizeGizmo);
             }
 
@@ -4418,8 +4424,7 @@ namespace FamiStudio
                 Gizmo releaseGizmo = new Gizmo();
                 releaseGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeLeftRight;
                 releaseGizmo.Action = GizmoAction.MoveRelease;
-                releaseGizmo.DrawRect = new Rectangle(x, y, gizmoSize, gizmoSize);
-                releaseGizmo.HitRect = releaseGizmo.DrawRect;
+                releaseGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(releaseGizmo);
             }
 
@@ -4445,18 +4450,7 @@ namespace FamiStudio
                 Gizmo slideGizmo = new Gizmo();
                 slideGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeUpDown;
                 slideGizmo.Action = GizmoAction.MoveSlide;
-                slideGizmo.DrawRect = new Rectangle(x, y, gizmoSize, gizmoSize);
-                if (PlatformUtils.IsMobile)
-                {
-                    slideGizmo.HitRect = slideGizmo.DrawRect;
-                }
-                else
-                {
-                    slideGizmo.HitRect = new Rectangle(
-                        slideGizmo.DrawRect.Left, 
-                        (slideGizmo.DrawRect.Bottom + slideGizmo.DrawRect.Top - noteSizeY) / 2,
-                        slideGizmo.DrawRect.Width, noteSizeY);
-                }
+                slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(slideGizmo);
             }
 
@@ -4472,10 +4466,9 @@ namespace FamiStudio
             if (!showEffectsPanel || selectedEffectIdx < 0 || note == null || !note.HasValidEffectValue(selectedEffectIdx))
                 return null;
 
-            var locationAbsIndex = location.ToAbsoluteNoteIndex(Song);
-
             var list = new List<Gizmo>();
 
+            var locationAbsIndex = location.ToAbsoluteNoteIndex(Song);
             var channel  = Song.Channels[editChannel];
             var minValue = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
             var maxValue = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
@@ -4493,8 +4486,7 @@ namespace FamiStudio
                 Gizmo effectGizmo = new Gizmo();
                 effectGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeUpDown;
                 effectGizmo.Action = GizmoAction.ChangeEffectValue;
-                effectGizmo.DrawRect = new Rectangle(x, y, gizmoSize, gizmoSize);
-                effectGizmo.HitRect = effectGizmo.DrawRect;
+                effectGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(effectGizmo);
             }
 
@@ -4510,8 +4502,7 @@ namespace FamiStudio
                 Gizmo slideGizmo = new Gizmo();
                 slideGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeUpDown;
                 slideGizmo.Action = GizmoAction.MoveVolumeSlideValue;
-                slideGizmo.DrawRect = new Rectangle(x, y, gizmoSize, gizmoSize);
-                slideGizmo.HitRect = slideGizmo.DrawRect;
+                slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(slideGizmo);
             }
 
@@ -4543,8 +4534,7 @@ namespace FamiStudio
             Gizmo slideGizmo = new Gizmo();
             slideGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeUpDown;
             slideGizmo.Action = GizmoAction.ChangeEnvValue;
-            slideGizmo.DrawRect = new Rectangle(x, y, gizmoSize, gizmoSize);
-            slideGizmo.HitRect = slideGizmo.DrawRect;
+            slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
 
             var list = new List<Gizmo>();
             list.Add(slideGizmo);
@@ -5496,7 +5486,7 @@ namespace FamiStudio
                     var absNoteLocation = gizmoNoteLocation.ToAbsoluteNoteIndex(Song);
                     foreach (var g in gizmos)
                     {
-                        if (g.HitRect.Contains(x - pianoSizeX, y - headerAndEffectSizeY))
+                        if (g.Rect.Contains(x - pianoSizeX, y - headerAndEffectSizeY))
                         {
                             switch (g.Action)
                             {
@@ -5525,24 +5515,38 @@ namespace FamiStudio
             return HandleNoteGizmos(x, y);
         }
 
+        private void GetRectangleCenter(Rectangle r, out int x, out int y)
+        {
+            x = (r.Left + r.Right)  / 2;
+            y = (r.Top  + r.Bottom) / 2;
+        }
+
+        private int GetEffectCoordY(int effect, int value)
+        {
+            var channel = Song.Channels[editChannel];
+            var minValue = Note.GetEffectMinValue(Song, channel, effect);
+            var maxValue = Note.GetEffectMaxValue(Song, channel, effect);
+            return headerSizeY + effectPanelSizeY - ((minValue == maxValue) ? effectPanelSizeY : (int)Math.Floor((value - minValue) / (float)(maxValue - minValue) * effectPanelSizeY));
+        }
+
         private bool HandleEffectsGizmos(int x, int y)
         {
             if (IsPointInNoteArea(x, y))
             {
-                var gizmos = GetEffectGizmos(out _, out var highlightLocation);
+                var gizmos = GetEffectGizmos(out var gizmoNote, out var gizmoNoteLocation);
                 if (gizmos != null)
                 {
                     foreach (var g in gizmos)
                     {
-                        if (g.HitRect.Contains(x - pianoSizeX, y - headerSizeY))
+                        if (g.Rect.Contains(x - pianoSizeX, y - headerSizeY))
                         {
                             switch (g.Action)
                             {
                                 case GizmoAction.ChangeEffectValue:
-                                    StartChangeEffectValue(x, y, highlightLocation);
+                                    StartChangeEffectValue(x, y, gizmoNoteLocation);
                                     break;
                                 case GizmoAction.MoveVolumeSlideValue:
-                                    StartDragVolumeSlideGizmo(x, y, highlightLocation);
+                                    StartDragVolumeSlideGizmo(x, y, gizmoNote, gizmoNoteLocation);
                                     break;
                             }
 
@@ -5650,7 +5654,7 @@ namespace FamiStudio
                 {
                     foreach (var g in gizmos)
                     {
-                        if (g.HitRect.Contains(x - pianoSizeX, y - headerAndEffectSizeY))
+                        if (g.Rect.Contains(x - pianoSizeX, y - headerAndEffectSizeY))
                         {
                             switch (g.Action)
                             {
@@ -6842,8 +6846,9 @@ namespace FamiStudio
 
             if (note != null && channel.SupportsSlideNotes)
             {
+                var offsetY = headerAndEffectSizeY + virtualSizeY - (int)((note.SlideNoteTarget + 0.5f) * noteSizeY) - scrollY - y;
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
-                StartCaptureOperation(x, y, CaptureOperation.DragSlideNoteTargetGizmo, false, location.ToAbsoluteNoteIndex(Song));
+                StartCaptureOperation(x, y, CaptureOperation.DragSlideNoteTargetGizmo, false, location.ToAbsoluteNoteIndex(Song), offsetY);
             }
         }
 
@@ -8037,7 +8042,7 @@ namespace FamiStudio
                         {
                             foreach (var gizmo in gizmos)
                             {
-                                if (gizmo.HitRect.Contains(pt.X - pianoSizeX, pt.Y - headerAndEffectSizeY))
+                                if (gizmo.Rect.Contains(pt.X - pianoSizeX, pt.Y - headerAndEffectSizeY))
                                 {
                                     Debug.Assert(gizmo.Action == GizmoAction.MoveSlide);
                                     Cursor.Current = Cursors.SizeNS;
