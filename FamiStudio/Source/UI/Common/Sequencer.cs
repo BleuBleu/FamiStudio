@@ -1168,12 +1168,11 @@ namespace FamiStudio
             {
                 var channelIdx = GetChannelIndexForCoord(e.Y);
 
-                // MATTT : Do we want to specify {MouseLeft} every time?
                 App.ShowContextMenu(Left + e.X, Top + e.Y, new[]
                 {
-                    new ContextMenuOption("MenuMute", "Toggle Mute Channel", "{MouseLeft} Toggle channel mute", () => { App.ToggleChannelActive(channelIdx); }),
-                    new ContextMenuOption("MenuSolo", "Toggle Solo Channel", "{MouseLeft} Toggle channel solo", () => { App.ToggleChannelSolo(channelIdx); }),
-                    new ContextMenuOption("MenuForceDisplay", "Toggle Force Display Channel", "{MouseLeft} Force displaying the channel in the\npiano roll, even when not selected", () => { App.ToggleChannelForceDisplay(channelIdx); })
+                    new ContextMenuOption("MenuMute", "Toggle Mute Channel", "Toggle channel mute", () => { App.ToggleChannelActive(channelIdx); }),
+                    new ContextMenuOption("MenuSolo", "Toggle Solo Channel", "Toggle channel solo", () => { App.ToggleChannelSolo(channelIdx); }),
+                    new ContextMenuOption("MenuForceDisplay", "Toggle Force Display Channel", "Force displaying the channel in the\npiano roll, even when not selected", () => { App.ToggleChannelForceDisplay(channelIdx); })
                 });
 
                 return true;

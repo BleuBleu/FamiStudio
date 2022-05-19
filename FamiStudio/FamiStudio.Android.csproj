@@ -502,6 +502,7 @@
     <EmbeddedResource Include="Resources\MobileEffectSpeed.png" />
     <EmbeddedResource Include="Resources\MobileEffectVibrato.png" />
     <EmbeddedResource Include="Resources\MobileEffectVolume.png" />
+    <EmbeddedResource Include="Resources\MobileMenuBlank.png" />
     <EmbeddedResource Include="Resources\MobileMenuClearEnvelope.png" />
     <EmbeddedResource Include="Resources\MobileMenuClearLoopPoint.png" />
     <EmbeddedResource Include="Resources\MobileMenuClearRelease.png" />
@@ -521,13 +522,16 @@
     <EmbeddedResource Include="Resources\MobileMenuPlayHalf.png" />
     <EmbeddedResource Include="Resources\MobileMenuPlayQuarter.png" />
     <EmbeddedResource Include="Resources\MobileMenuProperties.png" />
+    <EmbeddedResource Include="Resources\MobileMenuRadio.png" />
     <EmbeddedResource Include="Resources\MobileMenuRelease.png" />
     <EmbeddedResource Include="Resources\MobileMenuReplaceSelection.png" />
     <EmbeddedResource Include="Resources\MobileMenuReset.png" />
+    <EmbeddedResource Include="Resources\MobileMenuSave.png" />
     <EmbeddedResource Include="Resources\MobileMenuSelectAll.png" />
     <EmbeddedResource Include="Resources\MobileMenuSelectNote.png" />
     <EmbeddedResource Include="Resources\MobileMenuSelectPattern.png" /> 
     <EmbeddedResource Include="Resources\MobileMenuSolo.png" />
+    <EmbeddedResource Include="Resources\MobileMenuStar.png" />
     <EmbeddedResource Include="Resources\MobileMenuStopNote.png" />
     <EmbeddedResource Include="Resources\MobileMenuToggleAttack.png" />
     <EmbeddedResource Include="Resources\MobileMenuToggleRelease.png" />

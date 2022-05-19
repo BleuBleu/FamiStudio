@@ -41,17 +41,22 @@ namespace FamiStudio
             "MenuCustomPatternSettings",
             "MenuDelete",
             "MenuDeleteSelection",
+            "MenuExport",
             "MenuEyedropper",
+            "MenuFile",
             "MenuForceDisplay",
             "MenuLoopPoint",
-            "MenuMute", 
+            "MenuMute",
+            "MenuPlay",
             "MenuProperties",
             "MenuRadio",
             "MenuRelease",
+            "MenuSave",
             "MenuSelectAll",
             "MenuSelectNote",
             "MenuSelectPattern",
-            "MenuSolo", 
+            "MenuSolo",
+            "MenuStar",
             "MenuStopNote",
             "MenuToggleAttack",
             "MenuToggleRelease",
@@ -93,7 +98,6 @@ namespace FamiStudio
             var sizeX = 0;
             var sizeY = 0;
 
-            // MATTT : right marging + shortcut.
             for (int i = 0; i < menuOptions.Length; i++)
             {
                 ContextMenuOption option = menuOptions[i];
@@ -122,8 +126,6 @@ namespace FamiStudio
 
             return idx;
         }
-
-        // MATTT : Shortcut support too, display in toolbar!
 
         protected override void OnMouseDown(MouseEventArgsEx e)
         {

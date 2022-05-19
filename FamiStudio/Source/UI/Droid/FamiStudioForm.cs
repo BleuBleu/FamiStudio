@@ -535,18 +535,42 @@ namespace FamiStudio
             {
                 var opt = options[i];
 
-                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.Mobile{opt.Image}.png", true)); 
+                if (opt.Separator)
+                {
+                    var lineView = new View(this);
+                    lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
+                    lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyFillColor1));
+                    linearLayout.AddView(lineView);
+                }
+
+                var imageName = opt.Image;
+
+                if (string.IsNullOrEmpty(imageName))
+                {
+                    var checkState = opt.CheckState();
+                    switch (checkState)
+                    {
+                        case ContextMenuCheckState.Checked:   Debug.Assert(false); break; // Not used on Mobile at the moment.
+                        case ContextMenuCheckState.Unchecked: Debug.Assert(false); break; // Not used on Mobile at the moment.
+                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio"; break;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(imageName))
+                    imageName = "MenuBlank";
+
+                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.Mobile{imageName}.png", true));
                 bmp.SetBounds(0, 0, imageSize, imageSize);
 
                 var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
                 textView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
-                textView.SetCompoundDrawables(bmp, null, null, null);
                 textView.CompoundDrawablePadding = imagePad;
                 textView.SetPadding(imagePad, imagePad, imagePad, imagePad);
                 textView.Gravity = GravityFlags.CenterVertical;
                 textView.Text = opt.Text;
                 textView.Tag = new ContextMenuTag(opt);
                 textView.Click += ContextMenuDialog_Click;
+                textView.SetCompoundDrawables(bmp, null, null, null);
 
                 linearLayout.AddView(textView);
             }

@@ -653,11 +653,10 @@ namespace FamiStudio
             {
                 var options = new ContextMenuOption[Settings.RecentFiles.Count];
 
-                // MATTT : Icons
                 for (int i = 0; i < Settings.RecentFiles.Count; i++)
                 {
                     var j = i; // Important, copy for lambda below.
-                    options[i] = new ContextMenuOption("Instrument", Settings.RecentFiles[i], () => App.OpenProject(Settings.RecentFiles[j]));
+                    options[i] = new ContextMenuOption("MenuFile", Settings.RecentFiles[i], () => App.OpenProject(Settings.RecentFiles[j]));
                 }
 
                 App.ShowContextMenu(left + x, top + y, options);
@@ -671,10 +670,9 @@ namespace FamiStudio
 
         private void OnSaveAs(int x, int y)
         {
-            // MATTT : Icon (MOBILE + DESKTOP!)
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("Instrument", "Save As...", () => { App.SaveProjectAsync(true); }),
+                new ContextMenuOption("MenuSave", "Save As...", () => { App.SaveProjectAsync(true); }),
             });
         }
 
@@ -685,10 +683,9 @@ namespace FamiStudio
 
         private void OnRepeatLastExport(int x, int y)
         {
-            // MATTT : Icon
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("Instrument", "Repeast Last Export", "Repeats the previous export {Ctrl} {Shift} {E}", () => { App.RepeatLastExport(); }),
+                new ContextMenuOption("MenuExport", "Repeast Last Export", "Repeats the previous export {Ctrl} {Shift} {E}", () => { App.RepeatLastExport(); }),
             });
         }
 
@@ -719,10 +716,9 @@ namespace FamiStudio
 
         private void OnPasteSpecial(int x, int y)
         {
-            // MATTT : Icon (desktop + mobile)
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("Instrument", "Paste Special...", "Paste with advanced options {Ctrl} {Shift} {V}", () => { App.PasteSpecial(); }),
+                new ContextMenuOption("MenuStar", "Paste Special...", "Paste with advanced options {Ctrl} {Shift} {V}", () => { App.PasteSpecial(); }),
             });
         }
 
@@ -738,10 +734,9 @@ namespace FamiStudio
 
         private void OnDeleteSpecial(int x, int y)
         {
-            // MATTT : Icon (desktop + mobile)
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("Instrument", "Delete Special...", () => { App.DeleteSpecial(); }),
+                new ContextMenuOption("MenuStar", "Delete Special...", () => { App.DeleteSpecial(); }),
             });
         }
 
@@ -790,25 +785,15 @@ namespace FamiStudio
 
         private void OnPlayWithRate(int x, int y)
         {
-            // MATTT : On desktop, make this something we can change on the fly.
-            if (PlatformUtils.IsDesktop)
+            App.ShowContextMenu(left + x, top + y, new[]
             {
-                App.ShowContextMenu(left + x, top + y, new[]
-                {
-                    new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
-                    new ContextMenuOption("Half Speed",     "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
-                    new ContextMenuOption("Quarter Speed",  "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
-                });
-            }
-            else
-            {
-                App.ShowContextMenu(left + x, top + y, new[]
-                {
-                    new ContextMenuOption("MenuPlay", "Play (Regular Speed)", () => { App.PlayRate = 1; App.PlaySong(); }),
-                    new ContextMenuOption("MenuPlayHalf", "Play (Half Speed)", () => { App.PlayRate = 2; App.PlaySong(); }),
-                    new ContextMenuOption("MenuPlayQuarter", "Play (Quarter Speed)", () => { App.PlayRate = 4; App.PlaySong(); })
-                });
-            }
+                new ContextMenuOption("MenuPlay", "Play From Beginning of Song", "Plays from the start of the song {ForceCtrl} {Space}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
+                new ContextMenuOption("MenuPlay", "Play From Beginning of Current Pattern", "Plays from the start of the current pattern {Shift} {Space}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
+                new ContextMenuOption("MenuPlay", "Play From Loop Point", "Plays from the loop point {Ctrl} {Shift} {Space}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
+                new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, true ),
+                new ContextMenuOption("Half Speed",     "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+                new ContextMenuOption("Quarter Speed",  "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
+            });
         }
 
         private ButtonImageIndices OnPlayGetBitmap(ref Color tint)
@@ -1293,10 +1278,7 @@ namespace FamiStudio
 
                     if (btn != null)
                     {
-                        //if (left)
-                            btn.Click?.Invoke(e.X, e.Y);
-                        //else
-                        //    btn.RightClick?.Invoke(); // MATTT : Make sure everything works on desktop + mobile. (Need to add mobile context menus).
+                        btn.Click?.Invoke(e.X, e.Y);
                         MarkDirty();
                     }
                 }

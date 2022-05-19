@@ -8,12 +8,6 @@ P0:
 - Right-click functionality.
 	/ Tooltips
 	- Tooltips where a context menu can appear.
-	- Toolbar
-		- File icon for recent
-		- Disk icon save as
-		- Repeat last export icon
-		- Paste/delete special
-		- On mobile, replace the right click by context menus. => Not sure what that mean? Diff with master.
 	/ Sequencer :
 		- Unify more with mobile (add the clear selections if they were there on movile)
 		- Select all there too?
@@ -40,6 +34,7 @@ P1:
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
+	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Improve oscilloscope stability (min square norm?)

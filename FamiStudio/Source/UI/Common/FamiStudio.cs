@@ -1780,13 +1780,13 @@ namespace FamiStudio
                 else
                 {
                     if (ctrl && shift)
-                        SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
+                        PlaySongFromLoopPoint();
                     else if (shift)
-                        SeekSong(0);
-                    else if (ctrl) 
-                        SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition)));
-
-                    PlaySong();
+                        PlaySongFromBeginning();
+                    else if (ctrl)
+                        PlaySongFromStartOfPattern();
+                    else
+                        PlaySong();
                 }
             }
             else if (e.KeyCode == Keys.Home)
@@ -1859,6 +1859,30 @@ namespace FamiStudio
 #endif
                 }
             }
+        }
+
+        public void PlaySongFromBeginning()
+        {
+            if (IsPlaying)
+                StopSong();
+            SeekSong(0);
+            PlaySong();
+        }
+
+        public void PlaySongFromStartOfPattern()
+        {
+            if (IsPlaying)
+                StopSong();
+            SeekSong(song.GetPatternStartAbsoluteNoteIndex(song.PatternIndexFromAbsoluteNoteIndex(songPlayer.PlayPosition)));
+            PlaySong();
+        }
+
+        public void PlaySongFromLoopPoint()
+        {
+            if (IsPlaying)
+                StopSong();
+            SeekSong(song.LoopPoint >= 0 && song.LoopPoint < song.Length ? song.GetPatternStartAbsoluteNoteIndex(song.LoopPoint) : 0);
+            PlaySong();
         }
 
         public bool CanCopy   => PianoRoll.IsActiveControl && PianoRoll.CanCopy   || Sequencer.IsActiveControl && Sequencer.CanCopy;
