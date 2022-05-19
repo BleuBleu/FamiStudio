@@ -5038,29 +5038,14 @@ namespace FamiStudio
 
         private bool HandleMouseDownDPCMVolumeEnvelope(MouseEventArgs e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
-
-            if ((left || right) && IsPointInEffectPanel(e.X, e.Y))
+            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInEffectPanel(e.X, e.Y))
             {
                 var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e.X, e.Y);
                 if (vertexIdx >= 0)
                 {
-                    if (left)
-                    {
-                        StartDragWaveVolumeEnvelope(e.X, e.Y, vertexIdx);
-                    }
-                    else
-                    {
-                        // MATTT : How do we want to handle this on desktop?
-                        App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
-                        editSample.VolumeEnvelope[vertexIdx].volume = 1.0f;
-                        editSample.Process();
-                        App.UndoRedoManager.EndTransaction();
-                        MarkDirty();
-                    }
+                    StartDragWaveVolumeEnvelope(e.X, e.Y, vertexIdx);
+                    return true;
                 }
-                return true;
             }
 
             return false;
@@ -5108,15 +5093,17 @@ namespace FamiStudio
                 UpdateWaveSelection(x, y);
         }
 
-        private bool HandleMouseDownWaveSelection(MouseEventArgs e)
+        private bool HandleMouseDownWaveSelection(MouseEventArgsEx e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
             bool right = e.Button.HasFlag(MouseButtons.Right);
 
-            // MATTT : Any context menus to worry about here?
             if ((left || right) && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
             {
-                StartSelectWave(e.X, e.Y);
+                if (left)
+                    StartSelectWave(e.X, e.Y);
+                else
+                    e.DelayRightClick(); // Need to see if we have a context menu or not.
                 return true;
             }
 
@@ -5362,6 +5349,17 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleMouseDownDelayedWaveSelection(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
+            {
+                StartSelectWave(e.X, e.Y);
+                return true;
+            }
+
+            return false;
+        }
+
         protected override void OnMouseDownDelayed(MouseEventArgs e)
         {
             if (editMode == EditionMode.Channel)
@@ -5375,6 +5373,11 @@ namespace FamiStudio
                 editMode == EditionMode.Arpeggio)
             {
                 if (HandleMouseDownDelayedEnvelopeSelection(e)) goto Handled;
+            }
+
+            if (editMode == EditionMode.DPCM)
+            {
+                if (HandleMouseDownDelayedWaveSelection(e)) goto Handled;
             }
 
             return;
@@ -6224,18 +6227,30 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleTouchLongPressWave(int x, int y)
+        private void ResetDPCMVolumeEnvelopeVertex(int idx)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, editSample.Id);
+            editSample.VolumeEnvelope[idx].volume = 1.0f;
+            editSample.Process();
+            App.UndoRedoManager.EndTransaction();
+            MarkDirty();
+        }
+
+        private bool HandleContextMenuWave(int x, int y)
         {
             var menu = new List<ContextMenuOption>();
 
             if (IsPointInEffectPanel(x, y))
             {
+                var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(x, y);
+                if (vertexIdx >= 0)
+                    menu.Add(new ContextMenuOption("MenuClearEnvelope", "Reset Vertex", () => { ResetDPCMVolumeEnvelopeVertex(vertexIdx); }));
                 menu.Add(new ContextMenuOption("MenuClearEnvelope", "Reset Volume Envelope", () => { ResetVolumeEnvelope(); }));
             }
 
             if (IsSelectionValid())
             {
-                menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }));
+                menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, menu.Count > 0));
                 menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Samples", () => { DeleteSelectedWaveSection(); }));
             }
 
@@ -6243,6 +6258,11 @@ namespace FamiStudio
                 App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
             return true;
+        }
+
+        private bool HandleTouchLongPressWave(int x, int y)
+        {
+            return HandleContextMenuWave(x, y);
         }
 
         private bool HandleContextMenuDPCMMapping(int x, int y)
@@ -8135,6 +8155,11 @@ namespace FamiStudio
             return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuDPCMMapping(e.X, e.Y);
         }
 
+        private bool HandleMouseUpDPCMVolumeEnvelope(MouseEventArgs e)
+        {
+            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuWave(e.X, e.Y);
+        }
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
             bool middle = e.Button.HasFlag(MouseButtons.Middle);
@@ -8166,6 +8191,11 @@ namespace FamiStudio
                     editMode == EditionMode.Arpeggio)
                 {
                     if (HandleMouseUpEnvelope(e)) goto Handled;
+                }
+
+                if (editMode == EditionMode.DPCM)
+                {
+                    if (HandleMouseUpDPCMVolumeEnvelope(e)) goto Handled;
                 }
 
                 if (editMode == EditionMode.DPCMMapping)
