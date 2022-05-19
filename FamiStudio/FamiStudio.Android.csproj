@@ -460,6 +460,7 @@
     <EmbeddedResource Include="Resources\File%402x.png" />
     <EmbeddedResource Include="Resources\Follow%402x.png" />
     <EmbeddedResource Include="Resources\GhostSmall%402x.png" />
+    <EmbeddedResource Include="Resources\GizmoResizeFill@4x.png" />
     <EmbeddedResource Include="Resources\GizmoResizeLeftRight@4x.png" />
     <EmbeddedResource Include="Resources\GizmoResizeUpDown@4x.png" />
     <EmbeddedResource Include="Resources\Help%402x.png" />

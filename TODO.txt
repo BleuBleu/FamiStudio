@@ -8,7 +8,6 @@ P0:
 - Right-click functionality.
 	/ Tooltips
 	- Tooltips where a context menu can appear.
-	- Unify ShowMobileContextMenu/ShowDesktopContextMenu
 	- Toolbar
 		- File icon for recent
 		- Disk icon save as
@@ -33,9 +32,7 @@ P0:
 		/ DPCM Mapping
 			x Delete/props
 		- Double-click deletes notes, dpcm mapping, effect values, etc.
-		- Slide + volume slide gizmos.
-	- Gizmo
-		- Make them black on desktop unless we hover over them.
+		x Slide + volume slide gizmos.
 	/ PE
 P1:
 - Validation errors in JTS when deleting some instruments.

@@ -159,6 +159,7 @@ namespace FamiStudio
         {
             GizmoResizeLeftRight,
             GizmoResizeUpDown,
+            GizmoResizeFill,
             Count
         };
 
@@ -179,6 +180,7 @@ namespace FamiStudio
         {
             "GizmoResizeLeftRight",
             "GizmoResizeUpDown",
+            "GizmoResizeFill",
         };
 
         readonly string[] MiscImageNames = new string[]
@@ -971,15 +973,6 @@ namespace FamiStudio
                 { -waveGeometrySampleSize,  waveGeometrySampleSize }
             });
 
-            var circlePoints = new float[32, 2];
-            for (int i = 0; i < circlePoints.GetLength(0); i++)
-            {
-                var angle = i / (float)circlePoints.GetLength(0) * Math.PI * 2.0f;
-                circlePoints[i, 0] = (float)Math.Cos(angle) * 0.5f + 0.5f;
-                circlePoints[i, 1] = (float)Math.Sin(angle) * 0.5f + 0.5f;
-            }
-            circleGeo = g.CreateGeometry(circlePoints);
-
             ConditionalUpdateNoteGeometries(g);
         }
 
@@ -1014,7 +1007,6 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref slideNoteGeometry);
             Utils.DisposeAndNullify(ref seekGeometry);
             Utils.DisposeAndNullify(ref sampleGeometry);
-            Utils.DisposeAndNullify(ref circleGeo);
         }
 
         private void ConditionalUpdateNoteGeometries(RenderGraphics g)
@@ -1793,14 +1785,11 @@ namespace FamiStudio
                     {
                         foreach (var g in gizmos)
                         {
-                            // MATTT : Test new drawing mode on mobile.
-                            // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
                             var lineColor = IsGizmoHighlighted(g, headerSizeY) ? Color.White : Color.Black;
                             var scaling = r.g.WindowScaling;
 
-                            r.cz.PushTransform(g.Rect.X + scaling, g.Rect.Y + scaling, g.Rect.Width - 2 * scaling, g.Rect.Height - 2 * scaling);
-                            r.cz.FillGeometry(circleGeo, ThemeResources.LightGreyFillBrush1);
-                            r.cz.PopTransform();
+                            if (g.FillImageIndex >= 0)
+                                r.cz.DrawBitmapAtlas(bmpGizmos, (int)g.FillImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, Theme.LightGreyFillColor1);
                             r.cz.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                         }
                     }
@@ -2504,15 +2493,11 @@ namespace FamiStudio
                     {
                         foreach (var g in gizmos)
                         {
-                            // MATTT : Test new drawing mode on mobile.
-                            // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
                             var fillColor = GetNoteColor(Song.Channels[editChannel], gizmoNote.Value, gizmoNote.Instrument);
                             var lineColor = IsGizmoHighlighted(g, headerAndEffectSizeY) ? Color.White : Color.Black;
-                            var scaling = r.g.WindowScaling;
 
-                            r.cg.PushTransform(g.Rect.X + scaling, g.Rect.Y + scaling, g.Rect.Width - scaling * 2, g.Rect.Height - scaling * 2);
-                            r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(fillColor));
-                            r.cg.PopTransform();
+                            if (g.FillImageIndex >= 0)
+                                r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.FillImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, fillColor);
                             r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                         }
                     }
@@ -2768,14 +2753,10 @@ namespace FamiStudio
             {
                 foreach (var g in gizmos)
                 {
-                    // MATTT : Test new drawing mode on mobile.
-                    // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
                     var lineColor = IsGizmoHighlighted(g, 0) ? Color.White : Color.Black;
-                    var scaling = r.g.WindowScaling;
 
-                    r.cg.PushTransform(g.Rect.X + scaling, g.Rect.Y + scaling, g.Rect.Width - scaling * 2, g.Rect.Height - scaling * 2);
-                    r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(color));
-                    r.cg.PopTransform();
+                    if (g.FillImageIndex >= 0)
+                        r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.FillImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, color);
                     r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                 }
             }
@@ -4408,6 +4389,7 @@ namespace FamiStudio
 
                 Gizmo resizeGizmo = new Gizmo();
                 resizeGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeLeftRight;
+                resizeGizmo.FillImageIndex = (int)GizmoImageIndices.GizmoResizeFill;
                 resizeGizmo.Action = GizmoAction.ResizeNote;
                 resizeGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(resizeGizmo);
@@ -4426,6 +4408,7 @@ namespace FamiStudio
 
                 Gizmo releaseGizmo = new Gizmo();
                 releaseGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeLeftRight;
+                releaseGizmo.FillImageIndex = (int)GizmoImageIndices.GizmoResizeFill;
                 releaseGizmo.Action = GizmoAction.MoveRelease;
                 releaseGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(releaseGizmo);
@@ -4440,7 +4423,7 @@ namespace FamiStudio
 
                 if (PlatformUtils.IsMobile)
                 {
-                    if (captureOperation == CaptureOperation.DragSlideNoteTargetGizmo)
+                    if (PlatformUtils.IsMobile && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo)
                         y = mouseLastY - headerAndEffectSizeY - gizmoSize / 4 - (side > 0 ? side * noteSizeY : 0);
                     else
                         y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - gizmoSize / 4; 
@@ -4452,6 +4435,7 @@ namespace FamiStudio
 
                 Gizmo slideGizmo = new Gizmo();
                 slideGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeUpDown;
+                slideGizmo.FillImageIndex = (int)GizmoImageIndices.GizmoResizeFill;
                 slideGizmo.Action = GizmoAction.MoveSlide;
                 slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(slideGizmo);
@@ -4488,6 +4472,7 @@ namespace FamiStudio
 
                 Gizmo effectGizmo = new Gizmo();
                 effectGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeUpDown;
+                effectGizmo.FillImageIndex = (int)GizmoImageIndices.GizmoResizeFill;
                 effectGizmo.Action = GizmoAction.ChangeEffectValue;
                 effectGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(effectGizmo);
@@ -4504,6 +4489,7 @@ namespace FamiStudio
 
                 Gizmo slideGizmo = new Gizmo();
                 slideGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeUpDown;
+                slideGizmo.FillImageIndex = (int)GizmoImageIndices.GizmoResizeFill;
                 slideGizmo.Action = GizmoAction.MoveVolumeSlideValue;
                 slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
                 list.Add(slideGizmo);
@@ -4536,6 +4522,7 @@ namespace FamiStudio
 
             Gizmo slideGizmo = new Gizmo();
             slideGizmo.ImageIndex = (int)GizmoImageIndices.GizmoResizeUpDown;
+            slideGizmo.FillImageIndex = (int)GizmoImageIndices.GizmoResizeFill;
             slideGizmo.Action = GizmoAction.ChangeEnvValue;
             slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
 
