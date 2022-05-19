@@ -153,7 +153,8 @@ namespace FamiStudio
         static readonly bool[] captureWantsRealTimeUpdate = new[]
         {
             false, // None
-            true,  // Select
+            true,  // SelectColumn
+            true,  // SelectRectangle
             true,  // DragSelection
             false, // AltZoom
             true,  // DragSeekBar

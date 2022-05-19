@@ -1796,8 +1796,9 @@ namespace FamiStudio
                             // MATTT : Test new drawing mode on mobile.
                             // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
                             var lineColor = IsGizmoHighlighted(g, headerSizeY) ? Color.White : Color.Black;
+                            var scaling = r.g.WindowScaling;
 
-                            r.cz.PushTransform(g.Rect.X + 1, g.Rect.Y + 1, g.Rect.Width - 2, g.Rect.Height - 2);
+                            r.cz.PushTransform(g.Rect.X + scaling, g.Rect.Y + scaling, g.Rect.Width - 2 * scaling, g.Rect.Height - 2 * scaling);
                             r.cz.FillGeometry(circleGeo, ThemeResources.LightGreyFillBrush1);
                             r.cz.PopTransform();
                             r.cz.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
@@ -2507,8 +2508,9 @@ namespace FamiStudio
                             // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
                             var fillColor = GetNoteColor(Song.Channels[editChannel], gizmoNote.Value, gizmoNote.Instrument);
                             var lineColor = IsGizmoHighlighted(g, headerAndEffectSizeY) ? Color.White : Color.Black;
+                            var scaling = r.g.WindowScaling;
 
-                            r.cg.PushTransform(g.Rect.X + 1, g.Rect.Y + 1, g.Rect.Width - 2, g.Rect.Height - 2);
+                            r.cg.PushTransform(g.Rect.X + scaling, g.Rect.Y + scaling, g.Rect.Width - scaling * 2, g.Rect.Height - scaling * 2);
                             r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(fillColor));
                             r.cg.PopTransform();
                             r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
@@ -2769,8 +2771,9 @@ namespace FamiStudio
                     // MATTT : Test new drawing mode on mobile.
                     // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
                     var lineColor = IsGizmoHighlighted(g, 0) ? Color.White : Color.Black;
+                    var scaling = r.g.WindowScaling;
 
-                    r.cg.PushTransform(g.Rect.X + 1, g.Rect.Y + 1, g.Rect.Width - 2, g.Rect.Height - 2);
+                    r.cg.PushTransform(g.Rect.X + scaling, g.Rect.Y + scaling, g.Rect.Width - scaling * 2, g.Rect.Height - scaling * 2);
                     r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(color));
                     r.cg.PopTransform();
                     r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);

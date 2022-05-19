@@ -4401,34 +4401,12 @@ namespace FamiStudio
                 var button = buttons[buttonIdx];
                 var pt = new Point(e.X, e.Y);   
 
-                if (button.type == ButtonType.ProjectSettings)
-                {
-                    EditProjectProperties(pt);
-                }
-                else if (button.type == ButtonType.Song)
-                {
-                    EditSongProperties(pt, button.song);
-                }
-                else if (button.type == ButtonType.Instrument && button.instrument != null && subButtonType == SubButtonType.Max)
-                {
-                    EditInstrumentProperties(pt, button.instrument);
-                }
-                else if (button.type == ButtonType.Arpeggio && button.arpeggio != null && subButtonType == SubButtonType.Max)
-                {
-                    EditArpeggioProperties(pt, button.arpeggio);
-                }
-                else if (button.type == ButtonType.Dpcm && subButtonType == SubButtonType.Max)
-                {
-                    EditDPCMSampleProperties(pt, button.sample);
-                }
-#if !FAMISTUDIO_WINDOWS
-                else
+                if (PlatformUtils.IsGTK)
                 {
                     // When pressing multiple times on mac, it creates click -> dbl click -> click -> dbl click sequences which
                     // makes the project explorer feel very sluggish. Interpret dbl click as clicks helps a lot.
-                    OnMouseDown(e);
+                    OnMouseDown(new MouseEventArgsEx(e));
                 }
-#endif
             }
         }
 

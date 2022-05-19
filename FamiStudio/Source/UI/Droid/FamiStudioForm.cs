@@ -517,7 +517,7 @@ namespace FamiStudio
             base.OnResume();
         }
 
-        public void ShowContextMenu(ContextMenuOption[] options)
+        public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
             Debug.Assert(contextMenuDialog == null);
 
@@ -580,6 +580,12 @@ namespace FamiStudio
             contextMenuDialog.Show();
 
             PlatformUtils.VibrateClick();
+        }
+
+        public void HideContextMenu()
+        {
+            // Only used on desktop.
+            Debug.Assert(false);
         }
 
         private void ContextMenuDialog_DismissEvent(object sender, EventArgs e)
