@@ -6846,7 +6846,7 @@ namespace FamiStudio
 
             if (note != null && channel.SupportsSlideNotes)
             {
-                var offsetY = headerAndEffectSizeY + virtualSizeY - (int)((note.SlideNoteTarget + 0.5f) * noteSizeY) - scrollY - y;
+                var offsetY = headerAndEffectSizeY + virtualSizeY - (int)((note.SlideNoteTarget - 0.5f) * noteSizeY) - scrollY - y;
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
                 StartCaptureOperation(x, y, CaptureOperation.DragSlideNoteTargetGizmo, false, location.ToAbsoluteNoteIndex(Song), offsetY);
             }
