@@ -227,6 +227,7 @@ namespace FamiStudio
             DragSlideNoteTarget,
             DragSlideNoteTargetGizmo,
             DragVolumeSlideTarget,
+            DragVolumeSlideTargetGizmo,
             DragNote,
             DragSelection,
             AltZoom,
@@ -263,6 +264,7 @@ namespace FamiStudio
             true,  // DragSlideNoteTarget
             true,  // DragSlideNoteTargetGizmo
             false, // DragVolumeSlideTarget
+            false, // DragVolumeSlideTargetGizmo
             true,  // DragNote
             false, // DragSelection
             false, // AltZoom
@@ -299,6 +301,7 @@ namespace FamiStudio
             true,  // DragSlideNoteTarget
             true,  // DragSlideNoteTargetGizmo
             false, // DragVolumeSlideTarget
+            false, // DragVolumeSlideTargetGizmo
             true,  // DragNote
             true,  // DragSelection
             false, // AltZoom
@@ -1785,18 +1788,19 @@ namespace FamiStudio
                     int seekX = GetPixelForNote(GetSeekFrameToDraw());
                     r.ch.DrawLine(seekX, 0, seekX, effectPanelSizeY, GetSeekBarBrush(), 3);
 
-                    if (PlatformUtils.IsMobile)
-                {
-                        var gizmos = GetEffectGizmos(out _, out _);
-                        if (gizmos != null)
+                    var gizmos = GetEffectGizmos(out _, out _);
+                    if (gizmos != null)
+                    {
+                        foreach (var g in gizmos)
                         {
-                            foreach (var g in gizmos)
-                            {
-                                r.cz.PushTransform(g.DrawRect.X, g.DrawRect.Y, g.DrawRect.Width, g.DrawRect.Height);
-                                r.cz.FillAndDrawGeometry(circleGeo, ThemeResources.LightGreyFillBrush1, ThemeResources.WhiteBrush, 4, true);
-                                r.cz.PopTransform();
-                                r.cz.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width);
-                            }
+                            // MATTT : Test new drawing mode on mobile.
+                            // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
+                            var lineColor = IsGizmoHighlighted(g, headerSizeY) ? Color.White : Color.Black;
+
+                            r.cz.PushTransform(g.DrawRect.X + 1, g.DrawRect.Y + 1, g.DrawRect.Width - 2, g.DrawRect.Height - 2);
+                            r.cz.FillGeometry(circleGeo, ThemeResources.LightGreyFillBrush1);
+                            r.cz.PopTransform();
+                            r.cz.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                         }
                     }
                 }
@@ -2199,7 +2203,7 @@ namespace FamiStudio
             }
         }
 
-        private bool IsGizmoHighlighted(Gizmo g)
+        private bool IsGizmoHighlighted(Gizmo g, int offsetY)
         {
             if (PlatformUtils.IsMobile)
             {
@@ -2209,7 +2213,7 @@ namespace FamiStudio
             {
                 var pt = PointToClient(Cursor.Position);
 
-                if (g.HitRect.Contains(pt.X - pianoSizeX, pt.Y - headerAndEffectSizeY))
+                if (g.HitRect.Contains(pt.X - pianoSizeX, pt.Y - offsetY))
                     return true;
 
                 if (g.Action == GizmoAction.MoveSlide && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo)
@@ -2498,21 +2502,15 @@ namespace FamiStudio
                     {
                         foreach (var g in gizmos)
                         {
-                            var color = GetNoteColor(Song.Channels[editChannel], gizmoNote.Value, gizmoNote.Instrument);
-                                    
+                            // MATTT : Test new drawing mode on mobile.
+                            // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
+                            var fillColor = GetNoteColor(Song.Channels[editChannel], gizmoNote.Value, gizmoNote.Instrument);
+                            var lineColor = IsGizmoHighlighted(g, headerAndEffectSizeY) ? Color.White : Color.Black;
+
                             r.cg.PushTransform(g.DrawRect.X + 1, g.DrawRect.Y + 1, g.DrawRect.Width - 2, g.DrawRect.Height - 2);
-
-                            // MATTT : Why do we draw the circle on mobile instead of having it in the texture?
-                            // Also, double check the +1 / -2 on mobile make sure it looks good.
-                            var gizmoColor = IsGizmoHighlighted(g) ? Color.White : Color.Black;
-
-                            if (PlatformUtils.IsMobile)
-                                r.cg.FillAndDrawGeometry(circleGeo, r.g.GetSolidBrush(color), ThemeResources.WhiteBrush, 4, true);
-                            else
-                                r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(color));
-
+                            r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(fillColor));
                             r.cg.PopTransform();
-                            r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width, gizmoColor);
+                            r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                         }
                     }
                 }
@@ -2762,18 +2760,19 @@ namespace FamiStudio
                 r.cf.DrawText($"Editing Arpeggio {editArpeggio.Name}", ThemeResources.FontVeryLarge, bigTextPosX, bigTextPosY, whiteKeyBrush);
             }
 
-            if (PlatformUtils.IsMobile && HasHighlightedNote())
+            var gizmos = GetEnvelopeGizmos();
+            if (gizmos != null)
             {
-                var gizmos = GetEnvelopeGizmos();
-                if (gizmos != null)
+                foreach (var g in gizmos)
                 {
-                    foreach (var g in gizmos)
-                    {
-                        r.cg.PushTransform(g.DrawRect.X, g.DrawRect.Y, g.DrawRect.Width, g.DrawRect.Height);
-                        r.cg.FillAndDrawGeometry(circleGeo, r.g.GetSolidBrush(color), ThemeResources.WhiteBrush, 4, true);
-                        r.cg.PopTransform();
-                        r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width);
-                    }
+                    // MATTT : Test new drawing mode on mobile.
+                    // MATTT : Also, double check the +1 / -2 on mobile make sure it looks good.
+                    var lineColor = IsGizmoHighlighted(g, 0) ? Color.White : Color.Black;
+
+                    r.cg.PushTransform(g.DrawRect.X + 1, g.DrawRect.Y + 1, g.DrawRect.Width - 2, g.DrawRect.Height - 2);
+                    r.cg.FillGeometry(circleGeo, r.g.GetSolidBrush(color));
+                    r.cg.PopTransform();
+                    r.cg.DrawBitmapAtlas(bmpGizmos, (int)g.ImageIndex, g.DrawRect.X, g.DrawRect.Y, 1.0f, g.DrawRect.Width / (float)bmpGizmos.GetElementSize(0).Width, lineColor);
                 }
             }
         }
@@ -3532,12 +3531,12 @@ namespace FamiStudio
             pattern.InvalidateCumulativeCache();
         }
 
-        void StartDragVolumeSlideMobile(int x, int y, NoteLocation location)
+        void StartDragVolumeSlideGizmo(int x, int y, NoteLocation location)
         {
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[location.PatternIndex];
 
-            StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTarget, false, location.ToAbsoluteNoteIndex(Song));
+            StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTargetGizmo, false, location.ToAbsoluteNoteIndex(Song));
             App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
         }
 
@@ -3909,6 +3908,7 @@ namespace FamiStudio
                         UpdateSlideNoteCreation(x, y, false, true);
                         break;
                     case CaptureOperation.DragVolumeSlideTarget:
+                    case CaptureOperation.DragVolumeSlideTargetGizmo:
                         UpdateDragVolumeSlide(x, y, false);
                         break;
                     case CaptureOperation.CreateNote:
@@ -4045,6 +4045,7 @@ namespace FamiStudio
                         UpdateSlideNoteCreation(x, y, true, true);
                         break;
                     case CaptureOperation.DragVolumeSlideTarget:
+                    case CaptureOperation.DragVolumeSlideTargetGizmo:
                         UpdateDragVolumeSlide(x, y, true);
                         break;
                     case CaptureOperation.CreateNote:
@@ -4324,7 +4325,7 @@ namespace FamiStudio
             }
         }
 
-        private Note GetHighlightedNoteForDesktopGizmos(out NoteLocation location)
+        private Note GetNoteForDesktopNoteGizmos(out NoteLocation location)
         {
             Debug.Assert(PlatformUtils.IsDesktop);
             location = NoteLocation.Invalid;
@@ -4344,10 +4345,36 @@ namespace FamiStudio
             return Song.Channels[editChannel].FindMusicalNoteAtLocation(ref location, -1);
         }
 
+        private Note GetNoteForDesktopEffectGizmos(out NoteLocation location)
+        {
+            Debug.Assert(PlatformUtils.IsDesktop);
+            location = NoteLocation.Invalid;
+
+            if (captureOperation == CaptureOperation.DragVolumeSlideTargetGizmo) 
+            {
+                location = captureNoteLocation;
+            }
+            else
+            {
+                var pt = PointToClient(Cursor.Position);
+                if (!GetEffectNoteForCoord(pt.X, pt.Y, out var mouseLocation) || !mouseLocation.IsInSong(Song))
+                    return null;
+                location = mouseLocation;
+            }
+
+            var channel = Song.Channels[editChannel];
+            location = channel.GetLastEffectLocation(location, Note.EffectVolumeSlide);
+
+            if (location.IsValid)
+                return channel.GetNoteAt(location);
+
+            return null;
+        }
+
         private List<Gizmo> GetNoteGizmos(out Note note, out NoteLocation location)
         {
             note = PlatformUtils.IsDesktop ? 
-                GetHighlightedNoteForDesktopGizmos(out location) :
+                GetNoteForDesktopNoteGizmos(out location) :
                 GetHighlightedNoteAndLocation(out location);
 
             if (note == null || !note.IsMusical)
@@ -4438,12 +4465,14 @@ namespace FamiStudio
 
         private List<Gizmo> GetEffectGizmos(out Note note, out NoteLocation location)
         {
-            // MATTT : Will need to find the note with a previous volume slide!
-            note = GetHighlightedNote();
-            location = NoteLocation.FromAbsoluteNoteIndex(Song, highlightNoteAbsIndex);
+            note = PlatformUtils.IsDesktop ?
+                GetNoteForDesktopEffectGizmos(out location) :
+                GetHighlightedNoteAndLocation(out location);
 
-            if (note == null || !showEffectsPanel || selectedEffectIdx < 0 || !note.HasValidEffectValue(selectedEffectIdx))
+            if (!showEffectsPanel || selectedEffectIdx < 0 || note == null || !note.HasValidEffectValue(selectedEffectIdx))
                 return null;
+
+            var locationAbsIndex = location.ToAbsoluteNoteIndex(Song);
 
             var list = new List<Gizmo>();
 
@@ -4458,7 +4487,7 @@ namespace FamiStudio
             {
                 var effectPosY = effectPanelSizeY - ((minValue == maxValue) ? effectPanelSizeY : (float)Math.Floor((value - minValue) / (float)(maxValue - minValue) * effectPanelSizeY));
 
-                var x = GetPixelForNote(highlightNoteAbsIndex + 1) + gizmoSize / 4;
+                var x = GetPixelForNote(locationAbsIndex + 1) + gizmoSize / 4;
                 var y = (int)(effectPosY + (value >= midValue ? gizmoSize / 4 : -gizmoSize * 5 / 4));
 
                 Gizmo effectGizmo = new Gizmo();
@@ -4475,7 +4504,7 @@ namespace FamiStudio
                 var duration = channel.GetVolumeSlideDuration(location);
                 var effectPosY = effectPanelSizeY - ((minValue == maxValue) ? effectPanelSizeY : (float)Math.Floor((note.VolumeSlideTarget - minValue) / (float)(maxValue - minValue) * effectPanelSizeY));
 
-                var x = GetPixelForNote(highlightNoteAbsIndex + duration) - gizmoSize * 5 / 4;
+                var x = GetPixelForNote(locationAbsIndex + duration) - gizmoSize * 5 / 4;
                 var y = (int)(effectPosY + (note.VolumeSlideTarget >= midValue ? gizmoSize / 4 : -gizmoSize * 5 / 4));
 
                 Gizmo slideGizmo = new Gizmo();
@@ -4491,6 +4520,9 @@ namespace FamiStudio
 
         private List<Gizmo> GetEnvelopeGizmos()
         {
+            if (PlatformUtils.IsDesktop)
+                return null;
+
             var env = EditEnvelope;
 
             if (!HasHighlightedNote() || highlightNoteAbsIndex >= env.Length)
@@ -5229,6 +5261,11 @@ namespace FamiStudio
             return e.Button.HasFlag(MouseButtons.Left) && HandleNoteGizmos(e.X, e.Y);
         }
 
+        private bool HandleMouseDownEffectGizmos(MouseEventArgs e)
+        {
+            return e.Button.HasFlag(MouseButtons.Left) && HandleEffectsGizmos(e.X, e.Y);
+        }
+
         protected override void OnMouseDown(MouseEventArgsEx e)
         {
             bool left  = e.Button.HasFlag(MouseButtons.Left);
@@ -5251,6 +5288,7 @@ namespace FamiStudio
                 if (HandleMouseDownSeekBar(e)) goto Handled;
                 if (HandleMouseDownHeaderSelection(e)) goto Handled;
                 if (HandleMouseDownEffectList(e)) goto Handled;
+                if (HandleMouseDownEffectGizmos(e)) goto Handled; // Needs to be above "HandleMouseDownEffectPanel".
                 if (HandleMouseDownEffectPanel(e)) goto Handled;
                 if (HandleMouseDownSnapButton(e)) goto Handled;
                 if (HandleMouseDownNoteGizmos(e)) goto Handled;
@@ -5487,7 +5525,7 @@ namespace FamiStudio
             return HandleNoteGizmos(x, y);
         }
 
-        private bool HandleTouchDownNoteEffectsGizmos(int x, int y)
+        private bool HandleEffectsGizmos(int x, int y)
         {
             if (IsPointInNoteArea(x, y))
             {
@@ -5504,7 +5542,7 @@ namespace FamiStudio
                                     StartChangeEffectValue(x, y, highlightLocation);
                                     break;
                                 case GizmoAction.MoveVolumeSlideValue:
-                                    StartDragVolumeSlideMobile(x, y, highlightLocation);
+                                    StartDragVolumeSlideGizmo(x, y, highlightLocation);
                                     break;
                             }
 
@@ -5515,6 +5553,11 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        private bool HandleTouchDownNoteEffectsGizmos(int x, int y)
+        {
+            return HandleEffectsGizmos(x, y);
         }
 
         private bool HandleTouchDownDragNote(int x, int y)

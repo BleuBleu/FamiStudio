@@ -632,17 +632,24 @@ namespace FamiStudio
             return Note.GetEffectDefaultValue(song, effect);
         }
 
-        public int GetEffectValueAt(NoteLocation location, int effect)
+        public NoteLocation GetLastEffectLocation(NoteLocation location, int effect)
         {
-            var val = GetCachedLastValidEffectValue(location.PatternIndex - 1, effect, out _);
+            var effectLocation = NoteLocation.Invalid;
 
+            // First look in the current pattern.
             for (var it = GetSparseNoteIterator(new NoteLocation(location.PatternIndex, 0), location, Note.GetFilterForEffect(effect)); !it.Done; it.Next())
             {
-                if (it.Note != null && it.Note.HasVolume)
-                    return it.Note.Volume;
+                if (it.Note != null && it.Note.HasValidEffectValue(effect))
+                    effectLocation = it.Location;
             }
 
-            return val;
+            // Go back to previous is we didnt find anything.
+            if (!effectLocation.IsValid)
+            {
+                GetCachedLastValidEffectValue(location.PatternIndex - 1, effect, out effectLocation);
+            }
+
+            return effectLocation;
         }
 
         public NoteLocation GetCachedLastMusicalNoteWithAttackLocation(int patternIdx)

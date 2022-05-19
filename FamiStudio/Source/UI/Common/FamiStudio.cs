@@ -1080,6 +1080,7 @@ namespace FamiStudio
             {
                 UpdateTitle();
                 Settings.LastProjectFile = project.Filename;
+                Settings.AddRecentFile(project.Filename);
 
                 if (Settings.ClearUndoRedoOnSave)
                     undoRedoManager.Clear();
