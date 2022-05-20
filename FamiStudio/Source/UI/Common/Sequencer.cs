@@ -1598,7 +1598,9 @@ namespace FamiStudio
                     }
                 }
 
-                App.ShowContextMenu(left + x, top + y, menu.ToArray());
+                if (menu.Count > 0)
+                    App.ShowContextMenu(left + x, top + y, menu.ToArray());
+                
                 return true;
             }
 

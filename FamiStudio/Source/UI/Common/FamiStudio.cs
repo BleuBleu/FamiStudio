@@ -612,11 +612,12 @@ namespace FamiStudio
 
         public void ShowContextMenu(ContextMenuOption[] options)
         {
-            mainForm.ShowContextMenu(0, 0, options);
+            ShowContextMenu(0, 0, options);
         }
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
+            Debug.Assert(options.Length > 0);
             mainForm.ShowContextMenu(x, y, options);
         }
 
