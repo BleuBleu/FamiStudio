@@ -56,6 +56,11 @@ namespace FamiStudio
             }
         }
 
+        public void RemoveControl(RenderControl ctrl)
+        {
+            controls.Remove(ctrl);
+        }
+
         public override void Tick(float delta)
         {
             foreach (var ctrl in controls)

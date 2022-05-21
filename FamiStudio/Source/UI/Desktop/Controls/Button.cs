@@ -23,10 +23,11 @@ namespace FamiStudio
         private RenderBitmapAtlasRef bmp;
         private int margin = DpiScaling.ScaleForDialog(4);
         private bool bold;
+        private bool border;
         private bool hovered;
         private bool pressed;
 
-        public Button2(string img, string txt = null)
+        public Button2(string img, string txt)
         {
             imageName = img;
             text  = txt;
@@ -48,6 +49,12 @@ namespace FamiStudio
         {
             get { return bold; }
             set { bold = value; MarkDirty(); }
+        }
+
+        public bool Border
+        {
+            get { return border; }
+            set { border = value; MarkDirty(); }
         }
 
         protected override void OnMouseDown(MouseEventArgsEx e)
@@ -85,18 +92,23 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            if (bmp == null)
+            if (bmp == null && !string.IsNullOrEmpty(imageName))
             {
                 bmp = g.GetBitmapAtlasRef(imageName);
                 Debug.Assert(bmp != null);
             }
 
             var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
-            var bmpSize = bmp.ElementSize;
+            var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
 
             if (hovered || pressed)
             {
                 c.FillRectangle(ClientRectangle, pressed ? ThemeResources.MediumGreyFillBrush1 : ThemeResources.DarkGreyFillBrush2);
+            }
+
+            if (border)
+            {
+                c.DrawRectangle(ClientRectangle, ThemeResources.BlackBrush);
             }
 
             if (pressed)
@@ -104,12 +116,17 @@ namespace FamiStudio
                 c.PushTranslation(0, 1);
             }
 
-            // Center image if no text, otherwise left align.
-            if (string.IsNullOrEmpty(text))
+            var hasText = !string.IsNullOrEmpty(text);
+
+            if (!hasText && bmp != null)
             {
                 c.DrawBitmapAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2);
             }
-            else
+            else if (hasText && bmp == null)
+            {
+                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, width, height);
+            }
+            else if (hasText && bmp != null)
             {
                 c.DrawBitmapAtlas(bmp, margin, (height - bmpSize.Height) / 2);
                 c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, bmpSize.Width + margin * 2, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - bmpSize.Width - margin * 2, height);

@@ -147,7 +147,11 @@ namespace FamiStudio
 
             cb.FillAndDrawRectangle(0, 0, width - 1, defaultHeight - (listOpened ? 0 : 1), ThemeResources.LightGreyFillBrush1, ThemeResources.BlackBrush);
             cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (defaultHeight - bmpSize.Height) / 2, 1, 1, Theme.DarkGreyLineColor1);
-            cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft, 0, height);
+
+            if (selectedIndex >= 0)
+            {
+                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft, 0, height);
+            }
 
             if (listOpened)
             {

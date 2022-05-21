@@ -24,7 +24,7 @@ namespace FamiStudio
             public Label2 label;
             public RenderControl control;
             public string sliderFormat;
-            public RenderBitmapAtlasRef warningIcon;
+            public ImageBox2 warningIcon;
             public bool visible = true;
         };
 
@@ -34,8 +34,13 @@ namespace FamiStudio
         private int layoutHeight;
         private List<Property> properties = new List<Property>();
         private Dialog dialog;
-        // private ToolTip toolTip; // TOOLTIP!
-        //private RenderBitmapAtlasRef[] warningIcons;
+
+        private readonly static string[] WarningIcons = 
+        {
+            "WarningGood",
+            "WarningYellow",
+            "Warning"
+        };
 
         public int LayoutHeight  => layoutHeight;
         public int PropertyCount => properties.Count;
@@ -46,17 +51,6 @@ namespace FamiStudio
             baseY = y;
             layoutWidth = width;
             dialog = dlg;
-
-            //if (warningIcons ==  null)
-            //{
-            //    string suffix = DpiScaling.Dialog > 1 ? "@2x" : "";
-
-            //    // MATTT
-            //    //warningIcons = new Bitmap[3];
-            //    //warningIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
-            //    //warningIcons[1] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningYellow{suffix}.png")) as Bitmap;
-            //    //warningIcons[2] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Warning{suffix}.png"))       as Bitmap;
-            //}
         }
 
         public bool Visible
@@ -90,11 +84,7 @@ namespace FamiStudio
         {
             Debug.Assert(!string.IsNullOrEmpty(str));
 
-            var label = new Label2();
-            label.Text = str;
-
-            //if (multiline)
-            //    label.MaximumSize = new Size(1000, 0);
+            var label = new Label2(str, multiline);
             //toolTip.SetToolTip(label, SplitLongTooltip(tooltip));
 
             return label;
@@ -210,17 +200,10 @@ namespace FamiStudio
             }
         }
 
-        private PictureBox CreatePictureBox(Bitmap bmp)
+        private ImageBox2 CreateImageBox(string image)
         {
-            var pictureBox = new PictureBox();
-
-            //pictureBox.Image = bmp;
-            //pictureBox.Width  = DpiScaling.ScaleForDialog(bmp.Width);
-            //pictureBox.Height = DpiScaling.ScaleForDialog(bmp.Height);
-            //pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
-            //pictureBox.BorderStyle = BorderStyle.None;
-
-            return pictureBox;
+            var imageBox = new ImageBox2(image);
+            return imageBox;
         }
 
         private void ChangeColor(PictureBox pictureBox, int x, int y)
@@ -375,15 +358,12 @@ namespace FamiStudio
             //PropertyChanged?.Invoke(this, propIdx, itemIndex, columnIndex, value);
         }
 
-        private Button CreateButton(string text, string tooltip)
+        private Button2 CreateButton(string text, string tooltip)
         {
-            var button = new Button();
-            //button.Text = text;
+            var button = new Button2(null, text);
+            button.Border = true;
             //button.Click += Button_Click;
-            //button.FlatStyle = FlatStyle.Flat;
-            //button.Font = font;
-            //button.ForeColor = Theme.LightGreyFillColor2;
-            //button.Height = DpiScaling.ScaleForDialog(32);
+            button.Resize(button.Width, DpiScaling.ScaleForDialog(32));
             //toolTip.SetToolTip(button, SplitLongTooltip(tooltip));
             return button;
         }
@@ -458,25 +438,25 @@ namespace FamiStudio
 
         public int AddButton(string label, string value, string tooltip = null)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.Button,
-            //        label = label != null ? CreateLabel(label, tooltip) : null,
-            //        control = CreateButton(value, tooltip)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Button,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateButton(value, tooltip)
+                });
             return properties.Count - 1;
         }
 
         public int AddLabel(string label, string value, bool multiline = false, string tooltip = null)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.Label,
-            //        label = label != null ? CreateLabel(label, tooltip) : null,
-            //        control = CreateLabel(value, tooltip, multiline)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Label,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateLabel(value, tooltip, multiline)
+                });
             return properties.Count - 1;
         }
 
@@ -835,16 +815,15 @@ namespace FamiStudio
 
         public void SetPropertyWarning(int idx, CommentType type, string comment)
         {
-            //var prop = properties[idx];
+            var prop = properties[idx];
 
-            //if (prop.warningIcon == null)
-            //    prop.warningIcon = CreatePictureBox(warningIcons[(int)type]);
-            //else
-            //    prop.warningIcon.Image = warningIcons[(int)type];
+            if (prop.warningIcon == null)
+                prop.warningIcon = CreateImageBox(WarningIcons[(int)type]);
+            else
+                prop.warningIcon.Image = WarningIcons[(int)type];
 
-            //prop.warningIcon.Width   = DpiScaling.ScaleForDialog(16);
-            //prop.warningIcon.Height  = DpiScaling.ScaleForDialog(16);
-            //prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
+            prop.warningIcon.Resize(DpiScaling.ScaleForDialog(16), DpiScaling.ScaleForDialog(16));
+            prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
             //toolTip.SetToolTip(prop.warningIcon, SplitLongTooltip(comment));
         }
 
@@ -957,6 +936,15 @@ namespace FamiStudio
             var maxLabelWidth = 0;
             var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;
 
+            for (int i = 0; i < properties.Count; i++)
+            {
+                var prop = properties[i];
+
+                dialog.RemoveControl(prop.label);
+                dialog.RemoveControl(prop.control);
+                dialog.RemoveControl(prop.warningIcon);
+            }
+
             for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
@@ -999,6 +987,12 @@ namespace FamiStudio
                     dialog.AddControl(prop.control);
                 }
 
+                if (prop.type == PropertyType.Label)
+                {
+                    (prop.control as Label2).ResizeForMultiline(layoutWidth);
+                }
+
+                // MATTT : Focus management.
                 //if (prop.type == PropertyType.ColoredTextBox)
                 //{
                 //    (prop.control as TextBox).SelectAll();
@@ -1007,12 +1001,13 @@ namespace FamiStudio
 
                 height = Math.Max(prop.control.Height, height);
 
-                //if (prop.warningIcon != null)
-                //{
-                //    prop.warningIcon.Top = totalHeight + (height - prop.warningIcon.Height) / 2;
-                //    prop.warningIcon.Left = widthNoMargin + margin + margin - warningWidth;
-                //    Controls.Add(prop.warningIcon);
-                //}
+                if (prop.warningIcon != null)
+                {
+                    prop.warningIcon.Move(
+                        layoutWidth - warningWidth - margin,
+                        totalHeight + (height - prop.warningIcon.Height) / 2);
+                    dialog.AddControl(prop.warningIcon);
+                }
 
                 totalHeight += height;
             }

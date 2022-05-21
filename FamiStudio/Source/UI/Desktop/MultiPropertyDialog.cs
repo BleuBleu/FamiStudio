@@ -50,11 +50,11 @@ namespace FamiStudio
 
         private void Init()
         {
-            buttonYes = new Button2("Yes");
+            buttonYes = new Button2("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
 
-            buttonNo = new Button2("No");
+            buttonNo = new Button2("No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
             

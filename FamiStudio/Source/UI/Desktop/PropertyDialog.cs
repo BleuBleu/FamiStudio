@@ -55,15 +55,15 @@ namespace FamiStudio
             propertyPage = new PropertyPage(this, margin, margin, Width - margin * 2);
             propertyPage.PropertyWantsClose += PropertyPage_PropertyWantsClose;
 
-            buttonYes = new Button2("Yes");
+            buttonYes = new Button2("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
 
-            buttonNo = new Button2("No");
+            buttonNo = new Button2("No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
 
-            buttonAdvanced = new Button2("PlusSmall");
+            buttonAdvanced = new Button2("PlusSmall", null);
             buttonAdvanced.Click += ButtonAdvanced_Click;
             buttonAdvanced.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
             buttonAdvanced.Visible = false;
@@ -101,8 +101,8 @@ namespace FamiStudio
 
             advancedPropertiesVisible = !advancedPropertiesVisible;
             propertyPage.Build(advancedPropertiesVisible);
-
             buttonAdvanced.Image = advancedPropertiesVisible ? "MinusSmall" : "PlusSmall";
+            UpdateLayout();
         }
 
         protected override void OnShowDialog()

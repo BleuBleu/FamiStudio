@@ -708,6 +708,35 @@ namespace FamiStudio
             return false;
         }
 
+        public int GetNumCharactersForSize(string text, int sizeX)
+        {
+            var x = 0;
+            var maxX = 0;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c0 = text[i];
+                var info = GetCharInfo(c0);
+
+                int x0 = x + info.xoffset;
+                int x1 = x0 + info.width;
+
+                maxX = Math.Max(maxX, x1);
+
+                if (maxX > sizeX)
+                    return i - 1;
+
+                x += info.xadvance;
+                if (i != text.Length - 1)
+                {
+                    char c1 = text[i + 1];
+                    x += GetKerning(c0, c1);
+                }
+            }
+
+            return text.Length;
+        }
+
         public void MeasureString(string text, bool mono, out int minX, out int maxX)
         {
             minX = 0;
