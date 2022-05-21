@@ -109,7 +109,7 @@ namespace FamiStudio
                 originalNoteLength      = noteLength;
                 originalNotesPerBeat    = notesPerBeat;
 
-                UpdateWarnings();
+                //UpdateWarnings(); MATTT
             }
         }
 

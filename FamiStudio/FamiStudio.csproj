@@ -187,19 +187,21 @@
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
     <Compile Include="Source\UI\Desktop\ContextMenu.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Button.cs" />
+    <Compile Include="Source\UI\Desktop\Controls\CheckBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ColorPicker.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Dialog.cs" />
+    <Compile Include="Source\UI\Desktop\Controls\DropDown.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Label.cs" />
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
     <Compile Include="Source\UI\Desktop\MobileClasses.cs" />
+    <Compile Include="Source\UI\Desktop\MultiPropertyDialog.cs" />
+    <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
+    <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs">
       <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\AutoScrollTextBox.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Source\UI\Windows\Cursors.cs" />
     <Compile Include="Source\UI\Windows\FamiStudioForm.cs">
@@ -208,34 +210,7 @@
     <Compile Include="Source\UI\Windows\GLForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Source\UI\Windows\LabelTrackBar.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\MultiPropertyDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\NoFocusButton.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\NoInterpolationPictureBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Source\UI\Windows\PlatformUtils.cs" />
-    <Compile Include="Source\UI\Windows\PropertyDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\PropertyPage.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\PropertyPageListView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\Slider.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\TutorialDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Source\UI\Windows\WinUtils.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
@@ -385,6 +360,8 @@
     <EmbeddedResource Include="Resources\Delete.tga" />
     <EmbeddedResource Include="Resources\Drag%402x.tga" />
     <EmbeddedResource Include="Resources\Drag.tga" />
+    <EmbeddedResource Include="Resources\DropDownArrow%402x.tga" />
+    <EmbeddedResource Include="Resources\DropDownArrow.tga" />
     <EmbeddedResource Include="Resources\Duplicate%402x.tga" />
     <EmbeddedResource Include="Resources\Duplicate.tga" />
     <EmbeddedResource Include="Resources\DuplicateMove%402x.tga" />
@@ -572,8 +549,8 @@
     <EmbeddedResource Include="Resources\MouseWheel.tga" />
     <EmbeddedResource Include="Resources\Music%402x.tga" />
     <EmbeddedResource Include="Resources\Music.tga" />
-    <EmbeddedResource Include="Resources\No%402x.png" />
-    <EmbeddedResource Include="Resources\No.png" />
+    <EmbeddedResource Include="Resources\No%402x.tga" />
+    <EmbeddedResource Include="Resources\No.tga" />
     <EmbeddedResource Include="Resources\NTSC%402x.tga" />
     <EmbeddedResource Include="Resources\NTSC.tga" />
     <EmbeddedResource Include="Resources\NTSCToPAL%402x.tga" />
@@ -598,8 +575,8 @@
     <EmbeddedResource Include="Resources\PlayQuarter.tga" />
     <EmbeddedResource Include="Resources\PlaySource%402x.tga" />
     <EmbeddedResource Include="Resources\PlaySource.tga" />
-    <EmbeddedResource Include="Resources\PlusSmall%402x.png" />
-    <EmbeddedResource Include="Resources\PlusSmall.png" />
+    <EmbeddedResource Include="Resources\PlusSmall%402x.tga" />
+    <EmbeddedResource Include="Resources\PlusSmall.tga" />
     <EmbeddedResource Include="Resources\Properties%402x.tga" />
     <EmbeddedResource Include="Resources\Properties.tga" />
     <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
@@ -702,8 +679,8 @@
     <EmbeddedResource Include="Resources\WaveEdit%402x.tga" />
     <EmbeddedResource Include="Resources\WaveEdit.tga" />
     <EmbeddedResource Include="Resources\YellowChecker.tga" />
-    <EmbeddedResource Include="Resources\Yes%402x.png" />
-    <EmbeddedResource Include="Resources\Yes.png" />
+    <EmbeddedResource Include="Resources\Yes%402x.tga" />
+    <EmbeddedResource Include="Resources\Yes.tga" />
     <EmbeddedResource Include="Rom\fds.fds" />
     <EmbeddedResource Include="Rom\fds_famitracker.fds" />
     <EmbeddedResource Include="Rom\rom_famitracker_ntsc.nes" />

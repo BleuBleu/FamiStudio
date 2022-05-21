@@ -4,6 +4,7 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
+    /*
     class MidiImportDialog
     {
         private PropertyDialog dialog;
@@ -275,4 +276,5 @@ namespace FamiStudio
             return project;
         }
     }
+*/
 }

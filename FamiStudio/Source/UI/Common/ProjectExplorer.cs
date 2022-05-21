@@ -4014,7 +4014,7 @@ namespace FamiStudio
             }
         }
 
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
             TickFling(delta);
             UpdateCaptureOperation(mouseLastX, mouseLastY, true);
@@ -4054,7 +4054,7 @@ namespace FamiStudio
             dlg.Properties.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
             dlg.Properties.SetPropertyEnabled(5, project.UsesExpansionAudio(ExpansionType.N163));
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
-            UpdateProjectPropertiesWarnings(dlg.Properties);
+            //UpdateProjectPropertiesWarnings(dlg.Properties); MATTT
             dlg.Properties.Build();
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
@@ -4259,6 +4259,7 @@ namespace FamiStudio
             var dlg = new PropertyDialog("Instrument Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
+            dlg.Properties.AddDropDownList("Test", ExpansionType.Names, ExpansionType.Names[0]);
             dlg.Properties.Build();
 
             dlg.ShowDialogAsync(ParentForm, (r) =>

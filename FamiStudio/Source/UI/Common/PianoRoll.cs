@@ -8344,7 +8344,7 @@ namespace FamiStudio
             }
         }
 
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
             if (App == null)
                 return;

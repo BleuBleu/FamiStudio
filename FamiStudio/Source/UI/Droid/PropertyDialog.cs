@@ -18,6 +18,7 @@ using Java.Lang;
 using Debug        = System.Diagnostics.Debug;
 using DialogResult = System.Windows.Forms.DialogResult;
 using ActionBar    = AndroidX.AppCompat.App.ActionBar;
+
 namespace FamiStudio
 {
     public class PropertyDialog

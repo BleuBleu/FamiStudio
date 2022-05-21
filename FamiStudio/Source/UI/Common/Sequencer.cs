@@ -2742,10 +2742,6 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public override void DoMouseWheel(MouseEventArgs e)
-        {
-        }
-
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
@@ -2832,7 +2828,7 @@ namespace FamiStudio
             }
         }
 
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
             if (App == null)
                 return;

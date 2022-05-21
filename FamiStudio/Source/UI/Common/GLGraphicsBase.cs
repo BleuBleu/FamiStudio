@@ -3,8 +3,6 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using OpenTK;
-using OpenTK.Graphics.OpenGL;
 using System.Reflection;
 
 using Color = System.Drawing.Color;
@@ -13,6 +11,8 @@ using Color = System.Drawing.Color;
 using Android.Opengl;
 using Bitmap = Android.Graphics.Bitmap;
 #else
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
 #if FAMISTUDIO_WINDOWS
 using Bitmap = System.Drawing.Bitmap;
 #else
@@ -908,13 +908,8 @@ namespace FamiStudio
 
         public int GetElementIndex(string name)
         {
-            for (int i = 0; i < elementNames.Length; i++)
-            {
-                if (elementNames[i] == name)
-                    return i;
-            }
-
-            return -1;
+            // By the way we build the atlases, elements are sorted by name
+            return Array.BinarySearch(elementNames, name);
         }
 
         public void GetElementUVs(int elementIndex, out float u0, out float v0, out float u1, out float v1)

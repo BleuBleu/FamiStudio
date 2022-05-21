@@ -5,7 +5,7 @@ namespace FamiStudio
 {
     public class MobilePiano : RenderControl
     {
-        public void Tick(float deltaTime)
+        public override void Tick(float deltaTime)
         {
         }
 
@@ -16,7 +16,7 @@ namespace FamiStudio
 
     public class QuickAccessBar : RenderControl
     {
-        public void Tick(float deltaTime)
+        public override void Tick(float deltaTime)
         {
         }
     }

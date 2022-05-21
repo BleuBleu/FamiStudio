@@ -138,9 +138,9 @@ namespace FamiStudio
             dialogCommandListForeground = CreateCommandList(CommandListUsage.Default);
         }
 
-        public void EndDrawDialog(System.Drawing.Color clearColor)
+        public void EndDrawDialog(System.Drawing.Color clearColor, Rectangle dialogRect)
         {
-            DrawCommandList(dialogCommandList);
+            DrawCommandList(dialogCommandList, dialogRect);
             DrawCommandList(dialogCommandListForeground);
         }
 

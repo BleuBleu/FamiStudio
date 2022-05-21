@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using OpenTK.Graphics.OpenGL;
 
@@ -10,6 +11,7 @@ namespace FamiStudio
         private int height;
         private GLGraphics gfx;
         private GLControl[] controls = new GLControl[4];
+        private Stack<Dialog> dialogs = new Stack<Dialog>();
         private ThemeRenderResources res;
 
         private Toolbar toolbar;
@@ -27,7 +29,10 @@ namespace FamiStudio
         public QuickAccessBar QuickAccessBar => quickAccessBar;
         public MobilePiano MobilePiano => mobilePiano;
         public ContextMenu ContextMenu => contextMenu;
+        public GLGraphics Graphics => gfx;
         public bool IsContextMenuActive => contextMenuVisible;
+        public bool IsDialogActive => dialogs.Count > 0;
+        public Dialog TopDialog => dialogs.Peek();
 
         DateTime lastRender = DateTime.Now;
         bool  contextMenuVisible;
@@ -87,6 +92,14 @@ namespace FamiStudio
                 }
             }
 
+            // If there is an active dialog, it also eats all of the input.
+            if (dialogs.Count > 0)
+            {
+                var dlg = dialogs.Peek();
+                return dlg.GetControlAt(formX, formY, out ctrlX, out ctrlY);
+            }
+
+            // Finally, send to one of the main controls.
             foreach (var ctrl in controls)
             {
                 ctrlX = formX - ctrl.Left;
@@ -128,6 +141,14 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        public void Tick(float delta)
+        {
+            if (dialogs.Count > 0)
+            {
+                dialogs.Peek().Tick(delta);
+            }
+        }
+
         public void MarkDirty()
         {
             foreach (var ctrl in controls)
@@ -139,6 +160,8 @@ namespace FamiStudio
             bool anyNeedsRedraw = false;
             foreach (var control in controls)
                 anyNeedsRedraw |= control.NeedsRedraw;
+            foreach (var dlg in dialogs)
+                anyNeedsRedraw |= dlg.NeedsRedraw;
             if (contextMenuVisible)
                 anyNeedsRedraw |= contextMenu.NeedsRedraw;
             return anyNeedsRedraw;
@@ -165,6 +188,16 @@ namespace FamiStudio
                     control.ClearDirtyFlag();
                 }
 
+                // MATTT : Dirty flag management for dialogs.
+                foreach (var dlg in dialogs)
+                {
+                    gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
+                    gfx.Transform.PushTranslation(dlg.Left, dlg.Top);
+                    dlg.Render(gfx);
+                    dlg.ClearDirtyFlag();
+                    gfx.Transform.PopTransform();
+                }
+
                 if (contextMenuVisible)
                 {
                     gfx.BeginDrawControl(contextMenu.Rectangle, height);
@@ -177,6 +210,25 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        public void InitDialog(Dialog dialog)
+        {
+            dialog.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+            dialog.SetThemeRenderResource(res);
+            dialog.RenderInitialized(gfx);
+            dialog.ParentForm = contextMenu.ParentForm; // HACK
+        }
+
+        public void PushDialog(Dialog dialog)
+        {
+            dialogs.Push(dialog);
+        }
+
+        public void PopDialog(Dialog dialog)
+        {
+            Debug.Assert(dialogs.Peek() == dialog);
+            dialogs.Pop();
         }
 
         public void InitializeGL()
@@ -194,6 +246,20 @@ namespace FamiStudio
             contextMenu.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
             contextMenu.SetThemeRenderResource(res);
             contextMenu.RenderInitialized(gfx);
+
+            //// MATTT : Testing.
+            //var dlg = new Dialog();
+            //dlg.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+            //dlg.SetThemeRenderResource(res);
+            //dlg.RenderInitialized(gfx);
+            //dlg.Move(100, 100, 400, 300);
+            //dlg.ParentForm = contextMenu.ParentForm; // MATTT
+            //dialogs.Push(dlg);
+
+            //dlg.AddLabel(10, 10, 100, 10, "Poop!");
+            //dlg.AddButton(120, 10, 32, 32, "");
+            //dlg.AddTextBox(10, 50, 100, 16, "Hey");
+            //dlg.AddColorPicker(10, 80, 170, 60);
         }
     }
 }

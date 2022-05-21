@@ -14,14 +14,15 @@ namespace FamiStudio
         {
             this.parentForm = parentForm;
 
-            dialog = new PropertyDialog("Log", 800, false);
-            dialog.Properties.AddMultilineTextBox(null, ""); // 0
-            dialog.Properties.Build();
+            // MATTT
+            //dialog = new PropertyDialog("Log", 800, false);
+            //dialog.Properties.AddMultilineTextBox(null, ""); // 0
+            //dialog.Properties.Build();
         }
 
         public DialogResult ShowDialog()
         {
-            return dialog.ShowDialog(parentForm);
+            return DialogResult.OK; // MATTT dialog.ShowDialog(parentForm);
         }
 
         public DialogResult ShowDialogIfMessages()
@@ -41,7 +42,7 @@ namespace FamiStudio
         }
 
         public bool HasMessages => messages.Count > 0;
-        public bool AbortOperation => dialog.DialogResult != DialogResult.None;
+        public bool AbortOperation => false; // MATTT dialog.DialogResult != DialogResult.None;
         public void ReportProgress(float progress) { }
     }
 
@@ -63,32 +64,34 @@ namespace FamiStudio
 
         public void LogMessage(string msg)
         {
-            dialog.UpdateModalEvents();
+            // MATTT
+            //dialog.UpdateModalEvents();
 
-            if (AbortOperation)
-                return;
+            //if (AbortOperation)
+            //    return;
 
-            hasMessages = true;
-            if (!dialog.Visible)
-                dialog.ShowModal(parentForm);
-            dialog.Properties.AppendText(0, msg);
-            dialog.UpdateModalEvents();
+            //hasMessages = true;
+            //if (!dialog.Visible)
+            //    dialog.ShowModal(parentForm);
+            //dialog.Properties.AppendText(0, msg);
+            //dialog.UpdateModalEvents();
         }
 
         public void ReportProgress(float progress)
         {
-            dialog.UpdateModalEvents();
+            // MATTT
+            //dialog.UpdateModalEvents();
 
-            if (AbortOperation)
-                return;
+            //if (AbortOperation)
+            //    return;
 
-            dialog.Properties.SetPropertyValue(1, progress);
-            dialog.UpdateModalEvents();
+            //dialog.Properties.SetPropertyValue(1, progress);
+            //dialog.UpdateModalEvents();
         }
 
         public void StayModalUntilClosed()
         {
-            dialog.StayModalUntilClosed();
+            // MATTT dialog.StayModalUntilClosed();
         }
 
         public void Close()
@@ -96,6 +99,6 @@ namespace FamiStudio
         }
 
         public bool HasMessages => hasMessages;
-        public bool AbortOperation => dialog.DialogResult != DialogResult.None;
+        public bool AbortOperation => false; // MATTT dialog.DialogResult != DialogResult.None;
     }
 }

@@ -330,36 +330,37 @@ namespace FamiStudio
             {
                 if (click == ClickType.Double)
                 {
-                    var dlg = new PropertyDialog("", 300, false, true, dialog);
+                    var dlg = new PropertyDialog("", 300, false, true);
                     dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
                     dlg.Properties.Build();
 
                     // TODO : Make this cross-platform.
-#if FAMISTUDIO_WINDOWS
-                    dlg.KeyDown += (sender, e) =>
-                    {
-                        if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null)
-                        {
-                            if (e.KeyCode != Keys.Escape)
-                                AssignQwertyKey(rowIdx, colIdx - 2, (int)e.KeyCode);
-                            dlg.Close();
-                        }
-                    };
-#elif FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                    dlg.KeyPressEvent += (o, args) =>
-                    {
-                        // These 2 keys are used by the QWERTY input.
-                        if (args.Event.Key != Gdk.Key.Tab &&
-                            args.Event.Key != Gdk.Key.BackSpace && 
-                            PlatformUtils.KeyCodeToString((int)args.Event.Key) != null)
-                        {
-                            if (args.Event.Key != Gdk.Key.Escape)
-                                AssignQwertyKey(rowIdx, colIdx - 2, (int)args.Event.Key);
-                            dlg.Accept();
-                        }
-                    };
-#endif
-                    dlg.ShowDialogAsync(null, (r) => { });
+                    // MATTT
+//#if FAMISTUDIO_WINDOWS
+//                    dlg.KeyDown += (sender, e) =>
+//                    {
+//                        if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null)
+//                        {
+//                            if (e.KeyCode != Keys.Escape)
+//                                AssignQwertyKey(rowIdx, colIdx - 2, (int)e.KeyCode);
+//                            dlg.Close();
+//                        }
+//                    };
+//#elif FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
+//                    dlg.KeyPressEvent += (o, args) =>
+//                    {
+//                        // These 2 keys are used by the QWERTY input.
+//                        if (args.Event.Key != Gdk.Key.Tab &&
+//                            args.Event.Key != Gdk.Key.BackSpace && 
+//                            PlatformUtils.KeyCodeToString((int)args.Event.Key) != null)
+//                        {
+//                            if (args.Event.Key != Gdk.Key.Escape)
+//                                AssignQwertyKey(rowIdx, colIdx - 2, (int)args.Event.Key);
+//                            dlg.Accept();
+//                        }
+//                    };
+//#endif
+//                    dlg.ShowDialogAsync(null, (r) => { });
 
                     pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
                 }

@@ -13,6 +13,8 @@ namespace FamiStudio
     // MATTT : Rename to "Window".
     public partial class FamiStudioForm : GLForm
     {
+        private static FamiStudioForm instance;
+
         private const int DelayedRightClickTimeMs = 250;
         private const int DelayedRightClickPixelTolerance = 2;
 
@@ -27,8 +29,9 @@ namespace FamiStudio
         public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
         public MobilePiano MobilePiano => controls.MobilePiano;
         public new ContextMenu ContextMenu => controls.ContextMenu;
-        public static FamiStudioForm Instance => null;
+        public static FamiStudioForm Instance => instance;
         public new GLControl ActiveControl => activeControl;
+        public GLGraphics Graphics => controls.Graphics;
 
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => false;
@@ -41,6 +44,7 @@ namespace FamiStudio
         private MouseButtons lastButtonPress = MouseButtons.None;
         private Timer timer = new Timer();
         private Point contextMenuPoint = Point.Empty;
+        private DateTime lastTickTime = DateTime.Now;
 
         private DateTime       delayedRightClickStartTime = DateTime.MinValue;
         private MouseEventArgs delayedRightClickArgs      = null;
@@ -69,6 +73,7 @@ namespace FamiStudio
 
             Cursors.Initialize();
 
+            instance = this;
             controls = new FamiStudioControls(this);
             activeControl = controls.PianoRoll;
 
@@ -117,9 +122,20 @@ namespace FamiStudio
             TickAndRender();
         }
 
+        private void Tick()
+        {
+            var tickTime = DateTime.Now;
+            var deltaTime = (float)Math.Min(0.25f, (float)(tickTime - lastTickTime).TotalSeconds);
+
+            famistudio.Tick(deltaTime);
+            controls.Tick(deltaTime);
+
+            lastTickTime = tickTime;
+        }
+
         private void TickAndRender()
         {
-            famistudio.Tick();
+            Tick();
 
             if (controls.AnyControlNeedsRedraw() && famistudio.Project != null)
             {
@@ -438,6 +454,10 @@ namespace FamiStudio
             {
                 controls.ContextMenu.KeyDown(e);
             }
+            else if (controls.IsDialogActive)
+            {
+                controls.TopDialog.KeyDown(e);
+            }
             else
             {
                 famistudio.KeyDown(e, (int)e.KeyCode);
@@ -453,6 +473,10 @@ namespace FamiStudio
             if (controls.IsContextMenuActive)
             {
                 controls.ContextMenu.KeyUp(e);
+            }
+            else if (controls.IsDialogActive)
+            {
+                controls.TopDialog.KeyUp(e);
             }
             else
             {
@@ -520,6 +544,21 @@ namespace FamiStudio
         public void HideContextMenu()
         {
             controls.HideContextMenu();
+        }
+
+        public void InitDialog(Dialog dialog)
+        {
+            controls.InitDialog(dialog);
+        }
+
+        public void PushDialog(Dialog dialog)
+        {
+            controls.PushDialog(dialog);
+        }
+
+        public void PopDialog(Dialog dialog)
+        {
+            controls.PopDialog(dialog);
         }
 
         public static bool IsKeyDown(Keys k)

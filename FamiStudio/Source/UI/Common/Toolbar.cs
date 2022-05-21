@@ -595,7 +595,7 @@ namespace FamiStudio
                 PlatformUtils.Beep();
         }
 
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
             if (PlatformUtils.IsDesktop)
             {

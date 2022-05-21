@@ -161,7 +161,7 @@ namespace FamiStudio
             App.SetToolTip(hoveredItemIndex >= 0 ? menuOptions[hoveredItemIndex].ToolTip : null);
         }
 
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
         }
 

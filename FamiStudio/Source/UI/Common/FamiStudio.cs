@@ -65,7 +65,6 @@ namespace FamiStudio
 #endif
         private int autoSaveIndex = 0;
         private float averageTickRateMs = 8.0f;
-        private DateTime lastTickTime = DateTime.Now;
         private DateTime lastAutoSave;
 
         private bool   newReleaseAvailable = false;
@@ -572,32 +571,20 @@ namespace FamiStudio
         {
             var pianoRollPos = PianoRoll.PointToClient(pos);
             if (PianoRoll.ClientRectangle.Contains(pianoRollPos))
-            {
                 PianoRoll.ReplaceSelectionInstrument(instrument, pianoRollPos);
-                PianoRoll.Focus();
-            }
             var sequencerPos = Sequencer.PointToClient(pos);
             if (Sequencer.ClientRectangle.Contains(sequencerPos))
-            {
                 Sequencer.ReplaceSelectionInstrument(instrument, sequencerPos);
-                Sequencer.Focus();
-            }
         }
 
         private void ProjectExplorer_ArpeggioDroppedOutside(Arpeggio arpeggio, Point pos)
         {
             var pianoRollPos = PianoRoll.PointToClient(pos);
             if (PianoRoll.ClientRectangle.Contains(pianoRollPos))
-            {
                 PianoRoll.ReplaceSelectionArpeggio(arpeggio, pianoRollPos);
-                PianoRoll.Focus();
-            }
             var sequencerPos = Sequencer.PointToClient(pos);
             if (Sequencer.ClientRectangle.Contains(sequencerPos))
-            {
                 Sequencer.ReplaceSelectionArpeggio(arpeggio, sequencerPos);
-                Sequencer.Focus();
-            }
         }
 
         private void Sequencer_PatternModified()
@@ -998,8 +985,9 @@ namespace FamiStudio
             {
                 if (mid)
                 {
-                    var dlg = new MidiImportDialog(filename);
-                    project = dlg.ShowDialog(mainForm);
+                    // MATTT
+                    //var dlg = new MidiImportDialog(filename);
+                    //project = dlg.ShowDialog(mainForm);
                 }
                 else if (nsf)
                 {
@@ -2237,11 +2225,12 @@ namespace FamiStudio
             }
         }
 
-        public void Tick(float deltaTime = -1.0f)
+        public void Tick(float deltaTime)
         {
             Debug.Assert(!mainForm.IsAsyncDialogInProgress);
 
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
+            averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
 
             ProcessAudioDeviceChanges();
             ProcessQueuedMidiNotes();
@@ -2256,22 +2245,12 @@ namespace FamiStudio
 
         private void TickControls(float deltaTime)
         {
-            var tickTime = DateTime.Now;
-
-            if (deltaTime < 0.0f)
-                deltaTime = (float)(tickTime - lastTickTime).TotalSeconds;
-
-            deltaTime = (float)Math.Min(0.25f, deltaTime);
-            averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
-
             ToolBar.Tick(deltaTime);
             PianoRoll.Tick(deltaTime);
             Sequencer.Tick(deltaTime);
             ProjectExplorer.Tick(deltaTime);
             QuickAccessBar.Tick(deltaTime);
             MobilePiano.Tick(deltaTime);
-
-            lastTickTime = tickTime;
         }
 
         private void Sequencer_PatternClicked(int channelIdx, int patternIdx, bool setActive)

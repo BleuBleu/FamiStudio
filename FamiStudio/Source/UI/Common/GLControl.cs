@@ -19,8 +19,8 @@ namespace FamiStudio
     {
         private CursorInfo cursorInfo;
         private FamiStudioForm parentForm;
-        private Dialog parentDialog;
         private ThemeRenderResources themeRes;
+        protected Dialog parentDialog;
         protected int left = 0;
         protected int top = 0;
         protected int width = 100;
@@ -28,6 +28,7 @@ namespace FamiStudio
         private float mainWindowScaling = 1.0f;
         private float fontScaling = 1.0f;
         private bool dirty = true;
+        private bool visible = true;
 
         protected GLControl() { cursorInfo = new CursorInfo(this); }
         protected virtual void OnRenderInitialized(GLGraphics g) { }
@@ -54,8 +55,9 @@ namespace FamiStudio
         protected virtual void OnTouchScale(int x, int y, float scale) { }
         protected virtual void OnTouchScaleEnd(int x, int y) { }
         protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
-        public virtual void DoMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
         public virtual bool WantsFullScreenViewport => false;
+        public virtual void Tick(float delta) { }
+        public virtual bool PriorityInput => false;
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
         public void Render(GLGraphics g) { OnRender(g); }
@@ -79,7 +81,6 @@ namespace FamiStudio
         public void TouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }
         public void TouchScaleEnd(int x, int y) { OnTouchScaleEnd(x, y); }
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
-        public void Focus() { }
 
         public System.Drawing.Point ClientToParent(System.Drawing.Point p) { return PointToClient(PointToScreen(p)); }
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
@@ -89,7 +90,7 @@ namespace FamiStudio
         public System.Drawing.Size ParentFormSize => parentForm.Size;
         public bool IsLandscape => parentForm.IsLandscape;
         public int Left => parentDialog != null ? left + parentDialog.left : left;
-        public int Top => parentDialog != null ? top  + parentDialog.left : top;
+        public int Top => parentDialog != null ? top  + parentDialog.top : top;
         public int Right => Left + width;
         public int Bottom => Top  + height;
         public int Width => width;
@@ -97,10 +98,12 @@ namespace FamiStudio
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }
         public bool NeedsRedraw => dirty;
         public bool IsRenderInitialized => themeRes != null;
+        public bool HasDialogFocus => parentDialog != null && parentDialog.FocusedControl == this;
+        public bool Visible { get => visible; set { visible = value; MarkDirty(); } }
         public float MainWindowScaling => mainWindowScaling;
         public float FontScaling => fontScaling;
         public ThemeRenderResources ThemeResources => themeRes;
-        public void MarkDirty() { dirty = true; }
+        public void MarkDirty() { dirty = true; if (parentDialog != null) parentDialog.MarkDirty(); }
         public void ClearDirtyFlag() { dirty = false; }
         public void SetDpiScales(float main, float font) { mainWindowScaling = main; fontScaling = font; }
         public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
@@ -125,10 +128,27 @@ namespace FamiStudio
                 OnResize(EventArgs.Empty);
         }
 
+        public void Resize(int w, int h, bool fireResizeEvent = true)
+        {
+            width = Math.Max(1, w);
+            height = Math.Max(1, h);
+
+            if (fireResizeEvent)
+                OnResize(EventArgs.Empty);
+        }
+
+        public void CenterToForm()
+        {
+            Move((parentForm.Width  - width)  / 2,
+                 (parentForm.Height - height) / 2,
+                 width, height);
+        }
+
         public System.Windows.Forms.Keys ModifierKeys => parentForm.GetModifierKeys();
         public FamiStudio App => parentForm?.FamiStudio;
         public CursorInfo Cursor => cursorInfo;
         public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
+        public Dialog ParentDialog { get => parentDialog; set => parentDialog = value; }
 
         public int ScaleForMainWindow(float val) { return (int)Math.Round(val * mainWindowScaling); }
         public float ScaleForMainWindowFloat(float val) { return (val * mainWindowScaling); }
