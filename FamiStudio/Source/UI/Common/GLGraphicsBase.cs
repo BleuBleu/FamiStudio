@@ -3,6 +3,9 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
+using System.Reflection;
 
 using Color = System.Drawing.Color;
 
@@ -10,8 +13,6 @@ using Color = System.Drawing.Color;
 using Android.Opengl;
 using Bitmap = Android.Graphics.Bitmap;
 #else
-using OpenTK;
-using OpenTK.Graphics.OpenGL;
 #if FAMISTUDIO_WINDOWS
 using Bitmap = System.Drawing.Bitmap;
 #else
@@ -23,6 +24,13 @@ namespace FamiStudio
 {
     public abstract class GLGraphicsBase : IDisposable
     {
+        public enum CommandListUsage
+        {
+            Default,
+            Dialog,
+            DialogForeground
+        }
+
         protected struct GradientCacheKey
         {
             public Color color0;
@@ -35,42 +43,6 @@ namespace FamiStudio
             }
         }
 
-        protected class BitmapAtlasKey
-        {
-            private string[] BitmapNames;
-
-            public BitmapAtlasKey(string[] names)
-            {
-                BitmapNames = names;
-            }
-
-            public override int GetHashCode()
-            {
-                var hash = 0;
-
-                for (int i = 0; i < BitmapNames.Length; i++)
-                    hash = Utils.HashCombine(BitmapNames[i].GetHashCode(), hash);
-
-                return hash;
-            }
-
-            public override bool Equals(object obj)
-            {
-                var other = obj as BitmapAtlasKey;
-
-                if (other == null)
-                    return false;
-
-                for (int i = 0; i < BitmapNames.Length; i++)
-                {
-                    if (BitmapNames[i] != other.BitmapNames[i])
-                        return false;
-                }
-
-                return true;
-            }
-        }
-
         protected float windowScaling = 1.0f;
         protected float fontScaling = 1.0f;
         protected int windowSizeY;
@@ -80,18 +52,19 @@ namespace FamiStudio
         protected Rectangle controlRectFlip;
         protected GLTransform transform = new GLTransform();
         protected GLBitmap dashedBitmap;
+        protected Dictionary<int, GLBitmapAtlas> atlases = new Dictionary<int, GLBitmapAtlas>();
 
         protected Dictionary<GradientCacheKey, GLBrush> verticalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
         protected Dictionary<GradientCacheKey, GLBrush> horizontalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
         protected Dictionary<Color, GLBrush> solidGradientCache = new Dictionary<Color, GLBrush>();
-        protected Dictionary<BitmapAtlasKey, GLBitmapAtlas> bitmapAtlasesCache = new Dictionary<BitmapAtlasKey, GLBitmapAtlas>();
 
         public float FontScaling => fontScaling;
         public float WindowScaling => windowScaling;
         public int DashTextureSize => dashedBitmap.Size.Width;
+        public int WindowSizeY => windowSizeY;
         public GLTransform Transform => transform;
 
-        protected const int MaxAtlasResolution = 4096;
+        protected const int MaxAtlasResolution = 1024;
         protected const int MaxVertexCount = 128 * 1024;
         protected const int MaxIndexCount = MaxVertexCount / 4 * 6;
 
@@ -105,7 +78,7 @@ namespace FamiStudio
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
         protected abstract int CreateEmptyTexture(int width, int height, bool filter = false);
-        protected abstract int CreateTexture(Bitmap bmp, bool filter);
+        protected abstract int CreateTexture(int[,] bmpData, bool filter);
         public abstract void DrawCommandList(GLCommandList list, Rectangle scissor);
 
         protected GLGraphicsBase(float mainScale, float fontScale)
@@ -129,6 +102,8 @@ namespace FamiStudio
                 quadIdxArray[j++] = i2;
                 quadIdxArray[j++] = i3;
             }
+
+            BuildBitmapAtlases();
         }
 
         public virtual void BeginDrawFrame()
@@ -153,7 +128,188 @@ namespace FamiStudio
         {
         }
 
-        public abstract GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names);
+        protected string GetScaledFilename(string name, out bool needsScaling)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.tga") != null)
+            {
+                needsScaling = false;
+                return $"FamiStudio.Resources.{name}@15x.tga";
+            }
+            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
+            {
+                needsScaling = windowScaling != 2.0f;
+                return $"FamiStudio.Resources.{name}@2x.tga";
+            }
+            else
+            {
+                needsScaling = false;
+                return $"FamiStudio.Resources.{name}.tga";
+            }
+        }
+
+        protected int[,] LoadBitmapFromResourceWithScaling(string name)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var scaledFilename = GetScaledFilename(name, out var needsScaling);
+            var bmpData = TgaFile.LoadFromResource(scaledFilename);
+
+            // Pre-resize all images so we dont have to deal with scaling later.
+            if (needsScaling)
+            {
+                // MATTT : Do scaling here!!!
+                Debug.Assert(false);
+
+                var newWidth  = Math.Max(1, (int)(bmpData.GetLength(1) * (windowScaling / 2.0f)));
+                var newHeight = Math.Max(1, (int)(bmpData.GetLength(0) * (windowScaling / 2.0f)));
+
+//#if FAMISTUDIO_WINDOWS
+//                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
+//#else
+//                bmp = bmp.ScaleSimple(newWidth, newHeight, Gdk.InterpType.Bilinear);
+//#endif
+            }
+
+            return bmpData;
+        }
+
+        private void BuildBitmapAtlases()
+        {
+            // Build atlases.
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceNames = assembly.GetManifestResourceNames();
+            var atlasImages = new Dictionary<int, List<string>>();
+            var filteredImages = new HashSet<string>();
+
+            foreach (var res in resourceNames)
+            {
+                // Ignore fonts (which have a '_' in their name).
+                if (res.StartsWith("FamiStudio.Resources.") && res.EndsWith(".tga") && res.IndexOf('_') < 0)
+                {
+                    // Remove any scaling from the name.
+                    var at = res.IndexOf('@');
+                    var cleanedFilename = res.Substring(21, at >= 0 ? at - 21 : res.Length - 25);
+                    filteredImages.Add(cleanedFilename);
+                }
+            }
+
+            // Keep 1 atlas per power-of-two size. 
+            var minWidth = (int)(16 * windowScaling);
+
+            foreach (var res in filteredImages)
+            {
+                var scaledFilename = GetScaledFilename(res, out var needsScaling);
+                TgaFile.GetResourceImageSize(scaledFilename, out var width, out var height);
+
+                if (needsScaling)
+                {
+                    width  = Math.Max(1, (int)(width  * (windowScaling / 2.0f)));
+                    height = Math.Max(1, (int)(height * (windowScaling / 2.0f)));
+                }
+
+                width  = Math.Max(minWidth, width);
+                height = Math.Max(minWidth, height);
+
+                var maxSize = Math.Max(width, height);
+                var maxSizePow2 = Utils.NextPowerOfTwo(maxSize);
+
+                if (!atlasImages.TryGetValue(maxSizePow2, out var atlas))
+                {
+                    atlas = new List<string>();
+                    atlasImages.Add(maxSizePow2, atlas);
+                }
+
+                atlas.Add(res);
+            }
+
+            // Build the textures.
+            foreach (var kv in atlasImages)
+            {
+                var bmp = CreateBitmapAtlasFromResources(kv.Value.ToArray());
+                atlases.Add(kv.Key, bmp);
+            }
+        }
+
+        public unsafe GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
+        {
+            var bitmaps = new int[names.Length][,];
+            var elementSizeX = 0;
+            var elementSizeY = 0;
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                var bmpData = LoadBitmapFromResourceWithScaling(names[i]);
+
+                elementSizeX = Math.Max(elementSizeX, bmpData.GetLength(1));
+                elementSizeY = Math.Max(elementSizeY, bmpData.GetLength(0));
+
+                Debug.WriteLine($"Atlas element size : {elementSizeX} x {elementSizeY}");
+
+                bitmaps[i] = bmpData;
+            }
+
+            Debug.Assert(elementSizeX < MaxAtlasResolution);
+
+            var elementsPerRow = MaxAtlasResolution / elementSizeX;
+            var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
+            var atlasSizeX = Utils.NextPowerOfTwo(elementsPerRow * elementSizeX);
+            var atlasSizeY = Utils.NextPowerOfTwo(numRows * elementSizeY);
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
+            var elementRects = new Rectangle[names.Length];
+
+            GL.BindTexture(TextureTarget.Texture2D, textureId);
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                var bmpData = bitmaps[i];
+
+                var row = i / elementsPerRow;
+                var col = i % elementsPerRow;
+
+                elementRects[i] = new Rectangle(
+                    col * elementSizeX,
+                    row * elementSizeY,
+                    bmpData.GetLength(1),
+                    bmpData.GetLength(0));
+
+                fixed (int* ptr = &bmpData[0, 0])
+                {
+                    var stride = sizeof(int) * bmpData.GetLength(0);
+
+                    // MATTT : Check that!!! Should be same now!
+#if FAMISTUDIO_WINDOWS
+                    var format = PixelFormat.Bgra;
+#else
+                    var format = PixelFormat.Rgba;
+#endif
+                    GL.TexSubImage2D(TextureTarget.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmpData.GetLength(1), bmpData.GetLength(0), format, PixelType.UnsignedByte, new IntPtr(ptr));
+                }
+            }
+
+            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, names, elementRects);
+        }
+
+        public GLBitmapAtlasRef GetBitmapAtlasRef(string name)
+        {
+            // Look in all atlases
+            foreach (var a in atlases.Values)
+            {
+                var idx = a.GetElementIndex(name);
+                if (idx >= 0)
+                    return new GLBitmapAtlasRef(a, idx);
+            }
+
+            return null;
+        }
+
+        public GLBitmapAtlasRef[] GetBitmapAtlasRefs(string[] name)
+        {
+            var refs = new GLBitmapAtlasRef[name.Length];
+            for (int i = 0; i < refs.Length; i++)
+                refs[i] = GetBitmapAtlasRef(name[i]);
+            return refs;
+        }
 
         public void SetLineBias(int bias)
         {
@@ -165,7 +321,7 @@ namespace FamiStudio
             DrawCommandList(list, Rectangle.Empty);
         }
 
-        public virtual GLCommandList CreateCommandList()
+        public virtual GLCommandList CreateCommandList(CommandListUsage usage = CommandListUsage.Default)
         {
             return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, true, maxSmoothLineWidth);
         }
@@ -226,18 +382,6 @@ namespace FamiStudio
             solidGradientCache[color] = brush;
 
             return brush;
-        }
-
-        public GLBitmapAtlas GetBitmapAtlas(string[] imageNames)
-        {
-            var key = new BitmapAtlasKey(imageNames);
-            
-            if (bitmapAtlasesCache.TryGetValue(key, out var atlas))
-                return atlas;
-
-            atlas = CreateBitmapAtlasFromResources(imageNames);
-            bitmapAtlasesCache[key] = atlas;
-            return atlas;
         }
 
         public GLBrush GetVerticalGradientBrush(Color color0, int sizeY, float dimming)
@@ -312,7 +456,7 @@ namespace FamiStudio
             var suffix = bold ? "Bold" : "";
             var basename = $"{name}{size}{suffix}";
             var fntfile = $"FamiStudio.Resources.{basename}.fnt";
-            var imgfile = $"FamiStudio.Resources.{basename}_0.png";
+            var imgfile = $"FamiStudio.Resources.{basename}_0.tga";
 
             var str = "";
             using (Stream stream = typeof(GLGraphicsBase).Assembly.GetManifestResourceStream(fntfile))
@@ -322,7 +466,7 @@ namespace FamiStudio
             }
 
             var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var bmp = PlatformUtils.LoadBitmapFromResource(imgfile);
+            var bmpData = TgaFile.LoadFromResource(imgfile);
 
             var font = (GLFont)null;
 
@@ -338,44 +482,44 @@ namespace FamiStudio
                 switch (splits[0])
                 {
                     case "common":
-                        {
-                            baseValue = ReadFontParam<int>(splits, "base");
-                            lineHeight = ReadFontParam<int>(splits, "lineHeight");
-                            texSizeX = ReadFontParam<int>(splits, "scaleW");
-                            texSizeY = ReadFontParam<int>(splits, "scaleH");
-                            font = new GLFont(CreateTexture(bmp, false), size, baseValue, lineHeight);
-                            break;
-                        }
+                    {
+                        baseValue = ReadFontParam<int>(splits, "base");
+                        lineHeight = ReadFontParam<int>(splits, "lineHeight");
+                        texSizeX = ReadFontParam<int>(splits, "scaleW");
+                        texSizeY = ReadFontParam<int>(splits, "scaleH");
+                        font = new GLFont(CreateTexture(bmpData, false), size, baseValue, lineHeight);
+                        break;
+                    }
                     case "char":
-                        {
-                            var charInfo = new GLFont.CharInfo();
+                    {
+                        var charInfo = new GLFont.CharInfo();
 
-                            int c = ReadFontParam<int>(splits, "id");
-                            int x = ReadFontParam<int>(splits, "x");
-                            int y = ReadFontParam<int>(splits, "y");
+                        int c = ReadFontParam<int>(splits, "id");
+                        int x = ReadFontParam<int>(splits, "x");
+                        int y = ReadFontParam<int>(splits, "y");
 
-                            charInfo.width = ReadFontParam<int>(splits, "width");
-                            charInfo.height = ReadFontParam<int>(splits, "height");
-                            charInfo.xoffset = ReadFontParam<int>(splits, "xoffset");
-                            charInfo.yoffset = ReadFontParam<int>(splits, "yoffset");
-                            charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
-                            charInfo.u0 = (x + 0.0f) / (float)texSizeX;
-                            charInfo.v0 = (y + 0.0f) / (float)texSizeY;
-                            charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
-                            charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
+                        charInfo.width = ReadFontParam<int>(splits, "width");
+                        charInfo.height = ReadFontParam<int>(splits, "height");
+                        charInfo.xoffset = ReadFontParam<int>(splits, "xoffset");
+                        charInfo.yoffset = ReadFontParam<int>(splits, "yoffset");
+                        charInfo.xadvance = ReadFontParam<int>(splits, "xadvance");
+                        charInfo.u0 = (x + 0.0f) / (float)texSizeX;
+                        charInfo.v0 = (y + 0.0f) / (float)texSizeY;
+                        charInfo.u1 = (x + 0.0f + charInfo.width) / (float)texSizeX;
+                        charInfo.v1 = (y + 0.0f + charInfo.height) / (float)texSizeY;
 
-                            font.AddChar((char)c, charInfo);
+                        font.AddChar((char)c, charInfo);
 
-                            break;
-                        }
+                        break;
+                    }
                     case "kerning":
-                        {
-                            int c0 = ReadFontParam<int>(splits, "first");
-                            int c1 = ReadFontParam<int>(splits, "second");
-                            int amount = ReadFontParam<int>(splits, "amount");
-                            font.AddKerningPair(c0, c1, amount);
-                            break;
-                        }
+                    {
+                        int c0 = ReadFontParam<int>(splits, "first");
+                        int c1 = ReadFontParam<int>(splits, "second");
+                        int amount = ReadFontParam<int>(splits, "amount");
+                        font.AddKerningPair(c0, c1, amount);
+                        break;
+                    }
                 }
             }
 
@@ -390,13 +534,13 @@ namespace FamiStudio
                 b.Dispose();
             foreach (var b in solidGradientCache.Values)
                 b.Dispose();
-            foreach (var b in bitmapAtlasesCache.Values)
-                b.Dispose();
+            foreach (var a in atlases.Values)
+                a.Dispose();
 
             verticalGradientCache.Clear();
             horizontalGradientCache.Clear();
             solidGradientCache.Clear();
-            bitmapAtlasesCache.Clear();
+            atlases.Clear();
         }
 
         public float[] GetVertexArray()
@@ -749,15 +893,28 @@ namespace FamiStudio
 
     public class GLBitmapAtlas : GLBitmap
     {
-        Rectangle[] elementRects;
+        private string[] elementNames;
+        private Rectangle[] elementRects;
 
         public Size GetElementSize(int index) => elementRects[index].Size;
 
-        public GLBitmapAtlas(int id, int width, int height, Rectangle[] elementRects, bool disp = true, bool filter = false) :
-            base(id, width, height, disp, filter)
+        public GLBitmapAtlas(int id, int atlasSizeX, int atlasSizeY, string[] names, Rectangle[] rects, bool filter = false) :
+            base(id, atlasSizeX, atlasSizeY, true, filter)
         {
-            this.elementRects = elementRects;
-            this.atlas = true;
+            elementNames = names;
+            elementRects = rects;
+            atlas = true;
+        }
+
+        public int GetElementIndex(string name)
+        {
+            for (int i = 0; i < elementNames.Length; i++)
+            {
+                if (elementNames[i] == name)
+                    return i;
+            }
+
+            return -1;
         }
 
         public void GetElementUVs(int elementIndex, out float u0, out float v0, out float u1, out float v1)
@@ -768,6 +925,27 @@ namespace FamiStudio
             u1 = rect.Right  / (float)size.Width;
             v0 = rect.Top    / (float)size.Height;
             v1 = rect.Bottom / (float)size.Height;
+        }
+    }
+
+    public class GLBitmapAtlasRef
+    {
+        private GLBitmapAtlas atlas;
+        private int index;
+
+        public GLBitmapAtlas Atlas => atlas;
+        public int ElementIndex => index;
+        public Size ElementSize => atlas.GetElementSize(index);
+
+        public GLBitmapAtlasRef(GLBitmapAtlas a, int idx)
+        {
+            atlas = a;
+            index = idx;
+        }
+
+        public void GetElementUVs(out float u0, out float v0, out float u1, out float v1)
+        {
+            atlas.GetElementUVs(index, out u0, out v0, out u1, out v1);
         }
     }
 
@@ -1639,11 +1817,13 @@ namespace FamiStudio
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, false, tint);
         }
 
-        public void DrawBitmapAtlas(GLBitmapAtlas atlas, int bitmapIndex, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawBitmapAtlas(GLBitmapAtlasRef bmp, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
-            atlas.GetElementUVs(bitmapIndex, out var u0, out var v0, out var u1, out var v1);
-            var elementSize = atlas.GetElementSize(bitmapIndex);
+            var atlas = bmp.Atlas;
+            var elementIndex = bmp.ElementIndex;
+            var elementSize = bmp.ElementSize;
+            atlas.GetElementUVs(elementIndex, out var u0, out var v0, out var u1, out var v1);
             DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, false, tint);
         }
 

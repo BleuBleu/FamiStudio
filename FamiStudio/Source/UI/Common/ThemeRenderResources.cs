@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using RenderFont     = FamiStudio.GLFont;
 using RenderBrush    = FamiStudio.GLBrush;
 using RenderGraphics = FamiStudio.GLGraphics;
+using System.Reflection;
 
 namespace FamiStudio
 {

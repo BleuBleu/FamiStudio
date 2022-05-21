@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
+    // MATTT : Rename to "Window".
     public partial class FamiStudioForm : GLForm
     {
         private const int DelayedRightClickTimeMs = 250;

@@ -16,7 +16,10 @@ namespace FamiStudio
 {
     public class GLGraphics : GLGraphicsBase
     {
-        bool supportsLineWidth = true;
+        private bool supportsLineWidth = true;
+
+        private GLCommandList dialogCommandList;
+        private GLCommandList dialogCommandListForeground;
 
         public GLGraphics(float mainScale, float fontScale) : base(mainScale, fontScale)
         {
@@ -89,143 +92,34 @@ namespace FamiStudio
             return id;
         }
 
-        protected override int CreateTexture(Bitmap bmp, bool filter)
+        // MATTT : Move to base!
+        protected unsafe override int CreateTexture(int[,] bmpData, bool filter)
         {
-#if FAMISTUDIO_WINDOWS
-            var bmpData =
-                bmp.LockBits(
-                    new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
-                    System.Drawing.Imaging.ImageLockMode.ReadOnly,
-                    System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            Debug.Assert(bmpData.Stride == bmp.Width * 4);
-            var ptr = bmpData.Scan0;
-            var format = PixelFormat.Bgra;
-#else
-            Debug.Assert(bmp.Rowstride == bmp.Width * 4);
-            var ptr = bmp.Pixels;
-            var format = PixelFormat.Rgba;
-#endif
-
-            int id = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, id);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, bmp.Width, bmp.Height, 0, format, PixelType.UnsignedByte, ptr);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
-
-#if FAMISTUDIO_WINDOWS
-            bmp.UnlockBits(bmpData);
-#endif
-
-            return id;
-        }
-
-        protected Bitmap LoadBitmapFromResourceWithScaling(string name)
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-
-            bool needsScaling = false;
-            Bitmap bmp;
-
-            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.png") != null)
+            fixed (int* ptr = &bmpData[0, 0])
             {
-                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@15x.png");
-            }
-            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
-            {
-                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@2x.png");
-                needsScaling = windowScaling != 2.0f;
-            }
-            else
-            {
-                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png");
-            }
+                var stride = sizeof(int) * bmpData.GetLength(1);
 
-            // Pre-resize all images so we dont have to deal with scaling later.
-            if (needsScaling)
-            {
-                var newWidth  = Math.Max(1, (int)(bmp.Width  * (windowScaling / 2.0f)));
-                var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
+                // MATTT : Check that!!!
+            #if FAMISTUDIO_WINDOWS
+                var format = PixelFormat.Bgra;
+            #else
+                var format = PixelFormat.Rgba;
+            #endif
 
-#if FAMISTUDIO_WINDOWS
-                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
-#else
-                bmp = bmp.ScaleSimple(newWidth, newHeight, Gdk.InterpType.Bilinear);
-#endif
+                int id = GL.GenTexture();
+                GL.BindTexture(TextureTarget.Texture2D, id);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, bmpData.GetLength(1), bmpData.GetLength(0), 0, format, PixelType.UnsignedByte, new IntPtr(ptr));
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+
+                return id;
             }
-
-            return bmp;
         }
 
         public GLBitmap CreateBitmapFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);
-            return new GLBitmap(CreateTexture(bmp, false), bmp.Width, bmp.Height);
-        }
-
-        public override GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
-        {
-            var bitmaps = new Bitmap[names.Length];
-            var elementSizeX = 0;
-            var elementSizeY = 0;
-
-            for (int i = 0; i < names.Length; i++)
-            {
-                var bmp = LoadBitmapFromResourceWithScaling(names[i]);
-
-                elementSizeX = Math.Max(elementSizeX, bmp.Width);
-                elementSizeY = Math.Max(elementSizeY, bmp.Height);
-
-                bitmaps[i] = bmp;
-            }
-
-            var elementsPerRow = MaxAtlasResolution / elementSizeX;
-            var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
-            var atlasSizeX = elementsPerRow * elementSizeX;
-            var atlasSizeY = numRows * elementSizeY;
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
-            var elementRects = new Rectangle[names.Length];
-
-            GL.BindTexture(TextureTarget.Texture2D, textureId);
-
-            for (int i = 0; i < names.Length; i++)
-            {
-                var bmp = bitmaps[i];
-
-                var row = i / elementsPerRow;
-                var col = i % elementsPerRow;
-
-                elementRects[i] = new Rectangle(
-                    col * elementSizeX,
-                    row * elementSizeY,
-                    bmp.Width,
-                    bmp.Height);
-
-#if FAMISTUDIO_WINDOWS
-                var bmpData =
-                    bmp.LockBits(
-                        new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
-                        System.Drawing.Imaging.ImageLockMode.ReadOnly,
-                        System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                var ptr = bmpData.Scan0;
-                var stride = bmpData.Stride;
-                var format = PixelFormat.Bgra;
-#else
-                var ptr = bmp.Pixels;
-                var stride = bmp.Rowstride;
-                var format = PixelFormat.Rgba;
-#endif
-
-                Debug.Assert(stride == bmp.Width * 4);
-
-                GL.TexSubImage2D(TextureTarget.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, format, PixelType.UnsignedByte, ptr);
-
-#if FAMISTUDIO_WINDOWS
-                bmp.UnlockBits(bmpData);
-#endif
-                bmp.Dispose();
-            }
-
-            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, elementRects);
+            return new GLBitmap(CreateTexture(bmp, false), bmp.GetLength(0), bmp.GetLength(1));
         }
 
         public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
@@ -238,9 +132,29 @@ namespace FamiStudio
             return bmp.Size.Width;
         }
 
-        public override GLCommandList CreateCommandList()
+        public void BeginDrawDialog()
         {
-            return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, supportsLineWidth);
+            dialogCommandList = CreateCommandList(CommandListUsage.Default);
+            dialogCommandListForeground = CreateCommandList(CommandListUsage.Default);
+        }
+
+        public void EndDrawDialog(System.Drawing.Color clearColor)
+        {
+            DrawCommandList(dialogCommandList);
+            DrawCommandList(dialogCommandListForeground);
+        }
+
+        public override GLCommandList CreateCommandList(CommandListUsage usage = CommandListUsage.Default)
+        {
+            switch (usage)
+            {
+                case CommandListUsage.Dialog:
+                    return dialogCommandList;
+                case CommandListUsage.DialogForeground:
+                    return dialogCommandListForeground;
+                default:
+                    return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, supportsLineWidth);
+            }
         }
 
         public unsafe override void DrawCommandList(GLCommandList list, Rectangle scissor)

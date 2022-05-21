@@ -263,18 +263,6 @@ namespace FamiStudio
             return paramInfos.Count == 0 ? null : paramInfos.ToArray();
         }
 
-        readonly static string[] AlgorithmImageNames = new string[]
-        {
-            "Algorithm0",
-            "Algorithm1",
-            "Algorithm2",
-            "Algorithm3",
-            "Algorithm4",
-            "Algorithm5",
-            "Algorithm6",
-            "Algorithm7",
-        };
-
         public static void CustomDrawAdsrGraph(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
         {
             var g = c.Graphics;
@@ -398,15 +386,15 @@ namespace FamiStudio
         public static void CustomDrawEpsmAlgorithm(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
         {
             var instrument = userData1 as Instrument;
-            var atlas = c.Graphics.GetBitmapAtlas(AlgorithmImageNames);
             var algo = instrument.EpsmPatchRegs[0] & 0x07;
-            var bmpSize = atlas.GetElementSize(algo);
+            var bmp = c.Graphics.GetBitmapAtlasRef($"Algorithm{algo}");
+            var bmpSize = bmp.ElementSize;
 
             var posX = (rect.Left + rect.Right)  / 2 - bmpSize.Width  / 2;
             var posY = (rect.Top  + rect.Bottom) / 2 - bmpSize.Height / 2;
 
             c.FillAndDrawRectangle(rect, c.Graphics.GetSolidBrush(Color.Black, 1, 0.5f), res.BlackBrush);
-            c.DrawBitmapAtlas(atlas, algo, posX, posY);
+            c.DrawBitmapAtlas(bmp, posX, posY);
         }
     }
 

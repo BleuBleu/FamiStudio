@@ -7,12 +7,12 @@ using Color     = System.Drawing.Color;
 using Point     = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderBrush       = FamiStudio.GLBrush;
-using RenderFont        = FamiStudio.GLFont;
-using RenderControl     = FamiStudio.GLControl;
-using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderCommandList = FamiStudio.GLCommandList;
+using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
+using RenderBrush          = FamiStudio.GLBrush;
+using RenderFont           = FamiStudio.GLFont;
+using RenderControl        = FamiStudio.GLControl;
+using RenderGraphics       = FamiStudio.GLGraphics;
+using RenderCommandList    = FamiStudio.GLCommandList;
 
 namespace FamiStudio
 {
@@ -254,7 +254,7 @@ namespace FamiStudio
         bool redTooltip = false;
         string tooltip = "";
         RenderFont timeCodeFont;
-        RenderBitmapAtlas bmpSpecialCharAtlas;
+        RenderBitmapAtlasRef[] bmpSpecialCharacters;
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
         private delegate void MouseWheelDelegate(int delta);
@@ -287,7 +287,7 @@ namespace FamiStudio
 
         private RenderBrush toolbarBrush;
         private RenderBrush warningBrush;
-        private RenderBitmapAtlas bmpButtonAtlas;
+        private RenderBitmapAtlasRef[] bmpButtons;
         private Button[] buttons = new Button[(int)ButtonType.Count];
 
         private bool oscilloscopeVisible = true;
@@ -318,7 +318,7 @@ namespace FamiStudio
                 toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1);
 
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
-            bmpButtonAtlas = g.CreateBitmapAtlasFromResources(ButtonImageNames);
+            bmpButtons = g.GetBitmapAtlasRefs(ButtonImageNames);
             timeCodeFont = ThemeResources.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
@@ -350,7 +350,7 @@ namespace FamiStudio
                 // On mobile, everything will scale from 1080p.
                 var screenSize = PlatformUtils.GetScreenResolution();
                 var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
-                var bitmapSize = bmpButtonAtlas.GetElementSize(0);
+                var bitmapSize = bmpButtons[0].ElementSize;
 
                 buttonIconPosX = ScaleCustom(DefaultButtonIconPosX, scale);
                 buttonIconPosY = ScaleCustom(DefaultButtonIconPosY, scale);
@@ -374,7 +374,7 @@ namespace FamiStudio
                 buttonIconPosY          = ScaleForMainWindow(DefaultButtonIconPosY);
                 buttonSize              = ScaleForMainWindow(DefaultButtonSize);
 
-                bmpSpecialCharAtlas = g.CreateBitmapAtlasFromResources(SpecialCharImageNames);
+                bmpSpecialCharacters = g.GetBitmapAtlasRefs(SpecialCharImageNames);
 
                 buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
                 buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
@@ -435,7 +435,7 @@ namespace FamiStudio
                 foreach (var c in specialCharacters.Values)
                 {
                     if (c.BmpIndex != SpecialCharImageIndices.Count)
-                        c.Width = bmpSpecialCharAtlas.GetElementSize((int)c.BmpIndex).Width;
+                        c.Width = bmpSpecialCharacters[(int)c.BmpIndex].ElementSize.Width;
                     c.Height = tooltipSpecialCharSizeY;
                 }
             }
@@ -447,8 +447,6 @@ namespace FamiStudio
         {
             Utils.DisposeAndNullify(ref toolbarBrush);
             Utils.DisposeAndNullify(ref warningBrush);
-            Utils.DisposeAndNullify(ref bmpButtonAtlas);
-            Utils.DisposeAndNullify(ref bmpSpecialCharAtlas);
 
             specialCharacters.Clear();
         }
@@ -961,8 +959,8 @@ namespace FamiStudio
 
                 if (status != ButtonStatus.Disabled && hover)
                     opacity *= 0.75f;
-
-                c.DrawBitmapAtlas(bmpButtonAtlas, (int)bmpIndex, btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat, tint);
+                
+                c.DrawBitmapAtlas(bmpButtons[(int)bmpIndex], btn.IconPos.X, btn.IconPos.Y, opacity, iconScaleFloat, tint);
             }
         }
 
@@ -1069,7 +1067,7 @@ namespace FamiStudio
 
                             if (specialCharacter.BmpIndex != SpecialCharImageIndices.Count)
                             {
-                                c.DrawBitmapAtlas(bmpSpecialCharAtlas, (int)specialCharacter.BmpIndex, posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyFillColor1);
+                                c.DrawBitmapAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyFillColor1);
                             }
                             else
                             {

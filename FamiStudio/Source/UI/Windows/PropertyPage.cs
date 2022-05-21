@@ -53,10 +53,11 @@ namespace FamiStudio
             {
                 string suffix = DpiScaling.Dialog > 1 ? "@2x" : "";
                 
-                warningIcons = new Bitmap[3];
-                warningIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
-                warningIcons[1] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningYellow{suffix}.png")) as Bitmap;
-                warningIcons[2] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Warning{suffix}.png"))       as Bitmap;
+                // MATTT
+                //warningIcons = new Bitmap[3];
+                //warningIcons[0] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningGood{suffix}.png"))   as Bitmap;
+                //warningIcons[1] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.WarningYellow{suffix}.png")) as Bitmap;
+                //warningIcons[2] = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Warning{suffix}.png"))       as Bitmap;
             }
         }
 

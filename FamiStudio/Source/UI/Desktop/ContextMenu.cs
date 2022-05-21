@@ -7,12 +7,12 @@ using Color     = System.Drawing.Color;
 using Point     = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
 
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderBrush       = FamiStudio.GLBrush;
-using RenderFont        = FamiStudio.GLFont;
-using RenderControl     = FamiStudio.GLControl;
-using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderCommandList = FamiStudio.GLCommandList;
+using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
+using RenderBrush          = FamiStudio.GLBrush;
+using RenderFont           = FamiStudio.GLFont;
+using RenderControl        = FamiStudio.GLControl;
+using RenderGraphics       = FamiStudio.GLGraphics;
+using RenderCommandList    = FamiStudio.GLCommandList;
 
 namespace FamiStudio
 {
@@ -28,56 +28,20 @@ namespace FamiStudio
         int textPosX;
         int minSizeX;
 
-        // TODO : This is super lame, find a way to build the atlas
-        // on the fly as we get more and more images.
-        readonly string[] ContextMenuIconsNames = new string[]
-        {
-            "MenuCheckOff",
-            "MenuCheckOn",
-            "MenuClearEnvelope",
-            "MenuClearSelection",
-            "MenuClearLoopPoint",
-            "MenuClearRelease",
-            "MenuCustomPatternSettings",
-            "MenuDelete",
-            "MenuDeleteSelection",
-            "MenuExport",
-            "MenuEyedropper",
-            "MenuFile",
-            "MenuForceDisplay",
-            "MenuLoopPoint",
-            "MenuMute",
-            "MenuPlay",
-            "MenuProperties",
-            "MenuRadio",
-            "MenuRelease",
-            "MenuSave",
-            "MenuSelectAll",
-            "MenuSelectNote",
-            "MenuSelectPattern",
-            "MenuSolo",
-            "MenuStar",
-            "MenuStopNote",
-            "MenuToggleAttack",
-            "MenuToggleRelease",
-            "MenuToggleSlide",
-        };
-
         int hoveredItemIndex = -1;
-        RenderBitmapAtlas contextMenuIconsAtlas;
-        RenderBitmapAtlas expansionAtlas;
+        RenderBitmapAtlasRef[] bmpExpansions;
+        RenderBitmapAtlasRef[] bmpContextMenu;
+        RenderBitmapAtlasRef bmpMenuCheckOn;
+        RenderBitmapAtlasRef bmpMenuCheckOff;
+        RenderBitmapAtlasRef bmpMenuRadio;
         ContextMenuOption[] menuOptions;
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
-            contextMenuIconsAtlas = g.CreateBitmapAtlasFromResources(ContextMenuIconsNames);
-            expansionAtlas = g.CreateBitmapAtlasFromResources(ExpansionType.Icons);
-        }
-
-        protected override void OnRenderTerminated()
-        {
-            Utils.DisposeAndNullify(ref contextMenuIconsAtlas);
-            Utils.DisposeAndNullify(ref expansionAtlas);
+            bmpExpansions   = g.GetBitmapAtlasRefs(ExpansionType.Icons);
+            bmpMenuCheckOn  = g.GetBitmapAtlasRef("MenuCheckOn");
+            bmpMenuCheckOff = g.GetBitmapAtlasRef("MenuCheckOff");
+            bmpMenuRadio    = g.GetBitmapAtlasRef("MenuRadio");
         }
 
         private void UpdateRenderCoords()
@@ -93,6 +57,7 @@ namespace FamiStudio
             UpdateRenderCoords();
 
             menuOptions = options;
+            bmpContextMenu = new RenderBitmapAtlasRef[options.Length];
 
             // Measure size.
             var sizeX = 0;
@@ -105,7 +70,11 @@ namespace FamiStudio
                 sizeX = Math.Max(sizeX, (int)g.MeasureString(option.Text, ThemeResources.FontMedium));
                 sizeY += itemSizeY;
 
-                Debug.Assert(string.IsNullOrEmpty(option.Image) || GetAtlasAndIndex(option.Image, out _) >= 0);
+                if (!string.IsNullOrEmpty(option.Image))
+                {
+                    bmpContextMenu[i] = g.GetBitmapAtlasRef(option.Image);
+                    Debug.Assert(bmpContextMenu != null);
+                }
             }
 
             width  = Math.Max(minSizeX, sizeX + textPosX) + iconPos; 
@@ -196,20 +165,6 @@ namespace FamiStudio
         {
         }
 
-        private int GetAtlasAndIndex(string image, out RenderBitmapAtlas atlas)
-        {
-            atlas = contextMenuIconsAtlas;
-            var idx = Array.IndexOf(ContextMenuIconsNames, image);
-
-            if (idx < 0)
-            {
-                atlas = expansionAtlas;
-                idx = Array.IndexOf(ExpansionType.Icons, image);
-            }
-
-            return idx;
-        }
-
         protected override void OnRender(RenderGraphics g)
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
@@ -232,23 +187,22 @@ namespace FamiStudio
                 if (option.Separator) 
                     c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyFillBrush1);
 
-                var imageName = option.Image;
+                var bmp = bmpContextMenu[i];
 
-                if (string.IsNullOrEmpty(imageName))
+                if (bmp == null)
                 {
                     var checkState = option.CheckState();
                     switch (checkState)
                     {
-                        case ContextMenuCheckState.Checked:   imageName = "MenuCheckOn";  break;
-                        case ContextMenuCheckState.Unchecked: imageName = "MenuCheckOff"; break;
-                        case ContextMenuCheckState.Radio:     imageName = "MenuRadio";    break;
+                        case ContextMenuCheckState.Checked:   bmp = bmpMenuCheckOn;  break;
+                        case ContextMenuCheckState.Unchecked: bmp = bmpMenuCheckOff; break;
+                        case ContextMenuCheckState.Radio:     bmp = bmpMenuRadio;    break;
                     }
                 }
 
-                if (!string.IsNullOrEmpty(imageName))
+                if (bmp != null)
                 {
-                    var iconIndex = GetAtlasAndIndex(imageName, out var atlas);
-                    c.DrawBitmapAtlas(atlas, iconIndex, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
+                    c.DrawBitmapAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
                 }
 
                 c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, Width, itemSizeY);

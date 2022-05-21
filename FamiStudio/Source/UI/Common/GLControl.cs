@@ -19,6 +19,7 @@ namespace FamiStudio
     {
         private CursorInfo cursorInfo;
         private FamiStudioForm parentForm;
+        private Dialog parentDialog;
         private ThemeRenderResources themeRes;
         protected int left = 0;
         protected int top = 0;
@@ -84,13 +85,13 @@ namespace FamiStudio
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
         public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
-        public System.Drawing.Rectangle Rectangle => new System.Drawing.Rectangle(left, top, width, height);
+        public System.Drawing.Rectangle Rectangle => new System.Drawing.Rectangle(Left, Top, Width, Height);
         public System.Drawing.Size ParentFormSize => parentForm.Size;
         public bool IsLandscape => parentForm.IsLandscape;
-        public int Left => left;
-        public int Top => top;
-        public int Right => left + width;
-        public int Bottom => top + height;
+        public int Left => parentDialog != null ? left + parentDialog.left : left;
+        public int Top => parentDialog != null ? top  + parentDialog.left : top;
+        public int Right => Left + width;
+        public int Bottom => Top  + height;
         public int Width => width;
         public int Height => height;
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }

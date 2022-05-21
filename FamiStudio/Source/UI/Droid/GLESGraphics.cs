@@ -222,7 +222,7 @@ namespace FamiStudio
                 bmp.Recycle();
             }
 
-            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, elementRects, true, true);
+            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, elementRects, true);
         }
 
         public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
