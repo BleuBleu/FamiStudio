@@ -145,12 +145,12 @@ namespace FamiStudio
             var bmpSize = bmpArrow.ElementSize;
             var cb = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
 
-            cb.FillAndDrawRectangle(0, 0, width - 1, defaultHeight - (listOpened ? 0 : 1), ThemeResources.LightGreyFillBrush1, ThemeResources.BlackBrush);
-            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (defaultHeight - bmpSize.Height) / 2, 1, 1, Theme.DarkGreyLineColor1);
+            cb.FillAndDrawRectangle(0, 0, width - 1, defaultHeight - (listOpened ? 0 : 1), ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (defaultHeight - bmpSize.Height) / 2, 1, 1, Theme.LightGreyFillColor1);
 
             if (selectedIndex >= 0)
             {
-                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft, 0, height);
+                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, defaultHeight);
             }
 
             if (listOpened)
@@ -161,17 +161,17 @@ namespace FamiStudio
                 var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
                 cf.PushTranslation(0, defaultHeight);
-                cf.FillAndDrawRectangle(0, 0, width - 1, numItems * defaultHeight - 1, ThemeResources.LightGreyFillBrush1, ThemeResources.BlackBrush);
+                cf.FillAndDrawRectangle(0, 0, width - 1, numItems * defaultHeight - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
 
                 for (int i = 0; i < numItems; i++)
                 {
-                    cf.DrawText(items[i + listScroll], ThemeResources.FontMedium, margin, i * defaultHeight, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - margin - actualScrollBarWidth, defaultHeight);
+                    cf.DrawText(items[i + listScroll], ThemeResources.FontMedium, margin, i * defaultHeight, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - margin - actualScrollBarWidth, defaultHeight);
                 }
 
                 if (hasScrollBar)
                 {
-                    cf.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * defaultHeight, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
-                    cf.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
+                    cf.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * defaultHeight - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    cf.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
                 }
 
                 cf.PopTransform();

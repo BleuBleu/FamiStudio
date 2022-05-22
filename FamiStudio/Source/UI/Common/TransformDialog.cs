@@ -51,7 +51,7 @@ namespace FamiStudio
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
                 var section = (TransformOperation)i;
-                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Instrument" /*"Clean"*/); // MATTT
+                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Clean"); 
                 CreatePropertyPage(page, section);
             }
         }

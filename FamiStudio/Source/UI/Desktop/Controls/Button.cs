@@ -101,9 +101,13 @@ namespace FamiStudio
             var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
 
-            if (hovered || pressed)
+            if (border || pressed || hovered)
             {
-                c.FillRectangle(ClientRectangle, pressed ? ThemeResources.MediumGreyFillBrush1 : ThemeResources.DarkGreyFillBrush2);
+                var fillBrush = pressed ? ThemeResources.MediumGreyFillBrush1 :
+                                hovered ? ThemeResources.DarkGreyFillBrush3 :
+                                          ThemeResources.DarkGreyFillBrush2;
+
+                c.FillRectangle(ClientRectangle, fillBrush);
             }
 
             if (border)

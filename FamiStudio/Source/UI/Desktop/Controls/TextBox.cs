@@ -25,10 +25,12 @@ namespace FamiStudio
         private int selectionStart = -1;
         private int selectionEnd = -1;
         private int scrollX;
-        private Color backColor = Color.White;
+        private Color foreColor = Theme.LightGreyFillColor1;
+        private Color backColor = Theme.DarkGreyLineColor1;
 
         private int margin = DpiScaling.ScaleForDialog(4);
 
+        public Color ForeColor { get => foreColor; set { foreColor = value; MarkDirty(); } }
         public Color BackColor { get => backColor; set { backColor = value; MarkDirty(); } }
 
         public TextBox2(string txt)
@@ -54,9 +56,11 @@ namespace FamiStudio
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var foreBrush = g.GetSolidBrush(foreColor);
+            var backBrush = g.GetSolidBrush(backColor);
 
-            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, g.GetSolidBrush(backColor), ThemeResources.BlackBrush);
-            c.DrawText("Hello", ThemeResources.FontMedium, margin, 0, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - margin * 2, height);
+            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, backBrush, foreBrush);
+            c.DrawText("Hello", ThemeResources.FontMedium, margin, 0, foreBrush, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - margin * 2, height);
         }
     }
 }

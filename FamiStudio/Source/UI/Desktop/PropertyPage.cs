@@ -118,6 +118,7 @@ namespace FamiStudio
         {
             var textBox = new TextBox2(txt);
             textBox.BackColor = backColor;
+            textBox.ForeColor = Color.Black;
             return textBox;
         }
 
@@ -242,14 +243,10 @@ namespace FamiStudio
                 ChangeColor(sender as PictureBox, e.X, e.Y);
         }
 
-        private NumericUpDown CreateNumericUpDown(int value, int min, int max, string tooltip = null)
+        private NumericUpDown2 CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
-            var upDown = new NumericUpDown();
+            var upDown = new NumericUpDown2(value, min, max);
 
-            //upDown.Font = font;
-            //upDown.Minimum = min;
-            //upDown.Maximum = max;
-            //upDown.Text = value.ToString();
             //upDown.ValueChanged += UpDown_ValueChanged;
             //toolTip.SetToolTip(upDown, SplitLongTooltip(tooltip));
 
@@ -485,13 +482,13 @@ namespace FamiStudio
 
         public int AddNumericUpDown(string label, int value, int min, int max, string tooltip = null)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.NumericUpDown,
-            //        label = label != null ? CreateLabel(label, tooltip) : null,
-            //        control = CreateNumericUpDown(value, min, max, tooltip)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.NumericUpDown,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateNumericUpDown(value, min, max, tooltip)
+                });
             return properties.Count - 1;
         }
 

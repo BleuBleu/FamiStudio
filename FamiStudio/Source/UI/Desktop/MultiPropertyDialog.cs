@@ -64,7 +64,7 @@ namespace FamiStudio
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var page = new PropertyPage(this, tabsSizeX + margin, margin, width - tabsSizeX - margin * 2);
+            var page = new PropertyPage(this, tabsSizeX + margin * 2, margin, width - tabsSizeX - margin * 3);
 
             var tab = new PropertyPageTab();
             tab.button = AddButton(text, image);
@@ -76,7 +76,7 @@ namespace FamiStudio
 
         protected override void OnShowDialog()
         {
-            var y = 0;
+            var y = margin;
             var maxHeight = 0;
             for (int i = 0; i < tabs.Count; i++)
             {
@@ -84,7 +84,7 @@ namespace FamiStudio
                 tab.button.Visible = tab.visible;
                 if (tab.visible)
                 {
-                    tab.button.Move(0, y);
+                    tab.button.Move(margin, y);
                     y += tab.button.Height;
                     maxHeight = Math.Max(maxHeight, tabs[i].properties.LayoutHeight);
                 }

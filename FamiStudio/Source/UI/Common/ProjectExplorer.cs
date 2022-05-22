@@ -4259,7 +4259,6 @@ namespace FamiStudio
             var dlg = new PropertyDialog("Instrument Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
-            dlg.Properties.AddDropDownList("Test", ExpansionType.Names, ExpansionType.Names[0]);
             dlg.Properties.Build();
 
             dlg.ShowDialogAsync(ParentForm, (r) =>

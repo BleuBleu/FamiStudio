@@ -38,15 +38,30 @@ namespace FamiStudio
             bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
         }
 
+        public bool IsPointInCheckBox(int x, int y)
+        {
+            var bmpSize = bmpCheckOn.ElementSize;
+            var baseY = (height - bmpSize.Height) / 2;
+
+            return x >= 0 && y >= baseY && x < bmpSize.Width && y < baseY + bmpSize.Height;
+        }
+
+        protected override void OnMouseDown(MouseEventArgsEx e)
+        {
+            if (IsPointInCheckBox(e.X, e.Y))
+                Checked = !Checked;
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
             var bmpSize = bmpCheckOn.ElementSize;
-
             var baseY = (height - bmpSize.Height) / 2;
 
-            c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, ThemeResources.WhiteBrush, ThemeResources.BlackBrush);
-            c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, Color.Black);
+            //c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, ThemeResources.WhiteBrush, ThemeResources.BlackBrush);
+            //c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, Color.Black);
+            c.FillRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, ThemeResources.DarkGreyLineBrush1);
+            c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, Theme.LightGreyFillColor1);
 
             if (!string.IsNullOrEmpty(text))
                 c.DrawText(text, ThemeResources.FontMedium, bmpSize.Width + margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, height);

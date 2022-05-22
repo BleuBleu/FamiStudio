@@ -10,6 +10,8 @@ namespace FamiStudio
         public static Color DarkGreyLineColor3    = Color.FromArgb( 38,  42,  46);
         public static Color DarkGreyFillColor1    = Color.FromArgb( 42,  48,  51);
         public static Color DarkGreyFillColor2    = Color.FromArgb( 49,  55,  61);
+        public static Color DarkGreyFillColor3    = Color.FromArgb( 56,  62,  71);
+        public static Color MediumGreyFillColor2  = Color.FromArgb( 76,  81,  95);
         public static Color MediumGreyFillColor1  = Color.FromArgb( 86,  91, 105);
         public static Color LightGreyFillColor1   = Color.FromArgb(178, 185, 198);
         public static Color LightGreyFillColor2   = Color.FromArgb(198, 205, 218);
