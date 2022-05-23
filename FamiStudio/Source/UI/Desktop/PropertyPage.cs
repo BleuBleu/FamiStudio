@@ -1001,7 +1001,7 @@ namespace FamiStudio
                 if (prop.warningIcon != null)
                 {
                     prop.warningIcon.Move(
-                        baseX + layoutWidth - warningWidth - margin,
+                        baseX + layoutWidth - prop.warningIcon.Width,
                         baseY + totalHeight + (height - prop.warningIcon.Height) / 2);
                     dialog.AddControl(prop.warningIcon);
                 }

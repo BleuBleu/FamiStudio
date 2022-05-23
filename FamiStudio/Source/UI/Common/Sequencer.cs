@@ -2575,7 +2575,7 @@ namespace FamiStudio
 
         private void EditPatternCustomSettings(Point pt, int patternIdx)
         {
-            var dlg = new PropertyDialog("Pattern Custom Settings", PointToScreen(pt), 300);
+            var dlg = new PropertyDialog("Pattern Custom Settings", new Point(left + pt.X, top + pt.Y), 300);
             var song = Song;
             var enabled = song.PatternHasCustomSettings(patternIdx);
 
@@ -2625,7 +2625,7 @@ namespace FamiStudio
         {
             bool multiplePatternSelected = selection && ((selectionMax.ChannelIndex != selectionMin.ChannelIndex) || (selectionMin.PatternIndex != selectionMax.PatternIndex));
 
-            var dlg = new PropertyDialog("Pattern Properties", PointToScreen(pt), 240);
+            var dlg = new PropertyDialog("Pattern Properties", new Point(left + pt.X, top + pt.Y), 240);
             dlg.Properties.AddColoredTextBox(pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
             dlg.Properties.AddColorPicker(pattern.Color);

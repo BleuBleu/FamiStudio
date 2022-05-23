@@ -13,6 +13,9 @@ namespace FamiStudio
         private GLControl[] controls = new GLControl[4];
         private Stack<Dialog> dialogs = new Stack<Dialog>();
         private ThemeRenderResources res;
+        private float dialogDimming = 0.0f;
+        private DateTime lastRender = DateTime.Now;
+        private bool contextMenuVisible;
 
         private Toolbar toolbar;
         private Sequencer sequencer;
@@ -33,9 +36,6 @@ namespace FamiStudio
         public bool IsContextMenuActive => contextMenuVisible;
         public bool IsDialogActive => dialogs.Count > 0;
         public Dialog TopDialog => dialogs.Peek();
-
-        DateTime lastRender = DateTime.Now;
-        bool  contextMenuVisible;
 
         public GLControl[] Controls => controls;
 
@@ -73,6 +73,9 @@ namespace FamiStudio
             projectExplorer.Move(width - projectExplorerWidth, toolBarHeight, projectExplorerWidth, height - toolBarHeight);
             sequencer.Move(0, toolBarHeight, width - projectExplorerWidth, sequencerHeight);
             pianoRoll.Move(0, toolBarHeight + sequencerHeight, width - projectExplorerWidth, height - toolBarHeight - sequencerHeight);
+
+            foreach (var dlg in dialogs)
+                dlg.CenterToForm();
         }
 
         public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
@@ -143,9 +146,22 @@ namespace FamiStudio
 
         public void Tick(float delta)
         {
+            var newDialogDimming = dialogDimming;
+
             if (dialogs.Count > 0)
             {
                 dialogs.Peek().Tick(delta);
+                newDialogDimming = Math.Min(1.0f, dialogDimming + delta * 6.0f);
+            }
+            else
+            {
+                newDialogDimming = Math.Max(0.0f, dialogDimming - delta * 12.0f);
+            }
+
+            if (newDialogDimming != dialogDimming)
+            {
+                dialogDimming = newDialogDimming;
+                MarkDirty();
             }
         }
 
@@ -179,6 +195,8 @@ namespace FamiStudio
                 if (controls[0].App.Project == null)
                     return true;
 
+                var fullWindowRect = new System.Drawing.Rectangle(0, 0, width, height);
+
                 gfx.BeginDrawFrame();
 
                 foreach (var control in controls)
@@ -188,10 +206,18 @@ namespace FamiStudio
                     control.ClearDirtyFlag();
                 }
 
+                if (dialogDimming != 0.0f)
+                {
+                    gfx.BeginDrawControl(fullWindowRect, height);
+                    var c = gfx.CreateCommandList();
+                    c.FillRectangle(fullWindowRect, gfx.GetSolidBrush(System.Drawing.Color.Black, 1, Utils.Lerp(0.0f, 0.4f, dialogDimming)));
+                    gfx.DrawCommandList(c);
+                }
+
                 // MATTT : Dirty flag management for dialogs.
                 foreach (var dlg in dialogs)
                 {
-                    gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
+                    gfx.BeginDrawControl(fullWindowRect, height);
                     gfx.Transform.PushTranslation(dlg.Left, dlg.Top);
                     dlg.Render(gfx);
                     dlg.ClearDirtyFlag();

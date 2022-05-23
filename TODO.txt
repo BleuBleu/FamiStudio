@@ -13,8 +13,11 @@ P0:
 - Widgets:
 	- Recolor all icons to white, use filter on Android to make them grey.
 	- IsAsyncDialogInProgress, must implement on PC.
+	- Remove all using RenderXXX, rename properly.
+	- Add slighy dimming to main window when dialog is open.
 - GLFW:
-	-
+	- Remove all dependencies to WinForms, GTK, System.Drawing, etc.
+	- 
 P1:
 - Validation errors in JTS when deleting some instruments.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???

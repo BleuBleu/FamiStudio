@@ -3662,7 +3662,7 @@ namespace FamiStudio
         {
             var strings = DPCMSampleRate.GetStringList(true, FamiStudio.StaticInstance.PalPlayback, true, true);
 
-            var dlg = new PropertyDialog("DPCM Key Properties", PointToScreen(pt), 280, false, pt.Y > Height / 2);
+            var dlg = new PropertyDialog("DPCM Key Properties", new Point(left + pt.X, top + pt.Y), 280, false, pt.Y > Height / 2);
             dlg.Properties.AddDropDownList("Pitch :", strings, strings[mapping.Pitch]); // 0
             dlg.Properties.AddCheckBox("Loop :", mapping.Loop); // 1
             dlg.Properties.AddCheckBox("Override DMC Initial Value :", mapping.OverrideDmcInitialValue); // 2

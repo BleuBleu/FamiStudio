@@ -2905,7 +2905,7 @@ namespace FamiStudio
                 var activeExpansions = App.Project.GetActiveExpansions();
                 var expNames = new List<string>();
 
-                var dlg = new PropertyDialog("Add Instrument", PointToScreen(new Point(x, y)), 260, true);
+                var dlg = new PropertyDialog("Add Instrument", new Point(left + x, top + y), 260, true);
                 dlg.Properties.AddLabel(null, "Select audio expansion:"); // 0
 
                 expNames.Add(ExpansionType.Names[ExpansionType.None]);
@@ -4042,7 +4042,7 @@ namespace FamiStudio
                 expBools[i - ExpansionType.Start] = project.UsesExpansionAudio(i);
             }
 
-            var dlg = new PropertyDialog("Project Properties", PointToScreen(pt), 360, true);
+            var dlg = new PropertyDialog("Project Properties", new Point(left + pt.X, top + pt.Y), 360, true);
             dlg.Properties.ShowWarnings = true;
             dlg.Properties.AddTextBox("Title :", project.Name, 31); // 0
             dlg.Properties.AddTextBox("Author :", project.Author, 31); // 1
@@ -4213,7 +4213,7 @@ namespace FamiStudio
 
         private void EditSongProperties(Point pt, Song song)
         {
-            var dlg = new PropertyDialog("Song Properties", PointToScreen(pt), 320, true); 
+            var dlg = new PropertyDialog("Song Properties", new Point(left + pt.X, top + pt.Y), 320, true); 
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 
@@ -4256,7 +4256,7 @@ namespace FamiStudio
 
         private void EditInstrumentProperties(Point pt, Instrument instrument)
         {
-            var dlg = new PropertyDialog("Instrument Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog("Instrument Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();
@@ -4287,7 +4287,7 @@ namespace FamiStudio
 
         private void EditArpeggioProperties(Point pt, Arpeggio arpeggio)
         {
-            var dlg = new PropertyDialog("Arpeggio Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog("Arpeggio Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(arpeggio.Name, arpeggio.Color); // 0
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
@@ -4318,7 +4318,7 @@ namespace FamiStudio
 
         private void EditDPCMSampleProperties(Point pt, DPCMSample sample)
         {
-            var dlg = new PropertyDialog("DPCM Sample Properties", PointToScreen(pt), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog("DPCM Sample Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(sample.Name, sample.Color); // 0
             dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();

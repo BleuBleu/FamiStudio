@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Windows.Forms;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;
@@ -8,7 +9,6 @@ using RenderGeometry       = FamiStudio.GLGeometry;
 using RenderControl        = FamiStudio.GLControl;
 using RenderGraphics       = FamiStudio.GLGraphics;
 using RenderCommandList    = FamiStudio.GLCommandList;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -127,6 +127,14 @@ namespace FamiStudio
         protected override void OnMouseLeave(System.EventArgs e)
         {
             hoverButton = -1;
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            if (captureButton < 0 && e.Delta != 0 && e.X > GetButtonRect(0).Right && e.X < GetButtonRect(1).Left)
+            {
+                Value += e.Delta > 0 ? 1 : -1;
+            }
         }
 
         protected override void OnRender(RenderGraphics g)
