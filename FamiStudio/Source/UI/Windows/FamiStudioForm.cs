@@ -124,6 +124,7 @@ namespace FamiStudio
 
         private void Tick()
         {
+            // MATTT : Do the 0.25 clamp on mobile too!!
             var tickTime = DateTime.Now;
             var deltaTime = (float)Math.Min(0.25f, (float)(tickTime - lastTickTime).TotalSeconds);
 

@@ -233,6 +233,9 @@ namespace FamiStudio
 
         public unsafe GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
         {
+            // Need to sort since we do binary searches on the names.
+            Array.Sort(names);
+
             var bitmaps = new int[names.Length][,];
             var elementSizeX = 0;
             var elementSizeY = 0;
@@ -243,8 +246,6 @@ namespace FamiStudio
 
                 elementSizeX = Math.Max(elementSizeX, bmpData.GetLength(1));
                 elementSizeY = Math.Max(elementSizeY, bmpData.GetLength(0));
-
-                Debug.WriteLine($"Atlas element size : {elementSizeX} x {elementSizeY}");
 
                 bitmaps[i] = bmpData;
             }
@@ -260,9 +261,13 @@ namespace FamiStudio
 
             GL.BindTexture(TextureTarget.Texture2D, textureId);
 
+            Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
+
             for (int i = 0; i < names.Length; i++)
             {
                 var bmpData = bitmaps[i];
+
+                Debug.WriteLine($"  - {names[i]} ({bmpData.GetLength(1)} x {bmpData.GetLength(0)}):");
 
                 var row = i / elementsPerRow;
                 var col = i % elementsPerRow;
@@ -300,6 +305,7 @@ namespace FamiStudio
                     return new GLBitmapAtlasRef(a, idx);
             }
 
+            Debug.Assert(false);
             return null;
         }
 
@@ -1849,6 +1855,20 @@ namespace FamiStudio
             var elementSize = bmp.ElementSize;
             atlas.GetElementUVs(elementIndex, out var u0, out var v0, out var u1, out var v1);
             DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, false, tint);
+        }
+
+        public void DrawBitmapAtlasCentered(GLBitmapAtlasRef bmp, float x, float y, float width, float height, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        {
+            x += (width  - bmp.ElementSize.Width)  / 2;
+            y += (height - bmp.ElementSize.Height) / 2;
+            DrawBitmapAtlas(bmp, x, y, opacity, scale, tint);
+        }
+
+        public void DrawBitmapAtlasCentered(GLBitmapAtlasRef bmp, Rectangle rect, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        {
+            float x = rect.Left + (rect.Width  - bmp.ElementSize.Width)  / 2;
+            float y = rect.Top  + (rect.Height - bmp.ElementSize.Height) / 2;
+            DrawBitmapAtlas(bmp, x, y, opacity, scale, tint);
         }
 
         public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = new Color())

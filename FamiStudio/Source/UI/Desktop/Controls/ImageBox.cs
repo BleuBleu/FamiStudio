@@ -37,9 +37,7 @@ namespace FamiStudio
             }
 
             var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
-            var bmpSize = bmp.ElementSize;
-
-            c.DrawBitmapAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2);
+            c.DrawBitmapAtlasCentered(bmp, 0, 0, width, height);
         }
     }
 }

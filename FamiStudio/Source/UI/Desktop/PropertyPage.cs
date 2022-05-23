@@ -835,14 +835,14 @@ namespace FamiStudio
                 case PropertyType.MultilineTextBox:
                     ForceTextBoxASCII(prop.control as TextBox2);
                     return (prop.control as TextBox2).Text;
-                //case PropertyType.NumericUpDown:
-                //    return (int)(prop.control as NumericUpDown).Value;
+                case PropertyType.NumericUpDown:
+                    return (int)(prop.control as NumericUpDown2).Value;
                 //case PropertyType.Slider:
                 //    return (prop.control as Slider).Value;
                 //case PropertyType.Radio:
                 //    return (prop.control as RadioButton).Checked;
-                //case PropertyType.CheckBox:
-                //    return (prop.control as CheckBox).Checked;
+                case PropertyType.CheckBox:
+                    return (prop.control as CheckBox2).Checked;
                 case PropertyType.ColorPicker:
                     return (prop.control as ColorPicker2).SelectedColor;
                 case PropertyType.DropDownList:
@@ -1001,8 +1001,8 @@ namespace FamiStudio
                 if (prop.warningIcon != null)
                 {
                     prop.warningIcon.Move(
-                        layoutWidth - warningWidth - margin,
-                        totalHeight + (height - prop.warningIcon.Height) / 2);
+                        baseX + layoutWidth - warningWidth - margin,
+                        baseY + totalHeight + (height - prop.warningIcon.Height) / 2);
                     dialog.AddControl(prop.warningIcon);
                 }
 

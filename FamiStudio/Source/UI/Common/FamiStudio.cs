@@ -2227,6 +2227,7 @@ namespace FamiStudio
 
         public void Tick(float deltaTime)
         {
+            // MATTT : Implement AsyncDialog on PC. 
             Debug.Assert(!mainForm.IsAsyncDialogInProgress);
 
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;

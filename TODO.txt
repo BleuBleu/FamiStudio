@@ -10,7 +10,11 @@ P0:
 	- Tooltips where a context menu can appear.
 	- When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
 	- Sequencer : Add select all there too?
-- GLFW?
+- Widgets:
+	- Recolor all icons to white, use filter on Android to make them grey.
+	- IsAsyncDialogInProgress, must implement on PC.
+- GLFW:
+	-
 P1:
 - Validation errors in JTS when deleting some instruments.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
@@ -84,6 +88,10 @@ MacOS notes
 	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
 - If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
+
+Convert PNG to TGA
+==================
+magick mogrify -path C:\Dump\PngToTga\Tga\ -format tga -compress RLE *.png
 
 Android Notes
 =============

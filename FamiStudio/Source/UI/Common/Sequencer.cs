@@ -361,7 +361,7 @@ namespace FamiStudio
             bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
             bmpForceDisplay = g.GetBitmapAtlasRef("GhostSmall");
             bmpLoopPoint = g.GetBitmapAtlasRef("LoopSmallFill");
-            bmpInstanciate = g.GetBitmapAtlasRef("Instanciate");
+            bmpInstanciate = g.GetBitmapAtlasRef("Instance");
             bmpDuplicate = g.GetBitmapAtlasRef("Duplicate");
             bmpDuplicateMove = g.GetBitmapAtlasRef("DuplicateMove");
             seekBarBrush = g.CreateSolidBrush(Theme.SeekBarColor);

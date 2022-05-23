@@ -115,12 +115,9 @@ namespace FamiStudio
                 c.DrawRectangle(ClientRectangle, ThemeResources.BlackBrush);
             }
 
-            if (pressed)
-            {
-                c.PushTranslation(0, 1);
-            }
-
             var hasText = !string.IsNullOrEmpty(text);
+
+            c.PushTranslation(0, pressed ? 1 : 0);
 
             if (!hasText && bmp != null)
             {
@@ -136,10 +133,7 @@ namespace FamiStudio
                 c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, bmpSize.Width + margin * 2, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 
-            if (pressed)
-            {
-                c.PopTransform();
-            }
+            c.PopTransform();
         }
     }
 }
