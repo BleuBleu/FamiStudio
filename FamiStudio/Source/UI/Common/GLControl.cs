@@ -108,6 +108,21 @@ namespace FamiStudio
         public void SetDpiScales(float main, float font) { mainWindowScaling = main; fontScaling = font; }
         public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
 
+        public System.Windows.Forms.Keys ModifierKeys => parentForm.GetModifierKeys();
+        public FamiStudio App => parentForm?.FamiStudio;
+        public CursorInfo Cursor => cursorInfo;
+        public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
+        public Dialog ParentDialog { get => parentDialog; set => parentDialog = value; }
+
+        public int ScaleForMainWindow(float val) { return (int)Math.Round(val * mainWindowScaling); }
+        public float ScaleForMainWindowFloat(float val) { return (val * mainWindowScaling); }
+        public int ScaleForFont(float val) { return (int)Math.Round(val * fontScaling); }
+        public float ScaleForFontFloat(float val) { return (val * fontScaling); }
+        public int ScaleCustom(float val, float scale) { return (int)Math.Round(val * scale); }
+        public float ScaleCustomFloat(float val, float scale) { return (val * scale); }
+        public int ScaleLineForMainWindow(int width) { return width == 1 ? 1 : (int)Math.Round(width * mainWindowScaling) | 1; }
+
+
         public void Move(int x, int y, bool fireResizeEvent = true)
         {
             left = x;
@@ -139,24 +154,19 @@ namespace FamiStudio
 
         public void CenterToForm()
         {
-            Move((parentForm.Width  - width)  / 2,
+            Move((parentForm.Width - width) / 2,
                  (parentForm.Height - height) / 2,
                  width, height);
         }
 
-        public System.Windows.Forms.Keys ModifierKeys => parentForm.GetModifierKeys();
-        public FamiStudio App => parentForm?.FamiStudio;
-        public CursorInfo Cursor => cursorInfo;
-        public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
-        public Dialog ParentDialog { get => parentDialog; set => parentDialog = value; }
-
-        public int ScaleForMainWindow(float val) { return (int)Math.Round(val * mainWindowScaling); }
-        public float ScaleForMainWindowFloat(float val) { return (val * mainWindowScaling); }
-        public int ScaleForFont(float val) { return (int)Math.Round(val * fontScaling); }
-        public float ScaleForFontFloat(float val) { return (val * fontScaling); }
-        public int ScaleCustom(float val, float scale) { return (int)Math.Round(val * scale); }
-        public float ScaleCustomFloat(float val, float scale) { return (val * scale); }
-        public int ScaleLineForMainWindow(int width) { return width == 1 ? 1 : (int)Math.Round(width * mainWindowScaling) | 1; }
+        protected void SetAndMarkDirty<T>(ref T target, T current) where T : IComparable
+        {
+            if (target.CompareTo(current) != 0)
+            {
+                target = current;
+                MarkDirty();
+            }
+        }
     }
 
     public class CursorInfo

@@ -7,6 +7,7 @@ using RenderGeometry       = FamiStudio.GLGeometry;
 using RenderControl        = FamiStudio.GLControl;
 using RenderGraphics       = FamiStudio.GLGraphics;
 using RenderCommandList    = FamiStudio.GLCommandList;
+using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -14,6 +15,7 @@ namespace FamiStudio
     {
         private string text;
         private bool check;
+        private bool hover;
         private int margin = DpiScaling.ScaleForMainWindow(4);
         private RenderBitmapAtlasRef bmpCheckOn;
         private RenderBitmapAtlasRef bmpCheckOff;
@@ -52,13 +54,23 @@ namespace FamiStudio
                 Checked = !Checked;
         }
 
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            SetAndMarkDirty(ref hover, IsPointInCheckBox(e.X, e.Y));
+       }
+
+        protected override void OnMouseLeave(System.EventArgs e)
+        {
+            SetAndMarkDirty(ref hover, false);
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
             var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
             var bmpSize = bmpCheckOn.ElementSize;
             var baseY = (height - bmpSize.Height) / 2;
 
-            c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+            c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, hover ? ThemeResources.DarkGreyLineBrush3 : ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
             c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, Theme.LightGreyFillColor1);
 
             if (!string.IsNullOrEmpty(text))

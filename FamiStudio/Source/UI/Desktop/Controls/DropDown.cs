@@ -57,6 +57,14 @@ namespace FamiStudio
             }
         }
 
+        public void SetItems(string[] newItems)
+        {
+            items = newItems;
+            if (selectedIndex >= items.Length)
+                selectedIndex = 0;
+            MarkDirty();
+        }
+
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             bmpArrow = g.GetBitmapAtlasRef("DropDownArrow");

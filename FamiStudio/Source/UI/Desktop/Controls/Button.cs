@@ -24,8 +24,8 @@ namespace FamiStudio
         private int margin = DpiScaling.ScaleForMainWindow(4);
         private bool bold;
         private bool border;
-        private bool hovered;
-        private bool pressed;
+        private bool hover;
+        private bool press;
 
         public Button2(string img, string txt)
         {
@@ -61,9 +61,9 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left))
             {
-                pressed = true;
+                press = true;
             }
-            hovered = true;
+            hover = true;
             MarkDirty();
         }
 
@@ -71,7 +71,7 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left))
             {
-                pressed = false;
+                press = false;
                 Click?.Invoke(this);
             }
             MarkDirty();
@@ -79,15 +79,13 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            hovered = true;
-            MarkDirty();
+            SetAndMarkDirty(ref hover, true);
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            hovered = false;
-            pressed = false;
-            MarkDirty();
+            SetAndMarkDirty(ref hover, false);
+            SetAndMarkDirty(ref press, false);
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -101,10 +99,10 @@ namespace FamiStudio
             var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
 
-            if (border || pressed || hovered)
+            if (border || press || hover)
             {
-                var fillBrush = pressed ? ThemeResources.MediumGreyFillBrush1 :
-                                hovered ? ThemeResources.DarkGreyFillBrush3 :
+                var fillBrush = press ? ThemeResources.MediumGreyFillBrush1 :
+                                hover ? ThemeResources.DarkGreyFillBrush3 :
                                           ThemeResources.DarkGreyFillBrush2;
 
                 c.FillRectangle(ClientRectangle, fillBrush);
@@ -117,7 +115,7 @@ namespace FamiStudio
 
             var hasText = !string.IsNullOrEmpty(text);
 
-            c.PushTranslation(0, pressed ? 1 : 0);
+            c.PushTranslation(0, press ? 1 : 0);
 
             if (!hasText && bmp != null)
             {

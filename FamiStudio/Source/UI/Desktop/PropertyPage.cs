@@ -89,21 +89,10 @@ namespace FamiStudio
             return label;
         }
 
-        private Label CreateLinkLabel(string str, string url, string tooltip = null)
+        private LinkLabel2 CreateLinkLabel(string str, string url, string tooltip = null)
         {
-            var label = new LinkLabel();
-
-            //label.Text = str;
-            //label.Font = font;
-            //label.LinkColor = Theme.LightGreyFillColor1;
-            //label.Links.Add(0, str.Length, url);
-            //label.LinkClicked += Label_LinkClicked;
-            //label.TextAlign = ContentAlignment.BottomCenter;
-            ////label.AutoSize = true;
-            //label.ForeColor = Theme.LightGreyFillColor2;
-            //label.BackColor = BackColor;
+            var label = new LinkLabel2(str, url);
             //toolTip.SetToolTip(label, SplitLongTooltip(tooltip));
-
             return label;
         }
 
@@ -252,21 +241,15 @@ namespace FamiStudio
             return upDown;
         }
 
-        private ProgressBar CreateProgressBar(float value)
+        private ProgressBar2 CreateProgressBar()
         {
-            var progress = new ProgressBar();
-
-            //progress.Font = font;
-            //progress.Minimum = 0;
-            //progress.Maximum = 1000;
-            //progress.Value = (int)Math.Round(value * 1000);
-
+            var progress = new ProgressBar2();
             return progress;
         }
 
-        private RadioButton CreateRadioButton(string text, bool check)
+        private RadioButton2 CreateRadioButton(string text, bool check, bool multiline)
         {
-            var radio = new RadioButton();
+            var radio = new RadioButton2(text, check, multiline);
 
             //radio.Font = font;
             //radio.ForeColor = Theme.LightGreyFillColor2;
@@ -458,13 +441,13 @@ namespace FamiStudio
 
         public int AddLinkLabel(string label, string value, string url, string tooltip = null)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.Label,
-            //        label = label != null ? CreateLabel(label, tooltip) : null,
-            //        control = CreateLinkLabel(value, url, tooltip)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.LinkLabel,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateLinkLabel(value, url, tooltip)
+                });
             return properties.Count - 1;
         }
 
@@ -491,27 +474,27 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddProgressBar(string label, float value)
+        public int AddProgressBar(string label)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.ProgressBar,
-            //        label = label != null ? CreateLabel(label) : null,
-            //        control = CreateProgressBar(value)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.ProgressBar,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateProgressBar()
+                });
             return properties.Count - 1;
         }
 
-        public int AddRadioButton(string label, string text, bool check)
+        public int AddRadioButton(string label, string text, bool check, bool multiline = false)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.Radio,
-            //        label = label != null ? CreateLabel(label) : null,
-            //        control = CreateRadioButton(text, check)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Radio,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateRadioButton(text, check, multiline)
+                });
             return properties.Count - 1;
         }
 
@@ -544,16 +527,8 @@ namespace FamiStudio
 
         public void UpdateDropDownListItems(int idx, string[] values)
         {
-            //var cb = (properties[idx].control as ComboBox);
-            //var selectedIdx = cb.SelectedIndex;
-
-            //cb.Items.Clear();
-            //cb.Items.AddRange(values);
-
-            //if (selectedIdx < values.Length)
-            //    cb.SelectedIndex = selectedIdx;
-            //else
-            //    cb.SelectedIndex = 0;
+            var dd = (properties[idx].control as DropDown2);
+            dd.SetItems(values);
         }
 
         public int AddCheckBox(string label, bool value, string tooltip = null)
@@ -833,8 +808,8 @@ namespace FamiStudio
                     return (int)(prop.control as NumericUpDown2).Value;
                 //case PropertyType.Slider:
                 //    return (prop.control as Slider).Value;
-                //case PropertyType.Radio:
-                //    return (prop.control as RadioButton).Checked;
+                case PropertyType.Radio:
+                    return (prop.control as RadioButton2).Checked;
                 case PropertyType.CheckBox:
                     return (prop.control as CheckBox2).Checked;
                 case PropertyType.ColorPicker:
@@ -886,26 +861,26 @@ namespace FamiStudio
 
         public void SetPropertyValue(int idx, object value)
         {
-            //var prop = properties[idx];
+            var prop = properties[idx];
 
-            //switch (prop.type)
-            //{
-            //    case PropertyType.CheckBox:
-            //        (prop.control as CheckBox).Checked = (bool)value;
-            //        break;
-            //    case PropertyType.Button:
-            //        (prop.control as Button).Text = (string)value;
-            //        break;
-            //    case PropertyType.MultilineTextBox:
-            //        (prop.control as TextBox).Text = (string)value;
-            //        break;
-            //    case PropertyType.ProgressBar:
-            //        (prop.control as ProgressBar).Value = (int)Math.Round((float)value * 1000);
-            //        break;
-            //    case PropertyType.Slider:
-            //        (prop.control as Slider).Value = (double)value;
-            //        break;
-            //}
+            switch (prop.type)
+            {
+                case PropertyType.CheckBox:
+                    (prop.control as CheckBox2).Checked = (bool)value;
+                    break;
+                case PropertyType.Button:
+                    (prop.control as Button2).Text = (string)value;
+                    break;
+                case PropertyType.MultilineTextBox:
+                    (prop.control as TextBox2).Text = (string)value;
+                    break;
+                case PropertyType.ProgressBar:
+                    (prop.control as ProgressBar2).Progress = (float)value;
+                    break;
+                case PropertyType.Slider:
+                    (prop.control as Slider2).Value = (double)value;
+                    break;
+            }
         }
         
         private int GetRadioButtonHeight(string text, int width)
@@ -978,9 +953,12 @@ namespace FamiStudio
                     dialog.AddControl(prop.control);
                 }
 
-                if (prop.type == PropertyType.Label)
+                // Hack for some multi line labels. Ideally we would do that when the 
+                // control is reszed or something.
+                if (prop.type == PropertyType.Label ||
+                    prop.type == PropertyType.Radio)
                 {
-                    (prop.control as Label2).ResizeForMultiline(layoutWidth);
+                    (prop.control as Label2).ResizeForMultiline();
                 }
 
                 // MATTT : Focus management.

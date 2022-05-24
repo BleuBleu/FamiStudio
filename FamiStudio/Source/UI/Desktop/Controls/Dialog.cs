@@ -19,6 +19,7 @@ namespace FamiStudio
         private Action<DialogResult> callback;
         
         public RenderControl FocusedControl => focusedControl;
+        public IReadOnlyCollection<RenderControl> Controls => controls.AsReadOnly();
 
         public Dialog()
         {
@@ -35,8 +36,8 @@ namespace FamiStudio
 
         public void Close(DialogResult result)
         {
-            callback(result);
             FamiStudioForm.Instance.PopDialog(this);
+            callback(result);
         }
 
         protected virtual void OnShowDialog()

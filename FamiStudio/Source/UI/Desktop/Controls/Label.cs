@@ -12,8 +12,9 @@ namespace FamiStudio
 {
     public class Label2 : RenderControl
     {
-        private string text;
-        private bool multiline;
+        protected int labelOffsetX;
+        protected string text;
+        protected bool multiline;
 
         public Label2(string txt, bool multi = false)
         {
@@ -22,17 +23,18 @@ namespace FamiStudio
             multiline = multi;
         }
 
-        public void ResizeForMultiline(int width)
+        public void ResizeForMultiline()
         {
             if (multiline)
             {
+                var actualWidth = width - labelOffsetX;
                 var input = text;
                 var output = "";
                 var numLines = 0;
 
                 while (true)
                 {
-                    var n = ThemeResources.FontMedium.GetNumCharactersForSize(input, width);
+                    var n = ThemeResources.FontMedium.GetNumCharactersForSize(input, actualWidth);
                     var done = n == input.Length;
                     
                     if (!done)
@@ -86,12 +88,12 @@ namespace FamiStudio
 
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    c.DrawText(lines[i], ThemeResources.FontMedium, 0, i * ThemeResources.FontMedium.LineHeight, ThemeResources.LightGreyFillBrush1, RenderTextFlags.TopLeft, 0, height);
+                    c.DrawText(lines[i], ThemeResources.FontMedium, labelOffsetX, i * ThemeResources.FontMedium.LineHeight, ThemeResources.LightGreyFillBrush1, RenderTextFlags.TopLeft, 0, height);
                 }
             }
             else
             {
-                c.DrawText(text, ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, height);
+                c.DrawText(text, ThemeResources.FontMedium, labelOffsetX, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, height);
             }
         }
     }

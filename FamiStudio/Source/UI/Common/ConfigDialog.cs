@@ -255,11 +255,7 @@ namespace FamiStudio
                 case ConfigSection.FFmpeg:
                     page.AddLabel(null, "Video export requires FFmpeg. If you already have it, set the path to the ffmpeg executable by clicking the button below, otherwise follow the download link.", true); // 0
                     page.AddButton(null, Settings.FFmpegExecutablePath, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 1
-                    // GTK LinkButtons dont work on MacOS, use a button (https://github.com/quodlibet/quodlibet/issues/2306)
-                    if (PlatformUtils.IsMacOS)
-                        page.AddButton(" ", "Download FFmpeg here"); // 2
-                    else
-                        page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
+                    page.AddLinkLabel(null, "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;
                 case ConfigSection.QWERTY:

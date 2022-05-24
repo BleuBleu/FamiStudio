@@ -37,6 +37,7 @@ namespace FamiStudio
         MultiColumnList,
         ColorPicker,
         Label,
+        LinkLabel,
         Button,
         MultilineTextBox,
         ProgressBar,

@@ -35,15 +35,7 @@ namespace FamiStudio
         public int Value
         {
             get { return val; }
-            set
-            {
-                var newVal = Utils.Clamp(value, min, max);
-                if (newVal != val)
-                {
-                    val = newVal;
-                    MarkDirty();
-                }
-            }
+            set { SetAndMarkDirty(ref val, Utils.Clamp(value, min, max)); }
         }
 
         protected override void OnRenderInitialized(RenderGraphics g)
@@ -100,7 +92,7 @@ namespace FamiStudio
             {
                 captureButton = idx;
                 captureDuration = 0;
-                Value += captureButton;
+                Value += captureButton == 0 ? -1 : 1;
                 Capture = true;
             }
         }
@@ -116,17 +108,12 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            var newHoverButton = IsPointInButton(e.X, e.Y);
-            if (newHoverButton != hoverButton)
-            {
-                hoverButton = newHoverButton;
-                MarkDirty();
-            }
+            SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
         }
 
         protected override void OnMouseLeave(System.EventArgs e)
         {
-            hoverButton = -1;
+            SetAndMarkDirty(ref hoverButton, -1);
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)

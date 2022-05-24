@@ -522,8 +522,7 @@ namespace FamiStudio
             if (captureControl != null && captureControl != ctrl)
                 return;
 
-            if (ctrl != null)
-                Cursor = ctrl.Cursor.Current;
+            Cursor = ctrl != null ? ctrl.Cursor.Current : Cursors.Default;
         }
 
         public void SetActiveControl(GLControl ctrl, bool animate = true)

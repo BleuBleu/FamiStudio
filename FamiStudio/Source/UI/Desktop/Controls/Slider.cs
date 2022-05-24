@@ -52,15 +52,7 @@ namespace FamiStudio
         public double Value
         {
             get { return val; }
-            set 
-            {
-                var newVal = Utils.Clamp(value, min, max);
-                if (newVal != val)
-                {
-                    val = newVal; 
-                    MarkDirty();
-                }
-            }
+            set { SetAndMarkDirty(ref val, Utils.Clamp(value, min, max)); }
         }
 
         private Rectangle GetThumbRectangle()
@@ -109,22 +101,14 @@ namespace FamiStudio
             }
             else
             {
-                SetHover(GetThumbRectangle().Contains(e.X, e.Y));
+                SetAndMarkDirty(ref hover, GetThumbRectangle().Contains(e.X, e.Y));
+
             }
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            SetHover(false);
-        }
-
-        private void SetHover(bool h)
-        {
-            if (h != hover)
-            {
-                hover = h;
-                MarkDirty();
-            }
+            SetAndMarkDirty(ref hover, false);
         }
 
         protected override void OnRender(RenderGraphics g)
