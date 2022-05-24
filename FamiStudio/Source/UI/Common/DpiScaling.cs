@@ -13,11 +13,9 @@ namespace FamiStudio
 
         private static float mainWindowScaling = 1;
         private static float fontScaling = 1;
-        private static float dialogScaling = 1;
 
         public static float MainWindow { get { Debug.Assert(initialized); return mainWindowScaling; } }
         public static float Font       { get { Debug.Assert(initialized); return fontScaling; } }
-        public static float Dialog     { get { Debug.Assert(initialized); return dialogScaling; } }
 
         public static int ScaleCustom(float val, float scale)
         {
@@ -41,12 +39,6 @@ namespace FamiStudio
         {
             Debug.Assert(initialized);
             return val * mainWindowScaling;
-        }
-
-        public static int ScaleForDialog(float val)
-        {
-            Debug.Assert(initialized);
-            return (int)Math.Round(val * dialogScaling);
         }
 
         public static int[] GetAvailableScalings()
@@ -88,18 +80,17 @@ namespace FamiStudio
                         mainWindowScaling = 1.0f;
                 }
 
-                dialogScaling     = 1;
                 fontScaling       = (float)Math.Round(mainWindowScaling * 3);
                 mainWindowScaling = (float)Math.Round(mainWindowScaling * 6);
             }
             else
             {
-                dialogScaling = PlatformUtils.GetDesktopScaling();
+                var desktopScaling = PlatformUtils.GetDesktopScaling();
 
                 if (Settings.DpiScaling != 0)
                     mainWindowScaling = RoundScaling(Settings.DpiScaling / 100.0f);
                 else
-                    mainWindowScaling = RoundScaling(dialogScaling);
+                    mainWindowScaling = RoundScaling(desktopScaling);
 
                 fontScaling = mainWindowScaling;
             }

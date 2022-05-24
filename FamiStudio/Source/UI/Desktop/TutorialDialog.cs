@@ -88,25 +88,25 @@ namespace FamiStudio
         {
             InitializeComponent();
 
-            string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
+            string suffix = DpiScaling.MainWindow >= 2.0f ? "@2x" : "";
             buttonLeft.Image   = Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowLeft{suffix}.png"));
 
-            Width         = DpiScaling.ScaleForDialog(Width);
-            Height        = DpiScaling.ScaleForDialog(Height);
-            label1.Height = DpiScaling.ScaleForDialog(label1.Height);
+            Width         = DpiScaling.ScaleForMainWindow(Width);
+            Height        = DpiScaling.ScaleForMainWindow(Height);
+            label1.Height = DpiScaling.ScaleForMainWindow(label1.Height);
 
             pictureBox1.Top    = (label1.Top + label1.Height) + 8;
             pictureBox1.Height = (int)(pictureBox1.Width / 1.7777777f); // 16:9
-            pictureBox1.Width  = DpiScaling.ScaleForDialog(pictureBox1.Width);
-            pictureBox1.Height = DpiScaling.ScaleForDialog(pictureBox1.Height);
+            pictureBox1.Width  = DpiScaling.ScaleForMainWindow(pictureBox1.Width);
+            pictureBox1.Height = DpiScaling.ScaleForMainWindow(pictureBox1.Height);
 
             label1.ForeColor           = Theme.LightGreyFillColor2;
             checkBoxDontShow.ForeColor = Theme.LightGreyFillColor2;
 
-            buttonLeft.Width   = DpiScaling.ScaleForDialog(buttonLeft.Width);
-            buttonLeft.Height  = DpiScaling.ScaleForDialog(buttonLeft.Height);
-            buttonRight.Width  = DpiScaling.ScaleForDialog(buttonRight.Width);
-            buttonRight.Height = DpiScaling.ScaleForDialog(buttonRight.Height);
+            buttonLeft.Width   = DpiScaling.ScaleForMainWindow(buttonLeft.Width);
+            buttonLeft.Height  = DpiScaling.ScaleForMainWindow(buttonLeft.Height);
+            buttonRight.Width  = DpiScaling.ScaleForMainWindow(buttonRight.Width);
+            buttonRight.Height = DpiScaling.ScaleForMainWindow(buttonRight.Height);
 
             buttonRight.Left  = ClientSize.Width  - buttonRight.Width  - 10;
             buttonRight.Top   = ClientSize.Height - buttonRight.Height - 10;
@@ -255,7 +255,7 @@ namespace FamiStudio
             OpenGif(TutorialImages[pageIndex]);
             UpdateGif();
 
-            string suffix = DpiScaling.Dialog >= 2.0f ? "@2x" : "";
+            string suffix = DpiScaling.MainWindow >= 2.0f ? "@2x" : "";
             buttonRight.Image = pageIndex == TutorialMessages.Length - 1 ?
                 Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png")) :
                 Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowRight{suffix}.png"));

@@ -21,7 +21,7 @@ namespace FamiStudio
         private string text;
         private string imageName;
         private RenderBitmapAtlasRef bmp;
-        private int margin = DpiScaling.ScaleForDialog(4);
+        private int margin = DpiScaling.ScaleForMainWindow(4);
         private bool bold;
         private bool border;
         private bool hovered;

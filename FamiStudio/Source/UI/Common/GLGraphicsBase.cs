@@ -24,6 +24,7 @@ namespace FamiStudio
 {
     public abstract class GLGraphicsBase : IDisposable
     {
+        // MATTT : Get rid of this, move to Dialog.
         public enum CommandListUsage
         {
             Default,
@@ -149,6 +150,42 @@ namespace FamiStudio
             }
         }
 
+        private int[,] ResizeBitmap(int[,] bmpData, int newWidth, int newHeight)
+        {
+            var newData = new int[newHeight, newWidth];
+            var factorX = bmpData.GetLength(1) / (float)newWidth;
+            var factorY = bmpData.GetLength(0) / (float)newHeight;
+
+            for (var y = 0; y < newHeight; y++)
+            {
+                var yy = y * factorY;
+                var fy = Utils.Frac(yy);
+                var y0 = (int)(yy + 0);
+                var y1 = (int)(yy + 1);
+
+                for (var x = 0; x < newWidth; x++)
+                {
+                    var xx = x * factorX;
+                    var fx = Utils.Frac(xx);
+                    var x0 = (int)(xx + 0);
+                    var x1 = (int)(xx + 1);
+
+                    var pixel00 = bmpData[y0, x0];
+                    var pixel01 = bmpData[y0, x1];
+                    var pixel10 = bmpData[y1, x0];
+                    var pixel11 = bmpData[y1, x1];
+
+                    newData[y, x] = 
+                        ((int)Utils.BiLerp((float)((pixel00 >>  0) & 0xff), (float)((pixel01 >>  0) & 0xff), (float)((pixel10 >>  0) & 0xff), (float)((pixel11 >>  0) & 0xff), fx, fy) <<  0) |
+                        ((int)Utils.BiLerp((float)((pixel00 >>  8) & 0xff), (float)((pixel01 >>  8) & 0xff), (float)((pixel10 >>  8) & 0xff), (float)((pixel11 >>  8) & 0xff), fx, fy) <<  8) |
+                        ((int)Utils.BiLerp((float)((pixel00 >> 16) & 0xff), (float)((pixel01 >> 16) & 0xff), (float)((pixel10 >> 16) & 0xff), (float)((pixel11 >> 16) & 0xff), fx, fy) << 16) |
+                        ((int)Utils.BiLerp((float)((pixel00 >> 24) & 0xff), (float)((pixel01 >> 24) & 0xff), (float)((pixel10 >> 24) & 0xff), (float)((pixel11 >> 24) & 0xff), fx, fy) << 24);
+                }
+            }
+
+            return newData;
+        }
+
         protected int[,] LoadBitmapFromResourceWithScaling(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -158,17 +195,10 @@ namespace FamiStudio
             // Pre-resize all images so we dont have to deal with scaling later.
             if (needsScaling)
             {
-                // MATTT : Do scaling here!!!
-                Debug.Assert(false);
-
                 var newWidth  = Math.Max(1, (int)(bmpData.GetLength(1) * (windowScaling / 2.0f)));
                 var newHeight = Math.Max(1, (int)(bmpData.GetLength(0) * (windowScaling / 2.0f)));
 
-//#if FAMISTUDIO_WINDOWS
-//                bmp = new System.Drawing.Bitmap(bmp, newWidth, newHeight);
-//#else
-//                bmp = bmp.ScaleSimple(newWidth, newHeight, Gdk.InterpType.Bilinear);
-//#endif
+                bmpData = ResizeBitmap(bmpData, newWidth, newHeight);
             }
 
             return bmpData;

@@ -194,6 +194,7 @@
     <Compile Include="Source\UI\Desktop\Controls\ImageBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Label.cs" />
     <Compile Include="Source\UI\Desktop\Controls\NumericUpDown.cs" />
+    <Compile Include="Source\UI\Desktop\Controls\Slider.cs" />
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
@@ -652,6 +653,8 @@
     <EmbeddedResource Include="Resources\Slide@15x.tga" />
     <EmbeddedResource Include="Resources\Slide@2x.tga" />
     <EmbeddedResource Include="Resources\Slide.tga" />
+    <EmbeddedResource Include="Resources\SliderThumb.tga" />    
+    <EmbeddedResource Include="Resources\SliderThumb@2x.tga" />    
     <EmbeddedResource Include="Resources\Snap@2x.tga" />
     <EmbeddedResource Include="Resources\Snap.tga" />
     <EmbeddedResource Include="Resources\SnapOff@2x.tga" />

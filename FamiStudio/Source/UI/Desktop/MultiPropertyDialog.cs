@@ -25,9 +25,9 @@ namespace FamiStudio
 
         int selectedIndex = 0;
         List<PropertyPageTab> tabs = new List<PropertyPageTab>();
-        private int margin = DpiScaling.ScaleForDialog(8);
+        private int margin = DpiScaling.ScaleForMainWindow(8);
         private int tabsSizeX;
-        private int tabsSizeY = DpiScaling.ScaleForDialog(32);
+        private int tabsSizeY = DpiScaling.ScaleForMainWindow(32);
 
         private Button2 buttonYes;
         private Button2 buttonNo;
@@ -36,8 +36,8 @@ namespace FamiStudio
         public MultiPropertyDialog(string title, int width, int height, int tabsWidth = 150)
         {
             // MATTT : Avoid using the DpiScaling, we are a GLControl, we can access.
-            tabsSizeX = DpiScaling.ScaleForDialog(tabsWidth);
-            Move(0, 0, DpiScaling.ScaleForDialog(width), DpiScaling.ScaleForDialog(width));
+            tabsSizeX = DpiScaling.ScaleForMainWindow(tabsWidth);
+            Move(0, 0, DpiScaling.ScaleForMainWindow(width), DpiScaling.ScaleForMainWindow(width));
             Init();
 
             //toolTip.SetToolTip(buttonYes, "Accept");
@@ -52,11 +52,11 @@ namespace FamiStudio
         {
             buttonYes = new Button2("Yes", null);
             buttonYes.Click += ButtonYes_Click;
-            buttonYes.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
+            buttonYes.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
 
             buttonNo = new Button2("No", null);
             buttonNo.Click += ButtonNo_Click;
-            buttonNo.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
+            buttonNo.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
             
             AddControl(buttonYes);
             AddControl(buttonNo);

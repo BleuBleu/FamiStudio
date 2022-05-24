@@ -1593,7 +1593,10 @@ namespace FamiStudio
                         }
                         else if (button.type == ButtonType.ParamCheckbox)
                         {
-                            c.DrawBitmapAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, contentSizeX - checkBoxPosX, checkBoxPosY, enabled ? 1.0f : 0.25f, bitmapScale, Color.Black);
+                            c.PushTranslation(contentSizeX - checkBoxPosX, checkBoxPosY);
+                            c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width - 1, bmpCheckBoxYes.ElementSize.Height - 1, g.GetSolidBrush(Color.Black, 1, enabled ? 1.0f : 0.25f));
+                            c.DrawBitmapAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, enabled ? 1.0f : 0.25f, bitmapScale, Color.Black);
+                            c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamList)
                         {

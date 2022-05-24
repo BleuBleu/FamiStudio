@@ -29,7 +29,7 @@ namespace FamiStudio
             val = value;
             min = minVal;
             max = maxVal;
-            height = DpiScaling.ScaleForDialog(24);
+            height = DpiScaling.ScaleForMainWindow(24);
         }
 
         public int Value

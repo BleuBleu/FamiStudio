@@ -27,9 +27,9 @@ namespace FamiStudio
         private int listHoveredItemIndex = -1;
 
         private int maxListScroll = 0;
-        private int margin = DpiScaling.ScaleForDialog(4);
-        private int scrollBarWidth = DpiScaling.ScaleForDialog(10);
-        private int defaultHeight = DpiScaling.ScaleForDialog(24);
+        private int margin = DpiScaling.ScaleForMainWindow(4);
+        private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
+        private int defaultHeight = DpiScaling.ScaleForMainWindow(24);
 
         public DropDown2(string[] list, int index)
         {

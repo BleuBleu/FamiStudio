@@ -18,7 +18,7 @@ namespace FamiStudio
 
         public ImageBox2(string image)
         {
-            height = DpiScaling.ScaleForDialog(24);
+            height = DpiScaling.ScaleForMainWindow(24);
             imageName = image;
         }
 

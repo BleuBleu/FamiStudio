@@ -42,6 +42,13 @@ namespace FamiStudio
             return v0 * (1.0 - alpha) + v1 * alpha;
         }
 
+        public static float BiLerp(float v00, float v01, float v10, float v11, float alpha0, float alpha1)
+        {
+            var l0 = Lerp(v00, v01, alpha0);
+            var l1 = Lerp(v10, v11, alpha0);
+            return Lerp(l0, l1, alpha1);
+        }
+
         public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
         {
             return Math.Abs(a - b) < delta;

@@ -18,7 +18,7 @@ namespace FamiStudio
         public Label2(string txt, bool multi = false)
         {
             text = txt;
-            height = DpiScaling.ScaleForDialog(24);
+            height = DpiScaling.ScaleForMainWindow(24);
             multiline = multi;
         }
 

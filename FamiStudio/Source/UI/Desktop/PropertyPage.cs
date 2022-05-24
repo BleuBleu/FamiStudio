@@ -23,7 +23,6 @@ namespace FamiStudio
             public PropertyType type;
             public Label2 label;
             public RenderControl control;
-            public string sliderFormat;
             public ImageBox2 warningIcon;
             public bool visible = true;
         };
@@ -169,7 +168,7 @@ namespace FamiStudio
             //textBox.Location = new Point(5, 5);
             //textBox.Multiline = true;
             //textBox.ReadOnly = true;
-            //textBox.Height = DpiScaling.ScaleForDialog(300);
+            //textBox.Height = DpiScaling.ScaleForMainWindow(300);
             //textBox.ScrollBars = ScrollBars.Vertical;
             //textBox.Select(0, 0);
             //textBox.GotFocus += TextBox_GotFocus;
@@ -274,7 +273,7 @@ namespace FamiStudio
             //radio.Text = text;
             //radio.AutoSize = false;
             //radio.Checked = check;
-            //radio.Padding = new Padding(DpiScaling.ScaleForDialog(16), 0, 0, 0);
+            //radio.Padding = new Padding(DpiScaling.ScaleForMainWindow(16), 0, 0, 0);
 
             return radio;
         }
@@ -339,7 +338,7 @@ namespace FamiStudio
             //list.UpdateData(data);
 
             //list.Font = font;
-            //list.Height = DpiScaling.ScaleForDialog(height);
+            //list.Height = DpiScaling.ScaleForMainWindow(height);
             //list.HeaderStyle = ColumnHeaderStyle.None;
             //list.ValueChanged += CheckedListBox_ValueChanged;
             //toolTip.SetToolTip(list, SplitLongTooltip(tooltip));
@@ -360,7 +359,7 @@ namespace FamiStudio
             var button = new Button2(null, text);
             button.Border = true;
             //button.Click += Button_Click;
-            button.Resize(button.Width, DpiScaling.ScaleForDialog(32));
+            button.Resize(button.Width, DpiScaling.ScaleForMainWindow(32));
             //toolTip.SetToolTip(button, SplitLongTooltip(tooltip));
             return button;
         }
@@ -609,16 +608,12 @@ namespace FamiStudio
             return -1;
         }
 
-        private object CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string tooltip = null)
+        private Slider2 CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
         {
-            //var slider = new Slider(value, min, max, increment, numDecimals, showLabel);
-            //slider.FormatValueEvent += Slider_FormatValueEvent;
+            var slider = new Slider2(value, min, max, increment, showLabel, format);
             //slider.ValueChangedEvent += Slider_ValueChangedEvent;
-            //slider.Font = font;
             //toolTip.SetToolTip(slider, SplitLongTooltip(tooltip));
-            //return slider;
-
-            return null;
+            return slider;
         }
 
         //private void Slider_ValueChangedEvent(Slider slider, double value)
@@ -639,14 +634,13 @@ namespace FamiStudio
 
         public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, string format = "{0}", string tooltip = null)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.Slider,
-            //        label = label != null ? CreateLabel(label, tooltip) : null,
-            //        control = CreateSlider(value, min, max, increment, numDecimals, format != null, tooltip),
-            //        sliderFormat = format
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Slider,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateSlider(value, min, max, increment, numDecimals, format != null, format, tooltip),
+                });
             return properties.Count - 1;
         }
 
@@ -658,7 +652,7 @@ namespace FamiStudio
             //    list.UpdateData(data);
 
             //list.Font = font;
-            //list.Height = DpiScaling.ScaleForDialog(height);
+            //list.Height = DpiScaling.ScaleForMainWindow(height);
             //list.MouseDoubleClick += ListView_MouseDoubleClick;
             //list.MouseDown += ListView_MouseDown;
             //list.ButtonPressed += ListView_ButtonPressed;
@@ -819,7 +813,7 @@ namespace FamiStudio
             else
                 prop.warningIcon.Image = WarningIcons[(int)type];
 
-            prop.warningIcon.Resize(DpiScaling.ScaleForDialog(16), DpiScaling.ScaleForDialog(16));
+            prop.warningIcon.Resize(DpiScaling.ScaleForMainWindow(16), DpiScaling.ScaleForMainWindow(16));
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
             //toolTip.SetToolTip(prop.warningIcon, SplitLongTooltip(comment));
         }
@@ -918,9 +912,9 @@ namespace FamiStudio
         {
             var testLabel = CreateLabel(text, null, true);
 
-            //testLabel.MaximumSize = new Size(width - DpiScaling.ScaleForDialog(16), 0);
+            //testLabel.MaximumSize = new Size(width - DpiScaling.ScaleForMainWindow(16), 0);
             //Controls.Add(testLabel);
-            //var height = testLabel.Height + DpiScaling.ScaleForDialog(8);
+            //var height = testLabel.Height + DpiScaling.ScaleForMainWindow(8);
             //Controls.Remove(testLabel);
             //return height;
 
@@ -929,7 +923,7 @@ namespace FamiStudio
 
         public void Build(bool advanced = false)
         {
-            var margin = DpiScaling.ScaleForDialog(8);
+            var margin = DpiScaling.ScaleForMainWindow(8);
             var maxLabelWidth = 0;
             var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;
 
@@ -954,7 +948,7 @@ namespace FamiStudio
             }
 
             int totalHeight = 0;
-            int warningWidth = showWarnings ? DpiScaling.ScaleForDialog(16) + margin : 0;
+            int warningWidth = showWarnings ? DpiScaling.ScaleForMainWindow(16) + margin : 0;
 
             for (int i = 0; i < propertyCount; i++)
             {

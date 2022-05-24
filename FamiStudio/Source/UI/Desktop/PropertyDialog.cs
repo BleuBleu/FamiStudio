@@ -20,10 +20,10 @@ namespace FamiStudio
         public event ValidateDelegate ValidateProperties;
 
         public PropertyPage Properties => propertyPage;
-        private bool topAlign = false;
+        private bool top = false;
         private bool center = false;
         private bool advancedPropertiesVisible = false;
-        private int margin = DpiScaling.ScaleForDialog(8);
+        private int margin = DpiScaling.ScaleForMainWindow(8);
 
         private Button2 buttonNo;
         private Button2 buttonYes;
@@ -33,7 +33,8 @@ namespace FamiStudio
 
         public PropertyDialog(string title, int width, bool canAccept = true, bool canCancel = true)
         {
-            Move(0, 0, DpiScaling.ScaleForDialog(width), DpiScaling.ScaleForDialog(width));
+            width = DpiScaling.ScaleForMainWindow(width);
+            Move(0, 0, width, width);
             Init();
 
             center = true;
@@ -43,7 +44,8 @@ namespace FamiStudio
 
         public PropertyDialog(string title, Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
-            this.topAlign = topAlign;
+            width = DpiScaling.ScaleForMainWindow(width);
+            top = topAlign;
             if (leftAlign)
                 pt.X -= width;
             Move(pt.X, pt.Y, width, width);
@@ -57,15 +59,15 @@ namespace FamiStudio
 
             buttonYes = new Button2("Yes", null);
             buttonYes.Click += ButtonYes_Click;
-            buttonYes.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
+            buttonYes.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
 
             buttonNo = new Button2("No", null);
             buttonNo.Click += ButtonNo_Click;
-            buttonNo.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
+            buttonNo.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
 
             buttonAdvanced = new Button2("PlusSmall", null);
             buttonAdvanced.Click += ButtonAdvanced_Click;
-            buttonAdvanced.Resize(DpiScaling.ScaleForDialog(36), DpiScaling.ScaleForDialog(36));
+            buttonAdvanced.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
             buttonAdvanced.Visible = false;
 
             AddControl(buttonYes);
@@ -109,8 +111,8 @@ namespace FamiStudio
         {
             UpdateLayout();
 
-            if (topAlign)
-                Move(left, top - height);
+            if (top)
+                Move(left, base.top - height);
 
             if (center)
                 CenterToForm();

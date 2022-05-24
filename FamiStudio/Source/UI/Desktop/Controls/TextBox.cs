@@ -28,14 +28,14 @@ namespace FamiStudio
         private Color foreColor = Theme.LightGreyFillColor1;
         private Color backColor = Theme.DarkGreyLineColor1;
 
-        private int margin = DpiScaling.ScaleForDialog(4);
+        private int margin = DpiScaling.ScaleForMainWindow(4);
 
         public Color ForeColor { get => foreColor; set { foreColor = value; MarkDirty(); } }
         public Color BackColor { get => backColor; set { backColor = value; MarkDirty(); } }
 
         public TextBox2(string txt)
         {
-            height = DpiScaling.ScaleForDialog(24);
+            height = DpiScaling.ScaleForMainWindow(24);
             text = txt;
         }
 

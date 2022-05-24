@@ -14,7 +14,7 @@ namespace FamiStudio
     {
         private string text;
         private bool check;
-        private int margin = DpiScaling.ScaleForDialog(4);
+        private int margin = DpiScaling.ScaleForMainWindow(4);
         private RenderBitmapAtlasRef bmpCheckOn;
         private RenderBitmapAtlasRef bmpCheckOff;
 
@@ -22,7 +22,7 @@ namespace FamiStudio
         {
             text = txt;
             check = chk;
-            height = DpiScaling.ScaleForDialog(24);
+            height = DpiScaling.ScaleForMainWindow(24);
         }
 
         public bool Checked
@@ -58,9 +58,7 @@ namespace FamiStudio
             var bmpSize = bmpCheckOn.ElementSize;
             var baseY = (height - bmpSize.Height) / 2;
 
-            //c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, ThemeResources.WhiteBrush, ThemeResources.BlackBrush);
-            //c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, Color.Black);
-            c.FillRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, ThemeResources.DarkGreyLineBrush1);
+            c.FillAndDrawRectangle(0, baseY, bmpSize.Width - 1, baseY + bmpSize.Height - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
             c.DrawBitmapAtlas(check ? bmpCheckOn : bmpCheckOff, 0, baseY, 1, 1, Theme.LightGreyFillColor1);
 
             if (!string.IsNullOrEmpty(text))
