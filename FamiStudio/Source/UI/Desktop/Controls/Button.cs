@@ -103,7 +103,7 @@ namespace FamiStudio
             {
                 var fillBrush = press ? ThemeResources.MediumGreyFillBrush1 :
                                 hover ? ThemeResources.DarkGreyFillBrush3 :
-                                          ThemeResources.DarkGreyFillBrush2;
+                                        ThemeResources.DarkGreyFillBrush2;
 
                 c.FillRectangle(ClientRectangle, fillBrush);
             }

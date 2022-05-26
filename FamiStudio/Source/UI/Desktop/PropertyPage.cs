@@ -250,14 +250,6 @@ namespace FamiStudio
         private RadioButton2 CreateRadioButton(string text, bool check, bool multiline)
         {
             var radio = new RadioButton2(text, check, multiline);
-
-            //radio.Font = font;
-            //radio.ForeColor = Theme.LightGreyFillColor2;
-            //radio.Text = text;
-            //radio.AutoSize = false;
-            //radio.Checked = check;
-            //radio.Padding = new Padding(DpiScaling.ScaleForMainWindow(16), 0, 0, 0);
-
             return radio;
         }
 
@@ -301,24 +293,24 @@ namespace FamiStudio
         {
         }
 
-        private object CreateCheckedListBox(string[] values, bool[] selected, string tooltip = null, int height = 200)
+        private Grid2 CreateCheckedListBox(string[] values, bool[] selected, string tooltip = null, int height = 200)
         {
-            //var columns = new[]
-            //{
-            //    new ColumnDesc("A", 0.0f, ColumnType.CheckBox),
-            //    new ColumnDesc("B", 1.0f, ColumnType.Label)
-            //};
+            var columns = new[]
+            {
+                new ColumnDesc("A", 0.0f, ColumnType.CheckBox),
+                new ColumnDesc("B", 1.0f, ColumnType.Label)
+            };
 
-            //var list = new PropertyPageListView(columns);
-            //var data = new object[values.Length, 2];
+            var list = new Grid2(columns, height, false); 
+            var data = new object[values.Length, 2];
 
-            //for (int i = 0; i < values.Length; i++)
-            //{
-            //    data[i, 0] = selected != null ? selected[i] : true;
-            //    data[i, 1] = values[i];
-            //}
+            for (int i = 0; i < values.Length; i++)
+            {
+                data[i, 0] = selected != null ? selected[i] : true;
+                data[i, 1] = values[i];
+            }
 
-            //list.UpdateData(data);
+            list.UpdateData(data);
 
             //list.Font = font;
             //list.Height = DpiScaling.ScaleForMainWindow(height);
@@ -326,9 +318,7 @@ namespace FamiStudio
             //list.ValueChanged += CheckedListBox_ValueChanged;
             //toolTip.SetToolTip(list, SplitLongTooltip(tooltip));
 
-            //return list;
-
-            return null;
+            return list;
         }
 
         private void CheckedListBox_ValueChanged(object sender, int itemIndex, int columnIndex, object value)
@@ -500,29 +490,29 @@ namespace FamiStudio
 
         public void UpdateIntegerRange(int idx, int min, int max)
         {
-            //var upDown = (properties[idx].control as NumericUpDown);
+            var upDown = (properties[idx].control as NumericUpDown2);
 
-            //upDown.Minimum = min;
-            //upDown.Maximum = max;
+            upDown.Minimum = min;
+            upDown.Maximum = max;
         }
 
         public void UpdateIntegerRange(int idx, int value, int min, int max)
         {
-            //var upDown = (properties[idx].control as NumericUpDown);
+            var upDown = (properties[idx].control as NumericUpDown2);
 
-            //upDown.Minimum = min;
-            //upDown.Maximum = max;
-            //upDown.Value = value;
+            upDown.Minimum = min;
+            upDown.Maximum = max;
+            upDown.Value = value;
         }
 
         public void SetLabelText(int idx, string text)
         {
-            //(properties[idx].control as Label).Text = text;
+            (properties[idx].control as Label2).Text = text;
         }
 
         public void SetDropDownListIndex(int idx, int selIdx)
         {
-            //(properties[idx].control as ComboBox).SelectedIndex = selIdx;
+            (properties[idx].control as DropDown2).SelectedIndex = selIdx;
         }
 
         public void UpdateDropDownListItems(int idx, string[] values)
@@ -568,13 +558,13 @@ namespace FamiStudio
 
         public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int height = 200)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.CheckBoxList,
-            //        label = label != null ? CreateLabel(label) : null,
-            //        control = CreateCheckedListBox(values, selected, tooltip, height)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.CheckBoxList,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateCheckedListBox(values, selected, tooltip, height)
+                });
             return properties.Count - 1;
         }
 
@@ -619,12 +609,12 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private object CreateListView(ColumnDesc[] columnDescs, object[,] data, int height = 300)
+        private Grid2 CreateGrid(ColumnDesc[] columnDescs, object[,] data, int height = 140)
         {
-            //var list = new PropertyPageListView(columnDescs);
+            var list = new Grid2(columnDescs, height, true);
 
-            //if (data != null)
-            //    list.UpdateData(data);
+            if (data != null)
+                list.UpdateData(data);
 
             //list.Font = font;
             //list.Height = DpiScaling.ScaleForMainWindow(height);
@@ -633,9 +623,7 @@ namespace FamiStudio
             //list.ButtonPressed += ListView_ButtonPressed;
             //list.ValueChanged += ListView_ValueChanged;
 
-            //return list;
-
-            return null;
+            return list;
         }
 
         private void ListView_ButtonPressed(object sender, int itemIndex, int columnIndex)
@@ -688,29 +676,30 @@ namespace FamiStudio
             //listView.SetColumnEnabled(colIdx, enabled);
         }
 
-        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int height = 300)
+        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int height = 140)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.MultiColumnList,
-            //        control = CreateListView(columnDescs, data, height)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.Grid,
+                    control = CreateGrid(columnDescs, data, height)
+                });
         }
 
-        public void UpdateMultiColumnList(int idx, object[,] data, string[] columnNames = null)
+        public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
         {
-            //var list = properties[idx].control as PropertyPageListView;
+            var list = properties[idx].control as Grid2;
 
-            //list.UpdateData(data);
+            list.UpdateData(data);
 
+            // MATTT
             //if (columnNames != null)
             //    list.RenameColumns(columnNames);
 
             //list.AutoResizeColumns();
         }
 
-        public void UpdateMultiColumnList(int idx, int rowIdx, int colIdx, object value)
+        public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
         {
             //var list = properties[idx].control as PropertyPageListView;
             //list.UpdateData(rowIdx, colIdx, value);
@@ -806,8 +795,8 @@ namespace FamiStudio
                     return (prop.control as TextBox2).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as NumericUpDown2).Value;
-                //case PropertyType.Slider:
-                //    return (prop.control as Slider).Value;
+                case PropertyType.Slider:
+                    return (prop.control as Slider2).Value;
                 case PropertyType.Radio:
                     return (prop.control as RadioButton2).Checked;
                 case PropertyType.CheckBox:
@@ -817,13 +806,13 @@ namespace FamiStudio
                 case PropertyType.DropDownList:
                     return (prop.control as DropDown2).Text;
                 case PropertyType.CheckBoxList:
-                //    {
-                //        var listView = prop.control as PropertyPageListView;
-                //        var selected = new bool[listView.Items.Count];
-                //        for (int i = 0; i < listView.Items.Count; i++)
-                //            selected[i] = (bool)listView.GetData(i, 0);
-                //        return selected;
-                //    }
+                {
+                    var grid = prop.control as Grid2;
+                    var selected = new bool[grid.ItemCount];
+                    for (int i = 0; i < grid.ItemCount; i++)
+                        selected[i] = (bool)grid.GetData(i, 0);
+                    return selected;
+                }
                 case PropertyType.Button:
                     return (prop.control as Button2).Text;
             }
@@ -839,7 +828,7 @@ namespace FamiStudio
         public T GetPropertyValue<T>(int idx, int rowIdx, int colIdx)
         {
             //var prop = properties[idx];
-            //Debug.Assert(prop.type == PropertyType.MultiColumnList);
+            //Debug.Assert(prop.type == PropertyType.Grid);
             //var list = prop.control as PropertyPageListView;
             //return (T)list.GetData(rowIdx, colIdx);
 
@@ -848,13 +837,13 @@ namespace FamiStudio
 
         public int GetSelectedIndex(int idx)
         {
-            //var prop = properties[idx];
+            var prop = properties[idx];
 
-            //switch (prop.type)
-            //{
-            //    case PropertyType.DropDownList:
-            //        return (prop.control as ComboBox).SelectedIndex;
-            //}
+            switch (prop.type)
+            {
+                case PropertyType.DropDownList:
+                    return (prop.control as DropDown2).SelectedIndex;
+            }
 
             return -1;
         }
@@ -883,19 +872,6 @@ namespace FamiStudio
             }
         }
         
-        private int GetRadioButtonHeight(string text, int width)
-        {
-            var testLabel = CreateLabel(text, null, true);
-
-            //testLabel.MaximumSize = new Size(width - DpiScaling.ScaleForMainWindow(16), 0);
-            //Controls.Add(testLabel);
-            //var height = testLabel.Height + DpiScaling.ScaleForMainWindow(8);
-            //Controls.Remove(testLabel);
-            //return height;
-
-            return 0;
-        }
-
         public void Build(bool advanced = false)
         {
             var margin = DpiScaling.ScaleForMainWindow(8);

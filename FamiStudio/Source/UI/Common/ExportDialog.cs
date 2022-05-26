@@ -230,7 +230,7 @@ namespace FamiStudio
                     page.AddCheckBox("Separate intro file", false); // 8
                     page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 9
                     if (PlatformUtils.IsDesktop)
-                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
+                        page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 10
                     else
                         page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
                     page.SetPropertyEnabled(3, false);
@@ -249,7 +249,7 @@ namespace FamiStudio
                         page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 7
                         if (PlatformUtils.IsDesktop)
-                            page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 8
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 8
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 8
                         page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // Stereo on mobile.
@@ -266,7 +266,7 @@ namespace FamiStudio
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 9
                         if (PlatformUtils.IsDesktop)
-                            page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 10
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
                         page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // Stereo on mobile.
@@ -303,7 +303,7 @@ namespace FamiStudio
                     page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
                     page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24); // 3
                     page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
-                    page.AddMultiColumnList(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null); // 5
+                    page.AddGrid(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
@@ -407,7 +407,7 @@ namespace FamiStudio
         {
             if (propIdx == 9 && click == ClickType.Right && colIdx == 2)
             {
-                props.UpdateMultiColumnList(propIdx, rowIdx, colIdx, 50);
+                props.UpdateGrid(propIdx, rowIdx, colIdx, 50);
             }
         }
 
@@ -823,7 +823,7 @@ namespace FamiStudio
                 cols[0] = "NES Channel";
             }
 
-            props.UpdateMultiColumnList(5, data, cols);
+            props.UpdateGrid(5, data, cols);
         }
 
         private void ExportMidi()

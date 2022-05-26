@@ -985,9 +985,8 @@ namespace FamiStudio
             {
                 if (mid)
                 {
-                    // MATTT
-                    //var dlg = new MidiImportDialog(filename);
-                    //project = dlg.ShowDialog(mainForm);
+                    var dlg = new MidiImportDialog(filename);
+                    project = dlg.ShowDialog(mainForm);
                 }
                 else if (nsf)
                 {

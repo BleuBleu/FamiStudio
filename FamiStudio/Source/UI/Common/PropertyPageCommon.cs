@@ -34,7 +34,7 @@ namespace FamiStudio
         CheckBox,
         DropDownList,
         CheckBoxList,
-        MultiColumnList,
+        Grid,
         ColorPicker,
         Label,
         LinkLabel,

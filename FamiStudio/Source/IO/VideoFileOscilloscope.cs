@@ -111,7 +111,7 @@ namespace FamiStudio
             if (!Initialize(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan))
                 return false;
 
-            var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
+            var bmpWatermark = videoGraphics.GetBitmapAtlasRef("VideoWatermark");
 
             numColumns = Math.Min(numColumns, channelStates.Length);
             var numRows = (int)Math.Ceiling(channelStates.Length / (float)numColumns);
@@ -224,7 +224,7 @@ namespace FamiStudio
                         cmd.DrawLine(i * channelResX, 0, i * channelResX, videoResY, themeResources.BlackBrush, channelLineWidth);
 
                     // Watermark.
-                    cmd.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
+                    cmd.DrawBitmapAtlas(bmpWatermark, videoResX - bmpWatermark.ElementSize.Width, videoResY - bmpWatermark.ElementSize.Height);
                     videoGraphics.DrawCommandList(cmd);
                     videoGraphics.EndDrawControl();
                     videoGraphics.EndDrawFrame();
@@ -253,7 +253,6 @@ namespace FamiStudio
                     c.bmpIcon.Dispose();
 
                 themeResources.Dispose();
-                bmpWatermark.Dispose();
                 gradientBrush.Dispose();
                 videoGraphics.Dispose();
             }

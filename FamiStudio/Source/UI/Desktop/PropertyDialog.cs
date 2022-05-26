@@ -20,7 +20,7 @@ namespace FamiStudio
         public event ValidateDelegate ValidateProperties;
 
         public PropertyPage Properties => propertyPage;
-        private bool top = false;
+        private bool topAlign = false;
         private bool center = false;
         private bool advancedPropertiesVisible = false;
         private int margin = DpiScaling.ScaleForMainWindow(8);
@@ -44,8 +44,8 @@ namespace FamiStudio
 
         public PropertyDialog(string title, Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
-            width = DpiScaling.ScaleForMainWindow(width);
-            top = topAlign;
+            this.width = DpiScaling.ScaleForMainWindow(width);
+            this.topAlign = topAlign;
             if (leftAlign)
                 pt.X -= width;
             Move(pt.X, pt.Y, width, width);
@@ -111,7 +111,7 @@ namespace FamiStudio
         {
             UpdateLayout();
 
-            if (top)
+            if (topAlign)
                 Move(left, base.top - height);
 
             if (center)

@@ -369,8 +369,7 @@ namespace FamiStudio
 
         public float MeasureString(string text, GLFont font, bool mono = false)
         {
-            font.MeasureString(text, mono, out int minX, out int maxX);
-            return maxX - minX;
+            return font.MeasureString(text, mono);
         }
 
         public GLGeometry CreateGeometry(float[,] points, bool closed = true)
@@ -744,7 +743,7 @@ namespace FamiStudio
             return false;
         }
 
-        public int GetNumCharactersForSize(string text, int sizeX)
+        public int GetNumCharactersForSize(string text, int sizeX, bool canRoundUp = false)
         {
             var x = 0;
             var maxX = 0;
@@ -760,7 +759,12 @@ namespace FamiStudio
                 maxX = Math.Max(maxX, x1);
 
                 if (maxX > sizeX)
-                    return i - 1;
+                {
+                    if (canRoundUp && sizeX >= (x1 + x0) / 2)
+                        return i + 1;
+                    else
+                        return i;
+                }
 
                 x += info.xadvance;
                 if (i != text.Length - 1)
@@ -773,6 +777,40 @@ namespace FamiStudio
             return text.Length;
         }
 
+
+        public int MeasureString(string text, bool mono)
+        {
+            int x = 0;
+
+            if (mono)
+            {
+                var info = GetCharInfo('0');
+
+                for (int i = 0; i < text.Length; i++)
+                {
+                    x += info.xadvance;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < text.Length; i++)
+                {
+                    var c0 = text[i];
+                    var info = GetCharInfo(c0);
+
+                    x += info.xadvance;
+                    if (i != text.Length - 1)
+                    {
+                        char c1 = text[i + 1];
+                        x += GetKerning(c0, c1);
+                    }
+                }
+            }
+
+            return x;
+        }
+
+        /*
         public void MeasureString(string text, bool mono, out int minX, out int maxX)
         {
             minX = 0;
@@ -824,6 +862,7 @@ namespace FamiStudio
             MeasureString(text, mono, out var minX, out var maxX);
             return maxX - minX;
         }
+        */
     }
 
     public class GLGeometry : IDisposable
@@ -1152,7 +1191,8 @@ namespace FamiStudio
 
         private class TextInstance
         {
-            public RectangleF rect;
+            public RectangleF layoutRect;
+            public RectangleF clipRect;
             public RenderTextFlags flags;
             public string text;
             public GLBrush brush;
@@ -1845,7 +1885,7 @@ namespace FamiStudio
             }
         }
 
-        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, RenderTextFlags flags = RenderTextFlags.None, float width = 0, float height = 0)
+        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, RenderTextFlags flags = RenderTextFlags.None, float width = 0, float height = 0, float clipMinX = 0, float clipMaxX = 0)
         {
             Debug.Assert(!flags.HasFlag(RenderTextFlags.Clip) || !flags.HasFlag(RenderTextFlags.Ellipsis));
             Debug.Assert(!flags.HasFlag(RenderTextFlags.Monospace) || !flags.HasFlag(RenderTextFlags.Ellipsis));
@@ -1863,10 +1903,22 @@ namespace FamiStudio
             xform.TransformPoint(ref x, ref y);
 
             var inst = new TextInstance();
-            inst.rect = new RectangleF(x, y, width, height);
+            inst.layoutRect = new RectangleF(x, y, width, height);
             inst.flags = flags;
             inst.text = text;
             inst.brush = brush;
+
+            if (clipMaxX > clipMinX)
+            {
+                var dummy = 0.0f;
+                xform.TransformPoint(ref clipMinX, ref dummy);
+                xform.TransformPoint(ref clipMaxX, ref dummy);
+                inst.clipRect = new RectangleF(clipMinX, y, clipMaxX - clipMinX, height); 
+            }
+            else
+            {
+                inst.clipRect =  inst.layoutRect;
+            }
 
             list.Add(inst);
         }
@@ -2049,15 +2101,16 @@ namespace FamiStudio
 
                     if (inst.flags.HasFlag(RenderTextFlags.Ellipsis))
                     {
-                        font.MeasureString("...", mono, out var dotsMinX, out var dotsMaxX);
-                        var ellipsisSizeX = (dotsMaxX - dotsMinX) * 2; // Leave some padding.
-                        if (font.TruncateString(ref inst.text, (int)(inst.rect.Width - ellipsisSizeX)))
+                        var ellipsisSizeX = font.MeasureString("...", mono) * 2; // Leave some padding.
+                        if (font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
                             inst.text += "...";
                     }
 
                     if (inst.flags != RenderTextFlags.TopLeft)
                     {
-                        font.MeasureString(inst.text, mono, out var minX, out var maxX);
+                        // MATTT : We no longer have minX in Measure string, is it a problem?
+                        var minX = 0;
+                        var maxX = font.MeasureString(inst.text, mono);
 
                         var halign = inst.flags & RenderTextFlags.HorizontalAlignMask;
                         var valign = inst.flags & RenderTextFlags.VerticalAlignMask;
@@ -2065,12 +2118,12 @@ namespace FamiStudio
                         if (halign == RenderTextFlags.Center)
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX) / 2;
+                            alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX) / 2;
                         }
                         else if (halign == RenderTextFlags.Right)
                         {
                             alignmentOffsetX -= minX;
-                            alignmentOffsetX += ((int)inst.rect.Width - maxX - minX);
+                            alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
                         }
 
                         if (valign != RenderTextFlags.Top)
@@ -2084,11 +2137,11 @@ namespace FamiStudio
 
                             if (valign == RenderTextFlags.Middle)
                             {
-                                alignmentOffsetY += ((int)inst.rect.Height - charA.height + 1) / 2;
+                                alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
                             }
                             else if (valign == RenderTextFlags.Bottom)
                             {
-                                alignmentOffsetY += ((int)inst.rect.Height - charA.height);
+                                alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
                             }
                         }
                     }
@@ -2096,8 +2149,8 @@ namespace FamiStudio
                     var packedColor = inst.brush.PackedColor0;
                     var numVertices = inst.text.Length * 4;
 
-                    int x = (int)(inst.rect.X + alignmentOffsetX);
-                    int y = (int)(inst.rect.Y + alignmentOffsetY);
+                    int x = (int)(inst.layoutRect.X + alignmentOffsetX);
+                    int y = (int)(inst.layoutRect.Y + alignmentOffsetY);
                     
                     if (mono)
                     {
@@ -2147,8 +2200,8 @@ namespace FamiStudio
                     }
                     else if (inst.flags.HasFlag(RenderTextFlags.Clip)) // Slow path when there is clipping.
                     {
-                        var clipMinX = (int)(inst.rect.X);
-                        var clipMaxX = (int)(inst.rect.X + inst.rect.Width);
+                        var clipMinX = (int)(inst.clipRect.X);
+                        var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
 
                         for (int i = 0; i < inst.text.Length; i++)
                         {

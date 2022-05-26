@@ -18,8 +18,22 @@ namespace FamiStudio
         private RenderControl focusedControl;
         private Action<DialogResult> callback;
         
-        public RenderControl FocusedControl => focusedControl;
         public IReadOnlyCollection<RenderControl> Controls => controls.AsReadOnly();
+
+        public RenderControl FocusedControl
+        {
+            get { return focusedControl; }
+            set 
+            {
+                if (value == focusedControl)
+                    return;
+
+                if (focusedControl != null)
+                    focusedControl.LostDialogFocus();
+
+                focusedControl = value;
+            }
+        }
 
         public Dialog()
         {
@@ -48,18 +62,22 @@ namespace FamiStudio
         {
             if (!controls.Contains(ctrl))
             {
+                ctrl.ParentForm = ParentForm;
+                ctrl.ParentDialog = this;
                 ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
                 ctrl.SetThemeRenderResource(ThemeResources);
                 ctrl.RenderInitialized(ParentForm.Graphics);
-                ctrl.ParentForm = ParentForm;
-                ctrl.ParentDialog = this;
                 controls.Add(ctrl);
             }
         }
 
         public void RemoveControl(RenderControl ctrl)
         {
-            controls.Remove(ctrl);
+            if (ctrl != null)
+            {
+                controls.Remove(ctrl);
+                ctrl.RenderTerminated();
+            }
         }
 
         public override void Tick(float delta)
@@ -73,14 +91,14 @@ namespace FamiStudio
             }
         }
 
-        public RenderControl GetControlAtInternal(bool priority, int formX, int formY, out int ctrlX, out int ctrlY)
+        public RenderControl GetControlAtInternal(bool focused, int formX, int formY, out int ctrlX, out int ctrlY)
         {
             ctrlX = 0;
             ctrlY = 0;
 
             foreach (var ctrl in controls)
             {
-                if (ctrl.Visible && ctrl.PriorityInput == priority)
+                if (ctrl.Visible && ctrl.HasDialogFocus == focused)
                 {
                     var dlgX = ctrl.Left - Left;
                     var dlgY = ctrl.Top - Top;
@@ -103,7 +121,15 @@ namespace FamiStudio
             var ctrl = GetControlAtInternal(true, formX, formY, out ctrlX, out ctrlY);
             if (ctrl != null)
                 return ctrl;
-            return GetControlAtInternal(false, formX, formY, out ctrlX, out ctrlY);
+            ctrl = GetControlAtInternal(false, formX, formY, out ctrlX, out ctrlY);
+            if (ctrl != null)
+                return ctrl;
+            return this;
+        }
+
+        protected override void OnMouseDown(MouseEventArgsEx e)
+        {
+            FocusedControl = null;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)

@@ -261,7 +261,7 @@ namespace FamiStudio
                 case ConfigSection.QWERTY:
                 {
                     page.AddLabel(null, "Double click in the 2 last columns to assign a key. Right click to clear a key.", true); // 0
-                    page.AddMultiColumnList(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings()); // 1
+                    page.AddGrid(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings(), 20); // 1
                     page.AddButton(null, "Reset to default");
                     page.PropertyClicked += QwertyPage_PropertyClicked;
                     break;
@@ -358,18 +358,18 @@ namespace FamiStudio
 //#endif
 //                    dlg.ShowDialogAsync(null, (r) => { });
 
-                    pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+                    pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
                 }
                 else if (click == ClickType.Right)
                 {
                     qwertyKeys[rowIdx, colIdx - 2] = -1;
-                    pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+                    pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
                 }
             }
             else if (propIdx == 2 && click == ClickType.Button)
             {
                 Array.Copy(Settings.DefaultQwertyKeys, qwertyKeys, Settings.DefaultQwertyKeys.Length);
-                pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+                pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
             }
         }
 

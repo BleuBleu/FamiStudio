@@ -38,6 +38,18 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref val, Utils.Clamp(value, min, max)); }
         }
 
+        public int Minimum
+        {
+            get { return min; }
+            set { min = value; val = Utils.Clamp(value, min, max); MarkDirty(); }
+        }
+
+        public int Maximum
+        {
+            get { return max; }
+            set { max = value; val = Utils.Clamp(value, min, max); MarkDirty(); }
+        }
+
         protected override void OnRenderInitialized(RenderGraphics g)
         {
             bmp = new[]

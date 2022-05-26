@@ -314,6 +314,7 @@ namespace FamiStudio
                 }
 
                 var ex = new MouseEventArgsEx(e.Button, e.Clicks, x, y, e.Delta);
+                ctrl.GrabDialogFocus();
                 ctrl.MouseDown(ex);
                 if (ex.IsRightClickDelayed)
                     DelayRightClick(ctrl, ex);

@@ -25,10 +25,10 @@ namespace FamiStudio
         protected int top = 0;
         protected int width = 100;
         protected int height = 100;
-        private float mainWindowScaling = 1.0f;
-        private float fontScaling = 1.0f;
-        private bool dirty = true;
-        private bool visible = true;
+        protected float mainWindowScaling = 1.0f;
+        protected float fontScaling = 1.0f;
+        protected bool dirty = true;
+        protected bool visible = true;
 
         protected GLControl() { cursorInfo = new CursorInfo(this); }
         protected virtual void OnRenderInitialized(GLGraphics g) { }
@@ -55,11 +55,13 @@ namespace FamiStudio
         protected virtual void OnTouchScale(int x, int y, float scale) { }
         protected virtual void OnTouchScaleEnd(int x, int y) { }
         protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
+        protected virtual void OnLostDialogFocus() { }
+        protected virtual void OnVisibleChanged() { }
         public virtual bool WantsFullScreenViewport => false;
         public virtual void Tick(float delta) { }
-        public virtual bool PriorityInput => false;
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
+        public void RenderTerminated() { OnRenderTerminated(); }
         public void Render(GLGraphics g) { OnRender(g); }
         public void MouseDown(MouseEventArgsEx e) { OnMouseDown(e); }
         public void MouseDownDelayed(System.Windows.Forms.MouseEventArgs e) { OnMouseDownDelayed(e); }
@@ -81,6 +83,7 @@ namespace FamiStudio
         public void TouchScale(int x, int y, float scale) { OnTouchScale(x, y, scale); }
         public void TouchScaleEnd(int x, int y) { OnTouchScaleEnd(x, y); }
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
+        public void LostDialogFocus() { OnLostDialogFocus(); }
 
         public System.Drawing.Point ClientToParent(System.Drawing.Point p) { return PointToClient(PointToScreen(p)); }
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
@@ -90,16 +93,17 @@ namespace FamiStudio
         public System.Drawing.Size ParentFormSize => parentForm.Size;
         public bool IsLandscape => parentForm.IsLandscape;
         public int Left => parentDialog != null ? left + parentDialog.left : left;
-        public int Top => parentDialog != null ? top  + parentDialog.top : top;
+        public int Top => parentDialog != null ? top + parentDialog.top : top;
         public int Right => Left + width;
-        public int Bottom => Top  + height;
+        public int Bottom => Top + height;
         public int Width => width;
         public int Height => height;
         public bool Capture { set { if (value) parentForm.CaptureMouse(this); else parentForm.ReleaseMouse(); } }
         public bool NeedsRedraw => dirty;
         public bool IsRenderInitialized => themeRes != null;
         public bool HasDialogFocus => parentDialog != null && parentDialog.FocusedControl == this;
-        public bool Visible { get => visible; set { visible = value; MarkDirty(); } }
+        public void GrabDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = this; }
+        public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public float MainWindowScaling => mainWindowScaling;
         public float FontScaling => fontScaling;
         public ThemeRenderResources ThemeResources => themeRes;

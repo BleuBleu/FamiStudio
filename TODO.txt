@@ -14,9 +14,7 @@ P0:
 	- Recolor all icons to white, use filter on Android to make them grey.
 	- IsAsyncDialogInProgress, must implement on PC.
 	- Remove all using RenderXXX, rename properly.
-	- Add slighy dimming to main window when dialog is open.
-	- Remove ScaleForDialog.
-	- Dont create VideoWatermark bmp, already in atlas
+	- Rename ScaleFOrMainWIndow
 	- All dialogs will need to be async, no more "ShowDialog"
 	- Pass form to dialogs, avoid ugly .INstance thing.
 - GLFW:

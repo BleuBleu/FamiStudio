@@ -4,6 +4,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
+    // MATTT : Lost of crashes playing with tempo and the new drop downs. Fix!
     static class FamiStudioTempoUtils
     {
         public const int MinNoteLength = 1;

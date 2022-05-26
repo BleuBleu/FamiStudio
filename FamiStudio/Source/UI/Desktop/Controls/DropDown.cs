@@ -12,6 +12,8 @@ using System;
 
 namespace FamiStudio
 {
+    // MATTT : Focus management
+    // MATTT : Escape to close (when focus is done)
     public class DropDown2 : RenderControl
     {
         private const int MaxItemsInList = 10;
@@ -22,24 +24,30 @@ namespace FamiStudio
         private GLBitmapAtlasRef bmpArrow;
         private string[] items;
         private int selectedIndex = 0;
-        private bool listOpened = false;
+        private bool hover;
+        private bool listOpened;
+        private bool transparent;
+        private int listHover = -1;
         private int listScroll = 0;
-        private int listHoveredItemIndex = -1;
-
+        private int numItemsInList = 0;
+        private int largeStepSize = 1;
+        private bool draggingScrollbars;
+        private int captureScrollBarPos;
+        private int captureMouseY;
         private int maxListScroll = 0;
-        private int margin = DpiScaling.ScaleForMainWindow(4);
-        private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
-        private int defaultHeight = DpiScaling.ScaleForMainWindow(24);
 
-        public DropDown2(string[] list, int index)
+        private int margin         = DpiScaling.ScaleForMainWindow(4);
+        private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
+        private int rowHeight      = DpiScaling.ScaleForMainWindow(24);
+
+        public DropDown2(string[] list, int index, bool trans = false)
         {
             items = list;
             selectedIndex = index;
-            maxListScroll = Math.Max(0, items.Length - MaxItemsInList);
-            height = defaultHeight;
+            height = rowHeight;
+            transparent = trans;
+            UpdateScrollParams();
         }
-
-        public override bool PriorityInput => listOpened;
 
         public string Text => items[selectedIndex];
 
@@ -63,6 +71,7 @@ namespace FamiStudio
             if (selectedIndex >= items.Length)
                 selectedIndex = 0;
             MarkDirty();
+            UpdateScrollParams();
         }
 
         protected override void OnRenderInitialized(RenderGraphics g)
@@ -72,51 +81,108 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgsEx e)
         {
+            MarkDirty();
+
             if (e.Button.HasFlag(MouseButtons.Left))
             {
+                if (listOpened && e.Y > rowHeight)
+                {
+                    if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
+                    {
+                        var y = e.Y - rowHeight;
+
+                        if (y < scrollBarPos)
+                        {
+                            listScroll = Math.Max(0, listScroll - largeStepSize);
+                        }
+                        else if (y > (scrollBarPos + scrollBarSize))
+                        {
+                            listScroll = Math.Min(maxListScroll, listScroll + largeStepSize);
+                        }
+                        else
+                        {
+                            Capture = true;
+                            draggingScrollbars = true;
+                            captureScrollBarPos = scrollBarPos;
+                            captureMouseY = e.Y;
+                        }
+
+                        return;
+                    }
+
+                    SelectedIndex = listScroll + (e.Y - rowHeight) / rowHeight;
+                }
+
                 SetListOpened(!listOpened);
             }
-            //hovered = true;
-            MarkDirty();
         }
 
         private void SetListOpened(bool open)
         {
-            listOpened = open;
-            height = defaultHeight + (listOpened ? Math.Min(items.Length, MaxItemsInList) * defaultHeight : 0);
+            SetAndMarkDirty(ref listOpened, open);
+            height = rowHeight + (listOpened ? Math.Min(items.Length, MaxItemsInList) * rowHeight : 0);
+            listScroll = Math.Min(selectedIndex, maxListScroll);
         }
 
-        //protected override void OnMouseUp(MouseEventArgs e)
-        //{
-        //    if (e.Button.HasFlag(MouseButtons.Left))
-        //    {
-        //        pressed = false;
-        //        Click?.Invoke(this);
-        //    }
-        //    MarkDirty();
-        //}
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (draggingScrollbars)
+            {
+                draggingScrollbars = false;
+                Capture = false;
+                MarkDirty();
+            }
+        }
 
-        //protected override void OnMouseMove(MouseEventArgs e)
-        //{
-        //    hovered = true;
-        //    MarkDirty();
-        //}
+        private void UpdateScrollParams()
+        {
+            largeStepSize = Math.Min(4, items.Length / 20); 
+            maxListScroll = Math.Max(0, items.Length - MaxItemsInList);
+            numItemsInList = Math.Min(items.Length, MaxItemsInList);
+        }
 
-        //protected override void OnMouseLeave(EventArgs e)
-        //{
-        //    hovered = false;
-        //    pressed = false;
-        //    MarkDirty();
-        //}
+        private void UpdateListHover(MouseEventArgs e)
+        {
+            if (listOpened && e.X < width - scrollBarWidth)
+                SetAndMarkDirty(ref listHover, listScroll + (e.Y - rowHeight) / rowHeight);
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            if (draggingScrollbars)
+            {
+                GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
+                var newScrollBarPos = captureScrollBarPos + (e.Y - captureMouseY);
+                var ratio = newScrollBarPos / (float)(numItemsInList * rowHeight - scrollBarSize);
+                var newListScroll = Utils.Clamp((int)Math.Round(ratio * maxListScroll), 0, maxListScroll);
+                SetAndMarkDirty(ref listScroll, newListScroll);
+            }
+            else
+            {
+                SetAndMarkDirty(ref hover, e.Y < rowHeight && !listOpened);
+                UpdateListHover(e);
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            SetAndMarkDirty(ref hover, false);
+            SetAndMarkDirty(ref listHover, -1);
+        }
+
+        protected override void OnLostDialogFocus()
+        {
+            SetListOpened(false);
+        }
 
         private bool GetScrollBarParams(out int pos, out int size)
         {
             if (items.Length > MaxItemsInList)
             {
-                var scrollAreaSize = MaxItemsInList * defaultHeight;
+                var scrollAreaSize = numItemsInList * rowHeight;
                 var minScrollBarSizeY = scrollAreaSize / 4;
-                var scrollY = listScroll * defaultHeight;
-                var maxScrollY = maxListScroll * defaultHeight;
+                var scrollY = listScroll * rowHeight;
+                var maxScrollY = maxListScroll * rowHeight;
 
                 size = Math.Max(minScrollBarSizeY, (int)Math.Round(scrollAreaSize * Math.Min(1.0f, scrollAreaSize / (float)(maxScrollY + scrollAreaSize))));
                 pos  = (int)Math.Round((scrollAreaSize - size) * (scrollY / (float)maxScrollY));
@@ -138,9 +204,8 @@ namespace FamiStudio
 
             if (listOpened)
             {
-                var stepSize = Math.Min(4, items.Length / 20);
-                listScroll = Utils.Clamp(listScroll + sign * stepSize, 0, maxListScroll);
-                MarkDirty();
+                SetAndMarkDirty(ref listScroll, Utils.Clamp(listScroll + sign * largeStepSize, 0, maxListScroll));
+                UpdateListHover(e);
             }
             else
             {
@@ -153,32 +218,34 @@ namespace FamiStudio
             var bmpSize = bmpArrow.ElementSize;
             var cb = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
 
-            cb.FillAndDrawRectangle(0, 0, width - 1, defaultHeight - (listOpened ? 0 : 1), ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
-            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (defaultHeight - bmpSize.Height) / 2, 1, 1, Theme.LightGreyFillColor1);
+            if (!transparent)
+                cb.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover ? ThemeResources.DarkGreyLineBrush3 : ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+            
+            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
 
             if (selectedIndex >= 0)
-            {
-                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, defaultHeight);
-            }
+                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, rowHeight);
 
             if (listOpened)
             {
                 var cf = g.CreateCommandList(GLGraphicsBase.CommandListUsage.DialogForeground);
-                var numItems = Math.Min(items.Length, MaxItemsInList);
                 var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
                 var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
-                cf.PushTranslation(0, defaultHeight);
-                cf.FillAndDrawRectangle(0, 0, width - 1, numItems * defaultHeight - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+                cf.PushTranslation(0, rowHeight);
+                cf.FillAndDrawRectangle(0, 0, width - 1, numItemsInList * rowHeight - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
 
-                for (int i = 0; i < numItems; i++)
+                for (int i = 0; i < numItemsInList; i++)
                 {
-                    cf.DrawText(items[i + listScroll], ThemeResources.FontMedium, margin, i * defaultHeight, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - margin - actualScrollBarWidth, defaultHeight);
+                    var absItemIndex = i + listScroll;
+                    if (absItemIndex == selectedIndex || absItemIndex == listHover)
+                        cf.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? ThemeResources.DarkGreyFillBrush1 : ThemeResources.DarkGreyLineBrush3);
+                    cf.DrawText(items[absItemIndex], ThemeResources.FontMedium, margin, i * rowHeight, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
                 }
 
                 if (hasScrollBar)
                 {
-                    cf.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * defaultHeight - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    cf.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * rowHeight - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
                     cf.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
                 }
 
