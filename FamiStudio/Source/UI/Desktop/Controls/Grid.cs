@@ -363,9 +363,6 @@ namespace FamiStudio
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
-            // BG
-            c.FillRectangle(0, 0, width, height, ThemeResources.DarkGreyLineBrush1);
-
             // Grid lines
             c.DrawLine(0, 0, width, 0, ThemeResources.BlackBrush);
             for (var i = numHeaderRows + 1; i < numRows; i++)
@@ -374,7 +371,9 @@ namespace FamiStudio
                 c.DrawLine(columnOffsets[j], 0, columnOffsets[j], height, ThemeResources.BlackBrush);
             if (numHeaderRows != 0)
                 c.DrawLine(0, rowHeight, width - 1, rowHeight, ThemeResources.LightGreyFillBrush1);
-            c.DrawRectangle(0, 0, width - 1, height - 1, ThemeResources.LightGreyFillBrush1);
+
+            // BG
+            c.FillAndDrawRectangle(0, 0, width - 1, height, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
 
             var baseY = 0;
 
@@ -426,8 +425,8 @@ namespace FamiStudio
                                 var buttonBaseX = colWidth - rowHeight;
                                 c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, rowHeight);
                                 c.PushTranslation(buttonBaseX, 0);
-                                c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight - 1, hoverRow == k && hoverCol == j && hoverButton ? ThemeResources.LightRedFillBrush : ThemeResources.DarkRedFillBrush, ThemeResources.LightGreyFillBrush1);
-                                c.DrawText("...", ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, rowHeight, rowHeight);
+                                c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? ThemeResources.MediumGreyFillBrush1 : ThemeResources.DarkGreyLineBrush3, ThemeResources.LightGreyFillBrush1);
+                                c.DrawText("...", ThemeResources.FontMediumBold, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, rowHeight, rowHeight);
                                 c.PopTransform();
                                 break;
                             }
@@ -460,12 +459,9 @@ namespace FamiStudio
 
                 if (hasScrollBar)
                 {
-                    //c.FillAndDrawRectangle(width - scrollBarWidth, rowHeight, width - 1, rowHeight + numItemRows * rowHeight - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
-                    //c.FillAndDrawRectangle(width - scrollBarWidth, rowHeight + scrollBarPos, width - 1, rowHeight + scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
-
-                    c.PushTranslation(width - scrollBarWidth, numHeaderRows * rowHeight);
-                    c.FillAndDrawRectangle(0, 0, scrollBarWidth - 1, rowHeight * numItemRows - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
-                    c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth - 1, scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    c.PushTranslation(width - scrollBarWidth - 1, numHeaderRows * rowHeight);
+                    c.FillAndDrawRectangle(0, 0, scrollBarWidth, rowHeight * numItemRows, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth, scrollBarPos + scrollBarSize, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
                     c.PopTransform();
                 }
             }
