@@ -460,8 +460,13 @@ namespace FamiStudio
 
                 if (hasScrollBar)
                 {
-                    c.FillAndDrawRectangle(width - scrollBarWidth, rowHeight, width - 1, rowHeight + numItemRows * rowHeight - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
-                    c.FillAndDrawRectangle(width - scrollBarWidth, rowHeight + scrollBarPos, width - 1, rowHeight + scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    //c.FillAndDrawRectangle(width - scrollBarWidth, rowHeight, width - 1, rowHeight + numItemRows * rowHeight - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    //c.FillAndDrawRectangle(width - scrollBarWidth, rowHeight + scrollBarPos, width - 1, rowHeight + scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+
+                    c.PushTranslation(width - scrollBarWidth, numHeaderRows * rowHeight);
+                    c.FillAndDrawRectangle(0, 0, scrollBarWidth - 1, rowHeight * numItemRows - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth - 1, scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    c.PopTransform();
                 }
             }
         }
