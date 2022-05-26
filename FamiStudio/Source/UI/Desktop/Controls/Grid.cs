@@ -92,7 +92,7 @@ namespace FamiStudio
             if (dropDownRow >= 0 && dropDownCol >= 0 && dropDownActive.Visible)
             {
                 data[dropDownRow, dropDownCol] = dropDownActive.Text;
-                ValueChanged?.Invoke(this, sliderRow, sliderCol, dropDownActive.Text);
+                ValueChanged?.Invoke(this, dropDownRow, dropDownCol, dropDownActive.Text);
                 MarkDirty();
             }
         }
