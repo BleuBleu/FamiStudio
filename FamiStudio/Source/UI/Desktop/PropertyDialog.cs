@@ -145,13 +145,16 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if (e.KeyCode == Keys.Return)
+            if (!e.Handled)
             {
-                Close(DialogResult.OK);
-            }
-            else if (e.KeyCode == Keys.Escape)
-            {
-                Close(DialogResult.Cancel);
+                if (e.KeyCode == Keys.Return)
+                {
+                    Close(DialogResult.OK);
+                }
+                else if (e.KeyCode == Keys.Escape)
+                {
+                    Close(DialogResult.Cancel);
+                }
             }
         }
 

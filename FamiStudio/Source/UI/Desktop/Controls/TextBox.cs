@@ -100,6 +100,11 @@ namespace FamiStudio
             {
 
             }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                ClearDialogFocus();
+                e.Handled = true;
+            }
         }
 
         private void EnsureCaretVisible()

@@ -293,7 +293,7 @@ namespace FamiStudio
         {
         }
 
-        private Grid2 CreateCheckedListBox(string[] values, bool[] selected, string tooltip = null, int height = 200)
+        private Grid2 CreateCheckedListBox(string[] values, bool[] selected, string tooltip = null, int numRows = 7)
         {
             var columns = new[]
             {
@@ -301,7 +301,7 @@ namespace FamiStudio
                 new ColumnDesc("B", 1.0f, ColumnType.Label)
             };
 
-            var list = new Grid2(columns, height, false); 
+            var grid = new Grid2(columns, numRows, false); 
             var data = new object[values.Length, 2];
 
             for (int i = 0; i < values.Length; i++)
@@ -310,21 +310,17 @@ namespace FamiStudio
                 data[i, 1] = values[i];
             }
 
-            list.UpdateData(data);
-
-            //list.Font = font;
-            //list.Height = DpiScaling.ScaleForMainWindow(height);
-            //list.HeaderStyle = ColumnHeaderStyle.None;
-            //list.ValueChanged += CheckedListBox_ValueChanged;
+            grid.UpdateData(data);
+            grid.ValueChanged += Grid_ValueChanged1;
             //toolTip.SetToolTip(list, SplitLongTooltip(tooltip));
 
-            return list;
+            return grid;
         }
 
-        private void CheckedListBox_ValueChanged(object sender, int itemIndex, int columnIndex, object value)
+        private void Grid_ValueChanged1(RenderControl sender, int rowIndex, int colIndex, object value)
         {
-            //var propIdx = GetPropertyIndexForControl(sender as Control);
-            //PropertyChanged?.Invoke(this, propIdx, itemIndex, columnIndex, value);
+            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
         }
 
         private Button2 CreateButton(string text, string tooltip)
@@ -556,14 +552,14 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int height = 200)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.CheckBoxList,
                     label = label != null ? CreateLabel(label) : null,
-                    control = CreateCheckedListBox(values, selected, tooltip, height)
+                    control = CreateCheckedListBox(values, selected, tooltip, numRows)
                 });
             return properties.Count - 1;
         }
@@ -609,34 +605,34 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private Grid2 CreateGrid(ColumnDesc[] columnDescs, object[,] data, int height = 140)
+        private Grid2 CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)
         {
-            var list = new Grid2(columnDescs, height, true);
+            var grid = new Grid2(columnDescs, numRows, true);
 
             if (data != null)
-                list.UpdateData(data);
+                grid.UpdateData(data);
 
-            //list.Font = font;
-            //list.Height = DpiScaling.ScaleForMainWindow(height);
+            grid.ValueChanged += Grid_ValueChanged;
+            grid.ButtonPressed += Grid_ButtonPressed;
+            // MATTT
             //list.MouseDoubleClick += ListView_MouseDoubleClick;
             //list.MouseDown += ListView_MouseDown;
-            //list.ButtonPressed += ListView_ButtonPressed;
-            //list.ValueChanged += ListView_ValueChanged;
 
-            return list;
+            return grid;
         }
 
-        private void ListView_ButtonPressed(object sender, int itemIndex, int columnIndex)
+        private void Grid_ButtonPressed(RenderControl sender, int rowIndex, int colIndex)
         {
-            //var propIdx = GetPropertyIndexForControl(sender as Control);
-            //PropertyClicked?.Invoke(this, ClickType.Button, propIdx, itemIndex, columnIndex);
+            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            PropertyClicked?.Invoke(this, ClickType.Button, propIdx, rowIndex, colIndex);
         }
 
-        private void ListView_ValueChanged(object sender, int itemIndex, int columnIndex, object value)
+        private void Grid_ValueChanged(RenderControl sender, int rowIndex, int colIndex, object value)
         {
-            //var propIdx = GetPropertyIndexForControl(sender as Control);
-            //PropertyChanged?.Invoke(this, propIdx, itemIndex, columnIndex, value);
+            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
         }
+
 
         private void ListView_MouseDown(object sender, MouseEventArgs e)
         {
@@ -676,13 +672,13 @@ namespace FamiStudio
             //listView.SetColumnEnabled(colIdx, enabled);
         }
 
-        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int height = 140)
+        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Grid,
-                    control = CreateGrid(columnDescs, data, height)
+                    control = CreateGrid(columnDescs, data, numRows)
                 });
         }
 

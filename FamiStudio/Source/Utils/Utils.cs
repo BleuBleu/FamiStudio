@@ -32,6 +32,11 @@ namespace FamiStudio
             return val;
         }
 
+        public static float Saturate(float val)
+        {
+            return Clamp(val, 0.0f, 1.0f);
+        }
+
         public static float Lerp(float v0, float v1, float alpha)
         {
             return v0 * (1.0f - alpha) + v1 * alpha;

@@ -19,7 +19,10 @@ namespace FamiStudio
         private const int MaxItemsInList = 10;
 
         public delegate void SelectedIndexChangedDelegate(RenderControl sender, int index);
+        public delegate void ListClosingDelegate(RenderControl sender);
+
         public event SelectedIndexChangedDelegate SelectedIndexChanged;
+        public event ListClosingDelegate ListClosing;
 
         private GLBitmapAtlasRef bmpArrow;
         private string[] items;
@@ -63,6 +66,11 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
+        }
+
+        public void SetRowHeight(int h)
+        {
+            rowHeight = h;
         }
 
         public void SetItems(string[] newItems)
@@ -117,13 +125,6 @@ namespace FamiStudio
             }
         }
 
-        private void SetListOpened(bool open)
-        {
-            SetAndMarkDirty(ref listOpened, open);
-            height = rowHeight + (listOpened ? Math.Min(items.Length, MaxItemsInList) * rowHeight : 0);
-            listScroll = Math.Min(selectedIndex, maxListScroll);
-        }
-
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (draggingScrollbars)
@@ -132,6 +133,29 @@ namespace FamiStudio
                 Capture = false;
                 MarkDirty();
             }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                SetListOpened(false);
+                ClearDialogFocus();
+                e.Handled = true;
+            }
+        }
+
+        public void SetListOpened(bool open)
+        {
+            if (open != listOpened)
+            {
+                if (listOpened)
+                    ListClosing?.Invoke(this);
+                listOpened = open;
+            }
+
+            height = rowHeight + (listOpened ? Math.Min(items.Length, MaxItemsInList) * rowHeight : 0);
+            listScroll = Math.Min(selectedIndex, maxListScroll);
         }
 
         private void UpdateScrollParams()

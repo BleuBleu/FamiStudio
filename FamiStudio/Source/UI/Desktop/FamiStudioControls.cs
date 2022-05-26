@@ -11,7 +11,7 @@ namespace FamiStudio
         private int height;
         private GLGraphics gfx;
         private GLControl[] controls = new GLControl[4];
-        private Stack<Dialog> dialogs = new Stack<Dialog>();
+        private List<Dialog> dialogs = new List<Dialog>();
         private ThemeRenderResources res;
         private float dialogDimming = 0.0f;
         private DateTime lastRender = DateTime.Now;
@@ -35,7 +35,7 @@ namespace FamiStudio
         public GLGraphics Graphics => gfx;
         public bool IsContextMenuActive => contextMenuVisible;
         public bool IsDialogActive => dialogs.Count > 0;
-        public Dialog TopDialog => dialogs.Peek();
+        public Dialog TopDialog => dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
 
         public GLControl[] Controls => controls;
 
@@ -98,8 +98,7 @@ namespace FamiStudio
             // If there is an active dialog, it also eats all of the input.
             if (dialogs.Count > 0)
             {
-                var dlg = dialogs.Peek();
-                return dlg.GetControlAt(formX, formY, out ctrlX, out ctrlY);
+                return TopDialog.GetControlAt(formX, formY, out ctrlX, out ctrlY);
             }
 
             // Finally, send to one of the main controls.
@@ -150,7 +149,7 @@ namespace FamiStudio
 
             if (dialogs.Count > 0)
             {
-                dialogs.Peek().Tick(delta);
+                TopDialog.Tick(delta);
                 newDialogDimming = Math.Min(1.0f, dialogDimming + delta * 6.0f);
             }
             else
@@ -248,13 +247,13 @@ namespace FamiStudio
 
         public void PushDialog(Dialog dialog)
         {
-            dialogs.Push(dialog);
+            dialogs.Add(dialog);
         }
 
         public void PopDialog(Dialog dialog)
         {
-            Debug.Assert(dialogs.Peek() == dialog);
-            dialogs.Pop();
+            Debug.Assert(TopDialog == dialog);
+            dialogs.RemoveAt(dialogs.Count - 1);
         }
 
         public void InitializeGL()

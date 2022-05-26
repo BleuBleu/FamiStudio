@@ -32,6 +32,7 @@ namespace FamiStudio
                     focusedControl.LostDialogFocus();
 
                 focusedControl = value;
+                MarkDirty();
             }
         }
 
@@ -62,12 +63,12 @@ namespace FamiStudio
         {
             if (!controls.Contains(ctrl))
             {
+                controls.Add(ctrl);
                 ctrl.ParentForm = ParentForm;
                 ctrl.ParentDialog = this;
                 ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
                 ctrl.SetThemeRenderResource(ThemeResources);
                 ctrl.RenderInitialized(ParentForm.Graphics);
-                controls.Add(ctrl);
             }
         }
 

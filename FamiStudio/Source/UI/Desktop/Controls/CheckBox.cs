@@ -35,7 +35,6 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
-            // MATTT : Different icon?
             bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
             bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
         }

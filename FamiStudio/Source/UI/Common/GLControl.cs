@@ -103,6 +103,7 @@ namespace FamiStudio
         public bool IsRenderInitialized => themeRes != null;
         public bool HasDialogFocus => parentDialog != null && parentDialog.FocusedControl == this;
         public void GrabDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = this; }
+        public void ClearDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = null; }
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public float MainWindowScaling => mainWindowScaling;
         public float FontScaling => fontScaling;

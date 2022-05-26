@@ -34,7 +34,7 @@ namespace FamiStudio
                 dialog.Properties.AddNumericUpDown("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 1
                 dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 2
                 dialog.Properties.AddCheckBox("Create PAL project:", false); // 3
-                dialog.Properties.AddCheckBoxList("Expansions :", expNames, new bool[expNames.Length], null, 150); // 4
+                dialog.Properties.AddCheckBoxList("Expansions :", expNames, new bool[expNames.Length], null); // 4
                 dialog.Properties.AddLabel(null, "Channel mapping:"); // 5
                 dialog.Properties.AddGrid(new[] { new ColumnDesc("NES Channel", 0.25f), new ColumnDesc("MIDI Source", 0.45f, GetSourceNames()), new ColumnDesc("Channel 10 Keys", 0.3f, ColumnType.Button) }, null); // 6
                 dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, only blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
