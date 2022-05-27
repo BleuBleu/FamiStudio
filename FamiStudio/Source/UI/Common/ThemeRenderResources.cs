@@ -103,7 +103,7 @@ namespace FamiStudio
             lightGreyFillBrush2  = g.CreateSolidBrush(Theme.LightGreyFillColor2);
             mediumGreyFillBrush1 = g.CreateSolidBrush(Theme.MediumGreyFillColor1);
             mediumGreyFillBrush2 = g.CreateSolidBrush(Theme.MediumGreyFillColor2);
-            darkGreyLineBrush1 = g.CreateSolidBrush(Theme.DarkGreyLineColor1);
+            darkGreyLineBrush1   = g.CreateSolidBrush(Theme.DarkGreyLineColor1);
             darkGreyLineBrush2   = g.CreateSolidBrush(Theme.DarkGreyLineColor2);
             darkGreyLineBrush3   = g.CreateSolidBrush(Theme.DarkGreyLineColor3);
             darkGreyFillBrush1   = g.CreateSolidBrush(Theme.DarkGreyFillColor1);

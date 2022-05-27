@@ -60,23 +60,22 @@ namespace FamiStudio
             buttonYes = new Button2("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
+            buttonYes.ToolTip = "Accept";
 
             buttonNo = new Button2("No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
+            buttonNo.ToolTip = "Cancel";
 
             buttonAdvanced = new Button2("PlusSmall", null);
             buttonAdvanced.Click += ButtonAdvanced_Click;
             buttonAdvanced.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
             buttonAdvanced.Visible = false;
+            buttonAdvanced.ToolTip = "Toggle Advanced Options";
 
             AddControl(buttonYes);
             AddControl(buttonNo);
             AddControl(buttonAdvanced);
-
-            //toolTip.SetToolTip(buttonYes, "Accept");
-            //toolTip.SetToolTip(buttonNo, "Cancel");
-            //toolTip.SetToolTip(buttonAdvanced, "Toggle Advanced Options");
         }
 
         private void PropertyPage_PropertyWantsClose(int idx)
@@ -157,21 +156,5 @@ namespace FamiStudio
                 }
             }
         }
-
-        //public void UpdateModalEvents()
-        //{
-        //    if (Visible)
-        //        Application.DoEvents();
-        //}
-
-        //public void ShowModal(FamiStudioForm form)
-        //{
-        //    form.Enabled = false;
-        //    Show(form);
-        //}
-
-        //public void StayModalUntilClosed()
-        //{
-        //}
     }
 }

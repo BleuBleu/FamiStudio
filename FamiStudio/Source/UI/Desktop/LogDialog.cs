@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace FamiStudio
 {
-    class LogDialog : ILogOutput
+    class LogDialog : Dialog, ILogOutput
     {
         private PropertyDialog dialog;
         private FamiStudioForm parentForm;
@@ -14,26 +14,20 @@ namespace FamiStudio
         {
             this.parentForm = parentForm;
 
-            // MATTT
-            //dialog = new PropertyDialog("Log", 800, false);
-            //dialog.Properties.AddMultilineTextBox(null, ""); // 0
-            //dialog.Properties.Build();
+            dialog = new PropertyDialog("Log", 800, false);
+            dialog.Properties.AddLogTextBox(null); // 0
+            dialog.Properties.Build();
         }
 
-        public DialogResult ShowDialog()
-        {
-            return DialogResult.OK; // MATTT dialog.ShowDialog(parentForm);
-        }
-
-        public DialogResult ShowDialogIfMessages()
+        public void ShowDialogIfMessages()
         {
             if (HasMessages)
             {
-                dialog.Properties.AppendText(0, string.Join("\r\n", messages));
-                return ShowDialog();
-            }
+                foreach (var msg in messages)
+                    dialog.Properties.AppendText(0, msg);
 
-            return DialogResult.Cancel;
+                ShowDialogAsync(null, (r) => { });
+            }
         }
 
         public void LogMessage(string msg)
@@ -42,11 +36,11 @@ namespace FamiStudio
         }
 
         public bool HasMessages => messages.Count > 0;
-        public bool AbortOperation => false; // MATTT dialog.DialogResult != DialogResult.None;
+        public bool AbortOperation =>  dialog.DialogResult != DialogResult.None;
         public void ReportProgress(float progress) { }
     }
 
-    class LogProgressDialog : ILogOutput
+    class LogProgressDialog : Dialog, ILogOutput
     {
         private PropertyDialog dialog;
         private FamiStudioForm parentForm;
@@ -57,41 +51,28 @@ namespace FamiStudio
             this.parentForm = parentForm;
 
             dialog = new PropertyDialog("Log", 800, false);
-            dialog.Properties.AddMultilineTextBox(null, ""); // 0
+            dialog.Properties.AddLogTextBox(null); // 0
             dialog.Properties.AddProgressBar(null); // 1
             dialog.Properties.Build();
         }
 
         public void LogMessage(string msg)
         {
-            // MATTT
-            //dialog.UpdateModalEvents();
+            if (AbortOperation)
+                return;
 
-            //if (AbortOperation)
-            //    return;
-
-            //hasMessages = true;
-            //if (!dialog.Visible)
-            //    dialog.ShowModal(parentForm);
-            //dialog.Properties.AppendText(0, msg);
-            //dialog.UpdateModalEvents();
+            hasMessages = true;
+            if (!dialog.Visible)
+                dialog.ShowDialogAsync(null, (r) => { });
+            dialog.Properties.AppendText(0, msg);
         }
 
         public void ReportProgress(float progress)
         {
-            // MATTT
-            //dialog.UpdateModalEvents();
+            if (AbortOperation)
+                return;
 
-            //if (AbortOperation)
-            //    return;
-
-            //dialog.Properties.SetPropertyValue(1, progress);
-            //dialog.UpdateModalEvents();
-        }
-
-        public void StayModalUntilClosed()
-        {
-            // MATTT dialog.StayModalUntilClosed();
+            dialog.Properties.SetPropertyValue(1, progress);
         }
 
         public void Close()
@@ -99,6 +80,6 @@ namespace FamiStudio
         }
 
         public bool HasMessages => hasMessages;
-        public bool AbortOperation => false; // MATTT dialog.DialogResult != DialogResult.None;
+        public bool AbortOperation => dialog.DialogResult != DialogResult.None;
     }
 }

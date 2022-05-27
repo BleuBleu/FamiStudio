@@ -1,6 +1,10 @@
 3.3.1
 =====
 - Include Demo instruments!!
+- Crash tempo?
+- Crash github
+- Warning EPSM ROM from twitter.
+- Threading issue ComputeNumberOfFrameForGroove needs a lock.
 
 4.0.0
 =====

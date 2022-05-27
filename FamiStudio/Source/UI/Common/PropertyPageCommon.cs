@@ -39,7 +39,7 @@ namespace FamiStudio
         Label,
         LinkLabel,
         Button,
-        MultilineTextBox,
+        LogTextBox,
         ProgressBar,
         Radio,
         RadioList

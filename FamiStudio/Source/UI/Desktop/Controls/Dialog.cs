@@ -21,6 +21,7 @@ namespace FamiStudio
         private List<RenderControl> controls = new List<RenderControl>();
         private RenderControl focusedControl;
         private Action<DialogResult> callback;
+        private DialogResult result = DialogResult.None;
         private float tooltipTimer;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForMainWindow(2);
@@ -32,6 +33,7 @@ namespace FamiStudio
 
         public RenderCommandList CommandList => commandList;
         public RenderCommandList CommandListForeground => commandListForeground;
+        public DialogResult DialogResult => result;
 
         public IReadOnlyCollection<RenderControl> Controls => controls.AsReadOnly();
 
@@ -53,20 +55,24 @@ namespace FamiStudio
 
         public Dialog()
         {
+            visible = false;
             // MATTT: Add the form to the constructor eventually.
             FamiStudioForm.Instance.InitDialog(this);
         }
 
-        public void ShowDialogAsync(object parent, Action<DialogResult> cb)
+        public void ShowDialogAsync(object parent, Action<DialogResult> cb) // MATTT : Remove parent, pass in contructor.
         {
+            visible = true;
             callback = cb;
             OnShowDialog();
             FamiStudioForm.Instance.PushDialog(this);
         }
 
-        public void Close(DialogResult result)
+        public void Close(DialogResult res)
         {
             FamiStudioForm.Instance.PopDialog(this);
+            result = res;
+            visible = false;
             callback(result);
         }
 

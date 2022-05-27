@@ -252,7 +252,7 @@ namespace FamiStudio
 
         int lastButtonX = 500;
         bool redTooltip = false;
-        string tooltip = "";
+        new string tooltip = "";
         RenderFont timeCodeFont;
         RenderBitmapAtlasRef[] bmpSpecialCharacters;
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();

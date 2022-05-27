@@ -147,30 +147,10 @@ namespace FamiStudio
             }
         }
 
-        private TextBox CreateMultilineTextBox(string txt)
+        private LogTextBox2 CreateLogTextBox()
         {
-            var textBox = new TextBox();
-
-            //textBox.Font = new Font(PlatformUtils.PrivateFontCollection.Families[0], 8.0f, FontStyle.Regular);
-            //textBox.Text = txt;
-            //textBox.BackColor = Theme.DarkGreyFillColor1;
-            //textBox.BorderStyle = BorderStyle.FixedSingle;
-            //textBox.ForeColor = Theme.LightGreyFillColor2;
-            //textBox.Location = new Point(5, 5);
-            //textBox.Multiline = true;
-            //textBox.ReadOnly = true;
-            //textBox.Height = DpiScaling.ScaleForMainWindow(300);
-            //textBox.ScrollBars = ScrollBars.Vertical;
-            //textBox.Select(0, 0);
-            //textBox.GotFocus += TextBox_GotFocus;
-
-            return textBox;
+            return new LogTextBox2(15);
         }
-
-        //private void TextBox_GotFocus(object sender, EventArgs e)
-        //{
-        //    HideCaret((sender as TextBox).Handle);
-        //}
 
         private ColorPicker2 CreateColorPicker(Color color)
         {
@@ -349,15 +329,15 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddMultilineTextBox(string label, string value)
+        public int AddLogTextBox(string label)
         {
-            //properties.Add(
-            //    new Property()
-            //    {
-            //        type = PropertyType.MultilineTextBox,
-            //        label = label != null ? CreateLabel(label) : null,
-            //        control = CreateMultilineTextBox(value)
-            //    });
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.LogTextBox,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateLogTextBox()
+                });
             return properties.Count - 1;
         }
 
@@ -651,12 +631,8 @@ namespace FamiStudio
 
         public void AppendText(int idx, string line)
         {
-            //var textBox = properties[idx].control as TextBox;
-            //textBox.AppendText(line + "\r\n");
-            //textBox.SelectionStart = textBox.Text.Length - 1;
-            //textBox.SelectionLength = 0;
-            //textBox.ScrollToCaret();
-            //textBox.Focus();
+            var textBox = properties[idx].control as LogTextBox2;
+            textBox.AddLine(line);
         }
 
         public void BeginAdvancedProperties()
@@ -686,7 +662,7 @@ namespace FamiStudio
             {
                 case PropertyType.TextBox:
                 case PropertyType.ColoredTextBox:
-                case PropertyType.MultilineTextBox:
+                case PropertyType.LogTextBox:
                     ForceTextBoxASCII(prop.control as TextBox2);
                     return (prop.control as TextBox2).Text;
                 case PropertyType.NumericUpDown:
@@ -723,12 +699,10 @@ namespace FamiStudio
 
         public T GetPropertyValue<T>(int idx, int rowIdx, int colIdx)
         {
-            //var prop = properties[idx];
-            //Debug.Assert(prop.type == PropertyType.Grid);
-            //var list = prop.control as PropertyPageListView;
-            //return (T)list.GetData(rowIdx, colIdx);
-
-            return default(T);
+            var prop = properties[idx];
+            Debug.Assert(prop.type == PropertyType.Grid);
+            var grid = prop.control as Grid2;
+            return (T)grid.GetData(rowIdx, colIdx);
         }
 
         public int GetSelectedIndex(int idx)
@@ -756,7 +730,7 @@ namespace FamiStudio
                 case PropertyType.Button:
                     (prop.control as Button2).Text = (string)value;
                     break;
-                case PropertyType.MultilineTextBox:
+                case PropertyType.LogTextBox:
                     (prop.control as TextBox2).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:

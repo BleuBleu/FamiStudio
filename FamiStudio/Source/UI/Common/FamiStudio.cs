@@ -441,9 +441,7 @@ namespace FamiStudio
                     Log.ReportProgress(1.0f);
                 }
 
-                if (PlatformUtils.IsDesktop)
-                    progressLogDialog.StayModalUntilClosed();
-                else
+                if (PlatformUtils.IsMobile)
                     progressLogDialog.Close();
 
                 progressLogDialog = null;

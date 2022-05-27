@@ -20,7 +20,7 @@ namespace FamiStudio
 
         public ProgressBar2()
         {
-            height = DpiScaling.ScaleForMainWindow(12);
+            height = DpiScaling.ScaleForMainWindow(10);
         }
 
         public float Progress
@@ -41,7 +41,7 @@ namespace FamiStudio
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
             if (visibleProgress > 0.0f)
-                c.FillAndDrawRectangle(0, 0, (visibleProgress * width) - 1, height - 1, ThemeResources.DarkGreyFillBrush2, ThemeResources.LightGreyFillBrush1);
+                c.FillAndDrawRectangle(0, 0, (visibleProgress * width) - 1, height - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
         }
     }
 }

@@ -193,6 +193,7 @@
     <Compile Include="Source\UI\Desktop\Controls\ImageBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Label.cs" />
     <Compile Include="Source\UI\Desktop\Controls\LinkLabel.cs" />
+    <Compile Include="Source\UI\Desktop\Controls\LogTextBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\NumericUpDown.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ProgressBar.cs" />
     <Compile Include="Source\UI\Desktop\Controls\RadioButton.cs" />
