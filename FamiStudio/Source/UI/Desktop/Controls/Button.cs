@@ -96,7 +96,7 @@ namespace FamiStudio
                 Debug.Assert(bmp != null);
             }
 
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
 
             if (border || press || hover)

@@ -138,7 +138,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
             var rects = new []
             {
                 GetButtonRect(0),

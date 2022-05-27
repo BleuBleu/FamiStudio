@@ -65,7 +65,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
             var bmpSize = bmpCheckOn.ElementSize;
             var baseY = (height - bmpSize.Height) / 2;
 

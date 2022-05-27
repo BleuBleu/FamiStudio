@@ -151,6 +151,12 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(RenderGraphics g)
         {
+            bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
+            bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
+        }
+
+        protected override void OnAddedToDialog()
+        {
             UpdateLayout();
 
             if (hasAnyDropDowns)
@@ -158,9 +164,6 @@ namespace FamiStudio
                 parentDialog.AddControl(dropDownInactive);
                 parentDialog.AddControl(dropDownActive);
             }
-
-            bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
-            bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
         }
 
         private bool PixelToCell(int x, int y, out int row, out int col)
@@ -382,7 +385,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 

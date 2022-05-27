@@ -17,7 +17,13 @@ namespace FamiStudio
         private List<RenderControl> controls = new List<RenderControl>();
         private RenderControl focusedControl;
         private Action<DialogResult> callback;
-        
+
+        private RenderCommandList commandList;
+        private RenderCommandList commandListForeground;
+
+        public RenderCommandList CommandList => commandList;
+        public RenderCommandList CommandListForeground => commandListForeground;
+
         public IReadOnlyCollection<RenderControl> Controls => controls.AsReadOnly();
 
         public RenderControl FocusedControl
@@ -68,7 +74,8 @@ namespace FamiStudio
                 ctrl.ParentDialog = this;
                 ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
                 ctrl.SetThemeRenderResource(ThemeResources);
-                ctrl.RenderInitialized(ParentForm.Graphics);
+                ctrl.RenderInitialized(ParentForm.Graphics); 
+                ctrl.AddedToDialog();
             }
         }
 
@@ -143,11 +150,11 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            g.BeginDrawDialog();
+            commandList = g.CreateCommandList();
+            commandListForeground = g.CreateCommandList();
 
             // Fill + Border
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
-            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
+            commandList.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
 
             // Render child controls
             foreach (var ctrl in controls)
@@ -161,7 +168,11 @@ namespace FamiStudio
                 }
             }
 
-            g.EndDrawDialog(Theme.DarkGreyFillColor1, Rectangle);
+            g.DrawCommandList(commandList, Rectangle);
+            g.DrawCommandList(commandListForeground);
+
+            commandList = null;
+            commandListForeground = null;
         }
     }
 }

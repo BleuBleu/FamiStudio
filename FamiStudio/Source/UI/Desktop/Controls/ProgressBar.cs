@@ -37,7 +37,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
             if (visibleProgress > 0.0f)

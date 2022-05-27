@@ -12,8 +12,6 @@ using System;
 
 namespace FamiStudio
 {
-    // MATTT : Focus management
-    // MATTT : Escape to close (when focus is done)
     public class DropDown2 : RenderControl
     {
         private const int MaxItemsInList = 10;
@@ -240,7 +238,7 @@ namespace FamiStudio
         protected override void OnRender(RenderGraphics g)
         {
             var bmpSize = bmpArrow.ElementSize;
-            var cb = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var cb = parentDialog.CommandList;
 
             if (!transparent)
                 cb.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover ? ThemeResources.DarkGreyLineBrush3 : ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
@@ -252,7 +250,7 @@ namespace FamiStudio
 
             if (listOpened)
             {
-                var cf = g.CreateCommandList(GLGraphicsBase.CommandListUsage.DialogForeground);
+                var cf = parentDialog.CommandListForeground;
                 var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
                 var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 

@@ -57,6 +57,7 @@ namespace FamiStudio
         protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
         protected virtual void OnLostDialogFocus() { }
         protected virtual void OnVisibleChanged() { }
+        protected virtual void OnAddedToDialog() { }
         public virtual bool WantsFullScreenViewport => false;
         public virtual void Tick(float delta) { }
 
@@ -84,6 +85,7 @@ namespace FamiStudio
         public void TouchScaleEnd(int x, int y) { OnTouchScaleEnd(x, y); }
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void LostDialogFocus() { OnLostDialogFocus(); }
+        public void AddedToDialog() { OnAddedToDialog(); }
 
         public System.Drawing.Point ClientToParent(System.Drawing.Point p) { return PointToClient(PointToScreen(p)); }
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }

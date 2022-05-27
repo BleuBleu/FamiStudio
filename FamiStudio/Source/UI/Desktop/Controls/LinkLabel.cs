@@ -46,7 +46,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
             var sx = MeasureString();
             var brush = hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1;
 

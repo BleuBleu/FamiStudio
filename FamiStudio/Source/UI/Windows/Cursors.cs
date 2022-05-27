@@ -15,6 +15,7 @@ namespace FamiStudio
         public static Cursor DragCursor = System.Windows.Forms.Cursors.Default;
         public static Cursor CopyCursor = System.Windows.Forms.Cursors.Default;
         public static Cursor Eyedrop    = System.Windows.Forms.Cursors.Default;
+        public static Cursor IBeam      = System.Windows.Forms.Cursors.IBeam;
 
         private static IntPtr OleLibrary;
         private static IntPtr DragCursorHandle;

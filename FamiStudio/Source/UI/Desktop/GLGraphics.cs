@@ -12,6 +12,7 @@ using Bitmap = System.Drawing.Bitmap;
 using Bitmap = Gdk.Pixbuf;
 #endif
 
+// MATTT : Make sure we call TerminateGraphics.
 namespace FamiStudio
 {
     public class GLGraphics : GLGraphicsBase
@@ -132,29 +133,10 @@ namespace FamiStudio
             return bmp.Size.Width;
         }
 
-        public void BeginDrawDialog()
-        {
-            dialogCommandList = CreateCommandList(CommandListUsage.Default);
-            dialogCommandListForeground = CreateCommandList(CommandListUsage.Default);
-        }
 
-        public void EndDrawDialog(System.Drawing.Color clearColor, Rectangle dialogRect)
+        public override GLCommandList CreateCommandList()
         {
-            DrawCommandList(dialogCommandList, dialogRect);
-            DrawCommandList(dialogCommandListForeground);
-        }
-
-        public override GLCommandList CreateCommandList(CommandListUsage usage = CommandListUsage.Default)
-        {
-            switch (usage)
-            {
-                case CommandListUsage.Dialog:
-                    return dialogCommandList;
-                case CommandListUsage.DialogForeground:
-                    return dialogCommandListForeground;
-                default:
-                    return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, supportsLineWidth);
-            }
+            return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, supportsLineWidth);
         }
 
         public unsafe override void DrawCommandList(GLCommandList list, Rectangle scissor)

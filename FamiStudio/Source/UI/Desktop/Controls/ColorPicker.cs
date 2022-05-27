@@ -62,7 +62,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
 
             var numColorsX = Theme.CustomColors.GetLength(0);
             var numColorsY = Theme.CustomColors.GetLength(1);

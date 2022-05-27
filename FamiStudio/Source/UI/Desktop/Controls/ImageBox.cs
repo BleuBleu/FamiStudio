@@ -36,7 +36,7 @@ namespace FamiStudio
                 Debug.Assert(bmp != null);
             }
 
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
             c.DrawBitmapAtlasCentered(bmp, 0, 0, width, height);
         }
     }

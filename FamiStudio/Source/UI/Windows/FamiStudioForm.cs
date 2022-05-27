@@ -34,7 +34,7 @@ namespace FamiStudio
         public GLGraphics Graphics => controls.Graphics;
 
         public bool IsLandscape => true;
-        public bool IsAsyncDialogInProgress => false;
+        public bool IsAsyncDialogInProgress => controls.IsDialogActive;
         public bool MobilePianoVisible { get => false; set => value = false; }
 
         private GLControl activeControl = null;
@@ -128,7 +128,9 @@ namespace FamiStudio
             var tickTime = DateTime.Now;
             var deltaTime = (float)Math.Min(0.25f, (float)(tickTime - lastTickTime).TotalSeconds);
 
-            famistudio.Tick(deltaTime);
+            if (!IsAsyncDialogInProgress)
+                famistudio.Tick(deltaTime);
+            
             controls.Tick(deltaTime);
 
             lastTickTime = tickTime;

@@ -24,14 +24,6 @@ namespace FamiStudio
 {
     public abstract class GLGraphicsBase : IDisposable
     {
-        // MATTT : Get rid of this, move to Dialog.
-        public enum CommandListUsage
-        {
-            Default,
-            Dialog,
-            DialogForeground
-        }
-
         protected struct GradientCacheKey
         {
             public Color color0;
@@ -357,7 +349,7 @@ namespace FamiStudio
             DrawCommandList(list, Rectangle.Empty);
         }
 
-        public virtual GLCommandList CreateCommandList(CommandListUsage usage = CommandListUsage.Default)
+        public virtual GLCommandList CreateCommandList()
         {
             return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, true, maxSmoothLineWidth);
         }

@@ -113,7 +113,7 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
             var thumbRect = GetThumbRectangle();
 
             c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, ThemeResources.DarkGreyLineBrush1, ScaleForMainWindow(3));

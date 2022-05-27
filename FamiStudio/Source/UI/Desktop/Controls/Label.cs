@@ -78,9 +78,14 @@ namespace FamiStudio
             return ThemeResources.FontMedium.MeasureString(text, false);
         }
 
+        protected override void OnAddedToDialog()
+        {
+            ResizeForMultiline();
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
 
             if (multiline)
             {

@@ -146,9 +146,22 @@ namespace FamiStudio
             return px;
         }
 
+        public void SelectAll()
+        {
+            selectionStart = 0;
+            selectionLength = text.Length;
+            caretIndex = text.Length;
+            MarkDirty();
+        }
+
+        protected override void OnAddedToDialog()
+        {
+            Cursor.Current = Cursors.IBeam;
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
-            var c = g.CreateCommandList(GLGraphicsBase.CommandListUsage.Dialog);
+            var c = parentDialog.CommandList;
 
             // MATTT : Cache those.
             var foreBrush = g.GetSolidBrush(foreColor);

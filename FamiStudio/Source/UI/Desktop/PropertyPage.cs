@@ -904,20 +904,11 @@ namespace FamiStudio
                     dialog.AddControl(prop.control);
                 }
 
-                // Hack for some multi line labels. Ideally we would do that when the 
-                // control is reszed or something.
-                if (prop.type == PropertyType.Label ||
-                    prop.type == PropertyType.Radio)
+                if (prop.type == PropertyType.ColoredTextBox)
                 {
-                    (prop.control as Label2).ResizeForMultiline();
+                    (prop.control as TextBox2).SelectAll();
+                    prop.control.GrabDialogFocus();
                 }
-
-                // MATTT : Focus management.
-                //if (prop.type == PropertyType.ColoredTextBox)
-                //{
-                //    (prop.control as TextBox).SelectAll();
-                //    prop.control.Focus();
-                //}
 
                 height = Math.Max(prop.control.Height, height);
 
