@@ -16,9 +16,13 @@ namespace FamiStudio
     {
         public delegate void ValueChangedDelegate(RenderControl sender, int rowIndex, int colIndex, object value);
         public delegate void ButtonPressedDelegate(RenderControl sender, int rowIndex, int colIndex);
+        public delegate void CellClickedDelegate(RenderControl sender, bool left, int rowIndex, int colIndex);
+        public delegate void CellDoubleClickedDelegate(RenderControl sender, int rowIndex, int colIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
+        public event CellClickedDelegate CellClicked;
+        public event CellDoubleClickedDelegate CellDoubleClicked;
 
         private int scroll;
         private int maxScroll;
@@ -56,7 +60,6 @@ namespace FamiStudio
 
         public int ItemCount => data.GetLength(0);
 
-        // MATTT : Go back to number of rows.
         public Grid2(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
         {
             columns = columnDescs;
@@ -188,6 +191,8 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgsEx e)
         {
+            var valid = PixelToCell(e.X, e.Y, out var row, out var col);
+
             if (e.Button.HasFlag(MouseButtons.Left))
             {
                 MarkDirty();
@@ -218,49 +223,59 @@ namespace FamiStudio
                     }
                     else
                     {
-                        PixelToCell(e.X, e.Y, out var row, out var col);
-                        
-                        var colDesc = columns[col];
+                        if (valid)
+                        { 
+                            var colDesc = columns[col];
 
-                        switch (colDesc.Type)
-                        {
-                            case ColumnType.Button:
+                            switch (colDesc.Type)
                             {
-                                if (IsPointInButton(e.X, row, col))
-                                    ButtonPressed?.Invoke(this, row, col);
-                                break;
-                            }
-                            case ColumnType.CheckBox:
-                            {
-                                data[row, col] = !(bool)data[row, col];
-                                ValueChanged?.Invoke(this, row, col, data[row, col]);
-                                break;
-                            }
-                            case ColumnType.Slider:
-                            {
-                                Capture = true;
-                                draggingSlider = true;
-                                sliderCol = col;
-                                sliderRow = row;
-                                data[row, col] = (int)Math.Round(Utils.Lerp(0, 100, Utils.Saturate((e.X - columnOffsets[col]) / (float)columnWidths[col])));
-                                ValueChanged?.Invoke(this, row, col, data[row, col]);
-                                break;
-                            }
-                            case ColumnType.DropDown:
-                            { 
-                                dropDownActive.Visible = true;
-                                dropDownActive.Move(left + columnOffsets[col], top + (row + numHeaderRows - scroll) * rowHeight, columnWidths[col], rowHeight);
-                                dropDownActive.SetItems(colDesc.DropDownValues);
-                                dropDownActive.SelectedIndex = Array.IndexOf(colDesc.DropDownValues,(string)data[row, col]);
-                                dropDownActive.SetListOpened(true);
-                                dropDownActive.GrabDialogFocus();
-                                dropDownRow = row;
-                                dropDownCol = col;
-                                break;
+                                case ColumnType.Button:
+                                {
+                                    if (IsPointInButton(e.X, row, col))
+                                        ButtonPressed?.Invoke(this, row, col);
+                                    break;
+                                }
+                                case ColumnType.CheckBox:
+                                {
+                                    data[row, col] = !(bool)data[row, col];
+                                    ValueChanged?.Invoke(this, row, col, data[row, col]);
+                                    break;
+                                }
+                                case ColumnType.Slider:
+                                {
+                                    Capture = true;
+                                    draggingSlider = true;
+                                    sliderCol = col;
+                                    sliderRow = row;
+                                    data[row, col] = (int)Math.Round(Utils.Lerp(0, 100, Utils.Saturate((e.X - columnOffsets[col]) / (float)columnWidths[col])));
+                                    ValueChanged?.Invoke(this, row, col, data[row, col]);
+                                    break;
+                                }
+                                case ColumnType.DropDown:
+                                {
+                                    dropDownActive.Visible = true;
+                                    dropDownActive.Move(left + columnOffsets[col], top + (row + numHeaderRows - scroll) * rowHeight, columnWidths[col], rowHeight);
+                                    dropDownActive.SetItems(colDesc.DropDownValues);
+                                    dropDownActive.SelectedIndex = Array.IndexOf(colDesc.DropDownValues, (string)data[row, col]);
+                                    dropDownActive.SetListOpened(true);
+                                    dropDownActive.GrabDialogFocus();
+                                    dropDownRow = row;
+                                    dropDownCol = col;
+                                    break;
+                                }
                             }
                         }
                     }
                 }
+            }
+
+            if (valid)
+            {
+                var left  = e.Button.HasFlag(MouseButtons.Left);
+                var right = e.Button.HasFlag(MouseButtons.Right);
+
+                if (left || right)
+                    CellClicked?.Invoke(this, left, row, col);
             }
         }
 
@@ -334,6 +349,14 @@ namespace FamiStudio
                     dropDownActive.Visible = false;
                     GrabDialogFocus();
                 }
+            }
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Left) && PixelToCell(e.X, e.Y, out var row, out var col))
+            {
+                CellDoubleClicked?.Invoke(this, row, col);
             }
         }
 

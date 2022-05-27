@@ -261,7 +261,7 @@ namespace FamiStudio
                 case ConfigSection.QWERTY:
                 {
                     page.AddLabel(null, "Double click in the 2 last columns to assign a key. Right click to clear a key.", true); // 0
-                    page.AddGrid(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings(), 20); // 1
+                    page.AddGrid(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings(), 14); // 1
                     page.AddButton(null, "Reset to default");
                     page.PropertyClicked += QwertyPage_PropertyClicked;
                     break;

@@ -293,7 +293,7 @@ namespace FamiStudio
         {
         }
 
-        private Grid2 CreateCheckedListBox(string[] values, bool[] selected, string tooltip = null, int numRows = 7)
+        private Grid2 CreateCheckListBox(string[] values, bool[] selected, string tooltip = null, int numRows = 7)
         {
             var columns = new[]
             {
@@ -559,7 +559,7 @@ namespace FamiStudio
                 {
                     type = PropertyType.CheckBoxList,
                     label = label != null ? CreateLabel(label) : null,
-                    control = CreateCheckedListBox(values, selected, tooltip, numRows)
+                    control = CreateCheckListBox(values, selected, tooltip, numRows)
                 });
             return properties.Count - 1;
         }
@@ -614,11 +614,22 @@ namespace FamiStudio
 
             grid.ValueChanged += Grid_ValueChanged;
             grid.ButtonPressed += Grid_ButtonPressed;
-            // MATTT
-            //list.MouseDoubleClick += ListView_MouseDoubleClick;
-            //list.MouseDown += ListView_MouseDown;
+            grid.CellDoubleClicked += Grid_CellDoubleClicked;
+            grid.CellClicked += Grid_CellClicked;
 
             return grid;
+        }
+
+        private void Grid_CellClicked(RenderControl sender, bool left, int rowIndex, int colIndex)
+        {
+            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            PropertyClicked?.Invoke(this, left ? ClickType.Left : ClickType.Right, propIdx, rowIndex, colIndex);
+        }
+
+        private void Grid_CellDoubleClicked(RenderControl sender, int rowIndex, int colIndex)
+        {
+            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            PropertyClicked?.Invoke(this, ClickType.Double, propIdx, rowIndex, colIndex);
         }
 
         private void Grid_ButtonPressed(RenderControl sender, int rowIndex, int colIndex)
@@ -633,38 +644,6 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
         }
 
-
-        private void ListView_MouseDown(object sender, MouseEventArgs e)
-        {
-            //if (e.Button == MouseButtons.Right)
-            //{
-            //    var listView = sender as PropertyPageListView;
-            //    var hitTest = listView.HitTest(e.Location);
-
-            //    if (hitTest.Item != null)
-            //    {
-            //        var propIdx = GetPropertyIndexForControl(sender as Control);
-            //        PropertyClicked?.Invoke(this, ClickType.Right, propIdx, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
-            //    }
-            //}
-        }
-
-        private void ListView_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            //var listView = sender as PropertyPageListView;
-            //var hitTest = listView.HitTest(e.Location);
-
-            //if (hitTest.Item != null)
-            //{
-            //    for (int i = 0; i < properties.Count; i++)
-            //    {
-            //        if (properties[i].control == sender)
-            //        {
-            //            PropertyClicked?.Invoke(this, ClickType.Double, i, hitTest.Item.Index, hitTest.Item.SubItems.IndexOf(hitTest.SubItem));
-            //        }
-            //    }
-            //}
-        }
 
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
