@@ -4057,7 +4057,7 @@ namespace FamiStudio
             dlg.Properties.SetPropertyEnabled(4, project.UsesFamiStudioTempo && !project.UsesAnyExpansionAudio);
             dlg.Properties.SetPropertyEnabled(5, project.UsesExpansionAudio(ExpansionType.N163));
             dlg.Properties.PropertyChanged += ProjectProperties_PropertyChanged;
-            //UpdateProjectPropertiesWarnings(dlg.Properties); MATTT
+            UpdateProjectPropertiesWarnings(dlg.Properties);
             dlg.Properties.Build();
 
             dlg.ShowDialogAsync(ParentForm, (r) =>

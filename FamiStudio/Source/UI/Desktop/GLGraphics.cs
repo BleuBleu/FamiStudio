@@ -93,7 +93,6 @@ namespace FamiStudio
             return id;
         }
 
-        // MATTT : Move to base!
         protected unsafe override int CreateTexture(int[,] bmpData, bool filter)
         {
             fixed (int* ptr = &bmpData[0, 0])
