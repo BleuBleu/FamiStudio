@@ -9,14 +9,23 @@ using RenderGeometry    = FamiStudio.GLGeometry;
 using RenderControl     = FamiStudio.GLControl;
 using RenderGraphics    = FamiStudio.GLGraphics;
 using RenderCommandList = FamiStudio.GLCommandList;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
     public class Dialog : RenderControl
     {
+        const float ToolTipDelay = 0.2f;
+        const int   ToolTipMaxCharsPerLine = 64;
+
         private List<RenderControl> controls = new List<RenderControl>();
         private RenderControl focusedControl;
         private Action<DialogResult> callback;
+        private float tooltipTimer;
+
+        private int tooltipTopMargin  = DpiScaling.ScaleForMainWindow(2);
+        private int tooltipSideMargin = DpiScaling.ScaleForMainWindow(4);
+        private int tooltipOffsetY = DpiScaling.ScaleForMainWindow(24);
 
         private RenderCommandList commandList;
         private RenderCommandList commandListForeground;
@@ -97,6 +106,8 @@ namespace FamiStudio
                     ctrl.Tick(delta);
                 }
             }
+
+            tooltipTimer += delta;
         }
 
         public RenderControl GetControlAtInternal(bool focused, int formX, int formY, out int ctrlX, out int ctrlY)
@@ -135,9 +146,27 @@ namespace FamiStudio
             return this;
         }
 
+        public void DialogMouseDownNotify(GLControl control, System.Windows.Forms.MouseEventArgs e) 
+        {
+            ResetToolTip();
+        }
+
+        public void DialogMouseMoveNotify(GLControl control, System.Windows.Forms.MouseEventArgs e)
+        {
+            ResetToolTip();
+        }
+
+        private void ResetToolTip()
+        {
+            if (tooltipTimer > ToolTipDelay)
+                MarkDirty();
+            tooltipTimer = 0;
+        }
+
         protected override void OnMouseDown(MouseEventArgsEx e)
         {
             FocusedControl = null;
+            ResetToolTip();
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -146,6 +175,38 @@ namespace FamiStudio
             {
                 focusedControl.KeyDown(e);
             }
+        }
+
+        private List<string> SplitLongTooltip(string str)
+        {
+            Debug.Assert(str.Length > ToolTipMaxCharsPerLine);
+
+            var splits = new List<string>();
+
+            if (str.Length > ToolTipMaxCharsPerLine)
+            {
+                var lastIdx = 0;
+
+                for (var i = ToolTipMaxCharsPerLine - 1; i < str.Length;)
+                {
+                    if (str[i] == ' ')
+                    {
+                        splits.Add(str.Substring(lastIdx, i - lastIdx));
+                        lastIdx = i + 1;
+                        i += ToolTipMaxCharsPerLine;
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+            }
+            else
+            {
+                splits.Add(str);
+            }
+
+            return splits;
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -173,6 +234,36 @@ namespace FamiStudio
 
             commandList = null;
             commandListForeground = null;
+
+            if (tooltipTimer > ToolTipDelay)
+            {
+                var pt = PointToClient(Cursor.Position);
+                var formPt = pt + new Size(left, top);
+                var ctrl = GetControlAt(left + pt.X, top + pt.Y, out _, out _);
+
+                if (ctrl != null && !string.IsNullOrEmpty(ctrl.ToolTip))
+                {
+                    var splits = SplitLongTooltip(ctrl.ToolTip);
+                    var sizeX = 0;
+                    var sizeY = ThemeResources.FontMedium.LineHeight * splits.Count + tooltipTopMargin;
+
+                    for (int i = 0; i < splits.Count; i++)
+                        sizeX = Math.Max(sizeX, ThemeResources.FontMedium.MeasureString(splits[i], false));
+
+                    var totalSizeX = sizeX + tooltipSideMargin * 2;
+                    var rightAlign = formPt.X + totalSizeX > ParentForm.Width;
+
+                    var c = g.CreateCommandList();
+                    g.Transform.PushTranslation(pt.X - (rightAlign ? totalSizeX : 0), pt.Y + tooltipOffsetY);
+
+                    for (int i = 0; i < splits.Count; i++)
+                        c.DrawText(splits[i], ThemeResources.FontMedium, tooltipSideMargin, i * ThemeResources.FontMedium.LineHeight + tooltipTopMargin, ThemeResources.LightGreyFillBrush1);
+
+                    c.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+                    g.Transform.PopTransform();
+                    g.DrawCommandList(c);
+                }
+            }
         }
     }
 }

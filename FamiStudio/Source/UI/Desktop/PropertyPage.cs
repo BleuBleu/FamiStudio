@@ -84,15 +84,14 @@ namespace FamiStudio
             Debug.Assert(!string.IsNullOrEmpty(str));
 
             var label = new Label2(str, multiline);
-            //toolTip.SetToolTip(label, SplitLongTooltip(tooltip));
-
+            label.ToolTip = tooltip;
             return label;
         }
 
         private LinkLabel2 CreateLinkLabel(string str, string url, string tooltip = null)
         {
             var label = new LinkLabel2(str, url);
-            //toolTip.SetToolTip(label, SplitLongTooltip(tooltip));
+            label.ToolTip = tooltip;
             return label;
         }
 
@@ -114,9 +113,11 @@ namespace FamiStudio
         {
             var textBox = new TextBox2(txt);
 
+            // MATTT
             //textBox.MaxLength = maxLength;
             //textBox.TextChanged += TextBox_TextChanged;
-            //toolTip.SetToolTip(textBox, SplitLongTooltip(tooltip));
+
+            textBox.ToolTip = tooltip;
 
             return textBox;
         }
@@ -236,7 +237,7 @@ namespace FamiStudio
             var upDown = new NumericUpDown2(value, min, max);
 
             //upDown.ValueChanged += UpDown_ValueChanged;
-            //toolTip.SetToolTip(upDown, SplitLongTooltip(tooltip));
+            upDown.ToolTip = tooltip;
 
             return upDown;
         }
@@ -263,7 +264,7 @@ namespace FamiStudio
         {
             var cb = new CheckBox2(value, text);
             //cb.CheckedChanged += Cb_CheckedChanged;
-            //toolTip.SetToolTip(cb, SplitLongTooltip(tooltip));
+            cb.ToolTip = tooltip;
             return cb;
         }
 
@@ -278,7 +279,7 @@ namespace FamiStudio
             var dropDown = new DropDown2(values, Array.IndexOf(values, value));
             dropDown.SelectedIndexChanged += DropDown_SelectedIndexChanged;
             //cb.SelectedIndexChanged += Cb_SelectedIndexChanged;
-            //toolTip.SetToolTip(cb, SplitLongTooltip(tooltip));
+            dropDown.ToolTip = tooltip;
 
             return dropDown;
         }
@@ -312,7 +313,7 @@ namespace FamiStudio
 
             grid.UpdateData(data);
             grid.ValueChanged += Grid_ValueChanged1;
-            //toolTip.SetToolTip(list, SplitLongTooltip(tooltip));
+            grid.ToolTip = tooltip;
 
             return grid;
         }
@@ -329,7 +330,7 @@ namespace FamiStudio
             button.Border = true;
             //button.Click += Button_Click;
             button.Resize(button.Width, DpiScaling.ScaleForMainWindow(32));
-            //toolTip.SetToolTip(button, SplitLongTooltip(tooltip));
+            button.ToolTip = tooltip;
             return button;
         }
 
@@ -573,7 +574,7 @@ namespace FamiStudio
         {
             var slider = new Slider2(value, min, max, increment, showLabel, format);
             //slider.ValueChangedEvent += Slider_ValueChangedEvent;
-            //toolTip.SetToolTip(slider, SplitLongTooltip(tooltip));
+            slider.ToolTip = tooltip;
             return slider;
         }
 
@@ -647,6 +648,7 @@ namespace FamiStudio
 
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
+            // MATTT
             //var listView = properties[propIdx].control as PropertyPageListView;
             //listView.SetColumnEnabled(colIdx, enabled);
         }
@@ -667,17 +669,16 @@ namespace FamiStudio
 
             list.UpdateData(data);
 
-            // MATTT
-            //if (columnNames != null)
-            //    list.RenameColumns(columnNames);
+            if (columnNames != null)
+                list.RenameColumns(columnNames);
 
-            //list.AutoResizeColumns();
+            //list.AutoResizeColumns(); MATTT, Not sure we need this.
         }
 
         public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
         {
-            //var list = properties[idx].control as PropertyPageListView;
-            //list.UpdateData(rowIdx, colIdx, value);
+            var grid = properties[idx].control as Grid2;
+            grid.UpdateData(rowIdx, colIdx, value);
         }
 
         public void SetPropertyEnabled(int idx, bool enabled)
@@ -714,35 +715,6 @@ namespace FamiStudio
             advancedPropertyStart = properties.Count;
         }
 
-        private string SplitLongTooltip(string str)
-        {
-            const int MaxCharsPerLine = 64;
-
-            if (str != null && str.Length > MaxCharsPerLine)
-            {
-                var strArray = str.ToCharArray(); 
-
-                for (var i = MaxCharsPerLine - 1; i < str.Length; )
-                {
-                    if (strArray[i] == ' ')
-                    {
-                        strArray[i] = '\n';
-                        i += MaxCharsPerLine;
-                    }
-                    else
-                    {
-                        i++;
-                    }
-                }
-
-                return new string(strArray);
-            }
-            else
-            {
-                return str;
-            }
-        }
-
         public void SetPropertyWarning(int idx, CommentType type, string comment)
         {
             var prop = properties[idx];
@@ -754,7 +726,7 @@ namespace FamiStudio
 
             prop.warningIcon.Resize(DpiScaling.ScaleForMainWindow(16), DpiScaling.ScaleForMainWindow(16));
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
-            //toolTip.SetToolTip(prop.warningIcon, SplitLongTooltip(comment));
+            prop.warningIcon.ToolTip = comment;
         }
 
         public object GetPropertyValue(int idx)

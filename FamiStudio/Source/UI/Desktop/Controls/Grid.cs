@@ -109,6 +109,12 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        public void UpdateData(int row, int col, object val)
+        {
+            data[row, col] = val;
+            MarkDirty();
+        }
+
         public void UpdateData(object[,] newData)
         {
             data = newData;
@@ -116,6 +122,14 @@ namespace FamiStudio
 
             if (parentDialog != null)
                 UpdateLayout();
+        }
+
+        public void RenameColumns(string[] columnNames)
+        {
+            Debug.Assert(columnNames.Length == columns.Length);
+            for (int i = 0; i < columnNames.Length; i++)
+                columns[i].Name = columnNames[i];
+            MarkDirty();
         }
 
         public object GetData(int row, int col)

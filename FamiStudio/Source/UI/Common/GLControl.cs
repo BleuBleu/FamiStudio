@@ -29,6 +29,7 @@ namespace FamiStudio
         protected float fontScaling = 1.0f;
         protected bool dirty = true;
         protected bool visible = true;
+        protected string tooltip;
 
         protected GLControl() { cursorInfo = new CursorInfo(this); }
         protected virtual void OnRenderInitialized(GLGraphics g) { }
@@ -58,17 +59,18 @@ namespace FamiStudio
         protected virtual void OnLostDialogFocus() { }
         protected virtual void OnVisibleChanged() { }
         protected virtual void OnAddedToDialog() { }
+
         public virtual bool WantsFullScreenViewport => false;
         public virtual void Tick(float delta) { }
 
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
         public void RenderTerminated() { OnRenderTerminated(); }
         public void Render(GLGraphics g) { OnRender(g); }
-        public void MouseDown(MouseEventArgsEx e) { OnMouseDown(e); }
+        public void MouseDown(MouseEventArgsEx e) { OnMouseDown(e); DialogMouseDownNotify(e); }
         public void MouseDownDelayed(System.Windows.Forms.MouseEventArgs e) { OnMouseDownDelayed(e); }
         public void MouseUp(System.Windows.Forms.MouseEventArgs e) { OnMouseUp(e); }
         public void MouseDoubleClick(System.Windows.Forms.MouseEventArgs e) { OnMouseDoubleClick(e); }
-        public void MouseMove(System.Windows.Forms.MouseEventArgs e) { OnMouseMove(e); }
+        public void MouseMove(System.Windows.Forms.MouseEventArgs e) { OnMouseMove(e); DialogMouseDownNotify(e); }
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
         public void MouseWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseWheel(e); }
         public void MouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseHorizontalWheel(e); }
@@ -86,8 +88,9 @@ namespace FamiStudio
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void LostDialogFocus() { OnLostDialogFocus(); }
         public void AddedToDialog() { OnAddedToDialog(); }
+        public void DialogMouseDownNotify(System.Windows.Forms.MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
+        public void DialogMouseMoveNotify(System.Windows.Forms.MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
 
-        public System.Drawing.Point ClientToParent(System.Drawing.Point p) { return PointToClient(PointToScreen(p)); }
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
         public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
@@ -107,6 +110,7 @@ namespace FamiStudio
         public void GrabDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = this; }
         public void ClearDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = null; }
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
+        public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
         public float MainWindowScaling => mainWindowScaling;
         public float FontScaling => fontScaling;
         public ThemeRenderResources ThemeResources => themeRes;
