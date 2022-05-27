@@ -179,8 +179,6 @@ namespace FamiStudio
 
         private List<string> SplitLongTooltip(string str)
         {
-            Debug.Assert(str.Length > ToolTipMaxCharsPerLine);
-
             var splits = new List<string>();
 
             if (str.Length > ToolTipMaxCharsPerLine)
