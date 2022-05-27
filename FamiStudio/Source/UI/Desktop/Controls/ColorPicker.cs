@@ -15,7 +15,10 @@ namespace FamiStudio
     public class ColorPicker2 : RenderControl
     {
         public delegate void ColorChangedDelegate(RenderControl sender, Color color);
+        public delegate void DoubleClickDelegate(RenderControl sender);
+
         public event ColorChangedDelegate ColorChanged;
+        public event DoubleClickDelegate  DoubleClicked;
 
         private Color selectedColor;
         public Color SelectedColor => selectedColor;
@@ -42,6 +45,15 @@ namespace FamiStudio
         {
             if (e.Button.HasFlag(MouseButtons.Left))
                 ChangeColor(e.X, e.Y);
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Left))
+            {
+                ChangeColor(e.X, e.Y);
+                DoubleClicked?.Invoke(this);
+            }
         }
 
         private void ChangeColor(int x, int y)

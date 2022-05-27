@@ -127,6 +127,7 @@ namespace FamiStudio
             ForceTextBoxASCII(sender as TextBox2);
         }
 
+        // MATTT : Will likely move to TextBox.
         private void ForceTextBoxASCII(TextBox2 textBox)
         {
             // All of our text storage is ASCII at the moment, so enforce it right away
@@ -176,6 +177,7 @@ namespace FamiStudio
             var colorPicker = new ColorPicker2(color);
             colorPicker.SetNiceSize(layoutWidth);
             colorPicker.ColorChanged += ColorPicker_ColorChanged;
+            colorPicker.DoubleClicked += ColorPicker_ColorDoubleClicked;
             return colorPicker;
         }
 
@@ -190,53 +192,21 @@ namespace FamiStudio
             }
         }
 
+        private void ColorPicker_ColorDoubleClicked(RenderControl sender)
+        {
+            PropertyWantsClose?.Invoke(GetPropertyIndexForControl(sender));
+        }
+
         private ImageBox2 CreateImageBox(string image)
         {
-            var imageBox = new ImageBox2(image);
-            return imageBox;
-        }
-
-        private void ChangeColor(PictureBox pictureBox, int x, int y)
-        {
-            int i = Math.Min(Theme.CustomColors.GetLength(0) - 1, Math.Max(0, (int)(x / (float)pictureBox.Width  * Theme.CustomColors.GetLength(0))));
-            int j = Math.Min(Theme.CustomColors.GetLength(1) - 1, Math.Max(0, (int)(y / (float)pictureBox.Height * Theme.CustomColors.GetLength(1))));
-
-            //foreach (var prop in properties)
-            //{
-            //    if (prop.type == PropertyType.ColoredTextBox)
-            //    {
-            //        prop.control.BackColor = Theme.CustomColors[i, j];
-            //    }
-            //}
-
-            pictureBox.BackColor = Theme.CustomColors[i, j];
-        }
-
-        private void PictureBox_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            //if (e.Button == MouseButtons.Left)
-            //    ChangeColor(sender as PictureBox, e.X, e.Y);
-
-            //PropertyWantsClose?.Invoke(GetPropertyIndexForControl(sender as Control));
-        }
-
-        private void PictureBox_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-                ChangeColor(sender as PictureBox, e.X, e.Y);
-        }
-
-        private void PictureBox_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-                ChangeColor(sender as PictureBox, e.X, e.Y);
+            return new ImageBox2(image);
         }
 
         private NumericUpDown2 CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
             var upDown = new NumericUpDown2(value, min, max);
 
-            //upDown.ValueChanged += UpDown_ValueChanged;
+            upDown.ValueChanged += UpDown_ValueChanged;
             upDown.ToolTip = tooltip;
 
             return upDown;
@@ -254,31 +224,30 @@ namespace FamiStudio
             return radio;
         }
 
-        private void UpDown_ValueChanged(object sender, EventArgs e)
+        private void UpDown_ValueChanged(RenderControl sender, int val)
         {
-            //int idx = GetPropertyIndexForControl(sender as Control);
-            //PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
+            int idx = GetPropertyIndexForControl(sender);
+            PropertyChanged?.Invoke(this, idx, -1, -1, val);
         }
 
         private CheckBox2 CreateCheckBox(bool value, string text = "", string tooltip = null)
         {
             var cb = new CheckBox2(value, text);
-            //cb.CheckedChanged += Cb_CheckedChanged;
+            cb.CheckedChanged += Cb_CheckedChanged;
             cb.ToolTip = tooltip;
             return cb;
         }
 
-        private void Cb_CheckedChanged(object sender, EventArgs e)
+        private void Cb_CheckedChanged(RenderControl sender, bool check)
         {
-            //int idx = GetPropertyIndexForControl(sender as Control);
-            //PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
+            int idx = GetPropertyIndexForControl(sender);
+            PropertyChanged?.Invoke(this, idx, -1, -1, check);
         }
 
         private DropDown2 CreateDropDownList(string[] values, string value, string tooltip = null)
         {
             var dropDown = new DropDown2(values, Array.IndexOf(values, value));
             dropDown.SelectedIndexChanged += DropDown_SelectedIndexChanged;
-            //cb.SelectedIndexChanged += Cb_SelectedIndexChanged;
             dropDown.ToolTip = tooltip;
 
             return dropDown;
@@ -288,10 +257,6 @@ namespace FamiStudio
         {
             int idx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
-        }
-
-        private void Cb_SelectedIndexChanged(object sender, EventArgs e)
-        {
         }
 
         private Grid2 CreateCheckListBox(string[] values, bool[] selected, string tooltip = null, int numRows = 7)
@@ -320,7 +285,7 @@ namespace FamiStudio
 
         private void Grid_ValueChanged1(RenderControl sender, int rowIndex, int colIndex, object value)
         {
-            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            var propIdx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
         }
 
@@ -328,43 +293,37 @@ namespace FamiStudio
         {
             var button = new Button2(null, text);
             button.Border = true;
-            //button.Click += Button_Click;
+            button.Click += Button_Click;
             button.Resize(button.Width, DpiScaling.ScaleForMainWindow(32));
             button.ToolTip = tooltip;
             return button;
         }
 
-        private void Button_Click(object sender, EventArgs e)
+        private void Button_Click(RenderControl sender)
         {
-            //var propIdx = GetPropertyIndexForControl(sender as Control);
-            //PropertyClicked?.Invoke(this, ClickType.Button, propIdx, -1, -1);
+            var propIdx = GetPropertyIndexForControl(sender);
+            PropertyClicked?.Invoke(this, ClickType.Button, propIdx, -1, -1);
         }
 
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
-            //var list = properties[idx].control as PropertyPageListView;
+            var grid = properties[idx].control as Grid2;
+            Debug.Assert(values.Length == grid.ItemCount);
 
-            //Debug.Assert(values.Length == list.Items.Count);
-
-            //for (int i = 0; i < values.Length; i++)
-            //{
-            //    list.SetData(i, 0, selected != null ? selected[i] : true);
-            //    list.SetData(i, 1, values[i]);
-            //}
-
-            //list.Invalidate();
+            for (int i = 0; i < values.Length; i++)
+            {
+                grid.UpdateData(i, 0, selected != null ? selected[i] : true);
+                grid.UpdateData(i, 1, values[i]);
+            }
         }
 
         public void UpdateCheckBoxList(int idx, bool[] selected)
         {
-            //var list = properties[idx].control as PropertyPageListView;
+            var grid = properties[idx].control as Grid2;
+            Debug.Assert(selected.Length == grid.ItemCount);
 
-            //Debug.Assert(selected.Length == list.Items.Count);
-
-            //for (int i = 0; i < selected.Length; i++)
-            //    list.SetData(i, 0, selected[i]);
-
-            //list.Invalidate();
+            for (int i = 0; i < selected.Length; i++)
+                grid.UpdateData(i, 0, selected[i]);
         }
 
         public int AddColoredTextBox(string value, Color color)
@@ -573,26 +532,16 @@ namespace FamiStudio
         private Slider2 CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
         {
             var slider = new Slider2(value, min, max, increment, showLabel, format);
-            //slider.ValueChangedEvent += Slider_ValueChangedEvent;
+            slider.ValueChanged += Slider_ValueChanged;
             slider.ToolTip = tooltip;
             return slider;
         }
 
-        //private void Slider_ValueChangedEvent(Slider slider, double value)
-        //{
-        //    var idx = GetPropertyIndexForControl(slider);
-        //    PropertyChanged?.Invoke(this, idx, -1, -1, value);
-        //}
-
-        //private string Slider_FormatValueEvent(Slider slider, double value)
-        //{
-        //    var idx = GetPropertyIndexForControl(slider);
-
-        //    if (idx >= 0)
-        //        return string.Format(properties[idx].sliderFormat, value);
-
-        //    return null;
-        //}
+        private void Slider_ValueChanged(RenderControl slider, double value)
+        {
+            var idx = GetPropertyIndexForControl(slider);
+            PropertyChanged?.Invoke(this, idx, -1, -1, value);
+        }
 
         public int AddSlider(string label, double value, double min, double max, double increment, int numDecimals, string format = "{0}", string tooltip = null)
         {
@@ -623,25 +572,25 @@ namespace FamiStudio
 
         private void Grid_CellClicked(RenderControl sender, bool left, int rowIndex, int colIndex)
         {
-            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            var propIdx = GetPropertyIndexForControl(sender);
             PropertyClicked?.Invoke(this, left ? ClickType.Left : ClickType.Right, propIdx, rowIndex, colIndex);
         }
 
         private void Grid_CellDoubleClicked(RenderControl sender, int rowIndex, int colIndex)
         {
-            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            var propIdx = GetPropertyIndexForControl(sender);
             PropertyClicked?.Invoke(this, ClickType.Double, propIdx, rowIndex, colIndex);
         }
 
         private void Grid_ButtonPressed(RenderControl sender, int rowIndex, int colIndex)
         {
-            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            var propIdx = GetPropertyIndexForControl(sender);
             PropertyClicked?.Invoke(this, ClickType.Button, propIdx, rowIndex, colIndex);
         }
 
         private void Grid_ValueChanged(RenderControl sender, int rowIndex, int colIndex, object value)
         {
-            var propIdx = GetPropertyIndexForControl(sender as RenderControl);
+            var propIdx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
         }
 

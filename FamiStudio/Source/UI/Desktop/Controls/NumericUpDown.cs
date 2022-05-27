@@ -14,6 +14,9 @@ namespace FamiStudio
 {
     public class NumericUpDown2 : RenderControl
     {
+        public delegate void ValueChangedDelegate(RenderControl sender, int val);
+        public event ValueChangedDelegate ValueChanged;
+
         private int val;
         private int min;
         private int max = 10;
@@ -35,7 +38,7 @@ namespace FamiStudio
         public int Value
         {
             get { return val; }
-            set { SetAndMarkDirty(ref val, Utils.Clamp(value, min, max)); }
+            set { if (SetAndMarkDirty(ref val, Utils.Clamp(value, min, max))) ValueChanged?.Invoke(this, val); }
         }
 
         public int Minimum

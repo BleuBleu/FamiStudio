@@ -13,6 +13,9 @@ namespace FamiStudio
 {
     public class CheckBox2 : RenderControl
     {
+        public delegate void CheckedChangedDelegate(RenderControl sender, bool check);
+        public event CheckedChangedDelegate CheckedChanged;
+
         private string text;
         private bool check;
         private bool hover;
@@ -30,7 +33,7 @@ namespace FamiStudio
         public bool Checked
         {
             get { return check; }
-            set { check = value; MarkDirty(); }
+            set { if (SetAndMarkDirty(ref check, value)) CheckedChanged?.Invoke(this, check); }
         }
 
         protected override void OnRenderInitialized(RenderGraphics g)

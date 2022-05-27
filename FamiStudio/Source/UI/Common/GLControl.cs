@@ -170,13 +170,16 @@ namespace FamiStudio
                  width, height);
         }
 
-        protected void SetAndMarkDirty<T>(ref T target, T current) where T : IComparable
+        protected bool SetAndMarkDirty<T>(ref T target, T current) where T : IComparable
         {
             if (target.CompareTo(current) != 0)
             {
                 target = current;
                 MarkDirty();
+                return true;
             }
+
+            return false;
         }
     }
 
