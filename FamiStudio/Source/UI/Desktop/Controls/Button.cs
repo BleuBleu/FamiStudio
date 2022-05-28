@@ -59,7 +59,7 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgsEx e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (enabled && e.Button.HasFlag(MouseButtons.Left))
             {
                 press = true;
             }
@@ -69,7 +69,7 @@ namespace FamiStudio
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (enabled && e.Button.HasFlag(MouseButtons.Left))
             {
                 press = false;
                 Click?.Invoke(this);
@@ -98,8 +98,9 @@ namespace FamiStudio
 
             var c = parentDialog.CommandList;
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
+            var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
 
-            if (border || press || hover)
+            if (enabled && (border || press || hover))
             {
                 var fillBrush = press ? ThemeResources.MediumGreyFillBrush1 :
                                 hover ? ThemeResources.DarkGreyFillBrush3 :
@@ -119,16 +120,16 @@ namespace FamiStudio
 
             if (!hasText && bmp != null)
             {
-                c.DrawBitmapAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2);
+                c.DrawBitmapAtlas(bmp, (width - bmpSize.Width) / 2, (height - bmpSize.Height) / 2, 1, 1, brush.Color0);
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, width, height);
+                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, 0, 0, brush, RenderTextFlags.MiddleCenter, width, height);
             }
             else if (hasText && bmp != null)
             {
-                c.DrawBitmapAtlas(bmp, margin, (height - bmpSize.Height) / 2);
-                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, bmpSize.Width + margin * 2, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - bmpSize.Width - margin * 2, height);
+                c.DrawBitmapAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, 1, brush.Color0);
+                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, bmpSize.Width + margin * 2, 0, brush, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 
             c.PopTransform();

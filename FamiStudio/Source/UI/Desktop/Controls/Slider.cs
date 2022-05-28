@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Globalization;
+using System.Diagnostics;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;
@@ -116,6 +117,8 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
+            Debug.Assert(enabled); // TODO : Add support for disabled state.
+
             var c = parentDialog.CommandList;
             var thumbRect = GetThumbRectangle();
 

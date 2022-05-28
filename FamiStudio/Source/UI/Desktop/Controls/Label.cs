@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderBrush = FamiStudio.GLBrush;
@@ -86,6 +87,7 @@ namespace FamiStudio
         protected override void OnRender(RenderGraphics g)
         {
             var c = parentDialog.CommandList;
+            var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
 
             if (multiline)
             {
@@ -93,12 +95,12 @@ namespace FamiStudio
 
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    c.DrawText(lines[i], ThemeResources.FontMedium, labelOffsetX, i * ThemeResources.FontMedium.LineHeight, ThemeResources.LightGreyFillBrush1, RenderTextFlags.TopLeft, 0, height);
+                    c.DrawText(lines[i], ThemeResources.FontMedium, labelOffsetX, i * ThemeResources.FontMedium.LineHeight, brush, RenderTextFlags.TopLeft, 0, height);
                 }
             }
             else
             {
-                c.DrawText(text, ThemeResources.FontMedium, labelOffsetX, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, height);
+                c.DrawText(text, ThemeResources.FontMedium, labelOffsetX, 0, brush, RenderTextFlags.MiddleLeft, 0, height);
             }
         }
     }

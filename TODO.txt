@@ -16,7 +16,8 @@ P0:
 	- Sequencer : Add select all there too?
 - Widgets:
 	- Recolor all icons to white, use filter on Android to make them grey.
-	- IsAsyncDialogInProgress, must implement on PC.
+	- Make sure we use the lightest grey (grey2) for all text. Or maybe not, we use it for highlight...
+	x IsAsyncDialogInProgress, must implement on PC.
 	- Remove all using RenderXXX, rename properly.
 	- Rename ScaleFOrMainWIndow
 	- All dialogs will need to be async, no more "ShowDialog"

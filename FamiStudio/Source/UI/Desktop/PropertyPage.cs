@@ -612,16 +612,19 @@ namespace FamiStudio
 
         public void SetPropertyEnabled(int idx, bool enabled)
         {
-            //var label = properties[idx].control as Label;
+            var prop = properties[idx];
 
-            //if (label != null)
-            //{
-            //    label.ForeColor = enabled ? Theme.LightGreyFillColor2 : Theme.MediumGreyFillColor1;
-            //}
-            //else
-            //{
-            //    properties[idx].control.Enabled = enabled;
-            //}
+            // TODO : I only added support to disable these so far.
+            Debug.Assert(
+                prop.type == PropertyType.CheckBox      ||
+                prop.type == PropertyType.DropDownList  ||
+                prop.type == PropertyType.NumericUpDown ||
+                prop.type == PropertyType.TextBox);
+
+            if (prop.label != null)
+                prop.label.Enabled = enabled;
+
+            prop.control.Enabled = enabled;
         }
 
         public void SetPropertyVisible(int idx, bool visible)

@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderBrush = FamiStudio.GLBrush;
@@ -7,7 +8,6 @@ using RenderGeometry = FamiStudio.GLGeometry;
 using RenderControl = FamiStudio.GLControl;
 using RenderGraphics = FamiStudio.GLGraphics;
 using RenderCommandList = FamiStudio.GLCommandList;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {

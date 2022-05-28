@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Globalization;
+using System.Diagnostics;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;
@@ -26,7 +27,18 @@ namespace FamiStudio
         public float Progress
         {
             get { return progress; }
-            set { SetAndMarkDirty(ref progress, Utils.Clamp(value, 0.0f, 1.0f)); }
+            set
+            {
+                var clampedValue = Utils.Clamp(value, 0.0f, 1.0f);
+                if (clampedValue != progress)
+                {
+                    // Dont do animation when going backwards.
+                    if (clampedValue < progress)
+                        visibleProgress = clampedValue;
+                    progress = clampedValue;
+                    MarkDirty();
+                }
+            }
         }
 
         public override void Tick(float delta)
@@ -37,6 +49,8 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
+            Debug.Assert(enabled); // TODO : Add support for disabled state.
+
             var c = parentDialog.CommandList;
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);

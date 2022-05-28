@@ -154,6 +154,13 @@ namespace FamiStudio
             ConditionalEmitDelayedRightClick();
         }
 
+        // MATTT : Temporary
+        public void RunEventLoop()
+        {
+            Application.DoEvents();
+            TickAndRender();
+        }
+
         protected override void GraphicsContextInitialized()
         {
             GL.Disable(EnableCap.DepthTest);

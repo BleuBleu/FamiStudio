@@ -399,6 +399,8 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
+            Debug.Assert(enabled); // TODO : Add support for disabled state.
+
             var c = parentDialog.CommandList;
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;

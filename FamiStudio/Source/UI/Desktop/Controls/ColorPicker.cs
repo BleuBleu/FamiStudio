@@ -1,5 +1,8 @@
 using System.Drawing;
 using System.Collections.Generic;
+using System.Windows.Forms;
+using System;
+using System.Diagnostics;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush = FamiStudio.GLBrush;
@@ -7,8 +10,6 @@ using RenderGeometry = FamiStudio.GLGeometry;
 using RenderControl = FamiStudio.GLControl;
 using RenderGraphics = FamiStudio.GLGraphics;
 using RenderCommandList = FamiStudio.GLCommandList;
-using System.Windows.Forms;
-using System;
 
 namespace FamiStudio
 {
@@ -74,6 +75,8 @@ namespace FamiStudio
 
         protected override void OnRender(RenderGraphics g)
         {
+            Debug.Assert(enabled); // TODO : Add support for disabled state.
+
             var c = parentDialog.CommandList;
 
             var numColorsX = Theme.CustomColors.GetLength(0);

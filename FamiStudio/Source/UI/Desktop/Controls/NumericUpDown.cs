@@ -70,11 +70,14 @@ namespace FamiStudio
 
         private int IsPointInButton(int x, int y)
         {
-            for (int i = 0; i < 2; i++)
+            if (enabled)
             {
-                var rect = GetButtonRect(i);
-                if (rect.Contains(x, y))
-                    return i;
+                for (int i = 0; i < 2; i++)
+                {
+                    var rect = GetButtonRect(i);
+                    if (rect.Contains(x, y))
+                        return i;
+                }
             }
 
             return -1;
@@ -133,7 +136,7 @@ namespace FamiStudio
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (captureButton < 0 && e.Delta != 0 && e.X > GetButtonRect(0).Right && e.X < GetButtonRect(1).Left)
+            if (enabled && captureButton < 0 && e.Delta != 0 && e.X > GetButtonRect(0).Right && e.X < GetButtonRect(1).Left)
             {
                 Value += e.Delta > 0 ? 1 : -1;
             }
@@ -142,6 +145,8 @@ namespace FamiStudio
         protected override void OnRender(RenderGraphics g)
         {
             var c = parentDialog.CommandList;
+            var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
+
             var rects = new []
             {
                 GetButtonRect(0),
@@ -150,18 +155,18 @@ namespace FamiStudio
 
             for (int i = 0; i < 2; i++)
             {
-                var fillBrush = captureButton == i ? ThemeResources.MediumGreyFillBrush1 :
-                                hoverButton   == i ? ThemeResources.DarkGreyFillBrush3 :
-                                                     ThemeResources.DarkGreyFillBrush2;
+                var fillBrush = enabled && captureButton == i ? ThemeResources.MediumGreyFillBrush1 :
+                                enabled && hoverButton   == i ? ThemeResources.DarkGreyFillBrush3 :
+                                                                ThemeResources.DarkGreyFillBrush2;
 
-                c.FillAndDrawRectangle(rects[i], fillBrush, ThemeResources.LightGreyFillBrush1);
+                c.FillAndDrawRectangle(rects[i], fillBrush, brush);
 
                 c.PushTranslation(0, captureButton == i ? 1 : 0);
-                c.DrawBitmapAtlasCentered(bmp[i], rects[i], 1, 1, Theme.LightGreyFillColor1);
+                c.DrawBitmapAtlasCentered(bmp[i], rects[i], 1, 1, brush.Color0);
                 c.PopTransform();
             }
 
-            c.DrawText(val.ToString(CultureInfo.InvariantCulture), ThemeResources.FontMedium, rects[0].Right, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, rects[1].Left - rects[0].Right, height);
+            c.DrawText(val.ToString(CultureInfo.InvariantCulture), ThemeResources.FontMedium, rects[0].Right, 0, brush, RenderTextFlags.MiddleCenter, rects[1].Left - rects[0].Right, height);
         }
     }
 }

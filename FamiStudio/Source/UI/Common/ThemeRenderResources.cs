@@ -17,7 +17,6 @@ namespace FamiStudio
         private RenderBrush lightGreyFillBrush1;
         private RenderBrush lightGreyFillBrush2;
         private RenderBrush mediumGreyFillBrush1;
-        private RenderBrush mediumGreyFillBrush2;
         private RenderBrush darkGreyLineBrush1;
         private RenderBrush darkGreyLineBrush2;
         private RenderBrush darkGreyLineBrush3;
@@ -32,7 +31,6 @@ namespace FamiStudio
         public RenderBrush LightGreyFillBrush1  => lightGreyFillBrush1; 
         public RenderBrush LightGreyFillBrush2  => lightGreyFillBrush2; 
         public RenderBrush MediumGreyFillBrush1 => mediumGreyFillBrush1;
-        public RenderBrush MediumGreyFillBrush2 => mediumGreyFillBrush2;
         public RenderBrush DarkGreyLineBrush1   => darkGreyLineBrush1;  
         public RenderBrush DarkGreyLineBrush2   => darkGreyLineBrush2;  
         public RenderBrush DarkGreyLineBrush3   => darkGreyLineBrush3;  
@@ -102,7 +100,6 @@ namespace FamiStudio
             lightGreyFillBrush1  = g.CreateSolidBrush(Theme.LightGreyFillColor1);
             lightGreyFillBrush2  = g.CreateSolidBrush(Theme.LightGreyFillColor2);
             mediumGreyFillBrush1 = g.CreateSolidBrush(Theme.MediumGreyFillColor1);
-            mediumGreyFillBrush2 = g.CreateSolidBrush(Theme.MediumGreyFillColor2);
             darkGreyLineBrush1   = g.CreateSolidBrush(Theme.DarkGreyLineColor1);
             darkGreyLineBrush2   = g.CreateSolidBrush(Theme.DarkGreyLineColor2);
             darkGreyLineBrush3   = g.CreateSolidBrush(Theme.DarkGreyLineColor3);
@@ -136,7 +133,6 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref lightGreyFillBrush1);
             Utils.DisposeAndNullify(ref lightGreyFillBrush2);
             Utils.DisposeAndNullify(ref mediumGreyFillBrush1);
-            Utils.DisposeAndNullify(ref mediumGreyFillBrush2);
             Utils.DisposeAndNullify(ref darkGreyLineBrush1);
             Utils.DisposeAndNullify(ref darkGreyLineBrush2);
             Utils.DisposeAndNullify(ref darkGreyLineBrush3);

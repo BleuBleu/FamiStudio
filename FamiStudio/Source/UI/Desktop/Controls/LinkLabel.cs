@@ -1,5 +1,7 @@
 using System.Drawing;
 using System.Collections.Generic;
+using System.Windows.Forms;
+using System.Diagnostics;
 
 using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
 using RenderBrush = FamiStudio.GLBrush;
@@ -7,7 +9,6 @@ using RenderGeometry = FamiStudio.GLGeometry;
 using RenderControl = FamiStudio.GLControl;
 using RenderGraphics = FamiStudio.GLGraphics;
 using RenderCommandList = FamiStudio.GLCommandList;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -44,8 +45,16 @@ namespace FamiStudio
             return ThemeResources.FontMedium.MeasureString(text, false);
         }
 
+        protected override void OnMouseDown(MouseEventArgsEx e)
+        {
+            if (e.Button.HasFlag(MouseButtons.Left))
+                PlatformUtils.OpenUrl(url);
+        }
+
         protected override void OnRender(RenderGraphics g)
         {
+            Debug.Assert(enabled); // TODO : Add support for disabled state.
+
             var c = parentDialog.CommandList;
             var sx = MeasureString();
             var brush = hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1;

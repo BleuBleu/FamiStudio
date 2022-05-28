@@ -29,6 +29,7 @@ namespace FamiStudio
         protected float fontScaling = 1.0f;
         protected bool dirty = true;
         protected bool visible = true;
+        protected bool enabled = true;
         protected string tooltip;
 
         protected GLControl() { cursorInfo = new CursorInfo(this); }
@@ -110,6 +111,7 @@ namespace FamiStudio
         public void GrabDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = this; }
         public void ClearDialogFocus() { if (parentDialog != null) parentDialog.FocusedControl = null; }
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
+        public bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
         public float MainWindowScaling => mainWindowScaling;
         public float FontScaling => fontScaling;

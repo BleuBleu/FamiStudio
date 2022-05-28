@@ -177,6 +177,7 @@ namespace FamiStudio
                 return true;
             });
 
+            // MATTT this does not tick or render!
             while (counter.Value != channelStates.Length)
             {
                 Log.ReportProgress(counter.Value / (float)channelStates.Length);

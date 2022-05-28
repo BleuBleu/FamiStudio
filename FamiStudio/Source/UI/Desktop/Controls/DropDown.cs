@@ -1,5 +1,7 @@
 using System.Drawing;
 using System.Collections.Generic;
+using System.Windows.Forms;
+using System;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;
@@ -7,8 +9,6 @@ using RenderGeometry       = FamiStudio.GLGeometry;
 using RenderControl        = FamiStudio.GLControl;
 using RenderGraphics       = FamiStudio.GLGraphics;
 using RenderCommandList    = FamiStudio.GLCommandList;
-using System.Windows.Forms;
-using System;
 
 namespace FamiStudio
 {
@@ -50,7 +50,7 @@ namespace FamiStudio
             UpdateScrollParams();
         }
 
-        public string Text => items[selectedIndex];
+        public string Text => selectedIndex >= 0 && selectedIndex < items.Length ? items[selectedIndex] : null;
 
         public int SelectedIndex
         {
@@ -89,7 +89,7 @@ namespace FamiStudio
         {
             MarkDirty();
 
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (enabled && e.Button.HasFlag(MouseButtons.Left))
             {
                 if (listOpened && e.Y > rowHeight)
                 {
@@ -221,7 +221,7 @@ namespace FamiStudio
         {
             var sign = e.Delta < 0 ? 1 : -1;
 
-            if (sign == 0)
+            if (!enabled || sign == 0)
                 return;
 
             if (listOpened)
@@ -239,14 +239,15 @@ namespace FamiStudio
         {
             var bmpSize = bmpArrow.ElementSize;
             var cb = parentDialog.CommandList;
+            var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
 
             if (!transparent)
-                cb.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover ? ThemeResources.DarkGreyLineBrush3 : ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+                cb.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover && enabled ? ThemeResources.DarkGreyLineBrush3 : ThemeResources.DarkGreyLineBrush1, brush);
             
-            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
+            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyFillColor2 : brush.Color0);
 
             if (selectedIndex >= 0)
-                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, rowHeight);
+                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, brush, RenderTextFlags.MiddleLeft, 0, rowHeight);
 
             if (listOpened)
             {

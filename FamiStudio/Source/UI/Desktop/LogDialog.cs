@@ -65,6 +65,9 @@ namespace FamiStudio
             if (!dialog.Visible)
                 dialog.ShowDialogAsync(null, (r) => { });
             dialog.Properties.AppendText(0, msg);
+
+            // MATTT : Total HACK!
+            ParentForm.RunEventLoop();
         }
 
         public void ReportProgress(float progress)
@@ -73,6 +76,18 @@ namespace FamiStudio
                 return;
 
             dialog.Properties.SetPropertyValue(1, progress);
+
+            // MATTT : Total HACK!
+            ParentForm.RunEventLoop();
+        }
+
+        // MATTT : Total HACK!
+        public void StayModalUntilClosed()
+        {
+            while (dialog.Visible)
+            {
+                ParentForm.RunEventLoop();
+            }
         }
 
         public void Close()
