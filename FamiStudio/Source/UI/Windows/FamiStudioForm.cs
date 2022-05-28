@@ -591,6 +591,10 @@ namespace FamiStudio
                 {
                     controls.ContextMenu.KeyDown(e);
                 }
+                else if (controls.IsDialogActive)
+                {
+                    controls.TopDialog.KeyDown(e);
+                }
                 else
                 {
                     famistudio.KeyDown(e, (int)keyData);

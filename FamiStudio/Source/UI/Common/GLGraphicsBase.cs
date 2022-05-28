@@ -688,15 +688,19 @@ namespace FamiStudio
             kerningPairs[c0 | (c1 << 8)] = amount;
         }
 
-        public CharInfo GetCharInfo(char c)
+        public CharInfo GetCharInfo(char c, bool fallback = true)
         {
             if (charMap.TryGetValue(c, out CharInfo info))
             {
                 return info;
             }
+            else if (fallback)
+            {
+                return charMap['?'];
+            }
             else
             {
-                return charMap[char.MaxValue];
+                return null;
             }
         }
 
