@@ -70,7 +70,7 @@ namespace FamiStudio
         protected List<int[]>   freeColArrays = new List<int[]>();
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
-        protected abstract int CreateEmptyTexture(int width, int height, bool filter = false);
+        protected abstract int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false);
         protected abstract int CreateTexture(int[,] bmpData, bool filter);
         public abstract void DrawCommandList(GLCommandList list, Rectangle scissor);
 
@@ -369,9 +369,9 @@ namespace FamiStudio
             return new GLGeometry(points, closed);
         }
 
-        public GLBitmap CreateEmptyBitmap(int width, int height)
+        public GLBitmap CreateEmptyBitmap(int width, int height, bool alpha = true, bool filter = false)
         {
-            return new GLBitmap(CreateEmptyTexture(width, height), width, height, true, false);
+            return new GLBitmap(CreateEmptyTexture(width, height, filter), width, height, true, filter);
         }
 
         public GLBrush CreateSolidBrush(Color color)

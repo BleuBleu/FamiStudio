@@ -124,7 +124,7 @@ namespace FamiStudio
             GLES11.GlTexSubImage2D(GLES11.GlTexture2d, 0, x, y, width, height, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
         }
 
-        protected override int CreateEmptyTexture(int width, int height, bool filter = false)
+        protected override int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false)
         {
             var id = new int[1];
             GLES11.GlGenTextures(1, id, 0);

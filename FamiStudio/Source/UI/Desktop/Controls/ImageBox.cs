@@ -14,14 +14,14 @@ namespace FamiStudio
 {
     public class ImageBox2 : RenderControl
     {
-        private string imageName;
+        private string atlasImageName;
         private RenderBitmap bmp;
         private RenderBitmapAtlasRef bmpAtlas;
 
         public ImageBox2(string image)
         {
             height = DpiScaling.ScaleForMainWindow(24);
-            imageName = image;
+            atlasImageName = image;
         }
 
         public ImageBox2(RenderBitmap b)
@@ -30,10 +30,16 @@ namespace FamiStudio
             bmp = b;
         }
 
-        public string Image
+        public string AtlasImageName
         {
-            get { return imageName; }
-            set { imageName = value; bmpAtlas = null; MarkDirty(); }
+            get { return atlasImageName; }
+            set { atlasImageName = value; bmpAtlas = null; MarkDirty(); }
+        }
+
+        public RenderBitmap Image
+        {
+            get { return bmp; }
+            set { bmp = value; MarkDirty(); }
         }
 
         protected override void OnRender(RenderGraphics g)
@@ -48,11 +54,9 @@ namespace FamiStudio
             }
             else
             {
-                c.FillRectangle(0, 0, width, height, ThemeResources.BlackBrush); // MATTT
-
                 if (bmpAtlas == null)
                 {
-                    bmpAtlas = g.GetBitmapAtlasRef(imageName);
+                    bmpAtlas = g.GetBitmapAtlasRef(atlasImageName);
                     Debug.Assert(bmpAtlas != null);
                 }
 

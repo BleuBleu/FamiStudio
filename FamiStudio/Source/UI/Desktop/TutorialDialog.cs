@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
+using RenderBitmap         = FamiStudio.GLBitmap;
 using RenderBrush          = FamiStudio.GLBrush;
 using RenderGeometry       = FamiStudio.GLGeometry;
 using RenderControl        = FamiStudio.GLControl;
@@ -69,8 +70,7 @@ namespace FamiStudio
             "Tutorial8.gif",
         };
 
-        int pageIndex = 0;
-
+        private int pageIndex = 0;
         private Button2 buttonRight;
         private Button2 buttonLeft;
         private ImageBox2 imageBox;
@@ -86,8 +86,11 @@ namespace FamiStudio
 
         private Timer gifTimer = new Timer();
         private IntPtr gif;
-        private Bitmap gifBmp;
+        private RenderBitmap gifBmp;
+        private int gifSizeX;
+        private int gifSizeY;
         private byte[] gifData;
+        private byte[] gifBuffer;
         private GCHandle gifHandle;
 
         public TutorialDialog()
@@ -147,8 +150,6 @@ namespace FamiStudio
                 CloseGif();
             }
 
-            // GifDec works only with files, create a copy.
-            // TODO : Change it to take a buffer as input.
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{filename}"))
             {
                 gifData = new byte[stream.Length];
@@ -159,13 +160,11 @@ namespace FamiStudio
             gifHandle = GCHandle.Alloc(gifData, GCHandleType.Pinned);
             
             gif = GifOpen(gifHandle.AddrOfPinnedObject(), 1);
-
-            var width  = GifGetWidth(gif);
-            var height = GifGetHeight(gif);
-
-            // MATTT
-            //gifBmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            //imageBox.Image = gifBmp;
+            gifSizeX = GifGetWidth(gif);
+            gifSizeY = GifGetHeight(gif);
+            gifBuffer = new byte[gifSizeX * gifSizeY * 3];
+            gifBmp = ParentForm.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, false, mainWindowScaling > 1.0f);
+            imageBox.Image = gifBmp;
         }
 
         private void CloseGif()
@@ -173,22 +172,24 @@ namespace FamiStudio
             if (gif != IntPtr.Zero)
             {
                 gifData = null;
+                gifBuffer = null;
                 gifHandle.Free();
                 gifTimer.Stop();
                 GifClose(gif);
                 gif = IntPtr.Zero;
+                gifBmp.Dispose();
                 gifBmp = null;
             }
         }
 
-        private void UpdateGif()
+        private unsafe void UpdateGif()
         {
-            // MATTT
-            //var data = gifBmp.LockBits(new Rectangle(0, 0, gifBmp.Width, gifBmp.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            //GifAdvanceFrame(gif, data.Scan0, data.Stride);
-            //gifTimer.Interval = GifGetFrameDelay(gif);
-            //gifTimer.Start();
-            //gifBmp.UnlockBits(data);
+            fixed (byte* p = &gifBuffer[0])
+                GifAdvanceFrame(gif, new IntPtr(p), gifSizeX * 3);
+
+            ParentForm.Graphics.UpdateBitmap(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
+            gifTimer.Interval = GifGetFrameDelay(gif);
+            gifTimer.Start();
             MarkDirty();
         }
 
@@ -207,11 +208,7 @@ namespace FamiStudio
             OpenGif(TutorialImages[pageIndex]);
             UpdateGif();
 
-            // MATTT
-            //string suffix = DpiScaling.MainWindow >= 2.0f ? "@2x" : "";
-            //buttonRight.Image = pageIndex == TutorialMessages.Length - 1 ?
-            //    Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.Yes{suffix}.png")) :
-            //    Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.ArrowRight{suffix}.png"));
+            buttonRight.Image = pageIndex == TutorialMessages.Length - 1 ? "Yes" : "ArrowRight";
         }
 
         private void ButtonLeft_Click(RenderControl sender)
@@ -223,9 +220,7 @@ namespace FamiStudio
         {
             if (pageIndex == TutorialMessages.Length - 1)
             {
-                // MATTT
-                //DialogResult = checkBoxDontShow.Checked ? DialogResult.OK : DialogResult.Cancel;
-                //Close();
+                Close(checkBoxDontShow.Checked ? DialogResult.OK : DialogResult.Cancel);
             }
             else
             {
@@ -235,7 +230,7 @@ namespace FamiStudio
 
         private void TutorialDialog_KeyDown(object sender, KeyEventArgs e)
         {
-            //buttonRight_Click(null, EventArgs.Empty);
+            ButtonRight_Click(null);
         }
     }
 }

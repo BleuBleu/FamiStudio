@@ -73,22 +73,28 @@ namespace FamiStudio
             GL.Clear(ClearBufferMask.ColorBufferBit);
         }
 
+        public void UpdateBitmap(GLBitmap bmp, int x, int y, int width, int height, byte[] data)
+        {
+            GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
+            GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, width, height, PixelFormat.Bgr, PixelType.UnsignedByte, data);
+        }
+
         public void UpdateBitmap(GLBitmap bmp, int x, int y, int width, int height, int[] data)
         {
             GL.BindTexture(TextureTarget.Texture2D, bmp.Id);
             GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, width, height, PixelFormat.Bgra, PixelType.UnsignedByte, data);
         }
 
-        protected override int CreateEmptyTexture(int width, int height, bool filter = false)
+        protected override int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false)
         {
             int id = GL.GenTexture();
 
             GL.BindTexture(TextureTarget.Texture2D, id);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, filter ? (int)All.Linear : (int)All.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, filter ? (int)All.Linear : (int)All.Nearest);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)All.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)All.ClampToEdge);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, width, height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, new uint[width * height]);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, alpha ? PixelInternalFormat.Rgba8 : PixelInternalFormat.Rgb8, width, height, 0, PixelFormat.Bgra, PixelType.UnsignedByte, new uint[width * height]);
 
             return id;
         }

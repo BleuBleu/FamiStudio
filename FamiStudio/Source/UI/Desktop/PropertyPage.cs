@@ -649,7 +649,7 @@ namespace FamiStudio
             if (prop.warningIcon == null)
                 prop.warningIcon = CreateImageBox(WarningIcons[(int)type]);
             else
-                prop.warningIcon.Image = WarningIcons[(int)type];
+                prop.warningIcon.AtlasImageName = WarningIcons[(int)type];
 
             prop.warningIcon.Resize(DpiScaling.ScaleForMainWindow(16), DpiScaling.ScaleForMainWindow(16));
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
