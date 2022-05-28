@@ -84,7 +84,7 @@ namespace FamiStudio
         private int buttonSize = DpiScaling.ScaleForMainWindow(36);
         private int checkSizeY = DpiScaling.ScaleForMainWindow(16);
 
-        private Timer gifTimer = new Timer();
+        private Timer gifTimer = new Timer(); // MATTT : Replace with tick.
         private IntPtr gif;
         private RenderBitmap gifBmp;
         private int gifSizeX;
@@ -158,7 +158,6 @@ namespace FamiStudio
             }
 
             gifHandle = GCHandle.Alloc(gifData, GCHandleType.Pinned);
-            
             gif = GifOpen(gifHandle.AddrOfPinnedObject(), 1);
             gifSizeX = GifGetWidth(gif);
             gifSizeY = GifGetHeight(gif);
