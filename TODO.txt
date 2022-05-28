@@ -24,11 +24,13 @@ P0:
 	- Pass form to dialogs, avoid ugly .INstance thing.
 - GLFW:
 	- ***** TO DERISK:
-    - DPI awareness
+    - DPI awareness => glfwGetMonitorContentScale, TEST!
     - Keyboard keys
     - Capture
+    - Resizing issue.
+    - Horizontal mouse wheel
+    - Pinch to zoom?
     - 
-
 	- Remove all dependencies to WinForms, GTK, System.Drawing, etc.
 	- 
 P1:

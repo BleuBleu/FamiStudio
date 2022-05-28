@@ -279,7 +279,7 @@ namespace FamiStudio
             var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
             var elementRects = new Rectangle[names.Length];
 
-            GL2.BindTexture(GL2.Texture2D, textureId);
+            GL.BindTexture(GL.Texture2D, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
 
@@ -304,11 +304,11 @@ namespace FamiStudio
 
                     // MATTT : Check that!!! Should be same now!
 #if FAMISTUDIO_WINDOWS
-                    var format = GL2.Bgra;
+                    var format = GL.Bgra;
 #else
                     var format = GL2.Rgba;
 #endif
-                    GL2.TexSubImage2D(GL2.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmpData.GetLength(1), bmpData.GetLength(0), format, GL2.UnsignedByte, new IntPtr(ptr));
+                    GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmpData.GetLength(1), bmpData.GetLength(0), format, GL.UnsignedByte, new IntPtr(ptr));
                 }
             }
 
@@ -671,7 +671,7 @@ namespace FamiStudio
             var id = new[] { Texture };
             GLES11.GlDeleteTextures(1, id, 0);
 #else
-            GL2.DeleteTexture(Texture);
+            GL.DeleteTexture(Texture);
 #endif
             texture = -1;
         }
@@ -977,7 +977,7 @@ namespace FamiStudio
                 var idArray = new[] { id };
                 GLES11.GlDeleteTextures(1, idArray, 0);
 #else
-                GL2.DeleteTexture(id);
+                GL.DeleteTexture(id);
 #endif
             }
             id = -1;

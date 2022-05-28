@@ -34,13 +34,34 @@ namespace FamiStudio
         public new GLControl ActiveControl => activeControl;
         public GLGraphics Graphics => controls.Graphics;
 
-        // MATTT
-        public Size Size => new Size(800, 600);
-        public int Width => 800;
-        public int Height => 600;
-        public string Text { set => glfwSetWindowTitle(window, value); }
-        public bool CanFocus => true;
+        public Size Size 
+        {
+            get
+            {
+                glfwGetWindowSize(window, out var w, out var h);
+                return new Size(w, h);
+            }
+        }
 
+        public int Width
+        {
+            get
+            {
+                glfwGetWindowSize(window, out var w, out _);
+                return w;
+            }
+        }
+
+        public int Height
+        {
+            get
+            {
+                glfwGetWindowSize(window, out _, out var h);
+                return h;
+            }
+        }
+
+        public string Text { set => glfwSetWindowTitle(window, value); }
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => controls.IsDialogActive;
         public bool MobilePianoVisible { get => false; set => value = false; }
@@ -48,15 +69,15 @@ namespace FamiStudio
         private GLControl activeControl = null;
         private GLControl captureControl = null;
         private GLControl hoverControl = null;
-        private MouseButtons captureButton   = MouseButtons.None;
+        private MouseButtons captureButton = MouseButtons.None;
         private MouseButtons lastButtonPress = MouseButtons.None;
         private Timer timer = new Timer();
         private Point contextMenuPoint = Point.Empty;
         private DateTime lastTickTime = DateTime.Now;
 
-        private DateTime       delayedRightClickStartTime = DateTime.MinValue;
-        private MouseEventArgs delayedRightClickArgs      = null;
-        private GLControl      delayedRightClickControl   = null;
+        private DateTime delayedRightClickStartTime = DateTime.MinValue;
+        private MouseEventArgs delayedRightClickArgs = null;
+        private GLControl delayedRightClickControl = null;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct NativeMessage
@@ -68,6 +89,8 @@ namespace FamiStudio
             public uint Time;
             public Point Location;
         }
+
+        GLFWwindowsizefun resizeCallback;
 
         //[DllImport("USER32.dll")]
         //private static extern short GetKeyState(int key);
@@ -105,6 +128,10 @@ namespace FamiStudio
             //GL.Clear(ClearBufferMask.ColorBufferBit);
             //GraphicsContext.CurrentContext.SwapBuffers();
 
+            resizeCallback = new GLFWwindowsizefun(OnResize);
+
+            glfwSwapInterval(1);
+            glfwSetWindowSizeCallback(window, resizeCallback);
             controls.InitializeGL();
         }
 
@@ -151,7 +178,7 @@ namespace FamiStudio
 
             if (!IsAsyncDialogInProgress)
                 famistudio.Tick(deltaTime);
-            
+
             controls.Tick(deltaTime);
 
             lastTickTime = tickTime;
@@ -183,21 +210,6 @@ namespace FamiStudio
         }
 
         /*
-        protected override void GraphicsContextInitialized()
-        {
-            GL.Disable(EnableCap.DepthTest);
-            GL.Viewport(0, 0, Width, Height);
-            GL.ClearColor(
-                Theme.DarkGreyFillColor2.R / 255.0f,
-                Theme.DarkGreyFillColor2.G / 255.0f,
-                Theme.DarkGreyFillColor2.B / 255.0f,
-                1.0f);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            GraphicsContext.CurrentContext.SwapBuffers();
-
-            controls.InitializeGL();
-        }
-
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             if (!famistudio.TryClosing())
@@ -266,266 +278,268 @@ namespace FamiStudio
             return Point.Empty;
         }
 
-        /*
-        protected override void OnResize(EventArgs e)
+        private void OnResize(IntPtr window, int width, int height)
         {
-            base.OnResize(e);
             RefreshLayout();
         }
 
-        protected void DelayRightClick(GLControl ctrl, MouseEventArgsEx e)
-        {
-            Debug.WriteLine($"DelayRightClick {ctrl}");
+    /*
 
-            delayedRightClickControl = ctrl;
-            delayedRightClickStartTime = DateTime.Now;
-            delayedRightClickArgs = e;
+    protected void DelayRightClick(GLControl ctrl, MouseEventArgsEx e)
+    {
+        Debug.WriteLine($"DelayRightClick {ctrl}");
+
+        delayedRightClickControl = ctrl;
+        delayedRightClickStartTime = DateTime.Now;
+        delayedRightClickArgs = e;
+    }
+
+    protected void ClearDelayedRightClick()
+    {
+        if (delayedRightClickControl != null)
+            Debug.WriteLine($"ClearDelayedRightClick {delayedRightClickControl}");
+
+        delayedRightClickArgs = null;
+        delayedRightClickControl = null;
+        delayedRightClickStartTime = DateTime.MinValue;
+    }
+
+    protected void ConditionalEmitDelayedRightClick(bool checkTime = true, bool forceClear = false, GLControl checkCtrl = null)
+    {
+        var deltaMs = (DateTime.Now - delayedRightClickStartTime).TotalMilliseconds;
+        var clear = forceClear;
+
+        if (delayedRightClickArgs != null && (deltaMs > DelayedRightClickTimeMs || !checkTime) && (checkCtrl == delayedRightClickControl || checkCtrl == null))
+        {
+            Debug.WriteLine($"ConditionalEmitDelayedRightClick delayedRightClickControl={delayedRightClickControl} checkTime={checkTime} deltaMs={deltaMs} forceClear={forceClear}");
+            delayedRightClickControl.MouseDownDelayed(delayedRightClickArgs);
+            clear = true;
         }
 
-        protected void ClearDelayedRightClick()
+        if (clear)
+            ClearDelayedRightClick();
+    }
+
+    protected bool ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(MouseEventArgs e, int x, int y, GLControl checkCtrl)
+    {
+        // Surprisingly is pretty common to move by 1 pixel between a right click
+        // mouse down/up. Add a small tolerance.
+        if (delayedRightClickArgs != null && checkCtrl == delayedRightClickControl && e.Button.HasFlag(MouseButtons.Right))
         {
-            if (delayedRightClickControl != null)
-                Debug.WriteLine($"ClearDelayedRightClick {delayedRightClickControl}");
+            Debug.WriteLine($"ShouldIgnoreMouseMoveBecauseOfDelayedRightClick dx={Math.Abs(x - delayedRightClickArgs.X)} dy={Math.Abs(y - delayedRightClickArgs.Y)}");
 
-            delayedRightClickArgs = null;
-            delayedRightClickControl = null;
-            delayedRightClickStartTime = DateTime.MinValue;
-        }
-
-        protected void ConditionalEmitDelayedRightClick(bool checkTime = true, bool forceClear = false, GLControl checkCtrl = null)
-        {
-            var deltaMs = (DateTime.Now - delayedRightClickStartTime).TotalMilliseconds;
-            var clear = forceClear;
-
-            if (delayedRightClickArgs != null && (deltaMs > DelayedRightClickTimeMs || !checkTime) && (checkCtrl == delayedRightClickControl || checkCtrl == null))
+            if (Math.Abs(x - delayedRightClickArgs.X) <= DelayedRightClickPixelTolerance &&
+                Math.Abs(y - delayedRightClickArgs.Y) <= DelayedRightClickPixelTolerance)
             {
-                Debug.WriteLine($"ConditionalEmitDelayedRightClick delayedRightClickControl={delayedRightClickControl} checkTime={checkTime} deltaMs={deltaMs} forceClear={forceClear}");
-                delayedRightClickControl.MouseDownDelayed(delayedRightClickArgs);
-                clear = true;
+                return true;
             }
-
-            if (clear)
-                ClearDelayedRightClick();
         }
 
-        protected bool ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(MouseEventArgs e, int x, int y, GLControl checkCtrl)
+        return false;            
+    }
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        Debug.WriteLine($"OnMouseDown {e.X} {e.Y}");
+
+        if (captureControl != null)
+            return;
+
+        var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
+        lastButtonPress = e.Button;
+        if (ctrl != null)
         {
-            // Surprisingly is pretty common to move by 1 pixel between a right click
-            // mouse down/up. Add a small tolerance.
-            if (delayedRightClickArgs != null && checkCtrl == delayedRightClickControl && e.Button.HasFlag(MouseButtons.Right))
+            SetActiveControl(ctrl);
+
+            // Ignore the first click.
+            if (controls.IsContextMenuActive && ctrl != ContextMenu)
             {
-                Debug.WriteLine($"ShouldIgnoreMouseMoveBecauseOfDelayedRightClick dx={Math.Abs(x - delayedRightClickArgs.X)} dy={Math.Abs(y - delayedRightClickArgs.Y)}");
-
-                if (Math.Abs(x - delayedRightClickArgs.X) <= DelayedRightClickPixelTolerance &&
-                    Math.Abs(y - delayedRightClickArgs.Y) <= DelayedRightClickPixelTolerance)
-                {
-                    return true;
-                }
-            }
-
-            return false;            
-        }
-
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            base.OnMouseDown(e);
-            Debug.WriteLine($"OnMouseDown {e.X} {e.Y}");
-
-            if (captureControl != null)
+                controls.HideContextMenu();
                 return;
-
-            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
-            lastButtonPress = e.Button;
-            if (ctrl != null)
-            {
-                SetActiveControl(ctrl);
-                
-                // Ignore the first click.
-                if (controls.IsContextMenuActive && ctrl != ContextMenu)
-                {
-                    controls.HideContextMenu();
-                    return;
-                }
-
-                var ex = new MouseEventArgsEx(e.Button, e.Clicks, x, y, e.Delta);
-                ctrl.GrabDialogFocus();
-                ctrl.MouseDown(ex);
-                if (ex.IsRightClickDelayed)
-                    DelayRightClick(ctrl, ex);
             }
-        }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+            var ex = new MouseEventArgsEx(e.Button, e.Clicks, x, y, e.Delta);
+            ctrl.GrabDialogFocus();
+            ctrl.MouseDown(ex);
+            if (ex.IsRightClickDelayed)
+                DelayRightClick(ctrl, ex);
+        }
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        Debug.WriteLine($"OnMouseUp {e.X} {e.Y}");
+
+        int x;
+        int y;
+        GLControl ctrl = null;
+
+        if (captureControl != null)
         {
-            base.OnMouseUp(e);
-            Debug.WriteLine($"OnMouseUp {e.X} {e.Y}");
-
-            int x;
-            int y;
-            GLControl ctrl = null;
-
-            if (captureControl != null)
-            {
-                ctrl = captureControl;
-                x = e.X - ctrl.Left;
-                y = e.Y - ctrl.Top;
-            }
-            else
-            {
-                ctrl = controls.GetControlAtCoord(e.X, e.Y, out x, out y);
-            }
-
-            if (e.Button == captureButton)
-                ReleaseMouse();
-
-            if (ctrl != null)
-            {
-                if (e.Button.HasFlag(MouseButtons.Right))
-                    ConditionalEmitDelayedRightClick(true, true, ctrl);
-
-                if (ctrl != ContextMenu)
-                    controls.HideContextMenu();
-
-                ctrl.MouseUp(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
-            }
+            ctrl = captureControl;
+            x = e.X - ctrl.Left;
+            y = e.Y - ctrl.Top;
         }
-
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        else
         {
-            base.OnMouseDoubleClick(e);
-
-            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
-            lastButtonPress = e.Button;
-            if (ctrl != null)
-            {
-                if (ctrl != ContextMenu)
-                    controls.HideContextMenu();
-
-                ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
-            }
+            ctrl = controls.GetControlAtCoord(e.X, e.Y, out x, out y);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        if (e.Button == captureButton)
+            ReleaseMouse();
+
+        if (ctrl != null)
         {
-            int x;
-            int y;
-            GLControl ctrl = null;
-            GLControl hover = null;
-            Debug.WriteLine($"OnMouseMove {e.X} {e.Y}");
+            if (e.Button.HasFlag(MouseButtons.Right))
+                ConditionalEmitDelayedRightClick(true, true, ctrl);
 
-            if (captureControl != null)
-            {
-                ctrl = captureControl;
-                x = e.X - ctrl.Left;
-                y = e.Y - ctrl.Top;
-                hover = controls.GetControlAtCoord(e.X, e.Y, out _, out _);
-            }
-            else
-            {
-                ctrl = controls.GetControlAtCoord(e.X, e.Y, out x, out y);
-                hover = ctrl;
-            }
+            if (ctrl != ContextMenu)
+                controls.HideContextMenu();
 
-            if (ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(e, x, y, ctrl))
-                return;
+            ctrl.MouseUp(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+        }
+    }
 
-            ConditionalEmitDelayedRightClick(false, true, ctrl);
+    protected override void OnMouseDoubleClick(MouseEventArgs e)
+    {
+        base.OnMouseDoubleClick(e);
 
-            // Dont forward move mouse when a context menu is active.
-            if (ctrl != null && (!controls.IsContextMenuActive || ctrl == ContextMenu))
-            {
-                ctrl.MouseMove(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
-                RefreshCursor(ctrl);
-            }
+        var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
+        lastButtonPress = e.Button;
+        if (ctrl != null)
+        {
+            if (ctrl != ContextMenu)
+                controls.HideContextMenu();
 
-            if (hover != hoverControl)
-            {
-                if (hoverControl != null && (!controls.IsContextMenuActive || hoverControl == ContextMenu))
-                    hoverControl.MouseLeave(EventArgs.Empty);
-                hoverControl = hover;
-            }
+            ctrl.MouseDoubleClick(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+        }
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        int x;
+        int y;
+        GLControl ctrl = null;
+        GLControl hover = null;
+        Debug.WriteLine($"OnMouseMove {e.X} {e.Y}");
+
+        if (captureControl != null)
+        {
+            ctrl = captureControl;
+            x = e.X - ctrl.Left;
+            y = e.Y - ctrl.Top;
+            hover = controls.GetControlAtCoord(e.X, e.Y, out _, out _);
+        }
+        else
+        {
+            ctrl = controls.GetControlAtCoord(e.X, e.Y, out x, out y);
+            hover = ctrl;
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        if (ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(e, x, y, ctrl))
+            return;
+
+        ConditionalEmitDelayedRightClick(false, true, ctrl);
+
+        // Dont forward move mouse when a context menu is active.
+        if (ctrl != null && (!controls.IsContextMenuActive || ctrl == ContextMenu))
+        {
+            ctrl.MouseMove(new MouseEventArgs(e.Button, e.Clicks, x, y, e.Delta));
+            RefreshCursor(ctrl);
+        }
+
+        if (hover != hoverControl)
         {
             if (hoverControl != null && (!controls.IsContextMenuActive || hoverControl == ContextMenu))
-            {
                 hoverControl.MouseLeave(EventArgs.Empty);
-                hoverControl = null;
-            }
-
-            base.OnMouseLeave(e);
+            hoverControl = hover;
         }
+    }
 
-        protected override void WndProc(ref Message m)
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        if (hoverControl != null && (!controls.IsContextMenuActive || hoverControl == ContextMenu))
         {
-            base.WndProc(ref m);
-
-            if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
-            {
-                var e = PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m);
-                var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
-
-                if (ctrl != null)
-                {
-                    if (ctrl != ContextMenu)
-                        controls.HideContextMenu();
-                    ctrl.MouseHorizontalWheel(e);
-                }
-            }
-            else if (m.Msg == 0x0231) // WM_ENTERSIZEMOVE 
-            {
-                // We dont receive any messages during resize/move, so we rely on a timer.
-                timer.Start();
-            }
-            else if (m.Msg == 0x0232) // WM_EXITSIZEMOVE
-            {
-                timer.Stop();
-            }
+            hoverControl.MouseLeave(EventArgs.Empty);
+            hoverControl = null;
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        base.OnMouseLeave(e);
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        base.WndProc(ref m);
+
+        if (m.Msg == 0x020e) // WM_MOUSEHWHEEL
         {
-            if (controls.IsContextMenuActive)
-            {
-                controls.ContextMenu.KeyDown(e);
-            }
-            else if (controls.IsDialogActive)
-            {
-                controls.TopDialog.KeyDown(e);
-            }
-            else
-            {
-                famistudio.KeyDown(e, (int)e.KeyCode);
-                foreach (var ctrl in controls.Controls)
-                    ctrl.KeyDown(e);
-            }
+            var e = PlatformUtils.ConvertHorizontalMouseWheelMessage(this, m);
+            var ctrl = controls.GetControlAtCoord(e.X, e.Y, out int x, out int y);
 
-            base.OnKeyDown(e);
+            if (ctrl != null)
+            {
+                if (ctrl != ContextMenu)
+                    controls.HideContextMenu();
+                ctrl.MouseHorizontalWheel(e);
+            }
         }
-
-        protected override void OnKeyUp(KeyEventArgs e)
+        else if (m.Msg == 0x0231) // WM_ENTERSIZEMOVE 
         {
-            if (controls.IsContextMenuActive)
-            {
-                controls.ContextMenu.KeyUp(e);
-            }
-            else if (controls.IsDialogActive)
-            {
-                controls.TopDialog.KeyUp(e);
-            }
-            else
-            {
-                famistudio.KeyUp(e, (int)e.KeyCode);
-                foreach (var ctrl in controls.Controls)
-                    ctrl.KeyUp(e);
-            }
-
-            base.OnKeyUp(e);
+            // We dont receive any messages during resize/move, so we rely on a timer.
+            timer.Start();
         }
-        */
+        else if (m.Msg == 0x0232) // WM_EXITSIZEMOVE
+        {
+            timer.Stop();
+        }
+    }
 
-        // MATTT
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        if (controls.IsContextMenuActive)
+        {
+            controls.ContextMenu.KeyDown(e);
+        }
+        else if (controls.IsDialogActive)
+        {
+            controls.TopDialog.KeyDown(e);
+        }
+        else
+        {
+            famistudio.KeyDown(e, (int)e.KeyCode);
+            foreach (var ctrl in controls.Controls)
+                ctrl.KeyDown(e);
+        }
+
+        base.OnKeyDown(e);
+    }
+
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+        if (controls.IsContextMenuActive)
+        {
+            controls.ContextMenu.KeyUp(e);
+        }
+        else if (controls.IsDialogActive)
+        {
+            controls.TopDialog.KeyUp(e);
+        }
+        else
+        {
+            famistudio.KeyUp(e, (int)e.KeyCode);
+            foreach (var ctrl in controls.Controls)
+                ctrl.KeyUp(e);
+        }
+
+        base.OnKeyUp(e);
+    }
+    */
+
+
+
+    // MATTT
         public void Refresh()
         {
 
@@ -533,8 +547,9 @@ namespace FamiStudio
 
         public void RefreshLayout()
         {
-            //controls.Resize(ClientRectangle.Width, ClientRectangle.Height);
-            //controls.MarkDirty();
+            glfwGetWindowSize(window, out var w, out var h);
+            controls.Resize(w, h);
+            controls.MarkDirty();
         }
 
         public void MarkDirty()
@@ -667,12 +682,6 @@ namespace FamiStudio
 
         public void Run()
         {
-
-            // MATTT : Hack.
-            glfwGetWindowSize(window, out var w, out var h);
-            controls.Resize(w, h);
-
-
             while (glfwWindowShouldClose(window) == 0)
             {
                 glfwPollEvents();
@@ -680,8 +689,6 @@ namespace FamiStudio
                 controls.Redraw();
                 glfwSwapBuffers(window);
             }
-
-            //Application.Run(this);
         }
 
         //private void FamiStudioForm_DragEnter(object sender, DragEventArgs e)

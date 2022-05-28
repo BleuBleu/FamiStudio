@@ -38,7 +38,7 @@ namespace FamiStudio
 
             glfwMakeContextCurrent(window);
 
-            GL2.Initialize();
+            GL.Initialize();
 
             return window;
         }
