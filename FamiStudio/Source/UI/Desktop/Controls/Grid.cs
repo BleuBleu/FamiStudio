@@ -37,6 +37,7 @@ namespace FamiStudio
         private object[,] data;
         private int[] columnWidths;
         private int[] columnOffsets;
+        private bool[] columnEnabled;
         private bool hasAnyDropDowns;
         private ColumnDesc[] columns;
 
@@ -88,6 +89,19 @@ namespace FamiStudio
                 dropDownActive.ListClosing += DropDownActive_ListClosing;
                 dropDownActive.SelectedIndexChanged += DropDownActive_SelectedIndexChanged;
             }
+
+            columnEnabled = new bool[columns.Length];
+            for (int i = 0; i < columnEnabled.Length; i++)
+                columnEnabled[i] = true;
+        }
+
+        public void SetColumnEnabled(int col, bool enabled)
+        {
+            // This is the only one that I added support to disabled state right now.
+            Debug.Assert(columns[col].Type == ColumnType.Slider);
+
+            columnEnabled[col] = enabled;
+            MarkDirty();
         }
 
         private void DropDownActive_SelectedIndexChanged(RenderControl sender, int index)
@@ -191,8 +205,6 @@ namespace FamiStudio
             if (x < 0 || x > maxX || y < minY || y > height)
                 return false;
 
-            row = y / rowHeight - numHeaderRows + scroll;
-
             for (int i = 1; i < columnOffsets.Length; i++)
             {
                 if (x <= columnOffsets[i])
@@ -201,6 +213,14 @@ namespace FamiStudio
                     break;
                 }
             }
+
+            if (!columnEnabled[col])
+            {
+                col = -1;
+                return false;
+            }
+
+            row = y / rowHeight - numHeaderRows + scroll;
 
             Debug.Assert(col >= 0);
             return true;
@@ -243,6 +263,7 @@ namespace FamiStudio
                         if (valid)
                         { 
                             var colDesc = columns[col];
+                            var colEnabled = columnEnabled[col];
 
                             switch (colDesc.Type)
                             {
@@ -298,7 +319,7 @@ namespace FamiStudio
 
         private bool IsPointInButton(int x, int row, int col)
         {
-            if (row < 0 || col < 0)
+            if (row < 0 || col < 0 || !columnEnabled[col])
                 return false;
             var cellX = x - columnOffsets[col];
             var buttonX = cellX - columnWidths[col] + rowHeight;
@@ -443,6 +464,7 @@ namespace FamiStudio
                     {
                         var col = columns[j];
                         var colWidth = columnWidths[j];
+                        var colEnabled = columnEnabled[j];
                         var x = columnOffsets[j];
                         var val = data[k, j];
 
@@ -474,8 +496,15 @@ namespace FamiStudio
                             }
                             case ColumnType.Slider:
                             {
-                                c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, ThemeResources.DarkGreyFillBrush3);
-                                c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, colWidth, rowHeight);
+                                if (colEnabled)
+                                {
+                                    c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, ThemeResources.DarkGreyFillBrush3);
+                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, colWidth, rowHeight);
+                                }
+                                else
+                                {
+                                    c.DrawText("N/A", ThemeResources.FontMedium, 0, 0, ThemeResources.MediumGreyFillBrush1, RenderTextFlags.MiddleCenter, colWidth, rowHeight);
+                                }
                                 break;
                             }
                             case ColumnType.Label:

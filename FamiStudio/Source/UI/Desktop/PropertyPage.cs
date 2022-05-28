@@ -577,9 +577,8 @@ namespace FamiStudio
 
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
-            // MATTT
-            //var listView = properties[propIdx].control as PropertyPageListView;
-            //listView.SetColumnEnabled(colIdx, enabled);
+            var grid = properties[propIdx].control as Grid2;
+            grid.SetColumnEnabled(colIdx, enabled);
         }
 
         public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)
