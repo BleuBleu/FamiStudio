@@ -128,11 +128,11 @@ namespace FamiStudio
         public static Project    StaticProject  { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
 
-        public void Initialize(string filename)
+        public void Initialize(FamiStudioForm form, string filename)
         {
             StaticInstance = this;
 
-            SetMainForm(PlatformUtils.IsMobile ? FamiStudioForm.Instance : new FamiStudioForm(this));
+            SetMainForm(form);
             InitializeMetronome();
             InitializeMidi();
             InitializeMultiMediaNotifications();

@@ -171,7 +171,7 @@ namespace FamiStudio
             return new MouseEventArgs(MouseButtons.None, 1, clientPos.X, clientPos.Y, delta);
         }
 
-        public static bool IsVS2015RuntimeInstalled()
+        public static bool IsVS2019RuntimeInstalled()
         {
             try
             {

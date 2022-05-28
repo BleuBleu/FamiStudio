@@ -23,6 +23,12 @@ P0:
 	- All dialogs will need to be async, no more "ShowDialog"
 	- Pass form to dialogs, avoid ugly .INstance thing.
 - GLFW:
+	- ***** TO DERISK:
+    - DPI awareness
+    - Keyboard keys
+    - Capture
+    - 
+
 	- Remove all dependencies to WinForms, GTK, System.Drawing, etc.
 	- 
 P1:

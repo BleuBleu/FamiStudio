@@ -155,7 +155,7 @@ namespace FamiStudio
             if (appAlreadyExists)
                 famistudio.SetMainForm(this, true);
             else
-                famistudio.Initialize(null);
+                famistudio.Initialize(this);
 
             detector = new GestureDetectorCompat(this, this);
             detector.IsLongpressEnabled = true;

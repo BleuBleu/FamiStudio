@@ -59,7 +59,6 @@
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
-    <PackageReference Include="OpenTK" Version="3.3.2" />
     <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -200,22 +199,17 @@
     <Compile Include="Source\UI\Desktop\Controls\Slider.cs" />
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
+    <Compile Include="Source\UI\Desktop\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
+    <Compile Include="Source\UI\Desktop\GLFW.cs" />
+    <Compile Include="Source\UI\Desktop\GLFW.LoadAssembly.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
     <Compile Include="Source\UI\Desktop\MobileClasses.cs" />
     <Compile Include="Source\UI\Desktop\MultiPropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
-    <Compile Include="Source\UI\Desktop\TutorialDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
     <Compile Include="Source\UI\Windows\Cursors.cs" />
-    <Compile Include="Source\UI\Windows\FamiStudioForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Source\UI\Windows\GLForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Source\UI\Windows\PlatformUtils.cs" />
     <Compile Include="Source\UI\Windows\WinUtils.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
@@ -705,6 +699,9 @@
     <EmbeddedResource Include="Rom\rom_pal.nes" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="glfw3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>    
     <Content Include="GifDec.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

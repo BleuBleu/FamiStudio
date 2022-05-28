@@ -11,8 +11,6 @@ using Color = System.Drawing.Color;
 using Android.Opengl;
 using Bitmap = Android.Graphics.Bitmap;
 #else
-using OpenTK;
-using OpenTK.Graphics.OpenGL;
 #if FAMISTUDIO_WINDOWS
 using Bitmap = System.Drawing.Bitmap;
 #else
@@ -281,7 +279,7 @@ namespace FamiStudio
             var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
             var elementRects = new Rectangle[names.Length];
 
-            GL.BindTexture(TextureTarget.Texture2D, textureId);
+            GL2.BindTexture(GL2.Texture2D, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
 
@@ -306,11 +304,11 @@ namespace FamiStudio
 
                     // MATTT : Check that!!! Should be same now!
 #if FAMISTUDIO_WINDOWS
-                    var format = PixelFormat.Bgra;
+                    var format = GL2.Bgra;
 #else
-                    var format = PixelFormat.Rgba;
+                    var format = GL2.Rgba;
 #endif
-                    GL.TexSubImage2D(TextureTarget.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmpData.GetLength(1), bmpData.GetLength(0), format, PixelType.UnsignedByte, new IntPtr(ptr));
+                    GL2.TexSubImage2D(GL2.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmpData.GetLength(1), bmpData.GetLength(0), format, GL2.UnsignedByte, new IntPtr(ptr));
                 }
             }
 
@@ -673,7 +671,7 @@ namespace FamiStudio
             var id = new[] { Texture };
             GLES11.GlDeleteTextures(1, id, 0);
 #else
-            GL.DeleteTexture(Texture);
+            GL2.DeleteTexture(Texture);
 #endif
             texture = -1;
         }
@@ -979,7 +977,7 @@ namespace FamiStudio
                 var idArray = new[] { id };
                 GLES11.GlDeleteTextures(1, idArray, 0);
 #else
-                GL.DeleteTexture(id);
+                GL2.DeleteTexture(id);
 #endif
             }
             id = -1;
@@ -1063,6 +1061,22 @@ namespace FamiStudio
 #else
             return c.ToArgb();
 #endif
+        }
+    }
+
+    public struct Vector4
+    {
+        public float X;
+        public float Y;
+        public float Z;
+        public float W;
+
+        public Vector4(float x, float y, float z, float w)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
         }
     }
 

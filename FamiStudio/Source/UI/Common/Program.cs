@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using static GLFWDotNet.GLFW;
 
 using RenderTheme = FamiStudio.ThemeRenderResources;
 
@@ -15,10 +16,32 @@ namespace FamiStudio
 #if FAMISTUDIO_WINDOWS
         [DllImport("SHCore.dll", SetLastError = true)]
         private static extern bool SetProcessDpiAwareness(int awareness);
-        [DllImport("kernel32.dll")]
-        static extern bool AttachConsole(int dwProcessId);
-        private const int ATTACH_PARENT_PROCESS = -1;
 #endif
+
+        // MATTT : Move somewhere else!
+        static IntPtr InitializeGLFW()
+        {
+            if (glfwInit() == 0)
+                return IntPtr.Zero;
+
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+            glfwWindowHint(GLFW_MAXIMIZED, 1);
+
+            var window = glfwCreateWindow(640, 480, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
+            if (window == IntPtr.Zero)
+            {
+                glfwTerminate();
+                return IntPtr.Zero; 
+            }
+
+            glfwMakeContextCurrent(window);
+
+            GL2.Initialize();
+
+            return window;
+        }
 
         [STAThread]
         static unsafe void Main(string[] args)
@@ -31,7 +54,7 @@ namespace FamiStudio
             }
             catch { }
 
-            if (!PlatformUtils.IsVS2015RuntimeInstalled())
+            if (!PlatformUtils.IsVS2019RuntimeInstalled())
             {
                 if (MessageBox.Show("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
@@ -55,8 +78,8 @@ namespace FamiStudio
             Init.InitializeBaseSystems();
 
 #if FAMISTUDIO_WINDOWS
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            //Application.EnableVisualStyles();
+            //Application.SetCompatibleTextRenderingDefault(false);
 #if !DEBUG
             if (Settings.IsPortableMode)
                 WinUtils.AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
@@ -69,10 +92,16 @@ namespace FamiStudio
 
             if (!cli.Run())
             {
-                //AttachConsole(ATTACH_PARENT_PROCESS);
+                var glfwWindow = InitializeGLFW();
+                if (glfwWindow == IntPtr.Zero)
+                {
+                    MessageBox.Show("Error initializing OpenGL.", "Error", MessageBoxButtons.OK);
+                    Environment.Exit(-1);
+                }
 
                 var famiStudio = new FamiStudio();
-                famiStudio.Initialize(args.Length > 0 ? args[0] : null);
+                var form = new FamiStudioForm(famiStudio, glfwWindow);
+                famiStudio.Initialize(form, args.Length > 0 ? args[0] : null);
                 famiStudio.Run();
             }
 
