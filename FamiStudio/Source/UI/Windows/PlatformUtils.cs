@@ -15,6 +15,7 @@ namespace FamiStudio
 {
     public static class PlatformUtils
     {
+        // MATTT : Remove once we ditched WinForms
         public static PrivateFontCollection PrivateFontCollection;
 
         public static string ApplicationVersion => Application.ProductVersion;

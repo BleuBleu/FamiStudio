@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
+using RenderBitmap         = FamiStudio.GLBitmap;
 using RenderBrush          = FamiStudio.GLBrush;
 using RenderGeometry       = FamiStudio.GLGeometry;
 using RenderControl        = FamiStudio.GLControl;
@@ -14,7 +15,8 @@ namespace FamiStudio
     public class ImageBox2 : RenderControl
     {
         private string imageName;
-        private RenderBitmapAtlasRef bmp;
+        private RenderBitmap bmp;
+        private RenderBitmapAtlasRef bmpAtlas;
 
         public ImageBox2(string image)
         {
@@ -22,24 +24,40 @@ namespace FamiStudio
             imageName = image;
         }
 
+        public ImageBox2(RenderBitmap b)
+        {
+            height = DpiScaling.ScaleForMainWindow(24);
+            bmp = b;
+        }
+
         public string Image
         {
             get { return imageName; }
-            set { imageName = value; bmp = null; MarkDirty(); }
+            set { imageName = value; bmpAtlas = null; MarkDirty(); }
         }
 
         protected override void OnRender(RenderGraphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
-            if (bmp == null)
-            {
-                bmp = g.GetBitmapAtlasRef(imageName);
-                Debug.Assert(bmp != null);
-            }
-
             var c = parentDialog.CommandList;
-            c.DrawBitmapAtlasCentered(bmp, 0, 0, width, height);
+
+            if (bmp != null)
+            {
+                c.DrawBitmapCentered(bmp, 0, 0, width, height);
+            }
+            else
+            {
+                c.FillRectangle(0, 0, width, height, ThemeResources.BlackBrush); // MATTT
+
+                if (bmpAtlas == null)
+                {
+                    bmpAtlas = g.GetBitmapAtlasRef(imageName);
+                    Debug.Assert(bmpAtlas != null);
+                }
+
+                c.DrawBitmapAtlasCentered(bmpAtlas, 0, 0, width, height);
+            }
         }
     }
 }
