@@ -3,12 +3,6 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using static GLFWDotNet.GLFW;
 
-#if FAMISTUDIO_WINDOWS
-using Bitmap = System.Drawing.Bitmap;
-#else
-using Bitmap = Gdk.Pixbuf;
-#endif
-
 // MATTT : Make sure we call TerminateGraphics.
 namespace FamiStudio
 {

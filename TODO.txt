@@ -33,6 +33,7 @@ P0:
   - Clear window to grey as soon as its created, nicer during loading.
   - Merge FamiStudioControls <-> Forms.
   - Window icon.
+  - Split in more folders, think of stuff that is kind of standalone (graphics, etc.)
 	- Remove all dependencies to WinForms, GTK, System.Drawing, etc.
 	- 
 P1:

@@ -592,7 +592,7 @@ namespace FamiStudio
 
         private int MakeButtonFlags(int button)
         {
-            return button != 0 ? 1 << button : 0;
+            return 1 << button;
         }
 
         private int MakeButtonFlags(bool l, bool r, bool m)
