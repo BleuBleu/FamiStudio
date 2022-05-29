@@ -30,7 +30,9 @@ P0:
     - Resizing issue.
     - Horizontal mouse wheel
     - Pinch to zoom?
-    - 
+  - Clear window to grey as soon as its created, nicer during loading.
+  - Merge FamiStudioControls <-> Forms.
+  - Window icon.
 	- Remove all dependencies to WinForms, GTK, System.Drawing, etc.
 	- 
 P1:

@@ -592,9 +592,20 @@ namespace FamiStudio
             PianoRoll.MarkDirty();
         }
 
-        public void Run()
+        public bool Run(string[] args)
         {
+            var form = FamiStudioForm.InitializeGLFWAndCreateWindow(this);
+
+            if (form == null)
+            {
+                MessageBox.Show("Error initializing OpenGL.", "Error", MessageBoxButtons.OK);
+                return false;
+            }
+
+            Initialize(form, args.Length > 0 ? args[0] : null);
             mainForm.Run();
+
+            return true;
         }
 
         public void ShowContextMenu(ContextMenuOption[] options)
@@ -1564,7 +1575,7 @@ namespace FamiStudio
 
             if (Settings.ShowOscilloscope)
             {
-                oscilloscope = new Oscilloscope((int)DpiScaling.MainWindow, project.OutputsStereoAudio);
+                oscilloscope = new Oscilloscope((int)DpiScaling.Window, project.OutputsStereoAudio);
                 oscilloscope.Start();
 
                 if (instrumentPlayer != null)

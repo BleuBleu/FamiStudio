@@ -58,6 +58,9 @@
     <ApplicationIcon>Resources\FamiStudio.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
     <Reference Include="System" />
@@ -72,6 +75,7 @@
     <None Include="App.config" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
+    <None Include="app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -196,6 +200,7 @@
     <Compile Include="Source\UI\Desktop\Controls\RadioButton.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Slider.cs" />
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
+    <Compile Include="Source\UI\Desktop\Cursors.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioForm.cs" />
     <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
@@ -207,9 +212,7 @@
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
-    <Compile Include="Source\UI\Windows\Cursors.cs" />
     <Compile Include="Source\UI\Windows\PlatformUtils.cs" />
-    <Compile Include="Source\UI\Windows\WinUtils.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
@@ -652,8 +655,8 @@
     <EmbeddedResource Include="Resources\Slide.tga" />
     <EmbeddedResource Include="Resources\Slide@15x.tga" />
     <EmbeddedResource Include="Resources\Slide@2x.tga" />
-    <EmbeddedResource Include="Resources\SliderThumb.tga" />    
-    <EmbeddedResource Include="Resources\SliderThumb@2x.tga" />    
+    <EmbeddedResource Include="Resources\SliderThumb.tga" />
+    <EmbeddedResource Include="Resources\SliderThumb@2x.tga" />
     <EmbeddedResource Include="Resources\Snap.tga" />
     <EmbeddedResource Include="Resources\Snap@2x.tga" />
     <EmbeddedResource Include="Resources\SnapOff.tga" />
@@ -699,7 +702,7 @@
   <ItemGroup>
     <Content Include="glfw3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>    
+    </Content>
     <Content Include="GifDec.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

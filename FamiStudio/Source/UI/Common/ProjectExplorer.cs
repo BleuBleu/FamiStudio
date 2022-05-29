@@ -1847,8 +1847,8 @@ namespace FamiStudio
                         int dx = x - sx;
                         int dy = y - sy;
 
-                        if (dx >= 0 && dx < 16 * DpiScaling.MainWindow &&
-                            dy >= 0 && dy < 16 * DpiScaling.MainWindow)
+                        if (dx >= 0 && dx < 16 * DpiScaling.Window &&
+                            dy >= 0 && dy < 16 * DpiScaling.Window)
                         {
                             buttonRelX = dx;
                             buttonRelY = dy;
@@ -2339,9 +2339,9 @@ namespace FamiStudio
             App.SequencerShowExpansionIcons = buttonIdx >= 0 && (buttons[buttonIdx].type == ButtonType.Instrument || buttons[buttonIdx].type == ButtonType.InstrumentHeader);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -2363,14 +2363,14 @@ namespace FamiStudio
             App.SequencerShowExpansionIcons = false;
         }
 
-        protected bool HandleMouseUpButtons(MouseEventArgs e)
+        protected bool HandleMouseUpButtons(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuButtons(e.X, e.Y);
+            return e.Right && HandleContextMenuButtons(e.X, e.Y);
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle);
+            bool middle = e.Middle;
             bool doMouseUp = false;
 
             if (!middle)
@@ -2462,9 +2462,9 @@ namespace FamiStudio
             canFling = false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs2 e)
         {
-            DoScroll(e.Delta > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
+            DoScroll(e.ScrollY > 0 ? buttonSizeY * 3 : -buttonSizeY * 3);
         }
 
         protected override void OnResize(EventArgs e)
@@ -3098,9 +3098,9 @@ namespace FamiStudio
             });
         }
 
-        private bool HandleMouseDownPan(MouseEventArgs e)
+        private bool HandleMouseDownPan(MouseEventArgs2 e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
 
             if (middle)
             {
@@ -3111,9 +3111,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownScrollbar(MouseEventArgs e)
+        private bool HandleMouseDownScrollbar(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && needsScrollBar && e.X > contentSizeX && GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY))
+            if (e.Left && needsScrollBar && e.X > contentSizeX && GetScrollBarParams(out var scrollBarPosY, out var scrollBarSizeY))
             {
                 if (e.Y < scrollBarPosY)
                 {
@@ -3138,9 +3138,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSongProjectSettings(MouseEventArgs e, SubButtonType subButtonType)
+        private bool HandleMouseDownSongProjectSettings(MouseEventArgs2 e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Properties)
                     EditProjectProperties(new Point(e.X, e.Y));
@@ -3149,9 +3149,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownSongHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
+        private bool HandleMouseDownSongHeaderButton(MouseEventArgs2 e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Add)
                     AddSong();
@@ -3162,9 +3162,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownSongButton(MouseEventArgs e, Button button, int buttonIdx, SubButtonType subButtonType)
+        private bool HandleMouseDownSongButton(MouseEventArgs2 e, Button button, int buttonIdx, SubButtonType subButtonType)
         {
-            var left  = e.Button.HasFlag(MouseButtons.Left);
+            var left  = e.Left;
 
             if (left && subButtonType == SubButtonType.Properties)
             {
@@ -3180,9 +3180,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownInstrumentHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
+        private bool HandleMouseDownInstrumentHeaderButton(MouseEventArgs2 e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Add)
                     AskAddInstrument(e.X, e.Y);
@@ -3193,9 +3193,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownInstrumentButton(MouseEventArgs e, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
+        private bool HandleMouseDownInstrumentButton(MouseEventArgs2 e, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Expand)
                 {
@@ -3251,9 +3251,9 @@ namespace FamiStudio
             }
         }
 
-        private bool HandleMouseDownParamSliderButton(MouseEventArgs e, Button button, int buttonIdx)
+        private bool HandleMouseDownParamSliderButton(MouseEventArgs2 e, Button button, int buttonIdx)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool left  = e.Left;
 
             if (left)
             {
@@ -3337,9 +3337,9 @@ namespace FamiStudio
             RefreshButtons();
         }
 
-        private bool HandleMouseDownParamCheckboxButton(MouseEventArgs e, Button button)
+        private bool HandleMouseDownParamCheckboxButton(MouseEventArgs2 e, Button button)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool left  = e.Left;
 
             if (left)
                 ClickParamCheckbox(e.X, e.Y, button, false);
@@ -3347,9 +3347,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownParamListButton(MouseEventArgs e, Button button)
+        private bool HandleMouseDownParamListButton(MouseEventArgs2 e, Button button)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool left  = e.Left;
 
             if (left)
                 ClickParamListButton(e.X, e.Y, button, false);
@@ -3357,9 +3357,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownParamTabs(MouseEventArgs e, Button button)
+        private bool HandleMouseDownParamTabs(MouseEventArgs2 e, Button button)
         {
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Left;
 
             if (left)
                 ClickParamTabsButton(e.X, e.Y, button);
@@ -3367,9 +3367,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownArpeggioHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
+        private bool HandleMouseDownArpeggioHeaderButton(MouseEventArgs2 e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Add)
                     AddArpeggio();
@@ -3378,9 +3378,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownArpeggioButton(MouseEventArgs e, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
+        private bool HandleMouseDownArpeggioButton(MouseEventArgs2 e, Button button, SubButtonType subButtonType, int buttonIdx, int buttonRelX, int buttonRelY)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.Properties)
                 {
@@ -3404,9 +3404,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownDpcmHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
+        private bool HandleMouseDownDpcmHeaderButton(MouseEventArgs2 e, SubButtonType subButtonType)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && subButtonType == SubButtonType.Load)
+            if (e.Left && subButtonType == SubButtonType.Load)
             {
                 LoadDPCMSample();
             }
@@ -3414,9 +3414,9 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownDpcmButton(MouseEventArgs e, Button button, SubButtonType subButtonType, int buttonIdx)
+        private bool HandleMouseDownDpcmButton(MouseEventArgs2 e, Button button, SubButtonType subButtonType, int buttonIdx)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 if (subButtonType == SubButtonType.EditWave)
                 {
@@ -3449,7 +3449,7 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
-            else if (e.Button.HasFlag(MouseButtons.Right))
+            else if (e.Right)
             {
                 if (subButtonType == SubButtonType.Play)
                 {
@@ -3460,7 +3460,7 @@ namespace FamiStudio
             return true;
         }
 
-        private bool HandleMouseDownTopTabs(MouseEventArgs e)
+        private bool HandleMouseDownTopTabs(MouseEventArgs2 e)
         {
             if (topTabSizeY > 0 && e.Y < topTabSizeY)
             {
@@ -3472,7 +3472,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownButtons(MouseEventArgs e)
+        private bool HandleMouseDownButtons(MouseEventArgs2 e)
         {
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType, out var buttonRelX, out var buttonRelY);
 
@@ -3516,7 +3516,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             if (captureOperation != CaptureOperation.None)
                 return;
@@ -4347,7 +4347,7 @@ namespace FamiStudio
             });
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
         {
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
@@ -4355,16 +4355,6 @@ namespace FamiStudio
             {
                 if (captureOperation != CaptureOperation.None)
                     AbortCaptureOperation();
-
-                var button = buttons[buttonIdx];
-                var pt = new Point(e.X, e.Y);   
-
-                if (PlatformUtils.IsGTK)
-                {
-                    // When pressing multiple times on mac, it creates click -> dbl click -> click -> dbl click sequences which
-                    // makes the project explorer feel very sluggish. Interpret dbl click as clicks helps a lot.
-                    OnMouseDown(new MouseEventArgsEx(e));
-                }
             }
         }
 

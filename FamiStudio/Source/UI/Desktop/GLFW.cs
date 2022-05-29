@@ -542,7 +542,7 @@ namespace GLFWDotNet
 			public delegate void glfwGetWindowFrameSize(IntPtr window, out int left, out int top, out int right, out int bottom);
 
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-			public delegate void glfwGetWindowContentScale(IntPtr window, out IntPtr xscale, out IntPtr yscale);
+			public delegate void glfwGetWindowContentScale(IntPtr window, out float xscale, out float yscale);
 
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
 			public delegate float glfwGetWindowOpacity(IntPtr window);
@@ -2054,7 +2054,7 @@ namespace GLFWDotNet
 		/// <param name="yscale">
 		/// Where to store the y-axis content scale, or `NULL`.
 		/// </param>
-		public static void glfwGetWindowContentScale(IntPtr window, out IntPtr xscale, out IntPtr yscale)
+		public static void glfwGetWindowContentScale(IntPtr window, out float xscale, out float yscale)
 		{
 			_glfwGetWindowContentScale(window, out xscale, out yscale);
 		}

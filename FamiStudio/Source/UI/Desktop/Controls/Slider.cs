@@ -67,7 +67,7 @@ namespace FamiStudio
             return new Rectangle(x, y, thumbSize, thumbSize);
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             var thumbRect = GetThumbRectangle();
             if (thumbRect.Contains(e.X, e.Y))
@@ -86,7 +86,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
             if (dragging)
             {
@@ -95,7 +95,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             if (dragging)
             {

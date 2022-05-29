@@ -369,7 +369,7 @@ namespace FamiStudio
 
         public GLBitmap CreateEmptyBitmap(int width, int height, bool alpha = true, bool filter = false)
         {
-            return new GLBitmap(CreateEmptyTexture(width, height, filter), width, height, true, filter);
+            return new GLBitmap(CreateEmptyTexture(width, height, alpha, filter), width, height, true, filter);
         }
 
         public GLBrush CreateSolidBrush(Color color)

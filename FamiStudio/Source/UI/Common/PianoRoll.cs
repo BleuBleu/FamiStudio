@@ -3694,9 +3694,9 @@ namespace FamiStudio
             }
         }
 
-        private bool HandleDoubleClickChannelNote(MouseEventArgs e)
+        private bool HandleDoubleClickChannelNote(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && GetLocationForCoord(e.X, e.Y, out var mouseLocation, out byte noteValue) && mouseLocation.IsInSong(Song))
+            if (e.Left && GetLocationForCoord(e.X, e.Y, out var mouseLocation, out byte noteValue) && mouseLocation.IsInSong(Song))
             {
                 var channel = Song.Channels[editChannel];
                 var noteLocation = mouseLocation;
@@ -3714,9 +3714,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleDoubleClickEffectPanel(MouseEventArgs e)
+        private bool HandleDoubleClickEffectPanel(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
+            if (e.Left && selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
             {
                 var channel = Song.Channels[editChannel];
                 var pattern = channel.PatternInstances[location.PatternIndex];
@@ -3734,7 +3734,7 @@ namespace FamiStudio
 
         }
 
-        private bool HandleDoubleClickDPCMMapping(MouseEventArgs e)
+        private bool HandleDoubleClickDPCMMapping(MouseEventArgs2 e)
         {
             if (GetLocationForCoord(e.X, e.Y, out _, out var noteValue))
             {
@@ -3747,7 +3747,7 @@ namespace FamiStudio
             return true;
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
         {
             if (editMode == EditionMode.Channel)
             {
@@ -4780,9 +4780,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseDownPan(MouseEventArgs e)
+        private bool HandleMouseDownPan(MouseEventArgs2 e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
 
             if (middle && e.Y > headerSizeY && e.X > pianoSizeX)
             {
@@ -4794,9 +4794,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownScrollbar(MouseEventArgs e)
+        private bool HandleMouseDownScrollbar(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && scrollBarThickness > 0 && e.X > pianoSizeX && e.Y > headerAndEffectSizeY)
+            if (e.Left && scrollBarThickness > 0 && e.X > pianoSizeX && e.Y > headerAndEffectSizeY)
             {
                 if (e.Y >= (Height - scrollBarThickness) && GetScrollBarParams(true, out var scrollBarPosX, out var scrollBarSizeX))
                 {
@@ -4845,9 +4845,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownPiano(MouseEventArgs e)
+        private bool HandleMouseDownPiano(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInPiano(e.X, e.Y))
+            if (e.Left && IsPointInPiano(e.X, e.Y))
             {
                 StartPlayPiano(e.X, e.Y);
                 return true;
@@ -4856,9 +4856,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSeekBar(MouseEventArgs e)
+        private bool HandleMouseDownSeekBar(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInHeader(e.X, e.Y))
+            if (e.Left && IsPointInHeader(e.X, e.Y))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSeekBar);
                 UpdateSeekDrag(e.X, e.Y, false);
@@ -4868,9 +4868,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownHeaderSelection(MouseEventArgsEx e)
+        private bool HandleMouseDownHeaderSelection(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && IsPointInHeader(e.X, e.Y))
+            if (e.Right && IsPointInHeader(e.X, e.Y))
             {
                 e.DelayRightClick(); // Need to wait and see if its a context menu click or not.
                 return true;
@@ -4879,9 +4879,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownEnvelopeSelection(MouseEventArgsEx e)
+        private bool HandleMouseDownEnvelopeSelection(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
+            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
                 e.DelayRightClick(); // Need to wait and see if its a context menu click or not.
                 return true;
@@ -4890,9 +4890,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownEffectList(MouseEventArgs e)
+        private bool HandleMouseDownEffectList(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInEffectList(e.X, e.Y))
+            if (e.Left && IsPointInEffectList(e.X, e.Y))
             {
                 int effectIdx = (e.Y - headerSizeY) / effectButtonSizeY;
                 if (effectIdx >= 0 && effectIdx < supportedEffects.Length)
@@ -4906,9 +4906,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownAltZoom(MouseEventArgs e)
+        private bool HandleMouseDownAltZoom(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && ModifierKeys.HasFlag(Keys.Alt))
+            if (e.Right && ModifierKeys.HasFlag(Keys.Alt))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;
@@ -4929,9 +4929,9 @@ namespace FamiStudio
             ResizeEnvelope(x, y);
         }
 
-        private bool HandleMouseDownEnvelopeResize(MouseEventArgs e)
+        private bool HandleMouseDownEnvelopeResize(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointWhereCanResizeEnvelope(e.X, e.Y) && EditEnvelope.CanResize)
+            if (e.Left && IsPointWhereCanResizeEnvelope(e.X, e.Y) && EditEnvelope.CanResize)
             {
                 StartResizeEnvelope(e.X, e.Y);
                 return true;
@@ -4940,10 +4940,10 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownEnvelopeLoopRelease(MouseEventArgs e)
+        private bool HandleMouseDownEnvelopeLoopRelease(MouseEventArgs2 e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool left  = e.Left;
+            bool right = e.Right;
 
             if (((left && EditEnvelope.CanLoop) || (right && EditEnvelope.CanRelease && EditEnvelope.Loop >= 0)) && IsPointInHeaderBottomPart(e.X, e.Y))
             {
@@ -4974,9 +4974,9 @@ namespace FamiStudio
             DrawEnvelope(x, y, true);
         }
 
-        private bool HandleMouseDownDrawEnvelope(MouseEventArgs e)
+        private bool HandleMouseDownDrawEnvelope(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInNoteArea(e.X, e.Y) && EditEnvelope.Length > 0)
+            if (e.Left && IsPointInNoteArea(e.X, e.Y) && EditEnvelope.Length > 0)
             {
                 StartDrawEnvelope(e.X, e.Y);
                 return true;
@@ -4985,10 +4985,10 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownEffectPanel(MouseEventArgsEx e)
+        private bool HandleMouseDownEffectPanel(MouseEventArgs2 e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool left  = e.Left;
+            bool right = e.Right;
 
             if (selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
             {
@@ -5024,9 +5024,9 @@ namespace FamiStudio
             StartCaptureOperation(x, y, CaptureOperation.DragWaveVolumeEnvelope);
         }
 
-        private bool HandleMouseDownDPCMVolumeEnvelope(MouseEventArgs e)
+        private bool HandleMouseDownDPCMVolumeEnvelope(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointInEffectPanel(e.X, e.Y))
+            if (e.Left && IsPointInEffectPanel(e.X, e.Y))
             {
                 var vertexIdx = GetWaveVolumeEnvelopeVertexIndex(e.X, e.Y);
                 if (vertexIdx >= 0)
@@ -5039,9 +5039,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSnapButton(MouseEventArgs e)
+        private bool HandleMouseDownSnapButton(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && (IsPointOnSnapButton(e.X, e.Y) || IsPointOnSnapResolution(e.X, e.Y)))
+            if (e.Left && (IsPointOnSnapButton(e.X, e.Y) || IsPointOnSnapResolution(e.X, e.Y)))
             {
                 snap = !snap;
                 MarkDirty();
@@ -5051,9 +5051,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownMaximizeButton(MouseEventArgs e)
+        private bool HandleMouseDownMaximizeButton(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointOnMaximizeButton(e.X, e.Y))
+            if (e.Left && IsPointOnMaximizeButton(e.X, e.Y))
             {
                 ToggleMaximize();
                 MarkDirty();
@@ -5063,9 +5063,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs e)
+        private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && IsPointOnToggleEffectPannelButton(e.X, e.Y))
+            if (e.Left && IsPointOnToggleEffectPannelButton(e.X, e.Y))
             {
                 ToggleEffectPannel();
                 return true;
@@ -5081,10 +5081,10 @@ namespace FamiStudio
                 UpdateWaveSelection(x, y);
         }
 
-        private bool HandleMouseDownWaveSelection(MouseEventArgsEx e)
+        private bool HandleMouseDownWaveSelection(MouseEventArgs2 e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool left  = e.Left;
+            bool right = e.Right;
 
             if ((left || right) && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
             {
@@ -5098,10 +5098,10 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownChannelNote(MouseEventArgsEx e)
+        private bool HandleMouseDownChannelNote(MouseEventArgs2 e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool left  = e.Left;
+            bool right = e.Right;
 
             if (GetLocationForCoord(e.X, e.Y, out var mouseLocation, out byte noteValue))
             {
@@ -5181,9 +5181,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDPCMMapping(MouseEventArgs e)
+        private bool HandleMouseDownDPCMMapping(MouseEventArgs2 e)
         {
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Left;
 
             if (left && GetLocationForCoord(e.X, e.Y, out var location, out var noteValue))
             {
@@ -5211,20 +5211,20 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownNoteGizmos(MouseEventArgs e)
+        private bool HandleMouseDownNoteGizmos(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Left) && HandleNoteGizmos(e.X, e.Y);
+            return e.Left && HandleNoteGizmos(e.X, e.Y);
         }
 
-        private bool HandleMouseDownEffectGizmos(MouseEventArgs e)
+        private bool HandleMouseDownEffectGizmos(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Left) && HandleEffectsGizmos(e.X, e.Y);
+            return e.Left && HandleEffectsGizmos(e.X, e.Y);
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool left  = e.Left;
+            bool right = e.Right;
 
             if (captureOperation != CaptureOperation.None && (left || right))
                 return;
@@ -5281,9 +5281,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseDownDelayedChannelNotes(MouseEventArgs e)
+        private bool HandleMouseDownDelayedChannelNotes(MouseEventArgs2 e)
         {
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool right = e.Right;
 
             if (right && GetLocationForCoord(e.X, e.Y, out var mouseLocation, out byte noteValue) && mouseLocation.PatternIndex < Song.Length)
             {
@@ -5300,9 +5300,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedHeaderSelection(MouseEventArgs e)
+        private bool HandleMouseDownDelayedHeaderSelection(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && IsPointInHeader(e.X, e.Y))
+            if (e.Right && IsPointInHeader(e.X, e.Y))
             {
                 StartSelection(e.X, e.Y);
                 return true;
@@ -5311,9 +5311,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedEffectPanel(MouseEventArgs e)
+        private bool HandleMouseDownDelayedEffectPanel(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
+            if (e.Right && selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
             {
                 var pattern = Song.Channels[editChannel].PatternInstances[location.PatternIndex];
 
@@ -5326,9 +5326,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedEnvelopeSelection(MouseEventArgs e)
+        private bool HandleMouseDownDelayedEnvelopeSelection(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
+            if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
                 StartSelection(e.X, e.Y);
                 return true;
@@ -5337,9 +5337,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedWaveSelection(MouseEventArgs e)
+        private bool HandleMouseDownDelayedWaveSelection(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
+            if (e.Right && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
             {
                 StartSelectWave(e.X, e.Y);
                 return true;
@@ -5348,7 +5348,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDownDelayed(MouseEventArgs e)
+        protected override void OnMouseDownDelayed(MouseEventArgs2 e)
         {
             if (editMode == EditionMode.Channel)
             {
@@ -7271,7 +7271,7 @@ namespace FamiStudio
             return GetMaximizeButtonRect().Contains(x, y);
         }
 
-        private void UpdateToolTip(MouseEventArgs e)
+        private void UpdateToolTip(MouseEventArgs2 e)
         {
             var tooltip = "";
             var newNoteTooltip = "";
@@ -7543,7 +7543,7 @@ namespace FamiStudio
             }
         }
 
-        private void StartNoteCreation(MouseEventArgs e, NoteLocation location, byte noteValue)
+        private void StartNoteCreation(MouseEventArgs2 e, NoteLocation location, byte noteValue)
         { 
             var channel = Song.Channels[editChannel];
 
@@ -8072,10 +8072,10 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
-            bool left   = e.Button.HasFlag(MouseButtons.Left);
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool left   = e.Left;
+            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -8091,9 +8091,9 @@ namespace FamiStudio
             App.SequencerShowExpansionIcons = false;
         }
 
-        private bool HandleMouseUpSnapResolution(MouseEventArgs e)
+        private bool HandleMouseUpSnapResolution(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
+            if (e.Right && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
             { 
                 var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 2];
 
@@ -8112,39 +8112,39 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseUpChannelNote(MouseEventArgs e)
+        private bool HandleMouseUpChannelNote(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuChannelNote(e.X, e.Y);
+            return e.Right && HandleContextMenuChannelNote(e.X, e.Y);
         }
 
-        private bool HandleMouseUpChannelHeader(MouseEventArgs e)
+        private bool HandleMouseUpChannelHeader(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuChannelHeader(e.X, e.Y);
+            return e.Right && HandleContextMenuChannelHeader(e.X, e.Y);
         }
 
-        private bool HandleMouseUpEffectPanel(MouseEventArgs e)
+        private bool HandleMouseUpEffectPanel(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuEffectPanel(e.X, e.Y);
+            return e.Right && HandleContextMenuEffectPanel(e.X, e.Y);
         }
 
-        private bool HandleMouseUpEnvelope(MouseEventArgs e)
+        private bool HandleMouseUpEnvelope(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuEnvelope(e.X, e.Y);
+            return e.Right && HandleContextMenuEnvelope(e.X, e.Y);
         }
 
-        private bool HandleMouseUpDPCMMapping(MouseEventArgs e)
+        private bool HandleMouseUpDPCMMapping(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuDPCMMapping(e.X, e.Y);
+            return e.Right && HandleContextMenuDPCMMapping(e.X, e.Y);
         }
 
-        private bool HandleMouseUpDPCMVolumeEnvelope(MouseEventArgs e)
+        private bool HandleMouseUpDPCMVolumeEnvelope(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuWave(e.X, e.Y);
+            return e.Right && HandleContextMenuWave(e.X, e.Y);
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle);
+            bool middle = e.Middle;
             bool doMouseUp = false;
 
             if (middle)
@@ -8246,23 +8246,23 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseWheelZoom(MouseEventArgs e)
+        private bool HandleMouseWheelZoom(MouseEventArgs2 e)
         {
             if (e.X > pianoSizeX)
             {
                 if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
                 {
                     if (ModifierKeys.HasFlag(Keys.Shift))
-                        scrollX -= e.Delta;
+                        scrollX -= (int)e.ScrollY; // MATTT cast
                     else
-                        scrollY -= e.Delta;
+                        scrollY -= (int)e.ScrollY; // MATTT cast
 
                     ClampScroll();
                     return true;
                 }
                 else if (editMode != EditionMode.DPCMMapping)
                 {
-                    ZoomAtLocation(e.X, e.Delta < 0.0f ? 0.5f : 2.0f);
+                    ZoomAtLocation(e.X, e.ScrollY < 0.0f ? 0.5f : 2.0f);
                     return true;
                 }
             }
@@ -8270,18 +8270,18 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseWheelSnapResolution(MouseEventArgs e)
+        private bool HandleMouseWheelSnapResolution(MouseEventArgs2 e)
         {
             if (editMode == EditionMode.Channel && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
             {
-                snapResolution = Utils.Clamp(snapResolution + (e.Delta > 0 ? 1 : -1), SnapResolutionType.Min, SnapResolutionType.Max);
+                snapResolution = Utils.Clamp(snapResolution + (e.ScrollY > 0 ? 1 : -1), SnapResolutionType.Min, SnapResolutionType.Max);
                 return true;
             }
 
             return false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs2 e)
         {
             if (HandleMouseWheelZoom(e)) goto Handled;
             if (HandleMouseWheelSnapResolution(e)) goto Handled;
@@ -8292,9 +8292,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseHorizontalWheel(MouseEventArgs e)
+        protected override void OnMouseHorizontalWheel(MouseEventArgs2 e)
         {
-            scrollX += e.Delta;
+            scrollX += (int)e.ScrollX; // MATTT cast to int
             ClampScroll();
             MarkDirty();
         }

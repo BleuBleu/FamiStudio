@@ -10,25 +10,38 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Threading;
 using System.Media;
+using Microsoft.Win32;
+using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
     public static class PlatformUtils
     {
-        // MATTT : Remove once we ditched WinForms
-        public static PrivateFontCollection PrivateFontCollection;
-
         public static string ApplicationVersion => Application.ProductVersion;
         public static string UserProjectsDirectory => null;
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
-        private static Thread mainThread;
+        public static float DoubleClickTime => doubleClickTime;
 
-        public static void Initialize()
+        private static Thread mainThread;
+        private static float doubleClickTime;
+
+        public static bool Initialize()
         {
+            if (!DetectRequiredDependencies())
+                return false;
+
+            //EnableVisualStyles();
+
+            clipboardFormat = RegisterClipboardFormat("FamiStudio");
             mainThread = Thread.CurrentThread;
-            PrivateFontCollection = new PrivateFontCollection();
-            AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Regular.ttf");
-            AddFontFromMemory(PrivateFontCollection, "FamiStudio.Resources.Quicksand-Bold.ttf");
+            doubleClickTime = GetDoubleClickTime() / 1000.0f;
+
+        #if !DEBUG
+            if (Settings.IsPortableMode)
+                PlatformUtils.AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
+        #endif
+
+            return true;
         }
 
         public static bool IsInMainThread()
@@ -49,25 +62,6 @@ namespace FamiStudio
         public static int GetOutputAudioSampleSampleRate()
         {
             return 44100;
-        }
-
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
-
-        private static void AddFontFromMemory(PrivateFontCollection pfc, string name)
-        {
-            var fontStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
-
-            byte[] fontdata = new byte[fontStream.Length];
-            fontStream.Read(fontdata, 0, (int)fontStream.Length);
-            fontStream.Close();
-
-            uint c = 0;
-            var p = Marshal.AllocCoTaskMem(fontdata.Length);
-            Marshal.Copy(fontdata, 0, p, fontdata.Length);
-            AddFontMemResourceEx(p, (uint)fontdata.Length, IntPtr.Zero, ref c);
-            pfc.AddMemoryFont(p, fontdata.Length);
-            Marshal.FreeCoTaskMem(p);
         }
 
         public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindowUnused = null)
@@ -133,7 +127,7 @@ namespace FamiStudio
             folderBrowserDialog.Description = title;
 
             if (!string.IsNullOrEmpty(defaultPath) && Directory.Exists(defaultPath))
-                folderBrowserDialog.SelectedPath = Settings.LastExportFolder;
+                folderBrowserDialog.SelectedPath = defaultPath;
 
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
@@ -160,17 +154,6 @@ namespace FamiStudio
         {
         }
 
-        public static MouseEventArgs ConvertHorizontalMouseWheelMessage(Control ctrl, System.Windows.Forms.Message m)
-        {
-            // TODO: Test hi-dpi and things like this.
-            short x = (short)((m.LParam.ToInt32() >> 0) & 0xffff);
-            short y = (short)((m.LParam.ToInt32() >> 16) & 0xffff);
-            short delta = (short)((m.WParam.ToInt32() >> 16) & 0xffff);
-            var clientPos = ctrl.PointToClient(new Point(x, y));
-
-            return new MouseEventArgs(MouseButtons.None, 1, clientPos.X, clientPos.Y, delta);
-        }
-
         public static bool IsVS2019RuntimeInstalled()
         {
             try
@@ -185,6 +168,33 @@ namespace FamiStudio
                 return false;
             }
         }
+
+        public static bool DetectRequiredDependencies()
+        {
+            if (!IsVS2019RuntimeInstalled())
+            {
+                if (MessageBox("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    OpenUrl("https://famistudio.org/doc/install/#windows");
+                }
+
+                return false;
+            }
+
+            if (!XAudio2Stream.TryDetectXAudio2())
+            {
+                if (MessageBox("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    OpenUrl("https://famistudio.org/doc/install/#windows");
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+        [DllImport("user32.dll")]
+        static extern uint GetDoubleClickTime();
 
         // From : https://stackoverflow.com/questions/318777/c-sharp-how-to-translate-virtual-keycode-to-char
         [DllImport("user32.dll")]
@@ -309,25 +319,185 @@ namespace FamiStudio
             SystemSounds.Beep.Play();
         }
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int RegisterClipboardFormat(string format);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int IsClipboardFormatAvailable(int format);
+        [DllImport("user32.dll")]
+        private static extern int OpenClipboard(IntPtr hwnd);
+        [DllImport("user32.dll", EntryPoint = "GetClipboardData")]
+        private static extern IntPtr GetClipboardDataWin32(int wFormat);
+        [DllImport("user32.dll", EntryPoint = "GetClipboardFormatNameA")]
+        private static extern int GetClipboardFormatName(int wFormat, string lpString, int nMaxCount);
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalAlloc(int wFlags, int dwBytes);
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GlobalLock(IntPtr hMem);
+        [DllImport("kernel32.dll")]
+        private static extern int GlobalUnlock(IntPtr hMem);
+        [DllImport("kernel32.dll")]
+        private static extern int GlobalSize(IntPtr mem);
+        [DllImport("user32.dll")]
+        private static extern int CloseClipboard();
+        [DllImport("user32.dll")]
+        private static extern int SetClipboardData(int wFormat, IntPtr hMem);
+        [DllImport("user32.dll")]
+        private static extern int EmptyClipboard();
+
+        const int CF_TEXT = 1;
+        const int GMEM_MOVEABLE = 2;
+
+        private static int clipboardFormat = -1;
+
         public static void SetClipboardData(byte[] data)
         {
-            WinUtils.SetClipboardData(data);
+            IntPtr mem = IntPtr.Zero;
+
+            if (data == null)
+            {
+                mem = GlobalAlloc(GMEM_MOVEABLE, 0);
+            }
+            else
+            {
+                mem = GlobalAlloc(GMEM_MOVEABLE, data == null ? 0 : data.Length);
+                var ptr = GlobalLock(mem);
+                Marshal.Copy(data, 0, ptr, data.Length);
+                GlobalUnlock(mem);
+            }
+
+            if (OpenClipboard(IntPtr.Zero) != 0)
+            {
+                SetClipboardData(clipboardFormat, mem);
+                CloseClipboard();
+            }
         }
 
         public static byte[] GetClipboardData(int maxSize)
         {
-            return WinUtils.GetClipboardData(maxSize);
+            byte[] buffer = null;
+
+            if (IsClipboardFormatAvailable(clipboardFormat) != 0)
+            {
+                if (OpenClipboard(IntPtr.Zero) != 0)
+                {
+                    var mem = GetClipboardDataWin32(clipboardFormat);
+                    if (mem != IntPtr.Zero)
+                    {
+                        var size = Math.Min(maxSize, GlobalSize(mem));
+                        var ptr = GlobalLock(mem);
+                        buffer = new byte[size];
+                        Marshal.Copy(ptr, buffer, 0, size);
+                        GlobalUnlock(mem);
+                    }
+                    CloseClipboard();
+                }
+            }
+
+            return buffer;
         }
 
         public static string GetClipboardString()
         {
-            return WinUtils.GetClipboardString();
+            byte[] buffer = null;
+
+            if (IsClipboardFormatAvailable(CF_TEXT) != 0)
+            {
+                if (OpenClipboard(IntPtr.Zero) != 0)
+                {
+                    var mem = GetClipboardDataWin32(CF_TEXT);
+                    if (mem != IntPtr.Zero)
+                    {
+                        var size = Math.Min(2048, GlobalSize(mem));
+                        var ptr = GlobalLock(mem);
+                        buffer = new byte[size];
+                        Marshal.Copy(ptr, buffer, 0, size);
+                        GlobalUnlock(mem);
+                    }
+                    CloseClipboard();
+                }
+            }
+
+            if (buffer == null)
+                return null;
+
+            return ASCIIEncoding.ASCII.GetString(buffer);
         }
 
         public static void ClearClipboardString()
         {
-            WinUtils.ClearClipboardString();
+            if (OpenClipboard(IntPtr.Zero) != 0)
+            {
+                EmptyClipboard();
+                CloseClipboard();
+            }
         }
+
+
+        [System.Runtime.InteropServices.DllImport("Shell32.dll")]
+        private static extern int SHChangeNotify(int eventId, int flags, IntPtr item1, IntPtr item2);
+
+        private const int SHCNE_ASSOCCHANGED = 0x8000000;
+        private const int SHCNF_FLUSH = 0x1000;
+
+        private static bool SetKeyDefaultValue(string keyPath, string value)
+        {
+            using (var key = Registry.CurrentUser.CreateSubKey(keyPath))
+            {
+                if (key.GetValue(null) as string != value)
+                {
+                    key.SetValue(null, value);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static void AssociateExtension(string extension, string executable, string description, string progId)
+        {
+            try
+            {
+                var madeChanges = false;
+                madeChanges |= SetKeyDefaultValue(@"Software\Classes\" + extension, progId);
+                madeChanges |= SetKeyDefaultValue(@"Software\Classes\" + progId, description);
+                madeChanges |= SetKeyDefaultValue($@"Software\Classes\{progId}\shell\open\command", "\"" + executable + "\" \"%1\"");
+                if (madeChanges)
+                {
+                    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        //[StructLayout(LayoutKind.Sequential, Pack = 4)]
+        //private struct ACTCTX
+        //{
+        //    public int cbSize;
+        //    public uint dwFlags;
+        //    public string lpSource;
+        //    public ushort wProcessorArchitecture;
+        //    public ushort wLangId;
+        //    public string lpAssemblyDirectory;
+        //    public IntPtr lpResourceName;
+        //    public string lpApplicationName;
+        //}
+
+        // MATTT : I think the manifest is enough.
+        //[DllImport("kernel32.dll")]
+        //private static extern IntPtr CreateActCtx(ref ACTCTX actctx);
+
+        //private static bool EnableVisualStyles()
+        //{
+        //    var ctx = default(ACTCTX);
+        //    ctx.cbSize = Marshal.SizeOf(typeof(ACTCTX));
+        //    ctx.lpSource = Assembly.GetExecutingAssembly().Location;
+        //    ctx.lpResourceName = (IntPtr)101;
+        //    ctx.dwFlags = 8u;
+        //    var hActCtx = CreateActCtx(ref ctx);
+        //    return hActCtx != new IntPtr(-1);
+        //}
 
         public const bool IsMobile  = false;
         public const bool IsAndroid = false;

@@ -43,7 +43,7 @@ namespace FamiStudio
             return new Rectangle(0, (height - bmpRadioOff.ElementSize.Height) / 2, bmpRadioOff.ElementSize.Width, bmpRadioOff.ElementSize.Height);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             SetAndMarkDirty(ref hover, true /*GetRadioRectangle().Contains(e.X, e.Y)*/);
         }
@@ -53,7 +53,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref hover, false);
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             //if (GetRadioRectangle().Contains(e.X, e.Y))
             {

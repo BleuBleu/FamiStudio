@@ -103,7 +103,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             var idx = IsPointInButton(e.X, e.Y);
             if (idx >= 0)
@@ -115,7 +115,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
             if (captureButton >= 0)
             {
@@ -124,7 +124,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
         }
@@ -134,11 +134,11 @@ namespace FamiStudio
             SetAndMarkDirty(ref hoverButton, -1);
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs2 e)
         {
-            if (enabled && captureButton < 0 && e.Delta != 0 && e.X > GetButtonRect(0).Right && e.X < GetButtonRect(1).Left)
+            if (enabled && captureButton < 0 && e.ScrollY != 0 && e.X > GetButtonRect(0).Right && e.X < GetButtonRect(1).Left)
             {
-                Value += e.Delta > 0 ? 1 : -1;
+                Value += e.ScrollY > 0 ? 1 : -1;
             }
         }
 

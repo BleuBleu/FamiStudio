@@ -198,9 +198,9 @@ namespace FamiStudio
                 //Debug.WriteLine($"Mouse wheel {precise} {scrollX} {scrollY}");
 
                 if (dy != 0)
-                    ctrl.MouseWheel(new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, dy));
+                    ctrl.MouseWheel(new System.Windows.Forms.MouseEventArgs2(System.Windows.Forms.MouseButtons.None, 1, x, y, dy));
                 if (dx != 0)
-                    ctrl.MouseHorizontalWheel(new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, dx));
+                    ctrl.MouseHorizontalWheel(new System.Windows.Forms.MouseEventArgs2(System.Windows.Forms.MouseButtons.None, 1, x, y, dx));
             }
         }
 
@@ -229,7 +229,7 @@ namespace FamiStudio
 
                 if (ctrl != null)
                 {
-                    var args = new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, Math.Sign(magnificationAccum) * 120);
+                    var args = new System.Windows.Forms.MouseEventArgs2(System.Windows.Forms.MouseButtons.None, 1, x, y, Math.Sign(magnificationAccum) * 120);
                     forceCtrlDown = true;
                     ctrl.MouseWheel(args);
                     forceCtrlDown = false;
@@ -283,17 +283,17 @@ namespace FamiStudio
             RenderFrame();
         }
 
-        protected System.Windows.Forms.MouseEventArgs ToWinFormArgs(Gdk.EventScroll e, int x, int y, bool horizontal)
+        protected System.Windows.Forms.MouseEventArgs2 ToWinFormArgs(Gdk.EventScroll e, int x, int y, bool horizontal)
         {
             if (horizontal)
             {
                 Debug.Assert(e.Direction == Gdk.ScrollDirection.Left || e.Direction == Gdk.ScrollDirection.Right);
-                return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, e.Direction == Gdk.ScrollDirection.Right ? 120 : -120);
+                return new System.Windows.Forms.MouseEventArgs2(System.Windows.Forms.MouseButtons.None, 1, x, y, e.Direction == Gdk.ScrollDirection.Right ? 120 : -120);
             }
             else
             {
                 Debug.Assert(e.Direction == Gdk.ScrollDirection.Up || e.Direction == Gdk.ScrollDirection.Down);
-                return new System.Windows.Forms.MouseEventArgs(System.Windows.Forms.MouseButtons.None, 1, x, y, e.Direction == Gdk.ScrollDirection.Up ? 120 : -120);
+                return new System.Windows.Forms.MouseEventArgs2(System.Windows.Forms.MouseButtons.None, 1, x, y, e.Direction == Gdk.ScrollDirection.Up ? 120 : -120);
             }
         }
 
@@ -684,7 +684,7 @@ namespace FamiStudio
             }
         }
 
-        public bool ShouldIgnoreMouseWheel(GLControl ctrl, System.Windows.Forms.MouseEventArgs e)
+        public bool ShouldIgnoreMouseWheel(GLControl ctrl, System.Windows.Forms.MouseEventArgs2 e)
         {
             return false;
         }

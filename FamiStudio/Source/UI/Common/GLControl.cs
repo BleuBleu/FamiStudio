@@ -5,14 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if FAMISTUDIO_WINDOWS
-using CursorType = System.Windows.Forms.Cursor;
-#elif FAMISTUDIO_ANDROID
-using CursorType = System.Object;
-#else
-using CursorType = Gdk.Cursor;
-#endif
-
 namespace FamiStudio
 {
     public class GLControl
@@ -36,15 +28,15 @@ namespace FamiStudio
         protected virtual void OnRenderInitialized(GLGraphics g) { }
         protected virtual void OnRenderTerminated() { }
         protected virtual void OnRender(GLGraphics g) { }
-        protected virtual void OnMouseDown(MouseEventArgsEx e) { }
-        protected virtual void OnMouseDownDelayed(System.Windows.Forms.MouseEventArgs e) { }
-        protected virtual void OnMouseUp(System.Windows.Forms.MouseEventArgs e) { }
-        protected virtual void OnMouseDoubleClick(System.Windows.Forms.MouseEventArgs e) { }
+        protected virtual void OnMouseDown(MouseEventArgs2 e) { }
+        protected virtual void OnMouseDownDelayed(MouseEventArgs2 e) { }
+        protected virtual void OnMouseUp(MouseEventArgs2 e) { }
+        protected virtual void OnMouseDoubleClick(MouseEventArgs2 e) { }
         protected virtual void OnResize(EventArgs e) { }
-        protected virtual void OnMouseMove(System.Windows.Forms.MouseEventArgs e) { }
+        protected virtual void OnMouseMove(MouseEventArgs2 e) { }
         protected virtual void OnMouseLeave(EventArgs e) { }
-        protected virtual void OnMouseWheel(System.Windows.Forms.MouseEventArgs e) { }
-        protected virtual void OnMouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { }
+        protected virtual void OnMouseWheel(MouseEventArgs2 e) { }
+        protected virtual void OnMouseHorizontalWheel(MouseEventArgs2 e) { }
         protected virtual void OnKeyDown(System.Windows.Forms.KeyEventArgs e) { }
         protected virtual void OnKeyUp(System.Windows.Forms.KeyEventArgs e) { }
         protected virtual void OnTouchDown(int x, int y) { }
@@ -67,14 +59,14 @@ namespace FamiStudio
         public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
         public void RenderTerminated() { OnRenderTerminated(); }
         public void Render(GLGraphics g) { OnRender(g); }
-        public void MouseDown(MouseEventArgsEx e) { OnMouseDown(e); DialogMouseDownNotify(e); }
-        public void MouseDownDelayed(System.Windows.Forms.MouseEventArgs e) { OnMouseDownDelayed(e); }
-        public void MouseUp(System.Windows.Forms.MouseEventArgs e) { OnMouseUp(e); }
-        public void MouseDoubleClick(System.Windows.Forms.MouseEventArgs e) { OnMouseDoubleClick(e); }
-        public void MouseMove(System.Windows.Forms.MouseEventArgs e) { OnMouseMove(e); DialogMouseDownNotify(e); }
+        public void MouseDown(MouseEventArgs2 e) { OnMouseDown(e); DialogMouseDownNotify(e); }
+        public void MouseDownDelayed(MouseEventArgs2 e) { OnMouseDownDelayed(e); }
+        public void MouseUp(MouseEventArgs2 e) { OnMouseUp(e); }
+        public void MouseDoubleClick(MouseEventArgs2 e) { OnMouseDoubleClick(e); }
+        public void MouseMove(MouseEventArgs2 e) { OnMouseMove(e); DialogMouseDownNotify(e); }
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
-        public void MouseWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseWheel(e); }
-        public void MouseHorizontalWheel(System.Windows.Forms.MouseEventArgs e) { OnMouseHorizontalWheel(e); }
+        public void MouseWheel(MouseEventArgs2 e) { OnMouseWheel(e); }
+        public void MouseHorizontalWheel(MouseEventArgs2 e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(System.Windows.Forms.KeyEventArgs e) { OnKeyDown(e); }
         public void KeyUp(System.Windows.Forms.KeyEventArgs e) { OnKeyUp(e); }
         public void TouchDown(int x, int y) { OnTouchDown(x, y); }
@@ -89,8 +81,8 @@ namespace FamiStudio
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void LostDialogFocus() { OnLostDialogFocus(); }
         public void AddedToDialog() { OnAddedToDialog(); }
-        public void DialogMouseDownNotify(System.Windows.Forms.MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
-        public void DialogMouseMoveNotify(System.Windows.Forms.MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
+        public void DialogMouseDownNotify(MouseEventArgs2 e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
+        public void DialogMouseMoveNotify(MouseEventArgs2 e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
@@ -187,37 +179,76 @@ namespace FamiStudio
 
     public class CursorInfo
     {
-        private CursorType cursor = Cursors.Default;
+        private IntPtr cursor = Cursors.Default;
         private GLControl parentControl;
 
         public CursorInfo(GLControl ctrl) { parentControl = ctrl; }
         public System.Drawing.Point Position => parentControl.ParentForm.GetCursorPosition();
-        public CursorType Current
+        public IntPtr Current
         {
             get { return cursor; }
             set { cursor = value; parentControl.ParentForm.RefreshCursor(); }
         }
     }
 
-    public class MouseEventArgsEx : System.Windows.Forms.MouseEventArgs
+    public class MouseEventArgs2
     {
-        private bool delay = false;
-        public  bool IsRightClickDelayed => delay;
+        public const int ButtonLeft   = 1;
+        public const int ButtonRight  = 2;
+        public const int ButtonMiddle = 4;
 
-        public MouseEventArgsEx(System.Windows.Forms.MouseEventArgs e) :
-            base(e.Button, e.Clicks, e.X, e.Y, e.Delta)
-        {
-        }
+        private int buttons;
+        private int posX;
+        private int posY;
+        private float scrollX;
+        private float scrollY;
+        private bool delay;
 
-        public MouseEventArgsEx(System.Windows.Forms.MouseButtons button, int clicks, int x, int y, int delta) :
-            base(button, clicks, x, y, delta)
+        public bool Left   => (buttons & ButtonLeft)   != 0;
+        public bool Right  => (buttons & ButtonRight)  != 0;
+        public bool Middle => (buttons & ButtonMiddle) != 0;
+
+        public int X => posX;
+        public int Y => posY;
+        public float ScrollX => scrollX;
+        public float ScrollY => scrollY;
+        public bool IsRightClickDelayed => delay;
+
+        public MouseEventArgs2(int btns, int x, int y, float sx = 0.0f, float sy = 0.0f)
         {
+            buttons = btns;
+            posX = x;
+            posY = y;
+            scrollX = sx;
+            scrollY = sy;
         }
 
         public void DelayRightClick()
         {
-            Debug.Assert(Button.HasFlag(System.Windows.Forms.MouseButtons.Right));
+            Debug.Assert(Right);
             delay = true;
         }
     }
+
+    //public class MouseEventArgs2 : MouseEventArgs2
+    //{
+    //    private bool delay = false;
+    //    public  bool IsRightClickDelayed => delay;
+
+    //    public MouseEventArgs2(MouseEventArgs2 e) :
+    //        base(e.Button, e.Clicks, e.X, e.Y, e.Delta)
+    //    {
+    //    }
+
+    //    public MouseEventArgs2(System.Windows.Forms.MouseButtons button, int clicks, int x, int y, int delta) :
+    //        base(button, clicks, x, y, delta)
+    //    {
+    //    }
+
+    //    public void DelayRightClick()
+    //    {
+    //        Debug.Assert(Button.HasFlag(System.Windows.Forms.MouseButtons.Right));
+    //        delay = true;
+    //    }
+    //}
 }

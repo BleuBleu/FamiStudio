@@ -238,7 +238,7 @@ namespace FamiStudio
 
         public void InitDialog(Dialog dialog)
         {
-            dialog.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+            dialog.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
             dialog.SetThemeRenderResource(res);
             dialog.RenderInitialized(gfx);
             dialog.ParentForm = contextMenu.ParentForm; // HACK
@@ -257,17 +257,17 @@ namespace FamiStudio
 
         public void InitializeGL()
         {
-            gfx = new GLGraphics(DpiScaling.MainWindow, DpiScaling.Font);
+            gfx = new GLGraphics(DpiScaling.Window, DpiScaling.Font);
             res = new ThemeRenderResources(gfx);
 
             foreach (var ctrl in controls)
             {
-                ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+                ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
                 ctrl.SetThemeRenderResource(res);
                 ctrl.RenderInitialized(gfx);
             }
 
-            contextMenu.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+            contextMenu.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
             contextMenu.SetThemeRenderResource(res);
             contextMenu.RenderInitialized(gfx);
 

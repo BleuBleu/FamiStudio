@@ -257,7 +257,7 @@ namespace FamiStudio
         RenderBitmapAtlasRef[] bmpSpecialCharacters;
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
-        private delegate void MouseWheelDelegate(int delta);
+        private delegate void MouseWheelDelegate(float delta);
         private delegate void MouseClickDelegate(int x, int y);
         private delegate ButtonStatus ButtonStatusDelegate();
         private delegate ButtonImageIndices BitmapDelegate(ref Color tint);
@@ -1219,7 +1219,7 @@ namespace FamiStudio
             base.OnMouseLeave(e);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             base.OnMouseMove(e);
 
@@ -1247,9 +1247,9 @@ namespace FamiStudio
             return null;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs2 e)
         {
-            GetButtonAtCoord(e.X, e.Y)?.MouseWheel?.Invoke(e.Delta);
+            GetButtonAtCoord(e.X, e.Y)?.MouseWheel?.Invoke(e.ScrollY);
             base.OnMouseWheel(e);
         }
 
@@ -1259,9 +1259,9 @@ namespace FamiStudio
                    y > timecodePosY && y < Height - timecodePosY;
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
+            bool left  = e.Left;
 
             if (left)
             {
@@ -1283,9 +1283,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool right = e.Right;
 
             if (right)
             {

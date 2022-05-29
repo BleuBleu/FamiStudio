@@ -226,11 +226,11 @@ namespace FamiStudio
             return true;
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             var valid = PixelToCell(e.X, e.Y, out var row, out var col);
 
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 MarkDirty();
 
@@ -309,8 +309,8 @@ namespace FamiStudio
 
             if (valid)
             {
-                var left  = e.Button.HasFlag(MouseButtons.Left);
-                var right = e.Button.HasFlag(MouseButtons.Right);
+                var left  = e.Left;
+                var right = e.Right;
 
                 if (left || right)
                     CellClicked?.Invoke(this, left, row, col);
@@ -326,7 +326,7 @@ namespace FamiStudio
             return buttonX >= 0 && buttonX < rowHeight;
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             if (draggingSlider)
             {
@@ -355,7 +355,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
             if (draggingScrollbars || draggingSlider)
             {
@@ -373,9 +373,9 @@ namespace FamiStudio
             SetAndMarkDirty(ref hoverButton, false);
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs2 e)
         {
-            var sign = e.Delta < 0 ? 1 : -1;
+            var sign = e.ScrollY < 0 ? 1 : -1;
 
             if (sign != 0)
             {
@@ -390,9 +390,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && PixelToCell(e.X, e.Y, out var row, out var col))
+            if (e.Left && PixelToCell(e.X, e.Y, out var row, out var col))
             {
                 CellDoubleClicked?.Invoke(this, row, col);
             }

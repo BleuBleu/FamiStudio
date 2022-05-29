@@ -316,7 +316,7 @@ namespace FamiStudio
             #if FAMISTUDIO_WINDOWS
                 var format = GL.Bgra;
             #else
-                var format = GL2.Rgba;
+                var format = GL.Rgba;
             #endif
 
                 int id = GL.GenTexture();

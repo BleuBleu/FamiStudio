@@ -50,13 +50,13 @@ namespace FamiStudio
             return x >= 0 && y >= baseY && x < bmpSize.Width && y < baseY + bmpSize.Height;
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             if (enabled && IsPointInCheckBox(e.X, e.Y))
                 Checked = !Checked;
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             SetAndMarkDirty(ref hover, IsPointInCheckBox(e.X, e.Y));
        }

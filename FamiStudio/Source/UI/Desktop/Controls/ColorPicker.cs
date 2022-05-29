@@ -37,20 +37,20 @@ namespace FamiStudio
             Resize(width, numColorsY * width / numColorsX);
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             ChangeColor(e.X, e.Y);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
                 ChangeColor(e.X, e.Y);
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 ChangeColor(e.X, e.Y);
                 DoubleClicked?.Invoke(this);

@@ -1079,9 +1079,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseDownPan(MouseEventArgs e)
+        private bool HandleMouseDownPan(MouseEventArgs2 e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
 
             if (middle)
             {
@@ -1093,7 +1093,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownScrollbar(MouseEventArgs e)
+        private bool HandleMouseDownScrollbar(MouseEventArgs2 e)
         {
             if (e.X > trackNameSizeX && e.Y > Height - scrollBarThickness && GetScrollBarParams(out var scrollBarPosX, out var scrollBarSizeX))
             {
@@ -1118,9 +1118,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownChannelName(MouseEventArgs e)
+        private bool HandleMouseDownChannelName(MouseEventArgs2 e)
         {
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Left;
 
             if (IsMouseInTrackName(e) && left)
             { 
@@ -1142,26 +1142,26 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseUpChannelName(MouseEventArgs e)
+        private bool HandleMouseUpChannelName(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuChannelName(e.X, e.Y);
+            return e.Right && HandleContextMenuChannelName(e.X, e.Y);
         }
 
-        private bool HandleMouseUpHeader(MouseEventArgs e)
+        private bool HandleMouseUpHeader(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuHeader(e.X, e.Y);
+            return e.Right && HandleContextMenuHeader(e.X, e.Y);
         }
 
-        private bool HandleMouseUpPatternArea(MouseEventArgs e)
+        private bool HandleMouseUpPatternArea(MouseEventArgs2 e)
         {
-            return e.Button.HasFlag(MouseButtons.Right) && HandleContextMenuPatternArea(e.X, e.Y);
+            return e.Right && HandleContextMenuPatternArea(e.X, e.Y);
         }
 
-        private bool HandleMouseDownSetLoopPoint(MouseEventArgs e)
+        private bool HandleMouseDownSetLoopPoint(MouseEventArgs2 e)
         {
             bool setLoop = FamiStudioForm.IsKeyDown(Keys.L);
 
-            if (setLoop && e.X > trackNameSizeX && e.Button.HasFlag(MouseButtons.Left))
+            if (setLoop && e.X > trackNameSizeX && e.Left)
             {
                 var patternIdx = GetPatternIndexForCoord(e.X);
                 if (patternIdx >= 0)
@@ -1172,9 +1172,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSeekBar(MouseEventArgs e)
+        private bool HandleMouseDownSeekBar(MouseEventArgs2 e)
         {
-            if (IsMouseInHeader(e) && e.Button.HasFlag(MouseButtons.Left))
+            if (IsMouseInHeader(e) && e.Left)
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSeekBar);
                 UpdateSeekDrag(e.X, e.Y, false);
@@ -1184,9 +1184,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownHeaderSelection(MouseEventArgsEx e)
+        private bool HandleMouseDownHeaderSelection(MouseEventArgs2 e)
         {
-            if (IsMouseInHeader(e) && e.Button.HasFlag(MouseButtons.Right))
+            if (IsMouseInHeader(e) && e.Right)
             {
                 e.DelayRightClick(); // Can have selection or context menu, need to wait.
                 return true;
@@ -1195,18 +1195,18 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownChannelChange(MouseEventArgs e)
+        private bool HandleMouseDownChannelChange(MouseEventArgs2 e)
         {
-            if (e.Y > headerSizeY && e.Y < Height - scrollBarThickness && e.Button.HasFlag(MouseButtons.Left))
+            if (e.Y > headerSizeY && e.Y < Height - scrollBarThickness && e.Left)
                 ChangeChannelForCoord(e.Y);
 
             // Does not prevent from processing other events.
             return false;
         }
 
-        private bool HandleMouseDownAltZoom(MouseEventArgs e)
+        private bool HandleMouseDownAltZoom(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && ModifierKeys.HasFlag(Keys.Alt) && GetPatternForCoord(e.X, e.Y, out _))
+            if (e.Right && ModifierKeys.HasFlag(Keys.Alt) && GetPatternForCoord(e.X, e.Y, out _))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;
@@ -1222,10 +1222,10 @@ namespace FamiStudio
             StartCaptureOperation(x, y, CaptureOperation.DragSelection);
         }
 
-        private bool HandleMouseDownPatternArea(MouseEventArgsEx e)
+        private bool HandleMouseDownPatternArea(MouseEventArgs2 e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool left  = e.Left;
+            bool right = e.Right;
 
             bool inPatternZone = GetPatternForCoord(e.X, e.Y, out var location);
 
@@ -1271,10 +1271,10 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
-            bool left  = e.Button.HasFlag(MouseButtons.Left);
-            bool right = e.Button.HasFlag(MouseButtons.Right);
+            bool left  = e.Left;
+            bool right = e.Right;
 
             if (captureOperation != CaptureOperation.None && (left || right))
                 return;
@@ -1297,9 +1297,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseDownDelayedHeaderSelection(MouseEventArgs e)
+        private bool HandleMouseDownDelayedHeaderSelection(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInHeader(e))
+            if (e.Right && IsMouseInHeader(e))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.SelectColumn);
                 return true;
@@ -1308,9 +1308,9 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedRectangleSelection(MouseEventArgs e)
+        private bool HandleMouseDownDelayedRectangleSelection(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Right) && IsMouseInPatternZone(e))
+            if (e.Right && IsMouseInPatternZone(e))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.SelectRectangle);
                 return true;
@@ -1319,7 +1319,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDownDelayed(MouseEventArgs e)
+        protected override void OnMouseDownDelayed(MouseEventArgs2 e)
         {
             if (HandleMouseDownDelayedHeaderSelection(e)) goto Handled;
             if (HandleMouseDownDelayedRectangleSelection(e)) goto Handled;
@@ -2108,9 +2108,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle);
+            bool middle = e.Middle;
             bool doMouseUp = false;
 
             if (middle)
@@ -2372,22 +2372,22 @@ namespace FamiStudio
             }
         }
 
-        private bool IsMouseInPatternZone(MouseEventArgs e)
+        private bool IsMouseInPatternZone(MouseEventArgs2 e)
         {
             return e.Y > headerSizeY && e.X > trackNameSizeX;
         }
 
-        private bool IsMouseInHeader(MouseEventArgs e)
+        private bool IsMouseInHeader(MouseEventArgs2 e)
         {
             return e.Y < headerSizeY && e.X > trackNameSizeX;
         }
 
-        private bool IsMouseInTrackName(MouseEventArgs e)
+        private bool IsMouseInTrackName(MouseEventArgs2 e)
         {
             return e.Y > headerSizeY && e.X < trackNameSizeX;
         }
 
-        private int GetTrackIconForPos(MouseEventArgs e)
+        private int GetTrackIconForPos(MouseEventArgs2 e)
         {
             for (int i = 0; i < Song.Channels.Length; i++)
             {
@@ -2398,7 +2398,7 @@ namespace FamiStudio
             return -1;
         }
 
-        private int GetTrackGhostForPos(MouseEventArgs e)
+        private int GetTrackGhostForPos(MouseEventArgs2 e)
         {
             for (int i = 0; i < Song.Channels.Length; i++)
             {
@@ -2409,12 +2409,12 @@ namespace FamiStudio
             return -1;
         }
 
-        private void UpdateToolTip(MouseEventArgs e)
+        private void UpdateToolTip(MouseEventArgs2 e)
         {
             if (e == null)
             {
                 var pt = PointToClient(Cursor.Position);
-                e = new MouseEventArgs(MouseButtons.None, 1, pt.X, pt.Y, 0);
+                e = new MouseEventArgs2(0, pt.X, pt.Y);
             }
 
             string tooltip = "";
@@ -2553,9 +2553,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
-            bool middle = e.Button.HasFlag(MouseButtons.Middle) || (e.Button.HasFlag(MouseButtons.Left) && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -2670,11 +2670,9 @@ namespace FamiStudio
             });
         }
 
-        protected bool HandleMouseDoubleClickPatternArea(MouseEventArgs e)
+        protected bool HandleMouseDoubleClickPatternArea(MouseEventArgs2 e)
         {
-            var left = (e.Button & MouseButtons.Left) != 0;
-
-            if (left && IsMouseInPatternZone(e) && GetPatternForCoord(e.X, e.Y, out var location))
+            if (e.Left && IsMouseInPatternZone(e) && GetPatternForCoord(e.X, e.Y, out var location))
             {
                 var pattern = Song.GetPatternInstance(location);
                 if (pattern != null)
@@ -2685,9 +2683,9 @@ namespace FamiStudio
             return false;
         }
 
-        protected bool HandleMouseDoubleClickChannelName(MouseEventArgs e)
+        protected bool HandleMouseDoubleClickChannelName(MouseEventArgs2 e)
         {
-            bool left = e.Button.HasFlag(MouseButtons.Left);
+            bool left = e.Left;
 
             if (left && IsMouseInTrackName(e))
             {
@@ -2703,7 +2701,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
         {
             if (HandleMouseDoubleClickChannelName(e)) goto Handled;
             if (HandleMouseDoubleClickPatternArea(e)) goto Handled;
@@ -2742,25 +2740,25 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs2 e)
         {
             if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
             {
                 if (ModifierKeys.HasFlag(Keys.Shift))
-                    scrollX -= e.Delta;
+                    scrollX -= (int)e.ScrollY; // MATTT, added int typecast.
 
                 ClampScroll();
                 MarkDirty();
             }
             else
             {
-                ZoomAtLocation(e.X, e.Delta < 0.0f ? 0.5f : 2.0f);
+                ZoomAtLocation(e.X, e.ScrollY < 0.0f ? 0.5f : 2.0f);
             }
         }
 
-        protected override void OnMouseHorizontalWheel(MouseEventArgs e)
+        protected override void OnMouseHorizontalWheel(MouseEventArgs2 e)
         {
-            scrollX += e.Delta;
+            scrollX += (int)e.ScrollX; // MATTT : cast
             ClampScroll();
             MarkDirty();
         }

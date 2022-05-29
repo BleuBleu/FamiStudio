@@ -57,9 +57,9 @@ namespace FamiStudio
             set { border = value; MarkDirty(); }
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
-            if (enabled && e.Button.HasFlag(MouseButtons.Left))
+            if (enabled && e.Left)
             {
                 press = true;
             }
@@ -67,9 +67,9 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
-            if (enabled && e.Button.HasFlag(MouseButtons.Left))
+            if (enabled && e.Left)
             {
                 press = false;
                 Click?.Invoke(this);
@@ -77,7 +77,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             SetAndMarkDirty(ref hover, true);
         }

@@ -72,7 +72,7 @@ namespace FamiStudio
             scrollX = Utils.Clamp(scrollX, 0, maxScrollX);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             Cursor.Current = enabled ? Cursors.Default : Cursors.IBeam;
 
@@ -89,9 +89,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 var c = PixelToChar(e.X);
                 SetAndMarkDirty(ref caretIndex, c);
@@ -106,16 +106,16 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
             {
                 mouseSelecting = false;
                 Capture = false;
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
         {
             var c0 = PixelToChar(e.X);
             var c1 = c0;

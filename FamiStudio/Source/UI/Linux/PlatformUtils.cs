@@ -32,6 +32,8 @@ namespace FamiStudio
 
         public static void Initialize()
         {
+            SetProcessName("FamiStudio");
+
             mainThread = Thread.CurrentThread;
 
             // When debugging or when in a app package, our paths are a bit different.
@@ -388,6 +390,24 @@ namespace FamiStudio
         public static void Beep()
         {
             SystemSounds.Beep.Play();
+        }
+
+        [DllImport("libc")]
+        private static extern int prctl(int option, byte[] arg2, IntPtr arg3, IntPtr arg4, IntPtr arg5);
+
+        public static void SetProcessName(string name)
+        {
+            try
+            {
+                var ret = prctl(15 /* PR_SET_NAME */, Encoding.ASCII.GetBytes(name + "\0"), IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+                if (ret == 0)
+                    return;
+            }
+            catch
+            {
+            }
+
+            Debug.WriteLine("Error setting process name.");
         }
 
         public static void SetClipboardData(byte[] data)

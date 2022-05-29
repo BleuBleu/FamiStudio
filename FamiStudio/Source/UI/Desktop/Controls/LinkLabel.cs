@@ -26,7 +26,7 @@ namespace FamiStudio
             height = DpiScaling.ScaleForMainWindow(24);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             // MATTT : Need hand cursor here!
             var insideText = e.X >= 0 && e.X < MeasureString();
@@ -45,9 +45,9 @@ namespace FamiStudio
             return ThemeResources.FontMedium.MeasureString(text, false);
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left))
+            if (e.Left)
                 PlatformUtils.OpenUrl(url);
         }
 

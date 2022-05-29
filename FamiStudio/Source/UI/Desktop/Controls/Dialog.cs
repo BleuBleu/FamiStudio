@@ -87,7 +87,7 @@ namespace FamiStudio
                 controls.Add(ctrl);
                 ctrl.ParentForm = ParentForm;
                 ctrl.ParentDialog = this;
-                ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+                ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
                 ctrl.SetThemeRenderResource(ThemeResources);
                 ctrl.RenderInitialized(ParentForm.Graphics); 
                 ctrl.AddedToDialog();
@@ -152,12 +152,12 @@ namespace FamiStudio
             return this;
         }
 
-        public void DialogMouseDownNotify(GLControl control, System.Windows.Forms.MouseEventArgs e) 
+        public void DialogMouseDownNotify(GLControl control, MouseEventArgs2 e) 
         {
             ResetToolTip();
         }
 
-        public void DialogMouseMoveNotify(GLControl control, System.Windows.Forms.MouseEventArgs e)
+        public void DialogMouseMoveNotify(GLControl control, MouseEventArgs2 e)
         {
             ResetToolTip();
         }
@@ -169,7 +169,7 @@ namespace FamiStudio
             tooltipTimer = 0;
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             FocusedControl = null;
             ResetToolTip();

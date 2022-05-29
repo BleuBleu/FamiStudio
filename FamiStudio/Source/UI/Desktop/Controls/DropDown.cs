@@ -85,11 +85,11 @@ namespace FamiStudio
             bmpArrow = g.GetBitmapAtlasRef("DropDownArrow");
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
             MarkDirty();
 
-            if (enabled && e.Button.HasFlag(MouseButtons.Left))
+            if (enabled && e.Left)
             {
                 if (listOpened && e.Y > rowHeight)
                 {
@@ -123,7 +123,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
             if (draggingScrollbars)
             {
@@ -163,13 +163,13 @@ namespace FamiStudio
             numItemsInList = Math.Min(items.Length, MaxItemsInList);
         }
 
-        private void UpdateListHover(MouseEventArgs e)
+        private void UpdateListHover(MouseEventArgs2 e)
         {
             if (listOpened && e.X < width - scrollBarWidth)
                 SetAndMarkDirty(ref listHover, listScroll + (e.Y - rowHeight) / rowHeight);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             if (draggingScrollbars)
             {
@@ -217,9 +217,9 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs2 e)
         {
-            var sign = e.Delta < 0 ? 1 : -1;
+            var sign = e.ScrollY < 0 ? 1 : -1;
 
             if (!enabled || sign == 0)
                 return;

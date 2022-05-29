@@ -42,9 +42,9 @@ namespace FamiStudio
             scroll = maxScroll;
         }
 
-        protected override void OnMouseDown(MouseEventArgsEx e)
+        protected override void OnMouseDown(MouseEventArgs2 e)
         {
-            if (e.Button.HasFlag(MouseButtons.Left) && 
+            if (e.Left && 
                 GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && 
                 e.X > width - scrollBarWidth)
             {
@@ -71,7 +71,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseUp(MouseEventArgs2 e)
         {
             if (draggingScrollbars)
             {
@@ -86,7 +86,7 @@ namespace FamiStudio
             maxScroll = Math.Max(0, lines.Count - numLines);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected override void OnMouseMove(MouseEventArgs2 e)
         {
             if (draggingScrollbars)
             {
@@ -118,9 +118,9 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs2 e)
         {
-            var sign = e.Delta < 0 ? 1 : -1;
+            var sign = e.ScrollY < 0 ? 1 : -1;
 
             if (sign == 0)
                 return;

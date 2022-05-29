@@ -13,12 +13,12 @@ namespace FamiStudio
 {
     public static class Cursors
     {
-        public static object Default;
-        public static object SizeWE;
-        public static object SizeNS;
-        public static object Move;
-        public static object DragCursor;
-        public static object CopyCursor;
-        public static object Eyedrop;
+        public static IntPtr Default;
+        public static IntPtr SizeWE;
+        public static IntPtr SizeNS;
+        public static IntPtr Move;
+        public static IntPtr DragCursor;
+        public static IntPtr CopyCursor;
+        public static IntPtr Eyedrop;
     }
 }
