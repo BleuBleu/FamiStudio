@@ -1,11 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
 using System.Diagnostics;
-
-using Color     = System.Drawing.Color;
-using Point     = System.Drawing.Point;
-using Rectangle = System.Drawing.Rectangle;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;

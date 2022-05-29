@@ -1,8 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Drawing;
-using System.Reflection;
-using System.Windows.Forms;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;
@@ -29,7 +26,6 @@ namespace FamiStudio
         private Button2 buttonYes;
         private Button2 buttonAdvanced;
         private PropertyPage propertyPage;
-        private ToolTip toolTip;
 
         public PropertyDialog(string title, int width, bool canAccept = true, bool canCancel = true)
         {

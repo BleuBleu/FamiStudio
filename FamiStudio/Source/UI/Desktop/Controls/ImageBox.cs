@@ -1,5 +1,3 @@
-using System.Drawing;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;

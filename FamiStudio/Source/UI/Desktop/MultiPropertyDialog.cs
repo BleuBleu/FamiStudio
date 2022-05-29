@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
-using System.Diagnostics;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;

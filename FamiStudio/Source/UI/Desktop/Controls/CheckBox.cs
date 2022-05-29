@@ -1,7 +1,3 @@
-using System.Drawing;
-using System.Collections.Generic;
-using System.Windows.Forms;
-
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;
 using RenderGeometry       = FamiStudio.GLGeometry;

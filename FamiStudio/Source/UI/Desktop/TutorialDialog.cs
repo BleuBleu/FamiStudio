@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Reflection;
+using System.Windows.Forms; // MATTT : Remove once timer is gone
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBitmap         = FamiStudio.GLBitmap;

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
-using System.Reflection;
 
 using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
 using RenderBrush          = FamiStudio.GLBrush;
@@ -93,12 +89,6 @@ namespace FamiStudio
             var label = new LinkLabel2(str, url);
             label.ToolTip = tooltip;
             return label;
-        }
-
-        private void Label_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            var link = sender as LinkLabel;
-            PlatformUtils.OpenUrl(link.Links[0].LinkData as string);
         }
 
         private TextBox2 CreateColoredTextBox(string txt, Color backColor)
