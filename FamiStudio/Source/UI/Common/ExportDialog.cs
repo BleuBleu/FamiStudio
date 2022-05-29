@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -1045,7 +1043,7 @@ namespace FamiStudio
         {
             dialog.ShowDialogAsync(app.MainForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     Export(false);
                     lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;

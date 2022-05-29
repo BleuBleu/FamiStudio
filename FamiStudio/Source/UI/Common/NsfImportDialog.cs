@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -38,7 +37,7 @@ namespace FamiStudio
                 // This is only ran in desktop and this isnt really async, so its ok.
                 dialog.ShowDialogAsync(parent, (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r == DialogResult2.OK)
                     { 
                         var songIndex           = Array.IndexOf(songNames, dialog.Properties.GetPropertyValue<string>(0)); ;
                         var duration            = dialog.Properties.GetPropertyValue<int>(1); 

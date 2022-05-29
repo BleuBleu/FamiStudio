@@ -147,28 +147,28 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs2 e)
         {
             base.OnKeyDown(e);
 
-            if (e.KeyCode == Keys.Return)
+            if (e.Key == Keys2.Enter)
             {
-                Close(DialogResult.OK);
+                Close(DialogResult2.OK);
             }
-            else if (e.KeyCode == Keys.Escape)
+            else if (e.Key == Keys2.Escape)
             {
-                Close(DialogResult.Cancel);
+                Close(DialogResult2.Cancel);
             }
         }
 
         private void ButtonYes_Click(RenderControl sender)
         {
-            Close(DialogResult.OK);
+            Close(DialogResult2.OK);
         }
 
         private void ButtonNo_Click(RenderControl sender)
         {
-            Close(DialogResult.Cancel);
+            Close(DialogResult2.Cancel);
         }
     }
 }

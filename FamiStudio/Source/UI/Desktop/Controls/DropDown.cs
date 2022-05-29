@@ -133,9 +133,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs2 e)
         {
-            if (e.KeyCode == Keys.Escape)
+            if (e.Key == Keys2.Escape)
             {
                 SetListOpened(false);
                 ClearDialogFocus();

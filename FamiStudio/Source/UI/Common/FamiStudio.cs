@@ -5,11 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 #if !FAMISTUDIO_ANDROID
@@ -777,9 +774,9 @@ namespace FamiStudio
             {
                 PlatformUtils.MessageBoxAsync("Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel, (r) =>
                 {
-                    if (r == DialogResult.No)
+                    if (r == DialogResult2.No)
                         callback();
-                    else if (r == DialogResult.Yes)
+                    else if (r == DialogResult2.Yes)
                         SaveProjectAsync(false, callback);
                 });
             }
@@ -1166,7 +1163,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(mainForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     RecreateAudioPlayers();
                     RefreshLayout();
@@ -1400,7 +1397,7 @@ namespace FamiStudio
             {
                 newReleaseAvailable = false;
 
-                if (PlatformUtils.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (PlatformUtils.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult2.Yes)
                 {
                     PlatformUtils.OpenUrl("http://www.famistudio.org");
                 }
@@ -1413,7 +1410,7 @@ namespace FamiStudio
             dlg.CleaningUp += TransformDialog_CleaningUp;
             dlg.ShowDialogAsync(mainForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                     ResetEverything();
             });
         }
@@ -1717,22 +1714,22 @@ namespace FamiStudio
             return false;
         }
 
-        public void KeyDown(KeyEventArgs e, int rawKeyCode)
+        public void KeyDown(KeyEventArgs2 e, int rawKeyCode)
         {
-            bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
-            bool shift = e.Modifiers.HasFlag(Keys.Shift);
+            bool ctrl  = e.Control;
+            bool shift = e.Shift;
 
             // Prevent loosing focus on Alt.
-            if (e.KeyCode == Keys.Menu)
+            if (e.Key == Keys2.Menu)
                 e.Handled = true;
 
-            if (e.KeyCode == Keys.Escape)
+            if (e.Key == Keys2.Escape)
             {
                 StopInstrument();
                 StopRecording();
             }
 
-            if (e.KeyCode == Keys.Q && shift)
+            if (e.Key == Keys2.Q && shift)
             {
                 ToggleQwertyPiano();
                 return;
@@ -1743,34 +1740,34 @@ namespace FamiStudio
                 return;
             }
 
-            if (recordingMode && e.KeyCode == Keys.Tab)
+            if (recordingMode && e.Key == Keys2.Tab)
             {
                 PianoRoll.AdvanceRecording(CurrentFrame, true);
             }
-            else if (recordingMode && e.KeyCode == Keys.Back)
+            else if (recordingMode && e.Key == Keys2.Backspace)
             {
                 PianoRoll.DeleteRecording(CurrentFrame);
             }
-            else if (e.KeyCode == Keys.PageUp)
+            else if (e.Key == Keys2.PageUp)
             {
                 baseRecordingOctave = Math.Min(7, baseRecordingOctave + 1);
                 PianoRoll.MarkDirty();
             }
-            else if (e.KeyCode == Keys.PageDown)
+            else if (e.Key == Keys2.PageDown)
             {
                 baseRecordingOctave = Math.Max(0, baseRecordingOctave - 1);
                 PianoRoll.MarkDirty();
             }
-            else if (e.KeyCode == Keys.Enter)
+            else if (e.Key == Keys2.Enter)
             {
                 ToggleRecording();
             }
-            else if (shift && e.KeyCode == Keys.F)
+            else if (shift && e.Key == Keys2.F)
             {
                 followMode = !followMode;
                 ToolBar.MarkDirty();
             }
-            else if (e.KeyCode == Keys.Space)
+            else if (e.Key == Keys2.Space)
             {
                 if (IsPlaying)
                 {
@@ -1788,7 +1785,7 @@ namespace FamiStudio
                         PlaySong();
                 }
             }
-            else if (e.KeyCode == Keys.Home)
+            else if (e.Key == Keys2.Home)
             {
                 if (ctrl)
                 {
@@ -1799,46 +1796,46 @@ namespace FamiStudio
                     SeekSong(0);
                 }
             }
-            if (!recordingMode && e.KeyCode >= Keys.F1 && e.KeyCode <= Keys.F24)
+            if (!recordingMode && e.Key >= Keys2.F1 && e.Key <= Keys2.F24)
             {
                 if (ctrl)
-                    ForceDisplayChannelMask ^= (1 << (e.KeyCode - Keys.F1));
+                    ForceDisplayChannelMask ^= (1 << (e.Key - Keys2.F1));
                 else
-                    SelectedChannelIndex = (e.KeyCode - Keys.F1);
+                    SelectedChannelIndex = (e.Key - Keys2.F1);
                 Sequencer.MarkDirty();
             }
-            else if ((ctrl && e.KeyCode == Keys.Y) || (ctrl && shift && e.KeyCode == Keys.Z))
+            else if ((ctrl && e.Key == Keys2.Y) || (ctrl && shift && e.Key == Keys2.Z))
             {
                 undoRedoManager.Redo();
             }
-            else if (ctrl && e.KeyCode == Keys.Z)
+            else if (ctrl && e.Key == Keys2.Z)
             {
                 undoRedoManager.Undo();
             }
-            else if (ctrl && e.KeyCode == Keys.N)
+            else if (ctrl && e.Key == Keys2.N)
             {
                 NewProject();
             }
-            else if (ctrl && e.KeyCode == Keys.S)
+            else if (ctrl && e.Key == Keys2.S)
             {
                 SaveProjectAsync(shift);
             }
-            else if (ctrl && e.KeyCode == Keys.E)
+            else if (ctrl && e.Key == Keys2.E)
             {
                 if (shift)
                     RepeatLastExport();
                 else
                     Export();
             }
-            else if (ctrl && e.KeyCode == Keys.O)
+            else if (ctrl && e.Key == Keys2.O)
             {
                 OpenProject();
             }
-            else if (shift && e.KeyCode == Keys.K)
+            else if (shift && e.Key == Keys2.K)
             {
                 ToggleQwertyPiano();
             }
-            else if (e.KeyCode == Keys.D1)
+            else if (e.Key == Keys2.D1)
             {
                 if (ctrl)
                 {
@@ -1849,7 +1846,7 @@ namespace FamiStudio
                     PianoRoll.ToggleMaximize();
                 }
             }
-            else if (PlatformUtils.IsMacOS && ctrl && e.KeyCode == Keys.Q)
+            else if (PlatformUtils.IsMacOS && ctrl && e.Key == Keys2.Q)
             {
                 if (TryClosing())
                 {
@@ -1934,10 +1931,10 @@ namespace FamiStudio
                 PianoRoll.DeleteSpecial();
         }
 
-        public void KeyUp(KeyEventArgs e, int rawKeyCode)
+        public void KeyUp(KeyEventArgs2 e, int rawKeyCode)
         {
-            bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
-            bool shift = e.Modifiers.HasFlag(Keys.Shift);
+            bool ctrl  = e.Control;
+            bool shift = e.Shift;
 
             if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(rawKeyCode, false))
             {
@@ -2169,7 +2166,7 @@ namespace FamiStudio
                         var dlg = new TutorialDialog();
                         dlg.ShowDialogAsync(mainForm, (r) =>
                         {
-                            if (r == DialogResult.OK)
+                            if (r == DialogResult2.OK)
                             {
                                 Settings.ShowTutorial = false;
                                 SaveSettings();

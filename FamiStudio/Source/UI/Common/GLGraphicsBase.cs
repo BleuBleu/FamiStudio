@@ -5,18 +5,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-using Color = System.Drawing.Color;
-
 #if FAMISTUDIO_ANDROID
 using Android.Opengl;
-using Bitmap = Android.Graphics.Bitmap;
-#else
-#if FAMISTUDIO_WINDOWS
-using Bitmap = System.Drawing.Bitmap;
-#else
-using Bitmap = Gdk.Pixbuf;
 #endif
-#endif
+
+using Color = System.Drawing.Color;
 
 namespace FamiStudio
 {

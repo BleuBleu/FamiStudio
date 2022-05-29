@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -37,8 +33,8 @@ namespace FamiStudio
         protected virtual void OnMouseLeave(EventArgs e) { }
         protected virtual void OnMouseWheel(MouseEventArgs2 e) { }
         protected virtual void OnMouseHorizontalWheel(MouseEventArgs2 e) { }
-        protected virtual void OnKeyDown(System.Windows.Forms.KeyEventArgs e) { }
-        protected virtual void OnKeyUp(System.Windows.Forms.KeyEventArgs e) { }
+        protected virtual void OnKeyDown(KeyEventArgs2 e) { }
+        protected virtual void OnKeyUp(KeyEventArgs2 e) { }
         protected virtual void OnTouchDown(int x, int y) { }
         protected virtual void OnTouchUp(int x, int y) { }
         protected virtual void OnTouchMove(int x, int y) { }
@@ -67,8 +63,8 @@ namespace FamiStudio
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
         public void MouseWheel(MouseEventArgs2 e) { OnMouseWheel(e); }
         public void MouseHorizontalWheel(MouseEventArgs2 e) { OnMouseHorizontalWheel(e); }
-        public void KeyDown(System.Windows.Forms.KeyEventArgs e) { OnKeyDown(e); }
-        public void KeyUp(System.Windows.Forms.KeyEventArgs e) { OnKeyUp(e); }
+        public void KeyDown(KeyEventArgs2 e) { OnKeyDown(e); }
+        public void KeyUp(KeyEventArgs2 e) { OnKeyUp(e); }
         public void TouchDown(int x, int y) { OnTouchDown(x, y); }
         public void TouchUp(int x, int y) { OnTouchUp(x, y); }
         public void TouchMove(int x, int y) { OnTouchMove(x, y); }
@@ -113,7 +109,7 @@ namespace FamiStudio
         public void SetDpiScales(float main, float font) { mainWindowScaling = main; fontScaling = font; }
         public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
 
-        public System.Windows.Forms.Keys ModifierKeys => parentForm.GetModifierKeys();
+        public ModifierKeys2 ModifierKeys => parentForm.GetModifierKeys();
         public FamiStudio App => parentForm?.FamiStudio;
         public CursorInfo Cursor => cursorInfo;
         public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
@@ -190,9 +186,31 @@ namespace FamiStudio
             set { cursor = value; parentControl.ParentForm.RefreshCursor(); }
         }
     }
+    
+    public class ModifierKeys2
+    { 
+        // Matches GLFW
+        private const int ModifierShift = 1;
+        private const int ModifierControl = 2;
+        private const int ModifierAlt = 4;
+        private const int ModifierSuper = 4;
+
+        private int modifiers;
+
+        public bool Shift    => (modifiers & ModifierShift)   != 0;
+        public bool Control  => (modifiers & ModifierControl) != 0;
+        public bool Alt      => (modifiers & ModifierAlt)     != 0;
+        public bool Super    => (modifiers & ModifierSuper)   != 0;
+
+        public void Set(int mods)
+        {
+            modifiers = mods;
+        }
+    }
 
     public class MouseEventArgs2
     {
+        // Matches GLFW (1 << button)
         public const int ButtonLeft   = 1;
         public const int ButtonRight  = 2;
         public const int ButtonMiddle = 4;
@@ -230,25 +248,155 @@ namespace FamiStudio
         }
     }
 
-    //public class MouseEventArgs2 : MouseEventArgs2
-    //{
-    //    private bool delay = false;
-    //    public  bool IsRightClickDelayed => delay;
+    public class KeyEventArgs2
+    {   
+        // Matches GLFW
+        private const int ModifierShift   = 1;
+        private const int ModifierControl = 2;
+        private const int ModifierAlt     = 4;
+        private const int ModifierSuper   = 4;
 
-    //    public MouseEventArgs2(MouseEventArgs2 e) :
-    //        base(e.Button, e.Clicks, e.X, e.Y, e.Delta)
-    //    {
-    //    }
+        private Keys2 key;
+        private int   modifiers;
+        private bool  repeat;
+        private bool  handled;
 
-    //    public MouseEventArgs2(System.Windows.Forms.MouseButtons button, int clicks, int x, int y, int delta) :
-    //        base(button, clicks, x, y, delta)
-    //    {
-    //    }
+        public Keys2 Key      => key;
+        public bool  Shift    => (modifiers & ModifierShift)   != 0;
+        public bool  Control  => (modifiers & ModifierControl) != 0;
+        public bool  Alt      => (modifiers & ModifierAlt)     != 0;
+        public bool  Super    => (modifiers & ModifierSuper)   != 0;
+        public bool  IsRepeat => repeat;
+        public bool  Handled { get => handled; set => handled = value; }
 
-    //    public void DelayRightClick()
-    //    {
-    //        Debug.Assert(Button.HasFlag(System.Windows.Forms.MouseButtons.Right));
-    //        delay = true;
-    //    }
-    //}
+        public KeyEventArgs2(Keys2 k, int mods, bool rep)
+        {
+            key = k;
+            modifiers = mods;
+            repeat = rep;
+        }
+    }
+
+    // Matches GLFW
+    public enum Keys2
+    {
+        Unknown = -1,
+        Space = 32,
+        D0 = 48,
+        D1 = 49,
+        D2 = 50,
+        D3 = 51,
+        D4 = 52,
+        D5 = 53,
+        D6 = 54,
+        D7 = 55,
+        D8 = 56,
+        D9 = 57,
+        A = 65,
+        B = 66,
+        C = 67,
+        D = 68,
+        E = 69,
+        F = 70,
+        G = 71,
+        H = 72,
+        I = 73,
+        J = 74,
+        K = 75,
+        L = 76,
+        M = 77,
+        N = 78,
+        O = 79,
+        P = 80,
+        Q = 81,
+        R = 82,
+        S = 83,
+        T = 84,
+        U = 85,
+        V = 86,
+        W = 87,
+        X = 88,
+        Y = 89,
+        Z = 90,
+        Escape = 256,
+        Enter = 257,
+        Tab = 258,
+        Backspace = 259,
+        Insert = 260,
+        Delete = 261,
+        Right = 262,
+        Left = 263,
+        Down = 264,
+        Up = 265,
+        PageUp = 266,
+        PageDown = 267,
+        Home = 268,
+        End = 269,
+        CapsLock = 280,
+        ScrollLock = 281,
+        NumLock = 282,
+        PrintScreen = 283,
+        Pause = 284,
+        F1 = 290,
+        F2 = 291,
+        F3 = 292,
+        F4 = 293,
+        F5 = 294,
+        F6 = 295,
+        F7 = 296,
+        F8 = 297,
+        F9 = 298,
+        F10 = 299,
+        F11 = 300,
+        F12 = 301,
+        F13 = 302,
+        F14 = 303,
+        F15 = 304,
+        F16 = 305,
+        F17 = 306,
+        F18 = 307,
+        F19 = 308,
+        F20 = 309,
+        F21 = 310,
+        F22 = 311,
+        F23 = 312,
+        F24 = 313,
+        F25 = 314,
+        KeypadD0 = 320,
+        KeypadD1 = 321,
+        KeypadD2 = 322,
+        KeypadD3 = 323,
+        KeypadD4 = 324,
+        KeypadD5 = 325,
+        KeypadD6 = 326,
+        KeypadD7 = 327,
+        KeypadD8 = 328,
+        KeypadD9 = 329,
+        KeypadDecimal = 330,
+        KeypadDivide = 331,
+        KeypadMultiply = 332,
+        KeypadSubtract = 333,
+        KeypadAdd = 334,
+        KeypadEnter = 335,
+        KeypadEqual = 336,
+        LeftShift = 340,
+        LeftControl = 341,
+        LeftAlt = 342,
+        LeftSuper = 343,
+        RightShift = 344,
+        RightControl = 345,
+        RightAlt = 346,
+        RightSuper = 347,
+        Menu = 348
+    };
+
+    // Matches Windows Forms
+    public enum DialogResult2
+    {
+        None,
+        OK = 1,
+        Cancel = 2,
+        Yes = 6,
+        No = 7
+    }
 }

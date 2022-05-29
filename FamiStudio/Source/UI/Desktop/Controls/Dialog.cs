@@ -20,8 +20,8 @@ namespace FamiStudio
 
         private List<RenderControl> controls = new List<RenderControl>();
         private RenderControl focusedControl;
-        private Action<DialogResult> callback;
-        private DialogResult result = DialogResult.None;
+        private Action<DialogResult2> callback;
+        private DialogResult2 result = DialogResult2.None;
         private float tooltipTimer;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForMainWindow(2);
@@ -33,7 +33,7 @@ namespace FamiStudio
 
         public RenderCommandList CommandList => commandList;
         public RenderCommandList CommandListForeground => commandListForeground;
-        public DialogResult DialogResult => result;
+        public DialogResult2 DialogResult2 => result;
 
         public IReadOnlyCollection<RenderControl> Controls => controls.AsReadOnly();
 
@@ -60,7 +60,7 @@ namespace FamiStudio
             FamiStudioForm.Instance.InitDialog(this);
         }
 
-        public void ShowDialogAsync(object parent, Action<DialogResult> cb) // MATTT : Remove parent, pass in contructor.
+        public void ShowDialogAsync(object parent, Action<DialogResult2> cb) // MATTT : Remove parent, pass in contructor.
         {
             visible = true;
             callback = cb;
@@ -68,7 +68,7 @@ namespace FamiStudio
             FamiStudioForm.Instance.PushDialog(this);
         }
 
-        public void Close(DialogResult res)
+        public void Close(DialogResult2 res)
         {
             FamiStudioForm.Instance.PopDialog(this);
             result = res;
@@ -175,7 +175,7 @@ namespace FamiStudio
             ResetToolTip();
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs2 e)
         {
             if (focusedControl != null && focusedControl.Visible)
             {

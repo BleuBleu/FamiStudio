@@ -133,7 +133,7 @@ namespace FamiStudio
 
                     dlg.ShowDialogAsync(null, (r) =>
                     {
-                        if (r == DialogResult.OK)
+                        if (r == DialogResult2.OK)
                         {
                             var keysBool = dlg.Properties.GetPropertyValue<bool[]>(1);
 
@@ -259,7 +259,7 @@ namespace FamiStudio
                 // This is only ran in desktop and this isnt really async, so its ok.
                 dialog.ShowDialogAsync(parent, (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r == DialogResult2.OK)
                     {
                         var expansionMask = GetExpansionMask(dialog.Properties.GetPropertyValue<bool[]>(4));
                         var polyphony = dialog.Properties.GetSelectedIndex(0);

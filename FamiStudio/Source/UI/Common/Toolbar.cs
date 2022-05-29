@@ -1073,7 +1073,7 @@ namespace FamiStudio
                             {
                                 // Solution used here is an easy workaround for macOS Spotlight being attached to Cmd+Space by default.
                                 //
-                                // We use `Keys.Control` flag detection to determine whether Ctrl was pressed or not. On macOS that
+                                // We use `Keys2.Control` flag detection to determine whether Ctrl was pressed or not. On macOS that
                                 // flag is present for both Ctrl *and* Cmd keys, which means Ctrl+Space and Cmd+Space are equivalent. 
                                 // In other words user can use Ctrl+Space instead of Cmd+Space to avoid Spotlight shortcut clash.
                                 //

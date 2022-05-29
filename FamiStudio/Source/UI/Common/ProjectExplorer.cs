@@ -2167,7 +2167,7 @@ namespace FamiStudio
                                 messageDlg.Properties.Build();
                                 messageDlg.ShowDialogAsync(null, (r) =>
                                 {
-                                    if (r == DialogResult.OK)
+                                    if (r == DialogResult2.OK)
                                     {
                                         var replace = messageDlg.Properties.GetPropertyValue<bool>(1);
                                         App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
@@ -2187,7 +2187,7 @@ namespace FamiStudio
                             {
                                 PlatformUtils.MessageBoxAsync($"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
                                 {
-                                    if (r == DialogResult.Yes)
+                                    if (r == DialogResult2.Yes)
                                     {
                                         App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
                                         instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
@@ -2250,7 +2250,7 @@ namespace FamiStudio
                         {
                             PlatformUtils.MessageBoxAsync($"Are you sure you want to replace all notes using arpeggio '{arpeggioDst.Name}' with '{arpeggioSrc.Name}'?", "Replace arpeggio?", MessageBoxButtons.YesNo, (r) =>
                             {
-                                if (r == DialogResult.Yes)
+                                if (r == DialogResult2.Yes)
                                 {
                                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
                                     App.Project.ReplaceArpeggio(arpeggioDst, arpeggioSrc);
@@ -2262,7 +2262,7 @@ namespace FamiStudio
                         {
                             PlatformUtils.MessageBoxAsync($"Are you sure you want to copy the arpeggio values from '{arpeggioSrc.Name}' to '{arpeggioDst.Name}'?", "Copy Arpeggio", MessageBoxButtons.YesNo, (r) =>
                             {
-                                if (r == DialogResult.Yes)
+                                if (r == DialogResult2.Yes)
                                 {
                                     App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, arpeggioDst.Id);
                                     arpeggioDst.Envelope.Length = arpeggioSrc.Envelope.Length;
@@ -2341,7 +2341,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs2 e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -2478,7 +2478,7 @@ namespace FamiStudio
             var buttonIdx = buttons.IndexOf(button);
             Debug.Assert(buttonIdx >= 0);
 
-            var shift = ModifierKeys.HasFlag(Keys.Shift);
+            var shift = ModifierKeys.Shift;
             var buttonTopY = 0;
 
             foreach (var b in buttons)
@@ -2551,7 +2551,7 @@ namespace FamiStudio
 
                         dlg.ShowDialogAsync(ParentForm, (r) =>
                         {
-                            if (r == DialogResult.OK)
+                            if (r == DialogResult2.OK)
                             {
                                 App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -2668,7 +2668,7 @@ namespace FamiStudio
 
                             dlg.ShowDialogAsync(ParentForm, (r) =>
                             {
-                                if (r == DialogResult.OK)
+                                if (r == DialogResult2.OK)
                                 {
                                     var selected = dlg.Properties.GetPropertyValue<bool[]>(1);
                                     var instrumentsIdsToMerge = new List<int>();
@@ -2777,7 +2777,7 @@ namespace FamiStudio
 
                             dlg.ShowDialogAsync(ParentForm, (r) =>
                             {
-                                if (r == DialogResult.OK)
+                                if (r == DialogResult2.OK)
                                 {
                                     App.BeginLogTask();
                                     {
@@ -2878,7 +2878,7 @@ namespace FamiStudio
         {
             PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo, (r) =>
             {
-                if (r == DialogResult.Yes)
+                if (r == DialogResult2.Yes)
                 {
                     bool selectNewSong = song == App.SelectedSong;
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
@@ -2929,7 +2929,7 @@ namespace FamiStudio
 
                 dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r == DialogResult2.OK)
                     {
                         for (int i = 0; i < expNames.Count; i++)
                         {
@@ -2962,7 +2962,7 @@ namespace FamiStudio
         {
             PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{inst.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo, (r) =>
             {
-                if (r == DialogResult.Yes)
+                if (r == DialogResult2.Yes)
                 {
                     bool selectNewInstrument = inst == App.SelectedInstrument;
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
@@ -2996,7 +2996,7 @@ namespace FamiStudio
         {
             PlatformUtils.MessageBoxAsync($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo, (r) =>
             {
-                if (r == DialogResult.Yes)
+                if (r == DialogResult2.Yes)
                 {
                     bool selectNewArpeggio = arpeggio == App.SelectedArpeggio;
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
@@ -3087,7 +3087,7 @@ namespace FamiStudio
         {
             PlatformUtils.MessageBoxAsync($"Are you sure you want to delete DPCM Sample '{sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo, (r) =>
             {
-                if (r == DialogResult.Yes)
+                if (r == DialogResult2.Yes)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamples, TransactionFlags.StopAudio);
                     App.Project.DeleteSample(sample);
@@ -3100,7 +3100,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs2 e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
 
             if (middle)
             {
@@ -4062,7 +4062,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     var selectedExpansions = dlg.Properties.GetPropertyValue<bool[]>(6);
                     var expansionMask = 0;
@@ -4116,7 +4116,7 @@ namespace FamiStudio
                             else
                                 PlatformUtils.ShowToast($"EPSM is not supported with other expansions enabled, expansion change was ignored.");
                         }
-                        else if (!expansionRemoved || PlatformUtils.IsMobile || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        else if (!expansionRemoved || PlatformUtils.IsMobile || expansionRemoved && PlatformUtils.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult2.Yes)
                         {
                             App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
                             project.SetExpansionAudioMask(expansionMask, numChannels);
@@ -4228,7 +4228,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples, TransactionFlags.StopAudio);
                     App.SeekSong(0);
@@ -4266,7 +4266,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     var newName = dlg.Properties.GetPropertyValue<string>(0);
 
@@ -4297,7 +4297,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     var newName = dlg.Properties.GetPropertyValue<string>(0);
 

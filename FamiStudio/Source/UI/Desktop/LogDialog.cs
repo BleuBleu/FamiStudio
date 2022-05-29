@@ -36,7 +36,7 @@ namespace FamiStudio
         }
 
         public bool HasMessages => messages.Count > 0;
-        public bool AbortOperation =>  dialog.DialogResult != DialogResult.None;
+        public bool AbortOperation =>  dialog.DialogResult2 != DialogResult2.None;
         public void ReportProgress(float progress) { }
     }
 
@@ -95,6 +95,6 @@ namespace FamiStudio
         }
 
         public bool HasMessages => hasMessages;
-        public bool AbortOperation => dialog.DialogResult != DialogResult.None;
+        public bool AbortOperation => dialog.DialogResult2 != DialogResult2.None;
     }
 }

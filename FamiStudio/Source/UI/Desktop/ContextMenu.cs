@@ -121,25 +121,25 @@ namespace FamiStudio
             SetHoveredItemIndex(-1);
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs2 e)
         {
-            if (e.KeyCode == Keys.Escape)
+            if (e.Key == Keys2.Escape)
             {
                 App.HideContextMenu();
             }
             else if (hoveredItemIndex >= 0)
             {
-                if (e.KeyCode == Keys.Enter)
+                if (e.Key == Keys2.Enter)
                 {
                     App.HideContextMenu();
                     MarkDirty();
                     menuOptions[hoveredItemIndex].Callback();
                 }
-                else if (e.KeyCode == Keys.Up)
+                else if (e.Key == Keys2.Up)
                 {
                     SetHoveredItemIndex(Math.Max(0, hoveredItemIndex - 1));
                 }
-                else if (e.KeyCode == Keys.Down)
+                else if (e.Key == Keys2.Down)
                 {
                     SetHoveredItemIndex(Math.Min(menuOptions.Length - 1, hoveredItemIndex + 1));
                 }

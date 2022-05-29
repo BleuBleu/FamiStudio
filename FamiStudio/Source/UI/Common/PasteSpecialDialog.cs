@@ -49,7 +49,7 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult2> callback)
         {
              dialog.ShowDialogAsync(parent, callback);
         }

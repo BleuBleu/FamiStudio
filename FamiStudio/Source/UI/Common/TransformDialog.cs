@@ -217,11 +217,11 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult2> callback)
         {
             dialog.ShowDialogAsync(parent, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     var operation = (TransformOperation)dialog.SelectedIndex;
 

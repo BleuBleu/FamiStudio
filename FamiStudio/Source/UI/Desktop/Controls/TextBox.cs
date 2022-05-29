@@ -155,20 +155,20 @@ namespace FamiStudio
 
         // MATTT : See if GLFW (or GTK) has key repeat, if it doesnt, well need to 
         // handle it ourselves.
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs2 e)
         {
             // MATTT : Copy/paste.
-            if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right)
+            if (e.Key == Keys2.Left || e.Key == Keys2.Right)
             {
-                var sign = e.KeyCode == Keys.Left ? -1 : 1;
+                var sign = e.Key == Keys2.Left ? -1 : 1;
                 var prevCaretIndex = caretIndex;
 
-                if (e.Modifiers.HasFlag(Keys.Control) || e.Modifiers.HasFlag(Keys.Alt))
+                if (e.Control || e.Alt)
                     caretIndex = FindWordStart(caretIndex, sign);
                 else
                     caretIndex = Utils.Clamp(caretIndex + sign, 0, text.Length);
 
-                if (e.Modifiers.HasFlag(Keys.Shift))
+                if (e.Shift)
                 {
                     var minCaret = Math.Min(prevCaretIndex, caretIndex);
                     var maxCaret = Math.Max(prevCaretIndex, caretIndex);
@@ -202,11 +202,11 @@ namespace FamiStudio
                 EnsureCaretVisible();
                 MarkDirty();
             }
-            else if (e.KeyCode == Keys.A && e.Modifiers.HasFlag(Keys.Control))
+            else if (e.Key == Keys2.A && e.Control)
             {
                 SelectAll();
             }
-            else if (e.KeyCode == Keys.Back)
+            else if (e.Key == Keys2.Backspace)
             {
                 if (!DeleteSelection() && caretIndex > 0)
                 {
@@ -216,7 +216,7 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
-            else if (e.KeyCode == Keys.Delete)
+            else if (e.Key == Keys2.Delete)
             {
                 if (!DeleteSelection() && caretIndex < text.Length)
                 {
@@ -225,25 +225,25 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
-            else if ((int)e.KeyCode >= 0 && (int)e.KeyCode <= 255 && ThemeResources.FontMedium.GetCharInfo((char)e.KeyCode, false) != null)
+            else if ((int)e.Key >= 0 && (int)e.Key <= 255 && ThemeResources.FontMedium.GetCharInfo((char)e.Key, false) != null)
             {
                 // MATTT : This is janky. Need equivalent of OnKeyPress().
                 DeleteSelection();
-                text = text.Insert(caretIndex, ((char)e.KeyCode).ToString());
+                text = text.Insert(caretIndex, ((char)e.Key).ToString());
                 caretIndex++;
                 UpdateScrollParams();
                 EnsureCaretVisible();
                 ClearSelection();
                 MarkDirty();
             }
-            else if (e.KeyCode == Keys.Escape)
+            else if (e.Key == Keys2.Escape)
             {
                 ClearDialogFocus();
                 e.Handled = true;
             }
         }
 
-        protected override void OnKeyUp(KeyEventArgs e)
+        protected override void OnKeyUp(KeyEventArgs2 e)
         {
         }
 

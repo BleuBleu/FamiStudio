@@ -1956,13 +1956,13 @@ namespace FamiStudio
                 var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingArpeggios, out var missingSamples);
 
                 if (missingInstruments)
-                    createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                    createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
 
                 if (missingArpeggios)
-                    createMissingArpeggios = PlatformUtils.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                    createMissingArpeggios = PlatformUtils.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
 
                 if (missingSamples && editChannel == ChannelType.Dpcm)
-                    createMissingSamples = PlatformUtils.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                    createMissingSamples = PlatformUtils.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
             }
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
@@ -2073,7 +2073,7 @@ namespace FamiStudio
 
                 dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r == DialogResult2.OK)
                     {
                         var effectMask = dlg.PasteEffectMask;
 
@@ -2111,7 +2111,7 @@ namespace FamiStudio
 
                 dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r == DialogResult2.OK)
                         DeleteSelectedNotes(true, dlg.DeleteNotes, dlg.DeleteEffectMask);
                 });
             }
@@ -3393,7 +3393,7 @@ namespace FamiStudio
 
             App.UndoRedoManager.RestoreTransaction(false);
 
-            var shift = ModifierKeys.HasFlag(Keys.Shift);
+            var shift = ModifierKeys.Shift;
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
@@ -3673,7 +3673,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                     mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
@@ -3966,7 +3966,7 @@ namespace FamiStudio
 
                     PlatformUtils.MessageBoxAsync($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo, (r) =>
                     {
-                        if (r == DialogResult.Yes)
+                        if (r == DialogResult2.Yes)
                         {
                             // Need to promote the transaction to project level since we are going to be transposing 
                             // potentially in multiple songs.
@@ -4519,22 +4519,22 @@ namespace FamiStudio
             return list;
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs2 e)
         {
             UpdateCursor();
 
             if (captureOperation != CaptureOperation.None)
                 return;
 
-            bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
-            bool shift = e.Modifiers.HasFlag(Keys.Shift);
+            bool ctrl  = e.Control;
+            bool shift = e.Shift;
 
-            if (e.KeyCode == Keys.Escape)
+            if (e.Key == Keys2.Escape)
             {
                 ClearSelection();
                 MarkDirty();
             }
-            else if (e.KeyCode == Keys.A && ctrl && IsActiveControl)
+            else if (e.Key == Keys2.A && ctrl && IsActiveControl)
             {
                 if (editMode == EditionMode.Arpeggio ||
                     editMode == EditionMode.Enveloppe)
@@ -4546,7 +4546,7 @@ namespace FamiStudio
                     SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
                 }
             }
-            else if (e.KeyCode == Keys.S && shift)
+            else if (e.Key == Keys2.S && shift)
             {
                 if (SnapAllowed)
                 {
@@ -4558,11 +4558,11 @@ namespace FamiStudio
             {
                 if (ctrl)
                 {
-                    if (e.KeyCode == Keys.C)
+                    if (e.Key == Keys2.C)
                         Copy();
-                    else if (e.KeyCode == Keys.X)
+                    else if (e.Key == Keys2.X)
                         Cut();
-                    else if (e.KeyCode == Keys.V)
+                    else if (e.Key == Keys2.V)
                     {
                         if (shift)
                             PasteSpecial();
@@ -4571,7 +4571,7 @@ namespace FamiStudio
                     }
                 }
 
-                if (e.KeyCode == Keys.Delete)
+                if (e.Key == Keys2.Delete)
                 {
                     if (editMode == EditionMode.Channel)
                     {
@@ -4592,36 +4592,36 @@ namespace FamiStudio
 
                 if (editMode == EditionMode.Channel)
                 {
-                    switch (e.KeyCode)
+                    switch (e.Key)
                     {
-                        case Keys.Up:
+                        case Keys2.Up:
                             TransposeNotes(ctrl ? 12 : 1);
                             break;
-                        case Keys.Down:
+                        case Keys2.Down:
                             TransposeNotes(ctrl ? -12 : -1);
                             break;
-                        case Keys.Right:
+                        case Keys2.Right:
                             MoveNotes(ctrl ? (Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : 1);
                             break;
-                        case Keys.Left:
+                        case Keys2.Left:
                             MoveNotes(ctrl ? -(Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : -1);
                             break;
                     }
                 }
                 else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
                 {
-                    switch (e.KeyCode)
+                    switch (e.Key)
                     {
-                        case Keys.Up:
+                        case Keys2.Up:
                             IncrementEnvelopeValues(ctrl ? 4 : 1);
                             break;
-                        case Keys.Down:
+                        case Keys2.Down:
                             IncrementEnvelopeValues(ctrl ? -4 : -1);
                             break;
-                        case Keys.Right:
+                        case Keys2.Right:
                             MoveEnvelopeValues(ctrl ? 4 : 1);
                             break;
-                        case Keys.Left:
+                        case Keys2.Left:
                             MoveEnvelopeValues(ctrl ? -4 : -1);
                             break;
                     }
@@ -4629,7 +4629,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyUp(KeyEventArgs e)
+        protected override void OnKeyUp(KeyEventArgs2 e)
         {
             UpdateCursor();
         }
@@ -4782,7 +4782,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs2 e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
 
             if (middle && e.Y > headerSizeY && e.X > pianoSizeX)
             {
@@ -4908,7 +4908,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownAltZoom(MouseEventArgs2 e)
         {
-            if (e.Right && ModifierKeys.HasFlag(Keys.Alt))
+            if (e.Right && ModifierKeys.Alt)
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;
@@ -4994,7 +4994,7 @@ namespace FamiStudio
             {
                 if (left)
                 {
-                    var slide = FamiStudioForm.IsKeyDown(Keys.S);
+                    var slide = FamiStudioForm.IsKeyDown(Keys2.S);
 
                     if (slide && selectedEffectIdx == Note.EffectVolume)
                     {
@@ -5114,11 +5114,11 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    var shift   = ModifierKeys.HasFlag(Keys.Shift);
-                    var stop    = FamiStudioForm.IsKeyDown(Keys.T);
-                    var slide   = FamiStudioForm.IsKeyDown(Keys.S);
-                    var attack  = FamiStudioForm.IsKeyDown(Keys.A);
-                    var eyedrop = FamiStudioForm.IsKeyDown(Keys.I);
+                    var shift   = ModifierKeys.Shift;
+                    var stop    = FamiStudioForm.IsKeyDown(Keys2.T);
+                    var slide   = FamiStudioForm.IsKeyDown(Keys2.S);
+                    var attack  = FamiStudioForm.IsKeyDown(Keys2.A);
+                    var eyedrop = FamiStudioForm.IsKeyDown(Keys2.I);
 
                     if (slide)
                     {
@@ -6938,7 +6938,7 @@ namespace FamiStudio
 
                 dlg.ShowDialogAsync(ParentForm, (r) =>
                 {
-                    if (r == DialogResult.OK)
+                    if (r == DialogResult2.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
                         var sampleName = dlg.Properties.GetPropertyValue<string>(1);
@@ -7696,7 +7696,7 @@ namespace FamiStudio
                         PromoteTransaction(TransactionScope.Channel, Song.Id, editChannel);
                 }
 
-                var copy = ModifierKeys.HasFlag(Keys.Control);
+                var copy = ModifierKeys.Control;
                 var keepFx = captureOperation != CaptureOperation.DragSelection;
 
                 // If not copying, delete original notes.
@@ -8001,11 +8001,11 @@ namespace FamiStudio
             {
                 Cursor.Current = Cursors.SizeNS;
             }
-            else if (ModifierKeys.HasFlag(Keys.Control) && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
+            else if (ModifierKeys.Control && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
             {
                 Cursor.Current = Cursors.CopyCursor;
             }
-            else if (editMode == EditionMode.Channel && FamiStudioForm.IsKeyDown(Keys.I))
+            else if (editMode == EditionMode.Channel && FamiStudioForm.IsKeyDown(Keys2.I))
             {
                 Cursor.Current = Cursors.Eyedrop;
             }
@@ -8075,7 +8075,7 @@ namespace FamiStudio
         protected override void OnMouseMove(MouseEventArgs2 e)
         {
             bool left   = e.Left;
-            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -8250,9 +8250,9 @@ namespace FamiStudio
         {
             if (e.X > pianoSizeX)
             {
-                if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
+                if (Settings.TrackPadControls && !ModifierKeys.Control)
                 {
-                    if (ModifierKeys.HasFlag(Keys.Shift))
+                    if (ModifierKeys.Shift)
                         scrollX -= (int)e.ScrollY; // MATTT cast
                     else
                         scrollY -= (int)e.ScrollY; // MATTT cast

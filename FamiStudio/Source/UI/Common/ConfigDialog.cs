@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace FamiStudio
@@ -335,10 +333,10 @@ namespace FamiStudio
 //#if FAMISTUDIO_WINDOWS
 //                    dlg.KeyDown += (sender, e) =>
 //                    {
-//                        if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null)
+//                        if (PlatformUtils.KeyCodeToString((int)e.Key) != null)
 //                        {
-//                            if (e.KeyCode != Keys.Escape)
-//                                AssignQwertyKey(rowIdx, colIdx - 2, (int)e.KeyCode);
+//                            if (e.Key != Keys2.Escape)
+//                                AssignQwertyKey(rowIdx, colIdx - 2, (int)e.Key);
 //                            dlg.Close();
 //                        }
 //                    };
@@ -471,11 +469,11 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult2> callback)
         {
             dialog.ShowDialogAsync(parent, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     var pageGeneral = pages[(int)ConfigSection.General];
                     var pageUI = pages[(int)ConfigSection.UserInterface];

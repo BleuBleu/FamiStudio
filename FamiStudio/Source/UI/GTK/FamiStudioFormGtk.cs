@@ -56,7 +56,7 @@ namespace FamiStudio
         private System.Windows.Forms.MouseButtons captureButton   = System.Windows.Forms.MouseButtons.None;
         private System.Windows.Forms.MouseButtons lastButtonPress = System.Windows.Forms.MouseButtons.None;
         private BitArray keys = new BitArray(65536);
-        private System.Windows.Forms.Keys modifiers = System.Windows.Forms.Keys.None;
+        private System.Windows.Forms.Keys modifiers = System.Windows.Forms.Keys2.None;
 
         public FamiStudioForm(FamiStudio famistudio) : base(new GraphicsMode(new ColorFormat(8, 8, 8, 0), 0, 0), 1, 0, GraphicsContextFlags.Default)
         {
@@ -273,7 +273,7 @@ namespace FamiStudio
         void Handle_FocusOutEvent(object o, FocusOutEventArgs args)
         {
             keys.SetAll(false);
-            modifiers = System.Windows.Forms.Keys.None;
+            modifiers = System.Windows.Forms.Keys2.None;
         }
 
         protected override void Resized(int width, int height)
@@ -452,14 +452,14 @@ namespace FamiStudio
 
         private void SetKeyMap(System.Windows.Forms.Keys k, bool set)
         {
-            var regularKey = k & ~System.Windows.Forms.Keys.Modifiers;
+            var regularKey = k & ~System.Windows.Forms.Keys2.Modifiers;
             if (regularKey > 0 && (int)regularKey < keys.Length)
             {
                 keys[(int)regularKey] = set;
             }
             else
             {
-                var mods = k & System.Windows.Forms.Keys.Modifiers;
+                var mods = k & System.Windows.Forms.Keys2.Modifiers;
                 if (mods > 0)
                 {
                     if (set)
@@ -482,7 +482,7 @@ namespace FamiStudio
 
             SetKeyMap(winKey, true);
 
-            var args = new System.Windows.Forms.KeyEventArgs(winKey | winMod);
+            var args = new KeyEventArgs2(winKey | winMod);
             famistudio.KeyDown(args, (int)evnt.Key);
             foreach (var ctrl in controls.Controls)
                 ctrl.KeyDown(args);
@@ -497,7 +497,7 @@ namespace FamiStudio
 
             SetKeyMap(winKey, false);
 
-            var args = new System.Windows.Forms.KeyEventArgs(winKey | winMod);
+            var args = new KeyEventArgs2(winKey | winMod);
 
             famistudio.KeyUp(args, (int)evnt.Key);
             foreach (var ctrl in controls.Controls)
@@ -667,7 +667,7 @@ namespace FamiStudio
 
         public System.Windows.Forms.Keys GetModifierKeys()
         {
-            return modifiers | (forceCtrlDown ? System.Windows.Forms.Keys.Control : System.Windows.Forms.Keys.None);
+            return modifiers | (forceCtrlDown ? System.Windows.Forms.Keys2.Control : System.Windows.Forms.Keys2.None);
         }
 
         public static bool IsKeyDown(System.Windows.Forms.Keys k)

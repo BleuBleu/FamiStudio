@@ -659,8 +659,8 @@ namespace FamiStudio
                         var anchorOffsetLeftX  = (int)(patternSizeX * selectionDragAnchorPatternXFraction);
                         var anchorOffsetRightX = (int)(patternSizeX * (1.0f - selectionDragAnchorPatternXFraction));
 
-                        var instance  = ModifierKeys.HasFlag(Keys.Control);
-                        var duplicate = instance && ModifierKeys.HasFlag(Keys.Shift);
+                        var instance  = ModifierKeys.Control;
+                        var duplicate = instance && ModifierKeys.Shift;
 
                         var bmpCopy = (RenderBitmapAtlasRef)null;
                         var bmpSize = ScaleCustom(bmpDuplicate.ElementSize.Width, bitmapScale);
@@ -1081,7 +1081,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownPan(MouseEventArgs2 e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
 
             if (middle)
             {
@@ -1159,7 +1159,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSetLoopPoint(MouseEventArgs2 e)
         {
-            bool setLoop = FamiStudioForm.IsKeyDown(Keys.L);
+            bool setLoop = FamiStudioForm.IsKeyDown(Keys2.L);
 
             if (setLoop && e.X > trackNameSizeX && e.Left)
             {
@@ -1206,7 +1206,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownAltZoom(MouseEventArgs2 e)
         {
-            if (e.Right && ModifierKeys.HasFlag(Keys.Alt) && GetPatternForCoord(e.X, e.Y, out _))
+            if (e.Right && ModifierKeys.Alt && GetPatternForCoord(e.X, e.Y, out _))
             {
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.AltZoom);
                 return true;
@@ -1235,8 +1235,8 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    var ctrl  = ModifierKeys.HasFlag(Keys.Control);
-                    var shift = ModifierKeys.HasFlag(Keys.Shift);
+                    var ctrl  = ModifierKeys.Control;
+                    var shift = ModifierKeys.Shift;
 
                     if (pattern == null && !shift)
                     {
@@ -1773,15 +1773,15 @@ namespace FamiStudio
 
             bool createMissingInstrument = false;
             if (missingInstruments)
-                createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
 
             bool createMissingArpeggios = false;
             if (missingArpeggios)
-                createMissingArpeggios = PlatformUtils.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingArpeggios = PlatformUtils.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
 
             bool createMissingSamples = false;
             if (missingSamples)
-                createMissingSamples = PlatformUtils.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
+                createMissingSamples = PlatformUtils.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
@@ -1916,7 +1916,7 @@ namespace FamiStudio
 
             dialog.ShowDialogAsync(ParentForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     PasteInternal(
                         dialog.Properties.GetPropertyValue<bool>(0),
@@ -2048,8 +2048,8 @@ namespace FamiStudio
                         var dragChannelIdxCurrent = GetChannelIndexForCoord(y);
                         var channelIdxDelta = dragChannelIdxCurrent - dragChannelIdxStart;
 
-                        var copy = ModifierKeys.HasFlag(Keys.Control);
-                        var duplicate = copy && ModifierKeys.HasFlag(Keys.Shift) || channelIdxDelta != 0;
+                        var copy = ModifierKeys.Control;
+                        var duplicate = copy && ModifierKeys.Shift || channelIdxDelta != 0;
 
                         MoveCopyOrDuplicateSelection(channelIdxDelta, patternIdxDelta, copy, duplicate);
 
@@ -2210,9 +2210,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs2 e)
         {
-            if (e.KeyCode == Keys.Escape)
+            if (e.Key == Keys2.Escape)
             {
                 CancelDragSelection();
                 UpdateCursor();
@@ -2221,27 +2221,27 @@ namespace FamiStudio
             }
             else if (IsActiveControl)
             {
-                bool ctrl  = e.Modifiers.HasFlag(Keys.Control);
-                bool shift = e.Modifiers.HasFlag(Keys.Shift);
+                bool ctrl  = e.Control;
+                bool shift = e.Shift;
 
                 if (ctrl)
                 {
-                    if (e.KeyCode == Keys.C)
+                    if (e.Key == Keys2.C)
                         Copy();
-                    else if (e.KeyCode == Keys.X)
+                    else if (e.Key == Keys2.X)
                         Cut();
-                    else if (e.KeyCode == Keys.V && !shift)
+                    else if (e.Key == Keys2.V && !shift)
                         Paste();
-                    else if (e.KeyCode == Keys.V && shift)
+                    else if (e.Key == Keys2.V && shift)
                         PasteSpecial();
                 }
 
-                if (e.KeyCode == Keys.Delete && IsSelectionValid())
+                if (e.Key == Keys2.Delete && IsSelectionValid())
                 {
                     CancelDragSelection();
                     DeleteSelection();
                 }
-                else if (e.KeyCode == Keys.A && ctrl && IsActiveControl)
+                else if (e.Key == Keys2.A && ctrl && IsActiveControl)
                 {
                     SetSelection(new PatternLocation(0, 0), new PatternLocation(Song.Channels.Length - 1, Song.Length - 1), true);
                 }
@@ -2256,7 +2256,7 @@ namespace FamiStudio
             UpdateToolTip(null);
         }
 
-        protected override void OnKeyUp(KeyEventArgs e)
+        protected override void OnKeyUp(KeyEventArgs2 e)
         {
             if (captureOperation == CaptureOperation.DragSelection)
             {
@@ -2555,7 +2555,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs2 e)
         {
-            bool middle = e.Middle || (e.Left && ModifierKeys.HasFlag(Keys.Alt));
+            bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
@@ -2599,7 +2599,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
                     tempoProperties.ApplyAsync(dlg.Properties.GetPropertyValue<bool>(0), () =>
@@ -2633,7 +2633,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentForm, (r) =>
             {
-                if (r == DialogResult.OK)
+                if (r == DialogResult2.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
@@ -2742,9 +2742,9 @@ namespace FamiStudio
 
         protected override void OnMouseWheel(MouseEventArgs2 e)
         {
-            if (Settings.TrackPadControls && !ModifierKeys.HasFlag(Keys.Control))
+            if (Settings.TrackPadControls && !ModifierKeys.Control)
             {
-                if (ModifierKeys.HasFlag(Keys.Shift))
+                if (ModifierKeys.Shift)
                     scrollX -= (int)e.ScrollY; // MATTT, added int typecast.
 
                 ClampScroll();

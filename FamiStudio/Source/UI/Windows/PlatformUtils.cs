@@ -74,7 +74,7 @@ namespace FamiStudio
                 Multiselect = multiselect
             };
 
-            if (ofd.ShowDialog() == DialogResult.OK)
+            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 defaultPath = System.IO.Path.GetDirectoryName(ofd.FileName);
 
@@ -106,7 +106,7 @@ namespace FamiStudio
                 InitialDirectory = defaultPath
             };
 
-            if (sfd.ShowDialog() == DialogResult.OK)
+            if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 defaultPath = System.IO.Path.GetDirectoryName(sfd.FileName);
                 return sfd.FileName;
@@ -129,7 +129,7 @@ namespace FamiStudio
             if (!string.IsNullOrEmpty(defaultPath) && Directory.Exists(defaultPath))
                 folderBrowserDialog.SelectedPath = defaultPath;
 
-            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 defaultPath = folderBrowserDialog.SelectedPath;
                 return folderBrowserDialog.SelectedPath;
@@ -138,13 +138,13 @@ namespace FamiStudio
             return null;
         }
 
-        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
+        public static DialogResult2 MessageBox(string text, string title, MessageBoxButtons buttons)
         {
             var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
-            return System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
+            return (DialogResult2)System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
         }
 
-        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
+        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult2> callback = null)
         {
             var res = MessageBox(text, title, buttons);
             callback?.Invoke(res);
@@ -173,7 +173,7 @@ namespace FamiStudio
         {
             if (!IsVS2019RuntimeInstalled())
             {
-                if (MessageBox("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (MessageBox("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult2.Yes)
                 {
                     OpenUrl("https://famistudio.org/doc/install/#windows");
                 }
@@ -183,7 +183,7 @@ namespace FamiStudio
 
             if (!XAudio2Stream.TryDetectXAudio2())
             {
-                if (MessageBox("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (MessageBox("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult2.Yes)
                 {
                     OpenUrl("https://famistudio.org/doc/install/#windows");
                 }

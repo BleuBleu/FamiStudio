@@ -75,6 +75,7 @@ namespace FamiStudio
         private bool quit = false;
         private int lastCursorX = -1;
         private int lastCursorY = -1;
+        private ModifierKeys2 modifiers = new ModifierKeys2();
 
         // Double-click emulation.
         private int lastClickButton = -1;
@@ -455,8 +456,8 @@ namespace FamiStudio
             }
 
             var buttons = MakeButtonFlags(
-                glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != 0,
-                glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != 0,
+                glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)   != 0,
+                glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)  != 0,
                 glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) != 0);
 
             var e = new MouseEventArgs2(buttons, cx, cy);
@@ -517,10 +518,42 @@ namespace FamiStudio
                     ctrl.MouseHorizontalWheel(new MouseEventArgs2(0, cx, cy, scrollX));
             }
         }
+        
+        private void SendKeyUpOrDown(GLControl ctrl, KeyEventArgs2 e, bool down)
+        {
+            if (down)
+                ctrl.KeyDown(e);
+            else
+                ctrl.KeyUp(e);
+        }
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
             Debug.WriteLine($"KEY! Key = {key}, Scancode = {scancode}, Action = {action}, Mods = {mods}");
+
+            modifiers.Set(mods);
+
+            var down = action == GLFW_PRESS || action == GLFW_REPEAT;
+            var e = new KeyEventArgs2((Keys2)key, mods, action == GLFW_REPEAT);
+            
+            if (controls.IsContextMenuActive)
+            {
+                SendKeyUpOrDown(controls.ContextMenu, e, down);
+            }
+            else if (controls.IsDialogActive)
+            {
+                SendKeyUpOrDown(controls.TopDialog, e, down);
+            }
+            else
+            {
+                if (down)
+                    famistudio.KeyDown(e, scancode);
+                else
+                    famistudio.KeyUp(e, scancode);
+
+                foreach (var ctrl in controls.Controls)
+                    SendKeyUpOrDown(ctrl, e, down);
+            }
         }
 
         private void CharCallback(IntPtr window, uint codepoint)
@@ -559,14 +592,7 @@ namespace FamiStudio
 
         private int MakeButtonFlags(int button)
         {
-            switch (button)
-            {
-                case GLFW_MOUSE_BUTTON_LEFT:   return MouseEventArgs2.ButtonLeft;
-                case GLFW_MOUSE_BUTTON_RIGHT:  return MouseEventArgs2.ButtonRight;
-                case GLFW_MOUSE_BUTTON_MIDDLE: return MouseEventArgs2.ButtonMiddle;
-            }
-
-            return 0;
+            return button != 0 ? 1 << button : 0;
         }
 
         private int MakeButtonFlags(bool l, bool r, bool m)
@@ -646,46 +672,6 @@ namespace FamiStudio
                 timer.Stop();
             }
         }
-
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (controls.IsContextMenuActive)
-            {
-                controls.ContextMenu.KeyDown(e);
-            }
-            else if (controls.IsDialogActive)
-            {
-                controls.TopDialog.KeyDown(e);
-            }
-            else
-            {
-                famistudio.KeyDown(e, (int)e.KeyCode);
-                foreach (var ctrl in controls.Controls)
-                    ctrl.KeyDown(e);
-            }
-
-            base.OnKeyDown(e);
-        }
-
-        protected override void OnKeyUp(KeyEventArgs e)
-        {
-            if (controls.IsContextMenuActive)
-            {
-                controls.ContextMenu.KeyUp(e);
-            }
-            else if (controls.IsDialogActive)
-            {
-                controls.TopDialog.KeyUp(e);
-            }
-            else
-            {
-                famistudio.KeyUp(e, (int)e.KeyCode);
-                foreach (var ctrl in controls.Controls)
-                    ctrl.KeyUp(e);
-            }
-
-            base.OnKeyUp(e);
-        }
         */
 
         // MATTT
@@ -706,10 +692,9 @@ namespace FamiStudio
             controls.MarkDirty();
         }
 
-        public Keys GetModifierKeys()
+        public ModifierKeys2 GetModifierKeys()
         {
-            //return ModifierKeys;
-            return Keys.None;
+            return modifiers;
         }
 
         public Point GetCursorPosition()
@@ -768,45 +753,11 @@ namespace FamiStudio
             controls.PopDialog(dialog);
         }
 
-        public static bool IsKeyDown(Keys k)
+        public static bool IsKeyDown(Keys2 k)
         {
             //return (GetKeyState((int)k) & 0x8000) != 0;
             return false;
         }
-
-        //protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        //{
-        //    if (keyData == Keys.Up    ||
-        //        keyData == Keys.Down  ||
-        //        keyData == Keys.Left  ||
-        //        keyData == Keys.Right ||
-        //        keyData == Keys.Tab   ||
-        //        keyData == Keys.F10)
-        //    {
-        //        var e = new KeyEventArgs(keyData);
-
-        //        if (controls.IsContextMenuActive)
-        //        {
-        //            controls.ContextMenu.KeyDown(e);
-        //        }
-        //        else if (controls.IsDialogActive)
-        //        {
-        //            controls.TopDialog.KeyDown(e);
-        //        }
-        //        else
-        //        {
-        //            famistudio.KeyDown(e, (int)keyData);
-        //            foreach (var ctrl in controls.Controls)
-        //                ctrl.KeyDown(e);
-        //        }
-
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        return base.ProcessCmdKey(ref msg, keyData);
-        //    }
-        //}
 
         [DllImport("DwmApi")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using DialogResult = System.Windows.Forms.DialogResult;
-
 namespace FamiStudio
 {
     class DeleteSpecialDialog
@@ -49,7 +47,7 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult2> callback)
         {
             dialog.ShowDialogAsync(parent, callback);
         }

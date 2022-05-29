@@ -65,55 +65,55 @@ namespace FamiStudio
         public static bool ShowRegisterViewer = PlatformUtils.IsDesktop;
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
-#if FAMISTUDIO_WINDOWS
+#if false // MATTT FAMISTUDIO_WINDOWS
         public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
         {
             // Stop note
-            { (int)System.Windows.Forms.Keys.D1, -1 },
+            { (int)System.Windows.Forms.Keys2.D1, -1 },
 
             // Octave 1
-            { (int)System.Windows.Forms.Keys.Z, -1 },
-            { (int)System.Windows.Forms.Keys.S, -1 },
-            { (int)System.Windows.Forms.Keys.X, -1 },
-            { (int)System.Windows.Forms.Keys.D, -1 },
-            { (int)System.Windows.Forms.Keys.C, -1 },
-            { (int)System.Windows.Forms.Keys.V, -1 },
-            { (int)System.Windows.Forms.Keys.G, -1 },
-            { (int)System.Windows.Forms.Keys.B, -1 },
-            { (int)System.Windows.Forms.Keys.H, -1 },
-            { (int)System.Windows.Forms.Keys.N, -1 },
-            { (int)System.Windows.Forms.Keys.J, -1 },
-            { (int)System.Windows.Forms.Keys.M, -1 },
+            { (int)System.Windows.Forms.Keys2.Z, -1 },
+            { (int)System.Windows.Forms.Keys2.S, -1 },
+            { (int)System.Windows.Forms.Keys2.X, -1 },
+            { (int)System.Windows.Forms.Keys2.D, -1 },
+            { (int)System.Windows.Forms.Keys2.C, -1 },
+            { (int)System.Windows.Forms.Keys2.V, -1 },
+            { (int)System.Windows.Forms.Keys2.G, -1 },
+            { (int)System.Windows.Forms.Keys2.B, -1 },
+            { (int)System.Windows.Forms.Keys2.H, -1 },
+            { (int)System.Windows.Forms.Keys2.N, -1 },
+            { (int)System.Windows.Forms.Keys2.J, -1 },
+            { (int)System.Windows.Forms.Keys2.M, -1 },
 
             // Octave 2
-            { (int)System.Windows.Forms.Keys.Q,  (int)System.Windows.Forms.Keys.Oemcomma,  },
-            { (int)System.Windows.Forms.Keys.D2, (int)System.Windows.Forms.Keys.L,         },
-            { (int)System.Windows.Forms.Keys.W,  (int)System.Windows.Forms.Keys.OemPeriod, },
-            { (int)System.Windows.Forms.Keys.D3, (int)System.Windows.Forms.Keys.Oem1,      },
-            { (int)System.Windows.Forms.Keys.E,  (int)System.Windows.Forms.Keys.Oem2,      },
-            { (int)System.Windows.Forms.Keys.R,  -1 },
-            { (int)System.Windows.Forms.Keys.D5, -1 },
-            { (int)System.Windows.Forms.Keys.T,  -1 },
-            { (int)System.Windows.Forms.Keys.D6, -1 },
-            { (int)System.Windows.Forms.Keys.Y,  -1 },
-            { (int)System.Windows.Forms.Keys.D7, -1 },
-            { (int)System.Windows.Forms.Keys.U,  -1 },
+            { (int)System.Windows.Forms.Keys2.Q,  (int)System.Windows.Forms.Keys2.Oemcomma,  },
+            { (int)System.Windows.Forms.Keys2.D2, (int)System.Windows.Forms.Keys2.L,         },
+            { (int)System.Windows.Forms.Keys2.W,  (int)System.Windows.Forms.Keys2.OemPeriod, },
+            { (int)System.Windows.Forms.Keys2.D3, (int)System.Windows.Forms.Keys2.Oem1,      },
+            { (int)System.Windows.Forms.Keys2.E,  (int)System.Windows.Forms.Keys2.Oem2,      },
+            { (int)System.Windows.Forms.Keys2.R,  -1 },
+            { (int)System.Windows.Forms.Keys2.D5, -1 },
+            { (int)System.Windows.Forms.Keys2.T,  -1 },
+            { (int)System.Windows.Forms.Keys2.D6, -1 },
+            { (int)System.Windows.Forms.Keys2.Y,  -1 },
+            { (int)System.Windows.Forms.Keys2.D7, -1 },
+            { (int)System.Windows.Forms.Keys2.U,  -1 },
 
             // Octave 3
-            { (int)System.Windows.Forms.Keys.I,       -1 },
-            { (int)System.Windows.Forms.Keys.D9,      -1 },
-            { (int)System.Windows.Forms.Keys.O,       -1 },
-            { (int)System.Windows.Forms.Keys.D0,      -1 },
-            { (int)System.Windows.Forms.Keys.P,       -1 },
-            { (int)System.Windows.Forms.Keys.Oem4,    -1 },
-            { (int)System.Windows.Forms.Keys.Oemplus, -1 },
-            { (int)System.Windows.Forms.Keys.Oem6,    -1 },
+            { (int)System.Windows.Forms.Keys2.I,       -1 },
+            { (int)System.Windows.Forms.Keys2.D9,      -1 },
+            { (int)System.Windows.Forms.Keys2.O,       -1 },
+            { (int)System.Windows.Forms.Keys2.D0,      -1 },
+            { (int)System.Windows.Forms.Keys2.P,       -1 },
+            { (int)System.Windows.Forms.Keys2.Oem4,    -1 },
+            { (int)System.Windows.Forms.Keys2.Oemplus, -1 },
+            { (int)System.Windows.Forms.Keys2.Oem6,    -1 },
             { -1, -1 },
             { -1, -1 },
             { -1, -1 },
             { -1, -1 }
         };
-#elif FAMISTUDIO_ANDROID
+#elif true // MATTT FAMISTUDIO_ANDROID
         public static readonly int[,] DefaultQwertyKeys = new int[37, 2];
 #else
         public static readonly int[,] DefaultQwertyKeys = new int[37, 2]

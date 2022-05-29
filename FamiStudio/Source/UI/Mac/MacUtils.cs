@@ -886,7 +886,7 @@ namespace FamiStudio
             return null;
         }
 
-        public static System.Windows.Forms.DialogResult ShowAlert(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)
+        public static System.Windows.Forms.DialogResult2 ShowAlert(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)
         {
             var alert = SendIntPtr(SendIntPtr(clsNSAlert, selAlloc), selInit);
 
@@ -914,15 +914,15 @@ namespace FamiStudio
                 buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
             {
                 if (ret == NSAlertFirstButtonReturn)
-                    return System.Windows.Forms.DialogResult.Yes;
+                    return System.Windows.Forms.DialogResult2.Yes;
                 if (ret == NSAlertSecondButtonReturn)
-                    return System.Windows.Forms.DialogResult.No;
+                    return System.Windows.Forms.DialogResult2.No;
 
-                return System.Windows.Forms.DialogResult.Cancel;
+                return System.Windows.Forms.DialogResult2.Cancel;
             }
             else
             {
-                return System.Windows.Forms.DialogResult.OK;
+                return System.Windows.Forms.DialogResult2.OK;
             }
         }
 
