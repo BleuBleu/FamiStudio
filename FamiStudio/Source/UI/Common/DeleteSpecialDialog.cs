@@ -28,10 +28,10 @@ namespace FamiStudio
             }
 
 
-            dialog.Properties.AddCheckBoxList(PlatformUtils.IsMobile ? "Effects to delete" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete."); // 2
-            dialog.Properties.AddButton(PlatformUtils.IsMobile ? "Select All Effects" : null, "Select All"); // 3
-            dialog.Properties.AddButton(PlatformUtils.IsMobile ? "De-select All Effects" : null, "Select None"); // 4
-            dialog.Properties.SetPropertyVisible(1, PlatformUtils.IsDesktop);
+            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? "Effects to delete" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete."); // 2
+            dialog.Properties.AddButton(Platform.IsMobile ? "Select All Effects" : null, "Select All"); // 3
+            dialog.Properties.AddButton(Platform.IsMobile ? "De-select All Effects" : null, "Select None"); // 4
+            dialog.Properties.SetPropertyVisible(1, Platform.IsDesktop);
             dialog.Properties.Build();
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
         }

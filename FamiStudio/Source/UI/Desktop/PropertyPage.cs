@@ -3,13 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
     public partial class PropertyPage
@@ -17,9 +10,9 @@ namespace FamiStudio
         class Property
         {
             public PropertyType type;
-            public Label2 label;
-            public RenderControl control;
-            public ImageBox2 warningIcon;
+            public Label label;
+            public Control control;
+            public ImageBox warningIcon;
             public bool visible = true;
         };
 
@@ -62,7 +55,7 @@ namespace FamiStudio
             }
         }
 
-        private int GetPropertyIndexForControl(RenderControl ctrl)
+        private int GetPropertyIndexForControl(Control ctrl)
         {
             for (int i = 0; i < properties.Count; i++)
             {
@@ -75,33 +68,33 @@ namespace FamiStudio
             return -1;
         }
 
-        private Label2 CreateLabel(string str, string tooltip = null, bool multiline = false)
+        private Label CreateLabel(string str, string tooltip = null, bool multiline = false)
         {
             Debug.Assert(!string.IsNullOrEmpty(str));
 
-            var label = new Label2(str, multiline);
+            var label = new Label(str, multiline);
             label.ToolTip = tooltip;
             return label;
         }
 
-        private LinkLabel2 CreateLinkLabel(string str, string url, string tooltip = null)
+        private LinkLabel CreateLinkLabel(string str, string url, string tooltip = null)
         {
-            var label = new LinkLabel2(str, url);
+            var label = new LinkLabel(str, url);
             label.ToolTip = tooltip;
             return label;
         }
 
-        private TextBox2 CreateColoredTextBox(string txt, Color backColor)
+        private TextBox CreateColoredTextBox(string txt, Color backColor)
         {
-            var textBox = new TextBox2(txt);
+            var textBox = new TextBox(txt);
             textBox.BackColor = backColor;
             textBox.ForeColor = Color.Black;
             return textBox;
         }
 
-        private TextBox2 CreateTextBox(string txt, int maxLength, string tooltip = null)
+        private TextBox CreateTextBox(string txt, int maxLength, string tooltip = null)
         {
-            var textBox = new TextBox2(txt);
+            var textBox = new TextBox(txt);
 
             // MATTT
             //textBox.MaxLength = maxLength;
@@ -114,11 +107,11 @@ namespace FamiStudio
 
         private void TextBox_TextChanged(object sender, EventArgs e)
         {
-            ForceTextBoxASCII(sender as TextBox2);
+            ForceTextBoxASCII(sender as TextBox);
         }
 
         // MATTT : Will likely move to TextBox.
-        private void ForceTextBoxASCII(TextBox2 textBox)
+        private void ForceTextBoxASCII(TextBox textBox)
         {
             // All of our text storage is ASCII at the moment, so enforce it right away
             // to prevent issues later on.
@@ -137,44 +130,44 @@ namespace FamiStudio
             }
         }
 
-        private LogTextBox2 CreateLogTextBox()
+        private LogTextBox CreateLogTextBox()
         {
-            return new LogTextBox2(15);
+            return new LogTextBox(15);
         }
 
-        private ColorPicker2 CreateColorPicker(Color color)
+        private ColorPicker CreateColorPicker(Color color)
         {
-            var colorPicker = new ColorPicker2(color);
+            var colorPicker = new ColorPicker(color);
             colorPicker.SetNiceSize(layoutWidth);
             colorPicker.ColorChanged += ColorPicker_ColorChanged;
             colorPicker.DoubleClicked += ColorPicker_ColorDoubleClicked;
             return colorPicker;
         }
 
-        private void ColorPicker_ColorChanged(RenderControl sender, Color color)
+        private void ColorPicker_ColorChanged(Control sender, Color color)
         {
             foreach (var prop in properties)
             {
                 if (prop.type == PropertyType.ColoredTextBox)
                 {
-                    (prop.control as TextBox2).BackColor = color;
+                    (prop.control as TextBox).BackColor = color;
                 }
             }
         }
 
-        private void ColorPicker_ColorDoubleClicked(RenderControl sender)
+        private void ColorPicker_ColorDoubleClicked(Control sender)
         {
             PropertyWantsClose?.Invoke(GetPropertyIndexForControl(sender));
         }
 
-        private ImageBox2 CreateImageBox(string image)
+        private ImageBox CreateImageBox(string image)
         {
-            return new ImageBox2(image);
+            return new ImageBox(image);
         }
 
-        private NumericUpDown2 CreateNumericUpDown(int value, int min, int max, string tooltip = null)
+        private NumericUpDown CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
-            var upDown = new NumericUpDown2(value, min, max);
+            var upDown = new NumericUpDown(value, min, max);
 
             upDown.ValueChanged += UpDown_ValueChanged;
             upDown.ToolTip = tooltip;
@@ -182,54 +175,54 @@ namespace FamiStudio
             return upDown;
         }
 
-        private ProgressBar2 CreateProgressBar()
+        private ProgressBar CreateProgressBar()
         {
-            var progress = new ProgressBar2();
+            var progress = new ProgressBar();
             return progress;
         }
 
-        private RadioButton2 CreateRadioButton(string text, bool check, bool multiline)
+        private RadioButton CreateRadioButton(string text, bool check, bool multiline)
         {
-            var radio = new RadioButton2(text, check, multiline);
+            var radio = new RadioButton(text, check, multiline);
             return radio;
         }
 
-        private void UpDown_ValueChanged(RenderControl sender, int val)
+        private void UpDown_ValueChanged(Control sender, int val)
         {
             int idx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, idx, -1, -1, val);
         }
 
-        private CheckBox2 CreateCheckBox(bool value, string text = "", string tooltip = null)
+        private CheckBox CreateCheckBox(bool value, string text = "", string tooltip = null)
         {
-            var cb = new CheckBox2(value, text);
+            var cb = new CheckBox(value, text);
             cb.CheckedChanged += Cb_CheckedChanged;
             cb.ToolTip = tooltip;
             return cb;
         }
 
-        private void Cb_CheckedChanged(RenderControl sender, bool check)
+        private void Cb_CheckedChanged(Control sender, bool check)
         {
             int idx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, idx, -1, -1, check);
         }
 
-        private DropDown2 CreateDropDownList(string[] values, string value, string tooltip = null)
+        private DropDown CreateDropDownList(string[] values, string value, string tooltip = null)
         {
-            var dropDown = new DropDown2(values, Array.IndexOf(values, value));
+            var dropDown = new DropDown(values, Array.IndexOf(values, value));
             dropDown.SelectedIndexChanged += DropDown_SelectedIndexChanged;
             dropDown.ToolTip = tooltip;
 
             return dropDown;
         }
 
-        private void DropDown_SelectedIndexChanged(RenderControl sender, int index)
+        private void DropDown_SelectedIndexChanged(Control sender, int index)
         {
             int idx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, idx, -1, -1, GetPropertyValue(idx));
         }
 
-        private Grid2 CreateCheckListBox(string[] values, bool[] selected, string tooltip = null, int numRows = 7)
+        private Grid CreateCheckListBox(string[] values, bool[] selected, string tooltip = null, int numRows = 7)
         {
             var columns = new[]
             {
@@ -237,7 +230,7 @@ namespace FamiStudio
                 new ColumnDesc("B", 1.0f, ColumnType.Label)
             };
 
-            var grid = new Grid2(columns, numRows, false); 
+            var grid = new Grid(columns, numRows, false); 
             var data = new object[values.Length, 2];
 
             for (int i = 0; i < values.Length; i++)
@@ -253,15 +246,15 @@ namespace FamiStudio
             return grid;
         }
 
-        private void Grid_ValueChanged1(RenderControl sender, int rowIndex, int colIndex, object value)
+        private void Grid_ValueChanged1(Control sender, int rowIndex, int colIndex, object value)
         {
             var propIdx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
         }
 
-        private Button2 CreateButton(string text, string tooltip)
+        private Button CreateButton(string text, string tooltip)
         {
-            var button = new Button2(null, text);
+            var button = new Button(null, text);
             button.Border = true;
             button.Click += Button_Click;
             button.Resize(button.Width, DpiScaling.ScaleForMainWindow(32));
@@ -269,7 +262,7 @@ namespace FamiStudio
             return button;
         }
 
-        private void Button_Click(RenderControl sender)
+        private void Button_Click(Control sender)
         {
             var propIdx = GetPropertyIndexForControl(sender);
             PropertyClicked?.Invoke(this, ClickType.Button, propIdx, -1, -1);
@@ -277,7 +270,7 @@ namespace FamiStudio
 
         public void UpdateCheckBoxList(int idx, string[] values, bool[] selected)
         {
-            var grid = properties[idx].control as Grid2;
+            var grid = properties[idx].control as Grid;
             Debug.Assert(values.Length == grid.ItemCount);
 
             for (int i = 0; i < values.Length; i++)
@@ -289,7 +282,7 @@ namespace FamiStudio
 
         public void UpdateCheckBoxList(int idx, bool[] selected)
         {
-            var grid = properties[idx].control as Grid2;
+            var grid = properties[idx].control as Grid;
             Debug.Assert(selected.Length == grid.ItemCount);
 
             for (int i = 0; i < selected.Length; i++)
@@ -416,7 +409,7 @@ namespace FamiStudio
 
         public void UpdateIntegerRange(int idx, int min, int max)
         {
-            var upDown = (properties[idx].control as NumericUpDown2);
+            var upDown = (properties[idx].control as NumericUpDown);
 
             upDown.Minimum = min;
             upDown.Maximum = max;
@@ -424,7 +417,7 @@ namespace FamiStudio
 
         public void UpdateIntegerRange(int idx, int value, int min, int max)
         {
-            var upDown = (properties[idx].control as NumericUpDown2);
+            var upDown = (properties[idx].control as NumericUpDown);
 
             upDown.Minimum = min;
             upDown.Maximum = max;
@@ -433,17 +426,17 @@ namespace FamiStudio
 
         public void SetLabelText(int idx, string text)
         {
-            (properties[idx].control as Label2).Text = text;
+            (properties[idx].control as Label).Text = text;
         }
 
         public void SetDropDownListIndex(int idx, int selIdx)
         {
-            (properties[idx].control as DropDown2).SelectedIndex = selIdx;
+            (properties[idx].control as DropDown).SelectedIndex = selIdx;
         }
 
         public void UpdateDropDownListItems(int idx, string[] values)
         {
-            var dd = (properties[idx].control as DropDown2);
+            var dd = (properties[idx].control as DropDown);
             dd.SetItems(values);
         }
 
@@ -499,15 +492,15 @@ namespace FamiStudio
             return -1;
         }
 
-        private Slider2 CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
+        private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
         {
-            var slider = new Slider2(value, min, max, increment, showLabel, format);
+            var slider = new Slider(value, min, max, increment, showLabel, format);
             slider.ValueChanged += Slider_ValueChanged;
             slider.ToolTip = tooltip;
             return slider;
         }
 
-        private void Slider_ValueChanged(RenderControl slider, double value)
+        private void Slider_ValueChanged(Control slider, double value)
         {
             var idx = GetPropertyIndexForControl(slider);
             PropertyChanged?.Invoke(this, idx, -1, -1, value);
@@ -525,9 +518,9 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        private Grid2 CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)
+        private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)
         {
-            var grid = new Grid2(columnDescs, numRows, true);
+            var grid = new Grid(columnDescs, numRows, true);
 
             if (data != null)
                 grid.UpdateData(data);
@@ -540,25 +533,25 @@ namespace FamiStudio
             return grid;
         }
 
-        private void Grid_CellClicked(RenderControl sender, bool left, int rowIndex, int colIndex)
+        private void Grid_CellClicked(Control sender, bool left, int rowIndex, int colIndex)
         {
             var propIdx = GetPropertyIndexForControl(sender);
             PropertyClicked?.Invoke(this, left ? ClickType.Left : ClickType.Right, propIdx, rowIndex, colIndex);
         }
 
-        private void Grid_CellDoubleClicked(RenderControl sender, int rowIndex, int colIndex)
+        private void Grid_CellDoubleClicked(Control sender, int rowIndex, int colIndex)
         {
             var propIdx = GetPropertyIndexForControl(sender);
             PropertyClicked?.Invoke(this, ClickType.Double, propIdx, rowIndex, colIndex);
         }
 
-        private void Grid_ButtonPressed(RenderControl sender, int rowIndex, int colIndex)
+        private void Grid_ButtonPressed(Control sender, int rowIndex, int colIndex)
         {
             var propIdx = GetPropertyIndexForControl(sender);
             PropertyClicked?.Invoke(this, ClickType.Button, propIdx, rowIndex, colIndex);
         }
 
-        private void Grid_ValueChanged(RenderControl sender, int rowIndex, int colIndex, object value)
+        private void Grid_ValueChanged(Control sender, int rowIndex, int colIndex, object value)
         {
             var propIdx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
@@ -567,7 +560,7 @@ namespace FamiStudio
 
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
-            var grid = properties[propIdx].control as Grid2;
+            var grid = properties[propIdx].control as Grid;
             grid.SetColumnEnabled(colIdx, enabled);
         }
 
@@ -583,7 +576,7 @@ namespace FamiStudio
 
         public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
         {
-            var list = properties[idx].control as Grid2;
+            var list = properties[idx].control as Grid;
 
             list.UpdateData(data);
 
@@ -595,7 +588,7 @@ namespace FamiStudio
 
         public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
         {
-            var grid = properties[idx].control as Grid2;
+            var grid = properties[idx].control as Grid;
             grid.UpdateData(rowIdx, colIdx, value);
         }
 
@@ -623,7 +616,7 @@ namespace FamiStudio
 
         public void AppendText(int idx, string line)
         {
-            var textBox = properties[idx].control as LogTextBox2;
+            var textBox = properties[idx].control as LogTextBox;
             textBox.AddLine(line);
         }
 
@@ -655,30 +648,30 @@ namespace FamiStudio
                 case PropertyType.TextBox:
                 case PropertyType.ColoredTextBox:
                 case PropertyType.LogTextBox:
-                    ForceTextBoxASCII(prop.control as TextBox2);
-                    return (prop.control as TextBox2).Text;
+                    ForceTextBoxASCII(prop.control as TextBox);
+                    return (prop.control as TextBox).Text;
                 case PropertyType.NumericUpDown:
-                    return (int)(prop.control as NumericUpDown2).Value;
+                    return (int)(prop.control as NumericUpDown).Value;
                 case PropertyType.Slider:
-                    return (prop.control as Slider2).Value;
+                    return (prop.control as Slider).Value;
                 case PropertyType.Radio:
-                    return (prop.control as RadioButton2).Checked;
+                    return (prop.control as RadioButton).Checked;
                 case PropertyType.CheckBox:
-                    return (prop.control as CheckBox2).Checked;
+                    return (prop.control as CheckBox).Checked;
                 case PropertyType.ColorPicker:
-                    return (prop.control as ColorPicker2).SelectedColor;
+                    return (prop.control as ColorPicker).SelectedColor;
                 case PropertyType.DropDownList:
-                    return (prop.control as DropDown2).Text;
+                    return (prop.control as DropDown).Text;
                 case PropertyType.CheckBoxList:
                 {
-                    var grid = prop.control as Grid2;
+                    var grid = prop.control as Grid;
                     var selected = new bool[grid.ItemCount];
                     for (int i = 0; i < grid.ItemCount; i++)
                         selected[i] = (bool)grid.GetData(i, 0);
                     return selected;
                 }
                 case PropertyType.Button:
-                    return (prop.control as Button2).Text;
+                    return (prop.control as Button).Text;
             }
 
             return null;
@@ -693,7 +686,7 @@ namespace FamiStudio
         {
             var prop = properties[idx];
             Debug.Assert(prop.type == PropertyType.Grid);
-            var grid = prop.control as Grid2;
+            var grid = prop.control as Grid;
             return (T)grid.GetData(rowIdx, colIdx);
         }
 
@@ -704,7 +697,7 @@ namespace FamiStudio
             switch (prop.type)
             {
                 case PropertyType.DropDownList:
-                    return (prop.control as DropDown2).SelectedIndex;
+                    return (prop.control as DropDown).SelectedIndex;
             }
 
             return -1;
@@ -717,19 +710,19 @@ namespace FamiStudio
             switch (prop.type)
             {
                 case PropertyType.CheckBox:
-                    (prop.control as CheckBox2).Checked = (bool)value;
+                    (prop.control as CheckBox).Checked = (bool)value;
                     break;
                 case PropertyType.Button:
-                    (prop.control as Button2).Text = (string)value;
+                    (prop.control as Button).Text = (string)value;
                     break;
                 case PropertyType.LogTextBox:
-                    (prop.control as TextBox2).Text = (string)value;
+                    (prop.control as TextBox).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:
-                    (prop.control as ProgressBar2).Progress = (float)value;
+                    (prop.control as ProgressBar).Progress = (float)value;
                     break;
                 case PropertyType.Slider:
-                    (prop.control as Slider2).Value = (double)value;
+                    (prop.control as Slider).Value = (double)value;
                     break;
             }
         }
@@ -793,7 +786,7 @@ namespace FamiStudio
 
                 if (prop.type == PropertyType.ColoredTextBox)
                 {
-                    (prop.control as TextBox2).SelectAll();
+                    (prop.control as TextBox).SelectAll();
                     prop.control.GrabDialogFocus();
                 }
 

@@ -1,19 +1,11 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Windows.Forms;
 using System.Collections.Generic;
-
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
 
 namespace FamiStudio
 {
-    public class PianoRoll : RenderControl
+    public class PianoRoll : Control
     {
         const float MinZoomFamiStudio       = 1.0f / 32.0f;
         const float MinZoomOther            = 1.0f / 8.0f;
@@ -25,7 +17,7 @@ namespace FamiStudio
         const float DefaultEnvelopeZoom     = 4.0f;
         const float ContinuousFollowPercent = 0.75f;
         const float DefaultZoomWaveTime     = 0.25f;
-        const float ScrollSpeedFactor       = PlatformUtils.IsMobile ? 2.0f : 1.0f;
+        const float ScrollSpeedFactor       = Platform.IsMobile ? 2.0f : 1.0f;
 
         const int NumOctaves = 8;
         const int NumNotes   = NumOctaves * 12;
@@ -37,7 +29,7 @@ namespace FamiStudio
         const int DefaultNoteSizeY                 = 12;
         const int DefaultNoteAttackSizeX           = 3;
         const int DefaultReleaseNoteSizeY          = 8;
-        const int DefaultEnvelopeSizeY             = PlatformUtils.IsMobile ? 4 : 9;
+        const int DefaultEnvelopeSizeY             = Platform.IsMobile ? 4 : 9;
         const int DefaultPianoSizeX                = 94;
         const int DefaultPianoSizeXMobile          = 40;
         const int DefaultWhiteKeySizeY             = 20;
@@ -127,41 +119,41 @@ namespace FamiStudio
             VideoRecording
         };
 
-        RenderBrush whiteKeyBrush;
-        RenderBrush blackKeyBrush;
-        RenderBrush whiteKeyPressedBrush;
-        RenderBrush blackKeyPressedBrush;
-        RenderBrush frameLineBrush;
-        RenderBrush debugBrush;
-        RenderBrush seekBarBrush;
-        RenderBrush seekBarRecBrush;
-        RenderBrush selectionBgVisibleBrush;
-        RenderBrush selectionBgInvisibleBrush;
-        RenderBrush selectionNoteBrush;
-        RenderBrush highlightNoteBrush;
-        RenderBrush attackBrush;
-        RenderBrush attackBrushForceDisplay;
-        RenderBrush iconTransparentBrush;
-        RenderBrush invalidDpcmMappingBrush;
-        RenderBrush volumeSlideBarFillBrush;
-        RenderBitmapAtlasRef bmpLoopSmallFill;
-        RenderBitmapAtlasRef bmpReleaseSmallFill;
-        RenderBitmapAtlasRef bmpEnvResize;
-        RenderBitmapAtlasRef bmpExpandedSmall;
-        RenderBitmapAtlasRef bmpCollapsedSmall;
-        RenderBitmapAtlasRef bmpMaximize;
-        RenderBitmapAtlasRef bmpSnap;
-        RenderBitmapAtlasRef bmpSnapOff;
-        RenderBitmapAtlasRef bmpGizmoResizeLeftRight;
-        RenderBitmapAtlasRef bmpGizmoResizeUpDown;
-        RenderBitmapAtlasRef bmpGizmoResizeFill;
-        RenderBitmapAtlasRef[] bmpEffects;
-        RenderGeometry[] stopNoteGeometry        = new RenderGeometry[2]; // [1] is used to draw arps.
-        RenderGeometry[] stopReleaseNoteGeometry = new RenderGeometry[2]; // [1] is used to draw arps.
-        RenderGeometry[] releaseNoteGeometry     = new RenderGeometry[2]; // [1] is used to draw arps.
-        RenderGeometry   slideNoteGeometry;
-        RenderGeometry   seekGeometry;
-        RenderGeometry   sampleGeometry;
+        Brush whiteKeyBrush;
+        Brush blackKeyBrush;
+        Brush whiteKeyPressedBrush;
+        Brush blackKeyPressedBrush;
+        Brush frameLineBrush;
+        Brush debugBrush;
+        Brush seekBarBrush;
+        Brush seekBarRecBrush;
+        Brush selectionBgVisibleBrush;
+        Brush selectionBgInvisibleBrush;
+        Brush selectionNoteBrush;
+        Brush highlightNoteBrush;
+        Brush attackBrush;
+        Brush attackBrushForceDisplay;
+        Brush iconTransparentBrush;
+        Brush invalidDpcmMappingBrush;
+        Brush volumeSlideBarFillBrush;
+        BitmapAtlasRef bmpLoopSmallFill;
+        BitmapAtlasRef bmpReleaseSmallFill;
+        BitmapAtlasRef bmpEnvResize;
+        BitmapAtlasRef bmpExpandedSmall;
+        BitmapAtlasRef bmpCollapsedSmall;
+        BitmapAtlasRef bmpMaximize;
+        BitmapAtlasRef bmpSnap;
+        BitmapAtlasRef bmpSnapOff;
+        BitmapAtlasRef bmpGizmoResizeLeftRight;
+        BitmapAtlasRef bmpGizmoResizeUpDown;
+        BitmapAtlasRef bmpGizmoResizeFill;
+        BitmapAtlasRef[] bmpEffects;
+        Geometry[] stopNoteGeometry        = new Geometry[2]; // [1] is used to draw arps.
+        Geometry[] stopReleaseNoteGeometry = new Geometry[2]; // [1] is used to draw arps.
+        Geometry[] releaseNoteGeometry     = new Geometry[2]; // [1] is used to draw arps.
+        Geometry   slideNoteGeometry;
+        Geometry   seekGeometry;
+        Geometry   sampleGeometry;
 
         readonly string[] EffectImageNames = new string[]
         {
@@ -227,8 +219,8 @@ namespace FamiStudio
             false, // ChangeEffectValue
             false, // ChangeSelectionEffectValue
             false, // DrawEnvelope
-            PlatformUtils.IsMobile, // Select
-            PlatformUtils.IsMobile, // SelectWave
+            Platform.IsMobile, // Select
+            Platform.IsMobile, // SelectWave
             false, // CreateNote
             true,  // CreateSlideNote
             true,  // DragSlideNoteTarget
@@ -314,7 +306,7 @@ namespace FamiStudio
         int lastChannelScrollX = -1;
         int lastChannelScrollY = -1;
         float lastChannelZoom = -1;
-        int selectedEffectIdx = PlatformUtils.IsMobile ? -1 : 0;
+        int selectedEffectIdx = Platform.IsMobile ? -1 : 0;
         int[] supportedEffects;
         bool captureThresholdMet = false;
         bool captureRealTimeUpdate = false;
@@ -329,7 +321,7 @@ namespace FamiStudio
         float flingVelX = 0.0f;
         float flingVelY = 0.0f;
         float zoom = DefaultChannelZoom;
-        float zoomY = PlatformUtils.IsMobile ? 0.8f : 1.0f;
+        float zoomY = Platform.IsMobile ? 0.8f : 1.0f;
         float pianoScaleX = 1.0f; // Only used by video export.
         float captureWaveTime = 0.0f;
         string noteTooltip = "";
@@ -387,8 +379,8 @@ namespace FamiStudio
         private class Gizmo
         {
             public Rectangle Rect;
-            public RenderBitmapAtlasRef FillImage = null;
-            public RenderBitmapAtlasRef Image;
+            public BitmapAtlasRef FillImage = null;
+            public BitmapAtlasRef Image;
             public GizmoAction Action;
         };
 
@@ -450,7 +442,7 @@ namespace FamiStudio
             var videoMode = editMode == EditionMode.VideoRecording;
             var headerScale = editMode == EditionMode.DPCMMapping || editMode == EditionMode.DPCM ? 1 : (editMode == EditionMode.VideoRecording ? 0 : 2);
             var scrollBarSize = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
-            var effectIconsScale = PlatformUtils.IsMobile ? 0.5f : 1.0f;
+            var effectIconsScale = Platform.IsMobile ? 0.5f : 1.0f;
 
             minZoom = editMode == EditionMode.Channel && Song != null && Song.UsesFamiStudioTempo ? MinZoomFamiStudio : MinZoomOther;
             maxZoom = editMode == EditionMode.DPCM ? MaxWaveZoom : MaxZoom;
@@ -462,8 +454,8 @@ namespace FamiStudio
             noteSizeY                 = ScaleForMainWindow(DefaultNoteSizeY * zoomY);
             noteAttackSizeX           = ScaleForMainWindow(DefaultNoteAttackSizeX);
             releaseNoteSizeY          = ScaleForMainWindow(DefaultReleaseNoteSizeY * zoomY) & 0xfe; // Keep even
-            pianoSizeX                = ScaleForMainWindow((videoMode || PlatformUtils.IsDesktop ? DefaultPianoSizeX    : DefaultPianoSizeXMobile)    * pianoScaleX);
-            blackKeySizeX             = ScaleForMainWindow((videoMode || PlatformUtils.IsDesktop ? DefaultBlackKeySizeX : DefaultBlackKeySizeXMobile) * pianoScaleX);
+            pianoSizeX                = ScaleForMainWindow((videoMode || Platform.IsDesktop ? DefaultPianoSizeX    : DefaultPianoSizeXMobile)    * pianoScaleX);
+            blackKeySizeX             = ScaleForMainWindow((videoMode || Platform.IsDesktop ? DefaultBlackKeySizeX : DefaultBlackKeySizeXMobile) * pianoScaleX);
             whiteKeySizeY             = ScaleForMainWindow(DefaultWhiteKeySizeY * zoomY);
             blackKeySizeY             = ScaleForMainWindow(DefaultBlackKeySizeY * zoomY);
             effectIconPosX            = ScaleForMainWindow(DefaultEffectIconPosX * effectIconsScale);
@@ -492,7 +484,7 @@ namespace FamiStudio
             gizmoSize                 = ScaleForMainWindow(DefaultGizmoSize);
 
             // Make sure the effect panel actually fit on screen on mobile.
-            if (PlatformUtils.IsMobile && ParentForm != null)
+            if (Platform.IsMobile && ParentForm != null)
                 effectPanelSizeY = Math.Min(ParentFormSize.Height / 2, ScaleForMainWindow(DefaultEffectPanelSizeY));
             else
                 effectPanelSizeY = ScaleForMainWindow(DefaultEffectPanelSizeY);
@@ -500,9 +492,9 @@ namespace FamiStudio
             octaveSizeY = 12 * noteSizeY;
             headerAndEffectSizeY = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
             virtualSizeY = NumNotes * noteSizeY;
-            pianoVisible = editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping || editMode == EditionMode.VideoRecording || PlatformUtils.IsDesktop;
+            pianoVisible = editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping || editMode == EditionMode.VideoRecording || Platform.IsDesktop;
 
-            if (PlatformUtils.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Enveloppe))
+            if (Platform.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Enveloppe))
             {
                 Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
                 var maxValuesInScreen = editEnvelope == EnvelopeType.FdsWaveform || editEnvelope == EnvelopeType.FdsModulation ? 64 : 16;
@@ -623,7 +615,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        public void StartVideoRecording(RenderGraphics g, Song song, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
+        public void StartVideoRecording(Graphics g, Song song, float videoZoom, float pianoRollScaleX, float pianoRollScaleY, out int outNoteSizeY)
         {
             editChannel = 0;
             editMode = EditionMode.VideoRecording;
@@ -657,7 +649,7 @@ namespace FamiStudio
 
         public void SaveChannelScroll()
         {
-            if (PlatformUtils.IsMobile && editMode == EditionMode.Channel)
+            if (Platform.IsMobile && editMode == EditionMode.Channel)
             {
                 lastChannelScrollX = scrollX;
                 lastChannelScrollY = scrollY;
@@ -667,7 +659,7 @@ namespace FamiStudio
 
         public bool RestoreChannelScroll()
         {
-            if (PlatformUtils.IsMobile && lastChannelScrollX >= 0 && lastChannelScrollY >= 0 && lastChannelZoom > 0)
+            if (Platform.IsMobile && lastChannelScrollX >= 0 && lastChannelScrollY >= 0 && lastChannelZoom > 0)
             {
                 scrollX = lastChannelScrollX;
                 scrollY = lastChannelScrollY;
@@ -699,7 +691,7 @@ namespace FamiStudio
                 if (Array.IndexOf(supportedEffects, selectedEffectIdx) == -1)
                     selectedEffectIdx = supportedEffects.Length > 0 ? supportedEffects[0] : -1;
 
-                if (PlatformUtils.IsMobile && selectedEffectIdx < 0)
+                if (Platform.IsMobile && selectedEffectIdx < 0)
                     showEffectsPanel = false;
             }
         }
@@ -732,20 +724,20 @@ namespace FamiStudio
         private void CenterEnvelopeScroll(Envelope envelope, int envelopeType, Instrument instrument = null)
         {
             var baseNoteSizeX = ScaleForMainWindow(DefaultNoteSizeX);
-            var envelopeLength = Math.Max(PlatformUtils.IsMobile ? 8 : 4, envelope.Length);
+            var envelopeLength = Math.Max(Platform.IsMobile ? 8 : 4, envelope.Length);
 
             zoom = minZoom;
             while (zoom < maxZoom && envelopeLength * baseNoteSizeX * (zoom * 2.0f) < (Width - pianoSizeX))
                 zoom *= 2.0f;
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
                 envelopeValueZoom = 1.0f;
 
             UpdateRenderCoords();
 
             Envelope.GetMinMaxValueForType(instrument, envelopeType, out var typeMin, out var typeMax);
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 int midY = virtualSizeY - ((typeMin + typeMax) / 2 + 64 / (int)envelopeValueZoom) * (virtualSizeY / (128 / (int)envelopeValueZoom));
 
@@ -886,7 +878,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             UpdateRenderCoords();
 
@@ -923,7 +915,7 @@ namespace FamiStudio
             bmpGizmoResizeFill = g.GetBitmapAtlasRef("GizmoResizeFill");
             bmpEffects = g.GetBitmapAtlasRefs(EffectImageNames);
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 bitmapScale = g.WindowScaling * 0.5f;
                 effectBitmapScale = g.WindowScaling * 0.25f;
@@ -977,7 +969,7 @@ namespace FamiStudio
             Utils.DisposeAndNullify(ref sampleGeometry);
         }
 
-        private void ConditionalUpdateNoteGeometries(RenderGraphics g)
+        private void ConditionalUpdateNoteGeometries(Graphics g)
         {
             if (geometryNoteSizeY == noteSizeY)
                 return;
@@ -1087,7 +1079,7 @@ namespace FamiStudio
             }
         }
 
-        private RenderBrush GetSeekBarBrush()
+        private Brush GetSeekBarBrush()
         {
             return (editMode == EditionMode.Channel && App.IsRecording) ? seekBarRecBrush : seekBarBrush;
         }
@@ -1136,16 +1128,16 @@ namespace FamiStudio
             public float minVisibleWaveTime;
             public float maxVisibleWaveTime;
 
-            public RenderGraphics g;
-            public RenderCommandList cc; // Top left (corner, header list)
-            public RenderCommandList ch; // Top right (header, effect panel)
-            public RenderCommandList cz; // Top right (effect panel gizmos)
-            public RenderCommandList cp; // Left side (piano area)
-            public RenderCommandList cb; // Right side (note area) background
-            public RenderCommandList cf; // Right side (note area) foreground
-            public RenderCommandList cg; // Right side (note area) mobile gizmos.
-            public RenderCommandList cs; // Scroll bars
-            public RenderCommandList cd; // Debug
+            public Graphics g;
+            public CommandList cc; // Top left (corner, header list)
+            public CommandList ch; // Top right (header, effect panel)
+            public CommandList cz; // Top right (effect panel gizmos)
+            public CommandList cp; // Left side (piano area)
+            public CommandList cb; // Right side (note area) background
+            public CommandList cf; // Right side (note area) foreground
+            public CommandList cg; // Right side (note area) mobile gizmos.
+            public CommandList cs; // Scroll bars
+            public CommandList cd; // Debug
         }
 
         private void RenderHeader(RenderInfo r)
@@ -1208,7 +1200,7 @@ namespace FamiStudio
                         var label = editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos + n : n;
                         var labelString = label.ToString();
                         if (labelString.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                            r.ch.DrawText(labelString, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
+                            r.ch.DrawText(labelString, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
                     }
                 }
 
@@ -1251,15 +1243,15 @@ namespace FamiStudio
                     {
                         var numBeats = (int)Math.Ceiling(patternLen / (float)beatLen);
                         for (int i = 0; i < numBeats; i++)
-                            r.ch.DrawText($"{p + 1}.{i + 1}", ThemeResources.FontMedium, px + beatTextPosX + beatSizeX * i, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Middle, 0, headerSizeY / 2 - 1);
+                            r.ch.DrawText($"{p + 1}.{i + 1}", ThemeResources.FontMedium, px + beatTextPosX + beatSizeX * i, 0, ThemeResources.LightGreyFillBrush1, TextFlags.Middle, 0, headerSizeY / 2 - 1);
                     }
                     else
                     {
-                        r.ch.DrawText((p + 1).ToString(), ThemeResources.FontMedium, px, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, sx, headerSizeY / 2 - 1);
+                        r.ch.DrawText((p + 1).ToString(), ThemeResources.FontMedium, px, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleCenter, sx, headerSizeY / 2 - 1);
                     }
 
                     if (pattern != null)
-                        r.ch.DrawText(pattern.Name, ThemeResources.FontMedium, px, headerSizeY / 2, ThemeResources.BlackBrush, RenderTextFlags.MiddleCenter | RenderTextFlags.Clip, sx, headerSizeY / 2 - 1);
+                        r.ch.DrawText(pattern.Name, ThemeResources.FontMedium, px, headerSizeY / 2, ThemeResources.BlackBrush, TextFlags.MiddleCenter | TextFlags.Clip, sx, headerSizeY / 2 - 1);
                 }
 
                 int maxX = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(r.maxVisiblePattern));
@@ -1279,7 +1271,7 @@ namespace FamiStudio
                 ForEachWaveTimecode(r, (time, x, level, idx) =>
                 {
                     if (time != 0.0f)
-                        r.ch.DrawText(time.ToString($"F{level + 1}"), ThemeResources.FontMedium, x - 100, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, 200, headerSizeY - 1);
+                        r.ch.DrawText(time.ToString($"F{level + 1}"), ThemeResources.FontMedium, x - 100, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleCenter, 200, headerSizeY - 1);
                 });
 
                 // Processed Range
@@ -1311,7 +1303,7 @@ namespace FamiStudio
             r.cc.FillRectangle(0, 0, pianoSizeX, headerAndEffectSizeY, ThemeResources.DarkGreyFillBrush1);
             r.cc.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, headerAndEffectSizeY, ThemeResources.BlackBrush);
 
-            if (!PlatformUtils.IsMobile && editMode != EditionMode.VideoRecording)
+            if (!Platform.IsMobile && editMode != EditionMode.VideoRecording)
             {
                 var maxRect = GetMaximizeButtonRect();
                 r.cc.DrawBitmapAtlas(bmpMaximize, maxRect.X, maxRect.Y, 1.0f, 1.0f, maximized ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1);
@@ -1323,13 +1315,13 @@ namespace FamiStudio
                 var toggleRect = GetToggleEffectPannelButtonRect();
                 r.cc.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, toggleRect.X, toggleRect.Y, 1.0f, bitmapScale, Theme.LightGreyFillColor1);
 
-                if (SnapAllowed && !PlatformUtils.IsMobile)
+                if (SnapAllowed && !Platform.IsMobile)
                 {
                     var snapBtnRect = GetSnapButtonRect();
                     var snapResRect = GetSnapResolutionRect();
 
                     r.cc.DrawBitmapAtlas(SnapEnabled || App.IsRecording ? bmpSnap : bmpSnapOff, snapBtnRect.X, snapBtnRect.Y, 1.0f, 1.0f, App.IsRecording ? Theme.DarkRedFillColor : (SnapEnabled ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1));
-                    r.cc.DrawText(SnapResolutionType.Names[snapResolution], ThemeResources.FontSmall, snapResRect.X, snapResRect.Y, App.IsRecording ? ThemeResources.DarkRedFillBrush : (SnapEnabled ? ThemeResources.LightGreyFillBrush2 : ThemeResources.MediumGreyFillBrush1), RenderTextFlags.Right | RenderTextFlags.Middle, snapResRect.Width, snapResRect.Height);
+                    r.cc.DrawText(SnapResolutionType.Names[snapResolution], ThemeResources.FontSmall, snapResRect.X, snapResRect.Y, App.IsRecording ? ThemeResources.DarkRedFillBrush : (SnapEnabled ? ThemeResources.LightGreyFillBrush2 : ThemeResources.MediumGreyFillBrush1), TextFlags.Right | TextFlags.Middle, snapResRect.Width, snapResRect.Height);
                 }
 
                 if (showEffectsPanel)
@@ -1342,14 +1334,14 @@ namespace FamiStudio
                     {
                         var effectIdx = supportedEffects[i];
 
-                        if (PlatformUtils.IsMobile && effectIdx != selectedEffectIdx)
+                        if (Platform.IsMobile && effectIdx != selectedEffectIdx)
                             continue;
 
                         r.cc.PushTranslation(0, effectButtonY);
                         r.cc.DrawLine(0, -1, pianoSizeX, -1, ThemeResources.BlackBrush);
                         
                         r.cc.DrawBitmapAtlas(bmpEffects[effectIdx], effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyFillColor1);
-                        r.cc.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeResources.FontSmallBold : ThemeResources.FontSmall, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, effectButtonSizeY);
+                        r.cc.DrawText(Note.EffectNames[effectIdx], selectedEffectIdx == effectIdx ? ThemeResources.FontSmallBold : ThemeResources.FontSmall, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, TextFlags.Middle, 0, effectButtonSizeY);
                         r.cc.PopTransform();
 
                         effectButtonY += effectButtonSizeY;
@@ -1371,7 +1363,7 @@ namespace FamiStudio
                     r.cc.DrawLine(0, -1, pianoSizeX, -1, ThemeResources.BlackBrush);
                     
                     r.cc.DrawBitmapAtlas(bmpEffects[Note.EffectVolume], effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyFillColor1);
-                    r.cc.DrawText(Note.EffectNames[Note.EffectVolume], ThemeResources.FontSmallBold, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, RenderTextFlags.Middle, 0, effectButtonSizeY);
+                    r.cc.DrawText(Note.EffectNames[Note.EffectVolume], ThemeResources.FontSmallBold, effectNamePosX, 0, ThemeResources.LightGreyFillBrush2, TextFlags.Middle, 0, effectButtonSizeY);
                     r.cc.PopTransform();
 
                     r.cc.PushTranslation(0, effectButtonSizeY);
@@ -1472,10 +1464,10 @@ namespace FamiStudio
                 }
 
                 if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping) && ThemeResources.FontSmall.Size < noteSizeY)
-                    r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseY - noteSizeY + 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, pianoSizeX - r.g.WindowScaling * 2, noteSizeY - 1);
+                    r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseY - noteSizeY + 1, ThemeResources.BlackBrush, TextFlags.Middle, pianoSizeX - r.g.WindowScaling * 2, noteSizeY - 1);
             }
 
-            if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled) && PlatformUtils.IsDesktop)
+            if (App != null && (App.IsRecording || App.IsQwertyPianoEnabled) && Platform.IsDesktop)
             {
                 var showQwerty = App.IsRecording || App.IsQwertyPianoEnabled;
                 var keyStrings = new string[Note.MusicalNoteMax];
@@ -1489,9 +1481,9 @@ namespace FamiStudio
                         continue;
 
                     if (keyStrings[i] == null)
-                        keyStrings[i] = PlatformUtils.KeyCodeToString(k);
+                        keyStrings[i] = Platform.KeyCodeToString(k);
                     else
-                        keyStrings[i] += $"   {PlatformUtils.KeyCodeToString(k)}";
+                        keyStrings[i] += $"   {Platform.KeyCodeToString(k)}";
                 }
 
                 for (int i = 0; i < Note.MusicalNoteMax; i++)
@@ -1502,13 +1494,13 @@ namespace FamiStudio
                     int octaveBaseY = (virtualSizeY - octaveSizeY * ((i / 12) + App.BaseRecordingOctave)) - scrollY;
                     int y = octaveBaseY - (i % 12) * noteSizeY;
 
-                    RenderBrush brush;
+                    Brush brush;
                     if (App.IsRecording)
                         brush = IsBlackKey(i % 12) ? ThemeResources.LightRedFillBrush : ThemeResources.DarkRedFillBrush;
                     else
                         brush = IsBlackKey(i % 12) ? ThemeResources.LightGreyFillBrush2 : ThemeResources.BlackBrush;
 
-                    r.cp.DrawText(keyStrings[i], ThemeResources.FontVerySmall, 0, y - recordingKeyOffsetY + 1, brush, RenderTextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
+                    r.cp.DrawText(keyStrings[i], ThemeResources.FontVerySmall, 0, y - recordingKeyOffsetY + 1, brush, TextFlags.MiddleCenter, blackKeySizeX, noteSizeY - 1);
                 }
             }
 
@@ -1680,7 +1672,7 @@ namespace FamiStudio
 
                     var highlightLocation = NoteLocation.Invalid;
 
-                    if (PlatformUtils.IsMobile)
+                    if (Platform.IsMobile)
                     {
                         highlightLocation = NoteLocation.FromAbsoluteNoteIndex(song, highlightNoteAbsIndex);
                     }
@@ -1728,9 +1720,9 @@ namespace FamiStudio
                             if (text.Length * fontSmallCharSizeX + 2 < noteSizeX)
                             {
                                 if (sizeY < effectPanelSizeY / 2)
-                                    r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
+                                    r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, TextFlags.Center, noteSizeX);
                                 else
-                                    r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, ThemeResources.BlackBrush, RenderTextFlags.Center, noteSizeX);
+                                    r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, ThemeResources.BlackBrush, TextFlags.Center, noteSizeX);
                             }
 
                             r.ch.PopTransform();
@@ -1956,13 +1948,13 @@ namespace FamiStudio
                 var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingArpeggios, out var missingSamples);
 
                 if (missingInstruments)
-                    createMissingInstrument = PlatformUtils.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
+                    createMissingInstrument = Platform.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
 
                 if (missingArpeggios)
-                    createMissingArpeggios = PlatformUtils.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
+                    createMissingArpeggios = Platform.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
 
                 if (missingSamples && editChannel == ChannelType.Dpcm)
-                    createMissingSamples = PlatformUtils.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult2.Yes;
+                    createMissingSamples = Platform.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
             }
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
@@ -2153,7 +2145,7 @@ namespace FamiStudio
             return IsSelectionValid() && idx >= selectionMin && idx <= selectionMax;
         }
 
-        private void DrawSelectionRect(RenderCommandList c, int height)
+        private void DrawSelectionRect(CommandList c, int height)
         {
             if (IsSelectionValid())
             {
@@ -2165,7 +2157,7 @@ namespace FamiStudio
 
         private bool IsGizmoHighlighted(Gizmo g, int offsetY)
         {
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 return true;
             }
@@ -2291,7 +2283,7 @@ namespace FamiStudio
 
                 if (editMode != EditionMode.VideoRecording)
                 {
-                    if (PlatformUtils.IsMobile)
+                    if (Platform.IsMobile)
                     {
                         if (HasHighlightedNote())
                         {
@@ -2504,7 +2496,7 @@ namespace FamiStudio
                         if (mapping.Loop) text += ", Looping";
                         if (mapping.OverrideDmcInitialValue) text += $" , DMC Initial value = {mapping.DmcInitialValueDiv2}";
 
-                        r.cf.DrawText(text, ThemeResources.FontSmall, dpcmTextPosX, 0, ThemeResources.BlackBrush, RenderTextFlags.MiddleLeft, 0, noteSizeY);
+                        r.cf.DrawText(text, ThemeResources.FontSmall, dpcmTextPosX, 0, ThemeResources.BlackBrush, TextFlags.MiddleLeft, 0, noteSizeY);
                         r.cf.PopTransform();
                     }
                 }
@@ -2522,7 +2514,7 @@ namespace FamiStudio
 
                 if (dragSample != null)
                 {
-                    var pt = PlatformUtils.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
+                    var pt = Platform.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
 
                     if (GetNoteValueForCoord(pt.X, pt.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue))
                     {
@@ -2532,7 +2524,7 @@ namespace FamiStudio
                         r.cf.PopTransform();
                     }
                 }
-                else if (PlatformUtils.IsDesktop && captureOperation == CaptureOperation.None)
+                else if (Platform.IsDesktop && captureOperation == CaptureOperation.None)
                 {
                     var pt = PointToClient(Cursor.Position);
 
@@ -2571,11 +2563,11 @@ namespace FamiStudio
             var oddRectangle       = false;
 
             var maxX = GetPixelForNote(env.Length);
-            var maxi = (PlatformUtils.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue) + 1;
+            var maxi = (Platform.IsDesktop ? maxValue : envTypeMaxValue - envTypeMinValue) + 1;
 
             for (int i = 0; i <= maxi; i++)
             {
-                var value = PlatformUtils.IsMobile ? i + envTypeMinValue : i - midValue;
+                var value = Platform.IsMobile ? i + envTypeMinValue : i - midValue;
                 var y = (virtualSizeY - envelopeValueSizeY * i) - scrollY;
                 
                 if (i != maxi)
@@ -2597,7 +2589,7 @@ namespace FamiStudio
                 }
 
                 if (drawLabel)
-                    r.cb.DrawText(value.ToString(), ThemeResources.FontSmall, maxX + 4 * r.g.WindowScaling, y - envelopeValueSizeY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, envelopeValueSizeY);
+                    r.cb.DrawText(value.ToString(), ThemeResources.FontSmall, maxX + 4 * r.g.WindowScaling, y - envelopeValueSizeY, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, envelopeValueSizeY);
             }
 
             DrawSelectionRect(r.cb, Height);
@@ -2633,8 +2625,8 @@ namespace FamiStudio
                 for (int i = 0; i < env.Length; i++)
                 {
                     var selected = IsEnvelopeValueSelected(i);
-                    var highlighted = PlatformUtils.IsMobile && highlightNoteAbsIndex == i;
-                    var bias = PlatformUtils.IsMobile ? -envTypeMinValue : midValue;
+                    var highlighted = Platform.IsMobile && highlightNoteAbsIndex == i;
+                    var bias = Platform.IsMobile ? -envTypeMinValue : midValue;
 
                     float x0 = GetPixelForNote(i + 0);
                     float x1 = GetPixelForNote(i + 1);
@@ -2649,7 +2641,7 @@ namespace FamiStudio
 
                     var label = env.Values[i].ToString("+#;-#;0");
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                        r.cf.DrawText(label, ThemeResources.FontSmall, x0, y - envelopeValueSizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center, noteSizeX);
+                        r.cf.DrawText(label, ThemeResources.FontSmall, x0, y - envelopeValueSizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyFillBrush1, TextFlags.Center, noteSizeX);
                 }
             }
             else
@@ -2657,7 +2649,7 @@ namespace FamiStudio
                 for (int i = 0; i < env.Length; i++)
                 {
                     var center = editEnvelope == EnvelopeType.FdsWaveform ? 32 : 0;
-                    var bias = PlatformUtils.IsMobile ? -envTypeMinValue : midValue;
+                    var bias = Platform.IsMobile ? -envTypeMinValue : midValue;
                     int val = env.Values[i];
 
                     float y0, y1, ty;
@@ -2677,7 +2669,7 @@ namespace FamiStudio
                     var x0 = GetPixelForNote(i + 0);
                     var x1 = GetPixelForNote(i + 1);
                     var selected = IsEnvelopeValueSelected(i);
-                    var highlighted = PlatformUtils.IsMobile && highlightNoteAbsIndex == i;
+                    var highlighted = Platform.IsMobile && highlightNoteAbsIndex == i;
 
                     r.cf.FillRectangle(x0, y0, x1, y1, r.g.GetSolidBrush(color));
 
@@ -2692,7 +2684,7 @@ namespace FamiStudio
 
                     var label = val.ToString();
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                        r.cf.DrawText(label, ThemeResources.FontSmall, x0, ty + offset, brush, RenderTextFlags.Center, noteSizeX);
+                        r.cf.DrawText(label, ThemeResources.FontSmall, x0, ty + offset, brush, TextFlags.Center, noteSizeX);
                 }
             }
 
@@ -2753,7 +2745,7 @@ namespace FamiStudio
             {
                 var textWidth = Width - tooltipTextPosX - scrollBarThickness;
                 if (textWidth > 0)
-                    r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, RenderTextFlags.Right, textWidth);
+                    r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, whiteKeyBrush, TextFlags.Right, textWidth);
             }
         }
 
@@ -2802,7 +2794,7 @@ namespace FamiStudio
                 {
                     var label = note.FriendlyName;
                     if ((sx - noteTextPosX) > (label.Length + 1) * fontSmallCharSizeX)
-                        r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, noteSizeY - 1);
+                        r.cf.DrawText(note.FriendlyName, ThemeResources.FontSmall, noteTextPosX, 1, ThemeResources.BlackBrush, TextFlags.Middle, 0, noteSizeY - 1);
                 }
 
                 if (note.Arpeggio != null)
@@ -2920,7 +2912,7 @@ namespace FamiStudio
             return (sampleIndex + offset) / editSample.SourceSampleRate;
         }
 
-        private void RenderWave(RenderInfo r, short[] data, float rate, RenderBrush brush, bool isSource, bool drawSamples)
+        private void RenderWave(RenderInfo r, short[] data, float rate, Brush brush, bool isSource, bool drawSamples)
         {
             var viewWidth     = Width - pianoSizeX;
             var viewHeight    = Height - headerAndEffectSizeY - scrollBarThickness;
@@ -2976,7 +2968,7 @@ namespace FamiStudio
             }
         }
 
-        private void RenderDmc(RenderInfo r, byte[] data, float rate, float baseTime, RenderBrush brush, bool isSource, bool drawSamples, int dmcInitialValue)
+        private void RenderDmc(RenderInfo r, byte[] data, float rate, float baseTime, Brush brush, bool isSource, bool drawSamples, int dmcInitialValue)
         {
             var viewWidth     = Width - pianoSizeX;
             var viewHeight    = Height - headerAndEffectSizeY - scrollBarThickness;
@@ -3163,11 +3155,11 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip))
             {
-                r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, actualHeight - tooltipTextPosY, whiteKeyBrush, RenderTextFlags.Right, Width - tooltipTextPosX);
+                r.cf.DrawText(noteTooltip, ThemeResources.FontLarge, 0, actualHeight - tooltipTextPosY, whiteKeyBrush, TextFlags.Right, Width - tooltipTextPosX);
             }
         }
 
-        public void RenderVideoFrame(RenderGraphics g, int channel, int patternIndex, float noteIndex, float centerNote, int highlightKey, Color highlightColor)
+        public void RenderVideoFrame(Graphics g, int channel, int patternIndex, float noteIndex, float centerNote, int highlightKey, Color highlightColor)
         {
             Debug.Assert(editMode == EditionMode.VideoRecording);
 
@@ -3223,7 +3215,7 @@ namespace FamiStudio
         private void RenderDebug(RenderInfo r)
         {
 #if DEBUG
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 r.cd = r.g.CreateCommandList();
                 r.cd.FillRectangle(mouseLastX - 30, mouseLastY - 30, mouseLastX + 30, mouseLastY + 30, ThemeResources.WhiteBrush);
@@ -3231,7 +3223,7 @@ namespace FamiStudio
 #endif
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             // Init
             var r = new RenderInfo();
@@ -3248,7 +3240,7 @@ namespace FamiStudio
             r.cg = g.CreateCommandList();
             r.cz = g.CreateCommandList();
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
                 r.cs = g.CreateCommandList();
 
             r.maxVisibleNote = NumNotes - Utils.Clamp((int)Math.Floor(scrollY / (float)noteSizeY), 0, NumNotes);
@@ -3415,7 +3407,7 @@ namespace FamiStudio
             {
                 delta = (captureMouseY - y) / 4;
             }
-            else if (PlatformUtils.IsDesktop)
+            else if (Platform.IsDesktop)
             {
                 var ratio = (y - headerSizeY) / (float)effectPanelSizeY;
                 var newValue = (int)Math.Round(Utils.Lerp(maxValue, minValue, ratio));
@@ -3498,14 +3490,14 @@ namespace FamiStudio
 
         void UpdateDragVolumeSlide(int x, int y, bool final)
         {
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
                 App.UndoRedoManager.RestoreTransaction(false);
 
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
             var note    = pattern.Notes[captureNoteLocation.NoteIndex];
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 var ratio = Utils.Clamp(1.0f - (y - headerSizeY) / (float)effectPanelSizeY, 0.0f, 1.0f);
                 note.VolumeSlideTarget = (byte)Math.Round(ratio * Note.VolumeMax);
@@ -3694,7 +3686,7 @@ namespace FamiStudio
             }
         }
 
-        private bool HandleDoubleClickChannelNote(MouseEventArgs2 e)
+        private bool HandleDoubleClickChannelNote(MouseEventArgs e)
         {
             if (e.Left && GetLocationForCoord(e.X, e.Y, out var mouseLocation, out byte noteValue) && mouseLocation.IsInSong(Song))
             {
@@ -3714,7 +3706,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleDoubleClickEffectPanel(MouseEventArgs2 e)
+        private bool HandleDoubleClickEffectPanel(MouseEventArgs e)
         {
             if (e.Left && selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
             {
@@ -3734,7 +3726,7 @@ namespace FamiStudio
 
         }
 
-        private bool HandleDoubleClickDPCMMapping(MouseEventArgs2 e)
+        private bool HandleDoubleClickDPCMMapping(MouseEventArgs e)
         {
             if (GetLocationForCoord(e.X, e.Y, out _, out var noteValue))
             {
@@ -3747,7 +3739,7 @@ namespace FamiStudio
             return true;
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             if (editMode == EditionMode.Channel)
             {
@@ -3836,7 +3828,7 @@ namespace FamiStudio
 
         private void UpdateCaptureOperation(int x, int y, float scale = 1.0f, bool realTime = false)
         {  
-            const int CaptureThreshold = PlatformUtils.IsDesktop ? 5 : 50;
+            const int CaptureThreshold = Platform.IsDesktop ? 5 : 50;
 
             if (captureOperation != CaptureOperation.None && !captureThresholdMet)
             {
@@ -3964,7 +3956,7 @@ namespace FamiStudio
 
                     draggedSample = null;
 
-                    PlatformUtils.MessageBoxAsync($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo, (r) =>
+                    Platform.MessageBoxAsync($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons2.YesNo, (r) =>
                     {
                         if (r == DialogResult2.Yes)
                         {
@@ -3987,7 +3979,7 @@ namespace FamiStudio
                         App.UndoRedoManager.EndTransaction();
                     });
 
-                    if (PlatformUtils.IsMobile)
+                    if (Platform.IsMobile)
                         highlightDPCMSample = noteValue;
                 }
                 else
@@ -3996,7 +3988,7 @@ namespace FamiStudio
                     App.UndoRedoManager.AbortTransaction();
 
                     if (noteValue != captureNoteValue && draggedSample != null)
-                        PlatformUtils.Beep();
+                        Platform.Beep();
                 }
             }
         }
@@ -4069,7 +4061,7 @@ namespace FamiStudio
                 captureOperation = CaptureOperation.None;
                 Capture = false;
                 panning = false;
-                if (!PlatformUtils.IsMobile)
+                if (!Platform.IsMobile)
                     highlightNoteAbsIndex = -1;
 
                 MarkDirty();
@@ -4094,7 +4086,7 @@ namespace FamiStudio
                 Capture = false;
                 panning = false;
                 canFling = false;
-                if (!PlatformUtils.IsMobile)
+                if (!Platform.IsMobile)
                     highlightNoteAbsIndex = -1;
 
                 ManyPatternChanged?.Invoke();
@@ -4306,7 +4298,7 @@ namespace FamiStudio
 
         private Note GetNoteForDesktopNoteGizmos(out NoteLocation location)
         {
-            Debug.Assert(PlatformUtils.IsDesktop);
+            Debug.Assert(Platform.IsDesktop);
             location = NoteLocation.Invalid;
 
             if (captureOperation == CaptureOperation.DragSlideNoteTargetGizmo)
@@ -4326,7 +4318,7 @@ namespace FamiStudio
 
         private Note GetNoteForDesktopEffectGizmos(out NoteLocation location)
         {
-            Debug.Assert(PlatformUtils.IsDesktop);
+            Debug.Assert(Platform.IsDesktop);
             location = NoteLocation.Invalid;
 
             if (captureOperation == CaptureOperation.DragVolumeSlideTargetGizmo) 
@@ -4352,7 +4344,7 @@ namespace FamiStudio
 
         private List<Gizmo> GetNoteGizmos(out Note note, out NoteLocation location)
         {
-            note = PlatformUtils.IsDesktop ? 
+            note = Platform.IsDesktop ? 
                 GetNoteForDesktopNoteGizmos(out location) :
                 GetHighlightedNoteAndLocation(out location);
 
@@ -4364,7 +4356,7 @@ namespace FamiStudio
             var list = new List<Gizmo>();
 
             // Resize gizmo
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 var x = GetPixelForNote(locationAbsIndex + visualDuration) + gizmoSize / 4;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY - gizmoSize / 4;
@@ -4384,7 +4376,7 @@ namespace FamiStudio
             }
 
             // Release gizmo
-            if (PlatformUtils.IsMobile && note.HasRelease && note.Release < visualDuration)
+            if (Platform.IsMobile && note.HasRelease && note.Release < visualDuration)
             {
                 var x = GetPixelForNote(locationAbsIndex + note.Release) - gizmoSize / 2;
                 var y = virtualSizeY - note.Value * noteSizeY - scrollY + gizmoSize * 3 / 4;
@@ -4406,12 +4398,12 @@ namespace FamiStudio
             if (note.IsSlideNote)
             {
                 var side = note.SlideNoteTarget > note.Value ? 1 : -1;
-                var x = GetPixelForNote(locationAbsIndex + visualDuration) + (PlatformUtils.IsMobile ? gizmoSize / 4 : -5 * gizmoSize / 4);
+                var x = GetPixelForNote(locationAbsIndex + visualDuration) + (Platform.IsMobile ? gizmoSize / 4 : -5 * gizmoSize / 4);
                 var y = 0;
 
-                if (PlatformUtils.IsMobile)
+                if (Platform.IsMobile)
                 {
-                    if (PlatformUtils.IsMobile && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo)
+                    if (Platform.IsMobile && captureOperation == CaptureOperation.DragSlideNoteTargetGizmo)
                         y = mouseLastY - headerAndEffectSizeY - gizmoSize / 4 - (side > 0 ? side * noteSizeY : 0);
                     else
                         y = virtualSizeY - (note.SlideNoteTarget + side) * noteSizeY - scrollY - gizmoSize / 4; 
@@ -4434,7 +4426,7 @@ namespace FamiStudio
 
         private List<Gizmo> GetEffectGizmos(out Note note, out NoteLocation location)
         {
-            note = PlatformUtils.IsDesktop ?
+            note = Platform.IsDesktop ?
                 GetNoteForDesktopEffectGizmos(out location) :
                 GetHighlightedNoteAndLocation(out location);
 
@@ -4451,7 +4443,7 @@ namespace FamiStudio
             var value    = note.GetEffectValue(selectedEffectIdx);
 
             // Effect values
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 var effectPosY = effectPanelSizeY - ((minValue == maxValue) ? effectPanelSizeY : (float)Math.Floor((value - minValue) / (float)(maxValue - minValue) * effectPanelSizeY));
 
@@ -4488,7 +4480,7 @@ namespace FamiStudio
 
         private List<Gizmo> GetEnvelopeGizmos()
         {
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
                 return null;
 
             var env = EditEnvelope;
@@ -4519,7 +4511,7 @@ namespace FamiStudio
             return list;
         }
 
-        protected override void OnKeyDown(KeyEventArgs2 e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             UpdateCursor();
 
@@ -4529,12 +4521,12 @@ namespace FamiStudio
             bool ctrl  = e.Control;
             bool shift = e.Shift;
 
-            if (e.Key == Keys2.Escape)
+            if (e.Key == Keys.Escape)
             {
                 ClearSelection();
                 MarkDirty();
             }
-            else if (e.Key == Keys2.A && ctrl && IsActiveControl)
+            else if (e.Key == Keys.A && ctrl && IsActiveControl)
             {
                 if (editMode == EditionMode.Arpeggio ||
                     editMode == EditionMode.Enveloppe)
@@ -4546,7 +4538,7 @@ namespace FamiStudio
                     SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
                 }
             }
-            else if (e.Key == Keys2.S && shift)
+            else if (e.Key == Keys.S && shift)
             {
                 if (SnapAllowed)
                 {
@@ -4558,11 +4550,11 @@ namespace FamiStudio
             {
                 if (ctrl)
                 {
-                    if (e.Key == Keys2.C)
+                    if (e.Key == Keys.C)
                         Copy();
-                    else if (e.Key == Keys2.X)
+                    else if (e.Key == Keys.X)
                         Cut();
-                    else if (e.Key == Keys2.V)
+                    else if (e.Key == Keys.V)
                     {
                         if (shift)
                             PasteSpecial();
@@ -4571,7 +4563,7 @@ namespace FamiStudio
                     }
                 }
 
-                if (e.Key == Keys2.Delete)
+                if (e.Key == Keys.Delete)
                 {
                     if (editMode == EditionMode.Channel)
                     {
@@ -4594,16 +4586,16 @@ namespace FamiStudio
                 {
                     switch (e.Key)
                     {
-                        case Keys2.Up:
+                        case Keys.Up:
                             TransposeNotes(ctrl ? 12 : 1);
                             break;
-                        case Keys2.Down:
+                        case Keys.Down:
                             TransposeNotes(ctrl ? -12 : -1);
                             break;
-                        case Keys2.Right:
+                        case Keys.Right:
                             MoveNotes(ctrl ? (Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : 1);
                             break;
-                        case Keys2.Left:
+                        case Keys.Left:
                             MoveNotes(ctrl ? -(Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : -1);
                             break;
                     }
@@ -4612,16 +4604,16 @@ namespace FamiStudio
                 {
                     switch (e.Key)
                     {
-                        case Keys2.Up:
+                        case Keys.Up:
                             IncrementEnvelopeValues(ctrl ? 4 : 1);
                             break;
-                        case Keys2.Down:
+                        case Keys.Down:
                             IncrementEnvelopeValues(ctrl ? -4 : -1);
                             break;
-                        case Keys2.Right:
+                        case Keys.Right:
                             MoveEnvelopeValues(ctrl ? 4 : 1);
                             break;
-                        case Keys2.Left:
+                        case Keys.Left:
                             MoveEnvelopeValues(ctrl ? -4 : -1);
                             break;
                     }
@@ -4629,7 +4621,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyUp(KeyEventArgs2 e)
+        protected override void OnKeyUp(KeyEventArgs e)
         {
             UpdateCursor();
         }
@@ -4780,7 +4772,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseDownPan(MouseEventArgs2 e)
+        private bool HandleMouseDownPan(MouseEventArgs e)
         {
             bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
 
@@ -4794,7 +4786,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownScrollbar(MouseEventArgs2 e)
+        private bool HandleMouseDownScrollbar(MouseEventArgs e)
         {
             if (e.Left && scrollBarThickness > 0 && e.X > pianoSizeX && e.Y > headerAndEffectSizeY)
             {
@@ -4845,7 +4837,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownPiano(MouseEventArgs2 e)
+        private bool HandleMouseDownPiano(MouseEventArgs e)
         {
             if (e.Left && IsPointInPiano(e.X, e.Y))
             {
@@ -4856,7 +4848,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSeekBar(MouseEventArgs2 e)
+        private bool HandleMouseDownSeekBar(MouseEventArgs e)
         {
             if (e.Left && IsPointInHeader(e.X, e.Y))
             {
@@ -4868,7 +4860,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownHeaderSelection(MouseEventArgs2 e)
+        private bool HandleMouseDownHeaderSelection(MouseEventArgs e)
         {
             if (e.Right && IsPointInHeader(e.X, e.Y))
             {
@@ -4879,7 +4871,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownEnvelopeSelection(MouseEventArgs2 e)
+        private bool HandleMouseDownEnvelopeSelection(MouseEventArgs e)
         {
             if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
@@ -4890,7 +4882,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownEffectList(MouseEventArgs2 e)
+        private bool HandleMouseDownEffectList(MouseEventArgs e)
         {
             if (e.Left && IsPointInEffectList(e.X, e.Y))
             {
@@ -4906,7 +4898,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownAltZoom(MouseEventArgs2 e)
+        private bool HandleMouseDownAltZoom(MouseEventArgs e)
         {
             if (e.Right && ModifierKeys.Alt)
             {
@@ -4929,7 +4921,7 @@ namespace FamiStudio
             ResizeEnvelope(x, y);
         }
 
-        private bool HandleMouseDownEnvelopeResize(MouseEventArgs2 e)
+        private bool HandleMouseDownEnvelopeResize(MouseEventArgs e)
         {
             if (e.Left && IsPointWhereCanResizeEnvelope(e.X, e.Y) && EditEnvelope.CanResize)
             {
@@ -4940,7 +4932,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownEnvelopeLoopRelease(MouseEventArgs2 e)
+        private bool HandleMouseDownEnvelopeLoopRelease(MouseEventArgs e)
         {
             bool left  = e.Left;
             bool right = e.Right;
@@ -4974,7 +4966,7 @@ namespace FamiStudio
             DrawEnvelope(x, y, true);
         }
 
-        private bool HandleMouseDownDrawEnvelope(MouseEventArgs2 e)
+        private bool HandleMouseDownDrawEnvelope(MouseEventArgs e)
         {
             if (e.Left && IsPointInNoteArea(e.X, e.Y) && EditEnvelope.Length > 0)
             {
@@ -4985,7 +4977,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownEffectPanel(MouseEventArgs2 e)
+        private bool HandleMouseDownEffectPanel(MouseEventArgs e)
         {
             bool left  = e.Left;
             bool right = e.Right;
@@ -4994,7 +4986,7 @@ namespace FamiStudio
             {
                 if (left)
                 {
-                    var slide = FamiStudioForm.IsKeyDown(Keys2.S);
+                    var slide = FamiStudioForm.IsKeyDown(Keys.S);
 
                     if (slide && selectedEffectIdx == Note.EffectVolume)
                     {
@@ -5024,7 +5016,7 @@ namespace FamiStudio
             StartCaptureOperation(x, y, CaptureOperation.DragWaveVolumeEnvelope);
         }
 
-        private bool HandleMouseDownDPCMVolumeEnvelope(MouseEventArgs2 e)
+        private bool HandleMouseDownDPCMVolumeEnvelope(MouseEventArgs e)
         {
             if (e.Left && IsPointInEffectPanel(e.X, e.Y))
             {
@@ -5039,7 +5031,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownSnapButton(MouseEventArgs2 e)
+        private bool HandleMouseDownSnapButton(MouseEventArgs e)
         {
             if (e.Left && (IsPointOnSnapButton(e.X, e.Y) || IsPointOnSnapResolution(e.X, e.Y)))
             {
@@ -5051,7 +5043,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownMaximizeButton(MouseEventArgs2 e)
+        private bool HandleMouseDownMaximizeButton(MouseEventArgs e)
         {
             if (e.Left && IsPointOnMaximizeButton(e.X, e.Y))
             {
@@ -5063,7 +5055,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs2 e)
+        private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs e)
         {
             if (e.Left && IsPointOnToggleEffectPannelButton(e.X, e.Y))
             {
@@ -5081,7 +5073,7 @@ namespace FamiStudio
                 UpdateWaveSelection(x, y);
         }
 
-        private bool HandleMouseDownWaveSelection(MouseEventArgs2 e)
+        private bool HandleMouseDownWaveSelection(MouseEventArgs e)
         {
             bool left  = e.Left;
             bool right = e.Right;
@@ -5098,7 +5090,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownChannelNote(MouseEventArgs2 e)
+        private bool HandleMouseDownChannelNote(MouseEventArgs e)
         {
             bool left  = e.Left;
             bool right = e.Right;
@@ -5115,10 +5107,10 @@ namespace FamiStudio
                 if (left)
                 {
                     var shift   = ModifierKeys.Shift;
-                    var stop    = FamiStudioForm.IsKeyDown(Keys2.T);
-                    var slide   = FamiStudioForm.IsKeyDown(Keys2.S);
-                    var attack  = FamiStudioForm.IsKeyDown(Keys2.A);
-                    var eyedrop = FamiStudioForm.IsKeyDown(Keys2.I);
+                    var stop    = FamiStudioForm.IsKeyDown(Keys.T);
+                    var slide   = FamiStudioForm.IsKeyDown(Keys.S);
+                    var attack  = FamiStudioForm.IsKeyDown(Keys.A);
+                    var eyedrop = FamiStudioForm.IsKeyDown(Keys.I);
 
                     if (slide)
                     {
@@ -5181,7 +5173,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDPCMMapping(MouseEventArgs2 e)
+        private bool HandleMouseDownDPCMMapping(MouseEventArgs e)
         {
             bool left = e.Left;
 
@@ -5211,17 +5203,17 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownNoteGizmos(MouseEventArgs2 e)
+        private bool HandleMouseDownNoteGizmos(MouseEventArgs e)
         {
             return e.Left && HandleNoteGizmos(e.X, e.Y);
         }
 
-        private bool HandleMouseDownEffectGizmos(MouseEventArgs2 e)
+        private bool HandleMouseDownEffectGizmos(MouseEventArgs e)
         {
             return e.Left && HandleEffectsGizmos(e.X, e.Y);
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             bool left  = e.Left;
             bool right = e.Right;
@@ -5281,7 +5273,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseDownDelayedChannelNotes(MouseEventArgs2 e)
+        private bool HandleMouseDownDelayedChannelNotes(MouseEventArgs e)
         {
             bool right = e.Right;
 
@@ -5300,7 +5292,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedHeaderSelection(MouseEventArgs2 e)
+        private bool HandleMouseDownDelayedHeaderSelection(MouseEventArgs e)
         {
             if (e.Right && IsPointInHeader(e.X, e.Y))
             {
@@ -5311,7 +5303,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedEffectPanel(MouseEventArgs2 e)
+        private bool HandleMouseDownDelayedEffectPanel(MouseEventArgs e)
         {
             if (e.Right && selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
             {
@@ -5326,7 +5318,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedEnvelopeSelection(MouseEventArgs2 e)
+        private bool HandleMouseDownDelayedEnvelopeSelection(MouseEventArgs e)
         {
             if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
             {
@@ -5337,7 +5329,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDownDelayedWaveSelection(MouseEventArgs2 e)
+        private bool HandleMouseDownDelayedWaveSelection(MouseEventArgs e)
         {
             if (e.Right && (IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)))
             {
@@ -5348,7 +5340,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseDownDelayed(MouseEventArgs2 e)
+        protected override void OnMouseDownDelayed(MouseEventArgs e)
         {
             if (editMode == EditionMode.Channel)
             {
@@ -6099,8 +6091,8 @@ namespace FamiStudio
         {
             if (IsPointInNoteArea(x, y) && EditEnvelope.Length > 0)
             {
-                PlatformUtils.VibrateClick();
-                PlatformUtils.ShowToast("Keep holding and move your finger to draw");
+                Platform.VibrateClick();
+                Platform.ShowToast("Keep holding and move your finger to draw");
                 StartDrawEnvelope(x, y);
                 return true;
             }
@@ -6154,8 +6146,8 @@ namespace FamiStudio
 
         private bool HandleContextMenuEnvelope(int x, int y)
         {
-            if (PlatformUtils.IsMobile && IsPointInHeader(x, y) ||
-                PlatformUtils.IsDesktop && (IsPointInHeaderTopPart(x, y) || IsPointInNoteArea(x,y)))
+            if (Platform.IsMobile && IsPointInHeader(x, y) ||
+                Platform.IsDesktop && (IsPointInHeaderTopPart(x, y) || IsPointInNoteArea(x,y)))
             {
                 var env = EditEnvelope;
                 var lastPixel = GetPixelForNote(env.Length);
@@ -6255,7 +6247,7 @@ namespace FamiStudio
 
                 if (mapping != null)
                 {
-                    if (PlatformUtils.IsMobile)
+                    if (Platform.IsMobile)
                         highlightDPCMSample = noteValue;
 
                     App.ShowContextMenu(left + x, top + y, new[]
@@ -6471,7 +6463,7 @@ namespace FamiStudio
             UpdateRenderCoords();
             ClampScroll();
 
-            if (PlatformUtils.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Enveloppe))
+            if (Platform.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Enveloppe))
                 CenterEnvelopeScroll();
         }
 
@@ -6574,7 +6566,7 @@ namespace FamiStudio
 
         private void SetMobileHighlightedNote(int absNoteIndex)
         {
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
                 highlightNoteAbsIndex = absNoteIndex;
         }
 
@@ -6586,7 +6578,7 @@ namespace FamiStudio
 
         private bool HasHighlightedNote()
         {
-            return PlatformUtils.IsMobile && highlightNoteAbsIndex >= 0;
+            return Platform.IsMobile && highlightNoteAbsIndex >= 0;
         }
 
         private bool IsHighlightedNoteSelected()
@@ -6610,9 +6602,9 @@ namespace FamiStudio
             if (scrollHorizontal)
             {
                 int posMinX = 0;
-                int posMaxX = PlatformUtils.IsDesktop ? Width + pianoSizeX : (IsLandscape ? Width + headerSizeY : Width);
+                int posMaxX = Platform.IsDesktop ? Width + pianoSizeX : (IsLandscape ? Width + headerSizeY : Width);
                 int marginMinX = pianoSizeX;
-                int marginMaxX = PlatformUtils.IsDesktop ? pianoSizeX : headerSizeY;
+                int marginMaxX = Platform.IsDesktop ? pianoSizeX : headerSizeY;
 
                 scrollX += Utils.ComputeScrollAmount(x, posMinX, marginMinX, App.AverageTickRate * ScrollSpeedFactor, true);
                 scrollX += Utils.ComputeScrollAmount(x, posMaxX, marginMaxX, App.AverageTickRate * ScrollSpeedFactor, false);
@@ -6622,7 +6614,7 @@ namespace FamiStudio
             if (scrollVertical)
             {
                 int posMinY = 0;
-                int posMaxY = PlatformUtils.IsMobile && !IsLandscape ? Height + headerSizeY : Height;
+                int posMaxY = Platform.IsMobile && !IsLandscape ? Height + headerSizeY : Height;
                 int marginMinY = headerSizeY;
                 int marginMaxY = headerSizeY;
 
@@ -6918,7 +6910,7 @@ namespace FamiStudio
         {
             if (App.Project.Samples.Count == 0)
             {
-                PlatformUtils.MessageBoxAsync("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons.OK);
+                Platform.MessageBoxAsync("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons2.OK);
             }
             else
             {
@@ -6930,10 +6922,10 @@ namespace FamiStudio
 
                 var dlg = new PropertyDialog("Assign DPCM Sample", 300);
                 dlg.Properties.AddLabel(null, "Select sample to assign:"); // 0
-                dlg.Properties.AddDropDownList(PlatformUtils.IsMobile ? "Select the sample to assign" : null, sampleNames.ToArray(), sampleNames[0]); // 1
+                dlg.Properties.AddDropDownList(Platform.IsMobile ? "Select the sample to assign" : null, sampleNames.ToArray(), sampleNames[0]); // 1
                 dlg.Properties.AddDropDownList("Pitch :", pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 2
                 dlg.Properties.AddCheckBox("Loop :", false); // 3
-                dlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
+                dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
                 dlg.ShowDialogAsync(ParentForm, (r) =>
@@ -7151,7 +7143,7 @@ namespace FamiStudio
             var halfHeight    = effectPanelSizeY * 0.5f;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
 
-            var threshold = ScaleForMainWindow(PlatformUtils.IsDesktop ? 10 : 20);
+            var threshold = ScaleForMainWindow(Platform.IsDesktop ? 10 : 20);
 
             x -= pianoSizeX;
             y -= headerSizeY;
@@ -7271,7 +7263,7 @@ namespace FamiStudio
             return GetMaximizeButtonRect().Contains(x, y);
         }
 
-        private void UpdateToolTip(MouseEventArgs2 e)
+        private void UpdateToolTip(MouseEventArgs e)
         {
             var tooltip = "";
             var newNoteTooltip = "";
@@ -7543,7 +7535,7 @@ namespace FamiStudio
             }
         }
 
-        private void StartNoteCreation(MouseEventArgs2 e, NoteLocation location, byte noteValue)
+        private void StartNoteCreation(MouseEventArgs e, NoteLocation location, byte noteValue)
         { 
             var channel = Song.Channels[editChannel];
 
@@ -8005,7 +7997,7 @@ namespace FamiStudio
             {
                 Cursor.Current = Cursors.CopyCursor;
             }
-            else if (editMode == EditionMode.Channel && FamiStudioForm.IsKeyDown(Keys2.I))
+            else if (editMode == EditionMode.Channel && FamiStudioForm.IsKeyDown(Keys.I))
             {
                 Cursor.Current = Cursors.Eyedrop;
             }
@@ -8072,7 +8064,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             bool left   = e.Left;
             bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
@@ -8091,7 +8083,7 @@ namespace FamiStudio
             App.SequencerShowExpansionIcons = false;
         }
 
-        private bool HandleMouseUpSnapResolution(MouseEventArgs2 e)
+        private bool HandleMouseUpSnapResolution(MouseEventArgs e)
         {
             if (e.Right && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
             { 
@@ -8112,37 +8104,37 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseUpChannelNote(MouseEventArgs2 e)
+        private bool HandleMouseUpChannelNote(MouseEventArgs e)
         {
             return e.Right && HandleContextMenuChannelNote(e.X, e.Y);
         }
 
-        private bool HandleMouseUpChannelHeader(MouseEventArgs2 e)
+        private bool HandleMouseUpChannelHeader(MouseEventArgs e)
         {
             return e.Right && HandleContextMenuChannelHeader(e.X, e.Y);
         }
 
-        private bool HandleMouseUpEffectPanel(MouseEventArgs2 e)
+        private bool HandleMouseUpEffectPanel(MouseEventArgs e)
         {
             return e.Right && HandleContextMenuEffectPanel(e.X, e.Y);
         }
 
-        private bool HandleMouseUpEnvelope(MouseEventArgs2 e)
+        private bool HandleMouseUpEnvelope(MouseEventArgs e)
         {
             return e.Right && HandleContextMenuEnvelope(e.X, e.Y);
         }
 
-        private bool HandleMouseUpDPCMMapping(MouseEventArgs2 e)
+        private bool HandleMouseUpDPCMMapping(MouseEventArgs e)
         {
             return e.Right && HandleContextMenuDPCMMapping(e.X, e.Y);
         }
 
-        private bool HandleMouseUpDPCMVolumeEnvelope(MouseEventArgs2 e)
+        private bool HandleMouseUpDPCMVolumeEnvelope(MouseEventArgs e)
         {
             return e.Right && HandleContextMenuWave(e.X, e.Y);
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             bool middle = e.Middle;
             bool doMouseUp = false;
@@ -8201,7 +8193,7 @@ namespace FamiStudio
             if (continuouslyFollowing)
                 x = (int)(Width * ContinuousFollowPercent);
 
-            Debug.Assert(PlatformUtils.IsMobile || scale == 0.5f || scale == 2.0f);
+            Debug.Assert(Platform.IsMobile || scale == 0.5f || scale == 2.0f);
 
             var pixelX = x - pianoSizeX;
             var absoluteX = pixelX + scrollX;
@@ -8210,7 +8202,7 @@ namespace FamiStudio
             zoom *= scale;
             zoom = Utils.Clamp(zoom, minZoom, maxZoom);
 
-            Debug.Assert(PlatformUtils.IsMobile || Utils.Frac(Math.Log(zoom, 2.0)) == 0.0);
+            Debug.Assert(Platform.IsMobile || Utils.Frac(Math.Log(zoom, 2.0)) == 0.0);
 
             // This will update the noteSizeX.
             UpdateRenderCoords();
@@ -8227,7 +8219,7 @@ namespace FamiStudio
             if (scale == 1.0f)
                 return;
 
-            Debug.Assert(PlatformUtils.IsMobile);
+            Debug.Assert(Platform.IsMobile);
 
             var pixelY = y - headerAndEffectSizeY;
             var absoluteY = pixelY + scrollY;
@@ -8246,7 +8238,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private bool HandleMouseWheelZoom(MouseEventArgs2 e)
+        private bool HandleMouseWheelZoom(MouseEventArgs e)
         {
             if (e.X > pianoSizeX)
             {
@@ -8270,7 +8262,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseWheelSnapResolution(MouseEventArgs2 e)
+        private bool HandleMouseWheelSnapResolution(MouseEventArgs e)
         {
             if (editMode == EditionMode.Channel && (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y)))
             {
@@ -8281,7 +8273,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs2 e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
             if (HandleMouseWheelZoom(e)) goto Handled;
             if (HandleMouseWheelSnapResolution(e)) goto Handled;
@@ -8292,7 +8284,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseHorizontalWheel(MouseEventArgs2 e)
+        protected override void OnMouseHorizontalWheel(MouseEventArgs e)
         {
             scrollX += (int)e.ScrollX; // MATTT cast to int
             ClampScroll();
@@ -8436,7 +8428,7 @@ namespace FamiStudio
 
         private bool GetEnvelopeValueForCoord(int x, int y, out int idx, out sbyte value)
         {
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 var maxValue = 64 / (int)envelopeValueZoom - 1;
                 value = (sbyte)(maxValue - (int)Math.Min((y + scrollY - headerAndEffectSizeY - 1) / envelopeValueSizeY, 128));
@@ -8481,7 +8473,7 @@ namespace FamiStudio
             buffer.Serialize(ref selectionMin);
             buffer.Serialize(ref selectionMax);
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 buffer.Serialize(ref highlightNoteAbsIndex);
                 buffer.Serialize(ref highlightDPCMSample);

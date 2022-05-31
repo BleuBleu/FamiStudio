@@ -1,25 +1,18 @@
 using System;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class DropDown2 : RenderControl
+    public class DropDown : Control
     {
         private const int MaxItemsInList = 10;
 
-        public delegate void SelectedIndexChangedDelegate(RenderControl sender, int index);
-        public delegate void ListClosingDelegate(RenderControl sender);
+        public delegate void SelectedIndexChangedDelegate(Control sender, int index);
+        public delegate void ListClosingDelegate(Control sender);
 
         public event SelectedIndexChangedDelegate SelectedIndexChanged;
         public event ListClosingDelegate ListClosing;
 
-        private GLBitmapAtlasRef bmpArrow;
+        private BitmapAtlasRef bmpArrow;
         private string[] items;
         private int selectedIndex = 0;
         private bool hover;
@@ -38,7 +31,7 @@ namespace FamiStudio
         private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
         private int rowHeight      = DpiScaling.ScaleForMainWindow(24);
 
-        public DropDown2(string[] list, int index, bool trans = false)
+        public DropDown(string[] list, int index, bool trans = false)
         {
             items = list;
             selectedIndex = index;
@@ -77,12 +70,12 @@ namespace FamiStudio
             UpdateScrollParams();
         }
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             bmpArrow = g.GetBitmapAtlasRef("DropDownArrow");
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             MarkDirty();
 
@@ -120,7 +113,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             if (draggingScrollbars)
             {
@@ -130,9 +123,9 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyDown(KeyEventArgs2 e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.Key == Keys2.Escape)
+            if (e.Key == Keys.Escape)
             {
                 SetListOpened(false);
                 ClearDialogFocus();
@@ -160,13 +153,13 @@ namespace FamiStudio
             numItemsInList = Math.Min(items.Length, MaxItemsInList);
         }
 
-        private void UpdateListHover(MouseEventArgs2 e)
+        private void UpdateListHover(MouseEventArgs e)
         {
             if (listOpened && e.X < width - scrollBarWidth)
                 SetAndMarkDirty(ref listHover, listScroll + (e.Y - rowHeight) / rowHeight);
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             if (draggingScrollbars)
             {
@@ -214,7 +207,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs2 e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
             var sign = e.ScrollY < 0 ? 1 : -1;
 
@@ -232,7 +225,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             var bmpSize = bmpArrow.ElementSize;
             var cb = parentDialog.CommandList;
@@ -244,7 +237,7 @@ namespace FamiStudio
             cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyFillColor2 : brush.Color0);
 
             if (selectedIndex >= 0)
-                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, brush, RenderTextFlags.MiddleLeft, 0, rowHeight);
+                cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, brush, TextFlags.MiddleLeft, 0, rowHeight);
 
             if (listOpened)
             {
@@ -260,7 +253,7 @@ namespace FamiStudio
                     var absItemIndex = i + listScroll;
                     if (absItemIndex == selectedIndex || absItemIndex == listHover)
                         cf.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? ThemeResources.DarkGreyFillBrush1 : ThemeResources.DarkGreyLineBrush3);
-                    cf.DrawText(items[absItemIndex], ThemeResources.FontMedium, margin, i * rowHeight, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
+                    cf.DrawText(items[absItemIndex], ThemeResources.FontMedium, margin, i * rowHeight, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
                 }
 
                 if (hasScrollBar)

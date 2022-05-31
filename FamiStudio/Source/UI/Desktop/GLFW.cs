@@ -44,9 +44,9 @@ namespace GLFWDotNet
         {
 			switch (platform)
             {
-				case OSPlatform.Windows: return FamiStudio.PlatformUtils.IsWindows;
-				case OSPlatform.Linux:   return FamiStudio.PlatformUtils.IsLinux;
-				case OSPlatform.OSX:     return FamiStudio.PlatformUtils.IsMacOS;
+				case OSPlatform.Windows: return FamiStudio.Platform.IsWindows;
+				case OSPlatform.Linux:   return FamiStudio.Platform.IsLinux;
+				case OSPlatform.OSX:     return FamiStudio.Platform.IsMacOS;
 			}
 
 			return false;

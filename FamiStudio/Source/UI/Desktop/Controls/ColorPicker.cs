@@ -1,19 +1,12 @@
 using System.Drawing;
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush = FamiStudio.GLBrush;
-using RenderGeometry = FamiStudio.GLGeometry;
-using RenderControl = FamiStudio.GLControl;
-using RenderGraphics = FamiStudio.GLGraphics;
-using RenderCommandList = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class ColorPicker2 : RenderControl
+    public class ColorPicker : Control
     {
-        public delegate void ColorChangedDelegate(RenderControl sender, Color color);
-        public delegate void DoubleClickDelegate(RenderControl sender);
+        public delegate void ColorChangedDelegate(Control sender, Color color);
+        public delegate void DoubleClickDelegate(Control sender);
 
         public event ColorChangedDelegate ColorChanged;
         public event DoubleClickDelegate  DoubleClicked;
@@ -21,7 +14,7 @@ namespace FamiStudio
         private Color selectedColor;
         public Color SelectedColor => selectedColor;
 
-        public ColorPicker2(Color color)
+        public ColorPicker(Color color)
         {
             selectedColor = color;
         }
@@ -34,18 +27,18 @@ namespace FamiStudio
             Resize(width, numColorsY * width / numColorsX);
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             ChangeColor(e.X, e.Y);
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             if (e.Left)
                 ChangeColor(e.X, e.Y);
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             if (e.Left)
             {
@@ -70,7 +63,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 

@@ -1,10 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -72,7 +67,7 @@ namespace FamiStudio
                     page.AddCheckBox("Merge identical patterns:", true, MergePatternsTooltip);                                        // 0
                     page.AddCheckBox("Delete empty patterns:", true, DeleteEmptyPatternsTooltip);                                     // 1
                     page.AddCheckBox("Adjust maximum note lengths:", true, AdjustMaximumNoteLengthsTooltip);                          // 2
-                    page.AddCheckBoxList(PlatformUtils.IsMobile ? "Songs to process:" : null , GetSongNames(), null, SongsTooltips) ; // 3
+                    page.AddCheckBoxList(Platform.IsMobile ? "Songs to process:" : null , GetSongNames(), null, SongsTooltips) ; // 3
                     break;
                 case TransformOperation.ProjectCleanup:
                     page.AddCheckBox("Delete unused instruments:", true, DeleteUnusedInstrumentsTooltip);                             // 0

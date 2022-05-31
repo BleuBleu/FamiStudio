@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -117,8 +116,8 @@ namespace FamiStudio
 
         public unsafe ConfigDialog()
         {
-            int width  = PlatformUtils.IsWindows ? 550 : 570;
-            int height = PlatformUtils.IsWindows ? 350 : 450;
+            int width  = Platform.IsWindows ? 550 : 570;
+            int height = Platform.IsWindows ? 350 : 450;
 
             dialog = new MultiPropertyDialog("FamiStudio Configuration", width, height);
             dialog.SetVerb("Apply", true);
@@ -137,11 +136,11 @@ namespace FamiStudio
                 CreatePropertyPage(page, section);
             }
 
-            dialog.SetPageVisible((int)ConfigSection.MacOS,   PlatformUtils.IsMacOS);
-            dialog.SetPageVisible((int)ConfigSection.MIDI,    PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.FFmpeg,  PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.QWERTY,  PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.Mobile,  PlatformUtils.IsMobile);
+            dialog.SetPageVisible((int)ConfigSection.MacOS,   Platform.IsMacOS);
+            dialog.SetPageVisible((int)ConfigSection.MIDI,    Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.FFmpeg,  Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.QWERTY,  Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.Mobile,  Platform.IsMobile);
         }
 
         private string[] BuildDpiScalingList()
@@ -171,12 +170,12 @@ namespace FamiStudio
                     page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 6
                     page.PropertyClicked += PageGeneral_PropertyClicked;
                     page.PropertyChanged += PageGeneral_PropertyChanged;
-                    page.SetPropertyVisible(0, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(2, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(5, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(6, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(0, Platform.IsDesktop);
+                    page.SetPropertyVisible(2, Platform.IsDesktop);
+                    page.SetPropertyVisible(3, Platform.IsDesktop);
+                    page.SetPropertyVisible(4, Platform.IsDesktop);
+                    page.SetPropertyVisible(5, Platform.IsDesktop);
+                    page.SetPropertyVisible(6, Platform.IsDesktop);
                     break;
                 }
 
@@ -199,12 +198,12 @@ namespace FamiStudio
                     page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope, ShowOscilloscopeTooltip); // 8
                     page.AddCheckBox("Show Register Viewer Tab:", Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 9
                     page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 10
-                    page.SetPropertyVisible(0, !PlatformUtils.IsMacOS); // No manual DPI selection on MacOS.
-                    page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(8, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(9, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(10, PlatformUtils.IsDesktop);
+                    page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS.
+                    page.SetPropertyVisible(3, Platform.IsDesktop);
+                    page.SetPropertyVisible(4, Platform.IsDesktop);
+                    page.SetPropertyVisible(8, Platform.IsDesktop);
+                    page.SetPropertyVisible(9, Platform.IsDesktop);
+                    page.SetPropertyVisible(10, Platform.IsDesktop);
                     break;
                 }
                 case ConfigSection.Sound:
@@ -223,8 +222,8 @@ namespace FamiStudio
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 1
                     page.AddSlider("Expansion Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
                     page.AddSlider("Expansion Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
-                    page.AddButton(PlatformUtils.IsDesktop ? null : "Reset", "Reset expansion to default", "Resets this expansion to the default settings."); // 4
-                    page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 5
+                    page.AddButton(Platform.IsDesktop ? null : "Reset", "Reset expansion to default", "Resets this expansion to the default settings."); // 4
+                    page.AddLabel(Platform.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 5
                     page.PropertyChanged += MixerPage_PropertyChanged;
                     page.PropertyClicked += MixerPage_PropertyClicked;
                     break;
@@ -292,7 +291,7 @@ namespace FamiStudio
         {
             if (click == ClickType.Button)
             {
-                PlatformUtils.OpenUrl(Settings.GetAutoSaveFilePath());
+                Platform.OpenUrl(Settings.GetAutoSaveFilePath());
             }
         }
 
@@ -302,9 +301,9 @@ namespace FamiStudio
             {
                 if (propIdx == 1)
                 {
-                    var ffmpegExeFilter = PlatformUtils.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
+                    var ffmpegExeFilter = Platform.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
                     var dummy = "";
-                    var filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
+                    var filename = Platform.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
 
                     if (filename != null)
                     {
@@ -313,7 +312,7 @@ namespace FamiStudio
                 }
                 else if (propIdx == 2)
                 {
-                    PlatformUtils.OpenUrl("https://famistudio.org/doc/ffmpeg/");
+                    Platform.OpenUrl("https://famistudio.org/doc/ffmpeg/");
                 }
             }
         }
@@ -375,7 +374,7 @@ namespace FamiStudio
         {
             var data = new string[37, 4];
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 // Stop note.
                 {
@@ -384,8 +383,8 @@ namespace FamiStudio
 
                     data[0, 0] = "N/A";
                     data[0, 1] = "Stop Note";
-                    data[0, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 0]);
-                    data[0, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 1]);
+                    data[0, 2] = k0 < 0 ? "" : Platform.KeyCodeToString(qwertyKeys[0, 0]);
+                    data[0, 3] = k1 < 0 ? "" : Platform.KeyCodeToString(qwertyKeys[0, 1]);
                 }
 
                 // Regular notes.
@@ -399,8 +398,8 @@ namespace FamiStudio
 
                     data[idx, 0] = octave.ToString();
                     data[idx, 1] = Note.NoteNames[note];
-                    data[idx, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 0]);
-                    data[idx, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 1]);
+                    data[idx, 2] = k0 < 0 ? "" : Platform.KeyCodeToString(qwertyKeys[idx, 0]);
+                    data[idx, 3] = k1 < 0 ? "" : Platform.KeyCodeToString(qwertyKeys[idx, 1]);
                 }
             }
             return data;

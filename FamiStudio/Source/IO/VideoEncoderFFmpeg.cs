@@ -34,7 +34,7 @@ namespace FamiStudio
             process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
 
-            if (PlatformUtils.IsWindows)
+            if (Platform.IsWindows)
             {
                 // Cant raise the process priority without being admin on Linux/MacOS.
                 Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.BelowNormal;
@@ -57,7 +57,7 @@ namespace FamiStudio
             process.Dispose();
             process = null;
 
-            if (PlatformUtils.IsWindows)
+            if (Platform.IsWindows)
             {
                 // Cant raise the process priority without being admin on Linux/MacOS.
                 Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.Normal;
@@ -100,7 +100,7 @@ namespace FamiStudio
                 {
                     Log.LogMessage(LogSeverity.Error, "ffmpeg does not seem to be compiled with x264 support. Make sure you have the GPL version.");
 
-                    if (PlatformUtils.IsLinux)
+                    if (Platform.IsLinux)
                     {
                         Log.LogMessage(LogSeverity.Info, 
                             "If you are running the FlatPak build, then video export simply cannot work since the " +

@@ -3,14 +3,6 @@ using System.Reflection;
 using System.Windows.Forms; // MATTT : Remove once timer is gone
 using System.Runtime.InteropServices;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBitmap         = FamiStudio.GLBitmap;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
     public partial class TutorialDialog : Dialog
@@ -68,11 +60,11 @@ namespace FamiStudio
         };
 
         private int pageIndex = 0;
-        private Button2 buttonRight;
-        private Button2 buttonLeft;
-        private ImageBox2 imageBox;
-        private Label2 label;
-        private CheckBox2 checkBoxDontShow;
+        private Button buttonRight;
+        private Button buttonLeft;
+        private ImageBox imageBox;
+        private Label label;
+        private CheckBox checkBoxDontShow;
 
         private int margin     = DpiScaling.ScaleForMainWindow(8);
         private int imageSizeX = DpiScaling.ScaleForMainWindow(960);
@@ -83,7 +75,7 @@ namespace FamiStudio
 
         private Timer gifTimer = new Timer(); // MATTT : Replace with tick.
         private IntPtr gif;
-        private RenderBitmap gifBmp;
+        private Bitmap gifBmp;
         private int gifSizeX;
         private int gifSizeY;
         private byte[] gifData;
@@ -101,25 +93,25 @@ namespace FamiStudio
 
         private void Init()
         {
-            buttonLeft = new Button2("ArrowLeft", null);
+            buttonLeft = new Button("ArrowLeft", null);
             buttonLeft.Click += ButtonLeft_Click;
             buttonLeft.Resize(buttonSize, buttonSize);
             buttonLeft.ToolTip = "Previous";
             buttonLeft.Move(width - buttonSize * 2 - margin * 2, height - buttonSize - margin);
 
-            buttonRight = new Button2("ArrowRight", null);
+            buttonRight = new Button("ArrowRight", null);
             buttonRight.Click += ButtonRight_Click;
             buttonRight.Resize(buttonSize, buttonSize);
             buttonRight.ToolTip = "Next";
             buttonRight.Move(width - buttonSize - margin, height - buttonSize - margin);
 
-            label = new Label2("This is a nice label", true);
+            label = new Label("This is a nice label", true);
             label.Move(margin, margin, width - margin, labelSizeY);
 
-            imageBox = new ImageBox2("VideoWatermark");
+            imageBox = new ImageBox("VideoWatermark");
             imageBox.Move(margin, margin * 2 + labelSizeY, imageSizeX, imageSizeY);
 
-            checkBoxDontShow = new CheckBox2(false, "Do not show again");
+            checkBoxDontShow = new CheckBox(false, "Do not show again");
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY, width - buttonSize * 3, checkSizeY);
 
             AddControl(buttonLeft);
@@ -207,12 +199,12 @@ namespace FamiStudio
             buttonRight.Image = pageIndex == TutorialMessages.Length - 1 ? "Yes" : "ArrowRight";
         }
 
-        private void ButtonLeft_Click(RenderControl sender)
+        private void ButtonLeft_Click(Control sender)
         {
             SetPage(pageIndex - 1);
         }
 
-        private void ButtonRight_Click(RenderControl sender)
+        private void ButtonRight_Click(Control sender)
         {
             if (pageIndex == TutorialMessages.Length - 1)
             {
@@ -224,7 +216,7 @@ namespace FamiStudio
             }
         }
 
-        private void TutorialDialog_KeyDown(object sender, KeyEventArgs2 e)
+        private void TutorialDialog_KeyDown(object sender, KeyEventArgs e)
         {
             ButtonRight_Click(null);
         }

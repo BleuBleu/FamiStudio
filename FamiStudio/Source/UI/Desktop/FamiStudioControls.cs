@@ -8,8 +8,8 @@ namespace FamiStudio
     {
         private int width;
         private int height;
-        private GLGraphics gfx;
-        private GLControl[] controls = new GLControl[4];
+        private Graphics gfx;
+        private Control[] controls = new Control[4];
         private List<Dialog> dialogs = new List<Dialog>();
         private ThemeRenderResources res;
         private float dialogDimming = 0.0f;
@@ -31,12 +31,12 @@ namespace FamiStudio
         public QuickAccessBar QuickAccessBar => quickAccessBar;
         public MobilePiano MobilePiano => mobilePiano;
         public ContextMenu ContextMenu => contextMenu;
-        public GLGraphics Graphics => gfx;
+        public Graphics Graphics => gfx;
         public bool IsContextMenuActive => contextMenuVisible;
         public bool IsDialogActive => dialogs.Count > 0;
         public Dialog TopDialog => dialogs.Count > 0 ? dialogs[dialogs.Count - 1] : null;
 
-        public GLControl[] Controls => controls;
+        public Control[] Controls => controls;
 
         public FamiStudioControls(FamiStudioForm parent)
         {
@@ -77,7 +77,7 @@ namespace FamiStudio
                 dlg.CenterToForm();
         }
 
-        public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
+        public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
             // Don't send any events if the context menu is visible.
             if (contextMenuVisible)
@@ -257,7 +257,7 @@ namespace FamiStudio
 
         public void InitializeGL()
         {
-            gfx = new GLGraphics(DpiScaling.Window, DpiScaling.Font);
+            gfx = new Graphics(DpiScaling.Window, DpiScaling.Font);
             res = new ThemeRenderResources(gfx);
 
             foreach (var ctrl in controls)

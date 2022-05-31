@@ -2,22 +2,15 @@ using System;
 using System.Drawing;
 using System.Collections.Generic;
 
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderBrush       = FamiStudio.GLBrush;
-using RenderGeometry    = FamiStudio.GLGeometry;
-using RenderControl     = FamiStudio.GLControl;
-using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderCommandList = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class Dialog : RenderControl
+    public class Dialog : Control
     {
         const float ToolTipDelay = 0.2f;
         const int   ToolTipMaxCharsPerLine = 64;
 
-        private List<RenderControl> controls = new List<RenderControl>();
-        private RenderControl focusedControl;
+        private List<Control> controls = new List<Control>();
+        private Control focusedControl;
         private Action<DialogResult2> callback;
         private DialogResult2 result = DialogResult2.None;
         private float tooltipTimer;
@@ -26,16 +19,16 @@ namespace FamiStudio
         private int tooltipSideMargin = DpiScaling.ScaleForMainWindow(4);
         private int tooltipOffsetY = DpiScaling.ScaleForMainWindow(24);
 
-        private RenderCommandList commandList;
-        private RenderCommandList commandListForeground;
+        private CommandList commandList;
+        private CommandList commandListForeground;
 
-        public RenderCommandList CommandList => commandList;
-        public RenderCommandList CommandListForeground => commandListForeground;
+        public CommandList CommandList => commandList;
+        public CommandList CommandListForeground => commandListForeground;
         public DialogResult2 DialogResult2 => result;
 
-        public IReadOnlyCollection<RenderControl> Controls => controls.AsReadOnly();
+        public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
-        public RenderControl FocusedControl
+        public Control FocusedControl
         {
             get { return focusedControl; }
             set 
@@ -78,7 +71,7 @@ namespace FamiStudio
         {
         }
 
-        public void AddControl(RenderControl ctrl)
+        public void AddControl(Control ctrl)
         {
             if (!controls.Contains(ctrl))
             {
@@ -92,7 +85,7 @@ namespace FamiStudio
             }
         }
 
-        public void RemoveControl(RenderControl ctrl)
+        public void RemoveControl(Control ctrl)
         {
             if (ctrl != null)
             {
@@ -114,7 +107,7 @@ namespace FamiStudio
             tooltipTimer += delta;
         }
 
-        public RenderControl GetControlAtInternal(bool focused, int formX, int formY, out int ctrlX, out int ctrlY)
+        public Control GetControlAtInternal(bool focused, int formX, int formY, out int ctrlX, out int ctrlY)
         {
             ctrlX = 0;
             ctrlY = 0;
@@ -139,7 +132,7 @@ namespace FamiStudio
             return null;
         }
 
-        public RenderControl GetControlAt(int formX, int formY, out int ctrlX, out int ctrlY)
+        public Control GetControlAt(int formX, int formY, out int ctrlX, out int ctrlY)
         {
             var ctrl = GetControlAtInternal(true, formX, formY, out ctrlX, out ctrlY);
             if (ctrl != null)
@@ -150,12 +143,12 @@ namespace FamiStudio
             return this;
         }
 
-        public void DialogMouseDownNotify(GLControl control, MouseEventArgs2 e) 
+        public void DialogMouseDownNotify(Control control, MouseEventArgs e) 
         {
             ResetToolTip();
         }
 
-        public void DialogMouseMoveNotify(GLControl control, MouseEventArgs2 e)
+        public void DialogMouseMoveNotify(Control control, MouseEventArgs e)
         {
             ResetToolTip();
         }
@@ -167,13 +160,13 @@ namespace FamiStudio
             tooltipTimer = 0;
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             FocusedControl = null;
             ResetToolTip();
         }
 
-        protected override void OnKeyDown(KeyEventArgs2 e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             if (focusedControl != null && focusedControl.Visible)
             {
@@ -211,7 +204,7 @@ namespace FamiStudio
             return splits;
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             commandList = g.CreateCommandList();
             commandListForeground = g.CreateCommandList();

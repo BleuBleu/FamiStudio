@@ -2,16 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class LogTextBox2 : RenderControl
+    public class LogTextBox : Control
     {
         private List<string> lines = new List<string>();
         private int numLines;
@@ -25,7 +18,7 @@ namespace FamiStudio
         private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
         private int lineHeight     = DpiScaling.ScaleForMainWindow(16);
 
-        public LogTextBox2(int lineCount)
+        public LogTextBox(int lineCount)
         {
             numLines = lineCount;
             height = lineCount* lineHeight;
@@ -40,7 +33,7 @@ namespace FamiStudio
             scroll = maxScroll;
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Left && 
                 GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && 
@@ -69,7 +62,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             if (draggingScrollbars)
             {
@@ -84,7 +77,7 @@ namespace FamiStudio
             maxScroll = Math.Max(0, lines.Count - numLines);
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             if (draggingScrollbars)
             {
@@ -116,7 +109,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs2 e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
             var sign = e.ScrollY < 0 ? 1 : -1;
 
@@ -126,7 +119,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref scroll, Utils.Clamp(scroll + sign * 3, 0, maxScroll));
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
@@ -138,7 +131,7 @@ namespace FamiStudio
 
             for (int i = 0, j = scroll; i < numLines && j < lines.Count; j++, i++)
             {
-                c.DrawText(lines[j], ThemeResources.FontMedium, margin, i * lineHeight, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - margin - actualScrollBarWidth, lineHeight);
+                c.DrawText(lines[j], ThemeResources.FontMedium, margin, i * lineHeight, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, lineHeight);
             }
 
             if (hasScrollBar)

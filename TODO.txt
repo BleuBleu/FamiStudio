@@ -20,7 +20,7 @@ P0:
 	x IsAsyncDialogInProgress, must implement on PC.
 	- Remove all using RenderXXX, rename properly.
 	- Rename ScaleFOrMainWIndow
-	- All dialogs will need to be async, no more "ShowDialog"
+	- All dialogs will need to be async, no more "ShowDialog". Actually with GLFW we can.
 	- Pass form to dialogs, avoid ugly .INstance thing.
 - GLFW:
 	- ***** TO DERISK:

@@ -1,22 +1,16 @@
 using System;
+using System.Drawing; // MATTT : See the usings below.
 using System.Collections.Generic;
-using System.Windows.Forms;
 using System.Diagnostics;
 
-using Color     = System.Drawing.Color;
-using Point     = System.Drawing.Point;
-using Rectangle = System.Drawing.Rectangle;
-
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderFont           = FamiStudio.GLFont;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
+// MATTT : Needed?
+//using Color     = System.Drawing.Color;
+//using Point     = System.Drawing.Point;
+//using Rectangle = System.Drawing.Rectangle;
 
 namespace FamiStudio
 {
-    public class Toolbar : RenderControl
+    public class Toolbar : Control
     {
         private enum ButtonType
         {
@@ -222,10 +216,10 @@ namespace FamiStudio
         const int DefaultTooltipLineSizeY        = 17;
         const int DefaultTooltipSpecialCharSizeX = 16;
         const int DefaultTooltipSpecialCharSizeY = 14;
-        const int DefaultButtonIconPosX          = PlatformUtils.IsMobile ?  12 : 2;
-        const int DefaultButtonIconPosY          = PlatformUtils.IsMobile ?  12 : 4;
-        const int DefaultButtonSize              = PlatformUtils.IsMobile ? 120 : 36;
-        const int DefaultIconSize                = PlatformUtils.IsMobile ?  96 : 32; 
+        const int DefaultButtonIconPosX          = Platform.IsMobile ?  12 : 2;
+        const int DefaultButtonIconPosY          = Platform.IsMobile ?  12 : 4;
+        const int DefaultButtonSize              = Platform.IsMobile ? 120 : 36;
+        const int DefaultIconSize                = Platform.IsMobile ?  96 : 32; 
         const float ShowExtraButtonsThreshold    = 0.8f;
 
         int tooltipSingleLinePosY;
@@ -253,8 +247,8 @@ namespace FamiStudio
         int lastButtonX = 500;
         bool redTooltip = false;
         new string tooltip = "";
-        RenderFont timeCodeFont;
-        RenderBitmapAtlasRef[] bmpSpecialCharacters;
+        Font timeCodeFont;
+        BitmapAtlasRef[] bmpSpecialCharacters;
         Dictionary<string, TooltipSpecialCharacter> specialCharacters = new Dictionary<string, TooltipSpecialCharacter>();
 
         private delegate void MouseWheelDelegate(float delta);
@@ -285,9 +279,9 @@ namespace FamiStudio
         private int timecodeOscSizeX;
         private int timecodeOscSizeY;
 
-        private RenderBrush toolbarBrush;
-        private RenderBrush warningBrush;
-        private RenderBitmapAtlasRef[] bmpButtons;
+        private Brush toolbarBrush;
+        private Brush warningBrush;
+        private BitmapAtlasRef[] bmpButtons;
         private Button[] buttons = new Button[(int)ButtonType.Count];
 
         private bool oscilloscopeVisible = true;
@@ -303,16 +297,16 @@ namespace FamiStudio
         public float ExpandRatio => expandRatio;
         public bool  IsExpanded  => expandRatio > 0.0f;
 
-        public override bool WantsFullScreenViewport => PlatformUtils.IsMobile;
+        public override bool WantsFullScreenViewport => Platform.IsMobile;
 
         private float iconScaleFloat = 1.0f;
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
                 toolbarBrush = g.CreateSolidBrush(Theme.DarkGreyFillColor1);
             else
                 toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1);
@@ -322,9 +316,9 @@ namespace FamiStudio
             timeCodeFont = ThemeResources.FontHuge;
 
             buttons[(int)ButtonType.New]       = new Button { BmpAtlasIndex = ButtonImageIndices.File, Click = OnNew };
-            buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = PlatformUtils.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
+            buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = Platform.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
             buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
-            buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = PlatformUtils.IsDesktop ? OnRepeatLastExport : (MouseClickDelegate)null };
+            buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = Platform.IsDesktop ? OnRepeatLastExport : (MouseClickDelegate)null };
             buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
             buttons[(int)ButtonType.Cut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
             buttons[(int)ButtonType.Paste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
@@ -341,14 +335,14 @@ namespace FamiStudio
             buttons[(int)ButtonType.Follow]    = new Button { BmpAtlasIndex = ButtonImageIndices.Follow, Click = OnFollow, Enabled = OnFollowEnabled, CloseOnClick = false };
             buttons[(int)ButtonType.Help]      = new Button { BmpAtlasIndex = ButtonImageIndices.Help, Click = OnHelp };
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 buttons[(int)ButtonType.Delete] = new Button { BmpAtlasIndex = ButtonImageIndices.Delete, Click = OnDelete, RightClick = OnDeleteSpecial, Enabled = OnDeleteEnabled };
                 buttons[(int)ButtonType.More]   = new Button { BmpAtlasIndex = ButtonImageIndices.More, Click = OnMore };
                 buttons[(int)ButtonType.Piano]  = new Button { BmpAtlasIndex = ButtonImageIndices.Piano, Click = OnMobilePiano, Enabled = OnMobilePianoEnabled };
 
                 // On mobile, everything will scale from 1080p.
-                var screenSize = PlatformUtils.GetScreenResolution();
+                var screenSize = Platform.GetScreenResolution();
                 var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
                 var bitmapSize = bmpButtons[0].ElementSize;
 
@@ -456,7 +450,7 @@ namespace FamiStudio
             if (!IsRenderInitialized)
                 return;
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
                 var hideLessImportantButtons = Width < 1420 * MainWindowScaling;
@@ -592,12 +586,12 @@ namespace FamiStudio
             notification = (warning ? "{Warning} " : "") + msg;
             notificationWarning = warning;
             if (beep)
-                PlatformUtils.Beep();
+                Platform.Beep();
         }
 
         public override void Tick(float delta)
         {
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 if (!string.IsNullOrEmpty(notification))
                     MarkDirty();
@@ -941,7 +935,7 @@ namespace FamiStudio
             return App.MobilePianoVisible ? ButtonStatus.Enabled : ButtonStatus.Dimmed;
         }
 
-        private void RenderButtons(RenderCommandList c)
+        private void RenderButtons(CommandList c)
         {
             var pt = PointToClient(Cursor.Position);
 
@@ -951,7 +945,7 @@ namespace FamiStudio
                 if (btn == null || !btn.Visible)
                     continue;
 
-                var hover = btn.Rect.Contains(pt) && !PlatformUtils.IsMobile;
+                var hover = btn.Rect.Contains(pt) && !Platform.IsMobile;
                 var tint = Theme.LightGreyFillColor1;
                 var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap(ref tint) : btn.BmpAtlasIndex;
                 var status = btn.Enabled == null ? ButtonStatus.Enabled : btn.Enabled();
@@ -964,7 +958,7 @@ namespace FamiStudio
             }
         }
 
-        private void RenderTimecode(RenderCommandList c, int x, int y, int sx, int sy)
+        private void RenderTimecode(CommandList c, int x, int y, int sx, int sy)
         {
             var frame = App.CurrentFrame;
             var famitrackerTempo = App.Project != null && App.Project.UsesFamiTrackerTempo;
@@ -991,11 +985,11 @@ namespace FamiStudio
                 var charPosX = sx / 2 - ((numPatternDigits + numNoteDigits) * zeroSizeX + colonSizeX) / 2;
 
                 for (int i = 0; i < numPatternDigits; i++, charPosX += zeroSizeX)
-                    c.DrawText(patternString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
-                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
+                    c.DrawText(patternString[i].ToString(), timeCodeFont, charPosX, 0, textColor, TextFlags.MiddleCenter, zeroSizeX, sy);
+                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, TextFlags.MiddleCenter, colonSizeX, sy);
                 charPosX += colonSizeX;
                 for (int i = 0; i < numNoteDigits; i++, charPosX += zeroSizeX)
-                    c.DrawText(noteString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
+                    c.DrawText(noteString[i].ToString(), timeCodeFont, charPosX, 0, textColor, TextFlags.MiddleCenter, zeroSizeX, sy);
             }
             else
             {
@@ -1009,21 +1003,21 @@ namespace FamiStudio
                 var charPosX = sx / 2 - (7 * zeroSizeX + 2 * colonSizeX) / 2;
 
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    c.DrawText(minutesString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
-                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
+                    c.DrawText(minutesString[i].ToString(), timeCodeFont, charPosX, 0, textColor, TextFlags.MiddleCenter, zeroSizeX, sy);
+                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, TextFlags.MiddleCenter, colonSizeX, sy);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 2; i++, charPosX += zeroSizeX)
-                    c.DrawText(secondsString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
-                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, colonSizeX, sy);
+                    c.DrawText(secondsString[i].ToString(), timeCodeFont, charPosX, 0, textColor, TextFlags.MiddleCenter, zeroSizeX, sy);
+                c.DrawText(":", timeCodeFont, charPosX, 0, textColor, TextFlags.MiddleCenter, colonSizeX, sy);
                 charPosX += colonSizeX;
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
-                    c.DrawText(millisecondsString[i].ToString(), timeCodeFont, charPosX, 0, textColor, RenderTextFlags.MiddleCenter, zeroSizeX, sy);
+                    c.DrawText(millisecondsString[i].ToString(), timeCodeFont, charPosX, 0, textColor, TextFlags.MiddleCenter, zeroSizeX, sy);
             }
 
             c.PopTransform();
         }
 
-        private void RenderWarningAndTooltip(RenderCommandList c)
+        private void RenderWarningAndTooltip(CommandList c)
         {
             var scaling = MainWindowScaling;
             var message = tooltip;
@@ -1089,12 +1083,12 @@ namespace FamiStudio
                                 // what `{ForceCtrl}` stands for – it "forces" tooltip rendering to render `{Ctrl}` on macOS as "Ctrl"
                                 // instead of "Cmd". 
                                 //
-                                if (PlatformUtils.IsMacOS && str == "Ctrl") str = "Cmd";
+                                if (Platform.IsMacOS && str == "Ctrl") str = "Cmd";
                                 if (str == "ForceCtrl") str = "Ctrl";
                                 
                                 posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                                 c.DrawRectangle(posX, posY + specialCharacter.OffsetY, posX + specialCharacter.Width, posY + specialCharacter.Height + specialCharacter.OffsetY, messageBrush);
-                                c.DrawText(str, messageFont, posX, posY, messageBrush, RenderTextFlags.Center, specialCharacter.Width);
+                                c.DrawText(str, messageFont, posX, posY, messageBrush, TextFlags.Center, specialCharacter.Width);
                                 posX -= (int)scaling; // HACK: The way we handle fonts in OpenGL is so different, i cant be bothered to debug this.
                             }
                         }
@@ -1110,9 +1104,9 @@ namespace FamiStudio
             }
         }
 
-        private void RenderShadow(RenderCommandList c)
+        private void RenderShadow(CommandList c)
         {
-            if (PlatformUtils.IsMobile && IsExpanded)
+            if (Platform.IsMobile && IsExpanded)
             {
                 c.Transform.GetOrigin(out var ox, out var oy);
                 var fullscreenRect = new Rectangle(0, 0, ParentFormSize.Width, ParentFormSize.Height);
@@ -1121,9 +1115,9 @@ namespace FamiStudio
             }
         }
 
-        private void RenderBackground(RenderCommandList c)
+        private void RenderBackground(CommandList c)
         {
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 c.FillRectangle(0, 0, Width, Height, toolbarBrush);
             }
@@ -1145,7 +1139,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             var c = g.CreateCommandList(); // Main
 
@@ -1157,7 +1151,7 @@ namespace FamiStudio
 
             g.DrawCommandList(c);
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 var ct = g.CreateCommandList(); // Tooltip (clipped)
                 RenderWarningAndTooltip(ct);
@@ -1177,7 +1171,7 @@ namespace FamiStudio
             return oscilloscopeVisible && lastOscilloscopeHadNonZeroSample != hasNonZeroSample;
         }
 
-        private void RenderOscilloscope(RenderCommandList c, int x, int y, int sx, int sy)
+        private void RenderOscilloscope(CommandList c, int x, int y, int sx, int sy)
         {
             if (!oscilloscopeVisible)
                 return;
@@ -1202,9 +1196,9 @@ namespace FamiStudio
                 c.PopTransform();
             }
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
-                Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out var betaNumber);
+                Utils.SplitVersionNumber(Platform.ApplicationVersion, out var betaNumber);
 
                 if (betaNumber > 0)
                     c.DrawText($"BETA {betaNumber}", ThemeResources.FontSmall, x + 4, y + 4, ThemeResources.LightRedFillBrush);
@@ -1219,7 +1213,7 @@ namespace FamiStudio
             base.OnMouseLeave(e);
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
 
@@ -1247,7 +1241,7 @@ namespace FamiStudio
             return null;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs2 e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
             GetButtonAtCoord(e.X, e.Y)?.MouseWheel?.Invoke(e.ScrollY);
             base.OnMouseWheel(e);
@@ -1259,7 +1253,7 @@ namespace FamiStudio
                    y > timecodePosY && y < Height - timecodePosY;
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             bool left  = e.Left;
 
@@ -1283,7 +1277,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             bool right = e.Right;
 
@@ -1306,7 +1300,7 @@ namespace FamiStudio
             if (btn != null && btn.RightClick != null)
             {
                 if (btn.VibrateOnLongPress)
-                    PlatformUtils.VibrateClick();
+                    Platform.VibrateClick();
                 btn.RightClick(x, y);
                 MarkDirty();
                 if (btn.CloseOnClick && IsExpanded)
@@ -1319,7 +1313,7 @@ namespace FamiStudio
             var btn = GetButtonAtCoord(x, y);
             if (btn != null)
             {
-                PlatformUtils.VibrateTick();
+                Platform.VibrateTick();
                 btn.Click?.Invoke(x, y);
                 MarkDirty();
                 if (!btn.CloseOnClick)
@@ -1329,7 +1323,7 @@ namespace FamiStudio
             if (IsPointInTimeCode(x, y))
             {
                 Settings.TimeFormat = Settings.TimeFormat == 0 ? 1 : 0;
-                PlatformUtils.VibrateTick();
+                Platform.VibrateTick();
                 MarkDirty();
                 return;
             }
@@ -1337,7 +1331,7 @@ namespace FamiStudio
             if (IsExpanded)
             {
                 if (btn == null)
-                    PlatformUtils.VibrateTick();
+                    Platform.VibrateTick();
                 StartClosing();
             }
         }

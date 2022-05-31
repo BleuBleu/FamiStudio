@@ -47,29 +47,6 @@ namespace System.Windows.Forms
         public Point Location => new Point(X, Y);
     }
 
-    public enum MessageBoxButtons
-    {
-        OK = 0,
-        OKCancel = 1,
-        AbortRetryIgnore = 2,
-        YesNoCancel = 3,
-        YesNo = 4,
-        RetryCancel = 5
-    }
-
-    public enum MessageBoxIcon
-    {
-        None = 0,
-        Hand = 16,
-        Stop = 16,
-        Error = 16,
-        Question = 32,
-        Exclamation = 48,
-        Warning = 48,
-        Asterisk = 64,
-        Information = 64
-    }
-
     [Flags]
     public enum Keys
     {

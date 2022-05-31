@@ -1,10 +1,8 @@
 using System;
 
-using RenderControl = FamiStudio.GLControl;
-
 namespace FamiStudio
 {
-    public class MobilePiano : RenderControl
+    public class MobilePiano : Control
     {
         public override void Tick(float deltaTime)
         {
@@ -15,7 +13,7 @@ namespace FamiStudio
         }
     }
 
-    public class QuickAccessBar : RenderControl
+    public class QuickAccessBar : Control
     {
         public override void Tick(float deltaTime)
         {

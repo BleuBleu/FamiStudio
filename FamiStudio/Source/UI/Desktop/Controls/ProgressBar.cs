@@ -1,20 +1,13 @@
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class ProgressBar2 : RenderControl
+    public class ProgressBar : Control
     {
         private float progress;
         private float visibleProgress;
 
-        public ProgressBar2()
+        public ProgressBar()
         {
             height = DpiScaling.ScaleForMainWindow(10);
         }
@@ -42,7 +35,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref visibleProgress, newVisibleProgress);
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 

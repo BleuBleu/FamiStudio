@@ -1,16 +1,9 @@
 using System;
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderFont           = FamiStudio.GLFont;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class ContextMenu : RenderControl
+    public class ContextMenu : Control
     {
         const int DefaultItemSizeY    = 22;
         const int DefaultIconPos      = 4;
@@ -23,14 +16,14 @@ namespace FamiStudio
         int minSizeX;
 
         int hoveredItemIndex = -1;
-        RenderBitmapAtlasRef[] bmpExpansions;
-        RenderBitmapAtlasRef[] bmpContextMenu;
-        RenderBitmapAtlasRef bmpMenuCheckOn;
-        RenderBitmapAtlasRef bmpMenuCheckOff;
-        RenderBitmapAtlasRef bmpMenuRadio;
+        BitmapAtlasRef[] bmpExpansions;
+        BitmapAtlasRef[] bmpContextMenu;
+        BitmapAtlasRef bmpMenuCheckOn;
+        BitmapAtlasRef bmpMenuCheckOff;
+        BitmapAtlasRef bmpMenuRadio;
         ContextMenuOption[] menuOptions;
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             bmpExpansions   = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpMenuCheckOn  = g.GetBitmapAtlasRef("MenuCheckOn");
@@ -46,12 +39,12 @@ namespace FamiStudio
             minSizeX  = ScaleForMainWindow(DefaultMenuMinSizeX);
         }
 
-        public void Initialize(RenderGraphics g, ContextMenuOption[] options)
+        public void Initialize(Graphics g, ContextMenuOption[] options)
         {
             UpdateRenderCoords();
 
             menuOptions = options;
-            bmpContextMenu = new RenderBitmapAtlasRef[options.Length];
+            bmpContextMenu = new BitmapAtlasRef[options.Length];
 
             // Measure size.
             var sizeX = 0;
@@ -90,7 +83,7 @@ namespace FamiStudio
             return idx;
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             var itemIndex = GetIndexAtCoord(e.X, e.Y);
 
@@ -104,7 +97,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             var itemIndex = GetIndexAtCoord(e.X, e.Y);
             SetHoveredItemIndex(itemIndex);
@@ -115,25 +108,25 @@ namespace FamiStudio
             SetHoveredItemIndex(-1);
         }
 
-        protected override void OnKeyDown(KeyEventArgs2 e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.Key == Keys2.Escape)
+            if (e.Key == Keys.Escape)
             {
                 App.HideContextMenu();
             }
             else if (hoveredItemIndex >= 0)
             {
-                if (e.Key == Keys2.Enter)
+                if (e.Key == Keys.Enter)
                 {
                     App.HideContextMenu();
                     MarkDirty();
                     menuOptions[hoveredItemIndex].Callback();
                 }
-                else if (e.Key == Keys2.Up)
+                else if (e.Key == Keys.Up)
                 {
                     SetHoveredItemIndex(Math.Max(0, hoveredItemIndex - 1));
                 }
-                else if (e.Key == Keys2.Down)
+                else if (e.Key == Keys.Down)
                 {
                     SetHoveredItemIndex(Math.Min(menuOptions.Length - 1, hoveredItemIndex + 1));
                 }
@@ -159,7 +152,7 @@ namespace FamiStudio
         {
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
@@ -199,7 +192,7 @@ namespace FamiStudio
                     c.DrawBitmapAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
                 }
 
-                c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, Width, itemSizeY);
+                c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
             }
 

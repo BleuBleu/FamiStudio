@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
-    public class GLControl
+    public class Control
     {
         private CursorInfo cursorInfo;
         private FamiStudioForm parentForm;
@@ -20,21 +20,21 @@ namespace FamiStudio
         protected bool enabled = true;
         protected string tooltip;
 
-        protected GLControl() { cursorInfo = new CursorInfo(this); }
-        protected virtual void OnRenderInitialized(GLGraphics g) { }
+        protected Control() { cursorInfo = new CursorInfo(this); }
+        protected virtual void OnRenderInitialized(Graphics g) { }
         protected virtual void OnRenderTerminated() { }
-        protected virtual void OnRender(GLGraphics g) { }
-        protected virtual void OnMouseDown(MouseEventArgs2 e) { }
-        protected virtual void OnMouseDownDelayed(MouseEventArgs2 e) { }
-        protected virtual void OnMouseUp(MouseEventArgs2 e) { }
-        protected virtual void OnMouseDoubleClick(MouseEventArgs2 e) { }
+        protected virtual void OnRender(Graphics g) { }
+        protected virtual void OnMouseDown(MouseEventArgs e) { }
+        protected virtual void OnMouseDownDelayed(MouseEventArgs e) { }
+        protected virtual void OnMouseUp(MouseEventArgs e) { }
+        protected virtual void OnMouseDoubleClick(MouseEventArgs e) { }
         protected virtual void OnResize(EventArgs e) { }
-        protected virtual void OnMouseMove(MouseEventArgs2 e) { }
+        protected virtual void OnMouseMove(MouseEventArgs e) { }
         protected virtual void OnMouseLeave(EventArgs e) { }
-        protected virtual void OnMouseWheel(MouseEventArgs2 e) { }
-        protected virtual void OnMouseHorizontalWheel(MouseEventArgs2 e) { }
-        protected virtual void OnKeyDown(KeyEventArgs2 e) { }
-        protected virtual void OnKeyUp(KeyEventArgs2 e) { }
+        protected virtual void OnMouseWheel(MouseEventArgs e) { }
+        protected virtual void OnMouseHorizontalWheel(MouseEventArgs e) { }
+        protected virtual void OnKeyDown(KeyEventArgs e) { }
+        protected virtual void OnKeyUp(KeyEventArgs e) { }
         protected virtual void OnTouchDown(int x, int y) { }
         protected virtual void OnTouchUp(int x, int y) { }
         protected virtual void OnTouchMove(int x, int y) { }
@@ -52,19 +52,19 @@ namespace FamiStudio
         public virtual bool WantsFullScreenViewport => false;
         public virtual void Tick(float delta) { }
 
-        public void RenderInitialized(GLGraphics g) { OnRenderInitialized(g); }
+        public void RenderInitialized(Graphics g) { OnRenderInitialized(g); }
         public void RenderTerminated() { OnRenderTerminated(); }
-        public void Render(GLGraphics g) { OnRender(g); }
-        public void MouseDown(MouseEventArgs2 e) { OnMouseDown(e); DialogMouseDownNotify(e); }
-        public void MouseDownDelayed(MouseEventArgs2 e) { OnMouseDownDelayed(e); }
-        public void MouseUp(MouseEventArgs2 e) { OnMouseUp(e); }
-        public void MouseDoubleClick(MouseEventArgs2 e) { OnMouseDoubleClick(e); }
-        public void MouseMove(MouseEventArgs2 e) { OnMouseMove(e); DialogMouseDownNotify(e); }
+        public void Render(Graphics g) { OnRender(g); }
+        public void MouseDown(MouseEventArgs e) { OnMouseDown(e); DialogMouseDownNotify(e); }
+        public void MouseDownDelayed(MouseEventArgs e) { OnMouseDownDelayed(e); }
+        public void MouseUp(MouseEventArgs e) { OnMouseUp(e); }
+        public void MouseDoubleClick(MouseEventArgs e) { OnMouseDoubleClick(e); }
+        public void MouseMove(MouseEventArgs e) { OnMouseMove(e); DialogMouseDownNotify(e); }
         public void MouseLeave(EventArgs e) { OnMouseLeave(e); }
-        public void MouseWheel(MouseEventArgs2 e) { OnMouseWheel(e); }
-        public void MouseHorizontalWheel(MouseEventArgs2 e) { OnMouseHorizontalWheel(e); }
-        public void KeyDown(KeyEventArgs2 e) { OnKeyDown(e); }
-        public void KeyUp(KeyEventArgs2 e) { OnKeyUp(e); }
+        public void MouseWheel(MouseEventArgs e) { OnMouseWheel(e); }
+        public void MouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }
+        public void KeyDown(KeyEventArgs e) { OnKeyDown(e); }
+        public void KeyUp(KeyEventArgs e) { OnKeyUp(e); }
         public void TouchDown(int x, int y) { OnTouchDown(x, y); }
         public void TouchUp(int x, int y) { OnTouchUp(x, y); }
         public void TouchMove(int x, int y) { OnTouchMove(x, y); }
@@ -77,8 +77,8 @@ namespace FamiStudio
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void LostDialogFocus() { OnLostDialogFocus(); }
         public void AddedToDialog() { OnAddedToDialog(); }
-        public void DialogMouseDownNotify(MouseEventArgs2 e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
-        public void DialogMouseMoveNotify(MouseEventArgs2 e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
+        public void DialogMouseDownNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
+        public void DialogMouseMoveNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
 
         public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentForm.PointToClient(this, p); }
         public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentForm.PointToScreen(this, p); }
@@ -109,7 +109,7 @@ namespace FamiStudio
         public void SetDpiScales(float main, float font) { mainWindowScaling = main; fontScaling = font; }
         public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
 
-        public ModifierKeys2 ModifierKeys => parentForm.GetModifierKeys();
+        public ModifierKeys ModifierKeys => parentForm.GetModifierKeys();
         public FamiStudio App => parentForm?.FamiStudio;
         public CursorInfo Cursor => cursorInfo;
         public FamiStudioForm ParentForm { get => parentForm; set => parentForm = value; }
@@ -176,9 +176,9 @@ namespace FamiStudio
     public class CursorInfo
     {
         private IntPtr cursor = Cursors.Default;
-        private GLControl parentControl;
+        private Control parentControl;
 
-        public CursorInfo(GLControl ctrl) { parentControl = ctrl; }
+        public CursorInfo(Control ctrl) { parentControl = ctrl; }
         public System.Drawing.Point Position => parentControl.ParentForm.GetCursorPosition();
         public IntPtr Current
         {
@@ -187,7 +187,7 @@ namespace FamiStudio
         }
     }
     
-    public class ModifierKeys2
+    public class ModifierKeys
     { 
         // Matches GLFW
         private const int ModifierShift = 1;
@@ -208,7 +208,7 @@ namespace FamiStudio
         }
     }
 
-    public class MouseEventArgs2
+    public class MouseEventArgs
     {
         // Matches GLFW (1 << button)
         public const int ButtonLeft   = 1;
@@ -232,7 +232,7 @@ namespace FamiStudio
         public float ScrollY => scrollY;
         public bool IsRightClickDelayed => delay;
 
-        public MouseEventArgs2(int btns, int x, int y, float sx = 0.0f, float sy = 0.0f)
+        public MouseEventArgs(int btns, int x, int y, float sx = 0.0f, float sy = 0.0f)
         {
             buttons = btns;
             posX = x;
@@ -248,7 +248,7 @@ namespace FamiStudio
         }
     }
 
-    public class KeyEventArgs2
+    public class KeyEventArgs
     {   
         // Matches GLFW
         private const int ModifierShift   = 1;
@@ -256,20 +256,20 @@ namespace FamiStudio
         private const int ModifierAlt     = 4;
         private const int ModifierSuper   = 4;
 
-        private Keys2 key;
-        private int   modifiers;
-        private bool  repeat;
-        private bool  handled;
+        private Keys key;
+        private int  modifiers;
+        private bool repeat;
+        private bool handled;
 
-        public Keys2 Key      => key;
-        public bool  Shift    => (modifiers & ModifierShift)   != 0;
-        public bool  Control  => (modifiers & ModifierControl) != 0;
-        public bool  Alt      => (modifiers & ModifierAlt)     != 0;
-        public bool  Super    => (modifiers & ModifierSuper)   != 0;
-        public bool  IsRepeat => repeat;
-        public bool  Handled { get => handled; set => handled = value; }
+        public Keys Key      => key;
+        public bool Shift    => (modifiers & ModifierShift)   != 0;
+        public bool Control  => (modifiers & ModifierControl) != 0;
+        public bool Alt      => (modifiers & ModifierAlt)     != 0;
+        public bool Super    => (modifiers & ModifierSuper)   != 0;
+        public bool IsRepeat => repeat;
+        public bool Handled { get => handled; set => handled = value; }
 
-        public KeyEventArgs2(Keys2 k, int mods, bool rep)
+        public KeyEventArgs(Keys k, int mods, bool rep)
         {
             key = k;
             modifiers = mods;
@@ -278,7 +278,7 @@ namespace FamiStudio
     }
 
     // Matches GLFW
-    public enum Keys2
+    public enum Keys
     {
         Unknown = -1,
         Space = 32,
@@ -398,5 +398,21 @@ namespace FamiStudio
         Cancel = 2,
         Yes = 6,
         No = 7
+    }
+
+    // Matches Windows Forms
+    public enum MessageBoxButtons2
+    {
+        OK = 0,
+        OKCancel = 1,
+        YesNoCancel = 3,
+        YesNo = 4,
+    }
+
+    // Matches Windows Forms
+    public enum MessageBoxIcon2
+    {
+        None = 0,
+        Error = 16
     }
 }

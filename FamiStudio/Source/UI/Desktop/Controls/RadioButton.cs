@@ -2,23 +2,16 @@ using System;
 using System.Drawing;
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class RadioButton2 : Label2
+    public class RadioButton : Label
     {
         private bool check;
         private bool hover;
-        private RenderBitmapAtlasRef bmpRadioOff;
-        private RenderBitmapAtlasRef bmpRadioOn;
+        private BitmapAtlasRef bmpRadioOff;
+        private BitmapAtlasRef bmpRadioOn;
 
-        public RadioButton2(string txt, bool chk, bool multi = false) : base(txt, multi)
+        public RadioButton(string txt, bool chk, bool multi = false) : base(txt, multi)
         {
             check = chk;
         }
@@ -29,7 +22,7 @@ namespace FamiStudio
             set { SetAndMarkDirty(ref check, value); }
         }
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             bmpRadioOff = g.GetBitmapAtlasRef("RadioButtonOff");
             bmpRadioOn  = g.GetBitmapAtlasRef("RadioButtonOn");
@@ -41,7 +34,7 @@ namespace FamiStudio
             return new Rectangle(0, (height - bmpRadioOff.ElementSize.Height) / 2, bmpRadioOff.ElementSize.Width, bmpRadioOff.ElementSize.Height);
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             SetAndMarkDirty(ref hover, true /*GetRadioRectangle().Contains(e.X, e.Y)*/);
         }
@@ -51,7 +44,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref hover, false);
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             //if (GetRadioRectangle().Contains(e.X, e.Y))
             {
@@ -59,13 +52,13 @@ namespace FamiStudio
 
                 foreach (var ctrl in parentDialog.Controls)
                 {
-                    if (ctrl != this && ctrl is RadioButton2 radio)
+                    if (ctrl != this && ctrl is RadioButton radio)
                         radio.Checked = false;
                 }
             }
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 

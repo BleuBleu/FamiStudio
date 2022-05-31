@@ -6,10 +6,10 @@
         {
             Settings.Load();
             
-            if (!PlatformUtils.Initialize())
+            if (!Platform.Initialize())
                 return false;
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
                 DpiScaling.Initialize();
             
             Theme.Initialize();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using System.Drawing;
 using System.Diagnostics;
 using static GLFWDotNet.GLFW;
@@ -29,8 +28,8 @@ namespace FamiStudio
         public MobilePiano MobilePiano => controls.MobilePiano;
         public new ContextMenu ContextMenu => controls.ContextMenu;
         public static FamiStudioForm Instance => instance;
-        public new GLControl ActiveControl => activeControl;
-        public GLGraphics Graphics => controls.Graphics;
+        public new Control ActiveControl => activeControl;
+        public Graphics Graphics => controls.Graphics;
 
         public Size Size
         {
@@ -64,18 +63,18 @@ namespace FamiStudio
         public bool IsAsyncDialogInProgress => controls.IsDialogActive;
         public bool MobilePianoVisible { get => false; set => value = false; }
 
-        private GLControl activeControl = null;
-        private GLControl captureControl = null;
-        private GLControl hoverControl = null;
+        private Control activeControl = null;
+        private Control captureControl = null;
+        private Control hoverControl = null;
         private int captureButton = -1;
         private int lastButtonPress = -1;
-        private Timer timer = new Timer();
+        //private Timer timer = new Timer();
         private Point contextMenuPoint = Point.Empty;
         private double lastTickTime = -1.0f;
         private bool quit = false;
         private int lastCursorX = -1;
         private int lastCursorY = -1;
-        private ModifierKeys2 modifiers = new ModifierKeys2();
+        private ModifierKeys modifiers = new ModifierKeys();
 
         // Double-click emulation.
         private int lastClickButton = -1;
@@ -84,8 +83,8 @@ namespace FamiStudio
         private int lastClickY = -1;
 
         private double delayedRightClickStartTime;
-        private MouseEventArgs2 delayedRightClickArgs = null;
-        private GLControl delayedRightClickControl = null;
+        private MouseEventArgs delayedRightClickArgs = null;
+        private Control delayedRightClickControl = null;
 
         //[StructLayout(LayoutKind.Sequential)]
         //public struct NativeMessage
@@ -203,9 +202,20 @@ namespace FamiStudio
             glfwSwapInterval(1);
             glfwGetWindowContentScale(window, out var scaling, out _);
 
-            GL.Initialize();
+            GL.StaticInitialize();
             Cursors.Initialize();
             DpiScaling.Initialize(scaling);
+
+            glfwGetWindowSize(window, out var w, out var h);
+            GL.Disable(GL.DepthTest);
+            GL.Viewport(0, 0, w, h);
+            GL.ClearColor(
+                Theme.DarkGreyLineColor1.R / 255.0f,
+                Theme.DarkGreyLineColor1.G / 255.0f,
+                Theme.DarkGreyLineColor1.B / 255.0f,
+                1.0f);
+            GL.Clear(GL.ColorBufferBit);
+            glfwSwapBuffers(window);
 
             return new FamiStudioForm(fs, window);
         }
@@ -279,7 +289,7 @@ namespace FamiStudio
             controls.Redraw();
         }
 
-        public void CaptureMouse(GLControl ctrl)
+        public void CaptureMouse(Control ctrl)
         {
             //if (lastButtonPress != System.Windows.Forms.MouseButtons.None)
             //{
@@ -300,14 +310,14 @@ namespace FamiStudio
             //}
         }
 
-        public Point PointToClient(GLControl ctrl, Point p)
+        public Point PointToClient(Control ctrl, Point p)
         {
             //p = PointToClient(p);
             //return new Point(p.X - ctrl.Left, p.Y - ctrl.Top);
             return Point.Empty;
         }
 
-        public Point PointToScreen(GLControl ctrl, Point p)
+        public Point PointToScreen(Control ctrl, Point p)
         {
             //p = new Point(p.X + ctrl.Left, p.Y + ctrl.Top);
             //return PointToScreen(p);
@@ -355,7 +365,7 @@ namespace FamiStudio
 
                 var doubleClick = 
                     button == lastClickButton &&
-                    delay <= PlatformUtils.DoubleClickTime &&
+                    delay <= Platform.DoubleClickTime &&
                     Math.Abs(lastClickX - lastCursorX) < 4 &&
                     Math.Abs(lastClickY - lastCursorY) < 4;
 
@@ -384,11 +394,11 @@ namespace FamiStudio
 
                     if (doubleClick)
                     {
-                        ctrl.MouseDoubleClick(new MouseEventArgs2(MakeButtonFlags(button), cx, cy));
+                        ctrl.MouseDoubleClick(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
                     }
                     else
                     {
-                        var ex = new MouseEventArgs2(MakeButtonFlags(button), cx, cy); // MATTT : Remove MouseButtons when we are done with WinFOrms.
+                        var ex = new MouseEventArgs(MakeButtonFlags(button), cx, cy); // MATTT : Remove MouseButtons when we are done with WinFOrms.
                         ctrl.GrabDialogFocus();
                         ctrl.MouseDown(ex);
                         if (ex.IsRightClickDelayed)
@@ -400,7 +410,7 @@ namespace FamiStudio
             {
                 int cx;
                 int cy;
-                GLControl ctrl = null;
+                Control ctrl = null;
 
                 if (captureControl != null)
                 {
@@ -424,7 +434,7 @@ namespace FamiStudio
                     if (ctrl != ContextMenu)
                         controls.HideContextMenu();
 
-                    ctrl.MouseUp(new MouseEventArgs2(MakeButtonFlags(button), cx, cy));
+                    ctrl.MouseUp(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
                 }
             }
         }
@@ -439,8 +449,8 @@ namespace FamiStudio
 
             int cx;
             int cy;
-            GLControl ctrl = null;
-            GLControl hover = null;
+            Control ctrl = null;
+            Control hover = null;
 
             if (captureControl != null)
             {
@@ -460,7 +470,7 @@ namespace FamiStudio
                 glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)  != 0,
                 glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) != 0);
 
-            var e = new MouseEventArgs2(buttons, cx, cy);
+            var e = new MouseEventArgs(buttons, cx, cy);
 
             if (ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(e, cx, cy, ctrl))
                 return;
@@ -513,13 +523,13 @@ namespace FamiStudio
 
                 // MATTT : Read button states here too.
                 if (scrollY != 0.0f)
-                    ctrl.MouseWheel(new MouseEventArgs2(0, cx, cy, 0, scrollY));
+                    ctrl.MouseWheel(new MouseEventArgs(0, cx, cy, 0, scrollY));
                 if (scrollX != 0.0f)
-                    ctrl.MouseHorizontalWheel(new MouseEventArgs2(0, cx, cy, scrollX));
+                    ctrl.MouseHorizontalWheel(new MouseEventArgs(0, cx, cy, scrollX));
             }
         }
         
-        private void SendKeyUpOrDown(GLControl ctrl, KeyEventArgs2 e, bool down)
+        private void SendKeyUpOrDown(Control ctrl, KeyEventArgs e, bool down)
         {
             if (down)
                 ctrl.KeyDown(e);
@@ -534,7 +544,7 @@ namespace FamiStudio
             modifiers.Set(mods);
 
             var down = action == GLFW_PRESS || action == GLFW_REPEAT;
-            var e = new KeyEventArgs2((Keys2)key, mods, action == GLFW_REPEAT);
+            var e = new KeyEventArgs((Keys)key, mods, action == GLFW_REPEAT);
             
             if (controls.IsContextMenuActive)
             {
@@ -582,6 +592,13 @@ namespace FamiStudio
             }
         }
 
+        private Point GetCursorPosInternal()
+        {
+            // MATTT : Do we get fractional coords with DPI scaling?
+            glfwGetCursorPos(window, out var dx, out var dy);
+            return new Point((int)dx, (int)dy);
+        }
+
         private void GetCursorPosInternal(out int x, out int y)
         {
             // MATTT : Do we get fractional coords with DPI scaling?
@@ -598,13 +615,13 @@ namespace FamiStudio
         private int MakeButtonFlags(bool l, bool r, bool m)
         {
             var flags = 0;
-            if (l) flags |= MouseEventArgs2.ButtonLeft;
-            if (r) flags |= MouseEventArgs2.ButtonRight;
-            if (m) flags |= MouseEventArgs2.ButtonMiddle;
+            if (l) flags |= MouseEventArgs.ButtonLeft;
+            if (r) flags |= MouseEventArgs.ButtonRight;
+            if (m) flags |= MouseEventArgs.ButtonMiddle;
             return flags;
         }
 
-        protected void DelayRightClick(GLControl ctrl, MouseEventArgs2 e)
+        protected void DelayRightClick(Control ctrl, MouseEventArgs e)
         {
             Debug.WriteLine($"DelayRightClick {ctrl}");
 
@@ -623,7 +640,7 @@ namespace FamiStudio
             delayedRightClickStartTime = 0.0;
         }
 
-        protected void ConditionalEmitDelayedRightClick(bool checkTime = true, bool forceClear = false, GLControl checkCtrl = null)
+        protected void ConditionalEmitDelayedRightClick(bool checkTime = true, bool forceClear = false, Control checkCtrl = null)
         {
             var delta = glfwGetTime() - delayedRightClickStartTime;
             var clear = forceClear;
@@ -639,7 +656,7 @@ namespace FamiStudio
                 ClearDelayedRightClick();
         }
 
-        protected bool ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(MouseEventArgs2 e, int x, int y, GLControl checkCtrl)
+        protected bool ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(MouseEventArgs e, int x, int y, Control checkCtrl)
         {
             // Surprisingly is pretty common to move by 1 pixel between a right click
             // mouse down/up. Add a small tolerance.
@@ -692,7 +709,7 @@ namespace FamiStudio
             controls.MarkDirty();
         }
 
-        public ModifierKeys2 GetModifierKeys()
+        public ModifierKeys GetModifierKeys()
         {
             return modifiers;
         }
@@ -700,7 +717,7 @@ namespace FamiStudio
         public Point GetCursorPosition()
         {
             // Pretend the mouse is fixed when a context menu is active.
-            return controls.IsContextMenuActive ? contextMenuPoint : Cursor.Position;
+            return controls.IsContextMenuActive ? contextMenuPoint : GetCursorPosInternal();
         }
 
         public void RefreshCursor()
@@ -709,7 +726,7 @@ namespace FamiStudio
             //RefreshCursor(controls.GetControlAtCoord(pt.X, pt.Y, out _, out _));
         }
 
-        private void RefreshCursor(GLControl ctrl)
+        private void RefreshCursor(Control ctrl)
         {
             //if (captureControl != null && captureControl != ctrl)
             //    return;
@@ -717,7 +734,7 @@ namespace FamiStudio
             //Cursor = ctrl != null ? ctrl.Cursor.Current : Cursors.Default;
         }
 
-        public void SetActiveControl(GLControl ctrl, bool animate = true)
+        public void SetActiveControl(Control ctrl, bool animate = true)
         {
             //if (ctrl != null && ctrl != activeControl && (ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer))
             //{
@@ -753,7 +770,7 @@ namespace FamiStudio
             controls.PopDialog(dialog);
         }
 
-        public static bool IsKeyDown(Keys2 k)
+        public static bool IsKeyDown(Keys k)
         {
             //return (GetKeyState((int)k) & 0x8000) != 0;
             return false;
@@ -764,7 +781,7 @@ namespace FamiStudio
 
         protected void EnableWindowsDarkTheme()
         {
-            if (PlatformUtils.IsWindows)
+            if (Platform.IsWindows)
             {
                 IntPtr handle = glfwGetNativeWindow(window);
 

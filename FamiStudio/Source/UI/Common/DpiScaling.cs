@@ -39,11 +39,11 @@ namespace FamiStudio
 
         public static int[] GetAvailableScalings()
         {
-            if (PlatformUtils.IsWindows || PlatformUtils.IsLinux)
+            if (Platform.IsWindows || Platform.IsLinux)
                 return new[] { 100, 150, 200 };
-            else if (PlatformUtils.IsAndroid)
+            else if (Platform.IsAndroid)
                 return new[] { 66, 100, 133 };
-            else if (PlatformUtils.IsMacOS)
+            else if (Platform.IsMacOS)
                 return new int[0]; // Intentional, we dont allow to manually set the scaling on MacOS.
 
             Debug.Assert(false);
@@ -58,9 +58,9 @@ namespace FamiStudio
 
         public static void Initialize(float scaling = -1.0f)
         {
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
-                var density = PlatformUtils.GetPixelDensity();
+                var density = Platform.GetPixelDensity();
 
                 if (Settings.DpiScaling != 0)
                 {

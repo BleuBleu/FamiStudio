@@ -42,7 +42,7 @@ namespace FamiStudio
             }
 
             // We sometimes gets stuck here on Linux (likely a thread that we dont control still running), lets abort.
-            if (PlatformUtils.IsLinux)
+            if (Platform.IsLinux)
             {
                 Environment.Exit(0);
             }

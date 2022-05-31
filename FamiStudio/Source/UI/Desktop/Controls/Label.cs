@@ -1,19 +1,12 @@
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderBrush = FamiStudio.GLBrush;
-using RenderGeometry = FamiStudio.GLGeometry;
-using RenderControl = FamiStudio.GLControl;
-using RenderGraphics = FamiStudio.GLGraphics;
-using RenderCommandList = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class Label2 : RenderControl
+    public class Label : Control
     {
         protected int labelOffsetX;
         protected string text;
         protected bool multiline;
 
-        public Label2(string txt, bool multi = false)
+        public Label(string txt, bool multi = false)
         {
             text = txt;
             height = DpiScaling.ScaleForMainWindow(24);
@@ -80,7 +73,7 @@ namespace FamiStudio
             ResizeForMultiline();
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             var c = parentDialog.CommandList;
             var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
@@ -91,12 +84,12 @@ namespace FamiStudio
 
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    c.DrawText(lines[i], ThemeResources.FontMedium, labelOffsetX, i * ThemeResources.FontMedium.LineHeight, brush, RenderTextFlags.TopLeft, 0, height);
+                    c.DrawText(lines[i], ThemeResources.FontMedium, labelOffsetX, i * ThemeResources.FontMedium.LineHeight, brush, TextFlags.TopLeft, 0, height);
                 }
             }
             else
             {
-                c.DrawText(text, ThemeResources.FontMedium, labelOffsetX, 0, brush, RenderTextFlags.MiddleLeft, 0, height);
+                c.DrawText(text, ThemeResources.FontMedium, labelOffsetX, 0, brush, TextFlags.MiddleLeft, 0, height);
             }
         }
     }

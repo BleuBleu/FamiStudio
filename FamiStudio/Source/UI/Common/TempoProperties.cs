@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -253,9 +250,9 @@ namespace FamiStudio
 
                 var messageDlg = new PropertyDialog("Tempo Conversion", 400, true, false);
                 messageDlg.Properties.AddLabel(null, label, true); // 0
-                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true, true); // 1
-                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, "Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.", false, true); // 2
-                messageDlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
+                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true, true); // 1
+                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, "Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.", false, true); // 2
+                messageDlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 messageDlg.Properties.Build();
                 messageDlg.ShowDialogAsync(null, (r) =>
                 {

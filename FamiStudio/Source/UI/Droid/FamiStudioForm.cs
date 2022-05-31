@@ -252,7 +252,7 @@ namespace FamiStudio
         {
             if (delayedMessage != null)
             {
-                PlatformUtils.MessageBoxAsync(delayedMessage, delayedMessageTitle, System.Windows.Forms.MessageBoxButtons.OK);
+                PlatformUtils.MessageBoxAsync(delayedMessage, delayedMessageTitle, System.Windows.Forms.MessageBoxButtons2.OK);
 
                 delayedMessage      = null;
                 delayedMessageTitle = null;

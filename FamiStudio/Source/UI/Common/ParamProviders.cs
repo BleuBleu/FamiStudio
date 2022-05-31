@@ -1,14 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderCommandList = FamiStudio.GLCommandList;
 
 namespace FamiStudio
 {
@@ -30,7 +22,7 @@ namespace FamiStudio
         public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
         public delegate string GetValueStringDelegate();
-        public delegate void CustomDrawDelegate(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2);
+        public delegate void CustomDrawDelegate(CommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2);
 
         public EnabledDelegate IsEnabled;
         public GetValueDelegate GetValue;
@@ -263,7 +255,7 @@ namespace FamiStudio
             return paramInfos.Count == 0 ? null : paramInfos.ToArray();
         }
 
-        public static void CustomDrawAdsrGraph(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawAdsrGraph(CommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
         {
             var g = c.Graphics;
             var instrument = userData1 as Instrument;
@@ -383,7 +375,7 @@ namespace FamiStudio
             c.DrawLine(line, res.BlackBrush, 1, true);
         }
 
-        public static void CustomDrawEpsmAlgorithm(RenderCommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
+        public static void CustomDrawEpsmAlgorithm(CommandList c, ThemeRenderResources res, Rectangle rect, object userData1, object userData2)
         {
             var instrument = userData1 as Instrument;
             var algo = instrument.EpsmPatchRegs[0] & 0x07;

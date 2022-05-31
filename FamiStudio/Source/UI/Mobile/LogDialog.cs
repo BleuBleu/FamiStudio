@@ -1,5 +1,4 @@
-﻿using System.Windows.Forms;
-using Xamarin.Essentials;
+﻿using Xamarin.Essentials;
 
 namespace FamiStudio
 {

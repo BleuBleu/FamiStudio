@@ -110,6 +110,8 @@
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Saw.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc6Square.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateVrc7.cs" />
+    <Compile Include="Source\Graphics\Common\GLGraphicsBase.cs" />
+    <Compile Include="Source\Graphics\Desktop\GLGraphics.cs" />
     <Compile Include="Source\IO\AudioExportUtils.cs" />
     <Compile Include="Source\IO\BambootrackerInstrumentFile.cs" />
     <Compile Include="Source\IO\FamistudioTextFile.cs" />
@@ -149,6 +151,7 @@
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Player\XAudio2Stream.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
+    <Compile Include="Source\Platform\Windows\Platform.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\Project\Channel.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
@@ -165,8 +168,7 @@
     <Compile Include="Source\UI\Common\DpiScaling.cs" />
     <Compile Include="Source\UI\Common\ExportDialog.cs" />
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
-    <Compile Include="Source\UI\Common\GLControl.cs" />
-    <Compile Include="Source\UI\Common\GLGraphicsBase.cs" />
+    <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\Init.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
@@ -203,7 +205,6 @@
     <Compile Include="Source\UI\Desktop\Cursors.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioForm.cs" />
-    <Compile Include="Source\UI\Desktop\GLGraphics.cs" />
     <Compile Include="Source\UI\Desktop\GLFW.cs" />
     <Compile Include="Source\UI\Desktop\GLFW.LoadAssembly.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
@@ -212,7 +213,6 @@
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
-    <Compile Include="Source\UI\Windows\PlatformUtils.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />

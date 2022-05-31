@@ -5,15 +5,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-#if FAMISTUDIO_ANDROID
-using Android.Opengl;
-#endif
-
-using Color = System.Drawing.Color;
-
 namespace FamiStudio
 {
-    public abstract class GLGraphicsBase : IDisposable
+    public abstract class GraphicsBase : IDisposable
     {
         protected struct GradientCacheKey
         {
@@ -34,19 +28,19 @@ namespace FamiStudio
         protected int maxSmoothLineWidth = int.MaxValue;
         protected Rectangle controlRect;
         protected Rectangle controlRectFlip;
-        protected GLTransform transform = new GLTransform();
-        protected GLBitmap dashedBitmap;
-        protected Dictionary<int, GLBitmapAtlas> atlases = new Dictionary<int, GLBitmapAtlas>();
+        protected TransformStack transform = new TransformStack();
+        protected Bitmap dashedBitmap;
+        protected Dictionary<int, BitmapAtlas> atlases = new Dictionary<int, BitmapAtlas>();
 
-        protected Dictionary<GradientCacheKey, GLBrush> verticalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
-        protected Dictionary<GradientCacheKey, GLBrush> horizontalGradientCache = new Dictionary<GradientCacheKey, GLBrush>();
-        protected Dictionary<Color, GLBrush> solidGradientCache = new Dictionary<Color, GLBrush>();
+        protected Dictionary<GradientCacheKey, Brush> verticalGradientCache = new Dictionary<GradientCacheKey, Brush>();
+        protected Dictionary<GradientCacheKey, Brush> horizontalGradientCache = new Dictionary<GradientCacheKey, Brush>();
+        protected Dictionary<Color, Brush> solidGradientCache = new Dictionary<Color, Brush>();
 
         public float FontScaling => fontScaling;
         public float WindowScaling => windowScaling;
         public int DashTextureSize => dashedBitmap.Size.Width;
         public int WindowSizeY => windowSizeY;
-        public GLTransform Transform => transform;
+        public TransformStack Transform => transform;
 
         protected const int MaxAtlasResolution = 1024;
         protected const int MaxVertexCount = 128 * 1024;
@@ -63,9 +57,11 @@ namespace FamiStudio
 
         protected abstract int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false);
         protected abstract int CreateTexture(int[,] bmpData, bool filter);
-        public abstract void DrawCommandList(GLCommandList list, Rectangle scissor);
+        public abstract void DeleteTexture(int id);
+        public abstract void DrawCommandList(CommandList list, Rectangle scissor);
+        public abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
 
-        protected GLGraphicsBase(float mainScale, float fontScale)
+        protected GraphicsBase(float mainScale, float fontScale)
         {
             windowScaling = mainScale;
             fontScaling = fontScale;
@@ -244,87 +240,23 @@ namespace FamiStudio
             }
         }
 
-        public unsafe GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
-        {
-            // Need to sort since we do binary searches on the names.
-            Array.Sort(names);
-
-            var bitmaps = new int[names.Length][,];
-            var elementSizeX = 0;
-            var elementSizeY = 0;
-
-            for (int i = 0; i < names.Length; i++)
-            {
-                var bmpData = LoadBitmapFromResourceWithScaling(names[i]);
-
-                elementSizeX = Math.Max(elementSizeX, bmpData.GetLength(1));
-                elementSizeY = Math.Max(elementSizeY, bmpData.GetLength(0));
-
-                bitmaps[i] = bmpData;
-            }
-
-            Debug.Assert(elementSizeX < MaxAtlasResolution);
-
-            var elementsPerRow = MaxAtlasResolution / elementSizeX;
-            var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
-            var atlasSizeX = Utils.NextPowerOfTwo(elementsPerRow * elementSizeX);
-            var atlasSizeY = Utils.NextPowerOfTwo(numRows * elementSizeY);
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
-            var elementRects = new Rectangle[names.Length];
-
-            GL.BindTexture(GL.Texture2D, textureId);
-
-            Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
-
-            for (int i = 0; i < names.Length; i++)
-            {
-                var bmpData = bitmaps[i];
-
-                Debug.WriteLine($"  - {names[i]} ({bmpData.GetLength(1)} x {bmpData.GetLength(0)}):");
-
-                var row = i / elementsPerRow;
-                var col = i % elementsPerRow;
-
-                elementRects[i] = new Rectangle(
-                    col * elementSizeX,
-                    row * elementSizeY,
-                    bmpData.GetLength(1),
-                    bmpData.GetLength(0));
-
-                fixed (int* ptr = &bmpData[0, 0])
-                {
-                    var stride = sizeof(int) * bmpData.GetLength(0);
-
-                    // MATTT : Check that!!! Should be same now!
-#if FAMISTUDIO_WINDOWS
-                    var format = GL.Bgra;
-#else
-                    var format = GL2.Rgba;
-#endif
-                    GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmpData.GetLength(1), bmpData.GetLength(0), format, GL.UnsignedByte, new IntPtr(ptr));
-                }
-            }
-
-            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, names, elementRects);
-        }
-
-        public GLBitmapAtlasRef GetBitmapAtlasRef(string name)
+        public BitmapAtlasRef GetBitmapAtlasRef(string name)
         {
             // Look in all atlases
             foreach (var a in atlases.Values)
             {
                 var idx = a.GetElementIndex(name);
                 if (idx >= 0)
-                    return new GLBitmapAtlasRef(a, idx);
+                    return new BitmapAtlasRef(a, idx);
             }
 
             Debug.Assert(false);
             return null;
         }
 
-        public GLBitmapAtlasRef[] GetBitmapAtlasRefs(string[] name)
+        public BitmapAtlasRef[] GetBitmapAtlasRefs(string[] name)
         {
-            var refs = new GLBitmapAtlasRef[name.Length];
+            var refs = new BitmapAtlasRef[name.Length];
             for (int i = 0; i < refs.Length; i++)
                 refs[i] = GetBitmapAtlasRef(name[i]);
             return refs;
@@ -335,14 +267,14 @@ namespace FamiStudio
             lineWidthBias = bias;
         }
 
-        public void DrawCommandList(GLCommandList list)
+        public void DrawCommandList(CommandList list)
         {
             DrawCommandList(list, Rectangle.Empty);
         }
 
-        public virtual GLCommandList CreateCommandList()
+        public virtual CommandList CreateCommandList()
         {
-            return new GLCommandList(this, dashedBitmap.Size.Width, lineWidthBias, true, maxSmoothLineWidth);
+            return new CommandList(this, dashedBitmap.Size.Width, lineWidthBias, true, maxSmoothLineWidth);
         }
 
         protected Rectangle FlipRectangleY(Rectangle rc)
@@ -350,39 +282,39 @@ namespace FamiStudio
             return new Rectangle(rc.Left, windowSizeY - rc.Top - rc.Height, rc.Width, rc.Height);
         }
 
-        public float MeasureString(string text, GLFont font, bool mono = false)
+        public float MeasureString(string text, Font font, bool mono = false)
         {
             return font.MeasureString(text, mono);
         }
 
-        public GLGeometry CreateGeometry(float[,] points, bool closed = true)
+        public Geometry CreateGeometry(float[,] points, bool closed = true)
         {
-            return new GLGeometry(points, closed);
+            return new Geometry(points, closed);
         }
 
-        public GLBitmap CreateEmptyBitmap(int width, int height, bool alpha = true, bool filter = false)
+        public Bitmap CreateEmptyBitmap(int width, int height, bool alpha = true, bool filter = false)
         {
-            return new GLBitmap(CreateEmptyTexture(width, height, alpha, filter), width, height, true, filter);
+            return new Bitmap(this, CreateEmptyTexture(width, height, alpha, filter), width, height, true, filter);
         }
 
-        public GLBrush CreateSolidBrush(Color color)
+        public Brush CreateSolidBrush(Color color)
         {
-            return new GLBrush(color);
+            return new Brush(color);
         }
 
-        public GLBrush CreateHorizontalGradientBrush(float x0, float x1, Color color0, Color color1)
+        public Brush CreateHorizontalGradientBrush(float x0, float x1, Color color0, Color color1)
         {
             Debug.Assert(x0 == 0.0f);
-            return new GLBrush(color0, color1, x1 - x0, 0.0f);
+            return new Brush(color0, color1, x1 - x0, 0.0f);
         }
 
-        public GLBrush CreateVerticalGradientBrush(float y0, float y1, Color color0, Color color1)
+        public Brush CreateVerticalGradientBrush(float y0, float y1, Color color0, Color color1)
         {
             Debug.Assert(y0 == 0.0f);
-            return new GLBrush(color0, color1, 0.0f, y1 - y0);
+            return new Brush(color0, color1, 0.0f, y1 - y0);
         }
 
-        public GLBrush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
+        public Brush GetSolidBrush(Color color, float dimming = 1.0f, float alphaDimming = 1.0f)
         {
             if (dimming != 1.0f || alphaDimming != 1.0f)
             {
@@ -396,13 +328,13 @@ namespace FamiStudio
             if (solidGradientCache.TryGetValue(color, out var brush))
                 return brush;
 
-            brush = new GLBrush(color);
+            brush = new Brush(color);
             solidGradientCache[color] = brush;
 
             return brush;
         }
 
-        public GLBrush GetVerticalGradientBrush(Color color0, int sizeY, float dimming)
+        public Brush GetVerticalGradientBrush(Color color0, int sizeY, float dimming)
         {
             Color color1 = Color.FromArgb(
                 (int)(color0.A),
@@ -413,7 +345,7 @@ namespace FamiStudio
             return GetVerticalGradientBrush(color0, color1, sizeY);
         }
 
-        public GLBrush GetVerticalGradientBrush(Color color0, Color color1, int sizeY)
+        public Brush GetVerticalGradientBrush(Color color0, Color color1, int sizeY)
         {
             var key = new GradientCacheKey() { color0 = color0, color1 = color1, size = sizeY };
 
@@ -426,7 +358,7 @@ namespace FamiStudio
             return brush;
         }
 
-        public GLBrush GetHorizontalGradientBrush(Color color0, int sizeY, float dimming)
+        public Brush GetHorizontalGradientBrush(Color color0, int sizeY, float dimming)
         {
             Color color1 = Color.FromArgb(
                 (int)(color0.A),
@@ -437,7 +369,7 @@ namespace FamiStudio
             return GetHorizontalGradientBrush(color0, color1, sizeY);
         }
 
-        public GLBrush GetHorizontalGradientBrush(Color color0, Color color1, int sizeY)
+        public Brush GetHorizontalGradientBrush(Color color0, Color color1, int sizeY)
         {
             var key = new GradientCacheKey() { color0 = color0, color1 = color1, size = sizeY };
 
@@ -464,12 +396,12 @@ namespace FamiStudio
             return default(T);
         }
 
-        public GLFont CreateScaledFont(GLFont source, int desiredHeight)
+        public Font CreateScaledFont(Font source, int desiredHeight)
         {
             return null;
         }
 
-        public GLFont CreateFontFromResource(string name, bool bold, int size)
+        public Font CreateFontFromResource(string name, bool bold, int size)
         {
             var suffix = bold ? "Bold" : "";
             var basename = $"{name}{size}{suffix}";
@@ -477,7 +409,7 @@ namespace FamiStudio
             var imgfile = $"FamiStudio.Resources.{basename}_0.tga";
 
             var str = "";
-            using (Stream stream = typeof(GLGraphicsBase).Assembly.GetManifestResourceStream(fntfile))
+            using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(fntfile))
             using (StreamReader reader = new StreamReader(stream))
             {
                 str = reader.ReadToEnd();
@@ -486,7 +418,7 @@ namespace FamiStudio
             var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             var bmpData = TgaFile.LoadFromResource(imgfile);
 
-            var font = (GLFont)null;
+            var font = (Font)null;
 
             int baseValue = 0;
             int lineHeight = 0;
@@ -505,12 +437,12 @@ namespace FamiStudio
                         lineHeight = ReadFontParam<int>(splits, "lineHeight");
                         texSizeX = ReadFontParam<int>(splits, "scaleW");
                         texSizeY = ReadFontParam<int>(splits, "scaleH");
-                        font = new GLFont(CreateTexture(bmpData, false), size, baseValue, lineHeight);
+                        font = new Font(this, CreateTexture(bmpData, false), size, baseValue, lineHeight);
                         break;
                     }
                     case "char":
                     {
-                        var charInfo = new GLFont.CharInfo();
+                        var charInfo = new Font.CharInfo();
 
                         int c = ReadFontParam<int>(splits, "id");
                         int x = ReadFontParam<int>(splits, "x");
@@ -622,7 +554,7 @@ namespace FamiStudio
         }
     };
 
-    public class GLFont : IDisposable
+    public class Font : IDisposable
     {
         public class CharInfo
         {
@@ -644,14 +576,16 @@ namespace FamiStudio
         private int size;
         private int baseValue;
         private int lineHeight;
+        private GraphicsBase graphics;
 
         public int Texture => texture;
         public int Size => size;
         public int LineHeight => lineHeight;
         public int OffsetY => size - baseValue;
 
-        public GLFont(int tex, int sz, int b, int l)
+        public Font(GraphicsBase g, int tex, int sz, int b, int l)
         {
+            graphics = g;
             texture = tex;
             size = sz;
             baseValue = b;
@@ -660,12 +594,7 @@ namespace FamiStudio
 
         public void Dispose()
         {
-#if FAMISTUDIO_ANDROID
-            var id = new[] { Texture };
-            GLES11.GlDeleteTextures(1, id, 0);
-#else
-            GL.DeleteTexture(Texture);
-#endif
+            graphics.DeleteTexture(texture);
             texture = -1;
         }
 
@@ -852,13 +781,13 @@ namespace FamiStudio
         */
     }
 
-    public class GLGeometry : IDisposable
+    public class Geometry : IDisposable
     {
         public float[] Points { get; private set; }
 
         public Dictionary<float, float[]> miterPoints = new Dictionary<float, float[]>();
 
-        public GLGeometry(float[,] points, bool closed)
+        public Geometry(float[,] points, bool closed)
         {
             var numPoints = points.GetLength(0);
             var closedPoints = new float[(numPoints + (closed ? 1 : 0)) * 2];
@@ -909,7 +838,7 @@ namespace FamiStudio
         }
     }
 
-    public class GLBrush : IDisposable
+    public class Brush : IDisposable
     {
         public float GradientSizeX = 0.0f;
         public float GradientSizeY = 0.0f;
@@ -918,18 +847,18 @@ namespace FamiStudio
         public int PackedColor0;
         public int PackedColor1;
 
-        public GLBrush(Color color)
+        public Brush(Color color)
         {
             Color0 = color;
-            PackedColor0 = GLColorUtils.PackColor(color);
+            PackedColor0 = ColorUtils.PackColor(color);
         }
 
-        public GLBrush(Color color0, Color color1, float sizeX, float sizeY)
+        public Brush(Color color0, Color color1, float sizeX, float sizeY)
         {
             Color0 = color0;
             Color1 = color1;
-            PackedColor0 = GLColorUtils.PackColor(color0);
-            PackedColor1 = GLColorUtils.PackColor(color1);
+            PackedColor0 = ColorUtils.PackColor(color0);
+            PackedColor1 = ColorUtils.PackColor(color1);
             GradientSizeX = sizeX;
             GradientSizeY = sizeY;
         }
@@ -941,21 +870,23 @@ namespace FamiStudio
         }
     }
 
-    public class GLBitmap : IDisposable
+    public class Bitmap : IDisposable
     {
         protected int id;
         protected Size size;
         protected bool dispose = true;
         protected bool filter = false;
         protected bool atlas = false;
+        protected GraphicsBase graphics;
 
         public int Id => id;
         public Size Size => size;
         public bool Filtering => filter;
         public bool IsAtlas => atlas;
 
-        public GLBitmap(int id, int width, int height, bool disp = true, bool filter = false)
+        public Bitmap(GraphicsBase g, int id, int width, int height, bool disp = true, bool filter = false)
         {
+            this.graphics = g;
             this.id = id;
             this.size = new Size(width, height);
             this.dispose = disp;
@@ -965,14 +896,7 @@ namespace FamiStudio
         public void Dispose()
         {
             if (dispose)
-            {
-#if FAMISTUDIO_ANDROID
-                var idArray = new[] { id };
-                GLES11.GlDeleteTextures(1, idArray, 0);
-#else
-                GL.DeleteTexture(id);
-#endif
-            }
+                graphics.DeleteTexture(id);
             id = -1;
         }
 
@@ -982,15 +906,15 @@ namespace FamiStudio
         }
     }
 
-    public class GLBitmapAtlas : GLBitmap
+    public class BitmapAtlas : Bitmap
     {
         private string[] elementNames;
         private Rectangle[] elementRects;
 
         public Size GetElementSize(int index) => elementRects[index].Size;
 
-        public GLBitmapAtlas(int id, int atlasSizeX, int atlasSizeY, string[] names, Rectangle[] rects, bool filter = false) :
-            base(id, atlasSizeX, atlasSizeY, true, filter)
+        public BitmapAtlas(GraphicsBase g, int id, int atlasSizeX, int atlasSizeY, string[] names, Rectangle[] rects, bool filter = false) :
+            base(g, id, atlasSizeX, atlasSizeY, true, filter)
         {
             elementNames = names;
             elementRects = rects;
@@ -1014,16 +938,16 @@ namespace FamiStudio
         }
     }
 
-    public class GLBitmapAtlasRef
+    public class BitmapAtlasRef
     {
-        private GLBitmapAtlas atlas;
+        private BitmapAtlas atlas;
         private int index;
 
-        public GLBitmapAtlas Atlas => atlas;
+        public BitmapAtlas Atlas => atlas;
         public int ElementIndex => index;
         public Size ElementSize => atlas.GetElementSize(index);
 
-        public GLBitmapAtlasRef(GLBitmapAtlas a, int idx)
+        public BitmapAtlasRef(BitmapAtlas a, int idx)
         {
             atlas = a;
             index = idx;
@@ -1035,7 +959,7 @@ namespace FamiStudio
         }
     }
 
-    public static class GLColorUtils
+    public static class ColorUtils
     {
         public static int PackColor(Color c)
         {
@@ -1057,55 +981,54 @@ namespace FamiStudio
         }
     }
 
-    public struct Vector4
+    public struct Transform
     {
-        public float X;
-        public float Y;
-        public float Z;
-        public float W;
+        public float ScaleX;
+        public float ScaleY;
+        public float TranslationX;
+        public float TranslationY;
 
-        public Vector4(float x, float y, float z, float w)
+        public bool HasScaling => ScaleX != 1.0f || ScaleY != 1.0f;
+
+        public Transform(float sx, float sy, float tx, float ty)
         {
-            X = x;
-            Y = y;
-            Z = z;
-            W = w;
+            ScaleX = sx;
+            ScaleY = sy;
+            TranslationX = tx;
+            TranslationY = ty;
         }
     }
 
-    public class GLTransform
+    public class TransformStack
     {
-        public static readonly GLTransform Identity = new GLTransform();
+        private Transform transform = new Transform(); // xy = scale, zw = translation
+        private Stack<Transform> transformStack = new Stack<Transform>();
 
-        protected Vector4 transform = new Vector4(1, 1, 0, 0); // xy = scale, zw = translation
-        protected Stack<Vector4> transformStack = new Stack<Vector4>();
-
-        public Vector4 Transform => transform;
-        public bool HasScaling => transform.X != 1.0f || transform.Y != 1.0f;
+        public bool HasScaling => transform.HasScaling;
 
         public void SetIdentity()
         {
-            transform.X = 1;
-            transform.Y = 1;
-            transform.Z = 0;
-            transform.W = 0;
+            transform.ScaleX = 1;
+            transform.ScaleY = 1;
+            transform.TranslationX = 0;
+            transform.TranslationY = 0;
         }
 
         public void PushTranslation(float x, float y)
         {
             transformStack.Push(transform);
-            transform.Z += x;
-            transform.W += y;
+            transform.TranslationX += x;
+            transform.TranslationY += y;
         }
 
         public void PushTransform(float tx, float ty, float sx, float sy)
         {
             transformStack.Push(transform);
 
-            transform.X *= sx;
-            transform.Y *= sy;
-            transform.Z += tx;
-            transform.W += ty;
+            transform.ScaleX *= sx;
+            transform.ScaleY *= sy;
+            transform.TranslationX += tx;
+            transform.TranslationY += ty;
         }
 
         public void PopTransform()
@@ -1115,14 +1038,14 @@ namespace FamiStudio
 
         public void TransformPoint(ref float x, ref float y)
         {
-            x = x * transform.X + transform.Z;
-            y = y * transform.Y + transform.W;
+            x = x * transform.ScaleX + transform.TranslationX;
+            y = y * transform.ScaleY + transform.TranslationY;
         }
 
         public void ScaleSize(ref float width, ref float height)
         {
-            width  *= transform.X;
-            height *= transform.Y;
+            width  *= transform.ScaleX;
+            height *= transform.ScaleY;
         }
 
         public void GetOrigin(out float x, out float y)
@@ -1134,7 +1057,7 @@ namespace FamiStudio
     }
 
     [Flags]
-    public enum RenderTextFlags
+    public enum TextFlags
     {
         None = 0,
 
@@ -1165,7 +1088,7 @@ namespace FamiStudio
     }
 
     // This is common to both OGL, it only does data packing, no GL calls.
-    public class GLCommandList
+    public class CommandList
     {
         private class MeshBatch
         {
@@ -1196,9 +1119,9 @@ namespace FamiStudio
         {
             public RectangleF layoutRect;
             public RectangleF clipRect;
-            public RenderTextFlags flags;
+            public TextFlags flags;
             public string text;
-            public GLBrush brush;
+            public Brush brush;
         };
 
         private class BitmapInstance
@@ -1267,14 +1190,14 @@ namespace FamiStudio
         private MeshBatch meshSmoothBatch;
         private LineBatch currentLineBatch;
         private List<LineBatch> lineBatches = new List<LineBatch>();
-        private Dictionary<GLFont,   List<TextInstance>>   texts   = new Dictionary<GLFont,   List<TextInstance>>();
-        private Dictionary<GLBitmap, List<BitmapInstance>> bitmaps = new Dictionary<GLBitmap, List<BitmapInstance>>();
+        private Dictionary<Font,   List<TextInstance>>   texts   = new Dictionary<Font,   List<TextInstance>>();
+        private Dictionary<Bitmap, List<BitmapInstance>> bitmaps = new Dictionary<Bitmap, List<BitmapInstance>>();
 
-        private GLGraphicsBase graphics;
-        private GLTransform xform;
+        private GraphicsBase graphics;
+        private TransformStack xform;
 
-        public GLTransform Transform => xform;
-        public GLGraphicsBase Graphics => graphics;
+        public TransformStack Transform => xform;
+        public GraphicsBase Graphics => graphics;
 
         public bool HasAnyMeshes  => meshBatch != null || meshSmoothBatch != null;
         public bool HasAnyLines   => lineBatches.Count > 0;
@@ -1282,7 +1205,7 @@ namespace FamiStudio
         public bool HasAnyBitmaps => bitmaps.Count > 0;
         public bool HasAnything   => HasAnyMeshes || HasAnyLines || HasAnyTexts || HasAnyBitmaps || HasAnyTickLineMeshes;
 
-        public GLCommandList(GLGraphicsBase g, int dashTextureSize, int lineBias = 0, bool supportsLineWidth = true, int maxSmoothWidth = int.MaxValue)
+        public CommandList(GraphicsBase g, int dashTextureSize, int lineBias = 0, bool supportsLineWidth = true, int maxSmoothWidth = int.MaxValue)
         {
             graphics = g;
             xform = g.Transform;
@@ -1403,7 +1326,7 @@ namespace FamiStudio
             return currentLineBatch;
         }
 
-        private void DrawLineInternal(float x0, float y0, float x1, float y1, GLBrush brush, int width, bool smooth, bool dash)
+        private void DrawLineInternal(float x0, float y0, float x1, float y1, Brush brush, int width, bool smooth, bool dash)
         {
 #if FAMISTUDIO_LINUX
             if (width > 1.0f && drawThickLineAsPolygon)
@@ -1496,7 +1419,7 @@ namespace FamiStudio
         }
 #endif
 
-        public void DrawLine(float x0, float y0, float x1, float y1, GLBrush brush, int width = 1, bool smooth = false, bool dash = false)
+        public void DrawLine(float x0, float y0, float x1, float y1, Brush brush, int width = 1, bool smooth = false, bool dash = false)
         {
             width += lineWidthBias;
 
@@ -1506,7 +1429,7 @@ namespace FamiStudio
             DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, dash);
         }
 
-        public void DrawLine(float[] points, GLBrush brush, int width = 1, bool smooth = false)
+        public void DrawLine(float[] points, Brush brush, int width = 1, bool smooth = false)
         {
             width += lineWidthBias;
 
@@ -1528,7 +1451,7 @@ namespace FamiStudio
             }
         }
 
-        public void DrawLine(float[,] points, GLBrush brush, int width = 1, bool smooth = false)
+        public void DrawLine(float[,] points, Brush brush, int width = 1, bool smooth = false)
         {
             width += lineWidthBias;
 
@@ -1550,7 +1473,7 @@ namespace FamiStudio
             }
         }
 
-        public void DrawGeometry(float[,] points, GLBrush brush, int width = 1, bool smooth = false)
+        public void DrawGeometry(float[,] points, Brush brush, int width = 1, bool smooth = false)
         {
             width += lineWidthBias;
 
@@ -1572,17 +1495,17 @@ namespace FamiStudio
             }
         }
 
-        public void DrawRectangle(Rectangle rect, GLBrush brush, int width = 1, bool smooth = false)
+        public void DrawRectangle(Rectangle rect, Brush brush, int width = 1, bool smooth = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
         }
 
-        public void DrawRectangle(RectangleF rect, GLBrush brush, int width = 1, bool smooth = false)
+        public void DrawRectangle(RectangleF rect, Brush brush, int width = 1, bool smooth = false)
         {
             DrawRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush, width, smooth);
         }
 
-        public void DrawRectangle(float x0, float y0, float x1, float y1, GLBrush brush, int width = 1, bool smooth = false)
+        public void DrawRectangle(float x0, float y0, float x1, float y1, Brush brush, int width = 1, bool smooth = false)
         {
             width += lineWidthBias;
 
@@ -1607,7 +1530,7 @@ namespace FamiStudio
             DrawLineInternal(x0, y0 - halfWidth, x0, y1 + extraPixel + halfWidth, brush, width, smooth, false);
         }
 
-        public void DrawGeometry(GLGeometry geo, GLBrush brush, int width, bool smooth = false, bool miter = false)
+        public void DrawGeometry(Geometry geo, Brush brush, int width, bool smooth = false, bool miter = false)
         {
             width += lineWidthBias;
 
@@ -1640,13 +1563,13 @@ namespace FamiStudio
             }
         }
 
-        public void FillAndDrawGeometry(GLGeometry geo, GLBrush fillBrush, GLBrush lineBrush, int lineWidth = 1, bool smooth = false, bool miter = false)
+        public void FillAndDrawGeometry(Geometry geo, Brush fillBrush, Brush lineBrush, int lineWidth = 1, bool smooth = false, bool miter = false)
         {
             FillGeometry(geo, fillBrush, smooth);
             DrawGeometry(geo, lineBrush, lineWidth, smooth, miter);
         }
 
-        public void FillRectangle(float x0, float y0, float x1, float y1, GLBrush brush)
+        public void FillRectangle(float x0, float y0, float x1, float y1, Brush brush)
         {
             var batch = GetMeshBatch(false);
 
@@ -1783,29 +1706,29 @@ namespace FamiStudio
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
-        public void FillRectangle(Rectangle rect, GLBrush brush)
+        public void FillRectangle(Rectangle rect, Brush brush)
         {
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
         }
 
-        public void FillRectangle(RectangleF rect, GLBrush brush)
+        public void FillRectangle(RectangleF rect, Brush brush)
         {
             FillRectangle(rect.Left, rect.Top, rect.Right, rect.Bottom, brush);
         }
 
-        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, GLBrush fillBrush, GLBrush lineBrush, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangle(float x0, float y0, float x1, float y1, Brush fillBrush, Brush lineBrush, int width = 1, bool smooth = false)
         {
             FillRectangle(x0, y0, x1, y1, fillBrush);
             DrawRectangle(x0, y0, x1, y1, lineBrush, width, smooth);
         }
 
-        public void FillAndDrawRectangle(Rectangle rect, GLBrush fillBrush, GLBrush lineBrush, int width = 1, bool smooth = false)
+        public void FillAndDrawRectangle(Rectangle rect, Brush fillBrush, Brush lineBrush, int width = 1, bool smooth = false)
         {
             FillRectangle(rect, fillBrush);
             DrawRectangle(rect, lineBrush, width, smooth);
         }
 
-        public void FillGeometry(GLGeometry geo, GLBrush brush, bool smooth = false)
+        public void FillGeometry(Geometry geo, Brush brush, bool smooth = false)
         {
             var batch = GetMeshBatch(smooth);
             var i0 = (short)(batch.vtxIdx / 2);
@@ -1845,7 +1768,7 @@ namespace FamiStudio
 
                     batch.vtxArray[batch.vtxIdx++] = x;
                     batch.vtxArray[batch.vtxIdx++] = y;
-                    batch.colArray[batch.colIdx++] = GLColorUtils.PackColor(r, g, b, a);
+                    batch.colArray[batch.colIdx++] = ColorUtils.PackColor(r, g, b, a);
                 }
             }
 
@@ -1861,7 +1784,7 @@ namespace FamiStudio
             Debug.Assert(batch.colIdx * 2 == batch.vtxIdx);
         }
 
-        public void FillGeometry(float[,] points, GLBrush brush, bool smooth = false)
+        public void FillGeometry(float[,] points, Brush brush, bool smooth = false)
         {
             var batch = GetMeshBatch(smooth);
             var i0 = (short)(batch.vtxIdx / 2);
@@ -1888,14 +1811,14 @@ namespace FamiStudio
             }
         }
 
-        public void DrawText(string text, GLFont font, float x, float y, GLBrush brush, RenderTextFlags flags = RenderTextFlags.None, float width = 0, float height = 0, float clipMinX = 0, float clipMaxX = 0)
+        public void DrawText(string text, Font font, float x, float y, Brush brush, TextFlags flags = TextFlags.None, float width = 0, float height = 0, float clipMinX = 0, float clipMaxX = 0)
         {
-            Debug.Assert(!flags.HasFlag(RenderTextFlags.Clip) || !flags.HasFlag(RenderTextFlags.Ellipsis));
-            Debug.Assert(!flags.HasFlag(RenderTextFlags.Monospace) || !flags.HasFlag(RenderTextFlags.Ellipsis));
-            Debug.Assert(!flags.HasFlag(RenderTextFlags.Monospace) || !flags.HasFlag(RenderTextFlags.Clip));
-            Debug.Assert(!flags.HasFlag(RenderTextFlags.Ellipsis) || width > 0);
-            Debug.Assert((flags & RenderTextFlags.HorizontalAlignMask) == RenderTextFlags.Left || width  > 0);
-            Debug.Assert((flags & RenderTextFlags.VerticalAlignMask)   == RenderTextFlags.Top  || height > 0);
+            Debug.Assert(!flags.HasFlag(TextFlags.Clip) || !flags.HasFlag(TextFlags.Ellipsis));
+            Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Ellipsis));
+            Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Clip));
+            Debug.Assert(!flags.HasFlag(TextFlags.Ellipsis) || width > 0);
+            Debug.Assert((flags & TextFlags.HorizontalAlignMask) == TextFlags.Left || width  > 0);
+            Debug.Assert((flags & TextFlags.VerticalAlignMask)   == TextFlags.Top  || height > 0);
 
             if (!texts.TryGetValue(font, out var list))
             {
@@ -1926,20 +1849,20 @@ namespace FamiStudio
             list.Add(inst);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
+        public void DrawBitmap(Bitmap bmp, float x, float y, float opacity = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, false, tint);
         }
 
-        public void DrawBitmapCentered(GLBitmap bmp, float x, float y, float width, float height, float opacity = 1.0f, Color tint = new Color())
+        public void DrawBitmapCentered(Bitmap bmp, float x, float y, float width, float height, float opacity = 1.0f, Color tint = new Color())
         {
             x += (width  - bmp.Size.Width)  / 2;
             y += (height - bmp.Size.Height) / 2;
             DrawBitmap(bmp, x, y, opacity, tint);
         }
 
-        public void DrawBitmapAtlas(GLBitmapAtlasRef bmp, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawBitmapAtlas(BitmapAtlasRef bmp, float x, float y, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             var atlas = bmp.Atlas;
@@ -1949,21 +1872,21 @@ namespace FamiStudio
             DrawBitmap(atlas, x, y, elementSize.Width * scale, elementSize.Height * scale, opacity, u0, v0, u1, v1, false, tint);
         }
 
-        public void DrawBitmapAtlasCentered(GLBitmapAtlasRef bmp, float x, float y, float width, float height, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawBitmapAtlasCentered(BitmapAtlasRef bmp, float x, float y, float width, float height, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
             x += (width  - bmp.ElementSize.Width)  / 2;
             y += (height - bmp.ElementSize.Height) / 2;
             DrawBitmapAtlas(bmp, x, y, opacity, scale, tint);
         }
 
-        public void DrawBitmapAtlasCentered(GLBitmapAtlasRef bmp, Rectangle rect, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
+        public void DrawBitmapAtlasCentered(BitmapAtlasRef bmp, Rectangle rect, float opacity = 1.0f, float scale = 1.0f, Color tint = new Color())
         {
             float x = rect.Left + (rect.Width  - bmp.ElementSize.Width)  / 2;
             float y = rect.Top  + (rect.Height - bmp.ElementSize.Height) / 2;
             DrawBitmapAtlas(bmp, x, y, opacity, scale, tint);
         }
 
-        public void DrawBitmap(GLBitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = new Color())
+        public void DrawBitmap(Bitmap bmp, float x, float y, float width, float height, float opacity, float u0 = 0, float v0 = 0, float u1 = 1, float v1 = 1, bool rotated = false, Color tint = new Color())
         {
             Debug.Assert(Utils.Frac(x) == 0.0f && Utils.Frac(y) == 0.0f);
             if (!bitmaps.TryGetValue(bmp, out var list))
@@ -2107,36 +2030,36 @@ namespace FamiStudio
                 {
                     var alignmentOffsetX = 0;
                     var alignmentOffsetY = font.OffsetY;
-                    var mono = inst.flags.HasFlag(RenderTextFlags.Monospace);
+                    var mono = inst.flags.HasFlag(TextFlags.Monospace);
 
-                    if (inst.flags.HasFlag(RenderTextFlags.Ellipsis))
+                    if (inst.flags.HasFlag(TextFlags.Ellipsis))
                     {
                         var ellipsisSizeX = font.MeasureString("...", mono) * 2; // Leave some padding.
                         if (font.TruncateString(ref inst.text, (int)(inst.layoutRect.Width - ellipsisSizeX)))
                             inst.text += "...";
                     }
 
-                    if (inst.flags != RenderTextFlags.TopLeft)
+                    if (inst.flags != TextFlags.TopLeft)
                     {
                         // MATTT : We no longer have minX in Measure string, is it a problem?
                         var minX = 0;
                         var maxX = font.MeasureString(inst.text, mono);
 
-                        var halign = inst.flags & RenderTextFlags.HorizontalAlignMask;
-                        var valign = inst.flags & RenderTextFlags.VerticalAlignMask;
+                        var halign = inst.flags & TextFlags.HorizontalAlignMask;
+                        var valign = inst.flags & TextFlags.VerticalAlignMask;
 
-                        if (halign == RenderTextFlags.Center)
+                        if (halign == TextFlags.Center)
                         {
                             alignmentOffsetX -= minX;
                             alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX) / 2;
                         }
-                        else if (halign == RenderTextFlags.Right)
+                        else if (halign == TextFlags.Right)
                         {
                             alignmentOffsetX -= minX;
                             alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
                         }
 
-                        if (valign != RenderTextFlags.Top)
+                        if (valign != TextFlags.Top)
                         {
                             // Use a tall character with no descender as reference.
                             var charA = font.GetCharInfo('A');
@@ -2145,11 +2068,11 @@ namespace FamiStudio
                             // adds extra padding and messes up calculations.
                             alignmentOffsetY = -charA.yoffset;
 
-                            if (valign == RenderTextFlags.Middle)
+                            if (valign == TextFlags.Middle)
                             {
                                 alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
                             }
-                            else if (valign == RenderTextFlags.Bottom)
+                            else if (valign == TextFlags.Bottom)
                             {
                                 alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
                             }
@@ -2208,7 +2131,7 @@ namespace FamiStudio
                         idxIdx += inst.text.Length * 6;
                         draw.count += inst.text.Length * 6;
                     }
-                    else if (inst.flags.HasFlag(RenderTextFlags.Clip)) // Slow path when there is clipping.
+                    else if (inst.flags.HasFlag(TextFlags.Clip)) // Slow path when there is clipping.
                     {
                         var clipMinX = (int)(inst.clipRect.X);
                         var clipMaxX = (int)(inst.clipRect.X + inst.clipRect.Width);
@@ -2406,7 +2329,7 @@ namespace FamiStudio
                         texArray[texIdx++] = inst.v1;
                     }
 
-                    var packedOpacity = GLColorUtils.PackColor(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)); 
+                    var packedOpacity = ColorUtils.PackColor(tint.R, tint.G, tint.B, (int)(inst.opacity * 255)); 
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;
                     colArray[colIdx++] = packedOpacity;

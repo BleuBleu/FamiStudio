@@ -3,18 +3,11 @@ using System.Drawing;
 using System.Globalization;
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class Slider2 : RenderControl
+    public class Slider : Control
     {
-        public delegate void ValueChangedDelegate(RenderControl sender, double val);
+        public delegate void ValueChangedDelegate(Control sender, double val);
         public event ValueChangedDelegate ValueChanged;
 
         private double min;
@@ -26,13 +19,13 @@ namespace FamiStudio
         private bool dragging;
         private bool hover;
         private int dragOffsetX;
-        private RenderBitmapAtlasRef bmpThumb;
+        private BitmapAtlasRef bmpThumb;
 
         private int thumbSize;
         private int labelMargin;
         private int labelSize;
 
-        public Slider2(double value, double minValue, double maxValue, double inc, bool showLabel, string fmt = "{0}")
+        public Slider(double value, double minValue, double maxValue, double inc, bool showLabel, string fmt = "{0}")
         {
             min = minValue;
             max = maxValue;
@@ -45,7 +38,7 @@ namespace FamiStudio
             labelMargin = label ? DpiScaling.ScaleForMainWindow(4) : 0;
         }
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             bmpThumb = g.GetBitmapAtlasRef("SliderThumb");
             thumbSize = bmpThumb.ElementSize.Width;
@@ -65,7 +58,7 @@ namespace FamiStudio
             return new Rectangle(x, y, thumbSize, thumbSize);
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             var thumbRect = GetThumbRectangle();
             if (thumbRect.Contains(e.X, e.Y))
@@ -84,7 +77,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             if (dragging)
             {
@@ -93,7 +86,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             if (dragging)
             {
@@ -113,7 +106,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref hover, false);
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
@@ -126,7 +119,7 @@ namespace FamiStudio
             if (label)
             {
                 var str = string.Format(CultureInfo.InvariantCulture, format, val);
-                c.DrawText(str, ThemeResources.FontMedium, width - labelSize, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleRight, labelSize, height);
+                c.DrawText(str, ThemeResources.FontMedium, width - labelSize, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleRight, labelSize, height);
             }
         }
     }

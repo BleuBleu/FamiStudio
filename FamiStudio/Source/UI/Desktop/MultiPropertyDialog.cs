@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
     public partial class MultiPropertyDialog : Dialog
     {
         class PropertyPageTab
         {
-            public Button2 button;
+            public Button button;
             public PropertyPage properties;
             public bool visible = true;
         }
@@ -25,8 +18,8 @@ namespace FamiStudio
         private int tabsSizeX;
         private int tabsSizeY = DpiScaling.ScaleForMainWindow(32);
 
-        private Button2 buttonYes;
-        private Button2 buttonNo;
+        private Button buttonYes;
+        private Button buttonNo;
         //private ToolTip toolTip; MATTT
 
         public MultiPropertyDialog(string title, int width, int height, int tabsWidth = 150)
@@ -46,11 +39,11 @@ namespace FamiStudio
 
         private void Init()
         {
-            buttonYes = new Button2("Yes", null);
+            buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
 
-            buttonNo = new Button2("No", null);
+            buttonNo = new Button("No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
             
@@ -110,16 +103,16 @@ namespace FamiStudio
 
         public int SelectedIndex => selectedIndex;
 
-        private Button2 AddButton(string text, string image)
+        private Button AddButton(string text, string image)
         {
-            var btn = new Button2(image, text);
+            var btn = new Button(image, text);
             btn.Resize(tabsSizeX, tabsSizeY);
             btn.Click += Btn_Click;
             AddControl(btn);
             return btn;
         }
 
-        private void Btn_Click(RenderControl sender)
+        private void Btn_Click(Control sender)
         {
             for (int i = 0; i < tabs.Count; i++)
             {
@@ -143,26 +136,26 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyDown(KeyEventArgs2 e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
 
-            if (e.Key == Keys2.Enter)
+            if (e.Key == Keys.Enter)
             {
                 Close(DialogResult2.OK);
             }
-            else if (e.Key == Keys2.Escape)
+            else if (e.Key == Keys.Escape)
             {
                 Close(DialogResult2.Cancel);
             }
         }
 
-        private void ButtonYes_Click(RenderControl sender)
+        private void ButtonYes_Click(Control sender)
         {
             Close(DialogResult2.OK);
         }
 
-        private void ButtonNo_Click(RenderControl sender)
+        private void ButtonNo_Click(Control sender)
         {
             Close(DialogResult2.Cancel);
         }

@@ -158,6 +158,12 @@ namespace FamiStudio
             return id[0];
         }
 
+        public override void DeleteTexture(int id)
+        {
+            var ids = new[] { id };
+            GLES11.GlDeleteTextures(1, ids, 0);
+        }
+
         protected Bitmap LoadBitmapFromResourceWithScaling(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -182,6 +188,9 @@ namespace FamiStudio
 
         public override GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
         {
+            // Need to sort since we do binary searches on the names.
+            Array.Sort(names);
+
             var bitmaps = new Bitmap[names.Length];
             var elementSizeX = 0;
             var elementSizeY = 0;
@@ -196,6 +205,8 @@ namespace FamiStudio
                 bitmaps[i] = bmp;
             }
 
+            Debug.Assert(elementSizeX < MaxAtlasResolution);
+
             var elementsPerRow = MaxAtlasResolution / elementSizeX;
             var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
             var atlasSizeX = elementsPerRow * elementSizeX;
@@ -205,9 +216,13 @@ namespace FamiStudio
 
             GLES11.GlBindTexture(GLES11.GlTexture2d, textureId);
 
+            Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
+
             for (int i = 0; i < names.Length; i++)
             {
                 var bmp = bitmaps[i];
+
+                Debug.WriteLine($"  - {names[i]} ({bmpData.GetLength(1)} x {bmpData.GetLength(0)}):");
 
                 var row = i / elementsPerRow;
                 var col = i % elementsPerRow;
@@ -222,17 +237,12 @@ namespace FamiStudio
                 bmp.Recycle();
             }
 
-            return new GLBitmapAtlas(textureId, atlasSizeX, atlasSizeY, elementRects, true);
+            return new GLBitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, true);
         }
 
         public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
         {
             return new GLBitmap(g.Texture, g.SizeX, g.SizeY, false, false);
-        }
-
-        public float GetBitmapWidth(GLBitmap bmp)
-        {
-            return bmp.Size.Width;
         }
 
         private T[] CopyResizeArray<T>(T[] array, int size)
@@ -579,20 +589,4 @@ namespace FamiStudio
             base.Dispose();
         }
     };
-
-    public struct Vector4
-    {
-        public Vector4(float x, float y, float z, float w)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-            W = w;
-        }
-
-        public float X;
-        public float Y;
-        public float Z;
-        public float W;
-    }
 }

@@ -2,21 +2,14 @@ using System;
 using System.Globalization;
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class Grid2 : RenderControl
+    public class Grid : Control
     {
-        public delegate void ValueChangedDelegate(RenderControl sender, int rowIndex, int colIndex, object value);
-        public delegate void ButtonPressedDelegate(RenderControl sender, int rowIndex, int colIndex);
-        public delegate void CellClickedDelegate(RenderControl sender, bool left, int rowIndex, int colIndex);
-        public delegate void CellDoubleClickedDelegate(RenderControl sender, int rowIndex, int colIndex);
+        public delegate void ValueChangedDelegate(Control sender, int rowIndex, int colIndex, object value);
+        public delegate void ButtonPressedDelegate(Control sender, int rowIndex, int colIndex);
+        public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
+        public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
@@ -47,11 +40,11 @@ namespace FamiStudio
         private int  sliderCol;
         private int  sliderRow;
 
-        private DropDown2 dropDownInactive;
-        private DropDown2 dropDownActive;
+        private DropDown dropDownInactive;
+        private DropDown dropDownActive;
 
-        private RenderBitmapAtlasRef bmpCheckOn;
-        private RenderBitmapAtlasRef bmpCheckOff;
+        private BitmapAtlasRef bmpCheckOn;
+        private BitmapAtlasRef bmpCheckOff;
 
         private int margin         = DpiScaling.ScaleForMainWindow(4);
         private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
@@ -60,7 +53,7 @@ namespace FamiStudio
 
         public int ItemCount => data.GetLength(0);
 
-        public Grid2(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
+        public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
         {
             columns = columnDescs;
             numRows = rows;
@@ -79,8 +72,8 @@ namespace FamiStudio
 
             if (hasAnyDropDowns)
             {
-                dropDownInactive = new DropDown2(new[] { "" }, 0, true);
-                dropDownActive = new DropDown2(new[] { "" }, 0);
+                dropDownInactive = new DropDown(new[] { "" }, 0, true);
+                dropDownActive = new DropDown(new[] { "" }, 0);
                 dropDownInactive.SetRowHeight(rowHeight);
                 dropDownActive.SetRowHeight(rowHeight);
                 dropDownInactive.Visible = false;
@@ -103,7 +96,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void DropDownActive_SelectedIndexChanged(RenderControl sender, int index)
+        private void DropDownActive_SelectedIndexChanged(Control sender, int index)
         {
             if (dropDownRow >= 0 && dropDownCol >= 0 && dropDownActive.Visible)
             {
@@ -113,7 +106,7 @@ namespace FamiStudio
             }
         }
 
-        private void DropDownActive_ListClosing(RenderControl sender)
+        private void DropDownActive_ListClosing(Control sender)
         {
             Debug.Assert(dropDownActive.Visible);
             dropDownActive.Visible = false;
@@ -176,7 +169,7 @@ namespace FamiStudio
             maxScroll = data != null ? Math.Max(0, data.GetLength(0) - numItemRows) : 0;
         }
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
             bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
@@ -225,7 +218,7 @@ namespace FamiStudio
             return true;
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             var valid = PixelToCell(e.X, e.Y, out var row, out var col);
 
@@ -325,7 +318,7 @@ namespace FamiStudio
             return buttonX >= 0 && buttonX < rowHeight;
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             if (draggingSlider)
             {
@@ -354,7 +347,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             if (draggingScrollbars || draggingSlider)
             {
@@ -372,7 +365,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref hoverButton, false);
         }
 
-        protected override void OnMouseWheel(MouseEventArgs2 e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
             var sign = e.ScrollY < 0 ? 1 : -1;
 
@@ -389,7 +382,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             if (e.Left && PixelToCell(e.X, e.Y, out var row, out var col))
             {
@@ -417,7 +410,7 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
@@ -444,7 +437,7 @@ namespace FamiStudio
             {
                 c.FillRectangle(0, 0, width, rowHeight, ThemeResources.DarkGreyLineBrush3);
                 for (var j = 0; j < data.GetLength(1); j++) 
-                    c.DrawText(columns[j].Name, ThemeResources.FontMedium, columnOffsets[j] + margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, rowHeight);
+                    c.DrawText(columns[j].Name, ThemeResources.FontMedium, columnOffsets[j] + margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, rowHeight);
                 baseY = rowHeight;
             }
 
@@ -486,10 +479,10 @@ namespace FamiStudio
                             case ColumnType.Button:
                             {
                                 var buttonBaseX = colWidth - rowHeight;
-                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, rowHeight);
+                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, rowHeight);
                                 c.PushTranslation(buttonBaseX, 0);
                                 c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? ThemeResources.MediumGreyFillBrush1 : ThemeResources.DarkGreyLineBrush3, ThemeResources.LightGreyFillBrush1);
-                                c.DrawText("...", ThemeResources.FontMediumBold, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, rowHeight, rowHeight);
+                                c.DrawText("...", ThemeResources.FontMediumBold, 0, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleCenter, rowHeight, rowHeight);
                                 c.PopTransform();
                                 break;
                             }
@@ -498,17 +491,17 @@ namespace FamiStudio
                                 if (colEnabled)
                                 {
                                     c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, ThemeResources.DarkGreyFillBrush3);
-                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
-                                    c.DrawText("N/A", ThemeResources.FontMedium, 0, 0, ThemeResources.MediumGreyFillBrush1, RenderTextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText("N/A", ThemeResources.FontMedium, 0, 0, ThemeResources.MediumGreyFillBrush1, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 break;
                             }
                             case ColumnType.Label:
                             {
-                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, RenderTextFlags.MiddleLeft, 0, rowHeight);
+                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, rowHeight);
                                 break;
                             }
                             case ColumnType.CheckBox:

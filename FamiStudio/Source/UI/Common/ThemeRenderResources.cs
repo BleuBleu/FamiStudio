@@ -3,45 +3,40 @@ using System.Drawing;
 using System.Diagnostics;
 using System.Collections.Generic;
 
-using RenderFont     = FamiStudio.GLFont;
-using RenderBrush    = FamiStudio.GLBrush;
-using RenderGraphics = FamiStudio.GLGraphics;
-using System.Reflection;
-
 namespace FamiStudio
 {
     public class ThemeRenderResources : IDisposable
     {
-        private RenderBrush whiteBrush;
-        private RenderBrush blackBrush;
-        private RenderBrush lightGreyFillBrush1;
-        private RenderBrush lightGreyFillBrush2;
-        private RenderBrush mediumGreyFillBrush1;
-        private RenderBrush darkGreyLineBrush1;
-        private RenderBrush darkGreyLineBrush2;
-        private RenderBrush darkGreyLineBrush3;
-        private RenderBrush darkGreyFillBrush1;
-        private RenderBrush darkGreyFillBrush2;
-        private RenderBrush darkGreyFillBrush3;
-        private RenderBrush lightRedFillBrush;
-        private RenderBrush darkRedFillBrush;
+        private Brush whiteBrush;
+        private Brush blackBrush;
+        private Brush lightGreyFillBrush1;
+        private Brush lightGreyFillBrush2;
+        private Brush mediumGreyFillBrush1;
+        private Brush darkGreyLineBrush1;
+        private Brush darkGreyLineBrush2;
+        private Brush darkGreyLineBrush3;
+        private Brush darkGreyFillBrush1;
+        private Brush darkGreyFillBrush2;
+        private Brush darkGreyFillBrush3;
+        private Brush lightRedFillBrush;
+        private Brush darkRedFillBrush;
 
-        public RenderBrush WhiteBrush           => whiteBrush;
-        public RenderBrush BlackBrush           => blackBrush;
-        public RenderBrush LightGreyFillBrush1  => lightGreyFillBrush1; 
-        public RenderBrush LightGreyFillBrush2  => lightGreyFillBrush2; 
-        public RenderBrush MediumGreyFillBrush1 => mediumGreyFillBrush1;
-        public RenderBrush DarkGreyLineBrush1   => darkGreyLineBrush1;  
-        public RenderBrush DarkGreyLineBrush2   => darkGreyLineBrush2;  
-        public RenderBrush DarkGreyLineBrush3   => darkGreyLineBrush3;  
-        public RenderBrush DarkGreyFillBrush1   => darkGreyFillBrush1;  
-        public RenderBrush DarkGreyFillBrush2   => darkGreyFillBrush2;  
-        public RenderBrush DarkGreyFillBrush3   => darkGreyFillBrush3;  
-        public RenderBrush LightRedFillBrush    => lightRedFillBrush;   
-        public RenderBrush DarkRedFillBrush     => darkRedFillBrush;
+        public Brush WhiteBrush           => whiteBrush;
+        public Brush BlackBrush           => blackBrush;
+        public Brush LightGreyFillBrush1  => lightGreyFillBrush1; 
+        public Brush LightGreyFillBrush2  => lightGreyFillBrush2; 
+        public Brush MediumGreyFillBrush1 => mediumGreyFillBrush1;
+        public Brush DarkGreyLineBrush1   => darkGreyLineBrush1;  
+        public Brush DarkGreyLineBrush2   => darkGreyLineBrush2;  
+        public Brush DarkGreyLineBrush3   => darkGreyLineBrush3;  
+        public Brush DarkGreyFillBrush1   => darkGreyFillBrush1;  
+        public Brush DarkGreyFillBrush2   => darkGreyFillBrush2;  
+        public Brush DarkGreyFillBrush3   => darkGreyFillBrush3;  
+        public Brush LightRedFillBrush    => lightRedFillBrush;   
+        public Brush DarkRedFillBrush     => darkRedFillBrush;
 
-        private Dictionary<Color, RenderBrush> customColorBrushes = new Dictionary<Color, RenderBrush>();
-        public  Dictionary<Color, RenderBrush> CustomColorBrushes => customColorBrushes;
+        private Dictionary<Color, Brush> customColorBrushes = new Dictionary<Color, Brush>();
+        public  Dictionary<Color, Brush> CustomColorBrushes => customColorBrushes;
 
         protected enum RenderFontStyle
         {
@@ -80,20 +75,20 @@ namespace FamiStudio
             new FontDefinition() { Name = "QuickSand", Size = 28 }  // Huge
         };
 
-        protected RenderFont[] fonts = new RenderFont[(int)RenderFontStyle.Max];
+        protected Font[] fonts = new Font[(int)RenderFontStyle.Max];
 
-        public RenderFont FontVerySmall     => fonts[0];
-        public RenderFont FontVerySmallBold => fonts[1];
-        public RenderFont FontSmall         => fonts[2];
-        public RenderFont FontSmallBold     => fonts[3];
-        public RenderFont FontMedium        => fonts[4];
-        public RenderFont FontMediumBold    => fonts[5];
-        public RenderFont FontLarge         => fonts[6];
-        public RenderFont FontVeryLarge     => fonts[7];
-        public RenderFont FontVeryLargeBold => fonts[8];
-        public RenderFont FontHuge          => fonts[9];
+        public Font FontVerySmall     => fonts[0];
+        public Font FontVerySmallBold => fonts[1];
+        public Font FontSmall         => fonts[2];
+        public Font FontSmallBold     => fonts[3];
+        public Font FontMedium        => fonts[4];
+        public Font FontMediumBold    => fonts[5];
+        public Font FontLarge         => fonts[6];
+        public Font FontVeryLarge     => fonts[7];
+        public Font FontVeryLargeBold => fonts[8];
+        public Font FontHuge          => fonts[9];
 
-        public ThemeRenderResources(RenderGraphics g)
+        public ThemeRenderResources(Graphics g)
         {
             whiteBrush           = g.CreateSolidBrush(Theme.WhiteColor);
             blackBrush           = g.CreateSolidBrush(Theme.BlackColor);
@@ -150,7 +145,7 @@ namespace FamiStudio
             customColorBrushes.Clear();
         }
 
-        public RenderFont GetBestMatchingFontByWidth(string text, int desiredWidth, bool bold)
+        public Font GetBestMatchingFontByWidth(string text, int desiredWidth, bool bold)
         {
             // Get largest font that will fit.
             for (int i = 0; i < FontDefinitions.Length; i++)
@@ -178,7 +173,7 @@ namespace FamiStudio
             return fonts[0];
         }
 
-        public RenderFont GetBestMatchingFontByHeight(RenderGraphics g, int desiredHeight, bool bold)
+        public Font GetBestMatchingFontByHeight(Graphics g, int desiredHeight, bool bold)
         {
             var lastIdx = 0;
             var foundIdx = 0;

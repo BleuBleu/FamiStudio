@@ -2,30 +2,23 @@ using System;
 using System.Drawing;
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class Button2 : RenderControl
+    public class Button : Control
     {
-        public delegate void ClickDelegate(RenderControl sender);
+        public delegate void ClickDelegate(Control sender);
         public event ClickDelegate Click;
 
         private string text;
         private string imageName;
-        private RenderBitmapAtlasRef bmp;
+        private BitmapAtlasRef bmp;
         private int margin = DpiScaling.ScaleForMainWindow(4);
         private bool bold;
         private bool border;
         private bool hover;
         private bool press;
 
-        public Button2(string img, string txt)
+        public Button(string img, string txt)
         {
             imageName = img;
             text  = txt;
@@ -55,7 +48,7 @@ namespace FamiStudio
             set { border = value; MarkDirty(); }
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             if (enabled && e.Left)
             {
@@ -65,7 +58,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             if (enabled && e.Left)
             {
@@ -75,7 +68,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             SetAndMarkDirty(ref hover, true);
         }
@@ -86,7 +79,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref press, false);
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             if (bmp == null && !string.IsNullOrEmpty(imageName))
             {
@@ -122,12 +115,12 @@ namespace FamiStudio
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, 0, 0, brush, RenderTextFlags.MiddleCenter, width, height);
+                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, 0, 0, brush, TextFlags.MiddleCenter, width, height);
             }
             else if (hasText && bmp != null)
             {
                 c.DrawBitmapAtlas(bmp, margin, (height - bmpSize.Height) / 2, 1, 1, brush.Color0);
-                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, bmpSize.Width + margin * 2, 0, brush, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, width - bmpSize.Width - margin * 2, height);
+                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, bmpSize.Width + margin * 2, 0, brush, TextFlags.MiddleLeft | TextFlags.Clip, width - bmpSize.Width - margin * 2, height);
             }
 
             c.PopTransform();

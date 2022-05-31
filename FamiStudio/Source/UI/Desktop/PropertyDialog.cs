@@ -1,13 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 // MATTT Move to \Desktop
 namespace FamiStudio
 {
@@ -22,9 +15,9 @@ namespace FamiStudio
         private bool advancedPropertiesVisible = false;
         private int margin = DpiScaling.ScaleForMainWindow(8);
 
-        private Button2 buttonNo;
-        private Button2 buttonYes;
-        private Button2 buttonAdvanced;
+        private Button buttonNo;
+        private Button buttonYes;
+        private Button buttonAdvanced;
         private PropertyPage propertyPage;
 
         public PropertyDialog(string title, int width, bool canAccept = true, bool canCancel = true)
@@ -53,17 +46,17 @@ namespace FamiStudio
             propertyPage = new PropertyPage(this, margin, margin, Width - margin * 2);
             propertyPage.PropertyWantsClose += PropertyPage_PropertyWantsClose;
 
-            buttonYes = new Button2("Yes", null);
+            buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
             buttonYes.ToolTip = "Accept";
 
-            buttonNo = new Button2("No", null);
+            buttonNo = new Button("No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
             buttonNo.ToolTip = "Cancel";
 
-            buttonAdvanced = new Button2("PlusSmall", null);
+            buttonAdvanced = new Button("PlusSmall", null);
             buttonAdvanced.Click += ButtonAdvanced_Click;
             buttonAdvanced.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
             buttonAdvanced.Visible = false;
@@ -79,7 +72,7 @@ namespace FamiStudio
             Close(DialogResult2.OK);
         }
 
-        private void ButtonYes_Click(RenderControl sender)
+        private void ButtonYes_Click(Control sender)
         {
             if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
             {
@@ -87,12 +80,12 @@ namespace FamiStudio
             }
         }
 
-        private void ButtonNo_Click(RenderControl sender)
+        private void ButtonNo_Click(Control sender)
         {
             Close(DialogResult2.Cancel);
         }
 
-        private void ButtonAdvanced_Click(RenderControl sender)
+        private void ButtonAdvanced_Click(Control sender)
         {
             Debug.Assert(propertyPage.HasAdvancedProperties);
 
@@ -136,17 +129,17 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnKeyDown(KeyEventArgs2 e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
 
             if (!e.Handled)
             {
-                if (e.Key == Keys2.Enter)
+                if (e.Key == Keys.Enter)
                 {
                     Close(DialogResult2.OK);
                 }
-                else if (e.Key == Keys2.Escape)
+                else if (e.Key == Keys.Escape)
                 {
                     Close(DialogResult2.Cancel);
                 }

@@ -1,29 +1,22 @@
 using System.Diagnostics;
 
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderBrush = FamiStudio.GLBrush;
-using RenderGeometry = FamiStudio.GLGeometry;
-using RenderControl = FamiStudio.GLControl;
-using RenderGraphics = FamiStudio.GLGraphics;
-using RenderCommandList = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class LinkLabel2 : RenderControl
+    public class LinkLabel : Control
     {
         private string text;
         private string url;
         private bool hover;
         private int lineOffset = DpiScaling.ScaleForMainWindow(4);
 
-        public LinkLabel2(string txt, string link)
+        public LinkLabel(string txt, string link)
         {
             text = txt;
             url = link;
             height = DpiScaling.ScaleForMainWindow(24);
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             // MATTT : Need hand cursor here!
             var insideText = e.X >= 0 && e.X < MeasureString();
@@ -42,13 +35,13 @@ namespace FamiStudio
             return ThemeResources.FontMedium.MeasureString(text, false);
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Left)
-                PlatformUtils.OpenUrl(url);
+                Platform.OpenUrl(url);
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 
@@ -56,7 +49,7 @@ namespace FamiStudio
             var sx = MeasureString();
             var brush = hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1;
 
-            c.DrawText(text, ThemeResources.FontMedium, 0, 0, brush, RenderTextFlags.MiddleLeft, 0, height);
+            c.DrawText(text, ThemeResources.FontMedium, 0, 0, brush, TextFlags.MiddleLeft, 0, height);
             c.DrawLine(0, height  - lineOffset, sx, height - lineOffset, brush);
         }
     }

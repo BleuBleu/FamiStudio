@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-using RenderGraphics = FamiStudio.GLOffscreenGraphics;
+using Graphics = FamiStudio.OffscreenGraphics;
 
 namespace FamiStudio
 {
@@ -265,7 +265,7 @@ namespace FamiStudio
 #else
             fixed (byte* vp = &image[0])
             {
-                var b = new Bitmap(sizeX, sizeY, sizeX * 4, System.Drawing.Imaging.PixelFormat.Format32bppArgb, new IntPtr(vp));
+                var b = new System.Drawing.Bitmap(sizeX, sizeY, sizeX * 4, System.Drawing.Imaging.PixelFormat.Format32bppArgb, new IntPtr(vp));
                 b.Save($"d:\\dump\\pr\\frame_{frameIndex:D4}.png");
             }
 #endif
@@ -284,7 +284,7 @@ namespace FamiStudio
 
             foreach (var state in channelStates)
             {
-                state.graphics = RenderGraphics.Create(channelResX, channelResY, false);
+                state.graphics = OffscreenGraphics.Create(channelResX, channelResY, false);
                 state.bitmap = videoGraphics.CreateBitmapFromOffscreenGraphics(state.graphics);
 
                 // Measure the longest text.

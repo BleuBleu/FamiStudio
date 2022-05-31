@@ -44,7 +44,7 @@ namespace FamiStudio
         public static bool TrackPadControls = false;
         public static bool ShowTutorial = true;
         public static bool ClearUndoRedoOnSave = true;
-        public static bool OpenLastProjectOnStart = PlatformUtils.IsDesktop;
+        public static bool OpenLastProjectOnStart = Platform.IsDesktop;
         public static bool AutoSaveCopy = true;
         public static string LastProjectFile;
 
@@ -62,7 +62,7 @@ namespace FamiStudio
         public static bool ShowOscilloscope = true;
         public static bool ForceCompactSequencer = false;
         public static bool ShowImplicitStopNotes = true;
-        public static bool ShowRegisterViewer = PlatformUtils.IsDesktop;
+        public static bool ShowRegisterViewer = Platform.IsDesktop;
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
 #if false // MATTT FAMISTUDIO_WINDOWS
@@ -264,8 +264,8 @@ namespace FamiStudio
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
             TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
             TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
-            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", PlatformUtils.IsDesktop);
-            ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", PlatformUtils.IsDesktop);
+            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", Platform.IsDesktop);
+            ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", Platform.IsDesktop);
 
             // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
@@ -362,7 +362,7 @@ namespace FamiStudio
             NumBufferedAudioFrames = Utils.Clamp(NumBufferedAudioFrames, 2, 16);
 
             // Linux or Mac is more likely to have standard path for ffmpeg.
-            if (PlatformUtils.IsLinux || PlatformUtils.IsMacOS)
+            if (Platform.IsLinux || Platform.IsMacOS)
             {
                 if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
                 {
@@ -386,7 +386,7 @@ namespace FamiStudio
             // At 3.2.0, we added a new Discord screen to the tutorial.
             // At 3.2.3, we added a new snapping tutorial screen.
             // At 4.0.0, we changed the controls and need to re-show tutorials.
-            if (Version < 4 || (Version < 7 && PlatformUtils.IsDesktop))
+            if (Version < 4 || (Version < 7 && Platform.IsDesktop))
                 ShowTutorial = true;
 
             // Re-force time format to the MM:SS:mmm
@@ -548,7 +548,7 @@ namespace FamiStudio
             }
             else
             {
-                return PlatformUtils.SettingsDirectory;
+                return Platform.SettingsDirectory;
             }
         }
 

@@ -1,31 +1,24 @@
 using System.Drawing;
 using System.Globalization;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class NumericUpDown2 : RenderControl
+    public class NumericUpDown : Control
     {
-        public delegate void ValueChangedDelegate(RenderControl sender, int val);
+        public delegate void ValueChangedDelegate(Control sender, int val);
         public event ValueChangedDelegate ValueChanged;
 
         private int val;
         private int min;
         private int max = 10;
-        private RenderBitmapAtlasRef[] bmp;
+        private BitmapAtlasRef[] bmp;
 
         private float captureDuration;
         private int   captureButton = -1;
 
         private int hoverButton = -1;
 
-        public NumericUpDown2(int value, int minVal, int maxVal)
+        public NumericUpDown(int value, int minVal, int maxVal)
         {
             val = value;
             min = minVal;
@@ -51,7 +44,7 @@ namespace FamiStudio
             set { max = value; val = Utils.Clamp(value, min, max); MarkDirty(); }
         }
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             bmp = new[]
             {
@@ -101,7 +94,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             var idx = IsPointInButton(e.X, e.Y);
             if (idx >= 0)
@@ -113,7 +106,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             if (captureButton >= 0)
             {
@@ -122,7 +115,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
         }
@@ -132,7 +125,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref hoverButton, -1);
         }
 
-        protected override void OnMouseWheel(MouseEventArgs2 e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
             if (enabled && captureButton < 0 && e.ScrollY != 0 && e.X > GetButtonRect(0).Right && e.X < GetButtonRect(1).Left)
             {
@@ -140,7 +133,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             var c = parentDialog.CommandList;
             var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
@@ -164,7 +157,7 @@ namespace FamiStudio
                 c.PopTransform();
             }
 
-            c.DrawText(val.ToString(CultureInfo.InvariantCulture), ThemeResources.FontMedium, rects[0].Right, 0, brush, RenderTextFlags.MiddleCenter, rects[1].Left - rects[0].Right, height);
+            c.DrawText(val.ToString(CultureInfo.InvariantCulture), ThemeResources.FontMedium, rects[0].Right, 0, brush, TextFlags.MiddleCenter, rects[1].Left - rects[0].Right, height);
         }
     }
 }

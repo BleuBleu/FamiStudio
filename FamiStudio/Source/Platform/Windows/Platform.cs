@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using System.Drawing.Text;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -15,13 +14,14 @@ using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
-    public static class PlatformUtils
+    public static class Platform
     {
-        public static string ApplicationVersion => Application.ProductVersion;
+        public static string ApplicationVersion => version;
         public static string UserProjectsDirectory => null;
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
         public static float DoubleClickTime => doubleClickTime;
 
+        private static string version;
         private static Thread mainThread;
         private static float doubleClickTime;
 
@@ -30,17 +30,16 @@ namespace FamiStudio
             if (!DetectRequiredDependencies())
                 return false;
 
-            //EnableVisualStyles();
-
             clipboardFormat = RegisterClipboardFormat("FamiStudio");
             mainThread = Thread.CurrentThread;
             doubleClickTime = GetDoubleClickTime() / 1000.0f;
 
-        #if !DEBUG
+#if !DEBUG
             if (Settings.IsPortableMode)
-                PlatformUtils.AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
-        #endif
+                Platform.AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
+#endif
 
+            version = Assembly.GetEntryAssembly().GetName().Version.ToString();
             return true;
         }
 
@@ -56,7 +55,8 @@ namespace FamiStudio
 
         public static Size GetScreenResolution()
         {
-            return Screen.PrimaryScreen.Bounds.Size;
+            Debug.Assert(false); // Unused.
+            return Size.Empty;
         }
 
         public static int GetOutputAudioSampleSampleRate()
@@ -66,7 +66,7 @@ namespace FamiStudio
 
         public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindowUnused = null)
         {
-            var ofd = new OpenFileDialog()
+            var ofd = new System.Windows.Forms.OpenFileDialog()
             {
                 Filter = extensions,
                 Title = title,
@@ -99,7 +99,7 @@ namespace FamiStudio
 
         public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
-            var sfd = new SaveFileDialog()
+            var sfd = new System.Windows.Forms.SaveFileDialog()
             {
                 Filter = extensions,
                 Title = title,
@@ -123,7 +123,7 @@ namespace FamiStudio
 
         public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
-            var folderBrowserDialog = new FolderBrowserDialog();
+            var folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             folderBrowserDialog.Description = title;
 
             if (!string.IsNullOrEmpty(defaultPath) && Directory.Exists(defaultPath))
@@ -138,13 +138,13 @@ namespace FamiStudio
             return null;
         }
 
-        public static DialogResult2 MessageBox(string text, string title, MessageBoxButtons buttons)
+        public static DialogResult2 MessageBox(string text, string title, MessageBoxButtons2 buttons)
         {
-            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
-            return (DialogResult2)System.Windows.Forms.MessageBox.Show(text, title, buttons, icons);
+            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon2.Error : MessageBoxIcon2.None;
+            return (DialogResult2)System.Windows.Forms.MessageBox.Show(text, title, (System.Windows.Forms.MessageBoxButtons)buttons, (System.Windows.Forms.MessageBoxIcon)icons);
         }
 
-        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult2> callback = null)
+        public static void MessageBoxAsync(string text, string title, MessageBoxButtons2 buttons, Action<DialogResult2> callback = null)
         {
             var res = MessageBox(text, title, buttons);
             callback?.Invoke(res);
@@ -173,7 +173,7 @@ namespace FamiStudio
         {
             if (!IsVS2019RuntimeInstalled())
             {
-                if (MessageBox("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult2.Yes)
+                if (MessageBox("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons2.YesNo) == DialogResult2.Yes)
                 {
                     OpenUrl("https://famistudio.org/doc/install/#windows");
                 }
@@ -183,7 +183,7 @@ namespace FamiStudio
 
             if (!XAudio2Stream.TryDetectXAudio2())
             {
-                if (MessageBox("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult2.Yes)
+                if (MessageBox("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons2.YesNo) == DialogResult2.Yes)
                 {
                     OpenUrl("https://famistudio.org/doc/install/#windows");
                 }
@@ -193,9 +193,11 @@ namespace FamiStudio
 
             return true;
         }
+
         [DllImport("user32.dll")]
         static extern uint GetDoubleClickTime();
 
+        // MATTT : Remove all this.
         // From : https://stackoverflow.com/questions/318777/c-sharp-how-to-translate-virtual-keycode-to-char
         [DllImport("user32.dll")]
         static extern bool GetKeyboardState(byte[] lpKeyState);
@@ -261,11 +263,13 @@ namespace FamiStudio
             return str;
         }
 
-        public static Bitmap LoadBitmapFromResource(string name)
+        // MATTT : Needed?
+        public static System.Drawing.Bitmap LoadBitmapFromResource(string name)
         {
             return System.Drawing.Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(name)) as System.Drawing.Bitmap;
         }
 
+        // MATTT : Remove.
         public static float GetDesktopScaling()
         {
             var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);

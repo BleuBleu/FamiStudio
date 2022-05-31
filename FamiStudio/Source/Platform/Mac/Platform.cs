@@ -6,7 +6,6 @@ using System.Linq;
 using System.Media;
 using System.Reflection;
 using System.Threading;
-using System.Windows.Forms;
 using Gtk;
 using OpenTK;
 
@@ -16,15 +15,17 @@ namespace FamiStudio
 {
     public static class PlatformUtils
     {
-        public static string ApplicationVersion => System.Windows.Forms.Application.ProductVersion;
+        public static string ApplicationVersion => version;
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
         public static string UserProjectsDirectory => null;
 
         private static Thread mainThread;
+        private static string version;
 
         public static void Initialize()
         {
             mainThread = Thread.CurrentThread;
+            version = Assembly.GetEntryAssembly().GetName().Version.ToString();
 
             // When debugging or when in a app package, our paths are a bit different.
             string[] pathsToSearch =

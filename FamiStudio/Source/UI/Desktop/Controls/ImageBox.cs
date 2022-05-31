@@ -1,28 +1,20 @@
 using System.Diagnostics;
 
-using RenderBitmapAtlasRef = FamiStudio.GLBitmapAtlasRef;
-using RenderBitmap         = FamiStudio.GLBitmap;
-using RenderBrush          = FamiStudio.GLBrush;
-using RenderGeometry       = FamiStudio.GLGeometry;
-using RenderControl        = FamiStudio.GLControl;
-using RenderGraphics       = FamiStudio.GLGraphics;
-using RenderCommandList    = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
-    public class ImageBox2 : RenderControl
+    public class ImageBox : Control
     {
         private string atlasImageName;
-        private RenderBitmap bmp;
-        private RenderBitmapAtlasRef bmpAtlas;
+        private Bitmap bmp;
+        private BitmapAtlasRef bmpAtlas;
 
-        public ImageBox2(string image)
+        public ImageBox(string image)
         {
             height = DpiScaling.ScaleForMainWindow(24);
             atlasImageName = image;
         }
 
-        public ImageBox2(RenderBitmap b)
+        public ImageBox(Bitmap b)
         {
             height = DpiScaling.ScaleForMainWindow(24);
             bmp = b;
@@ -34,13 +26,13 @@ namespace FamiStudio
             set { atlasImageName = value; bmpAtlas = null; MarkDirty(); }
         }
 
-        public RenderBitmap Image
+        public Bitmap Image
         {
             get { return bmp; }
             set { bmp = value; MarkDirty(); }
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
 

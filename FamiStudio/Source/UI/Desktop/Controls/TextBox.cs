@@ -2,19 +2,12 @@
 using System.Drawing;
 using System.Diagnostics;
 
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderBrush = FamiStudio.GLBrush;
-using RenderGeometry = FamiStudio.GLGeometry;
-using RenderControl = FamiStudio.GLControl;
-using RenderGraphics = FamiStudio.GLGraphics;
-using RenderCommandList = FamiStudio.GLCommandList;
-
 namespace FamiStudio
 {
     // TODO:
-    //  - Copy/paste
+    //  - Copy/paste (use GLFW clipboard for strings!)
 
-    public class TextBox2 : RenderControl
+    public class TextBox : Control
     {
         private string text;
         private int scrollX;
@@ -31,9 +24,9 @@ namespace FamiStudio
         private Color foreColor = Theme.LightGreyFillColor1;
         private Color backColor = Theme.DarkGreyLineColor1;
 
-        private RenderBrush foreBrush;
-        private RenderBrush backBrush;
-        private RenderBrush selBrush;
+        private Brush foreBrush;
+        private Brush backBrush;
+        private Brush selBrush;
         
         private int topMargin    = DpiScaling.ScaleForMainWindow(3);
         private int sideMargin   = DpiScaling.ScaleForMainWindow(4);
@@ -42,7 +35,7 @@ namespace FamiStudio
         public Color ForeColor { get => foreColor; set { foreColor = value; foreBrush = null; MarkDirty(); } }
         public Color BackColor { get => backColor; set { backColor = value; backBrush = null;  selBrush = null; MarkDirty(); } }
 
-        public TextBox2(string txt)
+        public TextBox(string txt)
         {
             height = DpiScaling.ScaleForMainWindow(24);
             text = txt;
@@ -70,7 +63,7 @@ namespace FamiStudio
             scrollX = Utils.Clamp(scrollX, 0, maxScrollX);
         }
 
-        protected override void OnMouseMove(MouseEventArgs2 e)
+        protected override void OnMouseMove(MouseEventArgs e)
         {
             Cursor.Current = enabled ? Cursors.Default : Cursors.IBeam;
 
@@ -87,7 +80,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDown(MouseEventArgs2 e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Left)
             {
@@ -104,7 +97,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseUp(MouseEventArgs2 e)
+        protected override void OnMouseUp(MouseEventArgs e)
         {
             if (e.Left)
             {
@@ -113,7 +106,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs2 e)
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             var c0 = PixelToChar(e.X);
             var c1 = c0;
@@ -153,12 +146,12 @@ namespace FamiStudio
 
         // MATTT : See if GLFW (or GTK) has key repeat, if it doesnt, well need to 
         // handle it ourselves.
-        protected override void OnKeyDown(KeyEventArgs2 e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             // MATTT : Copy/paste.
-            if (e.Key == Keys2.Left || e.Key == Keys2.Right)
+            if (e.Key == Keys.Left || e.Key == Keys.Right)
             {
-                var sign = e.Key == Keys2.Left ? -1 : 1;
+                var sign = e.Key == Keys.Left ? -1 : 1;
                 var prevCaretIndex = caretIndex;
 
                 if (e.Control || e.Alt)
@@ -200,11 +193,11 @@ namespace FamiStudio
                 EnsureCaretVisible();
                 MarkDirty();
             }
-            else if (e.Key == Keys2.A && e.Control)
+            else if (e.Key == Keys.A && e.Control)
             {
                 SelectAll();
             }
-            else if (e.Key == Keys2.Backspace)
+            else if (e.Key == Keys.Backspace)
             {
                 if (!DeleteSelection() && caretIndex > 0)
                 {
@@ -214,7 +207,7 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
-            else if (e.Key == Keys2.Delete)
+            else if (e.Key == Keys.Delete)
             {
                 if (!DeleteSelection() && caretIndex < text.Length)
                 {
@@ -234,14 +227,14 @@ namespace FamiStudio
                 ClearSelection();
                 MarkDirty();
             }
-            else if (e.Key == Keys2.Escape)
+            else if (e.Key == Keys.Escape)
             {
                 ClearDialogFocus();
                 e.Handled = true;
             }
         }
 
-        protected override void OnKeyUp(KeyEventArgs2 e)
+        protected override void OnKeyUp(KeyEventArgs e)
         {
         }
 
@@ -336,7 +329,7 @@ namespace FamiStudio
             UpdateScrollParams();
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             var c = parentDialog.CommandList;
 
@@ -355,7 +348,7 @@ namespace FamiStudio
                     c.FillRectangle(sx0, topMargin, sx1, height - topMargin, selBrush);
             }
 
-            c.DrawText(text, ThemeResources.FontMedium, sideMargin - scrollX, 0, foreBrush, RenderTextFlags.MiddleLeft | RenderTextFlags.Clip, 0, height, sideMargin, width - sideMargin);
+            c.DrawText(text, ThemeResources.FontMedium, sideMargin - scrollX, 0, foreBrush, TextFlags.MiddleLeft | TextFlags.Clip, 0, height, sideMargin, width - sideMargin);
 
             if (caretBlink && HasDialogFocus)
             {
