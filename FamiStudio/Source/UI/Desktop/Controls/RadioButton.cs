@@ -26,7 +26,7 @@ namespace FamiStudio
         {
             bmpRadioOff = g.GetBitmapAtlasRef("RadioButtonOff");
             bmpRadioOn  = g.GetBitmapAtlasRef("RadioButtonOn");
-            labelOffsetX = bmpRadioOff.ElementSize.Width + ScaleForMainWindow(8);
+            labelOffsetX = bmpRadioOff.ElementSize.Width + ScaleForWindow(8);
         }
 
         private Rectangle GetRadioRectangle()

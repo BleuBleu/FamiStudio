@@ -112,7 +112,7 @@ namespace FamiStudio
             fixed (char* p = &str[0])
             {
                 ofn.structSize = Marshal.SizeOf(ofn);
-                ofn.dlgOwner = FamiStudioForm.Instance.Handle;
+                ofn.dlgOwner = FamiStudioWindow.Instance.Handle;
                 ofn.filter = extensions.Replace('|', '\0');
                 ofn.file = new IntPtr(p);
                 ofn.maxFile = str.Length;
@@ -172,7 +172,7 @@ namespace FamiStudio
             fixed (char* p = &str[0])
             {
                 ofn.structSize = Marshal.SizeOf(ofn);
-                ofn.dlgOwner = FamiStudioForm.Instance.Handle;
+                ofn.dlgOwner = FamiStudioWindow.Instance.Handle;
                 ofn.filter = extensions.Replace('|', '\0');
                 ofn.file = new IntPtr(p);
                 ofn.maxFile = str.Length;
@@ -449,6 +449,11 @@ namespace FamiStudio
         public static void Beep()
         {
             SystemSounds.Beep.Play();
+        }
+
+        public static double TimeSeconds()
+        {
+            return glfwGetTime();
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]

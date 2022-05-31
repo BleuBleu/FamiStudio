@@ -177,22 +177,22 @@ namespace FamiStudio
             var scrollBarSize  = Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0);
             var patternZoom    = Song != null ? 128.0f / (float)Utils.NextPowerOfTwo(Song.PatternLength) : 1.0f;
 
-            trackNameSizeX     = ScaleForMainWindow(DefaultTrackNameSizeX);
-            headerSizeY        = ScaleForMainWindow(DefaultHeaderSizeY);
-            trackSizeY         = ScaleForMainWindow(ComputeDesiredChannelSizeY());
-            scrollMargin       = ScaleForMainWindow(DefaultScrollMargin);
-            barTextPosY        = ScaleForMainWindow(DefaultBarTextPosY);
-            trackIconPosX      = ScaleForMainWindow(DefaultTrackIconPosX);
-            trackIconPosY      = ScaleForMainWindow(DefaultTrackIconPosY);
-            trackNamePosX      = ScaleForMainWindow(DefaultTrackNamePosX);
-            ghostNoteOffsetX   = ScaleForMainWindow(DefaultGhostNoteOffsetX);
-            ghostNoteOffsetY   = ScaleForMainWindow(DefaultGhostNoteOffsetY);
-            patternNamePosX    = ScaleForMainWindow(DefaultPatternNamePosX);
-            headerIconPosX     = ScaleForMainWindow(DefaultHeaderIconPosX);
-            headerIconPosY     = ScaleForMainWindow(DefaultHeaderIconPosY);
-            scrollBarThickness = ScaleForMainWindow(scrollBarSize);
-            minScrollBarLength = ScaleForMainWindow(DefaultMinScrollBarLength);
-            noteSizeX          = ScaleForMainWindowFloat(zoom * patternZoom);
+            trackNameSizeX     = ScaleForWindow(DefaultTrackNameSizeX);
+            headerSizeY        = ScaleForWindow(DefaultHeaderSizeY);
+            trackSizeY         = ScaleForWindow(ComputeDesiredChannelSizeY());
+            scrollMargin       = ScaleForWindow(DefaultScrollMargin);
+            barTextPosY        = ScaleForWindow(DefaultBarTextPosY);
+            trackIconPosX      = ScaleForWindow(DefaultTrackIconPosX);
+            trackIconPosY      = ScaleForWindow(DefaultTrackIconPosY);
+            trackNamePosX      = ScaleForWindow(DefaultTrackNamePosX);
+            ghostNoteOffsetX   = ScaleForWindow(DefaultGhostNoteOffsetX);
+            ghostNoteOffsetY   = ScaleForWindow(DefaultGhostNoteOffsetY);
+            patternNamePosX    = ScaleForWindow(DefaultPatternNamePosX);
+            headerIconPosX     = ScaleForWindow(DefaultHeaderIconPosX);
+            headerIconPosY     = ScaleForWindow(DefaultHeaderIconPosY);
+            scrollBarThickness = ScaleForWindow(scrollBarSize);
+            minScrollBarLength = ScaleForWindow(DefaultMinScrollBarLength);
+            noteSizeX          = ScaleForWindowFloat(zoom * patternZoom);
             virtualSizeY       = Song != null ? trackSizeY * Song.Channels.Length : 0;
 
             // Shave a couple pixels when the size is getting too small.
@@ -974,8 +974,8 @@ namespace FamiStudio
             return new Rectangle(
                 trackIconPosX,
                 trackIconPosY + headerSizeY + idx * trackSizeY, 
-                ScaleForMainWindow(16),
-                ScaleForMainWindow(16));
+                ScaleForWindow(16),
+                ScaleForWindow(16));
         }
 
         Rectangle GetTrackGhostRect(int idx)
@@ -983,8 +983,8 @@ namespace FamiStudio
             return new Rectangle(
                 trackNameSizeX - ghostNoteOffsetX, 
                 headerSizeY + (idx + 1) * trackSizeY - ghostNoteOffsetY - 1,
-                ScaleForMainWindow(12),
-                ScaleForMainWindow(12));
+                ScaleForWindow(12),
+                ScaleForWindow(12));
         }
 
         bool IsPointInHeader(int x, int y)
@@ -1152,7 +1152,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSetLoopPoint(MouseEventArgs e)
         {
-            bool setLoop = FamiStudioForm.IsKeyDown(Keys.L);
+            bool setLoop = FamiStudioWindow.IsKeyDown(Keys.L);
 
             if (setLoop && e.X > trackNameSizeX && e.Left)
             {
@@ -1907,7 +1907,7 @@ namespace FamiStudio
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();
 
-            dialog.ShowDialogAsync(ParentForm, (r) =>
+            dialog.ShowDialogAsync(ParentWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {
@@ -2590,7 +2590,7 @@ namespace FamiStudio
             dlg.Properties.PropertiesUserData = tempoProperties;
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {
@@ -2624,7 +2624,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(pattern.Color);
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {

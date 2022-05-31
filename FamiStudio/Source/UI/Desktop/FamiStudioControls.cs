@@ -38,7 +38,7 @@ namespace FamiStudio
 
         public Control[] Controls => controls;
 
-        public FamiStudioControls(FamiStudioForm parent)
+        public FamiStudioControls(FamiStudioWindow parent)
         {
             toolbar = new Toolbar();
             sequencer = new Sequencer();
@@ -54,9 +54,9 @@ namespace FamiStudio
             controls[3] = projectExplorer;
 
             foreach (var ctrl in controls)
-                ctrl.ParentForm = parent;
+                ctrl.ParentWindow = parent;
 
-            contextMenu.ParentForm = parent;
+            contextMenu.ParentWindow = parent;
         }
 
         public void Resize(int w, int h)
@@ -74,7 +74,7 @@ namespace FamiStudio
             pianoRoll.Move(0, toolBarHeight + sequencerHeight, width - projectExplorerWidth, height - toolBarHeight - sequencerHeight);
 
             foreach (var dlg in dialogs)
-                dlg.CenterToForm();
+                dlg.CenterToWindow();
         }
 
         public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
@@ -241,7 +241,7 @@ namespace FamiStudio
             dialog.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
             dialog.SetThemeRenderResource(res);
             dialog.RenderInitialized(gfx);
-            dialog.ParentForm = contextMenu.ParentForm; // HACK
+            dialog.ParentWindow = contextMenu.ParentWindow; // HACK
         }
 
         public void PushDialog(Dialog dialog)

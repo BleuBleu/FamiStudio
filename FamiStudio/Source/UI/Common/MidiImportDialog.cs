@@ -249,7 +249,7 @@ namespace FamiStudio
             dialog.Properties.UpdateGrid(6, gridData);
         }
 
-        public Project ShowDialog(FamiStudioForm parent)
+        public Project ShowDialog(FamiStudioWindow parent)
         {
             var project = (Project)null;
 

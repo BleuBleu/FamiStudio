@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading.Tasks;
 
 #if !FAMISTUDIO_ANDROID
 using System.Web.Script.Serialization;
@@ -17,7 +18,7 @@ namespace FamiStudio
     {
         private const int MaxAutosaves = 30;
 
-        private FamiStudioForm mainForm;
+        private FamiStudioWindow mainWindow;
         private Project project;
         private Song song;
         private Instrument selectedInstrument; // null = DPCM
@@ -53,7 +54,7 @@ namespace FamiStudio
         private BitArray keyStates = new BitArray(65536);
         private ConcurrentQueue<Tuple<int, bool>> midiNoteQueue = new ConcurrentQueue<Tuple<int, bool>>();
 #if FAMISTUDIO_WINDOWS
-        private MultiMediaNotificationListener mmNoticiations;
+        private MultiMediaNotificationListener mmNoticiations; // MATTT : Move to platform?
 #endif
         private int autoSaveIndex = 0;
         private float averageTickRateMs = 8.0f;
@@ -72,7 +73,7 @@ namespace FamiStudio
         public bool  SequencerHasSelection => Sequencer.GetPatternTimeSelectionRange(out _, out _);
         public bool  PianoRollHasSelection => PianoRoll.IsSelectionValid();
         public int   BaseRecordingOctave => baseRecordingOctave;
-        public bool  MobilePianoVisible { get => mainForm.MobilePianoVisible; set => mainForm.MobilePianoVisible = value; }
+        public bool  MobilePianoVisible { get => mainWindow.MobilePianoVisible; set => mainWindow.MobilePianoVisible = value; }
         public int   CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
         public int   ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : -1; set => songPlayer.ChannelMask = value; }
         public int   PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { songPlayer.PlayRate = value; } }
@@ -85,20 +86,20 @@ namespace FamiStudio
         public bool EffectPanelExpanded         { get => PianoRoll.EffectPanelExpanded; set => PianoRoll.EffectPanelExpanded = value; }
         public bool SequencerShowExpansionIcons { get => Sequencer.ShowExpansionIcons;  set => Sequencer.ShowExpansionIcons  = value; }
 
-        public UndoRedoManager UndoRedoManager => undoRedoManager; 
-        public DPCMSample      DraggedSample   => ProjectExplorer.DraggedSample;
-        public DPCMSample      EditSample      => PianoRoll.EditSample;
-        public Project         Project         => project;
-        public Channel         SelectedChannel => song.Channels[SelectedChannelIndex];
-        public Toolbar         ToolBar         => mainForm.ToolBar;
-        public Sequencer       Sequencer       => mainForm.Sequencer;
-        public PianoRoll       PianoRoll       => mainForm.PianoRoll;
-        public ProjectExplorer ProjectExplorer => mainForm.ProjectExplorer;
-        public QuickAccessBar  QuickAccessBar  => mainForm.QuickAccessBar;
-        public MobilePiano     MobilePiano     => mainForm.MobilePiano;
-        public Control   ActiveControl   => mainForm.ActiveControl;
-        public FamiStudioForm  MainForm        => mainForm;
-        public BasePlayer      ActivePlayer    => IsPlaying ? (BasePlayer)songPlayer : (BasePlayer)instrumentPlayer;
+        public UndoRedoManager  UndoRedoManager => undoRedoManager; 
+        public DPCMSample       DraggedSample   => ProjectExplorer.DraggedSample;
+        public DPCMSample       EditSample      => PianoRoll.EditSample;
+        public Project          Project         => project;
+        public Channel          SelectedChannel => song.Channels[SelectedChannelIndex];
+        public Toolbar          ToolBar         => mainWindow.ToolBar;
+        public Sequencer        Sequencer       => mainWindow.Sequencer;
+        public PianoRoll        PianoRoll       => mainWindow.PianoRoll;
+        public ProjectExplorer  ProjectExplorer => mainWindow.ProjectExplorer;
+        public QuickAccessBar   QuickAccessBar  => mainWindow.QuickAccessBar;
+        public MobilePiano      MobilePiano     => mainWindow.MobilePiano;
+        public Control          ActiveControl   => mainWindow.ActiveControl;
+        public FamiStudioWindow MainWindow      => mainWindow;
+        public BasePlayer       ActivePlayer    => IsPlaying ? (BasePlayer)songPlayer : (BasePlayer)instrumentPlayer;
 
         public bool IsSequencerActive          => ActiveControl == Sequencer;
         public bool IsPianoRollActive          => ActiveControl == PianoRoll;
@@ -120,11 +121,11 @@ namespace FamiStudio
         public static Project    StaticProject  { get; set; }
         public static FamiStudio StaticInstance { get; private set; }
 
-        public void Initialize(FamiStudioForm form, string filename)
+        public void Initialize(FamiStudioWindow form, string filename)
         {
             StaticInstance = this;
 
-            SetMainForm(form);
+            SetMainWindow(form);
             InitializeMetronome();
             InitializeMidi();
             InitializeMultiMediaNotifications();
@@ -147,9 +148,9 @@ namespace FamiStudio
 #endif
         }
 
-        public void SetMainForm(FamiStudioForm form, bool resuming = false)
+        public void SetMainWindow(FamiStudioWindow win, bool resuming = false)
         {
-            mainForm = form;
+            mainWindow = win;
 
             SetActiveControl(Platform.IsDesktop ? (Control)PianoRoll : Sequencer, false);
 
@@ -183,8 +184,6 @@ namespace FamiStudio
             ProjectExplorer.DPCMSampleDeleted        += ProjectExplorer_DPCMSampleDeleted;
             ProjectExplorer.DPCMSampleDraggedOutside += ProjectExplorer_DPCMSampleDraggedOutside;
             ProjectExplorer.DPCMSampleMapped         += ProjectExplorer_DPCMSampleMapped;
-
-            
 
             if (resuming)
             {
@@ -361,7 +360,7 @@ namespace FamiStudio
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
             Debug.Assert(ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer);
-            mainForm.SetActiveControl(ctrl, animate);
+            mainWindow.SetActiveControl(ctrl, animate);
         }
 
         public void ReplacePianoRollSelectionInstrument(Instrument inst)
@@ -406,14 +405,14 @@ namespace FamiStudio
 
             if (progress)
             {
-                progressLogDialog = new LogProgressDialog(mainForm, title, text);
+                progressLogDialog = new LogProgressDialog(mainWindow, title, text);
                 Log.SetLogOutput(progressLogDialog);
             }
             else 
             {
                 if (Platform.IsDesktop)
                 {
-                    logDialog = new LogDialog(mainForm);
+                    logDialog = new LogDialog(mainWindow);
                     Log.SetLogOutput(logDialog);
                 }
                 else
@@ -586,16 +585,16 @@ namespace FamiStudio
 
         public bool Run(string[] args)
         {
-            var form = FamiStudioForm.InitializeGLFWAndCreateWindow(this);
+            var win = FamiStudioWindow.InitializeGLFWAndCreateWindow(this);
 
-            if (form == null)
+            if (win == null)
             {
                 Platform.MessageBox("Error initializing OpenGL.", "Error", MessageBoxButtons2.OK);
                 return false;
             }
 
-            Initialize(form, args.Length > 0 ? args[0] : null);
-            mainForm.Run();
+            Initialize(win, args.Length > 0 ? args[0] : null);
+            mainWindow.Run();
 
             return true;
         }
@@ -608,12 +607,12 @@ namespace FamiStudio
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
             Debug.Assert(options.Length > 0);
-            mainForm.ShowContextMenu(x, y, options);
+            mainWindow.ShowContextMenu(x, y, options);
         }
 
         public void HideContextMenu()
         {
-            mainForm.HideContextMenu();
+            mainWindow.HideContextMenu();
         }
 
         private void InitializeMultiMediaNotifications()
@@ -697,7 +696,7 @@ namespace FamiStudio
 
         private void UndoRedoManager_PreUndoRedo(TransactionScope scope, TransactionFlags flags)
         {
-            Debug.Assert(!mainForm.IsAsyncDialogInProgress);
+            Debug.Assert(!mainWindow.IsAsyncDialogInProgress);
 
             ValidateIntegrity();
 
@@ -719,7 +718,7 @@ namespace FamiStudio
 
         private void UndoRedoManager_PostUndoRedo(TransactionScope scope, TransactionFlags flags)
         {
-            Debug.Assert(!mainForm.IsAsyncDialogInProgress);
+            Debug.Assert(!mainWindow.IsAsyncDialogInProgress);
 
             ValidateIntegrity();
 
@@ -750,7 +749,7 @@ namespace FamiStudio
 
         private void ValidateIntegrity()
         {
-#if DEBUG
+        #if DEBUG
             if (song != null)
                 Debug.Assert(project.SongExists(song));
             if (selectedInstrument != null)
@@ -760,7 +759,7 @@ namespace FamiStudio
 
             Sequencer.ValidateIntegrity();
             PianoRoll.ValidateIntegrity();
-#endif
+        #endif
         }
 
         public void TrySaveProjectAsync(Action callback)
@@ -917,7 +916,7 @@ namespace FamiStudio
                     NewProject();
                 }
 
-                mainForm.Refresh();
+                mainWindow.Refresh();
             }
             EndLogTask();
         }
@@ -989,12 +988,12 @@ namespace FamiStudio
                 if (mid)
                 {
                     var dlg = new MidiImportDialog(filename);
-                    project = dlg.ShowDialog(mainForm);
+                    project = dlg.ShowDialog(mainWindow);
                 }
                 else if (nsf)
                 {
                     var dlg = new NsfImportDialog(filename);
-                    project = dlg.ShowDialog(mainForm);
+                    project = dlg.ShowDialog(mainWindow);
                 }
             }
             else
@@ -1156,7 +1155,7 @@ namespace FamiStudio
         {
             var dlg = new ConfigDialog();
 
-            dlg.ShowDialogAsync(mainForm, (r) =>
+            dlg.ShowDialogAsync(mainWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {
@@ -1209,7 +1208,7 @@ namespace FamiStudio
 
         private void RefreshLayout()
         {
-            mainForm.RefreshLayout();
+            mainWindow.RefreshLayout();
             Sequencer.LayoutChanged();
             PianoRoll.LayoutChanged();
             ToolBar.LayoutChanged();
@@ -1218,7 +1217,7 @@ namespace FamiStudio
 
         private void CheckForNewRelease()
         {
-#if !FAMISTUDIO_ANDROID
+        #if !FAMISTUDIO_ANDROID
             try
             {
                 using (var client = new HttpClient())
@@ -1258,13 +1257,9 @@ namespace FamiStudio
                             foreach (var asset in assets)
                             {
                                 var name = (string)asset["name"];
-#if FAMISTUDIO_WINDOWS
-                                if (name != null && name.ToLower().Contains("win"))
-#elif FAMISTUDIO_LINUX
-                                if (name != null && name.ToLower().Contains("linux"))
-#else
-                                if (name != null && name.ToLower().Contains("macos"))
-#endif
+                                var token = Platform.IsWindows ? "win" : (Platform.IsMacOS ? "macos" : "linux");
+
+                                if (name != null && name.ToLower().Contains(token))
                                 {
                                     newReleaseAvailable = true;
                                     break;
@@ -1277,7 +1272,7 @@ namespace FamiStudio
             catch
             {
             }
-#endif
+        #endif
         }
 
         private void InitializeAutoSave()
@@ -1403,7 +1398,7 @@ namespace FamiStudio
         {
             var dlg = new TransformDialog(this);
             dlg.CleaningUp += TransformDialog_CleaningUp;
-            dlg.ShowDialogAsync(mainForm, (r) =>
+            dlg.ShowDialogAsync(mainWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                     ResetEverything();
@@ -1434,7 +1429,7 @@ namespace FamiStudio
             if (betaNumber > 0)
                 title += $" - BETA {betaNumber} - DEVELOPMENT VERSION DO NOT DISTRIBUTE!";
 
-            mainForm.Text = title;
+            mainWindow.Text = title;
         }
 
         public void ShowInstrumentError(Channel channel, bool beep)
@@ -1843,12 +1838,9 @@ namespace FamiStudio
             }
             else if (Platform.IsMacOS && ctrl && e.Key == Keys.Q)
             {
+                // MATTT : Retest this on macos.
                 if (TryClosing())
-                {
-#if FAMISTUDIO_MACOS
-                    mainForm.Quit();
-#endif
-                }
+                    mainWindow.Quit();
             }
         }
 
@@ -2149,7 +2141,7 @@ namespace FamiStudio
         private void ConditionalShowTutorial()
         {
             // Edge case where we open a NSF from the command line and the open dialog is active.
-            if (mainForm.IsAsyncDialogInProgress)
+            if (mainWindow.IsAsyncDialogInProgress)
                 return;
 
             if (tutorialCounter > 0)
@@ -2159,7 +2151,7 @@ namespace FamiStudio
                     if (Settings.ShowTutorial)
                     {
                         var dlg = new TutorialDialog();
-                        dlg.ShowDialogAsync(mainForm, (r) =>
+                        dlg.ShowDialogAsync(mainWindow, (r) =>
                         {
                             if (r == DialogResult2.OK)
                             {
@@ -2228,7 +2220,7 @@ namespace FamiStudio
 
         public void Tick(float deltaTime)
         {
-            Debug.Assert(!mainForm.IsAsyncDialogInProgress);
+            Debug.Assert(!mainWindow.IsAsyncDialogInProgress);
 
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
             averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
@@ -2317,9 +2309,9 @@ namespace FamiStudio
 
                 switch (controlIdx)
                 {
-                    case 0: mainForm.SetActiveControl(Sequencer, false); break;
-                    case 1: mainForm.SetActiveControl(PianoRoll, false); break;
-                    case 2: mainForm.SetActiveControl(ProjectExplorer, false); break;
+                    case 0: mainWindow.SetActiveControl(Sequencer, false); break;
+                    case 1: mainWindow.SetActiveControl(PianoRoll, false); break;
+                    case 2: mainWindow.SetActiveControl(ProjectExplorer, false); break;
                 }
             }
         }
@@ -2349,7 +2341,7 @@ namespace FamiStudio
                     SeekSong(currentFrame);
 
                 RefreshLayout();
-                mainForm.MarkDirty();
+                mainWindow.MarkDirty();
 
                 // When the song changes between undo/redos, must stop the audio.
                 if (oldSong.Id != song.Id)

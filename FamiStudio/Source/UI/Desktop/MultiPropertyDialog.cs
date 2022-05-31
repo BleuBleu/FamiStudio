@@ -88,7 +88,7 @@ namespace FamiStudio
             buttonNo.Move(Width - buttonNo.Width - margin, buttonY);
 
             SetSelectedTab(0);
-            CenterToForm();
+            CenterToWindow();
         }
         
         public PropertyPage GetPropertyPage(int idx)

@@ -1016,25 +1016,25 @@ namespace FamiStudio
 
         private void UpdateRenderCoords(bool updateVirtualSizeY = true)
         {
-            expandButtonSizeX    = ScaleForMainWindow(DefaultExpandButtonSizeX);
-            buttonIconPosX       = ScaleForMainWindow(DefaultButtonIconPosX);      
-            buttonIconPosY       = ScaleForMainWindow(DefaultButtonIconPosY);      
-            buttonTextPosX       = ScaleForMainWindow(DefaultButtonTextPosX);      
-            buttonTextNoIconPosX = ScaleForMainWindow(DefaultButtonTextNoIconPosX);
-            expandButtonPosX     = ScaleForMainWindow(DefaultExpandButtonPosX);
-            expandButtonPosY     = ScaleForMainWindow(DefaultExpandButtonPosY);
-            subButtonSpacingX    = ScaleForMainWindow(DefaultSubButtonSpacingX);   
-            subButtonPosY        = ScaleForMainWindow(DefaultSubButtonPosY);       
-            buttonSizeY          = ScaleForMainWindow(DefaultButtonSizeY);
-            sliderPosX           = ScaleForMainWindow(DefaultSliderPosX);
-            sliderPosY           = ScaleForMainWindow(DefaultSliderPosY);
-            sliderSizeX          = ScaleForMainWindow(DefaultSliderSizeX);
-            sliderSizeY          = ScaleForMainWindow(DefaultSliderSizeY);
-            checkBoxPosX         = ScaleForMainWindow(DefaultCheckBoxPosX);
-            checkBoxPosY         = ScaleForMainWindow(DefaultCheckBoxPosY);
-            paramRightPadX       = ScaleForMainWindow(DefaultParamRightPadX);
-            draggedLineSizeY     = ScaleForMainWindow(DefaultDraggedLineSizeY);
-            registerLabelSizeX   = ScaleForMainWindow(DefaultRegisterLabelSizeX);
+            expandButtonSizeX    = ScaleForWindow(DefaultExpandButtonSizeX);
+            buttonIconPosX       = ScaleForWindow(DefaultButtonIconPosX);      
+            buttonIconPosY       = ScaleForWindow(DefaultButtonIconPosY);      
+            buttonTextPosX       = ScaleForWindow(DefaultButtonTextPosX);      
+            buttonTextNoIconPosX = ScaleForWindow(DefaultButtonTextNoIconPosX);
+            expandButtonPosX     = ScaleForWindow(DefaultExpandButtonPosX);
+            expandButtonPosY     = ScaleForWindow(DefaultExpandButtonPosY);
+            subButtonSpacingX    = ScaleForWindow(DefaultSubButtonSpacingX);   
+            subButtonPosY        = ScaleForWindow(DefaultSubButtonPosY);       
+            buttonSizeY          = ScaleForWindow(DefaultButtonSizeY);
+            sliderPosX           = ScaleForWindow(DefaultSliderPosX);
+            sliderPosY           = ScaleForWindow(DefaultSliderPosY);
+            sliderSizeX          = ScaleForWindow(DefaultSliderSizeX);
+            sliderSizeY          = ScaleForWindow(DefaultSliderSizeY);
+            checkBoxPosX         = ScaleForWindow(DefaultCheckBoxPosX);
+            checkBoxPosY         = ScaleForWindow(DefaultCheckBoxPosY);
+            paramRightPadX       = ScaleForWindow(DefaultParamRightPadX);
+            draggedLineSizeY     = ScaleForWindow(DefaultDraggedLineSizeY);
+            registerLabelSizeX   = ScaleForWindow(DefaultRegisterLabelSizeX);
             topTabSizeY          = Settings.ShowRegisterViewer ? buttonSizeY : 0;
             scrollAreaSizeY      = Height - topTabSizeY;
             contentSizeX         = Width;
@@ -1055,7 +1055,7 @@ namespace FamiStudio
                 needsScrollBar = virtualSizeY > scrollAreaSizeY;
 
                 if (needsScrollBar)
-                    scrollBarThickness = ScaleForMainWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
+                    scrollBarThickness = ScaleForWindow(Settings.ScrollBars == 1 ? DefaultScrollBarThickness1 : (Settings.ScrollBars == 2 ? DefaultScrollBarThickness2 : 0));
                 else
                     scrollBarThickness = 0;
 
@@ -1098,7 +1098,7 @@ namespace FamiStudio
         {
             var h = 0;
             for (int i = 0; i < regs.Length; i++)
-                h += ScaleForMainWindow(regs[i].Height);
+                h += ScaleForWindow(regs[i].Height);
             return h;
         }
 
@@ -1381,7 +1381,7 @@ namespace FamiStudio
             for (int i = 0; i < button.regs.Length; i++)
             {
                 var reg = button.regs[i];
-                var regSizeY = ScaleForMainWindow(reg.Height);
+                var regSizeY = ScaleForWindow(reg.Height);
 
                 c.PushTranslation(0, y);
 
@@ -1615,7 +1615,7 @@ namespace FamiStudio
 
                                 c.PushTranslation(leftPadding + tabWidth * j, 0);
                                 c.DrawText(tabName, tabFont, 0, 0, tabLineBrush, TextFlags.MiddleCenter, tabWidth, button.height);
-                                c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, ScaleLineForMainWindow(tabLine));
+                                c.DrawLine(0, button.height - tabLine / 2, tabWidth, button.height - tabLine / 2, tabLineBrush, ScaleLineForWindow(tabLine));
                                 c.PopTransform();
 
                             }
@@ -2540,7 +2540,7 @@ namespace FamiStudio
                         dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
                         dlg.Properties.Build();
 
-                        dlg.ShowDialogAsync(ParentForm, (r) =>
+                        dlg.ShowDialogAsync(ParentWindow, (r) =>
                         {
                             if (r == DialogResult2.OK)
                             {
@@ -2657,7 +2657,7 @@ namespace FamiStudio
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            dlg.ShowDialogAsync(ParentForm, (r) =>
+                            dlg.ShowDialogAsync(ParentWindow, (r) =>
                             {
                                 if (r == DialogResult2.OK)
                                 {
@@ -2766,7 +2766,7 @@ namespace FamiStudio
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            dlg.ShowDialogAsync(ParentForm, (r) =>
+                            dlg.ShowDialogAsync(ParentWindow, (r) =>
                             {
                                 if (r == DialogResult2.OK)
                                 {
@@ -2918,7 +2918,7 @@ namespace FamiStudio
                 dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
-                dlg.ShowDialogAsync(ParentForm, (r) =>
+                dlg.ShowDialogAsync(ParentWindow, (r) =>
                 {
                     if (r == DialogResult2.OK)
                     {
@@ -4051,7 +4051,7 @@ namespace FamiStudio
             UpdateProjectPropertiesWarnings(dlg.Properties);
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {
@@ -4217,7 +4217,7 @@ namespace FamiStudio
             tempoProperties.AddProperties();
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {
@@ -4255,7 +4255,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {
@@ -4286,7 +4286,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {
@@ -4317,7 +4317,7 @@ namespace FamiStudio
             dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 

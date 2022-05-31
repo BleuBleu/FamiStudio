@@ -6,13 +6,12 @@ using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
-    // MATTT : Rename to "Window".
-    public class FamiStudioForm
+    public class FamiStudioWindow
     {
-        private static FamiStudioForm instance;
-
         private const double DelayedRightClickTime = 0.25;
         private const int    DelayedRightClickPixelTolerance = 2;
+
+        private static FamiStudioWindow instance;
 
         private IntPtr window; // GLFW window.
 
@@ -26,38 +25,14 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar QuickAccessBar => controls.QuickAccessBar;
         public MobilePiano MobilePiano => controls.MobilePiano;
-        public new ContextMenu ContextMenu => controls.ContextMenu;
-        public static FamiStudioForm Instance => instance;
-        public new Control ActiveControl => activeControl;
+        public ContextMenu ContextMenu => controls.ContextMenu;
+        public Control ActiveControl => activeControl;
         public Graphics Graphics => controls.Graphics;
+        public static FamiStudioWindow Instance => instance;
 
-        public Size Size
-        {
-            get
-            {
-                glfwGetWindowSize(window, out var w, out var h);
-                return new Size(w, h);
-            }
-        }
-
-        public int Width
-        {
-            get
-            {
-                glfwGetWindowSize(window, out var w, out _);
-                return w;
-            }
-        }
-
-        public int Height
-        {
-            get
-            {
-                glfwGetWindowSize(window, out _, out var h);
-                return h;
-            }
-        }
-
+        public Size Size => GetWindowSizeInternal();
+        public int Width => GetWindowSizeInternal().Width;
+        public int Height => GetWindowSizeInternal().Height;
         public string Text { set => glfwSetWindowTitle(window, value); }
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => controls.IsDialogActive;
@@ -69,7 +44,6 @@ namespace FamiStudio
         private Control hoverControl = null;
         private int captureButton = -1;
         private int lastButtonPress = -1;
-        //private Timer timer = new Timer();
         private Point contextMenuPoint = Point.Empty;
         private double lastTickTime = -1.0f;
         private bool quit = false;
@@ -87,23 +61,10 @@ namespace FamiStudio
         private MouseEventArgs delayedRightClickArgs = null;
         private Control delayedRightClickControl = null;
 
-        //[StructLayout(LayoutKind.Sequential)]
-        //public struct NativeMessage
-        //{
-        //    public IntPtr Handle;
-        //    public uint Message;
-        //    public IntPtr WParameter;
-        //    public IntPtr LParameter;
-        //    public uint Time;
-        //    public Point Location;
-        //}
-
         GLFWerrorfun errorCallback;
         GLFWwindowsizefun windowSizeCallback;
         GLFWwindowclosefun windowCloseCallback;
         GLFWwindowrefreshfun windowRefreshCallback;
-        GLFWframebuffersizefun frameBufferSizeCallback; // TODO
-        GLFWwindowcontentscalefun contentScaleCallback; // TODO
         GLFWmousebuttonfun mouseButtonCallback;
         GLFWcursorposfun cursorPosCallback;
         GLFWcursorenterfun cursorEnterCallback;
@@ -112,15 +73,8 @@ namespace FamiStudio
         GLFWcharfun charCallback;
         GLFWcharmodsfun charModsCallback;
         GLFWdropfun dropCallback;
-        GLFWmonitorfun monitorCallback; // TODO
 
-        //[DllImport("USER32.dll")]
-        //private static extern short GetKeyState(int key);
-
-        //[DllImport("user32.dll")]
-        //public static extern int PeekMessage(out NativeMessage message, IntPtr window, uint filterMin, uint filterMax, uint remove);
-
-        public FamiStudioForm(FamiStudio app, IntPtr glfwWindow)
+        public FamiStudioWindow(FamiStudio app, IntPtr glfwWindow)
         {
             famistudio = app;
             window = glfwWindow;
@@ -128,30 +82,10 @@ namespace FamiStudio
             controls = new FamiStudioControls(this);
             activeControl = controls.PianoRoll;
 
-            //timer.Tick += timer_Tick;
-            //timer.Interval = 4;
-
-            //DragDrop  += FamiStudioForm_DragDrop;
-            //DragEnter += FamiStudioForm_DragEnter;
-            //Application.Idle += Application_Idle;
-
-            //GL.Disable(EnableCap.DepthTest);
-            //GL.Viewport(0, 0, Width, Height);
-            //GL.ClearColor(
-            //    Theme.DarkGreyFillColor2.R / 255.0f,
-            //    Theme.DarkGreyFillColor2.G / 255.0f,
-            //    Theme.DarkGreyFillColor2.B / 255.0f,
-            //    1.0f);
-            //GL.Clear(ClearBufferMask.ColorBufferBit);
-            //GraphicsContext.CurrentContext.SwapBuffers();
-
-            // MATTT : Unset those when closing.
             errorCallback = new GLFWerrorfun(ErrorCallback);
             windowSizeCallback = new GLFWwindowsizefun(WindowSizeCallback);
             windowCloseCallback = new GLFWwindowclosefun(WindowCloseCallback);
             windowRefreshCallback = new GLFWwindowrefreshfun(WindowRefreshCallback);
-            //frameBufferSizeCallback = new GLFWframebuffersizefun(); // TODO!
-            //contentScaleCallback = new GLFWwindowcontentscalefun(); // TODO!
             mouseButtonCallback = new GLFWmousebuttonfun(MouseButtonCallback);
             cursorPosCallback = new GLFWcursorposfun(CursorPosCallback);
             cursorEnterCallback = new GLFWcursorenterfun(CursorEnterCallback);
@@ -160,14 +94,11 @@ namespace FamiStudio
             charCallback = new GLFWcharfun(CharCallback);
             charModsCallback = new GLFWcharmodsfun(CharModsCallback);
             dropCallback = new GLFWdropfun(DropCallback);
-            //monitorCallback = new GLFWmonitorfun(); // TODO!
 
             glfwSetErrorCallback(errorCallback);
             glfwSetWindowSizeCallback(window, windowSizeCallback);
             glfwSetWindowCloseCallback(window, windowCloseCallback);
             glfwSetWindowRefreshCallback(window, windowRefreshCallback);
-            //glfwSetFramebufferSizeCallback(); // TODO!
-            //glfwSetWindowContentScaleCallback(); // TODO!
             glfwSetMouseButtonCallback(window, mouseButtonCallback);
             glfwSetCursorPosCallback(window, cursorPosCallback);
             glfwSetCursorEnterCallback(window, cursorEnterCallback);
@@ -175,14 +106,32 @@ namespace FamiStudio
             glfwSetKeyCallback(window, keyCallback);
             glfwSetCharCallback(window, charCallback);
             glfwSetDropCallback(window, dropCallback);
-            //glfwSetMonitorCallback(); // TODO!
 
+            SubclassWindow(true); 
             EnableWindowsDarkTheme();
+            InitialFrameBufferClear();
 
             controls.InitializeGL();
         }
         
-        public static unsafe FamiStudioForm InitializeGLFWAndCreateWindow(FamiStudio fs)
+        private void Shutdown()
+        {
+            SubclassWindow(false);
+
+            glfwSetErrorCallback(null);
+            glfwSetWindowSizeCallback(window, null);
+            glfwSetWindowCloseCallback(window, null);
+            glfwSetWindowRefreshCallback(window, null);
+            glfwSetMouseButtonCallback(window, null);
+            glfwSetCursorPosCallback(window, null);
+            glfwSetCursorEnterCallback(window, null);
+            glfwSetScrollCallback(window, null);
+            glfwSetKeyCallback(window, null);
+            glfwSetCharCallback(window, null);
+            glfwSetDropCallback(window, null);
+        }
+
+        public static unsafe FamiStudioWindow InitializeGLFWAndCreateWindow(FamiStudio fs)
         {
             if (glfwInit() == 0)
                 return null;
@@ -207,6 +156,11 @@ namespace FamiStudio
             Cursors.Initialize();
             DpiScaling.Initialize(scaling);
 
+            return new FamiStudioWindow(fs, window);
+        }
+
+        private void InitialFrameBufferClear()
+        {
             glfwGetWindowSize(window, out var w, out var h);
             GL.Disable(GL.DepthTest);
             GL.Viewport(0, 0, w, h);
@@ -217,29 +171,7 @@ namespace FamiStudio
                 1.0f);
             GL.Clear(GL.ColorBufferBit);
             glfwSwapBuffers(window);
-
-            return new FamiStudioForm(fs, window);
         }
-
-        //bool IsApplicationIdle()
-        //{
-        //    NativeMessage msg;
-        //    return PeekMessage(out msg, IntPtr.Zero, 0, 0, 0) == 0;
-        //}
-
-        //private void Application_Idle(object sender, EventArgs e)
-        //{
-        //    do
-        //    {
-        //        TickAndRender();
-        //    }
-        //    while (IsApplicationIdle());
-        //}
-
-        //private void timer_Tick(object sender, EventArgs e)
-        //{
-        //    TickAndRender();
-        //}
 
         private void Tick()
         {
@@ -259,36 +191,21 @@ namespace FamiStudio
             lastTickTime = tickTime;
         }
 
-        //private void TickAndRender()
-        //{
-        //    Tick();
-
-        //    if (controls.AnyControlNeedsRedraw() && famistudio.Project != null)
-        //    {
-        //        // Here we hit a vsync if its enabled. 
-        //        //RenderFrameAndSwapBuffers(); MATTT
-        //    }
-
-        //    // Always sleep, in case people turn off vsync. This avoid rendering 
-        //    // is a super tight loop. We could check "VSyncEnabled" but its an extension
-        //    // and I dont trust it. Let's take a break either way.
-        //    System.Threading.Thread.Sleep(4);
-
-        //    //ConditionalEmitDelayedRightClick(); MATTT
-        //}
-
-        // MATTT : Temporary
-        // MATTT : This is super slow, when exporting video/audio, ReportProgress *always* renders a frame and sleep 4ms.
         public void RunEventLoop()
         {
-            RunIteration();
+            RunIteration(false);
         }
 
-        protected void RenderFrame(bool force = false)
+        protected void RenderFrameAndSwapBuffer(bool force = false)
         {
             if (force)
                 controls.MarkDirty();
-            controls.Redraw();
+
+            if (controls.AnyControlNeedsRedraw() /*&& famistudio.Project != null*/) // MATTT : Re-test NSF open shit.
+            {
+                controls.Redraw();
+                glfwSwapBuffers(window);
+            }
         }
 
         public void CaptureMouse(Control ctrl)
@@ -312,22 +229,33 @@ namespace FamiStudio
             //}
         }
 
+        public Point PointToClient(Point p)
+        {
+            glfwGetWindowPos(window, out var px, out var py);
+            return new Point(p.X - px, p.Y - py);
+        }
+
+        public Point PointToScreen(Point p)
+        {
+            glfwGetWindowPos(window, out var px, out var py);
+            return new Point(p.X + px, p.Y + py);
+        }
+
         public Point PointToClient(Control ctrl, Point p)
         {
-            //p = PointToClient(p);
-            //return new Point(p.X - ctrl.Left, p.Y - ctrl.Top);
-            return Point.Empty;
+            p = PointToClient(p);
+            return new Point(p.X - ctrl.Left, p.Y - ctrl.Top);
         }
 
         public Point PointToScreen(Control ctrl, Point p)
         {
-            //p = new Point(p.X + ctrl.Left, p.Y + ctrl.Top);
-            //return PointToScreen(p);
-            return Point.Empty;
+            p = new Point(p.X + ctrl.Left, p.Y + ctrl.Top);
+            return PointToScreen(p);
         }
 
         private void ErrorCallback(int error, string description)
         {
+            Debug.WriteLine($"*** GLFW Error code {error}, {description}.");
         }
 
         private void WindowSizeCallback(IntPtr window, int width, int height)
@@ -340,12 +268,12 @@ namespace FamiStudio
             // MATTT : This may pop some async message boxes in the future.
             if (famistudio.TryClosing())
                 quit = true;
-
-            // timer.Stop(); // MATTT : See how we want to handle this.
         }
 
         private void WindowRefreshCallback(IntPtr window)
         {
+            Debug.WriteLine($"WINDOW REFRESH!");
+            MarkDirty();
         }
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
@@ -359,7 +287,7 @@ namespace FamiStudio
 
                 var ctrl = controls.GetControlAtCoord(lastCursorX, lastCursorY, out int cx, out int cy);
                 
-                lastButtonPress = button; // MATTT : Remove MouseButtons when we are done with WinFOrms.
+                lastButtonPress = button; 
 
                 // Double click emulation.
                 var now = glfwGetTime();
@@ -400,7 +328,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        var ex = new MouseEventArgs(MakeButtonFlags(button), cx, cy); // MATTT : Remove MouseButtons when we are done with WinFOrms.
+                        var ex = new MouseEventArgs(MakeButtonFlags(button), cx, cy);
                         ctrl.GrabDialogFocus();
                         ctrl.MouseDown(ex);
                         if (ex.IsRightClickDelayed)
@@ -425,7 +353,7 @@ namespace FamiStudio
                     ctrl = controls.GetControlAtCoord(lastCursorX, lastCursorY, out cx, out cy);
                 }
 
-                if (MakeButtonFlags(button) == captureButton) // MATTT : WinForms shit.
+                if (button == captureButton)
                     ReleaseMouse();
 
                 if (ctrl != null)
@@ -467,11 +395,7 @@ namespace FamiStudio
                 hover = ctrl;
             }
 
-            var buttons = MakeButtonFlags(
-                glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)   != 0,
-                glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)  != 0,
-                glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) != 0);
-
+            var buttons = MakeButtonFlags();
             var e = new MouseEventArgs(buttons, cx, cy);
 
             if (ShouldIgnoreMouseMoveBecauseOfDelayedRightClick(e, cx, cy, ctrl))
@@ -523,11 +447,12 @@ namespace FamiStudio
                 var scrollX = Utils.SignedCeil((float)xoffset * 5000.0f);
                 var scrollY = Utils.SignedCeil((float)yoffset * 5000.0f);
 
-                // MATTT : Read button states here too.
+                var buttons = MakeButtonFlags();
+
                 if (scrollY != 0.0f)
-                    ctrl.MouseWheel(new MouseEventArgs(0, cx, cy, 0, scrollY));
+                    ctrl.MouseWheel(new MouseEventArgs(buttons, cx, cy, 0, scrollY));
                 if (scrollX != 0.0f)
-                    ctrl.MouseHorizontalWheel(new MouseEventArgs(0, cx, cy, scrollX));
+                    ctrl.MouseHorizontalWheel(new MouseEventArgs(buttons, cx, cy, scrollX));
             }
         }
         
@@ -575,6 +500,7 @@ namespace FamiStudio
 
         private void CharModsCallback(IntPtr window, uint codepoint, int mods)
         {
+            Debug.WriteLine($"CHAR MODS! CodePoint = {codepoint}, Mods = {mods}");
         }
 
         private unsafe void DropCallback(IntPtr window, int count, IntPtr paths)
@@ -594,11 +520,17 @@ namespace FamiStudio
             }
         }
 
+        private Size GetWindowSizeInternal()
+        {
+            glfwGetWindowSize(window, out var w, out var h);
+            return new Size(w, h);
+        }
+
         private Point GetCursorPosInternal()
         {
             // MATTT : Do we get fractional coords with DPI scaling?
             glfwGetCursorPos(window, out var dx, out var dy);
-            return new Point((int)dx, (int)dy);
+            return PointToScreen(new Point((int)dx, (int)dy));
         }
 
         private void GetCursorPosInternal(out int x, out int y)
@@ -614,12 +546,12 @@ namespace FamiStudio
             return 1 << button;
         }
 
-        private int MakeButtonFlags(bool l, bool r, bool m)
+        private int MakeButtonFlags()
         {
             var flags = 0;
-            if (l) flags |= MouseEventArgs.ButtonLeft;
-            if (r) flags |= MouseEventArgs.ButtonRight;
-            if (m) flags |= MouseEventArgs.ButtonMiddle;
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)   != 0) flags |= MouseEventArgs.ButtonLeft;
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)  != 0) flags |= MouseEventArgs.ButtonRight;
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) != 0) flags |= MouseEventArgs.ButtonMiddle;
             return flags;
         }
 
@@ -676,27 +608,102 @@ namespace FamiStudio
             return false;            
         }
 
-        /*
-        protected override void WndProc(ref Message m)
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowLong(IntPtr hwnd, int nIndex, IntPtr newProc);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowLong(IntPtr hwnd, int nIndex, WndProcDelegate newProc);
+        
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindowLong(IntPtr hwnd, int nIndex);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr CallWindowProc(IntPtr proc, IntPtr hwnd, int msg, int wparam, int lparam);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SetTimer(IntPtr hwnd, IntPtr evt, uint elapse, TimerProcDelegate func);
+        
+        [DllImport("user32.dll")]
+        static extern IntPtr KillTimer(IntPtr hwnd, IntPtr evt);
+
+        private const int GWL_WNDPROC = -4;
+        private const int WM_ENTERSIZEMOVE = 0x231;
+        private const int WM_EXITSIZEMOVE = 0x232;
+        private const int WM_TIMER = 0x113;
+
+        private delegate IntPtr WndProcDelegate(IntPtr hwnd, int msg, int wparam, int lparam);
+        private delegate void TimerProcDelegate(IntPtr hwnd, int msg, int id, int time);
+
+        private TimerProcDelegate timerProc;
+        private WndProcDelegate newWndProc;
+        private IntPtr  oldWndProc;
+        private bool inTimerProc;
+
+        private void SubclassWindow(bool enable)
         {
-            base.WndProc(ref m);
-            
-            if (m.Msg == 0x0231) // WM_ENTERSIZEMOVE 
+            if (Platform.IsWindows)
             {
-                // We dont receive any messages during resize/move, so we rely on a timer.
-                timer.Start();
-            }
-            else if (m.Msg == 0x0232) // WM_EXITSIZEMOVE
-            {
-                timer.Stop();
+                var hwnd = Handle;
+
+                if (enable)
+                {
+                    Debug.Assert(newWndProc == null);
+                    newWndProc = new WndProcDelegate(WndProc);
+                    oldWndProc = GetWindowLong(hwnd, GWL_WNDPROC);
+                    SetWindowLong(hwnd, GWL_WNDPROC, newWndProc);
+                }
+                else
+                {
+                    Debug.Assert(oldWndProc != IntPtr.Zero);
+                    SetWindowLong(hwnd, GWL_WNDPROC, oldWndProc);
+                }
             }
         }
-        */
 
-        // MATTT
+        private void TimerProc(IntPtr hwnd, int msg, int id, int time)
+        {
+            // Prevent recursion.
+            if (!inTimerProc)
+            {
+                inTimerProc = true;
+                RunIteration();
+                inTimerProc = false;
+            }
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, int wparam, int lparam)
+        {
+            if (msg == WM_ENTERSIZEMOVE) // WM_ENTERSIZEMOVE 
+            {
+                Debug.Assert(timerProc == null);
+                timerProc = new TimerProcDelegate(TimerProc);
+                SetTimer(hwnd, (IntPtr)1, 4, timerProc);
+            }
+            else if (msg == WM_EXITSIZEMOVE) // WM_EXITSIZEMOVE
+            {
+                Debug.Assert(timerProc != null);
+                timerProc = null;
+                KillTimer(hwnd, (IntPtr)1);
+            }
+
+            return CallWindowProc(oldWndProc, hwnd, msg, wparam, lparam);
+        }
+
+        public void Quit()
+        {
+            // MATTT : Retest this on macos.
+            quit = true;
+
+            // HACK : RtMidi still has a thread running and it seems
+            // to prevent the app from quitting. Will investigate more
+            // later.
+
+            //Process.GetCurrentProcess().Kill();
+        }
+
         public void Refresh()
         {
-
+            RenderFrameAndSwapBuffer(true);
         }
 
         public void RefreshLayout()
@@ -800,25 +807,24 @@ namespace FamiStudio
             }
         }
 
-        private void RunIteration()
+        private void ProcessEvents()
         {
             glfwPollEvents();
+        }
 
+        private void RunIteration(bool allowSleep = true)
+        {
+            ProcessEvents();
             Tick();
-
-            if (controls.AnyControlNeedsRedraw() && famistudio.Project != null)
-            {
-                controls.Redraw();
-                glfwSwapBuffers(window);
-            }
-
-            // Always sleep a bit, even if we rendered something. This handles cases
-            // where people turn off vsync. 
-            
-            // MATTT : This actually slows down export in RunEventLoop()... We should NOT sleep in those cases.
-            System.Threading.Thread.Sleep(4);
-
+            RenderFrameAndSwapBuffer();
             ConditionalEmitDelayedRightClick();
+
+            if (allowSleep)
+            {
+                // Always sleep a bit, even if we rendered something. This handles cases where people
+                // turn off vsync and we end up eating 100% CPU. 
+                System.Threading.Thread.Sleep(4);
+            }
         }
 
         public void Run()
@@ -827,6 +833,8 @@ namespace FamiStudio
             {
                 RunIteration();
             }
+
+            Shutdown();
         }
     }
 }

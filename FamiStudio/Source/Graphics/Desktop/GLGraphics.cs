@@ -96,7 +96,7 @@ namespace FamiStudio
             {
                 var stride = sizeof(int) * bmpData.GetLength(1);
 
-                // MATTT : Check that!!!
+                // MATTT : Check that!!! + Dont use define.
             #if FAMISTUDIO_WINDOWS
                 var format = GL.Bgra;
             #else

@@ -448,22 +448,22 @@ namespace FamiStudio
             maxZoom = editMode == EditionMode.DPCM ? MaxWaveZoom : MaxZoom;
             zoom    = Utils.Clamp(zoom, minZoom, maxZoom);
 
-            headerSizeY               = ScaleForMainWindow(DefaultHeaderSizeY * headerScale);
-            effectButtonSizeY         = ScaleForMainWindow(DefaultEffectButtonSizeY * effectIconsScale);
-            noteSizeX                 = ScaleForMainWindowFloat(DefaultNoteSizeX * zoom);
-            noteSizeY                 = ScaleForMainWindow(DefaultNoteSizeY * zoomY);
-            noteAttackSizeX           = ScaleForMainWindow(DefaultNoteAttackSizeX);
-            releaseNoteSizeY          = ScaleForMainWindow(DefaultReleaseNoteSizeY * zoomY) & 0xfe; // Keep even
-            pianoSizeX                = ScaleForMainWindow((videoMode || Platform.IsDesktop ? DefaultPianoSizeX    : DefaultPianoSizeXMobile)    * pianoScaleX);
-            blackKeySizeX             = ScaleForMainWindow((videoMode || Platform.IsDesktop ? DefaultBlackKeySizeX : DefaultBlackKeySizeXMobile) * pianoScaleX);
-            whiteKeySizeY             = ScaleForMainWindow(DefaultWhiteKeySizeY * zoomY);
-            blackKeySizeY             = ScaleForMainWindow(DefaultBlackKeySizeY * zoomY);
-            effectIconPosX            = ScaleForMainWindow(DefaultEffectIconPosX * effectIconsScale);
-            effectIconPosY            = ScaleForMainWindow(DefaultEffectIconPosY * effectIconsScale);
-            headerIconsPosX           = ScaleForMainWindow(headerScale == 1 ? DefaultSnapIconDpcmPosX : DefaultSnapIconPosX);
-            headerIconsPosY           = ScaleForMainWindow(headerScale == 1 ? DefaultSnapIconDpcmPosY : DefaultSnapIconPosY);
-            effectNamePosX            = ScaleForMainWindow(DefaultEffectNamePosX * effectIconsScale);
-            beatTextPosX              = ScaleForMainWindow(DefaultBeatTextPosX);
+            headerSizeY               = ScaleForWindow(DefaultHeaderSizeY * headerScale);
+            effectButtonSizeY         = ScaleForWindow(DefaultEffectButtonSizeY * effectIconsScale);
+            noteSizeX                 = ScaleForWindowFloat(DefaultNoteSizeX * zoom);
+            noteSizeY                 = ScaleForWindow(DefaultNoteSizeY * zoomY);
+            noteAttackSizeX           = ScaleForWindow(DefaultNoteAttackSizeX);
+            releaseNoteSizeY          = ScaleForWindow(DefaultReleaseNoteSizeY * zoomY) & 0xfe; // Keep even
+            pianoSizeX                = ScaleForWindow((videoMode || Platform.IsDesktop ? DefaultPianoSizeX    : DefaultPianoSizeXMobile)    * pianoScaleX);
+            blackKeySizeX             = ScaleForWindow((videoMode || Platform.IsDesktop ? DefaultBlackKeySizeX : DefaultBlackKeySizeXMobile) * pianoScaleX);
+            whiteKeySizeY             = ScaleForWindow(DefaultWhiteKeySizeY * zoomY);
+            blackKeySizeY             = ScaleForWindow(DefaultBlackKeySizeY * zoomY);
+            effectIconPosX            = ScaleForWindow(DefaultEffectIconPosX * effectIconsScale);
+            effectIconPosY            = ScaleForWindow(DefaultEffectIconPosY * effectIconsScale);
+            headerIconsPosX           = ScaleForWindow(headerScale == 1 ? DefaultSnapIconDpcmPosX : DefaultSnapIconPosX);
+            headerIconsPosY           = ScaleForWindow(headerScale == 1 ? DefaultSnapIconDpcmPosY : DefaultSnapIconPosY);
+            effectNamePosX            = ScaleForWindow(DefaultEffectNamePosX * effectIconsScale);
+            beatTextPosX              = ScaleForWindow(DefaultBeatTextPosX);
             effectValuePosTextOffsetY = ScaleForFont(DefaultEffectValuePosTextOffsetY);
             effectValueNegTextOffsetY = ScaleForFont(DefaultEffectValueNegTextOffsetY);
             bigTextPosX               = ScaleForFont(DefaultBigTextPosX);
@@ -471,23 +471,23 @@ namespace FamiStudio
             tooltipTextPosX           = ScaleForFont(DefaultTooltipTextPosX);
             tooltipTextPosY           = ScaleForFont(DefaultTooltipTextPosY);
             dpcmTextPosX              = ScaleForFont(DefaultDPCMTextPosX);
-            recordingKeyOffsetY       = ScaleForMainWindow(DefaultRecordingKeyOffsetY);
-            attackIconPosX            = ScaleForMainWindow(DefaultAttackIconPosX);
-            waveGeometrySampleSize    = ScaleForMainWindow(DefaultWaveGeometrySampleSize);
-            waveDisplayPaddingY       = ScaleForMainWindow(DefaultWaveDisplayPaddingY);
-            scrollBarThickness        = ScaleForMainWindow(scrollBarSize);
-            minScrollBarLength        = ScaleForMainWindow(DefaultMinScrollBarLength);
-            scrollMargin              = ScaleForMainWindow(DefaultScrollMargin);
-            noteResizeMargin          = ScaleForMainWindow(DefaultNoteResizeMargin);
-            minPixelDistForLines      = ScaleForMainWindow(DefaultMinPixelDistForLines);
-            envelopeValueSizeY        = ScaleForMainWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
-            gizmoSize                 = ScaleForMainWindow(DefaultGizmoSize);
+            recordingKeyOffsetY       = ScaleForWindow(DefaultRecordingKeyOffsetY);
+            attackIconPosX            = ScaleForWindow(DefaultAttackIconPosX);
+            waveGeometrySampleSize    = ScaleForWindow(DefaultWaveGeometrySampleSize);
+            waveDisplayPaddingY       = ScaleForWindow(DefaultWaveDisplayPaddingY);
+            scrollBarThickness        = ScaleForWindow(scrollBarSize);
+            minScrollBarLength        = ScaleForWindow(DefaultMinScrollBarLength);
+            scrollMargin              = ScaleForWindow(DefaultScrollMargin);
+            noteResizeMargin          = ScaleForWindow(DefaultNoteResizeMargin);
+            minPixelDistForLines      = ScaleForWindow(DefaultMinPixelDistForLines);
+            envelopeValueSizeY        = ScaleForWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
+            gizmoSize                 = ScaleForWindow(DefaultGizmoSize);
 
             // Make sure the effect panel actually fit on screen on mobile.
-            if (Platform.IsMobile && ParentForm != null)
-                effectPanelSizeY = Math.Min(ParentFormSize.Height / 2, ScaleForMainWindow(DefaultEffectPanelSizeY));
+            if (Platform.IsMobile && ParentWindow != null)
+                effectPanelSizeY = Math.Min(ParentWindowSize.Height / 2, ScaleForWindow(DefaultEffectPanelSizeY));
             else
-                effectPanelSizeY = ScaleForMainWindow(DefaultEffectPanelSizeY);
+                effectPanelSizeY = ScaleForWindow(DefaultEffectPanelSizeY);
 
             octaveSizeY = 12 * noteSizeY;
             headerAndEffectSizeY = headerSizeY + (showEffectsPanel ? effectPanelSizeY : 0);
@@ -723,7 +723,7 @@ namespace FamiStudio
 
         private void CenterEnvelopeScroll(Envelope envelope, int envelopeType, Instrument instrument = null)
         {
-            var baseNoteSizeX = ScaleForMainWindow(DefaultNoteSizeX);
+            var baseNoteSizeX = ScaleForWindow(DefaultNoteSizeX);
             var envelopeLength = Math.Max(Platform.IsMobile ? 8 : 4, envelope.Length);
 
             zoom = minZoom;
@@ -2063,7 +2063,7 @@ namespace FamiStudio
 
                 var dlg = new PasteSpecialDialog(Song.Channels[editChannel], lastPasteSpecialPasteMix, lastPasteSpecialPasteNotes, lastPasteSpecialPasteEffectMask);
 
-                dlg.ShowDialogAsync(ParentForm, (r) =>
+                dlg.ShowDialogAsync(ParentWindow, (r) =>
                 {
                     if (r == DialogResult2.OK)
                     {
@@ -2101,7 +2101,7 @@ namespace FamiStudio
 
                 var dlg = new DeleteSpecialDialog(Song.Channels[editChannel]);
 
-                dlg.ShowDialogAsync(ParentForm, (r) =>
+                dlg.ShowDialogAsync(ParentWindow, (r) =>
                 {
                     if (r == DialogResult2.OK)
                         DeleteSelectedNotes(true, dlg.DeleteNotes, dlg.DeleteEffectMask);
@@ -3663,7 +3663,7 @@ namespace FamiStudio
             dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
             dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;
 
-            dlg.ShowDialogAsync(ParentForm, (r) =>
+            dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {
@@ -4986,7 +4986,7 @@ namespace FamiStudio
             {
                 if (left)
                 {
-                    var slide = FamiStudioForm.IsKeyDown(Keys.S);
+                    var slide = FamiStudioWindow.IsKeyDown(Keys.S);
 
                     if (slide && selectedEffectIdx == Note.EffectVolume)
                     {
@@ -5107,10 +5107,10 @@ namespace FamiStudio
                 if (left)
                 {
                     var shift   = ModifierKeys.Shift;
-                    var stop    = FamiStudioForm.IsKeyDown(Keys.T);
-                    var slide   = FamiStudioForm.IsKeyDown(Keys.S);
-                    var attack  = FamiStudioForm.IsKeyDown(Keys.A);
-                    var eyedrop = FamiStudioForm.IsKeyDown(Keys.I);
+                    var stop    = FamiStudioWindow.IsKeyDown(Keys.T);
+                    var slide   = FamiStudioWindow.IsKeyDown(Keys.S);
+                    var attack  = FamiStudioWindow.IsKeyDown(Keys.A);
+                    var eyedrop = FamiStudioWindow.IsKeyDown(Keys.I);
 
                     if (slide)
                     {
@@ -6928,7 +6928,7 @@ namespace FamiStudio
                 dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
-                dlg.ShowDialogAsync(ParentForm, (r) =>
+                dlg.ShowDialogAsync(ParentWindow, (r) =>
                 {
                     if (r == DialogResult2.OK)
                     {
@@ -7143,7 +7143,7 @@ namespace FamiStudio
             var halfHeight    = effectPanelSizeY * 0.5f;
             var halfHeightPad = halfHeight - waveDisplayPaddingY;
 
-            var threshold = ScaleForMainWindow(Platform.IsDesktop ? 10 : 20);
+            var threshold = ScaleForWindow(Platform.IsDesktop ? 10 : 20);
 
             x -= pianoSizeX;
             y -= headerSizeY;
@@ -7997,7 +7997,7 @@ namespace FamiStudio
             {
                 Cursor.Current = Cursors.CopyCursor;
             }
-            else if (editMode == EditionMode.Channel && FamiStudioForm.IsKeyDown(Keys.I))
+            else if (editMode == EditionMode.Channel && FamiStudioWindow.IsKeyDown(Keys.I))
             {
                 Cursor.Current = Cursors.Eyedrop;
             }

@@ -85,6 +85,7 @@ namespace FamiStudio
         }
 
 #if FAMISTUDIO_WINDOWS
+        // MATTT : Move to platform.
         [DllImport("kernel32.dll")]
         static extern bool AttachConsole(int dwProcessId);
         private const int ATTACH_PARENT_PROCESS = -1;

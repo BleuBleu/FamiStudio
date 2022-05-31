@@ -48,7 +48,7 @@ namespace FamiStudio
         {
             visible = false;
             // MATTT: Add the form to the constructor eventually.
-            FamiStudioForm.Instance.InitDialog(this);
+            FamiStudioWindow.Instance.InitDialog(this);
         }
 
         public void ShowDialogAsync(object parent, Action<DialogResult2> cb) // MATTT : Remove parent, pass in contructor.
@@ -56,12 +56,12 @@ namespace FamiStudio
             visible = true;
             callback = cb;
             OnShowDialog();
-            FamiStudioForm.Instance.PushDialog(this);
+            FamiStudioWindow.Instance.PushDialog(this);
         }
 
         public void Close(DialogResult2 res)
         {
-            FamiStudioForm.Instance.PopDialog(this);
+            FamiStudioWindow.Instance.PopDialog(this);
             result = res;
             visible = false;
             callback(result);
@@ -76,11 +76,11 @@ namespace FamiStudio
             if (!controls.Contains(ctrl))
             {
                 controls.Add(ctrl);
-                ctrl.ParentForm = ParentForm;
+                ctrl.ParentWindow = ParentWindow;
                 ctrl.ParentDialog = this;
                 ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
                 ctrl.SetThemeRenderResource(ThemeResources);
-                ctrl.RenderInitialized(ParentForm.Graphics); 
+                ctrl.RenderInitialized(ParentWindow.Graphics); 
                 ctrl.AddedToDialog();
             }
         }
@@ -246,7 +246,7 @@ namespace FamiStudio
                         sizeX = Math.Max(sizeX, ThemeResources.FontMedium.MeasureString(splits[i], false));
 
                     var totalSizeX = sizeX + tooltipSideMargin * 2;
-                    var rightAlign = formPt.X + totalSizeX > ParentForm.Width;
+                    var rightAlign = formPt.X + totalSizeX > ParentWindow.Width;
 
                     var c = g.CreateCommandList();
                     g.Transform.PushTranslation(pt.X - (rightAlign ? totalSizeX : 0), pt.Y + tooltipOffsetY);

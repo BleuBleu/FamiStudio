@@ -1040,7 +1040,7 @@ namespace FamiStudio
 
         public void ShowDialogAsync()
         {
-            dialog.ShowDialogAsync(app.MainForm, (r) =>
+            dialog.ShowDialogAsync(app.MainWindow, (r) =>
             {
                 if (r == DialogResult2.OK)
                 {

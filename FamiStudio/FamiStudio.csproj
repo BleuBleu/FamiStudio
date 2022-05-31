@@ -203,7 +203,7 @@
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
     <Compile Include="Source\UI\Desktop\Cursors.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
-    <Compile Include="Source\UI\Desktop\FamiStudioForm.cs" />
+    <Compile Include="Source\UI\Desktop\FamiStudioWindow.cs" />
     <Compile Include="Source\UI\Desktop\GLFW.cs" />
     <Compile Include="Source\UI\Desktop\GLFW.LoadAssembly.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
@@ -218,7 +218,6 @@
     <Compile Include="Source\Utils\EpsmUnitTests.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
-    <Compile Include="Source\Utils\PerformanceCounter.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />

@@ -141,7 +141,7 @@ namespace FamiStudio
             gifSizeX = GifGetWidth(gif);
             gifSizeY = GifGetHeight(gif);
             gifBuffer = new byte[gifSizeX * gifSizeY * 3];
-            gifBmp = ParentForm.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, false, mainWindowScaling > 1.0f);
+            gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, false, windowScaling > 1.0f);
             imageBox.Image = gifBmp;
         }
 
@@ -164,7 +164,7 @@ namespace FamiStudio
             fixed (byte* p = &gifBuffer[0])
                 GifAdvanceFrame(gif, new IntPtr(p), gifSizeX * 3);
 
-            ParentForm.Graphics.UpdateBitmap(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
+            ParentWindow.Graphics.UpdateBitmap(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
             gifTimer = GifGetFrameDelay(gif) / 1000.0f;
             MarkDirty();
         }
@@ -180,7 +180,7 @@ namespace FamiStudio
 
         protected override void OnShowDialog()
         {
-            CenterToForm();
+            CenterToWindow();
         }
 
         private void SetPage(int idx)

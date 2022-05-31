@@ -356,17 +356,17 @@ namespace FamiStudio
             {
                 buttons[(int)ButtonType.Qwerty] = new Button { BmpAtlasIndex = ButtonImageIndices.QwertyPiano, Click = OnQwerty, Enabled = OnQwertyEnabled };
 
-                timecodePosY            = ScaleForMainWindow(DefaultTimecodePosY);
-                oscilloscopePosY        = ScaleForMainWindow(DefaultTimecodePosY);
-                timecodeOscSizeX        = ScaleForMainWindow(DefaultTimecodeSizeX);
-                tooltipSingleLinePosY   = ScaleForMainWindow(DefaultTooltipSingleLinePosY);
-                tooltipMultiLinePosY    = ScaleForMainWindow(DefaultTooltipMultiLinePosY);
-                tooltipLineSizeY        = ScaleForMainWindow(DefaultTooltipLineSizeY);
-                tooltipSpecialCharSizeX = ScaleForMainWindow(DefaultTooltipSpecialCharSizeX);
-                tooltipSpecialCharSizeY = ScaleForMainWindow(DefaultTooltipSpecialCharSizeY);
-                buttonIconPosX          = ScaleForMainWindow(DefaultButtonIconPosX);
-                buttonIconPosY          = ScaleForMainWindow(DefaultButtonIconPosY);
-                buttonSize              = ScaleForMainWindow(DefaultButtonSize);
+                timecodePosY            = ScaleForWindow(DefaultTimecodePosY);
+                oscilloscopePosY        = ScaleForWindow(DefaultTimecodePosY);
+                timecodeOscSizeX        = ScaleForWindow(DefaultTimecodeSizeX);
+                tooltipSingleLinePosY   = ScaleForWindow(DefaultTooltipSingleLinePosY);
+                tooltipMultiLinePosY    = ScaleForWindow(DefaultTooltipMultiLinePosY);
+                tooltipLineSizeY        = ScaleForWindow(DefaultTooltipLineSizeY);
+                tooltipSpecialCharSizeX = ScaleForWindow(DefaultTooltipSpecialCharSizeX);
+                tooltipSpecialCharSizeY = ScaleForWindow(DefaultTooltipSpecialCharSizeY);
+                buttonIconPosX          = ScaleForWindow(DefaultButtonIconPosX);
+                buttonIconPosY          = ScaleForWindow(DefaultButtonIconPosY);
+                buttonSize              = ScaleForWindow(DefaultButtonSize);
 
                 bmpSpecialCharacters = g.GetBitmapAtlasRefs(SpecialCharImageNames);
 
@@ -391,32 +391,32 @@ namespace FamiStudio
                 buttons[(int)ButtonType.Follow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
                 buttons[(int)ButtonType.Help].ToolTip      = "{MouseLeft} Online documentation";
 
-                specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(32) };
-                specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
-                specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
-                specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = ScaleForMainWindow(28) };
-                specialCharacters["ForceCtrl"]  = new TooltipSpecialCharacter { Width = ScaleForMainWindow(28) };
-                specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
-                specialCharacters["Tab"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
-                specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = ScaleForMainWindow(38) };
-                specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
-                specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
-                specialCharacters["F1"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F2"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F3"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F4"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F5"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F6"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F7"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F8"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F9"]         = new TooltipSpecialCharacter { Width = ScaleForMainWindow(18) };
-                specialCharacters["F10"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
-                specialCharacters["F11"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
-                specialCharacters["F12"]        = new TooltipSpecialCharacter { Width = ScaleForMainWindow(24) };
-                specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = ScaleForMainWindow(2) };
-                specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = ScaleForMainWindow(2) };
-                specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = ScaleForMainWindow(2) };
-                specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = ScaleForMainWindow(2) };
+                specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(32) };
+                specialCharacters["Space"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
+                specialCharacters["Home"]       = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
+                specialCharacters["Ctrl"]       = new TooltipSpecialCharacter { Width = ScaleForWindow(28) };
+                specialCharacters["ForceCtrl"]  = new TooltipSpecialCharacter { Width = ScaleForWindow(28) };
+                specialCharacters["Alt"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
+                specialCharacters["Tab"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
+                specialCharacters["Enter"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(38) };
+                specialCharacters["Esc"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
+                specialCharacters["Del"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
+                specialCharacters["F1"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F2"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F3"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F4"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F5"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F6"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F7"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F8"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F9"]         = new TooltipSpecialCharacter { Width = ScaleForWindow(18) };
+                specialCharacters["F10"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
+                specialCharacters["F11"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
+                specialCharacters["F12"]        = new TooltipSpecialCharacter { Width = ScaleForWindow(24) };
+                specialCharacters["Drag"]       = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Drag,       OffsetY = ScaleForWindow(2) };
+                specialCharacters["MouseLeft"]  = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseLeft,  OffsetY = ScaleForWindow(2) };
+                specialCharacters["MouseRight"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseRight, OffsetY = ScaleForWindow(2) };
+                specialCharacters["MouseWheel"] = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.MouseWheel, OffsetY = ScaleForWindow(2) };
                 specialCharacters["Warning"]    = new TooltipSpecialCharacter { BmpIndex = SpecialCharImageIndices.Warning };
 
                 for (char i = 'A'; i <= 'Z'; i++)
@@ -1109,7 +1109,7 @@ namespace FamiStudio
             if (Platform.IsMobile && IsExpanded)
             {
                 c.Transform.GetOrigin(out var ox, out var oy);
-                var fullscreenRect = new Rectangle(0, 0, ParentFormSize.Width, ParentFormSize.Height);
+                var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
                 fullscreenRect.Offset(-(int)ox, -(int)oy);
                 c.FillRectangle(fullscreenRect, c.Graphics.GetSolidBrush(Color.Black, 1.0f, expandRatio * 0.6f));
             }

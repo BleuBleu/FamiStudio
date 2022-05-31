@@ -2,13 +2,13 @@
 
 namespace FamiStudio
 {
-    class LogDialog : Dialog, ILogOutput
+    class LogDialog : ILogOutput
     {
         private PropertyDialog dialog;
-        private FamiStudioForm parentForm;
+        private FamiStudioWindow parentForm;
         private List<string>   messages = new List<string>();
 
-        public LogDialog(FamiStudioForm parentForm)
+        public LogDialog(FamiStudioWindow parentForm)
         {
             this.parentForm = parentForm;
 
@@ -24,7 +24,7 @@ namespace FamiStudio
                 foreach (var msg in messages)
                     dialog.Properties.AppendText(0, msg);
 
-                ShowDialogAsync(null, (r) => { });
+                dialog.ShowDialogAsync(null, (r) => { });
             }
         }
 
@@ -38,15 +38,18 @@ namespace FamiStudio
         public void ReportProgress(float progress) { }
     }
 
-    class LogProgressDialog : Dialog, ILogOutput
+    class LogProgressDialog : ILogOutput
     {
-        private PropertyDialog dialog;
-        private FamiStudioForm parentForm;
-        private bool hasMessages = false;
+        private const double ProcessEventDelay = 1.0 / 30.0;
 
-        public unsafe LogProgressDialog(FamiStudioForm parentForm, string title = null, string text = null)
+        private PropertyDialog dialog;
+        private FamiStudioWindow parentWindow;
+        private bool hasMessages = false;
+        private double lastEventLoop;
+
+        public unsafe LogProgressDialog(FamiStudioWindow win, string title = null, string text = null)
         {
-            this.parentForm = parentForm;
+            parentWindow = win; // MATTT : Will be in the dialog when done.
 
             dialog = new PropertyDialog("Log", 800, false);
             dialog.Properties.AddLogTextBox(null); // 0
@@ -63,9 +66,7 @@ namespace FamiStudio
             if (!dialog.Visible)
                 dialog.ShowDialogAsync(null, (r) => { });
             dialog.Properties.AppendText(0, msg);
-
-            // MATTT : Total HACK!
-            ParentForm.RunEventLoop();
+            ConditionalRunEventLoop();
         }
 
         public void ReportProgress(float progress)
@@ -74,22 +75,28 @@ namespace FamiStudio
                 return;
 
             dialog.Properties.SetPropertyValue(1, progress);
-
-            // MATTT : Total HACK!
-            ParentForm.RunEventLoop();
+            ConditionalRunEventLoop();
         }
 
-        // MATTT : Total HACK!
         public void StayModalUntilClosed()
         {
             while (dialog.Visible)
-            {
-                ParentForm.RunEventLoop();
-            }
+                ConditionalRunEventLoop();
         }
 
         public void Close()
         {
+        }
+
+        private void ConditionalRunEventLoop()
+        {
+            var now = Platform.TimeSeconds();
+
+            if (now - lastEventLoop > ProcessEventDelay)
+            {
+                dialog.ParentWindow.RunEventLoop();
+                lastEventLoop = now;
+            }
         }
 
         public bool HasMessages => hasMessages;

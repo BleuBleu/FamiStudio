@@ -33,10 +33,10 @@ namespace FamiStudio
 
         private void UpdateRenderCoords()
         {
-            itemSizeY = ScaleForMainWindow(DefaultItemSizeY);
-            iconPos   = ScaleForMainWindow(DefaultIconPos);
-            textPosX  = ScaleForMainWindow(DefaultTextPosX);
-            minSizeX  = ScaleForMainWindow(DefaultMenuMinSizeX);
+            itemSizeY = ScaleForWindow(DefaultItemSizeY);
+            iconPos   = ScaleForWindow(DefaultIconPos);
+            textPosX  = ScaleForWindow(DefaultTextPosX);
+            minSizeX  = ScaleForWindow(DefaultMenuMinSizeX);
         }
 
         public void Initialize(Graphics g, ContextMenuOption[] options)

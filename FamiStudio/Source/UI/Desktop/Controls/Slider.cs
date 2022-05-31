@@ -113,7 +113,7 @@ namespace FamiStudio
             var c = parentDialog.CommandList;
             var thumbRect = GetThumbRectangle();
 
-            c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, ThemeResources.DarkGreyLineBrush1, ScaleForMainWindow(3));
+            c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, ThemeResources.DarkGreyLineBrush1, ScaleForWindow(3));
             c.DrawBitmapAtlas(bmpThumb, thumbRect.Left, thumbRect.Top, 1, 1, hover || dragging ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
 
             if (label)

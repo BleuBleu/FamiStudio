@@ -103,7 +103,7 @@ namespace FamiStudio
                 Move(left, base.top - height);
 
             if (center)
-                CenterToForm();
+                CenterToWindow();
         }
 
         private void UpdateLayout()

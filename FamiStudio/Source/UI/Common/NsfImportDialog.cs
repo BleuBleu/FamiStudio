@@ -27,7 +27,7 @@ namespace FamiStudio
             }
         }
 
-        public Project ShowDialog(FamiStudioForm parent)
+        public Project ShowDialog(FamiStudioWindow parent)
         {
             var project = (Project)null;
 
