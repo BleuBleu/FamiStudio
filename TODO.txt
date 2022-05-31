@@ -24,18 +24,18 @@ P0:
 	- Pass form to dialogs, avoid ugly .INstance thing.
 - GLFW:
 	- ***** TO DERISK:
-    - DPI awareness => glfwGetMonitorContentScale, TEST!
-    - Keyboard keys
-    - Capture
+    / DPI awareness => glfwGetMonitorContentScale, TEST!
+    / Keyboard keys
+    / Capture
     - Resizing issue.
-    - Horizontal mouse wheel
+    / Horizontal mouse wheel
     - Pinch to zoom?
   - Clear window to grey as soon as its created, nicer during loading.
   - Merge FamiStudioControls <-> Forms.
   - Window icon.
   - Split in more folders, think of stuff that is kind of standalone (graphics, etc.)
 	- Remove all dependencies to WinForms, GTK, System.Drawing, etc.
-	- 
+- MAKE SURE I DIDNT MESS UP THE DEMO SONGS! I SUBMITTED TONS OF SHIT.
 P1:
 - Validation errors in JTS when deleting some instruments.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
@@ -57,7 +57,6 @@ P2:
 - C0 is hidden in piano roll video
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
-- Fix GTK leak (GTK 3.x?), or 2.12.45
 
 Testing:
 ========

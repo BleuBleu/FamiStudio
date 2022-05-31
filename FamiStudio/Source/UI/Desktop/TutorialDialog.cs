@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using System.Windows.Forms; // MATTT : Remove once timer is gone
 using System.Runtime.InteropServices;
 
 namespace FamiStudio
@@ -73,7 +72,7 @@ namespace FamiStudio
         private int buttonSize = DpiScaling.ScaleForMainWindow(36);
         private int checkSizeY = DpiScaling.ScaleForMainWindow(16);
 
-        private Timer gifTimer = new Timer(); // MATTT : Replace with tick.
+        private float gifTimer = 0.0f;
         private IntPtr gif;
         private Bitmap gifBmp;
         private int gifSizeX;
@@ -120,16 +119,7 @@ namespace FamiStudio
             AddControl(imageBox);
             AddControl(checkBoxDontShow);
 
-            gifTimer.Interval = 10;
-            gifTimer.Tick += GifTimer_Tick;
-
             SetPage(0);
-        }
-
-
-        private void GifTimer_Tick(object sender, EventArgs e)
-        {
-            UpdateGif();
         }
 
         private void OpenGif(string filename)
@@ -162,7 +152,6 @@ namespace FamiStudio
                 gifData = null;
                 gifBuffer = null;
                 gifHandle.Free();
-                gifTimer.Stop();
                 GifClose(gif);
                 gif = IntPtr.Zero;
                 gifBmp.Dispose();
@@ -176,9 +165,17 @@ namespace FamiStudio
                 GifAdvanceFrame(gif, new IntPtr(p), gifSizeX * 3);
 
             ParentForm.Graphics.UpdateBitmap(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
-            gifTimer.Interval = GifGetFrameDelay(gif);
-            gifTimer.Start();
+            gifTimer = GifGetFrameDelay(gif) / 1000.0f;
             MarkDirty();
+        }
+
+        public override void Tick(float delta)
+        {
+            gifTimer -= delta;
+
+            // MATTT : Pass remainder to next frame!
+            if (gifTimer <= 0)
+                UpdateGif();
         }
 
         protected override void OnShowDialog()

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-//using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -64,24 +63,91 @@ namespace FamiStudio
             return 44100;
         }
 
-        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindowUnused = null)
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public class OpenFileName
         {
-            var ofd = new System.Windows.Forms.OpenFileDialog()
-            {
-                Filter = extensions,
-                Title = title,
-                InitialDirectory = defaultPath,
-                Multiselect = multiselect
-            };
+            public int structSize = 0;
+            public IntPtr dlgOwner = IntPtr.Zero;
+            public IntPtr instance = IntPtr.Zero;
+            public string filter = null;
+            public string customFilter = null;
+            public int maxCustFilter = 0;
+            public int filterIndex = 0;
+            public IntPtr file = IntPtr.Zero;
+            public int maxFile = 0;
+            public string fileTitle = null;
+            public int maxFileTitle = 0;
+            public string initialDir = null;
+            public string title = null;
+            public int flags = 0;
+            public short fileOffset = 0;
+            public short fileExtension = 0;
+            public string defExt = null;
+            public IntPtr custData = IntPtr.Zero;
+            public IntPtr hook = IntPtr.Zero;
+            public string templateName = null;
+            public IntPtr reservedPtr = IntPtr.Zero;
+            public int reservedInt = 0;
+            public int flagsEx = 0;
+        }
 
-            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                defaultPath = System.IO.Path.GetDirectoryName(ofd.FileName);
+        [DllImport("Comdlg32.dll", CharSet = CharSet.Auto)]
+        public static extern bool GetOpenFileName([In, Out] OpenFileName ofn);
 
-                if (multiselect)
-                    return ofd.FileNames;
-                else
-                    return new[] { ofd.FileName };
+        [DllImport("Comdlg32.dll", CharSet = CharSet.Auto)]
+        public static extern bool GetSaveFileName([In, Out] OpenFileName ofn);
+
+        private const int OFN_ALLOWMULTISELECT = 0x00000200;
+        private const int OFN_EXPLORER = 0x00080000;
+        private const int OFN_OVERWRITEPROMPT = 0x00000002;
+        private const int OFN_PATHMUSTEXIST = 0x00000800;
+        private const int OFN_FILEMUSTEXIST = 0x00001000;
+
+        public static unsafe string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindowUnused = null)
+        {
+            OpenFileName ofn = new OpenFileName();
+
+            var str = new char[4096];
+
+            fixed (char* p = &str[0])
+            {
+                ofn.structSize = Marshal.SizeOf(ofn);
+                ofn.dlgOwner = FamiStudioForm.Instance.Handle;
+                ofn.filter = extensions.Replace('|', '\0');
+                ofn.file = new IntPtr(p);
+                ofn.maxFile = str.Length;
+                ofn.flags = (multiselect ? OFN_ALLOWMULTISELECT | OFN_EXPLORER : 0) | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                ofn.initialDir = defaultPath;
+                ofn.title = title;
+
+                if (GetOpenFileName(ofn))
+                {
+                    var strings = new List<string>();
+
+                    var idx0 = -1;
+                    while (true)
+                    {
+                        var idx1 = Array.IndexOf(str, '\0', idx0 + 1);
+                        if (idx1 == idx0 + 1)
+                            break;
+                        strings.Add(new string(str, idx0 + 1, idx1 - idx0 - 1));
+                        idx0 = idx1;
+                    }
+
+                    // When multiselect is allowed and the user selects multiple
+                    // first, index 0 is the path, followed by the filenames.
+                    if (strings.Count > 1)
+                    {
+                        Debug.Assert(multiselect);
+
+                        for (int i = 1; i < strings.Count; i++)
+                            strings[i] = Path.Combine(strings[0], strings[i]);
+
+                        strings.RemoveAt(0);
+                    }
+
+                    return strings.ToArray();
+                }
             }
 
             return null;
@@ -97,19 +163,29 @@ namespace FamiStudio
             return filenames[0];
         }
 
-        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
+        public static unsafe string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
-            var sfd = new System.Windows.Forms.SaveFileDialog()
-            {
-                Filter = extensions,
-                Title = title,
-                InitialDirectory = defaultPath
-            };
+            OpenFileName ofn = new OpenFileName();
 
-            if (sfd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            var str = new char[4096];
+
+            fixed (char* p = &str[0])
             {
-                defaultPath = System.IO.Path.GetDirectoryName(sfd.FileName);
-                return sfd.FileName;
+                ofn.structSize = Marshal.SizeOf(ofn);
+                ofn.dlgOwner = FamiStudioForm.Instance.Handle;
+                ofn.filter = extensions.Replace('|', '\0');
+                ofn.file = new IntPtr(p);
+                ofn.maxFile = str.Length;
+                ofn.flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+                ofn.initialDir = defaultPath;
+                ofn.title = title;
+                ofn.defExt = extensions.Substring(extensions.Length - 3);
+
+                if (GetSaveFileName(ofn))
+                {
+                    var len = Array.IndexOf(str, '\0');
+                    return new string(str, 0, len);
+                }
             }
 
             return null;
@@ -121,27 +197,88 @@ namespace FamiStudio
             return ShowSaveFileDialog(title, extensions, ref dummy);
         }
 
+        private struct BROWSEINFO
+        {
+            public IntPtr hwndOwner;
+            public IntPtr pidlRoot;
+            public string pszDisplayName;
+            public string lpszTitle;
+            public uint ulFlags;
+            public BrowseCallBackProc lpfn;
+            public IntPtr lParam;
+            public int iImage;
+        }
+
+        private const int BIF_SHAREABLE = 0x00008000;
+        private const int BIF_NEWDIALOGSTYLE = 0x00000040;
+
+        private const int WM_USER = 0x400;
+        private const int BFFM_INITIALIZED = 1;
+        private const int BFFM_SETSELECTIONA = WM_USER + 102;
+        private const int BFFM_SETSELECTIONW = WM_USER + 103;
+
+        private delegate int BrowseCallBackProc(IntPtr hwnd, int msg, IntPtr lp, IntPtr wp);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, string lParam);
+
+        [DllImport("shell32.dll")]
+        private static extern IntPtr SHBrowseForFolder(ref BROWSEINFO lpbi);
+
+        [DllImport("shell32.dll")]
+        private static extern Int32 SHGetPathFromIDList(IntPtr pidl, StringBuilder pszPath);
+
+        private static string browseInitialPath;
+
+        private static int OnBrowseEvent(IntPtr hwnd, int msg, IntPtr lp, IntPtr wp)
+        {
+            if (msg == BFFM_INITIALIZED) 
+                SendMessage(hwnd, BFFM_SETSELECTIONW, 1, browseInitialPath);
+            return 0;
+        }
+
         public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
-            var folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
-            folderBrowserDialog.Description = title;
+            var sb = new StringBuilder(4096);
+            var pidl = IntPtr.Zero;
 
-            if (!string.IsNullOrEmpty(defaultPath) && Directory.Exists(defaultPath))
-                folderBrowserDialog.SelectedPath = defaultPath;
+            BROWSEINFO bi;
+            bi.hwndOwner = Process.GetCurrentProcess().MainWindowHandle; ;
+            bi.pidlRoot = IntPtr.Zero;
+            bi.pszDisplayName = null;
+            bi.lpszTitle = title;
+            bi.ulFlags = BIF_NEWDIALOGSTYLE | BIF_SHAREABLE;
+            bi.lpfn = Directory.Exists(defaultPath) ? new BrowseCallBackProc(OnBrowseEvent) : null;
+            bi.lParam = IntPtr.Zero;
+            bi.iImage = 0;
 
-            if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            try
             {
-                defaultPath = folderBrowserDialog.SelectedPath;
-                return folderBrowserDialog.SelectedPath;
+                browseInitialPath = defaultPath;
+                pidl = SHBrowseForFolder(ref bi);
+                if (SHGetPathFromIDList(pidl, sb) == 0)
+                {
+                    return null;
+                }
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(pidl);
             }
 
-            return null;
+            return sb.ToString();
         }
+        
+        // Declares managed prototypes for unmanaged functions.
+        [DllImport("User32.dll", EntryPoint = "MessageBox", CharSet = CharSet.Auto)]
+        internal static extern int MessageBoxInternal(IntPtr hWnd, string lpText, string lpCaption, uint uType);
+
+        const uint MB_TASKMODAL = 0x00002000;
 
         public static DialogResult2 MessageBox(string text, string title, MessageBoxButtons2 buttons)
         {
             var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon2.Error : MessageBoxIcon2.None;
-            return (DialogResult2)System.Windows.Forms.MessageBox.Show(text, title, (System.Windows.Forms.MessageBoxButtons)buttons, (System.Windows.Forms.MessageBoxIcon)icons);
+            return (DialogResult2)MessageBoxInternal(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
         }
 
         public static void MessageBoxAsync(string text, string title, MessageBoxButtons2 buttons, Action<DialogResult2> callback = null)
@@ -231,6 +368,7 @@ namespace FamiStudio
 
         public static string KeyCodeToString(int key)
         {
+            /*
             var virtualKeyCode = (uint)key;
             var scanCode = MapVirtualKey(virtualKeyCode, 0);
             var inputLocaleIdentifier = GetKeyboardLayout(0);
@@ -261,19 +399,9 @@ namespace FamiStudio
             }
 
             return str;
-        }
+            */
 
-        // MATTT : Needed?
-        public static System.Drawing.Bitmap LoadBitmapFromResource(string name)
-        {
-            return System.Drawing.Image.FromStream(Assembly.GetExecutingAssembly().GetManifestResourceStream(name)) as System.Drawing.Bitmap;
-        }
-
-        // MATTT : Remove.
-        public static float GetDesktopScaling()
-        {
-            var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero);
-            return graphics.DpiX / 96.0f;
+            return "TODO!!!";
         }
 
         public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)

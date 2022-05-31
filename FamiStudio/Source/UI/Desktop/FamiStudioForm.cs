@@ -9,7 +9,7 @@ namespace FamiStudio
     // MATTT : Rename to "Window".
     public class FamiStudioForm
     {
-        private static FamiStudioForm instance; // MATTT : Remove once we pass the form to the dialogs.
+        private static FamiStudioForm instance;
 
         private const double DelayedRightClickTime = 0.25;
         private const int    DelayedRightClickPixelTolerance = 2;
@@ -62,6 +62,7 @@ namespace FamiStudio
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => controls.IsDialogActive;
         public bool MobilePianoVisible { get => false; set => value = false; }
+        public IntPtr Handle => glfwGetNativeWindow(window);
 
         private Control activeControl = null;
         private Control captureControl = null;
@@ -277,6 +278,7 @@ namespace FamiStudio
         //}
 
         // MATTT : Temporary
+        // MATTT : This is super slow, when exporting video/audio, ReportProgress *always* renders a frame and sleep 4ms.
         public void RunEventLoop()
         {
             RunIteration();
@@ -812,6 +814,8 @@ namespace FamiStudio
 
             // Always sleep a bit, even if we rendered something. This handles cases
             // where people turn off vsync. 
+            
+            // MATTT : This actually slows down export in RunEventLoop()... We should NOT sleep in those cases.
             System.Threading.Thread.Sleep(4);
 
             ConditionalEmitDelayedRightClick();

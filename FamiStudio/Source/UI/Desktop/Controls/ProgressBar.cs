@@ -20,8 +20,8 @@ namespace FamiStudio
                 var clampedValue = Utils.Clamp(value, 0.0f, 1.0f);
                 if (clampedValue != progress)
                 {
-                    // Dont do animation when going backwards.
-                    if (clampedValue < progress)
+                    // Dont do animation when going backwards or when 100% done.
+                    if (clampedValue < progress || clampedValue == 1.0f)
                         visibleProgress = clampedValue;
                     progress = clampedValue;
                     MarkDirty();

@@ -55,7 +55,9 @@ namespace FamiStudio
 
         public bool Save(Project project, string filename)
         {
+#if !DEBUG
             try
+#endif
             {
                 var serializer = new ProjectSaveBuffer(project);
                 project.SerializeState(serializer);
@@ -76,10 +78,12 @@ namespace FamiStudio
                     return true;
                 }
             }
+#if !DEBUG
             catch
             {
                 return false;
             }
+#endif
         }
     }
 }
