@@ -212,7 +212,6 @@ namespace FamiStudio
                     gfx.DrawCommandList(c);
                 }
 
-                // MATTT : Dirty flag management for dialogs.
                 foreach (var dlg in dialogs)
                 {
                     gfx.BeginDrawControl(fullWindowRect, height);
@@ -270,20 +269,6 @@ namespace FamiStudio
             contextMenu.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
             contextMenu.SetThemeRenderResource(res);
             contextMenu.RenderInitialized(gfx);
-
-            //// MATTT : Testing.
-            //var dlg = new Dialog();
-            //dlg.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
-            //dlg.SetThemeRenderResource(res);
-            //dlg.RenderInitialized(gfx);
-            //dlg.Move(100, 100, 400, 300);
-            //dlg.ParentForm = contextMenu.ParentForm; // MATTT
-            //dialogs.Push(dlg);
-
-            //dlg.AddLabel(10, 10, 100, 10, "Poop!");
-            //dlg.AddButton(120, 10, 32, 32, "");
-            //dlg.AddTextBox(10, 50, 100, 16, "Hey");
-            //dlg.AddColorPicker(10, 80, 170, 60);
         }
     }
 }

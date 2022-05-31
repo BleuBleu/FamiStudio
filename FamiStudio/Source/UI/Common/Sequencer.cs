@@ -3,8 +3,6 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-//using Color = System.Drawing.Color; // MATTT : Needed?
-
 namespace FamiStudio
 {
     public class Sequencer : Control
@@ -234,14 +232,14 @@ namespace FamiStudio
         {
             if (Platform.IsMobile)
             {
-                return Math.Max((Height / (int)MainWindowScaling - DefaultHeaderSizeY) / GetChannelCount(), 20);
+                return Math.Max((Height / (int)WindowScaling - DefaultHeaderSizeY) / GetChannelCount(), 20);
             }
             else
             {
                 var sizeY = Math.Max(Settings.ForceCompactSequencer ? 0 : 280 / GetChannelCount(), 21);
 
                 // If we are using 150% scaling (windows/linux only), we need to make sure to pick an even value.
-                if (Utils.Frac(MainWindowScaling) != 0.0f)
+                if (Utils.Frac(WindowScaling) != 0.0f)
                     sizeY = (sizeY + 1) & (~1);
 
                 return sizeY;
@@ -1152,7 +1150,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownSetLoopPoint(MouseEventArgs e)
         {
-            bool setLoop = FamiStudioWindow.IsKeyDown(Keys.L);
+            bool setLoop = ParentWindow.IsKeyDown(Keys.L);
 
             if (setLoop && e.X > trackNameSizeX && e.Left)
             {

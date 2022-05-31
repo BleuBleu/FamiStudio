@@ -1,12 +1,7 @@
 using System;
-using System.Drawing; // MATTT : See the usings below.
+using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
-
-// MATTT : Needed?
-//using Color     = System.Drawing.Color;
-//using Point     = System.Drawing.Point;
-//using Rectangle = System.Drawing.Rectangle;
 
 namespace FamiStudio
 {
@@ -453,8 +448,8 @@ namespace FamiStudio
             if (Platform.IsDesktop)
             {
                 // Hide a few buttons if the window is too small (out min "usable" resolution is ~1280x720).
-                var hideLessImportantButtons = Width < 1420 * MainWindowScaling;
-                var hideOscilloscope         = Width < 1250 * MainWindowScaling;
+                var hideLessImportantButtons = Width < 1420 * WindowScaling;
+                var hideOscilloscope         = Width < 1250 * WindowScaling;
 
                 var x = 0;
 
@@ -1019,7 +1014,7 @@ namespace FamiStudio
 
         private void RenderWarningAndTooltip(CommandList c)
         {
-            var scaling = MainWindowScaling;
+            var scaling = WindowScaling;
             var message = tooltip;
             var messageBrush = redTooltip ? warningBrush : ThemeResources.LightGreyFillBrush2;
             var messageFont = ThemeResources.FontMedium;

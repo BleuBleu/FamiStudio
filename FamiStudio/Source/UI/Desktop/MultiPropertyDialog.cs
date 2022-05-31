@@ -20,7 +20,6 @@ namespace FamiStudio
 
         private Button buttonYes;
         private Button buttonNo;
-        //private ToolTip toolTip; MATTT
 
         public MultiPropertyDialog(string title, int width, int height, int tabsWidth = 150)
         {
@@ -28,9 +27,6 @@ namespace FamiStudio
             tabsSizeX = DpiScaling.ScaleForMainWindow(tabsWidth);
             Move(0, 0, DpiScaling.ScaleForMainWindow(width), DpiScaling.ScaleForMainWindow(width));
             Init();
-
-            //toolTip.SetToolTip(buttonYes, "Accept");
-            //toolTip.SetToolTip(buttonNo, "Cancel");
         }
 
         public void SetVerb(string text, bool showOnTabPage = false)
@@ -42,11 +38,13 @@ namespace FamiStudio
             buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
+            buttonYes.ToolTip = "Accept";
 
             buttonNo = new Button("No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
-            
+            buttonNo.ToolTip = "Cancel";
+
             AddControl(buttonYes);
             AddControl(buttonNo);
         }

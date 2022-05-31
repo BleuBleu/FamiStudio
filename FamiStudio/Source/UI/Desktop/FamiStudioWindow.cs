@@ -210,23 +210,21 @@ namespace FamiStudio
 
         public void CaptureMouse(Control ctrl)
         {
-            //if (lastButtonPress != System.Windows.Forms.MouseButtons.None)
-            //{
-            //    Debug.Assert(captureControl == null);
+            if (lastButtonPress >= 0)
+            {
+                Debug.Assert(captureControl == null);
 
-            //    captureButton = lastButtonPress;
-            //    captureControl = ctrl;
-            //    Capture = true;
-            //}
+                captureButton = lastButtonPress;
+                captureControl = ctrl;
+            }
         }
 
         public void ReleaseMouse()
         {
-            //if (captureControl != null)
-            //{
-            //    captureControl = null;
-            //    Capture = false;
-            //}
+            if (captureControl != null)
+            {
+                captureControl = null;
+            }
         }
 
         public Point PointToClient(Point p)
@@ -689,6 +687,28 @@ namespace FamiStudio
             return CallWindowProc(oldWndProc, hwnd, msg, wparam, lparam);
         }
 
+        [DllImport("DwmApi")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
+
+        protected void EnableWindowsDarkTheme()
+        {
+            if (Platform.IsWindows)
+            {
+                IntPtr handle = glfwGetNativeWindow(window);
+
+                // From https://stackoverflow.com/questions/57124243/winforms-dark-title-bar-on-windows-10
+                try
+                {
+                    if (DwmSetWindowAttribute(handle, 19, new[] { 1 }, 4) != 0)
+                        DwmSetWindowAttribute(handle, 20, new[] { 1 }, 4);
+                }
+                catch
+                {
+                    // Will likely fail on Win7/8.
+                }
+            }
+        }
+
         public void Quit()
         {
             // MATTT : Retest this on macos.
@@ -731,32 +751,32 @@ namespace FamiStudio
 
         public void RefreshCursor()
         {
-            //var pt = PointToClient(Cursor.Position);
-            //RefreshCursor(controls.GetControlAtCoord(pt.X, pt.Y, out _, out _));
+            var pt = PointToClient(GetCursorPosInternal());
+            RefreshCursor(controls.GetControlAtCoord(pt.X, pt.Y, out _, out _));
         }
 
         private void RefreshCursor(Control ctrl)
         {
-            //if (captureControl != null && captureControl != ctrl)
-            //    return;
+            if (captureControl != null && captureControl != ctrl)
+                return;
 
-            //Cursor = ctrl != null ? ctrl.Cursor.Current : Cursors.Default;
+            glfwSetCursor(window, ctrl != null ? ctrl.Cursor.Current : Cursors.Default);
         }
 
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
-            //if (ctrl != null && ctrl != activeControl && (ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer))
-            //{
-            //    activeControl.MarkDirty();
-            //    activeControl = ctrl;
-            //    activeControl.MarkDirty();
-            //}
+            if (ctrl != null && ctrl != activeControl && (ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer))
+            {
+                activeControl.MarkDirty();
+                activeControl = ctrl;
+                activeControl.MarkDirty();
+            }
         }
 
         public void ShowContextMenu(int x, int y, ContextMenuOption[] options)
         {
-            //contextMenuPoint = PointToScreen(new Point(x, y));
-            //controls.ShowContextMenu(x, y, options);
+            contextMenuPoint = PointToScreen(new Point(x, y));
+            controls.ShowContextMenu(x, y, options);
         }
 
         public void HideContextMenu()
@@ -779,32 +799,9 @@ namespace FamiStudio
             controls.PopDialog(dialog);
         }
 
-        public static bool IsKeyDown(Keys k)
+        public bool IsKeyDown(Keys k)
         {
-            //return (GetKeyState((int)k) & 0x8000) != 0;
-            return false;
-        }
-
-        [DllImport("DwmApi")]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
-
-        protected void EnableWindowsDarkTheme()
-        {
-            if (Platform.IsWindows)
-            {
-                IntPtr handle = glfwGetNativeWindow(window);
-
-                // From https://stackoverflow.com/questions/57124243/winforms-dark-title-bar-on-windows-10
-                try
-                {
-                    if (DwmSetWindowAttribute(handle, 19, new[] { 1 }, 4) != 0)
-                        DwmSetWindowAttribute(handle, 20, new[] { 1 }, 4);
-                }
-                catch
-                {
-                    // Will likely fail on Win7/8.
-                }
-            }
+            return glfwGetKey(window, (int)k) == GLFW_PRESS;
         }
 
         private void ProcessEvents()

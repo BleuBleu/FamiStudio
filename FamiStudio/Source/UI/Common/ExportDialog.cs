@@ -202,9 +202,6 @@ namespace FamiStudio
             else
             {
                 page.AddLabel(null, "Video export requires FFmpeg. Please go in the application settings and look for the 'FFmpeg' section.", true);
-                // HACK : Last minute hack, too lazy to debug GTK layouting issues right now.
-                if (Platform.IsGTK)
-                    page.AddLabel(null, " ");
                 return false;
             }
         }

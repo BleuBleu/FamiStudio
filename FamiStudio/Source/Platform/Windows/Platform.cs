@@ -232,7 +232,7 @@ namespace FamiStudio
 
         private static int OnBrowseEvent(IntPtr hwnd, int msg, IntPtr lp, IntPtr wp)
         {
-            if (msg == BFFM_INITIALIZED) 
+            if (msg == BFFM_INITIALIZED)
                 SendMessage(hwnd, BFFM_SETSELECTIONW, 1, browseInitialPath);
             return 0;
         }
@@ -268,7 +268,7 @@ namespace FamiStudio
 
             return sb.ToString();
         }
-        
+
         // Declares managed prototypes for unmanaged functions.
         [DllImport("User32.dll", EntryPoint = "MessageBox", CharSet = CharSet.Auto)]
         internal static extern int MessageBoxInternal(IntPtr hWnd, string lpText, string lpCaption, uint uType);
@@ -454,6 +454,64 @@ namespace FamiStudio
         public static double TimeSeconds()
         {
             return glfwGetTime();
+        }
+        
+        [DllImport("user32.dll")]
+        private static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr name);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
+
+        [DllImport("gdi32.dll")]
+        private static extern int GetObject(IntPtr hgdiobj, int cbBuffer, out BITMAP bmp);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ICONINFO
+        {
+            public bool fIcon;
+            public Int32 xHotspot;
+            public Int32 yHotspot;
+            public IntPtr hbmMask;
+            public IntPtr hbmColor;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct BITMAP
+        {
+            public int bmType;
+            public int bmWidth;
+            public int bmHeight;
+            public int bmWidthBytes;
+            public int bmPlanes;
+            public int bmBitsPixel;
+            public IntPtr bmBits;
+        };
+
+        private const int IDC_ARROW = 32512;
+
+        public static int GetCursorSize()
+        {
+            var size = 32;
+            var arrow = LoadCursor(IntPtr.Zero, (IntPtr)IDC_ARROW);
+
+            if (GetIconInfo(arrow, out var info))
+            {
+                var bBWCursor = (info.hbmColor == IntPtr.Zero);
+
+                if (GetObject(info.hbmMask, Marshal.SizeOf(typeof(BITMAP)), out var bmpInfo) != 0)
+                {
+                    size = bmpInfo.bmWidth;
+                    size = Math.Abs(bmpInfo.bmHeight) / (bBWCursor ? 2 : 1);
+                }
+
+                DeleteObject(info.hbmColor);
+                DeleteObject(info.hbmMask);
+            }
+
+            return size;
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -642,6 +700,5 @@ namespace FamiStudio
         public const bool IsWindows = true;
         public const bool IsLinux   = false;
         public const bool IsMacOS   = false;
-        public const bool IsGTK     = false;
     }
 }

@@ -2678,7 +2678,7 @@ namespace FamiStudio
                     else
                         highlightRect = new RectangleF(x0, y0, x1 - x0, y1 - y0);
 
-                    bool drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * MainWindowScaling * 2);
+                    bool drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * WindowScaling * 2);
                     var brush = drawOutside ? ThemeResources.LightGreyFillBrush1 : ThemeResources.BlackBrush;
                     var offset = drawOutside != val < center ? -effectValuePosTextOffsetY : effectValueNegTextOffsetY;
 
@@ -4986,7 +4986,7 @@ namespace FamiStudio
             {
                 if (left)
                 {
-                    var slide = FamiStudioWindow.IsKeyDown(Keys.S);
+                    var slide = ParentWindow.IsKeyDown(Keys.S);
 
                     if (slide && selectedEffectIdx == Note.EffectVolume)
                     {
@@ -5107,10 +5107,10 @@ namespace FamiStudio
                 if (left)
                 {
                     var shift   = ModifierKeys.Shift;
-                    var stop    = FamiStudioWindow.IsKeyDown(Keys.T);
-                    var slide   = FamiStudioWindow.IsKeyDown(Keys.S);
-                    var attack  = FamiStudioWindow.IsKeyDown(Keys.A);
-                    var eyedrop = FamiStudioWindow.IsKeyDown(Keys.I);
+                    var stop    = ParentWindow.IsKeyDown(Keys.T);
+                    var slide   = ParentWindow.IsKeyDown(Keys.S);
+                    var attack  = ParentWindow.IsKeyDown(Keys.A);
+                    var eyedrop = ParentWindow.IsKeyDown(Keys.I);
 
                     if (slide)
                     {
@@ -7240,7 +7240,7 @@ namespace FamiStudio
         {
             var toggleRect = GetToggleEffectPannelButtonRect();
             var snapRect   = GetSnapButtonRect();
-            return new Rectangle(toggleRect.Right, toggleRect.Top + 1, snapRect.Left - toggleRect.Right - (int)MainWindowScaling, snapRect.Height);
+            return new Rectangle(toggleRect.Right, toggleRect.Top + 1, snapRect.Left - toggleRect.Right - (int)WindowScaling, snapRect.Height);
         }
 
         private bool IsPointOnToggleEffectPannelButton(int x, int y)
@@ -7997,7 +7997,7 @@ namespace FamiStudio
             {
                 Cursor.Current = Cursors.CopyCursor;
             }
-            else if (editMode == EditionMode.Channel && FamiStudioWindow.IsKeyDown(Keys.I))
+            else if (editMode == EditionMode.Channel && ParentWindow.IsKeyDown(Keys.I))
             {
                 Cursor.Current = Cursors.Eyedrop;
             }

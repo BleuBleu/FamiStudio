@@ -423,7 +423,8 @@
     <EmbeddedResource Include="Resources\ExportVideo@2x.tga" />
     <EmbeddedResource Include="Resources\ExportWav.tga" />
     <EmbeddedResource Include="Resources\ExportWav@2x.tga" />
-    <EmbeddedResource Include="Resources\Eyedrop.cur" />
+    <EmbeddedResource Include="Resources\EyedropCursor.tga" />
+    <EmbeddedResource Include="Resources\EyedropCursor@2x.tga" />
     <EmbeddedResource Include="Resources\FamiStudio.ico" />
     <EmbeddedResource Include="Resources\File.tga" />
     <EmbeddedResource Include="Resources\File@2x.tga" />

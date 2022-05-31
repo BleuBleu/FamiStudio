@@ -35,8 +35,6 @@ namespace FamiStudio
                 {
                     if (log)
                     {
-                        // MATTT : This is super slow, ReportProgress *always* renders 
-                        // a frame and sleep 4ms.
                         if (duration > 0)
                             Log.ReportProgress(samples.Count / (float)maxSample);
                         else

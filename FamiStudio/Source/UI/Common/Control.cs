@@ -101,7 +101,7 @@ namespace FamiStudio
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
         public string ToolTip { get => tooltip; set { tooltip = value; MarkDirty(); } }
-        public float MainWindowScaling => windowScaling;
+        public float WindowScaling => windowScaling;
         public float FontScaling => fontScaling;
         public ThemeRenderResources ThemeResources => themeRes;
         public void MarkDirty() { dirty = true; if (parentDialog != null) parentDialog.MarkDirty(); }

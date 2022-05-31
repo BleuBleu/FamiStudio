@@ -420,7 +420,7 @@ namespace FamiStudio
             return System.Drawing.Point.Empty;
         }
 
-        public static bool IsKeyDown(System.Windows.Forms.Keys key)
+        public bool IsKeyDown(System.Windows.Forms.Keys key)
         {
             return false;
         }

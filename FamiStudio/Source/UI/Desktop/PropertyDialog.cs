@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
 
-// MATTT Move to \Desktop
 namespace FamiStudio
 {
     public partial class PropertyDialog : Dialog
