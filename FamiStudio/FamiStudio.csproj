@@ -682,24 +682,12 @@
     <EmbeddedResource Include="Rom\rom_pal.nes" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="glfw3.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="GifDec.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="NesSndEmu.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="NotSoFatso.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ShineMp3.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Vorbis.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="glfw3.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
+    <Content Include="GifDec.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
+    <Content Include="NesSndEmu.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
+    <Content Include="NotSoFatso.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
+    <Content Include="ShineMp3.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
+    <Content Include="Vorbis.dll"> <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

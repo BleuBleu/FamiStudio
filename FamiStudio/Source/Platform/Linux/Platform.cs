@@ -71,7 +71,7 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindow = null)
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, IntPtr parentWindow = default(IntPtr))
         {
             /*
             var extensionList = GetExtensionList(extensions);
@@ -127,7 +127,7 @@ namespace FamiStudio
             return null;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, object parentWindow = null)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, IntPtr parentWindow = default(IntPtr))
         {
             var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindow);
 

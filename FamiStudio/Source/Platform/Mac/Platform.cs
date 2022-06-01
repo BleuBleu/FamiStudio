@@ -6,57 +6,27 @@ using System.Linq;
 using System.Media;
 using System.Reflection;
 using System.Threading;
-using Gtk;
-using OpenTK;
+using static GLFWDotNet.GLFW;
 
 using Action = System.Action;
 
 namespace FamiStudio
 {
-    public static class PlatformUtils
+    public static class Platform
     {
         public static string ApplicationVersion => version;
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
         public static string UserProjectsDirectory => null;
+        public static float DoubleClickTime => 0.25f; // MATTT
 
         private static Thread mainThread;
         private static string version;
 
-        public static void Initialize()
+        public static bool Initialize()
         {
             mainThread = Thread.CurrentThread;
             version = Assembly.GetEntryAssembly().GetName().Version.ToString();
-
-            // When debugging or when in a app package, our paths are a bit different.
-            string[] pathsToSearch =
-            {
-                "./Resources/",
-                "../../Resources/",
-                "../Resources/Fonts/",
-                "."
-            };
-
-            string[] fontsToLoad =
-            {
-                "Quicksand-Regular.ttf",
-                "Quicksand-Bold.ttf"
-            };
-
-            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-            foreach (var path in pathsToSearch)
-            {
-                var absPath = Path.Combine(appPath, path);
-
-                if (File.Exists(Path.Combine(absPath, fontsToLoad[0])))
-                {
-                    foreach (var font in fontsToLoad)
-                        MacUtils.CoreTextRegisterFont(Path.Combine(absPath, font));
-                    break;
-                }
-            }
-
-            InitializeGtk();
+            return true;
         }
 
         public static bool IsInMainThread()
@@ -80,24 +50,6 @@ namespace FamiStudio
             return 44100;
         }
 
-        private static void ParseRcFileFromResource(string rcFile)
-        {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(rcFile))
-            using (var reader = new StreamReader(stream))
-            {
-                string gtkrc = reader.ReadToEnd();
-                Gtk.Rc.ParseString(gtkrc);
-            }
-        }
-
-        public static void InitializeGtk()
-        {
-            Gtk.Application.Init();
-
-            var rcFile = "FamiStudio.Resources.gtk_mac.rc";
-            ParseRcFileFromResource(rcFile);
-        }
-
         private static string[] GetExtensionList(string str)
         {
             var splits = str.Split('|');
@@ -111,7 +63,7 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, Window parentWindow = null)
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, IntPtr parentWindow = default(IntPtr))
         {
             var extensionList = GetExtensionList(extensions);
 
@@ -121,7 +73,7 @@ namespace FamiStudio
             return filenames;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, Window parentWindow = null)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, IntPtr parentWindow = default(IntPtr))
         {
             var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindow);
 
@@ -176,27 +128,20 @@ namespace FamiStudio
         {
         }
 
-        public static string KeyCodeToString(int keyval)
+        // MATTT : Do we want to move the GLFW common code else where?
+        public static int GetKeyScancode(Keys key)
         {
-            var str = char.ConvertFromUtf32((int)Gdk.Keyval.ToUnicode((uint)keyval));
-
-            // Fallback to key enum for special keys.
-            if (str.Length == 0 || (str.Length == 1 && str[0] <= 32))
-            {
-                return ((Gdk.Key)keyval).ToString();
-            }
-
-            return str.ToUpper();
+            return glfwGetKeyScancode((int)key);
         }
 
-        public static Gdk.Pixbuf LoadBitmapFromResource(string name)
+        public static string KeyToString(Keys key)
         {
-            return Gdk.Pixbuf.LoadFromResource(name);
+            return glfwGetKeyName((int)key, 0);
         }
 
-        public static float GetDesktopScaling()
+        public static string ScancodeToString(int scancode)
         {
-            return MacUtils.MainWindowScaling;
+            return glfwGetKeyName((int)Keys.Unknown, scancode);
         }
 
         public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
@@ -246,6 +191,16 @@ namespace FamiStudio
             SystemSounds.Beep.Play();
         }
 
+        public static double TimeSeconds()
+        {
+            return glfwGetTime();
+        }
+
+        public static int GetCursorSize()
+        {
+            return 32; // MATTT
+        }
+
         public static void SetClipboardData(byte[] data)
         {
             MacUtils.SetPasteboardData(data);
@@ -259,6 +214,12 @@ namespace FamiStudio
         public static string GetClipboardString()
         {
             return MacUtils.GetPasteboardString();
+        }
+
+        public static void SetClipboardString(string str)
+        {
+            // MATTT
+            Debug.Assert(false);
         }
 
         public static void ClearClipboardString()

@@ -263,7 +263,7 @@ namespace FamiStudio
             public ButtonStatusDelegate Enabled;
             public MouseClickDelegate Click;
             public MouseClickDelegate RightClick;
-            public MouseWheelDelegate MouseWheel;
+            //public MouseWheelDelegate MouseWheel;
             public BitmapDelegate GetBitmap;
         };
 
@@ -1236,11 +1236,11 @@ namespace FamiStudio
             return null;
         }
 
-        protected override void OnMouseWheel(MouseEventArgs e)
-        {
-            GetButtonAtCoord(e.X, e.Y)?.MouseWheel?.Invoke(e.ScrollY);
-            base.OnMouseWheel(e);
-        }
+        //protected override void OnMouseWheel(MouseEventArgs e)
+        //{
+        //    GetButtonAtCoord(e.X, e.Y)?.MouseWheel?.Invoke(e.ScrollY);
+        //    base.OnMouseWheel(e);
+        //}
 
         protected bool IsPointInTimeCode(int x, int y)
         {

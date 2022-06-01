@@ -103,7 +103,8 @@ namespace FamiStudio
         private const int OFN_PATHMUSTEXIST = 0x00000800;
         private const int OFN_FILEMUSTEXIST = 0x00001000;
 
-        public static unsafe string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindowUnused = null)
+        // MATTT : Use parent window or Instance, not BOTH.
+        public static unsafe string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, IntPtr parentWindow = default(IntPtr))
         {
             OpenFileName ofn = new OpenFileName();
 
@@ -153,9 +154,9 @@ namespace FamiStudio
             return null;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, object parentWindowUnused = null)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, IntPtr parentWindow = default(IntPtr))
         {
-            var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindowUnused);
+            var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindow);
 
             if (filenames == null || filenames.Length == 0)
                 return null;

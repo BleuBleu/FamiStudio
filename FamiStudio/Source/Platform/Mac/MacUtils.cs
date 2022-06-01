@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace FamiStudio
 {
+    // MATTT : Clean this up!!! Remove anything that isnt needed anymore.
     static class MacUtils
     {
         static IntPtr appKitLib;
@@ -102,9 +103,6 @@ namespace FamiStudio
 
         [DllImport("/System/Library/Frameworks/AppKit.framework/AppKit")]
         public static extern void NSBeep();
-
-        [DllImport("/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreText.framework/CoreText")]
-        public static extern bool CTFontManagerRegisterFontsForURL(IntPtr fontUrl, int scope, IntPtr error);
 
         [DllImport("libgdk-quartz-2.0.0.dylib", EntryPoint = "gdk_quartz_window_get_nswindow")]
         public static extern IntPtr NSWindowFromGdkWindow(IntPtr window);
@@ -486,12 +484,6 @@ namespace FamiStudio
             return items;
         }
 
-        public static void CoreTextRegisterFont(string fontfile)
-        {
-            var url = ToNSURL(fontfile);
-            CTFontManagerRegisterFontsForURL(url, 1, IntPtr.Zero);
-        }
-
         internal struct NSFloat
         {
             public IntPtr Value;
@@ -680,16 +672,16 @@ namespace FamiStudio
             return r;
         }
 
-        public static System.Windows.Forms.MouseButtons GetMouseButtons()
-        {
-            int macButtons = SendInt(clsNSEvent, selPressedMouseButtons);
+        //public static MouseButtons GetMouseButtons()
+        //{
+        //    int macButtons = SendInt(clsNSEvent, selPressedMouseButtons);
 
-            System.Windows.Forms.MouseButtons buttons = 0;
-            if ((macButtons & 1) != 0) buttons |= System.Windows.Forms.MouseButtons.Left;
-            if ((macButtons & 2) != 0) buttons |= System.Windows.Forms.MouseButtons.Right;
-            if ((macButtons & 4) != 0) buttons |= System.Windows.Forms.MouseButtons.Middle;
-            return buttons;
-        }
+        //    MouseButtons buttons = 0;
+        //    if ((macButtons & 1) != 0) buttons |= MouseButtons.Left;
+        //    if ((macButtons & 2) != 0) buttons |= MouseButtons.Right;
+        //    if ((macButtons & 4) != 0) buttons |= MouseButtons.Middle;
+        //    return buttons;
+        //}
 
         public static System.Drawing.PointF GetWindowSize(IntPtr nsWin)
         {
@@ -887,7 +879,7 @@ namespace FamiStudio
             return null;
         }
 
-        public static System.Windows.Forms.DialogResult2 ShowAlert(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)
+        public static DialogResult ShowAlert(string text, string title, MessageBoxButtons buttons)
         {
             var alert = SendIntPtr(SendIntPtr(clsNSAlert, selAlloc), selInit);
 
@@ -895,13 +887,13 @@ namespace FamiStudio
             SendIntPtr(alert, selSetInformativeText, ToNSString(text));
             SendIntPtr(alert, selSetAlertStyle, 2);
 
-            if (buttons == System.Windows.Forms.MessageBoxButtons.YesNo ||
-                buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
+            if (buttons == MessageBoxButtons.YesNo ||
+                buttons == MessageBoxButtons.YesNoCancel)
             {
                 SendIntPtr(alert, selAddButtonWithTitle, ToNSString("Yes"));
                 SendIntPtr(alert, selAddButtonWithTitle, ToNSString("No"));
 
-                if (buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
+                if (buttons == MessageBoxButtons.YesNoCancel)
                 {
                     SendIntPtr(alert, selAddButtonWithTitle, ToNSString("Cancel"));
                 }
@@ -911,19 +903,19 @@ namespace FamiStudio
 
             SetNSWindowFocus(nsWindow);
 
-            if (buttons == System.Windows.Forms.MessageBoxButtons.YesNo ||
-                buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
+            if (buttons == MessageBoxButtons.YesNo ||
+                buttons == MessageBoxButtons.YesNoCancel)
             {
                 if (ret == NSAlertFirstButtonReturn)
-                    return System.Windows.Forms.DialogResult2.Yes;
+                    return DialogResult.Yes;
                 if (ret == NSAlertSecondButtonReturn)
-                    return System.Windows.Forms.DialogResult2.No;
+                    return DialogResult.No;
 
-                return System.Windows.Forms.DialogResult2.Cancel;
+                return DialogResult.Cancel;
             }
             else
             {
-                return System.Windows.Forms.DialogResult2.OK;
+                return DialogResult.OK;
             }
         }
 
