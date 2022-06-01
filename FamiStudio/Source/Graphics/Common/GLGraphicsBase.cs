@@ -922,11 +922,7 @@ namespace FamiStudio
 
         public static int PackColorForTexture(Color c)
         {
-#if FAMISTUDIO_ANDROID
-            return (c.A << 24) | (c.B << 16) | (c.G << 8) | c.R;
-#else
-            return c.ToArgb();
-#endif
+            return Platform.IsAndroid ? ((c.A << 24) | (c.B << 16) | (c.G << 8) | c.R) : c.ToArgb();
         }
     }
 
@@ -1124,13 +1120,9 @@ namespace FamiStudio
             public int count;
         };
 
-#if FAMISTUDIO_LINUX
         private bool drawThickLineAsPolygon;
         private MeshBatch thickLineBatch; // Linux only
         public bool HasAnyTickLineMeshes => thickLineBatch != null;
-#else
-        public bool HasAnyTickLineMeshes => false;
-#endif
 
         private int maxSmoothLineWidth = int.MaxValue;
         private int lineWidthBias;
@@ -1161,9 +1153,7 @@ namespace FamiStudio
             invDashTextureSize = 1.0f / dashTextureSize;
             lineWidthBias = lineBias;
             maxSmoothLineWidth = maxSmoothWidth;
-#if FAMISTUDIO_LINUX
             drawThickLineAsPolygon = !supportsLineWidth;
-#endif
         }
 
         public void PushTranslation(float x, float y)
@@ -1277,13 +1267,11 @@ namespace FamiStudio
 
         private void DrawLineInternal(float x0, float y0, float x1, float y1, Brush brush, int width, bool smooth, bool dash)
         {
-#if FAMISTUDIO_LINUX
             if (width > 1.0f && drawThickLineAsPolygon)
             {
                 DrawThickLineAsPolygonInternal(x0, y0, x1, y1, brush, width);
                 return;
             }
-#endif
 
             var batch = GetLineBatch(width, smooth);
 
@@ -1321,8 +1309,7 @@ namespace FamiStudio
             batch.colArray[batch.colIdx++] = brush.PackedColor0;
         }
 
-#if FAMISTUDIO_LINUX
-        private void DrawThickLineAsPolygonInternal(float x0, float y0, float x1, float y1, GLBrush brush, float width)
+        private void DrawThickLineAsPolygonInternal(float x0, float y0, float x1, float y1, Brush brush, float width)
         {
             if (thickLineBatch == null)
             {
@@ -1366,7 +1353,6 @@ namespace FamiStudio
             batch.colArray[batch.colIdx++] = brush.PackedColor0;
             batch.colArray[batch.colIdx++] = brush.PackedColor0;
         }
-#endif
 
         public void DrawLine(float x0, float y0, float x1, float y1, Brush brush, int width = 1, bool smooth = false, bool dash = false)
         {
@@ -1464,14 +1450,12 @@ namespace FamiStudio
             var halfWidth = 0.0f;
             var extraPixel = smooth ? 0 : 1;
 
-#if FAMISTUDIO_ANDROID
-            if (width > maxSmoothLineWidth)
+            if (Platform.IsAndroid && width > maxSmoothLineWidth)
             {
                 smooth = false;
                 halfWidth = (float)Math.Floor(width * 0.5f);
                 extraPixel = 0;
             }
-#endif
 
             DrawLineInternal(x0 - halfWidth, y0, x1 + extraPixel + halfWidth, y0, brush, width, smooth, false);
             DrawLineInternal(x1, y0 - halfWidth, x1, y1 + extraPixel + halfWidth, brush, width, smooth, false);
@@ -1483,13 +1467,11 @@ namespace FamiStudio
         {
             width += lineWidthBias;
 
-#if FAMISTUDIO_ANDROID
-            if (width > maxSmoothLineWidth)
+            if (Platform.IsAndroid && width > maxSmoothLineWidth)
             {
                 smooth = false;
                 miter = !xform.HasScaling; // Miter doesnt work with scaling atm.
             }
-#endif
 
             var points = miter ? geo.GetMiterPoints(width) : geo.Points;
 
@@ -1915,7 +1897,6 @@ namespace FamiStudio
             return drawData;
         }
 
-#if FAMISTUDIO_LINUX
         public MeshDrawData GetThickLineAsPolygonDrawData()
         {
             var draw = (MeshDrawData)null;
@@ -1934,7 +1915,6 @@ namespace FamiStudio
 
             return draw;
         }
-#endif
 
         public List<LineDrawData> GetLineDrawData()
         {

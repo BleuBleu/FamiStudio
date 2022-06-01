@@ -21,7 +21,7 @@ int __stdcall GifGetHeight(gd_GIF* gif)
     return gif->height;
 }
 
-int __stdcall GifAdvanceFrame(gd_GIF* gif, unsigned char* buffer, int stride)
+int __stdcall GifAdvanceFrame(gd_GIF* gif)
 {
     int ret = gd_get_frame(gif);
 
@@ -33,11 +33,14 @@ int __stdcall GifAdvanceFrame(gd_GIF* gif, unsigned char* buffer, int stride)
 
     if (ret == -1)
         return -1;
+}
 
+void __stdcall GifRenderFrame(gd_GIF* gif, unsigned char* buffer, int stride, int channels)
+{
     unsigned char* color = buffer;
 
-    // Create temp buffer if stride isnt a perfect match.
-    if (stride != gif->width * 3)
+    // Create temp buffer if stride isnt a perfect match or if we need to add alpha.
+    if (channels != 3 || stride != gif->width * 3)
     {
         color = malloc(stride * gif->height);
     }
@@ -46,18 +49,34 @@ int __stdcall GifAdvanceFrame(gd_GIF* gif, unsigned char* buffer, int stride)
 
     if (color != buffer)
     {
-        unsigned char* row = color;
+        unsigned char* src = color;
 
-        for (int y = 0; y < gif->height; y++)
+        if (channels == 3)
         {
-            memcpy(&buffer[stride * y], row, gif->width * 3);
-            row += gif->width * 3; 
+            for (int y = 0; y < gif->height; y++)
+            {
+                memcpy(&buffer[stride * y], src, gif->width * 3);
+                src += gif->width * 3;
+            }
+        }
+        else
+        {
+            unsigned char* dst = buffer;
+
+            for (int y = 0; y < gif->height * gif->width; y++)
+            {
+                dst[0] = src[2];
+                dst[1] = src[1];
+                dst[2] = src[0];
+                dst[3] = 255;
+
+                src += 3;
+                dst += 4;
+            }
         }
 
         free(color);
     }
-
-    return ret;
 }
 
 int __stdcall GifGetFrameDelay(gd_GIF* gif)

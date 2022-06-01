@@ -18,7 +18,6 @@ using Java.Util;
 using Debug = System.Diagnostics.Debug;
 using ActionBar = AndroidX.AppCompat.App.ActionBar;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -56,14 +55,14 @@ namespace FamiStudio
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
         private MaxHeightImageView imageView;
 
-        private ManualResetEvent gifQuitEvent = new ManualResetEvent(false);
-        private Task gifTask;
+        //private Timer gifTimer;
         private IntPtr gif;
+        private Handler gifHandler;
+        private Action gifAction;
         private Android.Graphics.Bitmap gifBmp;
         private int gifSizeX;
         private int gifSizeY;
         private byte[] gifData;
-        private byte[] gifBuffer;
         private GCHandle gifHandle;
 
         private int pageIndex = 0;
@@ -153,6 +152,9 @@ namespace FamiStudio
             coordLayout.AddView(appBarLayout);
             coordLayout.AddView(linearLayout);
 
+            gifHandler = new Handler(Looper.MainLooper);
+            gifAction = new Action(() => UpdateGif());
+
             RefreshPage();
             SetContentView(coordLayout);
         }
@@ -205,63 +207,55 @@ namespace FamiStudio
             gifSizeX = Gif.GetWidth(gif);
             gifSizeY = Gif.GetHeight(gif);
             gifBmp = Android.Graphics.Bitmap.CreateBitmap(gifSizeX, gifSizeY, Android.Graphics.Bitmap.Config.Argb8888, false);
-            gifBuffer = new byte[gifSizeX * gifSizeY * 4];
             imageView.SetImageBitmap(gifBmp);
-
-            AdvanceFrame();
-            UpdateImage();
-            StartGifTask();
         }
 
         private void CloseGif()
         {
             if (gif != IntPtr.Zero)
             {
-                StopGifTask();
                 gifData = null;
-                gifBuffer = null;
                 gifHandle.Free();
+                gifHandler.RemoveCallbacksAndMessages(null);
+#if false
+                gifTimer.Cancel();
+                gifTimer = null;
+#endif
                 Gif.Close(gif);
                 gif = IntPtr.Zero;
             }
         }
-        private unsafe int AdvanceFrame()
-        {
-            var start = SystemClock.UptimeMillis();
-            Gif.AdvanceFrame(gif);
-            lock (gifBuffer)
-            {
-                fixed (byte* p = &gifBuffer[0])
-                    Gif.RenderFrame(gif, (IntPtr)p, gifSizeX * 4, 4);
-            }
-            return (int)(SystemClock.UptimeMillis() - start);
-        }
 
-        private void UpdateImage()
+        private DateTime lastUpdate = DateTime.Now;
+
+        private unsafe void UpdateGif(int debug = 0)
         {
-            lock (gifBuffer)
+            if (gif != IntPtr.Zero)
             {
+                var now = DateTime.Now;
+                var timeDiff = (int)(now - lastUpdate).TotalMilliseconds;
+                var rollover = Gif.GetFrameDelay(gif) - timeDiff;
+                Console.WriteLine($"Delay Actual = {timeDiff} ms, Espected = {Gif.GetFrameDelay(gif)} ms, Rollover = {rollover}");
+                lastUpdate = now;
+
+
+                var decodeStart = SystemClock.UptimeMillis();
                 var pixels = gifBmp.LockPixels();
-                Marshal.Copy(gifBuffer, 0, pixels, gifBuffer.Length);
+                Gif.AdvanceFrame(gif, pixels, gifSizeX * 4, 4);
                 gifBmp.UnlockPixels();
+                imageView.Invalidate();
+                var decodeTime = SystemClock.UptimeMillis() - decodeStart;
+
+                Debug.WriteLine($"Decode time = {decodeTime} ms.");
+
+                var delay = System.Math.Max(0, Gif.GetFrameDelay(gif) - decodeTime - 5);
+#if true
+                gifHandler.PostDelayed(gifAction, delay);
+#else
+                gifTimer = new Timer();
+                gifTimer.Schedule(new GifTask(this), Gif.GetFrameDelay(gif));
+#endif
             }
-
-            imageView.Invalidate();
-        }
-
-        private void StartGifTask()
-        {
-            Debug.Assert(gifTask == null);
-
-            gifQuitEvent.Reset();
-            gifTask = Task.Factory.StartNew(GifTask, TaskCreationOptions.LongRunning);
-        }
-
-        private void StopGifTask()
-        {
-            gifQuitEvent.Set();
-            gifTask.Wait();
-            gifTask = null;
         }
 
         private void RefreshPage()
@@ -269,6 +263,7 @@ namespace FamiStudio
             textView.Text = TutorialMessages[pageIndex];
 
             OpenGif($"MobileTutorial{pageIndex + 1}.gif");
+            UpdateGif();
         }
 
         public override void OnBackPressed()
@@ -315,28 +310,31 @@ namespace FamiStudio
             base.OnPause();
         }
 
-        private unsafe void GifTask()
-        {
-            // The first frame is always decoded on the main thread, so wait here.
-            if (gifQuitEvent.WaitOne(Gif.GetFrameDelay(gif)))
-            {
-                return;
-            }
+        //private bool gifTaskDone;
+        //private ManualResetEvent gifEvent = new ManualResetEvent();
 
-            while (true)
-            {
-                var decodeTime = AdvanceFrame();
-                var delay = Gif.GetFrameDelay(gif) - decodeTime;
+        //private void GifTask()
+        //{
+        //    while (!gifTaskDone)
+        //    {
+        //        gifEvent.WaitOne();
+        //        RunOnUiThread(() => { UpdateGif(); });
+        //    }
+        //}
 
-                Debug.WriteLine($"Decode time {decodeTime}");
+        //private class GifRunnable : IRunnable
+        //{
+        //    TutorialDialogActivity act;
 
-                RunOnUiThread(() => { UpdateImage(); });
+        //    public GifTask(TutorialDialogActivity a)
+        //    {
+        //        act = a;
+        //    }
 
-                if (gifQuitEvent.WaitOne(delay))
-                {
-                    break;
-                }
-            }
-        }
+        //    public override void Run()
+        //    {
+        //        act.RunOnUiThread(() => { act.UpdateGif(); });
+        //    }
+        //}
     }
 }

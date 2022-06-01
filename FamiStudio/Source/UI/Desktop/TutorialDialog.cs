@@ -4,34 +4,8 @@ using System.Runtime.InteropServices;
 
 namespace FamiStudio
 {
-    public partial class TutorialDialog : Dialog
+    public class TutorialDialog : Dialog
     {
-#if FAMISTUDIO_WINDOWS
-        private const string GifDecDll = "GifDec.dll";
-#elif FAMISTUDIO_MACOS
-        private const string GifDecDll = "GifDec.dylib";
-#else
-        private const string GifDecDll = "GifDec.so";
-#endif
-
-        [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall)]
-        private static extern IntPtr GifOpen(IntPtr data, int swap);
-
-        [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall)]
-        private static extern int GifGetWidth(IntPtr gif);
-
-        [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall)]
-        private static extern int GifGetHeight(IntPtr gif);
-
-        [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall)]
-        private static extern int GifAdvanceFrame(IntPtr gif, IntPtr buffer, int stride);
-
-        [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall)]
-        private static extern int GifGetFrameDelay(IntPtr gif);
-
-        [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall)]
-        private static extern void GifClose(IntPtr gif);
-
         public static readonly string[] TutorialMessages = new[]
         {
             @"(1/9) Welcome to FamiStudio! Let's take a few seconds to review some of the basic controls to make sure you use the app to its fullest.",
@@ -162,7 +136,7 @@ namespace FamiStudio
         private unsafe void UpdateGif()
         {
             fixed (byte* p = &gifBuffer[0])
-                GifAdvanceFrame(gif, new IntPtr(p), gifSizeX * 3);
+                GifAdvanceFrame(gif, new IntPtr(p), gifSizeX * 3, 3);
 
             ParentWindow.Graphics.UpdateBitmap(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
             gifTimer = GifGetFrameDelay(gif) / 1000.0f;

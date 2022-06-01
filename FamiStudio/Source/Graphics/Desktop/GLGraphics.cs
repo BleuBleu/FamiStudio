@@ -20,11 +20,13 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.Repeat);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.Repeat);
 
-#if FAMISTUDIO_LINUX
-            var lineWidths = new float[2];
-            GL.GetFloat(GetPName.LineWidthRange, lineWidths);
-            supportsLineWidth = lineWidths[1] > 1.0f;
-#endif
+            if (Platform.IsLinux)
+            {
+                // MATTT : Add this call.
+                //var lineWidths = new float[2];
+                //GL.GetFloat(GetPName.LineWidthRange, lineWidths);
+                //supportsLineWidth = lineWidths[1] > 1.0f;
+            }
         }
 
         public override void BeginDrawControl(Rectangle unflippedControlRect, int windowSizeY)
@@ -98,11 +100,7 @@ namespace FamiStudio
                 var stride = sizeof(int) * bmp.Width;
 
                 // MATTT : Check that!!! + Dont use define.
-            #if FAMISTUDIO_WINDOWS
-                var format = GL.Bgra;
-            #else
-                var format = GL.Rgba;
-            #endif
+                var format = Platform.IsWindows ? GL.Bgra : GL.Rgba;
 
                 int id = GL.GenTexture();
                 GL.BindTexture(GL.Texture2D, id);
@@ -173,12 +171,30 @@ namespace FamiStudio
             Debug.Assert(elementSizeX < MaxAtlasResolution);
 
             var elementsPerRow = MaxAtlasResolution / elementSizeX;
-            var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
-            var atlasSizeX = Utils.NextPowerOfTwo(elementsPerRow * elementSizeX);
-            var atlasSizeY = Utils.NextPowerOfTwo(numRows * elementSizeY);
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
             var elementRects = new Rectangle[names.Length];
+            var atlasSizeX = 0;
+            var atlasSizeY = 0;
 
+            for (int i = 0; i < names.Length; i++)
+            {
+                var bmp = bitmaps[i];
+                var row = i / elementsPerRow;
+                var col = i % elementsPerRow;
+
+                elementRects[i] = new Rectangle(
+                    col * elementSizeX,
+                    row * elementSizeY,
+                    bmp.Width,
+                    bmp.Height);
+
+                atlasSizeX = Math.Max(atlasSizeX, elementRects[i].Right);
+                atlasSizeY = Math.Max(atlasSizeY, elementRects[i].Bottom);
+            }
+
+            atlasSizeX = Utils.NextPowerOfTwo(atlasSizeX);
+            atlasSizeY = Utils.NextPowerOfTwo(atlasSizeY);
+
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
             GL.BindTexture(GL.Texture2D, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
@@ -189,25 +205,12 @@ namespace FamiStudio
 
                 Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
 
-                var row = i / elementsPerRow;
-                var col = i % elementsPerRow;
-
-                elementRects[i] = new Rectangle(
-                    col * elementSizeX,
-                    row * elementSizeY,
-                    bmp.Width,
-                    bmp.Height);
-
                 fixed (int* ptr = &bmp.Data[0])
                 {
                     var stride = sizeof(int) * bmp.Width;
 
                     // MATTT : Check that!!! Should be same now!
-#if FAMISTUDIO_WINDOWS
-                    var format = GL.Bgra;
-#else
-                    var format = GL.Rgba;
-#endif
+                    var format = Platform.IsWindows ? GL.Bgra : GL.Rgba;
                     GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, format, GL.UnsignedByte, new IntPtr(ptr));
                 }
             }
@@ -276,20 +279,18 @@ namespace FamiStudio
                     GL.PopMatrix();
                 }
 
-#if FAMISTUDIO_LINUX
-                if (list.HasAnyTickLineMeshes)
+                if (Platform.IsLinux && list.HasAnyTickLineMeshes)
                 {
                     var draw = list.GetThickLineAsPolygonDrawData();
 
-                    /*if (draw.smooth)*/ GL.Enable(EnableCap.PolygonSmooth);
-                    GL.EnableClientState(ArrayCap.ColorArray);
-                    GL.ColorPointer(4, ColorPointerType.UnsignedByte, 0, draw.colArray);
-                    GL.VertexPointer(2, VertexPointerType.Float, 0, draw.vtxArray);
-                    GL.DrawElements(PrimitiveType.Triangles, draw.numIndices, DrawElementsType.UnsignedShort, draw.idxArray);
-                    GL.DisableClientState(ArrayCap.ColorArray);
-                    /*if (draw.smooth)*/ GL.Disable(EnableCap.PolygonSmooth);
+                    /*if (draw.smooth)*/ GL.Enable(GL.PolygonSmooth);
+                    GL.EnableClientState(GL.ColorArray);
+                    GL.ColorPointer(4, GL.UnsignedByte, 0, draw.colArray);
+                    GL.VertexPointer(2, GL.Float, 0, draw.vtxArray);
+                    GL.DrawElements(GL.Triangles, draw.numIndices, GL.UnsignedShort, draw.idxArray);
+                    GL.DisableClientState(GL.ColorArray);
+                    /*if (draw.smooth)*/ GL.Disable(GL.PolygonSmooth);
                 }
-#endif
 
                 if (list.HasAnyBitmaps)
                 {

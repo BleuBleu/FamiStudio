@@ -172,24 +172,36 @@
     <AndroidNativeLibrary Include="libs\arm64-v8a\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\arm64-v8a\libGifDec.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>    
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\armeabi-v7a\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\armeabi-v7a\libGifDec.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>    
     <AndroidNativeLibrary Include="libs\x86\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86\libGifDec.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>    
     <AndroidNativeLibrary Include="libs\x86_64\libNesSndEmu.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
     <AndroidNativeLibrary Include="libs\x86_64\libShineMp3.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="libs\x86_64\libGifDec.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AndroidNativeLibrary>    
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -300,6 +312,7 @@
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
+    <Compile Include="Source\Utils\Gif.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
     <Compile Include="Source\Utils\SimpleBitmap.cs" />
@@ -538,6 +551,17 @@
     <EmbeddedResource Include="Resources\MobilePianoRest.tga" />
     <EmbeddedResource Include="Resources\MobileSnapOff.tga" />
     <EmbeddedResource Include="Resources\MobileSnapOn.tga" />
+    <EmbeddedResource Include="Resources\MobileTutorial1.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial2.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial3.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial4.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial5.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial6.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial7.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial8.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial9.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial10.gif" />
+    <EmbeddedResource Include="Resources\MobileTutorial11.gif" />
     <EmbeddedResource Include="Resources\More@2x.tga" />
     <EmbeddedResource Include="Resources\MouseLeft@2x.tga" />
     <EmbeddedResource Include="Resources\MouseRight@2x.tga" />
@@ -676,30 +700,6 @@
     <EmbeddedResource Include="..\Setup\Demo Songs\Silver Surfer.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Tower of Heaven.fms" />
     <EmbeddedResource Include="..\Setup\Demo Songs\Tutorial Song.fms" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial1.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial1.png" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial10.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial10.png" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial11.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial11.png" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial2.gif" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial2.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial3.gif" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial3.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial4.gif" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial4.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial5.gif" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial5.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial6.gif" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial6.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial7.gif" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial7.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial8.gif" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial8.html" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial9.gif" />
-    <AndroidAsset Include="Source\UI\Droid\Assets\tutorial9.html" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>
