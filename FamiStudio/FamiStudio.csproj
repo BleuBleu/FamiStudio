@@ -72,28 +72,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <EmbeddedResource Include="Nsf\nsf_famistudio_epsm_ntsc.bin" />
-    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
     <None Include="app.manifest" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <EmbeddedResource Include="Rom\rom_epsm_famitracker_ntsc.nes" />
-    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
@@ -138,19 +120,19 @@
     <Compile Include="Source\IO\VideoFilePianoRoll.cs" />
     <Compile Include="Source\IO\VorbisFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
+    <Compile Include="Source\Platform\Windows\Platform.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
     <Compile Include="Source\Player\MultiMediaNotifications.cs" />
     <Compile Include="Source\Player\NesApu.cs" />
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
+    <Compile Include="Source\Player\RegisterInterpreter.cs" />
     <Compile Include="Source\Player\RegisterPlayer.cs" />
     <Compile Include="Source\Player\SongPlayer.cs" />
     <Compile Include="Source\Player\UnitTestPlayer.cs" />
     <Compile Include="Source\Player\WavPlayer.cs" />
     <Compile Include="Source\Player\XAudio2Stream.cs" />
-    <Compile Include="Source\Player\RegisterInterpreter.cs" />
-    <Compile Include="Source\Platform\Windows\Platform.cs" />
     <Compile Include="Source\Project\Arpeggio.cs" />
     <Compile Include="Source\Project\Channel.cs" />
     <Compile Include="Source\Project\DPCMSample.cs" />
@@ -163,11 +145,11 @@
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\CommandLineInterface.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
+    <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\DpiScaling.cs" />
     <Compile Include="Source\UI\Common\ExportDialog.cs" />
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
-    <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\Init.cs" />
     <Compile Include="Source\UI\Common\MidiImportDialog.cs" />
     <Compile Include="Source\UI\Common\NsfImportDialog.cs" />
@@ -225,7 +207,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_dual.bin" />
+    <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_epsm_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_fds_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_mmc5_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famistudio_famitracker_multi_n163_1ch_ntsc.bin" />
@@ -275,10 +259,6 @@
     <EmbeddedResource Include="Nsf\nsf_famitone2_dual.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_ntsc.bin" />
     <EmbeddedResource Include="Nsf\nsf_famitone2_pal.bin" />
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Add.tga" />
     <EmbeddedResource Include="Resources\Add@2x.tga" />
     <EmbeddedResource Include="Resources\Algorithm0.tga" />
@@ -429,7 +409,6 @@
     <EmbeddedResource Include="Resources\FamiStudio_24.tga" />
     <EmbeddedResource Include="Resources\FamiStudio_32.tga" />
     <EmbeddedResource Include="Resources\FamiStudio_64.tga" />
-    <EmbeddedResource Include="Resources\FamiStudio_128.tga" />
     <EmbeddedResource Include="Resources\File.tga" />
     <EmbeddedResource Include="Resources\File@2x.tga" />
     <EmbeddedResource Include="Resources\Follow.tga" />
@@ -697,6 +676,8 @@
     <EmbeddedResource Include="Resources\Yes@2x.tga" />
     <EmbeddedResource Include="Rom\fds.fds" />
     <EmbeddedResource Include="Rom\fds_famitracker.fds" />
+    <EmbeddedResource Include="Rom\rom_epsm_famitracker_ntsc.nes" />
+    <EmbeddedResource Include="Rom\rom_epsm_ntsc.nes" />    
     <EmbeddedResource Include="Rom\rom_famitracker_ntsc.nes" />
     <EmbeddedResource Include="Rom\rom_famitracker_pal.nes" />
     <EmbeddedResource Include="Rom\rom_ntsc.nes" />

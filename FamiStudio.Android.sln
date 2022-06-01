@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SndEmu.Android", "ThirdPart
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShineMp3.Android", "ThirdParty\ShineMp3\ShineMp3.Android.vcxproj", "{05DC3C69-F693-4142-B1A4-4C5DD30619DF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GifDec.Android", "ThirdParty\GifDec\GifDec.Android.vcxproj", "{B099FC66-7C6F-475C-B978-D7920F15312C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,24 @@ Global
 		{05DC3C69-F693-4142-B1A4-4C5DD30619DF}.Release|x64.Build.0 = Release|x64
 		{05DC3C69-F693-4142-B1A4-4C5DD30619DF}.Release|x86.ActiveCfg = Release|x86
 		{05DC3C69-F693-4142-B1A4-4C5DD30619DF}.Release|x86.Build.0 = Release|x86
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|ARM.ActiveCfg = Debug|ARM
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|ARM.Build.0 = Debug|ARM
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|ARM64.Build.0 = Debug|ARM64
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|x64.ActiveCfg = Debug|x64
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|x64.Build.0 = Debug|x64
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|x86.ActiveCfg = Debug|x86
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Debug|x86.Build.0 = Debug|x86
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|Any CPU.ActiveCfg = Release|x86
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|ARM.ActiveCfg = Release|ARM
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|ARM.Build.0 = Release|ARM
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|ARM64.ActiveCfg = Release|ARM64
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|ARM64.Build.0 = Release|ARM64
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|x64.ActiveCfg = Release|x64
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|x64.Build.0 = Release|x64
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|x86.ActiveCfg = Release|x86
+		{B099FC66-7C6F-475C-B978-D7920F15312C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

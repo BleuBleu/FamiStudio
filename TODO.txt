@@ -19,7 +19,6 @@ P0:
 	- Recolor all icons to white, use filter on Android to make them grey.
 	- Make sure we use the lightest grey (grey2) for all text. Or maybe not, we use it for highlight...
 	- Pass form to dialogs, avoid ugly .INstance thing.
-	- Finish text box.
 - GLFW:
 	- Pinch to zoom?
   - Merge FamiStudioControls <-> Forms.
