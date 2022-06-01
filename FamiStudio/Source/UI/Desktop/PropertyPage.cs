@@ -90,6 +90,7 @@ namespace FamiStudio
             textBox.BackColor = backColor;
             textBox.ForeColor = Theme.BlackColor;
             textBox.DisabledColor = Theme.BlackColor;
+            textBox.SelectionColor = Theme.Darken(backColor);
             return textBox;
         }
 
@@ -127,6 +128,7 @@ namespace FamiStudio
                 if (prop.type == PropertyType.ColoredTextBox)
                 {
                     (prop.control as TextBox).BackColor = color;
+                    (prop.control as TextBox).SelectionColor = Theme.Darken(color);
                 }
             }
         }

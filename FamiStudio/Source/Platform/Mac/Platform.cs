@@ -270,7 +270,6 @@ namespace FamiStudio
         public const bool IsAndroid = false;
         public const bool IsDesktop = true;
         public const bool IsWindows = false;
-        public const bool IsGTK     = true;
         public const bool IsLinux   = false;
         public const bool IsMacOS   = true;
     }

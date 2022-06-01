@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Drawing;
 using System.Diagnostics;
-using System.Text;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
-    // TODO:
-    //  - Copy/paste (use GLFW clipboard for strings!)
-
     public class TextBox : Control
     {
+        private class TextBoxState
+        {
+            public int selStart;
+            public int selLen;
+            public int caretIndex;
+            public string text;
+        };
+
         private string text;
         private int scrollX;
         private int maxScrollX;
@@ -22,9 +27,13 @@ namespace FamiStudio
         private bool caretBlink = true;
         private float caretBlinkTime;
 
+        private int undoRedoIndex = 0;
+        private List<TextBoxState> undoRedo = new List<TextBoxState>();
+
         private Color foreColor     = Theme.LightGreyFillColor1;
         private Color disabledColor = Theme.MediumGreyFillColor1;
         private Color backColor     = Theme.DarkGreyLineColor1;
+        private Color selColor      = Theme.MediumGreyFillColor1;
 
         private Brush foreBrush;
         private Brush disabledBrush;
@@ -35,15 +44,15 @@ namespace FamiStudio
         private int sideMargin   = DpiScaling.ScaleForMainWindow(4);
         private int scrollAmount = DpiScaling.ScaleForMainWindow(20);
 
-        public Color ForeColor     { get => foreColor;     set { foreColor     = value; foreBrush     = null; MarkDirty(); } }
-        public Color DisabledColor { get => disabledColor; set { disabledColor = value; disabledBrush = null; MarkDirty(); } }
-        public Color BackColor     { get => backColor;     set { backColor     = value; backBrush     = null;  selBrush = null; MarkDirty(); } }
+        public Color ForeColor      { get => foreColor;     set { foreColor     = value; foreBrush     = null; MarkDirty(); } }
+        public Color DisabledColor  { get => disabledColor; set { disabledColor = value; disabledBrush = null; MarkDirty(); } }
+        public Color BackColor      { get => backColor;     set { backColor     = value; backBrush     = null; MarkDirty(); } }
+        public Color SelectionColor { get => selColor;      set { selColor      = value; selBrush      = null; MarkDirty(); } }
 
         public TextBox(string txt)
         {
             height = DpiScaling.ScaleForMainWindow(24);
             text = txt;
-            //text = "Hello this is a very   ₭₭ long text bla bla bla toto titi tata tutu"; // For debugging.
         }
 
         public string Text
@@ -117,7 +126,6 @@ namespace FamiStudio
                 var c0 = PixelToChar(e.X);
                 var c1 = c0;
 
-                // MATTT : This is buggy, clicking on a space select both left/right words.
                 c0 = FindWordStart(c0, -1);
                 c1 = FindWordStart(c1,  1);
 
@@ -140,8 +148,11 @@ namespace FamiStudio
             }
             else
             {
-                while (c >= 1 &&  char.IsWhiteSpace(text[c - 1]))
-                    c--;
+                if (c < text.Length && char.IsWhiteSpace(text[c]))
+                {
+                    while (c >= 1 && char.IsWhiteSpace(text[c - 1]))
+                        c--;
+                }
                 while (c >= 1 && !char.IsWhiteSpace(text[c - 1]))
                     c--;
             }
@@ -164,10 +175,10 @@ namespace FamiStudio
                 var sign = e.Key == Keys.Left ? -1 : 1;
                 var prevCaretIndex = caretIndex;
 
+                caretIndex = Utils.Clamp(caretIndex + sign, 0, text.Length);
+
                 if (e.Control || e.Alt)
                     caretIndex = FindWordStart(caretIndex, sign);
-                else
-                    caretIndex = Utils.Clamp(caretIndex + sign, 0, text.Length);
 
                 if (e.Shift)
                 {
@@ -212,6 +223,7 @@ namespace FamiStudio
                 if (!DeleteSelection() && caretIndex > 0)
                 {
                     caretIndex--;
+                    SaveUndoRedoState();
                     text = RemoveStringRange(caretIndex, 1);
                     UpdateScrollParams();
                     MarkDirty();
@@ -221,6 +233,7 @@ namespace FamiStudio
             {
                 if (!DeleteSelection() && caretIndex < text.Length)
                 {
+                    SaveUndoRedoState();
                     text = RemoveStringRange(caretIndex, 1);
                     UpdateScrollParams();
                     MarkDirty();
@@ -233,11 +246,20 @@ namespace FamiStudio
             }
             else if (e.Key == Keys.V && e.Control)
             {
-                var str = Platform.GetClipboardString();
-                if (!string.IsNullOrEmpty(str))
-                {
-                    InsertText(str);
-                }
+                InsertText(Platform.GetClipboardString());
+            }
+            else if (e.Key == Keys.C && e.Control)
+            {
+                if (selectionLength > 0)
+                    Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
+            }
+            else if (e.Key == Keys.Z && e.Control)
+            {
+                Undo();
+            }
+            else if (e.Key == Keys.Y && e.Control)
+            {
+                Redo();
             }
         }
 
@@ -255,13 +277,17 @@ namespace FamiStudio
 
         private void InsertText(string str)
         {
-            DeleteSelection();
-            text = text.Insert(caretIndex, str);
-            caretIndex += str.Length;
-            UpdateScrollParams();
-            EnsureCaretVisible();
-            ClearSelection();
-            MarkDirty();
+            if (!string.IsNullOrEmpty(str))
+            {
+                SaveUndoRedoState();
+                DeleteSelection();
+                text = text.Insert(caretIndex, str);
+                caretIndex += str.Length;
+                UpdateScrollParams();
+                EnsureCaretVisible();
+                ClearSelection();
+                MarkDirty();
+            }
         }
 
         public override void Tick(float delta)
@@ -335,9 +361,10 @@ namespace FamiStudio
         {
             if (selectionLength > 0)
             {
+                SaveUndoRedoState();
                 text = RemoveStringRange(selectionStart, selectionLength);
 
-                if (caretIndex >= selectionStart)
+                if (caretIndex > selectionStart)
                     caretIndex -= selectionLength;
 
                 ClearSelection();
@@ -347,6 +374,46 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        private void SaveUndoRedoState()
+        {
+            if (undoRedoIndex != undoRedo.Count)
+                undoRedo.RemoveRange(undoRedoIndex, undoRedo.Count - undoRedoIndex);
+
+            var state = new TextBoxState();
+            state.caretIndex = caretIndex;
+            state.selStart = selectionStart;
+            state.selLen = selectionLength;
+            state.text = text;
+            undoRedo.Add(state);
+            undoRedoIndex++;
+        }
+
+        private void RestoreUndoRedoState(TextBoxState state)
+        {
+            text = state.text;
+            caretIndex = state.caretIndex;
+            selectionStart = state.selStart;
+            selectionLength = state.selLen;
+            EnsureCaretVisible();
+            MarkDirty();
+        }
+
+        private void Undo()
+        {
+            if (undoRedoIndex > 0)
+            {
+                RestoreUndoRedoState(undoRedo[--undoRedoIndex]);
+            }
+        }
+
+        private void Redo()
+        {
+            if (undoRedoIndex < undoRedo.Count - 1)
+            {
+                RestoreUndoRedoState(undoRedo[++undoRedoIndex]);
+            }
         }
 
         protected override void OnAddedToDialog()
@@ -362,7 +429,7 @@ namespace FamiStudio
             if (foreBrush     == null) foreBrush     = g.CreateSolidBrush(foreColor);
             if (disabledBrush == null) disabledBrush = g.CreateSolidBrush(disabledColor);
             if (backBrush     == null) backBrush     = g.CreateSolidBrush(backColor);
-            if (selBrush      == null) selBrush      = g.CreateSolidBrush(Theme.Darken(backColor));
+            if (selBrush      == null) selBrush      = g.CreateSolidBrush(selColor);
 
             c.FillAndDrawRectangle(0, 0, width - 1, height - 1, backBrush, enabled ? foreBrush : disabledBrush);
             

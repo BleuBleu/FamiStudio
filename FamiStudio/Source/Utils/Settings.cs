@@ -143,14 +143,7 @@ namespace FamiStudio
         public static Dictionary<int, int> ScanCodeToNoteMap = new Dictionary<int, int>();
 
         // Audio section
-        // MATTT : Remove defines!
-#if FAMISTUDIO_LINUX
-        const int DefaultNumBufferedAudioFrames = 4; // ALSA seems to like to have one extra buffer.
-#elif FAMISTUDIO_ANDROID
-        const int DefaultNumBufferedAudioFrames = 2;
-#else
-        const int DefaultNumBufferedAudioFrames = 3;
-#endif
+        const int DefaultNumBufferedAudioFrames = Platform.IsLinux ? 4 : Platform.IsAndroid ? 2 : 3;
         public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
         public static int InstrumentStopTime = 1;
         public static bool SquareSmoothVibrato = true;

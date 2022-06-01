@@ -564,6 +564,31 @@ namespace FamiStudio
             return Encoding.Unicode.GetString(buffer).TrimEnd('\0');
         }
 
+        public static void SetClipboardString(string str)
+        {
+            IntPtr mem = IntPtr.Zero;
+
+            if (string.IsNullOrEmpty(str))
+            {
+                mem = GlobalAlloc(GMEM_MOVEABLE, 0);
+            }
+            else
+            {
+                var bytes = Encoding.Unicode.GetBytes(str.Insert(str.Length, "\0"));
+                mem = GlobalAlloc(GMEM_MOVEABLE, bytes.Length);
+                var ptr = GlobalLock(mem);
+                Marshal.Copy(bytes, 0, ptr, bytes.Length);
+                GlobalUnlock(mem);
+            }
+
+            if (OpenClipboard(IntPtr.Zero) != 0)
+            {
+                EmptyClipboard();
+                SetClipboardData(CF_UNICODETEXT, mem);
+                CloseClipboard();
+            }
+        }
+
         public static void ClearClipboardString()
         {
             if (OpenClipboard(IntPtr.Zero) != 0)
@@ -610,34 +635,6 @@ namespace FamiStudio
             {
             }
         }
-
-        //[StructLayout(LayoutKind.Sequential, Pack = 4)]
-        //private struct ACTCTX
-        //{
-        //    public int cbSize;
-        //    public uint dwFlags;
-        //    public string lpSource;
-        //    public ushort wProcessorArchitecture;
-        //    public ushort wLangId;
-        //    public string lpAssemblyDirectory;
-        //    public IntPtr lpResourceName;
-        //    public string lpApplicationName;
-        //}
-
-        // MATTT : I think the manifest is enough.
-        //[DllImport("kernel32.dll")]
-        //private static extern IntPtr CreateActCtx(ref ACTCTX actctx);
-
-        //private static bool EnableVisualStyles()
-        //{
-        //    var ctx = default(ACTCTX);
-        //    ctx.cbSize = Marshal.SizeOf(typeof(ACTCTX));
-        //    ctx.lpSource = Assembly.GetExecutingAssembly().Location;
-        //    ctx.lpResourceName = (IntPtr)101;
-        //    ctx.dwFlags = 8u;
-        //    var hActCtx = CreateActCtx(ref ctx);
-        //    return hActCtx != new IntPtr(-1);
-        //}
 
         public const bool IsMobile  = false;
         public const bool IsAndroid = false;

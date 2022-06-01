@@ -30,10 +30,10 @@ namespace FamiStudio
             buttonNo.Visible  = canCancel;
         }
 
-        public PropertyDialog(string title, Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        public PropertyDialog(string title, Point pt, int w, bool leftAlign = false, bool top = false)
         {
-            this.width = DpiScaling.ScaleForMainWindow(width);
-            this.topAlign = topAlign;
+            width = DpiScaling.ScaleForMainWindow(w);
+            topAlign = top;
             if (leftAlign)
                 pt.X -= width;
             Move(pt.X, pt.Y, width, width);

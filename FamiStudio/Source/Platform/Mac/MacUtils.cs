@@ -411,6 +411,7 @@ namespace FamiStudio
 
         public static string FromNSString(IntPtr handle)
         {
+            // MATTT : Test this with unicode characters.
             return Marshal.PtrToStringAuto(SendIntPtr(handle, selUTF8String));
         }
 

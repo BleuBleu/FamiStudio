@@ -434,7 +434,6 @@ namespace FamiStudio
         public const bool IsAndroid = false;
         public const bool IsDesktop = true;
         public const bool IsWindows = false;
-        public const bool IsGTK     = true;
         public const bool IsLinux   = true;
         public const bool IsMacOS   = false;
     }

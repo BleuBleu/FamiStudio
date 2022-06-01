@@ -249,6 +249,5 @@ namespace FamiStudio
         public const bool IsWindows = false;
         public const bool IsLinux   = false;
         public const bool IsMacOS   = false;
-        public const bool IsGTK     = false;
     }
 }

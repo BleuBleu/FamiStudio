@@ -14,17 +14,17 @@ P0:
 	- Tooltips where a context menu can appear.
 	- When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
 	- Sequencer : Add select all there too?
+	- Sometimes i feel context menu appear instead of selection... Test more.
 - Widgets:
 	- Recolor all icons to white, use filter on Android to make them grey.
 	- Make sure we use the lightest grey (grey2) for all text. Or maybe not, we use it for highlight...
 	- Pass form to dialogs, avoid ugly .INstance thing.
+	- Finish text box.
 - GLFW:
-	- ***** TO DERISK:
-    / Keyboard keys
-    / Capture
-    - Pinch to zoom?
+	- Pinch to zoom?
   - Merge FamiStudioControls <-> Forms.
-	- Remove all dependencies to WinForms, GTK, etc.
+	- Add more cursors, 36, 48 and 64.
+	/ Remove all dependencies to WinForms, GTK, etc.
 - MAKE SURE I DIDNT MESS UP THE DEMO SONGS! I SUBMITTED TONS OF SHIT.
 P1:
 - Validation errors in JTS when deleting some instruments.
