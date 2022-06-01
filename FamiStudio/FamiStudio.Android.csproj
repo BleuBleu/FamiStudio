@@ -302,6 +302,7 @@
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Settings.cs" />
+    <Compile Include="Source\Utils\SimpleBitmap.cs" />
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />

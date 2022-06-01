@@ -437,7 +437,7 @@ namespace FamiStudio
         {
             var landscape = IsLandscape;
 
-            var maxWidth  = landscape ? Math.Min(ParentFormSize.Width, ParentFormSize.Height) - buttonSize : Width;
+            var maxWidth  = landscape ? Math.Min(ParentWindowSize.Width, ParentWindowSize.Height) - buttonSize : Width;
             var maxHeight = landscape ? Height : listItemSize * 8;
 
             popupRect.X = 0;
@@ -1045,7 +1045,7 @@ namespace FamiStudio
             // Background shadow.
             if (IsExpanded)
             {
-                var fullscreenRect = new Rectangle(0, 0, ParentFormSize.Width, ParentFormSize.Height);
+                var fullscreenRect = new Rectangle(0, 0, ParentWindowSize.Width, ParentWindowSize.Height);
                 fullscreenRect.Offset(-(int)ox, -(int)oy);
                 c.FillRectangle(fullscreenRect, g.GetSolidBrush(Color.Black, 1.0f, popupRatio * 0.6f));
             }
@@ -1083,7 +1083,7 @@ namespace FamiStudio
                     c.DrawBitmapAtlas(bmpButtonAtlas, (int)image, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
 
                     if (!string.IsNullOrEmpty(text))
-                        c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyFillBrush1, RenderTextFlags.Center | RenderTextFlags.Ellipsis, buttonSize, 0);
+                        c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyFillBrush1, TextFlags.Center | TextFlags.Ellipsis, buttonSize, 0);
                 }
             }
 
@@ -1118,7 +1118,7 @@ namespace FamiStudio
                         c.DrawBitmapAtlas(bmpButtonAtlas, item.ExtraImageIndex, item.ExtraIconX, item.ExtraIconY, extraOpacity, iconScaleFloat, Color.Black);
                     }
 
-                    c.DrawText(item.Text, i == popupSelectedIdx ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, item.TextX, item.TextY, ThemeResources.BlackBrush, RenderTextFlags.Middle, 0, listItemSize);
+                    c.DrawText(item.Text, i == popupSelectedIdx ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, item.TextX, item.TextY, ThemeResources.BlackBrush, TextFlags.Middle, 0, listItemSize);
                 }
 
                 c.PopTransform();

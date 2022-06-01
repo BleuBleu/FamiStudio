@@ -25,8 +25,9 @@ namespace FamiStudio
 
         private const int ToastShortDuration = 2000;
 
-        public static void Initialize()
+        public static bool Initialize()
         {
+            return true;
         }
 
         public static bool IsInMainThread()
@@ -152,7 +153,19 @@ namespace FamiStudio
             return null;
         }
 
-        public static string KeyCodeToString(int keyval)
+        public static int GetKeyScancode(Keys key)
+        {
+            Debug.Assert(false);
+            return -1;
+        }
+
+        public static string KeyToString(Keys key)
+        {
+            Debug.Assert(false);
+            return string.Empty;
+        }
+
+        public static string ScancodeToString(int scancode)
         {
             Debug.Assert(false);
             return string.Empty;

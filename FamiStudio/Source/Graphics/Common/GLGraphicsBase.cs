@@ -57,6 +57,7 @@ namespace FamiStudio
 
         protected abstract int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false);
         protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
+        protected abstract string GetScaledFilename(string name, out bool needsScaling);
         public abstract void DeleteTexture(int id);
         public abstract void DrawCommandList(CommandList list, Rectangle scissor);
         public abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
@@ -106,27 +107,6 @@ namespace FamiStudio
 
         public virtual void EndDrawControl()
         {
-        }
-
-        protected string GetScaledFilename(string name, out bool needsScaling)
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-
-            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.tga") != null)
-            {
-                needsScaling = false;
-                return $"FamiStudio.Resources.{name}@15x.tga";
-            }
-            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
-            {
-                needsScaling = windowScaling != 2.0f;
-                return $"FamiStudio.Resources.{name}@2x.tga";
-            }
-            else
-            {
-                needsScaling = false;
-                return $"FamiStudio.Resources.{name}.tga";
-            }
         }
 
         protected SimpleBitmap LoadBitmapFromResourceWithScaling(string name)

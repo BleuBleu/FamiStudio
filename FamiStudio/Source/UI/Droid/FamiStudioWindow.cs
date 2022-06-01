@@ -41,6 +41,7 @@ namespace FamiStudio
         private BaseDialogActivityInfo activeDialog;
         private BaseDialogActivityInfo pendingFinishDialog;
         private Control captureControl;
+        private ModifierKeys modifiers = new ModifierKeys();
 
         private string delayedMessage = null;
         private string delayedMessageTitle = null;
@@ -57,8 +58,11 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar  QuickAccessBar  => controls.QuickAccessBar;
         public MobilePiano     MobilePiano     => controls.MobilePiano;
-        public Control       ActiveControl   => controls.ActiveControl;
+        public Control         ActiveControl   => controls.ActiveControl;
+        public Graphics        Graphics        => controls.Graphics;
 
+        public int Width  => glSurfaceView.Width;
+        public int Height => glSurfaceView.Height;
         public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
         public bool MobilePianoVisible { get => controls.MobilePianoVisible; set => controls.MobilePianoVisible = value; }
@@ -151,9 +155,9 @@ namespace FamiStudio
 
             // Simply update the form if the app already exists.
             if (appAlreadyExists)
-                famistudio.SetMainForm(this, true);
+                famistudio.SetMainWindow(this, true);
             else
-                famistudio.Initialize(this);
+                famistudio.Initialize(this, null);
 
             detector = new GestureDetectorCompat(this, this);
             detector.IsLongpressEnabled = true;
@@ -250,7 +254,7 @@ namespace FamiStudio
         {
             if (delayedMessage != null)
             {
-                Platform.MessageBoxAsync(delayedMessage, delayedMessageTitle, MessageBoxButtons2.OK);
+                Platform.MessageBoxAsync(delayedMessage, delayedMessageTitle, MessageBoxButtons.OK);
 
                 delayedMessage      = null;
                 delayedMessageTitle = null;
@@ -388,9 +392,9 @@ namespace FamiStudio
             }
         }
 
-        public Keys GetModifierKeys()
+        public ModifierKeys GetModifierKeys()
         {
-            return Keys.None;
+            return modifiers;
         }
 
         public System.Drawing.Point GetCursorPosition()
@@ -421,6 +425,32 @@ namespace FamiStudio
         public bool IsKeyDown(Keys key)
         {
             return false;
+        }
+
+        public void InitDialog(Dialog dlg)
+        {
+            Debug.Assert(false);
+        }
+
+        public void PushDialog(Dialog dlg)
+        {
+            Debug.Assert(false);
+        }
+
+        public void PopDialog(Dialog dlg)
+        {
+            Debug.Assert(false);
+        }
+
+        public void Quit()
+        {
+            Debug.Assert(false);
+        }
+
+        public static FamiStudioWindow CreateWindow(FamiStudio fs)
+        {
+            Debug.Assert(false);
+            return null;
         }
 
         public void CaptureMouse(Control ctrl)

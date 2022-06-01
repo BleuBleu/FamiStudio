@@ -81,20 +81,6 @@ namespace FamiStudio
             return editText;
         }
 
-        private void ForceEditTextASCII(EditText text)
-        {
-            var oldText = text.Text;
-            var newText = Utils.ForceASCII(oldText);
-
-            if (oldText != newText)
-            {
-                var sel1 = text.SelectionStart;
-                var sel2 = text.SelectionEnd;
-                text.Text = newText;
-                text.SetSelection(sel1, sel2);
-            }
-        }
-
         private void EditText_AfterTextChanged(object sender, AfterTextChangedEventArgs e)
         {
             var editText = sender as EditText;
@@ -448,7 +434,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddRadioButton(string label, string text, bool check)
+        public int AddRadioButton(string label, string text, bool check, bool multiline = false)
         {
             var first = properties.Count == 0 || properties[properties.Count - 1].type != PropertyType.Radio;
             var prop = new Property();
@@ -758,16 +744,16 @@ namespace FamiStudio
         {
         }
 
-        public void AddMultiColumnList(ColumnDesc[] columnDescs, object[,] data, int rows = 10)
+        public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int rows = 10)
         {
             properties.Add(new Property());
         }
 
-        public void UpdateMultiColumnList(int idx, object[,] data, string[] columnNames = null)
+        public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)
         {
         }
 
-        public void UpdateMultiColumnList(int idx, int rowIdx, int colIdx, object value)
+        public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)
         {
         }
 
@@ -811,8 +797,7 @@ namespace FamiStudio
             {
                 case PropertyType.TextBox:
                 case PropertyType.ColoredTextBox:
-                case PropertyType.MultilineTextBox:
-                    ForceEditTextASCII(prop.controls[0] as EditText);
+                case PropertyType.LogTextBox:
                     return (prop.controls[0] as EditText).Text;
                 case PropertyType.NumericUpDown:
                     return (prop.controls[0] as HorizontalNumberPicker).Value;
@@ -885,7 +870,7 @@ namespace FamiStudio
                 case PropertyType.Button:
                     (prop.controls[0] as MaterialButton).Text = (string)value;
                     break;
-                case PropertyType.MultilineTextBox:
+                case PropertyType.LogTextBox:
                     (prop.controls[0] as EditText).Text = (string)value;
                     break;
                 case PropertyType.ProgressBar:

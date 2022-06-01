@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Android.Opengl;
 using Android.Runtime;
 using Java.Nio;
@@ -143,18 +144,18 @@ namespace FamiStudio
             return id[0];
         }
 
-        protected override int CreateTexture(Bitmap bmp, bool filter)
+        protected override int CreateTexture(SimpleBitmap bmp, bool filter)
         {
+            var buffer = IntBuffer.Wrap(bmp.Data);
             var id = new int[1];
             GLES11.GlGenTextures(1, id, 0);
             GLES11.GlBindTexture(GLES11.GlTexture2d, id[0]);
-            GLUtils.TexImage2D(GLES11.GlTexture2d, 0, bmp, 0);
+            GLES11.GlTexImage2D(GLES11.GlTexture2d, 0, GLES11.GlRgba, bmp.Width, bmp.Height, 0, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
             GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMinFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
             GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureMagFilter, filter ? GLES11.GlLinear : GLES11.GlNearest);
             GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlClampToEdge);
             GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapT, GLES11.GlClampToEdge);
-            bmp.Recycle();
-
+            
             return id[0];
         }
 
@@ -164,26 +165,29 @@ namespace FamiStudio
             GLES11.GlDeleteTextures(1, ids, 0);
         }
 
-        protected Bitmap LoadBitmapFromResourceWithScaling(string name)
+        protected override string GetScaledFilename(string name, out bool needsScaling)
         {
             var assembly = Assembly.GetExecutingAssembly();
+            needsScaling = false;
 
-            Bitmap bmp;
-
-            if (windowScaling >= 4.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@4x.png") != null)
-                bmp = Platform.LoadBitmapFromResource($"FamiStudio.Resources.{name}@4x.png");
-            else if (windowScaling >= 2.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
-                bmp = Platform.LoadBitmapFromResource($"FamiStudio.Resources.{name}@2x.png");
+            if (windowScaling >= 4.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@4x.tga") != null)
+            {
+                return $"FamiStudio.Resources.{name}@15x.tga";
+            }
+            else if (windowScaling >= 2.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
+            {
+                return $"FamiStudio.Resources.{name}@2x.tga";
+            }
             else
-                bmp = Platform.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png");
-
-            return bmp;
+            {
+                return $"FamiStudio.Resources.{name}.tga";
+            }
         }
 
         public Bitmap CreateBitmapFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);
-            return new Bitmap(CreateTexture(bmp, true), bmp.Width, bmp.Height, true, true);
+            return new Bitmap(this, CreateTexture(bmp, true), bmp.Width, bmp.Height, true, true);
         }
 
         public override BitmapAtlas CreateBitmapAtlasFromResources(string[] names)
@@ -191,7 +195,7 @@ namespace FamiStudio
             // Need to sort since we do binary searches on the names.
             Array.Sort(names);
 
-            var bitmaps = new Bitmap[names.Length];
+            var bitmaps = new SimpleBitmap[names.Length];
             var elementSizeX = 0;
             var elementSizeY = 0;
 
@@ -222,7 +226,7 @@ namespace FamiStudio
             {
                 var bmp = bitmaps[i];
 
-                Debug.WriteLine($"  - {names[i]} ({bmpData.GetLength(1)} x {bmpData.GetLength(0)}):");
+                Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
 
                 var row = i / elementsPerRow;
                 var col = i % elementsPerRow;
@@ -233,8 +237,8 @@ namespace FamiStudio
                     bmp.Width,
                     bmp.Height);
 
-                GLUtils.TexSubImage2D(GLES11.GlTexture2d, 0, elementRects[i].X, elementRects[i].Y, bmp);
-                bmp.Recycle();
+                var buffer = IntBuffer.Wrap(bmp.Data);
+                GLES11.GlTexSubImage2D(GLES11.GlTexture2d, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
             }
 
             return new BitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, true);
@@ -242,7 +246,7 @@ namespace FamiStudio
 
         public Bitmap CreateBitmapFromOffscreenGraphics(OffscreenGraphics g)
         {
-            return new Bitmap(g.Texture, g.SizeX, g.SizeY, false, false);
+            return new Bitmap(this, g.Texture, g.SizeX, g.SizeY, false, false);
         }
 
         private T[] CopyResizeArray<T>(T[] array, int size)

@@ -18,6 +18,9 @@ namespace FamiStudio
 {
     public class PropertyDialog
     {
+        public delegate void KeyDownDelegate(Dialog dlg, KeyEventArgs e);
+        public event KeyDownDelegate DialogKeyDown;
+
         private string title = "";
         private string verb = "Apply";
         private bool canAccept = true;

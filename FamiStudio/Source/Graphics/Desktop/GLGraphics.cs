@@ -118,6 +118,27 @@ namespace FamiStudio
             GL.DeleteTexture(id);
         }
 
+        protected string GetScaledFilename(string name, out bool needsScaling)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            if (windowScaling == 1.5f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@15x.tga") != null)
+            {
+                needsScaling = false;
+                return $"FamiStudio.Resources.{name}@15x.tga";
+            }
+            else if (windowScaling > 1.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
+            {
+                needsScaling = windowScaling != 2.0f;
+                return $"FamiStudio.Resources.{name}@2x.tga";
+            }
+            else
+            {
+                needsScaling = false;
+                return $"FamiStudio.Resources.{name}.tga";
+            }
+        }
+
         public Bitmap CreateBitmapFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);

@@ -156,7 +156,7 @@ namespace FamiStudio
 
         public void CenterToWindow()
         {
-            Move((parentWindow.Width - width) / 2,
+            Move((parentWindow.Width  - width) / 2,
                  (parentWindow.Height - height) / 2,
                  width, height);
         }

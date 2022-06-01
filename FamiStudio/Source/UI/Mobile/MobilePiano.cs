@@ -256,7 +256,7 @@ namespace FamiStudio
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
             {
                 var r = GetKeyRectangle(i, 0);
-                cp.DrawText("C" + i, ThemeResources.FontSmall, r.X, r.Y, ThemeResources.BlackBrush, RenderTextFlags.BottomCenter, r.Width, r.Height - ThemeResources.FontSmall.Size);
+                cp.DrawText("C" + i, ThemeResources.FontSmall, r.X, r.Y, ThemeResources.BlackBrush, TextFlags.BottomCenter, r.Width, r.Height - ThemeResources.FontSmall.Size);
             }
 
             // Drag images
@@ -278,7 +278,7 @@ namespace FamiStudio
             }
 
             //if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping) && ThemeResources.FontSmall.Size < noteSizeY)
-            //    r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseX - noteSizeY + 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, whiteKeySizeX - r.g.WindowScaling * 2, noteSizeY - 1);
+            //    r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseX - noteSizeY + 1, ThemeResources.BlackBrush, TextFlags.Middle, whiteKeySizeX - r.g.WindowScaling * 2, noteSizeY - 1);
             //if ((i == playOctave && j == playNote) || (draggingNote && (i == dragOctave && j == dragNote)))
             //    r.cp.FillRectangle(GetKeyRectangle(i, j), blackKeyPressedBrush);
 

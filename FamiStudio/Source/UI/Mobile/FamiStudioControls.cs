@@ -16,8 +16,8 @@ namespace FamiStudio
         private Control[] controls = new Control[6];
         private Control   transitionControl;
         private Control   activeControl;
-        private float       transitionTimer;
-        private bool        mobilePianoVisible = false;
+        private float     transitionTimer;
+        private bool      mobilePianoVisible = false;
 
         private Toolbar         toolbar;
         private Sequencer       sequencer;
@@ -32,7 +32,8 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => projectExplorer;
         public QuickAccessBar  QuickAccessBar  => quickAccessBar;
         public MobilePiano     MobilePiano     => mobilePiano;
-        public Control       ActiveControl   => activeControl;
+        public Control         ActiveControl   => activeControl;
+        public Graphics        Graphics        => gfx; 
 
         public Control[] Controls => controls;
         public bool IsLandscape => width > height;
@@ -66,7 +67,7 @@ namespace FamiStudio
             activeControl = sequencer;
 
             foreach (var ctrl in controls)
-                ctrl.ParentForm = parent;
+                ctrl.ParentWindow = parent;
         }
 
        public void SetActiveControl(Control ctrl, bool animate = true)
@@ -318,12 +319,12 @@ namespace FamiStudio
         {
             Debug.Assert(gfx == null);
 
-            gfx = new GLGraphics(DpiScaling.MainWindow, DpiScaling.Font);
+            gfx = new Graphics(DpiScaling.Window, DpiScaling.Font);
             res = new ThemeRenderResources(gfx);
             
             foreach (var ctrl in controls)
             {
-                ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+                ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
                 ctrl.SetThemeRenderResource(res);
                 ctrl.RenderInitialized(gfx);
             }
