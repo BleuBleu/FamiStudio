@@ -198,6 +198,7 @@
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
     <Compile Include="Source\Utils\EpsmUnitTests.cs" />
+    <Compile Include="Source\Utils\Gif.cs" />
     <Compile Include="Source\Utils\Log.cs" />
     <Compile Include="Source\Utils\Midi.cs" />
     <Compile Include="Source\Utils\Settings.cs" />

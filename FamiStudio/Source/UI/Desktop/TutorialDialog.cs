@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -66,6 +67,7 @@ namespace FamiStudio
 
         private void Init()
         {
+            // MATTT : This doesnt work with scaling i think.
             buttonLeft = new Button("ArrowLeft", null);
             buttonLeft.Click += ButtonLeft_Click;
             buttonLeft.Resize(buttonSize, buttonSize);
@@ -111,9 +113,9 @@ namespace FamiStudio
             }
 
             gifHandle = GCHandle.Alloc(gifData, GCHandleType.Pinned);
-            gif = GifOpen(gifHandle.AddrOfPinnedObject(), 1);
-            gifSizeX = GifGetWidth(gif);
-            gifSizeY = GifGetHeight(gif);
+            gif = Gif.Open(gifHandle.AddrOfPinnedObject(), 1);
+            gifSizeX = Gif.GetWidth(gif);
+            gifSizeY = Gif.GetHeight(gif);
             gifBuffer = new byte[gifSizeX * gifSizeY * 3];
             gifBmp = ParentWindow.Graphics.CreateEmptyBitmap(gifSizeX, gifSizeY, false, windowScaling > 1.0f);
             imageBox.Image = gifBmp;
@@ -126,7 +128,7 @@ namespace FamiStudio
                 gifData = null;
                 gifBuffer = null;
                 gifHandle.Free();
-                GifClose(gif);
+                Gif.Close(gif);
                 gif = IntPtr.Zero;
                 gifBmp.Dispose();
                 gifBmp = null;
@@ -135,11 +137,16 @@ namespace FamiStudio
 
         private unsafe void UpdateGif()
         {
-            fixed (byte* p = &gifBuffer[0])
-                GifAdvanceFrame(gif, new IntPtr(p), gifSizeX * 3, 3);
+            var decodeStart = Platform.TimeSeconds();
 
+            Gif.AdvanceFrame(gif);
+            fixed (byte* p = &gifBuffer[0])
+                Gif.RenderFrame(gif, new IntPtr(p), gifSizeX * 3, 3);
             ParentWindow.Graphics.UpdateBitmap(gifBmp, 0, 0, gifSizeX, gifSizeY, gifBuffer);
-            gifTimer = GifGetFrameDelay(gif) / 1000.0f;
+
+            var decodeTime = (int)((Platform.TimeSeconds() - decodeStart) * 1000);
+
+            gifTimer = (Gif.GetFrameDelay(gif) - decodeTime) / 1000.0f;
             MarkDirty();
         }
 

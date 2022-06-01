@@ -4,6 +4,7 @@ EXPORTS
 	GifGetWidth      @2
 	GifGetHeight     @3
 	GifAdvanceFrame  @4
-	GifGetFrameDelay @5
-	GifRewind        @6
-	GifClose         @7
+	GifRenderFrame   @5
+	GifGetFrameDelay @6
+	GifRewind        @7
+	GifClose         @8
