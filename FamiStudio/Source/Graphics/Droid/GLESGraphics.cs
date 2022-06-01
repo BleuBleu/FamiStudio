@@ -12,7 +12,7 @@ using Bitmap = Android.Graphics.Bitmap;
 
 namespace FamiStudio
 {
-    public class GLGraphics : GLGraphicsBase
+    public class Graphics : GraphicsBase
     {
         // Must be powers of two.
         const int MinBufferSize = 16;
@@ -34,7 +34,7 @@ namespace FamiStudio
         List<IntBuffer>[]   usedColBuffers = new List<IntBuffer>  [NumBufferSizes];
         List<ShortBuffer>[] usedIdxBuffers = new List<ShortBuffer>[NumBufferSizes];
 
-        public GLGraphics(float mainScale, float baseScale) : base(mainScale, baseScale)
+        public Graphics(float mainScale, float baseScale) : base(mainScale, baseScale)
         {
             dashedBitmap = CreateBitmapFromResource("Dash");
             GLES11.GlTexParameterx(GLES11.GlTexture2d, GLES11.GlTextureWrapS, GLES11.GlRepeat);
@@ -114,7 +114,7 @@ namespace FamiStudio
             GLES11.GlClear(GLES11.GlColorBufferBit);
         }
 
-        public void UpdateBitmap(GLBitmap bmp, int x, int y, int width, int height, int[] data)
+        public void UpdateBitmap(Bitmap bmp, int x, int y, int width, int height, int[] data)
         {
             var buffer = ByteBuffer.AllocateDirect(width * height * sizeof(int)).Order(ByteOrder.NativeOrder()).AsIntBuffer();
             buffer.Put(data);
@@ -171,22 +171,22 @@ namespace FamiStudio
             Bitmap bmp;
 
             if (windowScaling >= 4.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@4x.png") != null)
-                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@4x.png");
+                bmp = Platform.LoadBitmapFromResource($"FamiStudio.Resources.{name}@4x.png");
             else if (windowScaling >= 2.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.png") != null)
-                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}@2x.png");
+                bmp = Platform.LoadBitmapFromResource($"FamiStudio.Resources.{name}@2x.png");
             else
-                bmp = PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png");
+                bmp = Platform.LoadBitmapFromResource($"FamiStudio.Resources.{name}.png");
 
             return bmp;
         }
 
-        public GLBitmap CreateBitmapFromResource(string name)
+        public Bitmap CreateBitmapFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);
-            return new GLBitmap(CreateTexture(bmp, true), bmp.Width, bmp.Height, true, true);
+            return new Bitmap(CreateTexture(bmp, true), bmp.Width, bmp.Height, true, true);
         }
 
-        public override GLBitmapAtlas CreateBitmapAtlasFromResources(string[] names)
+        public override BitmapAtlas CreateBitmapAtlasFromResources(string[] names)
         {
             // Need to sort since we do binary searches on the names.
             Array.Sort(names);
@@ -237,12 +237,12 @@ namespace FamiStudio
                 bmp.Recycle();
             }
 
-            return new GLBitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, true);
+            return new BitmapAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, true);
         }
 
-        public GLBitmap CreateBitmapFromOffscreenGraphics(GLOffscreenGraphics g)
+        public Bitmap CreateBitmapFromOffscreenGraphics(OffscreenGraphics g)
         {
-            return new GLBitmap(g.Texture, g.SizeX, g.SizeY, false, false);
+            return new Bitmap(g.Texture, g.SizeX, g.SizeY, false, false);
         }
 
         private T[] CopyResizeArray<T>(T[] array, int size)
@@ -348,7 +348,7 @@ namespace FamiStudio
             return buffer;
         }
 
-        public override unsafe void DrawCommandList(GLCommandList list, Rectangle scissor)
+        public override unsafe void DrawCommandList(CommandList list, Rectangle scissor)
         {
             if (list == null)
                 return;
@@ -476,7 +476,7 @@ namespace FamiStudio
         }
     }
 
-    public class GLOffscreenGraphics : GLGraphics
+    public class OffscreenGraphics : Graphics
     {
         protected int fbo;
         protected int texture;
@@ -487,7 +487,7 @@ namespace FamiStudio
         public int SizeX => resX;
         public int SizeY => resY;
 
-        private GLOffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(1.0f, 1.0f)
+        private OffscreenGraphics(int imageSizeX, int imageSizeY, bool allowReadback) : base(1.0f, 1.0f)
         {
             resX = imageSizeX;
             resY = imageSizeY;
@@ -506,7 +506,7 @@ namespace FamiStudio
             }
         }
 
-        public static GLOffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
+        public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
         {
 #if !DEBUG
             try
@@ -515,7 +515,7 @@ namespace FamiStudio
                 var extentions = GLES11.GlGetString(GLES11.GlExtensions);
 
                 if (extentions.ToUpper().Contains("GL_OES_FRAMEBUFFER_OBJECT"))
-                    return new GLOffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
+                    return new OffscreenGraphics(imageSizeX, imageSizeY, allowReadback);
             }
 #if !DEBUG
             catch

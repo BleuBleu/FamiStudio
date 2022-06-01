@@ -29,7 +29,7 @@ namespace FamiStudio
 
         public static int DpToPixels(int dp)
         {
-            return (int)(dp * Platform.AppContext.Resources.DisplayMetrics.Density);
+            return (int)(dp * Xamarin.Essentials.Platform.AppContext.Resources.DisplayMetrics.Density);
         }
 
         public static Android.Graphics.Color GetColorFromResources(Context context, int resId)

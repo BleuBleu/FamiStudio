@@ -5,15 +5,9 @@ using System.Collections.Generic;
 using Color     = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderBrush       = FamiStudio.GLBrush;
-using RenderControl     = FamiStudio.GLControl;
-using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderFont        = FamiStudio.GLFont;
-
 namespace FamiStudio
 {
-    public class QuickAccessBar : RenderControl
+    public class QuickAccessBar : Control
     {
         // All of these were calibrated at 1080p and will scale up/down from there.
         const int DefaultNavButtonSize    = 120;
@@ -202,9 +196,9 @@ namespace FamiStudio
             "Play"
         };
 
-        RenderFont buttonFont;
-        RenderBrush scrollBarBrush;
-        RenderBitmapAtlas bmpButtonAtlas;
+        Font buttonFont;
+        Brush scrollBarBrush;
+        BitmapAtlas bmpButtonAtlas;
         Button[] buttons = new Button[(int)ButtonType.Count];
 
         // These are only use for popup menu.
@@ -248,7 +242,7 @@ namespace FamiStudio
 
         public override bool WantsFullScreenViewport => true;
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        protected override void OnRenderInitialized(Graphics g)
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
             Debug.Assert(Note.EffectCount == EffectImageIndices.Length);
@@ -269,7 +263,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.DPCMEffect] = new Button { GetRenderInfo = GetDPCMEffectRenderInfo, Click = OnDPCMEffect, ListItemClick = OnDPCMEffectItemClick };
             buttons[(int)ButtonType.DPCMPlay]   = new Button { GetRenderInfo = GetDPCMPlayRenderInfo, Click = OnDPCMPlay, LongPress = OnDPCMPlayLongPress };
 
-            var screenSize = PlatformUtils.GetScreenResolution();
+            var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
             buttonFont        = scale > 1.2f ? ThemeResources.FontSmall : ThemeResources.FontVerySmall;
@@ -348,7 +342,7 @@ namespace FamiStudio
                 UpdateButtonLayout();
         }
 
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
             TickFling(delta);
 
@@ -1042,7 +1036,7 @@ namespace FamiStudio
             }
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             var c = g.CreateCommandList();
 
@@ -1192,7 +1186,7 @@ namespace FamiStudio
             {
                 if (btn.Visible && btn.Rect.Contains(x, y))
                 {
-                    PlatformUtils.VibrateTick();
+                    Platform.VibrateTick();
                     btn.Click();
                     return;
                 }
@@ -1208,7 +1202,7 @@ namespace FamiStudio
 
                     if (idx >= 0 && idx < listItems.Length)
                     {
-                        PlatformUtils.VibrateTick();
+                        Platform.VibrateTick();
                         buttons[popupButtonIdx].ListItemClick?.Invoke(idx);
                         popupSelectedIdx = idx;
                     }

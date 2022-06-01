@@ -147,6 +147,7 @@
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\Dialog.cs" />
     <Compile Include="Source\UI\Common\DpiScaling.cs" />
     <Compile Include="Source\UI\Common\ExportDialog.cs" />
     <Compile Include="Source\UI\Common\FamiStudio.cs" />
@@ -171,7 +172,6 @@
     <Compile Include="Source\UI\Desktop\Controls\Button.cs" />
     <Compile Include="Source\UI\Desktop\Controls\CheckBox.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ColorPicker.cs" />
-    <Compile Include="Source\UI\Desktop\Controls\Dialog.cs" />
     <Compile Include="Source\UI\Desktop\Controls\DropDown.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Grid.cs" />
     <Compile Include="Source\UI\Desktop\Controls\ImageBox.cs" />

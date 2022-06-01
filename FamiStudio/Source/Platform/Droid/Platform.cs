@@ -15,7 +15,7 @@ using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
 {
-    public static class PlatformUtils
+    public static class Platform
     {
         private static Toast    lastToast;
         private static DateTime lastToastTime = DateTime.MinValue;
@@ -53,7 +53,7 @@ namespace FamiStudio
 
         public static int GetPixelDensity()
         {
-            var metrics = Platform.AppContext.Resources.DisplayMetrics;
+            var metrics = Xamarin.Essentials.Platform.AppContext.Resources.DisplayMetrics;
             return (int)Math.Min(metrics.Xdpi, metrics.Ydpi);
         }
 
@@ -63,31 +63,31 @@ namespace FamiStudio
             return new Size((int)displayInfo.Width, (int)displayInfo.Height);
         }
 
-        public static System.Windows.Forms.DialogResult MessageBox(string text, string title, System.Windows.Forms.MessageBoxButtons buttons)
+        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
         {
             Debug.Assert(false); 
-            return System.Windows.Forms.DialogResult.None;
+            return DialogResult.None;
         }
 
-        public static void MessageBoxAsync(string text, string title, System.Windows.Forms.MessageBoxButtons buttons, Action<System.Windows.Forms.DialogResult> callback = null)
+        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
         {
-            AlertDialog.Builder dialog = new AlertDialog.Builder(Platform.CurrentActivity);
+            AlertDialog.Builder dialog = new AlertDialog.Builder(Xamarin.Essentials.Platform.CurrentActivity);
             AlertDialog alert = dialog.Create();
             
             alert.SetTitle(title);
             alert.SetMessage(text);
 
-            if (buttons == System.Windows.Forms.MessageBoxButtons.YesNo ||
-                buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
+            if (buttons == MessageBoxButtons.YesNo ||
+                buttons == MessageBoxButtons.YesNoCancel)
             {
-                alert.SetButton("Yes", (c, ev) => { callback?.Invoke(System.Windows.Forms.DialogResult.Yes); });
-                alert.SetButton2("No",  (c, ev) => { callback?.Invoke(System.Windows.Forms.DialogResult.No); });
-                if (buttons == System.Windows.Forms.MessageBoxButtons.YesNoCancel)
-                    alert.SetButton3("Cancel", (c, ev) => { callback?.Invoke(System.Windows.Forms.DialogResult.Cancel); });
+                alert.SetButton("Yes", (c, ev) => { callback?.Invoke(DialogResult.Yes); });
+                alert.SetButton2("No",  (c, ev) => { callback?.Invoke(DialogResult.No); });
+                if (buttons == MessageBoxButtons.YesNoCancel)
+                    alert.SetButton3("Cancel", (c, ev) => { callback?.Invoke(DialogResult.Cancel); });
             }
             else
             {
-                alert.SetButton("OK", (c, ev) => { callback?.Invoke(System.Windows.Forms.DialogResult.OK); });
+                alert.SetButton("OK", (c, ev) => { callback?.Invoke(DialogResult.OK); });
             }
 
             alert.Show();
@@ -95,30 +95,30 @@ namespace FamiStudio
 
         public static void DelayedMessageBoxAsync(string text, string title)
         {
-            FamiStudioForm.Instance.QueueDelayedMessageBox(text, title);
+            FamiStudioWindow.Instance.QueueDelayedMessageBox(text, title);
         }
 
         public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
         {
-            FamiStudioForm.Instance.StartLoadFileActivityAsync(mimeType, callback);
+            FamiStudioWindow.Instance.StartLoadFileActivityAsync(mimeType, callback);
         }
 
         public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
         {
-            FamiStudioForm.Instance.StartSaveFileActivityAsync(mimeType, filename, callback);
+            FamiStudioWindow.Instance.StartSaveFileActivityAsync(mimeType, filename, callback);
         }
 
         public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)
         {
             MainThread.InvokeOnMainThreadAsync(() =>
             {
-                FamiStudioForm.Instance.FinishSaveFileActivityAsync(commit, callback);
+                FamiStudioWindow.Instance.FinishSaveFileActivityAsync(commit, callback);
             });
         }
 
         public static void StartShareFileAsync(string filename, Action callback)
         {
-            FamiStudioForm.Instance.StartFileSharingActivity(filename, callback);
+            FamiStudioWindow.Instance.StartFileSharingActivity(filename, callback);
         }
 
         public static string GetShareFilename(string filename)
@@ -221,7 +221,7 @@ namespace FamiStudio
 
         public static void OpenUrl(string url)
         {
-            FamiStudioForm.Instance.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(url)));
+            FamiStudioWindow.Instance.StartActivity(new Intent(Intent.ActionView, Android.Net.Uri.Parse(url)));
         }
 
         public static void SetClipboardData(byte[] data)

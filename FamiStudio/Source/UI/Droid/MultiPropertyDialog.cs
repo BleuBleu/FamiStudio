@@ -14,9 +14,7 @@ using AndroidX.CoordinatorLayout.Widget;
 using Google.Android.Material.AppBar;
 using Java.Lang;
 
-using Debug        = System.Diagnostics.Debug;
-using DialogResult = System.Windows.Forms.DialogResult;
-using ActionBar    = AndroidX.AppCompat.App.ActionBar;
+using ActionBar = AndroidX.AppCompat.App.ActionBar;
 
 namespace FamiStudio
 {
@@ -59,7 +57,7 @@ namespace FamiStudio
             var tab = new PropertyPageTab();
             tab.text = text;
             tab.image = image;
-            tab.properties = new PropertyPage(FamiStudioForm.Instance);
+            tab.properties = new PropertyPage(FamiStudioWindow.Instance);
             tabs.Add(tab);
 
             return tab.properties;
@@ -85,9 +83,9 @@ namespace FamiStudio
             return tabs[idx];
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
         {
-            FamiStudioForm.Instance.StartMultiPropertyDialogActivity(callback, this);
+            FamiStudioWindow.Instance.StartMultiPropertyDialogActivity(callback, this);
         }
     }
 
@@ -117,7 +115,7 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            var info = FamiStudioForm.Instance != null ? FamiStudioForm.Instance.ActiveDialog as MultiPropertyDialogActivityInfo : null;
+            var info = FamiStudioWindow.Instance != null ? FamiStudioWindow.Instance.ActiveDialog as MultiPropertyDialogActivityInfo : null;
 
             if (savedInstanceState != null || info == null)
             {
@@ -181,7 +179,7 @@ namespace FamiStudio
             // If we are being stopped, but not by the user closing the dialog,
             // it is likely that the user switched app. If the main activity isnt
             // running, lets suspend FamiStudio.
-            if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
+            if (!stoppedByUser && !FamiStudioWindow.ActivityRunning)
                 FamiStudio.StaticInstance.Suspend();
             base.OnPause();
         }
@@ -311,7 +309,7 @@ namespace FamiStudio
 
                     var imageView = new ImageView(container.Context);
                     imageView.LayoutParameters = new LinearLayout.LayoutParams(dp36, dp36);
-                    imageView.SetImageBitmap(PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.{tab.image}@2x.png", true));
+                    imageView.SetImageBitmap(Platform.LoadBitmapFromResource($"FamiStudio.Resources.{tab.image}@2x.png", true));
 
                     var textViewLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
                     textViewLayoutParams.Gravity = GravityFlags.Left | GravityFlags.CenterVertical;

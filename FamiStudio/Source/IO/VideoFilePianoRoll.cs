@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-using Graphics = FamiStudio.OffscreenGraphics;
-
 namespace FamiStudio
 {
     class VideoFilePianoRoll : VideoFileBase

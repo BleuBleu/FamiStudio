@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-
 using Android.Widget;
 using Android.App;
 using Android.Content;
@@ -18,13 +17,12 @@ using AndroidX.Core.Content;
 using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
 
-using Debug        = System.Diagnostics.Debug;
-using DialogResult = System.Windows.Forms.DialogResult;
+using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ResizeableActivity = false, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize)]
-    public class FamiStudioForm : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, GestureDetector.IOnDoubleTapListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
+    public class FamiStudioWindow : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, GestureDetector.IOnDoubleTapListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
     {
         private LinearLayout linearLayout;
         private GLSurfaceView glSurfaceView;
@@ -42,13 +40,13 @@ namespace FamiStudio
         private object renderLock = new object();
         private BaseDialogActivityInfo activeDialog;
         private BaseDialogActivityInfo pendingFinishDialog;
-        private GLControl captureControl;
+        private Control captureControl;
 
         private string delayedMessage = null;
         private string delayedMessageTitle = null;
 
         public static bool ActivityRunning => activityRunning;
-        public static FamiStudioForm Instance { get; private set; }
+        public static FamiStudioWindow Instance { get; private set; }
         public BaseDialogActivityInfo ActiveDialog => activeDialog;
         public bool IsAsyncDialogInProgress => activeDialog != null;
 
@@ -59,7 +57,7 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => controls.ProjectExplorer;
         public QuickAccessBar  QuickAccessBar  => controls.QuickAccessBar;
         public MobilePiano     MobilePiano     => controls.MobilePiano;
-        public GLControl       ActiveControl   => controls.ActiveControl;
+        public Control       ActiveControl   => controls.ActiveControl;
 
         public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
@@ -69,11 +67,11 @@ namespace FamiStudio
         private GestureDetectorCompat detector;
         private ScaleGestureDetector  scaleDetector;
 
-        public FamiStudioForm()
+        public FamiStudioWindow()
         {
         }
 
-        public FamiStudioForm(FamiStudio f)
+        public FamiStudioWindow(FamiStudio f)
         {
             Debug.Assert(false);
         }
@@ -88,7 +86,7 @@ namespace FamiStudio
             }
         }
 
-        public void SetActiveControl(GLControl ctrl, bool animate = true)
+        public void SetActiveControl(Control ctrl, bool animate = true)
         {
             controls.SetActiveControl(ctrl, animate);
         }
@@ -252,7 +250,7 @@ namespace FamiStudio
         {
             if (delayedMessage != null)
             {
-                PlatformUtils.MessageBoxAsync(delayedMessage, delayedMessageTitle, System.Windows.Forms.MessageBoxButtons2.OK);
+                Platform.MessageBoxAsync(delayedMessage, delayedMessageTitle, MessageBoxButtons2.OK);
 
                 delayedMessage      = null;
                 delayedMessageTitle = null;
@@ -390,9 +388,9 @@ namespace FamiStudio
             }
         }
 
-        public System.Windows.Forms.Keys GetModifierKeys()
+        public Keys GetModifierKeys()
         {
-            return System.Windows.Forms.Keys.None;
+            return Keys.None;
         }
 
         public System.Drawing.Point GetCursorPosition()
@@ -410,22 +408,22 @@ namespace FamiStudio
             return System.Drawing.Point.Empty;
         }
 
-        public System.Drawing.Point PointToClient(GLControl ctrl, System.Drawing.Point p)
+        public System.Drawing.Point PointToClient(Control ctrl, System.Drawing.Point p)
         {
             return System.Drawing.Point.Empty;
         }
 
-        public System.Drawing.Point PointToScreen(GLControl ctrl, System.Drawing.Point p)
+        public System.Drawing.Point PointToScreen(Control ctrl, System.Drawing.Point p)
         {
             return System.Drawing.Point.Empty;
         }
 
-        public bool IsKeyDown(System.Windows.Forms.Keys key)
+        public bool IsKeyDown(Keys key)
         {
             return false;
         }
 
-        public void CaptureMouse(GLControl ctrl)
+        public void CaptureMouse(Control ctrl)
         {
             Debug.Assert(captureControl == null);
             captureControl = ctrl;
@@ -559,7 +557,7 @@ namespace FamiStudio
                 if (string.IsNullOrEmpty(imageName))
                     imageName = "MenuBlank";
 
-                var bmp = new BitmapDrawable(Resources, PlatformUtils.LoadBitmapFromResource($"FamiStudio.Resources.Mobile{imageName}.png", true));
+                var bmp = new BitmapDrawable(Resources, Platform.LoadBitmapFromResource($"FamiStudio.Resources.Mobile{imageName}.png", true));
                 bmp.SetBounds(0, 0, imageSize, imageSize);
 
                 var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
@@ -603,7 +601,7 @@ namespace FamiStudio
 
             contextMenuDialog.Show();
 
-            PlatformUtils.VibrateClick();
+            Platform.VibrateClick();
         }
 
         public void HideContextMenu()
@@ -626,10 +624,10 @@ namespace FamiStudio
             contextMenuDialog.Dismiss();
             MarkDirty();
 
-            PlatformUtils.VibrateTick();
+            Platform.VibrateTick();
         }
 
-        private GLControl GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
+        private Control GetCapturedControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
             if (captureControl != null)
             {
@@ -829,7 +827,7 @@ namespace FamiStudio
         public int  RequestCode => requestCode;
         public virtual bool ShouldSuspend => true;
         public virtual bool IsDialogDone(Result result) => true;
-        public abstract void OnResult(FamiStudioForm main, Result code, Intent data);
+        public abstract void OnResult(FamiStudioWindow main, Result code, Intent data);
     };
 
     public class LoadDialogActivityInfo : BaseDialogActivityInfo
@@ -842,7 +840,7 @@ namespace FamiStudio
             callback = cb;
         }
 
-        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
         {
             if (code == Result.Ok)
             {
@@ -901,7 +899,7 @@ namespace FamiStudio
 
         public override bool IsDialogDone(Result result) => result != Result.Ok;
 
-        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
         {
             if (code == Result.Ok)
             {
@@ -926,7 +924,7 @@ namespace FamiStudio
 
                     using (var streamIn = File.OpenRead(lastSaveTempFile))
                     {
-                        using (var streamOut = FamiStudioForm.Instance.ContentResolver.OpenOutputStream(lastSaveFileUri))
+                        using (var streamOut = FamiStudioWindow.Instance.ContentResolver.OpenOutputStream(lastSaveFileUri))
                         {
                             while (true)
                             {
@@ -968,7 +966,7 @@ namespace FamiStudio
             callback = cb;
         }
 
-        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
         {
             callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
         }
@@ -988,7 +986,7 @@ namespace FamiStudio
             callback = cb;
         }
 
-        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
         {
             callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
         }
@@ -1008,7 +1006,7 @@ namespace FamiStudio
             callback = cb;
         }
 
-        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
         {
             callback(code == Result.Ok ? DialogResult.OK : DialogResult.Cancel);
         }
@@ -1024,7 +1022,7 @@ namespace FamiStudio
             callback = cb;
         }
 
-        public override void OnResult(FamiStudioForm main, Result code, Intent data)
+        public override void OnResult(FamiStudioWindow main, Result code, Intent data)
         {
             if (code == Result.Ok)
                 callback();

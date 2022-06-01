@@ -263,6 +263,7 @@
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
+    <Compile Include="Source\UI\Common\Dialog.cs" />
     <Compile Include="Source\UI\Common\DpiScaling.cs" />
     <Compile Include="Source\UI\Common\ExportDialog.cs" />
     <Compile Include="Source\UI\Common\FamiStudio.cs" />

@@ -4,9 +4,6 @@ using Android.Text.Style;
 using Android.App;
 using Android.OS;
 using Android.Views;
-using Android.Runtime;
-using Android.Content;
-using Android.Content.Res;
 using Android.Content.PM;
 using AndroidX.AppCompat.App;
 using AndroidX.Fragment.App;
@@ -15,9 +12,7 @@ using AndroidX.CoordinatorLayout.Widget;
 using Google.Android.Material.AppBar;
 using Java.Lang;
 
-using Debug        = System.Diagnostics.Debug;
-using DialogResult = System.Windows.Forms.DialogResult;
-using ActionBar    = AndroidX.AppCompat.App.ActionBar;
+using ActionBar = AndroidX.AppCompat.App.ActionBar;
 
 namespace FamiStudio
 {
@@ -27,7 +22,7 @@ namespace FamiStudio
         private string verb = "Apply";
         private bool canAccept = true;
         private bool canCancel = true;
-        private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
+        private PropertyPage propertyPage = new PropertyPage(FamiStudioWindow.Instance);
 
         public PropertyPage Properties => propertyPage;
         public string Title => title;
@@ -60,9 +55,9 @@ namespace FamiStudio
             CloseRequested?.Invoke(result);
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
         {
-            FamiStudioForm.Instance.StartPropertyDialogActivity(callback, this);
+            FamiStudioWindow.Instance.StartPropertyDialogActivity(callback, this);
         }
     }
 
@@ -88,7 +83,7 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            var info = FamiStudioForm.Instance != null ? FamiStudioForm.Instance.ActiveDialog as PropertyDialogActivityInfo : null;
+            var info = FamiStudioWindow.Instance != null ? FamiStudioWindow.Instance.ActiveDialog as PropertyDialogActivityInfo : null;
 
             if (savedInstanceState != null || info == null)
             {
@@ -166,7 +161,7 @@ namespace FamiStudio
             // If we are being stopped, but not by the user closing the dialog,
             // it is likely that the user switched app. If the main activity isnt
             // running, lets suspend FamiStudio.
-            if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
+            if (!stoppedByUser && !FamiStudioWindow.ActivityRunning)
                 FamiStudio.StaticInstance.Suspend();
             base.OnPause();
         }

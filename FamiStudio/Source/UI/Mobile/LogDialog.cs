@@ -4,7 +4,7 @@ namespace FamiStudio
 {
     class LogDialog : ILogOutput
     {
-        public LogDialog(FamiStudioForm parentForm)
+        public LogDialog(FamiStudioWindow parentForm)
         {
         }
 
@@ -33,9 +33,9 @@ namespace FamiStudio
         bool abort = false;
         bool hasMessages = false;
         private PropertyDialog dialog;
-        private FamiStudioForm parentForm;
+        private FamiStudioWindow parentForm;
 
-        public unsafe LogProgressDialog(FamiStudioForm parentForm, string title, string text)
+        public unsafe LogProgressDialog(FamiStudioWindow parentForm, string title, string text)
         {
             this.parentForm = parentForm;
 

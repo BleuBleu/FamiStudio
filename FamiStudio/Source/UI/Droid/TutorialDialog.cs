@@ -4,32 +4,24 @@ using Android.Text.Style;
 using Android.App;
 using Android.OS;
 using Android.Views;
-using Android.Runtime;
 using Android.Content;
-using Android.Content.Res;
 using Android.Content.PM;
 using AndroidX.AppCompat.App;
-using AndroidX.Fragment.App;
-using AndroidX.Core.Widget;
 using AndroidX.CoordinatorLayout.Widget;
 using Google.Android.Material.AppBar;
 using Java.Lang;
-
-using Debug        = System.Diagnostics.Debug;
-using DialogResult = System.Windows.Forms.DialogResult;
-using ActionBar    = AndroidX.AppCompat.App.ActionBar;
 using Android.Widget;
 using Android.Webkit;
-using AndroidX.ConstraintLayout.Widget;
-using Android.Util;
+
+using ActionBar = AndroidX.AppCompat.App.ActionBar;
 
 namespace FamiStudio
 {
     public class TutorialDialog
     {
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
         {
-            FamiStudioForm.Instance.StartTutorialDialogActivity(callback, this);
+            FamiStudioWindow.Instance.StartTutorialDialogActivity(callback, this);
         }
     }
 
@@ -94,7 +86,7 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            var info = FamiStudioForm.Instance != null ? FamiStudioForm.Instance.ActiveDialog as TutorialDialogActivityInfo : null;
+            var info = FamiStudioWindow.Instance != null ? FamiStudioWindow.Instance.ActiveDialog as TutorialDialogActivityInfo : null;
 
             if (savedInstanceState != null || info == null)
             {
@@ -225,7 +217,7 @@ namespace FamiStudio
             // If we are being stopped, but not by the user closing the dialog,
             // it is likely that the user switched app. If the main activity isnt
             // running, lets suspend FamiStudio.
-            if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
+            if (!stoppedByUser && !FamiStudioWindow.ActivityRunning)
                 FamiStudio.StaticInstance.Suspend();
             base.OnPause();
         }
