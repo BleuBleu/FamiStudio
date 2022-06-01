@@ -65,7 +65,7 @@ namespace FamiStudio
         {
             var scaling = size > 32 ? 2 : 1;
             var suffix = scaling == 2 ? "@2x" : "";
-            var img = TgaFile.LoadFromResource($"FamiStudio.Resources.{name}{suffix}.tga");
+            var bmp = TgaFile.LoadFromResource($"FamiStudio.Resources.{name}{suffix}.tga");
 
             ScaleHotspot(scaling, ref hotx, ref hoty);
 
@@ -80,11 +80,11 @@ namespace FamiStudio
             //    img = Utils.ResizeBitmap(img, size, size);
             //}
 
-            fixed (int* p = &img[0, 0])
+            fixed (int* p = &bmp.Data[0])
             {
                 var glfwImg = new GLFWimage();
-                glfwImg.width  = img.GetLength(1);
-                glfwImg.height = img.GetLength(0);
+                glfwImg.width  = bmp.Width;
+                glfwImg.height = bmp.Height;
                 glfwImg.pixels = (IntPtr)p;
                 return glfwCreateCursor(new IntPtr(&glfwImg), hotx, hoty);
             }

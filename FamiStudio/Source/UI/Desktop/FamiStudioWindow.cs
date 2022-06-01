@@ -179,10 +179,10 @@ namespace FamiStudio
             var icon64 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_64.tga", true);
             var images = new GLFWimage[4];
 
-            fixed (int* p16 = &icon16[0, 0], 
-                        p24 = &icon24[0, 0], 
-                        p32 = &icon32[0, 0], 
-                        p64 = &icon64[0, 0])
+            fixed (int* p16 = &icon16.Data[0], 
+                        p24 = &icon24.Data[0], 
+                        p32 = &icon32.Data[0], 
+                        p64 = &icon64.Data[0])
             {
                 images[0].width  = 16;
                 images[0].height = 16;

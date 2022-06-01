@@ -90,11 +90,11 @@ namespace FamiStudio
             return id;
         }
 
-        protected unsafe override int CreateTexture(int[,] bmpData, bool filter)
+        protected unsafe override int CreateTexture(SimpleBitmap bmp, bool filter)
         {
-            fixed (int* ptr = &bmpData[0, 0])
+            fixed (int* ptr = &bmp.Data[0])
             {
-                var stride = sizeof(int) * bmpData.GetLength(1);
+                var stride = sizeof(int) * bmp.Width;
 
                 // MATTT : Check that!!! + Dont use define.
             #if FAMISTUDIO_WINDOWS
@@ -105,7 +105,7 @@ namespace FamiStudio
 
                 int id = GL.GenTexture();
                 GL.BindTexture(GL.Texture2D, id);
-                GL.TexImage2D(GL.Texture2D, 0, GL.Rgba8, bmpData.GetLength(1), bmpData.GetLength(0), 0, format, GL.UnsignedByte, new IntPtr(ptr));
+                GL.TexImage2D(GL.Texture2D, 0, GL.Rgba8, bmp.Width, bmp.Height, 0, format, GL.UnsignedByte, new IntPtr(ptr));
                 GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
                 GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
 
@@ -121,7 +121,7 @@ namespace FamiStudio
         public Bitmap CreateBitmapFromResource(string name)
         {
             var bmp = LoadBitmapFromResourceWithScaling(name);
-            return new Bitmap(this, CreateTexture(bmp, false), bmp.GetLength(0), bmp.GetLength(1));
+            return new Bitmap(this, CreateTexture(bmp, false), bmp.Width, bmp.Height);
         }
 
         public Bitmap CreateBitmapFromOffscreenGraphics(OffscreenGraphics g)
@@ -134,18 +134,18 @@ namespace FamiStudio
             // Need to sort since we do binary searches on the names.
             Array.Sort(names);
 
-            var bitmaps = new int[names.Length][,];
+            var bitmaps = new SimpleBitmap[names.Length];
             var elementSizeX = 0;
             var elementSizeY = 0;
 
             for (int i = 0; i < names.Length; i++)
             {
-                var bmpData = LoadBitmapFromResourceWithScaling(names[i]);
+                var bmp = LoadBitmapFromResourceWithScaling(names[i]);
 
-                elementSizeX = Math.Max(elementSizeX, bmpData.GetLength(1));
-                elementSizeY = Math.Max(elementSizeY, bmpData.GetLength(0));
+                elementSizeX = Math.Max(elementSizeX, bmp.Width);
+                elementSizeY = Math.Max(elementSizeY, bmp.Height);
 
-                bitmaps[i] = bmpData;
+                bitmaps[i] = bmp;
             }
 
             Debug.Assert(elementSizeX < MaxAtlasResolution);
@@ -163,9 +163,9 @@ namespace FamiStudio
 
             for (int i = 0; i < names.Length; i++)
             {
-                var bmpData = bitmaps[i];
+                var bmp = bitmaps[i];
 
-                Debug.WriteLine($"  - {names[i]} ({bmpData.GetLength(1)} x {bmpData.GetLength(0)}):");
+                Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
 
                 var row = i / elementsPerRow;
                 var col = i % elementsPerRow;
@@ -173,12 +173,12 @@ namespace FamiStudio
                 elementRects[i] = new Rectangle(
                     col * elementSizeX,
                     row * elementSizeY,
-                    bmpData.GetLength(1),
-                    bmpData.GetLength(0));
+                    bmp.Width,
+                    bmp.Height);
 
-                fixed (int* ptr = &bmpData[0, 0])
+                fixed (int* ptr = &bmp.Data[0])
                 {
-                    var stride = sizeof(int) * bmpData.GetLength(0);
+                    var stride = sizeof(int) * bmp.Width;
 
                     // MATTT : Check that!!! Should be same now!
 #if FAMISTUDIO_WINDOWS
@@ -186,7 +186,7 @@ namespace FamiStudio
 #else
                     var format = GL.Rgba;
 #endif
-                    GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmpData.GetLength(1), bmpData.GetLength(0), format, GL.UnsignedByte, new IntPtr(ptr));
+                    GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, format, GL.UnsignedByte, new IntPtr(ptr));
                 }
             }
 

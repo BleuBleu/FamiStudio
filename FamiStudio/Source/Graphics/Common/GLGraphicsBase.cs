@@ -56,7 +56,7 @@ namespace FamiStudio
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
         protected abstract int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false);
-        protected abstract int CreateTexture(int[,] bmpData, bool filter);
+        protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
         public abstract void DeleteTexture(int id);
         public abstract void DrawCommandList(CommandList list, Rectangle scissor);
         public abstract BitmapAtlas CreateBitmapAtlasFromResources(string[] names);
@@ -129,22 +129,22 @@ namespace FamiStudio
             }
         }
 
-        protected int[,] LoadBitmapFromResourceWithScaling(string name)
+        protected SimpleBitmap LoadBitmapFromResourceWithScaling(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
             var scaledFilename = GetScaledFilename(name, out var needsScaling);
-            var bmpData = TgaFile.LoadFromResource(scaledFilename);
+            var bmp = TgaFile.LoadFromResource(scaledFilename);
 
             // Pre-resize all images so we dont have to deal with scaling later.
             if (needsScaling)
             {
-                var newWidth  = Math.Max(1, (int)(bmpData.GetLength(1) * (windowScaling / 2.0f)));
-                var newHeight = Math.Max(1, (int)(bmpData.GetLength(0) * (windowScaling / 2.0f)));
+                var newWidth  = Math.Max(1, (int)(bmp.Width  * (windowScaling / 2.0f)));
+                var newHeight = Math.Max(1, (int)(bmp.Height * (windowScaling / 2.0f)));
 
-                bmpData = Utils.ResizeBitmap(bmpData, newWidth, newHeight);
+                bmp = bmp.Resize(newWidth, newHeight);
             }
 
-            return bmpData;
+            return bmp;
         }
 
         private void BuildBitmapAtlases()
@@ -380,7 +380,7 @@ namespace FamiStudio
             }
 
             var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var bmpData = TgaFile.LoadFromResource(imgfile);
+            var bmp = TgaFile.LoadFromResource(imgfile);
 
             var font = (Font)null;
 
@@ -401,7 +401,7 @@ namespace FamiStudio
                         lineHeight = ReadFontParam<int>(splits, "lineHeight");
                         texSizeX = ReadFontParam<int>(splits, "scaleW");
                         texSizeY = ReadFontParam<int>(splits, "scaleH");
-                        font = new Font(this, CreateTexture(bmpData, false), size, baseValue, lineHeight);
+                        font = new Font(this, CreateTexture(bmp, false), size, baseValue, lineHeight);
                         break;
                     }
                     case "char":

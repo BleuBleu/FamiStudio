@@ -51,7 +51,7 @@ namespace FamiStudio
             return a << 24 | b << 16 | g << 8 | r;
         }
 
-        private static unsafe int[,] LoadInternal(byte[] bytes, bool swap = false)
+        private static unsafe SimpleBitmap LoadInternal(byte[] bytes, bool swap = false)
         {
             fixed (byte* p = &bytes[0])
             {
@@ -65,80 +65,82 @@ namespace FamiStudio
                 var bpp = ph->bitsperpixel / 8;
                 var flip = (ph->imagedescriptor & 0x20) == 0;
 
-                var imageData = new int[ph->height, ph->width];
-                var dataIdx = Marshal.SizeOf(typeof(TgaHeader)) + ph->idlength;
-                var pixelIdx = 0;
+                var bmp = new SimpleBitmap(ph->width, ph->height);
+                var i = Marshal.SizeOf(typeof(TgaHeader)) + ph->idlength;
 
                 var ri = swap ? 2 : 0;
                 var gi = 1;
                 var bi = swap ? 0 : 2;
                 var ai = 3;
 
-                while (pixelIdx < imageData.Length)
+                var x = 0;
+                var y = flip ? ph->height - 1 : 0;
+                var yinc = flip ? -1 : 1;
+
+                while (y >= 0 && y < ph->height)
                 {
                     if (!compressed)
                     {
-                        imageData[flip ? ph->height - pixelIdx / ph->width - 1 : pixelIdx / ph->width, pixelIdx % ph->width] = PackColor(
-                            bytes[dataIdx + ri],
-                            bytes[dataIdx + gi],
-                            bytes[dataIdx + bi],
-                            bpp == 4 ? bytes[dataIdx + ai] : (byte)255);
+                        bmp.SetPixel(x, y, PackColor(
+                            bytes[i + ri],
+                            bytes[i + gi],
+                            bytes[i + bi],
+                            bpp == 4 ? bytes[i + ai] : (byte)255));
 
-                        dataIdx += bpp;
-                        pixelIdx++;
+                        i += bpp;
+                        if (++x == bmp.Width) { x = 0; y += yinc; }
                     }
                     else
                     {
-                        var code = bytes[dataIdx];
-                        dataIdx++;
+                        var code = bytes[i];
+                        i++;
 
-                        imageData[flip ? ph->height - pixelIdx / ph->width - 1 : pixelIdx / ph->width, pixelIdx % ph->width] = PackColor(
-                            bytes[dataIdx + ri],
-                            bytes[dataIdx + gi],
-                            bytes[dataIdx + bi],
-                            bpp == 4 ? bytes[dataIdx + ai] : (byte)255);
-
-                        pixelIdx++;
+                        bmp.SetPixel(x, y, PackColor(
+                            bytes[i + ri],
+                            bytes[i + gi],
+                            bytes[i + bi],
+                            bpp == 4 ? bytes[i + ai] : (byte)255));
+                        if (++x == bmp.Width) { x = 0; y += yinc; }
 
                         var count = code & 0x7f;
 
                         if ((code & 0x80) != 0) // RLE
                         {
-                            for (var i = 0; i < count; i++)
+                            for (var j = 0; j < count; j++)
                             {
-                                imageData[flip ? ph->height - pixelIdx / ph->width - 1 : pixelIdx / ph->width, pixelIdx % ph->width] = PackColor(
-                                    bytes[dataIdx + ri],
-                                    bytes[dataIdx + gi],
-                                    bytes[dataIdx + bi],
-                                    bpp == 4 ? bytes[dataIdx + ai] : (byte)255);
-                                pixelIdx++;
+                                bmp.SetPixel(x, y, PackColor(
+                                    bytes[i + ri],
+                                    bytes[i + gi],
+                                    bytes[i + bi],
+                                    bpp == 4 ? bytes[i + ai] : (byte)255));
+                                if (++x == bmp.Width) { x = 0; y += yinc; }
                             }
 
-                            dataIdx += bpp;
+                            i += bpp;
                         }
                         else
                         {
-                            dataIdx += bpp;
+                            i += bpp;
 
-                            for (var i = 0; i < count; i++)
+                            for (var j = 0; j < count; j++)
                             {
-                                imageData[flip ? ph->height - pixelIdx / ph->width - 1 : pixelIdx / ph->width, pixelIdx % ph->width] = PackColor(
-                                    bytes[dataIdx + ri],
-                                    bytes[dataIdx + gi],
-                                    bytes[dataIdx + bi],
-                                    bpp == 4 ? bytes[dataIdx + ai] : (byte)255);
-                                dataIdx += bpp;
-                                pixelIdx++;
+                                bmp.SetPixel(x, y, PackColor(
+                                    bytes[i + ri],
+                                    bytes[i + gi],
+                                    bytes[i + bi],
+                                    bpp == 4 ? bytes[i + ai] : (byte)255));
+                                i += bpp;
+                                if (++x == bmp.Width) { x = 0; y += yinc; }
                             }
                         }
                     }
                 }
 
-                return imageData;
+                return bmp;
             }
         }
 
-        public static int[,] LoadFromResource(string name, bool swap = false)
+        public static SimpleBitmap LoadFromResource(string name, bool swap = false)
         {
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
             {
@@ -150,7 +152,7 @@ namespace FamiStudio
             }
         }
 
-        public static unsafe int[,] LoadFromFile(string filename, bool swap = false)
+        public static unsafe SimpleBitmap LoadFromFile(string filename, bool swap = false)
         {
             return LoadInternal(System.IO.File.ReadAllBytes(filename), swap);
         }
