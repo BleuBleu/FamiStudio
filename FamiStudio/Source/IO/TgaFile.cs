@@ -51,7 +51,7 @@ namespace FamiStudio
             return a << 24 | b << 16 | g << 8 | r;
         }
 
-        private static unsafe int[,] LoadInternal(byte[] bytes)
+        private static unsafe int[,] LoadInternal(byte[] bytes, bool swap = false)
         {
             fixed (byte* p = &bytes[0])
             {
@@ -69,27 +69,34 @@ namespace FamiStudio
                 var bpp = ph->bitsperpixel / 8;
                 var flip = (ph->imagedescriptor & 0x20) == 0;
 
+                var ri = swap ? 2 : 0;
+                var gi = 1;
+                var bi = swap ? 0 : 2;
+                var ai = 3;
+
                 while (pixelIdx < imageData.Length)
                 {
                     if (!compressed)
                     {
                         imageData[flip ? ph->height - pixelIdx / ph->width - 1 : pixelIdx / ph->width, pixelIdx % ph->width] = PackColor(
-                            bytes[dataIdx++],
-                            bytes[dataIdx++],
-                            bytes[dataIdx++],
-                            bpp == 4 ? bytes[dataIdx++] : (byte)255);
+                            bytes[dataIdx + ri],
+                            bytes[dataIdx + gi],
+                            bytes[dataIdx + bi],
+                            bpp == 4 ? bytes[dataIdx + ai] : (byte)255);
 
+                        dataIdx += bpp;
                         pixelIdx++;
                     }
                     else
                     {
                         var code = bytes[dataIdx];
+                        dataIdx++;
 
                         imageData[flip ? ph->height - pixelIdx / ph->width - 1 : pixelIdx / ph->width, pixelIdx % ph->width] = PackColor(
-                            bytes[dataIdx + 1],
-                            bytes[dataIdx + 2],
-                            bytes[dataIdx + 3],
-                            bpp == 4 ? bytes[dataIdx + 4] : (byte)255);
+                            bytes[dataIdx + ri],
+                            bytes[dataIdx + gi],
+                            bytes[dataIdx + bi],
+                            bpp == 4 ? bytes[dataIdx + ai] : (byte)255);
 
                         pixelIdx++;
 
@@ -100,26 +107,27 @@ namespace FamiStudio
                             for (var i = 0; i < count; i++)
                             {
                                 imageData[flip ? ph->height - pixelIdx / ph->width - 1 : pixelIdx / ph->width, pixelIdx % ph->width] = PackColor(
-                                    bytes[dataIdx + 1],
-                                    bytes[dataIdx + 2],
-                                    bytes[dataIdx + 3],
-                                    bpp == 4 ? bytes[dataIdx + 4] : (byte)255);
+                                    bytes[dataIdx + ri],
+                                    bytes[dataIdx + gi],
+                                    bytes[dataIdx + bi],
+                                    bpp == 4 ? bytes[dataIdx + ai] : (byte)255);
                                 pixelIdx++;
                             }
 
-                            dataIdx += bpp + 1;
+                            dataIdx += bpp;
                         }
                         else
                         {
-                            dataIdx += bpp + 1;
+                            dataIdx += bpp;
 
                             for (var i = 0; i < count; i++)
                             {
                                 imageData[flip ? ph->height - pixelIdx / ph->width - 1 : pixelIdx / ph->width, pixelIdx % ph->width] = PackColor(
-                                    bytes[dataIdx++],
-                                    bytes[dataIdx++],
-                                    bytes[dataIdx++],
-                                    bpp == 4 ? bytes[dataIdx++] : (byte)255);
+                                    bytes[dataIdx + ri],
+                                    bytes[dataIdx + gi],
+                                    bytes[dataIdx + bi],
+                                    bpp == 4 ? bytes[dataIdx + ai] : (byte)255);
+                                dataIdx += bpp;
                                 pixelIdx++;
                             }
                         }
@@ -130,7 +138,7 @@ namespace FamiStudio
             }
         }
 
-        public static int[,] LoadFromResource(string name)
+        public static int[,] LoadFromResource(string name, bool swap = false)
         {
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
             {
@@ -138,13 +146,13 @@ namespace FamiStudio
                 stream.Read(bytes, 0, (int)stream.Length);
                 stream.Close();
 
-                return LoadInternal(bytes);
+                return LoadInternal(bytes, swap);
             }
         }
 
-        public static unsafe int[,] LoadFromFile(string filename)
+        public static unsafe int[,] LoadFromFile(string filename, bool swap = false)
         {
-            return LoadInternal(System.IO.File.ReadAllBytes(filename));
+            return LoadInternal(System.IO.File.ReadAllBytes(filename), swap);
         }
     }
 }

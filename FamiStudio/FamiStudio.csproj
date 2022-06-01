@@ -425,7 +425,11 @@
     <EmbeddedResource Include="Resources\ExportWav@2x.tga" />
     <EmbeddedResource Include="Resources\EyedropCursor.tga" />
     <EmbeddedResource Include="Resources\EyedropCursor@2x.tga" />
-    <EmbeddedResource Include="Resources\FamiStudio.ico" />
+    <EmbeddedResource Include="Resources\FamiStudio_16.tga" />
+    <EmbeddedResource Include="Resources\FamiStudio_24.tga" />
+    <EmbeddedResource Include="Resources\FamiStudio_32.tga" />
+    <EmbeddedResource Include="Resources\FamiStudio_64.tga" />
+    <EmbeddedResource Include="Resources\FamiStudio_128.tga" />
     <EmbeddedResource Include="Resources\File.tga" />
     <EmbeddedResource Include="Resources\File@2x.tga" />
     <EmbeddedResource Include="Resources\Follow.tga" />

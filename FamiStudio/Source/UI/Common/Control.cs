@@ -35,6 +35,7 @@ namespace FamiStudio
         protected virtual void OnMouseHorizontalWheel(MouseEventArgs e) { }
         protected virtual void OnKeyDown(KeyEventArgs e) { }
         protected virtual void OnKeyUp(KeyEventArgs e) { }
+        protected virtual void OnChar(CharEventArgs e) { }
         protected virtual void OnTouchDown(int x, int y) { }
         protected virtual void OnTouchUp(int x, int y) { }
         protected virtual void OnTouchMove(int x, int y) { }
@@ -65,6 +66,7 @@ namespace FamiStudio
         public void MouseHorizontalWheel(MouseEventArgs e) { OnMouseHorizontalWheel(e); }
         public void KeyDown(KeyEventArgs e) { OnKeyDown(e); }
         public void KeyUp(KeyEventArgs e) { OnKeyUp(e); }
+        public void Char(CharEventArgs e) { OnChar(e); }
         public void TouchDown(int x, int y) { OnTouchDown(x, y); }
         public void TouchUp(int x, int y) { OnTouchUp(x, y); }
         public void TouchMove(int x, int y) { OnTouchMove(x, y); }
@@ -189,17 +191,18 @@ namespace FamiStudio
     public class ModifierKeys
     { 
         // Matches GLFW
-        private const int ModifierShift = 1;
+        private const int ModifierShift   = 1;
         private const int ModifierControl = 2;
-        private const int ModifierAlt = 4;
-        private const int ModifierSuper = 4;
+        private const int ModifierAlt     = 4;
+        private const int ModifierSuper   = 8;
 
         private int modifiers;
 
-        public bool Shift    => (modifiers & ModifierShift)   != 0;
-        public bool Control  => (modifiers & ModifierControl) != 0;
-        public bool Alt      => (modifiers & ModifierAlt)     != 0;
-        public bool Super    => (modifiers & ModifierSuper)   != 0;
+        public bool Shift     => (modifiers & ModifierShift)   != 0;
+        public bool Control   => (modifiers & ModifierControl) != 0;
+        public bool Alt       => (modifiers & ModifierAlt)     != 0;
+        public bool Super     => (modifiers & ModifierSuper)   != 0;
+        public int  Modifiers => modifiers;
 
         public void Set(int mods)
         {
@@ -253,7 +256,7 @@ namespace FamiStudio
         private const int ModifierShift   = 1;
         private const int ModifierControl = 2;
         private const int ModifierAlt     = 4;
-        private const int ModifierSuper   = 4;
+        private const int ModifierSuper   = 8;
 
         private Keys key;
         private int  modifiers;
@@ -273,6 +276,30 @@ namespace FamiStudio
             key = k;
             modifiers = mods;
             repeat = rep;
+        }
+    }
+
+    public class CharEventArgs
+    {
+        // Matches GLFW
+        private const int ModifierShift   = 1;
+        private const int ModifierControl = 2;
+        private const int ModifierAlt     = 4;
+        private const int ModifierSuper   = 4;
+
+        private char chr;
+        private int  modifiers;
+
+        public char Char    => chr;
+        public bool Shift   => (modifiers & ModifierShift)   != 0;
+        public bool Control => (modifiers & ModifierControl) != 0;
+        public bool Alt     => (modifiers & ModifierAlt)     != 0;
+        public bool Super   => (modifiers & ModifierSuper)   != 0;
+
+        public CharEventArgs(char c, int mods)
+        {
+            chr = c;
+            modifiers = mods;
         }
     }
 

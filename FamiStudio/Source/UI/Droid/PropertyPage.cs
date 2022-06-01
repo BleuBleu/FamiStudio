@@ -99,8 +99,6 @@ namespace FamiStudio
         {
             var editText = sender as EditText;
 
-            ForceEditTextASCII(editText);
-
             var idx = GetPropertyIndexForView(editText);
             if (idx >= 0)
                 PropertyChanged?.Invoke(this, idx, -1, -1, editText.Text);

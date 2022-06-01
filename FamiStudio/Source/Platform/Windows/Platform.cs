@@ -540,6 +540,7 @@ namespace FamiStudio
         private static extern int EmptyClipboard();
 
         const int CF_TEXT = 1;
+        const int CF_UNICODETEXT = 13;
         const int GMEM_MOVEABLE = 2;
 
         private static int clipboardFormat = -1;
@@ -595,11 +596,11 @@ namespace FamiStudio
         {
             byte[] buffer = null;
 
-            if (IsClipboardFormatAvailable(CF_TEXT) != 0)
+            if (IsClipboardFormatAvailable(CF_UNICODETEXT) != 0)
             {
                 if (OpenClipboard(IntPtr.Zero) != 0)
                 {
-                    var mem = GetClipboardDataWin32(CF_TEXT);
+                    var mem = GetClipboardDataWin32(CF_UNICODETEXT);
                     if (mem != IntPtr.Zero)
                     {
                         var size = Math.Min(2048, GlobalSize(mem));
@@ -615,7 +616,7 @@ namespace FamiStudio
             if (buffer == null)
                 return null;
 
-            return ASCIIEncoding.ASCII.GetString(buffer);
+            return Encoding.Unicode.GetString(buffer).TrimEnd('\0');
         }
 
         public static void ClearClipboardString()
@@ -626,7 +627,6 @@ namespace FamiStudio
                 CloseClipboard();
             }
         }
-
 
         [System.Runtime.InteropServices.DllImport("Shell32.dll")]
         private static extern int SHChangeNotify(int eventId, int flags, IntPtr item1, IntPtr item2);

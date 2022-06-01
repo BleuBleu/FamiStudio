@@ -106,31 +106,6 @@ namespace FamiStudio
             return textBox;
         }
 
-        private void TextBox_TextChanged(object sender, EventArgs e)
-        {
-            ForceTextBoxASCII(sender as TextBox);
-        }
-
-        // MATTT : Will likely move to TextBox.
-        private void ForceTextBoxASCII(TextBox textBox)
-        {
-            // All of our text storage is ASCII at the moment, so enforce it right away
-            // to prevent issues later on.
-            var oldText = textBox.Text;
-            var newText = Utils.ForceASCII(oldText);
-
-            if (oldText != newText)
-            {
-                // MATTT
-                //var selStart = textBox.SelectionStart;
-                //var selLen = textBox.SelectionLength;
-
-                //textBox.Text = newText;
-                //textBox.SelectionStart = selStart;
-                //textBox.SelectionLength = selLen;
-            }
-        }
-
         private LogTextBox CreateLogTextBox()
         {
             return new LogTextBox(15);
@@ -650,7 +625,6 @@ namespace FamiStudio
                 case PropertyType.TextBox:
                 case PropertyType.ColoredTextBox:
                 case PropertyType.LogTextBox:
-                    ForceTextBoxASCII(prop.control as TextBox);
                     return (prop.control as TextBox).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as NumericUpDown).Value;

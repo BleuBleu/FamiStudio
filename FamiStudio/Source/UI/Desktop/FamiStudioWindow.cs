@@ -107,6 +107,7 @@ namespace FamiStudio
             glfwSetCharCallback(window, charCallback);
             glfwSetDropCallback(window, dropCallback);
 
+            SetWindowIcon();
             SubclassWindow(true); 
             EnableWindowsDarkTheme();
             InitialFrameBufferClear();
@@ -171,6 +172,36 @@ namespace FamiStudio
                 1.0f);
             GL.Clear(GL.ColorBufferBit);
             glfwSwapBuffers(window);
+        }
+
+        private unsafe void SetWindowIcon()
+        {
+            var icon16 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_16.tga", true);
+            var icon24 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_24.tga", true);
+            var icon32 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_32.tga", true);
+            var icon64 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_64.tga", true);
+            var images = new GLFWimage[4];
+
+            fixed (int* p16 = &icon16[0, 0], p24 = &icon24[0, 0], p32 = &icon32[0, 0], p64 = &icon64[0, 0])
+            {
+                images[0].width  = 16;
+                images[0].height = 16;
+                images[0].pixels = (IntPtr)p16;
+                images[1].width  = 24;
+                images[1].height = 24;
+                images[1].pixels = (IntPtr)p24;
+                images[2].width  = 32;
+                images[2].height = 32;
+                images[2].pixels = (IntPtr)p32;
+                images[3].width  = 64;
+                images[3].height = 64;
+                images[3].pixels = (IntPtr)p64;
+
+                fixed(GLFWimage* pi = &images[0])
+                {
+                    glfwSetWindowIcon(window, 4, (IntPtr)pi);
+                }
+            }
         }
 
         private void Tick()
@@ -493,7 +524,25 @@ namespace FamiStudio
 
         private void CharCallback(IntPtr window, uint codepoint)
         {
-            Debug.WriteLine($"CHAR! Key = {codepoint}");
+            Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
+
+            var e = new CharEventArgs((char)codepoint, modifiers.Modifiers);
+
+            if (controls.IsContextMenuActive)
+            {
+                controls.ContextMenu.Char(e);
+            }
+            else if (controls.IsDialogActive)
+            {
+                controls.TopDialog.Char(e);
+            }
+            else
+            {
+                //famistudio.Char(e); // MATTT
+
+                foreach (var ctrl in controls.Controls)
+                    ctrl.Char(e);
+            }
         }
 
         private void CharModsCallback(IntPtr window, uint codepoint, int mods)

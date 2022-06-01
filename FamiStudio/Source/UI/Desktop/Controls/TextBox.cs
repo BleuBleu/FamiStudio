@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Diagnostics;
+using System.Text;
 
 namespace FamiStudio
 {
@@ -225,26 +226,42 @@ namespace FamiStudio
                     MarkDirty();
                 }
             }
-            else if ((int)e.Key >= 0 && (int)e.Key <= 255 && ThemeResources.FontMedium.GetCharInfo((char)e.Key, false) != null)
-            {
-                // MATTT : This is janky. Need equivalent of OnKeyPress().
-                DeleteSelection();
-                text = text.Insert(caretIndex, ((char)e.Key).ToString());
-                caretIndex++;
-                UpdateScrollParams();
-                EnsureCaretVisible();
-                ClearSelection();
-                MarkDirty();
-            }
             else if (e.Key == Keys.Escape)
             {
                 ClearDialogFocus();
                 e.Handled = true;
             }
+            else if (e.Key == Keys.V && e.Control)
+            {
+                var str = Platform.GetClipboardString();
+                if (!string.IsNullOrEmpty(str))
+                {
+                    InsertText(str);
+                }
+            }
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
+        }
+
+        protected override void OnChar(CharEventArgs e)
+        {
+            if (enabled)
+            {
+                InsertText(e.Char.ToString());
+            }
+        }
+
+        private void InsertText(string str)
+        {
+            DeleteSelection();
+            text = text.Insert(caretIndex, str);
+            caretIndex += str.Length;
+            UpdateScrollParams();
+            EnsureCaretVisible();
+            ClearSelection();
+            MarkDirty();
         }
 
         public override void Tick(float delta)

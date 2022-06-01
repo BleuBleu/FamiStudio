@@ -20,7 +20,8 @@ namespace FamiStudio
         // Version 11 = FamiStudio 3.1.0 (Volume slides, DPCM fine pitch)
         // Version 12 = FamiStudio 3.2.0 (Multiple expansions, overclocking)
         // Version 13 = FamiStudio 3.3.0 (EPSM, Delta counter)
-        public static int Version = 13;
+        // Version 14 = FamiStudio 4.0.0 (Unicode text).
+        public static int Version = 14;
         public static int MaxMappedSampleSize = 0x4000;
         public static int MaxSampleAddress = 255 * 64;
 

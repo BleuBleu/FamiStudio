@@ -174,6 +174,22 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            if (focusedControl != null && focusedControl.Visible)
+            {
+                focusedControl.KeyUp(e);
+            }
+        }
+
+        protected override void OnChar(CharEventArgs e)
+        {
+            if (focusedControl != null && focusedControl.Visible)
+            {
+                focusedControl.Char(e);
+            }
+        }
+
         private List<string> SplitLongTooltip(string str)
         {
             var splits = new List<string>();
