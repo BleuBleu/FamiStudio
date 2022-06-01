@@ -171,14 +171,6 @@ namespace FamiStudio
             return string.Empty;
         }
 
-        // MATTT : Move to DroidUtils, not part of the interface
-        public static Android.Graphics.Bitmap LoadBitmapFromResource(string name, bool premultiplied = false)
-        {
-            return Android.Graphics.BitmapFactory.DecodeStream(
-                Assembly.GetExecutingAssembly().GetManifestResourceStream(name), null,
-                new Android.Graphics.BitmapFactory.Options() { InPremultiplied = premultiplied });
-        }
-
         public static void VibrateTick()
         {
             if (Settings.AllowVibration)

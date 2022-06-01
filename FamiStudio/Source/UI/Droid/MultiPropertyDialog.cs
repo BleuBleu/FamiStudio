@@ -15,6 +15,7 @@ using Google.Android.Material.AppBar;
 using Java.Lang;
 
 using ActionBar = AndroidX.AppCompat.App.ActionBar;
+using AndroidX.Core.Graphics;
 
 namespace FamiStudio
 {
@@ -309,7 +310,8 @@ namespace FamiStudio
 
                     var imageView = new ImageView(container.Context);
                     imageView.LayoutParameters = new LinearLayout.LayoutParams(dp36, dp36);
-                    imageView.SetImageBitmap(Platform.LoadBitmapFromResource($"FamiStudio.Resources.{tab.image}@2x.png", true));
+                    imageView.SetImageBitmap(DroidUtils.LoadTgaBitmapFromResource($"FamiStudio.Resources.{tab.image}@2x.tga"));
+                    imageView.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(container.Context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
 
                     var textViewLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
                     textViewLayoutParams.Gravity = GravityFlags.Left | GravityFlags.CenterVertical;

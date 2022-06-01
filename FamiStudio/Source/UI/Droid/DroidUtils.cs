@@ -1,6 +1,7 @@
 ﻿using Android.Content;
 using Android.Util;
 using AndroidX.Core.Content;
+using System.Reflection;
 using Xamarin.Essentials;
 
 namespace FamiStudio
@@ -37,5 +38,19 @@ namespace FamiStudio
             // Seriously google?
             return new Android.Graphics.Color(ContextCompat.GetColor(context, resId));
         }
+
+        public static Android.Graphics.Bitmap LoadTgaBitmapFromResource(string name, bool swap = false)
+        {
+            var img = TgaFile.LoadFromResource(name, swap);
+            return Android.Graphics.Bitmap.CreateBitmap(img.Data, img.Width, img.Height, Android.Graphics.Bitmap.Config.Argb8888);
+        }
+
+        public static Android.Graphics.Bitmap LoadPngBitmapFromResource(string name, bool premultiplied = false)
+        {
+            return Android.Graphics.BitmapFactory.DecodeStream(
+                Assembly.GetExecutingAssembly().GetManifestResourceStream(name), null,
+                new Android.Graphics.BitmapFactory.Options() { InPremultiplied = premultiplied });
+        }
+
     }
 }

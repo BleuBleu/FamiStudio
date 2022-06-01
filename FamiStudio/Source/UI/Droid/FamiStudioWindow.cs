@@ -18,6 +18,7 @@ using Javax.Microedition.Khronos.Opengles;
 using Google.Android.Material.BottomSheet;
 
 using Debug = System.Diagnostics.Debug;
+using AndroidX.Core.Graphics;
 
 namespace FamiStudio
 {
@@ -587,8 +588,9 @@ namespace FamiStudio
                 if (string.IsNullOrEmpty(imageName))
                     imageName = "MenuBlank";
 
-                var bmp = new BitmapDrawable(Resources, Platform.LoadBitmapFromResource($"FamiStudio.Resources.Mobile{imageName}.png", true));
+                var bmp = new BitmapDrawable(Resources, DroidUtils.LoadTgaBitmapFromResource($"FamiStudio.Resources.Mobile{imageName}.tga"));
                 bmp.SetBounds(0, 0, imageSize, imageSize);
+                bmp.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
 
                 var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
                 textView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
