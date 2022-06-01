@@ -98,7 +98,6 @@ namespace FamiStudio
 
         Font buttonFont;
         Brush scrollBarBrush;
-        BitmapAtlas bmpButtonAtlas;
         Button[] buttons = new Button[(int)ButtonType.Count];
 
         // These are only use for popup menu.
@@ -147,12 +146,12 @@ namespace FamiStudio
             bmpSequencer = g.GetBitmapAtlasRef("Sequencer");
             bmpPianoRoll = g.GetBitmapAtlasRef("PianoRoll");
             bmpProjectExplorer = g.GetBitmapAtlasRef("ProjectExplorer");
-            bmpSnapOn = g.GetBitmapAtlasRef("SnapOn");
-            bmpSnapOff = g.GetBitmapAtlasRef("SnapOff");
-            bmpArpeggio = g.GetBitmapAtlasRef("Arpeggio");
+            bmpSnapOn = g.GetBitmapAtlasRef("MobileSnapOn");
+            bmpSnapOff = g.GetBitmapAtlasRef("MobileSnapOff");
+            bmpArpeggio = g.GetBitmapAtlasRef("MobileArpeggio");
             bmpGhostSmall = g.GetBitmapAtlasRef("GhostSmall");
             bmpPlay = g.GetBitmapAtlasRef("Play");
-            bmpEffectNone = g.GetBitmapAtlasRef("EffectNone");
+            bmpEffectNone = g.GetBitmapAtlasRef("MobileEffectNone");
             bmpEffects = g.GetBitmapAtlasRefs(Note.EffectIcons);
             bmpExpansions = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpEnvelopes = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
@@ -175,21 +174,20 @@ namespace FamiStudio
             var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
-            buttonFont        = scale > 1.2f ? ThemeResources.FontSmall : ThemeResources.FontVerySmall;
-            buttonSize        = ScaleCustom(DefaultButtonSize, scale);
-            buttonSizeNav     = ScaleCustom(DefaultNavButtonSize, scale);
-            buttonIconPos1    = ScaleCustom(DefaultIconPos1, scale);
-            buttonIconPos2    = ScaleCustom(DefaultIconPos2, scale);
-            textPosTop        = ScaleCustom(DefaultTextPosTop, scale);
-            listItemSize      = ScaleCustom(DefaultListItemSize, scale);
-            listIconPos       = ScaleCustom(DefaultListIconPos, scale);
-            scrollBarSizeX    = ScaleCustom(DefaultScrollBarSizeX, scale);
-            iconScaleFloat    = ScaleCustomFloat(DefaultIconSize / (float)bmpButtonAtlas.GetElementSize(0).Width, scale);
+            buttonFont      = scale > 1.2f ? ThemeResources.FontSmall : ThemeResources.FontVerySmall;
+            buttonSize      = ScaleCustom(DefaultButtonSize, scale);
+            buttonSizeNav   = ScaleCustom(DefaultNavButtonSize, scale);
+            buttonIconPos1  = ScaleCustom(DefaultIconPos1, scale);
+            buttonIconPos2  = ScaleCustom(DefaultIconPos2, scale);
+            textPosTop      = ScaleCustom(DefaultTextPosTop, scale);
+            listItemSize    = ScaleCustom(DefaultListItemSize, scale);
+            listIconPos     = ScaleCustom(DefaultListIconPos, scale);
+            scrollBarSizeX  = ScaleCustom(DefaultScrollBarSizeX, scale);
+            iconScaleFloat  = ScaleCustomFloat(DefaultIconSize / (float)bmpSnapOn.ElementSize.Width, scale);
         }
 
         protected override void OnRenderTerminated()
         {
-            Utils.DisposeAndNullify(ref bmpButtonAtlas);
             Utils.DisposeAndNullify(ref scrollBarBrush);
         }
 

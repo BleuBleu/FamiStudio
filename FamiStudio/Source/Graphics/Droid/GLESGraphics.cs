@@ -172,7 +172,7 @@ namespace FamiStudio
 
             if (windowScaling >= 4.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@4x.tga") != null)
             {
-                return $"FamiStudio.Resources.{name}@15x.tga";
+                return $"FamiStudio.Resources.{name}@4x.tga";
             }
             else if (windowScaling >= 2.0f && assembly.GetManifestResourceInfo($"FamiStudio.Resources.{name}@2x.tga") != null)
             {
@@ -212,22 +212,13 @@ namespace FamiStudio
             Debug.Assert(elementSizeX < MaxAtlasResolution);
 
             var elementsPerRow = MaxAtlasResolution / elementSizeX;
-            var numRows = Utils.DivideAndRoundUp(names.Length, elementsPerRow);
-            var atlasSizeX = elementsPerRow * elementSizeX;
-            var atlasSizeY = numRows * elementSizeY;
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true);
             var elementRects = new Rectangle[names.Length];
-
-            GLES11.GlBindTexture(GLES11.GlTexture2d, textureId);
-
-            Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
+            var atlasSizeX = 0;
+            var atlasSizeY = 0;
 
             for (int i = 0; i < names.Length; i++)
             {
                 var bmp = bitmaps[i];
-
-                Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
-
                 var row = i / elementsPerRow;
                 var col = i % elementsPerRow;
 
@@ -237,7 +228,25 @@ namespace FamiStudio
                     bmp.Width,
                     bmp.Height);
 
+                atlasSizeX = Math.Max(atlasSizeX, elementRects[i].Right);
+                atlasSizeY = Math.Max(atlasSizeY, elementRects[i].Bottom);
+            }
+
+            atlasSizeX = Utils.NextPowerOfTwo(atlasSizeX);
+            atlasSizeY = Utils.NextPowerOfTwo(atlasSizeY);
+
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true);
+            GLES11.GlBindTexture(GLES11.GlTexture2d, textureId);
+
+            Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                var bmp = bitmaps[i];
                 var buffer = IntBuffer.Wrap(bmp.Data);
+
+                Debug.WriteLine($"  - {names[i]} ({bmp.Width} x {bmp.Height}):");
+
                 GLES11.GlTexSubImage2D(GLES11.GlTexture2d, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
             }
 
