@@ -88,7 +88,8 @@ namespace FamiStudio
         {
             var textBox = new TextBox(txt);
             textBox.BackColor = backColor;
-            textBox.ForeColor = Color.Black;
+            textBox.ForeColor = Theme.BlackColor;
+            textBox.DisabledColor = Theme.BlackColor;
             return textBox;
         }
 
@@ -601,7 +602,8 @@ namespace FamiStudio
                 prop.type == PropertyType.CheckBox      ||
                 prop.type == PropertyType.DropDownList  ||
                 prop.type == PropertyType.NumericUpDown ||
-                prop.type == PropertyType.TextBox);
+                prop.type == PropertyType.TextBox       ||
+                prop.type == PropertyType.ColoredTextBox);
 
             if (prop.label != null)
                 prop.label.Enabled = enabled;

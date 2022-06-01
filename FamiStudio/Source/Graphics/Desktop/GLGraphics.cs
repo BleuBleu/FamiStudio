@@ -351,11 +351,10 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToBorder);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToBorder);
 
-            // MATTT
-            //fbo = GL.Ext.GenFramebuffer();
-            //GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
-            //GL.Ext.FramebufferTexture2D(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, TextureTarget.Texture2D, texture, 0);
-            //GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, 0);
+            fbo = GL.GenFramebuffer();
+            GL.BindFramebuffer(GL.Framebuffer, fbo);
+            GL.FramebufferTexture2D(GL.Framebuffer, GL.ColorAttachment0, GL.Texture2D, texture, 0);
+            GL.BindFramebuffer(GL.Framebuffer, 0);
         }
 
         public static OffscreenGraphics Create(int imageSizeX, int imageSizeY, bool allowReadback)
@@ -367,59 +366,55 @@ namespace FamiStudio
         {
             base.BeginDrawControl(unflippedControlRect, windowSizeY);
 
-            // MATTT
-            //GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, fbo);
-            //GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+            GL.BindFramebuffer(GL.DrawFramebuffer, fbo);
+            GL.DrawBuffer(GL.ColorAttachment0);
         }
 
         public override void EndDrawControl()
         {
             base.EndDrawControl();
 
-            // MATTT
-            //GL.Ext.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+            GL.BindFramebuffer(GL.DrawFramebuffer, 0);
         }
 
         public unsafe void GetBitmap(byte[] data)
         {
             byte[] tmp = new byte[data.Length];
 
-            // MATTT
-            //GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fbo);
-            //fixed (byte* tmpPtr = &tmp[0])
-            //{
-            //    GL.ReadPixels(0, 0, resX, resY, PixelFormat.Bgra, PixelType.UnsignedByte, new IntPtr(tmpPtr));
-            //    GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
+            GL.BindFramebuffer(GL.ReadFramebuffer, fbo);
+            fixed (byte* tmpPtr = &tmp[0])
+            {
+                GL.ReadPixels(0, 0, resX, resY, GL.Bgra, GL.UnsignedByte, new IntPtr(tmpPtr));
+                GL.BindFramebuffer(GL.ReadFramebuffer, 0);
 
-            //    // Flip image vertically to match D3D. 
-            //    for (int y = 0; y < resY; y++)
-            //    {
-            //        int y0 = y;
-            //        int y1 = resY - y - 1;
+                // Flip image vertically to match D3D. 
+                for (int y = 0; y < resY; y++)
+                {
+                    int y0 = y;
+                    int y1 = resY - y - 1;
 
-            //        y0 *= resX * 4;
-            //        y1 *= resX * 4;
+                    y0 *= resX * 4;
+                    y1 *= resX * 4;
 
-            //        // ABGR -> RGBA
-            //        byte* p = tmpPtr + y0;
-            //        for (int x = 0; x < resX * 4; x += 4)
-            //        {
-            //            data[y1 + x + 3] = *p++;
-            //            data[y1 + x + 2] = *p++;
-            //            data[y1 + x + 1] = *p++;
-            //            data[y1 + x + 0] = *p++;
-            //        }
-            //    }
-            //}
+                    // ABGR -> RGBA
+                    byte* p = tmpPtr + y0;
+                    for (int x = 0; x < resX * 4; x += 4)
+                    {
+                        data[y1 + x + 3] = *p++;
+                        data[y1 + x + 2] = *p++;
+                        data[y1 + x + 1] = *p++;
+                        data[y1 + x + 0] = *p++;
+                    }
+                }
+            }
         }
 
         public override void Dispose()
         {
-            // MATTT
-            //if (texture != 0) GL.DeleteTextures(1, ref texture);
-            //if (fbo != 0) GL.Ext.DeleteFramebuffers(1, ref fbo);
+            if (texture != 0) GL.DeleteTexture(texture);
+            if (fbo != 0)     GL.DeleteFramebuffer(fbo);
 
-            //base.Dispose();
+            base.Dispose();
         }
     };
 
@@ -464,6 +459,10 @@ namespace FamiStudio
         public const int Lines             = 0x0001;
         public const int Triangles         = 0x0004;
         public const int UnsignedShort     = 0x1403;
+        public const int Framebuffer       = 0x8D40;
+        public const int ColorAttachment0  = 0x8CE0;
+        public const int DrawFramebuffer   = 0x8CA9;
+        public const int ReadFramebuffer   = 0x8CA8;
 
         public delegate void ClearDelegate(uint mask);
         public delegate void ClearColorDelegate(float red, float green, float blue, float alpha);
@@ -492,70 +491,109 @@ namespace FamiStudio
         public delegate void PopMatrixDelegate();
         public delegate void TranslateDelegate(float x, float y, float z);
         public delegate void LineWidthDelegate(float width);
+        public delegate void GenFramebuffersDelegate(int n, IntPtr indices);
+        public delegate void BindFramebufferDelegate(int target, int framebuffer);
+        public delegate void DrawBufferDelegate(int buf);
+        public delegate void FramebufferTexture2DDelegate(int target,int attachment, int textarget, int texture, int level);
+        public delegate void ReadPixelsDelegate(int x, int y, int width, int height, int format, int type, IntPtr data);
+        public delegate void DeleteFramebuffersDelegate(int n, IntPtr framebuffers);
 
-        public static ClearDelegate              Clear;
-        public static ClearColorDelegate         ClearColor;
-        public static ViewportDelegate           Viewport;
-        public static MatrixModeDelegate         MatrixMode;
-        public static LoadIdentityDelegate       LoadIdentity;
-        public static OrthoDelegate              Ortho;
-        public static EnableDelegate             Enable;
-        public static DisableDelegate            Disable;
-        public static BlendFuncDelegate          BlendFunc;
-        public static ScissorDelegate            Scissor;
-        public static EnableClientStateDelegate  EnableClientState;
-        public static DisableClientStateDelegate DisableClientState;
-        public static TexParameterDelegate       TexParameter;
-        public static BindTextureDelegate        BindTexture;
-        public static TexImage2DDelegate         TexImage2DRaw;
-        public static TexSubImage2DDelegate      TexSubImage2DRaw;
-        public static GenTexturesDelegate        GenTextures;
-        public static DeleteTexturesDelegate     DeleteTextures;
-        public static ColorPointerDelegate       ColorPointerRaw;
-        public static VertexPointerDelegate      VertexPointerRaw;
-        public static TexCoordPointerDelegate    TexCoordPointerRaw;
-        public static DrawArraysDelegate         DrawArrays;
-        public static DrawElementsDelegate       DrawElementsRaw;
-        public static TranslateDelegate          Translate;
-        public static PushMatrixDelegate         PushMatrix;
-        public static PopMatrixDelegate          PopMatrix;
-        public static LineWidthDelegate          LineWidth;
+        public static ClearDelegate                Clear;
+        public static ClearColorDelegate           ClearColor;
+        public static ViewportDelegate             Viewport;
+        public static MatrixModeDelegate           MatrixMode;
+        public static LoadIdentityDelegate         LoadIdentity;
+        public static OrthoDelegate                Ortho;
+        public static EnableDelegate               Enable;
+        public static DisableDelegate              Disable;
+        public static BlendFuncDelegate            BlendFunc;
+        public static ScissorDelegate              Scissor;
+        public static EnableClientStateDelegate    EnableClientState;
+        public static DisableClientStateDelegate   DisableClientState;
+        public static TexParameterDelegate         TexParameter;
+        public static BindTextureDelegate          BindTexture;
+        public static TexImage2DDelegate           TexImage2DRaw;
+        public static TexSubImage2DDelegate        TexSubImage2DRaw;
+        public static GenTexturesDelegate          GenTextures;
+        public static DeleteTexturesDelegate       DeleteTextures;
+        public static ColorPointerDelegate         ColorPointerRaw;
+        public static VertexPointerDelegate        VertexPointerRaw;
+        public static TexCoordPointerDelegate      TexCoordPointerRaw;
+        public static DrawArraysDelegate           DrawArrays;
+        public static DrawElementsDelegate         DrawElementsRaw;
+        public static TranslateDelegate            Translate;
+        public static PushMatrixDelegate           PushMatrix;
+        public static PopMatrixDelegate            PopMatrix;
+        public static LineWidthDelegate            LineWidth;
+        public static GenFramebuffersDelegate      GenFramebuffers;
+        public static BindFramebufferDelegate      BindFramebuffer;
+        public static DrawBufferDelegate           DrawBuffer;
+        public static FramebufferTexture2DDelegate FramebufferTexture2D;
+        public static ReadPixelsDelegate           ReadPixels;
+        public static DeleteFramebuffersDelegate   DeleteFramebuffers;
 
         public static void StaticInitialize()
         {
             if (initialized)
                 return;
 
-            Clear              = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(glfwGetProcAddress("glClear"));
-            ClearColor         = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(glfwGetProcAddress("glClearColor"));
-            Viewport           = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(glfwGetProcAddress("glViewport"));
-            MatrixMode         = Marshal.GetDelegateForFunctionPointer<MatrixModeDelegate>(glfwGetProcAddress("glMatrixMode"));
-            LoadIdentity       = Marshal.GetDelegateForFunctionPointer<LoadIdentityDelegate>(glfwGetProcAddress("glLoadIdentity"));
-            Ortho              = Marshal.GetDelegateForFunctionPointer<OrthoDelegate>(glfwGetProcAddress("glOrtho"));
-            Enable             = Marshal.GetDelegateForFunctionPointer<EnableDelegate>(glfwGetProcAddress("glEnable"));
-            Disable            = Marshal.GetDelegateForFunctionPointer<DisableDelegate>(glfwGetProcAddress("glDisable"));
-            BlendFunc          = Marshal.GetDelegateForFunctionPointer<BlendFuncDelegate>(glfwGetProcAddress("glBlendFunc"));
-            Scissor            = Marshal.GetDelegateForFunctionPointer<ScissorDelegate>(glfwGetProcAddress("glScissor"));
-            EnableClientState  = Marshal.GetDelegateForFunctionPointer<EnableClientStateDelegate>(glfwGetProcAddress("glEnableClientState"));
-            DisableClientState = Marshal.GetDelegateForFunctionPointer<DisableClientStateDelegate>(glfwGetProcAddress("glDisableClientState"));
-            TexParameter       = Marshal.GetDelegateForFunctionPointer<TexParameterDelegate>(glfwGetProcAddress("glTexParameteri"));
-            BindTexture        = Marshal.GetDelegateForFunctionPointer<BindTextureDelegate>(glfwGetProcAddress("glBindTexture"));
-            TexImage2DRaw      = Marshal.GetDelegateForFunctionPointer<TexImage2DDelegate>(glfwGetProcAddress("glTexImage2D"));
-            TexSubImage2DRaw   = Marshal.GetDelegateForFunctionPointer<TexSubImage2DDelegate>(glfwGetProcAddress("glTexSubImage2D"));
-            GenTextures        = Marshal.GetDelegateForFunctionPointer<GenTexturesDelegate>(glfwGetProcAddress("glGenTextures"));
-            DeleteTextures     = Marshal.GetDelegateForFunctionPointer<DeleteTexturesDelegate>(glfwGetProcAddress("glDeleteTextures"));
-            ColorPointerRaw    = Marshal.GetDelegateForFunctionPointer<ColorPointerDelegate>(glfwGetProcAddress("glColorPointer"));
-            VertexPointerRaw   = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(glfwGetProcAddress("glVertexPointer"));
-            TexCoordPointerRaw = Marshal.GetDelegateForFunctionPointer<TexCoordPointerDelegate>(glfwGetProcAddress("glTexCoordPointer"));
-            DrawArrays         = Marshal.GetDelegateForFunctionPointer<DrawArraysDelegate>(glfwGetProcAddress("glDrawArrays"));
-            DrawElementsRaw    = Marshal.GetDelegateForFunctionPointer<DrawElementsDelegate>(glfwGetProcAddress("glDrawElements"));
-            PushMatrix         = Marshal.GetDelegateForFunctionPointer<PushMatrixDelegate>(glfwGetProcAddress("glPushMatrix"));
-            PopMatrix          = Marshal.GetDelegateForFunctionPointer<PopMatrixDelegate>(glfwGetProcAddress("glPopMatrix"));
-            PopMatrix          = Marshal.GetDelegateForFunctionPointer<PopMatrixDelegate>(glfwGetProcAddress("glPopMatrix"));
-            Translate          = Marshal.GetDelegateForFunctionPointer<TranslateDelegate>(glfwGetProcAddress("glTranslatef"));
-            LineWidth          = Marshal.GetDelegateForFunctionPointer<LineWidthDelegate>(glfwGetProcAddress("glLineWidth"));
+            Clear                = Marshal.GetDelegateForFunctionPointer<ClearDelegate>(glfwGetProcAddress("glClear"));
+            ClearColor           = Marshal.GetDelegateForFunctionPointer<ClearColorDelegate>(glfwGetProcAddress("glClearColor"));
+            Viewport             = Marshal.GetDelegateForFunctionPointer<ViewportDelegate>(glfwGetProcAddress("glViewport"));
+            MatrixMode           = Marshal.GetDelegateForFunctionPointer<MatrixModeDelegate>(glfwGetProcAddress("glMatrixMode"));
+            LoadIdentity         = Marshal.GetDelegateForFunctionPointer<LoadIdentityDelegate>(glfwGetProcAddress("glLoadIdentity"));
+            Ortho                = Marshal.GetDelegateForFunctionPointer<OrthoDelegate>(glfwGetProcAddress("glOrtho"));
+            Enable               = Marshal.GetDelegateForFunctionPointer<EnableDelegate>(glfwGetProcAddress("glEnable"));
+            Disable              = Marshal.GetDelegateForFunctionPointer<DisableDelegate>(glfwGetProcAddress("glDisable"));
+            BlendFunc            = Marshal.GetDelegateForFunctionPointer<BlendFuncDelegate>(glfwGetProcAddress("glBlendFunc"));
+            Scissor              = Marshal.GetDelegateForFunctionPointer<ScissorDelegate>(glfwGetProcAddress("glScissor"));
+            EnableClientState    = Marshal.GetDelegateForFunctionPointer<EnableClientStateDelegate>(glfwGetProcAddress("glEnableClientState"));
+            DisableClientState   = Marshal.GetDelegateForFunctionPointer<DisableClientStateDelegate>(glfwGetProcAddress("glDisableClientState"));
+            TexParameter         = Marshal.GetDelegateForFunctionPointer<TexParameterDelegate>(glfwGetProcAddress("glTexParameteri"));
+            BindTexture          = Marshal.GetDelegateForFunctionPointer<BindTextureDelegate>(glfwGetProcAddress("glBindTexture"));
+            TexImage2DRaw        = Marshal.GetDelegateForFunctionPointer<TexImage2DDelegate>(glfwGetProcAddress("glTexImage2D"));
+            TexSubImage2DRaw     = Marshal.GetDelegateForFunctionPointer<TexSubImage2DDelegate>(glfwGetProcAddress("glTexSubImage2D"));
+            GenTextures          = Marshal.GetDelegateForFunctionPointer<GenTexturesDelegate>(glfwGetProcAddress("glGenTextures"));
+            DeleteTextures       = Marshal.GetDelegateForFunctionPointer<DeleteTexturesDelegate>(glfwGetProcAddress("glDeleteTextures"));
+            ColorPointerRaw      = Marshal.GetDelegateForFunctionPointer<ColorPointerDelegate>(glfwGetProcAddress("glColorPointer"));
+            VertexPointerRaw     = Marshal.GetDelegateForFunctionPointer<VertexPointerDelegate>(glfwGetProcAddress("glVertexPointer"));
+            TexCoordPointerRaw   = Marshal.GetDelegateForFunctionPointer<TexCoordPointerDelegate>(glfwGetProcAddress("glTexCoordPointer"));
+            DrawArrays           = Marshal.GetDelegateForFunctionPointer<DrawArraysDelegate>(glfwGetProcAddress("glDrawArrays"));
+            DrawElementsRaw      = Marshal.GetDelegateForFunctionPointer<DrawElementsDelegate>(glfwGetProcAddress("glDrawElements"));
+            PushMatrix           = Marshal.GetDelegateForFunctionPointer<PushMatrixDelegate>(glfwGetProcAddress("glPushMatrix"));
+            PopMatrix            = Marshal.GetDelegateForFunctionPointer<PopMatrixDelegate>(glfwGetProcAddress("glPopMatrix"));
+            PopMatrix            = Marshal.GetDelegateForFunctionPointer<PopMatrixDelegate>(glfwGetProcAddress("glPopMatrix"));
+            Translate            = Marshal.GetDelegateForFunctionPointer<TranslateDelegate>(glfwGetProcAddress("glTranslatef"));
+            LineWidth            = Marshal.GetDelegateForFunctionPointer<LineWidthDelegate>(glfwGetProcAddress("glLineWidth"));
+            GenFramebuffers      = Marshal.GetDelegateForFunctionPointer<GenFramebuffersDelegate>(GetExtProcAddress("glGenFramebuffers"));
+            BindFramebuffer      = Marshal.GetDelegateForFunctionPointer<BindFramebufferDelegate>(GetExtProcAddress("glBindFramebuffer"));
+            DrawBuffer           = Marshal.GetDelegateForFunctionPointer<DrawBufferDelegate>(GetExtProcAddress("glDrawBuffer"));
+            FramebufferTexture2D = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(GetExtProcAddress("glFramebufferTexture2D"));
+            ReadPixels           = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(GetExtProcAddress("glReadPixels"));
+            DeleteFramebuffers   = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(GetExtProcAddress("glDeleteFramebuffers"));
 
             initialized = true;
+        }
+
+        private static IntPtr GetExtProcAddress(string f, string suffix = "EXT")
+        {
+            var addr = glfwGetProcAddress(f + suffix);
+            return addr != IntPtr.Zero ? addr : glfwGetProcAddress(f);
+        }
+
+        public unsafe static int GenFramebuffer()
+        {
+            var tmp = new int[1];
+            fixed (int* p = &tmp[0])
+                GenFramebuffers(1, new IntPtr(p));
+            return tmp[0];
+        }
+
+        public unsafe static void DeleteFramebuffer(int id)
+        {
+            var tmp = new int[1] { id };
+            fixed (int* p = &tmp[0])
+                DeleteFramebuffers(1, new IntPtr(p));
         }
 
         public unsafe static void ColorPointer(int size, int type, int stride, int[] data)

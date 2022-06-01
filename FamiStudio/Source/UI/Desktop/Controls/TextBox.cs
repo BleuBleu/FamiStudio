@@ -21,10 +21,12 @@ namespace FamiStudio
         private bool caretBlink = true;
         private float caretBlinkTime;
 
-        private Color foreColor = Theme.LightGreyFillColor1;
-        private Color backColor = Theme.DarkGreyLineColor1;
+        private Color foreColor     = Theme.LightGreyFillColor1;
+        private Color disabledColor = Theme.MediumGreyFillColor1;
+        private Color backColor     = Theme.DarkGreyLineColor1;
 
         private Brush foreBrush;
+        private Brush disabledBrush;
         private Brush backBrush;
         private Brush selBrush;
         
@@ -32,8 +34,9 @@ namespace FamiStudio
         private int sideMargin   = DpiScaling.ScaleForMainWindow(4);
         private int scrollAmount = DpiScaling.ScaleForMainWindow(20);
 
-        public Color ForeColor { get => foreColor; set { foreColor = value; foreBrush = null; MarkDirty(); } }
-        public Color BackColor { get => backColor; set { backColor = value; backBrush = null;  selBrush = null; MarkDirty(); } }
+        public Color ForeColor     { get => foreColor;     set { foreColor     = value; foreBrush     = null; MarkDirty(); } }
+        public Color DisabledColor { get => disabledColor; set { disabledColor = value; disabledBrush = null; MarkDirty(); } }
+        public Color BackColor     { get => backColor;     set { backColor     = value; backBrush     = null;  selBrush = null; MarkDirty(); } }
 
         public TextBox(string txt)
         {
@@ -65,7 +68,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            Cursor.Current = enabled ? Cursors.Default : Cursors.IBeam;
+            Cursor.Current = enabled ? Cursors.IBeam : Cursors.Default;
 
             if (mouseSelecting)
             {
@@ -82,7 +85,7 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (e.Left)
+            if (e.Left && enabled)
             {
                 var c = PixelToChar(e.X);
                 SetAndMarkDirty(ref caretIndex, c);
@@ -99,7 +102,7 @@ namespace FamiStudio
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (e.Left)
+            if (e.Left && enabled)
             {
                 mouseSelecting = false;
                 Capture = false;
@@ -108,18 +111,21 @@ namespace FamiStudio
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
-            var c0 = PixelToChar(e.X);
-            var c1 = c0;
+            if (e.Left && enabled)
+            { 
+                var c0 = PixelToChar(e.X);
+                var c1 = c0;
 
-            // MATTT : This is buggy, clicking on a space select both left/right words.
-            c0 = FindWordStart(c0, -1);
-            c1 = FindWordStart(c1,  1);
+                // MATTT : This is buggy, clicking on a space select both left/right words.
+                c0 = FindWordStart(c0, -1);
+                c1 = FindWordStart(c1,  1);
 
-            selectionStart  = c0;
-            selectionLength = c1 - c0;
-            caretIndex      = c1;
+                selectionStart  = c0;
+                selectionLength = c1 - c0;
+                caretIndex      = c1;
 
-            MarkDirty();
+                MarkDirty();
+            }
         }
 
         private int FindWordStart(int c, int dir)
@@ -148,6 +154,9 @@ namespace FamiStudio
         // handle it ourselves.
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            if (!enabled)
+                return;
+
             // MATTT : Copy/paste.
             if (e.Key == Keys.Left || e.Key == Keys.Right)
             {
@@ -333,13 +342,14 @@ namespace FamiStudio
         {
             var c = parentDialog.CommandList;
 
-            if (foreBrush == null) foreBrush = g.CreateSolidBrush(foreColor);
-            if (backBrush == null) backBrush = g.CreateSolidBrush(backColor);
-            if (selBrush  == null) selBrush  = g.CreateSolidBrush(Theme.Darken(backColor));
+            if (foreBrush     == null) foreBrush     = g.CreateSolidBrush(foreColor);
+            if (disabledBrush == null) disabledBrush = g.CreateSolidBrush(disabledColor);
+            if (backBrush     == null) backBrush     = g.CreateSolidBrush(backColor);
+            if (selBrush      == null) selBrush      = g.CreateSolidBrush(Theme.Darken(backColor));
 
-            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, backBrush, foreBrush);
+            c.FillAndDrawRectangle(0, 0, width - 1, height - 1, backBrush, enabled ? foreBrush : disabledBrush);
             
-            if (selectionLength > 0 && HasDialogFocus)
+            if (selectionLength > 0 && HasDialogFocus && enabled)
             {
                 var sx0 = Utils.Clamp(CharToPixel(selectionStart), sideMargin, width - sideMargin);
                 var sx1 = selectionLength > 0 ? Utils.Clamp(CharToPixel(selectionStart + selectionLength), sideMargin, width - sideMargin) : sx0;
@@ -348,9 +358,9 @@ namespace FamiStudio
                     c.FillRectangle(sx0, topMargin, sx1, height - topMargin, selBrush);
             }
 
-            c.DrawText(text, ThemeResources.FontMedium, sideMargin - scrollX, 0, foreBrush, TextFlags.MiddleLeft | TextFlags.Clip, 0, height, sideMargin, width - sideMargin);
+            c.DrawText(text, ThemeResources.FontMedium, sideMargin - scrollX, 0, enabled ? foreBrush : disabledBrush, TextFlags.MiddleLeft | TextFlags.Clip, 0, height, sideMargin, width - sideMargin);
 
-            if (caretBlink && HasDialogFocus)
+            if (caretBlink && HasDialogFocus && enabled)
             {
                 var cx = CharToPixel(caretIndex);
                 c.DrawLine(cx, topMargin, cx, height - topMargin, foreBrush);

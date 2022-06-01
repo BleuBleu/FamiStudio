@@ -2617,7 +2617,7 @@ namespace FamiStudio
             bool multiplePatternSelected = selection && ((selectionMax.ChannelIndex != selectionMin.ChannelIndex) || (selectionMin.PatternIndex != selectionMax.PatternIndex));
 
             var dlg = new PropertyDialog("Pattern Properties", new Point(left + pt.X, top + pt.Y), 240);
-            dlg.Properties.AddColoredTextBox(pattern.Name, pattern.Color);
+            dlg.Properties.AddColoredTextBox(multiplePatternSelected ? "" : pattern.Name, pattern.Color);
             dlg.Properties.SetPropertyEnabled(0, !multiplePatternSelected);
             dlg.Properties.AddColorPicker(pattern.Color);
             dlg.Properties.Build();

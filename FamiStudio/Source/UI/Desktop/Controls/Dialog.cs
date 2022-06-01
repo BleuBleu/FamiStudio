@@ -195,6 +195,11 @@ namespace FamiStudio
                         i++;
                     }
                 }
+
+                if (lastIdx < str.Length)
+                {
+                    splits.Add(str.Substring(lastIdx));
+                }
             }
             else
             {
