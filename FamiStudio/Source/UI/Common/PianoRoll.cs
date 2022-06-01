@@ -1472,7 +1472,7 @@ namespace FamiStudio
                 var showQwerty = App.IsRecording || App.IsQwertyPianoEnabled;
                 var keyStrings = new string[Note.MusicalNoteMax];
 
-                foreach (var kv in Settings.KeyCodeToNoteMap)
+                foreach (var kv in Settings.ScanCodeToNoteMap)
                 {
                     var i = kv.Value - 1;
                     var k = kv.Key;
@@ -1481,9 +1481,9 @@ namespace FamiStudio
                         continue;
 
                     if (keyStrings[i] == null)
-                        keyStrings[i] = Platform.KeyCodeToString(k);
+                        keyStrings[i] = Platform.ScancodeToString(k);
                     else
-                        keyStrings[i] += $"   {Platform.KeyCodeToString(k)}";
+                        keyStrings[i] += $"   {Platform.ScancodeToString(k)}";
                 }
 
                 for (int i = 0; i < Note.MusicalNoteMax; i++)
@@ -1948,13 +1948,13 @@ namespace FamiStudio
                 var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingArpeggios, out var missingSamples);
 
                 if (missingInstruments)
-                    createMissingInstrument = Platform.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
+                    createMissingInstrument = Platform.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
                 if (missingArpeggios)
-                    createMissingArpeggios = Platform.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
+                    createMissingArpeggios = Platform.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
                 if (missingSamples && editChannel == ChannelType.Dpcm)
-                    createMissingSamples = Platform.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
+                    createMissingSamples = Platform.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
             }
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
@@ -2065,7 +2065,7 @@ namespace FamiStudio
 
                 dlg.ShowDialogAsync(ParentWindow, (r) =>
                 {
-                    if (r == DialogResult2.OK)
+                    if (r == DialogResult.OK)
                     {
                         var effectMask = dlg.PasteEffectMask;
 
@@ -2103,7 +2103,7 @@ namespace FamiStudio
 
                 dlg.ShowDialogAsync(ParentWindow, (r) =>
                 {
-                    if (r == DialogResult2.OK)
+                    if (r == DialogResult.OK)
                         DeleteSelectedNotes(true, dlg.DeleteNotes, dlg.DeleteEffectMask);
                 });
             }
@@ -3665,7 +3665,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
-                if (r == DialogResult2.OK)
+                if (r == DialogResult.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping);
                     mapping.Pitch = dlg.Properties.GetSelectedIndex(0);
@@ -3956,9 +3956,9 @@ namespace FamiStudio
 
                     draggedSample = null;
 
-                    Platform.MessageBoxAsync($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons2.YesNo, (r) =>
+                    Platform.MessageBoxAsync($"Do you want to transpose all the notes using this sample?", "Remap DPCM Sample", MessageBoxButtons.YesNo, (r) =>
                     {
-                        if (r == DialogResult2.Yes)
+                        if (r == DialogResult.Yes)
                         {
                             // Need to promote the transaction to project level since we are going to be transposing 
                             // potentially in multiple songs.
@@ -6910,7 +6910,7 @@ namespace FamiStudio
         {
             if (App.Project.Samples.Count == 0)
             {
-                Platform.MessageBoxAsync("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons2.OK);
+                Platform.MessageBoxAsync("Before assigning a sample to a piano key, load at least one sample in the 'DPCM Samples' section of the project explorer", "No DPCM sample found", MessageBoxButtons.OK);
             }
             else
             {
@@ -6930,7 +6930,7 @@ namespace FamiStudio
 
                 dlg.ShowDialogAsync(ParentWindow, (r) =>
                 {
-                    if (r == DialogResult2.OK)
+                    if (r == DialogResult.OK)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSamplesMapping, TransactionFlags.StopAudio);
                         var sampleName = dlg.Properties.GetPropertyValue<string>(1);

@@ -275,13 +275,13 @@ namespace FamiStudio
 
         const uint MB_TASKMODAL = 0x00002000;
 
-        public static DialogResult2 MessageBox(string text, string title, MessageBoxButtons2 buttons)
+        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
         {
             var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon2.Error : MessageBoxIcon2.None;
-            return (DialogResult2)MessageBoxInternal(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
+            return (DialogResult)MessageBoxInternal(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
         }
 
-        public static void MessageBoxAsync(string text, string title, MessageBoxButtons2 buttons, Action<DialogResult2> callback = null)
+        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
         {
             var res = MessageBox(text, title, buttons);
             callback?.Invoke(res);
@@ -310,7 +310,7 @@ namespace FamiStudio
         {
             if (!IsVS2019RuntimeInstalled())
             {
-                if (MessageBox("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons2.YesNo) == DialogResult2.Yes)
+                if (MessageBox("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     OpenUrl("https://famistudio.org/doc/install/#windows");
                 }
@@ -320,7 +320,7 @@ namespace FamiStudio
 
             if (!XAudio2Stream.TryDetectXAudio2())
             {
-                if (MessageBox("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons2.YesNo) == DialogResult2.Yes)
+                if (MessageBox("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     OpenUrl("https://famistudio.org/doc/install/#windows");
                 }
@@ -334,74 +334,19 @@ namespace FamiStudio
         [DllImport("user32.dll")]
         static extern uint GetDoubleClickTime();
 
-        // MATTT : Remove all this.
-        // From : https://stackoverflow.com/questions/318777/c-sharp-how-to-translate-virtual-keycode-to-char
-        [DllImport("user32.dll")]
-        static extern bool GetKeyboardState(byte[] lpKeyState);
-
-        [DllImport("user32.dll")]
-        static extern uint MapVirtualKey(uint uCode, uint uMapType);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr GetKeyboardLayout(uint idThread);
-
-        [DllImport("user32.dll")]
-        static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
-
-        static Dictionary<Tuple<IntPtr, uint>, string> KeyCodeStringCache = new Dictionary<Tuple<IntPtr, uint>, string>();
-
-        static readonly byte[] keyStateNull = new byte[256];
-
-        // Needed to get rid of dead keys.
-        // https://web.archive.org/web/20101004154432/http://blogs.msdn.com/b/michkap/archive/2006/04/06/569632.aspx
-        // https://web.archive.org/web/20100820152419/http://blogs.msdn.com/b/michkap/archive/2007/10/27/5717859.aspx
-        private static void ClearKeyboardBuffer(uint vk, uint sc, IntPtr hkl)
+        public static int GetKeyScancode(Keys key)
         {
-            var rc = 0;
-            var sb = new StringBuilder(10);
-            do
-            {
-                rc = ToUnicodeEx(vk, sc, keyStateNull, sb, sb.Capacity, 0, hkl);
-            }
-            while (rc < 0);
+            return glfwGetKeyScancode((int)key);
         }
 
-        public static string KeyCodeToString(int key)
+        public static string KeyToString(Keys key)
         {
-            /*
-            var virtualKeyCode = (uint)key;
-            var scanCode = MapVirtualKey(virtualKeyCode, 0);
-            var inputLocaleIdentifier = GetKeyboardLayout(0);
+            return glfwGetKeyName((int)key, 0);
+        }
 
-            var mapKey = new Tuple<IntPtr, uint>(inputLocaleIdentifier, virtualKeyCode);
-
-            if (!KeyCodeStringCache.TryGetValue(mapKey, out var str))
-            {
-                StringBuilder result = new StringBuilder();
-                ToUnicodeEx(virtualKeyCode, scanCode, keyStateNull, result, 5, 0, inputLocaleIdentifier);
-                ClearKeyboardBuffer(virtualKeyCode, scanCode, inputLocaleIdentifier);
-
-                // Fall back to Key enum for special keys.
-                if (result.Length == 0)
-                {
-                    str = ((System.Windows.Forms.Keys)key).ToString();
-                }
-                else
-                {
-                    str = result.ToString().ToUpper();
-
-                    // Ignore invisible characters.
-                    if (str.Length == 1 && str[0] <= 32)
-                        str = null;
-                }
-
-                KeyCodeStringCache.Add(mapKey, str);
-            }
-
-            return str;
-            */
-
-            return "TODO!!!";
+        public static string ScancodeToString(int scancode)
+        {
+            return glfwGetKeyName((int)Keys.Unknown, scancode);
         }
 
         public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)

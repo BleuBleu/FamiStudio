@@ -51,7 +51,6 @@ namespace FamiStudio
         private bool suspended = false;
         private float stopInstrumentTimer = 0.0f;
         private short[] metronomeSound;
-        private BitArray keyStates = new BitArray(65536);
         private ConcurrentQueue<Tuple<int, bool>> midiNoteQueue = new ConcurrentQueue<Tuple<int, bool>>();
 #if FAMISTUDIO_WINDOWS
         private MultiMediaNotificationListener mmNoticiations; // MATTT : Move to platform?
@@ -585,11 +584,11 @@ namespace FamiStudio
 
         public bool Run(string[] args)
         {
-            var win = FamiStudioWindow.InitializeGLFWAndCreateWindow(this);
+            var win = FamiStudioWindow.CreateWindow(this);
 
             if (win == null)
             {
-                Platform.MessageBox("Error initializing OpenGL.", "Error", MessageBoxButtons2.OK);
+                Platform.MessageBox("Error initializing OpenGL.", "Error", MessageBoxButtons.OK);
                 return false;
             }
 
@@ -766,11 +765,11 @@ namespace FamiStudio
         {
             if (undoRedoManager != null && undoRedoManager.NeedsSaving)
             {
-                Platform.MessageBoxAsync("Save changes?", "FamiStudio", MessageBoxButtons2.YesNoCancel, (r) =>
+                Platform.MessageBoxAsync("Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel, (r) =>
                 {
-                    if (r == DialogResult2.No)
+                    if (r == DialogResult.No)
                         callback();
-                    else if (r == DialogResult2.Yes)
+                    else if (r == DialogResult.Yes)
                         SaveProjectAsync(false, callback);
                 });
             }
@@ -1082,7 +1081,7 @@ namespace FamiStudio
             {
                 // TODO : See if we want to unify this under a single, cross-platform call.
                 if (Platform.IsDesktop)
-                    Platform.MessageBox("An error happened while saving.", "Error", MessageBoxButtons2.OK);
+                    Platform.MessageBox("An error happened while saving.", "Error", MessageBoxButtons.OK);
                 else
                     Platform.ShowToast("Error Saving Project!");
             }
@@ -1157,7 +1156,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(mainWindow, (r) =>
             {
-                if (r == DialogResult2.OK)
+                if (r == DialogResult.OK)
                 {
                     RecreateAudioPlayers();
                     RefreshLayout();
@@ -1387,7 +1386,7 @@ namespace FamiStudio
             {
                 newReleaseAvailable = false;
 
-                if (Platform.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons2.YesNo) == DialogResult2.Yes)
+                if (Platform.MessageBox($"A new version ({newReleaseString}) is available. Do you want to download it?", "New Version", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     Platform.OpenUrl("http://www.famistudio.org");
                 }
@@ -1400,7 +1399,7 @@ namespace FamiStudio
             dlg.CleaningUp += TransformDialog_CleaningUp;
             dlg.ShowDialogAsync(mainWindow, (r) =>
             {
-                if (r == DialogResult2.OK)
+                if (r == DialogResult.OK)
                     ResetEverything();
             });
         }
@@ -1655,24 +1654,11 @@ namespace FamiStudio
             }
         }
         
-        private bool PreventKeyRepeat(int rawKeyCode, bool keyDown)
+        protected bool HandleRecordingKey(int scancode, bool keyDown, bool repeat)
         {
-            var keyCode = rawKeyCode;
-
-            if (keyCode < keyStates.Length && keyDown != keyStates[keyCode])
+            if (Settings.ScanCodeToNoteMap.TryGetValue(scancode, out var noteValue))
             {
-                keyStates[keyCode] = keyDown;
-                return true;
-            }
-
-            return false;
-        }
-
-        protected bool HandleRecordingKey(int rawKeyCode, bool keyDown)
-        {
-            if (Settings.KeyCodeToNoteMap.TryGetValue(rawKeyCode, out var noteValue))
-            {
-                if (!PreventKeyRepeat(rawKeyCode, keyDown))
+                if (keyDown && repeat)
                     return true;
 
                 if (keyDown)
@@ -1687,12 +1673,12 @@ namespace FamiStudio
                         noteValue = noteValue - 1 + Note.FromFriendlyName("C0") + (baseRecordingOctave * 12);
                         noteValue = Utils.Clamp(noteValue, Note.MusicalNoteMin, Note.MusicalNoteMax);
 
-                        lastRecordingKeyDown = rawKeyCode;
+                        lastRecordingKeyDown = scancode;
 
                         PlayInstrumentNote(noteValue, true, true);
                     }
                 }
-                else if (rawKeyCode == lastRecordingKeyDown)
+                else if (scancode == lastRecordingKeyDown)
                 {
                     lastRecordingKeyDown = -1;
                     StopOrReleaseIntrumentNote(false);
@@ -1704,7 +1690,7 @@ namespace FamiStudio
             return false;
         }
 
-        public void KeyDown(KeyEventArgs e, int rawKeyCode)
+        public void KeyDown(KeyEventArgs e)
         {
             bool ctrl  = e.Control;
             bool shift = e.Shift;
@@ -1725,7 +1711,7 @@ namespace FamiStudio
                 return;
             }
 
-            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(rawKeyCode, true))
+            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e.Scancode, true, e.IsRepeat))
             {
                 return;
             }
@@ -1918,12 +1904,12 @@ namespace FamiStudio
                 PianoRoll.DeleteSpecial();
         }
 
-        public void KeyUp(KeyEventArgs e, int rawKeyCode)
+        public void KeyUp(KeyEventArgs e)
         {
             bool ctrl  = e.Control;
             bool shift = e.Shift;
 
-            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(rawKeyCode, false))
+            if ((recordingMode || qwertyPiano) && !ctrl && !shift && HandleRecordingKey(e.Scancode, false, e.IsRepeat))
             {
                 if (recordingMode)
                     return;
@@ -2153,7 +2139,7 @@ namespace FamiStudio
                         var dlg = new TutorialDialog();
                         dlg.ShowDialogAsync(mainWindow, (r) =>
                         {
-                            if (r == DialogResult2.OK)
+                            if (r == DialogResult.OK)
                             {
                                 Settings.ShowTutorial = false;
                                 SaveSettings();

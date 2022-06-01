@@ -6,13 +6,16 @@ namespace FamiStudio
 {
     public class Dialog : Control
     {
+        public delegate void KeyDownDelegate(Dialog dlg, KeyEventArgs e);
+        public event KeyDownDelegate DialogKeyDown;
+
         const float ToolTipDelay = 0.2f;
         const int   ToolTipMaxCharsPerLine = 64;
 
         private List<Control> controls = new List<Control>();
         private Control focusedControl;
-        private Action<DialogResult2> callback;
-        private DialogResult2 result = DialogResult2.None;
+        private Action<DialogResult> callback;
+        private DialogResult result = DialogResult.None;
         private float tooltipTimer;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForMainWindow(2);
@@ -24,7 +27,7 @@ namespace FamiStudio
 
         public CommandList CommandList => commandList;
         public CommandList CommandListForeground => commandListForeground;
-        public DialogResult2 DialogResult2 => result;
+        public DialogResult DialogResult2 => result;
 
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
@@ -51,7 +54,7 @@ namespace FamiStudio
             FamiStudioWindow.Instance.InitDialog(this);
         }
 
-        public void ShowDialogAsync(object parent, Action<DialogResult2> cb) // MATTT : Remove parent, pass in contructor.
+        public void ShowDialogAsync(object parent, Action<DialogResult> cb) // MATTT : Remove parent, pass in contructor.
         {
             visible = true;
             callback = cb;
@@ -59,7 +62,7 @@ namespace FamiStudio
             FamiStudioWindow.Instance.PushDialog(this);
         }
 
-        public void Close(DialogResult2 res)
+        public void Close(DialogResult res)
         {
             FamiStudioWindow.Instance.PopDialog(this);
             result = res;
@@ -168,6 +171,8 @@ namespace FamiStudio
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            DialogKeyDown?.Invoke(this, e);
+
             if (focusedControl != null && focusedControl.Visible)
             {
                 focusedControl.KeyDown(e);

@@ -47,7 +47,7 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult2> callback)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
         {
             dialog.ShowDialogAsync(parent, callback);
         }

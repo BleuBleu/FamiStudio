@@ -140,22 +140,22 @@ namespace FamiStudio
 
             if (e.Key == Keys.Enter)
             {
-                Close(DialogResult2.OK);
+                Close(DialogResult.OK);
             }
             else if (e.Key == Keys.Escape)
             {
-                Close(DialogResult2.Cancel);
+                Close(DialogResult.Cancel);
             }
         }
 
         private void ButtonYes_Click(Control sender)
         {
-            Close(DialogResult2.OK);
+            Close(DialogResult.OK);
         }
 
         private void ButtonNo_Click(Control sender)
         {
-            Close(DialogResult2.Cancel);
+            Close(DialogResult.Cancel);
         }
     }
 }

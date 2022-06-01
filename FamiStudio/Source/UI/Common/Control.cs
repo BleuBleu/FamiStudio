@@ -260,10 +260,12 @@ namespace FamiStudio
 
         private Keys key;
         private int  modifiers;
+        private int  scancode;
         private bool repeat;
         private bool handled;
 
         public Keys Key      => key;
+        public int  Scancode => scancode;
         public bool Shift    => (modifiers & ModifierShift)   != 0;
         public bool Control  => (modifiers & ModifierControl) != 0;
         public bool Alt      => (modifiers & ModifierAlt)     != 0;
@@ -271,10 +273,11 @@ namespace FamiStudio
         public bool IsRepeat => repeat;
         public bool Handled { get => handled; set => handled = value; }
 
-        public KeyEventArgs(Keys k, int mods, bool rep)
+        public KeyEventArgs(Keys k, int mods, bool rep, int scan)
         {
             key = k;
             modifiers = mods;
+            scancode = scan;
             repeat = rep;
         }
     }
@@ -308,6 +311,11 @@ namespace FamiStudio
     {
         Unknown = -1,
         Space = 32,
+        Apostrophe = 39, // MATTT : Check that on Linux/MacOS.
+        Comma = 44, // MATTT : Check that on Linux/MacOS.
+        Minus = 45, // MATTT : Check that on Linux/MacOS.
+        Period = 46, // MATTT : Check that on Linux/MacOS.
+        Slash = 47, // MATTT : Check that on Linux/MacOS.
         D0 = 48,
         D1 = 49,
         D2 = 50,
@@ -318,6 +326,8 @@ namespace FamiStudio
         D7 = 55,
         D8 = 56,
         D9 = 57,
+        SemiColon = 59, // MATTT : Check that on Linux/MacOS.
+        Equal = 61, // MATTT : Check that on Linux/MacOS.
         A = 65,
         B = 66,
         C = 67,
@@ -344,6 +354,9 @@ namespace FamiStudio
         X = 88,
         Y = 89,
         Z = 90,
+        LeftBracket = 91, // MATTT : Check that on Linux/MacOS.
+        BackSlash = 92, // MATTT : Check that on Linux/MacOS.
+        RightBracket = 93, // MATTT : Check that on Linux/MacOS.
         Escape = 256,
         Enter = 257,
         Tab = 258,
@@ -417,7 +430,7 @@ namespace FamiStudio
     };
 
     // Matches Windows Forms
-    public enum DialogResult2
+    public enum DialogResult
     {
         None,
         OK = 1,
@@ -427,7 +440,7 @@ namespace FamiStudio
     }
 
     // Matches Windows Forms
-    public enum MessageBoxButtons2
+    public enum MessageBoxButtons
     {
         OK = 0,
         OKCancel = 1,

@@ -4,7 +4,7 @@
     {
         public static bool InitializeBaseSystems()
         {
-            Settings.Load();
+            Settings.Initialize();
             
             if (!Platform.Initialize())
                 return false;

@@ -17,24 +17,14 @@ P0:
 - Widgets:
 	- Recolor all icons to white, use filter on Android to make them grey.
 	- Make sure we use the lightest grey (grey2) for all text. Or maybe not, we use it for highlight...
-	x IsAsyncDialogInProgress, must implement on PC.
-	- Remove all using RenderXXX, rename properly.
-	- Rename ScaleFOrMainWIndow
-	- All dialogs will need to be async, no more "ShowDialog". Actually with GLFW we can.
 	- Pass form to dialogs, avoid ugly .INstance thing.
 - GLFW:
 	- ***** TO DERISK:
-    / DPI awareness => glfwGetMonitorContentScale, TEST!
     / Keyboard keys
     / Capture
-    - Resizing issue.
-    / Horizontal mouse wheel
     - Pinch to zoom?
-  - Clear window to grey as soon as its created, nicer during loading.
   - Merge FamiStudioControls <-> Forms.
-  - Window icon.
-  - Split in more folders, think of stuff that is kind of standalone (graphics, etc.)
-	- Remove all dependencies to WinForms, GTK, System.Drawing, etc.
+	- Remove all dependencies to WinForms, GTK, etc.
 - MAKE SURE I DIDNT MESS UP THE DEMO SONGS! I SUBMITTED TONS OF SHIT.
 P1:
 - Validation errors in JTS when deleting some instruments.

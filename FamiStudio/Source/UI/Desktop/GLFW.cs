@@ -2688,9 +2688,10 @@ namespace GLFWDotNet
 		/// <returns>
 		/// The UTF-8 encoded, layout-specific name of the key, or `NULL`.
 		/// </returns>
-		public static IntPtr glfwGetKeyName(int key, int scancode)
+		public static string glfwGetKeyName(int key, int scancode)
 		{
-			return _glfwGetKeyName(key, scancode);
+			var keyNameStr = _glfwGetKeyName(key, scancode);
+			return Marshal.PtrToStringAnsi(keyNameStr);
 		}
 
 		/// <summary>

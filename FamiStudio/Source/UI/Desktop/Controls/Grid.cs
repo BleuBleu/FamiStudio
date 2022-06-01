@@ -90,7 +90,7 @@ namespace FamiStudio
         public void SetColumnEnabled(int col, bool enabled)
         {
             // This is the only one that I added support to disabled state right now.
-            Debug.Assert(columns[col].Type == ColumnType.Slider);
+            //Debug.Assert(columns[col].Type == ColumnType.Slider);
 
             columnEnabled[col] = enabled;
             MarkDirty();
@@ -128,6 +128,7 @@ namespace FamiStudio
 
             if (parentDialog != null)
                 UpdateLayout();
+            MarkDirty();
         }
 
         public void RenameColumns(string[] columnNames)

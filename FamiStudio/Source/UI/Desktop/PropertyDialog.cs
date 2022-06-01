@@ -68,20 +68,20 @@ namespace FamiStudio
 
         private void PropertyPage_PropertyWantsClose(int idx)
         {
-            Close(DialogResult2.OK);
+            Close(DialogResult.OK);
         }
 
         private void ButtonYes_Click(Control sender)
         {
             if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
             {
-                Close(DialogResult2.OK);
+                Close(DialogResult.OK);
             }
         }
 
         private void ButtonNo_Click(Control sender)
         {
-            Close(DialogResult2.Cancel);
+            Close(DialogResult.Cancel);
         }
 
         private void ButtonAdvanced_Click(Control sender)
@@ -136,11 +136,11 @@ namespace FamiStudio
             {
                 if (e.Key == Keys.Enter)
                 {
-                    Close(DialogResult2.OK);
+                    Close(DialogResult.OK);
                 }
                 else if (e.Key == Keys.Escape)
                 {
-                    Close(DialogResult2.Cancel);
+                    Close(DialogResult.Cancel);
                 }
             }
         }

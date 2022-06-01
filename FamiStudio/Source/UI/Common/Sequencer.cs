@@ -1764,15 +1764,15 @@ namespace FamiStudio
 
             bool createMissingInstrument = false;
             if (missingInstruments)
-                createMissingInstrument = Platform.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
+                createMissingInstrument = Platform.MessageBox($"You are pasting notes referring to unknown instruments. Do you want to create the missing instrument?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             bool createMissingArpeggios = false;
             if (missingArpeggios)
-                createMissingArpeggios = Platform.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
+                createMissingArpeggios = Platform.MessageBox($"You are pasting notes referring to unknown arpeggios. Do you want to create the missing arpeggios?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             bool createMissingSamples = false;
             if (missingSamples)
-                createMissingSamples = Platform.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons2.YesNo) == DialogResult2.Yes;
+                createMissingSamples = Platform.MessageBox($"You are pasting notes referring to unmapped DPCM samples. Do you want to create the missing samples?", "Paste", MessageBoxButtons.YesNo) == DialogResult.Yes;
 
             App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
@@ -1907,7 +1907,7 @@ namespace FamiStudio
 
             dialog.ShowDialogAsync(ParentWindow, (r) =>
             {
-                if (r == DialogResult2.OK)
+                if (r == DialogResult.OK)
                 {
                     PasteInternal(
                         dialog.Properties.GetPropertyValue<bool>(0),
@@ -2590,7 +2590,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
-                if (r == DialogResult2.OK)
+                if (r == DialogResult.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, song.Id);
                     tempoProperties.ApplyAsync(dlg.Properties.GetPropertyValue<bool>(0), () =>
@@ -2624,7 +2624,7 @@ namespace FamiStudio
 
             dlg.ShowDialogAsync(ParentWindow, (r) =>
             {
-                if (r == DialogResult2.OK)
+                if (r == DialogResult.OK)
                 {
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 

@@ -107,12 +107,14 @@ namespace FamiStudio
 
         // Mobile
         private readonly string AllowVibrationTooltip           = "When enabled, the phone will vibrate on long pressed, piano keys, etc.";
-        private readonly string DoubleClickDeleteTooltip        = "When enabled, double tapping on a pattern or note will delete it.";
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
         private int[,] qwertyKeys; // We keep a copy here in case the user cancels.
         private Settings.ExpansionMix[] expansionMixer = new Settings.ExpansionMix[ExpansionType.Count];
+
+        private int quertyRowIndex;
+        private int quertyColIndex;
 
         public unsafe ConfigDialog()
         {
@@ -261,6 +263,8 @@ namespace FamiStudio
                     page.AddGrid(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings(), 14); // 1
                     page.AddButton(null, "Reset to default");
                     page.PropertyClicked += QwertyPage_PropertyClicked;
+                    page.SetColumnEnabled(1, 0, false);
+                    page.SetColumnEnabled(1, 1, false);
                     break;
                 }
                 case ConfigSection.MacOS:
@@ -276,7 +280,6 @@ namespace FamiStudio
                 case ConfigSection.Mobile:
                 { 
                     page.AddCheckBox("Allow vibration:", Settings.AllowVibration, AllowVibrationTooltip); // 0
-                    page.AddCheckBox("Double-tap to delete:", Settings.DoubleClickDelete, DoubleClickDeleteTooltip); // 1
                     break;
                 }
             }
@@ -323,50 +326,40 @@ namespace FamiStudio
             {
                 if (click == ClickType.Double)
                 {
+                    quertyRowIndex = rowIdx;
+                    quertyColIndex = colIdx;
+
                     var dlg = new PropertyDialog("", 300, false, true);
                     dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
                     dlg.Properties.Build();
+                    dlg.DialogKeyDown += Dlg_QwertyKeyDown;
 
-                    // TODO : Make this cross-platform.
-                    // MATTT
-//#if FAMISTUDIO_WINDOWS
-//                    dlg.KeyDown += (sender, e) =>
-//                    {
-//                        if (PlatformUtils.KeyCodeToString((int)e.Key) != null)
-//                        {
-//                            if (e.Key != Keys2.Escape)
-//                                AssignQwertyKey(rowIdx, colIdx - 2, (int)e.Key);
-//                            dlg.Close();
-//                        }
-//                    };
-//#elif FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-//                    dlg.KeyPressEvent += (o, args) =>
-//                    {
-//                        // These 2 keys are used by the QWERTY input.
-//                        if (args.Event.Key != Gdk.Key.Tab &&
-//                            args.Event.Key != Gdk.Key.BackSpace && 
-//                            PlatformUtils.KeyCodeToString((int)args.Event.Key) != null)
-//                        {
-//                            if (args.Event.Key != Gdk.Key.Escape)
-//                                AssignQwertyKey(rowIdx, colIdx - 2, (int)args.Event.Key);
-//                            dlg.Accept();
-//                        }
-//                    };
-//#endif
-//                    dlg.ShowDialogAsync(null, (r) => { });
-
-                    pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
+                    dlg.ShowDialogAsync(null, (r) => { });
                 }
                 else if (click == ClickType.Right)
                 {
-                    qwertyKeys[rowIdx, colIdx - 2] = -1;
+                    qwertyKeys[rowIdx, colIdx - 2] = 0;
                     pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
                 }
             }
             else if (propIdx == 2 && click == ClickType.Button)
             {
-                Array.Copy(Settings.DefaultQwertyKeys, qwertyKeys, Settings.DefaultQwertyKeys.Length);
+                Array.Copy(Settings.DefaultQwertyScancodes, qwertyKeys, Settings.DefaultQwertyScancodes.Length);
                 pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
+            }
+        }
+
+        private void Dlg_QwertyKeyDown(Dialog dlg, KeyEventArgs e)
+        {
+            if (e.Key == Keys.Escape)
+            {
+                dlg.Close(DialogResult.Cancel);
+            }
+            else
+            {
+                AssignQwertyKey(quertyRowIndex, quertyColIndex - 2, e.Scancode);
+                pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
+                dlg.Close(DialogResult.OK);
             }
         }
 
@@ -383,8 +376,8 @@ namespace FamiStudio
 
                     data[0, 0] = "N/A";
                     data[0, 1] = "Stop Note";
-                    data[0, 2] = k0 < 0 ? "" : Platform.KeyCodeToString(qwertyKeys[0, 0]);
-                    data[0, 3] = k1 < 0 ? "" : Platform.KeyCodeToString(qwertyKeys[0, 1]);
+                    data[0, 2] = k0 < 0 ? "" : Platform.ScancodeToString(k0);
+                    data[0, 3] = k1 < 0 ? "" : Platform.ScancodeToString(k1);
                 }
 
                 // Regular notes.
@@ -398,26 +391,28 @@ namespace FamiStudio
 
                     data[idx, 0] = octave.ToString();
                     data[idx, 1] = Note.NoteNames[note];
-                    data[idx, 2] = k0 < 0 ? "" : Platform.KeyCodeToString(qwertyKeys[idx, 0]);
-                    data[idx, 3] = k1 < 0 ? "" : Platform.KeyCodeToString(qwertyKeys[idx, 1]);
+                    data[idx, 2] = k0 < 0 ? "" : Platform.ScancodeToString(k0);
+                    data[idx, 3] = k1 < 0 ? "" : Platform.ScancodeToString(k1);
                 }
             }
             return data;
         }
 
-        void AssignQwertyKey(int idx, int keyIndex, int keyCode)
+        void AssignQwertyKey(int idx, int keyIndex, int scancode)
         {
             // Unbind this key from anything.
             for (int i = 0; i < qwertyKeys.GetLength(0); i++)
             {
                 for (int j = 0; j < qwertyKeys.GetLength(1); j++)
                 {
-                    if (qwertyKeys[i, j] == keyCode)
+                    if (qwertyKeys[i, j] == scancode)
+                    {
                         qwertyKeys[i, j] = -1;
+                    }
                 }
             }
 
-            qwertyKeys[idx, keyIndex] = keyCode;
+            qwertyKeys[idx, keyIndex] = scancode;
         }
 
         private void MixerPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
@@ -468,11 +463,11 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult2> callback)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
         {
             dialog.ShowDialogAsync(parent, (r) =>
             {
-                if (r == DialogResult2.OK)
+                if (r == DialogResult.OK)
                 {
                     var pageGeneral = pages[(int)ConfigSection.General];
                     var pageUI = pages[(int)ConfigSection.UserInterface];
@@ -537,7 +532,6 @@ namespace FamiStudio
                     // Mobile
                     var pageMobile = pages[(int)ConfigSection.Mobile];
                     Settings.AllowVibration = pageMobile.GetPropertyValue<bool>(0);
-                    Settings.DoubleClickDelete = pageMobile.GetPropertyValue<bool>(1);
 
                     Settings.Save();
                 }

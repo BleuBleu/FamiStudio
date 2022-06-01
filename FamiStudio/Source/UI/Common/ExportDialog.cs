@@ -676,7 +676,7 @@ namespace FamiStudio
 
             if (songIds.Length > RomFileBase.MaxSongs)
             {
-                Platform.MessageBoxAsync($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons2.OK);
+                Platform.MessageBoxAsync($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
                 return;
             }
 
@@ -1039,7 +1039,7 @@ namespace FamiStudio
         {
             dialog.ShowDialogAsync(app.MainWindow, (r) =>
             {
-                if (r == DialogResult2.OK)
+                if (r == DialogResult.OK)
                 {
                     Export(false);
                     lastExportCrc = lastExportFilename != null ? ComputeProjectCrc(project) : 0;

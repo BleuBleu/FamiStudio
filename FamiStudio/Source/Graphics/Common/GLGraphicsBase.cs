@@ -1777,6 +1777,9 @@ namespace FamiStudio
 
         public void DrawText(string text, Font font, float x, float y, Brush brush, TextFlags flags = TextFlags.None, float width = 0, float height = 0, float clipMinX = 0, float clipMaxX = 0)
         {
+            if (string.IsNullOrEmpty(text))
+                return;
+
             Debug.Assert(!flags.HasFlag(TextFlags.Clip) || !flags.HasFlag(TextFlags.Ellipsis));
             Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Ellipsis));
             Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Clip));

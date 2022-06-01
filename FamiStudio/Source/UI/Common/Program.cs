@@ -1,35 +1,33 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using static FamiStudio.Init;
+using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
     static class Program
     {
-#if FAMISTUDIO_WINDOWS
-        [DllImport("SHCore.dll", SetLastError = true)]
-        private static extern bool SetProcessDpiAwareness(int awareness);
-#endif
+        // MATTT : Shutdown too!
+        static bool InitializeGLFW()
+        {
+            if (glfwInit() == 0)
+            {
+                // MATTT : We will need a "low level" message box if we ever roll out our own.
+                Platform.MessageBox("Error initializing GLFW.", "Error", MessageBoxButtons.OK);
+                return false;
+            }
+
+            return true;
+        }
 
         [STAThread]
-        static unsafe void Main(string[] args)
+        static void Main(string[] args)
         {
-#if FAMISTUDIO_WINDOWS
-            // MATTT : I think GLFW calls this internally : Check!
-            try
+            if (!InitializeGLFW() ||
+                !InitializeBaseSystems())
             {
-                // This is only supported in Windows 8.1+.
-                SetProcessDpiAwareness(1 /*Process_System_DPI_Aware*/);
+                Environment.Exit(-1);
             }
-            catch { }
-
-#endif
-
-            InitializeBaseSystems();
-
-            // MATTT : This will go away, i think?
-            //System.Windows.Forms.Application.EnableVisualStyles(); // MATTT : THIS SEEM TO HAVE AN IMPACT!!!
-            //Application.SetCompatibleTextRenderingDefault(false);
 
             var cli = new CommandLineInterface(args);
             if (!cli.Run())

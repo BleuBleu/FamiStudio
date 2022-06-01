@@ -132,11 +132,8 @@ namespace FamiStudio
             glfwSetDropCallback(window, null);
         }
 
-        public static unsafe FamiStudioWindow InitializeGLFWAndCreateWindow(FamiStudio fs)
+        public static unsafe FamiStudioWindow CreateWindow(FamiStudio fs)
         {
-            if (glfwInit() == 0)
-                return null;
-
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -182,7 +179,10 @@ namespace FamiStudio
             var icon64 = TgaFile.LoadFromResource($"FamiStudio.Resources.FamiStudio_64.tga", true);
             var images = new GLFWimage[4];
 
-            fixed (int* p16 = &icon16[0, 0], p24 = &icon24[0, 0], p32 = &icon32[0, 0], p64 = &icon64[0, 0])
+            fixed (int* p16 = &icon16[0, 0], 
+                        p24 = &icon24[0, 0], 
+                        p32 = &icon32[0, 0], 
+                        p64 = &icon64[0, 0])
             {
                 images[0].width  = 16;
                 images[0].height = 16;
@@ -495,12 +495,12 @@ namespace FamiStudio
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
-            Debug.WriteLine($"KEY! Key = {key}, Scancode = {scancode}, Action = {action}, Mods = {mods}");
+            Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode}, Action = {action}, Mods = {mods}");
 
             modifiers.Set(mods);
 
             var down = action == GLFW_PRESS || action == GLFW_REPEAT;
-            var e = new KeyEventArgs((Keys)key, mods, action == GLFW_REPEAT);
+            var e = new KeyEventArgs((Keys)key, mods, action == GLFW_REPEAT, scancode);
             
             if (controls.IsContextMenuActive)
             {
@@ -513,9 +513,9 @@ namespace FamiStudio
             else
             {
                 if (down)
-                    famistudio.KeyDown(e, scancode);
+                    famistudio.KeyDown(e);
                 else
-                    famistudio.KeyUp(e, scancode);
+                    famistudio.KeyUp(e);
 
                 foreach (var ctrl in controls.Controls)
                     SendKeyUpOrDown(ctrl, e, down);

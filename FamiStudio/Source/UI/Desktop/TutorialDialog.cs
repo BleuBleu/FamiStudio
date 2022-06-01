@@ -205,7 +205,7 @@ namespace FamiStudio
         {
             if (pageIndex == TutorialMessages.Length - 1)
             {
-                Close(checkBoxDontShow.Checked ? DialogResult2.OK : DialogResult2.Cancel);
+                Close(checkBoxDontShow.Checked ? DialogResult.OK : DialogResult.Cancel);
             }
             else
             {

@@ -64,111 +64,86 @@ namespace FamiStudio
         public static bool ShowImplicitStopNotes = true;
         public static bool ShowRegisterViewer = Platform.IsDesktop;
 
+        public struct QwertyKeyAssignment
+        {
+            public QwertyKeyAssignment(Keys k, int scan = -1)
+            {
+                Key = k;
+                Scancode = scan;
+            }
+
+            public override string ToString()
+            {
+                return $"{Key} ({Scancode})";
+            }
+
+            public void Clear()
+            {
+                Key = Keys.Unknown;
+                Scancode = 0;
+            }
+
+            public bool IsValid => Key != Keys.Unknown && (int)Key != 0 && Scancode >= 0;
+
+            public Keys Key;
+            public int  Scancode;
+        }
+
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
-#if false // MATTT FAMISTUDIO_WINDOWS
-        public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
+        public static readonly Keys[,] DefaultQwertyKeys = new Keys[37, 2]
         {
             // Stop note
-            { (int)System.Windows.Forms.Keys2.D1, -1 },
+            { Keys.D1,           Keys.Unknown   },
 
             // Octave 1
-            { (int)System.Windows.Forms.Keys2.Z, -1 },
-            { (int)System.Windows.Forms.Keys2.S, -1 },
-            { (int)System.Windows.Forms.Keys2.X, -1 },
-            { (int)System.Windows.Forms.Keys2.D, -1 },
-            { (int)System.Windows.Forms.Keys2.C, -1 },
-            { (int)System.Windows.Forms.Keys2.V, -1 },
-            { (int)System.Windows.Forms.Keys2.G, -1 },
-            { (int)System.Windows.Forms.Keys2.B, -1 },
-            { (int)System.Windows.Forms.Keys2.H, -1 },
-            { (int)System.Windows.Forms.Keys2.N, -1 },
-            { (int)System.Windows.Forms.Keys2.J, -1 },
-            { (int)System.Windows.Forms.Keys2.M, -1 },
+            { Keys.Z,            Keys.Unknown   },
+            { Keys.S,            Keys.Unknown   },
+            { Keys.X,            Keys.Unknown   },
+            { Keys.D,            Keys.Unknown   },
+            { Keys.C,            Keys.Unknown   },
+            { Keys.V,            Keys.Unknown   },
+            { Keys.G,            Keys.Unknown   },
+            { Keys.B,            Keys.Unknown   },
+            { Keys.H,            Keys.Unknown   },
+            { Keys.N,            Keys.Unknown   },
+            { Keys.J,            Keys.Unknown   },
+            { Keys.M,            Keys.Unknown   },
 
             // Octave 2
-            { (int)System.Windows.Forms.Keys2.Q,  (int)System.Windows.Forms.Keys2.Oemcomma,  },
-            { (int)System.Windows.Forms.Keys2.D2, (int)System.Windows.Forms.Keys2.L,         },
-            { (int)System.Windows.Forms.Keys2.W,  (int)System.Windows.Forms.Keys2.OemPeriod, },
-            { (int)System.Windows.Forms.Keys2.D3, (int)System.Windows.Forms.Keys2.Oem1,      },
-            { (int)System.Windows.Forms.Keys2.E,  (int)System.Windows.Forms.Keys2.Oem2,      },
-            { (int)System.Windows.Forms.Keys2.R,  -1 },
-            { (int)System.Windows.Forms.Keys2.D5, -1 },
-            { (int)System.Windows.Forms.Keys2.T,  -1 },
-            { (int)System.Windows.Forms.Keys2.D6, -1 },
-            { (int)System.Windows.Forms.Keys2.Y,  -1 },
-            { (int)System.Windows.Forms.Keys2.D7, -1 },
-            { (int)System.Windows.Forms.Keys2.U,  -1 },
+            { Keys.Q,            Keys.Comma     },
+            { Keys.D2,           Keys.L         },
+            { Keys.W,            Keys.Period    },
+            { Keys.D3,           Keys.SemiColon }, 
+            { Keys.E,            Keys.Slash     },
+            { Keys.R,            Keys.Unknown   },
+            { Keys.D5,           Keys.Unknown   },
+            { Keys.T,            Keys.Unknown   },
+            { Keys.D6,           Keys.Unknown   },
+            { Keys.Y,            Keys.Unknown   },
+            { Keys.D7,           Keys.Unknown   },
+            { Keys.U,            Keys.Unknown   },
 
             // Octave 3
-            { (int)System.Windows.Forms.Keys2.I,       -1 },
-            { (int)System.Windows.Forms.Keys2.D9,      -1 },
-            { (int)System.Windows.Forms.Keys2.O,       -1 },
-            { (int)System.Windows.Forms.Keys2.D0,      -1 },
-            { (int)System.Windows.Forms.Keys2.P,       -1 },
-            { (int)System.Windows.Forms.Keys2.Oem4,    -1 },
-            { (int)System.Windows.Forms.Keys2.Oemplus, -1 },
-            { (int)System.Windows.Forms.Keys2.Oem6,    -1 },
-            { -1, -1 },
-            { -1, -1 },
-            { -1, -1 },
-            { -1, -1 }
+            { Keys.I,            Keys.Unknown   },
+            { Keys.D9,           Keys.Unknown   },
+            { Keys.O,            Keys.Unknown   },
+            { Keys.D0,           Keys.Unknown   },
+            { Keys.P,            Keys.Unknown   },
+            { Keys.LeftBracket,  Keys.Unknown   }, 
+            { Keys.Equal,        Keys.Unknown   }, 
+            { Keys.RightBracket, Keys.Unknown   }, 
+            { Keys.Unknown,      Keys.Unknown   },
+            { Keys.Unknown,      Keys.Unknown   },
+            { Keys.Unknown,      Keys.Unknown   },
+            { Keys.Unknown,      Keys.Unknown   }
         };
-#elif true // MATTT FAMISTUDIO_ANDROID
-        public static readonly int[,] DefaultQwertyKeys = new int[37, 2];
-#else
-        public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
-        {
-            // Stop note
-            { (int)Gdk.Key.Key_1,        -1 },
 
-            // Octave 1
-            { (int)Gdk.Key.z,            -1 },
-            { (int)Gdk.Key.s,            -1 },
-            { (int)Gdk.Key.x,            -1 },
-            { (int)Gdk.Key.d,            -1 },
-            { (int)Gdk.Key.c,            -1 },
-            { (int)Gdk.Key.v,            -1 },
-            { (int)Gdk.Key.g,            -1 },
-            { (int)Gdk.Key.b,            -1 },
-            { (int)Gdk.Key.h,            -1 },
-            { (int)Gdk.Key.n,            -1 },
-            { (int)Gdk.Key.j,            -1 },
-            { (int)Gdk.Key.m,            -1 },
-
-            // Octave 2
-            { (int)Gdk.Key.q,            (int)Gdk.Key.comma     },
-            { (int)Gdk.Key.Key_2,        (int)Gdk.Key.l         },
-            { (int)Gdk.Key.w,            (int)Gdk.Key.period    },
-            { (int)Gdk.Key.Key_3,        (int)Gdk.Key.semicolon },
-            { (int)Gdk.Key.e,            (int)Gdk.Key.slash     },
-            { (int)Gdk.Key.r,            -1 },
-            { (int)Gdk.Key.Key_5,        -1 },
-            { (int)Gdk.Key.t,            -1 },
-            { (int)Gdk.Key.Key_6,        -1 },
-            { (int)Gdk.Key.y,            -1 },
-            { (int)Gdk.Key.Key_7,        -1 },
-            { (int)Gdk.Key.u,            -1 },
-
-            // Octave 3
-            { (int)Gdk.Key.i,            -1 },
-            { (int)Gdk.Key.Key_9,        -1 },
-            { (int)Gdk.Key.o,            -1 },
-            { (int)Gdk.Key.Key_0,        -1 },
-            { (int)Gdk.Key.p,            -1 },
-            { (int)Gdk.Key.bracketleft,  -1 },
-            { (int)Gdk.Key.equal,        -1 },
-            { (int)Gdk.Key.bracketright, -1 },
-            { -1, -1 },
-            { -1, -1 },
-            { -1, -1 },
-            { -1, -1 }
-        };
-#endif
-
+        public static int[,] DefaultQwertyScancodes = new int[37, 2];
         public static int[,] QwertyKeys = new int[37, 2];
-        public static Dictionary<int, int> KeyCodeToNoteMap = new Dictionary<int, int>();
+        public static Dictionary<int, int> ScanCodeToNoteMap = new Dictionary<int, int>();
 
         // Audio section
+        // MATTT : Remove defines!
 #if FAMISTUDIO_LINUX
         const int DefaultNumBufferedAudioFrames = 4; // ALSA seems to like to have one extra buffer.
 #elif FAMISTUDIO_ANDROID
@@ -234,6 +209,20 @@ namespace FamiStudio
         // Piano roll stuff
         public static int SnapResolution = SnapResolutionType.OneBeat;
         public static bool SnapEnabled = true;
+
+        public static void Initialize()
+        {
+            if (Platform.IsDesktop)
+            {
+                for (int i = 0; i < DefaultQwertyKeys.GetLength(0); i++)
+                {
+                    DefaultQwertyScancodes[i, 0] = DefaultQwertyKeys[i, 0] == Keys.Unknown ? -1 : Platform.GetKeyScancode(DefaultQwertyKeys[i, 0]);
+                    DefaultQwertyScancodes[i, 1] = DefaultQwertyKeys[i, 1] == Keys.Unknown ? -1 : Platform.GetKeyScancode(DefaultQwertyKeys[i, 1]);
+                }
+            }
+
+            Load();
+        }
 
         public static void Load()
         {
@@ -309,29 +298,32 @@ namespace FamiStudio
             }
 
             // QWERTY
-            Array.Copy(DefaultQwertyKeys, QwertyKeys, DefaultQwertyKeys.Length);
+            Array.Copy(DefaultQwertyScancodes, QwertyKeys, DefaultQwertyScancodes.Length);
 
-            // Stop note.
+            // At version 7 (FamiStudio 4.0.0) we changed how the QWERTY keys are saved.
+            if (Version >= 7)
             {
-                if (ini.HasKey("QWERTY", "StopNote"))
-                    QwertyKeys[0, 0] = ini.GetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
-                if (ini.HasKey("QWERTY", "StopNoteAlt"))
-                    QwertyKeys[0, 1] = ini.GetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
-            }
+                // Stop note.
+                {
+                    if (ini.HasKey("QWERTY", "StopNote"))
+                        QwertyKeys[0, 0] = ini.GetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
+                    if (ini.HasKey("QWERTY", "StopNoteAlt"))
+                        QwertyKeys[0, 1] = ini.GetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
+                }
 
-            // Regular notes.
-            for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
-            {
-                var octave = (idx - 1) / 12;
-                var note   = (idx - 1) % 12;
+                // Regular notes.
+                for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
+                {
+                    var octave = (idx - 1) / 12;
+                    var note = (idx - 1) % 12;
+                    var keyName1 = $"Octave{octave}Note{note}";
+                    var keyName2 = $"Octave{octave}Note{note}Alt";
 
-                var keyName0 = $"Octave{octave}Note{note}";
-                var keyName1 = $"Octave{octave}Note{note}Alt";
-
-                if (ini.HasKey("QWERTY", keyName0))
-                    QwertyKeys[idx, 0] = ini.GetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
-                if (ini.HasKey("QWERTY", keyName1))
-                    QwertyKeys[idx, 1] = ini.GetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
+                    if (ini.HasKey("QWERTY", keyName1))
+                        QwertyKeys[idx, 0] = ini.GetInt("QWERTY", keyName1, QwertyKeys[idx, 0]);
+                    if (ini.HasKey("QWERTY", keyName2))
+                        QwertyKeys[idx, 1] = ini.GetInt("QWERTY", keyName2, QwertyKeys[idx, 1]);
+                }
             }
 
             UpdateKeyCodeMaps();
@@ -465,25 +457,20 @@ namespace FamiStudio
             // QWERTY
             // Stop note.
             {
-                if (QwertyKeys[0, 0] >= 0)
-                    ini.SetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
-                if (QwertyKeys[0, 1] >= 0)
-                    ini.SetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
+                ini.SetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
+                ini.SetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
             }
 
             // Regular notes.
             for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
             {
                 var octave = (idx - 1) / 12;
-                var note   = (idx - 1) % 12;
-
+                var note = (idx - 1) % 12;
                 var keyName0 = $"Octave{octave}Note{note}";
                 var keyName1 = $"Octave{octave}Note{note}Alt";
 
-                if (QwertyKeys[idx, 0] >= 0)
-                    ini.SetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
-                if (QwertyKeys[idx, 1] >= 0)
-                    ini.SetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
+                ini.SetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
+                ini.SetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
             }
 
             // Mobile
@@ -501,7 +488,7 @@ namespace FamiStudio
 
         public static void UpdateKeyCodeMaps()
         {
-            KeyCodeToNoteMap.Clear();
+            ScanCodeToNoteMap.Clear();
 
             for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
             {
@@ -509,9 +496,9 @@ namespace FamiStudio
                 var k1 = QwertyKeys[idx, 1];
 
                 if (k0 >= 0)
-                    KeyCodeToNoteMap[k0] = idx;
+                    ScanCodeToNoteMap[k0] = idx;
                 if (k1 >= 0)
-                    KeyCodeToNoteMap[k1] = idx;
+                    ScanCodeToNoteMap[k1] = idx;
             }
         }
 

@@ -57,17 +57,17 @@ namespace FamiStudio
             {
                 var ph = (TgaHeader*)p;
 
-                Debug.Assert(ph->datatypecode == 2 || ph->datatypecode == 10); // RGB compressed or uncompressed only.
+                Debug.Assert(ph->datatypecode == 2  || ph->datatypecode == 10); // RGB compressed or uncompressed only.
                 Debug.Assert(ph->bitsperpixel == 24 || ph->bitsperpixel == 32); // 24/32bpp only
                 Debug.Assert(ph->colourmaptype == 0);
 
-                var imageData = new int[ph->height, ph->width];
                 var compressed = ph->datatypecode == 10;
-
-                var dataIdx = Marshal.SizeOf(typeof(TgaHeader)) + ph->idlength;
-                var pixelIdx = 0;
                 var bpp = ph->bitsperpixel / 8;
                 var flip = (ph->imagedescriptor & 0x20) == 0;
+
+                var imageData = new int[ph->height, ph->width];
+                var dataIdx = Marshal.SizeOf(typeof(TgaHeader)) + ph->idlength;
+                var pixelIdx = 0;
 
                 var ri = swap ? 2 : 0;
                 var gi = 1;

@@ -36,7 +36,7 @@ namespace FamiStudio
                 // This is only ran in desktop and this isnt really async, so its ok.
                 dialog.ShowDialogAsync(parent, (r) =>
                 {
-                    if (r == DialogResult2.OK)
+                    if (r == DialogResult.OK)
                     { 
                         var songIndex           = Array.IndexOf(songNames, dialog.Properties.GetPropertyValue<string>(0)); ;
                         var duration            = dialog.Properties.GetPropertyValue<int>(1); 
