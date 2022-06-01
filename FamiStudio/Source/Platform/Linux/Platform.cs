@@ -6,83 +6,35 @@ using System.IO;
 using System.Linq;
 using System.Media;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
-using Gtk;
-using OpenTK;
+using static GLFWDotNet.GLFW;
 
 using Action = System.Action;
 
 namespace FamiStudio
 {
-    public static class PlatformUtils
+    public static class Platform
     {
-        [System.Runtime.InteropServices.DllImport("fontconfig.so")]
-        static extern bool FcConfigAppFontAddFile(System.IntPtr config, string fontPath);
-        [System.Runtime.InteropServices.DllImport("fontconfig.so.1", EntryPoint = "FcConfigAppFontAddFile")]
-        static extern bool FcConfigAppFontAddFile1(System.IntPtr config, string fontPath);
-
         private static byte[] internalClipboardData;
 
         public static string ApplicationVersion => version;
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
         public static string UserProjectsDirectory => null;
+        public static float DoubleClickTime => 0.25f; // MATTT
 
         private static Thread mainThread;
         private static string version;
 
-        public static void Initialize()
+        public static bool Initialize()
         {
             SetProcessName("FamiStudio");
 
             mainThread = Thread.CurrentThread;
             version = Assembly.GetEntryAssembly().GetName().Version.ToString();
 
-            // When debugging or when in a app package, our paths are a bit different.
-            string[] pathsToSearch =
-            {
-                "./Resources/",
-                "../../Resources/",
-                "../Resources/Fonts/",
-                "."
-            };
-
-            string[] fontsToLoad =
-            {
-                "Quicksand-Regular.ttf",
-                "Quicksand-Bold.ttf"
-            };
-
-            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-            foreach (var path in pathsToSearch)
-            {
-                var absPath = Path.Combine(appPath, path);
-
-                if (File.Exists(Path.Combine(absPath, fontsToLoad[0])))
-                {
-                    foreach (var font in fontsToLoad)
-                    {
-                        var fullpath = Path.Combine(absPath, font);
-                        try
-                        {
-                            FcConfigAppFontAddFile(IntPtr.Zero, fullpath);
-                        }
-                        catch
-                        {
-                            try { FcConfigAppFontAddFile1(IntPtr.Zero, fullpath); } catch { }
-                        }
-                    }
-                    break;
-                }
-            }
-
-            Toolkit.Init(new ToolkitOptions
-            {
-                Backend = PlatformBackend.PreferX11,
-                EnableHighResolution = false
-            });
-
-            InitializeGtk();
+            return true;
         }
 
         public static bool IsInMainThread()
@@ -106,36 +58,6 @@ namespace FamiStudio
             return 44100;
         }
 
-        private static void ParseRcFileFromResource(string rcFile)
-        {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(rcFile))
-            using (var reader = new StreamReader(stream))
-            {
-                string gtkrc = reader.ReadToEnd();
-                Gtk.Rc.ParseString(gtkrc);
-            }
-        }
-
-        public static void InitializeGtk()
-        {
-            Gtk.Application.Init();
-
-            var rcFile = "FamiStudio.Resources.gtk_linux.rc";
-
-            ParseRcFileFromResource(rcFile);
-
-            var dpi = Gdk.Display.Default.DefaultScreen.Resolution;
-
-            if (dpi < 0)
-            {
-                dpi = Utils.Clamp(Gdk.Display.Default.DefaultScreen.Width / (Gdk.Display.Default.DefaultScreen.WidthMm / 25.4f), 96, 384);
-                Gdk.Display.Default.DefaultScreen.Resolution = dpi;
-            }
-
-            if (dpi >= 192.0)
-                ParseRcFileFromResource("FamiStudio.Resources.gtk_linux_hidpi.rc");
-        }
-
         private static string[] GetExtensionList(string str)
         {
             var splits = str.Split('|');
@@ -149,8 +71,9 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, Window parentWindow = null)
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, object parentWindow = null)
         {
+            /*
             var extensionList = GetExtensionList(extensions);
 
             Gtk.Rc.ResetStyles(Gtk.Settings.GetForScreen(Gdk.Screen.Default));
@@ -199,9 +122,12 @@ namespace FamiStudio
             filechooser.Destroy();
 
             return filenames;
+            */
+
+            return null;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, Window parentWindow = null)
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, object parentWindow = null)
         {
             var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindow);
 
@@ -213,6 +139,7 @@ namespace FamiStudio
 
         public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
+            /*
             var extensionList = GetExtensionList(extensions);
 
             Gtk.FileChooserDialog filechooser =
@@ -249,10 +176,14 @@ namespace FamiStudio
             filechooser.Destroy();
 
             return filename;
+            */
+
+            return null;
         }
 
         public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
+            /*
             Gtk.FileChooserDialog filechooser =
                 new Gtk.FileChooserDialog("Choose the file to save",
                     null,
@@ -276,6 +207,9 @@ namespace FamiStudio
             filechooser.Destroy();
 
             return filename;
+            */
+
+            return null;
         }
 
         public static string ShowSaveFileDialog(string title, string extensions)
@@ -286,6 +220,7 @@ namespace FamiStudio
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icon = MessageBoxIcon.None)
         {
+            /*
             if (buttons == MessageBoxButtons.YesNoCancel)
             {
                 buttons = MessageBoxButtons.YesNo;
@@ -311,6 +246,9 @@ namespace FamiStudio
                 return ret == -8 ? DialogResult.Yes : ret == -9 ? DialogResult.No : DialogResult.Cancel;
             else
                 return DialogResult.OK;
+            */
+
+            return DialogResult.OK;
         }
 
         public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
@@ -323,27 +261,19 @@ namespace FamiStudio
         {
         }
 
-        public static string KeyCodeToString(int keyval)
+        public static int GetKeyScancode(Keys key)
         {
-            var str = char.ConvertFromUtf32((int)Gdk.Keyval.ToUnicode((uint)keyval));
-
-            // Fallback to key enum for special keys.
-            if (str.Length == 0 || (str.Length == 1 && str[0] <= 32))
-            {
-                return ((Gdk.Key)keyval).ToString();
-            }
-
-            return str.ToUpper();
+            return glfwGetKeyScancode((int)key);
         }
 
-        public static Gdk.Pixbuf LoadBitmapFromResource(string name)
+        public static string KeyToString(Keys key)
         {
-            return Gdk.Pixbuf.LoadFromResource(name);
+            return glfwGetKeyName((int)key, 0);
         }
 
-        public static float GetDesktopScaling()
+        public static string ScancodeToString(int scancode)
         {
-            return (float)Gdk.Display.Default.DefaultScreen.Resolution / 96.0f;
+            return glfwGetKeyName((int)Keys.Unknown, scancode);
         }
 
         public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
@@ -393,6 +323,11 @@ namespace FamiStudio
             SystemSounds.Beep.Play();
         }
 
+        public static double TimeSeconds()
+        {
+            return glfwGetTime();
+        }
+
         [DllImport("libc")]
         private static extern int prctl(int option, byte[] arg2, IntPtr arg3, IntPtr arg4, IntPtr arg5);
 
@@ -410,6 +345,11 @@ namespace FamiStudio
 
             Debug.WriteLine("Error setting process name.");
         }
+        
+        public static int GetCursorSize()
+        {
+            return 32; // MATTT
+        }
 
         public static void SetClipboardData(byte[] data)
         {
@@ -424,6 +364,11 @@ namespace FamiStudio
         public static string GetClipboardString()
         {
             return null;
+        }
+
+        public static void SetClipboardString(string str)
+        {
+            Debug.Assert(false);
         }
 
         public static void ClearClipboardString()

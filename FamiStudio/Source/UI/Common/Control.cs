@@ -449,7 +449,7 @@ namespace FamiStudio
     }
 
     // Matches Windows Forms
-    public enum MessageBoxIcon2
+    public enum MessageBoxIcon
     {
         None = 0,
         Error = 16
