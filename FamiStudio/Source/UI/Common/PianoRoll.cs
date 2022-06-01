@@ -147,6 +147,7 @@ namespace FamiStudio
         BitmapAtlasRef bmpGizmoResizeLeftRight;
         BitmapAtlasRef bmpGizmoResizeUpDown;
         BitmapAtlasRef bmpGizmoResizeFill;
+        BitmapAtlasRef bmpEffectFrame;
         BitmapAtlasRef[] bmpEffects;
         Geometry[] stopNoteGeometry        = new Geometry[2]; // [1] is used to draw arps.
         Geometry[] stopReleaseNoteGeometry = new Geometry[2]; // [1] is used to draw arps.
@@ -154,23 +155,6 @@ namespace FamiStudio
         Geometry   slideNoteGeometry;
         Geometry   seekGeometry;
         Geometry   sampleGeometry;
-
-        readonly string[] EffectImageNames = new string[]
-        {
-            "EffectVolume",
-            "EffectVibrato",
-            "EffectVibrato",
-            "EffectPitch",
-            "EffectSpeed",
-            "EffectMod",
-            "EffectMod",
-            "EffectDutyCycle",
-            "EffectNoteDelay",
-            "EffectCutDelay",
-            "EffectVolume",
-            "EffectDutyCycle",
-            "EffectFrame" // Special background rectangle image.
-        };
 
         enum CaptureOperation
         {
@@ -882,8 +866,6 @@ namespace FamiStudio
         {
             UpdateRenderCoords();
 
-            Debug.Assert(EffectImageNames.Length == Note.EffectCount + 1);
-
             whiteKeyBrush = g.CreateHorizontalGradientBrush(0, pianoSizeX, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
             blackKeyBrush = g.CreateHorizontalGradientBrush(0, blackKeySizeX, Theme.DarkGreyFillColor1, Theme.DarkGreyFillColor2);
             whiteKeyPressedBrush = g.CreateHorizontalGradientBrush(0, pianoSizeX, Theme.Darken(Theme.LightGreyFillColor1), Theme.Darken(Theme.LightGreyFillColor2));
@@ -913,7 +895,8 @@ namespace FamiStudio
             bmpGizmoResizeLeftRight = g.GetBitmapAtlasRef("GizmoResizeLeftRight");
             bmpGizmoResizeUpDown = g.GetBitmapAtlasRef("GizmoResizeUpDown");
             bmpGizmoResizeFill = g.GetBitmapAtlasRef("GizmoResizeFill");
-            bmpEffects = g.GetBitmapAtlasRefs(EffectImageNames);
+            bmpEffectFrame = g.GetBitmapAtlasRef("EffectFrame");
+            bmpEffects = g.GetBitmapAtlasRefs(Note.EffectIcons);
 
             if (Platform.IsMobile)
             {
@@ -2437,7 +2420,7 @@ namespace FamiStudio
                                         var iconX = GetPixelForNote(channel.Song.GetPatternStartAbsoluteNoteIndex(p, time)) + (int)(noteSizeX / 2) - effectIconSizeX / 2;
                                         var iconY = effectPosY + effectIconPosY;
 
-                                        r.cf.DrawBitmapAtlas(bmpEffects[EffectImageNames.Length - 1], iconX, iconY, 1.0f, effectBitmapScale, drawOpaque ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1);
+                                        r.cf.DrawBitmapAtlas(bmpEffectFrame, iconX, iconY, 1.0f, effectBitmapScale, drawOpaque ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1);
                                         r.cf.DrawBitmapAtlas(bmpEffects[fx], iconX, iconY, drawOpaque ? 1.0f : 0.4f, effectBitmapScale, Theme.LightGreyFillColor1);
                                         effectPosY += effectIconSizeX + effectIconPosY + 1;
                                     }

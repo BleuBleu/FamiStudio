@@ -563,8 +563,6 @@
     <EmbeddedResource Include="Resources\PlusSmall@2x.tga" />
     <EmbeddedResource Include="Resources\Properties.tga" />
     <EmbeddedResource Include="Resources\Properties@2x.tga" />
-    <EmbeddedResource Include="Resources\Quicksand-Bold.ttf" />
-    <EmbeddedResource Include="Resources\Quicksand-Regular.ttf" />
     <EmbeddedResource Include="Resources\QuickSand10.fnt" />
     <EmbeddedResource Include="Resources\QuickSand10_0.tga" />
     <EmbeddedResource Include="Resources\QuickSand10Bold.fnt" />

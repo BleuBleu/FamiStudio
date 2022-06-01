@@ -27,19 +27,6 @@ namespace FamiStudio
             PlayPiano
         }
 
-        private enum ButtonImageIndices
-        {
-            MobilePianoDrag,
-            MobilePianoRest,
-            Count
-        };
-
-        private readonly string[] ButtonImageNames = new string[]
-        {
-            "MobilePianoDrag",
-            "MobilePianoRest"
-        };
-
         private int whiteKeySizeX;
         private int blackKeySizeX;
         private int octaveSizeX;
@@ -49,7 +36,8 @@ namespace FamiStudio
         Brush blackKeyBrush;
         Brush whiteKeyPressedBrush;
         Brush blackKeyPressedBrush;
-        BitmapAtlas bmpButtonAtlas; // MATTT : Migrate!
+        BitmapAtlasRef bmpMobilePianoDrag;
+        BitmapAtlasRef bmpMobilePianoRest;
 
         private int scrollX = -1;
         private int playAbsNote = -1;
@@ -66,12 +54,11 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(Graphics g)
         {
-            Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
-
             var screenSize = Platform.GetScreenResolution();
             layoutSize = Math.Min(screenSize.Width, screenSize.Height) / 4;
 
-            bmpButtonAtlas       = g.CreateBitmapAtlasFromResources(ButtonImageNames);
+            bmpMobilePianoDrag   = g.GetBitmapAtlasRef("MobilePianoDrag");
+            bmpMobilePianoRest   = g.GetBitmapAtlasRef("MobilePianoRest");
             whiteKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
             blackKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.DarkGreyFillColor1,  Theme.DarkGreyFillColor2);
             whiteKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Darken(Theme.LightGreyFillColor1), Theme.Darken(Theme.LightGreyFillColor2));
@@ -95,7 +82,6 @@ namespace FamiStudio
 
         protected override void OnRenderTerminated()
         {
-            Utils.DisposeAndNullify(ref bmpButtonAtlas);
             Utils.DisposeAndNullify(ref whiteKeyBrush);
             Utils.DisposeAndNullify(ref blackKeyBrush);
             Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
@@ -267,12 +253,12 @@ namespace FamiStudio
                     var r = GetPanRectangle(i, j);
                     if (!r.IsEmpty)
                     {
-                        var size = bmpButtonAtlas.GetElementSize((int)ButtonImageIndices.MobilePianoDrag);
+                        var size = bmpMobilePianoDrag.ElementSize;
                         var scale = Math.Min(r.Width, r.Height) / (float)Math.Min(size.Width, size.Height);
                         var posX = r.X + r.Width / 2 - (int)(size.Width * scale / 2);
                         var posY = r.Height / 2 - (int)(size.Height * scale / 2);
-                        var imageIndex = App.IsRecording && j == 1 ? (int)ButtonImageIndices.MobilePianoRest : (int)ButtonImageIndices.MobilePianoDrag;
-                        cp.DrawBitmapAtlas(bmpButtonAtlas, imageIndex, posX, posY, 0.25f, scale, Color.Black);
+                        var bmp = App.IsRecording && j == 1 ? bmpMobilePianoRest : bmpMobilePianoDrag;
+                        cp.DrawBitmapAtlas(bmp, posX, posY, 0.25f, scale, Color.Black);
                     }
                 }
             }

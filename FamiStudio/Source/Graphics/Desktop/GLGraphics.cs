@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using static GLFWDotNet.GLFW;
 
@@ -118,7 +119,7 @@ namespace FamiStudio
             GL.DeleteTexture(id);
         }
 
-        protected string GetScaledFilename(string name, out bool needsScaling)
+        protected override string GetScaledFilename(string name, out bool needsScaling)
         {
             var assembly = Assembly.GetExecutingAssembly();
 

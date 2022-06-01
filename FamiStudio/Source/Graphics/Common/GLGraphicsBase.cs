@@ -127,6 +127,12 @@ namespace FamiStudio
             return bmp;
         }
 
+        private bool IsAtlasBitmap(string name)
+        {
+            // Ignore fonts and other things we load differently.
+            return name.StartsWith("FamiStudio.Resources.") && name.EndsWith(".tga") && !name.Contains("QuickSand") && !name.Contains("MobileMenu");
+        }
+
         private void BuildBitmapAtlases()
         {
             // Build atlases.
@@ -137,8 +143,7 @@ namespace FamiStudio
 
             foreach (var res in resourceNames)
             {
-                // Ignore fonts (which have a '_' in their name).
-                if (res.StartsWith("FamiStudio.Resources.") && res.EndsWith(".tga") && res.IndexOf('_') < 0)
+                if (IsAtlasBitmap(res))
                 {
                     // Remove any scaling from the name.
                     var at = res.IndexOf('@');

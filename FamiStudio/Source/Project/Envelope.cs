@@ -517,6 +517,17 @@ namespace FamiStudio
             "N163Wave"
         };
 
+        public static readonly string[] Icons = new string[]
+        {
+            "EnvelopeVolume",
+            "EnvelopeArpeggio",
+            "EnvelopePitch",
+            "EnvelopeDuty",
+            "EnvelopeWave",
+            "EnvelopeMod",
+            "EnvelopeWave",
+        };
+
         public static int GetValueForName(string str)
         {
             return Array.IndexOf(Names, str);

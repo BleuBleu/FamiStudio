@@ -718,17 +718,6 @@ namespace FamiStudio
         BitmapAtlasRef[] bmpEnvelopes;
         BitmapAtlasRef[] bmpChannels;
 
-        readonly string[] EnvelopesImageNames = new string[]
-        {
-            "EnvelopeVolume",
-            "EnvelopeArpeggio",
-            "EnvelopePitch",
-            "EnvelopeDuty",
-            "EnvelopeWave",
-            "EnvelopeMod",
-            "EnvelopeWave",
-        };
-
         class Button
         {
             public string text;
@@ -1253,7 +1242,7 @@ namespace FamiStudio
             disabledBrush = g.CreateSolidBrush(Color.FromArgb(64, Color.Black));
 
             bmpExpansions  = g.GetBitmapAtlasRefs(ExpansionType.Icons);
-            bmpEnvelopes   = g.GetBitmapAtlasRefs(EnvelopesImageNames);
+            bmpEnvelopes   = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
             bmpChannels    = g.GetBitmapAtlasRefs(ChannelType.Icons);
             bmpExpand      = g.GetBitmapAtlasRef("InstrumentExpand");
             bmpExpanded    = g.GetBitmapAtlasRef("InstrumentExpanded");
