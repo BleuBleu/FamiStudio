@@ -277,7 +277,7 @@ namespace FamiStudio
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
         {
-            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon2.Error : MessageBoxIcon2.None;
+            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
             return (DialogResult)MessageBoxInternal(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
         }
 

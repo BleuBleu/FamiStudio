@@ -55,7 +55,7 @@ namespace FamiStudio
         protected List<int[]>   freeColArrays = new List<int[]>();
         protected List<short[]> freeIdxArrays = new List<short[]>();
 
-        protected abstract int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false);
+        protected abstract int CreateEmptyTexture(int width, int height, bool alpha, bool filter);
         protected abstract int CreateTexture(SimpleBitmap bmp, bool filter);
         protected abstract string GetScaledFilename(string name, out bool needsScaling);
         public abstract void DeleteTexture(int id);
@@ -241,7 +241,7 @@ namespace FamiStudio
             return new Geometry(points, closed);
         }
 
-        public Bitmap CreateEmptyBitmap(int width, int height, bool alpha = true, bool filter = false)
+        public Bitmap CreateEmptyBitmap(int width, int height, bool alpha, bool filter)
         {
             return new Bitmap(this, CreateEmptyTexture(width, height, alpha, filter), width, height, true, filter);
         }

@@ -423,8 +423,6 @@
     <EmbeddedResource Include="Resources\GizmoResizeLeftRight@2x.tga" />
     <EmbeddedResource Include="Resources\GizmoResizeUpDown.tga" />
     <EmbeddedResource Include="Resources\GizmoResizeUpDown@2x.tga" />
-    <EmbeddedResource Include="Resources\gtk_linux.rc" />
-    <EmbeddedResource Include="Resources\gtk_mac.rc" />
     <EmbeddedResource Include="Resources\Help.tga" />
     <EmbeddedResource Include="Resources\Help@2x.tga" />
     <EmbeddedResource Include="Resources\Instance.tga" />

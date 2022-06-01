@@ -13,7 +13,7 @@ namespace FamiStudio
         private const string GifDecDll = "libGifDec.so";
 #else
         private const string GifDecDll = "GifDec.so";
-#endif
+#endif 
 
         [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "GifOpen")]
         public static extern IntPtr Open(IntPtr data, int swap);

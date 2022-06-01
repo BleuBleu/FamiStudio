@@ -125,7 +125,7 @@ namespace FamiStudio
             GLES11.GlTexSubImage2D(GLES11.GlTexture2d, 0, x, y, width, height, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
         }
 
-        protected override int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false)
+        protected override int CreateEmptyTexture(int width, int height, bool alpha, bool filter)
         {
             var id = new int[1];
             GLES11.GlGenTextures(1, id, 0);
@@ -235,7 +235,7 @@ namespace FamiStudio
             atlasSizeX = Utils.NextPowerOfTwo(atlasSizeX);
             atlasSizeY = Utils.NextPowerOfTwo(atlasSizeY);
 
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true);
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true, true);
             GLES11.GlBindTexture(GLES11.GlTexture2d, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
@@ -507,7 +507,7 @@ namespace FamiStudio
 
             if (!allowReadback)
             {
-                texture = CreateEmptyTexture(imageSizeX, imageSizeY, false);
+                texture = CreateEmptyTexture(imageSizeX, imageSizeY, true, false);
 
                 var fbos = new int[1];
                 GLES11Ext.GlGenFramebuffersOES(1, fbos, 0);

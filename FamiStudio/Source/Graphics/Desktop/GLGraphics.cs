@@ -79,7 +79,7 @@ namespace FamiStudio
             GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Bgra, GL.UnsignedByte, data);
         }
 
-        protected override int CreateEmptyTexture(int width, int height, bool alpha = true, bool filter = false)
+        protected override int CreateEmptyTexture(int width, int height, bool alpha, bool filter)
         {
             int id = GL.GenTexture();
 
@@ -194,7 +194,7 @@ namespace FamiStudio
             atlasSizeX = Utils.NextPowerOfTwo(atlasSizeX);
             atlasSizeY = Utils.NextPowerOfTwo(atlasSizeY);
 
-            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY);
+            var textureId = CreateEmptyTexture(atlasSizeX, atlasSizeY, true, false);
             GL.BindTexture(GL.Texture2D, textureId);
 
             Debug.WriteLine($"Creating bitmap atlas of size {atlasSizeX}x{atlasSizeY} with {names.Length} images:");
