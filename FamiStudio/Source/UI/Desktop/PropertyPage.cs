@@ -560,8 +560,6 @@ namespace FamiStudio
 
             if (columnNames != null)
                 list.RenameColumns(columnNames);
-
-            //list.AutoResizeColumns(); MATTT, Not sure we need this.
         }
 
         public void UpdateGrid(int idx, int rowIdx, int colIdx, object value)

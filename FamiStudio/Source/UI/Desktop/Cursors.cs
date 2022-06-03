@@ -97,7 +97,6 @@ namespace FamiStudio
             SizeNS     = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
             DragCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
             CopyCursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
-            Eyedrop    = glfwCreateStandardCursor(GLFW_ARROW_CURSOR); // MATTT
             IBeam      = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
             Hand       = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
             Move       = glfwCreateStandardCursor(GLFW_HAND_CURSOR);

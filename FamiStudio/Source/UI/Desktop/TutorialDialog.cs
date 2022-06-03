@@ -96,6 +96,7 @@ namespace FamiStudio
             AddControl(checkBoxDontShow);
 
             SetPage(0);
+            CenterToWindow();
         }
 
         private void OpenGif(string filename)
@@ -154,14 +155,8 @@ namespace FamiStudio
         {
             gifTimer -= delta;
 
-            // MATTT : Pass remainder to next frame!
             if (gifTimer <= 0)
                 UpdateGif();
-        }
-
-        protected override void OnShowDialog()
-        {
-            CenterToWindow();
         }
 
         private void SetPage(int idx)

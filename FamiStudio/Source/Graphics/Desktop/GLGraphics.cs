@@ -22,10 +22,9 @@ namespace FamiStudio
 
             if (Platform.IsLinux)
             {
-                // MATTT : Add this call.
-                //var lineWidths = new float[2];
-                //GL.GetFloat(GetPName.LineWidthRange, lineWidths);
-                //supportsLineWidth = lineWidths[1] > 1.0f;
+                var lineWidths = new float[2];
+                GL.GetFloat(GL.LineWidthRange, lineWidths);
+                supportsLineWidth = lineWidths[1] > 1.0f;
             }
         }
 
@@ -99,7 +98,7 @@ namespace FamiStudio
             {
                 var stride = sizeof(int) * bmp.Width;
 
-                // MATTT : Check that!!! + Dont use define.
+                // MATTT : Check that!!! 
                 var format = Platform.IsWindows ? GL.Bgra : GL.Rgba;
 
                 int id = GL.GenTexture();
@@ -486,6 +485,7 @@ namespace FamiStudio
         public const int ColorAttachment0  = 0x8CE0;
         public const int DrawFramebuffer   = 0x8CA9;
         public const int ReadFramebuffer   = 0x8CA8;
+        public const int LineWidthRange    = 0x0B22;
 
         public delegate void ClearDelegate(uint mask);
         public delegate void ClearColorDelegate(float red, float green, float blue, float alpha);
@@ -520,6 +520,7 @@ namespace FamiStudio
         public delegate void FramebufferTexture2DDelegate(int target,int attachment, int textarget, int texture, int level);
         public delegate void ReadPixelsDelegate(int x, int y, int width, int height, int format, int type, IntPtr data);
         public delegate void DeleteFramebuffersDelegate(int n, IntPtr framebuffers);
+        public delegate void GetFloatDelegate(int param, IntPtr floats);
 
         public static ClearDelegate                Clear;
         public static ClearColorDelegate           ClearColor;
@@ -554,6 +555,7 @@ namespace FamiStudio
         public static FramebufferTexture2DDelegate FramebufferTexture2D;
         public static ReadPixelsDelegate           ReadPixels;
         public static DeleteFramebuffersDelegate   DeleteFramebuffers;
+        public static GetFloatDelegate             GetFloatRaw;
 
         public static void StaticInitialize()
         {
@@ -594,6 +596,7 @@ namespace FamiStudio
             FramebufferTexture2D = Marshal.GetDelegateForFunctionPointer<FramebufferTexture2DDelegate>(GetExtProcAddress("glFramebufferTexture2D"));
             ReadPixels           = Marshal.GetDelegateForFunctionPointer<ReadPixelsDelegate>(GetExtProcAddress("glReadPixels"));
             DeleteFramebuffers   = Marshal.GetDelegateForFunctionPointer<DeleteFramebuffersDelegate>(GetExtProcAddress("glDeleteFramebuffers"));
+            GetFloatRaw          = Marshal.GetDelegateForFunctionPointer<GetFloatDelegate>(GetExtProcAddress("glGetFloatv"));
 
             initialized = true;
         }
@@ -602,6 +605,12 @@ namespace FamiStudio
         {
             var addr = glfwGetProcAddress(f + suffix);
             return addr != IntPtr.Zero ? addr : glfwGetProcAddress(f);
+        }
+
+        public static unsafe void GetFloat(int param, float[] floats)
+        {
+            fixed (float* p = &floats[0])
+                GetFloatRaw(param, (IntPtr)p);
         }
 
         public unsafe static int GenFramebuffer()

@@ -112,18 +112,14 @@ namespace FamiStudio
                 x -= button.Width;
                 button.Move(x, height - margin - buttonSize);
             }
+
+            CenterToWindow();
         }
 
         private void Button_Click(Control sender)
         {
             var result = results[Array.IndexOf(buttons, sender as Button)];
             Close(result);
-        }
-
-        protected override void OnShowDialog()
-        {
-            // MATTT : Do we need to wait here to do this?
-            CenterToWindow();
         }
 
         protected override void OnKeyDown(KeyEventArgs e)

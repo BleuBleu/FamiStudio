@@ -161,15 +161,11 @@ namespace FamiStudio
             return c;
         }
 
-
-        // MATTT : See if GLFW (or GTK) has key repeat, if it doesnt, well need to 
-        // handle it ourselves.
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (!enabled)
                 return;
 
-            // MATTT : Copy/paste.
             if (e.Key == Keys.Left || e.Key == Keys.Right)
             {
                 var sign = e.Key == Keys.Left ? -1 : 1;

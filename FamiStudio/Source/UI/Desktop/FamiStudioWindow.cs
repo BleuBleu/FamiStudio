@@ -294,7 +294,6 @@ namespace FamiStudio
 
         private void WindowCloseCallback(IntPtr window)
         {
-            // MATTT : This may pop some async message boxes in the future.
             if (famistudio.TryClosing())
                 quit = true;
         }
@@ -538,8 +537,6 @@ namespace FamiStudio
             }
             else
             {
-                //famistudio.Char(e); // MATTT
-
                 foreach (var ctrl in controls.Controls)
                     ctrl.Char(e);
             }

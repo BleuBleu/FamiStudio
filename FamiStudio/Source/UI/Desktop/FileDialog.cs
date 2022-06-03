@@ -153,6 +153,7 @@ namespace FamiStudio
             AddControl(dropDownType);
 
             UpdatePathBar();
+            CenterToWindow();
         }
 
         private void ButtonComputer_Click(Control sender)
@@ -324,9 +325,10 @@ namespace FamiStudio
                     filename = f.Path;
                     Close(DialogResult.OK);
                 }
-                else
+                else if (Platform.MessageBox($"Overwrite file {f.Name}?", "Confirm Overwrite", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    // MATTT : Ask overwrite!
+                    filename = f.Path;
+                    Close(DialogResult.OK);
                 }
             }
         }
@@ -448,11 +450,6 @@ namespace FamiStudio
         private void ButtonNo_Click(Control sender)
         {
             Close(DialogResult.Cancel);
-        }
-
-        protected override void OnShowDialog()
-        {
-            CenterToWindow();
         }
 
         protected override void OnKeyDown(KeyEventArgs e)

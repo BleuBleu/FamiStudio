@@ -11,8 +11,11 @@
 / Finish OFD
 / MessageBoxes.
 - Add titles to dialogs
-- Remove System.Drawing.
-
+- 
+- BUG : Mobile, can't scroll to last pattern in sequencer
+- BUG : Crash reopening my own MID files?
+- BUG : Victoria lab, change notes per best from 4 -> 3 makes everything go ape shit.
+- BUG : Victoria lab, is it possible to fix the tempo?
 - BUG : Double click doesnt un-solo a channel if you do it really fast??
 - BUG : Check boxes misaligned on mobile
 - BUG : Crash Debug.Assert(custom.groove == null) when converting from FS to FT tempo.
@@ -24,6 +27,7 @@
 - DLG : Pass form to dialogs, avoid ugly .INstance thing.
 - GLFW : Linux OpenFileDialog => Only include TGA files in Linux build.
 - GLFW : Pinch to zoom?
+- GLFW : Mouse wheel, remove hacks, test on all platform.
 - GLFW : Merge FamiStudioControls <-> Forms?
 - GLFW : Add more cursors, 36, 48 and 64.
 - GLFW : Do dash lines still work?

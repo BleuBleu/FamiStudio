@@ -588,7 +588,6 @@ namespace FamiStudio
             }
         }
 
-        // MATTT : Move to platform.
         [DllImport("kernel32.dll")]
         static extern bool AttachConsole(int dwProcessId);
         private const int ATTACH_PARENT_PROCESS = -1;
@@ -609,7 +608,7 @@ namespace FamiStudio
             SendMessage(GetConsoleWindow(), WM_CHAR, (IntPtr)VK_ENTER, IntPtr.Zero);
         }
 
-        private static MultiMediaNotificationListener mmNoticiations; // MATTT : Move to platform?
+        private static MultiMediaNotificationListener mmNoticiations;
 
         private static void InitializeMultiMediaNotifications()
         {
