@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -4200,7 +4199,7 @@ namespace FamiStudio
 
                     if (App.Project.RenameSong(song, newName))
                     {
-                        song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                        song.Color = dlg.Properties.GetPropertyValue<Color>(1);
                         song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
 
                         tempoProperties.ApplyAsync(false, () =>
@@ -4268,7 +4267,7 @@ namespace FamiStudio
 
                     if (App.Project.RenameArpeggio(arpeggio, newName))
                     {
-                        arpeggio.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                        arpeggio.Color = dlg.Properties.GetPropertyValue<Color>(1);
                         ArpeggioColorChanged?.Invoke(arpeggio);
                         RefreshButtons();
                         App.UndoRedoManager.EndTransaction();
@@ -4297,7 +4296,7 @@ namespace FamiStudio
 
                 if (App.Project.RenameSample(sample, newName))
                 {
-                    sample.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
+                    sample.Color = dlg.Properties.GetPropertyValue<Color>(1);
                     DPCMSampleColorChanged?.Invoke(sample);
                     RefreshButtons();
                     App.UndoRedoManager.EndTransaction();

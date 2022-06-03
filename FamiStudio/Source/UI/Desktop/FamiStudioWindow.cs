@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Drawing;
 using System.Diagnostics;
 using static GLFWDotNet.GLFW;
 
@@ -309,6 +308,9 @@ namespace FamiStudio
         {
             Debug.WriteLine($"BUTTON! Button={button}, Action={action}, Mods={mods}");
 
+            if (quit)
+                return;
+
             if (action == GLFW_PRESS)
             {
                 if (captureControl != null)
@@ -402,6 +404,9 @@ namespace FamiStudio
         {
             Debug.WriteLine($"POS! X={xpos}, Y={ypos}");
 
+            if (quit)
+                return;
+
             // MATTT : Do we get fractional coords with DPI scaling?
             lastCursorX = (int)xpos;
             lastCursorY = (int)ypos;
@@ -451,7 +456,7 @@ namespace FamiStudio
         {
             Debug.WriteLine($"ENTER! entered={entered}");
 
-            if (entered == 0)
+            if (!quit && entered == 0)
             {
                 if (hoverControl != null && (!controls.IsContextMenuActive || hoverControl == ContextMenu))
                 {
@@ -464,6 +469,9 @@ namespace FamiStudio
         private void ScrollCallback(IntPtr window, double xoffset, double yoffset)
         {
             Debug.WriteLine($"SCROLL! X={xoffset}, Y={yoffset}");
+
+            if (quit)
+                return;
 
             var ctrl = controls.GetControlAtCoord(lastCursorX, lastCursorY, out int cx, out int cy);
             if (ctrl != null)
@@ -497,6 +505,9 @@ namespace FamiStudio
         {
             Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode}, Action = {action}, Mods = {mods}");
 
+            if (quit)
+                return;
+
             modifiers.Set(mods);
 
             var down = action == GLFW_PRESS || action == GLFW_REPEAT;
@@ -526,6 +537,9 @@ namespace FamiStudio
         {
             Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
 
+            if (quit)
+                return;
+
             var e = new CharEventArgs((char)codepoint, modifiers.Modifiers);
 
             if (controls.IsContextMenuActive)
@@ -552,7 +566,7 @@ namespace FamiStudio
 
         private unsafe void DropCallback(IntPtr window, int count, IntPtr paths)
         {
-            if (count > 0)
+            if (!quit && count > 0)
             {
                 string filename;
 
@@ -626,7 +640,7 @@ namespace FamiStudio
             var delta = glfwGetTime() - delayedRightClickStartTime;
             var clear = forceClear;
 
-            if (delayedRightClickArgs != null && (delta > DelayedRightClickTime || !checkTime) && (checkCtrl == delayedRightClickControl || checkCtrl == null))
+            if (!quit && delayedRightClickArgs != null && (delta > DelayedRightClickTime || !checkTime) && (checkCtrl == delayedRightClickControl || checkCtrl == null))
             {
                 Debug.WriteLine($"ConditionalEmitDelayedRightClick delayedRightClickControl={delayedRightClickControl} checkTime={checkTime} deltaMs={delta} forceClear={forceClear}");
                 delayedRightClickControl.MouseDownDelayed(delayedRightClickArgs);

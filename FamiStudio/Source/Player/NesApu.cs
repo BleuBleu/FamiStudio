@@ -424,7 +424,7 @@ namespace FamiStudio
             public EpsmRegisterValues Epsm;
 
             // Extra information for the register viewer.
-            public System.Drawing.Color[] InstrumentColors = new System.Drawing.Color[ChannelType.Count];
+            public Color[] InstrumentColors = new Color[ChannelType.Count];
             public N163InstrumentRange[]  N163InstrumentRanges = new N163InstrumentRange[8];
 
             private bool pal = false;
