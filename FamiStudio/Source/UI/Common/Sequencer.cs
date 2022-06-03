@@ -1111,9 +1111,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownChannelName(MouseEventArgs e)
         {
-            bool left = e.Left;
-
-            if (IsMouseInTrackName(e) && left)
+            if (e.Left && IsMouseInTrackName(e))
             { 
                 var trackIcon = GetTrackIconForPos(e);
                 var ghostIcon = GetTrackGhostForPos(e);
@@ -1215,16 +1213,13 @@ namespace FamiStudio
 
         private bool HandleMouseDownPatternArea(MouseEventArgs e)
         {
-            bool left  = e.Left;
-            bool right = e.Right;
-
             bool inPatternZone = GetPatternForCoord(e.X, e.Y, out var location);
 
             if (inPatternZone)
             {
                 var pattern = Song.GetPatternInstance(location);
 
-                if (left)
+                if (e.Left)
                 {
                     var ctrl  = ModifierKeys.Control;
                     var shift = ModifierKeys.Shift;
@@ -1252,7 +1247,7 @@ namespace FamiStudio
 
                     return true;
                 }
-                else if (right)
+                else if (e.Right)
                 {
                     e.DelayRightClick(); // Need to wait to see difference between context menu or selection.
                     return true;
@@ -1264,10 +1259,7 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            bool left  = e.Left;
-            bool right = e.Right;
-
-            if (captureOperation != CaptureOperation.None && (left || right))
+            if (captureOperation != CaptureOperation.None && (e.Left || e.Right))
                 return;
 
             UpdateCursor();
@@ -1444,7 +1436,7 @@ namespace FamiStudio
         {
             bool inPatternZone = GetPatternForCoord(x, y, out var location);
 
-            if (Settings.DoubleClickDelete && inPatternZone)
+            if (inPatternZone)
             {
                 var pattern = Song.GetPatternInstance(location);
 
@@ -2676,9 +2668,7 @@ namespace FamiStudio
 
         protected bool HandleMouseDoubleClickChannelName(MouseEventArgs e)
         {
-            bool left = e.Left;
-
-            if (left && IsMouseInTrackName(e))
+            if (e.Left && IsMouseInTrackName(e))
             {
                 var trackIcon = GetTrackIconForPos(e);
                 

@@ -18,16 +18,16 @@ namespace FamiStudio
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
 
-        private int tooltipTopMargin  = DpiScaling.ScaleForMainWindow(2);
-        private int tooltipSideMargin = DpiScaling.ScaleForMainWindow(4);
-        private int tooltipOffsetY = DpiScaling.ScaleForMainWindow(24);
+        private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
+        private int tooltipSideMargin = DpiScaling.ScaleForWindow(4);
+        private int tooltipOffsetY = DpiScaling.ScaleForWindow(24);
 
         private CommandList commandList;
         private CommandList commandListForeground;
 
         public CommandList CommandList => commandList;
         public CommandList CommandListForeground => commandListForeground;
-        public DialogResult DialogResult2 => result;
+        public DialogResult DialogResult => result;
 
         public IReadOnlyCollection<Control> Controls => controls.AsReadOnly();
 
@@ -52,6 +52,16 @@ namespace FamiStudio
             visible = false;
             // MATTT: Add the form to the constructor eventually.
             FamiStudioWindow.Instance.InitDialog(this);
+        }
+
+        public DialogResult ShowDialog()
+        {
+            ShowDialogAsync(null, (r) => { });
+            
+            while (result == DialogResult.None)
+                ParentWindow.RunEventLoop(true);
+
+            return result;
         }
 
         public void ShowDialogAsync(object parent, Action<DialogResult> cb) // MATTT : Remove parent, pass in contructor.

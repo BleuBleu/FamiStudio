@@ -10,13 +10,13 @@ namespace FamiStudio
 
         public ImageBox(string image)
         {
-            height = DpiScaling.ScaleForMainWindow(24);
+            height = DpiScaling.ScaleForWindow(24);
             atlasImageName = image;
         }
 
         public ImageBox(Bitmap b)
         {
-            height = DpiScaling.ScaleForMainWindow(24);
+            height = DpiScaling.ScaleForWindow(24);
             bmp = b;
         }
 

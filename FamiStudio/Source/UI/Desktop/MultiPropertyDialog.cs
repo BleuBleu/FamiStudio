@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace FamiStudio
 {
-    public partial class MultiPropertyDialog : Dialog
+    public class MultiPropertyDialog : Dialog
     {
         class PropertyPageTab
         {
@@ -14,9 +14,9 @@ namespace FamiStudio
 
         int selectedIndex = 0;
         List<PropertyPageTab> tabs = new List<PropertyPageTab>();
-        private int margin = DpiScaling.ScaleForMainWindow(8);
+        private int margin = DpiScaling.ScaleForWindow(8);
         private int tabsSizeX;
-        private int tabsSizeY = DpiScaling.ScaleForMainWindow(32);
+        private int tabsSizeY = DpiScaling.ScaleForWindow(32);
 
         private Button buttonYes;
         private Button buttonNo;
@@ -24,8 +24,8 @@ namespace FamiStudio
         public MultiPropertyDialog(string title, int width, int height, int tabsWidth = 150)
         {
             // MATTT : Avoid using the DpiScaling, we are a GLControl, we can access.
-            tabsSizeX = DpiScaling.ScaleForMainWindow(tabsWidth);
-            Move(0, 0, DpiScaling.ScaleForMainWindow(width), DpiScaling.ScaleForMainWindow(width));
+            tabsSizeX = DpiScaling.ScaleForWindow(tabsWidth);
+            Move(0, 0, DpiScaling.ScaleForWindow(width), DpiScaling.ScaleForWindow(width));
             Init();
         }
 
@@ -37,12 +37,12 @@ namespace FamiStudio
         {
             buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
-            buttonYes.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
+            buttonYes.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
             buttonYes.ToolTip = "Accept";
 
             buttonNo = new Button("No", null);
             buttonNo.Click += ButtonNo_Click;
-            buttonNo.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
+            buttonNo.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
             buttonNo.ToolTip = "Cancel";
 
             AddControl(buttonYes);

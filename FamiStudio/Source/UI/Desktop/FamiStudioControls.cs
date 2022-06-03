@@ -64,9 +64,9 @@ namespace FamiStudio
             width  = Math.Max(1, w);
             height = Math.Max(1, h);
 
-            int toolBarHeight        = DpiScaling.ScaleForMainWindow(40);
-            int projectExplorerWidth = DpiScaling.ScaleForMainWindow(300);
-            int sequencerHeight      = pianoRoll.IsMaximized ? 1 : DpiScaling.ScaleForMainWindow(sequencer.ComputeDesiredSizeY());
+            int toolBarHeight        = DpiScaling.ScaleForWindow(40);
+            int projectExplorerWidth = DpiScaling.ScaleForWindow(300);
+            int sequencerHeight      = pianoRoll.IsMaximized ? 1 : DpiScaling.ScaleForWindow(sequencer.ComputeDesiredSizeY());
 
             toolbar.Move(0, 0, width, toolBarHeight);
             projectExplorer.Move(width - projectExplorerWidth, toolBarHeight, projectExplorerWidth, height - toolBarHeight);

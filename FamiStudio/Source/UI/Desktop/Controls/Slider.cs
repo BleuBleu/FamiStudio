@@ -33,9 +33,9 @@ namespace FamiStudio
             increment = inc;
             label = showLabel;
             format = fmt;
-            height = DpiScaling.ScaleForMainWindow(24);
-            labelSize   = label ? DpiScaling.ScaleForMainWindow(50) : 0;
-            labelMargin = label ? DpiScaling.ScaleForMainWindow(4) : 0;
+            height = DpiScaling.ScaleForWindow(24);
+            labelSize   = label ? DpiScaling.ScaleForWindow(50) : 0;
+            labelMargin = label ? DpiScaling.ScaleForWindow(4) : 0;
         }
 
         protected override void OnRenderInitialized(Graphics g)

@@ -7,13 +7,13 @@ namespace FamiStudio
         private string text;
         private string url;
         private bool hover;
-        private int lineOffset = DpiScaling.ScaleForMainWindow(4);
+        private int lineOffset = DpiScaling.ScaleForWindow(4);
 
         public LinkLabel(string txt, string link)
         {
             text = txt;
             url = link;
-            height = DpiScaling.ScaleForMainWindow(24);
+            height = DpiScaling.ScaleForWindow(24);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

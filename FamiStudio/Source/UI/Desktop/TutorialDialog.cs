@@ -40,12 +40,12 @@ namespace FamiStudio
         private Label label;
         private CheckBox checkBoxDontShow;
 
-        private int margin     = DpiScaling.ScaleForMainWindow(8);
-        private int imageSizeX = DpiScaling.ScaleForMainWindow(960);
-        private int imageSizeY = DpiScaling.ScaleForMainWindow(540);
-        private int labelSizeY = DpiScaling.ScaleForMainWindow(36);
-        private int buttonSize = DpiScaling.ScaleForMainWindow(36);
-        private int checkSizeY = DpiScaling.ScaleForMainWindow(16);
+        private int margin     = DpiScaling.ScaleForWindow(8);
+        private int imageSizeX = DpiScaling.ScaleForWindow(960);
+        private int imageSizeY = DpiScaling.ScaleForWindow(540);
+        private int labelSizeY = DpiScaling.ScaleForWindow(36);
+        private int buttonSize = DpiScaling.ScaleForWindow(36);
+        private int checkSizeY = DpiScaling.ScaleForWindow(16);
 
         private float gifTimer = 0.0f;
         private IntPtr gif;
@@ -127,9 +127,9 @@ namespace FamiStudio
             {
                 gifData = null;
                 gifBuffer = null;
-                gifHandle.Free();
                 Gif.Close(gif);
                 gif = IntPtr.Zero;
+                gifHandle.Free();
                 gifBmp.Dispose();
                 gifBmp = null;
             }

@@ -423,6 +423,11 @@ namespace FamiStudio
             return System.Drawing.Point.Empty;
         }
 
+        public void RunEventLoop(bool allowSleep = false)
+        {
+            Debug.Assert(false);
+        }
+
         public bool IsKeyDown(Keys key)
         {
             return false;

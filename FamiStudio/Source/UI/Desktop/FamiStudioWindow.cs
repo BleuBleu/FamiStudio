@@ -222,9 +222,9 @@ namespace FamiStudio
             lastTickTime = tickTime;
         }
 
-        public void RunEventLoop()
+        public void RunEventLoop(bool allowSleep = false)
         {
-            RunIteration(false);
+            RunIteration(allowSleep);
         }
 
         protected void RenderFrameAndSwapBuffer(bool force = false)

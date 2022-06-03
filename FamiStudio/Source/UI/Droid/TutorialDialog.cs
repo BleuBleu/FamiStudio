@@ -220,9 +220,9 @@ namespace FamiStudio
                 StopGifTask();
                 gifData = null;
                 gifBuffer = null;
-                gifHandle.Free();
                 Gif.Close(gif);
                 gif = IntPtr.Zero;
+                gifHandle.Free();
             }
         }
         private unsafe int AdvanceFrame()
@@ -239,14 +239,17 @@ namespace FamiStudio
 
         private void UpdateImage()
         {
-            lock (gifBuffer)
+            if (gifBuffer != null)
             {
-                var pixels = gifBmp.LockPixels();
-                Marshal.Copy(gifBuffer, 0, pixels, gifBuffer.Length);
-                gifBmp.UnlockPixels();
-            }
+                lock (gifBuffer)
+                {
+                    var pixels = gifBmp.LockPixels();
+                    Marshal.Copy(gifBuffer, 0, pixels, gifBuffer.Length);
+                    gifBmp.UnlockPixels();
+                }
 
-            imageView.Invalidate();
+                imageView.Invalidate();
+            }
         }
 
         private void StartGifTask()

@@ -10,11 +10,13 @@ namespace FamiStudio
         public delegate void ButtonPressedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
+        public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
+        public event HeaderCellClickedDelegate HeaderCellClicked;
 
         private int scroll;
         private int maxScroll;
@@ -31,6 +33,7 @@ namespace FamiStudio
         private int[] columnOffsets;
         private bool[] columnEnabled;
         private bool hasAnyDropDowns;
+        private bool fullRowSelect;
         private ColumnDesc[] columns;
 
         private bool draggingScrollbars;
@@ -46,12 +49,13 @@ namespace FamiStudio
         private BitmapAtlasRef bmpCheckOn;
         private BitmapAtlasRef bmpCheckOff;
 
-        private int margin         = DpiScaling.ScaleForMainWindow(4);
-        private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
-        private int rowHeight      = DpiScaling.ScaleForMainWindow(20);
-        private int checkBoxWidth  = DpiScaling.ScaleForMainWindow(20);
+        private int margin         = DpiScaling.ScaleForWindow(4);
+        private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
+        private int rowHeight      = DpiScaling.ScaleForWindow(20);
+        private int checkBoxWidth  = DpiScaling.ScaleForWindow(20);
 
         public int ItemCount => data.GetLength(0);
+        public bool FullRowSelect { get => fullRowSelect; set => fullRowSelect = value; }
 
         public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
         {
@@ -156,7 +160,7 @@ namespace FamiStudio
             for (int i = 0; i < columns.Length - 1; i++)
             {
                 var col = columns[i];
-                var colWidth = col.Type == ColumnType.CheckBox ? checkBoxWidth : (int)Math.Round(col.Width * actualWidth);
+                var colWidth = col.Type == ColumnType.CheckBox || col.Type == ColumnType.Image ? checkBoxWidth : (int)Math.Round(col.Width * actualWidth);
 
                 columnWidths[i] = colWidth;
                 columnOffsets[i] = totalWidth;
@@ -168,6 +172,12 @@ namespace FamiStudio
             columnOffsets[columns.Length] = width - 1;
 
             maxScroll = data != null ? Math.Max(0, data.GetLength(0) - numItemRows) : 0;
+            scroll = Utils.Clamp(scroll, 0, maxScroll);
+        }
+
+        public void ResetScroll()
+        {
+            SetAndMarkDirty(ref scroll, 0);
         }
 
         protected override void OnRenderInitialized(Graphics g)
@@ -192,10 +202,9 @@ namespace FamiStudio
             row = -1;
             col = -1;
 
-            var minY = numHeaderRows * rowHeight;
             var maxX = width - (GetScrollBarParams(out _, out _) ? scrollBarWidth : 0);
 
-            if (x < 0 || x > maxX || y < minY || y > height)
+            if (x < 0 || x > maxX || y > height)
                 return false;
 
             for (int i = 1; i < columnOffsets.Length; i++)
@@ -213,10 +222,11 @@ namespace FamiStudio
                 return false;
             }
 
+            // Row -1 will mean header.
             row = y / rowHeight - numHeaderRows + scroll;
 
             Debug.Assert(col >= 0);
-            return true;
+            return row >= 0;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -302,11 +312,12 @@ namespace FamiStudio
 
             if (valid)
             {
-                var left  = e.Left;
-                var right = e.Right;
-
-                if (left || right)
-                    CellClicked?.Invoke(this, left, row, col);
+                if (e.Left || e.Right)
+                    CellClicked?.Invoke(this, e.Left, row, col);
+            }
+            else if (e.Left && row < 0 && col >= 0)
+            {
+                HeaderCellClicked?.Invoke(this, col);
             }
         }
 
@@ -385,7 +396,7 @@ namespace FamiStudio
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
-            if (e.Left && PixelToCell(e.X, e.Y, out var row, out var col))
+            if (e.Left && PixelToCell(e.X, e.Y, out var row, out var col) && row < data.GetLength(0))
             {
                 CellDoubleClicked?.Invoke(this, row, col);
             }
@@ -437,7 +448,7 @@ namespace FamiStudio
             if (numHeaderRows != 0)
             {
                 c.FillRectangle(0, 0, width, rowHeight, ThemeResources.DarkGreyLineBrush3);
-                for (var j = 0; j < data.GetLength(1); j++) 
+                for (var j = 0; j < columns.Length; j++) 
                     c.DrawText(columns[j].Name, ThemeResources.FontMedium, columnOffsets[j] + margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, rowHeight);
                 baseY = rowHeight;
             }
@@ -447,7 +458,12 @@ namespace FamiStudio
             {
                 // Hovered cell
                 if (hoverCol >= 0 && (hoverRow - scroll) >= 0 && hoverRow < data.GetLength(0))
-                    c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, ThemeResources.DarkGreyLineBrush3);
+                {
+                    if (fullRowSelect)
+                        c.FillRectangle(0, (numHeaderRows + hoverRow - scroll) * rowHeight, width, (numHeaderRows + hoverRow - scroll + 1) * rowHeight, ThemeResources.DarkGreyLineBrush3);
+                    else
+                        c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, ThemeResources.DarkGreyLineBrush3);
+                }
 
                 for (int i = 0, k = scroll; i < numItemRows && k < data.GetLength(0); i++, k++) // Rows
                 {
@@ -502,7 +518,7 @@ namespace FamiStudio
                             }
                             case ColumnType.Label:
                             {
-                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, rowHeight);
+                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
                                 break;
                             }
                             case ColumnType.CheckBox:
@@ -513,6 +529,12 @@ namespace FamiStudio
                                 c.DrawRectangle(0, 0, bmpCheckOn.ElementSize.Width - 1, bmpCheckOn.ElementSize.Height - 1, ThemeResources.LightGreyFillBrush1);
                                 c.DrawBitmapAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, 1, Theme.LightGreyFillColor1);
                                 c.PopTransform();
+                                break;
+                            }
+                            case ColumnType.Image:
+                            {
+                                var bmp = g.GetBitmapAtlasRef((string)val);
+                                c.DrawBitmapAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, Theme.LightGreyFillColor1);
                                 break;
                             }
                         }

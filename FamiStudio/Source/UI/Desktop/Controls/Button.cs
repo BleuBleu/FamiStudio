@@ -12,7 +12,7 @@ namespace FamiStudio
         private string text;
         private string imageName;
         private BitmapAtlasRef bmp;
-        private int margin = DpiScaling.ScaleForMainWindow(4);
+        private int margin = DpiScaling.ScaleForWindow(4);
         private bool bold;
         private bool border;
         private bool hover;
@@ -46,6 +46,13 @@ namespace FamiStudio
         {
             get { return border; }
             set { border = value; MarkDirty(); }
+        }
+
+        public void AutosizeWidth(int imageSize)
+        {
+            // Only bothered to support this one use case.
+            Debug.Assert(!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(imageName));
+            width = margin * 3 + ScaleForWindow(imageSize) + ThemeResources.FontMedium.MeasureString(text, false);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

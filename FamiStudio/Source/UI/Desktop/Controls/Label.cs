@@ -9,7 +9,7 @@ namespace FamiStudio
         public Label(string txt, bool multi = false)
         {
             text = txt;
-            height = DpiScaling.ScaleForMainWindow(24);
+            height = DpiScaling.ScaleForWindow(24);
             multiline = multi;
         }
 

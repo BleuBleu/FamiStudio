@@ -5158,9 +5158,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownDPCMMapping(MouseEventArgs e)
         {
-            bool left = e.Left;
-
-            if (left && GetLocationForCoord(e.X, e.Y, out var location, out var noteValue))
+            if (e.Left && GetLocationForCoord(e.X, e.Y, out var location, out var noteValue))
             {
                 if (App.Project.NoteSupportsDPCM(noteValue))
                 {
@@ -5758,7 +5756,7 @@ namespace FamiStudio
 
         private bool HandleTouchDoubleClickChannelNote(int x, int y)
         {
-            if (Settings.DoubleClickDelete && GetLocationForCoord(x, y, out var mouseLocation, out byte noteValue))
+            if (GetLocationForCoord(x, y, out var mouseLocation, out byte noteValue))
             {
                 if (mouseLocation.PatternIndex >= Song.Length)
                     return true;

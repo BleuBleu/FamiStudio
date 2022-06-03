@@ -14,9 +14,9 @@ namespace FamiStudio
         private int captureMouseY;
         private int maxScroll = 0;
 
-        private int margin         = DpiScaling.ScaleForMainWindow(4);
-        private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
-        private int lineHeight     = DpiScaling.ScaleForMainWindow(16);
+        private int margin         = DpiScaling.ScaleForWindow(4);
+        private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
+        private int lineHeight     = DpiScaling.ScaleForWindow(16);
 
         public LogTextBox(int lineCount)
         {

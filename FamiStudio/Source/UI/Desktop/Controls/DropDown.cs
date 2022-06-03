@@ -27,9 +27,9 @@ namespace FamiStudio
         private int captureMouseY;
         private int maxListScroll = 0;
 
-        private int margin         = DpiScaling.ScaleForMainWindow(4);
-        private int scrollBarWidth = DpiScaling.ScaleForMainWindow(10);
-        private int rowHeight      = DpiScaling.ScaleForMainWindow(24);
+        private int margin         = DpiScaling.ScaleForWindow(4);
+        private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
+        private int rowHeight      = DpiScaling.ScaleForWindow(24);
 
         public DropDown(string[] list, int index, bool trans = false)
         {

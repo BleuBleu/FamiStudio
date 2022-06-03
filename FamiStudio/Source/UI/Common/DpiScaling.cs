@@ -25,13 +25,13 @@ namespace FamiStudio
             return scale * windowScaling;
         }
 
-        public static int ScaleForMainWindow(float val)
+        public static int ScaleForWindow(float val)
         {
             Debug.Assert(initialized);
             return (int)Math.Round(val * windowScaling);
         }
 
-        public static float ScaleForMainWindowFloat(float val)
+        public static float ScaleForWindowFloat(float val)
         {
             Debug.Assert(initialized);
             return val * windowScaling;

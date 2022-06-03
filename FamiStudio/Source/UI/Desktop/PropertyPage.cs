@@ -235,7 +235,7 @@ namespace FamiStudio
             var button = new Button(null, text);
             button.Border = true;
             button.Click += Button_Click;
-            button.Resize(button.Width, DpiScaling.ScaleForMainWindow(32));
+            button.Resize(button.Width, DpiScaling.ScaleForWindow(32));
             button.ToolTip = tooltip;
             return button;
         }
@@ -613,7 +613,7 @@ namespace FamiStudio
             else
                 prop.warningIcon.AtlasImageName = WarningIcons[(int)type];
 
-            prop.warningIcon.Resize(DpiScaling.ScaleForMainWindow(16), DpiScaling.ScaleForMainWindow(16));
+            prop.warningIcon.Resize(DpiScaling.ScaleForWindow(16), DpiScaling.ScaleForWindow(16));
             prop.warningIcon.Visible = !string.IsNullOrEmpty(comment);
             prop.warningIcon.ToolTip = comment;
         }
@@ -707,7 +707,7 @@ namespace FamiStudio
         
         public void Build(bool advanced = false)
         {
-            var margin = DpiScaling.ScaleForMainWindow(8);
+            var margin = DpiScaling.ScaleForWindow(8);
             var maxLabelWidth = 0;
             var propertyCount = advanced || advancedPropertyStart < 0 ? properties.Count : advancedPropertyStart;
 
@@ -732,7 +732,7 @@ namespace FamiStudio
             }
 
             int totalHeight = 0;
-            int warningWidth = showWarnings ? DpiScaling.ScaleForMainWindow(16) + margin : 0;
+            int warningWidth = showWarnings ? DpiScaling.ScaleForWindow(16) + margin : 0;
 
             for (int i = 0; i < propertyCount; i++)
             {

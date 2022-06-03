@@ -104,8 +104,17 @@ namespace FamiStudio
         private const int OFN_FILEMUSTEXIST = 0x00001000;
 
         // MATTT : Use parent window or Instance, not BOTH.
+        // MATTT : Update default path!
         public static unsafe string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, IntPtr parentWindow = default(IntPtr))
         {
+#if true
+            var dlg = new FileDialog(FileDialog.Mode.Open, title, defaultPath, extensions);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                defaultPath = Path.GetDirectoryName(dlg.SelectedPath);
+                return new[] { dlg.SelectedPath };
+            }
+#else
             OpenFileName ofn = new OpenFileName();
 
             var str = new char[4096];
@@ -150,6 +159,7 @@ namespace FamiStudio
                     return strings.ToArray();
                 }
             }
+#endif
 
             return null;
         }
@@ -164,8 +174,17 @@ namespace FamiStudio
             return filenames[0];
         }
 
+        // MATTT : Update default path!
         public static unsafe string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
+#if true
+            var dlg = new FileDialog(FileDialog.Mode.Save, title, defaultPath, extensions);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                defaultPath = Path.GetDirectoryName(dlg.SelectedPath);
+                return dlg.SelectedPath;
+            }
+#else
             OpenFileName ofn = new OpenFileName();
 
             var str = new char[4096];
@@ -188,6 +207,7 @@ namespace FamiStudio
                     return new string(str, 0, len);
                 }
             }
+#endif
 
             return null;
         }
@@ -238,6 +258,7 @@ namespace FamiStudio
             return 0;
         }
 
+        // MATTT : Update default path!
         public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
         {
             var sb = new StringBuilder(4096);

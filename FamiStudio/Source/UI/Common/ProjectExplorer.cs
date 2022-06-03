@@ -3142,13 +3142,11 @@ namespace FamiStudio
 
         private bool HandleMouseDownSongButton(MouseEventArgs e, Button button, int buttonIdx, SubButtonType subButtonType)
         {
-            var left  = e.Left;
-
-            if (left && subButtonType == SubButtonType.Properties)
+            if (e.Left && subButtonType == SubButtonType.Properties)
             {
                 EditSongProperties(new Point(e.X, e.Y), button.song);
             }
-            else if (left && subButtonType == SubButtonType.Max)
+            else if (e.Left && subButtonType == SubButtonType.Max)
             {
                 App.SelectedSong = button.song;
                 StartCaptureOperation(e.X, e.Y, CaptureOperation.DragSong, buttonIdx);
@@ -3231,21 +3229,17 @@ namespace FamiStudio
 
         private bool HandleMouseDownParamSliderButton(MouseEventArgs e, Button button, int buttonIdx)
         {
-            bool left  = e.Left;
-
-            if (left)
+            if (e.Left)
             {
-                if (left)
-                {
-                    StartMoveSlider(e.X, e.Y, button, buttonIdx);
-                }
-                else
-                {
-                    App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-                    button.param.SetValue(button.param.DefaultValue);
-                    App.UndoRedoManager.EndTransaction();
-                    MarkDirty();
-                }
+                StartMoveSlider(e.X, e.Y, button, buttonIdx);
+            }
+            else
+            {
+                // MATTT : Wait, isnt there a context menu here?
+                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
+                button.param.SetValue(button.param.DefaultValue);
+                App.UndoRedoManager.EndTransaction();
+                MarkDirty();
             }
 
             return true;
@@ -3317,9 +3311,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownParamCheckboxButton(MouseEventArgs e, Button button)
         {
-            bool left  = e.Left;
-
-            if (left)
+            if (e.Left)
                 ClickParamCheckbox(e.X, e.Y, button, false);
 
             return true;
@@ -3327,9 +3319,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownParamListButton(MouseEventArgs e, Button button)
         {
-            bool left  = e.Left;
-
-            if (left)
+            if (e.Left)
                 ClickParamListButton(e.X, e.Y, button, false);
 
             return true;
@@ -3337,9 +3327,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownParamTabs(MouseEventArgs e, Button button)
         {
-            bool left = e.Left;
-
-            if (left)
+            if (e.Left)
                 ClickParamTabsButton(e.X, e.Y, button);
 
             return true;
@@ -3347,11 +3335,8 @@ namespace FamiStudio
 
         private bool HandleMouseDownArpeggioHeaderButton(MouseEventArgs e, SubButtonType subButtonType)
         {
-            if (e.Left)
-            {
-                if (subButtonType == SubButtonType.Add)
-                    AddArpeggio();
-            }
+            if (e.Left && subButtonType == SubButtonType.Add)
+                AddArpeggio();
 
             return true;
         }

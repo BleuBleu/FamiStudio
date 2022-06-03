@@ -40,9 +40,9 @@ namespace FamiStudio
         private Brush backBrush;
         private Brush selBrush;
         
-        private int topMargin    = DpiScaling.ScaleForMainWindow(3);
-        private int sideMargin   = DpiScaling.ScaleForMainWindow(4);
-        private int scrollAmount = DpiScaling.ScaleForMainWindow(20);
+        private int topMargin    = DpiScaling.ScaleForWindow(3);
+        private int sideMargin   = DpiScaling.ScaleForWindow(4);
+        private int scrollAmount = DpiScaling.ScaleForWindow(20);
 
         public Color ForeColor      { get => foreColor;     set { foreColor     = value; foreBrush     = null; MarkDirty(); } }
         public Color DisabledColor  { get => disabledColor; set { disabledColor = value; disabledBrush = null; MarkDirty(); } }
@@ -51,7 +51,7 @@ namespace FamiStudio
 
         public TextBox(string txt)
         {
-            height = DpiScaling.ScaleForMainWindow(24);
+            height = DpiScaling.ScaleForWindow(24);
             text = txt;
         }
 

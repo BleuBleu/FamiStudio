@@ -8,22 +8,25 @@
 
 4.0.0
 =====
-P0:
-- Context menu polish:.
-	- Review all tooltips (lots of {MouseRight} left for delete, etc.)
-	- Tooltips where a context menu can appear.
-	- When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
-	- Sequencer : Add select all there too?
-	- Sometimes i feel context menu appear instead of selection... Test more.
-- Widgets:
-	- Make sure we use the lightest grey (grey2) for all text. Or maybe not, we use it for highlight...
-	- Pass form to dialogs, avoid ugly .INstance thing.
-- GLFW:
-	- Pinch to zoom?
-  - Merge FamiStudioControls <-> Forms.
-	- Add more cursors, 36, 48 and 64.
-	/ Remove all dependencies to WinForms, GTK, etc.
-- MAKE SURE I DIDNT MESS UP THE DEMO SONGS! I SUBMITTED TONS OF SHIT.
+- Finish OFD
+
+- BUG : Double click doesnt un-solo a channel if you do it really fast??
+- BUG : Check boxes misaligned on mobile
+- CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
+- CTX : Tooltips where a context menu can appear.
+- CTX : When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
+- CTX : Sequencer : Add select all there too?
+- CTX : Sometimes i feel context menu appear instead of selection... Test more.
+- DLG : Pass form to dialogs, avoid ugly .INstance thing.
+- GLFW : Linux OpenFileDialog => Only include TGA files in Linux build.
+- GLFW : Pinch to zoom?
+- GLFW : Merge FamiStudioControls <-> Forms?
+- GLFW : Add more cursors, 36, 48 and 64.
+- GLFW : Do dash lines still work?
+- GLFW : Drag/drop samples, fti, etc.
+- TEST : Make sure the demo songs are 100% intact.
+- MISC : Is FamiStudio text UTF8? Should it be?
+
 P1:
 - Validation errors in JTS when deleting some instruments.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
@@ -49,7 +52,10 @@ P2:
 Testing:
 ========
 - Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
-- 
+
+Batch convert PNG -> TGA
+==========================
+"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path C:\Dump\PngToTga\Tga -compress RLE -format tga *.png
 
 Linux notes 
 =========== 

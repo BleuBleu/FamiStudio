@@ -9,7 +9,7 @@ namespace FamiStudio
 
         public ProgressBar()
         {
-            height = DpiScaling.ScaleForMainWindow(10);
+            height = DpiScaling.ScaleForWindow(10);
         }
 
         public float Progress

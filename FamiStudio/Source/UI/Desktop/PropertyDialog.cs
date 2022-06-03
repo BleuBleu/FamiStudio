@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace FamiStudio
 {
-    public partial class PropertyDialog : Dialog
+    public class PropertyDialog : Dialog
     {
         public delegate bool ValidateDelegate(PropertyPage props);
         public event ValidateDelegate ValidateProperties;
@@ -12,7 +12,7 @@ namespace FamiStudio
         private bool topAlign = false;
         private bool center = false;
         private bool advancedPropertiesVisible = false;
-        private int margin = DpiScaling.ScaleForMainWindow(8);
+        private int margin = DpiScaling.ScaleForWindow(8);
 
         private Button buttonNo;
         private Button buttonYes;
@@ -21,7 +21,7 @@ namespace FamiStudio
 
         public PropertyDialog(string title, int width, bool canAccept = true, bool canCancel = true)
         {
-            width = DpiScaling.ScaleForMainWindow(width);
+            width = DpiScaling.ScaleForWindow(width);
             Move(0, 0, width, width);
             Init();
 
@@ -32,7 +32,7 @@ namespace FamiStudio
 
         public PropertyDialog(string title, Point pt, int w, bool leftAlign = false, bool top = false)
         {
-            width = DpiScaling.ScaleForMainWindow(w);
+            width = DpiScaling.ScaleForWindow(w);
             topAlign = top;
             if (leftAlign)
                 pt.X -= width;
@@ -47,17 +47,17 @@ namespace FamiStudio
 
             buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
-            buttonYes.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
+            buttonYes.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
             buttonYes.ToolTip = "Accept";
 
             buttonNo = new Button("No", null);
             buttonNo.Click += ButtonNo_Click;
-            buttonNo.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
+            buttonNo.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
             buttonNo.ToolTip = "Cancel";
 
             buttonAdvanced = new Button("PlusSmall", null);
             buttonAdvanced.Click += ButtonAdvanced_Click;
-            buttonAdvanced.Resize(DpiScaling.ScaleForMainWindow(36), DpiScaling.ScaleForMainWindow(36));
+            buttonAdvanced.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
             buttonAdvanced.Visible = false;
             buttonAdvanced.ToolTip = "Toggle Advanced Options";
 

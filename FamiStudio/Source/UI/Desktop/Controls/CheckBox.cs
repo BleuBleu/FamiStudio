@@ -8,7 +8,7 @@ namespace FamiStudio
         private string text;
         private bool check;
         private bool hover;
-        private int margin = DpiScaling.ScaleForMainWindow(4);
+        private int margin = DpiScaling.ScaleForWindow(4);
         private BitmapAtlasRef bmpCheckOn;
         private BitmapAtlasRef bmpCheckOff;
 
@@ -16,7 +16,7 @@ namespace FamiStudio
         {
             text = txt;
             check = chk;
-            height = DpiScaling.ScaleForMainWindow(24);
+            height = DpiScaling.ScaleForWindow(24);
         }
 
         public bool Checked
