@@ -191,7 +191,7 @@ namespace FamiStudio
             {
                 Debug.Assert(controls[0].App.Project != null);
 
-                var fullWindowRect = new Rectangle(0, 0, width, height);
+                var fullWindowRect = new System.Drawing.Rectangle(0, 0, width, height);
 
                 gfx.BeginDrawFrame();
 
@@ -206,7 +206,7 @@ namespace FamiStudio
                 {
                     gfx.BeginDrawControl(fullWindowRect, height);
                     var c = gfx.CreateCommandList();
-                    c.FillRectangle(fullWindowRect, gfx.GetSolidBrush(Color.Black, 1, Utils.Lerp(0.0f, 0.4f, dialogDimming)));
+                    c.FillRectangle(fullWindowRect, gfx.GetSolidBrush(System.Drawing.Color.Black, 1, Utils.Lerp(0.0f, 0.4f, dialogDimming)));
                     gfx.DrawCommandList(c);
                 }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Collections.Generic;
 
 namespace FamiStudio
@@ -2619,7 +2620,7 @@ namespace FamiStudio
                     if (!highlighted)
                         r.cf.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? selectionNoteBrush : ThemeResources.BlackBrush, selected ? 2 : 1, selected);
                     else
-                        highlightRect = new Rectangle((int)x0, (int)(y - envelopeValueSizeY), (int)(x1 - x0), (int)envelopeValueSizeY); // MATTT : Was RectangleF ??? Did it round?
+                        highlightRect = new RectangleF(x0, y - envelopeValueSizeY, x1 - x0, envelopeValueSizeY);
 
                     var label = env.Values[i].ToString("+#;-#;0");
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
@@ -2658,7 +2659,7 @@ namespace FamiStudio
                     if (!highlighted)
                         r.cf.DrawRectangle(x0, y0, x1, y1, selected ? selectionNoteBrush : ThemeResources.BlackBrush, selected ? 2 : 1, selected);
                     else
-                        highlightRect = new Rectangle((int)x0, (int)y0, (int)(x1 - x0), (int)(y1 - y0)); // MATTT : Was RectangleF???
+                        highlightRect = new RectangleF(x0, y0, x1 - x0, y1 - y0);
 
                     bool drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * WindowScaling * 2);
                     var brush = drawOutside ? ThemeResources.LightGreyFillBrush1 : ThemeResources.BlackBrush;

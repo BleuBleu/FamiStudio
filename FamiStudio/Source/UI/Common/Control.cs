@@ -82,11 +82,11 @@ namespace FamiStudio
         public void DialogMouseDownNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
         public void DialogMouseMoveNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
 
-        public Point PointToClient(Point p) { return parentWindow.PointToClient(this, p); }
-        public Point PointToScreen(Point p) { return parentWindow.PointToScreen(this, p); }
-        public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
-        public Rectangle Rectangle => new Rectangle(Left, Top, Width, Height);
-        public Size ParentWindowSize => parentWindow.Size;
+        public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentWindow.PointToClient(this, p); }
+        public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentWindow.PointToScreen(this, p); }
+        public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
+        public System.Drawing.Rectangle Rectangle => new System.Drawing.Rectangle(Left, Top, Width, Height);
+        public System.Drawing.Size ParentWindowSize => parentWindow.Size;
         public bool IsLandscape => parentWindow.IsLandscape;
         public int Left => parentDialog != null ? left + parentDialog.left : left;
         public int Top => parentDialog != null ? top + parentDialog.top : top;
@@ -180,7 +180,7 @@ namespace FamiStudio
         private Control parentControl;
 
         public CursorInfo(Control ctrl) { parentControl = ctrl; }
-        public Point Position => parentControl.ParentWindow.GetCursorPosition();
+        public System.Drawing.Point Position => parentControl.ParentWindow.GetCursorPosition();
         public IntPtr Current
         {
             get { return cursor; }

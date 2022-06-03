@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 
 namespace FamiStudio
 {
@@ -222,7 +223,7 @@ namespace FamiStudio
             color = closestColor;
         }
 
-        public static Color RandomCustomColor()
+        public static System.Drawing.Color RandomCustomColor()
         {
             var si = CustomColors.GetLength(0);
             var sj = CustomColors.GetLength(1);
