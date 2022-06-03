@@ -599,7 +599,7 @@ namespace FamiStudio
         const uint WM_CHAR = 0x0102;
         const int VK_ENTER = 0x0D;
 
-        public static void InitilaizeConsole()
+        public static void InitializeConsole()
         {
             AttachConsole(ATTACH_PARENT_PROCESS);
         }

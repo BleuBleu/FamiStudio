@@ -7,7 +7,7 @@ using OpenTK.Audio.OpenAL;
 
 namespace FamiStudio
 {
-    public class OpenALStream
+    public class OpenALStream : IAudioStream
     {
         private static AudioContext context;
 

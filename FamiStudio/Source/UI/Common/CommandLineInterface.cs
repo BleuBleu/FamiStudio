@@ -86,7 +86,7 @@ namespace FamiStudio
 
         private void InitializeConsole()
         {
-            Platform.InitilaizeConsole();
+            Platform.InitializeConsole();
             Console.WriteLine($"");
         }
 

@@ -3,17 +3,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 
-// MATTT : Remove when added to all platforms.
-//#if FAMISTUDIO_WINDOWS
-//using AudioStream = FamiStudio.XAudio2Stream;
-//#elif FAMISTUDIO_LINUX
-//using AudioStream = FamiStudio.OpenALStream;
-//#elif FAMISTUDIO_ANDROID
-//using AudioStream = FamiStudio.AndroidAudioStream;
-//#else
-//using AudioStream = FamiStudio.PortAudioStream;
-//#endif
-
 namespace FamiStudio
 {
     public class AudioPlayer : BasePlayer

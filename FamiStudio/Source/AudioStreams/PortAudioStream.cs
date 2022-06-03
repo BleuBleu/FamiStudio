@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    public class PortAudioStream
+    public class PortAudioStream : IAudioStream
     {
         public enum PaError
         {

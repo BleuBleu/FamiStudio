@@ -1,25 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Media;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using static GLFWDotNet.GLFW;
-
-using Action = System.Action;
 
 namespace FamiStudio
 {
-    public static class Platform
+    public static partial class Platform
     {
         private static byte[] internalClipboardData;
 
-        public static string ApplicationVersion => version;
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
         public static string UserProjectsDirectory => null;
         public static float DoubleClickTime => 0.25f; // MATTT
@@ -27,38 +20,19 @@ namespace FamiStudio
         public const string DllPrefix = "";
         public const string DllExtension = ".so";
 
-        private static Thread mainThread;
-        private static string version;
-
         public static bool Initialize()
         {
-            SetProcessName("FamiStudio");
+            if (!InitializeDesktop())
+                return false;
 
-            mainThread = Thread.CurrentThread;
-            version = Assembly.GetEntryAssembly().GetName().Version.ToString();
+            SetProcessName("FamiStudio");
 
             return true;
         }
 
-        public static bool IsInMainThread()
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {
-            return mainThread == Thread.CurrentThread;
-        }
-
-        public static int GetPixelDensity()
-        {
-            return 96; // Unused.
-        }
-
-        public static Size GetScreenResolution()
-        {
-            Debug.Assert(false);
-            return Size.Empty;
-        }
-
-        public static int GetOutputAudioSampleSampleRate()
-        {
-            return 44100;
+            return new OpenALStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
         }
 
         private static string[] GetExtensionList(string str)
@@ -260,58 +234,6 @@ namespace FamiStudio
             callback?.Invoke(res);
         }
 
-        public static void DelayedMessageBoxAsync(string text, string title)
-        {
-        }
-
-        public static int GetKeyScancode(Keys key)
-        {
-            return glfwGetKeyScancode((int)key);
-        }
-
-        public static string KeyToString(Keys key)
-        {
-            return glfwGetKeyName((int)key, 0);
-        }
-
-        public static string ScancodeToString(int scancode)
-        {
-            return glfwGetKeyName((int)Keys.Unknown, scancode);
-        }
-
-        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
-        {
-        }
-
-        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
-        {
-        }
-
-        public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)
-        {
-        }
-
-        public static void StartShareFileAsync(string filename, Action callback)
-        {
-        }
-
-        public static string GetShareFilename(string filename)
-        {
-            return null;
-        }
-
-        public static void VibrateTick()
-        {
-        }
-
-        public static void VibrateClick()
-        {
-        }
-
-        public static void ShowToast(string text)
-        {
-        }
-
         public static void OpenUrl(string url)
         {
             try
@@ -324,11 +246,6 @@ namespace FamiStudio
         public static void Beep()
         {
             SystemSounds.Beep.Play();
-        }
-
-        public static double TimeSeconds()
-        {
-            return glfwGetTime();
         }
 
         [DllImport("libc")]
@@ -378,9 +295,16 @@ namespace FamiStudio
         {
         }
 
+        public static void InitializeConsole()
+        {
+        }
+
+        public static void ShutdownConsole()
+        {
+        }
+
         public const bool IsMobile  = false;
         public const bool IsAndroid = false;
-        public const bool IsDesktop = true;
         public const bool IsWindows = false;
         public const bool IsLinux   = true;
         public const bool IsMacOS   = false;
