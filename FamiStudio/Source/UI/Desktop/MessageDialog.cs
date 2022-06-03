@@ -43,7 +43,6 @@ namespace FamiStudio
 
         public MessageDialog(string text, string title, MessageBoxButtons buttons)
         {
-            Resize(DpiScaling.ScaleForWindow(700), DpiScaling.ScaleForWindow(500));
             CreateControls(text, buttons);
         }
 

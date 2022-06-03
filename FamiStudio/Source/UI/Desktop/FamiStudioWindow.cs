@@ -232,10 +232,8 @@ namespace FamiStudio
             if (force)
                 controls.MarkDirty();
 
-            if (controls.AnyControlNeedsRedraw())
+            if (controls.AnyControlNeedsRedraw() && famistudio.Project != null)
             {
-                Debug.Assert(famistudio.Project != null);
-
                 controls.Redraw();
                 glfwSwapBuffers(window);
             }
