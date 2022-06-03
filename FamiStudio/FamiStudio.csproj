@@ -109,7 +109,6 @@
     <Compile Include="Source\IO\Mp3File.cs" />
     <Compile Include="Source\IO\NotSoFatso.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
-    <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\RomFileBase.cs" />
@@ -143,9 +142,9 @@
     <Compile Include="Source\Project\Note.cs" />
     <Compile Include="Source\Project\Pattern.cs" />
     <Compile Include="Source\Project\Project.cs" />
+    <Compile Include="Source\Project\ProjectBuffer.cs" />    
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
-    <Compile Include="Source\UI\Common\CommandLineInterface.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\Control.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
@@ -161,7 +160,6 @@
     <Compile Include="Source\UI\Common\PasteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\PatternBitmapCache.cs" />
     <Compile Include="Source\UI\Common\PianoRoll.cs" />
-    <Compile Include="Source\UI\Common\Program.cs" />
     <Compile Include="Source\UI\Common\ProjectExplorer.cs" />
     <Compile Include="Source\UI\Common\PropertyPageCommon.cs" />
     <Compile Include="Source\UI\Common\Sequencer.cs" />
@@ -185,6 +183,7 @@
     <Compile Include="Source\UI\Desktop\Controls\RadioButton.cs" />
     <Compile Include="Source\UI\Desktop\Controls\Slider.cs" />
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
+    <Compile Include="Source\UI\Desktop\CommandLineInterface.cs" />
     <Compile Include="Source\UI\Desktop\Cursors.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioWindow.cs" />
@@ -195,6 +194,7 @@
     <Compile Include="Source\UI\Desktop\MessageDialog.cs" />    
     <Compile Include="Source\UI\Desktop\MobileClasses.cs" />
     <Compile Include="Source\UI\Desktop\MultiPropertyDialog.cs" />
+    <Compile Include="Source\UI\Desktop\Program.cs" />
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
