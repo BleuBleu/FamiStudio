@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace FamiStudio
 {
-    public class XAudio2Stream
+    public class XAudio2Stream : IAudioStream
     {
         private XAudio2 xaudio2;
         private MasteringVoice masteringVoice;
@@ -28,8 +28,6 @@ namespace FamiStudio
         private SourceVoice immediateVoice;
         private AudioBuffer immediateAudioBuffer;
         private bool immediateDonePlaying;
-
-        public delegate short[] GetBufferDataCallback();
 
         public XAudio2Stream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
         {

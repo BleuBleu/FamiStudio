@@ -90,8 +90,6 @@ namespace FamiStudio
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate PaStreamCallbackResult PaStreamCallback(IntPtr input, IntPtr output, uint frameCount, IntPtr timeInfo, PaStreamCallbackFlags statusFlags, IntPtr userData);
 
-        public delegate short[] GetBufferDataCallback();
-
         private IntPtr stream = new IntPtr();
         private bool playing = false;
         private GetBufferDataCallback bufferFill;

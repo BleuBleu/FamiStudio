@@ -205,6 +205,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\AudioStreams\AndroidAudioStream.cs" />    
     <Compile Include="Source\ChannelStates\ChannelState.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateDpcm.cs" />
     <Compile Include="Source\ChannelStates\ChannelStateEPSMFm.cs" />
@@ -250,11 +251,10 @@
     <Compile Include="Source\IO\VorbisFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Platform\Droid\Platform.cs" />    
-    <Compile Include="Source\Player\AndroidAudioStream.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
+    <Compile Include="Source\Player\AudioStreamInterface.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
-    <Compile Include="Source\Player\MultiMediaNotifications.cs" />
     <Compile Include="Source\Player\NesApu.cs" />
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />

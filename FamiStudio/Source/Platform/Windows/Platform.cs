@@ -40,6 +40,11 @@ namespace FamiStudio
             return true;
         }
 
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        {
+            return new XAudio2Stream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
+        }
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public class OpenFileName
         {

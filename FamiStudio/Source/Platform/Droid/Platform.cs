@@ -17,6 +17,9 @@ namespace FamiStudio
 {
     public static class Platform
     {
+        public delegate void AudioDeviceChangedDelegate();
+        public static event AudioDeviceChangedDelegate AudioDeviceChanged;
+
         private static Toast    lastToast;
         private static DateTime lastToastTime = DateTime.MinValue;
         private static string   lastToastText;
@@ -38,6 +41,11 @@ namespace FamiStudio
         public static float GetDesktopScaling()
         {
             return 1.0f;
+        }
+
+        public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
+        {
+            return new AndroidAudioStream(rate, stereo, bufferSize, numBuffers, bufferFillCallback);
         }
 
         public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");

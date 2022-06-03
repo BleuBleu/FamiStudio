@@ -11,7 +11,6 @@ namespace FamiStudio
     {
         private static AudioContext context;
 
-        public delegate short[] GetBufferDataCallback();
         private GetBufferDataCallback bufferFill;
         private int freq;
         private bool quit;

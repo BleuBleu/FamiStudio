@@ -8,11 +8,9 @@ using Debug = System.Diagnostics.Debug;
 
 namespace FamiStudio
 {
-    public class AndroidAudioStream : IDisposable
+    public class AndroidAudioStream : IAudioStream
     {
         public bool IsStarted => playingTask != null;
-
-        public delegate short[] GetBufferDataCallback();
 
         private GetBufferDataCallback bufferFill;
         private bool quit;

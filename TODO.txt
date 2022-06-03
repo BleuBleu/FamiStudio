@@ -11,6 +11,7 @@
 / Finish OFD
 / MessageBoxes.
 - Add titles to dialogs
+- Remove System.Drawing.
 
 - BUG : Double click doesnt un-solo a channel if you do it really fast??
 - BUG : Check boxes misaligned on mobile
