@@ -19,6 +19,9 @@ namespace FamiStudio
         public static string UserProjectsDirectory => null;
         public static float DoubleClickTime => 0.25f; // MATTT
 
+        public const string DllPrefix = "";
+        public const string DllExtension = ".dylib";
+
         private static Thread mainThread;
         private static string version;
 

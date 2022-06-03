@@ -10,15 +10,7 @@ namespace FamiStudio
 {
     class Mp3File
     {
-#if FAMISTUDIO_WINDOWS
-        private const string ShineMp3Dll = "ShineMp3.dll";
-#elif FAMISTUDIO_MACOS
-        private const string ShineMp3Dll = "ShineMp3.dylib";
-#elif FAMISTUDIO_ANDROID
-        private const string ShineMp3Dll = "libShineMp3.so";
-#else
-        private const string ShineMp3Dll = "ShineMp3.so";
-#endif
+        private const string ShineMp3Dll = Platform.DllPrefix + "ShineMp3" + Platform.DllExtension;
 
         [DllImport(ShineMp3Dll, CallingConvention = CallingConvention.StdCall, EntryPoint = "ShineMp3Encode")]
         extern static int ShineMp3Encode(int wav_rate, int wav_channels, int wav_num_samples, IntPtr wavData, int mp3_bitrate, int mp3_data_size, IntPtr mp3_data);

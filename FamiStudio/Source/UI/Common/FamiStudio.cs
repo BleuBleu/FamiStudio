@@ -44,7 +44,6 @@ namespace FamiStudio
         private bool metronome = false;
         private bool palPlayback = false;
         private bool audioDeviceChanged = false;
-        private bool pianoRollScrollChanged = false;
         private bool recordingMode = false;
         private bool qwertyPiano = false;
         private bool followMode = false;
@@ -52,9 +51,7 @@ namespace FamiStudio
         private float stopInstrumentTimer = 0.0f;
         private short[] metronomeSound;
         private ConcurrentQueue<Tuple<int, bool>> midiNoteQueue = new ConcurrentQueue<Tuple<int, bool>>();
-#if FAMISTUDIO_WINDOWS
-        private MultiMediaNotificationListener mmNoticiations; // MATTT : Move to platform?
-#endif
+
         private int autoSaveIndex = 0;
         private float averageTickRateMs = 8.0f;
         private DateTime lastAutoSave;
@@ -127,7 +124,7 @@ namespace FamiStudio
             SetMainWindow(form);
             InitializeMetronome();
             InitializeMidi();
-            InitializeMultiMediaNotifications();
+            InitializeDeviceChangeEvent();
             ApplySettings();
 
             if (string.IsNullOrEmpty(filename) && Platform.IsDesktop && Settings.OpenLastProjectOnStart && !string.IsNullOrEmpty(Settings.LastProjectFile) && File.Exists(Settings.LastProjectFile))
@@ -501,11 +498,7 @@ namespace FamiStudio
         {
             if (Settings.ShowPianoRollViewRange && !PianoRoll.IsMaximized)
             {
-#if FAMISTUDIO_WINDOWS
-                pianoRollScrollChanged = true;
-#else
                 Sequencer.MarkDirty();
-#endif
             }
         }
 
@@ -614,21 +607,6 @@ namespace FamiStudio
             mainWindow.HideContextMenu();
         }
 
-        private void InitializeMultiMediaNotifications()
-        {
-#if FAMISTUDIO_WINDOWS
-            // Windows 7 falls back to XAudio 2.7 which does not have 
-            // a virtual audio end point, which mean we need to detect 
-            // device changes a lot more manually.
-            if (Environment.OSVersion.Version.Major == 6 &&
-                Environment.OSVersion.Version.Minor <= 1)
-            {
-                mmNoticiations = new MultiMediaNotificationListener();
-                mmNoticiations.DefaultDeviceChanged += MmNoticiations_DefaultDeviceChanged;
-            }
-#endif
-        }
-
         private void InitializeMetronome()
         {
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("FamiStudio.Resources.Metronome.wav"))
@@ -650,7 +628,12 @@ namespace FamiStudio
             }
         }
 
-        private void MmNoticiations_DefaultDeviceChanged()
+        private void InitializeDeviceChangeEvent()
+        {
+            Platform.AudioDeviceChanged += Platform_AudioDeviceChanged;
+        }
+
+        private void Platform_AudioDeviceChanged()
         {
             audioDeviceChanged = true;
         }
@@ -2156,8 +2139,7 @@ namespace FamiStudio
                    instrumentPlayer != null && instrumentPlayer.IsPlaying || 
                    PianoRoll.IsEditingInstrument || 
                    PianoRoll.IsEditingArpeggio   || 
-                   PianoRoll.IsEditingDPCMSample || 
-                   pianoRollScrollChanged;
+                   PianoRoll.IsEditingDPCMSample;
         }
 
         private void ProcessAudioDeviceChanges()
@@ -2179,8 +2161,6 @@ namespace FamiStudio
             {
                 ToolBar.MarkDirty();
             }
-
-            pianoRollScrollChanged = false;
         }
 
         private void HighlightPlayingInstrumentNote()

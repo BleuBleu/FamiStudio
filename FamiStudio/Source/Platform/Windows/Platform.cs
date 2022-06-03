@@ -1,66 +1,43 @@
 ﻿using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Diagnostics;
-using System.Collections.Generic;
-using System.Threading;
 using System.Media;
 using Microsoft.Win32;
-using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
-    public static class Platform
+    public static partial class Platform
     {
-        public static string ApplicationVersion => version;
         public static string UserProjectsDirectory => null;
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
         public static float DoubleClickTime => doubleClickTime;
 
-        private static string version;
-        private static Thread mainThread;
+        public const string DllPrefix = "";
+        public const string DllExtension = ".dll";
+
         private static float doubleClickTime;
 
         public static bool Initialize()
         {
+            if (!InitializeDesktop())
+                return false;
+
             if (!DetectRequiredDependencies())
                 return false;
 
+            InitializeMultiMediaNotifications();
+
             clipboardFormat = RegisterClipboardFormat("FamiStudio");
-            mainThread = Thread.CurrentThread;
             doubleClickTime = GetDoubleClickTime() / 1000.0f;
 
 #if !DEBUG
-            if (Settings.IsPortableMode)
+            if (IsPortableMode)
                 Platform.AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
 #endif
 
-            version = Assembly.GetEntryAssembly().GetName().Version.ToString();
             return true;
-        }
-
-        public static bool IsInMainThread()
-        {
-            return mainThread == Thread.CurrentThread;
-        }
-
-        public static int GetPixelDensity()
-        {
-            return 96; // Unused.
-        }
-
-        public static Size GetScreenResolution()
-        {
-            Debug.Assert(false); // Unused.
-            return Size.Empty;
-        }
-
-        public static int GetOutputAudioSampleSampleRate()
-        {
-            return 44100;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
@@ -300,17 +277,18 @@ namespace FamiStudio
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
         {
             var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
+#if true
+            var dlg = new MessageDialog(text, title, buttons, icons);
+            return dlg.ShowDialog();
+#else
             return (DialogResult)MessageBoxInternal(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
+#endif
         }
 
         public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
         {
             var res = MessageBox(text, title, buttons);
             callback?.Invoke(res);
-        }
-
-        public static void DelayedMessageBoxAsync(string text, string title)
-        {
         }
 
         public static bool IsVS2019RuntimeInstalled()
@@ -356,54 +334,6 @@ namespace FamiStudio
         [DllImport("user32.dll")]
         static extern uint GetDoubleClickTime();
 
-        public static int GetKeyScancode(Keys key)
-        {
-            return glfwGetKeyScancode((int)key);
-        }
-
-        public static string KeyToString(Keys key)
-        {
-            return glfwGetKeyName((int)key, 0);
-        }
-
-        public static string ScancodeToString(int scancode)
-        {
-            return glfwGetKeyName((int)Keys.Unknown, scancode);
-        }
-
-        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
-        {
-        }
-
-        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
-        {
-        }
-
-        public static void FinishMobileSaveFileOperationAsync(bool commit, Action callback)
-        {
-        }
-
-        public static void StartShareFileAsync(string filename, Action callback)
-        {
-        }
-
-        public static string GetShareFilename(string filename)
-        {
-            return null;
-        }
-
-        public static void VibrateTick()
-        {
-        }
-
-        public static void VibrateClick()
-        {
-        }
-
-        public static void ShowToast(string text)
-        {
-        }
-
         public static void OpenUrl(string url)
         {
             try
@@ -418,11 +348,6 @@ namespace FamiStudio
             SystemSounds.Beep.Play();
         }
 
-        public static double TimeSeconds()
-        {
-            return glfwGetTime();
-        }
-        
         [DllImport("user32.dll")]
         private static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr name);
 
@@ -658,9 +583,49 @@ namespace FamiStudio
             }
         }
 
+        // MATTT : Move to platform.
+        [DllImport("kernel32.dll")]
+        static extern bool AttachConsole(int dwProcessId);
+        private const int ATTACH_PARENT_PROCESS = -1;
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll")]
+        static extern int SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+        const uint WM_CHAR = 0x0102;
+        const int VK_ENTER = 0x0D;
+
+        public static void InitilaizeConsole()
+        {
+            AttachConsole(ATTACH_PARENT_PROCESS);
+        }
+
+        public static void ShutdownConsole()
+        {
+            SendMessage(GetConsoleWindow(), WM_CHAR, (IntPtr)VK_ENTER, IntPtr.Zero);
+        }
+
+        private static MultiMediaNotificationListener mmNoticiations; // MATTT : Move to platform?
+
+        private static void InitializeMultiMediaNotifications()
+        {
+            // Windows 7 falls back to XAudio 2.7 which does not have 
+            // a virtual audio end point, which mean we need to detect 
+            // device changes a lot more manually.
+            if (Environment.OSVersion.Version.Major == 6 &&
+                Environment.OSVersion.Version.Minor <= 1)
+            {
+                mmNoticiations = new MultiMediaNotificationListener();
+                mmNoticiations.DefaultDeviceChanged += MmNoticiations_DefaultDeviceChanged;
+            }
+        }
+
+        private static void MmNoticiations_DefaultDeviceChanged()
+        {
+            AudioDeviceChanged?.Invoke();
+        }
+
         public const bool IsMobile  = false;
         public const bool IsAndroid = false;
-        public const bool IsDesktop = true;
         public const bool IsWindows = true;
         public const bool IsLinux   = false;
         public const bool IsMacOS   = false;

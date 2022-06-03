@@ -84,32 +84,15 @@ namespace FamiStudio
             return defaultValue;
         }
 
-#if FAMISTUDIO_WINDOWS
-        // MATTT : Move to platform.
-        [DllImport("kernel32.dll")]
-        static extern bool AttachConsole(int dwProcessId);
-        private const int ATTACH_PARENT_PROCESS = -1;
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetConsoleWindow();
-        [DllImport("user32.dll")]
-        static extern int SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-        const uint WM_CHAR = 0x0102;
-        const int VK_ENTER = 0x0D;
-#endif
-
         private void InitializeConsole()
         {
-#if FAMISTUDIO_WINDOWS
-            AttachConsole(ATTACH_PARENT_PROCESS);
-#endif
+            Platform.InitilaizeConsole();
             Console.WriteLine($"");
         }
 
         private void ShutdownConsole()
         {
-#if FAMISTUDIO_WINDOWS
-            SendMessage(GetConsoleWindow(), WM_CHAR, (IntPtr)VK_ENTER, IntPtr.Zero);
-#endif
+            Platform.ShutdownConsole();
         }
 
         private void DisplayHelp()

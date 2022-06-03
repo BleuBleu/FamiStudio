@@ -4,10 +4,10 @@
     {
         public static bool InitializeBaseSystems()
         {
-            Settings.Initialize();
-            
             if (!Platform.Initialize())
                 return false;
+
+            Settings.Initialize();
 
             if (Platform.IsMobile)
                 DpiScaling.Initialize();

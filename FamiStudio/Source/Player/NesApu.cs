@@ -7,15 +7,7 @@ namespace FamiStudio
 {
     public static class NesApu
     {
-#if FAMISTUDIO_WINDOWS
-        private const string NesSndEmuDll = "NesSndEmu.dll";
-#elif FAMISTUDIO_MACOS
-        private const string NesSndEmuDll = "NesSndEmu.dylib";
-#elif FAMISTUDIO_ANDROID
-        private const string NesSndEmuDll = "libNesSndEmu.so";
-#else
-        private const string NesSndEmuDll = "NesSndEmu.so";
-#endif
+        private const string NesSndEmuDll = Platform.DllPrefix + "NesSndEmu" + Platform.DllExtension;
 
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuInit")]
         public extern static int Init(int apuIdx, int sampleRate, int pal, int seperateTnd, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);

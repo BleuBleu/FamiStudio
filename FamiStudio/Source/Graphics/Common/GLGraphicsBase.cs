@@ -130,7 +130,13 @@ namespace FamiStudio
         private bool IsAtlasBitmap(string name)
         {
             // Ignore fonts and other things we load differently.
-            return name.StartsWith("FamiStudio.Resources.") && name.EndsWith(".tga") && !name.Contains("QuickSand") && !name.Contains("MobileMenu");
+            return
+                name.StartsWith("FamiStudio.Resources.") && 
+                name.EndsWith(".tga") && 
+                !name.Contains("Cursor") &&
+                !name.Contains("QuickSand") &&
+                !name.Contains("MobileMenu") && 
+                !name.Contains("FamiStudio_");
         }
 
         private void BuildBitmapAtlases()

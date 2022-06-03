@@ -8,7 +8,9 @@
 
 4.0.0
 =====
-- Finish OFD
+/ Finish OFD
+/ MessageBoxes.
+- Add titles to dialogs
 
 - BUG : Double click doesnt un-solo a channel if you do it really fast??
 - BUG : Check boxes misaligned on mobile
@@ -38,12 +40,13 @@ P1:
 - Improve no-attack.
 - Scroll bar in sequencer (option to limit seq size to xx%)
 - Volume/effect scaling, easy one we have context menus.
-P2:
+- Paste special, option to rename patterns.
+
+P2 (Unlikely):
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Uncompressed envelopes
 - CLI only EXE (Linux only).
-- Paste special, option to rename patterns.
 - C0 is hidden by scroll bars
 - C0 is hidden in piano roll video
 - Piano roll scale on desktop?
@@ -86,9 +89,6 @@ Linux notes
 MacOS notes
 ===========
 - MacOS Sierra, fully patched is 10.12.6, with AppKit version 1504.83.101
-- Must compile the MacLauncher with this to link to the AppKit version that
-  matches GTK+2. This will make MacOS load these older versions afterwards,
-  even on more recent OS'es.
 - Must compile vorbis on old version too (like Sierra). 
 - If problem installing MacOS VM, see @DOUG fix at
   https://www.geekrar.com/how-to-fix-the-cpu-has-been-disabled-by-the-guest-os/
@@ -129,23 +129,14 @@ Discord
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
 
-Cartoon Tutorial
-================
-- Stamp
-- Hue: -180
-- Chroma: -20
-
 Backlog: 
 =========
 - ROM export with expansion?
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
-- NSF import read DMC initial value.
 - Save snapping + qwerty settings + some export settings.
 - Left/right pan with +/- (cubase style)?
-- TailWindz : CTRL + Scroll should do "something"
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Scales
-- Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 

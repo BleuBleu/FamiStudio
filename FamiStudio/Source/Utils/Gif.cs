@@ -5,15 +5,7 @@ namespace FamiStudio
 {
     public static class Gif
     {
-#if FAMISTUDIO_WINDOWS
-        private const string GifDecDll = "GifDec.dll";
-#elif FAMISTUDIO_MACOS
-        private const string GifDecDll = "GifDec.dylib";
-#elif FAMISTUDIO_ANDROID
-        private const string GifDecDll = "libGifDec.so";
-#else
-        private const string GifDecDll = "GifDec.so";
-#endif 
+        private const string GifDecDll = Platform.DllPrefix + "GifDec" + Platform.DllExtension;
 
         [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "GifOpen")]
         public static extern IntPtr Open(IntPtr data, int swap);

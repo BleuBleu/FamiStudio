@@ -7,24 +7,10 @@ namespace FamiStudio
 {
     static class Program
     {
-        // MATTT : Shutdown too!
-        static bool InitializeGLFW()
-        {
-            if (glfwInit() == 0)
-            {
-                // MATTT : We will need a "low level" message box if we ever roll out our own.
-                Platform.MessageBox("Error initializing GLFW.", "Error", MessageBoxButtons.OK);
-                return false;
-            }
-
-            return true;
-        }
-
         [STAThread]
         static void Main(string[] args)
         {
-            if (!InitializeGLFW() ||
-                !InitializeBaseSystems())
+            if (!InitializeBaseSystems())
             {
                 Environment.Exit(-1);
             }

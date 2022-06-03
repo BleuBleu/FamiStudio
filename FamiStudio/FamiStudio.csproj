@@ -120,11 +120,12 @@
     <Compile Include="Source\IO\VideoFilePianoRoll.cs" />
     <Compile Include="Source\IO\VorbisFile.cs" />
     <Compile Include="Source\IO\WaveFile.cs" />
+    <Compile Include="Source\Platform\Desktop\Platform.cs" />
+    <Compile Include="Source\Platform\Windows\MultiMediaNotifications.cs" />
     <Compile Include="Source\Platform\Windows\Platform.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
     <Compile Include="Source\Player\InstrumentPlayer.cs" />
-    <Compile Include="Source\Player\MultiMediaNotifications.cs" />
     <Compile Include="Source\Player\NesApu.cs" />
     <Compile Include="Source\Player\OscilloscopeInterface.cs" />
     <Compile Include="Source\Player\RegisterInterpreter.cs" />
@@ -190,6 +191,7 @@
     <Compile Include="Source\UI\Desktop\GLFW.cs" />
     <Compile Include="Source\UI\Desktop\GLFW.LoadAssembly.cs" />
     <Compile Include="Source\UI\Desktop\LogDialog.cs" />
+    <Compile Include="Source\UI\Desktop\MessageDialog.cs" />    
     <Compile Include="Source\UI\Desktop\MobileClasses.cs" />
     <Compile Include="Source\UI\Desktop\MultiPropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
