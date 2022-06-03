@@ -232,8 +232,10 @@ namespace FamiStudio
             if (force)
                 controls.MarkDirty();
 
-            if (controls.AnyControlNeedsRedraw() /*&& famistudio.Project != null*/) // MATTT : Re-test NSF open shit.
+            if (controls.AnyControlNeedsRedraw())
             {
+                Debug.Assert(famistudio.Project != null);
+
                 controls.Redraw();
                 glfwSwapBuffers(window);
             }

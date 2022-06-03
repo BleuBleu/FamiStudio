@@ -539,6 +539,20 @@
     <EmbeddedResource Include="Resources\MenuToggleRelease@2x.tga" />
     <EmbeddedResource Include="Resources\MenuToggleSlide.tga" />
     <EmbeddedResource Include="Resources\MenuToggleSlide@2x.tga" />
+
+    <EmbeddedResource Include="Resources\MessageCancel.tga" />
+    <EmbeddedResource Include="Resources\MessageCancel@2x.tga" />
+    <EmbeddedResource Include="Resources\MessageError.tga" />
+    <EmbeddedResource Include="Resources\MessageError@2x.tga" />
+    <EmbeddedResource Include="Resources\MessageInfo.tga" />
+    <EmbeddedResource Include="Resources\MessageInfo@2x.tga" />
+    <EmbeddedResource Include="Resources\MessageNo.tga" />
+    <EmbeddedResource Include="Resources\MessageNo@2x.tga" />
+    <EmbeddedResource Include="Resources\MessageQuestion.tga" />
+    <EmbeddedResource Include="Resources\MessageQuestion@2x.tga" />
+    <EmbeddedResource Include="Resources\MessageYes.tga" />
+    <EmbeddedResource Include="Resources\MessageYes@2x.tga" />
+
     <EmbeddedResource Include="Resources\Metronome.tga" />
     <EmbeddedResource Include="Resources\Metronome.wav" />
     <EmbeddedResource Include="Resources\Metronome@2x.tga" />

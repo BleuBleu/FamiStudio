@@ -189,9 +189,7 @@ namespace FamiStudio
 
             if (AnyControlNeedsRedraw())
             {
-                // HACK : This happens when we have a dialog open, like the NSF dialog.
-                if (controls[0].App.Project == null)
-                    return true;
+                Debug.Assert(controls[0].App.Project != null);
 
                 var fullWindowRect = new System.Drawing.Rectangle(0, 0, width, height);
 

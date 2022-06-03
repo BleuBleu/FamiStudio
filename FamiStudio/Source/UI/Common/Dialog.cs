@@ -14,7 +14,6 @@ namespace FamiStudio
 
         private List<Control> controls = new List<Control>();
         private Control focusedControl;
-        private Action<DialogResult> callback;
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
 
@@ -56,7 +55,9 @@ namespace FamiStudio
 
         public DialogResult ShowDialog()
         {
-            ShowDialogAsync(null, (r) => { });
+            visible = true;
+            OnShowDialog();
+            FamiStudioWindow.Instance.PushDialog(this);
             
             while (result == DialogResult.None)
                 ParentWindow.RunEventLoop(true);
@@ -66,10 +67,7 @@ namespace FamiStudio
 
         public void ShowDialogAsync(object parent, Action<DialogResult> cb) // MATTT : Remove parent, pass in contructor.
         {
-            visible = true;
-            callback = cb;
-            OnShowDialog();
-            FamiStudioWindow.Instance.PushDialog(this);
+            cb(ShowDialog());
         }
 
         public void Close(DialogResult res)
@@ -77,7 +75,6 @@ namespace FamiStudio
             FamiStudioWindow.Instance.PopDialog(this);
             result = res;
             visible = false;
-            callback(result);
         }
 
         protected virtual void OnShowDialog()

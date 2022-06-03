@@ -790,6 +790,9 @@ namespace FamiStudio
                 ShutdownUndoRedoManager();
                 StopEverything();
                 project = null;
+                song = null;
+                selectedInstrument = null;
+                selectedArpeggio = null;
             }
             else
             {
@@ -967,6 +970,14 @@ namespace FamiStudio
 
             if (requiresDialog)
             {
+                // Our rendering code currently always requires a valid project/song
+                // to be present so we create a dummy project while the MIDI/NSF dialog
+                // is running.
+                Debug.Assert(this.project == null);
+
+                this.project = new Project(true);
+                this.song = this.project.Songs[0];
+
                 if (mid)
                 {
                     var dlg = new MidiImportDialog(filename);
@@ -977,6 +988,9 @@ namespace FamiStudio
                     var dlg = new NsfImportDialog(filename);
                     project = dlg.ShowDialog(mainWindow);
                 }
+
+                this.song = null;
+                this.project = null;
             }
             else
             {

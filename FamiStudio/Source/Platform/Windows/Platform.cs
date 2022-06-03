@@ -281,11 +281,11 @@ namespace FamiStudio
 
         public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
         {
-            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
 #if true
-            var dlg = new MessageDialog(text, title, buttons, icons);
+            var dlg = new MessageDialog(text, title, buttons);
             return dlg.ShowDialog();
 #else
+            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
             return (DialogResult)MessageBoxInternal(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
 #endif
         }

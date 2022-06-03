@@ -168,7 +168,7 @@ namespace FamiStudio
         {
             pageIndex = Utils.Clamp(idx, 0, TutorialMessages.Length - 1);
             label.Text = TutorialMessages[pageIndex];
-            label.ResizeForMultiline();
+            label.AdjustHeightForMultiline();
             buttonLeft.Visible = pageIndex != 0;
 
             OpenGif(TutorialImages[pageIndex]);

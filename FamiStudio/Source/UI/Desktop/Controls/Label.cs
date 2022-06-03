@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace FamiStudio
 {
     public class Label : Control
@@ -6,6 +8,12 @@ namespace FamiStudio
         protected string text;
         protected bool multiline;
 
+        public bool Multiline
+        {
+            get { return multiline; }
+            set { multiline = value; MarkDirty(); }
+        }
+
         public Label(string txt, bool multi = false)
         {
             text = txt;
@@ -13,7 +21,13 @@ namespace FamiStudio
             multiline = multi;
         }
 
-        public void ResizeForMultiline()
+        public void AutosizeWidth()
+        {
+            Debug.Assert(!multiline);
+            width = ThemeResources.FontMedium.MeasureString(text, false);
+        }
+
+        public void AdjustHeightForMultiline()
         {
             if (multiline)
             {
@@ -70,7 +84,7 @@ namespace FamiStudio
 
         protected override void OnAddedToDialog()
         {
-            ResizeForMultiline();
+            AdjustHeightForMultiline();
         }
 
         protected override void OnRender(Graphics g)

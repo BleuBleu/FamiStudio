@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Drawing;
 
 namespace FamiStudio
 {
@@ -7,6 +8,7 @@ namespace FamiStudio
         private string atlasImageName;
         private Bitmap bmp;
         private BitmapAtlasRef bmpAtlas;
+        private Color tint = Color.White;
 
         public ImageBox(string image)
         {
@@ -32,6 +34,12 @@ namespace FamiStudio
             set { bmp = value; MarkDirty(); }
         }
 
+        public Color Tint
+        {
+            get { return tint; }
+            set { tint = value; MarkDirty(); }
+        }
+
         protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
@@ -40,7 +48,7 @@ namespace FamiStudio
 
             if (bmp != null)
             {
-                c.DrawBitmapCentered(bmp, 0, 0, width, height);
+                c.DrawBitmapCentered(bmp, 0, 0, width, height, 1, tint);
             }
             else
             {
@@ -50,7 +58,7 @@ namespace FamiStudio
                     Debug.Assert(bmpAtlas != null);
                 }
 
-                c.DrawBitmapAtlasCentered(bmpAtlas, 0, 0, width, height);
+                c.DrawBitmapAtlasCentered(bmpAtlas, 0, 0, width, height, 1, 1, tint);
             }
         }
     }
