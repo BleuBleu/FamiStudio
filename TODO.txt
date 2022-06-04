@@ -16,7 +16,6 @@
 - GLFW : Do dash lines still work?
 ==============================
 
-- BUG : Victoria lab, change notes per best from 4 -> 3 makes everything go ape shit.
 - BUG : Victoria lab, is it possible to fix the tempo?
 - BUG : Double click doesnt un-solo a channel if you do it really fast??
 - CTX : When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
