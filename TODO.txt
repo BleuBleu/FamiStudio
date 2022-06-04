@@ -9,7 +9,6 @@
 4.0.0
 =====
 - BUG : Victoria lab, is it possible to fix the tempo?
-- BUG : Double click doesnt un-solo a channel if you do it really fast??
 - CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
 - CTX : Tooltips where a context menu can appear.
 - CTX : When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...

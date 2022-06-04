@@ -2673,7 +2673,7 @@ namespace FamiStudio
                 
                 if (trackIcon >= 0)
                 {
-                    App.ToggleChannelSolo(trackIcon);
+                    App.ToggleChannelSolo(trackIcon, true);
                     return true;
                 }
             }

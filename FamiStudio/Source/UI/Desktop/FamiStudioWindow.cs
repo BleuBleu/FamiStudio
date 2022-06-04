@@ -358,6 +358,8 @@ namespace FamiStudio
 
                     if (doubleClick)
                     {
+                        Debug.WriteLine($"DOUBLE CLICK!");
+
                         ctrl.MouseDoubleClick(new MouseEventArgs(MakeButtonFlags(button), cx, cy));
                     }
                     else

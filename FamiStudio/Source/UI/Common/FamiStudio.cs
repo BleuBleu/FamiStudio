@@ -323,12 +323,15 @@ namespace FamiStudio
                 songPlayer.ChannelMask ^= (1 << idx);
         }
 
-        public void ToggleChannelSolo(int idx)
+        public void ToggleChannelSolo(int idx, bool toggleAll = false)
         {
             if (songPlayer != null)
             {
                 var bit = 1 << idx;
-                songPlayer.ChannelMask = songPlayer.ChannelMask == bit ? -1 : bit;
+                if (songPlayer.ChannelMask == 0 && toggleAll)
+                    songPlayer.ChannelMask = -1;
+                else
+                    songPlayer.ChannelMask = songPlayer.ChannelMask == bit ? -1 : bit;
             }
         }
 
