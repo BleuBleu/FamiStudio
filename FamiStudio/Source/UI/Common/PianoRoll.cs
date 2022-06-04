@@ -57,7 +57,6 @@ namespace FamiStudio
         const int DefaultScrollBarThickness1       = 10;
         const int DefaultScrollBarThickness2       = 16;
         const int DefaultMinScrollBarLength        = 128;
-        const int DefaultScrollMargin              = 128;
         const int DefaultNoteResizeMargin          = 8;
         const int DefaultBeatTextPosX              = 3;
         const int DefaultMinPixelDistForLines      = 5;
@@ -461,11 +460,11 @@ namespace FamiStudio
             waveDisplayPaddingY       = ScaleForWindow(DefaultWaveDisplayPaddingY);
             scrollBarThickness        = ScaleForWindow(scrollBarSize);
             minScrollBarLength        = ScaleForWindow(DefaultMinScrollBarLength);
-            scrollMargin              = ScaleForWindow(DefaultScrollMargin);
             noteResizeMargin          = ScaleForWindow(DefaultNoteResizeMargin);
             minPixelDistForLines      = ScaleForWindow(DefaultMinPixelDistForLines);
             envelopeValueSizeY        = ScaleForWindowFloat(DefaultEnvelopeSizeY * envelopeValueZoom);
             gizmoSize                 = ScaleForWindow(DefaultGizmoSize);
+            scrollMargin              = (width - pianoSizeX) / 8;
 
             // Make sure the effect panel actually fit on screen on mobile.
             if (Platform.IsMobile && ParentWindow != null)

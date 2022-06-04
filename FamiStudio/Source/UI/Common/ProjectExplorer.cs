@@ -1273,29 +1273,6 @@ namespace FamiStudio
                     (int)Utils.Lerp(color2.G, color0.G, alpha),
                     (int)Utils.Lerp(color2.B, color0.B, alpha));
                 registerBrushes[i] = g.CreateSolidBrush(color);
-
-
-                /*
-                if (alpha < 0.5f)
-                {
-                    alpha *= 2.0f;
-                    var color = Color.FromArgb(
-                        (int)Utils.Lerp(color2.R, color1.R, alpha),
-                        (int)Utils.Lerp(color2.G, color1.G, alpha),
-                        (int)Utils.Lerp(color2.B, color1.B, alpha));
-                    registerBrushes[i] = g.CreateSolidBrush(color);
-
-                }
-                else
-                {
-                    alpha = (alpha - 0.5f) * 2.0f;
-                    var color = Color.FromArgb(
-                        (int)Utils.Lerp(color1.R, color0.R, alpha),
-                        (int)Utils.Lerp(color1.G, color0.G, alpha),
-                        (int)Utils.Lerp(color1.B, color0.B, alpha));
-                    registerBrushes[i] = g.CreateSolidBrush(color);
-                }
-                */
             }
 
             if (Platform.IsMobile)
@@ -1572,7 +1549,7 @@ namespace FamiStudio
                         else if (button.type == ButtonType.ParamCheckbox)
                         {
                             c.PushTranslation(contentSizeX - checkBoxPosX, checkBoxPosY);
-                            c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width - 1, bmpCheckBoxYes.ElementSize.Height - 1, g.GetSolidBrush(Color.Black, 1, enabled ? 1.0f : 0.25f));
+                            c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width * bitmapScale - 1, bmpCheckBoxYes.ElementSize.Height * bitmapScale - 1, g.GetSolidBrush(Color.Black, 1, enabled ? 1.0f : 0.25f));
                             c.DrawBitmapAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, enabled ? 1.0f : 0.25f, bitmapScale, Color.Black);
                             c.PopTransform();
                         }

@@ -8,8 +8,6 @@
 
 4.0.0
 =====
-- BUG : Check boxes misaligned on mobile
-- BUG : Mobile, can't scroll to last pattern in sequencer
 - BUG : Crash reopening my own MID files?
 - CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
 - CTX : Tooltips where a context menu can appear.

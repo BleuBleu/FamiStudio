@@ -10,7 +10,6 @@ namespace FamiStudio
         const int DefaultTrackNameSizeX      = Platform.IsMobile ? 64 : 94;
         const int DefaultHeaderSizeY         = 17;
         const int DefaultPatternHeaderSizeY  = 13;
-        const int DefaultScrollMargin        = 128;
         const int DefaultBarTextPosY         = 2;
         const int DefaultTrackIconPosX       = 2;
         const int DefaultTrackIconPosY       = 3;
@@ -178,7 +177,6 @@ namespace FamiStudio
             trackNameSizeX     = ScaleForWindow(DefaultTrackNameSizeX);
             headerSizeY        = ScaleForWindow(DefaultHeaderSizeY);
             trackSizeY         = ScaleForWindow(ComputeDesiredChannelSizeY());
-            scrollMargin       = ScaleForWindow(DefaultScrollMargin);
             barTextPosY        = ScaleForWindow(DefaultBarTextPosY);
             trackIconPosX      = ScaleForWindow(DefaultTrackIconPosX);
             trackIconPosY      = ScaleForWindow(DefaultTrackIconPosY);
@@ -192,6 +190,7 @@ namespace FamiStudio
             minScrollBarLength = ScaleForWindow(DefaultMinScrollBarLength);
             noteSizeX          = ScaleForWindowFloat(zoom * patternZoom);
             virtualSizeY       = Song != null ? trackSizeY * Song.Channels.Length : 0;
+            scrollMargin       = (width - trackNameSizeX) / 8;
 
             // Shave a couple pixels when the size is getting too small.
             if (TrackSizeIsSmall())
