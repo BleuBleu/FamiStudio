@@ -466,7 +466,10 @@ namespace FamiStudio
                             if (note.Instrument == instrumentOld)
                             {
                                 if (instrumentNew == null)
+                                {
                                     note.Value = Note.NoteInvalid;
+                                    note.Duration = 0;
+                                }
 
                                 note.Instrument = instrumentNew;
                             }

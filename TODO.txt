@@ -25,8 +25,6 @@
 - TEST : Make sure the demo songs are 100% intact.
 
 P1:
-- Scroll near edges when resizing envelope.
-- Validation errors in JTS when deleting some instruments.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

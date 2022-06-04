@@ -531,6 +531,7 @@ namespace FamiStudio
         {
             ResetSelectedInstrumentArpeggio();
             PianoRoll.Reset(selectedChannelIndex);
+            Sequencer.InvalidatePatternCache();
         }
 
         private void ProjectExplorer_ArpeggioDeleted(Arpeggio arpeggio)
@@ -2240,7 +2241,6 @@ namespace FamiStudio
         private void PianoRoll_ManyPatternChanged()
         {
             Sequencer.InvalidatePatternCache();
-            Sequencer.MarkDirty();
         }
 
         private void PianoRoll_DPCMSampleChanged()
