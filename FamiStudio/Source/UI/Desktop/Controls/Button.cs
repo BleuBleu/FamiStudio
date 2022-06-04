@@ -14,13 +14,14 @@ namespace FamiStudio
         private BitmapAtlasRef bmp;
         private int margin = DpiScaling.ScaleForWindow(4);
         private bool bold;
+        private bool ellipsis;
         private bool border;
         private bool hover;
         private bool press;
 
-        public Button(string img, string txt)
+        public Button(Dialog dlg, string img, string txt) : base(dlg)
         {
-            imageName = img;
+            Image = img;
             text  = txt;
         }
 
@@ -33,7 +34,7 @@ namespace FamiStudio
         public string Image
         {
             get { return imageName; }
-            set { imageName = value; bmp = null; MarkDirty(); }
+            set { imageName = value; UpdateAtlasBitmap(); MarkDirty(); }
         }
 
         public bool BoldFont
@@ -48,11 +49,17 @@ namespace FamiStudio
             set { border = value; MarkDirty(); }
         }
 
-        public void AutosizeWidth(int imageSize)
+        public bool Ellipsis
+        {
+            get { return ellipsis; }
+            set { ellipsis = value; MarkDirty(); }
+        }
+
+        public void AutosizeWidth()
         {
             // Only bothered to support this one use case.
             Debug.Assert(!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(imageName));
-            width = margin * 3 + ScaleForWindow(imageSize) + ThemeResources.FontMedium.MeasureString(text, false);
+            width = margin * 3 + bmp.ElementSize.Width + ThemeResources.FontMedium.MeasureString(text, false);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -86,14 +93,17 @@ namespace FamiStudio
             SetAndMarkDirty(ref press, false);
         }
 
-        protected override void OnRender(Graphics g)
+        private void UpdateAtlasBitmap()
         {
-            if (bmp == null && !string.IsNullOrEmpty(imageName))
+            if (!string.IsNullOrEmpty(imageName))
             {
-                bmp = g.GetBitmapAtlasRef(imageName);
+                bmp = parentWindow.Graphics.GetBitmapAtlasRef(imageName);
                 Debug.Assert(bmp != null);
             }
+        }
 
+        protected override void OnRender(Graphics g)
+        {
             var c = parentDialog.CommandList;
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
             var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
@@ -122,7 +132,7 @@ namespace FamiStudio
             }
             else if (hasText && bmp == null)
             {
-                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, 0, 0, brush, TextFlags.MiddleCenter, width, height);
+                c.DrawText(text, bold ? ThemeResources.FontMediumBold : ThemeResources.FontMedium, 0, 0, brush, TextFlags.MiddleCenter | (ellipsis ? TextFlags.Ellipsis : 0), width, height);
             }
             else if (hasText && bmp != null)
             {

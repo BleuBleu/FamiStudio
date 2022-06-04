@@ -72,21 +72,21 @@ namespace FamiStudio
         {
             Debug.Assert(!string.IsNullOrEmpty(str));
 
-            var label = new Label(str, multiline);
+            var label = new Label(dialog, str, multiline);
             label.ToolTip = tooltip;
             return label;
         }
 
         private LinkLabel CreateLinkLabel(string str, string url, string tooltip = null)
         {
-            var label = new LinkLabel(str, url);
+            var label = new LinkLabel(dialog, str, url);
             label.ToolTip = tooltip;
             return label;
         }
 
         private TextBox CreateColoredTextBox(string txt, Color backColor)
         {
-            var textBox = new TextBox(txt);
+            var textBox = new TextBox(dialog, txt);
             textBox.BackColor = backColor;
             textBox.ForeColor = Theme.BlackColor;
             textBox.DisabledColor = Theme.BlackColor;
@@ -96,7 +96,7 @@ namespace FamiStudio
 
         private TextBox CreateTextBox(string txt, int maxLength, string tooltip = null)
         {
-            var textBox = new TextBox(txt);
+            var textBox = new TextBox(dialog, txt);
 
             // MATTT
             //textBox.MaxLength = maxLength;
@@ -109,12 +109,12 @@ namespace FamiStudio
 
         private LogTextBox CreateLogTextBox()
         {
-            return new LogTextBox(15);
+            return new LogTextBox(dialog, 15);
         }
 
         private ColorPicker CreateColorPicker(Color color)
         {
-            var colorPicker = new ColorPicker(color);
+            var colorPicker = new ColorPicker(dialog, color);
             colorPicker.SetNiceSize(layoutWidth);
             colorPicker.ColorChanged += ColorPicker_ColorChanged;
             colorPicker.DoubleClicked += ColorPicker_ColorDoubleClicked;
@@ -140,12 +140,12 @@ namespace FamiStudio
 
         private ImageBox CreateImageBox(string image)
         {
-            return new ImageBox(image);
+            return new ImageBox(dialog, image);
         }
 
         private NumericUpDown CreateNumericUpDown(int value, int min, int max, string tooltip = null)
         {
-            var upDown = new NumericUpDown(value, min, max);
+            var upDown = new NumericUpDown(dialog, value, min, max);
 
             upDown.ValueChanged += UpDown_ValueChanged;
             upDown.ToolTip = tooltip;
@@ -155,13 +155,13 @@ namespace FamiStudio
 
         private ProgressBar CreateProgressBar()
         {
-            var progress = new ProgressBar();
+            var progress = new ProgressBar(dialog);
             return progress;
         }
 
         private RadioButton CreateRadioButton(string text, bool check, bool multiline)
         {
-            var radio = new RadioButton(text, check, multiline);
+            var radio = new RadioButton(dialog, text, check, multiline);
             return radio;
         }
 
@@ -173,7 +173,7 @@ namespace FamiStudio
 
         private CheckBox CreateCheckBox(bool value, string text = "", string tooltip = null)
         {
-            var cb = new CheckBox(value, text);
+            var cb = new CheckBox(dialog, value, text);
             cb.CheckedChanged += Cb_CheckedChanged;
             cb.ToolTip = tooltip;
             return cb;
@@ -187,7 +187,7 @@ namespace FamiStudio
 
         private DropDown CreateDropDownList(string[] values, string value, string tooltip = null)
         {
-            var dropDown = new DropDown(values, Array.IndexOf(values, value));
+            var dropDown = new DropDown(dialog, values, Array.IndexOf(values, value));
             dropDown.SelectedIndexChanged += DropDown_SelectedIndexChanged;
             dropDown.ToolTip = tooltip;
 
@@ -208,7 +208,7 @@ namespace FamiStudio
                 new ColumnDesc("B", 1.0f, ColumnType.Label)
             };
 
-            var grid = new Grid(columns, numRows, false); 
+            var grid = new Grid(dialog, columns, numRows, false); 
             var data = new object[values.Length, 2];
 
             for (int i = 0; i < values.Length; i++)
@@ -232,11 +232,12 @@ namespace FamiStudio
 
         private Button CreateButton(string text, string tooltip)
         {
-            var button = new Button(null, text);
+            var button = new Button(dialog, null, text);
             button.Border = true;
             button.Click += Button_Click;
             button.Resize(button.Width, DpiScaling.ScaleForWindow(32));
             button.ToolTip = tooltip;
+            button.Ellipsis = true;
             return button;
         }
 
@@ -472,7 +473,7 @@ namespace FamiStudio
 
         private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
         {
-            var slider = new Slider(value, min, max, increment, showLabel, format);
+            var slider = new Slider(dialog, value, min, max, increment, showLabel, format);
             slider.ValueChanged += Slider_ValueChanged;
             slider.ToolTip = tooltip;
             return slider;
@@ -498,7 +499,7 @@ namespace FamiStudio
 
         private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)
         {
-            var grid = new Grid(columnDescs, numRows, true);
+            var grid = new Grid(dialog, columnDescs, numRows, true);
 
             if (data != null)
                 grid.UpdateData(data);
@@ -721,12 +722,8 @@ namespace FamiStudio
             for (int i = 0; i < propertyCount; i++)
             {
                 var prop = properties[i];
-
                 if (prop.visible && prop.label != null)
-                {
-                    dialog.AddControl(prop.label); // Need to add to initialize rendering.
                     maxLabelWidth = Math.Max(maxLabelWidth, prop.label.MeasureWidth());
-                }
             }
 
             int totalHeight = 0;

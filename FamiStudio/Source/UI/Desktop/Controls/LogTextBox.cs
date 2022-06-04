@@ -18,7 +18,7 @@ namespace FamiStudio
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
         private int lineHeight     = DpiScaling.ScaleForWindow(16);
 
-        public LogTextBox(int lineCount)
+        public LogTextBox(Dialog dlg, int lineCount) : base(dlg)
         {
             numLines = lineCount;
             height = lineCount* lineHeight;

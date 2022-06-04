@@ -25,7 +25,7 @@ namespace FamiStudio
         private int labelMargin;
         private int labelSize;
 
-        public Slider(double value, double minValue, double maxValue, double inc, bool showLabel, string fmt = "{0}")
+        public Slider(Dialog dlg, double value, double minValue, double maxValue, double inc, bool showLabel, string fmt = "{0}") : base(dlg)
         {
             min = minValue;
             max = maxValue;

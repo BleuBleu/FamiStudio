@@ -12,7 +12,7 @@ namespace FamiStudio
         private BitmapAtlasRef bmpCheckOn;
         private BitmapAtlasRef bmpCheckOff;
 
-        public CheckBox(bool chk, string txt = null)
+        public CheckBox(Dialog dlg, bool chk, string txt = null) : base(dlg)
         {
             text = txt;
             check = chk;

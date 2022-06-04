@@ -38,10 +38,10 @@ namespace FamiStudio
         private MultiPropertyDialog dialog;
         private FamiStudio app;
 
-        public unsafe TransformDialog(FamiStudio famistudio)
+        public unsafe TransformDialog(FamiStudioWindow win)
         {
-            app = famistudio;
-            dialog = new MultiPropertyDialog("Transform Songs", 550, 500);
+            app = win.FamiStudio;
+            dialog = new MultiPropertyDialog(win, "Transform Songs", 550, 500);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
@@ -212,9 +212,9 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
-            dialog.ShowDialogAsync(parent, (r) =>
+            dialog.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {

@@ -56,7 +56,7 @@ namespace FamiStudio
         private byte[] gifBuffer;
         private GCHandle gifHandle;
 
-        public TutorialDialog()
+        public TutorialDialog(FamiStudioWindow win) : base(win)
         {
             Move(0, 0, 
                 imageSizeX + margin * 2, 
@@ -68,25 +68,25 @@ namespace FamiStudio
         private void Init()
         {
             // MATTT : This doesnt work with scaling i think.
-            buttonLeft = new Button("ArrowLeft", null);
+            buttonLeft = new Button(this, "ArrowLeft", null);
             buttonLeft.Click += ButtonLeft_Click;
             buttonLeft.Resize(buttonSize, buttonSize);
             buttonLeft.ToolTip = "Previous";
             buttonLeft.Move(width - buttonSize * 2 - margin * 2, height - buttonSize - margin);
 
-            buttonRight = new Button("ArrowRight", null);
+            buttonRight = new Button(this, "ArrowRight", null);
             buttonRight.Click += ButtonRight_Click;
             buttonRight.Resize(buttonSize, buttonSize);
             buttonRight.ToolTip = "Next";
             buttonRight.Move(width - buttonSize - margin, height - buttonSize - margin);
 
-            label = new Label("This is a nice label", true);
+            label = new Label(this, "This is a nice label", true);
             label.Move(margin, margin, width - margin, labelSizeY);
 
-            imageBox = new ImageBox("VideoWatermark");
+            imageBox = new ImageBox(this, "VideoWatermark");
             imageBox.Move(margin, margin * 2 + labelSizeY, imageSizeX, imageSizeY);
 
-            checkBoxDontShow = new CheckBox(false, "Do not show again");
+            checkBoxDontShow = new CheckBox(this, false, "Do not show again");
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY, width - buttonSize * 3, checkSizeY);
 
             AddControl(buttonLeft);

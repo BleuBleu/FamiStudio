@@ -10,13 +10,14 @@ namespace FamiStudio
         private BitmapAtlasRef bmpAtlas;
         private Color tint = Color.White;
 
-        public ImageBox(string image)
+        public ImageBox(Dialog dlg, string image) : base(dlg)
         {
             height = DpiScaling.ScaleForWindow(24);
             atlasImageName = image;
+            UpdateAtlasBitmap();
         }
 
-        public ImageBox(Bitmap b)
+        public ImageBox(Dialog dlg, Bitmap b) : base(dlg)
         {
             height = DpiScaling.ScaleForWindow(24);
             bmp = b;
@@ -25,7 +26,7 @@ namespace FamiStudio
         public string AtlasImageName
         {
             get { return atlasImageName; }
-            set { atlasImageName = value; bmpAtlas = null; MarkDirty(); }
+            set { atlasImageName = value; UpdateAtlasBitmap(); MarkDirty(); }
         }
 
         public Bitmap Image
@@ -38,6 +39,15 @@ namespace FamiStudio
         {
             get { return tint; }
             set { tint = value; MarkDirty(); }
+        }
+
+        private void UpdateAtlasBitmap()
+        {
+            if (!string.IsNullOrEmpty(atlasImageName))
+            {
+                bmpAtlas = parentWindow.Graphics.GetBitmapAtlasRef(atlasImageName);
+                Debug.Assert(bmpAtlas != null);
+            }
         }
 
         protected override void OnRender(Graphics g)

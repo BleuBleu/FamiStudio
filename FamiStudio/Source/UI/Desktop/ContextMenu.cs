@@ -23,6 +23,10 @@ namespace FamiStudio
         BitmapAtlasRef bmpMenuRadio;
         ContextMenuOption[] menuOptions;
 
+        public ContextMenu(FamiStudioWindow win) : base(win)
+        {
+        }
+
         protected override void OnRenderInitialized(Graphics g)
         {
             bmpExpansions   = g.GetBitmapAtlasRefs(ExpansionType.Icons);

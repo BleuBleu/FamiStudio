@@ -11,8 +11,6 @@ namespace FamiStudio
         private const double DelayedRightClickTime = 0.25;
         private const int    DelayedRightClickPixelTolerance = 2;
 
-        private static FamiStudioWindow instance;
-
         private IntPtr window; // GLFW window.
 
         private FamiStudio famistudio;
@@ -28,7 +26,6 @@ namespace FamiStudio
         public ContextMenu ContextMenu => controls.ContextMenu;
         public Control ActiveControl => activeControl;
         public Graphics Graphics => controls.Graphics;
-        public static FamiStudioWindow Instance => instance;
 
         public Size Size => GetWindowSizeInternal();
         public int Width => GetWindowSizeInternal().Width;
@@ -78,7 +75,6 @@ namespace FamiStudio
         {
             famistudio = app;
             window = glfwWindow;
-            instance = this;
             controls = new FamiStudioControls(this);
             activeControl = controls.PianoRoll;
 

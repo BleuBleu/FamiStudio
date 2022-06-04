@@ -33,7 +33,7 @@ namespace FamiStudio
             if (glfwInit() == 0)
             {
                 // MATTT : We will need a "low level" message box if we ever roll out our own.
-                Platform.MessageBox("Error initializing GLFW.", "Error", MessageBoxButtons.OK);
+                Platform.MessageBox(null, "Error initializing GLFW.", "Error", MessageBoxButtons.OK);
                 return false;
             }
 
@@ -70,6 +70,95 @@ namespace FamiStudio
         public static int GetOutputAudioSampleSampleRate()
         {
             return 44100;
+        }
+
+        public static unsafe string[] ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
+        {
+            if (Settings.UseOSDialogs)
+            {
+                return ShowPlatformOpenFileDialog(win, title, extensions, ref defaultPath, multiselect);
+            }
+            else
+            {
+                var dlg = new FileDialog(win, FileDialog.Mode.Open, title, defaultPath, extensions);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    defaultPath = Path.GetDirectoryName(dlg.SelectedPath);
+                    return new[] { dlg.SelectedPath };
+                }
+                return null;
+            }
+        }
+
+        public static unsafe string ShowSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        {
+            if (Settings.UseOSDialogs)
+            {
+                return ShowPlatformSaveFileDialog(win, title, extensions, ref defaultPath);
+            }
+            else
+            {
+                var dlg = new FileDialog(win, FileDialog.Mode.Save, title, defaultPath, extensions);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    defaultPath = Path.GetDirectoryName(dlg.SelectedPath);
+                    return dlg.SelectedPath;
+                }
+                return null;
+            }
+        }
+
+        public static string ShowBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
+        {
+            if (Settings.UseOSDialogs)
+            {
+                return ShowPlatformBrowseFolderDialog(win, title, ref defaultPath);
+            }
+            else
+            {
+                var dlg = new FileDialog(win, FileDialog.Mode.Folder, title, defaultPath);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    defaultPath = dlg.SelectedPath;
+                    return defaultPath;
+                }
+                return null;
+            }
+        }
+
+        public static DialogResult MessageBox(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons)
+        {
+            if (Settings.UseOSDialogs || win == null)
+            {
+                return PlatformMessageBox(win, text, title, buttons);
+            }
+            else
+            {
+                var dlg = new MessageDialog(win, text, title, buttons);
+                return dlg.ShowDialog();
+            }
+        }
+
+        public static string ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
+        {
+            var filenames = ShowOpenFileDialog(win, title, extensions, ref defaultPath, false);
+
+            if (filenames == null || filenames.Length == 0)
+                return null;
+
+            return filenames[0];
+        }
+
+        public static string ShowSaveFileDialog(FamiStudioWindow win, string title, string extensions)
+        {
+            string dummy = "";
+            return ShowSaveFileDialog(win, title, extensions, ref dummy);
+        }
+
+        public static void MessageBoxAsync(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
+        {
+            var res = MessageBox(win, text, title, buttons);
+            callback?.Invoke(res);
         }
 
         public static void DelayedMessageBoxAsync(string text, string title)

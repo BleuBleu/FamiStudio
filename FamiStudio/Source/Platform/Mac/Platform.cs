@@ -46,7 +46,7 @@ namespace FamiStudio
             return extensions.Distinct().ToArray();
         }
 
-        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, IntPtr parentWindow = default(IntPtr))
+        public static unsafe string[] ShowPlatformOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
         {
             var extensionList = GetExtensionList(extensions);
 
@@ -56,17 +56,7 @@ namespace FamiStudio
             return filenames;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, IntPtr parentWindow = default(IntPtr))
-        {
-            var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindow);
-
-            if (filenames == null || filenames.Length == 0)
-                return null;
-
-            return filenames[0];
-        }
-
-        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
+        public static unsafe string ShowPlatformSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
         {
             var extensionList = GetExtensionList(extensions);
 
@@ -76,7 +66,7 @@ namespace FamiStudio
             return filename;
         }
 
-        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
+        public static string ShowPlatformBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
         {
             var filename = MacUtils.ShowBrowseFolderDialog(title, ref defaultPath);
             if (!string.IsNullOrEmpty(filename))
@@ -90,21 +80,9 @@ namespace FamiStudio
             return null;
         }
 
-        public static string ShowSaveFileDialog(string title, string extensions)
-        {
-            string dummy = "";
-            return ShowSaveFileDialog(title, extensions, ref dummy);
-        }
-
-        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons, MessageBoxIcon icon = MessageBoxIcon.None)
+        public static DialogResult PlatformMessageBox(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons)
         {
             return MacUtils.ShowAlert(text, title, buttons);
-        }
-
-        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
-        {
-            var res = MessageBox(text, title, buttons);
-            callback?.Invoke(res);
         }
 
         public static void OpenUrl(string url)
@@ -143,7 +121,7 @@ namespace FamiStudio
 
         public static void SetClipboardString(string str)
         {
-            // MATTT
+            // MATTT : Migrate to GLFW clipboard.
             Debug.Assert(false);
         }
 

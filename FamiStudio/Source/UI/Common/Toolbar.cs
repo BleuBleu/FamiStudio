@@ -296,6 +296,10 @@ namespace FamiStudio
 
         private float iconScaleFloat = 1.0f;
 
+        public Toolbar(FamiStudioWindow win) : base(win)
+        {
+        }
+
         protected override void OnRenderInitialized(Graphics g)
         {
             Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
@@ -477,7 +481,7 @@ namespace FamiStudio
                     {
                         x += buttonSize + timecodeOscSizeX + buttonIconPosX;
 
-                        oscilloscopeVisible = Settings.ShowOscilloscope && !hideOscilloscope;
+                        oscilloscopeVisible = !hideOscilloscope;
                         if (oscilloscopeVisible)
                             x += timecodeOscSizeX + buttonIconPosX * 4;
                     }

@@ -4,6 +4,10 @@ namespace FamiStudio
 {
     public class MobilePiano : Control
     {
+        public MobilePiano(FamiStudioWindow win) : base(win)
+        {
+        }
+
         public override void Tick(float deltaTime)
         {
         }
@@ -15,6 +19,10 @@ namespace FamiStudio
 
     public class QuickAccessBar : Control
     {
+        public QuickAccessBar(FamiStudioWindow win) : base(win)
+        {
+        }
+
         public override void Tick(float deltaTime)
         {
         }

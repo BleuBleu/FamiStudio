@@ -57,7 +57,7 @@ namespace FamiStudio
         public int ItemCount => data.GetLength(0);
         public bool FullRowSelect { get => fullRowSelect; set => fullRowSelect = value; }
 
-        public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
+        public Grid(Dialog dlg, ColumnDesc[] columnDescs, int rows, bool hasHeader = true) : base(dlg) 
         {
             columns = columnDescs;
             numRows = rows;
@@ -76,8 +76,8 @@ namespace FamiStudio
 
             if (hasAnyDropDowns)
             {
-                dropDownInactive = new DropDown(new[] { "" }, 0, true);
-                dropDownActive = new DropDown(new[] { "" }, 0);
+                dropDownInactive = new DropDown(dlg, new[] { "" }, 0, true);
+                dropDownActive = new DropDown(dlg, new[] { "" }, 0);
                 dropDownInactive.SetRowHeight(rowHeight);
                 dropDownActive.SetRowHeight(rowHeight);
                 dropDownInactive.Visible = false;
@@ -226,7 +226,7 @@ namespace FamiStudio
             row = y / rowHeight - numHeaderRows + scroll;
 
             Debug.Assert(col >= 0);
-            return row >= 0;
+            return row >= 0 && row < data.GetLength(0);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

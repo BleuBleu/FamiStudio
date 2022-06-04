@@ -295,7 +295,7 @@ namespace FamiStudio
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
 
             // Setup piano roll and images.
-            var pianoRoll = new PianoRoll();
+            var pianoRoll = new PianoRoll(null);
             pianoRoll.Move(0, 0, channelResX, channelResY);
             pianoRoll.SetThemeRenderResource(themeResources);
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);

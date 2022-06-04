@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -46,33 +47,43 @@ namespace FamiStudio
             }
         }
 
-        public Dialog()
+        public Dialog(FamiStudioWindow win) : base(win)
         {
             visible = false;
-            // MATTT: Add the form to the constructor eventually.
-            FamiStudioWindow.Instance.InitDialog(this);
+            parentWindow.InitDialog(this);
+        }
+
+        private void ShowDialogInternal()
+        {
+            visible = true;
+            OnShowDialog();
+            parentWindow.PushDialog(this);
+        }
+
+        public void ShowDialogNonModal()
+        {
+            ShowDialogInternal();
         }
 
         public DialogResult ShowDialog()
         {
-            visible = true;
-            OnShowDialog();
-            FamiStudioWindow.Instance.PushDialog(this);
-            
+            ShowDialogInternal();
+
             while (result == DialogResult.None)
                 ParentWindow.RunEventLoop(true);
 
             return result;
         }
 
-        public void ShowDialogAsync(object parent, Action<DialogResult> cb) // MATTT : Remove parent, pass in contructor.
+        public void ShowDialogAsync(Action<DialogResult> cb)
         {
+            // Dialogs are not async on desktop.
             cb(ShowDialog());
         }
 
         public void Close(DialogResult res)
         {
-            FamiStudioWindow.Instance.PopDialog(this);
+            parentWindow.PopDialog(this);
             result = res;
             visible = false;
         }
@@ -81,16 +92,20 @@ namespace FamiStudio
         {
         }
 
+        public void InitControl(Control ctrl)
+        {
+            Debug.Assert(ctrl.ParentDialog == this);
+
+            ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
+            ctrl.SetThemeRenderResource(ThemeResources);
+            ctrl.RenderInitialized(ParentWindow.Graphics);
+        }
+
         public void AddControl(Control ctrl)
         {
             if (!controls.Contains(ctrl))
             {
                 controls.Add(ctrl);
-                ctrl.ParentWindow = ParentWindow;
-                ctrl.ParentDialog = this;
-                ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
-                ctrl.SetThemeRenderResource(ThemeResources);
-                ctrl.RenderInitialized(ParentWindow.Graphics); 
                 ctrl.AddedToDialog();
             }
         }
@@ -100,7 +115,7 @@ namespace FamiStudio
             if (ctrl != null)
             {
                 controls.Remove(ctrl);
-                ctrl.RenderTerminated();
+                ctrl.RenderTerminated(); // MATTT : This is wrong.
             }
         }
 
@@ -114,7 +129,17 @@ namespace FamiStudio
                 }
             }
 
+            var v1 = ShouldDisplayTooltip();
             tooltipTimer += delta;
+            var v2 = ShouldDisplayTooltip();
+
+            if (!v1 && v2)
+                MarkDirty();
+        }
+
+        private bool ShouldDisplayTooltip()
+        {
+            return tooltipTimer > ToolTipDelay;
         }
 
         public Control GetControlAtInternal(bool focused, int formX, int formY, out int ctrlX, out int ctrlY)
@@ -165,7 +190,7 @@ namespace FamiStudio
 
         private void ResetToolTip()
         {
-            if (tooltipTimer > ToolTipDelay)
+            if (ShouldDisplayTooltip())
                 MarkDirty();
             tooltipTimer = 0;
         }
@@ -263,7 +288,7 @@ namespace FamiStudio
             commandList = null;
             commandListForeground = null;
 
-            if (tooltipTimer > ToolTipDelay)
+            if (ShouldDisplayTooltip())
             {
                 var pt = PointToClient(Cursor.Position);
                 var formPt = pt + new Size(left, top);

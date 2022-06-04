@@ -986,7 +986,7 @@ namespace FamiStudio
         public event DPCMSamplePointDelegate DPCMSampleMapped;
         public event EmptyDelegate ProjectModified;
 
-        public ProjectExplorer()
+        public ProjectExplorer(FamiStudioWindow win) : base(win)
         {
             UpdateRenderCoords();
 
@@ -2137,13 +2137,13 @@ namespace FamiStudio
                             {
                                 const string label = "Which action do you wish to perform?";
 
-                                var messageDlg = new PropertyDialog("Copy or Replace?", 400, true, true);
+                                var messageDlg = new PropertyDialog(ParentWindow, "Copy or Replace?", 400, true, true);
                                 messageDlg.Properties.AddLabel(null, label, true); // 0
                                 messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, $"Replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'.", true); // 1
                                 messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, $"Copy all properties and envelopes of instrument '{instrumentSrc.Name}' on to instrument '{instrumentDst.Name}'.", false); // 2
                                 messageDlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                                 messageDlg.Properties.Build();
-                                messageDlg.ShowDialogAsync(null, (r) =>
+                                messageDlg.ShowDialogAsync((r) =>
                                 {
                                     if (r == DialogResult.OK)
                                     {
@@ -2163,7 +2163,7 @@ namespace FamiStudio
                             }
                             else
                             {
-                                Platform.MessageBoxAsync($"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
+                                Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
                                 {
                                     if (r == DialogResult.Yes)
                                     {
@@ -2226,7 +2226,7 @@ namespace FamiStudio
                     {
                         if (envelopeDragIdx == -1)
                         {
-                            Platform.MessageBoxAsync($"Are you sure you want to replace all notes using arpeggio '{arpeggioDst.Name}' with '{arpeggioSrc.Name}'?", "Replace arpeggio?", MessageBoxButtons.YesNo, (r) =>
+                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to replace all notes using arpeggio '{arpeggioDst.Name}' with '{arpeggioSrc.Name}'?", "Replace arpeggio?", MessageBoxButtons.YesNo, (r) =>
                             {
                                 if (r == DialogResult.Yes)
                                 {
@@ -2238,7 +2238,7 @@ namespace FamiStudio
                         }
                         else
                         {
-                            Platform.MessageBoxAsync($"Are you sure you want to copy the arpeggio values from '{arpeggioSrc.Name}' to '{arpeggioDst.Name}'?", "Copy Arpeggio", MessageBoxButtons.YesNo, (r) =>
+                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the arpeggio values from '{arpeggioSrc.Name}' to '{arpeggioDst.Name}'?", "Copy Arpeggio", MessageBoxButtons.YesNo, (r) =>
                             {
                                 if (r == DialogResult.Yes)
                                 {
@@ -2519,7 +2519,7 @@ namespace FamiStudio
                         foreach (var song in otherProject.Songs)
                             songNames.Add(song.Name);
 
-                        var dlg = new PropertyDialog("Import Songs", 300);
+                        var dlg = new PropertyDialog(ParentWindow, "Import Songs", 300);
                         dlg.Properties.AddLabel(null, "Select songs to import:"); // 0
                         dlg.Properties.AddCheckBoxList(null, songNames.ToArray(), null); // 1
                         dlg.Properties.AddButton(null, "Select All"); // 2
@@ -2527,7 +2527,7 @@ namespace FamiStudio
                         dlg.Properties.PropertyClicked += ImportSongs_PropertyClicked;
                         dlg.Properties.Build();
 
-                        dlg.ShowDialogAsync(ParentWindow, (r) =>
+                        dlg.ShowDialogAsync((r) =>
                         {
                             if (r == DialogResult.OK)
                             {
@@ -2570,7 +2570,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = Platform.ShowOpenFileDialog("Open File", "All Song Files (*.fms;*.txt;*.ftm)|*.fms;*.txt;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Song Files (*.fms;*.txt;*.ftm)|*.fms;*.txt;*.ftm|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
                 ImportSongsAction(filename);
             }
         }
@@ -2636,7 +2636,7 @@ namespace FamiStudio
                                 instrumentNames.Add(instrument.NameWithExpansion);
                             }
 
-                            var dlg = new PropertyDialog("Import Instruments", 300);
+                            var dlg = new PropertyDialog(ParentWindow, "Import Instruments", 300);
                             dlg.Properties.AddLabel(null, "Select instruments to import:"); // 0
                             dlg.Properties.AddCheckBoxList(null, instrumentNames.ToArray(), null); // 1
                             dlg.Properties.AddButton(null, "Select All"); // 2
@@ -2644,7 +2644,7 @@ namespace FamiStudio
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            dlg.ShowDialogAsync(ParentWindow, (r) =>
+                            dlg.ShowDialogAsync((r) =>
                             {
                                 if (r == DialogResult.OK)
                                 {
@@ -2684,7 +2684,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = Platform.ShowOpenFileDialog("Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti)|*.fti;*.fms;*.txt;*.ftm;*.bti|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
+                var filename = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Instrument Files (*.fti;*.fms;*.txt;*.ftm;*.bti)|*.fti;*.fms;*.txt;*.ftm;*.bti|FamiTracker Instrument File (*.fti)|*.fti|BambooTracker Instrument File (*.bti)|*.bti|FamiStudio Files (*.fms)|*.fms|FamiTracker Files (*.ftm)|*.ftm|FamiTracker Text Export (*.txt)|*.txt|FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastInstrumentFolder);
                 ImportInstrumentsAction(filename);
             }
         }
@@ -2725,7 +2725,7 @@ namespace FamiStudio
 
                     if (numFamiStudioFiles > 1 || (numFamiStudioFiles == 1 && numSamplesFiles != 0))
                     {
-                        Platform.MessageBoxAsync("You can only select one FamiStudio project to import samples from.", "Error", MessageBoxButtons.OK);
+                        Platform.MessageBoxAsync(ParentWindow, "You can only select one FamiStudio project to import samples from.", "Error", MessageBoxButtons.OK);
                         return;
                     }
                     else if (numFamiStudioFiles == 1)
@@ -2736,7 +2736,7 @@ namespace FamiStudio
                         {
                             if (samplesProject.Samples.Count == 0)
                             {
-                                Platform.MessageBox("The selected project does not contain any samples.", "Error", MessageBoxButtons.OK);
+                                Platform.MessageBox(ParentWindow, "The selected project does not contain any samples.", "Error", MessageBoxButtons.OK);
                                 return;
                             }
 
@@ -2745,7 +2745,7 @@ namespace FamiStudio
                             foreach (var sample in samplesProject.Samples)
                                 samplesNames.Add(sample.Name);
 
-                            var dlg = new PropertyDialog("Import DPCM Samples", 300);
+                            var dlg = new PropertyDialog(ParentWindow, "Import DPCM Samples", 300);
                             dlg.Properties.AddLabel(null, "Select samples to import:"); // 0
                             dlg.Properties.AddCheckBoxList("Import DPCM Samples", samplesNames.ToArray(), null); // 1
                             dlg.Properties.AddButton(null, "Select All"); // 2
@@ -2753,7 +2753,7 @@ namespace FamiStudio
                             dlg.Properties.Build();
                             dlg.Properties.PropertyClicked += ImportInstrument_PropertyClicked;
 
-                            dlg.ShowDialogAsync(ParentWindow, (r) =>
+                            dlg.ShowDialogAsync((r) =>
                             {
                                 if (r == DialogResult.OK)
                                 {
@@ -2839,7 +2839,7 @@ namespace FamiStudio
             }
             else
             {
-                var filenames = Platform.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc|FamiStudio Files (*.fms)|*.fms", ref Settings.LastSampleFolder, true);
+                var filenames = Platform.ShowOpenFileDialog(ParentWindow, "Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc|FamiStudio Files (*.fms)|*.fms", ref Settings.LastSampleFolder, true);
                 LoadDPCMSampleAction(filenames);
             }
         }
@@ -2854,7 +2854,7 @@ namespace FamiStudio
 
         private void AskDeleteSong(Song song)
         {
-            Platform.MessageBoxAsync($"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo, (r) =>
+            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to delete '{song.Name}' ?", "Delete song", MessageBoxButtons.YesNo, (r) =>
             {
                 if (r == DialogResult.Yes)
                 {
@@ -2886,7 +2886,7 @@ namespace FamiStudio
                 var activeExpansions = App.Project.GetActiveExpansions();
                 var expNames = new List<string>();
 
-                var dlg = new PropertyDialog("Add Instrument", new Point(left + x, top + y), 260, true);
+                var dlg = new PropertyDialog(ParentWindow, "Add Instrument", new Point(left + x, top + y), 260, true);
                 dlg.Properties.AddLabel(null, "Select audio expansion:"); // 0
 
                 expNames.Add(ExpansionType.Names[ExpansionType.None]);
@@ -2905,7 +2905,7 @@ namespace FamiStudio
                 dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
-                dlg.ShowDialogAsync(ParentWindow, (r) =>
+                dlg.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)
                     {
@@ -2938,7 +2938,7 @@ namespace FamiStudio
 
         private void AskDeleteInstrument(Instrument inst)
         {
-            Platform.MessageBoxAsync($"Are you sure you want to delete '{inst.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo, (r) =>
+            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to delete '{inst.Name}' ? All notes using this instrument will be deleted.", "Delete instrument", MessageBoxButtons.YesNo, (r) =>
             {
                 if (r == DialogResult.Yes)
                 {
@@ -2972,7 +2972,7 @@ namespace FamiStudio
 
         private void AskDeleteArpeggio(Arpeggio arpeggio)
         {
-            Platform.MessageBoxAsync($"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo, (r) =>
+            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to delete '{arpeggio.Name}' ? All notes using this arpeggio will be no longer be arpeggiated.", "Delete arpeggio", MessageBoxButtons.YesNo, (r) =>
             {
                 if (r == DialogResult.Yes)
                 {
@@ -3032,7 +3032,7 @@ namespace FamiStudio
 
         private void ExportDPCMSampleProcessedData(DPCMSample sample)
         {
-            var filename = Platform.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+            var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
             if (filename != null)
                 File.WriteAllBytes(filename, sample.ProcessedData);
         }
@@ -3041,13 +3041,13 @@ namespace FamiStudio
         {
             if (sample.SourceDataIsWav)
             {
-                var filename = Platform.ShowSaveFileDialog("Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
+                var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "Wav file (*.wav)|*.wav", ref Settings.LastSampleFolder);
                 if (filename != null)
                     WaveFile.Save(sample.SourceWavData.Samples, filename, sample.SourceWavData.SampleRate, 1);
             }
             else
             {
-                var filename = Platform.ShowSaveFileDialog("Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+                var filename = Platform.ShowSaveFileDialog(ParentWindow, "Save File", "DPCM Samples (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
                 if (filename != null)
                     File.WriteAllBytes(filename, sample.SourceDmcData.Data);
             }
@@ -3063,7 +3063,7 @@ namespace FamiStudio
 
         private void AskDeleteDPCMSample(DPCMSample sample)
         {
-            Platform.MessageBoxAsync($"Are you sure you want to delete DPCM Sample '{sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo, (r) =>
+            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to delete DPCM Sample '{sample.Name}' ? It will be removed from the DPCM Instrument and every note using it will be silent.", "Delete DPCM Sample", MessageBoxButtons.YesNo, (r) =>
             {
                 if (r == DialogResult.Yes)
                 {
@@ -4008,7 +4008,7 @@ namespace FamiStudio
                 expBools[i - ExpansionType.Start] = project.UsesExpansionAudio(i);
             }
 
-            var dlg = new PropertyDialog("Project Properties", new Point(left + pt.X, top + pt.Y), 360, true);
+            var dlg = new PropertyDialog(ParentWindow, "Project Properties", new Point(left + pt.X, top + pt.Y), 360, true);
             dlg.Properties.ShowWarnings = true;
             dlg.Properties.AddTextBox("Title :", project.Name, 31); // 0
             dlg.Properties.AddTextBox("Author :", project.Author, 31); // 1
@@ -4023,7 +4023,7 @@ namespace FamiStudio
             UpdateProjectPropertiesWarnings(dlg.Properties);
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentWindow, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -4075,11 +4075,11 @@ namespace FamiStudio
                         if (numExpansionsSelected > 1 && ((expansionMask & ExpansionType.EPSMMask) != 0))
                         {
                             if (Platform.IsDesktop)
-                                Platform.MessageBox($"EPSM is not supported with other expansions enabled", "Incompatible expansions", MessageBoxButtons.OK);
+                                Platform.MessageBox(ParentWindow, $"EPSM is not supported with other expansions enabled", "Incompatible expansions", MessageBoxButtons.OK);
                             else
                                 Platform.ShowToast($"EPSM is not supported with other expansions enabled, expansion change was ignored.");
                         }
-                        else if (!expansionRemoved || Platform.IsMobile || expansionRemoved && Platform.MessageBox($"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        else if (!expansionRemoved || Platform.IsMobile || expansionRemoved && Platform.MessageBox(ParentWindow, $"Remove an expansion will delete all instruments and channels using it, continue?", "Change expansion audio", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             App.SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
                             project.SetExpansionAudioMask(expansionMask, numChannels);
@@ -4093,13 +4093,13 @@ namespace FamiStudio
                         if (tempoMode == TempoType.FamiStudio)
                         {
                             if (!project.AreSongsEmpty && Platform.IsDesktop)
-                                Platform.MessageBox($"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
+                                Platform.MessageBox(ParentWindow, $"Converting from FamiTracker to FamiStudio tempo is extremely crude right now. It will ignore all speed changes and assume a tempo of 150. It is very likely that the songs will need a lot of manual corrections after.", "Change tempo mode", MessageBoxButtons.OK);
                             project.ConvertToFamiStudioTempo();
                         }
                         else if (tempoMode == TempoType.FamiTracker)
                         {
                             if (!project.AreSongsEmpty && Platform.IsDesktop)
-                                Platform.MessageBox($"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
+                                Platform.MessageBox(ParentWindow, $"Converting from FamiStudio to FamiTracker tempo will simply set the speed to 1 and tempo to 150. It will not try to merge notes or do anything sophisticated.", "Change tempo mode", MessageBoxButtons.OK);
                             project.ConvertToFamiTrackerTempo(project.AreSongsEmpty);
                         }
 
@@ -4179,7 +4179,7 @@ namespace FamiStudio
 
         private void EditSongProperties(Point pt, Song song)
         {
-            var dlg = new PropertyDialog("Song Properties", new Point(left + pt.X, top + pt.Y), 320, true); 
+            var dlg = new PropertyDialog(ParentWindow, "Song Properties", new Point(left + pt.X, top + pt.Y), 320, true); 
 
             var tempoProperties = new TempoProperties(dlg.Properties, song);
 
@@ -4189,7 +4189,7 @@ namespace FamiStudio
             tempoProperties.AddProperties();
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentWindow, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -4203,7 +4203,7 @@ namespace FamiStudio
                         song.Color = dlg.Properties.GetPropertyValue<System.Drawing.Color>(1);
                         song.SetLength(dlg.Properties.GetPropertyValue<int>(2));
 
-                        tempoProperties.ApplyAsync(false, () =>
+                        tempoProperties.ApplyAsync(ParentWindow, false, () =>
                         {
                             SongModified?.Invoke(song);
                             App.UndoRedoManager.EndTransaction();
@@ -4222,12 +4222,12 @@ namespace FamiStudio
 
         private void EditInstrumentProperties(Point pt, Instrument instrument)
         {
-            var dlg = new PropertyDialog("Instrument Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(ParentWindow, "Instrument Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(instrument.Name, instrument.Color); // 0
             dlg.Properties.AddColorPicker(instrument.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentWindow, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -4253,12 +4253,12 @@ namespace FamiStudio
 
         private void EditArpeggioProperties(Point pt, Arpeggio arpeggio)
         {
-            var dlg = new PropertyDialog("Arpeggio Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(ParentWindow, "Arpeggio Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(arpeggio.Name, arpeggio.Color); // 0
             dlg.Properties.AddColorPicker(arpeggio.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentWindow, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
@@ -4284,12 +4284,12 @@ namespace FamiStudio
 
         private void EditDPCMSampleProperties(Point pt, DPCMSample sample)
         {
-            var dlg = new PropertyDialog("DPCM Sample Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
+            var dlg = new PropertyDialog(ParentWindow, "DPCM Sample Properties", new Point(left + pt.X, top + pt.Y), 240, true, pt.Y > Height / 2);
             dlg.Properties.AddColoredTextBox(sample.Name, sample.Color); // 0
             dlg.Properties.AddColorPicker(sample.Color); // 1
             dlg.Properties.Build();
 
-            dlg.ShowDialogAsync(ParentWindow, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 var newName = dlg.Properties.GetPropertyValue<string>(0);
 

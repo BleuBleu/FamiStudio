@@ -17,7 +17,7 @@ namespace FamiStudio
             new MidiFileReader.MidiSource() { type = MidiSourceType.None }
         };
 
-        public MidiImportDialog(string file)
+        public MidiImportDialog(FamiStudioWindow win, string file)
         {
             filename = file;
             trackNames = new MidiFileReader().GetTrackNames(file);
@@ -28,7 +28,7 @@ namespace FamiStudio
                 for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
                     expNames[i - ExpansionType.Start] = ExpansionType.Names[i];
 
-                dialog = new PropertyDialog("MIDI Import", 500);
+                dialog = new PropertyDialog(win, "MIDI Import", 500);
                 dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 0
                 dialog.Properties.AddNumericUpDown("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 1
                 dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 2
@@ -122,7 +122,7 @@ namespace FamiStudio
 
                 if (src.type == MidiSourceType.Channel && src.index == 9)
                 {
-                    var dlg = new PropertyDialog("MIDI Source", 300, true, true);
+                    var dlg = new PropertyDialog(dialog.ParentWindow, "MIDI Source", 300, true, true);
                     dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 0
                     dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 1
                     dlg.Properties.AddButton(null, "Select All"); // 2
@@ -130,7 +130,7 @@ namespace FamiStudio
                     dlg.Properties.Build();
                     dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
 
-                    dlg.ShowDialogAsync(null, (r) =>
+                    dlg.ShowDialogAsync((r) =>
                     {
                         if (r == DialogResult.OK)
                         {
@@ -256,7 +256,7 @@ namespace FamiStudio
             if (dialog != null)
             {
                 // This is only ran in desktop and this isnt really async, so its ok.
-                dialog.ShowDialogAsync(parent, (r) =>
+                dialog.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)
                     {

@@ -41,7 +41,7 @@ namespace FamiStudio
             "MessageNo",     // No
         };
 
-        public MessageDialog(string text, string title, MessageBoxButtons buttons)
+        public MessageDialog(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons) : base(win)
         {
             CreateControls(text, buttons);
         }
@@ -63,15 +63,15 @@ namespace FamiStudio
                 tint = Theme.DarkRedFillColor;
             }
 
-            image = new ImageBox(imageName);
+            image = new ImageBox(this, imageName);
             image.Tint = tint;
             image.Move(margin, margin, imageSize, imageSize);
             AddControl(image);
 
-            label = new Label(text);
+            label = new Label(this, text);
             label.Move(margin * 2 + image.Width, margin, width - margin * 3 - image.Width, label.Height);
-            AddControl(label);
             label.AutosizeWidth();
+            AddControl(label);
 
             if (label.Width > maxTextSize)
             {
@@ -102,13 +102,13 @@ namespace FamiStudio
             for (int i = results.Length - 1; i >= 0; i--)
             {
                 var result = results[i];
-                var button = new Button(ButtonIcons[(int)result], ButtonLabels[(int)result]);
+                var button = new Button(this, ButtonIcons[(int)result], ButtonLabels[(int)result]);
                 buttons[i] = button;
                 AddControl(button);
 
                 button.Click += Button_Click;
                 button.Resize(buttonSize, buttonSize);
-                button.AutosizeWidth(16);
+                button.AutosizeWidth();
                 x -= button.Width;
                 button.Move(x, height - margin - buttonSize);
             }

@@ -11,7 +11,7 @@ namespace FamiStudio
         private BitmapAtlasRef bmpRadioOff;
         private BitmapAtlasRef bmpRadioOn;
 
-        public RadioButton(string txt, bool chk, bool multi = false) : base(txt, multi)
+        public RadioButton(Dialog dlg, string txt, bool chk, bool multi = false) : base(dlg, txt, multi)
         {
             check = chk;
         }

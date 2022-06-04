@@ -9,7 +9,7 @@ namespace FamiStudio
         private bool hover;
         private int lineOffset = DpiScaling.ScaleForWindow(4);
 
-        public LinkLabel(string txt, string link)
+        public LinkLabel(Dialog dlg, string txt, string link) : base(dlg)
         {
             text = txt;
             url = link;

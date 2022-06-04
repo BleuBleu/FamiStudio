@@ -5,14 +5,11 @@ namespace FamiStudio
     class LogDialog : ILogOutput
     {
         private PropertyDialog dialog;
-        private FamiStudioWindow parentForm;
         private List<string>   messages = new List<string>();
 
-        public LogDialog(FamiStudioWindow parentForm)
+        public LogDialog(FamiStudioWindow win)
         {
-            this.parentForm = parentForm;
-
-            dialog = new PropertyDialog("Log", 800, false);
+            dialog = new PropertyDialog(win, "Log", 800, false);
             dialog.Properties.AddLogTextBox(null); // 0
             dialog.Properties.Build();
         }
@@ -24,7 +21,7 @@ namespace FamiStudio
                 foreach (var msg in messages)
                     dialog.Properties.AppendText(0, msg);
 
-                dialog.ShowDialogAsync(null, (r) => { });
+                dialog.ShowDialog();
             }
         }
 
@@ -43,15 +40,12 @@ namespace FamiStudio
         private const double ProcessEventDelay = 1.0 / 30.0;
 
         private PropertyDialog dialog;
-        private FamiStudioWindow parentWindow;
         private bool hasMessages = false;
         private double lastEventLoop;
 
         public unsafe LogProgressDialog(FamiStudioWindow win, string title = null, string text = null)
         {
-            parentWindow = win; // MATTT : Will be in the dialog when done.
-
-            dialog = new PropertyDialog("Log", 800, false);
+            dialog = new PropertyDialog(win, "Log", 800, false);
             dialog.Properties.AddLogTextBox(null); // 0
             dialog.Properties.AddProgressBar(null); // 1
             dialog.Properties.Build();
@@ -64,7 +58,7 @@ namespace FamiStudio
 
             hasMessages = true;
             if (!dialog.Visible)
-                dialog.ShowDialogAsync(null, (r) => { });
+                dialog.ShowDialogNonModal();
             dialog.Properties.AppendText(0, msg);
             ConditionalRunEventLoop();
         }

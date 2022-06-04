@@ -7,6 +7,9 @@ namespace FamiStudio
 {
     public class TextBox : Control
     {
+        public delegate void TextChangedDelegate(Control sender);
+        public event TextChangedDelegate TextChanged;
+
         private class TextBoxState
         {
             public int selStart;
@@ -49,7 +52,7 @@ namespace FamiStudio
         public Color BackColor      { get => backColor;     set { backColor     = value; backBrush     = null; MarkDirty(); } }
         public Color SelectionColor { get => selColor;      set { selColor      = value; selBrush      = null; MarkDirty(); } }
 
-        public TextBox(string txt)
+        public TextBox(Dialog dlg, string txt) : base(dlg)
         {
             height = DpiScaling.ScaleForWindow(24);
             text = txt;
@@ -65,9 +68,15 @@ namespace FamiStudio
                 caretIndex = 0;
                 selectionStart = 0;
                 selectionLength = 0;
+                RaiseTextChanged();
                 UpdateScrollParams();
                 MarkDirty(); 
             }
+        }
+
+        private void RaiseTextChanged()
+        {
+            TextChanged?.Invoke(this);
         }
 
         private void UpdateScrollParams()
@@ -221,6 +230,7 @@ namespace FamiStudio
                     caretIndex--;
                     SaveUndoRedoState();
                     text = RemoveStringRange(caretIndex, 1);
+                    RaiseTextChanged();
                     UpdateScrollParams();
                     MarkDirty();
                 }
@@ -231,6 +241,7 @@ namespace FamiStudio
                 {
                     SaveUndoRedoState();
                     text = RemoveStringRange(caretIndex, 1);
+                    RaiseTextChanged();
                     UpdateScrollParams();
                     MarkDirty();
                 }
@@ -281,6 +292,7 @@ namespace FamiStudio
                 caretIndex += str.Length;
                 UpdateScrollParams();
                 EnsureCaretVisible();
+                RaiseTextChanged();
                 ClearSelection();
                 MarkDirty();
             }
@@ -362,7 +374,8 @@ namespace FamiStudio
 
                 if (caretIndex > selectionStart)
                     caretIndex -= selectionLength;
-
+                
+                RaiseTextChanged();
                 ClearSelection();
                 UpdateScrollParams();
 
@@ -392,6 +405,7 @@ namespace FamiStudio
             caretIndex = state.caretIndex;
             selectionStart = state.selStart;
             selectionLength = state.selLen;
+            RaiseTextChanged();
             EnsureCaretVisible();
             MarkDirty();
         }

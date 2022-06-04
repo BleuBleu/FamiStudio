@@ -6,8 +6,8 @@ namespace FamiStudio
     public class Control
     {
         private CursorInfo cursorInfo;
-        private FamiStudioWindow parentWindow;
         private ThemeRenderResources themeRes;
+        protected FamiStudioWindow parentWindow;
         protected Dialog parentDialog;
         protected int left = 0;
         protected int top = 0;
@@ -20,7 +20,20 @@ namespace FamiStudio
         protected bool enabled = true;
         protected string tooltip;
 
-        protected Control() { cursorInfo = new CursorInfo(this); }
+        protected Control(FamiStudioWindow win)
+        {
+            parentWindow = win;
+            cursorInfo = new CursorInfo(this); 
+        }
+
+        protected Control(Dialog dlg) 
+        {
+            parentDialog = dlg;
+            parentWindow = dlg.parentWindow;
+            cursorInfo = new CursorInfo(this);
+            parentDialog.InitControl(this);
+        }
+
         protected virtual void OnRenderInitialized(Graphics g) { }
         protected virtual void OnRenderTerminated() { }
         protected virtual void OnRender(Graphics g) { }
@@ -114,8 +127,8 @@ namespace FamiStudio
         public ModifierKeys ModifierKeys => parentWindow.GetModifierKeys();
         public FamiStudio App => parentWindow?.FamiStudio;
         public CursorInfo Cursor => cursorInfo;
-        public FamiStudioWindow ParentWindow { get => parentWindow; set => parentWindow = value; }
-        public Dialog ParentDialog { get => parentDialog; set => parentDialog = value; }
+        public FamiStudioWindow ParentWindow => parentWindow; 
+        public Dialog ParentDialog => parentDialog; 
 
         public int ScaleForWindow(float val) { return (int)Math.Round(val * windowScaling); }
         public float ScaleForWindowFloat(float val) { return (val * windowScaling); }
@@ -174,6 +187,7 @@ namespace FamiStudio
         }
     }
 
+    // MATTT : Get rid of this.
     public class CursorInfo
     {
         private IntPtr cursor = Cursors.Default;
@@ -445,12 +459,5 @@ namespace FamiStudio
         OK = 0,
         YesNoCancel = 3,
         YesNo = 4,
-    }
-
-    // Matches Windows Forms
-    public enum MessageBoxIcon
-    {
-        None = 0,
-        Error = 16
     }
 }

@@ -18,7 +18,7 @@ namespace FamiStudio
 
         private int hoverButton = -1;
 
-        public NumericUpDown(int value, int minVal, int maxVal)
+        public NumericUpDown(Dialog dlg, int value, int minVal, int maxVal) : base(dlg)
         {
             val = value;
             min = minVal;

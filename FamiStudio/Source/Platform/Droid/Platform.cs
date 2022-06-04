@@ -147,13 +147,13 @@ namespace FamiStudio
             return null;
         }
 
-        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, IntPtr parentWindow = default(IntPtr))
+        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, IntPtr parentWindow = default(IntPtr))
+        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;

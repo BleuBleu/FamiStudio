@@ -19,7 +19,7 @@ namespace FamiStudio
         private Button buttonAdvanced;
         private PropertyPage propertyPage;
 
-        public PropertyDialog(string title, int width, bool canAccept = true, bool canCancel = true)
+        public PropertyDialog(FamiStudioWindow win, string title, int width, bool canAccept = true, bool canCancel = true) : base(win)
         {
             width = DpiScaling.ScaleForWindow(width);
             Move(0, 0, width, width);
@@ -30,7 +30,7 @@ namespace FamiStudio
             buttonNo.Visible  = canCancel;
         }
 
-        public PropertyDialog(string title, Point pt, int w, bool leftAlign = false, bool top = false)
+        public PropertyDialog(FamiStudioWindow win, string title, Point pt, int w, bool leftAlign = false, bool top = false) : base(win)
         {
             width = DpiScaling.ScaleForWindow(w);
             topAlign = top;
@@ -45,17 +45,17 @@ namespace FamiStudio
             propertyPage = new PropertyPage(this, margin, margin, Width - margin * 2);
             propertyPage.PropertyWantsClose += PropertyPage_PropertyWantsClose;
 
-            buttonYes = new Button("Yes", null);
+            buttonYes = new Button(this, "Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
             buttonYes.ToolTip = "Accept";
 
-            buttonNo = new Button("No", null);
+            buttonNo = new Button(this, "No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
             buttonNo.ToolTip = "Cancel";
 
-            buttonAdvanced = new Button("PlusSmall", null);
+            buttonAdvanced = new Button(this, "PlusSmall", null);
             buttonAdvanced.Click += ButtonAdvanced_Click;
             buttonAdvanced.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
             buttonAdvanced.Visible = false;

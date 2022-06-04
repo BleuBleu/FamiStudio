@@ -14,7 +14,7 @@ namespace FamiStudio
         private Color selectedColor;
         public Color SelectedColor => selectedColor;
 
-        public ColorPicker(Color color)
+        public ColorPicker(Dialog dlg, Color color) : base(dlg)
         {
             selectedColor = color;
         }

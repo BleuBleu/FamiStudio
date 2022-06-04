@@ -17,7 +17,7 @@ namespace FamiStudio
         // Version 4   : FamiStudio 3.2.0
         // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
         // Version 6   : FamiStudio 3.3.0
-        // Version 7   : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files)
+        // Version 7   : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
         public const int SettingsVersion = 7;
         public const int NumRecentFiles = 10;
 
@@ -51,18 +51,16 @@ namespace FamiStudio
         // User Interface section
         public static int DpiScaling = 0;
         public static int TimeFormat = 1;
-        public static bool ShowPianoRollViewRange = true;
         public static bool ReverseTrackPad = false;
         public static int TrackPadMoveSensitity = 1;
         public static int TrackPadZoomSensitity = 8;
         public static int FollowMode = 0;
         public static int FollowSync = 0;
-        public static bool ShowNoteLabels = true;
         public static int  ScrollBars = ScrollBarsNone;
-        public static bool ShowOscilloscope = true;
         public static bool ForceCompactSequencer = false;
         public static bool ShowImplicitStopNotes = true;
         public static bool ShowRegisterViewer = Platform.IsDesktop;
+        public static bool UseOSDialogs = !Platform.IsLinux;
 
         public struct QwertyKeyAssignment
         {
@@ -237,16 +235,14 @@ namespace FamiStudio
             TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
             FollowMode = ini.GetInt("UI", "FollowMode", FollowModeContinuous);
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
-            ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
             ScrollBars = Version < 3 ? (ini.GetBool("UI", "ShowScrollBars", false) ? ScrollBarsThin : ScrollBarsNone) : ini.GetInt("UI", "ScrollBars", ScrollBarsNone);
-            ShowOscilloscope = ini.GetBool("UI", "ShowOscilloscope", true);
             ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
-            ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
             ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
             TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
             TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
             ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", Platform.IsDesktop);
             ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", Platform.IsDesktop);
+            UseOSDialogs = ini.GetBool("UI", "UseOSDialogs", !Platform.IsLinux);
 
             // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
@@ -399,16 +395,14 @@ namespace FamiStudio
             ini.SetInt("UI", "TimeFormat", TimeFormat);
             ini.SetInt("UI", "FollowMode", FollowMode);
             ini.SetInt("UI", "FollowSync", FollowSync);
-            ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
             ini.SetInt("UI", "ScrollBars", ScrollBars);
-            ini.SetBool("UI", "ShowOscilloscope", ShowOscilloscope);
             ini.SetBool("UI", "ForceCompactSequencer", ForceCompactSequencer);
-            ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
             ini.SetInt("UI", "TrackPadMoveSensitity", TrackPadMoveSensitity);
             ini.SetInt("UI", "TrackPadZoomSensitity", TrackPadZoomSensitity);
             ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
             ini.SetBool("UI", "ShowImplicitStopNotes", ShowImplicitStopNotes);
             ini.SetBool("UI", "ShowRegisterViewer", ShowRegisterViewer);
+            ini.SetBool("UI", "UseOSDialogs", UseOSDialogs);
 
             // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);

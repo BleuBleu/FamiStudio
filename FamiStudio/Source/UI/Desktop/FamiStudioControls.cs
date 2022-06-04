@@ -40,23 +40,18 @@ namespace FamiStudio
 
         public FamiStudioControls(FamiStudioWindow parent)
         {
-            toolbar = new Toolbar();
-            sequencer = new Sequencer();
-            pianoRoll = new PianoRoll();
-            projectExplorer = new ProjectExplorer();
-            quickAccessBar = new QuickAccessBar();
-            mobilePiano = new MobilePiano();
-            contextMenu = new ContextMenu();
+            toolbar = new Toolbar(parent);
+            sequencer = new Sequencer(parent);
+            pianoRoll = new PianoRoll(parent);
+            projectExplorer = new ProjectExplorer(parent);
+            quickAccessBar = new QuickAccessBar(parent);
+            mobilePiano = new MobilePiano(parent);
+            contextMenu = new ContextMenu(parent);
 
             controls[0] = toolbar;
             controls[1] = sequencer;
             controls[2] = pianoRoll;
             controls[3] = projectExplorer;
-
-            foreach (var ctrl in controls)
-                ctrl.ParentWindow = parent;
-
-            contextMenu.ParentWindow = parent;
         }
 
         public void Resize(int w, int h)
@@ -238,7 +233,6 @@ namespace FamiStudio
             dialog.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
             dialog.SetThemeRenderResource(res);
             dialog.RenderInitialized(gfx);
-            dialog.ParentWindow = contextMenu.ParentWindow; // HACK
         }
 
         public void PushDialog(Dialog dialog)

@@ -5,6 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Media;
 using Microsoft.Win32;
+using System.Collections.Generic;
 
 namespace FamiStudio
 {
@@ -85,18 +86,8 @@ namespace FamiStudio
         private const int OFN_PATHMUSTEXIST = 0x00000800;
         private const int OFN_FILEMUSTEXIST = 0x00001000;
 
-        // MATTT : Use parent window or Instance, not BOTH.
-        // MATTT : Update default path!
-        public static unsafe string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect, IntPtr parentWindow = default(IntPtr))
+        public static unsafe string[] ShowPlatformOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
         {
-#if true
-            var dlg = new FileDialog(FileDialog.Mode.Open, title, defaultPath, extensions);
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                defaultPath = Path.GetDirectoryName(dlg.SelectedPath);
-                return new[] { dlg.SelectedPath };
-            }
-#else
             OpenFileName ofn = new OpenFileName();
 
             var str = new char[4096];
@@ -104,7 +95,7 @@ namespace FamiStudio
             fixed (char* p = &str[0])
             {
                 ofn.structSize = Marshal.SizeOf(ofn);
-                ofn.dlgOwner = FamiStudioWindow.Instance.Handle;
+                ofn.dlgOwner = win != null ? win.Handle : IntPtr.Zero;
                 ofn.filter = extensions.Replace('|', '\0');
                 ofn.file = new IntPtr(p);
                 ofn.maxFile = str.Length;
@@ -138,35 +129,16 @@ namespace FamiStudio
                         strings.RemoveAt(0);
                     }
 
+                    defaultPath = Path.GetDirectoryName(strings[0]);
                     return strings.ToArray();
                 }
             }
-#endif
 
             return null;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath, IntPtr parentWindow = default(IntPtr))
+        public static unsafe string ShowPlatformSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
         {
-            var filenames = ShowOpenFileDialog(title, extensions, ref defaultPath, false, parentWindow);
-
-            if (filenames == null || filenames.Length == 0)
-                return null;
-
-            return filenames[0];
-        }
-
-        // MATTT : Update default path!
-        public static unsafe string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
-        {
-#if true
-            var dlg = new FileDialog(FileDialog.Mode.Save, title, defaultPath, extensions);
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                defaultPath = Path.GetDirectoryName(dlg.SelectedPath);
-                return dlg.SelectedPath;
-            }
-#else
             OpenFileName ofn = new OpenFileName();
 
             var str = new char[4096];
@@ -174,7 +146,7 @@ namespace FamiStudio
             fixed (char* p = &str[0])
             {
                 ofn.structSize = Marshal.SizeOf(ofn);
-                ofn.dlgOwner = FamiStudioWindow.Instance.Handle;
+                ofn.dlgOwner = win != null ? win.Handle : IntPtr.Zero;
                 ofn.filter = extensions.Replace('|', '\0');
                 ofn.file = new IntPtr(p);
                 ofn.maxFile = str.Length;
@@ -186,18 +158,13 @@ namespace FamiStudio
                 if (GetSaveFileName(ofn))
                 {
                     var len = Array.IndexOf(str, '\0');
-                    return new string(str, 0, len);
+                    var filename = new string(str, 0, len);
+                    defaultPath = Path.GetDirectoryName(filename);
+                    return filename;
                 }
             }
-#endif
 
             return null;
-        }
-
-        public static string ShowSaveFileDialog(string title, string extensions)
-        {
-            string dummy = "";
-            return ShowSaveFileDialog(title, extensions, ref dummy);
         }
 
         private struct BROWSEINFO
@@ -240,8 +207,7 @@ namespace FamiStudio
             return 0;
         }
 
-        // MATTT : Update default path!
-        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
+        public static string ShowPlatformBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
         {
             var sb = new StringBuilder(4096);
             var pidl = IntPtr.Zero;
@@ -270,30 +236,21 @@ namespace FamiStudio
                 Marshal.FreeCoTaskMem(pidl);
             }
 
-            return sb.ToString();
+            defaultPath = sb.ToString();
+            return defaultPath;
         }
 
         // Declares managed prototypes for unmanaged functions.
         [DllImport("User32.dll", EntryPoint = "MessageBox", CharSet = CharSet.Auto)]
-        internal static extern int MessageBoxInternal(IntPtr hWnd, string lpText, string lpCaption, uint uType);
+        internal static extern int MessageBox(IntPtr hWnd, string lpText, string lpCaption, uint uType);
 
         const uint MB_TASKMODAL = 0x00002000;
+        const uint MB_ICONERROR = 0x00000010;
 
-        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
+        public static DialogResult PlatformMessageBox(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons)
         {
-#if true
-            var dlg = new MessageDialog(text, title, buttons);
-            return dlg.ShowDialog();
-#else
-            var icons = title.ToLowerInvariant().Contains("error") ? MessageBoxIcon.Error : MessageBoxIcon.None;
-            return (DialogResult)MessageBoxInternal(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
-#endif
-        }
-
-        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
-        {
-            var res = MessageBox(text, title, buttons);
-            callback?.Invoke(res);
+            var icons = title.ToLowerInvariant().Contains("error") ? MB_ICONERROR : 0;
+            return (DialogResult)MessageBox(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
         }
 
         public static bool IsVS2019RuntimeInstalled()
@@ -315,7 +272,7 @@ namespace FamiStudio
         {
             if (!IsVS2019RuntimeInstalled())
             {
-                if (MessageBox("You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (MessageBox(null, "You seem to be missing the VS 2019 C++ Runtime which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     OpenUrl("https://famistudio.org/doc/install/#windows");
                 }
@@ -325,7 +282,7 @@ namespace FamiStudio
 
             if (!XAudio2Stream.TryDetectXAudio2())
             {
-                if (MessageBox("You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (MessageBox(null, "You seem to be missing parts of DirectX which is required to run FamiStudio, would you like to visit the FamiStudio website for instruction on how to install it?", "Missing Component", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     OpenUrl("https://famistudio.org/doc/install/#windows");
                 }

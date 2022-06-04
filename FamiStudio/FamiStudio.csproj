@@ -323,6 +323,8 @@
     <EmbeddedResource Include="Resources\ConfigFFmpeg@2x.tga" />
     <EmbeddedResource Include="Resources\ConfigGeneral.tga" />
     <EmbeddedResource Include="Resources\ConfigGeneral@2x.tga" />
+    <EmbeddedResource Include="Resources\ConfigMacOS.tga" />
+    <EmbeddedResource Include="Resources\ConfigMacOS@2x.tga" />
     <EmbeddedResource Include="Resources\ConfigMIDI.tga" />
     <EmbeddedResource Include="Resources\ConfigMIDI@2x.tga" />
     <EmbeddedResource Include="Resources\ConfigMixer.tga" />
@@ -417,7 +419,6 @@
     <EmbeddedResource Include="Resources\FamiStudio_64.tga" />
     <EmbeddedResource Include="Resources\File.tga" />
     <EmbeddedResource Include="Resources\File@2x.tga" />
-
     <EmbeddedResource Include="Resources\FileComputer.tga" />
     <EmbeddedResource Include="Resources\FileComputer@2x.tga" />
     <EmbeddedResource Include="Resources\FileDesktop.tga" />
@@ -434,7 +435,6 @@
     <EmbeddedResource Include="Resources\FileFolder@2x.tga" />
     <EmbeddedResource Include="Resources\FileHome.tga" />
     <EmbeddedResource Include="Resources\FileHome@2x.tga" />
-
     <EmbeddedResource Include="Resources\Follow.tga" />
     <EmbeddedResource Include="Resources\Follow@2x.tga" />
     <EmbeddedResource Include="Resources\GhostSmall.tga" />
@@ -539,7 +539,6 @@
     <EmbeddedResource Include="Resources\MenuToggleRelease@2x.tga" />
     <EmbeddedResource Include="Resources\MenuToggleSlide.tga" />
     <EmbeddedResource Include="Resources\MenuToggleSlide@2x.tga" />
-
     <EmbeddedResource Include="Resources\MessageCancel.tga" />
     <EmbeddedResource Include="Resources\MessageCancel@2x.tga" />
     <EmbeddedResource Include="Resources\MessageError.tga" />
@@ -552,7 +551,6 @@
     <EmbeddedResource Include="Resources\MessageQuestion@2x.tga" />
     <EmbeddedResource Include="Resources\MessageYes.tga" />
     <EmbeddedResource Include="Resources\MessageYes@2x.tga" />
-
     <EmbeddedResource Include="Resources\Metronome.tga" />
     <EmbeddedResource Include="Resources\Metronome.wav" />
     <EmbeddedResource Include="Resources\Metronome@2x.tga" />

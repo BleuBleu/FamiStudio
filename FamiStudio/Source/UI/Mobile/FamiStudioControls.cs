@@ -50,12 +50,12 @@ namespace FamiStudio
 
         public FamiStudioControls(FamiStudioWindow parent)
         {
-            toolbar         = new Toolbar();
-            sequencer       = new Sequencer();
-            pianoRoll       = new PianoRoll();
-            projectExplorer = new ProjectExplorer();
-            quickAccessBar  = new QuickAccessBar();
-            mobilePiano     = new MobilePiano();
+            toolbar         = new Toolbar(parent);
+            sequencer       = new Sequencer(parent);
+            pianoRoll       = new PianoRoll(parent);
+            projectExplorer = new ProjectExplorer(parent);
+            quickAccessBar  = new QuickAccessBar(parent);
+            mobilePiano     = new MobilePiano(parent);
 
             controls[0] = sequencer;
             controls[1] = pianoRoll;
@@ -65,9 +65,6 @@ namespace FamiStudio
             controls[5] = mobilePiano;
 
             activeControl = sequencer;
-
-            foreach (var ctrl in controls)
-                ctrl.ParentWindow = parent;
         }
 
        public void SetActiveControl(Control ctrl, bool animate = true)

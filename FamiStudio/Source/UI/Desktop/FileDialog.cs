@@ -1,13 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace FamiStudio
 {
-    // MATTT : Load, validate filename is valid when clicking OK.
-    // MATTT : Save mode (validate filename, etc)
-    // MATTT : Folder mode
-
     public class FileDialog : Dialog
     {
         public enum Mode
@@ -60,7 +57,7 @@ namespace FamiStudio
 
         public string SelectedPath => filename;
 
-        public FileDialog(Mode m, string title, string defaultPath, string extensionList = "")
+        public FileDialog(FamiStudioWindow win, Mode m, string title, string defaultPath, string extensionList = "") : base(win)
         {
             mode = m;
             SplitExtensionList(extensionList, out extensions, out var descriptions);
@@ -82,15 +79,23 @@ namespace FamiStudio
 
         private void SplitExtensionList(string list, out string[] extensions, out string[] descriptions)
         {
-            var splits = list.Split('|');
-            
-            extensions   = new string[splits.Length / 2];
-            descriptions = new string[splits.Length / 2];
-
-            for (int i = 0; i < splits.Length; i += 2)
+            if (!string.IsNullOrEmpty(list))
             {
-                extensions[i / 2] = splits[i + 1];
-                descriptions[i / 2] = splits[i + 0];
+                var splits = list.Split('|');
+
+                extensions   = new string[splits.Length / 2];
+                descriptions = new string[splits.Length / 2];
+
+                for (int i = 0; i < splits.Length; i += 2)
+                {
+                    extensions[i / 2] = splits[i + 1];
+                    descriptions[i / 2] = splits[i + 0];
+                }
+            }
+            else
+            {
+                extensions   = new[] { "" };
+                descriptions = new[] { "" };
             }
         }
 
@@ -99,12 +104,12 @@ namespace FamiStudio
             var widthNoMargin = width - margin * 2;
             var y = margin;
 
-            buttonComputer = new Button("FileComputer", "Computer");
+            buttonComputer = new Button(this, "FileComputer", "Computer");
             buttonComputer.Move(margin, y, 100, pathButtonSizeY); 
             buttonComputer.Click += ButtonComputer_Click;
             y += buttonComputer.Height + margin;
 
-            gridFiles = new Grid(new[] {
+            gridFiles = new Grid(this, new[] {
                 new ColumnDesc("",     0.0f, ColumnType.Image),
                 new ColumnDesc("Name", 0.7f, ColumnType.Label) { Ellipsis = true },
                 new ColumnDesc("Date", 0.3f, ColumnType.Label) }, 16, true);
@@ -115,27 +120,29 @@ namespace FamiStudio
             gridFiles.HeaderCellClicked += GridFiles_HeaderCellClicked;
             y += gridFiles.Height + margin;
 
-            textFile = new TextBox("");
+            textFile = new TextBox(this, "");
             textFile.Move(margin, y, widthNoMargin / 2, textFile.Height);
 
             if (mode != Mode.Save)
             {
                 textFile.Enabled = false;
-                textFile.DisabledColor = textFile.ForeColor;
+                if (mode == Mode.Open)
+                    textFile.DisabledColor = textFile.ForeColor;
             }
 
-            dropDownType = new DropDown(descriptions, 0);
+            dropDownType = new DropDown(this, descriptions, 0);
             dropDownType.Move(margin * 2 + textFile.Width, y, widthNoMargin - margin - textFile.Width, textFile.Height);
             dropDownType.SelectedIndexChanged += DropDownType_SelectedIndexChanged;
+            dropDownType.Enabled = mode != Mode.Folder;
             y += textFile.Height + margin;
 
-            buttonYes = new Button("Yes", null);
+            buttonYes = new Button(this, "Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(buttonSize, buttonSize);
             buttonYes.Move(Width - buttonSize * 2 - margin * 2, y);
             buttonYes.ToolTip = "Accept";
 
-            buttonNo = new Button("No", null);
+            buttonNo = new Button(this, "No", null);
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(buttonSize, buttonSize);
             buttonNo.Move(Width - buttonSize - margin, y);
@@ -163,7 +170,7 @@ namespace FamiStudio
 
         private void UpdatePathBar()
         {
-            buttonComputer.AutosizeWidth(16);
+            buttonComputer.AutosizeWidth();
 
             foreach (var btn in buttonsPath)
                 RemoveControl(btn);
@@ -177,7 +184,7 @@ namespace FamiStudio
                     Path.DirectorySeparatorChar,
                     Path.AltDirectorySeparatorChar}, StringSplitOptions.RemoveEmptyEntries);
 
-                var tempButton = new Button("FileFolder", "");
+                var tempButton = new Button(this, "FileFolder", "");
                 var buttonSizes = new int[splits.Length];
                 var totalSize = 0;
 
@@ -185,12 +192,9 @@ namespace FamiStudio
                 for (int i = 0; i < splits.Length; i++)
                 {
                     tempButton.Text = TrimLongFilename(splits[i]);
-
-                    AddControl(tempButton);
-                    tempButton.AutosizeWidth(16);
+                    tempButton.AutosizeWidth();
                     buttonSizes[i] = tempButton.Width;
                     totalSize += tempButton.Width + (i > 0 ? margin : 0);
-                    RemoveControl(tempButton);
                 }
 
                 var maxWidth = width - margin * 3 - buttonComputer.Width;
@@ -221,14 +225,14 @@ namespace FamiStudio
 
                 for (int i = startButtonIndex; i < splits.Length; i++)
                 {
-                    var button = new Button("FileFolder", TrimLongFilename(splits[i]));
-                    AddControl(button);
+                    var button = new Button(this, "FileFolder", TrimLongFilename(splits[i]));
                     button.Move(x, margin, 100, pathButtonSizeY);
-                    button.AutosizeWidth(16);
+                    button.AutosizeWidth();
                     button.Click += Button_Click;
                     buttonsPath.Add(button);
                     buttonPathPaths.Add(BuildPath(splits, i));
                     x += button.Width + margin;
+                    AddControl(button);
                 }
             }
         }
@@ -267,20 +271,6 @@ namespace FamiStudio
             }
         }
 
-        private void GridFiles_CellClicked(Control sender, bool left, int rowIndex, int colIndex)
-        {
-            if (left)
-            {
-                var f = files[rowIndex];
-
-                if (!f.IsDir)
-                {
-                    filename = f.Path;
-                    textFile.Text = f.Name;
-                }
-            }
-        }
-
         private void DropDownType_SelectedIndexChanged(Control sender, int index)
         {
             if (path != null)
@@ -310,6 +300,17 @@ namespace FamiStudio
             }
         }
 
+        private void GridFiles_CellClicked(Control sender, bool left, int rowIndex, int colIndex)
+        {
+            if (left)
+            {
+                var f = files[rowIndex];
+
+                if (!f.IsDir)
+                    textFile.Text = f.Name;
+            }
+        }
+
         private void GridFiles_CellDoubleClicked(Control sender, int rowIndex, int colIndex)
         {
             var f = files[rowIndex];
@@ -320,17 +321,53 @@ namespace FamiStudio
             }
             else
             {
+                textFile.Text = f.Name;
+                ValidateAndClose();
+            }
+        }
+
+        private bool ValidateAndClose()
+        {
+            if (path != null)
+            {
+                var f = Path.Combine(path, textFile.Text);
+
                 if (mode == Mode.Open)
                 {
-                    filename = f.Path;
-                    Close(DialogResult.OK);
+                    if (File.Exists(f))
+                    {
+                        filename = f;
+                        Close(DialogResult.OK);
+                        return true;
+                    }
+
+                    Platform.Beep();
                 }
-                else if (Platform.MessageBox($"Overwrite file {f.Name}?", "Confirm Overwrite", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                else if (mode == Mode.Save)
                 {
-                    filename = f.Path;
-                    Close(DialogResult.OK);
+                    // Force extension.
+                    if (!MatchesExtensionList(f, extensions))
+                        f += extensions[0].Trim('*');
+
+                    if (!File.Exists(f) || Platform.MessageBox(ParentWindow, $"Overwrite file {Path.GetFileName(f)}?", "Confirm Overwrite", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        filename = f;
+                        Close(DialogResult.OK);
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (Directory.Exists(path))
+                    {
+                        filename = path;
+                        Close(DialogResult.OK);
+                        return true;
+                    }
                 }
             }
+
+            return false;
         }
 
         private void UpdateColumnNames()
@@ -391,6 +428,22 @@ namespace FamiStudio
             UpdatePathBar();
         }
 
+        private string WildCardToRegular(string value)
+        {
+            return "^" + Regex.Escape(value).Replace("\\*", ".*") + "$";
+        }
+
+        private bool MatchesExtensionList(string s, string[] extensions)
+        {
+            foreach (var ext in extensions)
+            {
+                if (Regex.IsMatch(s, WildCardToRegular(ext)))
+                    return true;
+            }
+
+            return false;
+        }
+        
         private void GoToPath(string p)
         {
             files.Clear();
@@ -416,11 +469,11 @@ namespace FamiStudio
 
             if (mode != Mode.Folder)
             {
-                var validExtentions = extensions[dropDownType.SelectedIndex].ToLower().Split(new[] { '*', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                var validExtentions = extensions[dropDownType.SelectedIndex].ToLower().Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (var fi in fileInfos)
                 {
-                    if (!fi.Attributes.HasFlag(FileAttributes.Hidden) && Array.IndexOf(validExtentions, Path.GetExtension(fi.Name).ToLower()) >= 0)
+                    if (!fi.Attributes.HasFlag(FileAttributes.Hidden) && MatchesExtensionList(fi.Name.ToLower(), validExtentions))
                         files.Add(new FileEntry("FileFile", fi.Name, fi.FullName, false, fi.LastWriteTime));
                 }
             }
@@ -440,11 +493,7 @@ namespace FamiStudio
 
         private void ButtonYes_Click(Control sender)
         {
-            // MATTT
-            //if (ValidateProperties == null || ValidateProperties.Invoke(propertyPage))
-            {
-                Close(DialogResult.OK);
-            }
+            ValidateAndClose();
         }
 
         private void ButtonNo_Click(Control sender)
@@ -458,8 +507,7 @@ namespace FamiStudio
 
             if (e.Key == Keys.Enter && mode == Mode.Save && textFile.HasDialogFocus)
             {
-                Close(DialogResult.OK);
-                return;
+                ValidateAndClose();
             }
 
             if (!e.Handled && e.Key == Keys.Escape)

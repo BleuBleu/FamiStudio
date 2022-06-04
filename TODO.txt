@@ -8,34 +8,30 @@
 
 4.0.0
 =====
-/ Finish OFD
-/ MessageBoxes.
+/ Finish OFD, move to common platform, add images to all projects.
 - Add titles to dialogs
-- 
+- BUG : Check boxes misaligned on mobile
 - BUG : Mobile, can't scroll to last pattern in sequencer
+- BUG : Crash Debug.Assert(custom.groove == null) when converting from FS to FT tempo.
 - BUG : Crash reopening my own MID files?
+- CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
+- CTX : Tooltips where a context menu can appear.
+- GLFW : Do dash lines still work?
+==============================
+
 - BUG : Victoria lab, change notes per best from 4 -> 3 makes everything go ape shit.
 - BUG : Victoria lab, is it possible to fix the tempo?
 - BUG : Double click doesnt un-solo a channel if you do it really fast??
-- BUG : Check boxes misaligned on mobile
-- BUG : Crash Debug.Assert(custom.groove == null) when converting from FS to FT tempo.
-- CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
-- CTX : Tooltips where a context menu can appear.
 - CTX : When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
 - CTX : Sequencer : Add select all there too?
 - CTX : Sometimes i feel context menu appear instead of selection... Test more.
-- DLG : Pass form to dialogs, avoid ugly .INstance thing.
-- GLFW : Linux OpenFileDialog => Only include TGA files in Linux build.
 - GLFW : Pinch to zoom?
 - GLFW : Mouse wheel, remove hacks, test on all platform.
-- GLFW : Merge FamiStudioControls <-> Forms?
 - GLFW : Add more cursors, 36, 48 and 64.
-- GLFW : Do dash lines still work?
-- GLFW : Drag/drop samples, fti, etc.
 - TEST : Make sure the demo songs are 100% intact.
-- MISC : Is FamiStudio text UTF8? Should it be?
 
 P1:
+- Scroll near edges when resizing envelope.
 - Validation errors in JTS when deleting some instruments.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)

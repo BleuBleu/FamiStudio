@@ -31,7 +31,7 @@ namespace FamiStudio
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
         private int rowHeight      = DpiScaling.ScaleForWindow(24);
 
-        public DropDown(string[] list, int index, bool trans = false)
+        public DropDown(Dialog dlg, string[] list, int index, bool trans = false) : base(dlg)
         {
             items = list;
             selectedIndex = index;

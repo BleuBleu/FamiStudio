@@ -7,7 +7,7 @@ namespace FamiStudio
         private float progress;
         private float visibleProgress;
 
-        public ProgressBar()
+        public ProgressBar(Dialog dlg) : base(dlg)
         {
             height = DpiScaling.ScaleForWindow(10);
         }
