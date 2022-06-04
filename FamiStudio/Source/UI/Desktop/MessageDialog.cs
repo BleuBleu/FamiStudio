@@ -126,9 +126,20 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if (!e.Handled && e.Key == Keys.Escape)
+            if (!e.Handled)
             {
-                Close(results[results.Length - 1]);
+                if (e.Key == Keys.Escape)
+                {
+                    Close(results[results.Length - 1]);
+                }
+                else if (e.Key == Keys.Y && results[0] == DialogResult.Yes)
+                {
+                    Close(results[0]);
+                }
+                else if (e.Key == Keys.N && results.Length >= 1 && results[1] == DialogResult.No)
+                {
+                    Close(results[1]);
+                }
             }
         }
     }

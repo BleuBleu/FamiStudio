@@ -27,6 +27,7 @@ P1:
 - Improve oscilloscope stability (min square norm?)
 - Improve no-attack.
 - Scroll bar in sequencer (option to limit seq size to xx%)
+  => hide unused channels
 - Volume/effect scaling, easy one we have context menus.
 - Paste special, option to rename patterns.
 

@@ -672,17 +672,6 @@ namespace FamiStudio
             return r;
         }
 
-        //public static MouseButtons GetMouseButtons()
-        //{
-        //    int macButtons = SendInt(clsNSEvent, selPressedMouseButtons);
-
-        //    MouseButtons buttons = 0;
-        //    if ((macButtons & 1) != 0) buttons |= MouseButtons.Left;
-        //    if ((macButtons & 2) != 0) buttons |= MouseButtons.Right;
-        //    if ((macButtons & 4) != 0) buttons |= MouseButtons.Middle;
-        //    return buttons;
-        //}
-
         public static System.Drawing.PointF GetWindowSize(IntPtr nsWin)
         {
             var nsView = SendIntPtr(nsWin, selContentView);
