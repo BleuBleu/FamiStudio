@@ -233,7 +233,7 @@ namespace FamiStudio
         {
             false, // None
             false, // PlayPiano
-            false, // ResizeEnvelope
+            true,  // ResizeEnvelope
             false, // DragLoop
             false, // DragRelease
             false, // ChangeEffectValue
@@ -3308,6 +3308,8 @@ namespace FamiStudio
         {
             var env = EditEnvelope;
             int length = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
+
+            ScrollIfNearEdge(x, y);
 
             switch (captureOperation)
             {

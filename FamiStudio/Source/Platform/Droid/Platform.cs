@@ -254,7 +254,6 @@ namespace FamiStudio
 
         public static string GetClipboardString()
         {
-            Debug.Assert(false);
             return "";
         }
 
