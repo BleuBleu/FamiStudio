@@ -575,6 +575,7 @@ namespace FamiStudio
 
             // TODO : I only added support to disable these so far.
             Debug.Assert(
+                prop.type == PropertyType.Label         ||
                 prop.type == PropertyType.CheckBox      ||
                 prop.type == PropertyType.DropDownList  ||
                 prop.type == PropertyType.NumericUpDown ||
