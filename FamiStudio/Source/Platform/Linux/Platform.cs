@@ -38,16 +38,19 @@ namespace FamiStudio
         public static unsafe string[] ShowPlatformOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
         {
             Debug.Assert(false); // Linux has no common dialogs.
+            return null;
         }
 
         public static unsafe string ShowPlatformSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false); // Linux has no common dialogs.
+            return null;
         }
 
         public static string ShowPlatformBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
         {
             Debug.Assert(false); // Linux has no common dialogs.
+            return null;
         }
 
         public static DialogResult PlatformMessageBox(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons)
