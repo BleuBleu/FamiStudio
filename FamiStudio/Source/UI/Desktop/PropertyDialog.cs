@@ -12,14 +12,16 @@ namespace FamiStudio
         private bool topAlign = false;
         private bool center = false;
         private bool advancedPropertiesVisible = false;
-        private int margin = DpiScaling.ScaleForWindow(8);
+
+        private int margin     = DpiScaling.ScaleForWindow(8);
+        private int buttonSize = DpiScaling.ScaleForWindow(36);
 
         private Button buttonNo;
         private Button buttonYes;
         private Button buttonAdvanced;
         private PropertyPage propertyPage;
 
-        public PropertyDialog(FamiStudioWindow win, string title, int width, bool canAccept = true, bool canCancel = true) : base(win)
+        public PropertyDialog(FamiStudioWindow win, string title, int width, bool canAccept = true, bool canCancel = true) : base(win, title)
         {
             width = DpiScaling.ScaleForWindow(width);
             Move(0, 0, width, width);
@@ -30,7 +32,7 @@ namespace FamiStudio
             buttonNo.Visible  = canCancel;
         }
 
-        public PropertyDialog(FamiStudioWindow win, string title, Point pt, int w, bool leftAlign = false, bool top = false) : base(win)
+        public PropertyDialog(FamiStudioWindow win, string title, Point pt, int w, bool leftAlign = false, bool top = false) : base(win, title)
         {
             width = DpiScaling.ScaleForWindow(w);
             topAlign = top;
@@ -42,22 +44,22 @@ namespace FamiStudio
 
         private void Init()
         {
-            propertyPage = new PropertyPage(this, margin, margin, Width - margin * 2);
+            propertyPage = new PropertyPage(this, margin, margin + titleBarSizeY, Width - margin * 2);
             propertyPage.PropertyWantsClose += PropertyPage_PropertyWantsClose;
 
             buttonYes = new Button(this, "Yes", null);
             buttonYes.Click += ButtonYes_Click;
-            buttonYes.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
+            buttonYes.Resize(buttonSize, buttonSize);
             buttonYes.ToolTip = "Accept";
 
             buttonNo = new Button(this, "No", null);
             buttonNo.Click += ButtonNo_Click;
-            buttonNo.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
+            buttonNo.Resize(buttonSize, buttonSize);
             buttonNo.ToolTip = "Cancel";
 
             buttonAdvanced = new Button(this, "PlusSmall", null);
             buttonAdvanced.Click += ButtonAdvanced_Click;
-            buttonAdvanced.Resize(DpiScaling.ScaleForWindow(36), DpiScaling.ScaleForWindow(36));
+            buttonAdvanced.Resize(buttonSize, buttonSize);
             buttonAdvanced.Visible = false;
             buttonAdvanced.ToolTip = "Toggle Advanced Options";
 
@@ -107,9 +109,9 @@ namespace FamiStudio
 
         private void UpdateLayout()
         {
-            Resize(width, propertyPage.LayoutHeight + buttonNo.Height + margin * 3); 
+            Resize(width, propertyPage.LayoutHeight + buttonNo.Height + margin * 3 + titleBarSizeY); 
 
-            var buttonY = propertyPage.LayoutHeight + margin * 2;
+            var buttonY = propertyPage.LayoutHeight + margin * 2 + titleBarSizeY;
 
             if (buttonNo.Visible)
             {

@@ -57,7 +57,7 @@ namespace FamiStudio
 
         public string SelectedPath => filename;
 
-        public FileDialog(FamiStudioWindow win, Mode m, string title, string defaultPath, string extensionList = "") : base(win)
+        public FileDialog(FamiStudioWindow win, Mode m, string title, string defaultPath, string extensionList = "") : base(win, title)
         {
             mode = m;
             SplitExtensionList(extensionList, out extensions, out var descriptions);
@@ -102,7 +102,7 @@ namespace FamiStudio
         private void CreateControls(string[] descriptions)
         {
             var widthNoMargin = width - margin * 2;
-            var y = margin;
+            var y = titleBarSizeY + margin;
 
             buttonComputer = new Button(this, "FileComputer", "Computer");
             buttonComputer.Move(margin, y, 100, pathButtonSizeY); 
@@ -226,7 +226,7 @@ namespace FamiStudio
                 for (int i = startButtonIndex; i < splits.Length; i++)
                 {
                     var button = new Button(this, "FileFolder", TrimLongFilename(splits[i]));
-                    button.Move(x, margin, 100, pathButtonSizeY);
+                    button.Move(x, margin + titleBarSizeY, 100, pathButtonSizeY);
                     button.AutosizeWidth();
                     button.Click += Button_Click;
                     buttonsPath.Add(button);

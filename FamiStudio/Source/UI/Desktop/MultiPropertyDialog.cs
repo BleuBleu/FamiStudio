@@ -21,7 +21,7 @@ namespace FamiStudio
         private Button buttonYes;
         private Button buttonNo;
 
-        public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int height, int tabsWidth = 150) : base(win)
+        public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int height, int tabsWidth = 150) : base(win, title)
         {
             // MATTT : Avoid using the DpiScaling, we are a GLControl, we can access.
             tabsSizeX = DpiScaling.ScaleForWindow(tabsWidth);
@@ -51,7 +51,7 @@ namespace FamiStudio
 
         public PropertyPage AddPropertyPage(string text, string image)
         {
-            var page = new PropertyPage(this, tabsSizeX + margin * 2, margin, width - tabsSizeX - margin * 3);
+            var page = new PropertyPage(this, tabsSizeX + margin * 2, margin + titleBarSizeY, width - tabsSizeX - margin * 3);
 
             var tab = new PropertyPageTab();
             tab.button = AddButton(text, image);
@@ -63,7 +63,7 @@ namespace FamiStudio
 
         protected override void OnShowDialog()
         {
-            var y = margin;
+            var y = margin + titleBarSizeY;
             var maxHeight = 0;
             for (int i = 0; i < tabs.Count; i++)
             {
@@ -79,9 +79,9 @@ namespace FamiStudio
 
             maxHeight = Math.Max(maxHeight, Width / 2);
 
-            Resize(width, maxHeight + buttonNo.Height + margin * 3);
+            Resize(width, maxHeight + buttonNo.Height + margin * 3 + titleBarSizeY);
 
-            var buttonY = maxHeight + margin * 2;
+            var buttonY = maxHeight + margin * 2 + titleBarSizeY;
             buttonYes.Move(Width - buttonYes.Width * 2 - margin * 2, buttonY);
             buttonNo.Move(Width - buttonNo.Width - margin, buttonY);
 

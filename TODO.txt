@@ -8,7 +8,7 @@
 
 4.0.0
 =====
-- Add titles to dialogs
+- BUG : In channel 10 dialog, scroll bar is buggy.
 - BUG : Check boxes misaligned on mobile
 - BUG : Mobile, can't scroll to last pattern in sequencer
 - BUG : Crash Debug.Assert(custom.groove == null) when converting from FS to FT tempo.

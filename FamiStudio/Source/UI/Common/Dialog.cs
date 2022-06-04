@@ -17,10 +17,14 @@ namespace FamiStudio
         private Control focusedControl;
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
+        private string title;
 
         private int tooltipTopMargin  = DpiScaling.ScaleForWindow(2);
         private int tooltipSideMargin = DpiScaling.ScaleForWindow(4);
         private int tooltipOffsetY = DpiScaling.ScaleForWindow(24);
+        
+        protected int titleBarMargin = DpiScaling.ScaleForWindow(8);
+        protected int titleBarSizeY;
 
         private CommandList commandList;
         private CommandList commandListForeground;
@@ -47,9 +51,11 @@ namespace FamiStudio
             }
         }
 
-        public Dialog(FamiStudioWindow win) : base(win)
+        public Dialog(FamiStudioWindow win, string t = "") : base(win)
         {
             visible = false;
+            title = t;
+            titleBarSizeY = string.IsNullOrEmpty(t) ? 0 : DpiScaling.ScaleForWindow(24);
             parentWindow.InitDialog(this);
         }
 
@@ -269,6 +275,12 @@ namespace FamiStudio
 
             // Fill + Border
             commandList.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
+
+            if (titleBarSizeY > 0)
+            {
+                commandList.FillAndDrawRectangle(0, 0, width, titleBarSizeY, ThemeResources.DarkGreyLineBrush1, ThemeResources.BlackBrush);
+                commandList.DrawText(title, ThemeResources.FontMediumBold, titleBarMargin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, titleBarSizeY);
+            }
 
             // Render child controls
             foreach (var ctrl in controls)

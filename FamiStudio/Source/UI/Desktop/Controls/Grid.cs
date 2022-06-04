@@ -63,7 +63,7 @@ namespace FamiStudio
             numRows = rows;
             numItemRows = hasHeader ? numRows - 1 : numRows;
             numHeaderRows = hasHeader ? 1 : 0;
-            height = ScaleForWindow(numRows * rowHeight);
+            height = numRows * rowHeight;
 
             foreach (var col in columnDescs)
             {
