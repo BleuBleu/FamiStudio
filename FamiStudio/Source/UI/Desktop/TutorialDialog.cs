@@ -56,11 +56,11 @@ namespace FamiStudio
         private byte[] gifBuffer;
         private GCHandle gifHandle;
 
-        public TutorialDialog(FamiStudioWindow win) : base(win)
+        public TutorialDialog(FamiStudioWindow win) : base(win, "Welcome!")
         {
             Move(0, 0, 
                 imageSizeX + margin * 2, 
-                imageSizeY + margin * 4 + buttonSize + labelSizeY);
+                imageSizeY + margin * 4 + buttonSize + labelSizeY + titleBarSizeY);
 
             Init();
         }
@@ -81,13 +81,13 @@ namespace FamiStudio
             buttonRight.Move(width - buttonSize - margin, height - buttonSize - margin);
 
             label = new Label(this, "This is a nice label", true);
-            label.Move(margin, margin, width - margin, labelSizeY);
+            label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
             imageBox = new ImageBox(this, "VideoWatermark");
-            imageBox.Move(margin, margin * 2 + labelSizeY, imageSizeX, imageSizeY);
+            imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
 
             checkBoxDontShow = new CheckBox(this, false, "Do not show again");
-            checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY, width - buttonSize * 3, checkSizeY);
+            checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY + titleBarSizeY, width - buttonSize * 3, checkSizeY);
 
             AddControl(buttonLeft);
             AddControl(buttonRight);
