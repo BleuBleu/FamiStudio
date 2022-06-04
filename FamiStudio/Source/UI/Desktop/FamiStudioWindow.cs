@@ -78,6 +78,17 @@ namespace FamiStudio
             controls = new FamiStudioControls(this);
             activeControl = controls.PianoRoll;
 
+            BindGLFWCallbacks();
+            SetWindowIcon();
+            SubclassWindow(true); 
+            EnableWindowsDarkTheme();
+            InitialFrameBufferClear();
+
+            controls.InitializeGL();
+        }
+        
+        private void BindGLFWCallbacks()
+        {
             errorCallback = new GLFWerrorfun(ErrorCallback);
             windowSizeCallback = new GLFWwindowsizefun(WindowSizeCallback);
             windowCloseCallback = new GLFWwindowclosefun(WindowCloseCallback);
@@ -102,19 +113,10 @@ namespace FamiStudio
             glfwSetKeyCallback(window, keyCallback);
             glfwSetCharCallback(window, charCallback);
             glfwSetDropCallback(window, dropCallback);
-
-            SetWindowIcon();
-            SubclassWindow(true); 
-            EnableWindowsDarkTheme();
-            InitialFrameBufferClear();
-
-            controls.InitializeGL();
         }
-        
-        private void Shutdown()
-        {
-            SubclassWindow(false);
 
+        private void UnbindGLFWCallbacks()
+        {
             glfwSetErrorCallback(null);
             glfwSetWindowSizeCallback(window, null);
             glfwSetWindowCloseCallback(window, null);
@@ -290,8 +292,16 @@ namespace FamiStudio
 
         private void WindowCloseCallback(IntPtr window)
         {
+            if (IsAsyncDialogInProgress)
+            {
+                Platform.Beep();
+                return;
+            }
+
             if (famistudio.TryClosing())
-                quit = true;
+            {
+                Quit();
+            }
         }
 
         private void WindowRefreshCallback(IntPtr window)
@@ -756,6 +766,12 @@ namespace FamiStudio
             // MATTT : Retest this on macos.
             quit = true;
 
+            // Need to disable all event processing here. When quitting we may have
+            // a NULL project so the rendering and event processing code might be
+            // unstable. 
+            SubclassWindow(false);
+            UnbindGLFWCallbacks();
+
             // HACK : RtMidi still has a thread running and it seems
             // to prevent the app from quitting. Will investigate more
             // later.
@@ -872,8 +888,6 @@ namespace FamiStudio
             {
                 RunIteration();
             }
-
-            Shutdown();
         }
     }
 }

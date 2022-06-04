@@ -84,7 +84,7 @@ namespace FamiStudio
         private readonly string ShowFamitrackerStopNotesTooltip = "When enabled, partially transparent stop notes will be displayed whenever a note ends, when using FamiTracker tempo mode. This can help you to visually align note delays with stop notes.";
         private readonly string CompactSequencerTooltip         = "When enabled, the Sequencer will always try to keep its size as small as possible.";
         private readonly string ShowRegisterViewerTooltip       = "When enabled, the 'Register' tab will be visible in the Project Explorer.";
-        private readonly string UseOSDialogsTooltip             = "When enabled, FamiStudio will try to use the built-in Operating system dialog to open/save files and display error messages. Not available on Linux.";
+        private readonly string UseOSDialogsTooltip             = "When enabled, FamiStudio will try to use the built-in operating system dialog to open/save files and display error messages. Not available on Linux.";
 
         // Sound
         private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
@@ -178,7 +178,6 @@ namespace FamiStudio
                     page.SetPropertyVisible(6, Platform.IsDesktop);
                     break;
                 }
-
                 case ConfigSection.UserInterface:
                 {
                     var scalingValues   = BuildDpiScalingList();
@@ -197,11 +196,12 @@ namespace FamiStudio
                     page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 7
                     page.AddCheckBox("Use Operating System Dialogs:", Settings.UseOSDialogs, UseOSDialogsTooltip); // 8
                         
-                    page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS.
+                    page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. MATTT : Review this!!!
                     page.SetPropertyVisible(3, Platform.IsDesktop);
                     page.SetPropertyVisible(4, Platform.IsDesktop);
                     page.SetPropertyVisible(6, Platform.IsDesktop);
                     page.SetPropertyVisible(7, Platform.IsDesktop);
+                    page.SetPropertyVisible(8, Platform.IsDesktop);
                     page.SetPropertyEnabled(8, !Platform.IsLinux);
                     break;
                 }

@@ -8,7 +8,6 @@
 
 4.0.0
 =====
-/ Finish OFD, move to common platform, add images to all projects.
 - Add titles to dialogs
 - BUG : Check boxes misaligned on mobile
 - BUG : Mobile, can't scroll to last pattern in sequencer
