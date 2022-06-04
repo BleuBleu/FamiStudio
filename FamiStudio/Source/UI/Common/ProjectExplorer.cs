@@ -2116,8 +2116,8 @@ namespace FamiStudio
 
                                 var messageDlg = new PropertyDialog(ParentWindow, "Copy or Replace?", 400, true, true);
                                 messageDlg.Properties.AddLabel(null, label, true); // 0
-                                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, $"Replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'.", true); // 1
-                                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, $"Copy all properties and envelopes of instrument '{instrumentSrc.Name}' on to instrument '{instrumentDst.Name}'.", false); // 2
+                                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, $"Replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'.", true, true); // 1
+                                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, $"Copy all properties and envelopes of instrument '{instrumentSrc.Name}' on to instrument '{instrumentDst.Name}'.", false, true); // 2
                                 messageDlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                                 messageDlg.Properties.Build();
                                 messageDlg.ShowDialogAsync((r) =>
@@ -2203,7 +2203,7 @@ namespace FamiStudio
                     {
                         if (envelopeDragIdx == -1)
                         {
-                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to replace all notes using arpeggio '{arpeggioDst.Name}' with '{arpeggioSrc.Name}'?", "Replace arpeggio?", MessageBoxButtons.YesNo, (r) =>
+                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to replace all notes using arpeggio '{arpeggioDst.Name}' with '{arpeggioSrc.Name}'?", "Replace arpeggio", MessageBoxButtons.YesNo, (r) =>
                             {
                                 if (r == DialogResult.Yes)
                                 {

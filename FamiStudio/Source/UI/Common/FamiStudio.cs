@@ -752,7 +752,7 @@ namespace FamiStudio
         {
             if (undoRedoManager != null && undoRedoManager.NeedsSaving)
             {
-                Platform.MessageBoxAsync(window, "Save changes?", "FamiStudio", MessageBoxButtons.YesNoCancel, (r) =>
+                Platform.MessageBoxAsync(window, "Save changes?", "Confirm", MessageBoxButtons.YesNoCancel, (r) =>
                 {
                     if (r == DialogResult.No)
                         callback();
