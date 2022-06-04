@@ -1354,6 +1354,9 @@ namespace FamiStudio
             }
 
             tempoMode = TempoType.FamiTracker;
+
+            foreach (var song in songs)
+                song.ClearCustomPatternSettingsForFamitrackerTempo();
         }
 
         public void ConvertToCompoundNotes()

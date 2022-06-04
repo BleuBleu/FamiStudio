@@ -900,6 +900,22 @@ namespace FamiStudio
             }
         }
 
+        public void ClearCustomPatternSettingsForFamitrackerTempo()
+        {
+            Debug.Assert(UsesFamiTrackerTempo);
+
+            for (int p = 0; p < songLength; p++)
+            {
+                if (PatternHasCustomSettings(p))
+                {
+                    var settings = GetPatternCustomSettings(p);
+                    settings.noteLength = 0;
+                    settings.groovePaddingMode = GroovePaddingType.Middle;
+                    settings.groove = null;
+                }
+            }
+        }
+
         public bool ApplySpeedEffectAt(NoteLocation location, ref int speed)
         {
             if (UsesFamiStudioTempo)
