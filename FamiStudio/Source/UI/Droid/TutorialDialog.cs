@@ -24,7 +24,11 @@ namespace FamiStudio
 {
     public class TutorialDialog
     {
-        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
+        public TutorialDialog(FamiStudioWindow parent)
+        {
+        }
+
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
             FamiStudioWindow.Instance.StartTutorialDialogActivity(callback, this);
         }

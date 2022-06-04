@@ -32,18 +32,19 @@ namespace FamiStudio
         public string Verb  => verb;
         public bool CanAccept => canAccept;
         public bool CanCancel => canCancel;
+        public FamiStudioWindow ParentWindow => FamiStudioWindow.Instance;
 
         public delegate void CloseRequestDelegate(DialogResult result);
         public event CloseRequestDelegate CloseRequested;
 
-        public PropertyDialog(string text, int width, bool canAccept = true, bool canCancel = true, object parent = null)
+        public PropertyDialog(FamiStudioWindow win, string text, int width, bool canAccept = true, bool canCancel = true, object parent = null)
         {
             this.title = text;
             this.canAccept = canAccept;
             this.canCancel = canCancel;
         }
 
-        public PropertyDialog(string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        public PropertyDialog(FamiStudioWindow win, string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
             title = text;
         }
@@ -58,7 +59,7 @@ namespace FamiStudio
             CloseRequested?.Invoke(result);
         }
 
-        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
             FamiStudioWindow.Instance.StartPropertyDialogActivity(callback, this);
         }

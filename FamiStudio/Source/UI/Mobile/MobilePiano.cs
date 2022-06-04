@@ -52,6 +52,10 @@ namespace FamiStudio
         
         public int LayoutSize => layoutSize;
 
+        public MobilePiano(FamiStudioWindow win) : base(win)
+        {
+        }
+
         protected override void OnRenderInitialized(Graphics g)
         {
             var screenSize = Platform.GetScreenResolution();

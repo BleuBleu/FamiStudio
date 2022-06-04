@@ -76,13 +76,13 @@ namespace FamiStudio
             return new Size((int)displayInfo.Width, (int)displayInfo.Height);
         }
 
-        public static DialogResult MessageBox(string text, string title, MessageBoxButtons buttons)
+        public static DialogResult MessageBox(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons)
         {
             Debug.Assert(false); 
             return DialogResult.None;
         }
 
-        public static void MessageBoxAsync(string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
+        public static void MessageBoxAsync(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
         {
             AlertDialog.Builder dialog = new AlertDialog.Builder(Xamarin.Essentials.Platform.CurrentActivity);
             AlertDialog alert = dialog.Create();
@@ -141,25 +141,25 @@ namespace FamiStudio
             return Path.Combine(shareDir, filename);
         }
 
-        public static string ShowSaveFileDialog(string title, string extensions, ref string defaultPath)
+        public static string ShowSaveFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string[] ShowOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
+        public static string[] ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath, bool multiselect)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string ShowOpenFileDialog(string title, string extensions, ref string defaultPath)
+        public static string ShowOpenFileDialog(FamiStudioWindow win, string title, string extensions, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
         }
 
-        public static string ShowBrowseFolderDialog(string title, ref string defaultPath)
+        public static string ShowBrowseFolderDialog(FamiStudioWindow win, string title, ref string defaultPath)
         {
             Debug.Assert(false);
             return null;
@@ -250,6 +250,22 @@ namespace FamiStudio
         public static byte[] GetClipboardData(int maxSize)
         {
             return internalClipboardData;
+        }
+
+        public static string GetClipboardString()
+        {
+            Debug.Assert(false);
+            return "";
+        }
+
+        public static void SetClipboardString(string s)
+        {
+            Debug.Assert(false);
+        }
+
+        public static void ClearClipboardString()
+        {
+            Debug.Assert(false);
         }
 
         public const bool IsMobile  = true;

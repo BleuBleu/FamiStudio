@@ -41,8 +41,9 @@ namespace FamiStudio
         public bool ShowVerbOnTabPage => showVerbOnTabPage;
         public int PageCount => tabs.Count;
         public int SelectedIndex => selectedIndex;
-        
-        public MultiPropertyDialog(string text, int width, int height, int tabsWidth = 150)
+        public FamiStudioWindow ParentWindow => FamiStudioWindow.Instance;
+
+        public MultiPropertyDialog(FamiStudioWindow win, string text, int width, int height, int tabsWidth = 150)
         {
             title = text;
         }
@@ -84,7 +85,7 @@ namespace FamiStudio
             return tabs[idx];
         }
 
-        public void ShowDialogAsync(FamiStudioWindow parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
             FamiStudioWindow.Instance.StartMultiPropertyDialogActivity(callback, this);
         }

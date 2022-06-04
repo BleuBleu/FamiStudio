@@ -141,6 +141,10 @@ namespace FamiStudio
 
         public override bool WantsFullScreenViewport => true;
 
+        public QuickAccessBar(FamiStudioWindow win) : base(win)
+        {
+        }
+
         protected override void OnRenderInitialized(Graphics g)
         {
             bmpSequencer = g.GetBitmapAtlasRef("Sequencer");

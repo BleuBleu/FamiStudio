@@ -238,13 +238,11 @@
     <Compile Include="Source\IO\Mp3File.cs" />
     <Compile Include="Source\IO\NotSoFatso.cs" />
     <Compile Include="Source\IO\NsfFile.cs" />
-    <Compile Include="Source\IO\ProjectBuffer.cs" />
     <Compile Include="Source\IO\ProjectFile.cs" />
     <Compile Include="Source\IO\RomFile.cs" />
     <Compile Include="Source\IO\RomFileBase.cs" />
     <Compile Include="Source\IO\TgaFile.cs" />
     <Compile Include="Source\IO\VgmFile.cs" />
-    <Compile Include="Source\IO\VideoEncoderAndroid.cs" />
     <Compile Include="Source\IO\VideoFileBase.cs" />
     <Compile Include="Source\IO\VideoFileOscilloscope.cs" />
     <Compile Include="Source\IO\VideoFilePianoRoll.cs" />
@@ -270,6 +268,7 @@
     <Compile Include="Source\Project\Note.cs" />
     <Compile Include="Source\Project\Pattern.cs" />
     <Compile Include="Source\Project\Project.cs" />
+    <Compile Include="Source\Project\ProjectBuffer.cs" />    
     <Compile Include="Source\Project\Song.cs" />
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
@@ -319,6 +318,7 @@
     <Compile Include="Source\Utils\TempoUtils.cs" />
     <Compile Include="Source\Utils\Utils.cs" />
     <Compile Include="Source\Utils\WaveUtils.cs" />
+    <Compile Include="Source\Video\VideoEncoderAndroid.cs" />    
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Nsf\nsf_famistudio_dual.bin" />

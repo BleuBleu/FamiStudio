@@ -27,7 +27,7 @@ namespace FamiStudio
             famistudio = fami;
             saveMode = save;
 
-            dialog = new PropertyDialog(title, 100);
+            dialog = new PropertyDialog(famistudio.Window, title, 100);
             dialog.SetVerb(save ? "Save" : "Open");
 
             // User files.
@@ -126,7 +126,7 @@ namespace FamiStudio
                 var idx = dialog.Properties.GetSelectedIndex(0);
                 if (idx >= 0 && idx < userProjects.Count - 1)
                 {
-                    Platform.MessageBoxAsync("Delete project?", "Delete", MessageBoxButtons.YesNo, (r) =>
+                    Platform.MessageBoxAsync(famistudio.Window, "Delete project?", "Delete", MessageBoxButtons.YesNo, (r) =>
                     {
                         if (r == DialogResult.Yes)
                         {
@@ -156,7 +156,7 @@ namespace FamiStudio
 
         public void ShowDialogAsync(Action<string> callback)
         {
-            dialog.ShowDialogAsync(famistudio.MainWindow, (r) =>
+            dialog.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {

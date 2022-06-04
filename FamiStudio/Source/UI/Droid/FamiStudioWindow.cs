@@ -156,7 +156,7 @@ namespace FamiStudio
 
             // Simply update the form if the app already exists.
             if (appAlreadyExists)
-                famistudio.SetMainWindow(this, true);
+                famistudio.SetWindow(this, true);
             else
                 famistudio.Initialize(this, null);
 
@@ -255,7 +255,7 @@ namespace FamiStudio
         {
             if (delayedMessage != null)
             {
-                Platform.MessageBoxAsync(delayedMessage, delayedMessageTitle, MessageBoxButtons.OK);
+                Platform.MessageBoxAsync(this, delayedMessage, delayedMessageTitle, MessageBoxButtons.OK);
 
                 delayedMessage      = null;
                 delayedMessageTitle = null;
@@ -291,7 +291,7 @@ namespace FamiStudio
         private void DialogTest()
         {
 #if DEBUG
-            var dlg = new PropertyDialog("Test Dialog", 200);
+            var dlg = new PropertyDialog(this, "Test Dialog", 200);
 
             dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
             dlg.Properties.AddColorPicker(System.Drawing.Color.Pink);
@@ -306,7 +306,7 @@ namespace FamiStudio
             dlg.Properties.AddCheckBox("CheckBox1", true, "Checkbox tooltip!");
             dlg.Properties.AddSlider("Slider", 50, 0, 100, 1.0f, 2, "Allo {0} XXX", "Tooltip for slider");
 
-            dlg.ShowDialogAsync(this, (r) =>
+            dlg.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
