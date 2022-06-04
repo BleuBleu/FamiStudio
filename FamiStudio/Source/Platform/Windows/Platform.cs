@@ -446,67 +446,6 @@ namespace FamiStudio
             return buffer;
         }
 
-        public static string GetClipboardString()
-        {
-            byte[] buffer = null;
-
-            if (IsClipboardFormatAvailable(CF_UNICODETEXT) != 0)
-            {
-                if (OpenClipboard(IntPtr.Zero) != 0)
-                {
-                    var mem = GetClipboardDataWin32(CF_UNICODETEXT);
-                    if (mem != IntPtr.Zero)
-                    {
-                        var size = Math.Min(2048, GlobalSize(mem));
-                        var ptr = GlobalLock(mem);
-                        buffer = new byte[size];
-                        Marshal.Copy(ptr, buffer, 0, size);
-                        GlobalUnlock(mem);
-                    }
-                    CloseClipboard();
-                }
-            }
-
-            if (buffer == null)
-                return null;
-
-            return Encoding.Unicode.GetString(buffer).TrimEnd('\0');
-        }
-
-        public static void SetClipboardString(string str)
-        {
-            IntPtr mem = IntPtr.Zero;
-
-            if (string.IsNullOrEmpty(str))
-            {
-                mem = GlobalAlloc(GMEM_MOVEABLE, 0);
-            }
-            else
-            {
-                var bytes = Encoding.Unicode.GetBytes(str.Insert(str.Length, "\0"));
-                mem = GlobalAlloc(GMEM_MOVEABLE, bytes.Length);
-                var ptr = GlobalLock(mem);
-                Marshal.Copy(bytes, 0, ptr, bytes.Length);
-                GlobalUnlock(mem);
-            }
-
-            if (OpenClipboard(IntPtr.Zero) != 0)
-            {
-                EmptyClipboard();
-                SetClipboardData(CF_UNICODETEXT, mem);
-                CloseClipboard();
-            }
-        }
-
-        public static void ClearClipboardString()
-        {
-            if (OpenClipboard(IntPtr.Zero) != 0)
-            {
-                EmptyClipboard();
-                CloseClipboard();
-            }
-        }
-
         [System.Runtime.InteropServices.DllImport("Shell32.dll")]
         private static extern int SHChangeNotify(int eventId, int flags, IntPtr item1, IntPtr item2);
 

@@ -114,22 +114,6 @@ namespace FamiStudio
             return MacUtils.GetPasteboardData();
         }
 
-        public static string GetClipboardString()
-        {
-            return MacUtils.GetPasteboardString();
-        }
-
-        public static void SetClipboardString(string str)
-        {
-            // MATTT : Migrate to GLFW clipboard.
-            Debug.Assert(false);
-        }
-
-        public static void ClearClipboardString()
-        {
-            MacUtils.ClearPasteboardString();
-        }
-
         public static void InitializeConsole()
         {
         }

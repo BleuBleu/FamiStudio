@@ -731,7 +731,7 @@ namespace GLFWDotNet
 			public delegate int glfwGetGamepadState(int jid, out IntPtr state);
 
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
-			public delegate void glfwSetClipboardString(IntPtr window, string @string);
+			public delegate void glfwSetClipboardString(IntPtr window, IntPtr s);
 
 			[UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
 			public delegate IntPtr glfwGetClipboardString(IntPtr window);
@@ -3376,9 +3376,11 @@ namespace GLFWDotNet
 		/// <param name="string">
 		/// A UTF-8 encoded string.
 		/// </param>
-		public static void glfwSetClipboardString(IntPtr window, string @string)
+		public static unsafe void glfwSetClipboardString(IntPtr window, string s)
 		{
-			_glfwSetClipboardString(window, @string);
+			var bytes = System.Text.Encoding.UTF8.GetBytes(s + "\0");
+			fixed (byte* p = &bytes[0])
+				_glfwSetClipboardString(window, (IntPtr)p);
 		}
 
 		/// <summary>
@@ -3397,9 +3399,14 @@ namespace GLFWDotNet
 		/// The contents of the clipboard as a UTF-8 encoded string, or `NULL`
 		/// if an [error](@ref error_handling) occurred.
 		/// </returns>
-		public static IntPtr glfwGetClipboardString(IntPtr window)
+		public static unsafe string glfwGetClipboardString(IntPtr window)
 		{
-			return _glfwGetClipboardString(window);
+			var ptr = _glfwGetClipboardString(window);
+			var p = (byte*)ptr.ToPointer();
+			var n = 0;
+			for (; p[n] != 0; n++) ;
+
+			return System.Text.Encoding.UTF8.GetString(p, n);
 		}
 
 		/// <summary>

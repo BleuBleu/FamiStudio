@@ -180,6 +180,21 @@ namespace FamiStudio
             return glfwGetKeyName((int)Keys.Unknown, scancode);
         }
 
+        public static string GetClipboardString()
+        {
+            return glfwGetClipboardString(IntPtr.Zero);
+        }
+
+        public static void SetClipboardString(string str)
+        {
+            glfwSetClipboardString(IntPtr.Zero, str);
+        }
+
+        public static void ClearClipboardString()
+        {
+            glfwSetClipboardString(IntPtr.Zero, "");
+        }
+
         public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
         {
         }

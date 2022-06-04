@@ -105,20 +105,6 @@ namespace FamiStudio
             return internalClipboardData;
         }
 
-        public static string GetClipboardString()
-        {
-            return null;
-        }
-
-        public static void SetClipboardString(string str)
-        {
-            Debug.Assert(false);
-        }
-
-        public static void ClearClipboardString()
-        {
-        }
-
         public static void InitializeConsole()
         {
         }

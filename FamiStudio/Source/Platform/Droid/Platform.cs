@@ -252,15 +252,6 @@ namespace FamiStudio
             return internalClipboardData;
         }
 
-        public static string GetClipboardString()
-        {
-            return null;
-        }
-
-        public static void ClearClipboardString()
-        {
-        }
-
         public const bool IsMobile  = true;
         public const bool IsAndroid = true;
         public const bool IsDesktop = false;
