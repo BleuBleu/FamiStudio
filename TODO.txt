@@ -18,7 +18,6 @@
 - GLFW : Pinch to zoom?
 - GLFW : Mouse wheel, remove hacks, test on all platform.
 - GLFW : Add more cursors, 36, 48 and 64.
-- TEST : Make sure the demo songs are 100% intact.
 
 P1:
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
