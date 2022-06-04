@@ -202,7 +202,7 @@ namespace FamiStudio
                     page.SetPropertyVisible(6, Platform.IsDesktop);
                     page.SetPropertyVisible(7, Platform.IsDesktop);
                     page.SetPropertyVisible(8, Platform.IsDesktop);
-                    page.SetPropertyEnabled(8, !Platform.IsLinux);
+                    page.SetPropertyVisible(8, !Platform.IsLinux);
                     break;
                 }
                 case ConfigSection.Sound:
