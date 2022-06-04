@@ -35,13 +35,13 @@ namespace FamiStudio
         public int Minimum
         {
             get { return min; }
-            set { min = value; val = Utils.Clamp(value, min, max); MarkDirty(); }
+            set { min = value; val = Utils.Clamp(val, min, max); MarkDirty(); }
         }
 
         public int Maximum
         {
             get { return max; }
-            set { max = value; val = Utils.Clamp(value, min, max); MarkDirty(); }
+            set { max = value; val = Utils.Clamp(val, min, max); MarkDirty(); }
         }
 
         protected override void OnRenderInitialized(Graphics g)

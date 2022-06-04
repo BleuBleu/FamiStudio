@@ -241,7 +241,7 @@ namespace FamiStudio
                 {
                     if (GetScrollBarParams(out var scrollBarPos, out var scrollBarSize) && e.X > width - scrollBarWidth)
                     {
-                        var y = e.Y - rowHeight;
+                        var y = e.Y - rowHeight * numHeaderRows;
 
                         if (y < scrollBarPos)
                         {
