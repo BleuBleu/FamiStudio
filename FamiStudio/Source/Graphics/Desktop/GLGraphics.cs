@@ -98,12 +98,9 @@ namespace FamiStudio
             {
                 var stride = sizeof(int) * bmp.Width;
 
-                // MATTT : Check that!!! 
-                var format = Platform.IsWindows ? GL.Bgra : GL.Rgba;
-
                 int id = GL.GenTexture();
                 GL.BindTexture(GL.Texture2D, id);
-                GL.TexImage2D(GL.Texture2D, 0, GL.Rgba8, bmp.Width, bmp.Height, 0, format, GL.UnsignedByte, new IntPtr(ptr));
+                GL.TexImage2D(GL.Texture2D, 0, GL.Rgba8, bmp.Width, bmp.Height, 0, GL.Bgra, GL.UnsignedByte, new IntPtr(ptr));
                 GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
                 GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
 
@@ -207,10 +204,7 @@ namespace FamiStudio
                 fixed (int* ptr = &bmp.Data[0])
                 {
                     var stride = sizeof(int) * bmp.Width;
-
-                    // MATTT : Check that!!! Should be same now!
-                    var format = Platform.IsWindows ? GL.Bgra : GL.Rgba;
-                    GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, format, GL.UnsignedByte, new IntPtr(ptr));
+                    GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, GL.Bgra, GL.UnsignedByte, new IntPtr(ptr));
                 }
             }
 

@@ -189,6 +189,16 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (!e.Handled && e.Key == Keys.Escape)
+            {
+                ButtonRight_Click(this);
+            }
+        }
+
         private void TutorialDialog_KeyDown(object sender, KeyEventArgs e)
         {
             ButtonRight_Click(null);
