@@ -23,7 +23,6 @@ namespace FamiStudio
 
         public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int height, int tabsWidth = 150) : base(win, title)
         {
-            // MATTT : Avoid using the DpiScaling, we are a GLControl, we can access.
             tabsSizeX = DpiScaling.ScaleForWindow(tabsWidth);
             Move(0, 0, DpiScaling.ScaleForWindow(width), DpiScaling.ScaleForWindow(width));
             Init();

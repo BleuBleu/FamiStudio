@@ -9,6 +9,7 @@ namespace FamiStudio
         private Bitmap bmp;
         private BitmapAtlasRef bmpAtlas;
         private Color tint = Color.White;
+        private bool scale;
 
         public ImageBox(Dialog dlg, string image) : base(dlg)
         {
@@ -41,6 +42,12 @@ namespace FamiStudio
             set { tint = value; MarkDirty(); }
         }
 
+        public bool ScaleImage
+        {
+            get { return scale; }
+            set { scale = value; MarkDirty(); }
+        }
+
         private void UpdateAtlasBitmap()
         {
             if (!string.IsNullOrEmpty(atlasImageName))
@@ -58,7 +65,16 @@ namespace FamiStudio
 
             if (bmp != null)
             {
-                c.DrawBitmapCentered(bmp, 0, 0, width, height, 1, tint);
+                if (scale)
+                {
+                    float sx = width  / (float)bmp.Size.Width;
+                    float sy = height / (float)bmp.Size.Height;
+                    c.DrawBitmapScaled(bmp, 0, 0, sx, sy);
+                }
+                else
+                {
+                    c.DrawBitmapCentered(bmp, 0, 0, width, height, 1, tint);
+                }
             }
             else
             {

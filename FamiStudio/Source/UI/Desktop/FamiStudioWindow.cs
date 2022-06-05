@@ -601,7 +601,6 @@ namespace FamiStudio
 
         private Point GetCursorPosInternal()
         {
-            // MATTT : Do we get fractional coords with DPI scaling?
             glfwGetCursorPos(window, out var dx, out var dy);
             GLFWToWindow(dx, dy, out var x, out var y);
             return PointToScreen(new Point(x, y));
@@ -609,7 +608,6 @@ namespace FamiStudio
 
         private void GetCursorPosInternal(out int x, out int y)
         {
-            // MATTT : Do we get fractional coords with DPI scaling?
             glfwGetCursorPos(window, out var dx, out var dy);
             GLFWToWindow(dx, dy, out x, out y);
         }

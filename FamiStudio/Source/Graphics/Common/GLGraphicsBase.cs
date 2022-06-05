@@ -1795,6 +1795,11 @@ namespace FamiStudio
             DrawBitmap(bmp, x, y, bmp.Size.Width, bmp.Size.Height, opacity, 0, 0, 1, 1, false, tint);
         }
 
+        public void DrawBitmapScaled(Bitmap bmp, float x, float y, float sx, float sy)
+        {
+            DrawBitmap(bmp, x, y, sx, sy, 1, 0, 0, 1, 1);
+        }
+
         public void DrawBitmapCentered(Bitmap bmp, float x, float y, float width, float height, float opacity = 1.0f, Color tint = new Color())
         {
             x += (width  - bmp.Size.Width)  / 2;

@@ -67,7 +67,6 @@ namespace FamiStudio
 
         private void Init()
         {
-            // MATTT : This doesnt work with scaling i think.
             buttonLeft = new Button(this, "ArrowLeft", null);
             buttonLeft.Click += ButtonLeft_Click;
             buttonLeft.Resize(buttonSize, buttonSize);
@@ -85,6 +84,7 @@ namespace FamiStudio
 
             imageBox = new ImageBox(this, "VideoWatermark");
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
+            imageBox.ScaleImage = DpiScaling.Window > 1;
 
             checkBoxDontShow = new CheckBox(this, false, "Do not show again");
             checkBoxDontShow.Move(margin, margin * 3 + labelSizeY + imageSizeY + titleBarSizeY, width - buttonSize * 3, checkSizeY);
