@@ -245,7 +245,9 @@ namespace FamiStudio
 
         private string BuildPath(string[] elements, int maxIndex)
         {
-            string p = elements[0];
+            string p = Path.VolumeSeparatorChar == Path.DirectorySeparatorChar ? "/" : ""; 
+
+            p += elements[0];
 
             if (p[p.Length - 1] != Path.DirectorySeparatorChar ||
                 p[p.Length - 1] != Path.AltDirectorySeparatorChar)
@@ -420,7 +422,10 @@ namespace FamiStudio
             var drives = DriveInfo.GetDrives();
 
             foreach (var d in drives)
-                files.Add(new FileEntry("FileDisk", d.Name, d.RootDirectory.FullName, true));
+            {
+                if (d.IsReady && d.TotalSize > 0)
+                    files.Add(new FileEntry("FileDisk", d.Name, d.RootDirectory.FullName, true));
+            }
 
             path = null;
             gridFiles.UpdateData(GetGridData(files));
