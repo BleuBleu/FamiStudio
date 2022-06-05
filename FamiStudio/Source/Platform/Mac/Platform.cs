@@ -16,7 +16,7 @@ namespace FamiStudio
     {
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Application Support/FamiStudio");
         public static string UserProjectsDirectory => null;
-        public static float DoubleClickTime => 0.25f; // MATTT
+        public static float DoubleClickTime => MacUtils.DoubleClickInterval;
 
         public const string DllPrefix = "";
         public const string DllExtension = ".dylib";

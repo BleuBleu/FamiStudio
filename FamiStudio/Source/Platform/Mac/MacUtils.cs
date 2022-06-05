@@ -171,7 +171,6 @@ namespace FamiStudio
         public static event FileOpenDelegate FileOpen;
 
         const int NSOKButton = 1;
-        const int NSWindowZoomButton = 2;
         const int NSAlertFirstButtonReturn  = 1000;
         const int NSAlertSecondButtonReturn = 1001;
 
@@ -183,7 +182,6 @@ namespace FamiStudio
         static IntPtr clsNSSavePanel;
         static IntPtr clsNSAlert;
         static IntPtr clsNSCursor;
-        static IntPtr clsNSImage;
         static IntPtr clsNSPasteboard;
         static IntPtr clsNSData;
         static IntPtr clsNSNotificationCenter;
@@ -196,34 +194,20 @@ namespace FamiStudio
         static IntPtr selBytes = SelRegisterName("bytes");
         static IntPtr selCount = SelRegisterName("count");
         static IntPtr selGetObjectAtIndex = SelRegisterName("objectAtIndex:");
-        static IntPtr selClearContents = SelRegisterName("clearContents");
-        static IntPtr selStringForType = SelRegisterName("stringForType:");
-        static IntPtr selSetStringForType = SelRegisterName("setString:forType:");
-        static IntPtr selGeneralPasteboard = SelRegisterName("generalPasteboard");
         static IntPtr selPasteboardWithName = SelRegisterName("pasteboardWithName:");
         static IntPtr selDeclareTypesOwner = SelRegisterName("declareTypes:owner:");
         static IntPtr selSetDataForType = SelRegisterName("setData:forType:");
         static IntPtr selDataForType = SelRegisterName("dataForType:");
         static IntPtr selDataWithBytesLength = SelRegisterName("dataWithBytes:length:");
         static IntPtr selInitWithCharactersLength = SelRegisterName("initWithCharacters:length:");
-        static IntPtr selInitWithImageHotSpot = SelRegisterName("initWithImage:hotSpot:");
         static IntPtr selFileURLWithPath = SelRegisterName("fileURLWithPath:");
         static IntPtr selPath = SelRegisterName("path");
         static IntPtr selUTF8String = SelRegisterName("UTF8String");
         static IntPtr selArrayWithObjectsCount = SelRegisterName("arrayWithObjects:count:");
-        static IntPtr selPressedMouseButtons = SelRegisterName("pressedMouseButtons");
-        static IntPtr selBackingScaleFactor = SelRegisterName("backingScaleFactor");
-        static IntPtr selContentView = SelRegisterName("contentView");
-        static IntPtr selFrame = SelRegisterName("frame");
-        static IntPtr selMouseLocationOutsideOfEventStream = SelRegisterName("mouseLocationOutsideOfEventStream");
         static IntPtr selMakeKeyAndOrderFront = SelRegisterName("makeKeyAndOrderFront:");
-        static IntPtr selSetLevel = SelRegisterName("setLevel:");
-        static IntPtr selStandardWindowButton = SelRegisterName("standardWindowButton:");
-        static IntPtr selSetHidden = SelRegisterName("setHidden:");
         static IntPtr selOpenPanel = SelRegisterName("openPanel");
         static IntPtr selSavePanel = SelRegisterName("savePanel");
         static IntPtr selSetTitle = SelRegisterName("setTitle:");
-        static IntPtr selInitWithData = SelRegisterName("initWithData:");
         static IntPtr selSetDirectoryURL = SelRegisterName("setDirectoryURL:");
         static IntPtr selAllowsMultipleSelection = SelRegisterName("setAllowsMultipleSelection:");
         static IntPtr selSetAllowedFileTypes = SelRegisterName("setAllowedFileTypes:");
@@ -238,33 +222,24 @@ namespace FamiStudio
         static IntPtr selSetInformativeText = SelRegisterName("setInformativeText:");
         static IntPtr selSetAlertStyle = SelRegisterName("setAlertStyle:");
         static IntPtr selAddButtonWithTitle = SelRegisterName("addButtonWithTitle:");
-        static IntPtr selInvalidateCursorRectsForView = SelRegisterName("invalidateCursorRectsForView:");
-        static IntPtr selBounds = SelRegisterName("bounds");
-        static IntPtr selRelease = SelRegisterName("release");
         static IntPtr selDefaultCenter = SelRegisterName("defaultCenter");
         static IntPtr selAddObserver = SelRegisterName("addObserver:selector:name:object:");
-        static IntPtr selAddCursorRectCursor = SelRegisterName("addCursorRect:cursor:");
         static IntPtr selSharedApplication = SelRegisterName("sharedApplication");
         static IntPtr selInitWithTitleActionKeyEquivalent = SelRegisterName("initWithTitle:action:keyEquivalent:");
-        static IntPtr selInitWithTitle = SelRegisterName("initWithTitle:");
         static IntPtr selSetTarget = SelRegisterName("setTarget:");
         static IntPtr selNew = SelRegisterName("new");
         static IntPtr selAddItem = SelRegisterName("addItem:");
         static IntPtr selSetSubmenu = SelRegisterName("setSubmenu:");
         static IntPtr selSetMainMenu = SelRegisterName("setMainMenu:");
+        static IntPtr selDoubleClickInterval = SelRegisterName("doubleClickInterval");
 
-        static IntPtr generalPasteboard;
         static IntPtr famiStudioPasteboard;
-
-        static float mainWindowScaling = 1.0f;
-        static float dialogScaling = 1.0f;
+        static float  doubleClickInterval = 0.25f;
 
         public static IntPtr FoundationLibrary => foundationLib;
         public static IntPtr NSApplication => nsApplication;
         public static IntPtr NSWindow => nsWindow;
-
-        public static float MainWindowScaling => mainWindowScaling;
-        public static float DialogScaling => dialogScaling;
+        public static float  DoubleClickInterval => doubleClickInterval;
 
         public static void Initialize(IntPtr nsWin)
         {
@@ -277,7 +252,6 @@ namespace FamiStudio
             clsNSSavePanel = GetClass("NSSavePanel");
             clsNSAlert = GetClass("NSAlert");
             clsNSCursor = GetClass("NSCursor");
-            clsNSImage = GetClass("NSImage");
             clsNSPasteboard = GetClass("NSPasteboard");
             clsNSData = GetClass("NSData");
             clsNSNotificationCenter = GetClass("NSNotificationCenter");
@@ -285,14 +259,7 @@ namespace FamiStudio
             clsNSMenu = GetClass("NSMenu");
             clsNSMenuItem = GetClass("NSMenuItem");
 
-            dialogScaling = (float)SendFloat(nsWin, selBackingScaleFactor);
-
-            if (Settings.DpiScaling != 0)
-                mainWindowScaling = Settings.DpiScaling / 100.0f;
-            else
-                mainWindowScaling = dialogScaling;
-
-            generalPasteboard = SendIntPtr(clsNSPasteboard, selGeneralPasteboard);
+            doubleClickInterval = (float)SendFloat(clsNSEvent, selDoubleClickInterval);
             famiStudioPasteboard = SendIntPtr(clsNSPasteboard, selPasteboardWithName, ToNSString("FamiStudio"));
             nsApplication = SendIntPtr(clsNSApplication, selSharedApplication);
 
@@ -352,6 +319,8 @@ namespace FamiStudio
         public static void CreateMenu()
         {
             var quitMenuItem = SendIntPtr(clsNSMenuItem, selAlloc);
+
+            // MATTT : The quit menu seems disabled?
 
             SendIntPtr(quitMenuItem, selInitWithTitleActionKeyEquivalent, ToNSString("Quit"), SelRegisterName("windowShouldClose:"), ToNSString(""));
             SendVoid(quitMenuItem, selSetTarget, nsWindow);
@@ -672,62 +641,16 @@ namespace FamiStudio
             return r;
         }
 
-        public static System.Drawing.PointF GetWindowSize(IntPtr nsWin)
-        {
-            var nsView = SendIntPtr(nsWin, selContentView);
-            var viewRect = SendRect(nsView, selFrame);
-
-            return new System.Drawing.PointF(viewRect.Width, viewRect.Height);
-        }
-
-        public static System.Drawing.Point GetWindowMousePosition(IntPtr nsWin)
-        {
-            var nsView = SendIntPtr(nsWin, selContentView);
-            var viewRect = SendRect(nsView, selFrame);
-            var winHeight = (float)viewRect.Size.Height * dialogScaling;
-
-            var mouseLoc = SendPoint(nsWin, selMouseLocationOutsideOfEventStream);
-            var x = (float)mouseLoc.X * dialogScaling;
-            var y = (float)mouseLoc.Y * dialogScaling;
-            y = winHeight - y;
-
-            return new System.Drawing.Point((int)Math.Round(x), (int)Math.Round(y));
-        }
-
         public static IntPtr GetCursorByName(string name)
         {
             var sel = MacUtils.SelRegisterName(name);
             return SendIntPtr(clsNSCursor, sel);
         }
 
-        public static void SetWindowCursor(IntPtr nsWin, IntPtr target, IntPtr cursor)
-        {
-            var nsView = SendIntPtr(nsWin, selContentView);
-            var rect = SendRect(nsView, selBounds);
-            SendVoid(target, selAddCursorRectCursor, rect, cursor);
-        }
-
-        public static void InvalidateCursor(IntPtr nsWin)
-        {
-            var nsView = SendIntPtr(nsWin, selContentView);
-            SendVoid(nsWin, selInvalidateCursorRectsForView, nsView);
-        }
-
         public static IntPtr LoadLibrary(string fileName)
         {
             const int RTLD_NOW = 2;
             return dlopen(fileName, RTLD_NOW);
-        }
-
-        public static void SetNSWindowAlwayOnTop(IntPtr nsWin)
-        {
-            SendIntPtr(nsWin, selMakeKeyAndOrderFront, IntPtr.Zero);
-            SendIntPtr(nsWin, selSetLevel, 10);
-        }
-
-        public static void RemoveNSWindowAlwaysOnTop(IntPtr nsWin)
-        {
-            SendIntPtr(nsWin, selSetLevel, 0);
         }
 
         public static void SetNSWindowFocus(IntPtr nsWin)
@@ -738,35 +661,6 @@ namespace FamiStudio
         public static void RestoreMainNSWindowFocus()
         {
             SetNSWindowFocus(nsWindow);
-        }
-
-        public static void RemoveMaximizeButton(IntPtr nsWin)
-        {
-            var btn = SendIntPtr(nsWin, selStandardWindowButton, NSWindowZoomButton);
-            SendIntPtr(btn, selSetHidden, 1);
-        }
-
-        public unsafe static IntPtr CreateCursorFromImage(byte[] imageData, int hotX, int hotY)
-        {
-            fixed (byte* ptr = &imageData[0])
-            {
-                var nsData = SendIntPtr(clsNSData, selDataWithBytesLength, new IntPtr(ptr), imageData.Length);
-
-                var nsImage = SendIntPtr(clsNSImage, selAlloc);
-                nsImage = SendIntPtr(nsImage, selInitWithData, nsData);
-
-                var nsPoint = new NSPoint();
-                nsPoint.X = hotX;
-                nsPoint.Y = hotY;
-
-				var nsCursor = SendIntPtr(clsNSCursor, selAlloc);
-                nsCursor = SendIntPtr(nsCursor, selInitWithImageHotSpot, nsImage, nsPoint);
-
-                SendVoid(nsData,  selRelease);
-                SendVoid(nsImage, selRelease);
-                
-                return nsCursor;
-            }
         }
 
         public static string[] ShowOpenDialog(string title, string[] extensions, bool multiselect = false, string path = null)
@@ -951,21 +845,6 @@ namespace FamiStudio
             }
 
             return bytes;
-        }
-
-        public static string GetPasteboardString()
-        {
-            var nsString = SendIntPtr(generalPasteboard, selStringForType, ToNSString("NSStringPboardType"));
-
-            if (nsString == IntPtr.Zero)
-                return null;
-
-            return FromNSString(nsString);
-        }
-
-        public static void ClearPasteboardString()
-        {
-            SendVoid(generalPasteboard, selClearContents);
         }
 
         // The follow code (most AppleEvent/CoreFoundattion interop) was taken from
