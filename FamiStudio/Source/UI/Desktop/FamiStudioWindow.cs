@@ -136,6 +136,8 @@ namespace FamiStudio
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_MAXIMIZED, 1);
+            glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
+            glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, 1);
 
             var window = glfwCreateWindow(640, 480, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
             if (window == IntPtr.Zero)
@@ -151,15 +153,19 @@ namespace FamiStudio
             GL.StaticInitialize();
             Cursors.Initialize();
             DpiScaling.Initialize(scaling);
+#if FAMISTUDIO_MACOS
+            // TODO : Move this somewhere else.
+            MacUtils.Initialize(glfwGetCocoaWindow(window));
+#endif
 
             return new FamiStudioWindow(fs, window);
         }
 
         private void InitialFrameBufferClear()
         {
-            glfwGetWindowSize(window, out var w, out var h);
+            var size = GetWindowSizeInternal();
             GL.Disable(GL.DepthTest);
-            GL.Viewport(0, 0, w, h);
+            GL.Viewport(0, 0, size.Width, size.Height);
             GL.ClearColor(
                 Theme.DarkGreyLineColor1.R / 255.0f,
                 Theme.DarkGreyLineColor1.G / 255.0f,
@@ -287,6 +293,8 @@ namespace FamiStudio
 
         private void WindowSizeCallback(IntPtr window, int width, int height)
         {
+            Debug.WriteLine($"*** SIZE {width}, {height}.");
+
             RefreshLayout();
         }
 
@@ -301,6 +309,20 @@ namespace FamiStudio
             if (famistudio.TryClosing())
             {
                 Quit();
+            }
+        }
+
+        public static void GLFWToWindow(double dx, double dy, out int x, out int y)
+        {
+            if (Platform.IsMacOS)
+            {
+                x = (int)Math.Round(dx * DpiScaling.Window);
+                y = (int)Math.Round(dy * DpiScaling.Window);
+            }
+            else
+            {
+                x = (int)dx;
+                y = (int)dy;
             }
         }
 
@@ -409,9 +431,7 @@ namespace FamiStudio
         {
             Debug.WriteLine($"POS! X={xpos}, Y={ypos}");
 
-            // MATTT : Do we get fractional coords with DPI scaling?
-            lastCursorX = (int)xpos;
-            lastCursorY = (int)ypos;
+            GLFWToWindow(xpos, ypos, out lastCursorX, out lastCursorY);
 
             int cx;
             int cy;
@@ -574,7 +594,8 @@ namespace FamiStudio
 
         private Size GetWindowSizeInternal()
         {
-            glfwGetWindowSize(window, out var w, out var h);
+            glfwGetWindowSize(window, out var tw, out var th);
+            GLFWToWindow(tw, th, out var w, out var h);
             return new Size(w, h);
         }
 
@@ -582,15 +603,15 @@ namespace FamiStudio
         {
             // MATTT : Do we get fractional coords with DPI scaling?
             glfwGetCursorPos(window, out var dx, out var dy);
-            return PointToScreen(new Point((int)dx, (int)dy));
+            GLFWToWindow(dx, dy, out var x, out var y);
+            return PointToScreen(new Point(x, y));
         }
 
         private void GetCursorPosInternal(out int x, out int y)
         {
             // MATTT : Do we get fractional coords with DPI scaling?
             glfwGetCursorPos(window, out var dx, out var dy);
-            x = (int)dx;
-            y = (int)dy;
+            GLFWToWindow(dx, dy, out x, out y);
         }
 
         private int MakeButtonFlags(int button)
@@ -788,8 +809,8 @@ namespace FamiStudio
 
         public void RefreshLayout()
         {
-            glfwGetWindowSize(window, out var w, out var h);
-            controls.Resize(w, h);
+            var size = GetWindowSizeInternal();
+            controls.Resize(size.Width, size.Height);
             controls.MarkDirty();
         }
 
