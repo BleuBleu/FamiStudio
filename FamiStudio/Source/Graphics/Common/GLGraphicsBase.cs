@@ -1890,6 +1890,7 @@ namespace FamiStudio
             if (meshSmoothBatch != null)
             {
                 var draw = new MeshDrawData();
+                draw.smooth = true;
                 draw.vtxArray = meshSmoothBatch.vtxArray;
                 draw.colArray = meshSmoothBatch.colArray;
                 draw.idxArray = meshSmoothBatch.idxArray;
