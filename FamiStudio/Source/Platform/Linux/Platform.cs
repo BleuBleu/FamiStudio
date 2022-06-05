@@ -17,7 +17,7 @@ namespace FamiStudio
         public static string UserProjectsDirectory => null;
         public static float DoubleClickTime => 0.25f; // MATTT
 
-        public const string DllPrefix = "";
+        public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
 
         public static bool Initialize()

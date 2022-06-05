@@ -480,6 +480,7 @@ namespace FamiStudio
         public const int Float             = 0x1406;
         public const int Lines             = 0x0001;
         public const int Triangles         = 0x0004;
+        public const int Quads             = 0x0007;
         public const int UnsignedShort     = 0x1403;
         public const int Framebuffer       = 0x8D40;
         public const int ColorAttachment0  = 0x8CE0;
