@@ -93,9 +93,9 @@ namespace FamiStudio
             Debug.WriteLine("Error setting process name.");
         }
         
-        public static int GetCursorSize()
+        public static int GetCursorSize(float scaling)
         {
-            return 32; // MATTT
+            return (int)(32 * scaling); // No way to detect this on Linux.
         }
 
         public static void SetClipboardData(byte[] data)
