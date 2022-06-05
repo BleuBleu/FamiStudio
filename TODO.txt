@@ -8,7 +8,8 @@
 
 4.0.0
 =====
-- BUG : Victoria lab, is it possible to fix the tempo?
+- BUG : Trailing garbage open file dialog extensions.
+- BUG : Mobile gizmos dont scale anymore (?)
 - CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
 - CTX : Tooltips where a context menu can appear.
 - CTX : When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
@@ -17,8 +18,10 @@
 - GLFW : Pinch to zoom?
 - GLFW : Mouse wheel, remove hacks, test on all platform.
 - GLFW : Add more cursors, 36, 48 and 64.
+- CTL : Mouse wheel in drop down grid should scroll.
 
 P1:
+- Victoria lab, is it possible to fix the tempo?
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

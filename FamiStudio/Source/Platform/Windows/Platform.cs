@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Media;
 using Microsoft.Win32;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace FamiStudio
 {
@@ -35,7 +36,7 @@ namespace FamiStudio
 
 #if !DEBUG
             if (IsPortableMode)
-                Platform.AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
+                AssociateExtension(".fms", Assembly.GetExecutingAssembly().Location, "FamiStudio Project", "FamiStudio Project");
 #endif
 
             return true;
