@@ -67,9 +67,7 @@ namespace FamiStudio
             {
                 if (scale)
                 {
-                    float sx = width  / (float)bmp.Size.Width;
-                    float sy = height / (float)bmp.Size.Height;
-                    c.DrawBitmapScaled(bmp, 0, 0, sx, sy);
+                    c.DrawBitmapScaled(bmp, 0, 0, width, height);
                 }
                 else
                 {
