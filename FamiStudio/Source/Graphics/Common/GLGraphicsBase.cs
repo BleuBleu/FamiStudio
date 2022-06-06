@@ -23,6 +23,7 @@ namespace FamiStudio
 
         protected float windowScaling = 1.0f;
         protected float fontScaling = 1.0f;
+        protected bool builtAtlases;
         protected int windowSizeY;
         protected int lineWidthBias;
         protected int maxSmoothLineWidth = int.MaxValue;
@@ -84,7 +85,10 @@ namespace FamiStudio
                 quadIdxArray[j++] = i3;
             }
 
-            BuildBitmapAtlases();
+            // HACK : If we are on android with a scaling of 1.0, this mean we are
+            // rendering a video and we dont need any of the atlases.
+            if (!Platform.IsAndroid || mainScale != 1.0f)
+                BuildBitmapAtlases();
         }
 
         public virtual void BeginDrawFrame()
@@ -111,9 +115,8 @@ namespace FamiStudio
 
         protected SimpleBitmap LoadBitmapFromResourceWithScaling(string name)
         {
-            var assembly = Assembly.GetExecutingAssembly();
             var scaledFilename = GetScaledFilename(name, out var needsScaling);
-            var bmp = TgaFile.LoadFromResource(scaledFilename);
+            var bmp = TgaFile.LoadFromResource(scaledFilename, true);
 
             // Pre-resize all images so we dont have to deal with scaling later.
             if (needsScaling)
@@ -193,6 +196,8 @@ namespace FamiStudio
                 var bmp = CreateBitmapAtlasFromResources(kv.Value.ToArray());
                 atlases.Add(kv.Key, bmp);
             }
+
+            builtAtlases = true;
         }
 
         public BitmapAtlasRef GetBitmapAtlasRef(string name)
@@ -205,7 +210,7 @@ namespace FamiStudio
                     return new BitmapAtlasRef(a, idx);
             }
 
-            Debug.Assert(false);
+            Debug.Assert(!builtAtlases); // On Android, when rendering videos, we ignore missing bitmaps.
             return null;
         }
 
@@ -371,7 +376,7 @@ namespace FamiStudio
             }
 
             var lines = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            var bmp = TgaFile.LoadFromResource(imgfile);
+            var bmp = TgaFile.LoadFromResource(imgfile, true);
 
             var font = (Font)null;
 
@@ -924,11 +929,6 @@ namespace FamiStudio
         public static int PackColor(int r, int g, int b, int a)
         {
             return (a << 24) | (b << 16) | (g << 8) | r;
-        }
-
-        public static int PackColorForTexture(Color c)
-        {
-            return Platform.IsAndroid ? ((c.A << 24) | (c.B << 16) | (c.G << 8) | c.R) : c.ToArgb();
         }
     }
 

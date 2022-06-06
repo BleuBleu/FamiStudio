@@ -557,41 +557,7 @@ namespace FamiStudio
 
         public unsafe void GetBitmap(byte[] data)
         {
-            // This code is totally not needed or used
-            /*
-            if (texture > 0)
-            {
-                byte[] tmp = new byte[data.Length];
-
-                GLES11.GlBindTexture(GLES11.GlTexture2d, texture);
-                fixed (byte* tmpPtr = &tmp[0])
-                {
-                    var buffer = ByteBuffer.AllocateDirect(resX * resY * sizeof(int)).Order(ByteOrder.NativeOrder());
-                    GLES11.GlReadPixels(0, 0, resX, resY, GLES11.GlRgba, GLES11.GlUnsignedByte, buffer);
-                    buffer.Get(data);
-
-                    // Flip image vertically to match D3D. 
-                    for (int y = 0; y < resY; y++)
-                    {
-                        int y0 = y;
-                        int y1 = resY - y - 1;
-
-                        y0 *= resX * 4;
-                        y1 *= resX * 4;
-
-                        // ABGR -> RGBA
-                        byte* p = tmpPtr + y0;
-                        for (int x = 0; x < resX * 4; x += 4)
-                        {
-                            data[y1 + x + 3] = *p++;
-                            data[y1 + x + 2] = *p++;
-                            data[y1 + x + 1] = *p++;
-                            data[y1 + x + 0] = *p++;
-                        }
-                    }
-                }
-            }
-            */
+            // Our rendering is fed directly to the encoder on Android.
         }
 
         public override void Dispose()

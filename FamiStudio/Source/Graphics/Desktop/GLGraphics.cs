@@ -75,7 +75,7 @@ namespace FamiStudio
         public void UpdateBitmap(Bitmap bmp, int x, int y, int width, int height, int[] data)
         {
             GL.BindTexture(GL.Texture2D, bmp.Id);
-            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Bgra, GL.UnsignedByte, data);
+            GL.TexSubImage2D(GL.Texture2D, 0, x, y, width, height, GL.Rgba, GL.UnsignedByte, data);
         }
 
         protected override int CreateEmptyTexture(int width, int height, bool alpha, bool filter)
@@ -87,7 +87,7 @@ namespace FamiStudio
             GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, filter ? GL.Linear : GL.Nearest);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapS, GL.ClampToEdge);
             GL.TexParameter(GL.Texture2D, GL.TextureWrapT, GL.ClampToEdge);
-            GL.TexImage2D(GL.Texture2D, 0, alpha ? GL.Rgba8 : GL.Rgb8, width, height, 0, GL.Bgra, GL.UnsignedByte, new int[width * height]);
+            GL.TexImage2D(GL.Texture2D, 0, alpha ? GL.Rgba8 : GL.Rgb8, width, height, 0, GL.Rgba, GL.UnsignedByte, new int[width * height]);
 
             return id;
         }
@@ -100,7 +100,7 @@ namespace FamiStudio
 
                 int id = GL.GenTexture();
                 GL.BindTexture(GL.Texture2D, id);
-                GL.TexImage2D(GL.Texture2D, 0, GL.Rgba8, bmp.Width, bmp.Height, 0, GL.Bgra, GL.UnsignedByte, new IntPtr(ptr));
+                GL.TexImage2D(GL.Texture2D, 0, GL.Rgba8, bmp.Width, bmp.Height, 0, GL.Rgba, GL.UnsignedByte, new IntPtr(ptr));
                 GL.TexParameter(GL.Texture2D, GL.TextureMinFilter, GL.Nearest);
                 GL.TexParameter(GL.Texture2D, GL.TextureMagFilter, GL.Nearest);
 
@@ -204,7 +204,7 @@ namespace FamiStudio
                 fixed (int* ptr = &bmp.Data[0])
                 {
                     var stride = sizeof(int) * bmp.Width;
-                    GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, GL.Bgra, GL.UnsignedByte, new IntPtr(ptr));
+                    GL.TexSubImage2D(GL.Texture2D, 0, elementRects[i].X, elementRects[i].Y, bmp.Width, bmp.Height, GL.Rgba, GL.UnsignedByte, new IntPtr(ptr));
                 }
             }
 
@@ -400,7 +400,7 @@ namespace FamiStudio
             GL.BindFramebuffer(GL.ReadFramebuffer, fbo);
             fixed (byte* tmpPtr = &tmp[0])
             {
-                GL.ReadPixels(0, 0, resX, resY, GL.Bgra, GL.UnsignedByte, new IntPtr(tmpPtr));
+                GL.ReadPixels(0, 0, resX, resY, GL.Rgba, GL.UnsignedByte, new IntPtr(tmpPtr));
                 GL.BindFramebuffer(GL.ReadFramebuffer, 0);
 
                 // Flip image vertically to match D3D. 
@@ -416,9 +416,9 @@ namespace FamiStudio
                     byte* p = tmpPtr + y0;
                     for (int x = 0; x < resX * 4; x += 4)
                     {
-                        data[y1 + x + 3] = *p++;
-                        data[y1 + x + 2] = *p++;
                         data[y1 + x + 1] = *p++;
+                        data[y1 + x + 2] = *p++;
+                        data[y1 + x + 3] = *p++;
                         data[y1 + x + 0] = *p++;
                     }
                 }

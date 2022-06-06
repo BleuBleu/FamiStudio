@@ -263,7 +263,7 @@ namespace FamiStudio
             var channelResX = videoResY;
             var channelResY = (int)channelResXFloat;
             var longestChannelName = 0.0f;
-            var bmpWatermark = videoGraphics.GetBitmapAtlasRef("VideoWatermark");
+            var bmpWatermark = videoGraphics.CreateBitmapFromResource("VideoWatermark");
 
             foreach (var state in channelStates)
             {
@@ -413,8 +413,8 @@ namespace FamiStudio
                     }
 
                     // Watermark.
-                    fg.DrawBitmapAtlas(bmpWatermark, videoResX - bmpWatermark.ElementSize.Width, videoResY - bmpWatermark.ElementSize.Height);
-
+                    fg.DrawBitmap(bmpWatermark, videoResX - bmpWatermark.Size.Width, videoResY - bmpWatermark.Size.Height);
+                        
                     videoGraphics.DrawCommandList(bg);
                     videoGraphics.DrawCommandList(fg);
                     videoGraphics.EndDrawControl();
@@ -451,6 +451,7 @@ namespace FamiStudio
                     c.graphics.Dispose();
                 }
                 themeResources.Dispose();
+                bmpWatermark.Dispose();
                 gradientBrush.Dispose();
                 videoGraphics.Dispose();
             }
