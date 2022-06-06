@@ -8,8 +8,7 @@
 
 4.0.0
 =====
-- Need a quick note delete (gizmo? keyboard?)
-- Show slide note name next to gizmo.
+- Is CPU usage higher?
 - CMD broken
 - Unify GL_BGRA on android 
 - Enter close dialog? YES, it used to be like this. Lets only do it if there is only one textbox

@@ -1757,8 +1757,8 @@ namespace FamiStudio
             Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Ellipsis));
             Debug.Assert(!flags.HasFlag(TextFlags.Monospace) || !flags.HasFlag(TextFlags.Clip));
             Debug.Assert(!flags.HasFlag(TextFlags.Ellipsis) || width > 0);
-            Debug.Assert((flags & TextFlags.HorizontalAlignMask) == TextFlags.Left || width  > 0);
-            Debug.Assert((flags & TextFlags.VerticalAlignMask)   == TextFlags.Top  || height > 0);
+            Debug.Assert((flags & TextFlags.HorizontalAlignMask) != TextFlags.Center || width  > 0);
+            Debug.Assert((flags & TextFlags.VerticalAlignMask)   == TextFlags.Top    || height > 0);
 
             if (!texts.TryGetValue(font, out var list))
             {

@@ -365,6 +365,7 @@ namespace FamiStudio
             public BitmapAtlasRef FillImage = null;
             public BitmapAtlasRef Image;
             public GizmoAction Action;
+            public string GizmoText;
         };
 
         public bool SnapAllowed { get => editMode == EditionMode.Channel; }
@@ -2437,12 +2438,17 @@ namespace FamiStudio
                     {
                         foreach (var g in gizmos)
                         {
+                            var highlighted = IsGizmoHighlighted(g, headerAndEffectSizeY);
+
                             var fillColor = GetNoteColor(Song.Channels[editChannel], gizmoNote.Value, gizmoNote.Instrument);
-                            var lineColor = IsGizmoHighlighted(g, headerAndEffectSizeY) ? Color.White : Color.Black;
+                            var lineColor = highlighted ? Color.White : Color.Black;
 
                             if (g.FillImage != null)
                                 r.cg.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, fillColor);
                             r.cg.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.FillImage.ElementSize.Width, lineColor);
+
+                            if (highlighted && !string.IsNullOrEmpty(g.GizmoText))
+                                r.cg.DrawText(g.GizmoText, ThemeResources.FontSmall, g.Rect.X - g.Rect.Width / 8, g.Rect.Y, ThemeResources.WhiteBrush, TextFlags.MiddleRight, 0, g.Rect.Height);
                         }
                     }
                 }
@@ -4402,6 +4408,7 @@ namespace FamiStudio
                 slideGizmo.FillImage = bmpGizmoResizeFill;
                 slideGizmo.Action = GizmoAction.MoveSlide;
                 slideGizmo.Rect = new Rectangle(x, y, gizmoSize, gizmoSize);
+                slideGizmo.GizmoText = Note.GetFriendlyName(note.SlideNoteTarget);
                 list.Add(slideGizmo);
             }
 
