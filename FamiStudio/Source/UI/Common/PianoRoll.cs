@@ -8084,7 +8084,7 @@ namespace FamiStudio
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
                 {
                     var j = i; // Important, copy for lamdba.
-                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]}{(SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat")}", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0);
+                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]} {(SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat")}", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0);
                 }
 
                 App.ShowContextMenu(left + e.X, top + e.Y, options);
