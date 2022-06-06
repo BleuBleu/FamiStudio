@@ -1667,7 +1667,7 @@ namespace FamiStudio
                         }
                         else if (captureOperation == CaptureOperation.None)
                         {
-                            var pt = PointToClient(Cursor.Position);
+                            var pt = PointToClient(CursorPosition);
                             GetEffectNoteForCoord(pt.X, pt.Y, out highlightLocation);
                         }
                     }
@@ -2146,7 +2146,7 @@ namespace FamiStudio
             }
             else
             {
-                var pt = PointToClient(Cursor.Position);
+                var pt = PointToClient(CursorPosition);
 
                 if (g.Rect.Contains(pt.X - pianoSizeX, pt.Y - offsetY))
                     return true;
@@ -2283,7 +2283,7 @@ namespace FamiStudio
                         }
                         else if (captureOperation == CaptureOperation.None)
                         {
-                            var pt = PointToClient(Cursor.Position);
+                            var pt = PointToClient(CursorPosition);
                             highlightNote = GetNoteForCoord(pt.X, pt.Y, out _, out highlightLocation, out _);
                         }
                     }
@@ -2502,7 +2502,7 @@ namespace FamiStudio
 
                 if (dragSample != null)
                 {
-                    var pt = Platform.IsDesktop ? PointToClient(Cursor.Position) : new Point(mouseLastX, mouseLastY);
+                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
 
                     if (GetNoteValueForCoord(pt.X, pt.Y, out var noteValue) && App.Project.NoteSupportsDPCM(noteValue))
                     {
@@ -2514,7 +2514,7 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop && captureOperation == CaptureOperation.None)
                 {
-                    var pt = PointToClient(Cursor.Position);
+                    var pt = PointToClient(CursorPosition);
 
                     if (GetLocationForCoord(pt.X, pt.Y, out _, out var highlightNoteValue))
                     {
@@ -4297,7 +4297,7 @@ namespace FamiStudio
             }
             else
             {
-                var pt = PointToClient(Cursor.Position);
+                var pt = PointToClient(CursorPosition);
                 if (!GetLocationForCoord(pt.X, pt.Y, out var mouseLocation, out byte noteValue) || !mouseLocation.IsInSong(Song))
                     return null;
                 location = mouseLocation;
@@ -4317,7 +4317,7 @@ namespace FamiStudio
             }
             else
             {
-                var pt = PointToClient(Cursor.Position);
+                var pt = PointToClient(CursorPosition);
                 if (!GetEffectNoteForCoord(pt.X, pt.Y, out var mouseLocation) || !mouseLocation.IsInSong(Song))
                     return null;
                 location = mouseLocation;
@@ -7974,23 +7974,23 @@ namespace FamiStudio
 
         private void UpdateCursor()
         {
-            var pt = PointToClient(Cursor.Position);
+            var pt = PointToClient(CursorPosition);
 
             if (EditEnvelope != null && EditEnvelope.CanResize && IsPointWhereCanResizeEnvelope(pt.X, pt.Y) && captureOperation != CaptureOperation.Select || captureOperation == CaptureOperation.ResizeEnvelope)
             {
-                Cursor.Current = Cursors.SizeWE;
+                Cursor = Cursors.SizeWE;
             }
             else if (captureOperation == CaptureOperation.ChangeEffectValue)
             {
-                Cursor.Current = Cursors.SizeNS;
+                Cursor = Cursors.SizeNS;
             }
             else if (ModifierKeys.Control && (captureOperation == CaptureOperation.DragNote || captureOperation == CaptureOperation.DragSelection))
             {
-                Cursor.Current = Cursors.CopyCursor;
+                Cursor = Cursors.CopyCursor;
             }
             else if (editMode == EditionMode.Channel && ParentWindow.IsKeyDown(Keys.I))
             {
-                Cursor.Current = Cursors.Eyedrop;
+                Cursor = Cursors.Eyedrop;
             }
             else
             {
@@ -8003,10 +8003,10 @@ namespace FamiStudio
                         switch (captureOp)
                         {
                             case CaptureOperation.ChangeEffectValue:
-                                Cursor.Current = Cursors.SizeNS;
+                                Cursor = Cursors.SizeNS;
                                 break;
                             default:
-                                Cursor.Current = Cursors.Default;
+                                Cursor = Cursors.Default;
                                 break;
                         }
                     }
@@ -8021,7 +8021,7 @@ namespace FamiStudio
                                 if (gizmo.Rect.Contains(pt.X - pianoSizeX, pt.Y - headerAndEffectSizeY))
                                 {
                                     Debug.Assert(gizmo.Action == GizmoAction.MoveSlide);
-                                    Cursor.Current = Cursors.SizeNS;
+                                    Cursor = Cursors.SizeNS;
                                     return;
                                 }
                             }
@@ -8036,21 +8036,21 @@ namespace FamiStudio
                             case CaptureOperation.ResizeNoteEnd:
                             case CaptureOperation.ResizeSelectionNoteEnd:
                             case CaptureOperation.MoveNoteRelease:
-                                Cursor.Current = Cursors.SizeWE;
+                                Cursor = Cursors.SizeWE;
                                 break;
                             case CaptureOperation.DragNote:
                             case CaptureOperation.DragSelection:
-                                Cursor.Current = Cursors.Move;
+                                Cursor = Cursors.Move;
                                 break;
                             default:
-                                Cursor.Current = Cursors.Default;
+                                Cursor = Cursors.Default;
                                 break;
                         }
                     }
                 }
                 else
                 {
-                    Cursor.Current = Cursors.Default;
+                    Cursor = Cursors.Default;
                 }
             }
         }

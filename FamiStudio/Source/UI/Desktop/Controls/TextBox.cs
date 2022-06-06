@@ -87,7 +87,7 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            Cursor.Current = enabled ? Cursors.IBeam : Cursors.Default;
+            Cursor = enabled ? Cursors.IBeam : Cursors.Default;
 
             if (mouseSelecting)
             {

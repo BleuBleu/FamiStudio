@@ -20,13 +20,13 @@ namespace FamiStudio
         {
             // MATTT : Need hand cursor here!
             var insideText = e.X >= 0 && e.X < MeasureString();
-            Cursor.Current = insideText ? Cursors.CopyCursor : Cursors.Default;
+            Cursor = insideText ? Cursors.CopyCursor : Cursors.Default;
             SetAndMarkDirty(ref hover, insideText);
         }
 
         protected override void OnMouseLeave(System.EventArgs e)
         {
-            Cursor.Current = Cursors.Default;
+            Cursor = Cursors.Default;
             SetAndMarkDirty(ref hover, false);
         }
 

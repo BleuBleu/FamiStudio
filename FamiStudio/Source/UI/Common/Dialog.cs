@@ -302,7 +302,7 @@ namespace FamiStudio
 
             if (ShouldDisplayTooltip())
             {
-                var pt = PointToClient(Cursor.Position);
+                var pt = PointToClient(CursorPosition);
                 var formPt = pt + new Size(left, top);
                 var ctrl = GetControlAt(left + pt.X, top + pt.Y, out _, out _);
 

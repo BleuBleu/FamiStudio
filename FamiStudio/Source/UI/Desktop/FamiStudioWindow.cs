@@ -839,7 +839,7 @@ namespace FamiStudio
             if (captureControl != null && captureControl != ctrl)
                 return;
 
-            glfwSetCursor(window, ctrl != null ? ctrl.Cursor.Current : Cursors.Default);
+            glfwSetCursor(window, ctrl != null ? ctrl.Cursor : Cursors.Default);
         }
 
         public void SetActiveControl(Control ctrl, bool animate = true)

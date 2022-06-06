@@ -1918,11 +1918,11 @@ namespace FamiStudio
         {
             if (captureOperation == CaptureOperation.DragSelection)
             {
-                Cursor.Current = Cursors.DragCursor;
+                Cursor = Cursors.DragCursor;
             }
             else
             {
-                Cursor.Current = Cursors.Default;
+                Cursor = Cursors.Default;
             }
         }
 
@@ -2395,7 +2395,7 @@ namespace FamiStudio
         {
             if (e == null)
             {
-                var pt = PointToClient(Cursor.Position);
+                var pt = PointToClient(CursorPosition);
                 e = new MouseEventArgs(0, pt.X, pt.Y);
             }
 

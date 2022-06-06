@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Drawing;
 using System.Diagnostics;
 
 namespace FamiStudio
 {
     public class Control
     {
-        private CursorInfo cursorInfo;
         private ThemeRenderResources themeRes;
+        private IntPtr cursor = Cursors.Default;
         protected FamiStudioWindow parentWindow;
         protected Dialog parentDialog;
         protected int left = 0;
@@ -23,14 +24,12 @@ namespace FamiStudio
         protected Control(FamiStudioWindow win)
         {
             parentWindow = win;
-            cursorInfo = new CursorInfo(this); 
         }
 
         protected Control(Dialog dlg) 
         {
             parentDialog = dlg;
             parentWindow = dlg.parentWindow;
-            cursorInfo = new CursorInfo(this);
             parentDialog.InitControl(this);
         }
 
@@ -95,11 +94,11 @@ namespace FamiStudio
         public void DialogMouseDownNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
         public void DialogMouseMoveNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }
 
-        public System.Drawing.Point PointToClient(System.Drawing.Point p) { return parentWindow.PointToClient(this, p); }
-        public System.Drawing.Point PointToScreen(System.Drawing.Point p) { return parentWindow.PointToScreen(this, p); }
-        public System.Drawing.Rectangle ClientRectangle => new System.Drawing.Rectangle(0, 0, width, height);
-        public System.Drawing.Rectangle Rectangle => new System.Drawing.Rectangle(Left, Top, Width, Height);
-        public System.Drawing.Size ParentWindowSize => parentWindow.Size;
+        public Point PointToClient(Point p) { return parentWindow.PointToClient(this, p); }
+        public Point PointToScreen(Point p) { return parentWindow.PointToScreen(this, p); }
+        public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
+        public Rectangle Rectangle => new Rectangle(Left, Top, Width, Height);
+        public Size ParentWindowSize => parentWindow.Size;
         public bool IsLandscape => parentWindow.IsLandscape;
         public int Left => parentDialog != null ? left + parentDialog.left : left;
         public int Top => parentDialog != null ? top + parentDialog.top : top;
@@ -124,9 +123,10 @@ namespace FamiStudio
         public void SetDpiScales(float main, float font) { windowScaling = main; fontScaling = font; }
         public void SetThemeRenderResource(ThemeRenderResources res) { themeRes = res; }
 
+        public Point CursorPosition => parentWindow.GetCursorPosition();
         public ModifierKeys ModifierKeys => parentWindow.GetModifierKeys();
         public FamiStudio App => parentWindow?.FamiStudio;
-        public CursorInfo Cursor => cursorInfo;
+        public IntPtr Cursor { get => cursor; set { cursor = value; parentWindow.RefreshCursor(); } }
         public FamiStudioWindow ParentWindow => parentWindow; 
         public Dialog ParentDialog => parentDialog; 
 
@@ -187,21 +187,6 @@ namespace FamiStudio
         }
     }
 
-    // MATTT : Get rid of this.
-    public class CursorInfo
-    {
-        private IntPtr cursor = Cursors.Default;
-        private Control parentControl;
-
-        public CursorInfo(Control ctrl) { parentControl = ctrl; }
-        public System.Drawing.Point Position => parentControl.ParentWindow.GetCursorPosition();
-        public IntPtr Current
-        {
-            get { return cursor; }
-            set { cursor = value; parentControl.ParentWindow.RefreshCursor(); }
-        }
-    }
-    
     public class ModifierKeys
     { 
         // Matches GLFW

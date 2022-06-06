@@ -936,7 +936,7 @@ namespace FamiStudio
 
         private void RenderButtons(CommandList c)
         {
-            var pt = PointToClient(Cursor.Position);
+            var pt = PointToClient(CursorPosition);
 
             // Buttons
             foreach (var btn in buttons)
