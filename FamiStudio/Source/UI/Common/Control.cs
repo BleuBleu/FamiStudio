@@ -191,7 +191,7 @@ namespace FamiStudio
     { 
         // Matches GLFW
         private const int ModifierShift   = 1;
-        private const int ModifierControl = 2;
+        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
         private const int ModifierAlt     = 4;
         private const int ModifierSuper   = 8;
 
@@ -253,7 +253,7 @@ namespace FamiStudio
     {   
         // Matches GLFW
         private const int ModifierShift   = 1;
-        private const int ModifierControl = 2;
+        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
         private const int ModifierAlt     = 4;
         private const int ModifierSuper   = 8;
 
@@ -285,9 +285,9 @@ namespace FamiStudio
     {
         // Matches GLFW
         private const int ModifierShift   = 1;
-        private const int ModifierControl = 2;
+        private const int ModifierControl = Platform.IsMacOS ? 10 : 2;
         private const int ModifierAlt     = 4;
-        private const int ModifierSuper   = 4;
+        private const int ModifierSuper   = 8;
 
         private char chr;
         private int  modifiers;

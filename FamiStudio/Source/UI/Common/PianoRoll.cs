@@ -8057,7 +8057,6 @@ namespace FamiStudio
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            bool left   = e.Left;
             bool middle = e.Middle || (e.Left && ModifierKeys.Alt);
 
             UpdateCursor();
