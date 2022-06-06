@@ -347,7 +347,7 @@ namespace FamiStudio
 
         private const int IDC_ARROW = 32512;
 
-        public static int GetCursorSize()
+        public static int GetCursorSize(float scaling)
         {
             var size = 32;
             var arrow = LoadCursor(IntPtr.Zero, (IntPtr)IDC_ARROW);

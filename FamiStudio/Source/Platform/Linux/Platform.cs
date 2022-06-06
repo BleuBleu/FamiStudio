@@ -15,7 +15,7 @@ namespace FamiStudio
 
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
         public static string UserProjectsDirectory => null;
-        public static float DoubleClickTime => 0.25f; // MATTT
+        public static float DoubleClickTime => 0.5f; // 0.5 sec is the default on both Windows and Mac. So let's use that.
 
         public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
@@ -93,9 +93,9 @@ namespace FamiStudio
             Debug.WriteLine("Error setting process name.");
         }
         
-        public static int GetCursorSize()
+        public static int GetCursorSize(float scaling)
         {
-            return 32; // MATTT
+            return (int)(32 * scaling); // No way to detect this on Linux.
         }
 
         public static void SetClipboardData(byte[] data)

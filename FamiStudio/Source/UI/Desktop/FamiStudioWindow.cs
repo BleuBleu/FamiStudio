@@ -151,7 +151,7 @@ namespace FamiStudio
             glfwGetWindowContentScale(window, out var scaling, out _);
 
             GL.StaticInitialize();
-            Cursors.Initialize();
+            Cursors.Initialize(scaling);
             DpiScaling.Initialize(scaling);
 #if FAMISTUDIO_MACOS
             // TODO : Move this somewhere else.

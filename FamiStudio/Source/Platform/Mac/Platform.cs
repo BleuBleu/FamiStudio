@@ -99,9 +99,11 @@ namespace FamiStudio
             SystemSounds.Beep.Play();
         }
 
-        public static int GetCursorSize()
+        public static int GetCursorSize(float scaling)
         {
-            return 32; // MATTT
+            // TODO : There is a way to get the cursor size on MacOS from the accessibility
+            // settings. Will eventually do that.
+            return (int)(32 * scaling); 
         }
 
         public static void SetClipboardData(byte[] data)

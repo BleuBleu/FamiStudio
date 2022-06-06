@@ -32,8 +32,7 @@ namespace FamiStudio
         {
             if (glfwInit() == 0)
             {
-                // MATTT : We will need a "low level" message box if we ever roll out our own.
-                Platform.MessageBox(null, "Error initializing GLFW.", "Error", MessageBoxButtons.OK);
+                MessageBox(null, "Error initializing GLFW.", "Error", MessageBoxButtons.OK);
                 return false;
             }
 

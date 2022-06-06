@@ -90,7 +90,7 @@ namespace FamiStudio
             }
         }
 
-        public static void Initialize()
+        public static void Initialize(float scaling)
         {
             Default    = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
             SizeWE     = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
@@ -114,7 +114,7 @@ namespace FamiStudio
                 CopyCursor = CreateGLFWCursorWindows(CopyCursorHandle);
             }
 
-            var size = Platform.GetCursorSize();
+            var size = Platform.GetCursorSize(scaling);
             Eyedrop = CreateCursorFromResource(size, 6, 25, "EyedropCursor");  
         }
     }
