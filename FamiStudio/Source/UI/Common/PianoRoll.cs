@@ -4502,15 +4502,12 @@ namespace FamiStudio
             if (captureOperation != CaptureOperation.None)
                 return;
 
-            bool ctrl  = e.Control;
-            bool shift = e.Shift;
-
             if (e.Key == Keys.Escape)
             {
                 ClearSelection();
                 MarkDirty();
             }
-            else if (e.Key == Keys.A && ctrl && IsActiveControl)
+            else if (e.Key == Keys.A && e.Control && IsActiveControl)
             {
                 if (editMode == EditionMode.Arpeggio ||
                     editMode == EditionMode.Enveloppe)
@@ -4522,7 +4519,7 @@ namespace FamiStudio
                     SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
                 }
             }
-            else if (e.Key == Keys.S && shift)
+            else if (e.Key == Keys.S && e.Shift)
             {
                 if (SnapAllowed)
                 {
@@ -4532,7 +4529,7 @@ namespace FamiStudio
             }
             else if (IsActiveControl && IsSelectionValid())
             {
-                if (ctrl)
+                if (e.Control)
                 {
                     if (e.Key == Keys.C)
                         Copy();
@@ -4540,7 +4537,7 @@ namespace FamiStudio
                         Cut();
                     else if (e.Key == Keys.V)
                     {
-                        if (shift)
+                        if (e.Shift)
                             PasteSpecial();
                         else
                             Paste();
@@ -4551,7 +4548,7 @@ namespace FamiStudio
                 {
                     if (editMode == EditionMode.Channel)
                     {
-                        if (ctrl && shift)
+                        if (e.Control && e.Shift)
                             DeleteSpecial();
                         else
                             DeleteSelectedNotes();
@@ -4571,16 +4568,16 @@ namespace FamiStudio
                     switch (e.Key)
                     {
                         case Keys.Up:
-                            TransposeNotes(ctrl ? 12 : 1);
+                            TransposeNotes(e.Control ? 12 : 1);
                             break;
                         case Keys.Down:
-                            TransposeNotes(ctrl ? -12 : -1);
+                            TransposeNotes(e.Control ? -12 : -1);
                             break;
                         case Keys.Right:
-                            MoveNotes(ctrl ? (Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : 1);
+                            MoveNotes(e.Control ? (Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : 1);
                             break;
                         case Keys.Left:
-                            MoveNotes(ctrl ? -(Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : -1);
+                            MoveNotes(e.Control ? -(Song.Project.UsesFamiTrackerTempo ? Song.BeatLength : Song.NoteLength) : -1);
                             break;
                     }
                 }
@@ -4589,16 +4586,16 @@ namespace FamiStudio
                     switch (e.Key)
                     {
                         case Keys.Up:
-                            IncrementEnvelopeValues(ctrl ? 4 : 1);
+                            IncrementEnvelopeValues(e.Control ? 4 : 1);
                             break;
                         case Keys.Down:
-                            IncrementEnvelopeValues(ctrl ? -4 : -1);
+                            IncrementEnvelopeValues(e.Control ? -4 : -1);
                             break;
                         case Keys.Right:
-                            MoveEnvelopeValues(ctrl ? 4 : 1);
+                            MoveEnvelopeValues(e.Control ? 4 : 1);
                             break;
                         case Keys.Left:
-                            MoveEnvelopeValues(ctrl ? -4 : -1);
+                            MoveEnvelopeValues(e.Control ? -4 : -1);
                             break;
                     }
                 }
@@ -5090,13 +5087,18 @@ namespace FamiStudio
 
                 if (left)
                 {
-                    var shift   = ModifierKeys.Shift;
+                    var delete  = ModifierKeys.Shift;
+                    var release = ParentWindow.IsKeyDown(Keys.R); 
                     var stop    = ParentWindow.IsKeyDown(Keys.T);
                     var slide   = ParentWindow.IsKeyDown(Keys.S);
                     var attack  = ParentWindow.IsKeyDown(Keys.A);
                     var eyedrop = ParentWindow.IsKeyDown(Keys.I);
 
-                    if (slide)
+                    if (delete && note != null)
+                    {
+                        DeleteSingleNote(noteLocation, mouseLocation, note);
+                    }
+                    else if (slide)
                     {
                         StartSlideNoteCreation(e.X, e.Y, noteLocation, note, noteValue);
                     }
@@ -5108,7 +5110,7 @@ namespace FamiStudio
                     {
                         Eyedrop(note);
                     }
-                    else if (shift && note != null)
+                    else if (release && note != null)
                     {
                         ToggleReleaseNote(noteLocation, mouseLocation, note);
                     }
@@ -7357,7 +7359,7 @@ namespace FamiStudio
                         if (note != null)
                         {
                             if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease)
-                                tooltipList.Add("{Shift} {MouseLeft} Set release point");
+                                tooltipList.Add("{R} {MouseLeft} Set release point");
                             if (channel.SupportsSlideNotes)
                                 tooltipList.Add("{S} {MouseLeft} {Drag} Slide note");
                             if (note.IsMusical)
@@ -7365,7 +7367,7 @@ namespace FamiStudio
                                 tooltipList.Add("{A} {MouseLeft} Toggle note attack");
                                 tooltipList.Add("{I} {MouseLeft} Instrument Eyedrop");
                             }
-                            tooltipList.Add("{MouseRight} Delete note");
+                            tooltipList.Add("{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete note");
                         }
                         else 
                         {
