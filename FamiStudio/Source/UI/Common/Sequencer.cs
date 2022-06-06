@@ -1220,10 +1220,7 @@ namespace FamiStudio
 
                 if (e.Left)
                 {
-                    var ctrl  = ModifierKeys.Control;
-                    var shift = ModifierKeys.Shift;
-
-                    if (pattern == null && !shift)
+                     if (pattern == null)
                     {
                         CreateNewPattern(location);
                     }
@@ -1231,6 +1228,12 @@ namespace FamiStudio
                     {
                         if (pattern != null)
                         {
+                            if (ModifierKeys.Shift)
+                            {
+                                DeletePattern(location);
+                                return true;
+                            }
+
                             PatternClicked?.Invoke(location.ChannelIndex, location.PatternIndex, false);
                         }
 
@@ -2412,20 +2415,20 @@ namespace FamiStudio
                 if (pattern == null)
                     tooltipList.Add("{MouseLeft} Add Pattern");
 
-                tooltipList.Add("{L} {MouseLeft} Set Loop Point");
-                tooltipList.Add("{MouseWheel} Pan");
+                tooltipList.Add("{L}{MouseLeft} Set Loop Point");
+                tooltipList.Add("{MouseWheel}{Drag} Pan");
                 tooltipList.Add("{MouseRight}{Drag} Select Rectangle");
 
                 if (pattern != null)
                 {
-                    tooltipList.Add("{MouseLeft}{MouseLeft} Delete Pattern");
+                    tooltipList.Add("{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete Pattern");
                     tooltipList.Add("{MouseRight} More Options...");
                 }
 
                 if (IsPatternSelected(location))
                 {
                     tooltipList.Add("{Drag} Move Pattern");
-                    tooltipList.Add("{Ctrl} {Drag} Clone pattern");
+                    tooltipList.Add("{Ctrl}{Drag} Clone pattern");
                 }
 
                 if (tooltipList.Count >= 3)
@@ -2441,7 +2444,7 @@ namespace FamiStudio
             }
             else if (IsMouseInHeader(e))
             {
-                tooltip = "{MouseLeft} Seek - {MouseRight} More Options... - {MouseRight}{Drag} Select Column\n{L} {MouseLeft} Set Loop Point - {MouseWheel} Pan";
+                tooltip = "{MouseLeft} Seek - {MouseRight} More Options... - {MouseRight}{Drag} Select Column\n{L}{MouseLeft} Set Loop Point - {MouseWheel}{Drag} Pan";
             }
             else if (IsMouseInTrackName(e))
             {
@@ -2451,14 +2454,14 @@ namespace FamiStudio
                 }
                 else if (GetTrackGhostForPos(e) >= 0)
                 {
-                    tooltip = "{MouseLeft} Toggle channel display";
+                    tooltip = "{MouseLeft} Toggle channel display - {MouseRight} More Options...";
                     int idx = GetChannelIndexForCoord(e.Y) + 1;
                     if (idx >= 1 && idx <= 12)
-                        tooltip += $" {{Ctrl}} {{F{idx}}}";
+                        tooltip += $" {{Ctrl}}{{F{idx}}}";
                 }
                 else
                 {
-                    tooltip = "{MouseLeft} Make channel active";
+                    tooltip = "{MouseLeft} Make channel active - {MouseRight} More Options...";
                     int idx = GetChannelIndexForCoord(e.Y) + 1;
                     if (idx >= 1 && idx <= 12)
                         tooltip += $" {{F{idx}}}";

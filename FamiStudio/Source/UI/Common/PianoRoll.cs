@@ -7280,7 +7280,7 @@ namespace FamiStudio
             }
             else if (IsPointOnSnapResolution(e.X, e.Y) || IsPointOnSnapButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Toggle snapping {Shift} {S} {MouseWheel} Change snap precision\n{MouseRight} More Options...";
+                tooltip = "{MouseLeft} Toggle snapping {Shift}{S}{MouseWheel} Change snap precision\n{MouseRight} More Options...";
             }
             else if (IsPointOnMaximizeButton(e.X, e.Y))
             {
@@ -7288,7 +7288,7 @@ namespace FamiStudio
             }
             else if (IsPointInTopLeftCorner(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Show/hide effect panel {Ctrl} {1}";
+                tooltip = "{MouseLeft} Show/hide effect panel {Ctrl}{1}";
             }
             else if (IsPointInEffectList(e.X, e.Y))
             {
@@ -7298,7 +7298,7 @@ namespace FamiStudio
             {
                 if (editMode == EditionMode.Channel)
                 {
-                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{Shift} {MouseLeft} Set effect value (fine) - {MouseRight} Clear effect value";
+                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{Shift}{MouseLeft} Set effect value (fine) - {MouseRight} Clear effect value";
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
@@ -7306,13 +7306,13 @@ namespace FamiStudio
 
                     if (vertexIdx >= 0)
                     {
-                        tooltip = "{MouseLeft} {Drag} Move volume envelope vertex\n{MouseRight} Reset volume to 100%";
+                        tooltip = "{MouseLeft}{Drag} Move volume envelope vertex\n{MouseRight} Reset volume to 100%";
                     }
                 }
             }
             else if ((IsPointInNoteArea(e.X, e.Y) || IsPointInHeader(e.X, e.Y)) && editMode == EditionMode.DPCM)
             {
-                tooltip = "{MouseLeft} {Drag} or {MouseRight} {Drag} Select samples from source data";
+                tooltip = "{MouseLeft}{Drag} or {MouseRight}{Drag} Select samples from source data";
 
                 if (IsSelectionValid())
                 {
@@ -7349,38 +7349,38 @@ namespace FamiStudio
                             case CaptureOperation.ResizeSelectionNoteStart:
                             case CaptureOperation.ResizeNoteEnd:
                             case CaptureOperation.ResizeSelectionNoteEnd:
-                                tooltipList.Add("{MouseLeft} {Drag} Resize note(s)");
+                                tooltipList.Add("{MouseLeft}{Drag} Resize note(s)");
                                 break;
                             case CaptureOperation.MoveNoteRelease:
-                                tooltipList.Add("{MouseLeft} {Drag} Move release point");
+                                tooltipList.Add("{MouseLeft}{Drag} Move release point");
                                 break;
                             case CaptureOperation.DragNote:
                             case CaptureOperation.DragSelection:
-                                tooltipList.Add("{MouseLeft} {Drag} Move note(s)");
+                                tooltipList.Add("{MouseLeft}{Drag} Move note(s)");
                                 break;
                             default:
-                                tooltipList.Add("{MouseLeft} {Drag} Create note");
+                                tooltipList.Add("{MouseLeft}{Drag} Create note");
                                 break;
                         }
 
                         if (note != null)
                         {
                             if (channel.SupportsReleaseNotes && captureOp != CaptureOperation.MoveNoteRelease)
-                                tooltipList.Add("{R} {MouseLeft} Set release point");
+                                tooltipList.Add("{R}{MouseLeft} Set release point");
                             if (channel.SupportsSlideNotes)
-                                tooltipList.Add("{S} {MouseLeft} {Drag} Slide note");
+                                tooltipList.Add("{S}{MouseLeft}{Drag} Slide note");
                             if (note.IsMusical)
                             {
-                                tooltipList.Add("{A} {MouseLeft} Toggle note attack");
-                                tooltipList.Add("{I} {MouseLeft} Instrument Eyedrop");
+                                tooltipList.Add("{A}{MouseLeft} Toggle note attack");
+                                tooltipList.Add("{I}{MouseLeft} Instrument Eyedrop");
                             }
                             tooltipList.Add("{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete note");
                         }
                         else 
                         {
                             if (channel.SupportsStopNotes)
-                                tooltipList.Add("{T} {MouseLeft} Add stop note");
-                            tooltipList.Add("{MouseRight} {MouseRight} Select entire note");
+                                tooltipList.Add("{T}{MouseLeft} Add stop note");
+                            tooltipList.Add("{MouseRight}{MouseRight} Select entire note");
                         }
 
                         tooltipList.Add("{MouseWheel} Pan");
@@ -7402,7 +7402,7 @@ namespace FamiStudio
                         if (newNoteTooltip.Length > 0)
                             newNoteTooltip += " ";
 
-                        newNoteTooltip += $"{(selectionMax - selectionMin + 1)} {(Song.Project.UsesFamiTrackerTempo ? "notes" : "frames")} selected";
+                        newNoteTooltip += $"{(selectionMax - selectionMin + 1)}{(Song.Project.UsesFamiTrackerTempo ? "notes" : "frames")} selected";
                     }
                 }
                 else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
@@ -8084,7 +8084,7 @@ namespace FamiStudio
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
                 {
                     var j = i; // Important, copy for lamdba.
-                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]} {(SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat")}", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0);
+                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]}{(SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat")}", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0);
                 }
 
                 App.ShowContextMenu(left + e.X, top + e.Y, options);

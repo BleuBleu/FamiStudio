@@ -1857,7 +1857,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{MouseLeft} Song/Tempo properties - {MouseRight} Delete song\n{MouseLeft} {Drag} Re-order song";
+                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{Drag} Re-order song\n{MouseRight} More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.InstrumentHeader)
@@ -1888,14 +1888,14 @@ namespace FamiStudio
                     }
                     else
                     {
-                        tooltip = "{MouseLeft}{MouseLeft} Project properties";
+                        tooltip = "{MouseRight} More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.ParamCheckbox)
                 {
                     if (x >= contentSizeX - checkBoxPosX)
                     {
-                        tooltip = "{MouseLeft} Toggle value\n{MouseRight} Reset to default value";
+                        tooltip = "{MouseLeft} Toggle value\n{MouseRight} More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -1906,7 +1906,7 @@ namespace FamiStudio
                 {
                     if (x >= contentSizeX - sliderPosX)
                     {
-                        tooltip = "{MouseLeft} {Drag} Change value - {Shift} {MouseLeft} {Drag} Change value (fine)\n{MouseRight} Reset to default value";
+                        tooltip = "{MouseLeft}{Drag} Change value - {Shift}{MouseLeft}{Drag} Change value (fine)\n{MouseRight} Reset to default value";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -1931,7 +1931,7 @@ namespace FamiStudio
                         if (buttons[buttonIdx].instrument == null)
                             tooltip = "{MouseLeft} Select instrument";
                         else
-                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{MouseLeft} Instrument properties\n{MouseRight} Delete instrument - {MouseLeft} {Drag} Replace instrument";
+                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{Drag} Copy/Replace instrument\n{MouseRight} More Options...";
                     }
                     else
                     {
@@ -1941,7 +1941,7 @@ namespace FamiStudio
                         }
                         else if (subButtonType < SubButtonType.EnvelopeMax)
                         {
-                            tooltip = $"{{MouseLeft}} Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - {{MouseRight}} Delete envelope - {{MouseLeft}} {{Drag}} Copy envelope";
+                            tooltip = $"{{MouseLeft}} Edit {EnvelopeType.Names[(int)subButtonType].ToLower()} envelope - {{MouseLeft}}{{Drag}} Copy envelope - {{MouseRight}} More Options...";
                         }
                         else if (subButtonType == SubButtonType.Overflow)
                         {
@@ -1974,7 +1974,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseLeft}{MouseLeft} Edit properties\n{MouseRight} Delete sample";
+                        tooltip = "{MouseRight} More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
@@ -1992,7 +1992,7 @@ namespace FamiStudio
                 {
                     if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{MouseLeft} Arpeggio properties\n{MouseRight} Delete arpeggio - {MouseLeft} {Drag} Replace arpeggio";
+                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{Drag} Replace arpeggio\n{MouseRight} More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
@@ -2002,7 +2002,7 @@ namespace FamiStudio
             }
             else if (needsScrollBar && x > contentSizeX)
             {
-                tooltip = "{MouseLeft} {Drag} Scroll";
+                tooltip = "{MouseLeft}{Drag} Scroll";
             }
 
             App.SetToolTip(tooltip, redTooltip);
