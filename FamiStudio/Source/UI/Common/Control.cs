@@ -196,16 +196,22 @@ namespace FamiStudio
         private const int ModifierSuper   = 8;
 
         private int modifiers;
+        private int forcedModifiers;
 
-        public bool Shift     => (modifiers & ModifierShift)   != 0;
-        public bool Control   => (modifiers & ModifierControl) != 0;
-        public bool Alt       => (modifiers & ModifierAlt)     != 0;
-        public bool Super     => (modifiers & ModifierSuper)   != 0;
-        public int  Modifiers => modifiers;
+        public bool Shift     => (Modifiers & ModifierShift)   != 0;
+        public bool Control   => (Modifiers & ModifierControl) != 0;
+        public bool Alt       => (Modifiers & ModifierAlt)     != 0;
+        public bool Super     => (Modifiers & ModifierSuper)   != 0;
+        public int  Modifiers => (modifiers | forcedModifiers);
 
         public void Set(int mods)
         {
             modifiers = mods;
+        }
+
+        public void SetForced(int mods)
+        {
+            forcedModifiers = mods;
         }
     }
 

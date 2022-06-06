@@ -43,6 +43,7 @@ namespace FamiStudio
         private int lastButtonPress = -1;
         private Point contextMenuPoint = Point.Empty;
         private double lastTickTime = -1.0f;
+        private float magnificationAccum = 0;
         private bool quit = false;
         private int lastCursorX = -1;
         private int lastCursorY = -1;
@@ -883,6 +884,66 @@ namespace FamiStudio
             return glfwGetKey(window, (int)k) == GLFW_PRESS;
         }
 
+#if FAMISTUDIO_MACOS
+        private IntPtr selType = MacUtils.SelRegisterName("type");
+        private IntPtr selMagnification = MacUtils.SelRegisterName("magnification");
+        private IntPtr selNextEventMatchingMask = MacUtils.SelRegisterName("nextEventMatchingMask:untilDate:inMode:dequeue:");
+        private IntPtr nsLoopMode;
+
+        private void ProcessSpecialEvents()
+        {
+            if (!Settings.TrackPadControls)
+                return;
+
+            if (nsLoopMode == IntPtr.Zero)
+                nsLoopMode = MacUtils.GetStringConstant(MacUtils.FoundationLibrary, "NSDefaultRunLoopMode");
+
+            while (true)
+            {
+                const int NSEventTypeMagnify = 30;
+
+                var e = MacUtils.SendIntPtr(MacUtils.NSApplication, selNextEventMatchingMask, 1 << NSEventTypeMagnify, IntPtr.Zero, nsLoopMode, true);
+
+                if (e == IntPtr.Zero)
+                    return;
+
+                var type = MacUtils.SendInt(e, selType);
+
+                if (type == NSEventTypeMagnify)
+                {
+                    var magnification = (float)MacUtils.SendFloat(e, selMagnification);
+
+                    if (Math.Sign(magnification) != Math.Sign(magnificationAccum))
+                        magnificationAccum = 0;
+
+                    magnificationAccum += magnification;
+
+                    if (Math.Abs(magnificationAccum) > 0.25f)
+                    {
+                        var pt = GetCursorPosInternal();
+                        var sz = GetWindowSizeInternal();
+
+                        // We get notified for clicks in the title back and stuff.
+                        if (pt.X < 0 || pt.Y < 0 || pt.X >= sz.Width || pt.Y >= sz.Height)
+                            continue;
+
+                        var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
+
+                        modifiers.SetForced(GLFW_MOD_CONTROL);
+                        ctrl.MouseWheel(new MouseEventArgs(0, pt.X, pt.Y, 0, magnificationAccum));
+                        modifiers.SetForced(0);
+
+                        magnificationAccum = 0;
+                    }
+                }
+            }
+        }
+#else
+        void ProcessSpecialEvents()
+        {
+        }
+#endif
+
         private void ProcessEvents()
         {
             glfwPollEvents();
@@ -890,6 +951,7 @@ namespace FamiStudio
 
         private void RunIteration(bool allowSleep = true)
         {
+            ProcessSpecialEvents();
             ProcessEvents();
             Tick();
             RenderFrameAndSwapBuffer();
