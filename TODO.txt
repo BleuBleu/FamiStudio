@@ -9,9 +9,7 @@
 4.0.0
 =====
 - Is CPU usage higher?
-- CMD broken
 - Unify GL_BGRA on android 
-- BUG : Trailing garbage open file dialog extensions.
 - BUG : Mobile gizmos dont scale anymore (?)
 - CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
 - CTX : Tooltips where a context menu can appear.

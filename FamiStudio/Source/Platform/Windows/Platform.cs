@@ -97,7 +97,7 @@ namespace FamiStudio
             {
                 ofn.structSize = Marshal.SizeOf(ofn);
                 ofn.dlgOwner = win != null ? win.Handle : IntPtr.Zero;
-                ofn.filter = extensions.Replace('|', '\0');
+                ofn.filter = extensions.Replace('|', '\0') + "\0";
                 ofn.file = new IntPtr(p);
                 ofn.maxFile = str.Length;
                 ofn.flags = (multiselect ? OFN_ALLOWMULTISELECT | OFN_EXPLORER : 0) | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
@@ -148,7 +148,7 @@ namespace FamiStudio
             {
                 ofn.structSize = Marshal.SizeOf(ofn);
                 ofn.dlgOwner = win != null ? win.Handle : IntPtr.Zero;
-                ofn.filter = extensions.Replace('|', '\0');
+                ofn.filter = extensions.Replace('|', '\0') + "\0";
                 ofn.file = new IntPtr(p);
                 ofn.maxFile = str.Length;
                 ofn.flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
