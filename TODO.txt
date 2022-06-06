@@ -11,7 +11,6 @@
 - Is CPU usage higher?
 - CMD broken
 - Unify GL_BGRA on android 
-- Enter close dialog? YES, it used to be like this. Lets only do it if there is only one textbox
 - BUG : Trailing garbage open file dialog extensions.
 - BUG : Mobile gizmos dont scale anymore (?)
 - CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
@@ -30,6 +29,7 @@ P1:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
+	=> Remove 1-frame snap glitch.
 - Improve oscilloscope stability (min square norm?)
 - Improve no-attack.
 - Scroll bar in sequencer (option to limit seq size to xx%)
