@@ -8,6 +8,11 @@
 
 4.0.0
 =====
+- Need a quick note delete (gizmo? keyboard?)
+- Show slide note name next to gizmo.
+- CMD broken
+- Unify GL_BGRA on android 
+- Enter close dialog? YES, it used to be like this. Lets only do it if there is only one textbox
 - BUG : Trailing garbage open file dialog extensions.
 - BUG : Mobile gizmos dont scale anymore (?)
 - CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
@@ -18,7 +23,6 @@
 - GLFW : Pinch to zoom?
 - GLFW : Mouse wheel, remove hacks, test on all platform.
 - GLFW : Add more cursors, 36, 48 and 64.
-- CTL : Mouse wheel in drop down grid should scroll.
 
 P1:
 - Victoria lab, is it possible to fix the tempo?
