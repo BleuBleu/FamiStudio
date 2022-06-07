@@ -151,13 +151,13 @@ namespace FamiStudio
             glfwSwapInterval(1);
             glfwGetWindowContentScale(window, out var scaling, out _);
 
+#if FAMISTUDIO_MACOS
+            // TODO : Move this somewhere else. Must be called after window is created and before cursors.
+            MacUtils.Initialize(glfwGetCocoaWindow(window));
+#endif
             GL.StaticInitialize();
             Cursors.Initialize(scaling);
             DpiScaling.Initialize(scaling);
-#if FAMISTUDIO_MACOS
-            // TODO : Move this somewhere else.
-            MacUtils.Initialize(glfwGetCocoaWindow(window));
-#endif
 
             return new FamiStudioWindow(fs, window);
         }

@@ -38,7 +38,21 @@ namespace FamiStudio
         private struct GLFWCursorWindows
         {
             public IntPtr Dummy;
-            public IntPtr Cursor;
+            public IntPtr Cursor; // HCURSOR = 32/64 bit.
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        private struct GLFWCursorMacOS
+        {
+            public IntPtr Dummy;
+            public IntPtr NSCursor; // NSCursor = 64-bit
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        private struct GLFWCursorX11
+        {
+            public IntPtr Dummy;
+            public uint   XCursor; // XID = always 32-bit
         };
 
         private static unsafe IntPtr CreateGLFWCursorWindows(IntPtr cursor)
@@ -47,6 +61,15 @@ namespace FamiStudio
             var pc = (GLFWCursorWindows*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(GLFWCursorWindows))).ToPointer();
             pc->Dummy = IntPtr.Zero;
             pc->Cursor = cursor;
+            return (IntPtr)pc;
+        }
+
+        private static unsafe IntPtr CreateGLFWCursorMacOS(string name)
+        {
+            // TODO : Free that memory when quitting.
+            var pc = (GLFWCursorMacOS*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(GLFWCursorMacOS))).ToPointer();
+            pc->Dummy = IntPtr.Zero;
+            pc->NSCursor = MacUtils.GetCursorByName(name);
             return (IntPtr)pc;
         }
 
@@ -112,6 +135,11 @@ namespace FamiStudio
                 Move = LoadWindowsCursor(OCR_SIZEALL);
                 DragCursor = CreateGLFWCursorWindows(DragCursorHandle);
                 CopyCursor = CreateGLFWCursorWindows(CopyCursorHandle);
+            }
+            else if (Platform.IsMacOS)
+            {
+                DragCursor = CreateGLFWCursorMacOS("closedHandCursor");
+                CopyCursor = CreateGLFWCursorMacOS("dragCopyCursor");
             }
 
             var size = Platform.GetCursorSize(scaling);
