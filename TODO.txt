@@ -8,6 +8,7 @@
 
 4.0.0
 =====
+- Shift gets stuck on linux/macos i feel, try on real mac.
 - Double click/Shift click to clear effect value.
 - Change Shift+click for fine to Alt (effect + slider.)
 - Is CPU usage higher?
@@ -16,7 +17,6 @@
 - CTX : Sometimes i feel context menu appear instead of selection... Test more.
 / GLFW : Pinch to zoom? Test Windows + Linux too.
 - GLFW : Mouse wheel, remove hacks, test on all platform.
-- GLFW : Add more cursors, 36, 48 and 64.
 
 P1:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

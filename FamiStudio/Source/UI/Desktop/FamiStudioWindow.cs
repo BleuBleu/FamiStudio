@@ -287,6 +287,32 @@ namespace FamiStudio
             return PointToScreen(p);
         }
 
+        // https://github.com/glfw/glfw/issues/1630
+        private int FixKeyboardMods(int mods, int key, int action)
+        {
+            if (!Platform.IsWindows)
+            {
+                if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
+                {
+                    return (action == GLFW_RELEASE) ? mods & (~GLFW_MOD_SHIFT) : mods | GLFW_MOD_SHIFT;
+                }
+                if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
+                {
+                    return (action == GLFW_RELEASE) ? mods & (~GLFW_MOD_CONTROL) : mods | GLFW_MOD_CONTROL;
+                }
+                if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
+                {
+                    return (action == GLFW_RELEASE) ? mods & (~GLFW_MOD_ALT) : mods | GLFW_MOD_ALT;
+                }
+                if (key == GLFW_KEY_LEFT_SUPER || key == GLFW_KEY_RIGHT_SUPER)
+                {
+                    return (action == GLFW_RELEASE) ? mods & (~GLFW_MOD_SUPER) : mods | GLFW_MOD_SUPER;
+                }
+            }
+
+            return mods;
+        }
+
         private void ErrorCallback(int error, string description)
         {
             Debug.WriteLine($"*** GLFW Error code {error}, {description}.");
@@ -523,6 +549,8 @@ namespace FamiStudio
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
+            mods = FixKeyboardMods(mods, key, action);
+
             Debug.WriteLine($"KEY! Key = {(Keys)key}, Scancode = {scancode}, Action = {action}, Mods = {mods}");
 
             modifiers.Set(mods);

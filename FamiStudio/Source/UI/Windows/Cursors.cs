@@ -45,12 +45,6 @@ namespace FamiStudio
             return CreateGLFWCursorWindows(LoadImage(IntPtr.Zero, (IntPtr)type, IMAGE_CURSOR, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         }
 
-        private static void ScaleHotspot(float scale, ref int hx, ref int hy)
-        {
-            hx = (int)Math.Round(hx * scale);
-            hy = (int)Math.Round(hy * scale);
-        }
-
         public static void Initialize(float scaling)
         {
             InitializeDesktop(scaling);
