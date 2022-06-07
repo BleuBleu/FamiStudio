@@ -6,6 +6,12 @@ namespace FamiStudio
 {
     public static partial class Cursors
     {
+        private static void ScaleHotspot(float scale, ref int hx, ref int hy)
+        {
+            hx = (int)Math.Round(hx * scale);
+            hy = (int)Math.Round(hy * scale);
+        }
+
         private static unsafe IntPtr CreateCursorFromResource(int size, int hotx, int hoty, string name)
         {
             var suffix = size >= 64 ? "64" : 

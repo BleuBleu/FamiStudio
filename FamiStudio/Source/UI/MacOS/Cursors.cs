@@ -4,7 +4,7 @@ using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
-    public static class Cursors
+    public static partial class Cursors
     {
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         private struct GLFWCursorMacOS
