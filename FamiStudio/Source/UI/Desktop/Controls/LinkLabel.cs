@@ -20,7 +20,7 @@ namespace FamiStudio
         {
             // MATTT : Need hand cursor here!
             var insideText = e.X >= 0 && e.X < MeasureString();
-            Cursor = insideText ? Cursors.CopyCursor : Cursors.Default;
+            Cursor = insideText ? Cursors.PointingHand : Cursors.Default;
             SetAndMarkDirty(ref hover, insideText);
         }
 

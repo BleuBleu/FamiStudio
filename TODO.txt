@@ -8,6 +8,8 @@
 
 4.0.0
 =====
+- Double click/Shift click to clear effect value.
+- Change Shift+click for fine to Alt (effect + slider.)
 - Is CPU usage higher?
 / CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
 - CTX : When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
@@ -17,17 +19,17 @@
 - GLFW : Add more cursors, 36, 48 and 64.
 
 P1:
-- Victoria lab, is it possible to fix the tempo?
-- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
-- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
 	=> Remove 1-frame snap glitch.
+- Victoria lab, is it possible to fix the tempo?
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
+- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve oscilloscope stability (min square norm?)
 - Improve no-attack.
 - Scroll bar in sequencer (option to limit seq size to xx%)
-  => hide unused channels
+  => hide unused channels?
 - Volume/effect scaling, easy one we have context menus.
 - Paste special, option to rename patterns.
 

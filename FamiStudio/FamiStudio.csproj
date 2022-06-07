@@ -146,6 +146,7 @@
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\Control.cs" />
+    <Compile Include="Source\UI\Common\Cursors.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\Dialog.cs" />
     <Compile Include="Source\UI\Common\DpiScaling.cs" />
@@ -183,7 +184,7 @@
     <Compile Include="Source\UI\Desktop\Controls\Slider.cs" />
     <Compile Include="Source\UI\Desktop\Controls\TextBox.cs" />
     <Compile Include="Source\UI\Desktop\CommandLineInterface.cs" />
-    <Compile Include="Source\UI\Desktop\Cursors.cs" />
+    <Compile Include="Source\UI\Desktop\Cursors.cs" />    
     <Compile Include="Source\UI\Desktop\FamiStudioControls.cs" />
     <Compile Include="Source\UI\Desktop\FamiStudioWindow.cs" />
     <Compile Include="Source\UI\Desktop\FileDialog.cs" />    
@@ -197,6 +198,7 @@
     <Compile Include="Source\UI\Desktop\PropertyDialog.cs" />
     <Compile Include="Source\UI\Desktop\PropertyPage.cs" />
     <Compile Include="Source\UI\Desktop\TutorialDialog.cs" />
+    <Compile Include="Source\UI\Windows\Cursors.cs" />
     <Compile Include="Source\Utils\ClipboardUtils.cs" />
     <Compile Include="Source\Utils\Compression.cs" />
     <Compile Include="Source\Utils\CRC32.cs" />
@@ -411,8 +413,12 @@
     <EmbeddedResource Include="Resources\ExportVideo@2x.tga" />
     <EmbeddedResource Include="Resources\ExportWav.tga" />
     <EmbeddedResource Include="Resources\ExportWav@2x.tga" />
-    <EmbeddedResource Include="Resources\EyedropCursor.tga" />
-    <EmbeddedResource Include="Resources\EyedropCursor@2x.tga" />
+    <EmbeddedResource Include="Resources\CursorEyedrop32.tga" />
+    <EmbeddedResource Include="Resources\CursorEyedrop48.tga" />
+    <EmbeddedResource Include="Resources\CursorEyedrop64.tga" />
+    <EmbeddedResource Include="Resources\CursorMove32.tga" />
+    <EmbeddedResource Include="Resources\CursorMove48.tga" />
+    <EmbeddedResource Include="Resources\CursorMove64.tga" />
     <EmbeddedResource Include="Resources\FamiStudio_16.tga" />
     <EmbeddedResource Include="Resources\FamiStudio_24.tga" />
     <EmbeddedResource Include="Resources\FamiStudio_32.tga" />

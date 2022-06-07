@@ -1,17 +1,10 @@
-﻿using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
+using System.Runtime.InteropServices;
+using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
-    public static class Cursors
+    public static partial class Cursors
     {
         public static IntPtr Default;
         public static IntPtr SizeWE;
@@ -20,5 +13,7 @@ namespace FamiStudio
         public static IntPtr DragCursor;
         public static IntPtr CopyCursor;
         public static IntPtr Eyedrop;
+        public static IntPtr IBeam;
+        public static IntPtr PointingHand;
     }
 }
