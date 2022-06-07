@@ -522,7 +522,7 @@ namespace FamiStudio
                 if (ctrl != ContextMenu)
                     controls.HideContextMenu();
 
-                const float Multiplier = Platform.IsWindows ? 30.0f : 2.0f;
+                const float Multiplier = Platform.IsWindows ? 10.0f : 2.0f;
 
                 // MATTT : Test this on all platforms.
                 var scrollX = -(float)xoffset * Settings.TrackPadMoveSensitity * Multiplier;
