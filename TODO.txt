@@ -12,12 +12,11 @@
 - Change Shift+click for fine to Alt (effect + slider.)
 - Is CPU usage higher?
 / CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
-- CTX : When opening a context menu, its annoying that we cant select afterwards (right click), it keeps opening a new menu... Confusing...
-- CTX : Sometimes i feel context menu appear instead of selection... Test more.
 / GLFW : Pinch to zoom? Test Windows + Linux too. 
 - GLFW : Mouse wheel, remove hacks, test on all platform. Make sure scroll direction is consistent on all platforms.
-- Move trackpad sensitivity to General Settings (not just MacOS.)
+/ Move trackpad sensitivity to General Settings (not just MacOS.)
 - Add Flip trackpack dir X/Y.
+	=> Set correct direction for each OS.
 
 P1:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

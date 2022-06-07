@@ -133,8 +133,11 @@ namespace FamiStudio
 
         public void HideContextMenu()
         {
-            contextMenuVisible = false;
-            MarkDirty();
+            if (contextMenuVisible)
+            {
+                contextMenuVisible = false;
+                MarkDirty();
+            }
         }
 
         public void Tick(float delta)
