@@ -290,7 +290,7 @@ namespace FamiStudio
         // https://github.com/glfw/glfw/issues/1630
         private int FixKeyboardMods(int mods, int key, int action)
         {
-            if (!Platform.IsWindows)
+            if (Platform.IsLinux)
             {
                 if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
                 {
@@ -456,7 +456,7 @@ namespace FamiStudio
 
         private void CursorPosCallback(IntPtr window, double xpos, double ypos)
         {
-            Debug.WriteLine($"POS! X={xpos}, Y={ypos}");
+            //Debug.WriteLine($"POS! X={xpos}, Y={ypos}");
 
             GLFWToWindow(xpos, ypos, out lastCursorX, out lastCursorY);
 
