@@ -479,9 +479,9 @@ namespace FamiStudio
                     // General
                     Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(0);
                     Settings.ShowTutorial = pageGeneral.GetPropertyValue<bool>(1);
-                    Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(3);
-                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(4);
-                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(5);
+                    Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(2);
+                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(3);
+                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(4);
 
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);
