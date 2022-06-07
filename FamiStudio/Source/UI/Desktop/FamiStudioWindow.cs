@@ -525,10 +525,9 @@ namespace FamiStudio
                 if (ctrl != ContextMenu)
                     controls.HideContextMenu();
 
-                // MATTT : Apply trackpad sensitivity if trackpad controls
-                // MATTT : HACKY MULTIPLIER.
-                var scrollX = Utils.SignedCeil((float)xoffset * 5000.0f);
-                var scrollY = Utils.SignedCeil((float)yoffset * 5000.0f);
+                // MATTT : Test this on all platforms.
+                var scrollX = (float)xoffset * Settings.TrackPadMoveSensitity * 10;
+                var scrollY = (float)yoffset * Settings.TrackPadMoveSensitity * 10;
 
                 var buttons = MakeButtonFlags();
 
@@ -628,17 +627,16 @@ namespace FamiStudio
             return new Size(w, h);
         }
 
-        private Point GetCursorPosInternal()
+        private Point GetClientCursorPosInternal()
         {
             glfwGetCursorPos(window, out var dx, out var dy);
             GLFWToWindow(dx, dy, out var x, out var y);
-            return PointToScreen(new Point(x, y));
+            return new Point(x, y);
         }
 
-        private void GetCursorPosInternal(out int x, out int y)
+        private Point GetScreenCursorPosInternal()
         {
-            glfwGetCursorPos(window, out var dx, out var dy);
-            GLFWToWindow(dx, dy, out x, out y);
+            return PointToScreen(GetClientCursorPosInternal());
         }
 
         private int MakeButtonFlags(int button)
@@ -854,12 +852,12 @@ namespace FamiStudio
         public Point GetCursorPosition()
         {
             // Pretend the mouse is fixed when a context menu is active.
-            return controls.IsContextMenuActive ? contextMenuPoint : GetCursorPosInternal();
+            return controls.IsContextMenuActive ? contextMenuPoint : GetScreenCursorPosInternal(); // MATTT : Is this screen or client.
         }
 
         public void RefreshCursor()
         {
-            var pt = PointToClient(GetCursorPosInternal());
+            var pt = GetClientCursorPosInternal();
             RefreshCursor(controls.GetControlAtCoord(pt.X, pt.Y, out _, out _));
         }
 
@@ -946,14 +944,18 @@ namespace FamiStudio
 
                     magnificationAccum += magnification;
 
-                    if (Math.Abs(magnificationAccum) > 0.25f)
+                    float threshold = 1.0f / (float)Utils.Clamp(Settings.TrackPadZoomSensitity, 1, 32);
+
+                    if (Math.Abs(magnificationAccum) > threshold)
                     {
-                        var pt = GetCursorPosInternal();
+                        var pt = GetClientCursorPosInternal();
                         var sz = GetWindowSizeInternal();
 
                         // We get notified for clicks in the title back and stuff.
                         if (pt.X < 0 || pt.Y < 0 || pt.X >= sz.Width || pt.Y >= sz.Height)
                             continue;
+
+                        Debug.WriteLine($"PINCH ZOOM! {magnificationAccum} {pt.X} {pt.Y}");
 
                         var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
 
