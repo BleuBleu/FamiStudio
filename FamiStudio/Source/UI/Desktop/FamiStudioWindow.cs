@@ -525,9 +525,13 @@ namespace FamiStudio
                 if (ctrl != ContextMenu)
                     controls.HideContextMenu();
 
+                const float Multiplier = Platform.IsWindows ? 100.0f : 10.0f;
+
                 // MATTT : Test this on all platforms.
-                var scrollX = (float)xoffset * Settings.TrackPadMoveSensitity * 10;
-                var scrollY = (float)yoffset * Settings.TrackPadMoveSensitity * 10;
+                var scrollX = (float)xoffset * Settings.TrackPadMoveSensitity * Multiplier;
+                var scrollY = (float)yoffset * Settings.TrackPadMoveSensitity * Multiplier;
+
+                Debug.WriteLine($"SCALED! X={scrollX}, Y={scrollY}");
 
                 var buttons = MakeButtonFlags();
 
