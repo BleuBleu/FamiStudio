@@ -398,6 +398,10 @@ namespace FamiStudio
                 {
                     SetActiveControl(ctrl);
 
+                    // Ignore the first click.
+                    if (ctrl != ContextMenu)
+                        controls.HideContextMenu();
+
                     if (doubleClick)
                     {
                         Debug.WriteLine($"DOUBLE CLICK!");

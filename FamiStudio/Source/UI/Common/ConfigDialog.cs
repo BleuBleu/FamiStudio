@@ -204,9 +204,9 @@ namespace FamiStudio
                 case ConfigSection.Input:
                 { 
                     page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls, TrackpadControlsTooltip); // 0
-                    page.AddCheckBox("Reverse trackpad X:", Settings.ReverseTrackPadX); // 1
-                    page.AddCheckBox("Reverse trackpad Y:", Settings.ReverseTrackPadY); // 2
-                    page.AddNumericUpDown("Trackpad movement sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 3
+                    page.AddCheckBox("Reverse trackpad scroll X:", Settings.ReverseTrackPadX); // 1
+                    page.AddCheckBox("Reverse trackpad scroll Y:", Settings.ReverseTrackPadY); // 2
+                    page.AddNumericUpDown("Trackpad scroll sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 3
                     page.AddNumericUpDown("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 32); // 4
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
                     page.SetPropertyEnabled(2, Settings.TrackPadControls);

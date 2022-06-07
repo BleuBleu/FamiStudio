@@ -8,6 +8,7 @@
 
 4.0.0
 =====
+- Add DLL map for linux? 22.04 didnt find X11 or libdl.
 - Double click/Shift click to clear effect value.
 - Change Shift+click for fine to Alt (effect + slider.)
 - Is CPU usage higher?
