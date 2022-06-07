@@ -8235,9 +8235,9 @@ namespace FamiStudio
                 if (Settings.TrackPadControls && !ModifierKeys.Control)
                 {
                     if (ModifierKeys.Shift)
-                        scrollX -= (int)e.ScrollY; // MATTT cast
+                        scrollX -= Utils.SignedCeil(e.ScrollY);
                     else
-                        scrollY -= (int)e.ScrollY; // MATTT cast
+                        scrollY -= Utils.SignedCeil(e.ScrollY);
 
                     ClampScroll();
                     return true;
@@ -8276,7 +8276,7 @@ namespace FamiStudio
 
         protected override void OnMouseHorizontalWheel(MouseEventArgs e)
         {
-            scrollX += (int)e.ScrollX; // MATTT cast to int
+            scrollX += Utils.SignedCeil(e.ScrollX);
             ClampScroll();
             MarkDirty();
         }

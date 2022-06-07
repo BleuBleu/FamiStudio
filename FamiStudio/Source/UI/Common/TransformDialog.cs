@@ -41,7 +41,7 @@ namespace FamiStudio
         public unsafe TransformDialog(FamiStudioWindow win)
         {
             app = win.FamiStudio;
-            dialog = new MultiPropertyDialog(win, "Transform Songs", 550, 500);
+            dialog = new MultiPropertyDialog(win, "Transform Songs", 550);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {

@@ -51,7 +51,8 @@ namespace FamiStudio
         // User Interface section
         public static int DpiScaling = 0;
         public static int TimeFormat = 1;
-        public static bool ReverseTrackPad = false;
+        public static bool ReverseTrackPadX = false;
+        public static bool ReverseTrackPadY = false;
         public static int TrackPadMoveSensitity = 1;
         public static int TrackPadZoomSensitity = 8;
         public static int FollowMode = 0;
@@ -223,7 +224,6 @@ namespace FamiStudio
 
             // General
             CheckUpdates = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
-            TrackPadControls = ini.GetBool(Version < 2 ? "UI" : "General", "TrackPadControls", false); // At version 2 (FamiStudio 3.0.0, changed section)
             ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
             OpenLastProjectOnStart = ini.GetBool("General", "OpenLastProjectOnStart", true);
@@ -237,12 +237,16 @@ namespace FamiStudio
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
             ScrollBars = Version < 3 ? (ini.GetBool("UI", "ShowScrollBars", false) ? ScrollBarsThin : ScrollBarsNone) : ini.GetInt("UI", "ScrollBars", ScrollBarsNone);
             ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
-            ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
-            TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
-            TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
             ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", Platform.IsDesktop);
             ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", Platform.IsDesktop);
             UseOSDialogs = ini.GetBool("UI", "UseOSDialogs", !Platform.IsLinux);
+
+            // Input
+            TrackPadControls = ini.GetBool("Input", "TrackPadControls", false);
+            ReverseTrackPadX = ini.GetBool("Input", "ReverseTrackPadX", false);
+            ReverseTrackPadY = ini.GetBool("Input", "ReverseTrackPadY", false);
+            TrackPadMoveSensitity = ini.GetInt("Input", "TrackPadMoveSensitity", 1);
+            TrackPadZoomSensitity = ini.GetInt("Input", "TrackPadZoomSensitity", 8);
 
             // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
@@ -383,7 +387,6 @@ namespace FamiStudio
             // General
             ini.SetInt("General", "Version", SettingsVersion);
             ini.SetBool("General", "CheckUpdates", CheckUpdates);
-            ini.SetBool("General", "TrackPadControls", TrackPadControls);
             ini.SetBool("General", "ShowTutorial", ShowTutorial);
             ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);
             ini.SetBool("General", "OpenLastProjectOnStart", OpenLastProjectOnStart);
@@ -397,12 +400,16 @@ namespace FamiStudio
             ini.SetInt("UI", "FollowSync", FollowSync);
             ini.SetInt("UI", "ScrollBars", ScrollBars);
             ini.SetBool("UI", "ForceCompactSequencer", ForceCompactSequencer);
-            ini.SetInt("UI", "TrackPadMoveSensitity", TrackPadMoveSensitity);
-            ini.SetInt("UI", "TrackPadZoomSensitity", TrackPadZoomSensitity);
-            ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
             ini.SetBool("UI", "ShowImplicitStopNotes", ShowImplicitStopNotes);
             ini.SetBool("UI", "ShowRegisterViewer", ShowRegisterViewer);
             ini.SetBool("UI", "UseOSDialogs", UseOSDialogs);
+
+            // Input
+            ini.SetBool("Input", "TrackPadControls", TrackPadControls);
+            ini.SetInt("Input", "TrackPadMoveSensitity", TrackPadMoveSensitity);
+            ini.SetInt("Input", "TrackPadZoomSensitity", TrackPadZoomSensitity);
+            ini.SetBool("Input", "ReverseTrackPadX", ReverseTrackPadX);
+            ini.SetBool("Input", "ReverseTrackPadY", ReverseTrackPadY);
 
             // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);

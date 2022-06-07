@@ -21,7 +21,7 @@ namespace FamiStudio
         private Button buttonYes;
         private Button buttonNo;
 
-        public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int height, int tabsWidth = 150) : base(win, title)
+        public MultiPropertyDialog(FamiStudioWindow win, string title, int width, int tabsWidth = 150) : base(win, title)
         {
             tabsSizeX = DpiScaling.ScaleForWindow(tabsWidth);
             Move(0, 0, DpiScaling.ScaleForWindow(width), DpiScaling.ScaleForWindow(width));

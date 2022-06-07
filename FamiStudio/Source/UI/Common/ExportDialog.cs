@@ -80,10 +80,7 @@ namespace FamiStudio
 
         public unsafe ExportDialog(FamiStudioWindow win)
         {
-            int width  = 600;
-            int height = Platform.IsLinux ? 650 : (Platform.IsMacOS ? 630 : 550);
-
-            dialog = new MultiPropertyDialog(win, "Export Songs", width, height, 200);
+            dialog = new MultiPropertyDialog(win, "Export Songs", 600, 200);
             dialog.SetVerb("Export");
             app = win.FamiStudio;
             project = app.Project;

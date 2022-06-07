@@ -325,8 +325,8 @@
     <EmbeddedResource Include="Resources\ConfigFFmpeg@2x.tga" />
     <EmbeddedResource Include="Resources\ConfigGeneral.tga" />
     <EmbeddedResource Include="Resources\ConfigGeneral@2x.tga" />
-    <EmbeddedResource Include="Resources\ConfigMacOS.tga" />
-    <EmbeddedResource Include="Resources\ConfigMacOS@2x.tga" />
+    <EmbeddedResource Include="Resources\ConfigInput.tga" />
+    <EmbeddedResource Include="Resources\ConfigInput@2x.tga" />
     <EmbeddedResource Include="Resources\ConfigMIDI.tga" />
     <EmbeddedResource Include="Resources\ConfigMIDI@2x.tga" />
     <EmbeddedResource Include="Resources\ConfigMixer.tga" />
