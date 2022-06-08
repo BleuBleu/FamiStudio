@@ -9,12 +9,7 @@
 
 4.0.0
 =====
-- Double click/Shift click to clear effect value.
-- Change Shift+click for fine to Alt (effect + slider.)
-- Right click to play source sample sshouldnt pop ctx menu.
-- All remaining MATTT
 - Is CPU usage higher?
-/ CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
 
 P1:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

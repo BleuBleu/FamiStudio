@@ -3375,8 +3375,6 @@ namespace FamiStudio
 
             App.UndoRedoManager.RestoreTransaction(false);
 
-            var shift = ModifierKeys.Shift;
-
             var channel = Song.Channels[editChannel];
             var pattern = channel.PatternInstances[captureNoteLocation.PatternIndex];
 
@@ -3393,7 +3391,7 @@ namespace FamiStudio
 
             var delta = 0;
 
-            if (shift)
+            if (ModifierKeys.Control)
             {
                 delta = (captureMouseY - y) / 4;
             }
@@ -4967,18 +4965,25 @@ namespace FamiStudio
 
         private bool HandleMouseDownEffectPanel(MouseEventArgs e)
         {
-            bool left  = e.Left;
-            bool right = e.Right;
-
             if (selectedEffectIdx >= 0 && IsPointInEffectPanel(e.X, e.Y) && GetEffectNoteForCoord(e.X, e.Y, out var location))
             {
-                if (left)
+                if (e.Left)
                 {
                     var slide = ParentWindow.IsKeyDown(Keys.S);
 
                     if (slide && selectedEffectIdx == Note.EffectVolume)
                     {
                         StartDragVolumeSlide(e.X, e.Y, location);
+                    }
+                    else if (ModifierKeys.Shift)
+                    {
+                        var channel = Song.Channels[editChannel];
+                        var pattern = channel.PatternInstances[location.PatternIndex];
+
+                        if (pattern != null && pattern.TryGetNoteWithEffectAt(location.NoteIndex, selectedEffectIdx, out var note))
+                        {
+                            ClearEffectValue(location, note);
+                        }
                     }
                     else
                     {
@@ -4987,7 +4992,7 @@ namespace FamiStudio
 
                     return true;
                 }
-                else if (right)
+                else if (e.Right)
                 {
                     e.DelayRightClick(); // Wait to see if its a context menu or selection.
                     return true;
@@ -7261,14 +7266,14 @@ namespace FamiStudio
 
             if (IsPointInHeader(e.X, e.Y) && editMode == EditionMode.Channel)
             {
-                tooltip = "{MouseLeft} Seek - {MouseRight} Select - {MouseRight}{MouseRight} Select entire pattern";
+                tooltip = "{MouseLeft} Seek - {MouseRight}{Drag} Select - {MouseRight} More Options...";
             }
             else if (IsPointInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
                 if (IsPointWhereCanResizeEnvelope(e.X, e.Y))
                     tooltip = "{MouseLeft} Resize envelope\n";
                 else
-                    tooltip = "{MouseRight} Select";
+                    tooltip = "{MouseRight}{Drag} Select";
             }
             else if (IsPointInHeaderBottomPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
             {
@@ -7298,7 +7303,7 @@ namespace FamiStudio
             {
                 if (editMode == EditionMode.Channel)
                 {
-                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{Shift}{MouseLeft} Set effect value (fine) - {MouseRight} Clear effect value";
+                    tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{Ctrl}{MouseLeft} Set effect value (fine) - {MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Clear effect value";
                 }
                 else if (editMode == EditionMode.DPCM)
                 {
@@ -7306,7 +7311,7 @@ namespace FamiStudio
 
                     if (vertexIdx >= 0)
                     {
-                        tooltip = "{MouseLeft}{Drag} Move volume envelope vertex\n{MouseRight} Reset volume to 100%";
+                        tooltip = "{MouseLeft}{Drag} Move volume envelope vertex\n{MouseRight} More Options...%";
                     }
                 }
             }
@@ -7380,7 +7385,6 @@ namespace FamiStudio
                         {
                             if (channel.SupportsStopNotes)
                                 tooltipList.Add("{T}{MouseLeft} Add stop note");
-                            tooltipList.Add("{MouseRight}{MouseRight} Select entire note");
                         }
 
                         tooltipList.Add("{MouseWheel} Pan");
@@ -7432,7 +7436,7 @@ namespace FamiStudio
                             }
                             else
                             {
-                                tooltip = "{MouseLeft}{MouseLeft} Sample properties - {MouseRight} Unassign DPCM sample {MouseWheel} Pan";
+                                tooltip = "{MouseLeft}{MouseLeft} Sample properties - {MouseWheel} Pan\n{MouseRight} More Options...";
 
                                 if (mapping.Sample != null)
                                     newNoteTooltip += $" ({mapping.Sample.Name})";

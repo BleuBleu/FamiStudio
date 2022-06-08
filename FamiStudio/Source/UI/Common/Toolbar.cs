@@ -369,25 +369,25 @@ namespace FamiStudio
 
                 bmpSpecialCharacters = g.GetBitmapAtlasRefs(SpecialCharImageNames);
 
-                buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl} {N}";
-                buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl} {O}";
-                buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl} {S}\n{MouseRight} More Options...";
-                buttons[(int)ButtonType.Export].ToolTip    = "{MouseLeft} Export to various formats {Ctrl} {E}\n{MouseRight} More Options...";
-                buttons[(int)ButtonType.Copy].ToolTip      = "{MouseLeft} Copy selection {Ctrl} {C}";
-                buttons[(int)ButtonType.Cut].ToolTip       = "{MouseLeft} Cut selection {Ctrl} {X}";
-                buttons[(int)ButtonType.Paste].ToolTip     = "{MouseLeft} Paste {Ctrl} {V}\n{MouseRight} More Options...";
-                buttons[(int)ButtonType.Undo].ToolTip      = "{MouseLeft} Undo {Ctrl} {Z}";
-                buttons[(int)ButtonType.Redo].ToolTip      = "{MouseLeft} Redo {Ctrl} {Y}";
+                buttons[(int)ButtonType.New].ToolTip       = "{MouseLeft} New Project {Ctrl}{N}";
+                buttons[(int)ButtonType.Open].ToolTip      = "{MouseLeft} Open Project {Ctrl}{O}\n{MouseRight} More Options...";
+                buttons[(int)ButtonType.Save].ToolTip      = "{MouseLeft} Save Project {Ctrl}{S}\n{MouseRight} More Options...";
+                buttons[(int)ButtonType.Export].ToolTip    = "{MouseLeft} Export to various formats {Ctrl}{E}\n{MouseRight} More Options...";
+                buttons[(int)ButtonType.Copy].ToolTip      = "{MouseLeft} Copy selection {Ctrl}{C}";
+                buttons[(int)ButtonType.Cut].ToolTip       = "{MouseLeft} Cut selection {Ctrl}{X}";
+                buttons[(int)ButtonType.Paste].ToolTip     = "{MouseLeft} Paste {Ctrl}{V}\n{MouseRight} More Options...";
+                buttons[(int)ButtonType.Undo].ToolTip      = "{MouseLeft} Undo {Ctrl}{Z}";
+                buttons[(int)ButtonType.Redo].ToolTip      = "{MouseLeft} Redo {Ctrl}{Y}";
                 buttons[(int)ButtonType.Transform].ToolTip = "{MouseLeft} Perform cleanup and various operations";
                 buttons[(int)ButtonType.Config].ToolTip    = "{MouseLeft} Edit Application Settings";
-                buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseRight} More Options... - Play from start of pattern {ForceCtrl} {Space}\nPlay from start of song {Shift} {Space} - Play from loop point {Ctrl} {Shift} {Space}";
-                buttons[(int)ButtonType.Rewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl} {Home}";
+                buttons[(int)ButtonType.Play].ToolTip      = "{MouseLeft} Play/Pause {Space} - {MouseRight} More Options...";
+                buttons[(int)ButtonType.Rewind].ToolTip    = "{MouseLeft} Rewind {Home}\nRewind to beginning of current pattern {Ctrl}{Home}";
                 buttons[(int)ButtonType.Rec].ToolTip       = "{MouseLeft} Toggles recording mode {Enter}\nAbort recording {Esc}";
                 buttons[(int)ButtonType.Loop].ToolTip      = "{MouseLeft} Toggle Loop Mode (Song, Pattern/Selection)";
-                buttons[(int)ButtonType.Qwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift} {Q}";
+                buttons[(int)ButtonType.Qwerty].ToolTip    = "{MouseLeft} Toggle QWERTY keyboard piano input {Shift}{Q}";
                 buttons[(int)ButtonType.Metronome].ToolTip = "{MouseLeft} Toggle metronome while song is playing";
                 buttons[(int)ButtonType.Machine].ToolTip   = "{MouseLeft} Toggle between NTSC/PAL playback mode";
-                buttons[(int)ButtonType.Follow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift} {F}";
+                buttons[(int)ButtonType.Follow].ToolTip    = "{MouseLeft} Toggle follow mode {Shift}{F}";
                 buttons[(int)ButtonType.Help].ToolTip      = "{MouseLeft} Online documentation";
 
                 specialCharacters["Shift"]      = new TooltipSpecialCharacter { Width = ScaleForWindow(32) };
@@ -663,7 +663,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuSave", "Save As...", () => { App.SaveProjectAsync(true); }),
+                new ContextMenuOption("MenuSave", "Save As...", "Save project to another file {Ctrl}{Shift}{S}", () => { App.SaveProjectAsync(true); }),
             });
         }
 
@@ -676,7 +676,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuExport", "Repeast Last Export", "Repeats the previous export {Ctrl} {Shift} {E}", () => { App.RepeatLastExport(); }),
+                new ContextMenuOption("MenuExport", "Repeast Last Export", "Repeats the previous export {Ctrl}{Shift}{E}", () => { App.RepeatLastExport(); }),
             });
         }
 
@@ -709,7 +709,7 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuStar", "Paste Special...", "Paste with advanced options {Ctrl} {Shift} {V}", () => { App.PasteSpecial(); }),
+                new ContextMenuOption("MenuStar", "Paste Special...", "Paste with advanced options {Ctrl}{Shift}{V}", () => { App.PasteSpecial(); }),
             });
         }
 
@@ -778,9 +778,9 @@ namespace FamiStudio
         {
             App.ShowContextMenu(left + x, top + y, new[]
             {
-                new ContextMenuOption("MenuPlay", "Play From Beginning of Song", "Plays from the start of the song {ForceCtrl} {Space}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
-                new ContextMenuOption("MenuPlay", "Play From Beginning of Current Pattern", "Plays from the start of the current pattern {Shift} {Space}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
-                new ContextMenuOption("MenuPlay", "Play From Loop Point", "Plays from the loop point {Ctrl} {Shift} {Space}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
+                new ContextMenuOption("MenuPlay", "Play From Beginning of Song", "Plays from the start of the song {ForceCtrl}{Space}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
+                new ContextMenuOption("MenuPlay", "Play From Beginning of Current Pattern", "Plays from the start of the current pattern {Shift}{Space}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
+                new ContextMenuOption("MenuPlay", "Play From Loop Point", "Plays from the loop point {Ctrl}{Shift}{Space}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
                 new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, true ),
                 new ContextMenuOption("Half Speed",     "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
                 new ContextMenuOption("Quarter Speed",  "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),

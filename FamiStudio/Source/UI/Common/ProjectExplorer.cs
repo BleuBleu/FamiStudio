@@ -812,7 +812,7 @@ namespace FamiStudio
                         {
                             if (string.IsNullOrEmpty(sample.SourceFilename))
                                 active &= ~(1 << 3);
-                            return new[] { SubButtonType.Properties, SubButtonType.EditWave, SubButtonType.Save, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
+                            return new[] { SubButtonType.Properties, SubButtonType.EditWave, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
                         }
                 }
 
@@ -931,8 +931,6 @@ namespace FamiStudio
                         return projectExplorer.bmpAdd;
                     case SubButtonType.Play:
                         return projectExplorer.bmpPlay;
-                    case SubButtonType.Save:
-                        return projectExplorer.bmpSave;
                     case SubButtonType.DPCM: 
                         return projectExplorer.bmpDPCM;
                     case SubButtonType.EditWave:
@@ -1857,7 +1855,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{Drag} Re-order song\n{MouseRight} More Options...";
+                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{Drag} Re-order song\n{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete Song - {MouseRight} More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.InstrumentHeader)
@@ -1906,7 +1904,7 @@ namespace FamiStudio
                 {
                     if (x >= contentSizeX - sliderPosX)
                     {
-                        tooltip = "{MouseLeft}{Drag} Change value - {Shift}{MouseLeft}{Drag} Change value (fine)\n{MouseRight} Reset to default value";
+                        tooltip = "{MouseLeft}{Drag} Change value - {Ctrl}{MouseLeft}{Drag} Change value (fine)\n{MouseRight} More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -1917,7 +1915,7 @@ namespace FamiStudio
                 {
                     if (x >= contentSizeX - sliderPosX)
                     {
-                        tooltip = "{MouseLeft} Change value\n{MouseRight} Reset to default value";
+                        tooltip = "{MouseLeft} Change value\n{MouseRight} More Options...";
                     }
                     else if (button.param.ToolTip != null)
                     {
@@ -1931,7 +1929,7 @@ namespace FamiStudio
                         if (buttons[buttonIdx].instrument == null)
                             tooltip = "{MouseLeft} Select instrument";
                         else
-                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{Drag} Copy/Replace instrument\n{MouseRight} More Options...";
+                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{Drag} Copy/Replace instrument\n{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete Instrument -{MouseRight} More Options...";
                     }
                     else
                     {
@@ -1968,13 +1966,9 @@ namespace FamiStudio
                     {
                         tooltip = "{MouseLeft} Reload source data (if available)\nOnly possible when data was loaded from a DMC/WAV file";
                     }
-                    else if (subButtonType == SubButtonType.Save)
-                    {
-                        tooltip = "{MouseLeft} Export processed DMC file\n{MouseRight} Export source data (DMC or WAV)";
-                    }
                     else if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseRight} More Options...";
+                        tooltip = "{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete DPCM Sample - {MouseRight} More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
@@ -1992,7 +1986,7 @@ namespace FamiStudio
                 {
                     if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{Drag} Replace arpeggio\n{MouseRight} More Options...";
+                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{Drag} Replace arpeggio\n{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete Arpeggio - {MouseRight} More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
@@ -3359,10 +3353,6 @@ namespace FamiStudio
                 {
                     ReloadDPCMSampleSourceData(button.sample);
                 }
-                else if (subButtonType == SubButtonType.Save)
-                {
-                    ExportDPCMSampleProcessedData(button.sample);
-                }
                 else if (subButtonType == SubButtonType.Play)
                 {
                     App.PreviewDPCMSample(button.sample, false);
@@ -3728,22 +3718,21 @@ namespace FamiStudio
 
         private bool HandleContextMenuDpcmButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
-            if (Platform.IsDesktop && subButtonType == SubButtonType.Save)
+            if (subButtonType != SubButtonType.Max)
+                return true;
+
+            var menu = new List<ContextMenuOption>();
+
+            if (Platform.IsDesktop)
             {
-                App.ShowContextMenu(left + x, top + y, new[]
-                {
-                    new ContextMenuOption("MenuSave", "Export Processed DMC Data...", () => { ExportDPCMSampleProcessedData(button.sample); }),
-                    new ContextMenuOption("MenuSave", "Export Source Data...", () => { ExportDPCMSampleSourceData(button.sample); })
-                });
+                menu.Add(new ContextMenuOption("MenuSave", "Export Processed DMC Data...", () => { ExportDPCMSampleProcessedData(button.sample); }));
+                menu.Add(new ContextMenuOption("MenuSave", "Export Source Data...", () => { ExportDPCMSampleSourceData(button.sample); }));
             }
-            else
-            {
-                App.ShowContextMenu(left + x, top + y, new[]
-                {
-                    new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }),
-                    new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); })
-                });
-            }
+
+            menu.Add(new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }, Platform.IsDesktop));
+            menu.Add(new ContextMenuOption("MenuProperties", "DPCM Sample Properties...", () => { EditDPCMSampleProperties(new Point(x, y), button.sample); }));
+
+            App.ShowContextMenu(left + x, top + y, menu.ToArray());
 
             return true;
         }
@@ -4280,15 +4269,76 @@ namespace FamiStudio
             });
         }
 
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        private bool HandleMouseDoubleClickSong(Button button, MouseEventArgs e)
+        {
+            if (App.Project.Songs.Count > 1)
+            {
+                AskDeleteSong(button.song);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleMouseDoubleClickInstrument(Button button, MouseEventArgs e)
+        {
+            if (button.instrument != null)
+            {
+                AskDeleteInstrument(button.instrument);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleMouseDoubleClickArpeggio(Button button, MouseEventArgs e)
+        {
+            AskDeleteArpeggio(button.arpeggio);
+            return true;
+        }
+
+        private bool HandleMouseDoubleClickDPCMSample(Button button, MouseEventArgs e)
+        {
+            AskDeleteDPCMSample(button.sample);
+            return true;
+        }
+
+        private bool HandleMouseDoubleClickButtons(MouseEventArgs e)
         {
             var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
 
-            if (buttonIdx >= 0)
+            if (e.Left && buttonIdx >= 0 && subButtonType == SubButtonType.Max)
             {
                 if (captureOperation != CaptureOperation.None)
                     AbortCaptureOperation();
+
+                var button = buttons[buttonIdx];
+
+                switch (button.type)
+                {
+                    case ButtonType.Song:
+                        return HandleMouseDoubleClickSong(button, e);
+                    case ButtonType.Instrument:
+                        return HandleMouseDoubleClickInstrument(button, e);
+                    case ButtonType.Arpeggio:
+                        return HandleMouseDoubleClickArpeggio(button, e);
+                    case ButtonType.Dpcm:
+                        return HandleMouseDoubleClickDPCMSample(button, e);
+                }
+
+                return true;
             }
+
+            return false;
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            if (HandleMouseDoubleClickButtons(e)) goto Handled;
+            return;
+
+        Handled:
+            MarkDirty();
         }
 
         public void ValidateIntegrity()
