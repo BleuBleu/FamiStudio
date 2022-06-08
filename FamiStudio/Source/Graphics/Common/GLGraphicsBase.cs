@@ -1929,6 +1929,7 @@ namespace FamiStudio
                             inst.text += "...";
                     }
 
+                    // MATTT : No need to measure if MiddleLeft for example.
                     if (inst.flags != TextFlags.TopLeft)
                     {
                         var minX = 0;
