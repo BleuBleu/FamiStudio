@@ -575,8 +575,12 @@ namespace FamiStudio
                 else
                     famistudio.KeyUp(e);
 
-                foreach (var ctrl in controls.Controls)
-                    SendKeyUpOrDown(ctrl, e, down);
+                // FamiStudio can decide to quit.
+                if (!quit)
+                {
+                    foreach (var ctrl in controls.Controls)
+                        SendKeyUpOrDown(ctrl, e, down);
+                }
             }
         }
 
@@ -814,7 +818,6 @@ namespace FamiStudio
 
         public void Quit()
         {
-            // MATTT : Retest this on macos.
             quit = true;
 
             // Need to disable all event processing here. When quitting we may have
@@ -822,12 +825,6 @@ namespace FamiStudio
             // unstable. 
             SubclassWindow(false);
             UnbindGLFWCallbacks();
-
-            // HACK : RtMidi still has a thread running and it seems
-            // to prevent the app from quitting. Will investigate more
-            // later.
-
-            //Process.GetCurrentProcess().Kill();
         }
 
         public void Refresh()
