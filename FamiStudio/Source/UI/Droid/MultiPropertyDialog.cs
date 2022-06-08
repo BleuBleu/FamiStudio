@@ -288,7 +288,7 @@ namespace FamiStudio
                 var linearLayout = new LinearLayout(container.Context);
                 linearLayout.Orientation = Orientation.Vertical;
                 linearLayout.LayoutParameters = linearLayoutParams;
-                linearLayout.SetBackgroundColor(DroidUtils.GetColorFromResources(container.Context, Resource.Color.DarkGreyFillColor1));
+                linearLayout.SetBackgroundColor(DroidUtils.GetColorFromResources(container.Context, Resource.Color.DarkGreyColor4));
 
                 var first = true;
 
@@ -303,7 +303,7 @@ namespace FamiStudio
                     {
                         var spacer = new View(container.Context);
                         spacer.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-                        spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(container.Context, Resource.Color.LightGreyFillColor1));
+                        spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(container.Context, Resource.Color.LightGreyColor1));
                         linearLayout.AddView(spacer);
                     }
 
@@ -312,7 +312,7 @@ namespace FamiStudio
                     var imageView = new ImageView(container.Context);
                     imageView.LayoutParameters = new LinearLayout.LayoutParams(dp36, dp36);
                     imageView.SetImageBitmap(DroidUtils.LoadTgaBitmapFromResource($"FamiStudio.Resources.{tab.image}@2x.tga"));
-                    imageView.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(container.Context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
+                    imageView.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(container.Context, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
 
                     var textViewLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
                     textViewLayoutParams.Gravity = GravityFlags.Left | GravityFlags.CenterVertical;

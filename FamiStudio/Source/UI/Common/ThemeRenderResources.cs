@@ -9,31 +9,31 @@ namespace FamiStudio
     {
         private Brush whiteBrush;
         private Brush blackBrush;
-        private Brush lightGreyFillBrush1;
-        private Brush lightGreyFillBrush2;
-        private Brush mediumGreyFillBrush1;
-        private Brush darkGreyLineBrush1;
-        private Brush darkGreyLineBrush2;
-        private Brush darkGreyLineBrush3;
-        private Brush darkGreyFillBrush1;
-        private Brush darkGreyFillBrush2;
-        private Brush darkGreyFillBrush3;
-        private Brush lightRedFillBrush;
-        private Brush darkRedFillBrush;
+        private Brush lightGreyBrush1;
+        private Brush lightGreyBrush2;
+        private Brush mediumGreyBrush1;
+        private Brush darkGreyBrush1;
+        private Brush darkGreyBrush2;
+        private Brush darkGreyBrush3;
+        private Brush darkGreyBrush4;
+        private Brush darkGreyBrush5;
+        private Brush darkGreyBrush6;
+        private Brush lightRedBrush;
+        private Brush darkRedBrush;
 
-        public Brush WhiteBrush           => whiteBrush;
-        public Brush BlackBrush           => blackBrush;
-        public Brush LightGreyFillBrush1  => lightGreyFillBrush1; 
-        public Brush LightGreyFillBrush2  => lightGreyFillBrush2; 
-        public Brush MediumGreyFillBrush1 => mediumGreyFillBrush1;
-        public Brush DarkGreyLineBrush1   => darkGreyLineBrush1;  
-        public Brush DarkGreyLineBrush2   => darkGreyLineBrush2;  
-        public Brush DarkGreyLineBrush3   => darkGreyLineBrush3;  
-        public Brush DarkGreyFillBrush1   => darkGreyFillBrush1;  
-        public Brush DarkGreyFillBrush2   => darkGreyFillBrush2;  
-        public Brush DarkGreyFillBrush3   => darkGreyFillBrush3;  
-        public Brush LightRedFillBrush    => lightRedFillBrush;   
-        public Brush DarkRedFillBrush     => darkRedFillBrush;
+        public Brush WhiteBrush       => whiteBrush;
+        public Brush BlackBrush       => blackBrush;
+        public Brush LightGreyBrush1  => lightGreyBrush1; 
+        public Brush LightGreyBrush2  => lightGreyBrush2; 
+        public Brush MediumGreyBrush1 => mediumGreyBrush1;
+        public Brush DarkGreyBrush1   => darkGreyBrush1;  
+        public Brush DarkGreyBrush2   => darkGreyBrush2;  
+        public Brush DarkGreyBrush3   => darkGreyBrush3;  
+        public Brush DarkGreyBrush4   => darkGreyBrush4;  
+        public Brush DarkGreyBrush5   => darkGreyBrush5;  
+        public Brush DarkGreyBrush6   => darkGreyBrush6;  
+        public Brush LightRedBrush    => lightRedBrush;   
+        public Brush DarkRedBrush     => darkRedBrush;
 
         private Dictionary<Color, Brush> customColorBrushes = new Dictionary<Color, Brush>();
         public  Dictionary<Color, Brush> CustomColorBrushes => customColorBrushes;
@@ -90,19 +90,19 @@ namespace FamiStudio
 
         public ThemeRenderResources(Graphics g)
         {
-            whiteBrush           = g.CreateSolidBrush(Theme.WhiteColor);
-            blackBrush           = g.CreateSolidBrush(Theme.BlackColor);
-            lightGreyFillBrush1  = g.CreateSolidBrush(Theme.LightGreyFillColor1);
-            lightGreyFillBrush2  = g.CreateSolidBrush(Theme.LightGreyFillColor2);
-            mediumGreyFillBrush1 = g.CreateSolidBrush(Theme.MediumGreyFillColor1);
-            darkGreyLineBrush1   = g.CreateSolidBrush(Theme.DarkGreyLineColor1);
-            darkGreyLineBrush2   = g.CreateSolidBrush(Theme.DarkGreyLineColor2);
-            darkGreyLineBrush3   = g.CreateSolidBrush(Theme.DarkGreyLineColor3);
-            darkGreyFillBrush1   = g.CreateSolidBrush(Theme.DarkGreyFillColor1);
-            darkGreyFillBrush2   = g.CreateSolidBrush(Theme.DarkGreyFillColor2);
-            darkGreyFillBrush3   = g.CreateSolidBrush(Theme.DarkGreyFillColor3);
-            lightRedFillBrush    = g.CreateSolidBrush(Theme.LightRedFillColor);
-            darkRedFillBrush     = g.CreateSolidBrush(Theme.DarkRedFillColor);
+            whiteBrush       = g.CreateSolidBrush(Theme.WhiteColor);
+            blackBrush       = g.CreateSolidBrush(Theme.BlackColor);
+            lightGreyBrush1  = g.CreateSolidBrush(Theme.LightGreyColor1);
+            lightGreyBrush2  = g.CreateSolidBrush(Theme.LightGreyColor2);
+            mediumGreyBrush1 = g.CreateSolidBrush(Theme.MediumGreyColor1);
+            darkGreyBrush1   = g.CreateSolidBrush(Theme.DarkGreyColor1);
+            darkGreyBrush2   = g.CreateSolidBrush(Theme.DarkGreyColor2);
+            darkGreyBrush3   = g.CreateSolidBrush(Theme.DarkGreyColor3);
+            darkGreyBrush4   = g.CreateSolidBrush(Theme.DarkGreyColor4);
+            darkGreyBrush5   = g.CreateSolidBrush(Theme.DarkGreyColor5);
+            darkGreyBrush6   = g.CreateSolidBrush(Theme.DarkGreyColor6);
+            lightRedBrush    = g.CreateSolidBrush(Theme.LightRedColor);
+            darkRedBrush     = g.CreateSolidBrush(Theme.DarkRedColor);
 
             for (int j = 0; j < Theme.CustomColors.GetLength(1); j++)
             {
@@ -125,17 +125,17 @@ namespace FamiStudio
         {
             Utils.DisposeAndNullify(ref whiteBrush);
             Utils.DisposeAndNullify(ref blackBrush);
-            Utils.DisposeAndNullify(ref lightGreyFillBrush1);
-            Utils.DisposeAndNullify(ref lightGreyFillBrush2);
-            Utils.DisposeAndNullify(ref mediumGreyFillBrush1);
-            Utils.DisposeAndNullify(ref darkGreyLineBrush1);
-            Utils.DisposeAndNullify(ref darkGreyLineBrush2);
-            Utils.DisposeAndNullify(ref darkGreyLineBrush3);
-            Utils.DisposeAndNullify(ref darkGreyFillBrush1);
-            Utils.DisposeAndNullify(ref darkGreyFillBrush2);
-            Utils.DisposeAndNullify(ref darkGreyFillBrush3);
-            Utils.DisposeAndNullify(ref lightRedFillBrush);
-            Utils.DisposeAndNullify(ref darkRedFillBrush);
+            Utils.DisposeAndNullify(ref lightGreyBrush1);
+            Utils.DisposeAndNullify(ref lightGreyBrush2);
+            Utils.DisposeAndNullify(ref mediumGreyBrush1);
+            Utils.DisposeAndNullify(ref darkGreyBrush1);
+            Utils.DisposeAndNullify(ref darkGreyBrush2);
+            Utils.DisposeAndNullify(ref darkGreyBrush3);
+            Utils.DisposeAndNullify(ref darkGreyBrush4);
+            Utils.DisposeAndNullify(ref darkGreyBrush5);
+            Utils.DisposeAndNullify(ref darkGreyBrush6);
+            Utils.DisposeAndNullify(ref lightRedBrush);
+            Utils.DisposeAndNullify(ref darkRedBrush);
 
             foreach (var kv in customColorBrushes)
                 kv.Value.Dispose();

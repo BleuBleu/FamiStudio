@@ -63,10 +63,10 @@ namespace FamiStudio
 
             bmpMobilePianoDrag   = g.GetBitmapAtlasRef("MobilePianoDrag");
             bmpMobilePianoRest   = g.GetBitmapAtlasRef("MobilePianoRest");
-            whiteKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
-            blackKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.DarkGreyFillColor1,  Theme.DarkGreyFillColor2);
-            whiteKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Darken(Theme.LightGreyFillColor1), Theme.Darken(Theme.LightGreyFillColor2));
-            blackKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Lighten(Theme.DarkGreyFillColor1), Theme.Lighten(Theme.DarkGreyFillColor2));
+            whiteKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.LightGreyColor1, Theme.LightGreyColor2);
+            blackKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.DarkGreyColor4,  Theme.DarkGreyColor5);
+            whiteKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Darken(Theme.LightGreyColor1), Theme.Darken(Theme.LightGreyColor2));
+            blackKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Lighten(Theme.DarkGreyColor4), Theme.Lighten(Theme.DarkGreyColor5));
         }
         
         private void UpdateRenderCoords()
@@ -233,7 +233,7 @@ namespace FamiStudio
                         var groupStart = j == 0 || j == 5;
                         var x = GetKeyRectangle(i, j).X;
                         var y = groupStart ? 0 : Height / 2;
-                        var brush = groupStart ? ThemeResources.BlackBrush : ThemeResources.DarkGreyFillBrush2;
+                        var brush = groupStart ? ThemeResources.BlackBrush : ThemeResources.DarkGreyBrush5;
                         cp.DrawLine(x, y, x, Height, brush);
                     }
                 }

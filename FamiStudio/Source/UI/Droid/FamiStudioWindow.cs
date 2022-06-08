@@ -555,7 +555,7 @@ namespace FamiStudio
         {
             Debug.Assert(contextMenuDialog == null);
 
-            var bgColor = DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyFillColor1);
+            var bgColor = DroidUtils.ToAndroidColor(global::FamiStudio.Theme.DarkGreyColor4);
 
             var linearLayout = new LinearLayout(this);
             linearLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
@@ -573,7 +573,7 @@ namespace FamiStudio
                 {
                     var lineView = new View(this);
                     lineView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-                    lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyFillColor1));
+                    lineView.SetBackgroundColor(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1));
                     linearLayout.AddView(lineView);
                 }
 
@@ -595,7 +595,7 @@ namespace FamiStudio
 
                 var bmp = new BitmapDrawable(Resources, DroidUtils.LoadTgaBitmapFromResource($"FamiStudio.Resources.Mobile{imageName}.tga"));
                 bmp.SetBounds(0, 0, imageSize, imageSize);
-                bmp.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
+                bmp.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(this, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
 
                 var textView = new TextView(new ContextThemeWrapper(this, Resource.Style.LightGrayTextMedium));
                 textView.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);

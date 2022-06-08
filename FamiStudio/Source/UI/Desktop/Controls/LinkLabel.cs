@@ -46,7 +46,7 @@ namespace FamiStudio
 
             var c = parentDialog.CommandList;
             var sx = MeasureString();
-            var brush = hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1;
+            var brush = hover ? ThemeResources.LightGreyBrush2 : ThemeResources.LightGreyBrush1;
 
             c.DrawText(text, ThemeResources.FontMedium, 0, 0, brush, TextFlags.MiddleLeft, 0, height);
             c.DrawLine(0, height  - lineOffset, sx, height - lineOffset, brush);

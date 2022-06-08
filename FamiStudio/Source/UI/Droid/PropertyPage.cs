@@ -70,7 +70,7 @@ namespace FamiStudio
             editText.InputType = InputTypes.ClassText;
             editText.Text = txt;
             editText.SetTextColor(Application.Context.GetColorStateList(Resource.Color.light_grey));
-            editText.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
+            editText.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
             editText.SetMaxLines(1);
             editText.SetOnEditorActionListener(this);
             editText.AfterTextChanged += EditText_AfterTextChanged;
@@ -139,7 +139,7 @@ namespace FamiStudio
             var spinner = new Spinner(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));
             var adapter = new CustomFontArrayAdapter(spinner, context, Android.Resource.Layout.SimpleSpinnerItem, values);
             spinner.Adapter = adapter;
-            spinner.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1), BlendModeCompat.SrcAtop));
+            spinner.Background.SetColorFilter(BlendModeColorFilterCompat.CreateBlendModeColorFilterCompat(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1), BlendModeCompat.SrcAtop));
             spinner.SetSelection(adapter.GetPosition(value));
             spinner.ItemSelected += Spinner_ItemSelected;
             return spinner;
@@ -224,7 +224,7 @@ namespace FamiStudio
         {
             var spacer = new View(context);
             spacer.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 1);
-            spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1)); 
+            spacer.SetBackgroundColor(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1)); 
             return spacer;
         }
 
@@ -918,7 +918,7 @@ namespace FamiStudio
             pageLayout = new LinearLayout(container.Context);
             pageLayout.LayoutParameters = coordLayoutParameters;
             pageLayout.Orientation = Orientation.Vertical;
-            pageLayout.SetBackgroundColor(DroidUtils.ToAndroidColor(Theme.DarkGreyFillColor1));
+            pageLayout.SetBackgroundColor(DroidUtils.ToAndroidColor(Theme.DarkGreyColor4));
 
             var first = true;
 
@@ -980,7 +980,7 @@ namespace FamiStudio
             {
                 var style = position == spinner.SelectedItemPosition ? Resource.Style.SpinnerItemSelected : Resource.Style.SpinnerItem;
                 TextViewCompat.SetTextAppearance(tv, style);
-                tv.SetBackgroundResource(Resource.Color.LightGreyFillColor1);
+                tv.SetBackgroundResource(Resource.Color.LightGreyColor1);
             }
 
             return baseView;
@@ -1014,13 +1014,13 @@ namespace FamiStudio
             buttonLess = new MaterialButton(context);
             buttonLess.Text = "-";
             buttonLess.SetTextColor(Android.Graphics.Color.Black);
-            buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1));
+            buttonLess.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1));
             buttonLess.LayoutParameters = lp;
 
             buttonMore = new MaterialButton(context);
             buttonMore.Text = "+";
             buttonMore.SetTextColor(Android.Graphics.Color.Black);
-            buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyFillColor1));
+            buttonMore.BackgroundTintList = ColorStateList.ValueOf(DroidUtils.GetColorFromResources(context, Resource.Color.LightGreyColor1));
             buttonMore.LayoutParameters = lp;
 
             textView = new TextView(new ContextThemeWrapper(context, Resource.Style.LightGrayTextMedium));

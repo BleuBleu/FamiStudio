@@ -229,12 +229,12 @@ namespace FamiStudio
         {
             var bmpSize = bmpArrow.ElementSize;
             var cb = parentDialog.CommandList;
-            var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
+            var brush = enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1;
 
             if (!transparent)
-                cb.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover && enabled ? ThemeResources.DarkGreyLineBrush3 : ThemeResources.DarkGreyLineBrush1, brush);
+                cb.FillAndDrawRectangle(0, 0, width - 1, rowHeight - (listOpened ? 0 : 1), hover && enabled ? ThemeResources.DarkGreyBrush3 : ThemeResources.DarkGreyBrush1, brush);
             
-            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyFillColor2 : brush.Color0);
+            cb.DrawBitmapAtlas(bmpArrow, width - bmpSize.Width - margin, (rowHeight - bmpSize.Height) / 2, 1, 1, hover && enabled ? Theme.LightGreyColor2 : brush.Color0);
 
             if (selectedIndex >= 0)
                 cb.DrawText(items[selectedIndex], ThemeResources.FontMedium, margin, 0, brush, TextFlags.MiddleLeft, 0, rowHeight);
@@ -246,20 +246,20 @@ namespace FamiStudio
                 var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
                 cf.PushTranslation(0, rowHeight);
-                cf.FillAndDrawRectangle(0, 0, width - 1, numItemsInList * rowHeight - 1, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+                cf.FillAndDrawRectangle(0, 0, width - 1, numItemsInList * rowHeight - 1, ThemeResources.DarkGreyBrush1, ThemeResources.LightGreyBrush1);
 
                 for (int i = 0; i < numItemsInList; i++)
                 {
                     var absItemIndex = i + listScroll;
                     if (absItemIndex == selectedIndex || absItemIndex == listHover)
-                        cf.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? ThemeResources.DarkGreyFillBrush1 : ThemeResources.DarkGreyLineBrush3);
-                    cf.DrawText(items[absItemIndex], ThemeResources.FontMedium, margin, i * rowHeight, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
+                        cf.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? ThemeResources.DarkGreyBrush4 : ThemeResources.DarkGreyBrush3);
+                    cf.DrawText(items[absItemIndex], ThemeResources.FontMedium, margin, i * rowHeight, ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
                 }
 
                 if (hasScrollBar)
                 {
-                    cf.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * rowHeight - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
-                    cf.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    cf.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, MaxItemsInList * rowHeight - 1, ThemeResources.DarkGreyBrush4, ThemeResources.LightGreyBrush1);
+                    cf.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize - 1, ThemeResources.MediumGreyBrush1, ThemeResources.LightGreyBrush1);
                 }
 
                 cf.PopTransform();

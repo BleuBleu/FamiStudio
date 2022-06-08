@@ -34,10 +34,10 @@ namespace FamiStudio
         private int undoRedoIndex = 0;
         private List<TextBoxState> undoRedo = new List<TextBoxState>();
 
-        private Color foreColor     = Theme.LightGreyFillColor1;
-        private Color disabledColor = Theme.MediumGreyFillColor1;
-        private Color backColor     = Theme.DarkGreyLineColor1;
-        private Color selColor      = Theme.MediumGreyFillColor1;
+        private Color foreColor     = Theme.LightGreyColor1;
+        private Color disabledColor = Theme.MediumGreyColor1;
+        private Color backColor     = Theme.DarkGreyColor1;
+        private Color selColor      = Theme.MediumGreyColor1;
 
         private Brush foreBrush;
         private Brush disabledBrush;

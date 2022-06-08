@@ -65,7 +65,7 @@ namespace FamiStudio
             base.OnRender(g);
 
             var c = parentDialog.CommandList;
-            c.DrawBitmapAtlasCentered(check ? bmpRadioOn : bmpRadioOff, 0, 0, bmpRadioOn.ElementSize.Width, height, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
+            c.DrawBitmapAtlasCentered(check ? bmpRadioOn : bmpRadioOff, 0, 0, bmpRadioOn.ElementSize.Width, height, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
         }
     }
 }

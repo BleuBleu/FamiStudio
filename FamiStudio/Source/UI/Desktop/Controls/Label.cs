@@ -90,7 +90,7 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             var c = parentDialog.CommandList;
-            var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
+            var brush = enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1;
 
             if (multiline)
             {

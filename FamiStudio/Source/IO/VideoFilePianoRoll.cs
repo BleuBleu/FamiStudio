@@ -358,7 +358,7 @@ namespace FamiStudio
                             }
                             else
                             {
-                                color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : Theme.LightGreyFillColor1);
+                                color = Color.FromArgb(128 + volume * 127 / 15, note.Instrument != null ? note.Instrument.Color : Theme.LightGreyColor1);
                             }
                         }
 
@@ -396,9 +396,9 @@ namespace FamiStudio
                         var channelNameSizeX = (int)videoGraphics.MeasureString(s.channelText, font);
                         var channelIconPosX  = channelPosX0 + channelResY / 2 - (channelNameSizeX + s.bmpIcon.Size.Width + ChannelIconTextSpacing) / 2;
 
-                        fg.FillAndDrawRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width - 1, ChannelIconPosY + s.bmpIcon.Size.Height - 1, themeResources.DarkGreyLineBrush2, themeResources.LightGreyFillBrush1);
-                        fg.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY, 1, Theme.LightGreyFillColor1);
-                        fg.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, themeResources.LightGreyFillBrush1);
+                        fg.FillAndDrawRectangle(channelIconPosX, ChannelIconPosY, channelIconPosX + s.bmpIcon.Size.Width - 1, ChannelIconPosY + s.bmpIcon.Size.Height - 1, themeResources.DarkGreyBrush2, themeResources.LightGreyBrush1);
+                        fg.DrawBitmap(s.bmpIcon, channelIconPosX, ChannelIconPosY, 1, Theme.LightGreyColor1);
+                        fg.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, ChannelIconPosY + textOffsetY, themeResources.LightGreyBrush1);
 
                         if (s.videoChannelIndex > 0)
                             fg.DrawLine(channelPosX0, 0, channelPosX0, videoResY, themeResources.BlackBrush, channelLineWidth);
@@ -409,7 +409,7 @@ namespace FamiStudio
                         // Intentionally flipping min/max Y since D3D is upside down compared to how we display waves typically.
                         GenerateOscilloscope(s.wav, frame.wavOffset, oscWindowSize, oscLookback, oscScale, channelPosX0 + 10, oscMaxY, channelPosX1 - 10, oscMinY, oscilloscope);
 
-                        fg.DrawGeometry(oscilloscope, themeResources.LightGreyFillBrush1, 1, true);
+                        fg.DrawGeometry(oscilloscope, themeResources.LightGreyBrush1, 1, true);
                     }
 
                     // Watermark.

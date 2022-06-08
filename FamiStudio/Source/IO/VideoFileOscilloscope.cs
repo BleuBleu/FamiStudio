@@ -23,7 +23,7 @@ namespace FamiStudio
 
                     if (note != null && note.IsMusical)
                     {
-                        var color = Theme.LightGreyFillColor1;
+                        var color = Theme.LightGreyColor1;
 
                         if (colorMode == OscilloscopeColorType.Channel)
                         {
@@ -74,7 +74,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        colors[i, j] = Theme.LightGreyFillColor1;
+                        colors[i, j] = Theme.LightGreyColor1;
                     }
                 }
             }
@@ -177,7 +177,7 @@ namespace FamiStudio
 
                     videoGraphics.BeginDrawFrame();
                     videoGraphics.BeginDrawControl(new Rectangle(0, 0, videoResX, videoResY), videoResY);
-                    videoGraphics.Clear(Theme.DarkGreyLineColor2);
+                    videoGraphics.Clear(Theme.DarkGreyColor2);
 
                     var cmd = videoGraphics.CreateCommandList();
 
@@ -212,9 +212,9 @@ namespace FamiStudio
                         var channelIconPosX = channelPosX0 + s.bmpIcon.Size.Width  / 2;
                         var channelIconPosY = channelPosY0 + s.bmpIcon.Size.Height / 2;
 
-                        cmd.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width - 1, channelIconPosY + s.bmpIcon.Size.Height - 1, themeResources.DarkGreyLineBrush2, themeResources.LightGreyFillBrush1);
-                        cmd.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyFillColor1);
-                        cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, themeResources.LightGreyFillBrush1); 
+                        cmd.FillAndDrawRectangle(channelIconPosX, channelIconPosY, channelIconPosX + s.bmpIcon.Size.Width - 1, channelIconPosY + s.bmpIcon.Size.Height - 1, themeResources.DarkGreyBrush2, themeResources.LightGreyBrush1);
+                        cmd.DrawBitmap(s.bmpIcon, channelIconPosX, channelIconPosY, 1, Theme.LightGreyColor1);
+                        cmd.DrawText(s.channelText, font, channelIconPosX + s.bmpIcon.Size.Width + ChannelIconTextSpacing, channelIconPosY + textOffsetY, themeResources.LightGreyBrush1); 
                     }
 
                     // Grid lines

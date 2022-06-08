@@ -274,12 +274,12 @@ namespace FamiStudio
             commandListForeground = g.CreateCommandList();
 
             // Fill + Border
-            commandList.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
+            commandList.FillAndDrawRectangle(0, 0, width - 1, height - 1, ThemeResources.DarkGreyBrush4, ThemeResources.BlackBrush);
 
             if (titleBarSizeY > 0)
             {
-                commandList.FillAndDrawRectangle(0, 0, width, titleBarSizeY, ThemeResources.DarkGreyLineBrush1, ThemeResources.BlackBrush);
-                commandList.DrawText(title, ThemeResources.FontMediumBold, titleBarMargin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, titleBarSizeY);
+                commandList.FillAndDrawRectangle(0, 0, width, titleBarSizeY, ThemeResources.DarkGreyBrush1, ThemeResources.BlackBrush);
+                commandList.DrawText(title, ThemeResources.FontMediumBold, titleBarMargin, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft, 0, titleBarSizeY);
             }
 
             // Render child controls
@@ -322,9 +322,9 @@ namespace FamiStudio
                     g.Transform.PushTranslation(pt.X - (rightAlign ? totalSizeX : 0), pt.Y + tooltipOffsetY);
 
                     for (int i = 0; i < splits.Count; i++)
-                        c.DrawText(splits[i], ThemeResources.FontMedium, tooltipSideMargin, i * ThemeResources.FontMedium.LineHeight + tooltipTopMargin, ThemeResources.LightGreyFillBrush1);
+                        c.DrawText(splits[i], ThemeResources.FontMedium, tooltipSideMargin, i * ThemeResources.FontMedium.LineHeight + tooltipTopMargin, ThemeResources.LightGreyBrush1);
 
-                    c.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+                    c.FillAndDrawRectangle(0, 0, totalSizeX, sizeY, ThemeResources.DarkGreyBrush1, ThemeResources.LightGreyBrush1);
                     g.Transform.PopTransform();
                     g.DrawCommandList(c);
                 }

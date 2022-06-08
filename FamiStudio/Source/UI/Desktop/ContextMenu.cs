@@ -162,7 +162,7 @@ namespace FamiStudio
 
             var c = g.CreateCommandList();
 
-            c.DrawRectangle(0, 0, Width - 1, Height - 1, ThemeResources.LightGreyFillBrush1);
+            c.DrawRectangle(0, 0, Width - 1, Height - 1, ThemeResources.LightGreyBrush1);
 
             for (int i = 0, y = 0; i < menuOptions.Length; i++, y += itemSizeY)
             {
@@ -173,10 +173,10 @@ namespace FamiStudio
                 var hover = i == hoveredItemIndex;
 
                 if (hover)
-                    c.FillRectangle(0, 0, Width, itemSizeY, ThemeResources.MediumGreyFillBrush1);
+                    c.FillRectangle(0, 0, Width, itemSizeY, ThemeResources.MediumGreyBrush1);
 
                 if (option.Separator) 
-                    c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyFillBrush1);
+                    c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyBrush1);
 
                 var bmp = bmpContextMenu[i];
 
@@ -193,14 +193,14 @@ namespace FamiStudio
 
                 if (bmp != null)
                 {
-                    c.DrawBitmapAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
+                    c.DrawBitmapAtlas(bmp, iconPos, iconPos, 1, 1, hover ? Theme.LightGreyColor2 : Theme.LightGreyColor1);
                 }
 
-                c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, Width, itemSizeY);
+                c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyBrush2 : ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
             }
 
-            g.Clear(Theme.DarkGreyFillColor1);
+            g.Clear(Theme.DarkGreyColor4);
             g.DrawCommandList(c);
         }
     }

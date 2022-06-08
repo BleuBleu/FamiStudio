@@ -127,17 +127,17 @@ namespace FamiStudio
             var hasScrollBar = GetScrollBarParams(out var scrollBarPos, out var scrollBarSize);
             var actualScrollBarWidth = hasScrollBar ? scrollBarWidth : 0;
 
-            c.FillAndDrawRectangle(0, 0, width - 1, height, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+            c.FillAndDrawRectangle(0, 0, width - 1, height, ThemeResources.DarkGreyBrush1, ThemeResources.LightGreyBrush1);
 
             for (int i = 0, j = scroll; i < numLines && j < lines.Count; j++, i++)
             {
-                c.DrawText(lines[j], ThemeResources.FontMedium, margin, i * lineHeight, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, lineHeight);
+                c.DrawText(lines[j], ThemeResources.FontMedium, margin, i * lineHeight, ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, lineHeight);
             }
 
             if (hasScrollBar)
             {
-                c.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, height, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
-                c.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                c.FillAndDrawRectangle(width - scrollBarWidth, 0, width - 1, height, ThemeResources.DarkGreyBrush4, ThemeResources.LightGreyBrush1);
+                c.FillAndDrawRectangle(width - scrollBarWidth, scrollBarPos, width - 1, scrollBarPos + scrollBarSize, ThemeResources.MediumGreyBrush1, ThemeResources.LightGreyBrush1);
             }
         }
     }

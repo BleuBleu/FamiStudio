@@ -106,13 +106,13 @@ namespace FamiStudio
         {
             var c = parentDialog.CommandList;
             var bmpSize = bmp != null ? bmp.ElementSize : Size.Empty;
-            var brush = enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1;
+            var brush = enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1;
 
             if (enabled && (border || press || hover))
             {
-                var fillBrush = press ? ThemeResources.MediumGreyFillBrush1 :
-                                hover ? ThemeResources.DarkGreyFillBrush3 :
-                                        ThemeResources.DarkGreyFillBrush2;
+                var fillBrush = press ? ThemeResources.MediumGreyBrush1 :
+                                hover ? ThemeResources.DarkGreyBrush6 :
+                                        ThemeResources.DarkGreyBrush5;
 
                 c.FillRectangle(ClientRectangle, fillBrush);
             }

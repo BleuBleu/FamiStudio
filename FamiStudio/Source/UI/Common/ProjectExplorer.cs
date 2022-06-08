@@ -319,7 +319,7 @@ namespace FamiStudio
                     var color = i.Registers.InstrumentColors[ChannelType.FdsWave];
 
                     if (color.A == 0)
-                        color = Theme.LightGreyFillColor2;
+                        color = Theme.LightGreyColor2;
 
                     var brush = c.Graphics.GetSolidBrush(color);
 
@@ -329,7 +329,7 @@ namespace FamiStudio
                         c.FillRectangle(x * sx, h - y, (x + 1) * sx, h, brush);
                 }
 
-                c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, res.DarkGreyLineBrush3);
+                c.FillRectangle(64 * sx, 0, 64 * sx, rect.Height, res.DarkGreyBrush3);
                 c.DrawLine(64 * sx, 0, 64 * sx, rect.Height, res.BlackBrush);
             }
 
@@ -442,14 +442,14 @@ namespace FamiStudio
                         }
                     }
 
-                    var color = channelIndex >= 0 ? i.Registers.InstrumentColors[ChannelType.N163Wave1 + channelIndex] : Theme.LightGreyFillColor2;
+                    var color = channelIndex >= 0 ? i.Registers.InstrumentColors[ChannelType.N163Wave1 + channelIndex] : Theme.LightGreyColor2;
                     var brush = c.Graphics.GetSolidBrush(color);
 
                     c.FillRectangle((x * 2 + 0) * sx, h - lo, (x * 2 + 1) * sx, h, brush);
                     c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, brush);
                 }
 
-                c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, res.DarkGreyLineBrush3);
+                c.FillRectangle(numValues * sx, 0, 256 * sx, rect.Height, res.DarkGreyBrush3);
                 c.DrawLine(256 * sx, 0, 256 * sx, rect.Height, res.BlackBrush);
             }
         }
@@ -721,7 +721,7 @@ namespace FamiStudio
         class Button
         {
             public string text;
-            public Color color = Theme.DarkGreyFillColor2;
+            public Color color = Theme.DarkGreyColor5;
             public Color imageTint = Color.Black;
             public Brush textBrush;
             public Brush textDisabledBrush;
@@ -745,7 +745,7 @@ namespace FamiStudio
             public Button(ProjectExplorer pe)
             {
                 projectExplorer = pe;
-                textBrush = pe.ThemeResources.LightGreyFillBrush2;
+                textBrush = pe.ThemeResources.LightGreyBrush2;
                 textDisabledBrush = pe.disabledBrush;
                 height = pe.buttonSizeY;
             }
@@ -919,7 +919,7 @@ namespace FamiStudio
                 }
             }
 
-            public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyFillColor1 : Color.Black;
+            public Color SubButtonTint => type == ButtonType.SongHeader || type == ButtonType.InstrumentHeader || type == ButtonType.DpcmHeader || type == ButtonType.ArpeggioHeader || type == ButtonType.ProjectSettings ? Theme.LightGreyColor1 : Color.Black;
 
             public bool TextEllipsis => type == ButtonType.ProjectSettings;
             
@@ -1115,7 +1115,7 @@ namespace FamiStudio
 	                buttons.Add(new Button(this) { type = ButtonType.Song, song = song, text = song.Name, color = song.Color, bmp = bmpSong, textBrush = ThemeResources.BlackBrush });
 
 	            buttons.Add(new Button(this) { type = ButtonType.InstrumentHeader, text = "Instruments" });
-	            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush, bmp = bmpExpansions[ExpansionType.None] });
+	            buttons.Add(new Button(this) { type = ButtonType.Instrument, color = Theme.LightGreyColor1, textBrush = ThemeResources.BlackBrush, bmp = bmpExpansions[ExpansionType.None] });
 
 	            foreach (var instrument in project.Instruments)
 	            {
@@ -1188,7 +1188,7 @@ namespace FamiStudio
 	            }
 
 	            buttons.Add(new Button(this) { type = ButtonType.ArpeggioHeader, text = "Arpeggios" });
-	            buttons.Add(new Button(this) { type = ButtonType.Arpeggio, text = "None", color = Theme.LightGreyFillColor1, textBrush = ThemeResources.BlackBrush });
+	            buttons.Add(new Button(this) { type = ButtonType.Arpeggio, text = "None", color = Theme.LightGreyColor1, textBrush = ThemeResources.BlackBrush });
 
 	            foreach (var arpeggio in project.Arpeggios)
 	            {
@@ -1205,7 +1205,7 @@ namespace FamiStudio
                     if (expRegs != null)
                     {
                         var expName = e == ExpansionType.None ? "2A03" : ExpansionType.Names[e];
-                        buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = $"{expName} Registers", bmp = bmpExpansions[e], imageTint = Theme.LightGreyFillColor2 });
+                        buttons.Add(new Button(this) { type = ButtonType.RegisterExpansionHeader, text = $"{expName} Registers", bmp = bmpExpansions[e], imageTint = Theme.LightGreyColor2 });
                         buttons.Add(new Button(this) { type = ButtonType.ExpansionRegistersFirst + e, height = GetHeightForRegisterRows(expRegs.ExpansionRows), regs = expRegs.ExpansionRows, gradient = false });
 
                         var channels = Channel.GetChannelsForExpansionMask(ExpansionType.GetMaskFromValue(e), project.ExpansionNumN163Channels);
@@ -1218,7 +1218,7 @@ namespace FamiStudio
 
                             if (chanRegs != null && chanRegs.Length > 0)
                             {
-                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = ChannelType.Names[c], bmp = bmpChannels[c], imageTint = Theme.LightGreyFillColor2 });
+                                buttons.Add(new Button(this) { type = ButtonType.RegisterChannelHeader, text = ChannelType.Names[c], bmp = bmpChannels[c], imageTint = Theme.LightGreyColor2 });
                                 buttons.Add(new Button(this) { type = ButtonType.ChannelStateFirst + c, height = GetHeightForRegisterRows(chanRegs), regs = chanRegs, gradient = false });
                             }
                         }
@@ -1261,7 +1261,7 @@ namespace FamiStudio
             bmpSave        = g.GetBitmapAtlasRef("SaveSmall");
             bmpProperties  = g.GetBitmapAtlasRef("Properties");
 
-            var color0 = Theme.LightGreyFillColor2; // Grey
+            var color0 = Theme.LightGreyColor2; // Grey
             var color1 = Theme.CustomColors[14, 5]; // Orange
             var color2 = Theme.CustomColors[0,  5]; // Red
 
@@ -1328,8 +1328,8 @@ namespace FamiStudio
             for (int i = 0; i < numTabs; i++)
             {
                 var activeTab = i == (int)selectedTab;
-                var tabColor  = activeTab ? Theme.DarkGreyFillColor1 : Theme.Darken(Theme.DarkGreyFillColor1);
-                var textBrush = activeTab ? ThemeResources.LightGreyFillBrush2 : ThemeResources.LightGreyFillBrush1;
+                var tabColor  = activeTab ? Theme.DarkGreyColor4 : Theme.Darken(Theme.DarkGreyColor4);
+                var textBrush = activeTab ? ThemeResources.LightGreyBrush2 : ThemeResources.LightGreyBrush1;
                 var textFont  = activeTab ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
                 var x0 = (i + 0) * tabSizeX;
                 var x1 = (i + 1) * tabSizeX;
@@ -1355,7 +1355,7 @@ namespace FamiStudio
                 if (reg.CustomDraw != null)
                 {
                     var label = reg.Label;
-                    c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, TextFlags.Middle, 0, regSizeY);
+                    c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyBrush2, TextFlags.Middle, 0, regSizeY);
 
                     c.PushTranslation(registerLabelSizeX + 1, 0);
                     reg.CustomDraw(c, ThemeResources, new Rectangle(0, 0, contentSizeX - registerLabelSizeX - 1, regSizeY));
@@ -1367,14 +1367,14 @@ namespace FamiStudio
                     var value = reg.GetValue().ToString();
                     var flags = reg.Monospace ? TextFlags.Middle | TextFlags.Monospace : TextFlags.Middle;
 
-                    c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, TextFlags.Middle, 0, regSizeY);
-                    c.DrawText(value, ThemeResources.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, ThemeResources.LightGreyFillBrush2, flags, 0, regSizeY);
+                    c.DrawText(label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyBrush2, TextFlags.Middle, 0, regSizeY);
+                    c.DrawText(value, ThemeResources.FontSmall, buttonTextNoIconPosX + registerLabelSizeX, 0, ThemeResources.LightGreyBrush2, flags, 0, regSizeY);
                 }
                 else
                 {
                     Debug.Assert(exp >= 0);
 
-                    c.DrawText(reg.Label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyFillBrush2, TextFlags.Middle, 0, regSizeY);
+                    c.DrawText(reg.Label, ThemeResources.FontSmall, buttonTextNoIconPosX, 0, ThemeResources.LightGreyBrush2, TextFlags.Middle, 0, regSizeY);
 
                     var flags = TextFlags.Monospace | TextFlags.Middle;
                     var x = buttonTextNoIconPosX + registerLabelSizeX;
@@ -1678,13 +1678,13 @@ namespace FamiStudio
                 int scrollBarSizeY = (int)Math.Round(scrollAreaSizeY * (scrollAreaSizeY / (float)virtualSizeY));
                 int scrollBarPosY = (int)Math.Round(scrollAreaSizeY * (scrollY / (float)virtualSizeY));
 
-                c.FillAndDrawRectangle(contentSizeX, 0, Width - 1, Height, ThemeResources.DarkGreyFillBrush1, ThemeResources.BlackBrush);
-                c.FillAndDrawRectangle(contentSizeX, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, ThemeResources.MediumGreyFillBrush1, ThemeResources.BlackBrush);
+                c.FillAndDrawRectangle(contentSizeX, 0, Width - 1, Height, ThemeResources.DarkGreyBrush4, ThemeResources.BlackBrush);
+                c.FillAndDrawRectangle(contentSizeX, scrollBarPosY, Width - 1, scrollBarPosY + scrollBarSizeY, ThemeResources.MediumGreyBrush1, ThemeResources.BlackBrush);
             }
 
             c.DrawLine(0, 0, Width, 0, ThemeResources.BlackBrush);
 
-            g.Clear(Theme.DarkGreyFillColor1);
+            g.Clear(Theme.DarkGreyColor4);
 
             if (Settings.ShowRegisterViewer)
             {

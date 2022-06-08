@@ -168,9 +168,9 @@ namespace FamiStudio
             GL.Disable(GL.DepthTest);
             GL.Viewport(0, 0, size.Width, size.Height);
             GL.ClearColor(
-                Theme.DarkGreyLineColor1.R / 255.0f,
-                Theme.DarkGreyLineColor1.G / 255.0f,
-                Theme.DarkGreyLineColor1.B / 255.0f,
+                Theme.DarkGreyColor1.R / 255.0f,
+                Theme.DarkGreyColor1.G / 255.0f,
+                Theme.DarkGreyColor1.B / 255.0f,
                 1.0f);
             GL.Clear(GL.ColorBufferBit);
             glfwSwapBuffers(window);
@@ -851,7 +851,7 @@ namespace FamiStudio
         public Point GetCursorPosition()
         {
             // Pretend the mouse is fixed when a context menu is active.
-            return controls.IsContextMenuActive ? contextMenuPoint : GetScreenCursorPosInternal(); // MATTT : Is this screen or client.
+            return controls.IsContextMenuActive ? contextMenuPoint : GetScreenCursorPosInternal();
         }
 
         public void RefreshCursor()

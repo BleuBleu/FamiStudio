@@ -3601,19 +3601,19 @@ namespace FamiStudio
 			public const int colorPrimaryDark = 2131034174;
 			
 			// aapt resource value: 0x7F050000
-			public const int DarkGreyFillColor1 = 2131034112;
+			public const int DarkGreyColor4 = 2131034112;
 			
 			// aapt resource value: 0x7F050001
-			public const int DarkGreyFillColor2 = 2131034113;
+			public const int DarkGreyColor5 = 2131034113;
 			
 			// aapt resource value: 0x7F050002
-			public const int DarkGreyLineColor1 = 2131034114;
+			public const int DarkGreyColor1 = 2131034114;
 			
 			// aapt resource value: 0x7F050003
-			public const int DarkGreyLineColor2 = 2131034115;
+			public const int DarkGreyColor2 = 2131034115;
 			
 			// aapt resource value: 0x7F050004
-			public const int DarkGreyLineColor3 = 2131034116;
+			public const int DarkGreyColor3 = 2131034116;
 			
 			// aapt resource value: 0x7F05003F
 			public const int design_bottom_navigation_shadow_color = 2131034175;
@@ -3766,10 +3766,10 @@ namespace FamiStudio
 			public const int ic_launcher_background = 2131034223;
 			
 			// aapt resource value: 0x7F050006
-			public const int LightGreyFillColor1 = 2131034118;
+			public const int LightGreyColor1 = 2131034118;
 			
 			// aapt resource value: 0x7F050007
-			public const int LightGreyFillColor2 = 2131034119;
+			public const int LightGreyColor2 = 2131034119;
 			
 			// aapt resource value: 0x7F050070
 			public const int light_grey = 2131034224;
@@ -3877,7 +3877,7 @@ namespace FamiStudio
 			public const int material_timepicker_modebutton_tint = 2131034258;
 			
 			// aapt resource value: 0x7F050008
-			public const int MediumGreyFillColor1 = 2131034120;
+			public const int MediumGreyColor1 = 2131034120;
 			
 			// aapt resource value: 0x7F050093
 			public const int mtrl_btn_bg_color_selector = 2131034259;

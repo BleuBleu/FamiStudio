@@ -306,9 +306,9 @@ namespace FamiStudio
             Debug.Assert((int)SpecialCharImageIndices.Count == SpecialCharImageNames.Length);
 
             if (Platform.IsMobile)
-                toolbarBrush = g.CreateSolidBrush(Theme.DarkGreyFillColor1);
+                toolbarBrush = g.CreateSolidBrush(Theme.DarkGreyColor4);
             else
-                toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1);
+                toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyColor5, Theme.DarkGreyColor4);
 
             warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
             bmpButtons = g.GetBitmapAtlasRefs(ButtonImageNames);
@@ -813,7 +813,7 @@ namespace FamiStudio
         private ButtonImageIndices OnRecordGetBitmap(ref Color tint)
         {
             if (App.IsRecording)
-                tint = Theme.DarkRedFillColor;
+                tint = Theme.DarkRedColor;
             return ButtonImageIndices.Rec; 
         }
 
@@ -945,7 +945,7 @@ namespace FamiStudio
                     continue;
 
                 var hover = btn.Rect.Contains(pt) && !Platform.IsMobile;
-                var tint = Theme.LightGreyFillColor1;
+                var tint = Theme.LightGreyColor1;
                 var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap(ref tint) : btn.BmpAtlasIndex;
                 var status = btn.Enabled == null ? ButtonStatus.Enabled : btn.Enabled();
                 var opacity = status == ButtonStatus.Enabled ? 1.0f : 0.25f;
@@ -966,10 +966,10 @@ namespace FamiStudio
             var colonSizeX = c.Graphics.MeasureString(":", timeCodeFont);
 
             var timeCodeSizeY = Height - timecodePosY * 2;
-            var textColor = App.IsRecording ? ThemeResources.DarkRedFillBrush : ThemeResources.LightGreyFillBrush2;
+            var textColor = App.IsRecording ? ThemeResources.DarkRedBrush : ThemeResources.LightGreyBrush2;
 
             c.PushTranslation(x, y);
-            c.FillAndDrawRectangle(0, 0, sx, sy, ThemeResources.BlackBrush, ThemeResources.LightGreyFillBrush2);
+            c.FillAndDrawRectangle(0, 0, sx, sy, ThemeResources.BlackBrush, ThemeResources.LightGreyBrush2);
 
             if (Settings.TimeFormat == 0 || famitrackerTempo) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -1020,7 +1020,7 @@ namespace FamiStudio
         {
             var scaling = WindowScaling;
             var message = tooltip;
-            var messageBrush = redTooltip ? warningBrush : ThemeResources.LightGreyFillBrush2;
+            var messageBrush = redTooltip ? warningBrush : ThemeResources.LightGreyBrush2;
             var messageFont = ThemeResources.FontMedium;
 
             if (!string.IsNullOrEmpty(notification))
@@ -1034,7 +1034,7 @@ namespace FamiStudio
                 else
                 {
                     message = (((((long)span.TotalMilliseconds) / 250) & 1) != 0) ? notification : "";
-                    messageBrush = notificationWarning ? warningBrush : ThemeResources.LightGreyFillBrush2;
+                    messageBrush = notificationWarning ? warningBrush : ThemeResources.LightGreyBrush2;
                     messageFont = notificationWarning ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
                 }
             }
@@ -1060,7 +1060,7 @@ namespace FamiStudio
 
                             if (specialCharacter.BmpIndex != SpecialCharImageIndices.Count)
                             {
-                                c.DrawBitmapAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyFillColor1);
+                                c.DrawBitmapAtlas(bmpSpecialCharacters[(int)specialCharacter.BmpIndex], posX, posY + specialCharacter.OffsetY, 1.0f, 1.0f, Theme.LightGreyColor1);
                             }
                             else
                             {
@@ -1131,7 +1131,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    var brush = c.Graphics.GetVerticalGradientBrush(Theme.DarkGreyFillColor2, Theme.DarkGreyFillColor1, LayoutSize);
+                    var brush = c.Graphics.GetVerticalGradientBrush(Theme.DarkGreyColor5, Theme.DarkGreyColor4, LayoutSize);
                     c.FillRectangle(0, 0, Width, RenderSize, toolbarBrush);
                     c.DrawLine(0, renderSize - 1, Width, renderSize - 1, ThemeResources.BlackBrush);
                 }
@@ -1185,13 +1185,13 @@ namespace FamiStudio
                 float scaleY = sy / -2; // D3D is upside down compared to how we display waves typically.
 
                 c.PushTransform(x, y + sy / 2, scaleX, scaleY);
-                c.DrawGeometry(oscilloscopeGeometry, ThemeResources.LightGreyFillBrush2, 1, true);
+                c.DrawGeometry(oscilloscopeGeometry, ThemeResources.LightGreyBrush2, 1, true);
                 c.PopTransform();
             }
             else
             {
                 c.PushTranslation(x, y + sy / 2);
-                c.DrawLine(0, 0, sx, 0, ThemeResources.LightGreyFillBrush2);
+                c.DrawLine(0, 0, sx, 0, ThemeResources.LightGreyBrush2);
                 c.PopTransform();
             }
 
@@ -1200,10 +1200,10 @@ namespace FamiStudio
                 Utils.SplitVersionNumber(Platform.ApplicationVersion, out var betaNumber);
 
                 if (betaNumber > 0)
-                    c.DrawText($"BETA {betaNumber}", ThemeResources.FontSmall, x + 4, y + 4, ThemeResources.LightRedFillBrush);
+                    c.DrawText($"BETA {betaNumber}", ThemeResources.FontSmall, x + 4, y + 4, ThemeResources.LightRedBrush);
             }
 
-            c.DrawRectangle(x, y, x + sx, y + sy, ThemeResources.LightGreyFillBrush2);
+            c.DrawRectangle(x, y, x + sx, y + sy, ThemeResources.LightGreyBrush2);
         }
 
         protected override void OnMouseLeave(EventArgs e)

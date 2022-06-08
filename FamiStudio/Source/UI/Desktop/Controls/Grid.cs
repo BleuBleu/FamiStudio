@@ -437,19 +437,19 @@ namespace FamiStudio
             for (var j = 0; j < columnOffsets.Length - 1; j++)
                 c.DrawLine(columnOffsets[j], 0, columnOffsets[j], height, ThemeResources.BlackBrush);
             if (numHeaderRows != 0)
-                c.DrawLine(0, rowHeight, width - 1, rowHeight, ThemeResources.LightGreyFillBrush1);
+                c.DrawLine(0, rowHeight, width - 1, rowHeight, ThemeResources.LightGreyBrush1);
 
             // BG
-            c.FillAndDrawRectangle(0, 0, width - 1, height, ThemeResources.DarkGreyLineBrush1, ThemeResources.LightGreyFillBrush1);
+            c.FillAndDrawRectangle(0, 0, width - 1, height, ThemeResources.DarkGreyBrush1, ThemeResources.LightGreyBrush1);
 
             var baseY = 0;
 
             // Header
             if (numHeaderRows != 0)
             {
-                c.FillRectangle(0, 0, width, rowHeight, ThemeResources.DarkGreyLineBrush3);
+                c.FillRectangle(0, 0, width, rowHeight, ThemeResources.DarkGreyBrush3);
                 for (var j = 0; j < columns.Length; j++) 
-                    c.DrawText(columns[j].Name, ThemeResources.FontMedium, columnOffsets[j] + margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, rowHeight);
+                    c.DrawText(columns[j].Name, ThemeResources.FontMedium, columnOffsets[j] + margin, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft, 0, rowHeight);
                 baseY = rowHeight;
             }
 
@@ -460,9 +460,9 @@ namespace FamiStudio
                 if (hoverCol >= 0 && (hoverRow - scroll) >= 0 && hoverRow < data.GetLength(0))
                 {
                     if (fullRowSelect)
-                        c.FillRectangle(0, (numHeaderRows + hoverRow - scroll) * rowHeight, width, (numHeaderRows + hoverRow - scroll + 1) * rowHeight, ThemeResources.DarkGreyLineBrush3);
+                        c.FillRectangle(0, (numHeaderRows + hoverRow - scroll) * rowHeight, width, (numHeaderRows + hoverRow - scroll + 1) * rowHeight, ThemeResources.DarkGreyBrush3);
                     else
-                        c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, ThemeResources.DarkGreyLineBrush3);
+                        c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, ThemeResources.DarkGreyBrush3);
                 }
 
                 for (int i = 0, k = scroll; i < numItemRows && k < data.GetLength(0); i++, k++) // Rows
@@ -496,10 +496,10 @@ namespace FamiStudio
                             case ColumnType.Button:
                             {
                                 var buttonBaseX = colWidth - rowHeight;
-                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft, 0, rowHeight);
+                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft, 0, rowHeight);
                                 c.PushTranslation(buttonBaseX, 0);
-                                c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? ThemeResources.MediumGreyFillBrush1 : ThemeResources.DarkGreyLineBrush3, ThemeResources.LightGreyFillBrush1);
-                                c.DrawText("...", ThemeResources.FontMediumBold, 0, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleCenter, rowHeight, rowHeight);
+                                c.FillAndDrawRectangle(0, 0, rowHeight - 1, rowHeight, hoverRow == k && hoverCol == j && hoverButton ? ThemeResources.MediumGreyBrush1 : ThemeResources.DarkGreyBrush3, ThemeResources.LightGreyBrush1);
+                                c.DrawText("...", ThemeResources.FontMediumBold, 0, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleCenter, rowHeight, rowHeight);
                                 c.PopTransform();
                                 break;
                             }
@@ -507,18 +507,18 @@ namespace FamiStudio
                             {
                                 if (colEnabled)
                                 {
-                                    c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, ThemeResources.DarkGreyFillBrush3);
-                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.FillRectangle(0, 0, (int)Math.Round((int)val / 100.0f * colWidth), rowHeight, ThemeResources.DarkGreyBrush6);
+                                    c.DrawText(string.Format(CultureInfo.InvariantCulture, col.StringFormat, (int)val), ThemeResources.FontMedium, 0, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
-                                    c.DrawText("N/A", ThemeResources.FontMedium, 0, 0, ThemeResources.MediumGreyFillBrush1, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.DrawText("N/A", ThemeResources.FontMedium, 0, 0, ThemeResources.MediumGreyBrush1, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 break;
                             }
                             case ColumnType.Label:
                             {
-                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
+                                c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
                                 break;
                             }
                             case ColumnType.CheckBox:
@@ -526,15 +526,15 @@ namespace FamiStudio
                                 var checkBaseX = (colWidth  - bmpCheckOn.ElementSize.Width)  / 2;
                                 var checkBaseY = (rowHeight - bmpCheckOn.ElementSize.Height) / 2;
                                 c.PushTranslation(checkBaseX, checkBaseY);
-                                c.DrawRectangle(0, 0, bmpCheckOn.ElementSize.Width - 1, bmpCheckOn.ElementSize.Height - 1, ThemeResources.LightGreyFillBrush1);
-                                c.DrawBitmapAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, 1, Theme.LightGreyFillColor1);
+                                c.DrawRectangle(0, 0, bmpCheckOn.ElementSize.Width - 1, bmpCheckOn.ElementSize.Height - 1, ThemeResources.LightGreyBrush1);
+                                c.DrawBitmapAtlas((bool)val ? bmpCheckOn : bmpCheckOff, 0, 0, 1, 1, Theme.LightGreyColor1);
                                 c.PopTransform();
                                 break;
                             }
                             case ColumnType.Image:
                             {
                                 var bmp = g.GetBitmapAtlasRef((string)val);
-                                c.DrawBitmapAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, Theme.LightGreyFillColor1);
+                                c.DrawBitmapAtlasCentered(bmp, 0, 0, checkBoxWidth, rowHeight, 1, 1, Theme.LightGreyColor1);
                                 break;
                             }
                         }
@@ -546,8 +546,8 @@ namespace FamiStudio
                 if (hasScrollBar)
                 {
                     c.PushTranslation(width - scrollBarWidth - 1, numHeaderRows * rowHeight);
-                    c.FillAndDrawRectangle(0, 0, scrollBarWidth, rowHeight * numItemRows, ThemeResources.DarkGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
-                    c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth, scrollBarPos + scrollBarSize, ThemeResources.MediumGreyFillBrush1, ThemeResources.LightGreyFillBrush1);
+                    c.FillAndDrawRectangle(0, 0, scrollBarWidth, rowHeight * numItemRows, ThemeResources.DarkGreyBrush4, ThemeResources.LightGreyBrush1);
+                    c.FillAndDrawRectangle(0, scrollBarPos, scrollBarWidth, scrollBarPos + scrollBarSize, ThemeResources.MediumGreyBrush1, ThemeResources.LightGreyBrush1);
                     c.PopTransform();
                 }
             }

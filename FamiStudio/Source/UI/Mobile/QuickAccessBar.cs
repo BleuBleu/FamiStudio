@@ -499,14 +499,14 @@ namespace FamiStudio
             for (int i = 0; i < items.Length - 1; i++)
             {
                 var item = new ListItem();
-                item.Color = Theme.LightGreyFillColor1;
+                item.Color = Theme.LightGreyColor1;
                 item.Image = bmpSnapOn;
                 item.Text = $"Snap to {SnapResolutionType.Names[i]} Beat{(SnapResolutionType.Factors[i] > 1.0 ? "s" : "")}";
                 items[i] = item;
             }
 
             var turnOffItem = new ListItem();
-            turnOffItem.Color = Theme.LightGreyFillColor1;
+            turnOffItem.Color = Theme.LightGreyColor1;
             turnOffItem.Image = bmpSnapOff;
             turnOffItem.Text = $"Snap Off";
             items[items.Length - 1] = turnOffItem;
@@ -537,7 +537,7 @@ namespace FamiStudio
             var items = new ListItem[count];
 
             var item = new ListItem();
-            item.Color = Theme.LightGreyFillColor1;
+            item.Color = Theme.LightGreyColor1;
             item.Image = bmpEffectNone;
             item.Text = "None";
             item.Data = -1;
@@ -548,7 +548,7 @@ namespace FamiStudio
                 if (channel.ShouldDisplayEffect(i))
                 {
                     item = new ListItem();
-                    item.Color = Theme.LightGreyFillColor1;
+                    item.Color = Theme.LightGreyColor1;
                     item.Image = bmpEffects[i];
                     item.Text = Note.EffectNames[i];
                     item.Data = i;
@@ -574,12 +574,12 @@ namespace FamiStudio
             var items = new ListItem[2];
 
             items[0] = new ListItem();
-            items[0].Color = Theme.LightGreyFillColor1;
+            items[0].Color = Theme.LightGreyColor1;
             items[0].Image = bmpEffectNone;
             items[0].Text = "None";
 
             items[1] = new ListItem();
-            items[1].Color = Theme.LightGreyFillColor1;
+            items[1].Color = Theme.LightGreyColor1;
             items[1].Image = bmpEffects[Note.EffectVolume];
             items[1].Text = "Volume Envelope";
 
@@ -607,7 +607,7 @@ namespace FamiStudio
             for (int i = 0; i < channelTypes.Length; i++)
             {
                 var item = new ListItem();
-                item.Color = Theme.LightGreyFillColor1;
+                item.Color = Theme.LightGreyColor1;
                 item.Image = bmpChannels[channelTypes[i]];
                 item.GetImageOpacity = (l) => { return App.IsChannelActive((int)l.Data) ? 1.0f : 0.2f; };
                 item.ExtraImage = bmpGhostSmall;
@@ -635,7 +635,7 @@ namespace FamiStudio
             if (editingChannel && channel.SupportsInstrument(null))
             {
                 var dpcmItem = new ListItem();
-                dpcmItem.Color = Theme.LightGreyFillColor1;
+                dpcmItem.Color = Theme.LightGreyColor1;
                 dpcmItem.Image = bmpExpansions[ExpansionType.None];
                 dpcmItem.Text = "DPCM";
                 items.Add(dpcmItem);
@@ -693,7 +693,7 @@ namespace FamiStudio
                 if (env != null)
                 {
                     var item = new ListItem();
-                    item.Color = Theme.LightGreyFillColor1;
+                    item.Color = Theme.LightGreyColor1;
                     item.Image = bmpEnvelopes[i];
                     item.GetImageOpacity = (l) => { return env.IsEmpty(i) ? 0.2f : 1.0f; };
                     item.Text = EnvelopeType.Names[i];
@@ -721,7 +721,7 @@ namespace FamiStudio
             if (!App.IsEditingArpeggio)
             {
                 var arpNoneItem = new ListItem();
-                arpNoneItem.Color = Theme.LightGreyFillColor1;
+                arpNoneItem.Color = Theme.LightGreyColor1;
                 arpNoneItem.Image = bmpArpeggio;
                 arpNoneItem.Text = "None";
                 items.Add(arpNoneItem);
@@ -757,21 +757,21 @@ namespace FamiStudio
         private BitmapAtlasRef GetSequencerRenderInfo(out string text, out Color tint)
         {
             text = null;
-            tint = App.ActiveControl == App.Sequencer ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
+            tint = App.ActiveControl == App.Sequencer ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
             return bmpSequencer;
         }
 
         private BitmapAtlasRef GetPianoRollRenderInfo(out string text, out Color tint)
         {
             text = null;
-            tint = App.ActiveControl == App.PianoRoll && App.IsEditingChannel ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
+            tint = App.ActiveControl == App.PianoRoll && App.IsEditingChannel ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
             return bmpPianoRoll;
         }
 
         private BitmapAtlasRef GetProjectExplorerInfo(out string text, out Color tint)
         {
             text = null;
-            tint = App.ActiveControl == App.ProjectExplorer || App.ActiveControl == App.PianoRoll && !App.IsEditingChannel ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1;
+            tint = App.ActiveControl == App.ProjectExplorer || App.ActiveControl == App.PianoRoll && !App.IsEditingChannel ? Theme.LightGreyColor1 : Theme.MediumGreyColor1;
             return bmpProjectExplorer;
         }
 
@@ -779,7 +779,7 @@ namespace FamiStudio
         {
             var snapEnabled = App.SnapEnabled;
             text = snapEnabled ? SnapResolutionType.Names[App.SnapResolution] : "Off";
-            tint = App.IsRecording ? Theme.DarkRedFillColor : Theme.LightGreyFillColor1;
+            tint = App.IsRecording ? Theme.DarkRedColor : Theme.LightGreyColor1;
             return snapEnabled ? bmpSnapOn : bmpSnapOff;
         }
 
@@ -788,14 +788,14 @@ namespace FamiStudio
             var validEffect = App.SelectedEffect >= 0 && App.EffectPanelExpanded;
 
             text = validEffect ? Note.EffectNames[App.SelectedEffect] : "None";
-            tint = Theme.LightGreyFillColor1;
+            tint = Theme.LightGreyColor1;
             return validEffect ? bmpEffects[App.SelectedEffect] : bmpEffectNone;
         }
 
         private BitmapAtlasRef GetDPCMEffectRenderInfo(out string text, out Color tint)
         {
             text = App.EffectPanelExpanded ? "Volume" : "None";
-            tint = Theme.LightGreyFillColor1;
+            tint = Theme.LightGreyColor1;
             return App.EffectPanelExpanded ? bmpEffects[Note.EffectVolume] : bmpEffectNone;
         }
 
@@ -809,7 +809,7 @@ namespace FamiStudio
         private BitmapAtlasRef GetChannelRenderInfo(out string text, out Color tint)
         {
             text = App.SelectedChannel.NameWithExpansion;
-            tint = Theme.LightGreyFillColor1;
+            tint = Theme.LightGreyColor1;
             return bmpChannels[App.SelectedChannel.Type];
         }
 
@@ -817,7 +817,7 @@ namespace FamiStudio
         {
             var inst = App.SelectedInstrument;
             text = inst != null ? inst.Name  : "DPCM";
-            tint = inst != null ? inst.Color : Theme.LightGreyFillColor1;
+            tint = inst != null ? inst.Color : Theme.LightGreyColor1;
             var exp = inst != null ? inst.Expansion : ExpansionType.None;
             return bmpExpansions[exp];
         }
@@ -827,7 +827,7 @@ namespace FamiStudio
             var envType = App.EditEnvelopeType;
             var inst = App.SelectedInstrument;
             text = EnvelopeType.ShortNames[envType];
-            tint = inst != null ? inst.Color : Theme.LightGreyFillColor1;
+            tint = inst != null ? inst.Color : Theme.LightGreyColor1;
             return bmpEnvelopes[envType];
         }
 
@@ -835,7 +835,7 @@ namespace FamiStudio
         {
             var arp = App.SelectedArpeggio;
             text = arp != null ? arp.Name  : "None";
-            tint = arp != null ? arp.Color : Theme.LightGreyFillColor1;
+            tint = arp != null ? arp.Color : Theme.LightGreyColor1;
             return bmpArpeggio;
         }
 
@@ -974,11 +974,11 @@ namespace FamiStudio
             var bgRect = new Rectangle(0, 0, Width, Height);
 
             var navBgBrush = IsLandscape ?
-                g.GetHorizontalGradientBrush(Theme.DarkGreyLineColor1, buttonSize, 0.8f) :
-                g.GetVerticalGradientBrush(Theme.DarkGreyLineColor1, buttonSize, 0.8f);
+                g.GetHorizontalGradientBrush(Theme.DarkGreyColor1, buttonSize, 0.8f) :
+                g.GetVerticalGradientBrush(Theme.DarkGreyColor1, buttonSize, 0.8f);
             var bgBrush = IsLandscape ?
-                g.GetHorizontalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f) :
-                g.GetVerticalGradientBrush(Theme.DarkGreyFillColor1, buttonSize, 0.8f);
+                g.GetHorizontalGradientBrush(Theme.DarkGreyColor4, buttonSize, 0.8f) :
+                g.GetVerticalGradientBrush(Theme.DarkGreyColor4, buttonSize, 0.8f);
 
             c.FillRectangle(bgRect, bgBrush);
             c.FillRectangle(navBgRect, navBgBrush);
@@ -994,7 +994,7 @@ namespace FamiStudio
                     c.DrawBitmapAtlas(bmp, btn.IconX, btn.IconY, 1.0f, iconScaleFloat, tint);
 
                     if (!string.IsNullOrEmpty(text))
-                        c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyFillBrush1, TextFlags.Center | TextFlags.Ellipsis, buttonSize, 0);
+                        c.DrawText(text, buttonFont, btn.TextX, btn.TextY, ThemeResources.LightGreyBrush1, TextFlags.Center | TextFlags.Ellipsis, buttonSize, 0);
                 }
             }
 

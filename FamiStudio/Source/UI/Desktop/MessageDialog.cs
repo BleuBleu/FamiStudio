@@ -49,18 +49,18 @@ namespace FamiStudio
         private void CreateControls(string text, MessageBoxButtons btns)
         {
             var imageName = "MessageInfo";
-            var tint = Theme.LightGreyFillColor1;
+            var tint = Theme.LightGreyColor1;
 
             if (btns == MessageBoxButtons.YesNo ||
                 btns == MessageBoxButtons.YesNoCancel)
             {
                 imageName = "MessageQuestion";
-                tint = Theme.SeekBarColor;
+                tint = Theme.YellowColor;
             }
             else if (text.ToLower().Contains("error"))
             {
                 imageName = "MessageError";
-                tint = Theme.DarkRedFillColor;
+                tint = Theme.DarkRedColor;
             }
 
             image = new ImageBox(this, imageName);
