@@ -685,60 +685,6 @@ namespace FamiStudio
 
             return x;
         }
-
-        /*
-        public void MeasureString(string text, bool mono, out int minX, out int maxX)
-        {
-            minX = 0;
-            maxX = 0;
-
-            int x = 0;
-
-            if (mono)
-            {
-                var info = GetCharInfo('0');
-
-                for (int i = 0; i < text.Length; i++)
-                {
-                    var c0 = text[i];
-                    int x0 = x + info.xoffset;
-                    int x1 = x0 + info.width;
-
-                    minX = Math.Min(minX, x0);
-                    maxX = Math.Max(maxX, x1);
-
-                    x += info.xadvance;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < text.Length; i++)
-                {
-                    var c0 = text[i];
-                    var info = GetCharInfo(c0);
-
-                    int x0 = x + info.xoffset;
-                    int x1 = x0 + info.width;
-
-                    minX = Math.Min(minX, x0);
-                    maxX = Math.Max(maxX, x1);
-
-                    x += info.xadvance;
-                    if (i != text.Length - 1)
-                    {
-                        char c1 = text[i + 1];
-                        x += GetKerning(c0, c1);
-                    }
-                }
-            }
-        }
-
-        public int MeasureString(string text, bool mono)
-        {
-            MeasureString(text, mono, out var minX, out var maxX);
-            return maxX - minX;
-        }
-        */
     }
 
     public class Geometry : IDisposable
@@ -1985,7 +1931,6 @@ namespace FamiStudio
 
                     if (inst.flags != TextFlags.TopLeft)
                     {
-                        // MATTT : We no longer have minX in Measure string, is it a problem?
                         var minX = 0;
                         var maxX = font.MeasureString(inst.text, mono);
 
