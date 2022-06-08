@@ -670,8 +670,8 @@ namespace FamiStudio
             {
                 Debug.Assert(controls.CanAcceptInput);
 
-                ctrlX = formX - captureControl.Left;
-                ctrlY = formY - captureControl.Top;
+                ctrlX = formX - captureControl.WindowLeft;
+                ctrlY = formY - captureControl.WindowTop;
                 return captureControl;
             }
             else if (controls.CanAcceptInput)

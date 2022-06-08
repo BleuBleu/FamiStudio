@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {

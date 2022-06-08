@@ -77,8 +77,8 @@ namespace FamiStudio
             // Don't send any events if the context menu is visible.
             if (contextMenuVisible)
             {
-                ctrlX = formX - contextMenu.Left;
-                ctrlY = formY - contextMenu.Top;
+                ctrlX = formX - contextMenu.WindowLeft;
+                ctrlY = formY - contextMenu.WindowTop;
 
                 if (ctrlX >= 0 &&
                     ctrlY >= 0 &&
@@ -98,8 +98,8 @@ namespace FamiStudio
             // Finally, send to one of the main controls.
             foreach (var ctrl in controls)
             {
-                ctrlX = formX - ctrl.Left;
-                ctrlY = formY - ctrl.Top;
+                ctrlX = formX - ctrl.WindowLeft;
+                ctrlY = formY - ctrl.WindowTop;
 
                 if (ctrlX >= 0 &&
                     ctrlY >= 0 &&
@@ -195,7 +195,7 @@ namespace FamiStudio
 
                 foreach (var control in controls)
                 {
-                    gfx.BeginDrawControl(control.Rectangle, height);
+                    gfx.BeginDrawControl(control.WindowRectangle, height);
                     control.Render(gfx);
                     control.ClearDirtyFlag();
                 }
@@ -211,7 +211,7 @@ namespace FamiStudio
                 foreach (var dlg in dialogs)
                 {
                     gfx.BeginDrawControl(fullWindowRect, height);
-                    gfx.Transform.PushTranslation(dlg.Left, dlg.Top);
+                    gfx.Transform.PushTranslation(dlg.WindowLeft, dlg.WindowTop);
                     dlg.Render(gfx);
                     dlg.ClearDirtyFlag();
                     gfx.Transform.PopTransform();
@@ -219,7 +219,7 @@ namespace FamiStudio
 
                 if (contextMenuVisible)
                 {
-                    gfx.BeginDrawControl(contextMenu.Rectangle, height);
+                    gfx.BeginDrawControl(contextMenu.WindowRectangle, height);
                     contextMenu.Render(gfx);
                 }
 

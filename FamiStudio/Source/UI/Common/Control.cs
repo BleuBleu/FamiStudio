@@ -97,13 +97,13 @@ namespace FamiStudio
         public Point PointToClient(Point p) { return parentWindow.PointToClient(this, p); }
         public Point PointToScreen(Point p) { return parentWindow.PointToScreen(this, p); }
         public Rectangle ClientRectangle => new Rectangle(0, 0, width, height);
-        public Rectangle Rectangle => new Rectangle(Left, Top, Width, Height);
+        public Rectangle WindowRectangle => new Rectangle(WindowLeft, WindowTop, Width, Height);
         public Size ParentWindowSize => parentWindow.Size;
         public bool IsLandscape => parentWindow.IsLandscape;
-        public int Left => parentDialog != null ? left + parentDialog.left : left;
-        public int Top => parentDialog != null ? top + parentDialog.top : top;
-        public int Right => Left + width;
-        public int Bottom => Top + height;
+        public int WindowLeft => parentDialog != null ? left + parentDialog.left : left;
+        public int WindowTop => parentDialog != null ? top + parentDialog.top : top;
+        public int WindowRight => WindowLeft + width;
+        public int WindowBottom => WindowTop + height;
         public int Width => width;
         public int Height => height;
         public bool Capture { set { if (value) parentWindow.CaptureMouse(this); else parentWindow.ReleaseMouse(); } }

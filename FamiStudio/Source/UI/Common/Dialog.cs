@@ -157,13 +157,13 @@ namespace FamiStudio
             {
                 if (ctrl.Visible && ctrl.HasDialogFocus == focused)
                 {
-                    var dlgX = ctrl.Left - Left;
-                    var dlgY = ctrl.Top - Top;
+                    var dlgX = ctrl.WindowLeft - WindowLeft;
+                    var dlgY = ctrl.WindowTop - WindowTop;
 
-                    if (ctrl.Rectangle.Contains(formX, formY))
+                    if (ctrl.WindowRectangle.Contains(formX, formY))
                     {
-                        ctrlX = formX - ctrl.Left;
-                        ctrlY = formY - ctrl.Top;
+                        ctrlX = formX - ctrl.WindowLeft;
+                        ctrlY = formY - ctrl.WindowTop;
 
                         return ctrl;
                     }
@@ -288,13 +288,13 @@ namespace FamiStudio
                 if (ctrl.Visible)
                 {
                     // MATTT : This is stupid, need DialogLeft too?
-                    g.Transform.PushTranslation(ctrl.Left - Left, ctrl.Top - Top);
+                    g.Transform.PushTranslation(ctrl.WindowLeft - WindowLeft, ctrl.WindowTop - WindowTop);
                     ctrl.Render(g);
                     g.Transform.PopTransform();
                 }
             }
 
-            g.DrawCommandList(commandList, Rectangle);
+            g.DrawCommandList(commandList, WindowRectangle);
             g.DrawCommandList(commandListForeground);
 
             commandList = null;

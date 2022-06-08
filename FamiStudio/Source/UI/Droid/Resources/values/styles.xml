@@ -3,9 +3,9 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/DarkGreyLineColor1</item>
-        <item name="colorPrimaryDark">@color/DarkGreyLineColor1</item>
-        <item name="colorAccent">@color/LightGreyFillColor1</item>
+        <item name="colorPrimary">@color/DarkGreyColor1</item>
+        <item name="colorPrimaryDark">@color/DarkGreyColor1</item>
+        <item name="colorAccent">@color/LightGreyColor1</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -17,8 +17,8 @@
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
 
     <style name="ToolbarTheme">
-        <item name="android:textColorPrimary">@color/LightGreyFillColor2</item>
-        <item name="actionMenuTextColor">@color/LightGreyFillColor2</item>
+        <item name="android:textColorPrimary">@color/LightGreyColor2</item>
+        <item name="actionMenuTextColor">@color/LightGreyColor2</item>
     </style>
 
     <style name="DarkBackgroundStyle">
@@ -51,13 +51,13 @@
     </style>
 
     <style name="LightGrayCheckBox" parent="TextBase">
-        <item name="android:textColorPrimaryDisableOnly">@color/LightGreyFillColor2</item> <!-- For check boxes -->
-        <item name="android:buttonTint">@color/LightGreyFillColor2</item>
+        <item name="android:textColorPrimaryDisableOnly">@color/LightGreyColor2</item> <!-- For check boxes -->
+        <item name="android:buttonTint">@color/LightGreyColor2</item>
         <item name="android:textSize">12dp</item>
     </style>
 
     <style name="LightGraySeekBar">
-        <item name="android:progressBackgroundTint">@color/LightGreyFillColor2</item>
+        <item name="android:progressBackgroundTint">@color/LightGreyColor2</item>
     </style>
 
     <style name="SpinnerItem" parent="TextBase">

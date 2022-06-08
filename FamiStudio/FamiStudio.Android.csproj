@@ -273,6 +273,7 @@
     <Compile Include="Source\Project\UndoRedo.cs" />
     <Compile Include="Source\UI\Common\ConfigDialog.cs" />
     <Compile Include="Source\UI\Common\Control.cs" />
+    <Compile Include="Source\UI\Common\Cursors.cs" />
     <Compile Include="Source\UI\Common\DeleteSpecialDialog.cs" />
     <Compile Include="Source\UI\Common\Dialog.cs" />
     <Compile Include="Source\UI\Common\DpiScaling.cs" />
@@ -294,7 +295,6 @@
     <Compile Include="Source\UI\Common\ThemeRenderResources.cs" />
     <Compile Include="Source\UI\Common\Toolbar.cs" />
     <Compile Include="Source\UI\Common\TransformDialog.cs" />
-    <Compile Include="Source\UI\Droid\Cursors.cs" />
     <Compile Include="Source\UI\Droid\DroidUtils.cs" />
     <Compile Include="Source\UI\Droid\FamiStudioWindow.cs" />
     <Compile Include="Source\UI\Droid\MobileProjectDialog.cs" />

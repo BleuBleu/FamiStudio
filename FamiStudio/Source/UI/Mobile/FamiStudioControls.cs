@@ -137,8 +137,8 @@ namespace FamiStudio
 
         private bool IsPointInControl(Control ctrl, int x, int y, out int ctrlX, out int ctrlY)
         {
-            ctrlX = x - ctrl.Left;
-            ctrlY = y - ctrl.Top;
+            ctrlX = x - ctrl.WindowLeft;
+            ctrlY = y - ctrl.WindowTop;
 
             if (ctrlX >= 0 &&
                 ctrlY >= 0 &&
@@ -223,12 +223,12 @@ namespace FamiStudio
             if (fullscreenViewport)
                 gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
             else
-                gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.Left, ctrl.Top, ctrl.Width, ctrl.Height), height);
+                gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.WindowLeft, ctrl.WindowTop, ctrl.Width, ctrl.Height), height);
 
             gfx.SetLineBias(2);
 
             if (fullscreenViewport)
-                gfx.Transform.PushTranslation(ctrl.Left, ctrl.Top);
+                gfx.Transform.PushTranslation(ctrl.WindowLeft, ctrl.WindowTop);
 
             var t0 = DateTime.Now;
             ctrl.Render(gfx);
@@ -259,7 +259,7 @@ namespace FamiStudio
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
                 var brush = gfx.GetSolidBrush(System.Drawing.Color.FromArgb(alpha, Theme.DarkGreyColor4));
 
-                cmd.FillRectangle(activeControl.Left, activeControl.Top, activeControl.Right, activeControl.Bottom, brush);
+                cmd.FillRectangle(activeControl.WindowLeft, activeControl.WindowTop, activeControl.WindowRight, activeControl.WindowBottom, brush);
 
                 gfx.DrawCommandList(cmd);
                 gfx.EndDrawControl();

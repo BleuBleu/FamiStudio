@@ -277,12 +277,12 @@ namespace FamiStudio
         public Point PointToClient(Control ctrl, Point p)
         {
             p = PointToClient(p);
-            return new Point(p.X - ctrl.Left, p.Y - ctrl.Top);
+            return new Point(p.X - ctrl.WindowLeft, p.Y - ctrl.WindowTop);
         }
 
         public Point PointToScreen(Control ctrl, Point p)
         {
-            p = new Point(p.X + ctrl.Left, p.Y + ctrl.Top);
+            p = new Point(p.X + ctrl.WindowLeft, p.Y + ctrl.WindowTop);
             return PointToScreen(p);
         }
 
@@ -426,8 +426,8 @@ namespace FamiStudio
                 if (captureControl != null)
                 {
                     ctrl = captureControl;
-                    cx = lastCursorX - ctrl.Left;
-                    cy = lastCursorY - ctrl.Top;
+                    cx = lastCursorX - ctrl.WindowLeft;
+                    cy = lastCursorY - ctrl.WindowTop;
                 }
                 else
                 {
@@ -464,8 +464,8 @@ namespace FamiStudio
             if (captureControl != null)
             {
                 ctrl = captureControl;
-                cx = lastCursorX - ctrl.Left;
-                cy = lastCursorY - ctrl.Top;
+                cx = lastCursorX - ctrl.WindowLeft;
+                cy = lastCursorY - ctrl.WindowTop;
                 hover = controls.GetControlAtCoord(lastCursorX, lastCursorY, out _, out _);
             }
             else

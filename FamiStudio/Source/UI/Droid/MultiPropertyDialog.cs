@@ -43,7 +43,7 @@ namespace FamiStudio
         public int SelectedIndex => selectedIndex;
         public FamiStudioWindow ParentWindow => FamiStudioWindow.Instance;
 
-        public MultiPropertyDialog(FamiStudioWindow win, string text, int width, int height, int tabsWidth = 150)
+        public MultiPropertyDialog(FamiStudioWindow win, string text, int width, int tabsWidth = 150)
         {
             title = text;
         }
