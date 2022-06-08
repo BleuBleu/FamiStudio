@@ -32,13 +32,6 @@ namespace FamiStudio
             }
 
             ShutdownBaseSystems();
-
-            // We sometimes gets stuck here on Linux (likely a thread that we dont control still running), lets abort.
-            // MATTT : Still true?
-            if (Platform.IsLinux)
-            {
-                Environment.Exit(0);
-            }
         }
     }
 }
