@@ -75,7 +75,7 @@ namespace FamiStudio
         private readonly string AutosaveFolderTooltip           = "Click to open the auto save folder.";
 
         // Input
-        private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that pinch-to-zoom is not supported on Linux, you will have to hold CTRL or ALT and scroll up/down to zoom."; // MATTT : Still true?
+        private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that pinch-to-zoom is not supported on Linux, you will have to hold CTRL or ALT and scroll up/down to zoom.";
 
         // UI
         private readonly string ScalingTooltip                  = "Overall scaling of the main FamiStudio window. Leave it to 'System' if you want FamiStudio to automatically detect it based on the system configuration.";
@@ -192,7 +192,7 @@ namespace FamiStudio
                     page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 7
                     page.AddCheckBox("Use Operating System Dialogs:", Settings.UseOSDialogs, UseOSDialogsTooltip); // 8
                         
-                    page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. MATTT : Review this!!!
+                    page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. 
                     page.SetPropertyVisible(3, Platform.IsDesktop);
                     page.SetPropertyVisible(4, Platform.IsDesktop);
                     page.SetPropertyVisible(6, Platform.IsDesktop);

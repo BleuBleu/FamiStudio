@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 
 namespace FamiStudio
 {
-    // MATTT : Clean this up!!! Remove anything that isnt needed anymore.
     static class MacUtils
     {
         static IntPtr appKitLib;
@@ -378,7 +377,6 @@ namespace FamiStudio
 
         public static string FromNSString(IntPtr handle)
         {
-            // MATTT : Test this with unicode characters.
             return Marshal.PtrToStringAuto(SendIntPtr(handle, selUTF8String));
         }
 

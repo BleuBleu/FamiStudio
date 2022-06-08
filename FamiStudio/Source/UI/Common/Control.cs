@@ -316,11 +316,11 @@ namespace FamiStudio
     {
         Unknown = -1,
         Space = 32,
-        Apostrophe = 39, // MATTT : Check that on Linux/MacOS.
-        Comma = 44, // MATTT : Check that on Linux/MacOS.
-        Minus = 45, // MATTT : Check that on Linux/MacOS.
-        Period = 46, // MATTT : Check that on Linux/MacOS.
-        Slash = 47, // MATTT : Check that on Linux/MacOS.
+        Apostrophe = 39,
+        Comma = 44,
+        Minus = 45,
+        Period = 46,
+        Slash = 47,
         D0 = 48,
         D1 = 49,
         D2 = 50,
@@ -331,8 +331,8 @@ namespace FamiStudio
         D7 = 55,
         D8 = 56,
         D9 = 57,
-        SemiColon = 59, // MATTT : Check that on Linux/MacOS.
-        Equal = 61, // MATTT : Check that on Linux/MacOS.
+        SemiColon = 59,
+        Equal = 61,
         A = 65,
         B = 66,
         C = 67,
@@ -359,9 +359,9 @@ namespace FamiStudio
         X = 88,
         Y = 89,
         Z = 90,
-        LeftBracket = 91, // MATTT : Check that on Linux/MacOS.
-        BackSlash = 92, // MATTT : Check that on Linux/MacOS.
-        RightBracket = 93, // MATTT : Check that on Linux/MacOS.
+        LeftBracket = 91,
+        BackSlash = 92,
+        RightBracket = 93,
         Escape = 256,
         Enter = 257,
         Tab = 258,

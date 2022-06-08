@@ -11,17 +11,10 @@
 =====
 - Double click/Shift click to clear effect value.
 - Change Shift+click for fine to Alt (effect + slider.)
+- Right click to play source sample sshouldnt pop ctx menu.
+- All remaining MATTT
 - Is CPU usage higher?
 / CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
-/ GLFW : Pinch to zoom? Test Windows + Linux too. 
-- GLFW : Mouse wheel, remove hacks, test on all platform. Make sure scroll direction is consistent on all platforms.
-/ Move trackpad sensitivity to General Settings (not just MacOS.)
-- Add Flip trackpack dir X/Y.
-	=> Set correct direction for each OS.
-			- Linux   : Scrolling moves the content. Scroll up, content goes up.
-			- Windows : Scrolling moves the content. Scroll up, content goes up.
-			- MacOS   : 
-	=> Linux will need a trackpad zoom (Alt?).
 
 P1:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

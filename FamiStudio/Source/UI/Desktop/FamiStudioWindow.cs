@@ -524,7 +524,6 @@ namespace FamiStudio
 
                 const float Multiplier = Platform.IsWindows ? 10.0f : 2.0f;
 
-                // MATTT : Test this on all platforms.
                 var scrollX = -(float)xoffset * Settings.TrackPadMoveSensitity * Multiplier;
                 var scrollY =  (float)yoffset * Settings.TrackPadMoveSensitity * Multiplier;
 
