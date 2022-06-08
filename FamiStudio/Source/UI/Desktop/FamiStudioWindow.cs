@@ -211,7 +211,6 @@ namespace FamiStudio
 
         private void Tick()
         {
-            // MATTT : Do the 0.25 clamp on mobile too!!
             var tickTime = glfwGetTime();
 
             if (lastTickTime < 0.0)

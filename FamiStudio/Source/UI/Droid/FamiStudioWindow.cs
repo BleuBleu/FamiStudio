@@ -351,7 +351,7 @@ namespace FamiStudio
 
             if (glThreadIsRunning && !IsAsyncDialogInProgress)
             {
-                float deltaTime = (float)((frameTimeNanos - lastFrameTime) / 1000000000.0);
+                var deltaTime = (float)Math.Min(0.25f, (float)((frameTimeNanos - lastFrameTime) / 1000000000.0));
 
                 lock (renderLock)
                 {
