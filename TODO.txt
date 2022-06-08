@@ -15,6 +15,7 @@
 - All remaining MATTT
 - Is CPU usage higher?
 / CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
+- MobileMenuIcons arent white????
 
 P1:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

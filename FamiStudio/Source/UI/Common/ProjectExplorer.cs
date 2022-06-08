@@ -3209,17 +3209,10 @@ namespace FamiStudio
             if (e.Left)
             {
                 StartMoveSlider(e.X, e.Y, button, buttonIdx);
-            }
-            else
-            {
-                // MATTT : Wait, isnt there a context menu here?
-                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-                button.param.SetValue(button.param.DefaultValue);
-                App.UndoRedoManager.EndTransaction();
-                MarkDirty();
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         private void ClickParamCheckbox(int x, int y, Button button, bool reset)

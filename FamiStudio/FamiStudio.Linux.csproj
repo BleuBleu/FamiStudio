@@ -515,6 +515,8 @@
     <EmbeddedResource Include="Resources\MenuRadio@2x.tga" />
     <EmbeddedResource Include="Resources\MenuRelease.tga" />
     <EmbeddedResource Include="Resources\MenuRelease@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuReset.tga" />
+    <EmbeddedResource Include="Resources\MenuReset@2x.tga" />
     <EmbeddedResource Include="Resources\MenuSave.tga" />
     <EmbeddedResource Include="Resources\MenuSave@2x.tga" />
     <EmbeddedResource Include="Resources\MenuSelectAll.tga" />
