@@ -287,8 +287,7 @@ namespace FamiStudio
             {
                 if (ctrl.Visible)
                 {
-                    // MATTT : This is stupid, need DialogLeft too?
-                    g.Transform.PushTranslation(ctrl.WindowLeft - WindowLeft, ctrl.WindowTop - WindowTop);
+                    g.Transform.PushTranslation(WindowLeft + ctrl.Left, WindowTop + ctrl.Top);
                     ctrl.Render(g);
                     g.Transform.PopTransform();
                 }

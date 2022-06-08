@@ -100,6 +100,10 @@ namespace FamiStudio
         public Rectangle WindowRectangle => new Rectangle(WindowLeft, WindowTop, Width, Height);
         public Size ParentWindowSize => parentWindow.Size;
         public bool IsLandscape => parentWindow.IsLandscape;
+        public int Left => left;
+        public int Top => top;
+        public int Right => left + width;
+        public int Bottom => top + height;
         public int WindowLeft => parentDialog != null ? left + parentDialog.left : left;
         public int WindowTop => parentDialog != null ? top + parentDialog.top : top;
         public int WindowRight => WindowLeft + width;
