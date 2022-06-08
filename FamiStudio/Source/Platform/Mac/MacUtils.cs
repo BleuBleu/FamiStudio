@@ -35,9 +35,6 @@ namespace FamiStudio
         public extern static void SendVoid(IntPtr receiver, IntPtr selector, IntPtr intPtr1, IntPtr intPtr2, IntPtr intPtr3, IntPtr intPtr4);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
-        public extern static void SendVoid(IntPtr receiver, IntPtr selector, NSRect rect1, IntPtr intPtr1);
-
-        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static int SendInt(IntPtr receiver, IntPtr selector);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
@@ -64,26 +61,14 @@ namespace FamiStudio
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, int int1);
 
-        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
-        public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, NSPoint point1);
+        //[DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        //public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, IntPtr intPtr1, NSPoint point1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, uint uint1, IntPtr intPtr1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
         public extern static IntPtr SendIntPtr(IntPtr receiver, IntPtr selector, uint uint1, IntPtr intPtr1, IntPtr intPtr2, bool bool1);
-
-        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
-        public static extern NSPointF SendPointF(IntPtr receiver, IntPtr selector);
-
-        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
-        public static extern NSPointD SendPointD(IntPtr receiver, IntPtr selector);
-
-        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend_stret")]
-        private static extern void SendRect(out NSRect retval, IntPtr receiver, IntPtr selector);
-
-        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend_stret")]
-        private static extern void SendRect(out NSRect retval, IntPtr receiver, IntPtr selector, NSRect rect1);
 
         [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "class_replaceMethod")]
         public static extern void ClassReplaceMethod(IntPtr classHandle, IntPtr selector, IntPtr method, string types);
@@ -225,6 +210,7 @@ namespace FamiStudio
         static IntPtr selAddObserver = SelRegisterName("addObserver:selector:name:object:");
         static IntPtr selSharedApplication = SelRegisterName("sharedApplication");
         static IntPtr selInitWithTitleActionKeyEquivalent = SelRegisterName("initWithTitle:action:keyEquivalent:");
+        static IntPtr selDelegate = SelRegisterName("delegate");
         static IntPtr selSetTarget = SelRegisterName("setTarget:");
         static IntPtr selNew = SelRegisterName("new");
         static IntPtr selAddItem = SelRegisterName("addItem:");
@@ -319,10 +305,11 @@ namespace FamiStudio
         {
             var quitMenuItem = SendIntPtr(clsNSMenuItem, selAlloc);
 
-            // MATTT : The quit menu seems disabled?
-
             SendIntPtr(quitMenuItem, selInitWithTitleActionKeyEquivalent, ToNSString("Quit"), SelRegisterName("windowShouldClose:"), ToNSString(""));
-            SendVoid(quitMenuItem, selSetTarget, nsWindow);
+
+            // GLFW uses a delegate.
+            var del = SendIntPtr(nsWindow, selDelegate);
+            SendVoid(quitMenuItem, selSetTarget, del);
 
             var appMenu = SendIntPtr(clsNSMenu, selNew);
             SendIntPtr(appMenu, selAddItem, quitMenuItem);
@@ -372,30 +359,6 @@ namespace FamiStudio
                     handle = SendIntPtr(handle, selInitWithCharactersLength, (IntPtr)ptrFirstChar, str.Length);
                     return handle;
                 }
-            }
-        }
-
-        public static string FromNSString(IntPtr handle)
-        {
-            return Marshal.PtrToStringAuto(SendIntPtr(handle, selUTF8String));
-        }
-
-        public static string GetClassName(IntPtr obj)
-        {
-            return FromNSString(SendIntPtr(obj, selClassName));
-        }
-
-        public static void RegisterMethod(IntPtr handle, Delegate d, string selector, string typeString)
-        {
-            // TypeString info:
-            // https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html
-
-            var p = Marshal.GetFunctionPointerForDelegate(d);
-            var r = ClassAddMethod(handle, SelRegisterName(selector), p, typeString);
-
-            if (!r)
-            {
-                throw new ArgumentException("Could not register method " + d + " in class " + GetClassName(handle));
             }
         }
 
@@ -449,194 +412,6 @@ namespace FamiStudio
             }
 
             return items;
-        }
-
-        internal struct NSFloat
-        {
-            public IntPtr Value;
-
-            public static implicit operator NSFloat(float v)
-            {
-                var f = new NSFloat();
-                unsafe
-                {
-                    if (IntPtr.Size == 4)
-                    {
-                        f.Value = *(IntPtr*)&v;
-                    }
-                    else
-                    {
-                        double d = v;
-                        f.Value = *(IntPtr*)&d;
-                    }
-                }
-
-                return f;
-            }
-
-            public static implicit operator NSFloat(double v)
-            {
-                var f = new NSFloat();
-                unsafe
-                {
-                    if (IntPtr.Size == 4)
-                    {
-                        var fv = (float)v;
-                        f.Value = *(IntPtr*)&fv;
-                    }
-                    else
-                    {
-                        f.Value = *(IntPtr*)&v;
-                    }
-                }
-
-                return f;
-            }
-
-            public static implicit operator float(NSFloat f)
-            {
-                unsafe
-                {
-                    if (IntPtr.Size == 4)
-                    {
-                        return *(float*)&f.Value;
-                    }
-
-                    return (float)*(double*)&f.Value;
-                }
-            }
-
-            public static implicit operator double(NSFloat f)
-            {
-                unsafe
-                {
-                    if (IntPtr.Size == 4)
-                    {
-                        return *(float*)&f.Value;
-                    }
-
-                    return *(double*)&f.Value;
-                }
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct NSPoint
-        {
-            public NSFloat X;
-            public NSFloat Y;
-
-            public static implicit operator NSPoint(System.Drawing.PointF p)
-            {
-                return new NSPoint
-                {
-                    X = p.X,
-                    Y = p.Y
-                };
-            }
-
-            public static implicit operator System.Drawing.PointF(NSPoint s)
-            {
-                return new System.Drawing.PointF(s.X, s.Y);
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct NSPointF
-        {
-            public float X;
-            public float Y;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct NSPointD
-        {
-            public double X;
-            public double Y;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct NSSize
-        {
-            public NSFloat Width;
-            public NSFloat Height;
-
-            public static implicit operator NSSize(System.Drawing.SizeF s)
-            {
-                return new NSSize
-                {
-                    Width = s.Width,
-                    Height = s.Height
-                };
-            }
-
-            public static implicit operator System.Drawing.SizeF(NSSize s)
-            {
-                return new System.Drawing.SizeF(s.Width, s.Height);
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct NSRect
-        {
-            public NSPoint Location;
-            public NSSize Size;
-
-            public NSFloat Width => Size.Width;
-            public NSFloat Height => Size.Height;
-            public NSFloat X => Location.X;
-            public NSFloat Y => Location.Y;
-
-            public static implicit operator NSRect(System.Drawing.RectangleF s)
-            {
-                return new NSRect
-                {
-                    Location = s.Location,
-                    Size = s.Size
-                };
-            }
-
-            public static implicit operator System.Drawing.RectangleF(NSRect s)
-            {
-                return new System.Drawing.RectangleF(s.Location, s.Size);
-            }
-        }
-
-        public static NSPoint SendPoint(IntPtr receiver, IntPtr selector)
-        {
-            var r = new NSPoint();
-
-            unsafe
-            {
-                if (IntPtr.Size == 4)
-                {
-                    var pf = SendPointF(receiver, selector);
-                    r.X.Value = *(IntPtr*)&pf.X;
-                    r.Y.Value = *(IntPtr*)&pf.Y;
-                }
-                else
-                {
-                    var pd = SendPointD(receiver, selector);
-                    r.X.Value = *(IntPtr*)&pd.X;
-                    r.Y.Value = *(IntPtr*)&pd.Y;
-                }
-            }
-
-            return r;
-        }
-
-        public static NSRect SendRect(IntPtr receiver, IntPtr selector)
-        {
-            NSRect r;
-            SendRect(out r, receiver, selector);
-            return r;
-        }
-
-        public static NSRect SendRect(IntPtr receiver, IntPtr selector, NSRect rect1)
-        {
-            NSRect r;
-            SendRect(out r, receiver, selector, rect1);
-            return r;
         }
 
         public static IntPtr GetCursorByName(string name)
