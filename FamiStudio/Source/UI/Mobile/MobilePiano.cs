@@ -4,15 +4,9 @@ using System.Diagnostics;
 using Color     = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 
-using RenderBitmapAtlas = FamiStudio.GLBitmapAtlas;
-using RenderBrush       = FamiStudio.GLBrush;
-using RenderControl     = FamiStudio.GLControl;
-using RenderGraphics    = FamiStudio.GLGraphics;
-using RenderFont        = FamiStudio.GLFont;
-
 namespace FamiStudio
 {
-    public class MobilePiano : RenderControl
+    public class MobilePiano : Control
     {
         const int NumOctaves = 8;
         const int NumNotes   = NumOctaves * 12;
@@ -33,29 +27,17 @@ namespace FamiStudio
             PlayPiano
         }
 
-        private enum ButtonImageIndices
-        {
-            MobilePianoDrag,
-            MobilePianoRest,
-            Count
-        };
-
-        private readonly string[] ButtonImageNames = new string[]
-        {
-            "MobilePianoDrag",
-            "MobilePianoRest"
-        };
-
         private int whiteKeySizeX;
         private int blackKeySizeX;
         private int octaveSizeX;
         private int virtualSizeX;
 
-        RenderBrush whiteKeyBrush;
-        RenderBrush blackKeyBrush;
-        RenderBrush whiteKeyPressedBrush;
-        RenderBrush blackKeyPressedBrush;
-        RenderBitmapAtlas bmpButtonAtlas;
+        Brush whiteKeyBrush;
+        Brush blackKeyBrush;
+        Brush whiteKeyPressedBrush;
+        Brush blackKeyPressedBrush;
+        BitmapAtlasRef bmpMobilePianoDrag;
+        BitmapAtlasRef bmpMobilePianoRest;
 
         private int scrollX = -1;
         private int playAbsNote = -1;
@@ -70,14 +52,17 @@ namespace FamiStudio
         
         public int LayoutSize => layoutSize;
 
-        protected override void OnRenderInitialized(RenderGraphics g)
+        public MobilePiano(FamiStudioWindow win) : base(win)
         {
-            Debug.Assert((int)ButtonImageIndices.Count == ButtonImageNames.Length);
+        }
 
-            var screenSize = PlatformUtils.GetScreenResolution();
+        protected override void OnRenderInitialized(Graphics g)
+        {
+            var screenSize = Platform.GetScreenResolution();
             layoutSize = Math.Min(screenSize.Width, screenSize.Height) / 4;
 
-            bmpButtonAtlas       = g.CreateBitmapAtlasFromResources(ButtonImageNames);
+            bmpMobilePianoDrag   = g.GetBitmapAtlasRef("MobilePianoDrag");
+            bmpMobilePianoRest   = g.GetBitmapAtlasRef("MobilePianoRest");
             whiteKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.LightGreyFillColor1, Theme.LightGreyFillColor2);
             blackKeyBrush        = g.CreateVerticalGradientBrush(0, layoutSize, Theme.DarkGreyFillColor1,  Theme.DarkGreyFillColor2);
             whiteKeyPressedBrush = g.CreateVerticalGradientBrush(0, layoutSize, Theme.Darken(Theme.LightGreyFillColor1), Theme.Darken(Theme.LightGreyFillColor2));
@@ -86,7 +71,7 @@ namespace FamiStudio
         
         private void UpdateRenderCoords()
         {
-            var screenSize = PlatformUtils.GetScreenResolution();
+            var screenSize = Platform.GetScreenResolution();
             var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
 
             whiteKeySizeX = ScaleCustom(DefaultWhiteKeySizeX, scale * zoom);
@@ -101,7 +86,6 @@ namespace FamiStudio
 
         protected override void OnRenderTerminated()
         {
-            Utils.DisposeAndNullify(ref bmpButtonAtlas);
             Utils.DisposeAndNullify(ref whiteKeyBrush);
             Utils.DisposeAndNullify(ref blackKeyBrush);
             Utils.DisposeAndNullify(ref whiteKeyPressedBrush);
@@ -126,7 +110,7 @@ namespace FamiStudio
             }
         }
 
-        public void Tick(float delta)
+        public override void Tick(float delta)
         {
             TickFling(delta);
         }
@@ -183,10 +167,10 @@ namespace FamiStudio
             return false;
         }
 
-        protected void RenderDebug(RenderGraphics g)
+        protected void RenderDebug(Graphics g)
         {
 #if DEBUG
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 var c = g.CreateCommandList();
                 c.FillRectangle(lastX - 30, lastY - 30, lastX + 30, lastY + 30, ThemeResources.WhiteBrush);
@@ -195,7 +179,7 @@ namespace FamiStudio
 #endif
         }
 
-        protected void RenderPiano(RenderGraphics g)
+        protected void RenderPiano(Graphics g)
         {
             int minVisibleOctave = Utils.Clamp((int)Math.Floor(scrollX / (float)octaveSizeX), 0, NumOctaves);
             int maxVisibleOctave = Utils.Clamp((int)Math.Ceiling((scrollX + Width) / (float)octaveSizeX), 0, NumOctaves);
@@ -262,7 +246,7 @@ namespace FamiStudio
             for (int i = minVisibleOctave; i < maxVisibleOctave; i++)
             {
                 var r = GetKeyRectangle(i, 0);
-                cp.DrawText("C" + i, ThemeResources.FontSmall, r.X, r.Y, ThemeResources.BlackBrush, RenderTextFlags.BottomCenter, r.Width, r.Height - ThemeResources.FontSmall.Size);
+                cp.DrawText("C" + i, ThemeResources.FontSmall, r.X, r.Y, ThemeResources.BlackBrush, TextFlags.BottomCenter, r.Width, r.Height - ThemeResources.FontSmall.Size);
             }
 
             // Drag images
@@ -273,18 +257,18 @@ namespace FamiStudio
                     var r = GetPanRectangle(i, j);
                     if (!r.IsEmpty)
                     {
-                        var size = bmpButtonAtlas.GetElementSize((int)ButtonImageIndices.MobilePianoDrag);
+                        var size = bmpMobilePianoDrag.ElementSize;
                         var scale = Math.Min(r.Width, r.Height) / (float)Math.Min(size.Width, size.Height);
                         var posX = r.X + r.Width / 2 - (int)(size.Width * scale / 2);
                         var posY = r.Height / 2 - (int)(size.Height * scale / 2);
-                        var imageIndex = App.IsRecording && j == 1 ? (int)ButtonImageIndices.MobilePianoRest : (int)ButtonImageIndices.MobilePianoDrag;
-                        cp.DrawBitmapAtlas(bmpButtonAtlas, imageIndex, posX, posY, 0.25f, scale, Color.Black);
+                        var bmp = App.IsRecording && j == 1 ? bmpMobilePianoRest : bmpMobilePianoDrag;
+                        cp.DrawBitmapAtlas(bmp, posX, posY, 0.25f, scale, Color.Black);
                     }
                 }
             }
 
             //if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping) && ThemeResources.FontSmall.Size < noteSizeY)
-            //    r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseX - noteSizeY + 1, ThemeResources.BlackBrush, RenderTextFlags.Middle, whiteKeySizeX - r.g.WindowScaling * 2, noteSizeY - 1);
+            //    r.cp.DrawText("C" + i, ThemeResources.FontSmall, r.g.WindowScaling, octaveBaseX - noteSizeY + 1, ThemeResources.BlackBrush, TextFlags.Middle, whiteKeySizeX - r.g.WindowScaling * 2, noteSizeY - 1);
             //if ((i == playOctave && j == playNote) || (draggingNote && (i == dragOctave && j == dragNote)))
             //    r.cp.FillRectangle(GetKeyRectangle(i, j), blackKeyPressedBrush);
 
@@ -292,7 +276,7 @@ namespace FamiStudio
             g.DrawCommandList(cp, new Rectangle(0, 0, Width, Height));
         }
 
-        protected override void OnRender(RenderGraphics g)
+        protected override void OnRender(Graphics g)
         {
             RenderPiano(g); 
             RenderDebug(g);
@@ -365,7 +349,7 @@ namespace FamiStudio
                 {
                     playAbsNote = note;
                     App.PlayInstrumentNote(playAbsNote, true, true);
-                    PlatformUtils.VibrateTick();
+                    Platform.VibrateTick();
                     MarkDirty();
                 }
             }

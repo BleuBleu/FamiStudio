@@ -32,6 +32,11 @@ namespace FamiStudio
             return val;
         }
 
+        public static float Saturate(float val)
+        {
+            return Clamp(val, 0.0f, 1.0f);
+        }
+
         public static float Lerp(float v0, float v1, float alpha)
         {
             return v0 * (1.0f - alpha) + v1 * alpha;
@@ -40,6 +45,13 @@ namespace FamiStudio
         public static double Lerp(double v0, double v1, double alpha)
         {
             return v0 * (1.0 - alpha) + v1 * alpha;
+        }
+
+        public static float BiLerp(float v00, float v01, float v10, float v11, float alpha0, float alpha1)
+        {
+            var l0 = Lerp(v00, v01, alpha0);
+            var l1 = Lerp(v10, v11, alpha0);
+            return Lerp(l0, l1, alpha1);
         }
 
         public static bool IsNearlyEqual(float a, float b, float delta = 1e-5f)
@@ -335,11 +347,6 @@ namespace FamiStudio
             }
 
             return 0;
-        }
-
-        public static string ForceASCII(string str)
-        {
-            return System.Text.Encoding.ASCII.GetString(System.Text.Encoding.ASCII.GetBytes(str));
         }
 
         public static int ComputeScrollAmount(int pos, int maxPos, int marginSize, float factor, bool minSide)

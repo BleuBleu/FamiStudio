@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -12,12 +9,12 @@ namespace FamiStudio
         {
             General,
             UserInterface,
+            Input,
             Sound,
             Mixer,
             MIDI,
             FFmpeg,
             QWERTY,
-            MacOS,
             Mobile,
             Max
         };
@@ -26,12 +23,12 @@ namespace FamiStudio
         {
             "General",
             "Interface",
+            "Input",
             "Sound",
             "Mixer",
             "MIDI",
             "FFmpeg",
             "QWERTY",
-            "MacOS",
             "Mobile",
             ""
         };
@@ -72,11 +69,13 @@ namespace FamiStudio
         // General
         private readonly string CheckUpdatesTooltip             = "When enabled, FamiStudio will check for updates every time you start the app.";
         private readonly string ShowTutorialTooltip             = "When enabled, the first time tutorial will be displayed next time the app is started.";
-        private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that this does not work well on Linux.";
         private readonly string ClearUndoRedoTooltip            = "When enabled, the undo/redo stack will be cleared every time you save. Disabling this can help keep the memory usage down.";
         private readonly string OpenLastTooltip                 = "When enabled, FamiStudio will open the last project you were working on when you last closed the app.";
         private readonly string AutosaveTooltip                 = "When enabled, a copy of your project will be save approximately every 2 minutes. This can prevent loosing data when a crash occurs.";
         private readonly string AutosaveFolderTooltip           = "Click to open the auto save folder.";
+
+        // Input
+        private readonly string TrackpadControlsTooltip         = "When enabled, the control scheme will be more friendly to trackpads/laptops. You will be able to swipe to pan and pinch to zoom. Note that this does not work well on Linux."; // MATTT : Still true?
 
         // UI
         private readonly string ScalingTooltip                  = "Overall scaling of the main FamiStudio window. Leave it to 'System' if you want FamiStudio to automatically detect it based on the system configuration.";
@@ -84,12 +83,10 @@ namespace FamiStudio
         private readonly string FollowModeTooltip               = "Scrolling behavior when enabling follow mode in the toolbar.";
         private readonly string FollowingViewsTooltip           = "Affects which views will scroll when enabling follow mode in the toolbar.";
         private readonly string ScrollBarsTooltip               = "Affects the visibility and size of the scroll bars in the app.";
-        private readonly string ShowPianoRollRangeTooltip       = "When enabled, a grey rectangle will be displayed in the Sequencer to show you the currently visible range in the Piano Roll.";
-        private readonly string ShowNoteLabelsTooltip           = "When enabled, labels (ex: C#4) will be displayed on notes in the piano roll.";
         private readonly string ShowFamitrackerStopNotesTooltip = "When enabled, partially transparent stop notes will be displayed whenever a note ends, when using FamiTracker tempo mode. This can help you to visually align note delays with stop notes.";
-        private readonly string ShowOscilloscopeTooltip         = "When enabled, the oscilloscope will be visible in the toolbar. Disabling it can help performances on low-end systems.";
         private readonly string CompactSequencerTooltip         = "When enabled, the Sequencer will always try to keep its size as small as possible.";
         private readonly string ShowRegisterViewerTooltip       = "When enabled, the 'Register' tab will be visible in the Project Explorer.";
+        private readonly string UseOSDialogsTooltip             = "When enabled, FamiStudio will try to use the built-in operating system dialog to open/save files and display error messages. Not available on Linux.";
 
         // Sound
         private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
@@ -110,19 +107,18 @@ namespace FamiStudio
 
         // Mobile
         private readonly string AllowVibrationTooltip           = "When enabled, the phone will vibrate on long pressed, piano keys, etc.";
-        private readonly string DoubleClickDeleteTooltip        = "When enabled, double tapping on a pattern or note will delete it.";
 
         private PropertyPage[] pages = new PropertyPage[(int)ConfigSection.Max];
         private MultiPropertyDialog dialog;
         private int[,] qwertyKeys; // We keep a copy here in case the user cancels.
         private Settings.ExpansionMix[] expansionMixer = new Settings.ExpansionMix[ExpansionType.Count];
 
-        public unsafe ConfigDialog()
-        {
-            int width  = PlatformUtils.IsWindows ? 550 : 570;
-            int height = PlatformUtils.IsWindows ? 350 : 450;
+        private int quertyRowIndex;
+        private int quertyColIndex;
 
-            dialog = new MultiPropertyDialog("FamiStudio Configuration", width, height);
+        public unsafe ConfigDialog(FamiStudioWindow win)
+        {
+            dialog = new MultiPropertyDialog(win, "FamiStudio Configuration", 550);
             dialog.SetVerb("Apply", true);
 
             // Keep a copy of QWERTY keys.
@@ -139,11 +135,11 @@ namespace FamiStudio
                 CreatePropertyPage(page, section);
             }
 
-            dialog.SetPageVisible((int)ConfigSection.MacOS,   PlatformUtils.IsMacOS);
-            dialog.SetPageVisible((int)ConfigSection.MIDI,    PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.FFmpeg,  PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.QWERTY,  PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ConfigSection.Mobile,  PlatformUtils.IsMobile);
+            dialog.SetPageVisible((int)ConfigSection.Input,   Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.MIDI,    Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.FFmpeg,  Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.QWERTY,  Platform.IsDesktop);
+            dialog.SetPageVisible((int)ConfigSection.Mobile,  Platform.IsMobile);
         }
 
         private string[] BuildDpiScalingList()
@@ -166,22 +162,18 @@ namespace FamiStudio
                 {
                     page.AddCheckBox("Check for updates:", Settings.CheckUpdates, CheckUpdatesTooltip); // 0
                     page.AddCheckBox("Show Tutorial at Startup:", Settings.ShowTutorial, ShowTutorialTooltip); // 1
-                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls, TrackpadControlsTooltip); // 2
-                    page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 3
-                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 4
-                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 5
-                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 6
-                    page.PropertyClicked += PageGeneral_PropertyClicked;
-                    page.PropertyChanged += PageGeneral_PropertyChanged;
-                    page.SetPropertyVisible(0, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(2, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(5, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(6, PlatformUtils.IsDesktop);
+                    page.AddCheckBox("Clear Undo/Redo on save:", Settings.ClearUndoRedoOnSave, ClearUndoRedoTooltip); // 2
+                    page.AddCheckBox("Open last project on start:", Settings.OpenLastProjectOnStart, OpenLastTooltip); // 3
+                    page.AddCheckBox("Autosave a copy every 2 minutes:", Settings.AutoSaveCopy, AutosaveTooltip); // 4
+                    page.AddButton(null, "Open Autosave folder", AutosaveFolderTooltip); // 5
+                    page.PropertyClicked += GeneralPage_PropertyClicked;
+                    page.SetPropertyVisible(0, Platform.IsDesktop);
+                    page.SetPropertyVisible(2, Platform.IsDesktop);
+                    page.SetPropertyVisible(3, Platform.IsDesktop);
+                    page.SetPropertyVisible(4, Platform.IsDesktop);
+                    page.SetPropertyVisible(5, Platform.IsDesktop);
                     break;
                 }
-
                 case ConfigSection.UserInterface:
                 {
                     var scalingValues   = BuildDpiScalingList();
@@ -195,18 +187,33 @@ namespace FamiStudio
                     page.AddDropDownList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
                     page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
                     page.AddDropDownList("Scroll Bars:", ScrollBarsStrings, ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 4
-                    page.AddCheckBox("Show Piano Roll View Range:", Settings.ShowPianoRollViewRange, ShowPianoRollRangeTooltip); // 5
-                    page.AddCheckBox("Show Note Labels:", Settings.ShowNoteLabels, ShowNoteLabelsTooltip); // 6
-                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 7
-                    page.AddCheckBox("Show Oscilloscope:", Settings.ShowOscilloscope, ShowOscilloscopeTooltip); // 8
-                    page.AddCheckBox("Show Register Viewer Tab:", Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 9
-                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 10
-                    page.SetPropertyVisible(0, !PlatformUtils.IsMacOS); // No manual DPI selection on MacOS.
-                    page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(8, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(9, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(10, PlatformUtils.IsDesktop);
+                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 5
+                    page.AddCheckBox("Show Register Viewer Tab:", Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 6
+                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 7
+                    page.AddCheckBox("Use Operating System Dialogs:", Settings.UseOSDialogs, UseOSDialogsTooltip); // 8
+                        
+                    page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. MATTT : Review this!!!
+                    page.SetPropertyVisible(3, Platform.IsDesktop);
+                    page.SetPropertyVisible(4, Platform.IsDesktop);
+                    page.SetPropertyVisible(6, Platform.IsDesktop);
+                    page.SetPropertyVisible(7, Platform.IsDesktop);
+                    page.SetPropertyVisible(8, Platform.IsDesktop);
+                    page.SetPropertyVisible(8, !Platform.IsLinux);
+                    break;
+                }
+                case ConfigSection.Input:
+                { 
+                    page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls, TrackpadControlsTooltip); // 0
+                    page.AddCheckBox("Reverse trackpad scroll X:", Settings.ReverseTrackPadX); // 1
+                    page.AddCheckBox("Reverse trackpad scroll Y:", Settings.ReverseTrackPadY); // 2
+                    page.AddNumericUpDown("Trackpad scroll sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 3
+                    page.AddNumericUpDown("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 32); // 4
+                    page.SetPropertyEnabled(1, Settings.TrackPadControls);
+                    page.SetPropertyEnabled(2, Settings.TrackPadControls);
+                    page.SetPropertyEnabled(3, Settings.TrackPadControls);
+                    page.SetPropertyEnabled(4, Settings.TrackPadControls);
+                    page.SetPropertyVisible(4, Platform.IsMacOS);
+                    page.PropertyChanged += InputPage_PropertyChanged;
                     break;
                 }
                 case ConfigSection.Sound:
@@ -225,8 +232,8 @@ namespace FamiStudio
                     page.AddDropDownList("Expansion:", ExpansionType.Names, ExpansionType.Names[0], ExpansionTooltip); // 1
                     page.AddSlider("Expansion Volume:", Settings.ExpansionMixerSettings[ExpansionType.None].volume, -10.0, 10.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionVolumeTooltip); // 2
                     page.AddSlider("Expansion Treble:", Settings.ExpansionMixerSettings[ExpansionType.None].treble, -100.0, 5.0, 0.1, 1, "{0:+0.0;-0.0} dB", ExpansionTrebleTooltip); // 3
-                    page.AddButton(PlatformUtils.IsDesktop ? null : "Reset", "Reset expansion to default", "Resets this expansion to the default settings."); // 4
-                    page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 5
+                    page.AddButton(Platform.IsDesktop ? null : "Reset", "Reset expansion to default", "Resets this expansion to the default settings."); // 4
+                    page.AddLabel(Platform.IsDesktop ? null : "Note", "Note : These will have no effect on NSF, ROM, FDS and sound engine exports.", true); // 5
                     page.PropertyChanged += MixerPage_PropertyChanged;
                     page.PropertyClicked += MixerPage_PropertyClicked;
                     break;
@@ -255,35 +262,22 @@ namespace FamiStudio
                 case ConfigSection.FFmpeg:
                     page.AddLabel(null, "Video export requires FFmpeg. If you already have it, set the path to the ffmpeg executable by clicking the button below, otherwise follow the download link.", true); // 0
                     page.AddButton(null, Settings.FFmpegExecutablePath, "Path to FFmpeg executable. On Windows this is ffmpeg.exe. To download and install ffpmeg, check the link below."); // 1
-                    // GTK LinkButtons dont work on MacOS, use a button (https://github.com/quodlibet/quodlibet/issues/2306)
-                    if (PlatformUtils.IsMacOS)
-                        page.AddButton(" ", "Download FFmpeg here"); // 2
-                    else
-                        page.AddLinkLabel(" ", "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
+                    page.AddLinkLabel(null, "Download FFmpeg here", "https://famistudio.org/doc/ffmpeg/"); // 3
                     page.PropertyClicked += FFmpegPage_PropertyClicked;
                     break;
                 case ConfigSection.QWERTY:
                 {
                     page.AddLabel(null, "Double click in the 2 last columns to assign a key. Right click to clear a key.", true); // 0
-                    page.AddMultiColumnList(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings()); // 1
+                    page.AddGrid(new[] { new ColumnDesc("Octave", 0.2f), new ColumnDesc("Note", 0.2f), new ColumnDesc("Key", 0.3f), new ColumnDesc("Key (alt)", 0.3f) }, GetQwertyMappingStrings(), 14); // 1
                     page.AddButton(null, "Reset to default");
                     page.PropertyClicked += QwertyPage_PropertyClicked;
-                    break;
-                }
-                case ConfigSection.MacOS:
-                { 
-                    page.AddCheckBox("Reverse trackpad direction:", Settings.ReverseTrackPad); // 0
-                    page.AddNumericUpDown("Trackpad movement sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 1
-                    page.AddNumericUpDown("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 32); // 2
-                    page.SetPropertyEnabled(0, Settings.TrackPadControls);
-                    page.SetPropertyEnabled(1, Settings.TrackPadControls);
-                    page.SetPropertyEnabled(2, Settings.TrackPadControls);
+                    page.SetColumnEnabled(1, 0, false);
+                    page.SetColumnEnabled(1, 1, false);
                     break;
                 }
                 case ConfigSection.Mobile:
                 { 
                     page.AddCheckBox("Allow vibration:", Settings.AllowVibration, AllowVibrationTooltip); // 0
-                    page.AddCheckBox("Double-tap to delete:", Settings.DoubleClickDelete, DoubleClickDeleteTooltip); // 1
                     break;
                 }
             }
@@ -294,11 +288,22 @@ namespace FamiStudio
             return page;
         }
 
-        private void PageGeneral_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
+        private void InputPage_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        {
+            if (propIdx == 0)
+            {
+                props.SetPropertyEnabled(1, (bool)value);
+                props.SetPropertyEnabled(2, (bool)value);
+                props.SetPropertyEnabled(3, (bool)value);
+                props.SetPropertyEnabled(4, (bool)value);
+            }
+        }
+
+        private void GeneralPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
         {
             if (click == ClickType.Button)
             {
-                PlatformUtils.OpenUrl(Settings.GetAutoSaveFilePath());
+                Platform.OpenUrl(Settings.GetAutoSaveFilePath());
             }
         }
 
@@ -308,9 +313,9 @@ namespace FamiStudio
             {
                 if (propIdx == 1)
                 {
-                    var ffmpegExeFilter = PlatformUtils.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
+                    var ffmpegExeFilter = Platform.IsWindows ? "FFmpeg Executable (ffmpeg.exe)|ffmpeg.exe" : "FFmpeg Executable (ffmpeg)|*.*";
                     var dummy = "";
-                    var filename = PlatformUtils.ShowOpenFileDialog("Please select FFmpeg executable", ffmpegExeFilter, ref dummy, dialog);
+                    var filename = Platform.ShowOpenFileDialog(dialog.ParentWindow, "Please select FFmpeg executable", ffmpegExeFilter, ref dummy);
 
                     if (filename != null)
                     {
@@ -319,7 +324,7 @@ namespace FamiStudio
                 }
                 else if (propIdx == 2)
                 {
-                    PlatformUtils.OpenUrl("https://famistudio.org/doc/ffmpeg/");
+                    Platform.OpenUrl("https://famistudio.org/doc/ffmpeg/");
                 }
             }
         }
@@ -330,49 +335,40 @@ namespace FamiStudio
             {
                 if (click == ClickType.Double)
                 {
-                    var dlg = new PropertyDialog("", 300, false, true, dialog);
+                    quertyRowIndex = rowIdx;
+                    quertyColIndex = colIdx;
+
+                    var dlg = new PropertyDialog(dialog.ParentWindow, "", 300, false, true);
                     dlg.Properties.AddLabel(null, "Press the new key or ESC to cancel.");
                     dlg.Properties.Build();
+                    dlg.DialogKeyDown += Dlg_QwertyKeyDown;
 
-                    // TODO : Make this cross-platform.
-#if FAMISTUDIO_WINDOWS
-                    dlg.KeyDown += (sender, e) =>
-                    {
-                        if (PlatformUtils.KeyCodeToString((int)e.KeyCode) != null)
-                        {
-                            if (e.KeyCode != Keys.Escape)
-                                AssignQwertyKey(rowIdx, colIdx - 2, (int)e.KeyCode);
-                            dlg.Close();
-                        }
-                    };
-#elif FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-                    dlg.KeyPressEvent += (o, args) =>
-                    {
-                        // These 2 keys are used by the QWERTY input.
-                        if (args.Event.Key != Gdk.Key.Tab &&
-                            args.Event.Key != Gdk.Key.BackSpace && 
-                            PlatformUtils.KeyCodeToString((int)args.Event.Key) != null)
-                        {
-                            if (args.Event.Key != Gdk.Key.Escape)
-                                AssignQwertyKey(rowIdx, colIdx - 2, (int)args.Event.Key);
-                            dlg.Accept();
-                        }
-                    };
-#endif
-                    dlg.ShowDialogAsync(null, (r) => { });
-
-                    pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+                    dlg.ShowDialogAsync((r) => { });
                 }
                 else if (click == ClickType.Right)
                 {
-                    qwertyKeys[rowIdx, colIdx - 2] = -1;
-                    pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+                    qwertyKeys[rowIdx, colIdx - 2] = 0;
+                    pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
                 }
             }
             else if (propIdx == 2 && click == ClickType.Button)
             {
-                Array.Copy(Settings.DefaultQwertyKeys, qwertyKeys, Settings.DefaultQwertyKeys.Length);
-                pages[(int)ConfigSection.QWERTY].UpdateMultiColumnList(1, GetQwertyMappingStrings());
+                Array.Copy(Settings.DefaultQwertyScancodes, qwertyKeys, Settings.DefaultQwertyScancodes.Length);
+                pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
+            }
+        }
+
+        private void Dlg_QwertyKeyDown(Dialog dlg, KeyEventArgs e)
+        {
+            if (e.Key == Keys.Escape)
+            {
+                dlg.Close(DialogResult.Cancel);
+            }
+            else
+            {
+                AssignQwertyKey(quertyRowIndex, quertyColIndex - 2, e.Scancode);
+                pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
+                dlg.Close(DialogResult.OK);
             }
         }
 
@@ -380,7 +376,7 @@ namespace FamiStudio
         {
             var data = new string[37, 4];
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
             {
                 // Stop note.
                 {
@@ -389,8 +385,8 @@ namespace FamiStudio
 
                     data[0, 0] = "N/A";
                     data[0, 1] = "Stop Note";
-                    data[0, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 0]);
-                    data[0, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[0, 1]);
+                    data[0, 2] = k0 < 0 ? "" : Platform.ScancodeToString(k0);
+                    data[0, 3] = k1 < 0 ? "" : Platform.ScancodeToString(k1);
                 }
 
                 // Regular notes.
@@ -404,26 +400,28 @@ namespace FamiStudio
 
                     data[idx, 0] = octave.ToString();
                     data[idx, 1] = Note.NoteNames[note];
-                    data[idx, 2] = k0 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 0]);
-                    data[idx, 3] = k1 < 0 ? "" : PlatformUtils.KeyCodeToString(qwertyKeys[idx, 1]);
+                    data[idx, 2] = k0 < 0 ? "" : Platform.ScancodeToString(k0);
+                    data[idx, 3] = k1 < 0 ? "" : Platform.ScancodeToString(k1);
                 }
             }
             return data;
         }
 
-        void AssignQwertyKey(int idx, int keyIndex, int keyCode)
+        void AssignQwertyKey(int idx, int keyIndex, int scancode)
         {
             // Unbind this key from anything.
             for (int i = 0; i < qwertyKeys.GetLength(0); i++)
             {
                 for (int j = 0; j < qwertyKeys.GetLength(1); j++)
                 {
-                    if (qwertyKeys[i, j] == keyCode)
+                    if (qwertyKeys[i, j] == scancode)
+                    {
                         qwertyKeys[i, j] = -1;
+                    }
                 }
             }
 
-            qwertyKeys[idx, keyIndex] = keyCode;
+            qwertyKeys[idx, keyIndex] = scancode;
         }
 
         private void MixerPage_PropertyClicked(PropertyPage props, ClickType click, int propIdx, int rowIdx, int colIdx)
@@ -463,35 +461,27 @@ namespace FamiStudio
             }
         }
 
-        private void PageGeneral_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
-            if (props == pages[(int)ConfigSection.General] && propIdx == 2)
-            {
-                var macOsPage = pages[(int)ConfigSection.MacOS];
-                macOsPage.SetPropertyEnabled(0, (bool)value);
-                macOsPage.SetPropertyEnabled(1, (bool)value);
-                macOsPage.SetPropertyEnabled(2, (bool)value);
-            }
-        }
-
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
-        {
-            dialog.ShowDialogAsync(parent, (r) =>
+            dialog.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {
                     var pageGeneral = pages[(int)ConfigSection.General];
                     var pageUI = pages[(int)ConfigSection.UserInterface];
+                    var pageInput = pages[(int)ConfigSection.Input];
                     var pageSound = pages[(int)ConfigSection.Sound];
                     var pageMixer = pages[(int)ConfigSection.Mixer];
+                    var pageMIDI = pages[(int)ConfigSection.MIDI];
+                    var pageFFmpeg = pages[(int)ConfigSection.FFmpeg];
+                    var pageMobile = pages[(int)ConfigSection.Mobile];
 
                     // General
                     Settings.CheckUpdates = pageGeneral.GetPropertyValue<bool>(0);
                     Settings.ShowTutorial = pageGeneral.GetPropertyValue<bool>(1);
-                    Settings.TrackPadControls = pageGeneral.GetPropertyValue<bool>(2);
-                    Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(3);
-                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(4);
-                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(5);
+                    Settings.ClearUndoRedoOnSave = pageGeneral.GetPropertyValue<bool>(2);
+                    Settings.OpenLastProjectOnStart = pageGeneral.GetPropertyValue<bool>(3);
+                    Settings.AutoSaveCopy = pageGeneral.GetPropertyValue<bool>(4);
 
                     // UI
                     var scalingString = pageUI.GetPropertyValue<string>(0);
@@ -501,12 +491,10 @@ namespace FamiStudio
                     Settings.FollowMode = pageUI.GetSelectedIndex(2);
                     Settings.FollowSync = pageUI.GetSelectedIndex(3);
                     Settings.ScrollBars = pageUI.GetSelectedIndex(4);
-                    Settings.ShowPianoRollViewRange = pageUI.GetPropertyValue<bool>(5);
-                    Settings.ShowNoteLabels = pageUI.GetPropertyValue<bool>(6);
-                    Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(7);
-                    Settings.ShowOscilloscope = pageUI.GetPropertyValue<bool>(8);
-                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(9);
-                    Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(10);
+                    Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(5);
+                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(6);
+                    Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(7);
+                    Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(8);
 
                     // Sound
                     Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);
@@ -516,34 +504,29 @@ namespace FamiStudio
                     Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(4);
                     Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(5);
 
+                    // Input
+                    Settings.TrackPadControls = pageInput.GetPropertyValue<bool>(0);
+                    Settings.ReverseTrackPadX = pageInput.GetPropertyValue<bool>(1);
+                    Settings.ReverseTrackPadY = pageInput.GetPropertyValue<bool>(2);
+                    Settings.TrackPadMoveSensitity = pageInput.GetPropertyValue<int>(3);
+                    Settings.TrackPadZoomSensitity = pageInput.GetPropertyValue<int>(4);
+
                     // Mixer.
                     Settings.GlobalVolume = (float)pageMixer.GetPropertyValue<double>(0);
                     Array.Copy(expansionMixer, Settings.ExpansionMixerSettings, Settings.ExpansionMixerSettings.Length);
 
                     // MIDI
-                    var pageMIDI = pages[(int)ConfigSection.MIDI];
-
                     Settings.MidiDevice = pageMIDI.GetPropertyValue<string>(0);
 
                     // FFmpeg
-                    var pageFFmpeg = pages[(int)ConfigSection.FFmpeg];
-
                     Settings.FFmpegExecutablePath = pageFFmpeg.GetPropertyValue<string>(1);
 
                     // QWERTY
                     Array.Copy(qwertyKeys, Settings.QwertyKeys, Settings.QwertyKeys.Length);
                     Settings.UpdateKeyCodeMaps();
 
-                    // Mac OS
-                    var pageMacOS = pages[(int)ConfigSection.MacOS];
-                    Settings.ReverseTrackPad   = pageMacOS.GetPropertyValue<bool>(0);
-                    Settings.TrackPadMoveSensitity = pageMacOS.GetPropertyValue<int>(1);
-                    Settings.TrackPadZoomSensitity = pageMacOS.GetPropertyValue<int>(2);
-
                     // Mobile
-                    var pageMobile = pages[(int)ConfigSection.Mobile];
                     Settings.AllowVibration = pageMobile.GetPropertyValue<bool>(0);
-                    Settings.DoubleClickDelete = pageMobile.GetPropertyValue<bool>(1);
 
                     Settings.Save();
                 }

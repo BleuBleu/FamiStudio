@@ -1,42 +1,56 @@
 3.3.1
 =====
 - Include Demo instruments!!
+- Crash tempo?
+- Crash github
+- Warning EPSM ROM from twitter.
+- Threading issue ComputeNumberOfFrameForGroove needs a lock.
 
-3.4.0
+4.0.0
 =====
-P0:
-- Right-click functionality.
-	- Tooltips
-	- Tooltips where a context menu can appear.
-	- Icons
-	- Unify ShowMobileContextMenu/ShowDesktopContextMenu
-	- Toolbar
-		- On mobile, replace the right click by context menus.
-	- Sequencer :
-		- Pattern area.
-	- Piano roll
-	- PE
+- Add DLL map for linux? 22.04 didnt find X11 or libdl.
+- Double click/Shift click to clear effect value.
+- Change Shift+click for fine to Alt (effect + slider.)
+- Is CPU usage higher?
+/ CTX : Review all tooltips (lots of {MouseRight} left for delete, etc.)
+/ GLFW : Pinch to zoom? Test Windows + Linux too. 
+- GLFW : Mouse wheel, remove hacks, test on all platform. Make sure scroll direction is consistent on all platforms.
+/ Move trackpad sensitivity to General Settings (not just MacOS.)
+- Add Flip trackpack dir X/Y.
+	=> Set correct direction for each OS.
+
 P1:
-- Android : Starting scroll on a slider (in vrc7 instrument) changes the value
-- Shift-selection (rectangle) in sequencer shouldnt really care if you click in the colored part or not.
-- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
+	=> Way to temporarely disable snapping (FL studio does it with ALT).
+	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
+	=> Remove 1-frame snap glitch.
+- Victoria lab, is it possible to fix the tempo?
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
+- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
+- Improve oscilloscope stability (min square norm?)
+- Improve no-attack.
+- Scroll bar in sequencer (option to limit seq size to xx%)
+  => hide unused channels?
+- Volume/effect scaling, easy one we have context menus.
+- Paste special, option to rename patterns.
+
+P2 (Unlikely):
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
-- Improve oscilloscope stability (min square norm?)
 - Uncompressed envelopes
-- Improve no-attack.
-P2:
-- Volume/effect scaling
 - CLI only EXE (Linux only).
-- Paste special, option to rename patterns.
-- Way to temporarely disable snapping (FL studio does it with ALT).
-- Scroll bar in sequencer
 - C0 is hidden by scroll bars
 - C0 is hidden in piano roll video
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
-- Fix GTK leak (GTK 3.x?), or 2.12.45
+
+Testing:
+========
+- Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
+
+Batch convert PNG -> TGA
+==========================
+"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path C:\Dump\PngToTga\Tga -compress RLE -format tga *.png
 
 Linux notes 
 =========== 
@@ -67,9 +81,6 @@ Linux notes
 MacOS notes
 ===========
 - MacOS Sierra, fully patched is 10.12.6, with AppKit version 1504.83.101
-- Must compile the MacLauncher with this to link to the AppKit version that
-  matches GTK+2. This will make MacOS load these older versions afterwards,
-  even on more recent OS'es.
 - Must compile vorbis on old version too (like Sierra). 
 - If problem installing MacOS VM, see @DOUG fix at
   https://www.geekrar.com/how-to-fix-the-cpu-has-been-disabled-by-the-guest-os/
@@ -83,6 +94,10 @@ MacOS notes
 	cpuid.1.edx = "0000:0111:1000:1011:1111:1011:1111:1111"
 - If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
+
+Convert PNG to TGA
+==================
+magick mogrify -path C:\Dump\PngToTga\Tga\ -format tga -compress RLE *.png
 
 Android Notes
 =============
@@ -106,24 +121,14 @@ Discord
 ======= 
 - Invite link: https://discord.gg/88UPmxh 
 
-Cartoon Tutorial
-================
-- Stamp
-- Hue: -180
-- Chroma: -20
-
 Backlog: 
 =========
-- Write delta counter (Zxx).
 - ROM export with expansion?
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
-- NSF import read DMC initial value.
 - Save snapping + qwerty settings + some export settings.
 - Left/right pan with +/- (cubase style)?
-- TailWindz : CTRL + Scroll should do "something"
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Scales
-- Loop prevention for envelope (brad issue). 
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 

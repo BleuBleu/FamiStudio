@@ -1,5 +1,0 @@
-style "all"
-{
-    # Double size of check boxes at 200% scaling.
-    GtkCheckButton::indicator-size = 26
-}

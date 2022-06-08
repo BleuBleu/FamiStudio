@@ -32,7 +32,7 @@ namespace FamiStudio
 
             var lines = new List<string>();
 
-            var versionString = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
+            var versionString = Utils.SplitVersionNumber(Platform.ApplicationVersion, out _);
             var projectLine = $"Project";
             if (!noVersion)
                 projectLine += $"{GenerateAttribute("Version", versionString)}";
@@ -362,7 +362,7 @@ namespace FamiStudio
                     {
                         case "Project":
                         {
-                            var currentVersion = Utils.SplitVersionNumber(PlatformUtils.ApplicationVersion, out _);
+                            var currentVersion = Utils.SplitVersionNumber(Platform.ApplicationVersion, out _);
 
                             project = new Project();
                             if (!parameters.TryGetValue("Version", out var version))

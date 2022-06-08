@@ -1,18 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading;
-
-#if FAMISTUDIO_WINDOWS
-using AudioStream = FamiStudio.XAudio2Stream;
-#elif FAMISTUDIO_LINUX
-using AudioStream = FamiStudio.OpenALStream;
-#elif FAMISTUDIO_ANDROID
-using AudioStream = FamiStudio.AndroidAudioStream;
-#else
-using AudioStream = FamiStudio.PortAudioStream;
-#endif
 
 namespace FamiStudio
 {
@@ -29,7 +18,7 @@ namespace FamiStudio
             public float metronomeVolume;
         };
 
-        protected AudioStream audioStream;
+        protected IAudioStream audioStream;
         protected Thread playerThread;
         protected Semaphore bufferSemaphore;
         protected ManualResetEvent stopEvent = new ManualResetEvent(false);
@@ -47,7 +36,7 @@ namespace FamiStudio
             int bufferSize = (int)Math.Ceiling(sampleRate / (pal ? NesApu.FpsPAL : NesApu.FpsNTSC)) * sizeof(short)*2;
             numBufferedFrames = numBuffers;
             bufferSemaphore = new Semaphore(numBufferedFrames, numBufferedFrames);
-            audioStream = new AudioStream(sampleRate, stereo, bufferSize, numBufferedFrames, AudioBufferFillCallback);
+            audioStream = Platform.CreateAudioStream(sampleRate, stereo, bufferSize, numBufferedFrames, AudioBufferFillCallback);
             registerValues.SetPalMode(pal);
         }
 

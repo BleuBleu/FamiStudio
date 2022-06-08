@@ -30,7 +30,7 @@ namespace FamiStudio
 
         class CacheTexture
         {
-            public GLBitmap bmp;
+            public Bitmap bmp;
             public CacheRow[] rows;
         }
 
@@ -47,11 +47,11 @@ namespace FamiStudio
         private int clampedPatternCacheSizeY;
         private int desiredPatternCacheSizeY;
         private float scaleFactorV;
-        private GLGraphics graphics;
+        private Graphics graphics;
         private List<CacheTexture> cacheTextures = new List<CacheTexture>();
         private Dictionary<int, List<PatternCacheData>> patternCache = new Dictionary<int, List<PatternCacheData>>();
 
-        public PatternBitmapCache(GLGraphics g)
+        public PatternBitmapCache(Graphics g)
         {
             graphics = g;
         }
@@ -75,7 +75,7 @@ namespace FamiStudio
             v1 = v0 + rect.Height * InvPatternCacheTextureSize * scaleFactorV;
         }
 
-        public GLBitmap GetOrAddPattern(Pattern pattern, int patternLen, int framesPerNote, out float u0, out float v0, out float u1, out float v1)
+        public Bitmap GetOrAddPattern(Pattern pattern, int patternLen, int framesPerNote, out float u0, out float v0, out float u1, out float v1)
         {
             // Look in cache first.
             if (patternCache.TryGetValue(pattern.Id, out var list))
@@ -280,7 +280,7 @@ namespace FamiStudio
 
             for (int j = 0; j < noteSizeY; j++)
                 for (int x = t0; x < t1; x++)
-                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = GLColorUtils.PackColorForTexture(color);
+                    data[(patternSizeY - 1 - (y + j)) * patternSizeX + x] = ColorUtils.PackColor(color);
         }
 
         private int ComputePatternSizeX(int patternLen, int framesPerNote)
@@ -302,7 +302,7 @@ namespace FamiStudio
 
             // Create new texture.
             var texture = new CacheTexture();
-            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize);
+            texture.bmp  = graphics.CreateEmptyBitmap(PatternCacheTextureSize, PatternCacheTextureSize, true, false);
             InitCacheRows(texture);
             textureIdx = cacheTextures.Count;
             cacheTextures.Add(texture);

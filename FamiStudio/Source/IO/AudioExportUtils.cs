@@ -207,7 +207,7 @@ namespace FamiStudio
             while (counter.Value != song.Channels.Length)
             {
                 Log.ReportProgress(counter.Value / (float)song.Channels.Length);
-                Thread.Sleep(50);
+                Thread.Sleep(10);
 
                 if (Log.ShouldAbortOperation)
                     break;

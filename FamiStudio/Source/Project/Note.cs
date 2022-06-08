@@ -37,6 +37,22 @@ namespace FamiStudio
             "DAC"
         };
 
+        public static readonly string[] EffectIcons = new string[]
+        {
+            "EffectVolume",
+            "EffectVibrato",
+            "EffectVibrato",
+            "EffectPitch",
+            "EffectSpeed",
+            "EffectMod",
+            "EffectMod",
+            "EffectDutyCycle",
+            "EffectNoteDelay",
+            "EffectCutDelay",
+            "EffectVolume",
+            "EffectDutyCycle",
+        };
+
         public const int VolumeMax       = 0x0f;
         public const int VibratoSpeedMax = 0x0c;
         public const int VibratoDepthMax = 0x0f;

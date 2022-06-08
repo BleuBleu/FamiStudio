@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -245,19 +242,19 @@ namespace FamiStudio
                 props.SetPropertyEnabled(i, enabled);
         }
 
-        private void ShowConvertTempoDialogAsync(bool conversionNeeded, Action<bool> callback)
+        private void ShowConvertTempoDialogAsync(FamiStudioWindow win, bool conversionNeeded, Action<bool> callback)
         {
             if (conversionNeeded)
             {
                 const string label = "You changed the BPM enough so that the number of frames in a note has changed. What do you want to do?";
 
-                var messageDlg = new PropertyDialog("Tempo Conversion", 400, true, false);
+                var messageDlg = new PropertyDialog(win, "Tempo Conversion", 400, true, false);
                 messageDlg.Properties.AddLabel(null, label, true); // 0
-                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true); // 1
-                messageDlg.Properties.AddRadioButton(PlatformUtils.IsMobile ? label : null, "Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.", false); // 2
-                messageDlg.Properties.SetPropertyVisible(0, PlatformUtils.IsDesktop);
+                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, "Resize notes to reflect the new BPM. This is the most sensible option if you just want to change the tempo of the song.", true, true); // 1
+                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, "Leave the notes exactly where they are, just move the grid lines around the notes. This option is useful if you want to change how the notes are grouped.", false, true); // 2
+                messageDlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 messageDlg.Properties.Build();
-                messageDlg.ShowDialogAsync(null, (r) =>
+                messageDlg.ShowDialogAsync((r) =>
                 {
                     callback(messageDlg.Properties.GetPropertyValue<bool>(1));
                 });
@@ -276,7 +273,7 @@ namespace FamiStudio
             callback();
         }
 
-        public void ApplyAsync(bool custom, Action callback)
+        public void ApplyAsync(FamiStudioWindow win, bool custom, Action callback)
         {
             if (song.UsesFamiTrackerTempo)
             {
@@ -326,7 +323,7 @@ namespace FamiStudio
 
                 if (patternIdx == -1)
                 {
-                    ShowConvertTempoDialogAsync(noteLength != originalNoteLength, (c) =>
+                    ShowConvertTempoDialogAsync(win, noteLength != originalNoteLength, (c) =>
                     {
                         song.ChangeFamiStudioTempoGroove(groove, c);
                         song.SetBeatLength(beatLength * song.NoteLength);
@@ -356,7 +353,7 @@ namespace FamiStudio
                             patternsToResize.Add(i);
                     }
 
-                    ShowConvertTempoDialogAsync(patternsToResize.Count > 0, (c) =>
+                    ShowConvertTempoDialogAsync(win, patternsToResize.Count > 0, (c) =>
                     {
                         if (c)
                         {

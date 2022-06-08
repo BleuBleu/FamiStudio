@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -18,7 +17,7 @@ namespace FamiStudio
             new MidiFileReader.MidiSource() { type = MidiSourceType.None }
         };
 
-        public MidiImportDialog(string file)
+        public MidiImportDialog(FamiStudioWindow win, string file)
         {
             filename = file;
             trackNames = new MidiFileReader().GetTrackNames(file);
@@ -29,14 +28,14 @@ namespace FamiStudio
                 for (int i = ExpansionType.Start; i <= ExpansionType.End; i++)
                     expNames[i - ExpansionType.Start] = ExpansionType.Names[i];
 
-                dialog = new PropertyDialog("MIDI Import", 500);
+                dialog = new PropertyDialog(win, "MIDI Import", 500);
                 dialog.Properties.AddDropDownList("Polyphony behavior:", MidiPolyphonyBehavior.Names, MidiPolyphonyBehavior.Names[0]); // 0
                 dialog.Properties.AddNumericUpDown("Measures per pattern:", 2, 1, 4, "Maximum number of measures to put in a pattern. Might be less than this number if a tempo or time signature change happens."); // 1
                 dialog.Properties.AddCheckBox("Import velocity as volume:", true); // 2
                 dialog.Properties.AddCheckBox("Create PAL project:", false); // 3
-                dialog.Properties.AddCheckBoxList("Expansions :", expNames, new bool[expNames.Length], null, 150); // 4
+                dialog.Properties.AddCheckBoxList("Expansions :", expNames, new bool[expNames.Length], null); // 4
                 dialog.Properties.AddLabel(null, "Channel mapping:"); // 5
-                dialog.Properties.AddMultiColumnList(new[] { new ColumnDesc("NES Channel", 0.25f), new ColumnDesc("MIDI Source", 0.45f, GetSourceNames()), new ColumnDesc("Channel 10 Keys", 0.3f, ColumnType.Button) }, null); // 6
+                dialog.Properties.AddGrid(new[] { new ColumnDesc("NES Channel", 0.25f), new ColumnDesc("MIDI Source", 0.45f, GetSourceNames()), new ColumnDesc("Channel 10 Keys", 0.3f, ColumnType.Button) }, null); // 6
                 dialog.Properties.AddLabel(null, "Disclaimer : The NES cannot play multiple notes on the same channel, any kind of polyphony is not supported. MIDI files must be properly curated. Moreover, only blank instruments will be created and will sound nothing like their MIDI counterparts.", true);
                 dialog.Properties.Build();
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
@@ -123,7 +122,7 @@ namespace FamiStudio
 
                 if (src.type == MidiSourceType.Channel && src.index == 9)
                 {
-                    var dlg = new PropertyDialog("MIDI Source", 300, true, true, dialog);
+                    var dlg = new PropertyDialog(dialog.ParentWindow, "MIDI Source", 300, true, true);
                     dlg.Properties.AddLabel(null, "Channel 10 keys:"); // 0
                     dlg.Properties.AddCheckBoxList(null, MidiFileReader.MidiDrumKeyNames, GetSelectedChannel10Keys(src)); // 1
                     dlg.Properties.AddButton(null, "Select All"); // 2
@@ -131,7 +130,7 @@ namespace FamiStudio
                     dlg.Properties.Build();
                     dlg.Properties.PropertyClicked += MappingProperties_PropertyClicked;
 
-                    dlg.ShowDialogAsync(null, (r) =>
+                    dlg.ShowDialogAsync((r) =>
                     {
                         if (r == DialogResult.OK)
                         {
@@ -150,7 +149,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    PlatformUtils.Beep();
+                    Platform.Beep();
                 }
             }
         }
@@ -247,17 +246,17 @@ namespace FamiStudio
                 }
             }
 
-            dialog.Properties.UpdateMultiColumnList(6, gridData);
+            dialog.Properties.UpdateGrid(6, gridData);
         }
 
-        public Project ShowDialog(FamiStudioForm parent)
+        public Project ShowDialog(FamiStudioWindow parent)
         {
             var project = (Project)null;
 
             if (dialog != null)
             {
                 // This is only ran in desktop and this isnt really async, so its ok.
-                dialog.ShowDialogAsync(parent, (r) =>
+                dialog.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)
                     {

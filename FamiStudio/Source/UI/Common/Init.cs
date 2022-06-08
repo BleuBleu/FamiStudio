@@ -2,17 +2,19 @@
 {
     public class Init
     {
-        public static void InitializeBaseSystems()
+        public static bool InitializeBaseSystems()
         {
-            Settings.Load();
-            PlatformUtils.Initialize();
-            DpiScaling.Initialize();
+            if (!Platform.Initialize())
+                return false;
+
+            Settings.Initialize();
+
+            if (Platform.IsMobile)
+                DpiScaling.Initialize();
+            
             Theme.Initialize();
             NesApu.Initialize();
-#if FAMISTUDIO_WINDOWS
-            WinUtils.Initialize();
-            PerformanceCounter.Initialize();
-#endif
+            return true;
         }
     }
 }

@@ -10,14 +10,14 @@ namespace FamiStudio
         private int width;
         private int height;
 
-        private GLGraphics  gfx;
+        private Graphics  gfx;
         private ThemeRenderResources res;
 
-        private GLControl[] controls = new GLControl[6];
-        private GLControl   transitionControl;
-        private GLControl   activeControl;
-        private float       transitionTimer;
-        private bool        mobilePianoVisible = false;
+        private Control[] controls = new Control[6];
+        private Control   transitionControl;
+        private Control   activeControl;
+        private float     transitionTimer;
+        private bool      mobilePianoVisible = false;
 
         private Toolbar         toolbar;
         private Sequencer       sequencer;
@@ -32,9 +32,10 @@ namespace FamiStudio
         public ProjectExplorer ProjectExplorer => projectExplorer;
         public QuickAccessBar  QuickAccessBar  => quickAccessBar;
         public MobilePiano     MobilePiano     => mobilePiano;
-        public GLControl       ActiveControl   => activeControl;
+        public Control         ActiveControl   => activeControl;
+        public Graphics        Graphics        => gfx; 
 
-        public GLControl[] Controls => controls;
+        public Control[] Controls => controls;
         public bool IsLandscape => width > height;
         
         public bool MobilePianoVisible
@@ -47,14 +48,14 @@ namespace FamiStudio
             }
         }
 
-        public FamiStudioControls(FamiStudioForm parent)
+        public FamiStudioControls(FamiStudioWindow parent)
         {
-            toolbar         = new Toolbar();
-            sequencer       = new Sequencer();
-            pianoRoll       = new PianoRoll();
-            projectExplorer = new ProjectExplorer();
-            quickAccessBar  = new QuickAccessBar();
-            mobilePiano     = new MobilePiano();
+            toolbar         = new Toolbar(parent);
+            sequencer       = new Sequencer(parent);
+            pianoRoll       = new PianoRoll(parent);
+            projectExplorer = new ProjectExplorer(parent);
+            quickAccessBar  = new QuickAccessBar(parent);
+            mobilePiano     = new MobilePiano(parent);
 
             controls[0] = sequencer;
             controls[1] = pianoRoll;
@@ -64,12 +65,9 @@ namespace FamiStudio
             controls[5] = mobilePiano;
 
             activeControl = sequencer;
-
-            foreach (var ctrl in controls)
-                ctrl.ParentForm = parent;
         }
 
-       public void SetActiveControl(GLControl ctrl, bool animate = true)
+       public void SetActiveControl(Control ctrl, bool animate = true)
         {
             if (activeControl != ctrl)
             {
@@ -137,7 +135,7 @@ namespace FamiStudio
             }
         }
 
-        private bool IsPointInControl(GLControl ctrl, int x, int y, out int ctrlX, out int ctrlY)
+        private bool IsPointInControl(Control ctrl, int x, int y, out int ctrlX, out int ctrlY)
         {
             ctrlX = x - ctrl.Left;
             ctrlY = y - ctrl.Top;
@@ -161,7 +159,7 @@ namespace FamiStudio
             }
         }
 
-        public GLControl GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
+        public Control GetControlAtCoord(int formX, int formY, out int ctrlX, out int ctrlY)
         {
             if (!CanAcceptInput)
             {
@@ -218,7 +216,7 @@ namespace FamiStudio
             return anyNeedsRedraw;
         }
 
-        private void RenderControl(GLControl ctrl)
+        private void RenderControl(Control ctrl)
         {
             var fullscreenViewport = ctrl.WantsFullScreenViewport;
 
@@ -318,12 +316,12 @@ namespace FamiStudio
         {
             Debug.Assert(gfx == null);
 
-            gfx = new GLGraphics(DpiScaling.MainWindow, DpiScaling.Font);
+            gfx = new Graphics(DpiScaling.Window, DpiScaling.Font);
             res = new ThemeRenderResources(gfx);
             
             foreach (var ctrl in controls)
             {
-                ctrl.SetDpiScales(DpiScaling.MainWindow, DpiScaling.Font);
+                ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
                 ctrl.SetThemeRenderResource(res);
                 ctrl.RenderInitialized(gfx);
             }

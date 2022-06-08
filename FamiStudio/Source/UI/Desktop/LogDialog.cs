@@ -1,38 +1,28 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
     class LogDialog : ILogOutput
     {
         private PropertyDialog dialog;
-        private FamiStudioForm parentForm;
         private List<string>   messages = new List<string>();
 
-        public LogDialog(FamiStudioForm parentForm)
+        public LogDialog(FamiStudioWindow win)
         {
-            this.parentForm = parentForm;
-
-            dialog = new PropertyDialog("Log", 800, false);
-            dialog.Properties.AddMultilineTextBox(null, ""); // 0
+            dialog = new PropertyDialog(win, "Log", 800, false);
+            dialog.Properties.AddLogTextBox(null); // 0
             dialog.Properties.Build();
         }
 
-        public DialogResult ShowDialog()
-        {
-            return dialog.ShowDialog(parentForm);
-        }
-
-        public DialogResult ShowDialogIfMessages()
+        public void ShowDialogIfMessages()
         {
             if (HasMessages)
             {
-                dialog.Properties.AppendText(0, string.Join("\r\n", messages));
-                return ShowDialog();
-            }
+                foreach (var msg in messages)
+                    dialog.Properties.AppendText(0, msg);
 
-            return DialogResult.Cancel;
+                dialog.ShowDialog();
+            }
         }
 
         public void LogMessage(string msg)
@@ -41,58 +31,66 @@ namespace FamiStudio
         }
 
         public bool HasMessages => messages.Count > 0;
-        public bool AbortOperation => dialog.DialogResult != DialogResult.None;
+        public bool AbortOperation =>  dialog.DialogResult != DialogResult.None;
         public void ReportProgress(float progress) { }
     }
 
     class LogProgressDialog : ILogOutput
     {
+        private const double ProcessEventDelay = 1.0 / 30.0;
+
         private PropertyDialog dialog;
-        private FamiStudioForm parentForm;
         private bool hasMessages = false;
+        private double lastEventLoop;
 
-        public unsafe LogProgressDialog(FamiStudioForm parentForm, string title = null, string text = null)
+        public unsafe LogProgressDialog(FamiStudioWindow win, string title = null, string text = null)
         {
-            this.parentForm = parentForm;
-
-            dialog = new PropertyDialog("Log", 800, false);
-            dialog.Properties.AddMultilineTextBox(null, ""); // 0
-            dialog.Properties.AddProgressBar(null, 0.0f); // 1
+            dialog = new PropertyDialog(win, "Log", 800, false);
+            dialog.Properties.AddLogTextBox(null); // 0
+            dialog.Properties.AddProgressBar(null); // 1
             dialog.Properties.Build();
         }
 
         public void LogMessage(string msg)
         {
-            dialog.UpdateModalEvents();
-
             if (AbortOperation)
                 return;
 
             hasMessages = true;
             if (!dialog.Visible)
-                dialog.ShowModal(parentForm);
+                dialog.ShowDialogNonModal();
             dialog.Properties.AppendText(0, msg);
-            dialog.UpdateModalEvents();
+            ConditionalRunEventLoop();
         }
 
         public void ReportProgress(float progress)
         {
-            dialog.UpdateModalEvents();
-
             if (AbortOperation)
                 return;
 
             dialog.Properties.SetPropertyValue(1, progress);
-            dialog.UpdateModalEvents();
+            ConditionalRunEventLoop();
         }
 
         public void StayModalUntilClosed()
         {
-            dialog.StayModalUntilClosed();
+            while (dialog.Visible)
+                ConditionalRunEventLoop();
         }
 
         public void Close()
         {
+        }
+
+        private void ConditionalRunEventLoop()
+        {
+            var now = Platform.TimeSeconds();
+
+            if (now - lastEventLoop > ProcessEventDelay)
+            {
+                dialog.ParentWindow.RunEventLoop();
+                lastEventLoop = now;
+            }
         }
 
         public bool HasMessages => hasMessages;

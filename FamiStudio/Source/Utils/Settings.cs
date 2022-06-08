@@ -17,7 +17,9 @@ namespace FamiStudio
         // Version 4   : FamiStudio 3.2.0
         // Version 5   : FamiStudio 3.2.3 (Added snapping tutorial)
         // Version 6   : FamiStudio 3.3.0
-        public const int SettingsVersion = 6;
+        // Version 7   : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
+        public const int SettingsVersion = 7;
+        public const int NumRecentFiles = 10;
 
         // Constants for follow.
         public const int FollowModeJump       = 0;
@@ -42,138 +44,105 @@ namespace FamiStudio
         public static bool TrackPadControls = false;
         public static bool ShowTutorial = true;
         public static bool ClearUndoRedoOnSave = true;
-        public static bool OpenLastProjectOnStart = PlatformUtils.IsDesktop;
+        public static bool OpenLastProjectOnStart = Platform.IsDesktop;
         public static bool AutoSaveCopy = true;
         public static string LastProjectFile;
 
         // User Interface section
         public static int DpiScaling = 0;
         public static int TimeFormat = 1;
-        public static bool ShowPianoRollViewRange = true;
-        public static bool ReverseTrackPad = false;
+        public static bool ReverseTrackPadX = false;
+        public static bool ReverseTrackPadY = false;
         public static int TrackPadMoveSensitity = 1;
         public static int TrackPadZoomSensitity = 8;
         public static int FollowMode = 0;
         public static int FollowSync = 0;
-        public static bool ShowNoteLabels = true;
         public static int  ScrollBars = ScrollBarsNone;
-        public static bool ShowOscilloscope = true;
         public static bool ForceCompactSequencer = false;
         public static bool ShowImplicitStopNotes = true;
-        public static bool ShowRegisterViewer = PlatformUtils.IsDesktop;
+        public static bool ShowRegisterViewer = Platform.IsDesktop;
+        public static bool UseOSDialogs = !Platform.IsLinux;
+
+        public struct QwertyKeyAssignment
+        {
+            public QwertyKeyAssignment(Keys k, int scan = -1)
+            {
+                Key = k;
+                Scancode = scan;
+            }
+
+            public override string ToString()
+            {
+                return $"{Key} ({Scancode})";
+            }
+
+            public void Clear()
+            {
+                Key = Keys.Unknown;
+                Scancode = 0;
+            }
+
+            public bool IsValid => Key != Keys.Unknown && (int)Key != 0 && Scancode >= 0;
+
+            public Keys Key;
+            public int  Scancode;
+        }
 
         // QWERTY section, 3 octaves, 12 notes (+ stop note), up to 2 assignments per key.
-#if FAMISTUDIO_WINDOWS
-        public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
+        public static readonly Keys[,] DefaultQwertyKeys = new Keys[37, 2]
         {
             // Stop note
-            { (int)System.Windows.Forms.Keys.D1, -1 },
+            { Keys.D1,           Keys.Unknown   },
 
             // Octave 1
-            { (int)System.Windows.Forms.Keys.Z, -1 },
-            { (int)System.Windows.Forms.Keys.S, -1 },
-            { (int)System.Windows.Forms.Keys.X, -1 },
-            { (int)System.Windows.Forms.Keys.D, -1 },
-            { (int)System.Windows.Forms.Keys.C, -1 },
-            { (int)System.Windows.Forms.Keys.V, -1 },
-            { (int)System.Windows.Forms.Keys.G, -1 },
-            { (int)System.Windows.Forms.Keys.B, -1 },
-            { (int)System.Windows.Forms.Keys.H, -1 },
-            { (int)System.Windows.Forms.Keys.N, -1 },
-            { (int)System.Windows.Forms.Keys.J, -1 },
-            { (int)System.Windows.Forms.Keys.M, -1 },
+            { Keys.Z,            Keys.Unknown   },
+            { Keys.S,            Keys.Unknown   },
+            { Keys.X,            Keys.Unknown   },
+            { Keys.D,            Keys.Unknown   },
+            { Keys.C,            Keys.Unknown   },
+            { Keys.V,            Keys.Unknown   },
+            { Keys.G,            Keys.Unknown   },
+            { Keys.B,            Keys.Unknown   },
+            { Keys.H,            Keys.Unknown   },
+            { Keys.N,            Keys.Unknown   },
+            { Keys.J,            Keys.Unknown   },
+            { Keys.M,            Keys.Unknown   },
 
             // Octave 2
-            { (int)System.Windows.Forms.Keys.Q,  (int)System.Windows.Forms.Keys.Oemcomma,  },
-            { (int)System.Windows.Forms.Keys.D2, (int)System.Windows.Forms.Keys.L,         },
-            { (int)System.Windows.Forms.Keys.W,  (int)System.Windows.Forms.Keys.OemPeriod, },
-            { (int)System.Windows.Forms.Keys.D3, (int)System.Windows.Forms.Keys.Oem1,      },
-            { (int)System.Windows.Forms.Keys.E,  (int)System.Windows.Forms.Keys.Oem2,      },
-            { (int)System.Windows.Forms.Keys.R,  -1 },
-            { (int)System.Windows.Forms.Keys.D5, -1 },
-            { (int)System.Windows.Forms.Keys.T,  -1 },
-            { (int)System.Windows.Forms.Keys.D6, -1 },
-            { (int)System.Windows.Forms.Keys.Y,  -1 },
-            { (int)System.Windows.Forms.Keys.D7, -1 },
-            { (int)System.Windows.Forms.Keys.U,  -1 },
+            { Keys.Q,            Keys.Comma     },
+            { Keys.D2,           Keys.L         },
+            { Keys.W,            Keys.Period    },
+            { Keys.D3,           Keys.SemiColon }, 
+            { Keys.E,            Keys.Slash     },
+            { Keys.R,            Keys.Unknown   },
+            { Keys.D5,           Keys.Unknown   },
+            { Keys.T,            Keys.Unknown   },
+            { Keys.D6,           Keys.Unknown   },
+            { Keys.Y,            Keys.Unknown   },
+            { Keys.D7,           Keys.Unknown   },
+            { Keys.U,            Keys.Unknown   },
 
             // Octave 3
-            { (int)System.Windows.Forms.Keys.I,       -1 },
-            { (int)System.Windows.Forms.Keys.D9,      -1 },
-            { (int)System.Windows.Forms.Keys.O,       -1 },
-            { (int)System.Windows.Forms.Keys.D0,      -1 },
-            { (int)System.Windows.Forms.Keys.P,       -1 },
-            { (int)System.Windows.Forms.Keys.Oem4,    -1 },
-            { (int)System.Windows.Forms.Keys.Oemplus, -1 },
-            { (int)System.Windows.Forms.Keys.Oem6,    -1 },
-            { -1, -1 },
-            { -1, -1 },
-            { -1, -1 },
-            { -1, -1 }
+            { Keys.I,            Keys.Unknown   },
+            { Keys.D9,           Keys.Unknown   },
+            { Keys.O,            Keys.Unknown   },
+            { Keys.D0,           Keys.Unknown   },
+            { Keys.P,            Keys.Unknown   },
+            { Keys.LeftBracket,  Keys.Unknown   }, 
+            { Keys.Equal,        Keys.Unknown   }, 
+            { Keys.RightBracket, Keys.Unknown   }, 
+            { Keys.Unknown,      Keys.Unknown   },
+            { Keys.Unknown,      Keys.Unknown   },
+            { Keys.Unknown,      Keys.Unknown   },
+            { Keys.Unknown,      Keys.Unknown   }
         };
-#elif FAMISTUDIO_ANDROID
-        public static readonly int[,] DefaultQwertyKeys = new int[37, 2];
-#else
-        public static readonly int[,] DefaultQwertyKeys = new int[37, 2]
-        {
-            // Stop note
-            { (int)Gdk.Key.Key_1,        -1 },
 
-            // Octave 1
-            { (int)Gdk.Key.z,            -1 },
-            { (int)Gdk.Key.s,            -1 },
-            { (int)Gdk.Key.x,            -1 },
-            { (int)Gdk.Key.d,            -1 },
-            { (int)Gdk.Key.c,            -1 },
-            { (int)Gdk.Key.v,            -1 },
-            { (int)Gdk.Key.g,            -1 },
-            { (int)Gdk.Key.b,            -1 },
-            { (int)Gdk.Key.h,            -1 },
-            { (int)Gdk.Key.n,            -1 },
-            { (int)Gdk.Key.j,            -1 },
-            { (int)Gdk.Key.m,            -1 },
-
-            // Octave 2
-            { (int)Gdk.Key.q,            (int)Gdk.Key.comma     },
-            { (int)Gdk.Key.Key_2,        (int)Gdk.Key.l         },
-            { (int)Gdk.Key.w,            (int)Gdk.Key.period    },
-            { (int)Gdk.Key.Key_3,        (int)Gdk.Key.semicolon },
-            { (int)Gdk.Key.e,            (int)Gdk.Key.slash     },
-            { (int)Gdk.Key.r,            -1 },
-            { (int)Gdk.Key.Key_5,        -1 },
-            { (int)Gdk.Key.t,            -1 },
-            { (int)Gdk.Key.Key_6,        -1 },
-            { (int)Gdk.Key.y,            -1 },
-            { (int)Gdk.Key.Key_7,        -1 },
-            { (int)Gdk.Key.u,            -1 },
-
-            // Octave 3
-            { (int)Gdk.Key.i,            -1 },
-            { (int)Gdk.Key.Key_9,        -1 },
-            { (int)Gdk.Key.o,            -1 },
-            { (int)Gdk.Key.Key_0,        -1 },
-            { (int)Gdk.Key.p,            -1 },
-            { (int)Gdk.Key.bracketleft,  -1 },
-            { (int)Gdk.Key.equal,        -1 },
-            { (int)Gdk.Key.bracketright, -1 },
-            { -1, -1 },
-            { -1, -1 },
-            { -1, -1 },
-            { -1, -1 }
-        };
-#endif
-
+        public static int[,] DefaultQwertyScancodes = new int[37, 2];
         public static int[,] QwertyKeys = new int[37, 2];
-        public static Dictionary<int, int> KeyCodeToNoteMap = new Dictionary<int, int>();
+        public static Dictionary<int, int> ScanCodeToNoteMap = new Dictionary<int, int>();
 
         // Audio section
-#if FAMISTUDIO_LINUX
-        const int DefaultNumBufferedAudioFrames = 4; // ALSA seems to like to have one extra buffer.
-#elif FAMISTUDIO_ANDROID
-        const int DefaultNumBufferedAudioFrames = 2;
-#else
-        const int DefaultNumBufferedAudioFrames = 3;
-#endif
+        const int DefaultNumBufferedAudioFrames = Platform.IsLinux ? 4 : Platform.IsAndroid ? 2 : 3;
         public static int NumBufferedAudioFrames = DefaultNumBufferedAudioFrames;
         public static int InstrumentStopTime = 1;
         public static bool SquareSmoothVibrato = true;
@@ -219,16 +188,32 @@ namespace FamiStudio
         public static string LastSampleFolder = "";
         public static string LastExportFolder = "";
 
+        // Recent files history.
+        public static List<string> RecentFiles = new List<string>();
+
         // Misc
         public static string FFmpegExecutablePath = "";
 
         // Mobile section
         public static bool AllowVibration = true;
-        public static bool DoubleClickDelete = false;
 
         // Piano roll stuff
         public static int SnapResolution = SnapResolutionType.OneBeat;
         public static bool SnapEnabled = true;
+
+        public static void Initialize()
+        {
+            if (Platform.IsDesktop)
+            {
+                for (int i = 0; i < DefaultQwertyKeys.GetLength(0); i++)
+                {
+                    DefaultQwertyScancodes[i, 0] = DefaultQwertyKeys[i, 0] == Keys.Unknown ? -1 : Platform.GetKeyScancode(DefaultQwertyKeys[i, 0]);
+                    DefaultQwertyScancodes[i, 1] = DefaultQwertyKeys[i, 1] == Keys.Unknown ? -1 : Platform.GetKeyScancode(DefaultQwertyKeys[i, 1]);
+                }
+            }
+
+            Load();
+        }
 
         public static void Load()
         {
@@ -239,7 +224,6 @@ namespace FamiStudio
 
             // General
             CheckUpdates = ini.GetBool(Version < 2 ? "UI" : "General", "CheckUpdates",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
-            TrackPadControls = ini.GetBool(Version < 2 ? "UI" : "General", "TrackPadControls", false); // At version 2 (FamiStudio 3.0.0, changed section)
             ShowTutorial = ini.GetBool(Version < 2 ? "UI" : "General", "ShowTutorial",     true ); // At version 2 (FamiStudio 3.0.0, changed section)
             ClearUndoRedoOnSave = ini.GetBool("General", "ClearUndoRedoOnSave", true);
             OpenLastProjectOnStart = ini.GetBool("General", "OpenLastProjectOnStart", true);
@@ -251,16 +235,18 @@ namespace FamiStudio
             TimeFormat = ini.GetInt("UI", "TimeFormat", 0);
             FollowMode = ini.GetInt("UI", "FollowMode", FollowModeContinuous);
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
-            ShowNoteLabels = ini.GetBool("UI", "ShowNoteLabels", true);
             ScrollBars = Version < 3 ? (ini.GetBool("UI", "ShowScrollBars", false) ? ScrollBarsThin : ScrollBarsNone) : ini.GetInt("UI", "ScrollBars", ScrollBarsNone);
-            ShowOscilloscope = ini.GetBool("UI", "ShowOscilloscope", true);
             ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
-            ShowPianoRollViewRange = ini.GetBool("UI", "ShowPianoRollViewRange", true);
-            ReverseTrackPad = ini.GetBool("UI", "ReverseTrackPad", false);
-            TrackPadMoveSensitity = ini.GetInt("UI", "TrackPadMoveSensitity", 1);
-            TrackPadZoomSensitity = ini.GetInt("UI", "TrackPadZoomSensitity", 8);
-            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", PlatformUtils.IsDesktop);
-            ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", PlatformUtils.IsDesktop);
+            ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", Platform.IsDesktop);
+            ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", Platform.IsDesktop);
+            UseOSDialogs = ini.GetBool("UI", "UseOSDialogs", !Platform.IsLinux);
+
+            // Input
+            TrackPadControls = ini.GetBool("Input", "TrackPadControls", false);
+            ReverseTrackPadX = ini.GetBool("Input", "ReverseTrackPadX", false);
+            ReverseTrackPadY = ini.GetBool("Input", "ReverseTrackPadY", false);
+            TrackPadMoveSensitity = ini.GetInt("Input", "TrackPadMoveSensitity", 1);
+            TrackPadZoomSensitity = ini.GetInt("Input", "TrackPadZoomSensitity", 8);
 
             // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
@@ -280,6 +266,14 @@ namespace FamiStudio
             LastSampleFolder = ini.GetString("Folders", "LastSampleFolder", "");
             LastExportFolder = ini.GetString("Folders", "LastExportFolder", "");
 
+            // Recent files.
+            for (int i = 0; i < NumRecentFiles; i++)
+            {
+                var recentFile = ini.GetString("RecentFiles", $"RecentFile{i}", "");
+                if (!string.IsNullOrEmpty(recentFile) && File.Exists(recentFile))
+                    RecentFiles.Add(recentFile);
+            }
+
             // FFmpeg
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
@@ -296,29 +290,32 @@ namespace FamiStudio
             }
 
             // QWERTY
-            Array.Copy(DefaultQwertyKeys, QwertyKeys, DefaultQwertyKeys.Length);
+            Array.Copy(DefaultQwertyScancodes, QwertyKeys, DefaultQwertyScancodes.Length);
 
-            // Stop note.
+            // At version 7 (FamiStudio 4.0.0) we changed how the QWERTY keys are saved.
+            if (Version >= 7)
             {
-                if (ini.HasKey("QWERTY", "StopNote"))
-                    QwertyKeys[0, 0] = ini.GetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
-                if (ini.HasKey("QWERTY", "StopNoteAlt"))
-                    QwertyKeys[0, 1] = ini.GetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
-            }
+                // Stop note.
+                {
+                    if (ini.HasKey("QWERTY", "StopNote"))
+                        QwertyKeys[0, 0] = ini.GetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
+                    if (ini.HasKey("QWERTY", "StopNoteAlt"))
+                        QwertyKeys[0, 1] = ini.GetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
+                }
 
-            // Regular notes.
-            for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
-            {
-                var octave = (idx - 1) / 12;
-                var note   = (idx - 1) % 12;
+                // Regular notes.
+                for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
+                {
+                    var octave = (idx - 1) / 12;
+                    var note = (idx - 1) % 12;
+                    var keyName1 = $"Octave{octave}Note{note}";
+                    var keyName2 = $"Octave{octave}Note{note}Alt";
 
-                var keyName0 = $"Octave{octave}Note{note}";
-                var keyName1 = $"Octave{octave}Note{note}Alt";
-
-                if (ini.HasKey("QWERTY", keyName0))
-                    QwertyKeys[idx, 0] = ini.GetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
-                if (ini.HasKey("QWERTY", keyName1))
-                    QwertyKeys[idx, 1] = ini.GetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
+                    if (ini.HasKey("QWERTY", keyName1))
+                        QwertyKeys[idx, 0] = ini.GetInt("QWERTY", keyName1, QwertyKeys[idx, 0]);
+                    if (ini.HasKey("QWERTY", keyName2))
+                        QwertyKeys[idx, 1] = ini.GetInt("QWERTY", keyName2, QwertyKeys[idx, 1]);
+                }
             }
 
             UpdateKeyCodeMaps();
@@ -349,7 +346,7 @@ namespace FamiStudio
             NumBufferedAudioFrames = Utils.Clamp(NumBufferedAudioFrames, 2, 16);
 
             // Linux or Mac is more likely to have standard path for ffmpeg.
-            if (PlatformUtils.IsLinux || PlatformUtils.IsMacOS)
+            if (Platform.IsLinux || Platform.IsMacOS)
             {
                 if (string.IsNullOrEmpty(FFmpegExecutablePath) || !File.Exists(FFmpegExecutablePath))
                 {
@@ -364,7 +361,6 @@ namespace FamiStudio
             
             // Mobile section
             AllowVibration = ini.GetBool("Mobile", "AllowVibration", true);
-            DoubleClickDelete = ini.GetBool("Mobile", "DoubleClickDelete", false);
 
             // Piano roll section
             SnapResolution = Utils.Clamp(ini.GetInt("PianoRoll", "SnapResolution", SnapResolutionType.OneBeat), SnapResolutionType.Min, SnapResolutionType.Max);
@@ -372,7 +368,8 @@ namespace FamiStudio
 
             // At 3.2.0, we added a new Discord screen to the tutorial.
             // At 3.2.3, we added a new snapping tutorial screen.
-            if (Version < 4 || (Version < 5 && PlatformUtils.IsDesktop))
+            // At 4.0.0, we changed the controls and need to re-show tutorials.
+            if (Version < 4 || (Version < 7 && Platform.IsDesktop))
                 ShowTutorial = true;
 
             // Re-force time format to the MM:SS:mmm
@@ -390,7 +387,6 @@ namespace FamiStudio
             // General
             ini.SetInt("General", "Version", SettingsVersion);
             ini.SetBool("General", "CheckUpdates", CheckUpdates);
-            ini.SetBool("General", "TrackPadControls", TrackPadControls);
             ini.SetBool("General", "ShowTutorial", ShowTutorial);
             ini.SetBool("General", "ClearUndoRedoOnSave", ClearUndoRedoOnSave);
             ini.SetBool("General", "OpenLastProjectOnStart", OpenLastProjectOnStart);
@@ -402,16 +398,18 @@ namespace FamiStudio
             ini.SetInt("UI", "TimeFormat", TimeFormat);
             ini.SetInt("UI", "FollowMode", FollowMode);
             ini.SetInt("UI", "FollowSync", FollowSync);
-            ini.SetBool("UI", "ShowNoteLabels", ShowNoteLabels);
             ini.SetInt("UI", "ScrollBars", ScrollBars);
-            ini.SetBool("UI", "ShowOscilloscope", ShowOscilloscope);
             ini.SetBool("UI", "ForceCompactSequencer", ForceCompactSequencer);
-            ini.SetBool("UI", "ShowPianoRollViewRange", ShowPianoRollViewRange);
-            ini.SetInt("UI", "TrackPadMoveSensitity", TrackPadMoveSensitity);
-            ini.SetInt("UI", "TrackPadZoomSensitity", TrackPadZoomSensitity);
-            ini.SetBool("UI", "ReverseTrackPad", ReverseTrackPad);
             ini.SetBool("UI", "ShowImplicitStopNotes", ShowImplicitStopNotes);
             ini.SetBool("UI", "ShowRegisterViewer", ShowRegisterViewer);
+            ini.SetBool("UI", "UseOSDialogs", UseOSDialogs);
+
+            // Input
+            ini.SetBool("Input", "TrackPadControls", TrackPadControls);
+            ini.SetInt("Input", "TrackPadMoveSensitity", TrackPadMoveSensitity);
+            ini.SetInt("Input", "TrackPadZoomSensitity", TrackPadZoomSensitity);
+            ini.SetBool("Input", "ReverseTrackPadX", ReverseTrackPadX);
+            ini.SetBool("Input", "ReverseTrackPadY", ReverseTrackPadY);
 
             // Audio
             ini.SetInt("Audio", "NumBufferedFrames", NumBufferedAudioFrames);
@@ -440,6 +438,10 @@ namespace FamiStudio
             ini.SetString("Folders", "LastInstrumentFolder", LastInstrumentFolder);
             ini.SetString("Folders", "LastSampleFolder", LastSampleFolder);
             ini.SetString("Folders", "LastExportFolder", LastExportFolder);
+            
+            // Recent files.
+            for (int i = 0; i < RecentFiles.Count; i++)
+                ini.SetString("RecentFiles", $"RecentFile{i}", RecentFiles[i]);
 
             // FFmpeg
             ini.SetString("FFmpeg", "ExecutablePath", FFmpegExecutablePath);
@@ -447,30 +449,24 @@ namespace FamiStudio
             // QWERTY
             // Stop note.
             {
-                if (QwertyKeys[0, 0] >= 0)
-                    ini.SetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
-                if (QwertyKeys[0, 1] >= 0)
-                    ini.SetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
+                ini.SetInt("QWERTY", "StopNote", QwertyKeys[0, 0]);
+                ini.SetInt("QWERTY", "StopNoteAlt", QwertyKeys[0, 1]);
             }
 
             // Regular notes.
             for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
             {
                 var octave = (idx - 1) / 12;
-                var note   = (idx - 1) % 12;
-
+                var note = (idx - 1) % 12;
                 var keyName0 = $"Octave{octave}Note{note}";
                 var keyName1 = $"Octave{octave}Note{note}Alt";
 
-                if (QwertyKeys[idx, 0] >= 0)
-                    ini.SetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
-                if (QwertyKeys[idx, 1] >= 0)
-                    ini.SetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
+                ini.SetInt("QWERTY", keyName0, QwertyKeys[idx, 0]);
+                ini.SetInt("QWERTY", keyName1, QwertyKeys[idx, 1]);
             }
 
             // Mobile
             ini.SetBool("Mobile", "AllowVibration", AllowVibration);
-            ini.SetBool("Mobile", "DoubleClickDelete", DoubleClickDelete);
 
             // Piano roll section
             ini.SetInt("PianoRoll", "SnapResolution", SnapResolution);
@@ -483,7 +479,7 @@ namespace FamiStudio
 
         public static void UpdateKeyCodeMaps()
         {
-            KeyCodeToNoteMap.Clear();
+            ScanCodeToNoteMap.Clear();
 
             for (int idx = 1; idx < QwertyKeys.GetLength(0); idx++)
             {
@@ -491,10 +487,19 @@ namespace FamiStudio
                 var k1 = QwertyKeys[idx, 1];
 
                 if (k0 >= 0)
-                    KeyCodeToNoteMap[k0] = idx;
+                    ScanCodeToNoteMap[k0] = idx;
                 if (k1 >= 0)
-                    KeyCodeToNoteMap[k1] = idx;
+                    ScanCodeToNoteMap[k1] = idx;
             }
+        }
+
+        public static void AddRecentFile(string file)
+        {
+            RecentFiles.Remove(file);
+            RecentFiles.Insert(0, file);
+
+            while (RecentFiles.Count > NumRecentFiles)
+                RecentFiles.RemoveAt(RecentFiles.Count - 1);
         }
 
         public static string GetAutoSaveFilePath()
@@ -502,26 +507,15 @@ namespace FamiStudio
             return Path.Combine(Settings.GetConfigFilePath(), "AutoSaves");
         }
 
-        public static bool IsPortableMode
-        {
-            get
-            {
-                var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                var portableFile = Path.Combine(appPath, "portable.txt");
-
-                return File.Exists(portableFile);
-            }
-        }
-
         private static string GetConfigFilePath()
         {
-            if (IsPortableMode)
+            if (Platform.IsPortableMode)
             {
                 return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             }
             else
             {
-                return PlatformUtils.SettingsDirectory;
+                return Platform.SettingsDirectory;
             }
         }
 

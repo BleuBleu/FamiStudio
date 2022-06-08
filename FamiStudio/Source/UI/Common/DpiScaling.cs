@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -11,51 +7,43 @@ namespace FamiStudio
     {
         private static bool initialized; 
 
-        private static float mainWindowScaling = 1;
-        private static float fontScaling = 1;
-        private static float dialogScaling = 1;
+        private static float windowScaling = 1;
+        private static float fontScaling   = 1;
 
-        public static float MainWindow { get { Debug.Assert(initialized); return mainWindowScaling; } }
-        public static float Font       { get { Debug.Assert(initialized); return fontScaling; } }
-        public static float Dialog     { get { Debug.Assert(initialized); return dialogScaling; } }
+        public static float Window { get { Debug.Assert(initialized); return windowScaling; } }
+        public static float Font   { get { Debug.Assert(initialized); return fontScaling; } }
 
         public static int ScaleCustom(float val, float scale)
         {
             Debug.Assert(initialized);
-            return (int)Math.Round(scale * mainWindowScaling);
+            return (int)Math.Round(scale * windowScaling);
         }
 
         public static float ScaleCustomFloat(float val, float scale)
         {
             Debug.Assert(initialized);
-            return scale * mainWindowScaling;
+            return scale * windowScaling;
         }
 
-        public static int ScaleForMainWindow(float val)
+        public static int ScaleForWindow(float val)
         {
             Debug.Assert(initialized);
-            return (int)Math.Round(val * mainWindowScaling);
+            return (int)Math.Round(val * windowScaling);
         }
 
-        public static float ScaleForMainWindowFloat(float val)
+        public static float ScaleForWindowFloat(float val)
         {
             Debug.Assert(initialized);
-            return val * mainWindowScaling;
-        }
-
-        public static int ScaleForDialog(float val)
-        {
-            Debug.Assert(initialized);
-            return (int)Math.Round(val * dialogScaling);
+            return val * windowScaling;
         }
 
         public static int[] GetAvailableScalings()
         {
-            if (PlatformUtils.IsWindows || PlatformUtils.IsLinux)
+            if (Platform.IsWindows || Platform.IsLinux)
                 return new[] { 100, 150, 200 };
-            else if (PlatformUtils.IsAndroid)
+            else if (Platform.IsAndroid)
                 return new[] { 66, 100, 133 };
-            else if (PlatformUtils.IsMacOS)
+            else if (Platform.IsMacOS)
                 return new int[0]; // Intentional, we dont allow to manually set the scaling on MacOS.
 
             Debug.Assert(false);
@@ -68,40 +56,37 @@ namespace FamiStudio
             return Math.Min(2.0f, (int)(value * 2.0f) / 2.0f);
         }
 
-        public static void Initialize()
+        public static void Initialize(float scaling = -1.0f)
         {
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
-                var density = PlatformUtils.GetPixelDensity();
+                var density = Platform.GetPixelDensity();
 
                 if (Settings.DpiScaling != 0)
                 {
-                    mainWindowScaling = Settings.DpiScaling / 100.0f;
+                    windowScaling = Settings.DpiScaling / 100.0f;
                 }
                 else
                 {
                     if (density < 360)
-                        mainWindowScaling = 0.666f;
+                        windowScaling = 0.666f;
                     else if (density >= 480)
-                        mainWindowScaling = 1.333f;
+                        windowScaling = 1.333f;
                     else
-                        mainWindowScaling = 1.0f;
+                        windowScaling = 1.0f;
                 }
 
-                dialogScaling     = 1;
-                fontScaling       = (float)Math.Round(mainWindowScaling * 3);
-                mainWindowScaling = (float)Math.Round(mainWindowScaling * 6);
+                fontScaling   = (float)Math.Round(windowScaling * 3);
+                windowScaling = (float)Math.Round(windowScaling * 6);
             }
             else
             {
-                dialogScaling = PlatformUtils.GetDesktopScaling();
-
                 if (Settings.DpiScaling != 0)
-                    mainWindowScaling = RoundScaling(Settings.DpiScaling / 100.0f);
+                    windowScaling = RoundScaling(Settings.DpiScaling / 100.0f);
                 else
-                    mainWindowScaling = RoundScaling(dialogScaling);
+                    windowScaling = RoundScaling(scaling);
 
-                fontScaling = mainWindowScaling;
+                fontScaling = windowScaling;
             }
 
             initialized = true;

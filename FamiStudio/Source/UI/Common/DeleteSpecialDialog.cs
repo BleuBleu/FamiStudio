@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using DialogResult = System.Windows.Forms.DialogResult;
-
 namespace FamiStudio
 {
     class DeleteSpecialDialog
@@ -10,9 +8,9 @@ namespace FamiStudio
         private PropertyDialog dialog;
         private List<int> checkToEffect = new List<int>();
 
-        public unsafe DeleteSpecialDialog(Channel channel, bool notes = true, int effectsMask = Note.EffectAllMask)
+        public unsafe DeleteSpecialDialog(FamiStudioWindow win, Channel channel, bool notes = true, int effectsMask = Note.EffectAllMask)
         {
-            dialog = new PropertyDialog("Delete Special", 260);
+            dialog = new PropertyDialog(win, "Delete Special", 260);
             dialog.Properties.AddLabelCheckBox("Delete Notes", notes, 0, "When enabled, will delete the musical notes."); // 0
             dialog.Properties.AddLabel(null, "Effects to paste:"); // 1
 
@@ -30,10 +28,10 @@ namespace FamiStudio
             }
 
 
-            dialog.Properties.AddCheckBoxList(PlatformUtils.IsMobile ? "Effects to delete" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete."); // 2
-            dialog.Properties.AddButton(PlatformUtils.IsMobile ? "Select All Effects" : null, "Select All"); // 3
-            dialog.Properties.AddButton(PlatformUtils.IsMobile ? "De-select All Effects" : null, "Select None"); // 4
-            dialog.Properties.SetPropertyVisible(1, PlatformUtils.IsDesktop);
+            dialog.Properties.AddCheckBoxList(Platform.IsMobile ? "Effects to delete" : null, effectList.ToArray(), checkedList.ToArray(), "Select the effects to delete."); // 2
+            dialog.Properties.AddButton(Platform.IsMobile ? "Select All Effects" : null, "Select All"); // 3
+            dialog.Properties.AddButton(Platform.IsMobile ? "De-select All Effects" : null, "Select None"); // 4
+            dialog.Properties.SetPropertyVisible(1, Platform.IsDesktop);
             dialog.Properties.Build();
             dialog.Properties.PropertyClicked += Properties_PropertyClicked;
         }
@@ -49,9 +47,9 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
-            dialog.ShowDialogAsync(parent, callback);
+            dialog.ShowDialogAsync(callback);
         }
 
         public bool DeleteNotes => dialog.Properties.GetPropertyValue<bool>(0);

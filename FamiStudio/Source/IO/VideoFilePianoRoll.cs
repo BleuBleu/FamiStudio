@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-using RenderGraphics = FamiStudio.GLOffscreenGraphics;
-
 namespace FamiStudio
 {
     class VideoFilePianoRoll : VideoFileBase
@@ -256,21 +254,6 @@ namespace FamiStudio
             }
         }
 
-        // Not tested in a while, probably wrong channel order.
-        private unsafe void DumpDebugImage(byte[] image, int sizeX, int sizeY, int frameIndex)
-        {
-#if FAMISTUDIO_LINUX || FAMISTUDIO_MACOS
-            var pb = new Gdk.Pixbuf(image, true, 8, sizeX, sizeY, sizeX * 4);
-            pb.Save($"/home/mat/Downloads/frame_{frameIndex:D4}.png", "png");
-#else
-            fixed (byte* vp = &image[0])
-            {
-                var b = new Bitmap(sizeX, sizeY, sizeX * 4, System.Drawing.Imaging.PixelFormat.Format32bppArgb, new IntPtr(vp));
-                b.Save($"d:\\dump\\pr\\frame_{frameIndex:D4}.png");
-            }
-#endif
-        }
-
         public unsafe bool Save(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, float pianoRollZoom, bool stereo, float[] pan)
         {
             if (!Initialize(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan))
@@ -284,7 +267,7 @@ namespace FamiStudio
 
             foreach (var state in channelStates)
             {
-                state.graphics = RenderGraphics.Create(channelResX, channelResY, false);
+                state.graphics = OffscreenGraphics.Create(channelResX, channelResY, false);
                 state.bitmap = videoGraphics.CreateBitmapFromOffscreenGraphics(state.graphics);
 
                 // Measure the longest text.
@@ -312,7 +295,7 @@ namespace FamiStudio
             var oscLookback = (metadata[1].wavOffset - metadata[0].wavOffset) / 2;
 
             // Setup piano roll and images.
-            var pianoRoll = new PianoRoll();
+            var pianoRoll = new PianoRoll(null);
             pianoRoll.Move(0, 0, channelResX, channelResY);
             pianoRoll.SetThemeRenderResource(themeResources);
             pianoRoll.StartVideoRecording(channelStates[0].graphics, song, pianoRollZoom, pianoRollScaleX, pianoRollScaleY, out var noteSizeY);

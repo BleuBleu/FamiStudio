@@ -1,10 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -43,15 +38,15 @@ namespace FamiStudio
         private MultiPropertyDialog dialog;
         private FamiStudio app;
 
-        public unsafe TransformDialog(FamiStudio famistudio)
+        public unsafe TransformDialog(FamiStudioWindow win)
         {
-            app = famistudio;
-            dialog = new MultiPropertyDialog("Transform Songs", 550, 500);
+            app = win.FamiStudio;
+            dialog = new MultiPropertyDialog(win, "Transform Songs", 550);
 
             for (int i = 0; i < (int)TransformOperation.Max; i++)
             {
                 var section = (TransformOperation)i;
-                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Clean");
+                var page = dialog.AddPropertyPage(ConfigSectionNames[i], "Clean"); 
                 CreatePropertyPage(page, section);
             }
         }
@@ -72,7 +67,7 @@ namespace FamiStudio
                     page.AddCheckBox("Merge identical patterns:", true, MergePatternsTooltip);                                        // 0
                     page.AddCheckBox("Delete empty patterns:", true, DeleteEmptyPatternsTooltip);                                     // 1
                     page.AddCheckBox("Adjust maximum note lengths:", true, AdjustMaximumNoteLengthsTooltip);                          // 2
-                    page.AddCheckBoxList(PlatformUtils.IsMobile ? "Songs to process:" : null , GetSongNames(), null, SongsTooltips) ; // 3
+                    page.AddCheckBoxList(Platform.IsMobile ? "Songs to process:" : null , GetSongNames(), null, SongsTooltips) ; // 3
                     break;
                 case TransformOperation.ProjectCleanup:
                     page.AddCheckBox("Delete unused instruments:", true, DeleteUnusedInstrumentsTooltip);                             // 0
@@ -217,9 +212,9 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
-            dialog.ShowDialogAsync(parent, (r) =>
+            dialog.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {

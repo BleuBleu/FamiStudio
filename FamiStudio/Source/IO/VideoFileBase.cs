@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-
-using RenderBitmap   = FamiStudio.GLBitmap;
-using RenderGraphics = FamiStudio.GLOffscreenGraphics;
 
 #if FAMISTUDIO_ANDROID
 using VideoEncoder   = FamiStudio.VideoEncoderAndroid;
@@ -33,7 +26,7 @@ namespace FamiStudio
 
         protected Project project;
         protected Song song;
-        protected RenderGraphics videoGraphics;
+        protected OffscreenGraphics videoGraphics;
         protected VideoEncoder videoEncoder;
         protected VideoChannelState[] channelStates;
         protected ThemeRenderResources themeResources;
@@ -180,14 +173,14 @@ namespace FamiStudio
             while (counter.Value != channelStates.Length)
             {
                 Log.ReportProgress(counter.Value / (float)channelStates.Length);
-                Thread.Sleep(50);
+                Thread.Sleep(10);
 
                 if (Log.ShouldAbortOperation)
                     return false;
             }
 
             // Create graphics resources.
-            videoGraphics = RenderGraphics.Create(videoResX, videoResY, true);
+            videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, true);
 
             if (videoGraphics == null)
             {
@@ -248,7 +241,7 @@ namespace FamiStudio
                 var timeLeft = (int)Math.Round((numFramesTotal - numFramesRendered) / fps);
 
                 // We dont have the room to display FPS on Mobile.
-                if (PlatformUtils.IsDesktop)
+                if (Platform.IsDesktop)
                     str = $" ({fps:0.0} FPS, {timeLeft} sec left)";
                 else
                     str = $" ({timeLeft} sec left)";
@@ -265,9 +258,9 @@ namespace FamiStudio
         public int songChannelIndex;
         public string channelText;
         public Channel channel;
-        public RenderBitmap bmpIcon;
-        public RenderGraphics graphics;
-        public RenderBitmap bitmap;
+        public Bitmap bmpIcon;
+        public OffscreenGraphics graphics;
+        public Bitmap bitmap;
         public short[] wav;
     };
 

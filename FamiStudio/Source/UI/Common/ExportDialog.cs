@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Threading;
-using System.Windows.Forms;
 
 namespace FamiStudio
 {
@@ -32,7 +29,7 @@ namespace FamiStudio
 
         string[] ExportFormatNames =
         {
-            PlatformUtils.IsDesktop ? "WAV / MP3 / OGG" : "WAV / MP3",
+            Platform.IsDesktop ? "WAV / MP3 / OGG" : "WAV / MP3",
             "Video (Piano Roll)",
             "Video (Oscilloscope)",
             "NSF",
@@ -81,14 +78,11 @@ namespace FamiStudio
         public delegate void EmptyDelegate();
         public event EmptyDelegate Exporting;
 
-        public unsafe ExportDialog(FamiStudio famistudio)
+        public unsafe ExportDialog(FamiStudioWindow win)
         {
-            int width  = 600;
-            int height = PlatformUtils.IsLinux ? 650 : (PlatformUtils.IsMacOS ? 630 : 550);
-
-            dialog = new MultiPropertyDialog("Export Songs", width, height, 200);
+            dialog = new MultiPropertyDialog(win, "Export Songs", 600, 200);
             dialog.SetVerb("Export");
-            app = famistudio;
+            app = win.FamiStudio;
             project = app.Project;
 
             for (int i = 0; i < (int)ExportFormat.Max; i++)
@@ -99,16 +93,16 @@ namespace FamiStudio
             }
 
             // Hide a few formats we don't care about on mobile.
-            dialog.SetPageVisible((int)ExportFormat.Midi,            PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.Text,            PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiTracker,     PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiStudioSfx,   PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiTone2Music,  PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx,    PlatformUtils.IsDesktop);
-            dialog.SetPageVisible((int)ExportFormat.Share,           PlatformUtils.IsMobile);
+            dialog.SetPageVisible((int)ExportFormat.Midi,            Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.Text,            Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTracker,     Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiStudioMusic, Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiStudioSfx,   Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTone2Music,  Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.FamiTone2Sfx,    Platform.IsDesktop);
+            dialog.SetPageVisible((int)ExportFormat.Share,           Platform.IsMobile);
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
                 UpdateMidiInstrumentMapping();
         }
 
@@ -190,7 +184,7 @@ namespace FamiStudio
         private bool AddCommonVideoProperties(PropertyPage page, string[] songNames)
         {
             // TODO : Make this part of the VideoEncoder.
-            canExportToVideo = (!PlatformUtils.IsDesktop || (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath)));
+            canExportToVideo = (!Platform.IsDesktop || (!string.IsNullOrEmpty(Settings.FFmpegExecutablePath) && File.Exists(Settings.FFmpegExecutablePath)));
 
             if (canExportToVideo)
             {
@@ -205,9 +199,6 @@ namespace FamiStudio
             else
             {
                 page.AddLabel(null, "Video export requires FFmpeg. Please go in the application settings and look for the 'FFmpeg' section.", true);
-                // HACK : Last minute hack, too lazy to debug GTK layouting issues right now.
-                if (PlatformUtils.IsGTK)
-                    page.AddLabel(null, " ");
                 return false;
             }
         }
@@ -229,15 +220,15 @@ namespace FamiStudio
                     page.AddCheckBox("Separate channel files", false); // 7
                     page.AddCheckBox("Separate intro file", false); // 8
                     page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 9
-                    if (PlatformUtils.IsDesktop)
-                        page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
+                    if (Platform.IsDesktop)
+                        page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 10
                     else
                         page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
                     page.SetPropertyEnabled(3, false);
                     page.SetPropertyEnabled(6, false);
-                    page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // No separate files on mobile.
-                    page.SetPropertyVisible(8, PlatformUtils.IsDesktop); // No separate files on mobile.
-                    page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // No stereo on mobile.
+                    page.SetPropertyVisible(7, Platform.IsDesktop); // No separate files on mobile.
+                    page.SetPropertyVisible(8, Platform.IsDesktop); // No separate files on mobile.
+                    page.SetPropertyVisible(9, Platform.IsDesktop); // No stereo on mobile.
                     page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
                     page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
                     page.PropertyChanged += WavMp3_PropertyChanged;
@@ -248,11 +239,11 @@ namespace FamiStudio
                     {
                         page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 7
-                        if (PlatformUtils.IsDesktop)
-                            page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 8
+                        if (Platform.IsDesktop)
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 8
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 8
-                        page.SetPropertyVisible(7, PlatformUtils.IsDesktop); // Stereo on mobile.
+                        page.SetPropertyVisible(7, Platform.IsDesktop); // Stereo on mobile.
                         page.SetPropertyEnabled(7, !project.OutputsStereoAudio); // Force stereo for EPSM.
                         page.SetColumnEnabled(8, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
@@ -265,11 +256,11 @@ namespace FamiStudio
                         page.AddNumericUpDown("Oscilloscope Thickness :", 1, 1, 4); // 7
                         page.AddDropDownList("Oscilloscope Color :", OscilloscopeColorType.Names, OscilloscopeColorType.Names[OscilloscopeColorType.InstrumentsAndSamples]); // 8
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 9
-                        if (PlatformUtils.IsDesktop)
-                            page.AddMultiColumnList(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 200); // 10
+                        if (Platform.IsDesktop)
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 10
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 10
-                        page.SetPropertyVisible(9, PlatformUtils.IsDesktop); // Stereo on mobile.
+                        page.SetPropertyVisible(9, Platform.IsDesktop); // Stereo on mobile.
                         page.SetPropertyEnabled(9, !project.OutputsStereoAudio); // Force stereo for EPSM.
                         page.SetColumnEnabled(10, 2, project.OutputsStereoAudio);
                         page.PropertyChanged += VideoPage_PropertyChanged;
@@ -280,7 +271,7 @@ namespace FamiStudio
                     page.AddTextBox("Artist :", project.Author, 31); // 1
                     page.AddTextBox("Copyright :", project.Copyright, 31); // 2
                     page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 3
-                    page.AddCheckBoxList(PlatformUtils.IsDesktop ? null : "Songs", songNames, null); // 4
+                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null); // 4
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
 #endif
@@ -291,9 +282,9 @@ namespace FamiStudio
                     page.AddTextBox("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
                     page.AddTextBox("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
                     page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
-                    page.AddCheckBoxList(PlatformUtils.IsDesktop ? null : "Songs", songNames, null); // 4
+                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null); // 4
                     if (project.UsesAnyExpansionAudio)
-                        page.AddLabel(PlatformUtils.IsDesktop ? null : "Note", "ROM export does not support audio expansions. FDS disk export only supports the FDS expansion. Any incompatible expansion channel(s) will be ignored during the export.", true);
+                        page.AddLabel(Platform.IsDesktop ? null : "Note", "ROM export does not support audio expansions. FDS disk export only supports the FDS expansion. Any incompatible expansion channel(s) will be ignored during the export.", true);
                     page.SetPropertyEnabled(0,  project.UsesFdsExpansion);
                     page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     break;
@@ -303,7 +294,7 @@ namespace FamiStudio
                     page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
                     page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24); // 3
                     page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
-                    page.AddMultiColumnList(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null); // 5
+                    page.AddGrid(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
@@ -407,7 +398,7 @@ namespace FamiStudio
         {
             if (propIdx == 9 && click == ClickType.Right && colIdx == 2)
             {
-                props.UpdateMultiColumnList(propIdx, rowIdx, colIdx, 50);
+                props.UpdateGrid(propIdx, rowIdx, colIdx, 50);
             }
         }
 
@@ -447,7 +438,7 @@ namespace FamiStudio
                     var channelMask = 0;
                     var pan = (float[])null;
 
-                    if (PlatformUtils.IsDesktop)
+                    if (Platform.IsDesktop)
                     {
                         pan = new float[channelCount]; 
 
@@ -469,7 +460,7 @@ namespace FamiStudio
                         }
                     }
 
-                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, PlatformUtils.IsMobile || project.UsesEPSMExpansion,
+                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, Platform.IsMobile || project.UsesEPSMExpansion,
                          (samples, samplesChannels, fn) =>
                          {
                              switch (format)
@@ -490,10 +481,10 @@ namespace FamiStudio
                 }
             };
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 var songName = props.GetPropertyValue<string>(0);
-                PlatformUtils.StartMobileSaveFileOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
+                Platform.StartMobileSaveFileOperationAsync(AudioFormatType.MimeTypes[format], $"{songName}", (f) =>
                 {
                     new Thread(() =>
                     {
@@ -501,11 +492,11 @@ namespace FamiStudio
 
                         ExportWavMp3Action(f);
                         
-                        PlatformUtils.FinishMobileSaveFileOperationAsync(true, () =>
+                        Platform.FinishMobileSaveFileOperationAsync(true, () =>
                         {
                             var aborted = Log.ShouldAbortOperation;
                             app.EndLogTask();
-                            PlatformUtils.ShowToast($"Audio Export {(!aborted ? "Successful" : "Failed")}!");
+                            Platform.ShowToast($"Audio Export {(!aborted ? "Successful" : "Failed")}!");
                         });
                     }).Start();
                 });
@@ -520,7 +511,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    filename = PlatformUtils.ShowSaveFileDialog(
+                    filename = Platform.ShowSaveFileDialog(dialog.ParentWindow,
                         $"Export {AudioFormatType.Names[format]} File",
                         $"{AudioFormatType.Names[format]} Audio File (*.{AudioFormatType.Extensions[format]})|*.{AudioFormatType.Extensions[format]}",
                         ref Settings.LastExportFolder);
@@ -558,7 +549,7 @@ namespace FamiStudio
                     var channelMask = 0;
                     var pan = (float[])null;
 
-                    if (PlatformUtils.IsDesktop)
+                    if (Platform.IsDesktop)
                     {
                         pan = new float[channelCount];
 
@@ -603,10 +594,10 @@ namespace FamiStudio
                 }
             };
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
                 var songName = props.GetPropertyValue<string>(0);
-                PlatformUtils.StartMobileSaveFileOperationAsync("video/mp4", $"{songName}", (f) =>
+                Platform.StartMobileSaveFileOperationAsync("video/mp4", $"{songName}", (f) =>
                 {
                     new Thread(() =>
                     {
@@ -619,10 +610,10 @@ namespace FamiStudio
                         
                         var success = ExportVideoAction(f);
 
-                        PlatformUtils.FinishMobileSaveFileOperationAsync(success, () =>
+                        Platform.FinishMobileSaveFileOperationAsync(success, () =>
                         {
                             app.EndLogTask();
-                            PlatformUtils.ShowToast($"Video Export {(success ? "Successful" : "Failed")}!");
+                            Platform.ShowToast($"Video Export {(success ? "Successful" : "Failed")}!");
                         });
 
                     }).Start();
@@ -630,7 +621,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
+                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
                 ExportVideoAction(filename);
             }
         }
@@ -660,17 +651,17 @@ namespace FamiStudio
                 }
             };
 
-            if (PlatformUtils.IsMobile)
+            if (Platform.IsMobile)
             {
-                PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nsf", (f) =>
+                Platform.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nsf", (f) =>
                 {
                     ExportNsfAction(f);
-                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("NSF Export Successful!"); });
+                    Platform.FinishMobileSaveFileOperationAsync(true, () => { Platform.ShowToast("NSF Export Successful!"); });
                 });
             }
             else
             {
-                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf", ref Settings.LastExportFolder);
+                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf", ref Settings.LastExportFolder);
                 ExportNsfAction(filename);
             }
         }
@@ -682,7 +673,7 @@ namespace FamiStudio
 
             if (songIds.Length > RomFileBase.MaxSongs)
             {
-                PlatformUtils.MessageBoxAsync($"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
+                Platform.MessageBoxAsync(dialog.ParentWindow, $"Please select {RomFileBase.MaxSongs} songs or less.", "ROM Export", MessageBoxButtons.OK);
                 return;
             }
 
@@ -703,17 +694,17 @@ namespace FamiStudio
                     }
                 };
 
-                if (PlatformUtils.IsMobile)
+                if (Platform.IsMobile)
                 {
-                    PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nes", (f) =>
+                    Platform.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nes", (f) =>
                     {
                         ExportRomAction(f);
-                        PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("NES ROM Export Successful!"); });
+                        Platform.FinishMobileSaveFileOperationAsync(true, () => { Platform.ShowToast("NES ROM Export Successful!"); });
                     });
                 }
                 else
                 {
-                    var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export ROM File", "NES ROM (*.nes)|*.nes", ref Settings.LastExportFolder);
+                    var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export ROM File", "NES ROM (*.nes)|*.nes", ref Settings.LastExportFolder);
                     ExportRomAction(filename);
                 }
             }
@@ -733,17 +724,17 @@ namespace FamiStudio
                     }
                 };
 
-                if (PlatformUtils.IsMobile)
+                if (Platform.IsMobile)
                 {
-                    PlatformUtils.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.fds", (f) =>
+                    Platform.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.fds", (f) =>
                     {
                         ExportFdsAction(f);
-                        PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("FDS Disk Export Successful!"); });
+                        Platform.FinishMobileSaveFileOperationAsync(true, () => { Platform.ShowToast("FDS Disk Export Successful!"); });
                     });
                 }
                 else
                 {
-                    var filename = lastExportFilename != null ? null : PlatformUtils.ShowSaveFileDialog("Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
+                    var filename = lastExportFilename != null ? null : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export Famicom Disk", "FDS Disk (*.fds)|*.fds", ref Settings.LastExportFolder);
                     ExportFdsAction(filename);
                 }
             }
@@ -758,19 +749,19 @@ namespace FamiStudio
 
             if (share)
             {
-                filename = PlatformUtils.GetShareFilename(filename);
+                filename = Platform.GetShareFilename(filename);
                 app.SaveProjectCopy(filename);
-                PlatformUtils.StartShareFileAsync(filename, () => 
+                Platform.StartShareFileAsync(filename, () => 
                 {
-                    PlatformUtils.ShowToast("Sharing Successful!");
+                    Platform.ShowToast("Sharing Successful!");
                 });
             }
             else
             {
-                PlatformUtils.StartMobileSaveFileOperationAsync("*/*", filename, (f) =>
+                Platform.StartMobileSaveFileOperationAsync("*/*", filename, (f) =>
                 {
                     app.SaveProjectCopy(f);
-                    PlatformUtils.FinishMobileSaveFileOperationAsync(true, () => { PlatformUtils.ShowToast("Sharing Successful!"); });
+                    Platform.FinishMobileSaveFileOperationAsync(true, () => { Platform.ShowToast("Sharing Successful!"); });
                 });
             }
         }
@@ -823,12 +814,12 @@ namespace FamiStudio
                 cols[0] = "NES Channel";
             }
 
-            props.UpdateMultiColumnList(5, data, cols);
+            props.UpdateGrid(5, data, cols);
         }
 
         private void ExportMidi()
         {
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
@@ -851,7 +842,7 @@ namespace FamiStudio
 
         private void ExportText()
         {
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiStudio Text File", "FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export FamiStudio Text File", "FamiStudio Text Export (*.txt)|*.txt", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 var props = dialog.GetPropertyPage((int)ExportFormat.Text);
@@ -874,7 +865,7 @@ namespace FamiStudio
                 exportText = "VGM";
             }
             var song = project.GetSong(songName);
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog($"Export {exportText}", $"{exportText} File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, $"Export {exportText}", $"{exportText} File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 VgmExport.Save(song, filename, filetype);
@@ -889,7 +880,7 @@ namespace FamiStudio
 
             var props = dialog.GetPropertyPage((int)ExportFormat.FamiTracker);
 
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog("Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export FamiTracker Text File", "FamiTracker Text Format (*.txt)|*.txt", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 new FamitrackerTextFile().Save(project, filename, GetSongIds(props.GetPropertyValue<bool[]>(0)));
@@ -915,7 +906,7 @@ namespace FamiStudio
 
             if (separate)
             {
-                var folder = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowBrowseFolderDialog("Select the export folder", ref Settings.LastExportFolder);
+                var folder = lastExportFilename != null ? lastExportFilename : Platform.ShowBrowseFolderDialog(dialog.ParentWindow, "Select the export folder", ref Settings.LastExportFolder);
 
                 if (folder != null)
                 {
@@ -940,7 +931,7 @@ namespace FamiStudio
             else
             {
                 var engineName = famiStudio ? "FamiStudio" : "FamiTone2";
-                var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog($"Export {engineName} Assembly Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
+                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, $"Export {engineName} Assembly Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
                 if (filename != null)
                 {
                     var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_songlist.inc" : null;
@@ -965,7 +956,7 @@ namespace FamiStudio
             var generateInclude = props.GetPropertyValue<bool>(2);
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(3));
 
-            var filename = lastExportFilename != null ? lastExportFilename : PlatformUtils.ShowSaveFileDialog($"Export {engineName} Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
+            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, $"Export {engineName} Code", $"{engineName} Assembly File (*.{ext})|*.{ext}", ref Settings.LastExportFolder);
             if (filename != null)
             {
                 var includeFilename = generateInclude ? Path.ChangeExtension(filename, null) + "_sfxlist.inc" : null;
@@ -1009,7 +1000,7 @@ namespace FamiStudio
 
         public void Export(bool repeatLast)
         {
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
                 app.BeginLogTask(true);
 
             var selectedFormat = (ExportFormat)dialog.SelectedIndex;
@@ -1037,13 +1028,13 @@ namespace FamiStudio
                 case ExportFormat.Share: ExportShare(); break;
             }
 
-            if (PlatformUtils.IsDesktop)
+            if (Platform.IsDesktop)
                 app.EndLogTask();
         }
 
         public void ShowDialogAsync()
         {
-            dialog.ShowDialogAsync(app.MainForm, (r) =>
+            dialog.ShowDialogAsync((r) =>
             {
                 if (r == DialogResult.OK)
                 {

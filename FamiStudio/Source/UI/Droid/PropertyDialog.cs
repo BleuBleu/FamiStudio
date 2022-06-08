@@ -4,9 +4,6 @@ using Android.Text.Style;
 using Android.App;
 using Android.OS;
 using Android.Views;
-using Android.Runtime;
-using Android.Content;
-using Android.Content.Res;
 using Android.Content.PM;
 using AndroidX.AppCompat.App;
 using AndroidX.Fragment.App;
@@ -15,36 +12,39 @@ using AndroidX.CoordinatorLayout.Widget;
 using Google.Android.Material.AppBar;
 using Java.Lang;
 
-using Debug        = System.Diagnostics.Debug;
-using DialogResult = System.Windows.Forms.DialogResult;
-using ActionBar    = AndroidX.AppCompat.App.ActionBar;
+using ActionBar = AndroidX.AppCompat.App.ActionBar;
+
 namespace FamiStudio
 {
     public class PropertyDialog
     {
+        public delegate void KeyDownDelegate(Dialog dlg, KeyEventArgs e);
+        public event KeyDownDelegate DialogKeyDown;
+
         private string title = "";
         private string verb = "Apply";
         private bool canAccept = true;
         private bool canCancel = true;
-        private PropertyPage propertyPage = new PropertyPage(FamiStudioForm.Instance);
+        private PropertyPage propertyPage = new PropertyPage(FamiStudioWindow.Instance);
 
         public PropertyPage Properties => propertyPage;
         public string Title => title;
         public string Verb  => verb;
         public bool CanAccept => canAccept;
         public bool CanCancel => canCancel;
+        public FamiStudioWindow ParentWindow => FamiStudioWindow.Instance;
 
         public delegate void CloseRequestDelegate(DialogResult result);
         public event CloseRequestDelegate CloseRequested;
 
-        public PropertyDialog(string text, int width, bool canAccept = true, bool canCancel = true, object parent = null)
+        public PropertyDialog(FamiStudioWindow win, string text, int width, bool canAccept = true, bool canCancel = true, object parent = null)
         {
             this.title = text;
             this.canAccept = canAccept;
             this.canCancel = canCancel;
         }
 
-        public PropertyDialog(string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        public PropertyDialog(FamiStudioWindow win, string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
             title = text;
         }
@@ -59,9 +59,9 @@ namespace FamiStudio
             CloseRequested?.Invoke(result);
         }
 
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public void ShowDialogAsync(Action<DialogResult> callback)
         {
-            FamiStudioForm.Instance.StartPropertyDialogActivity(callback, this);
+            FamiStudioWindow.Instance.StartPropertyDialogActivity(callback, this);
         }
     }
 
@@ -87,7 +87,7 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            var info = FamiStudioForm.Instance != null ? FamiStudioForm.Instance.ActiveDialog as PropertyDialogActivityInfo : null;
+            var info = FamiStudioWindow.Instance != null ? FamiStudioWindow.Instance.ActiveDialog as PropertyDialogActivityInfo : null;
 
             if (savedInstanceState != null || info == null)
             {
@@ -165,7 +165,7 @@ namespace FamiStudio
             // If we are being stopped, but not by the user closing the dialog,
             // it is likely that the user switched app. If the main activity isnt
             // running, lets suspend FamiStudio.
-            if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
+            if (!stoppedByUser && !FamiStudioWindow.ActivityRunning)
                 FamiStudio.StaticInstance.Suspend();
             base.OnPause();
         }

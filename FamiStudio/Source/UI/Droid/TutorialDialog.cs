@@ -1,35 +1,36 @@
 ﻿using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Android.Text;
 using Android.Text.Style;
 using Android.App;
 using Android.OS;
 using Android.Views;
-using Android.Runtime;
 using Android.Content;
-using Android.Content.Res;
 using Android.Content.PM;
+using Android.Widget;
 using AndroidX.AppCompat.App;
-using AndroidX.Fragment.App;
-using AndroidX.Core.Widget;
 using AndroidX.CoordinatorLayout.Widget;
 using Google.Android.Material.AppBar;
 using Java.Lang;
+using Java.Util;
 
-using Debug        = System.Diagnostics.Debug;
-using DialogResult = System.Windows.Forms.DialogResult;
-using ActionBar    = AndroidX.AppCompat.App.ActionBar;
-using Android.Widget;
-using Android.Webkit;
-using AndroidX.ConstraintLayout.Widget;
-using Android.Util;
+using Debug = System.Diagnostics.Debug;
+using ActionBar = AndroidX.AppCompat.App.ActionBar;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FamiStudio
 {
     public class TutorialDialog
     {
-        public void ShowDialogAsync(FamiStudioForm parent, Action<DialogResult> callback)
+        public TutorialDialog(FamiStudioWindow parent)
         {
-            FamiStudioForm.Instance.StartTutorialDialogActivity(callback, this);
+        }
+
+        public void ShowDialogAsync(Action<DialogResult> callback)
+        {
+            FamiStudioWindow.Instance.StartTutorialDialogActivity(callback, this);
         }
     }
 
@@ -57,20 +58,31 @@ namespace FamiStudio
         private TextView textView;
         private AppBarLayout appBarLayout;
         private AndroidX.AppCompat.Widget.Toolbar toolbar;
-        private MaxHeightWebView webView;
+        private MaxHeightImageView imageView;
+
+        private ManualResetEvent gifQuitEvent = new ManualResetEvent(false);
+        private Task gifTask;
+        private IntPtr gif;
+        private Android.Graphics.Bitmap gifBmp;
+        private int gifSizeX;
+        private int gifSizeY;
+        private byte[] gifData;
+        private byte[] gifBuffer;
+        private GCHandle gifHandle;
+
         private int pageIndex = 0;
         private bool stoppedByUser;
 
-        private class MaxHeightWebView : WebView
+        private class MaxHeightImageView : ImageView
         {
-            public MaxHeightWebView(Context context) : base(context)
+            public MaxHeightImageView(Context context) : base(context)
             {
             }
 
             protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
             {
-                var width  = MeasureSpec.GetSize(widthMeasureSpec);
-                var ratio  = 540.0 / 1100.0; 
+                var width = MeasureSpec.GetSize(widthMeasureSpec);
+                var ratio = 540.0 / 1100.0;
                 var height = (int)(width * ratio);
 
                 const float MaxHeightScreen = 0.5f;
@@ -94,7 +106,7 @@ namespace FamiStudio
         {
             base.OnCreate(savedInstanceState);
 
-            var info = FamiStudioForm.Instance != null ? FamiStudioForm.Instance.ActiveDialog as TutorialDialogActivityInfo : null;
+            var info = FamiStudioWindow.Instance != null ? FamiStudioWindow.Instance.ActiveDialog as TutorialDialogActivityInfo : null;
 
             if (savedInstanceState != null || info == null)
             {
@@ -128,8 +140,8 @@ namespace FamiStudio
             textView.Text = TutorialMessages[0];
             textView.LayoutParameters = linearLayoutParams;
 
-            webView = new MaxHeightWebView(this);
-            webView.LayoutParameters = linearLayoutParams;
+            imageView = new MaxHeightImageView(this);
+            imageView.LayoutParameters = linearLayoutParams;
 
             var coordLayoutParams = new CoordinatorLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent); ;
             coordLayoutParams.Behavior = new AppBarLayout.ScrollingViewBehavior(this, null);
@@ -138,7 +150,7 @@ namespace FamiStudio
             linearLayout.LayoutParameters = coordLayoutParams;
             linearLayout.Orientation = Android.Widget.Orientation.Vertical;
             linearLayout.AddView(textView);
-            linearLayout.AddView(webView);
+            linearLayout.AddView(imageView);
 
             coordLayout = new CoordinatorLayout(this);
             coordLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
@@ -146,7 +158,6 @@ namespace FamiStudio
             coordLayout.AddView(linearLayout);
 
             RefreshPage();
-
             SetContentView(coordLayout);
         }
 
@@ -156,6 +167,7 @@ namespace FamiStudio
             {
                 stoppedByUser = true;
                 SetResult(Result.Canceled);
+                CloseGif();
                 Finish();
             }
             else
@@ -170,6 +182,7 @@ namespace FamiStudio
             if (pageIndex == TutorialMessages.Length - 1)
             {
                 stoppedByUser = true;
+                CloseGif();
                 SetResult(Result.Ok);
                 Finish();
             }
@@ -180,10 +193,89 @@ namespace FamiStudio
             }
         }
 
+        private void OpenGif(string filename)
+        {
+            CloseGif();
+
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"FamiStudio.Resources.{filename}"))
+            {
+                gifData = new byte[stream.Length];
+                stream.Read(gifData, 0, (int)stream.Length);
+                stream.Close();
+            }
+
+            gifHandle = GCHandle.Alloc(gifData, GCHandleType.Pinned);
+            gif = Gif.Open(gifHandle.AddrOfPinnedObject(), 1);
+            gifSizeX = Gif.GetWidth(gif);
+            gifSizeY = Gif.GetHeight(gif);
+            gifBmp = Android.Graphics.Bitmap.CreateBitmap(gifSizeX, gifSizeY, Android.Graphics.Bitmap.Config.Argb8888, false);
+            gifBuffer = new byte[gifSizeX * gifSizeY * 4];
+            imageView.SetImageBitmap(gifBmp);
+
+            AdvanceFrame();
+            UpdateImage();
+            StartGifTask();
+        }
+
+        private void CloseGif()
+        {
+            if (gif != IntPtr.Zero)
+            {
+                StopGifTask();
+                gifData = null;
+                gifBuffer = null;
+                Gif.Close(gif);
+                gif = IntPtr.Zero;
+                gifHandle.Free();
+            }
+        }
+        private unsafe int AdvanceFrame()
+        {
+            var start = SystemClock.UptimeMillis();
+            Gif.AdvanceFrame(gif);
+            lock (gifBuffer)
+            {
+                fixed (byte* p = &gifBuffer[0])
+                    Gif.RenderFrame(gif, (IntPtr)p, gifSizeX * 4, 4);
+            }
+            return (int)(SystemClock.UptimeMillis() - start);
+        }
+
+        private void UpdateImage()
+        {
+            if (gifBuffer != null)
+            {
+                lock (gifBuffer)
+                {
+                    var pixels = gifBmp.LockPixels();
+                    Marshal.Copy(gifBuffer, 0, pixels, gifBuffer.Length);
+                    gifBmp.UnlockPixels();
+                }
+
+                imageView.Invalidate();
+            }
+        }
+
+        private void StartGifTask()
+        {
+            Debug.Assert(gifTask == null);
+
+            gifQuitEvent.Reset();
+            gifTask = Task.Factory.StartNew(GifTask, TaskCreationOptions.LongRunning);
+        }
+
+        private void StopGifTask()
+        {
+            gifQuitEvent.Set();
+            gifTask.Wait();
+            gifTask = null;
+        }
+
         private void RefreshPage()
         {
             textView.Text = TutorialMessages[pageIndex];
-            webView.LoadUrl($"file:///android_asset/Source/UI/Droid/Assets/tutorial{pageIndex + 1}.html");
+
+            OpenGif($"MobileTutorial{pageIndex + 1}.gif");
         }
 
         public override void OnBackPressed()
@@ -225,9 +317,33 @@ namespace FamiStudio
             // If we are being stopped, but not by the user closing the dialog,
             // it is likely that the user switched app. If the main activity isnt
             // running, lets suspend FamiStudio.
-            if (!stoppedByUser && !FamiStudioForm.ActivityRunning)
+            if (!stoppedByUser && !FamiStudioWindow.ActivityRunning)
                 FamiStudio.StaticInstance.Suspend();
             base.OnPause();
+        }
+
+        private unsafe void GifTask()
+        {
+            // The first frame is always decoded on the main thread, so wait here.
+            if (gifQuitEvent.WaitOne(Gif.GetFrameDelay(gif)))
+            {
+                return;
+            }
+
+            while (true)
+            {
+                var decodeTime = AdvanceFrame();
+                var delay = Gif.GetFrameDelay(gif) - decodeTime;
+
+                Debug.WriteLine($"Decode time {decodeTime}");
+
+                RunOnUiThread(() => { UpdateImage(); });
+
+                if (gifQuitEvent.WaitOne(delay))
+                {
+                    break;
+                }
+            }
         }
     }
 }
