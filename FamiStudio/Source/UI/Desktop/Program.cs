@@ -11,18 +11,13 @@ namespace FamiStudio
         static void Main(string[] args)
         {
             var cli = new CommandLineInterface(args);
-            var commandLine = cli.HasAnythingToDo;
 
-            if (!InitializeBaseSystems(commandLine))
+            if (!InitializeBaseSystems(cli.HasAnythingToDo))
             {
                 Environment.Exit(-1);
             }
 
-            if (commandLine)
-            {
-                cli.Run();
-            }
-            else
+            if (!cli.Run())
             {
                 var fs = new FamiStudio();
                 if (!fs.Run(args))
