@@ -1822,7 +1822,6 @@ namespace FamiStudio
             }
             else if (Platform.IsMacOS && ctrl && e.Key == Keys.Q)
             {
-                // MATTT : Retest this on macos.
                 if (TryClosing())
                     window.Quit();
             }

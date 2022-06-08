@@ -96,12 +96,7 @@ namespace FamiStudio
 
         private TextBox CreateTextBox(string txt, int maxLength, string tooltip = null)
         {
-            var textBox = new TextBox(dialog, txt);
-
-            // MATTT
-            //textBox.MaxLength = maxLength;
-            //textBox.TextChanged += TextBox_TextChanged;
-
+            var textBox = new TextBox(dialog, txt, maxLength);
             textBox.ToolTip = tooltip;
 
             return textBox;

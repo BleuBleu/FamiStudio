@@ -140,7 +140,7 @@ namespace FamiStudio
             glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, 1);
 
-            var window = glfwCreateWindow(640, 480, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
+            var window = glfwCreateWindow(1280, 720, "FamiStudio", IntPtr.Zero, IntPtr.Zero);
             if (window == IntPtr.Zero)
             {
                 glfwTerminate();

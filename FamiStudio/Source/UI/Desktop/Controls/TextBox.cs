@@ -23,8 +23,9 @@ namespace FamiStudio
         private int maxScrollX;
         private int selectionStart = -1;
         private int selectionLength = 0;
-        private int caretIndex = 0;
+        private int caretIndex;
         private int widthNoMargin;
+        private int maxLength;
         private int mouseSelectionChar;
         private bool mouseSelecting;
         private bool caretBlink = true;
@@ -52,10 +53,11 @@ namespace FamiStudio
         public Color BackColor      { get => backColor;     set { backColor     = value; backBrush     = null; MarkDirty(); } }
         public Color SelectionColor { get => selColor;      set { selColor      = value; selBrush      = null; MarkDirty(); } }
 
-        public TextBox(Dialog dlg, string txt) : base(dlg)
+        public TextBox(Dialog dlg, string txt, int maxLen = 0) : base(dlg)
         {
             height = DpiScaling.ScaleForWindow(24);
             text = txt;
+            maxLength = maxLen;
         }
 
         public string Text
@@ -63,7 +65,7 @@ namespace FamiStudio
             get { return text; }
             set 
             { 
-                text = value;
+                text = maxLength > 0 ? value.Substring(0, maxLength) : value;
                 scrollX = 0;
                 caretIndex = 0;
                 selectionStart = 0;
@@ -260,6 +262,14 @@ namespace FamiStudio
                 if (selectionLength > 0)
                     Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
             }
+            else if (e.Key == Keys.X && e.Control)
+            {
+                if (selectionLength > 0)
+                {
+                    Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
+                    DeleteSelection();
+                }
+            }
             else if (e.Key == Keys.Z && e.Control)
             {
                 Undo();
@@ -288,6 +298,8 @@ namespace FamiStudio
             {
                 SaveUndoRedoState();
                 DeleteSelection();
+                if (maxLength > 0 && text.Length + str.Length > maxLength)
+                    str = str.Substring(0, Math.Min(str.Length, Math.Max(0, maxLength - text.Length)));
                 text = text.Insert(caretIndex, str);
                 caretIndex += str.Length;
                 UpdateScrollParams();
