@@ -8,8 +8,12 @@ namespace FamiStudio
     {
         private const int XC_fleur = 52;
 
-        [DllImport("X11")]
-        private extern static uint XCreateFontCursor(IntPtr display, uint shape);
+        // HACK : Ive had some issues on some distros where it fails to resolve the
+        // name correctly. Will attempt to use 2 lib names for safety.
+        [DllImport("libX11")]
+        private extern static uint XCreateFontCursor1(IntPtr display, uint shape);
+        [DllImport("libX11.so.6")]
+        private extern static uint XCreateFontCursor2(IntPtr display, uint shape);
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         private struct GLFWCursorX11
@@ -20,16 +24,39 @@ namespace FamiStudio
 
         private static unsafe IntPtr CreateGLFWCursorLinux(uint cursor)
         {
-            // TODO : Free that memory when quitting.
-            var pc = (GLFWCursorX11*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(GLFWCursorX11))).ToPointer();
-            pc->Dummy = IntPtr.Zero;
-            pc->XCursor = cursor;
-            return (IntPtr)pc;
+            if (cursor != 0)
+            {
+                // TODO : Free that memory when quitting.
+                var pc = (GLFWCursorX11*)Marshal.AllocHGlobal(Marshal.SizeOf(typeof(GLFWCursorX11))).ToPointer();
+                pc->Dummy = IntPtr.Zero;
+                pc->XCursor = cursor;
+                return (IntPtr)pc;
+            }
+            else
+            {
+                return IntPtr.Zero;
+            }
         }
 
         private static uint LoadLinuxCursor(uint shape)
         {
-            return XCreateFontCursor(glfwGetX11Display(), shape);
+            var display = glfwGetX11Display();
+
+            try 
+            {
+                return XCreateFontCursor1(display, shape);
+            }
+            catch
+            {
+                try
+                {
+                    return XCreateFontCursor2(display, shape);
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
         }
 
         public static void Initialize(float scaling)
@@ -38,9 +65,12 @@ namespace FamiStudio
 
             var fleur = CreateGLFWCursorLinux(LoadLinuxCursor(XC_fleur));
 
-            DragCursor = fleur;
-            CopyCursor = fleur;
-            Move = fleur;
+            if (fleur != IntPtr.Zero)
+            {
+                DragCursor = fleur;
+                CopyCursor = fleur;
+                Move = fleur;
+            }
         }
     }
 }
