@@ -9,6 +9,8 @@ namespace FamiStudio
         private string[] args;
         private Project project;
 
+        public bool HasAnythingToDo => HasOption("?") || HasOption("help") || args.Length >= 3;
+
         public CommandLineInterface(string[] args)
         {
             this.args = args;

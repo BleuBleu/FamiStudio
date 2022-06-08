@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using static GLFWDotNet.GLFW;
 
-// MATTT : Make sure we call TerminateGraphics.
 namespace FamiStudio
 {
      public class Graphics : GraphicsBase

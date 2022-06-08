@@ -21,9 +21,9 @@ namespace FamiStudio
 
         private static float doubleClickTime;
 
-        public static bool Initialize()
+        public static bool Initialize(bool commandLine)
         {
-            if (!InitializeDesktop())
+            if (!InitializeDesktop(commandLine))
                 return false;
 
             if (!DetectRequiredDependencies())
@@ -40,6 +40,11 @@ namespace FamiStudio
 #endif
 
             return true;
+        }
+
+        public static void Shutdown()
+        {
+            ShutdownDesktop();
         }
 
         public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)

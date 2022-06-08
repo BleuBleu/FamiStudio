@@ -15,17 +15,28 @@ namespace FamiStudio
 
         public static string ApplicationVersion => version;
 
+        private static bool initializedGlfw;
         private static string version;
         private static Thread mainThread;
 
-        private static bool InitializeDesktop()
+        private static bool InitializeDesktop(bool commandLine)
         {
-            if (!InitializeGLFW())
-                return false;
+            if (!commandLine)
+            {
+                if (!InitializeGLFW())
+                    return false;
+                initializedGlfw = true;
+            }
 
             version = Assembly.GetEntryAssembly().GetName().Version.ToString();
             mainThread = Thread.CurrentThread;
             return true;
+        }
+
+        private static void ShutdownDesktop()
+        {
+            if (initializedGlfw)
+                glfwTerminate();
         }
 
         private static bool InitializeGLFW()

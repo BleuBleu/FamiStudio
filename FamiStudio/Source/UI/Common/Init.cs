@@ -2,19 +2,28 @@
 {
     public class Init
     {
-        public static bool InitializeBaseSystems()
+        public static bool InitializeBaseSystems(bool commandLine = false)
         {
-            if (!Platform.Initialize())
+            if (!Platform.Initialize(commandLine))
                 return false;
 
             Settings.Initialize();
 
-            if (Platform.IsMobile)
-                DpiScaling.Initialize();
-            
-            Theme.Initialize();
-            NesApu.Initialize();
+            if (!commandLine)
+            {
+                if (Platform.IsMobile)
+                    DpiScaling.Initialize();
+
+                Theme.Initialize();
+                NesApu.Initialize();
+            }
+
             return true;
+        }
+
+        public static void ShutdownBaseSystems()
+        {
+            Platform.Shutdown();
         }
     }
 }

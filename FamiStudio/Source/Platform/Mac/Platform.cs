@@ -21,11 +21,16 @@ namespace FamiStudio
         public const string DllPrefix = "";
         public const string DllExtension = ".dylib";
 
-        public static bool Initialize()
+        public static bool Initialize(bool commandLine)
         {
-            if (!InitializeDesktop())
+            if (!InitializeDesktop(commandLine))
                 return false;
             return true;
+        }
+
+        public static void Shutdown()
+        {
+            ShutdownDesktop();
         }
 
         public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)

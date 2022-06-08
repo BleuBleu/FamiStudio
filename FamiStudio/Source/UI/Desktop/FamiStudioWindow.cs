@@ -162,6 +162,12 @@ namespace FamiStudio
             return new FamiStudioWindow(fs, window);
         }
 
+        private void DestroyWindow()
+        {
+            controls.ShutdownGL();
+            glfwDestroyWindow(window);
+        }
+
         private void InitialFrameBufferClear()
         {
             var size = GetWindowSizeInternal();
@@ -1000,6 +1006,8 @@ namespace FamiStudio
             {
                 RunIteration();
             }
+
+            DestroyWindow();
         }
     }
 }

@@ -28,9 +28,13 @@ namespace FamiStudio
 
         private const int ToastShortDuration = 2000;
 
-        public static bool Initialize()
+        public static bool Initialize(bool commandLine)
         {
             return true;
+        }
+
+        public static void Shutdown()
+        {
         }
 
         public static bool IsInMainThread()

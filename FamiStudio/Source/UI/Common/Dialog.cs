@@ -14,6 +14,7 @@ namespace FamiStudio
         const int   ToolTipMaxCharsPerLine = 64;
 
         private List<Control> controls = new List<Control>();
+        private List<Control> initControls = new List<Control>();
         private Control focusedControl;
         private DialogResult result = DialogResult.None;
         private float tooltipTimer;
@@ -89,6 +90,12 @@ namespace FamiStudio
 
         public void Close(DialogResult res)
         {
+            foreach (var ctrl in initControls)
+            {
+                ctrl.RenderTerminated();
+                ctrl.SetThemeRenderResource(null);
+            }
+
             parentWindow.PopDialog(this);
             result = res;
             visible = false;
@@ -105,6 +112,9 @@ namespace FamiStudio
             ctrl.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
             ctrl.SetThemeRenderResource(ThemeResources);
             ctrl.RenderInitialized(ParentWindow.Graphics);
+
+            Debug.Assert(!initControls.Contains(ctrl));
+            initControls.Add(ctrl);
         }
 
         public void AddControl(Control ctrl)
@@ -121,7 +131,6 @@ namespace FamiStudio
             if (ctrl != null)
             {
                 controls.Remove(ctrl);
-                ctrl.RenderTerminated(); // MATTT : This is wrong.
             }
         }
 
@@ -287,7 +296,7 @@ namespace FamiStudio
             {
                 if (ctrl.Visible)
                 {
-                    g.Transform.PushTranslation(WindowLeft + ctrl.Left, WindowTop + ctrl.Top);
+                    g.Transform.PushTranslation(ctrl.Left, ctrl.Top);
                     ctrl.Render(g);
                     g.Transform.PopTransform();
                 }

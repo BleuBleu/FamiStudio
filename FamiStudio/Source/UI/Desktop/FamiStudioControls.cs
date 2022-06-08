@@ -247,6 +247,7 @@ namespace FamiStudio
         {
             Debug.Assert(TopDialog == dialog);
             dialogs.RemoveAt(dialogs.Count - 1);
+            dialog.RenderTerminated();
         }
 
         public void InitializeGL()
@@ -264,6 +265,17 @@ namespace FamiStudio
             contextMenu.SetDpiScales(DpiScaling.Window, DpiScaling.Font);
             contextMenu.SetThemeRenderResource(res);
             contextMenu.RenderInitialized(gfx);
+        }
+
+        public void ShutdownGL()
+        {
+            foreach (var ctrl in controls)
+            {
+                ctrl.RenderTerminated();
+                ctrl.SetThemeRenderResource(null);
+            }
+
+            res.Dispose();
         }
     }
 }

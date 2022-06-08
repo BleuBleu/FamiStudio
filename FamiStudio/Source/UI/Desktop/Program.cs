@@ -10,13 +10,19 @@ namespace FamiStudio
         [STAThread]
         static void Main(string[] args)
         {
-            if (!InitializeBaseSystems())
+            var cli = new CommandLineInterface(args);
+            var commandLine = cli.HasAnythingToDo;
+
+            if (!InitializeBaseSystems(commandLine))
             {
                 Environment.Exit(-1);
             }
 
-            var cli = new CommandLineInterface(args);
-            if (!cli.Run())
+            if (commandLine)
+            {
+                cli.Run();
+            }
+            else
             {
                 var fs = new FamiStudio();
                 if (!fs.Run(args))
@@ -25,7 +31,10 @@ namespace FamiStudio
                 }
             }
 
+            ShutdownBaseSystems();
+
             // We sometimes gets stuck here on Linux (likely a thread that we dont control still running), lets abort.
+            // MATTT : Still true?
             if (Platform.IsLinux)
             {
                 Environment.Exit(0);

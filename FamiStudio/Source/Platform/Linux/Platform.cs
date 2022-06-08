@@ -20,14 +20,19 @@ namespace FamiStudio
         public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
 
-        public static bool Initialize()
+        public static bool Initialize(bool commandLine)
         {
-            if (!InitializeDesktop())
+            if (!InitializeDesktop(commandLine))
                 return false;
 
             SetProcessName("FamiStudio");
 
             return true;
+        }
+
+        public static void Shutdown()
+        {
+            ShutdownDesktop();
         }
 
         public static IAudioStream CreateAudioStream(int rate, bool stereo, int bufferSize, int numBuffers, GetBufferDataCallback bufferFillCallback)
