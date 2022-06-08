@@ -2725,7 +2725,7 @@ namespace FamiStudio
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (Settings.TrackPadControls && !ModifierKeys.Control)
+            if (Settings.TrackPadControls && !ModifierKeys.Control && !ModifierKeys.Alt)
             {
                 if (ModifierKeys.Shift)
                     scrollX -= Utils.SignedCeil(e.ScrollY);
