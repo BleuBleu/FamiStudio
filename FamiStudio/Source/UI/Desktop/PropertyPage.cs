@@ -580,6 +580,7 @@ namespace FamiStudio
                 prop.type == PropertyType.DropDownList  ||
                 prop.type == PropertyType.NumericUpDown ||
                 prop.type == PropertyType.TextBox       ||
+                prop.type == PropertyType.Slider        ||
                 prop.type == PropertyType.ColoredTextBox);
 
             if (prop.label != null)

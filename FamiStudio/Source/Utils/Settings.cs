@@ -53,8 +53,8 @@ namespace FamiStudio
         public static int TimeFormat = 1;
         public static bool ReverseTrackPadX = false;
         public static bool ReverseTrackPadY = false;
-        public static int TrackPadMoveSensitity = 1;
-        public static int TrackPadZoomSensitity = 8;
+        public static float TrackPadMoveSensitity = 10.0f;
+        public static float TrackPadZoomSensitity = 10.0f;
         public static int FollowMode = 0;
         public static int FollowSync = 0;
         public static int  ScrollBars = ScrollBarsNone;
@@ -242,11 +242,15 @@ namespace FamiStudio
             UseOSDialogs = ini.GetBool("UI", "UseOSDialogs", !Platform.IsLinux);
 
             // Input
-            TrackPadControls = ini.GetBool("Input", "TrackPadControls", false);
-            ReverseTrackPadX = ini.GetBool("Input", "ReverseTrackPadX", false);
-            ReverseTrackPadY = ini.GetBool("Input", "ReverseTrackPadY", false);
-            TrackPadMoveSensitity = ini.GetInt("Input", "TrackPadMoveSensitity", 1);
-            TrackPadZoomSensitity = ini.GetInt("Input", "TrackPadZoomSensitity", 8);
+            // At version 7 (FamiStudio 4.0.0) we changed the trackpad settings.
+            if (Version >= 7)
+            {
+                TrackPadControls = ini.GetBool("Input", "TrackPadControls", false);
+                ReverseTrackPadX = ini.GetBool("Input", "ReverseTrackPadX", false);
+                ReverseTrackPadY = ini.GetBool("Input", "ReverseTrackPadY", false);
+                TrackPadMoveSensitity = ini.GetFloat("Input", "TrackPadMoveSensitity", 10.0f);
+                TrackPadZoomSensitity = ini.GetFloat("Input", "TrackPadZoomSensitity", 10.0f);
+            }
 
             // Audio
             NumBufferedAudioFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedAudioFrames);
@@ -406,8 +410,8 @@ namespace FamiStudio
 
             // Input
             ini.SetBool("Input", "TrackPadControls", TrackPadControls);
-            ini.SetInt("Input", "TrackPadMoveSensitity", TrackPadMoveSensitity);
-            ini.SetInt("Input", "TrackPadZoomSensitity", TrackPadZoomSensitity);
+            ini.SetFloat("Input", "TrackPadMoveSensitity", TrackPadMoveSensitity);
+            ini.SetFloat("Input", "TrackPadZoomSensitity", TrackPadZoomSensitity);
             ini.SetBool("Input", "ReverseTrackPadX", ReverseTrackPadX);
             ini.SetBool("Input", "ReverseTrackPadY", ReverseTrackPadY);
 

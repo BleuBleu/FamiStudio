@@ -60,20 +60,23 @@ namespace FamiStudio
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            var thumbRect = GetThumbRectangle();
-            if (thumbRect.Contains(e.X, e.Y))
+            if (enabled)
             {
-                Capture = true;
-                dragging = true;
-                dragOffsetX = e.X - thumbRect.X;
-            }
-            else if (e.X > thumbRect.Right)
-            {
-                Value += increment;
-            }
-            else if (e.X < thumbRect.Left)
-            {
-                Value -= increment;
+                var thumbRect = GetThumbRectangle();
+                if (thumbRect.Contains(e.X, e.Y))
+                {
+                    Capture = true;
+                    dragging = true;
+                    dragOffsetX = e.X - thumbRect.X;
+                }
+                else if (e.X > thumbRect.Right)
+                {
+                    Value += increment;
+                }
+                else if (e.X < thumbRect.Left)
+                {
+                    Value -= increment;
+                }
             }
         }
 
@@ -94,10 +97,9 @@ namespace FamiStudio
                 var ratio = x / (float)(width - thumbSize - labelSize - labelMargin);
                 Value = Utils.Lerp(min, max, ratio);
             }
-            else
+            else if (enabled)
             {
                 SetAndMarkDirty(ref hover, GetThumbRectangle().Contains(e.X, e.Y));
-
             }
         }
 
@@ -108,18 +110,16 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
-            Debug.Assert(enabled); // TODO : Add support for disabled state.
-
             var c = parentDialog.CommandList;
             var thumbRect = GetThumbRectangle();
 
             c.DrawLine(thumbSize / 2, height / 2, width - thumbSize / 2 - labelSize - labelMargin, height / 2, ThemeResources.DarkGreyLineBrush1, ScaleForWindow(3));
-            c.DrawBitmapAtlas(bmpThumb, thumbRect.Left, thumbRect.Top, 1, 1, hover || dragging ? Theme.LightGreyFillColor2 : Theme.LightGreyFillColor1);
+            c.DrawBitmapAtlas(bmpThumb, thumbRect.Left, thumbRect.Top, 1, 1, hover || dragging ? Theme.LightGreyFillColor2 : enabled ? Theme.LightGreyFillColor1 : Theme.MediumGreyFillColor1);
 
             if (label)
             {
                 var str = string.Format(CultureInfo.InvariantCulture, format, val);
-                c.DrawText(str, ThemeResources.FontMedium, width - labelSize, 0, ThemeResources.LightGreyFillBrush1, TextFlags.MiddleRight, labelSize, height);
+                c.DrawText(str, ThemeResources.FontMedium, width - labelSize, 0, enabled ? ThemeResources.LightGreyFillBrush1 : ThemeResources.MediumGreyFillBrush1, TextFlags.MiddleRight, labelSize, height);
             }
         }
     }

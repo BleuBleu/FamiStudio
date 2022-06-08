@@ -206,8 +206,8 @@ namespace FamiStudio
                     page.AddCheckBox("Trackpad controls:", Settings.TrackPadControls, TrackpadControlsTooltip); // 0
                     page.AddCheckBox("Reverse trackpad scroll X:", Settings.ReverseTrackPadX); // 1
                     page.AddCheckBox("Reverse trackpad scroll Y:", Settings.ReverseTrackPadY); // 2
-                    page.AddNumericUpDown("Trackpad scroll sensitivity:", Settings.TrackPadMoveSensitity, 1, 16); // 3
-                    page.AddNumericUpDown("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1, 32); // 4
+                    page.AddSlider("Trackpad scroll sensitivity:", Settings.TrackPadMoveSensitity, 1.0, 20.0, 1.0f, 1, "{0:0.0}"); // 3
+                    page.AddSlider("Trackpad zoom sensitivity:", Settings.TrackPadZoomSensitity, 1.0, 20.0, 1.0, 1, "{0:0.0}"); // 4
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
                     page.SetPropertyEnabled(2, Settings.TrackPadControls);
                     page.SetPropertyEnabled(3, Settings.TrackPadControls);
@@ -508,8 +508,8 @@ namespace FamiStudio
                     Settings.TrackPadControls = pageInput.GetPropertyValue<bool>(0);
                     Settings.ReverseTrackPadX = pageInput.GetPropertyValue<bool>(1);
                     Settings.ReverseTrackPadY = pageInput.GetPropertyValue<bool>(2);
-                    Settings.TrackPadMoveSensitity = pageInput.GetPropertyValue<int>(3);
-                    Settings.TrackPadZoomSensitity = pageInput.GetPropertyValue<int>(4);
+                    Settings.TrackPadMoveSensitity = (float)pageInput.GetPropertyValue<double>(3);
+                    Settings.TrackPadZoomSensitity = (float)pageInput.GetPropertyValue<double>(4);
 
                     // Mixer.
                     Settings.GlobalVolume = (float)pageMixer.GetPropertyValue<double>(0);

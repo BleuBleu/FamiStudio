@@ -522,11 +522,14 @@ namespace FamiStudio
                 if (ctrl != ContextMenu)
                     controls.HideContextMenu();
 
-                const float Multiplier = Platform.IsWindows ? 100.0f : 10.0f;
+                const float Multiplier = Platform.IsWindows ? 10.0f : 1.0f;
 
                 // MATTT : Test this on all platforms.
-                var scrollX = (float)xoffset * Settings.TrackPadMoveSensitity * Multiplier;
-                var scrollY = (float)yoffset * Settings.TrackPadMoveSensitity * Multiplier;
+                var scrollX = -(float)xoffset * Settings.TrackPadMoveSensitity * Multiplier;
+                var scrollY =  (float)yoffset * Settings.TrackPadMoveSensitity * Multiplier;
+
+                if (Settings.ReverseTrackPadX) scrollX *= -1.0f;
+                if (Settings.ReverseTrackPadY) scrollY *= -1.0f;
 
                 Debug.WriteLine($"SCALED! X={scrollX}, Y={scrollY}");
 
@@ -945,7 +948,7 @@ namespace FamiStudio
 
                     magnificationAccum += magnification;
 
-                    float threshold = 1.0f / (float)Utils.Clamp(Settings.TrackPadZoomSensitity, 1, 32);
+                    float threshold = 1.0f / (float)Utils.Clamp(Settings.TrackPadZoomSensitity, 1, 16);
 
                     if (Math.Abs(magnificationAccum) > threshold)
                     {

@@ -5,10 +5,10 @@
 - Crash github
 - Warning EPSM ROM from twitter.
 - Threading issue ComputeNumberOfFrameForGroove needs a lock.
+- Allow register viewer.
 
 4.0.0
 =====
-- Add DLL map for linux? 22.04 didnt find X11 or libdl.
 - Double click/Shift click to clear effect value.
 - Change Shift+click for fine to Alt (effect + slider.)
 - Is CPU usage higher?
@@ -18,6 +18,10 @@
 / Move trackpad sensitivity to General Settings (not just MacOS.)
 - Add Flip trackpack dir X/Y.
 	=> Set correct direction for each OS.
+			- Linux   : Scrolling moves the content. Scroll up, content goes up.
+			- Windows : Scrolling moves the content. Scroll up, content goes up.
+			- MacOS   : 
+	=> Linux will need a trackpad zoom (Alt?).
 
 P1:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
