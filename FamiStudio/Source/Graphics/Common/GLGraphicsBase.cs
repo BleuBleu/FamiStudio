@@ -139,7 +139,8 @@ namespace FamiStudio
                 !name.Contains("Cursor") &&
                 !name.Contains("QuickSand") &&
                 !name.Contains("MobileMenu") && 
-                !name.Contains("FamiStudio_");
+                !name.Contains("FamiStudio_") &&
+                !name.Contains("VideoWatermark");
         }
 
         private void BuildBitmapAtlases()
