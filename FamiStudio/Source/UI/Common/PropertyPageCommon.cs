@@ -55,6 +55,7 @@ namespace FamiStudio
     public enum ColumnType
     {
         CheckBox,
+        Radio,
         Label,
         Button,
         DropDown,

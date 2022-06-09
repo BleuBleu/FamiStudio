@@ -48,6 +48,8 @@ namespace FamiStudio
 
         private BitmapAtlasRef bmpCheckOn;
         private BitmapAtlasRef bmpCheckOff;
+        private BitmapAtlasRef bmpRadioOn;
+        private BitmapAtlasRef bmpRadioOff;
 
         private int margin         = DpiScaling.ScaleForWindow(4);
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
@@ -160,7 +162,7 @@ namespace FamiStudio
             for (int i = 0; i < columns.Length - 1; i++)
             {
                 var col = columns[i];
-                var colWidth = col.Type == ColumnType.CheckBox || col.Type == ColumnType.Image ? checkBoxWidth : (int)Math.Round(col.Width * actualWidth);
+                var colWidth = col.Type == ColumnType.CheckBox || col.Type == ColumnType.Radio || col.Type == ColumnType.Image ? checkBoxWidth : (int)Math.Round(col.Width * actualWidth);
 
                 columnWidths[i] = colWidth;
                 columnOffsets[i] = totalWidth;
@@ -184,6 +186,8 @@ namespace FamiStudio
         {
             bmpCheckOn  = g.GetBitmapAtlasRef("CheckBoxYes");
             bmpCheckOff = g.GetBitmapAtlasRef("CheckBoxNo");
+            bmpRadioOn  = g.GetBitmapAtlasRef("RadioButtonOn");
+            bmpRadioOff = g.GetBitmapAtlasRef("RadioButtonOff");
         }
 
         protected override void OnAddedToDialog()
@@ -274,6 +278,17 @@ namespace FamiStudio
                                 {
                                     if (IsPointInButton(e.X, row, col))
                                         ButtonPressed?.Invoke(this, row, col);
+                                    break;
+                                }
+                                case ColumnType.Radio:
+                                {
+                                    data[row, col] = !(bool)data[row, col];
+                                    for (int i = 0; i < data.GetLength(0); i++)
+                                    {
+                                        if (i != row)
+                                            data[i, col] = !(bool)data[row, col];
+                                    }
+                                    ValueChanged?.Invoke(this, row, col, data[row, col]);
                                     break;
                                 }
                                 case ColumnType.CheckBox:
@@ -519,6 +534,15 @@ namespace FamiStudio
                             case ColumnType.Label:
                             {
                                 c.DrawText((string)val, ThemeResources.FontMedium, margin, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft | (col.Ellipsis ? TextFlags.Ellipsis : 0), colWidth, rowHeight);
+                                break;
+                            }
+                            case ColumnType.Radio:
+                            {
+                                var radioBaseX = (colWidth  - bmpRadioOn.ElementSize.Width)  / 2;
+                                var radioBaseY = (rowHeight - bmpRadioOn.ElementSize.Height) / 2;
+                                c.PushTranslation(radioBaseX, radioBaseY);
+                                c.DrawBitmapAtlas((bool)val ? bmpRadioOn : bmpRadioOff, 0, 0, 1, 1, Theme.LightGreyColor1);
+                                c.PopTransform();
                                 break;
                             }
                             case ColumnType.CheckBox:

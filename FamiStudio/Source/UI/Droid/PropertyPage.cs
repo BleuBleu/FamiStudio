@@ -621,7 +621,7 @@ namespace FamiStudio
                 PropertyChanged?.Invoke(this, idx, controlIdx, 0, e.IsChecked);
         }
 
-        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int height = 200)
+        public int AddCheckBoxList(string label, string[] values, bool[] selected, string tooltip = null, int numRows = 7)
         {
             var prop = new Property();
             prop.type = PropertyType.CheckBoxList;
@@ -644,7 +644,7 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null)
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
         {
             var prop = new Property();
             prop.type = PropertyType.RadioList;

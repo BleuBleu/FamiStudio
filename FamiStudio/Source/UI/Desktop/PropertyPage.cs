@@ -213,16 +213,34 @@ namespace FamiStudio
             }
 
             grid.UpdateData(data);
-            grid.ValueChanged += Grid_ValueChanged1;
+            grid.ValueChanged += Grid_ValueChanged;
             grid.ToolTip = tooltip;
 
             return grid;
         }
 
-        private void Grid_ValueChanged1(Control sender, int rowIndex, int colIndex, object value)
+        private Grid CreateRadioButtonList(string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
         {
-            var propIdx = GetPropertyIndexForControl(sender);
-            PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
+            var columns = new[]
+            {
+                new ColumnDesc("A", 0.0f, ColumnType.Radio),
+                new ColumnDesc("B", 1.0f, ColumnType.Label)
+            };
+
+            var grid = new Grid(dialog, columns, numRows, false);
+            var data = new object[values.Length, 2];
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                data[i, 0] = i == selectedIndex ? true : false;
+                data[i, 1] = values[i];
+            }
+
+            grid.UpdateData(data);
+            grid.ValueChanged += Grid_ValueChanged;
+            grid.ToolTip = tooltip;
+
+            return grid;
         }
 
         private Button CreateButton(string text, string tooltip)
@@ -461,9 +479,16 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null)
+        public int AddRadioButtonList(string label, string[] values, int selectedIndex, string tooltip = null, int numRows = 7)
         {
-            return -1;
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.RadioList,
+                    label = label != null ? CreateLabel(label) : null,
+                    control = CreateRadioButtonList(values, selectedIndex, tooltip, numRows)
+                });
+            return properties.Count - 1;
         }
 
         private Slider CreateSlider(double value, double min, double max, double increment, int numDecimals, bool showLabel, string format = "{0}", string tooltip = null)
@@ -530,7 +555,6 @@ namespace FamiStudio
             var propIdx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, propIdx, rowIndex, colIndex, value);
         }
-
 
         public void SetColumnEnabled(int propIdx, int colIdx, bool enabled)
         {
@@ -672,6 +696,19 @@ namespace FamiStudio
             {
                 case PropertyType.DropDownList:
                     return (prop.control as DropDown).SelectedIndex;
+                case PropertyType.RadioList:
+                {
+                    var grid = prop.control as Grid;
+
+                    for (int i = 0; i < grid.ItemCount; i++)
+                    {
+                        if ((bool)grid.GetData(i, 0) == true)
+                            return i;
+                    }
+
+                    Debug.Assert(false);
+                    return -1;
+                }
             }
 
             return -1;

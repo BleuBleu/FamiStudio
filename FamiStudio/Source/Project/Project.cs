@@ -402,9 +402,9 @@ namespace FamiStudio
             }
 
             newSong.SerializeState(loadSerializer);
-#if DEBUG
+            newSong.Name = GenerateUniqueSongName(newSong.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            SortSongs();
             ValidateIntegrity();
-#endif
             return newSong;
         }
 
@@ -440,6 +440,20 @@ namespace FamiStudio
             arpeggios.Add(arpeggio);
             SortArpeggios();
             return arpeggio;
+        }
+
+        public Arpeggio DuplicateArpeggio(Arpeggio arpeggio)
+        {
+            var saveSerializer = new ProjectSaveBuffer(this);
+            arpeggio.SerializeState(saveSerializer);
+            var newArpeggio = CreateArpeggio();
+            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
+            loadSerializer.RemapId(arpeggio.Id, newArpeggio.Id);
+            newArpeggio.SerializeState(loadSerializer);
+            newArpeggio.Name = GenerateUniqueArpeggioName(newArpeggio.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            SortArpeggios();
+            ValidateIntegrity();
+            return newArpeggio;
         }
 
         public void InvalidateCumulativePatternCache()
@@ -481,28 +495,26 @@ namespace FamiStudio
             InvalidateCumulativePatternCache();
         }
 
-        public void CopyInstrument(Instrument instrumentDst, Instrument instrumentSrc)
-        {
-            Debug.Assert(instrumentDst != null && instrumentSrc != null && instrumentDst.Expansion == instrumentSrc.Expansion);
-
-            var saveSerializer = new ProjectSaveBuffer(this);
-            instrumentSrc.SerializeState(saveSerializer);
-            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
-            loadSerializer.RemapId(instrumentSrc.Id, instrumentDst.Id);
-            var oldName = instrumentDst.Name;
-            instrumentDst.SerializeState(loadSerializer);
-            instrumentDst.Name = oldName;
-
-            InvalidateCumulativePatternCache();
-            ValidateIntegrity();
-        }
-
         public void DeleteInstrument(Instrument instrument)
         {
             instruments.Remove(instrument);
             ReplaceInstrument(instrument, null);
         }
-        
+
+        public Instrument DuplicateInstrument(Instrument instrument)
+        {
+            var saveSerializer = new ProjectSaveBuffer(this);
+            instrument.SerializeState(saveSerializer);
+            var newInstrument = CreateInstrument(instrument.Expansion);
+            var loadSerializer = new ProjectLoadBuffer(this, saveSerializer.GetBuffer(), Project.Version);
+            loadSerializer.RemapId(instrument.Id, newInstrument.Id);
+            newInstrument.SerializeState(loadSerializer);
+            newInstrument.Name = GenerateUniqueInstrumentName(newInstrument.Name.TrimEnd(new[] { ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' }));
+            SortInstruments();
+            ValidateIntegrity();
+            return newInstrument;
+        }
+
         public void DeleteAllInstruments()
         {
             foreach (var inst in instruments)
@@ -602,31 +614,31 @@ namespace FamiStudio
             arpeggios.Clear();
         }
 
-        public string GenerateUniqueSongName()
+        public string GenerateUniqueSongName(string baseName = "Song")
         {
             for (int i = 1; ; i++)
             {
-                var name = "Song " + i;
+                var name = $"{baseName} {i}";
                 if (songs.Find(song => song.Name == name) == null)
                     return name;
             }
         }
 
-        public string GenerateUniqueInstrumentName()
+        public string GenerateUniqueInstrumentName(string baseName = "Instrument")
         {
             for (int i = 1; ; i++)
             {
-                var name = "Instrument " + i;
+                var name = $"{baseName} {i}";
                 if (instruments.Find(inst => inst.Name == name) == null)
                     return name;
             }
         }
 
-        public string GenerateUniqueArpeggioName()
+        public string GenerateUniqueArpeggioName(string baseName = "Arpeggio")
         {
             for (int i = 1; ; i++)
             {
-                var name = "Arpeggio " + i;
+                var name = $"{baseName} {i}";
                 if (arpeggios.Find(arp => arp.Name == name) == null)
                     return name;
             }

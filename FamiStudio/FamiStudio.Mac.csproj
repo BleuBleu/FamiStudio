@@ -496,6 +496,8 @@
     <EmbeddedResource Include="Resources\MenuDelete@2x.tga" />
     <EmbeddedResource Include="Resources\MenuDeleteSelection.tga" />
     <EmbeddedResource Include="Resources\MenuDeleteSelection@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuDuplicate.tga" />
+    <EmbeddedResource Include="Resources\MenuDuplicate@2x.tga" />
     <EmbeddedResource Include="Resources\MenuExport.tga" />
     <EmbeddedResource Include="Resources\MenuExport@2x.tga" />
     <EmbeddedResource Include="Resources\MenuEyedropper.tga" />
@@ -516,6 +518,8 @@
     <EmbeddedResource Include="Resources\MenuRadio@2x.tga" />
     <EmbeddedResource Include="Resources\MenuRelease.tga" />
     <EmbeddedResource Include="Resources\MenuRelease@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuReplace.tga" />
+    <EmbeddedResource Include="Resources\MenuReplace@2x.tga" />
     <EmbeddedResource Include="Resources\MenuReset.tga" />
     <EmbeddedResource Include="Resources\MenuReset@2x.tga" />
     <EmbeddedResource Include="Resources\MenuSave.tga" />

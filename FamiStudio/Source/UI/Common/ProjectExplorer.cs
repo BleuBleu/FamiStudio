@@ -1620,53 +1620,20 @@ namespace FamiStudio
                 }
             }
 
-            if (captureOperation != CaptureOperation.None && captureThresholdMet)
+            if (captureOperation == CaptureOperation.DragSong && captureThresholdMet)
             {
-                if (captureOperation == CaptureOperation.DragSong)
+                var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
+                var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
+
+                if (buttonIdx >= 0)
                 {
-                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
-                    var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
+                    var button = buttons[buttonIdx];
 
-                    if (buttonIdx >= 0)
+                    if (button.type == ButtonType.Song ||
+                        button.type == ButtonType.SongHeader)
                     {
-                        var button = buttons[buttonIdx];
-
-                        if (button.type == ButtonType.Song ||
-                            button.type == ButtonType.SongHeader)
-                        {
-                            var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
-                            c.DrawLine(0, lineY, contentSizeX, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
-                        }
-                    }
-                }
-                else if (captureOperation == CaptureOperation.DragInstrument || (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null))
-                {
-                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
-                    if (ClientRectangle.Contains(pt))
-                    {
-                        if (envelopeDragIdx >= 0 || Platform.IsMobile)
-                        {
-                            var button = buttons[captureButtonIdx];
-                            var bx = pt.X - captureButtonRelX;
-                            var by = pt.Y - captureButtonRelY - topTabSizeY;
-                            
-                            if (envelopeDragIdx >= 0)
-                                c.DrawBitmapAtlas(bmpEnvelopes[envelopeDragIdx], bx, by, 0.5f, bitmapScale, Color.Black);
-                            else
-                                c.DrawBitmapAtlas(button.bmp, bx, by, 0.5f, bitmapScale, Color.Black);
-
-                            if (Platform.IsMobile)
-                                c.DrawRectangle(bx, by, bx + iconSize - 4, by + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
-                        }
-                        else
-                        {
-                            var minY = (captureOperation == CaptureOperation.DragInstrument ? minInstIdx : minArpIdx) * buttonSizeY - scrollY + topTabSizeY;
-                            var maxY = (captureOperation == CaptureOperation.DragInstrument ? maxInstIdx : maxArpIdx) * buttonSizeY - scrollY + topTabSizeY;
-                            var color = (captureOperation == CaptureOperation.DragInstrument ? draggedInstrument.Color : draggedArpeggio.Color);
-                            var dragY = Utils.Clamp(pt.Y - captureButtonRelY, minY, maxY) - topTabSizeY;
-
-                            c.FillRectangle(0, dragY, contentSizeX, dragY + buttonSizeY, c.Graphics.GetSolidBrush(color, 1, 0.5f));
-                        }
+                        var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
+                        c.DrawLine(0, lineY, contentSizeX, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
                     }
                 }
             }
@@ -2091,149 +2058,17 @@ namespace FamiStudio
 
         private void UpdateDragInstrument(int x, int y, bool final)
         {
-            if (final)
+            if (final && Platform.IsDesktop && !ClientRectangle.Contains(x, y))
             {
-                if (ClientRectangle.Contains(x, y))
-                {
-                    var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
-
-                    var instrumentSrc = draggedInstrument;
-                    var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
-
-                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null)
-                    {
-                        if (instrumentSrc.Expansion == instrumentDst.Expansion)
-                        {
-                            if (envelopeDragIdx == -1)
-                            {
-                                const string label = "Which action do you wish to perform?";
-
-                                var messageDlg = new PropertyDialog(ParentWindow, "Copy or Replace?", 400, true, true);
-                                messageDlg.Properties.AddLabel(null, label, true); // 0
-                                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, $"Replace all notes of instrument '{instrumentDst.Name}' with '{instrumentSrc.Name}'.", true, true); // 1
-                                messageDlg.Properties.AddRadioButton(Platform.IsMobile ? label : null, $"Copy all properties and envelopes of instrument '{instrumentSrc.Name}' on to instrument '{instrumentDst.Name}'.", false, true); // 2
-                                messageDlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
-                                messageDlg.Properties.Build();
-                                messageDlg.ShowDialogAsync((r) =>
-                                {
-                                    if (r == DialogResult.OK)
-                                    {
-                                        var replace = messageDlg.Properties.GetPropertyValue<bool>(1);
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-
-                                        if (replace)
-                                            App.Project.ReplaceInstrument(instrumentDst, instrumentSrc);
-                                        else
-                                            App.Project.CopyInstrument(instrumentDst, instrumentSrc);
-
-                                        App.UndoRedoManager.EndTransaction();
-                                        RefreshButtons();
-                                        InstrumentReplaced?.Invoke(instrumentDst);
-                                    }
-                                });
-                            }
-                            else
-                            {
-                                Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
-                                {
-                                    if (r == DialogResult.Yes)
-                                    {
-                                        App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
-                                        instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
-                                        instrumentDst.Envelopes[envelopeDragIdx].ClampToValidRange(instrumentDst, envelopeDragIdx);
-
-                                        // HACK : Copy some envelope related stuff. Need to cleanup the envelope code.
-                                        switch (envelopeDragIdx)
-                                        {
-                                            case EnvelopeType.FdsWaveform:
-                                                instrumentDst.FdsWavePreset = instrumentSrc.FdsWavePreset;
-                                                break;
-                                            case EnvelopeType.FdsModulation:
-                                                instrumentDst.FdsModPreset = instrumentSrc.FdsModPreset;
-                                                break;
-                                            case EnvelopeType.N163Waveform:
-                                                instrumentDst.N163WavePreset = instrumentSrc.N163WavePreset;
-                                                instrumentDst.N163WaveSize = instrumentSrc.N163WaveSize;
-                                                break;
-                                        }
-
-                                        App.UndoRedoManager.EndTransaction();
-                                        if (Platform.IsDesktop)
-                                            App.StartEditInstrument(instrumentDst, envelopeDragIdx);
-                                    }
-                                });
-                            }
-                        }
-                        else
-                        {
-                            App.DisplayNotification($"Incompatible audio expansion!"); ;
-                        }
-                    }
-                }
-                else if (Platform.IsDesktop)
-                {
-                    InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(x, y)));
-                }
-            }
-            else
-            {
-                ScrollIfNearEdge(x, y);
-                MarkDirty();
+                InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(x, y)));
             }
         }
 
         private void UpdateDragArpeggio(int x, int y, bool final)
         {
-            if (final)
+            if (final && Platform.IsDesktop && !ClientRectangle.Contains(x, y))
             {
-                if (ClientRectangle.Contains(x, y))
-                {
-                    var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
-
-                    var arpeggioSrc = draggedArpeggio;
-                    var arpeggioDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Arpeggio ? buttons[buttonIdx].arpeggio : null;
-
-                    if (arpeggioSrc != arpeggioDst && arpeggioSrc != null && arpeggioDst != null)
-                    {
-                        if (envelopeDragIdx == -1)
-                        {
-                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to replace all notes using arpeggio '{arpeggioDst.Name}' with '{arpeggioSrc.Name}'?", "Replace arpeggio", MessageBoxButtons.YesNo, (r) =>
-                            {
-                                if (r == DialogResult.Yes)
-                                {
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
-                                    App.Project.ReplaceArpeggio(arpeggioDst, arpeggioSrc);
-                                    App.UndoRedoManager.EndTransaction();
-                                }
-                            });
-                        }
-                        else
-                        {
-                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the arpeggio values from '{arpeggioSrc.Name}' to '{arpeggioDst.Name}'?", "Copy Arpeggio", MessageBoxButtons.YesNo, (r) =>
-                            {
-                                if (r == DialogResult.Yes)
-                                {
-                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, arpeggioDst.Id);
-                                    arpeggioDst.Envelope.Length = arpeggioSrc.Envelope.Length;
-                                    arpeggioDst.Envelope.Loop = arpeggioSrc.Envelope.Loop;
-                                    Array.Copy(arpeggioSrc.Envelope.Values, arpeggioDst.Envelope.Values, arpeggioDst.Envelope.Values.Length);
-                                    App.UndoRedoManager.EndTransaction();
-                                    if (Platform.IsDesktop)
-                                        App.StartEditArpeggio(arpeggioDst);
-                                }
-                            });
-                        }
-                    }
-                }
-                else if (Platform.IsDesktop)
-                {
-                    ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(x, y)));
-                }
-            }
-            else
-            {
-                ScrollIfNearEdge(x, y);
-                MarkDirty();
+                ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(x, y)));
             }
         }
 
@@ -3650,14 +3485,62 @@ namespace FamiStudio
             return true;
         }
 
+        private void DuplicateSong(Song s)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+            s.Project.DuplicateSong(s);
+            RefreshButtons();
+            App.UndoRedoManager.EndTransaction();
+        }
+
+        private void DuplicateInstrument(Instrument inst)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+            App.Project.DuplicateInstrument(inst);
+            RefreshButtons();
+            App.UndoRedoManager.EndTransaction();
+        }
+
         private bool HandleContextMenuSongButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
+            menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateSong(button.song); }));
             if (App.Project.Songs.Count > 1)
                 menu.Add(new ContextMenuOption("MenuDelete", "Delete Song", () => { AskDeleteSong(button.song); }));
             menu.Add(new ContextMenuOption("MenuProperties", "Song/Tempo Properties...", () => { EditSongProperties(new Point(x, y), button.song); }));
             App.ShowContextMenu(left + x, top + y, menu.ToArray());
             return true;
+        }
+
+        private void AskReplaceInstrument(Instrument inst)
+        {
+            var instrumentNames = new List<string>();
+
+            foreach (var i in App.Project.Instruments)
+            {
+                if (i.Expansion == inst.Expansion && i != inst)
+                    instrumentNames.Add(i.Name);
+            }
+
+            if (instrumentNames.Count > 0)
+            {                               
+                var dlg = new PropertyDialog(ParentWindow, "Replace Instrument", 250, true, true);
+                dlg.Properties.AddLabel(null, $"Select the instrument to replace with. All notes using '{inst.Name}' will be replaced by the selected one.", true); // 0
+                dlg.Properties.AddRadioButtonList(null, instrumentNames.ToArray(), 0, null, 12); // 1
+                dlg.Properties.Build();
+
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                        App.Project.ReplaceInstrument(inst, App.Project.GetInstrument(instrumentNames[dlg.Properties.GetSelectedIndex(1)]));
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                        InstrumentReplaced?.Invoke(inst);
+                    }
+                });
+            }
         }
 
         private bool HandleContextMenuInstrumentButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
@@ -3667,9 +3550,14 @@ namespace FamiStudio
             {
                 menu.Add(new ContextMenuOption("MenuClearEnvelope", "Clear Envelope", () => { ClearInstrumentEnvelope(button.instrument, (int)subButtonType); }));
             }
+            else
+            {
+                menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateInstrument(button.instrument); }));
+                menu.Add(new ContextMenuOption("MenuReplace", "Replace With...", () => { AskReplaceInstrument(button.instrument); }));
+            }
             if (button.instrument != null)
             {
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }, subButtonType < SubButtonType.EnvelopeMax));
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Instrument", () => { AskDeleteInstrument(button.instrument); }, true));
                 menu.Add(new ContextMenuOption("MenuProperties", "Instrument Properties...", () => { EditInstrumentProperties(new Point(x, y), button.instrument); }));
             }
             if (menu.Count > 0)
@@ -3703,12 +3591,53 @@ namespace FamiStudio
             return false;
         }
 
+        private void DuplicateArpeggio(Arpeggio arp)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+            App.Project.DuplicateArpeggio(arp);
+            RefreshButtons();
+            App.UndoRedoManager.EndTransaction();
+        }
+
+        private void AskReplaceArpeggio(Arpeggio arp)
+        {
+            var arpeggioNames = new List<string>();
+
+            foreach (var a in App.Project.Arpeggios)
+            {
+                if (a != arp)
+                    arpeggioNames.Add(a.Name);
+            }
+
+            if (arpeggioNames.Count > 0)
+            {
+                var dlg = new PropertyDialog(ParentWindow, "Replace Arpeggio", 250, true, true);
+                dlg.Properties.AddLabel(null, $"Select the arpeggio to replace with. All notes using '{arp.Name}' will be replaced by the selected one.", true); // 0
+                dlg.Properties.AddRadioButtonList(null, arpeggioNames.ToArray(), 0, null, 12); // 1
+                dlg.Properties.Build();
+
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.ProjectNoDPCMSamples);
+                        App.Project.ReplaceArpeggio(arp, App.Project.GetArpeggio(arpeggioNames[dlg.Properties.GetSelectedIndex(1)]));
+                        App.UndoRedoManager.EndTransaction();
+                        RefreshButtons();
+                        InstrumentReplaced?.Invoke(null);
+                    }
+                });
+            }
+        }
+
         private bool HandleContextMenuArpeggioButton(int x, int y, Button button)
         {
             var menu = new List<ContextMenuOption>();
             if (button.arpeggio != null)
             {
-                menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }));
+                menu.Add(new ContextMenuOption("MenuDuplicate", "Duplicate", () => { DuplicateArpeggio(button.arpeggio); }));
+                menu.Add(new ContextMenuOption("MenuReplace", "Replace With...", () => { AskReplaceArpeggio(button.arpeggio); }));
+                menu.Add(new ContextMenuOption("MenuDelete", "Delete Arpeggio", () => { AskDeleteArpeggio(button.arpeggio); }, true));
                 menu.Add(new ContextMenuOption("MenuProperties", "Arpeggio Properties...", () => { EditArpeggioProperties(new Point(x, y), button.arpeggio); }));
             }
             if (menu.Count > 0)
@@ -3828,6 +3757,8 @@ namespace FamiStudio
 
             if (buttonIdx >= 0)
             {
+                // MATTT : Retest this on mobile. We should not be able to drag instruments anymore since we
+                // have explicit duplciate/replace.
                 var button = buttons[buttonIdx];
                 if (button.instrument != null && buttonIdx == highlightedButtonIdx && subButtonType != SubButtonType.Expand)
                 {
