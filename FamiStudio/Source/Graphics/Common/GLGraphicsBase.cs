@@ -1929,14 +1929,13 @@ namespace FamiStudio
                             inst.text += "...";
                     }
 
-                    // MATTT : No need to measure if MiddleLeft for example.
-                    if (inst.flags != TextFlags.TopLeft)
+                    var halign = inst.flags & TextFlags.HorizontalAlignMask;
+                    var valign = inst.flags & TextFlags.VerticalAlignMask;
+
+                    if (halign != TextFlags.Left)
                     {
                         var minX = 0;
                         var maxX = font.MeasureString(inst.text, mono);
-
-                        var halign = inst.flags & TextFlags.HorizontalAlignMask;
-                        var valign = inst.flags & TextFlags.VerticalAlignMask;
 
                         if (halign == TextFlags.Center)
                         {
@@ -1948,24 +1947,24 @@ namespace FamiStudio
                             alignmentOffsetX -= minX;
                             alignmentOffsetX += ((int)inst.layoutRect.Width - maxX - minX);
                         }
+                    }
 
-                        if (valign != TextFlags.Top)
+                    if (valign != TextFlags.Top)
+                    {
+                        // Use a tall character with no descender as reference.
+                        var charA = font.GetCharInfo('A');
+
+                        // When aligning middle or center, ignore the y offset since it just
+                        // adds extra padding and messes up calculations.
+                        alignmentOffsetY = -charA.yoffset;
+
+                        if (valign == TextFlags.Middle)
                         {
-                            // Use a tall character with no descender as reference.
-                            var charA = font.GetCharInfo('A');
-
-                            // When aligning middle or center, ignore the y offset since it just
-                            // adds extra padding and messes up calculations.
-                            alignmentOffsetY = -charA.yoffset;
-
-                            if (valign == TextFlags.Middle)
-                            {
-                                alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
-                            }
-                            else if (valign == TextFlags.Bottom)
-                            {
-                                alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
-                            }
+                            alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height + 1) / 2;
+                        }
+                        else if (valign == TextFlags.Bottom)
+                        {
+                            alignmentOffsetY += ((int)inst.layoutRect.Height - charA.height);
                         }
                     }
 

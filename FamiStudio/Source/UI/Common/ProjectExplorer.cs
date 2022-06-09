@@ -1855,7 +1855,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{Drag} Re-order song\n{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete Song - {MouseRight} More Options...";
+                        tooltip = "{MouseLeft} Make song current - {MouseLeft}{Drag} Re-order song\n{MouseRight} More Options...";
                     }
                 }
                 else if (buttonType == ButtonType.InstrumentHeader)
@@ -1929,7 +1929,7 @@ namespace FamiStudio
                         if (buttons[buttonIdx].instrument == null)
                             tooltip = "{MouseLeft} Select instrument";
                         else
-                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{Drag} Copy/Replace instrument\n{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete Instrument -{MouseRight} More Options...";
+                            tooltip = "{MouseLeft} Select instrument - {MouseLeft}{Drag} Copy/Replace instrument\n{MouseRight} More Options...";
                     }
                     else
                     {
@@ -1968,7 +1968,7 @@ namespace FamiStudio
                     }
                     else if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete DPCM Sample - {MouseRight} More Options...";
+                        tooltip = "{MouseRight} More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
@@ -1986,7 +1986,7 @@ namespace FamiStudio
                 {
                     if (subButtonType == SubButtonType.Max)
                     {
-                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{Drag} Replace arpeggio\n{MouseLeft}{MouseLeft} or {Shift}{MouseLeft} Delete Arpeggio - {MouseRight} More Options...";
+                        tooltip = "{MouseLeft} Select arpeggio - {MouseLeft}{Drag} Replace arpeggio\n{MouseRight} More Options...";
                     }
                     else if (subButtonType == SubButtonType.Properties)
                     {
@@ -2718,7 +2718,7 @@ namespace FamiStudio
 
                             var dlg = new PropertyDialog(ParentWindow, "Import DPCM Samples", 300);
                             dlg.Properties.AddLabel(null, "Select samples to import:"); // 0
-                            dlg.Properties.AddCheckBoxList("Import DPCM Samples", samplesNames.ToArray(), null); // 1
+                            dlg.Properties.AddCheckBoxList(null, samplesNames.ToArray(), null); // 1
                             dlg.Properties.AddButton(null, "Select All"); // 2
                             dlg.Properties.AddButton(null, "Select None"); // 3
                             dlg.Properties.Build();
@@ -4334,11 +4334,11 @@ namespace FamiStudio
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
-            if (HandleMouseDoubleClickButtons(e)) goto Handled;
-            return;
-
-        Handled:
-            MarkDirty();
+            // Disabled. Double-click to delete will confuse existing users.
+            //if (HandleMouseDoubleClickButtons(e)) goto Handled;
+            //return;
+            //Handled:
+            //MarkDirty();
         }
 
         public void ValidateIntegrity()

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace FamiStudio
 {
@@ -14,18 +15,25 @@ namespace FamiStudio
             Folder
         }
 
+        private enum EntryType
+        {
+            Drive,
+            Directory,
+            File
+        }
+
         private class FileEntry
         {
-            public FileEntry(string img, string name, string path, bool dir, DateTime date = default(DateTime))
+            public FileEntry(string img, string name, string path, EntryType t, DateTime date = default(DateTime))
             {
-                IsDir = dir;
+                Type = t;
                 Image = img;
                 Name = name;
                 Path = path;
                 Date = date;
             }
 
-            public bool IsDir;
+            public EntryType Type;
             public string Image;
             public string Name;
             public string Path;
@@ -308,7 +316,7 @@ namespace FamiStudio
             {
                 var f = files[rowIndex];
 
-                if (!f.IsDir)
+                if (f.Type == EntryType.File)
                     textFile.Text = f.Name;
             }
         }
@@ -317,7 +325,12 @@ namespace FamiStudio
         {
             var f = files[rowIndex];
 
-            if (f.IsDir)
+            if (f.Type == EntryType.Drive)
+            {
+                var driveInfo = new DriveInfo(f.Name);
+                GoToPath(driveInfo.RootDirectory.FullName);
+            }
+            else if (f.Type == EntryType.Directory)
             {
                 GoToPath(f.Path);
             }
@@ -411,21 +424,17 @@ namespace FamiStudio
             files.Clear();
 
             if (Directory.Exists(userDir))
-                files.Add(new FileEntry("FileHome", "Home", userDir, true));
+                files.Add(new FileEntry("FileHome", "Home", userDir, EntryType.Directory));
             if (Directory.Exists(desktopDir))
-                files.Add(new FileEntry("FileDesktop", "Desktop", desktopDir, true));
+                files.Add(new FileEntry("FileDesktop", "Desktop", desktopDir, EntryType.Directory));
             if (Directory.Exists(downloadDir))
-                files.Add(new FileEntry("FileDownload", "Downloads", downloadDir, true));
+                files.Add(new FileEntry("FileDownload", "Downloads", downloadDir, EntryType.Directory));
             if (Directory.Exists(documentsDir))
-                files.Add(new FileEntry("FileDocuments", "Documents", documentsDir, true));
+                files.Add(new FileEntry("FileDocuments", "Documents", documentsDir, EntryType.Directory));
 
-            var drives = DriveInfo.GetDrives();
-
+            var drives = Environment.GetLogicalDrives();
             foreach (var d in drives)
-            {
-                if (d.IsReady && d.TotalSize > 0)
-                    files.Add(new FileEntry("FileDisk", d.Name, d.RootDirectory.FullName, true));
-            }
+                files.Add(new FileEntry("FileDisk", d, null, EntryType.Drive));
 
             path = null;
             gridFiles.UpdateData(GetGridData(files));
@@ -469,7 +478,7 @@ namespace FamiStudio
             foreach (var di in dirInfos)
             {
                 if (!di.Attributes.HasFlag(FileAttributes.Hidden))
-                    files.Add(new FileEntry("FileFolder", di.Name, di.FullName, true, di.LastWriteTime));
+                    files.Add(new FileEntry("FileFolder", di.Name, di.FullName, EntryType.Directory, di.LastWriteTime));
             }
 
             if (mode != Mode.Folder)
@@ -479,7 +488,7 @@ namespace FamiStudio
                 foreach (var fi in fileInfos)
                 {
                     if (!fi.Attributes.HasFlag(FileAttributes.Hidden) && MatchesExtensionList(fi.Name.ToLower(), validExtentions))
-                        files.Add(new FileEntry("FileFile", fi.Name, fi.FullName, false, fi.LastWriteTime));
+                        files.Add(new FileEntry("FileFile", fi.Name, fi.FullName, EntryType.File, fi.LastWriteTime));
                 }
             }
 

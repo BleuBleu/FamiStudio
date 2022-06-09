@@ -24,9 +24,9 @@ P1:
 - Scroll bar in sequencer (option to limit seq size to xx%)
   => hide unused channels?
 - Volume/effect scaling, easy one we have context menus.
-- Paste special, option to rename patterns.
 
 P2 (Unlikely):
+- Paste special, option to rename patterns.
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Uncompressed envelopes
@@ -47,8 +47,6 @@ Batch convert PNG -> TGA
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 
-- GTK# : sudo apt-get install gtk-sharp2  
-	- This seem to be enough (sudo apt-get install libgtk2.0-cil) 
 - How to recompile with old linux: 
 	- Ubuntu 16.04.6 
 	- Install cmake-gui 
