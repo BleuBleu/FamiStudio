@@ -195,7 +195,6 @@ namespace FamiStudio
                     page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. 
                     page.SetPropertyVisible(3, Platform.IsDesktop);
                     page.SetPropertyVisible(4, Platform.IsDesktop);
-                    page.SetPropertyVisible(6, Platform.IsDesktop);
                     page.SetPropertyVisible(7, Platform.IsDesktop);
                     page.SetPropertyVisible(8, Platform.IsDesktop);
                     page.SetPropertyVisible(8, !Platform.IsLinux);
