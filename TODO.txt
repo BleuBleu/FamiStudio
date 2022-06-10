@@ -3,6 +3,7 @@
 - Include Demo instruments!!
 - Crash tempo?
 - Crash github
+- How2 crash stereo export.
 - Warning EPSM ROM from twitter.
 - Threading issue ComputeNumberOfFrameForGroove needs a lock.
 - Allow register viewer.
@@ -11,28 +12,47 @@
 =====
 - Is CPU usage higher?
 
+N163 Multi-wave:
+================
+- Max 16 waves for now
+- Display a huge envelope, wave size * num waves
+- Add a "repeat effect"
+- LATER : Effect to change the wave index manually? Will likely require uncompressed envelopes?
+- See what's the best way to encode this in NSF
+- NSF:
+	- we have 6 bytes free for N163 instruments
+		- 2 bytes for the wave index envelope
+		- 2 bytes for the wave list
+	- wave list for each instrument:
+		inst_abc_waves:
+			$wave1,
+			$wave2,
+			$wave3,
+			$wave4
+	- envelope will tell us the index of the wave
+		{ 0, 0, 0, 1, 1, 2, 3, 3, 3, 4 }
+	- for each N163 instrument we will also keep the current index of the wave
+		n163_current_wave, 8
+	- When loading a new instrument, we load + reset the envelope
+	- On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
+
 P1:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
 	=> Remove 1-frame snap glitch.
 - N163 multi-wave
-  => Max 16 waves for now
-  => Display a huge envelope, wave size * num waves
-  => Add a "repeat effect"
-  => See what's the best way to encode this in NSF
-  => 
-- Victoria lab, is it possible to fix the tempo?
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
-- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Improve oscilloscope stability (min square norm?)
 - Improve no-attack.
-- Scroll bar in sequencer (option to limit seq size to xx%)
-  => hide unused channels?
-- Volume/effect scaling, easy one we have context menus.
+/ Scroll bar in sequencer (option to limit seq size to xx%)
+  / hide unused channels?
+  / Add allow sequencer scrolling
+  / Add ideal Sequencer size (10%, 15%, 20%, 25%, 35%, 40%, 45%, Unlimited).
 
 P2 (Unlikely):
-- Paste special, option to rename patterns.
+- Volume/effect scaling, easy one we have context menus.
+- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)- Paste special, option to rename patterns.
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Uncompressed envelopes
