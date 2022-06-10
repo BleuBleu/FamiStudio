@@ -4,7 +4,7 @@ x Crash cancelling stereo export?
 x Crash tempo?
 / Crash github (fixed the UNDO case)
 x How2 crash stereo export. Likely same crash.
-- Warning EPSM ROM from twitter.
+x Warning EPSM ROM from twitter.
 x Threading issue ComputeNumberOfFrameForGroove needs a lock.
 x Allow register viewer.
 
