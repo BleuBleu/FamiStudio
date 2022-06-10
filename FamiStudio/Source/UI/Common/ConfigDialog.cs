@@ -205,7 +205,6 @@ namespace FamiStudio
                     page.SetPropertyVisible(3, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(4, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(8, PlatformUtils.IsDesktop);
-                    page.SetPropertyVisible(9, PlatformUtils.IsDesktop);
                     page.SetPropertyVisible(10, PlatformUtils.IsDesktop);
                     break;
                 }

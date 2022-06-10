@@ -3972,12 +3972,30 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        private bool HandleTouchClickTopTabs(int x, int y)
+        {
+            if (topTabSizeY > 0 && y < topTabSizeY)
+            {
+                selectedTab = x < Width / 2 ? TabType.Project : TabType.Registers;
+                RefreshButtons();
+                return true;
+            }
+
+            return false;
+        }
+
         protected override void OnTouchClick(int x, int y)
         {
             if (captureOperation != CaptureOperation.None)
                 return;
 
-            HandleTouchClickButtons(x, y);
+            if (HandleTouchClickTopTabs(x, y)) goto Handled;
+            if (HandleTouchClickButtons(x, y)) goto Handled;
+
+            return;
+
+        Handled:
+            MarkDirty();
         }
 
         protected override void OnTouchLongPress(int x, int y)
