@@ -50,6 +50,8 @@ namespace FamiStudio
 
                 var numChannels = outputsStereo ? 2 : 1;
                 var channelSamples = GetIndividualChannelSamples(song, outputsStereo, channelMask, sampleRate, loopCount, project.PalMode, duration, log);
+                if (channelSamples == null)
+                    return;
 
                 for (int channelIdx = 0; channelIdx < song.Channels.Length; channelIdx++)
                 {
@@ -97,6 +99,8 @@ namespace FamiStudio
                         Log.LogMessageConditional(log, LogSeverity.Info, $"Exporting channels individually due to custom panning, this will take longer...");
 
                         var channelSamples = GetIndividualChannelSamples(song, outputsStereo, channelMask, sampleRate, loopCount, project.PalMode, duration, log);
+                        if (channelSamples == null)
+                            return;
 
                         var numGeneratedSamples = 0;
                         for (int i = 0; i < channelSamples.Length; i++)
@@ -210,7 +214,7 @@ namespace FamiStudio
                 Thread.Sleep(50);
 
                 if (Log.ShouldAbortOperation)
-                    break;
+                    return null;
             }
 
             return channelSamples;

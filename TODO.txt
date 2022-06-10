@@ -1,6 +1,12 @@
 3.3.1
 =====
-- Include Demo instruments!!
+x Crash cancelling stereo export?
+x Crash tempo?
+- Crash github
+- How2 crash stereo export.
+- Warning EPSM ROM from twitter.
+- Threading issue ComputeNumberOfFrameForGroove needs a lock.
+- Allow register viewer.
 
 3.4.0
 =====

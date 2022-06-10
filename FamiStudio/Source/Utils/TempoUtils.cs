@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace FamiStudio
 {
@@ -193,14 +194,14 @@ namespace FamiStudio
             }
         }
 
-        static Dictionary<CacheGrooveLengthKey, int[]> cachedGrooveLengths = new Dictionary<CacheGrooveLengthKey, int[]>();
+        static ThreadLocal<Dictionary<CacheGrooveLengthKey, int[]>> cachedGrooveLengths = new ThreadLocal<Dictionary<CacheGrooveLengthKey, int[]>>(() => new Dictionary<CacheGrooveLengthKey, int[]>());
 
         public static int ComputeNumberOfFrameForGroove(int length, int[] groove, int groovePadMode)
         {
             // Look in the cache first.
             var key = new CacheGrooveLengthKey() { groove = groove, groovePadMode = groovePadMode};
 
-            if (cachedGrooveLengths.TryGetValue(key, out var grooveLengthArray))
+            if (cachedGrooveLengths.Value.TryGetValue(key, out var grooveLengthArray))
                 return grooveLengthArray[length];
 
             grooveLengthArray = new int[Pattern.MaxLength];
@@ -220,7 +221,7 @@ namespace FamiStudio
                 grooveIterator.Advance();
             }
 
-            cachedGrooveLengths.Add(key, grooveLengthArray);
+            cachedGrooveLengths.Value.Add(key, grooveLengthArray);
 
             return grooveLengthArray[length];
         }
@@ -257,14 +258,14 @@ namespace FamiStudio
             }
         };
 
-        private static Dictionary<CachedTempoEnvelopeKey, byte[]> cachedTempoEnvelopes = new Dictionary<CachedTempoEnvelopeKey, byte[]>();
+        private static ThreadLocal<Dictionary<CachedTempoEnvelopeKey, byte[]>> cachedTempoEnvelopes = new ThreadLocal<Dictionary<CachedTempoEnvelopeKey, byte[]>>(() => new Dictionary<CachedTempoEnvelopeKey, byte[]>());
 
         public static byte[] GetTempoEnvelope(int[] groove, int groovePadMode, bool palSource)
         {
             // Look in the cache first.
             var key = new CachedTempoEnvelopeKey() { groove = groove, groovePadMode = groovePadMode, palSource = palSource };
 
-            if (cachedTempoEnvelopes.TryGetValue(key, out var env))
+            if (cachedTempoEnvelopes.Value.TryGetValue(key, out var env))
                 return env;
 
             // Otherwise build.
@@ -472,7 +473,7 @@ namespace FamiStudio
             envelope.Add(0x80);
 
             env = envelope.ToArray();
-            cachedTempoEnvelopes[key] = env;
+            cachedTempoEnvelopes.Value[key] = env;
 
             return env;
         }
