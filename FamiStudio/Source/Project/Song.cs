@@ -23,6 +23,12 @@ namespace FamiStudio
         private PatternCustomSetting[] patternCustomSettings = new PatternCustomSetting[Song.MaxLength];
         private int[] patternStartNote = new int[Song.MaxLength + 1];
 
+        // This lock is to address the use case where we undo a Song-scope transaction and we end up 
+        // recreating all the channels. The SongPlayer/ChannelState may be trying to get the channel
+        // with GetChannelByType() which this is happening. Another approach would be to stop the audio
+        // every time we undo a Song transaction, but that's super intrusive.
+        private object songLock = new object(); 
+
         // These are specific to FamiTracker tempo mode
         private int famitrackerTempo = 150;
         private int famitrackerSpeed = 6;
@@ -347,7 +353,10 @@ namespace FamiStudio
 
         public Channel GetChannelByType(int type)
         {
-            return channels[Channel.ChannelTypeToIndex(type, project.ExpansionAudioMask, project.ExpansionNumN163Channels)];
+            lock (songLock)
+            {
+                return channels[Channel.ChannelTypeToIndex(type, project.ExpansionAudioMask, project.ExpansionNumN163Channels)];
+            }
         }
 
         public void Trim()
@@ -1064,89 +1073,92 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
-            if (buffer.IsReading)
-                project = buffer.Project;
-
-            buffer.Serialize(ref id, true);
-            buffer.Serialize(ref patternLength);
-            buffer.Serialize(ref songLength);
-            buffer.Serialize(ref beatLength);
-            buffer.Serialize(ref name);
-            buffer.Serialize(ref famitrackerTempo);
-            buffer.Serialize(ref famitrackerSpeed);
-            buffer.Serialize(ref color);
-
-            // At version 5 (FamiStudio 2.0.0), we replaced the jump/skips effects by loop points and custom pattern length and we added a new tempo mode.
-            if (buffer.Version >= 5)
+            lock (songLock)
             {
-                buffer.Serialize(ref loopPoint);
-                buffer.Serialize(ref noteLength);
+                if (buffer.IsReading)
+                    project = buffer.Project;
 
-                // At version 10 (FamiStudio 3.0.0) we improved tempo.
-                if (buffer.Version >= 10)
-                    buffer.Serialize(ref groove);
-                else
-                    groove = new[] { noteLength };
+                buffer.Serialize(ref id, true);
+                buffer.Serialize(ref patternLength);
+                buffer.Serialize(ref songLength);
+                buffer.Serialize(ref beatLength);
+                buffer.Serialize(ref name);
+                buffer.Serialize(ref famitrackerTempo);
+                buffer.Serialize(ref famitrackerSpeed);
+                buffer.Serialize(ref color);
 
-                for (int i = 0; i < songLength; i++)
+                // At version 5 (FamiStudio 2.0.0), we replaced the jump/skips effects by loop points and custom pattern length and we added a new tempo mode.
+                if (buffer.Version >= 5)
                 {
-                    var customSettings = patternCustomSettings[i];
-
-                    buffer.Serialize(ref customSettings.useCustomSettings);
-                    buffer.Serialize(ref customSettings.patternLength);
-                    buffer.Serialize(ref customSettings.noteLength);
-                    buffer.Serialize(ref customSettings.beatLength);
+                    buffer.Serialize(ref loopPoint);
+                    buffer.Serialize(ref noteLength);
 
                     // At version 10 (FamiStudio 3.0.0) we improved tempo.
                     if (buffer.Version >= 10)
-                    {
-                        buffer.Serialize(ref customSettings.groove);
-                        buffer.Serialize(ref customSettings.groovePaddingMode);
-                    }
+                        buffer.Serialize(ref groove);
                     else
+                        groove = new[] { noteLength };
+
+                    for (int i = 0; i < songLength; i++)
                     {
-                        customSettings.groove = customSettings.useCustomSettings ? new[] { customSettings.noteLength } : null;
-                        customSettings.groovePaddingMode = GroovePaddingType.Middle;
+                        var customSettings = patternCustomSettings[i];
+
+                        buffer.Serialize(ref customSettings.useCustomSettings);
+                        buffer.Serialize(ref customSettings.patternLength);
+                        buffer.Serialize(ref customSettings.noteLength);
+                        buffer.Serialize(ref customSettings.beatLength);
+
+                        // At version 10 (FamiStudio 3.0.0) we improved tempo.
+                        if (buffer.Version >= 10)
+                        {
+                            buffer.Serialize(ref customSettings.groove);
+                            buffer.Serialize(ref customSettings.groovePaddingMode);
+                        }
+                        else
+                        {
+                            customSettings.groove = customSettings.useCustomSettings ? new[] { customSettings.noteLength } : null;
+                            customSettings.groovePaddingMode = GroovePaddingType.Middle;
+                        }
+
+                        // At version 8 (FamiStudio 2.3.0), we added custom beat length for FamiTracker tempo, so we need to initialize the value here.
+                        if (buffer.Version < 8 && project.UsesFamiTrackerTempo && patternCustomSettings[i].useCustomSettings && patternCustomSettings[i].beatLength == 0)
+                        {
+                            patternCustomSettings[i].beatLength = beatLength;
+                        }
                     }
 
-                    // At version 8 (FamiStudio 2.3.0), we added custom beat length for FamiTracker tempo, so we need to initialize the value here.
-                    if (buffer.Version < 8 && project.UsesFamiTrackerTempo && patternCustomSettings[i].useCustomSettings && patternCustomSettings[i].beatLength == 0)
-                    {
-                        patternCustomSettings[i].beatLength = beatLength;
-                    }
+                    for (int i = songLength; i < MaxLength; i++)
+                        patternCustomSettings[i].Clear();
                 }
 
-                for (int i = songLength; i < MaxLength; i++)
-                    patternCustomSettings[i].Clear();
+                if (buffer.IsReading)
+                {
+                    CreateChannels();
+                    UpdatePatternStartNotes();
+                }
+
+                foreach (var channel in channels)
+                    channel.SerializeState(buffer);
+
+                if (buffer.IsReading && !buffer.IsForUndoRedo)
+                    DeleteNotesPastMaxInstanceLength();
+
+                if (buffer.Version < 5)
+                    ConvertJumpSkipEffects();
+
+                if (buffer.Version < 10)
+                    ConvertToCompoundNotes();
+
+                if (buffer.IsReading && !buffer.IsForUndoRedo)
+                {
+                    RemoveUnsupportedFeatures();
+                    DeleteEmptyNotes();
+                }
+
+                // Before 2.3.0, songs had an invalid color by default.
+                if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
+                    color = Theme.RandomCustomColor();
             }
-
-            if (buffer.IsReading)
-            {
-                CreateChannels();
-                UpdatePatternStartNotes();
-            }
-
-            foreach (var channel in channels)
-                channel.SerializeState(buffer);
-
-            if (buffer.IsReading && !buffer.IsForUndoRedo)
-                DeleteNotesPastMaxInstanceLength();
-
-            if (buffer.Version < 5)
-                ConvertJumpSkipEffects();
-
-            if (buffer.Version < 10)
-                ConvertToCompoundNotes();
-
-            if (buffer.IsReading && !buffer.IsForUndoRedo)
-            {
-                RemoveUnsupportedFeatures();
-                DeleteEmptyNotes();
-            }
-
-            // Before 2.3.0, songs had an invalid color by default.
-            if (buffer.Version < 8 && color.ToArgb() == Color.Azure.ToArgb())
-                color = Theme.RandomCustomColor();
         }
 
         public class PatternCustomSetting

@@ -1068,7 +1068,7 @@ namespace FamiStudio
         {
             var channel = Song.Channels[location.ChannelIndex];
 
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, location.ChannelIndex);
             channel.PatternInstances[location.PatternIndex] = channel.CreatePattern();
             channel.InvalidateCumulativePatternCache();
             PatternClicked?.Invoke(location.ChannelIndex, location.PatternIndex, false);
@@ -1083,7 +1083,7 @@ namespace FamiStudio
             var channel = Song.Channels[location.ChannelIndex];
             var pattern = channel.PatternInstances[location.PatternIndex];
 
-            App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, location.ChannelIndex);
             patternCache.Remove(pattern);
             channel.PatternInstances[location.PatternIndex] = null;
             channel.InvalidateCumulativePatternCache();
@@ -2580,7 +2580,10 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
+                    if (selectionMax.ChannelIndex == selectionMin.ChannelIndex)
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, selectionMin.ChannelIndex);
+                    else
+                        App.UndoRedoManager.BeginTransaction(TransactionScope.Song, Song.Id);
 
                     var newName  = dlg.Properties.GetPropertyValue<string>(0);
                     var newColor = dlg.Properties.GetPropertyValue<Color>(1);
