@@ -51,7 +51,6 @@ namespace FamiStudio
             }
 
             bufferFill = bufferFillCallback;
-            bufferSemaphore = new Semaphore(numBuffers, numBuffers);
             quitEvent = new ManualResetEvent(false);
         }
 
@@ -70,20 +69,15 @@ namespace FamiStudio
         public void Start()
         {
             Debug.Assert(sourceVoice == null);
+            Debug.Assert(bufferSemaphore == null);
+
+            bufferSemaphore = new Semaphore(audioBuffersRing.Length, audioBuffersRing.Length);
 
             sourceVoice = new SourceVoice(xaudio2, waveFormat);
             sourceVoice.BufferEnd += SourceVoice_BufferEnd;
             sourceVoice.Start();
 
             quitEvent.Reset();
-
-            try
-            {
-                while (true) bufferSemaphore.Release();
-            }
-            catch (SemaphoreFullException)
-            {
-            }
 
             playingTask = Task.Factory.StartNew(PlayAsync, TaskCreationOptions.LongRunning);
         }
@@ -105,6 +99,12 @@ namespace FamiStudio
                 sourceVoice.BufferEnd -= SourceVoice_BufferEnd;
                 sourceVoice.Dispose();
                 sourceVoice = null;
+            }
+
+            if (bufferSemaphore != null)
+            {
+                bufferSemaphore.Dispose();
+                bufferSemaphore = null;
             }
         }
 

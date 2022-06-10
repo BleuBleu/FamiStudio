@@ -899,7 +899,7 @@ namespace FamiStudio
             {
                 new ContextMenuOption("MenuMute", "Toggle Mute Channel", () => { App.ToggleChannelActive(idx); MarkDirty(); }),
                 new ContextMenuOption("MenuSolo", "Toggle Solo Channel", () => { App.ToggleChannelSolo(idx); MarkDirty(); }),
-                new ContextMenuOption("MenuForceDisplay", "Force Display Channel", () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
+                new ContextMenuOption("MenuForceDisplay", "Force Display Channel in Piano Roll", () => { App.ToggleChannelForceDisplay(idx); MarkDirty(); })
             });
         }
 

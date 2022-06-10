@@ -975,6 +975,20 @@ namespace FamiStudio
                 pattern.DeleteEmptyNotes();
         }
 
+        public bool HasAnyPatternInstances
+        {
+            get
+            {
+                for (int i = 0; i < song.Length; i++)
+                {
+                    if (patternInstances[i] != null)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
         public void SetNoteDurationToMaximumLength()
         {
             var maxNoteLengths = new Dictionary<Note, int>();

@@ -82,7 +82,7 @@ namespace FamiStudio
             label = new Label(this, "This is a nice label", true);
             label.Move(margin, margin + titleBarSizeY, width - margin, labelSizeY);
 
-            imageBox = new ImageBox(this, "VideoWatermark");
+            imageBox = new ImageBox(this, (Bitmap)null);
             imageBox.Move(margin, margin * 2 + labelSizeY + titleBarSizeY, imageSizeX, imageSizeY);
             imageBox.ScaleImage = DpiScaling.Window > 1;
 

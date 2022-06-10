@@ -116,7 +116,7 @@ namespace FamiStudio
                     break;
             }
 
-            return int.Parse(s.Substring(0, idx));
+            return idx == 0 ? 0 : int.Parse(s.Substring(0, idx));
         }
 
         public static int RoundDownAndClamp(int x, int factor, int min)

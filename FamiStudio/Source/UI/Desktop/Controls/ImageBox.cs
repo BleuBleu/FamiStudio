@@ -74,7 +74,7 @@ namespace FamiStudio
                     c.DrawBitmapCentered(bmp, 0, 0, width, height, 1, tint);
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(atlasImageName))
             {
                 if (bmpAtlas == null)
                 {
@@ -83,6 +83,10 @@ namespace FamiStudio
                 }
 
                 c.DrawBitmapAtlasCentered(bmpAtlas, 0, 0, width, height, 1, 1, tint);
+            }
+            else
+            {
+                c.FillRectangle(0, 0, width, height, ThemeResources.BlackBrush);
             }
         }
     }
