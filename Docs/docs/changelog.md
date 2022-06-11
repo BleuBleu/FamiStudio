@@ -2,6 +2,14 @@
 
 Version history / release notes for each release.
 
+## Version 3.3.1 (Hotfix)
+
+Fixes/Changes:
+
+* Fixed crash when exporting (or cancelling export) to audio or video
+* Fixed crash when undo-ing certain manipulations in the Sequencer
+* Allowing register viewer on Mobile (off by default)
+
 ## Version 3.3.0
 
 Changes:
