@@ -770,6 +770,7 @@ famistudio_chn_vrc7_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = n
 famistudio_chn_epsm_trigger:      .res 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:   .res 6
 famistudio_chn_epsm_rhythm_stereo: .res 6
+famistudio_chn_epsm_fm_stereo:    .res 6
 famistudio_chn_epsm_alg:          .res 6
 famistudio_chn_epsm_vol_op1:      .res 6
 famistudio_chn_epsm_vol_op2:      .res 6
@@ -2314,7 +2315,8 @@ famistudio_epsm_vol_table_op4:
     .byte FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12,FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12
 famistudio_epsm_fm_vol_table:
     .byte $7e, $65, $50, $3f, $32, $27, $1e, $17, $12, $0d, $09, $06, $04, $02, $01, $00
-	;.byte $00,$01,$02,$04,$06,$09,$0d,$12,$17,$1e,$27,$32,$3f,$50,$65,$7e
+famistudio_epsm_fm_stereo_reg_table:
+    .byte $b4,$b5,$b6,$b4,$b5,$b6
 famistudio_channel_epsm_chan_table:
     .byte $00, $01, $02, $00, $01, $02
 famistudio_epsm_rhythm_key_table:
@@ -2460,14 +2462,27 @@ famistudio_update_epsm_fm_channel_sound:
     ; Untrigger note.  
     lda #FAMISTUDIO_EPSM_REG_KEY
     sta FAMISTUDIO_EPSM_REG_SEL0
-	;todo mute channel
+	
     lda famistudio_epsm_channel_key_table, y
     and #$0f ; remove trigger
     sta FAMISTUDIO_EPSM_REG_WRITE0
+	
+	;Mute channel
+	ldx @reg_offset
+	lda famistudio_epsm_fm_stereo_reg_table,y
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
+	lda #$00
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
     rts
 
 @nocut:
 
+	ldx @reg_offset
+    lda famistudio_epsm_fm_stereo_reg_table,y
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
+	lda famistudio_chn_epsm_fm_stereo,y
+	sta FAMISTUDIO_EPSM_REG_WRITE0,x
+	lda famistudio_chn_note+FAMISTUDIO_EPSM_CH3_IDX,y
     ; Read note, apply arpeggio
     clc
     ldx famistudio_epsm_fm_env_table,y    
@@ -2571,7 +2586,7 @@ famistudio_update_epsm_fm_channel_sound:
         sta famistudio_chn_epsm_trigger,y
 
     @update_volume:
-
+	
 	lda famistudio_chn_epsm_alg,y
 	cmp #7
 	bpl @op_1_2_3_4
@@ -4005,6 +4020,8 @@ famistudio_set_epsm_instrument:
 		and #$07
 		sta famistudio_chn_epsm_alg,x ;store algorithm
 		iny
+		lda (@ptr),y
+        	sta famistudio_chn_epsm_fm_stereo ,x
 		iny
 		iny
 		lda (@ptr),y
