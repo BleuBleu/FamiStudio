@@ -1,16 +1,7 @@
-3.3.1
-=====
-- Include Demo instruments!!
-- Crash tempo?
-- Crash github
-- How2 crash stereo export.
-- Warning EPSM ROM from twitter.
-- Threading issue ComputeNumberOfFrameForGroove needs a lock.
-- Allow register viewer.
-
 4.0.0
 =====
 - Is CPU usage higher?
+- Caps lock disables QWERTY piano?
 
 N163 Multi-wave:
 ================
@@ -37,20 +28,25 @@ N163 Multi-wave:
 	- On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
 
 P1:
+- Sound output selection?
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
 	=> Remove 1-frame snap glitch.
+	=> Snap effect values (at least give the option to!)
 - N163 multi-wave
-- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Improve oscilloscope stability (min square norm?)
-- Improve no-attack.
 / Scroll bar in sequencer (option to limit seq size to xx%)
   / hide unused channels?
+  	=> How do Fx keys work?
+  	=> Fix selection/copy, etc.
+  	=> 
   / Add allow sequencer scrolling
   / Add ideal Sequencer size (10%, 15%, 20%, 25%, 35%, 40%, 45%, Unlimited).
 
 P2 (Unlikely):
+- Improve no-attack.
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Volume/effect scaling, easy one we have context menus.
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)- Paste special, option to rename patterns.
 - Rewrite that crazy ugly function in sound engine + figure out how to have more (change volume or double-special code for rare ones).
