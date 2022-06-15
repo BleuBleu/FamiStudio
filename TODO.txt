@@ -2,6 +2,7 @@
 =====
 - Is CPU usage higher?
 - Caps lock disables QWERTY piano?
+- Re-test double click on files to open on macos.
 
 N163 Multi-wave:
 ================
@@ -57,6 +58,8 @@ P2 (Unlikely):
 - C0 is hidden in piano roll video
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
+
+- BUG : Holding piano on android doesnt hold??? BenMcLean in #development channel.
 
 Testing:
 ========
