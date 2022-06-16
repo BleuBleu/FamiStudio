@@ -237,6 +237,11 @@ namespace FamiStudio
             });
         }
 
+        public static double TimeSeconds()
+        {
+            return SystemClock.UptimeMillis() / 1000.0;
+        }
+
         public static void Beep()
         {
         }

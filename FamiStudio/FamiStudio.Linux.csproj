@@ -668,6 +668,10 @@
     <EmbeddedResource Include="Resources\Save@2x.tga" />
     <EmbeddedResource Include="Resources\SaveSmall.tga" />
     <EmbeddedResource Include="Resources\SaveSmall@2x.tga" />
+    <EmbeddedResource Include="Resources\ShyOn.tga" />
+    <EmbeddedResource Include="Resources\ShyOn@2x.tga" />
+    <EmbeddedResource Include="Resources\ShyOff.tga" />
+    <EmbeddedResource Include="Resources\ShyOff@2x.tga" />
     <EmbeddedResource Include="Resources\Slide.tga" />
     <EmbeddedResource Include="Resources\Slide@15x.tga" />
     <EmbeddedResource Include="Resources\Slide@2x.tga" />

@@ -270,8 +270,8 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 verticalScoll = true;
-                var channelSize = Math.Max((Height / (int)WindowScaling - DefaultHeaderSizeY) / channelCount, 20);
-                return channelSize * channelCount + constantSize;
+                channelSizeY = Math.Max((Height / (int)WindowScaling - DefaultHeaderSizeY) / channelCount, 20);
+                return channelSizeY * channelCount + constantSize;
             }
             else
             {
