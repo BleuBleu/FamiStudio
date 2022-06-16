@@ -131,7 +131,8 @@ namespace FamiStudio
             true,  // DragSelection
             false, // AltZoom
             false, // DragSeekBar
-            false, // ScrollBar
+            false, // ScrollBarX
+            false, // ScrollBarY
             false, // MobileZoom,
             false, // MobilePan,
         };
@@ -144,7 +145,8 @@ namespace FamiStudio
             true,  // DragSelection
             false, // AltZoom
             true,  // DragSeekBar
-            false, // ScrollBar
+            false, // ScrollBarX
+            false, // ScrollBarY
             false, // MobileZoom,
             false, // MobilePan,
         };
