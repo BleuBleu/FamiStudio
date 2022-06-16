@@ -6,7 +6,7 @@ using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
-    public class FamiStudioWindow
+    public partial class FamiStudioWindow
     {
         private const double DelayedRightClickTime = 0.25;
         private const int    DelayedRightClickPixelTolerance = 2;
@@ -79,16 +79,15 @@ namespace FamiStudio
             controls = new FamiStudioControls(this);
             activeControl = controls.PianoRoll;
 
+            PlatformWindowInitialize();
+            InitializeGL();
             BindGLFWCallbacks();
             SetWindowIcon();
-            SubclassWindow(true); 
-            EnableWindowsDarkTheme();
             InitialFrameBufferClear();
-            AssociateMacOSDocuments();
 
             controls.InitializeGL();
         }
-        
+
         private void BindGLFWCallbacks()
         {
             errorCallback = new GLFWerrorfun(ErrorCallback);
@@ -132,6 +131,15 @@ namespace FamiStudio
             glfwSetDropCallback(window, null);
         }
 
+        private void InitializeGL()
+        {
+            glfwGetWindowContentScale(window, out var scaling, out _);
+
+            GL.StaticInitialize();
+            Cursors.Initialize(scaling);
+            DpiScaling.Initialize(scaling);
+        }
+
         public static unsafe FamiStudioWindow CreateWindow(FamiStudio fs)
         {
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
@@ -150,30 +158,8 @@ namespace FamiStudio
 
             glfwMakeContextCurrent(window);
             glfwSwapInterval(1);
-            glfwGetWindowContentScale(window, out var scaling, out _);
-
-#if FAMISTUDIO_MACOS
-            // TODO : Move this somewhere else. Must be called after window is created and before cursors.
-            MacUtils.Initialize(glfwGetCocoaWindow(window));
-#endif
-            GL.StaticInitialize();
-            Cursors.Initialize(scaling);
-            DpiScaling.Initialize(scaling);
 
             return new FamiStudioWindow(fs, window);
-        }
-
-        private void AssociateMacOSDocuments()
-        {
-#if FAMISTUDIO_MACOS
-            // TODO : Move to Platform.
-            MacUtils.FileOpen += MacUtils_FileOpen;
-#endif
-        }
-
-        private void MacUtils_FileOpen(string filename)
-        {
-            famistudio.OpenProject(filename);
         }
 
         private void DestroyWindow()
@@ -732,109 +718,6 @@ namespace FamiStudio
             return false;            
         }
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr SetWindowLong(IntPtr hwnd, int nIndex, IntPtr newProc);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr SetWindowLong(IntPtr hwnd, int nIndex, WndProcDelegate newProc);
-        
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetWindowLong(IntPtr hwnd, int nIndex);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr CallWindowProc(IntPtr proc, IntPtr hwnd, int msg, int wparam, int lparam);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr SetTimer(IntPtr hwnd, IntPtr evt, uint elapse, TimerProcDelegate func);
-        
-        [DllImport("user32.dll")]
-        static extern IntPtr KillTimer(IntPtr hwnd, IntPtr evt);
-
-        private const int GWL_WNDPROC = -4;
-        private const int WM_ENTERSIZEMOVE = 0x231;
-        private const int WM_EXITSIZEMOVE = 0x232;
-        private const int WM_TIMER = 0x113;
-
-        private delegate IntPtr WndProcDelegate(IntPtr hwnd, int msg, int wparam, int lparam);
-        private delegate void TimerProcDelegate(IntPtr hwnd, int msg, int id, int time);
-
-        private TimerProcDelegate timerProc;
-        private WndProcDelegate newWndProc;
-        private IntPtr  oldWndProc;
-        private bool inTimerProc;
-
-        private void SubclassWindow(bool enable)
-        {
-            if (Platform.IsWindows)
-            {
-                var hwnd = Handle;
-
-                if (enable)
-                {
-                    Debug.Assert(newWndProc == null);
-                    newWndProc = new WndProcDelegate(WndProc);
-                    oldWndProc = GetWindowLong(hwnd, GWL_WNDPROC);
-                    SetWindowLong(hwnd, GWL_WNDPROC, newWndProc);
-                }
-                else
-                {
-                    Debug.Assert(oldWndProc != IntPtr.Zero);
-                    SetWindowLong(hwnd, GWL_WNDPROC, oldWndProc);
-                }
-            }
-        }
-
-        private void TimerProc(IntPtr hwnd, int msg, int id, int time)
-        {
-            // Prevent recursion.
-            if (!inTimerProc)
-            {
-                inTimerProc = true;
-                RunIteration();
-                inTimerProc = false;
-            }
-        }
-
-        private IntPtr WndProc(IntPtr hwnd, int msg, int wparam, int lparam)
-        {
-            if (msg == WM_ENTERSIZEMOVE) // WM_ENTERSIZEMOVE 
-            {
-                Debug.Assert(timerProc == null);
-                timerProc = new TimerProcDelegate(TimerProc);
-                SetTimer(hwnd, (IntPtr)1, 4, timerProc);
-            }
-            else if (msg == WM_EXITSIZEMOVE) // WM_EXITSIZEMOVE
-            {
-                Debug.Assert(timerProc != null);
-                timerProc = null;
-                KillTimer(hwnd, (IntPtr)1);
-            }
-
-            return CallWindowProc(oldWndProc, hwnd, msg, wparam, lparam);
-        }
-
-        [DllImport("DwmApi")]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
-
-        protected void EnableWindowsDarkTheme()
-        {
-            if (Platform.IsWindows)
-            {
-                IntPtr handle = glfwGetNativeWindow(window);
-
-                // From https://stackoverflow.com/questions/57124243/winforms-dark-title-bar-on-windows-10
-                try
-                {
-                    if (DwmSetWindowAttribute(handle, 19, new[] { 1 }, 4) != 0)
-                        DwmSetWindowAttribute(handle, 20, new[] { 1 }, 4);
-                }
-                catch
-                {
-                    // Will likely fail on Win7/8.
-                }
-            }
-        }
-
         public void Quit()
         {
             quit = true;
@@ -842,7 +725,7 @@ namespace FamiStudio
             // Need to disable all event processing here. When quitting we may have
             // a NULL project so the rendering and event processing code might be
             // unstable. 
-            SubclassWindow(false);
+            PlatformWindowShudown();
             UnbindGLFWCallbacks();
         }
 
@@ -929,70 +812,6 @@ namespace FamiStudio
             return glfwGetKey(window, (int)k) == GLFW_PRESS;
         }
 
-#if FAMISTUDIO_MACOS
-        private IntPtr selType = MacUtils.SelRegisterName("type");
-        private IntPtr selMagnification = MacUtils.SelRegisterName("magnification");
-        private IntPtr selNextEventMatchingMask = MacUtils.SelRegisterName("nextEventMatchingMask:untilDate:inMode:dequeue:");
-        private IntPtr nsLoopMode;
-
-        private void ProcessSpecialEvents()
-        {
-            if (!Settings.TrackPadControls)
-                return;
-
-            if (nsLoopMode == IntPtr.Zero)
-                nsLoopMode = MacUtils.GetStringConstant(MacUtils.FoundationLibrary, "NSDefaultRunLoopMode");
-
-            while (true)
-            {
-                const int NSEventTypeMagnify = 30;
-
-                var e = MacUtils.SendIntPtr(MacUtils.NSApplication, selNextEventMatchingMask, 1 << NSEventTypeMagnify, IntPtr.Zero, nsLoopMode, true);
-
-                if (e == IntPtr.Zero)
-                    return;
-
-                var type = MacUtils.SendInt(e, selType);
-
-                if (type == NSEventTypeMagnify)
-                {
-                    var magnification = (float)MacUtils.SendFloat(e, selMagnification);
-
-                    if (Math.Sign(magnification) != Math.Sign(magnificationAccum))
-                        magnificationAccum = 0;
-
-                    magnificationAccum += magnification;
-
-                    float threshold = 1.0f / (float)Utils.Clamp(Settings.TrackPadZoomSensitity, 1, 16);
-
-                    if (Math.Abs(magnificationAccum) > threshold)
-                    {
-                        var pt = GetClientCursorPosInternal();
-                        var sz = GetWindowSizeInternal();
-
-                        // We get notified for clicks in the title back and stuff.
-                        if (pt.X < 0 || pt.Y < 0 || pt.X >= sz.Width || pt.Y >= sz.Height)
-                            continue;
-
-                        Debug.WriteLine($"PINCH ZOOM! {magnificationAccum} {pt.X} {pt.Y}");
-
-                        var ctrl = controls.GetControlAtCoord(pt.X, pt.Y, out int x, out int y);
-
-                        modifiers.SetForced(GLFW_MOD_CONTROL);
-                        ctrl.MouseWheel(new MouseEventArgs(0, pt.X, pt.Y, 0, magnificationAccum));
-                        modifiers.SetForced(0);
-
-                        magnificationAccum = 0;
-                    }
-                }
-            }
-        }
-#else
-        void ProcessSpecialEvents()
-        {
-        }
-#endif
-
         private void ProcessEvents()
         {
             glfwPollEvents();
@@ -1000,7 +819,7 @@ namespace FamiStudio
 
         private void RunIteration(bool allowSleep = true)
         {
-            ProcessSpecialEvents();
+            ProcessPlatformEvents();
             ProcessEvents();
             Tick();
             RenderFrameAndSwapBuffer();
