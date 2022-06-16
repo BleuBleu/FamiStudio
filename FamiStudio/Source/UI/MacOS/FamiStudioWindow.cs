@@ -8,10 +8,17 @@ namespace FamiStudio
 {
     public partial class FamiStudioWindow
     {
+        private IntPtr selType = MacUtils.SelRegisterName("type");
+        private IntPtr selMagnification = MacUtils.SelRegisterName("magnification");
+        private IntPtr selNextEventMatchingMask = MacUtils.SelRegisterName("nextEventMatchingMask:untilDate:inMode:dequeue:");
+        private IntPtr nsLoopMode;
+
         private void PlatformWindowInitialize()
         {
             MacUtils.Initialize(glfwGetCocoaWindow(window));
             MacUtils.FileOpen += MacUtils_FileOpen;
+
+            nsLoopMode = MacUtils.GetStringConstant(MacUtils.FoundationLibrary, "NSDefaultRunLoopMode");
         }
 
         private void PlatformWindowShudown()
@@ -23,18 +30,10 @@ namespace FamiStudio
             famistudio.OpenProject(filename);
         }
 
-        private IntPtr selType = MacUtils.SelRegisterName("type");
-        private IntPtr selMagnification = MacUtils.SelRegisterName("magnification");
-        private IntPtr selNextEventMatchingMask = MacUtils.SelRegisterName("nextEventMatchingMask:untilDate:inMode:dequeue:");
-        private IntPtr nsLoopMode;
-
         private void ProcessPlatformEvents()
         {
             if (!Settings.TrackPadControls)
                 return;
-
-            if (nsLoopMode == IntPtr.Zero)
-                nsLoopMode = MacUtils.GetStringConstant(MacUtils.FoundationLibrary, "NSDefaultRunLoopMode");
 
             while (true)
             {
