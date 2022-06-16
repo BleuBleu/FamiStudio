@@ -342,7 +342,7 @@ namespace FamiStudio
 
         protected void PlayPiano(int x, int y)
         {
-            var note = GetPianoNote(x, y);
+            var note = GetPianoNote(x, Utils.Clamp(y, 0, height - 1));
             if (note >= 0)
             {
                 if (note != playAbsNote)

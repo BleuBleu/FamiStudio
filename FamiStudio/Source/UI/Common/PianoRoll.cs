@@ -3626,7 +3626,7 @@ namespace FamiStudio
 
         protected void PlayPiano(int x, int y)
         {
-            var note = GetPianoNote(x, y);
+            var note = GetPianoNote(Utils.Clamp(x, 0, pianoSizeX - 1), y);
             if (note >= 0)
             {
                 if (note != playingNote)
@@ -6412,8 +6412,11 @@ namespace FamiStudio
 
         protected override void OnTouchLongPress(int x, int y)
         {
-            if (captureOperation == CaptureOperation.ChangeEnvelopeValue)
+            if (captureOperation == CaptureOperation.ChangeEnvelopeValue ||
+                captureOperation == CaptureOperation.PlayPiano)
+            {
                 return;
+            }
 
             AbortCaptureOperation();
 

@@ -40,6 +40,7 @@ P1:
 - Sequencer improvement
   	- Add shortcut ([2] ?). Make sure to abort capture if that happens.
   	- Add to context menu somewhere?
+  	- Do it on mobile too
 
 P2 (Unlikely):
 - Improve no-attack.
@@ -55,11 +56,9 @@ P2 (Unlikely):
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
 
-- BUG : Holding piano on android doesnt hold??? BenMcLean in #development channel.
-
 Testing:
 ========
-- Restest sequencer hide channel a bunch, test mobile too. Make sure not broken.
+- Restest sequencer hide channel a bunch, test vertical scroll bars, test mobile too. Make sure not broken.
 - Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
 
 Batch convert PNG -> TGA
