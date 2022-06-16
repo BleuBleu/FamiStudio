@@ -1,8 +1,6 @@
 4.0.0
 =====
 - Is CPU usage higher?
-- Caps lock disables QWERTY piano?
-- Re-test double click on files to open on macos.
 
 N163 Multi-wave:
 ================
@@ -37,13 +35,15 @@ P1:
 	=> Snap effect values (at least give the option to!)
 - N163 multi-wave
 - Improve oscilloscope stability (min square norm?)
-- Sequencer improvement
+/ Sequencer improvement
   	- Add shortcut ([2] ?). Make sure to abort capture if that happens.
   	- Add to context menu somewhere?
   	- Do it on mobile too
 
 P2 (Unlikely):
 - Improve no-attack.
+	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
+	- Draw attack as red if user makes a mistake.
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Volume/effect scaling, easy one we have context menus.
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)- Paste special, option to rename patterns.
