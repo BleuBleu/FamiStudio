@@ -21,19 +21,13 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "OwnerKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_10AC375DF6BF4B2E8414009FE67686F6"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_1EEEE695612A423291368684551360AA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -71,18 +65,6 @@
         {
         "MsmKey" = "8:_62214DA92BDE4BE5AAA8D49FC8680020"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -153,38 +135,8 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_E06C1478A59946E3AB46830133F79763"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_EFD705BE398D4A4594B4EA0ABA4691E2"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_68F38BC81F0EC8ABA97B80F723386F61"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_02EAA2AD59C5483CB557FE728242DD43"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6C89BD387812ECC8F813AD5435321A15"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_0E1830606F567E40430D3A93BEF40D33"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -282,23 +234,12 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0E1830606F567E40430D3A93BEF40D33"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_10AC375DF6BF4B2E8414009FE67686F6"
             {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_0E1830606F567E40430D3A93BEF40D33"
-                    {
-                    "Name" = "8:SharpDX.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:SharpDX.dll"
-            "TargetName" = "8:"
+            "SourcePath" = "8:Demo Songs\\Dedrecil.fms"
+            "TargetName" = "8:Dedrecil.fms"
             "Tag" = "8:"
-            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
+            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -310,13 +251,13 @@
             "PackageAs" = "3:1"
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_10AC375DF6BF4B2E8414009FE67686F6"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1EEEE695612A423291368684551360AA"
             {
-            "SourcePath" = "8:Demo Songs\\Dedrecil.fms"
-            "TargetName" = "8:Dedrecil.fms"
+            "SourcePath" = "8:Demo Songs\\Sonic 1.fms"
+            "TargetName" = "8:Sonic 1.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
@@ -451,68 +392,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_68F38BC81F0EC8ABA97B80F723386F61"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
-                "ScatterAssemblies"
-                {
-                    "_68F38BC81F0EC8ABA97B80F723386F61"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Http.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6C89BD387812ECC8F813AD5435321A15"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:SharpDX.XAudio2, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_6C89BD387812ECC8F813AD5435321A15"
-                    {
-                    "Name" = "8:SharpDX.XAudio2.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:SharpDX.XAudio2.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_35E89725F8BA48E0AC14F44C8E513BED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_720D9750E68C4FC3AF93C9B4B9FDDE4E"
@@ -719,26 +598,6 @@
             {
             "SourcePath" = "8:Demo Songs\\Shatterhand.fms"
             "TargetName" = "8:Shatterhand.fms"
-            "Tag" = "8:"
-            "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E06C1478A59946E3AB46830133F79763"
-            {
-            "SourcePath" = "8:Demo Songs\\Green Hill.fms"
-            "TargetName" = "8:Green Hill.fms"
             "Tag" = "8:"
             "Folder" = "8:_480746F9AE674AEFA02C8BA1191EE4A2"
             "Condition" = "8:"
