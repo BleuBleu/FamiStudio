@@ -84,6 +84,7 @@ namespace FamiStudio
             SubclassWindow(true); 
             EnableWindowsDarkTheme();
             InitialFrameBufferClear();
+            AssociateMacOSDocuments();
 
             controls.InitializeGL();
         }
@@ -160,6 +161,19 @@ namespace FamiStudio
             DpiScaling.Initialize(scaling);
 
             return new FamiStudioWindow(fs, window);
+        }
+
+        private void AssociateMacOSDocuments()
+        {
+#if FAMISTUDIO_MACOS
+            // TODO : Move to Platform.
+            MacUtils.FileOpen += MacUtils_FileOpen;
+#endif
+        }
+
+        private void MacUtils_FileOpen(string filename)
+        {
+            famistudio.OpenProject(filename);
         }
 
         private void DestroyWindow()
