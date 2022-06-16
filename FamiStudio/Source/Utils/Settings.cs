@@ -58,7 +58,8 @@ namespace FamiStudio
         public static int FollowMode = 0;
         public static int FollowSync = 0;
         public static int  ScrollBars = ScrollBarsNone;
-        public static bool ForceCompactSequencer = false;
+        public static int  IdealSequencerSize = 25;
+        public static bool AllowSequencerVerticalScroll = false;
         public static bool ShowImplicitStopNotes = true;
         public static bool ShowRegisterViewer = Platform.IsDesktop;
         public static bool UseOSDialogs = !Platform.IsLinux;
@@ -236,7 +237,8 @@ namespace FamiStudio
             FollowMode = ini.GetInt("UI", "FollowMode", FollowModeContinuous);
             FollowSync = ini.GetInt("UI", "FollowSync", FollowSyncBoth);
             ScrollBars = Version < 3 ? (ini.GetBool("UI", "ShowScrollBars", false) ? ScrollBarsThin : ScrollBarsNone) : ini.GetInt("UI", "ScrollBars", ScrollBarsNone);
-            ForceCompactSequencer = ini.GetBool("UI", "ForceCompactSequencer", false);
+            IdealSequencerSize = ini.GetInt("UI", "IdealSequencerSize", 25);
+            AllowSequencerVerticalScroll = ini.GetBool("UI", "AllowSequencerVerticalScroll", false);
             ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", Platform.IsDesktop);
             ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", Platform.IsDesktop);
             UseOSDialogs = ini.GetBool("UI", "UseOSDialogs", !Platform.IsLinux);
@@ -403,7 +405,8 @@ namespace FamiStudio
             ini.SetInt("UI", "FollowMode", FollowMode);
             ini.SetInt("UI", "FollowSync", FollowSync);
             ini.SetInt("UI", "ScrollBars", ScrollBars);
-            ini.SetBool("UI", "ForceCompactSequencer", ForceCompactSequencer);
+            ini.SetInt("UI", "IdealSequencerSize", IdealSequencerSize);
+            ini.SetBool("UI", "AllowSequencerVerticalScroll", AllowSequencerVerticalScroll);
             ini.SetBool("UI", "ShowImplicitStopNotes", ShowImplicitStopNotes);
             ini.SetBool("UI", "ShowRegisterViewer", ShowRegisterViewer);
             ini.SetBool("UI", "UseOSDialogs", UseOSDialogs);

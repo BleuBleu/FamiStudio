@@ -153,7 +153,8 @@ namespace FamiStudio
             Sequencer.PatternClicked     += Sequencer_PatternClicked;
             Sequencer.PatternModified    += Sequencer_PatternModified;
             Sequencer.SelectionChanged   += Sequencer_SelectionChanged;
-            Sequencer.PatternsPasted     += PianoRoll_NotesPasted;
+            Sequencer.PatternsPasted     += Sequencer_PatternsPasted;
+            Sequencer.ShyChanged         += Sequencer_ShyChanged;
 
             PianoRoll.PatternChanged     += PianoRoll_PatternChanged;
             PianoRoll.ManyPatternChanged += PianoRoll_ManyPatternChanged;
@@ -210,6 +211,7 @@ namespace FamiStudio
                     song = value;
 
                     ResetSelectedChannel();
+                    RefreshLayout();
                     PianoRoll.SongChanged(selectedChannelIndex);
                     Sequencer.Reset();
                     ToolBar.Reset();
@@ -380,6 +382,18 @@ namespace FamiStudio
         private void PianoRoll_MaximizedChanged()
         {
             RefreshLayout();
+        }
+
+        private void Sequencer_ShyChanged()
+        {
+            RefreshLayout();
+        }
+
+        private void Sequencer_PatternsPasted()
+        {
+            RefreshLayout();
+            ProjectExplorer.RefreshButtons();
+            ProjectExplorer.MarkDirty();
         }
 
         private void Sequencer_SelectionChanged()
@@ -835,6 +849,7 @@ namespace FamiStudio
             StaticProject = project;
             song = project.Songs[0];
             palPlayback = project.PalMode;
+            Sequencer.SetHideEmptyChannels(false);
 
             ResetEverything();
             InitializeAutoSave();

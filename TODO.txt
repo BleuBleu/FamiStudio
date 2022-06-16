@@ -37,13 +37,9 @@ P1:
 	=> Snap effect values (at least give the option to!)
 - N163 multi-wave
 - Improve oscilloscope stability (min square norm?)
-/ Scroll bar in sequencer (option to limit seq size to xx%)
-  / hide unused channels?
-  	=> How do Fx keys work?
-  	=> Fix selection/copy, etc.
-  	=> 
-  / Add allow sequencer scrolling
-  / Add ideal Sequencer size (10%, 15%, 20%, 25%, 35%, 40%, 45%, Unlimited).
+- Sequencer improvement
+  	- Add shortcut ([2] ?). Make sure to abort capture if that happens.
+  	- Add to context menu somewhere?
 
 P2 (Unlikely):
 - Improve no-attack.
@@ -63,6 +59,7 @@ P2 (Unlikely):
 
 Testing:
 ========
+- Restest sequencer hide channel a bunch, test mobile too. Make sure not broken.
 - Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
 
 Batch convert PNG -> TGA

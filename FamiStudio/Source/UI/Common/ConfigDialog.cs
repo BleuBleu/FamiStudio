@@ -65,7 +65,20 @@ namespace FamiStudio
             "Thin",
             "Thick"
         };
-        
+
+        public string[] IdealSequencerHeightStrings =
+        {
+            "10%",
+            "15%",
+            "20%",
+            "25%",
+            "30%",
+            "35%",
+            "40%",
+            "45%",
+            "50%",
+        };
+
         // General
         private readonly string CheckUpdatesTooltip             = "When enabled, FamiStudio will check for updates every time you start the app.";
         private readonly string ShowTutorialTooltip             = "When enabled, the first time tutorial will be displayed next time the app is started.";
@@ -84,13 +97,14 @@ namespace FamiStudio
         private readonly string FollowingViewsTooltip           = "Affects which views will scroll when enabling follow mode in the toolbar.";
         private readonly string ScrollBarsTooltip               = "Affects the visibility and size of the scroll bars in the app.";
         private readonly string ShowFamitrackerStopNotesTooltip = "When enabled, partially transparent stop notes will be displayed whenever a note ends, when using FamiTracker tempo mode. This can help you to visually align note delays with stop notes.";
-        private readonly string CompactSequencerTooltip         = "When enabled, the Sequencer will always try to keep its size as small as possible.";
+        private readonly string IdealSequencerHeightTooltip     = "The size of the sequencer, in % of the height of the window. This size maybe not be achievable if there are too many channels.";
+        private readonly string AllowSequencerScrollTooltip     = "When enabled and the ideal sequencer height cannot be achieved, the sequencer will allow vertical scrolling.";
         private readonly string ShowRegisterViewerTooltip       = "When enabled, the 'Register' tab will be visible in the Project Explorer.";
         private readonly string UseOSDialogsTooltip             = "When enabled, FamiStudio will try to use the built-in operating system dialog to open/save files and display error messages. Not available on Linux.";
 
         // Sound
         private readonly string NumBufferedFramesTooltip        = "Number of frames the audio system will buffer. Make this as low as possible, increase if the sound becomes choppy. Larger numbers increase latency.";
-        private readonly string StopInstrumentTooltip           = "Number of secondes to wait before stopping instruments that have a release part in their volume envelopes.";
+        private readonly string StopInstrumentTooltip           = "Number of seconds to wait before stopping instruments that have a release part in their volume envelopes.";
         private readonly string PreventPoppingTooltip           = "When enabled, FamiStudio will use the sweep unit to prevent popping around certain notes on the 2 main square channels. Also known as 'Blargg's Smooth Vibrato' technique.";
         private readonly string ClampPeriodsTooltip             = "When enabled, FamiStudio will clamp periods and note values to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods and notes can sometimes wrap-around.";
         private readonly string NoDragSoundTooltip              = "When enabled, FamiStudio wil not emit sounds when dragging notes in the Piano Roll if the song is playing.";
@@ -154,6 +168,11 @@ namespace FamiStudio
             return list;
         }
 
+        private int GetSequencerSizeIndex(int s)
+        {
+            return Utils.Clamp((s - 10) / 5, 1, IdealSequencerHeightStrings.Length - 1);
+        }
+
         private PropertyPage CreatePropertyPage(PropertyPage page, ConfigSection section)
         {
             switch (section)
@@ -187,17 +206,18 @@ namespace FamiStudio
                     page.AddDropDownList("Follow Mode:", FollowModeStrings, FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
                     page.AddDropDownList("Following Views:", FollowSyncStrings, FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
                     page.AddDropDownList("Scroll Bars:", ScrollBarsStrings, ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 4
-                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 5
-                    page.AddCheckBox("Show Register Viewer Tab:", Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 6
-                    page.AddCheckBox("Force Compact Sequencer:", Settings.ForceCompactSequencer, CompactSequencerTooltip); // 7
-                    page.AddCheckBox("Use Operating System Dialogs:", Settings.UseOSDialogs, UseOSDialogsTooltip); // 8
+                    page.AddDropDownList("Ideal Sequencer Height:", IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 5
+                    page.AddCheckBox("Allow Sequencer Vertical Scrolling: ", Settings.AllowSequencerVerticalScroll, AllowSequencerScrollTooltip); // 6
+                    page.AddCheckBox("Show FamiTracker Stop Notes:", Settings.ShowImplicitStopNotes, ShowFamitrackerStopNotesTooltip); // 7
+                    page.AddCheckBox("Show Register Viewer Tab:", Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 8
+                    page.AddCheckBox("Use Operating System Dialogs:", Settings.UseOSDialogs, UseOSDialogsTooltip); // 9
                         
                     page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. 
                     page.SetPropertyVisible(3, Platform.IsDesktop);
                     page.SetPropertyVisible(4, Platform.IsDesktop);
-                    page.SetPropertyVisible(7, Platform.IsDesktop);
-                    page.SetPropertyVisible(8, Platform.IsDesktop);
-                    page.SetPropertyVisible(8, !Platform.IsLinux);
+                    page.SetPropertyVisible(5, Platform.IsDesktop);
+                    page.SetPropertyVisible(6, Platform.IsDesktop);
+                    page.SetPropertyVisible(9, Platform.IsDesktop && !Platform.IsLinux);
                     break;
                 }
                 case ConfigSection.Input:
@@ -490,10 +510,11 @@ namespace FamiStudio
                     Settings.FollowMode = pageUI.GetSelectedIndex(2);
                     Settings.FollowSync = pageUI.GetSelectedIndex(3);
                     Settings.ScrollBars = pageUI.GetSelectedIndex(4);
-                    Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(5);
-                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(6);
-                    Settings.ForceCompactSequencer = pageUI.GetPropertyValue<bool>(7);
-                    Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(8);
+                    Settings.IdealSequencerSize = Utils.ParseIntWithTrailingGarbage(pageUI.GetPropertyValue<string>(5));
+                    Settings.AllowSequencerVerticalScroll = pageUI.GetPropertyValue<bool>(6);
+                    Settings.ShowImplicitStopNotes = pageUI.GetPropertyValue<bool>(7);
+                    Settings.ShowRegisterViewer = pageUI.GetPropertyValue<bool>(8);
+                    Settings.UseOSDialogs = pageUI.GetPropertyValue<bool>(9);
 
                     // Sound
                     Settings.NumBufferedAudioFrames = pageSound.GetPropertyValue<int>(0);
