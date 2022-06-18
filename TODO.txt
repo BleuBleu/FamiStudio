@@ -2,6 +2,12 @@
 =====
 - Is CPU usage higher?
 
+NSF "famistudio_channel_update" refactoring
+===========================================
+1) Switch to new encoding. Make code work like that
+2) Then do the Y refactoring when it works. What i did was pretty good, the @set_reference things was a mess.
+3) 
+
 N163 Multi-wave:
 ================
 - Max 16 waves for now
@@ -26,6 +32,8 @@ N163 Multi-wave:
 	- When loading a new instrument, we load + reset the envelope
 	- On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
 
+- FIX "beq @sec_and_done" where carry is set
+
 P1:
 - Sound output selection?
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
@@ -41,6 +49,7 @@ P1:
   	- Do it on mobile too
 
 P2 (Unlikely):
+- Give better names to auto saves
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
@@ -134,6 +143,7 @@ Discord
 
 Backlog: 
 =========
+- Reorder channels for video export.
 - ROM export with expansion?
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
