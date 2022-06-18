@@ -1296,7 +1296,6 @@ namespace FamiStudio
 
             var releasesToCreate = new HashSet<NoteLocation>();
             var stopsToCreate = new HashSet<NoteLocation>();
-            var patternsToDuplicate = new HashSet<int>();
 
             var loc0 = new NoteLocation(0, 0);
             var loc1 = new NoteLocation(Song.Length, 0);
@@ -1305,7 +1304,7 @@ namespace FamiStudio
             {
                 var note = it.Note;
 
-                Debug.Assert(note.IsMusical || note.IsStop);
+                Debug.Assert(note.IsMusical || note.IsStop || note.HasCutDelay);
 
                 if (it.Note.IsMusical)
                 {
