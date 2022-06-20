@@ -1,5 +1,5 @@
 ;======================================================================================================================
-; FAMISTUDIO SOUND ENGINE (3.3.0)
+; FAMISTUDIO SOUND ENGINE (4.0.0)
 ; Copyright (c) 2019-2022 Mathieu Gauthier
 ;
 ; Copying and distribution of this file, with or without
@@ -2964,8 +2964,8 @@ famistudio_update_row:
     beq @no_new_note
 .endif
 
-    jsr famistudio_channel_update
-    bcc @no_new_note
+    jsr famistudio_update_channel
+    beq @no_new_note
 
     txa
     tay
@@ -4275,88 +4275,67 @@ famistudio_set_n163_instrument:
 
 .endif
 
-; Increments 16-bit. (internal)
-.macro famistudio_inc_16 addr
-    .local @ok
-    inc addr+0
-    bne @ok
-    inc addr+1
-@ok:
-.endmacro
-
-; Add 8-bit to a 16-bit (unsigned). (internal)
-.macro famistudio_add_16_8 addr, val
-    .local @ok
-    clc
-    lda val
-    adc addr+0
-    sta addr+0
-    bcc @ok
-    inc addr+1
-@ok:
-.endmacro
-
 ;======================================================================================================================
-; FAMISTUDIO_CHANNEL_UPDATE (internal)
+; FAMISTUDIO_UPDATE_CHANNEL (internal)
 ;
 ; Advances the song by one frame for a given channel. If a new note or effect(s) are found, they will be processed.
 ;
-; [in] x: channel index
+; [in]  x: channel index
+; [out] z: non-zero if we triggered a new note.
 ;======================================================================================================================
 
-famistudio_channel_update:
+famistudio_update_channel:
 
-    ; TODO : This function is an absolute mess:
-    ;   - Change all increments of the ptr to "iny" and increment the real pointer once.
-    ;   - See if we can unify the old FT2 "special_code" with our "special_code_6x".
-
-    @tmp_ptr_lo           = famistudio_r0
-    @tmp_chan_idx         = famistudio_r0
-    @tmp_slide_from       = famistudio_r1
-    @tmp_slide_idx        = famistudio_r1
-    @tmp_duty_cycle       = famistudio_r1
-    @tmp_pitch_hi         = famistudio_r1
-    @update_flags         = famistudio_r2 ; bit 7 = no attack, bit 6 = has set delayed cut.
-    @slide_delta_lo       = famistudio_ptr1_hi
-    @channel_data_ptr     = famistudio_ptr0
-    @special_code_jmp_ptr = famistudio_ptr1
-    @tempo_env_ptr        = famistudio_ptr1
-    @volume_env_ptr       = famistudio_ptr1
+    @chan_idx         = famistudio_r0
+    @tmp_slide_from   = famistudio_r1
+    @tmp_slide_idx    = famistudio_r1
+    @tmp_duty_cycle   = famistudio_r1
+    @tmp_ptr_lo       = famistudio_r1
+    @tmp_y1           = famistudio_r1
+    @update_flags     = famistudio_r2 ; bit 7 = no attack, bit 6 = has set delayed cut. Non-zero at end if new note.
+    @slide_delta_lo   = famistudio_ptr1_hi
+    @tmp_y2           = famistudio_ptr1_lo
+    @channel_data_ptr = famistudio_ptr0
+    @opcode_jmp_ptr   = famistudio_ptr1
+    @tempo_env_ptr    = famistudio_ptr1
+    @volume_env_ptr   = famistudio_ptr1
 
     lda famistudio_chn_repeat,x
     beq @no_repeat
     dec famistudio_chn_repeat,x
-    clc
+    lda #0
     rts
 
 @no_repeat:
-    lda #0
-    sta @update_flags
     lda famistudio_chn_ptr_lo,x
     sta @channel_data_ptr+0
     lda famistudio_chn_ptr_hi,x
     sta @channel_data_ptr+1
     ldy #0
+    sty @update_flags
+    stx @chan_idx    
 
 @read_byte:
     lda (@channel_data_ptr),y
-    famistudio_inc_16 @channel_data_ptr
+    iny
 
-@check_regular_note:
-    cmp #$61
-    bcs @check_special_code ; $00 to $60 are regular notes, most common case.
-    jmp @regular_note
-
-@check_special_code:
+; $80 to $ff = sequence of empty notes (up to 64) or instrument changes (up to 64)
+@check_negative: 
     ora #0
-    bpl @check_volume_track
-    jmp @special_code ; Bit 7: 0=note 1=special code
+    bmi @empty_notes_or_instrument_change
 
-@check_volume_track:
-    cmp #$70
-    bcc @special_code_6x
+; $00 to $3f = notes from C1 to D6 (most common notes, same as FT2 range)
+; $40 to $6f = opcodes for various things.
+@check_regular_note:
+    cmp #$40
+    bcc @common_note
 
 .if FAMISTUDIO_USE_VOLUME_TRACK
+; $70 to $7f = volume change 
+@check_volume_track:
+    cmp #$70
+    bcc @jmp_to_opcode
+
 @volume_track:    
     and #$0f
     asl
@@ -4364,68 +4343,273 @@ famistudio_channel_update:
     asl
     asl
     sta famistudio_chn_volume_track,x
-    jmp @read_byte
-.else
-    brk ; If you hit this, this mean you use the volume track in your songs, but did not enable the "FAMISTUDIO_USE_VOLUME_TRACK" feature.
+    bcc @read_byte
 .endif
 
-@special_code_6x:
-    stx @tmp_chan_idx
-    and #$0f
+@jmp_to_opcode:
+    and #$3f
     tax
-    lda @famistudio_special_code_jmp_lo-1,x
-    sta @special_code_jmp_ptr+0
-    lda @famistudio_special_code_jmp_hi-1,x
-    sta @special_code_jmp_ptr+1
-    ldx @tmp_chan_idx
-    jmp (@special_code_jmp_ptr)
+    lda @famistudio_opcode_jmp_lo,x
+    sta @opcode_jmp_ptr+0
+    lda @famistudio_opcode_jmp_hi,x
+    sta @opcode_jmp_ptr+1
+    ldx @chan_idx
+    jmp (@opcode_jmp_ptr)
+
+@empty_notes_or_instrument_change:
+    and #$7f
+    lsr a
+    bcs @set_repeat
+    asl a
+    asl a
+    sta famistudio_chn_instrument,x ; Store instrument number*4
+
+.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
+    cpx #5
+    bcc @regular_channel
+        lda #1
+        sta famistudio_chn_inst_changed-5, x
+    @regular_channel:
+.endif
+.if FAMISTUDIO_EXP_EPSM
+    cpx #8
+    bcc @regular_channel
+    cpx #15
+    bcs @regular_channel
+        lda #1
+        sta famistudio_chn_inst_changed-8, x
+    @regular_channel:
+.endif
+    jmp @read_byte 
+
+@set_repeat:
+    sta famistudio_chn_repeat,x ; Set up repeat counter
+    bcs @done 
+
+@common_note:
+    cmp #0
+    beq @play_note
+        adc #12 ; Carry is clear here.
+
+@play_note:    
+    sta famistudio_chn_note,x ; Store note code
+
+.if FAMISTUDIO_USE_SLIDE_NOTES
+@clear_previous_slide:
+    lda famistudio_channel_to_slide,x ; Clear any previous slide on new note.
+    bmi @cancel_delayed_cut
+    tax
+    lda #0
+    sta famistudio_slide_step,x
+    ldx @chan_idx
+.endif
+
+@cancel_delayed_cut:
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    ; Any note with an attack clears any pending delayed cut, unless it was set during this update (flags bit 6).
+    bit @update_flags
+    bvs @check_stop_note 
+    lda #$ff
+    sta famistudio_chn_cut_delay,x
+.endif
+
+@check_stop_note:
+    lda famistudio_chn_note,x
+    beq @check_dpcm_channel
+@check_no_attack:
+    bit @update_flags
+    bpl @set_final_update_flags
+    lda #0
+    beq @set_final_update_flags
+@check_dpcm_channel:    
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+    cpx #4 ; DPCM always has attack, even on stop notes.
+    bne @set_final_update_flags
+    txa 
+.endif
+@set_final_update_flags:
+    sta @update_flags
+
+.if FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_EPSM
+@set_expansion_triggers:
+    cmp #0
+    beq @done
+.if FAMISTUDIO_EXP_VRC7
+    cpx #FAMISTUDIO_VRC7_CH0_IDX
+    bcc @done
+    lda #1
+    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set trigger flag for VRC7
+.endif
+.if FAMISTUDIO_EXP_EPSM
+    cpx #FAMISTUDIO_EPSM_CH3_IDX
+    bcc @done
+    lda #1
+    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CH3_IDX,x ; Set trigger flag for EPSM
+.endif
+.endif
+
+@done:
+    lda famistudio_chn_ref_len,x ; Check reference row counter
+    beq @flush_y                  ; If it is zero, there is no reference
+    dec famistudio_chn_ref_len,x ; Decrease row counter
+    bne @flush_y
+
+    lda famistudio_chn_return_lo,x ; End of a reference, return to previous pointer
+    sta famistudio_chn_ptr_lo,x
+    lda famistudio_chn_return_hi,x
+    sta famistudio_chn_ptr_hi,x
+    lda @update_flags ; Reload to get correct flags.
+    rts
+
+@flush_y:
+
+    clc
+    tya
+    adc @channel_data_ptr+0
+    sta famistudio_chn_ptr_lo,x
+    lda #0
+    adc @channel_data_ptr+1
+    sta famistudio_chn_ptr_hi,x
+    lda @update_flags ; Reload to get correct flags.
+    rts
+
+;================== OPCODES ====================
+
+@opcode_extended_note:
+    lda (@channel_data_ptr),y
+    iny
+    jmp @play_note
+
+@opcode_release_note:
+.if FAMISTUDIO_EXP_VRC7
+    cpx #FAMISTUDIO_VRC7_CH0_IDX
+    bcc @apu_channel
+    lda #$80
+    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set release flag for VRC7
+    @apu_channel:
+.endif    
+.if FAMISTUDIO_EXP_EPSM
+    cpx #FAMISTUDIO_EPSM_CH3_IDX
+    bcc @apu_channel
+    lda #$80
+    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CH3_IDX,x ; Set release flag for EPSM
+    @apu_channel:
+.endif    
+
+    lda famistudio_channel_to_volume_env,x ; DPCM(5) will never have releases.
+    tax
+
+    lda famistudio_env_addr_lo,x ; Load envelope data address into temp
+    sta @volume_env_ptr+0
+    lda famistudio_env_addr_hi,x
+    sta @volume_env_ptr+1
+    
+    sty @tmp_y1
+    ldy #0
+    lda (@volume_env_ptr),y ; Read first byte of the envelope data, this contains the release index.
+    beq @env_has_no_release
+
+    sta famistudio_env_ptr,x
+    lda #0
+    sta famistudio_env_repeat,x ; Need to reset envelope repeat to force update.
+    
+@env_has_no_release:
+    ldx @chan_idx
+    ldy @tmp_y1
+    clc
+    jmp @done
+
+@opcode_set_reference:
+    clc ; Remember return address+3
+    tya
+    adc #3
+    adc @channel_data_ptr+0
+    sta famistudio_chn_return_lo,x
+    lda @channel_data_ptr+1
+    adc #0
+    sta famistudio_chn_return_hi,x
+    lda (@channel_data_ptr),y ; Read length of the reference (how many rows)
+    sta famistudio_chn_ref_len,x
+    iny
+    lda (@channel_data_ptr),y ; Read 16-bit absolute address of the reference
+    sta @tmp_ptr_lo
+    iny
+    lda (@channel_data_ptr),y
+    sta @channel_data_ptr+1
+    lda @tmp_ptr_lo
+    sta @channel_data_ptr+0
+    ldy #0
+    jmp @read_byte
+
+@opcode_loop:
+    lda (@channel_data_ptr),y
+    sta @tmp_ptr_lo
+    iny
+    lda (@channel_data_ptr),y
+    sta @channel_data_ptr+1
+    lda @tmp_ptr_lo
+    sta @channel_data_ptr+0
+    ldy #0
+    jmp @read_byte
+
+@opcode_disable_attack:
+    lda #$80
+    ora @update_flags
+    sta @update_flags
+    jmp @read_byte 
+
+.if FAMISTUDIO_USE_FAMITRACKER_TEMPO
+@opcode_famitracker_speed:
+    lda (@channel_data_ptr),y
+    iny
+    sta famistudio_song_speed
+    jmp @read_byte 
+.endif
 
 .if FAMISTUDIO_EXP_FDS
-@special_code_fds_mod_depth:    
+@opcode_fds_mod_depth:    
     lda (@channel_data_ptr),y
-    famistudio_inc_16 @channel_data_ptr
+    iny
     sta famistudio_fds_mod_depth
     lda #$40
     ora famistudio_fds_override_flags
     sta famistudio_fds_override_flags
     jmp @read_byte
 
-@special_code_fds_mod_speed:
+@opcode_fds_mod_speed:
     lda (@channel_data_ptr),y
-    sta famistudio_fds_mod_speed+0
     iny
+    sta famistudio_fds_mod_speed+0
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_fds_mod_speed+1
-    famistudio_add_16_8 @channel_data_ptr, #2
     lda #$80
     ora famistudio_fds_override_flags
     sta famistudio_fds_override_flags
-    dey
     jmp @read_byte
 .endif
 
 .if FAMISTUDIO_EXP_VRC6
-@special_code_vrc6_saw_volume:
+@opcode_vrc6_saw_volume:
     lda (@channel_data_ptr),y
-    famistudio_inc_16 @channel_data_ptr
+    iny 
     sta famistudio_vrc6_saw_volume
     jmp @read_byte
 .endif
 
 .if FAMISTUDIO_USE_VOLUME_SLIDES
-@special_code_volume_slide:
+@opcode_volume_slide:
     lda (@channel_data_ptr),y
     iny
     sta famistudio_chn_volume_slide_step, x
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_chn_volume_slide_target, x
-    famistudio_add_16_8 @channel_data_ptr, #2
-    dey
     jmp @read_byte 
 .endif
 
 .if FAMISTUDIO_USE_DELTA_COUNTER
-@special_dmc_counter:
+@opcode_dmc_counter:
     lda (@channel_data_ptr),y
     bmi @set_immediately
 @store_for_later:
@@ -4435,153 +4619,142 @@ famistudio_channel_update:
     and #$7f
     sta FAMISTUDIO_APU_DMC_RAW
 @inc_and_return:
-    famistudio_inc_16 @channel_data_ptr
+    iny
     jmp @read_byte 
 .endif
 
 .if FAMISTUDIO_USE_PITCH_TRACK
-@special_code_fine_pitch:
-    stx @tmp_chan_idx
+@opcode_fine_pitch:
     lda famistudio_channel_to_pitch_env,x
     tax
     lda (@channel_data_ptr),y
-    famistudio_inc_16 @channel_data_ptr
+    iny
     sta famistudio_pitch_env_fine_value,x
-    ldx @tmp_chan_idx
+    ldx @chan_idx
     jmp @read_byte 
 .endif
 
 .if FAMISTUDIO_USE_VIBRATO
-@special_code_clear_pitch_override_flag:
+@opcode_clear_pitch_override_flag:
     lda #$7f
     and famistudio_chn_env_override,x
     sta famistudio_chn_env_override,x
     jmp @read_byte 
 
-@special_code_override_pitch_envelope:
+@opcode_override_pitch_envelope:
     lda #$80
     ora famistudio_chn_env_override,x
     sta famistudio_chn_env_override,x
-    stx @tmp_chan_idx
     lda famistudio_channel_to_pitch_env,x
     tax
     lda (@channel_data_ptr),y
-    sta famistudio_pitch_env_addr_lo,x
     iny
+    sta famistudio_pitch_env_addr_lo,x
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_pitch_env_addr_hi,x
     lda #0
-    tay
     sta famistudio_pitch_env_repeat,x
     lda #1
     sta famistudio_pitch_env_ptr,x
-    ldx @tmp_chan_idx
-    famistudio_add_16_8 @channel_data_ptr, #2
+    ldx @chan_idx
     jmp @read_byte 
 .endif
 
 .if FAMISTUDIO_USE_ARPEGGIO
-@special_code_clear_arpeggio_override_flag:
+@opcode_clear_arpeggio_override_flag:
     lda #$fe
     and famistudio_chn_env_override,x
     sta famistudio_chn_env_override,x
     jmp @read_byte
 
-@special_code_override_arpeggio_envelope:
+@opcode_override_arpeggio_envelope:
     lda #$01
     ora famistudio_chn_env_override,x
     sta famistudio_chn_env_override,x
-    stx @tmp_chan_idx    
     lda famistudio_channel_to_arpeggio_env,x
     tax    
     lda (@channel_data_ptr),y
-    sta famistudio_env_addr_lo,x
     iny
+    sta famistudio_env_addr_lo,x
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_env_addr_hi,x
     lda #0
-    tay
     sta famistudio_env_repeat,x ; Reset the envelope since this might be a no-attack note.
     sta famistudio_env_value,x
     sta famistudio_env_ptr,x
-    ldx @tmp_chan_idx
-    famistudio_add_16_8 @channel_data_ptr, #2
+    ldx @chan_idx
     jmp @read_byte
 
-@special_code_reset_arpeggio:
-    stx @tmp_chan_idx    
+@opcode_reset_arpeggio:
     lda famistudio_channel_to_arpeggio_env,x
     tax
     lda #0
     sta famistudio_env_repeat,x
     sta famistudio_env_value,x
     sta famistudio_env_ptr,x
-    ldx @tmp_chan_idx
+    ldx @chan_idx
     jmp @read_byte
 .endif
 
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-@special_code_duty_cycle_effect:
-    stx @tmp_chan_idx
+@opcode_duty_cycle_effect:
     lda famistudio_channel_to_dutycycle,x
     tax 
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_duty_cycle,x
     sta @tmp_duty_cycle
-    ldx @tmp_chan_idx
+    ldx @chan_idx
     lda famistudio_channel_to_duty_env,x
     tax 
     lda @tmp_duty_cycle
     sta famistudio_env_value,x
-    ldx @tmp_chan_idx
-    famistudio_inc_16 @channel_data_ptr
+    ldx @chan_idx
     jmp @read_byte
 .endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-@special_code_note_delay:
+@opcode_note_delay:
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_chn_note_delay,x
-    famistudio_inc_16 @channel_data_ptr
-    jmp @no_ref
+    jmp @flush_y
 
-@special_code_cut_delay:
+@opcode_cut_delay:
     lda #$40
     sta @update_flags
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_chn_cut_delay,x
-    famistudio_inc_16 @channel_data_ptr
     jmp @read_byte 
 .elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-@special_code_set_tempo_envelope:
+@opcode_set_tempo_envelope:
     ; Load and reset the new tempo envelope.
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_tempo_env_ptr_lo
     sta @tempo_env_ptr+0
-    iny
     lda (@channel_data_ptr),y
+    iny
     sta famistudio_tempo_env_ptr_hi
     sta @tempo_env_ptr+1
-    famistudio_add_16_8 @channel_data_ptr, #2
     jmp @reset_tempo_env
-@special_code_reset_tempo_envelope:
+@opcode_reset_tempo_envelope:
     lda famistudio_tempo_env_ptr_lo
     sta @tempo_env_ptr+0 
     lda famistudio_tempo_env_ptr_hi
     sta @tempo_env_ptr+1
 @reset_tempo_env:    
+    sty @tmp_y1
     ldy #0
     sty famistudio_tempo_env_idx
     lda (@tempo_env_ptr),y
     sta famistudio_tempo_env_counter
+    ldy @tmp_y1
     jmp @read_byte
 .endif
-
-@special_code_disable_attack:
-    lda #$80
-    ora @update_flags
-    sta @update_flags
-    jmp @read_byte 
 
 .if FAMISTUDIO_USE_SLIDE_NOTES
 
@@ -4616,24 +4789,24 @@ famistudio_channel_update:
     jmp @slide_done_pos
 .endif
 
-@special_code_slide:
+@opcode_slide:
 .if FAMISTUDIO_USE_NOISE_SLIDE_NOTES
     cpx #3
     beq @noise_slide
 .endif
-    stx @tmp_chan_idx
     lda famistudio_channel_to_slide,x
     tax
     lda (@channel_data_ptr),y ; Read slide step size
     iny
     sta famistudio_slide_step,x
     lda (@channel_data_ptr),y ; Read slide note from
+    iny 
+    sty @tmp_y2
 .if FAMISTUDIO_DUAL_SUPPORT
     clc
     adc famistudio_pal_adjust
 .endif
     sta @tmp_slide_from
-    iny
     lda (@channel_data_ptr),y ; Read slide note to
     ldy @tmp_slide_from       ; reload note from
 .if FAMISTUDIO_DUAL_SUPPORT
@@ -4642,7 +4815,7 @@ famistudio_channel_update:
     stx @tmp_slide_idx ; X contained the slide index.    
     tax
 .ifdef FAMISTUDIO_EXP_NOTE_START
-    lda @tmp_chan_idx
+    lda @chan_idx
     cmp #FAMISTUDIO_EXP_NOTE_START
     bcs @note_table_expansion
 .endif
@@ -4689,339 +4862,181 @@ famistudio_channel_update:
             bne @positive_shift_loop
     @shift_done:
     .endif
-    ldx @tmp_chan_idx
-    ldy #2
+    ldx @chan_idx
+    ldy @tmp_y2
 
 @slide_done_pos:
     lda (@channel_data_ptr),y ; Re-read the target note (ugly...)
     sta famistudio_chn_note,x ; Store note code
-    famistudio_add_16_8 @channel_data_ptr, #3
-    ldy #0
-    jmp @check_no_attack
-.endif
-
-@regular_note:    
-    sta famistudio_chn_note,x ; Store note code
-.if FAMISTUDIO_USE_SLIDE_NOTES
-    ldy famistudio_channel_to_slide,x ; Clear any previous slide on new node.
-    bmi @check_no_attack
-    lda #0
-    sta famistudio_slide_step,y
-.endif
-@check_no_attack:
-    bit @update_flags
-    bmi @no_attack
-.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-    ; Any note with an attack clears any pending delayed cut, unless it was set during this update (flags bit 6).
-    bvs @check_stop_note 
-    lda #$ff
-    sta famistudio_chn_cut_delay,x
-.endif    
-    @check_stop_note:
-    lda famistudio_chn_note,x ; Dont trigger attack on stop notes.
-    beq @no_attack
-.if FAMISTUDIO_EXP_VRC7
-    cpx #FAMISTUDIO_VRC7_CH0_IDX
-    bcc @sec_and_done
-    lda #1
-    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set trigger flag for VRC7
-.endif
-.if FAMISTUDIO_EXP_EPSM
-    cpx #FAMISTUDIO_EPSM_CH3_IDX
-    bcc @sec_and_done
-    lda #1
-    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CH3_IDX,x ; Set trigger flag for EPSM
-.endif
-@sec_and_done:
-    sec ; New note flag is set
-    jmp @done
-@no_attack:
-.if FAMISTUDIO_CFG_DPCM_SUPPORT
-    cpx #4
-    beq @sec_and_done
-.endif
-@clc_and_done:
-    clc ; Pretend there is no new note.
-    jmp @done
-
-@special_code:
-    and #$7f
-    lsr a
-    bcs @set_empty_rows
-    asl a
-    asl a
-    sta famistudio_chn_instrument,x ; Store instrument number*4
-
-.if FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_FDS
-    cpx #5
-    bcc @regular_channel
-        lda #1
-        sta famistudio_chn_inst_changed-5, x
-    @regular_channel:
-.endif
-.if FAMISTUDIO_EXP_EPSM
-    cpx #8
-    bcc @regular_channel
-    cpx #15
-    bcs @regular_channel
-        lda #1
-        sta famistudio_chn_inst_changed-8, x
-    @regular_channel:
-.endif
-    jmp @read_byte 
-
-@set_speed:
-.if !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    jmp @invalid_opcode
-.else
-    lda (@channel_data_ptr),y
-    sta famistudio_song_speed
-    famistudio_inc_16 @channel_data_ptr
-    jmp @read_byte 
-.endif
-
-@set_loop:
-    lda (@channel_data_ptr),y
-    sta @tmp_ptr_lo
     iny
-    lda (@channel_data_ptr),y
-    sta @channel_data_ptr+1
-    lda @tmp_ptr_lo
-    sta @channel_data_ptr+0
-    dey
-    jmp @read_byte
+    jmp @cancel_delayed_cut
+.endif
 
-@set_empty_rows:
-    cmp #$3d
-    beq @set_speed
-    cmp #$3c
-    beq @release_note
-    bcc @set_repeat
-    cmp #$3e
-    beq @set_loop
-
-@set_reference:
-    clc ; Remember return address+3
-    lda @channel_data_ptr+0
-    adc #3
-    sta famistudio_chn_return_lo,x
-    lda @channel_data_ptr+1
-    adc #0
-    sta famistudio_chn_return_hi,x
-    lda (@channel_data_ptr),y ; Read length of the reference (how many rows)
-    sta famistudio_chn_ref_len,x
-    iny
-    lda (@channel_data_ptr),y ; Read 16-bit absolute address of the reference
-    sta @tmp_ptr_lo
-    iny
-    lda (@channel_data_ptr),y
-    sta @channel_data_ptr+1
-    lda @tmp_ptr_lo
-    sta @channel_data_ptr+0
-    ldy #0
-    jmp @read_byte
-
-@release_note:
-
-.if FAMISTUDIO_EXP_VRC7
-    cpx #FAMISTUDIO_VRC7_CH0_IDX
-    bcc @apu_channel
-    lda #$80
-    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set release flag for VRC7
-    @apu_channel:
-.endif    
-.if FAMISTUDIO_EXP_EPSM
-    cpx #FAMISTUDIO_EPSM_CH3_IDX
-    bcc @apu_channel
-    lda #$80
-    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CH3_IDX,x ; Set release flag for EPSM
-    @apu_channel:
-.endif    
-
-    stx @tmp_chan_idx
-    lda famistudio_channel_to_volume_env,x ; DPCM(5) will never have releases.
-    tax
-
-    lda famistudio_env_addr_lo,x ; Load envelope data address into temp
-    sta @volume_env_ptr+0
-    lda famistudio_env_addr_hi,x
-    sta @volume_env_ptr+1
-    
-    ldy #0
-    lda (@volume_env_ptr),y ; Read first byte of the envelope data, this contains the release index.
-    beq @env_has_no_release
-
-    sta famistudio_env_ptr,x
-    lda #0
-    sta famistudio_env_repeat,x ; Need to reset envelope repeat to force update.
-    
-@env_has_no_release:
-    ldx @tmp_chan_idx
-    clc
-    jmp @done
-
-@set_repeat:
-    sta famistudio_chn_repeat,x ; Set up repeat counter, carry is clear, no new note
-
-@done:
-    lda famistudio_chn_ref_len,x ; Check reference row counter
-    beq @no_ref                  ; If it is zero, there is no reference
-    dec famistudio_chn_ref_len,x ; Decrease row counter
-    bne @no_ref
-
-    lda famistudio_chn_return_lo,x ; End of a reference, return to previous pointer
-    sta famistudio_chn_ptr_lo,x
-    lda famistudio_chn_return_hi,x
-    sta famistudio_chn_ptr_hi,x
-    rts
-
-@no_ref:
-    lda @channel_data_ptr+0
-    sta famistudio_chn_ptr_lo,x
-    lda @channel_data_ptr+1
-    sta famistudio_chn_ptr_hi,x
-    rts
-
-@invalid_opcode:
+@opcode_invalid:
 
     ; If you hit this, this mean you either:
-    ; - have fine pitches in your songs, but didnt enable "FAMISTUDIO_USE_PITCH_TRACK"
-    ; - have vibrato effect in your songs, but didnt enable "FAMISTUDIO_USE_VIBRATO"
-    ; - have arpeggiated chords in your songs, but didnt enable "FAMISTUDIO_USE_ARPEGGIO"
-    ; - have slide notes in your songs, but didnt enable "FAMISTUDIO_USE_SLIDE_NOTES"
-    ; - have a duty cycle effect in your songs, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT"
-    ; - have delayed notes/cuts in your songs, but didnt enable "FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS"
-    ; - have exported a song that uses FamiStudio tempo but have defined "FAMISTUDIO_USE_FAMITRACKER_TEMPO"
-    ; - have exported VRC6 data but didnt define "FAMISTUDIO_EXP_VRC6"
+    ; - exported a song that uses FamiStudio tempo but have defined "FAMISTUDIO_USE_FAMITRACKER_TEMPO"
+    ; - use delayed notes/cuts, but didnt enable "FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS"
+    ; - use vibrato effect, but didnt enable "FAMISTUDIO_USE_VIBRATO"
+    ; - use arpeggiated chords, but didnt enable "FAMISTUDIO_USE_ARPEGGIO"
+    ; - use fine pitches, but didnt enable "FAMISTUDIO_USE_PITCH_TRACK"
+    ; - use a duty cycle effect, but didnt enable "FAMISTUDIO_USE_DUTYCYCLE_EFFECT"
+    ; - use slide notes, but didnt enable "FAMISTUDIO_USE_SLIDE_NOTES"
+    ; - use volume slides, but didnt enable "FAMISTUDIO_USE_VOLUME_SLIDES"
+    ; - use DMC counter effect, but didnt enable "FAMISTUDIO_USE_DELTA_COUNTER"
+    ; - exported FDS data, but didnt define "FAMISTUDIO_EXP_FDS"
+    ; - exported VRC6 data but didnt define "FAMISTUDIO_EXP_VRC6"
 
     brk 
 
-@famistudio_special_code_jmp_lo:
-.if FAMISTUDIO_USE_SLIDE_NOTES
-    .byte <@special_code_slide                        ; $61
+@famistudio_opcode_jmp_lo:
+    .byte <@opcode_extended_note                ; $40
+    .byte <@opcode_release_note                 ; $41
+    .byte <@opcode_set_reference                ; $42
+    .byte <@opcode_loop                         ; $43
+    .byte <@opcode_disable_attack               ; $44
+.if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
+    .byte <@opcode_famitracker_speed            ; $45
 .else
-    .byte <@invalid_opcode                            ; $61
+    .byte <@opcode_invalid                      ; $45
+.endif
+.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
+    .byte <@opcode_note_delay                   ; $46
+    .byte <@opcode_cut_delay                    ; $47
+.elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
+    .byte <@opcode_set_tempo_envelope           ; $46
+    .byte <@opcode_reset_tempo_envelope         ; $47
+.else
+    .byte <@opcode_invalid                      ; $46
+    .byte <@opcode_invalid                      ; $47
 .endif    
-    .byte <@special_code_disable_attack               ; $62
 .if FAMISTUDIO_USE_VIBRATO    
-    .byte <@special_code_override_pitch_envelope      ; $63
-    .byte <@special_code_clear_pitch_override_flag    ; $64
+    .byte <@opcode_override_pitch_envelope      ; $48
+    .byte <@opcode_clear_pitch_override_flag    ; $49
 .else
-    .byte <@invalid_opcode                            ; $63
-    .byte <@invalid_opcode                            ; $64
-.endif    
+    .byte <@opcode_invalid                      ; $48
+    .byte <@opcode_invalid                      ; $49
+.endif   
 .if FAMISTUDIO_USE_ARPEGGIO
-    .byte <@special_code_override_arpeggio_envelope   ; $65
-    .byte <@special_code_clear_arpeggio_override_flag ; $66
-    .byte <@special_code_reset_arpeggio               ; $67
+    .byte <@opcode_override_arpeggio_envelope   ; $4a
+    .byte <@opcode_clear_arpeggio_override_flag ; $4b
+    .byte <@opcode_reset_arpeggio               ; $4c
 .else
-    .byte <@invalid_opcode                            ; $65
-    .byte <@invalid_opcode                            ; $66
-    .byte <@invalid_opcode                            ; $67
+    .byte <@opcode_invalid                      ; $4a
+    .byte <@opcode_invalid                      ; $4b
+    .byte <@opcode_invalid                      ; $4c
 .endif    
 .if FAMISTUDIO_USE_PITCH_TRACK
-    .byte <@special_code_fine_pitch                   ; $68
+    .byte <@opcode_fine_pitch                   ; $4d
 .else
-    .byte <@invalid_opcode                            ; $68
+    .byte <@opcode_invalid                      ; $4d
 .endif    
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-    .byte <@special_code_duty_cycle_effect            ; $69
+    .byte <@opcode_duty_cycle_effect            ; $4e
 .else
-    .byte <@invalid_opcode                            ; $69
+    .byte <@opcode_invalid                      ; $4e
 .endif    
-.if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-    .byte <@special_code_note_delay                   ; $6a
-    .byte <@special_code_cut_delay                    ; $6b
-.elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    .byte <@special_code_set_tempo_envelope           ; $6a
-    .byte <@special_code_reset_tempo_envelope         ; $6b
+.if FAMISTUDIO_USE_SLIDE_NOTES
+    .byte <@opcode_slide                        ; $4f
 .else
-    .byte <@invalid_opcode                            ; $6a
-    .byte <@invalid_opcode                            ; $6b
+    .byte <@opcode_invalid                      ; $4f
 .endif    
-.if FAMISTUDIO_EXP_FDS
-    .byte <@special_code_fds_mod_speed                ; $6c
-    .byte <@special_code_fds_mod_depth                ; $6d
-.elseif FAMISTUDIO_EXP_VRC6
-    .byte <@special_code_vrc6_saw_volume              ; $6c
-    .byte <@invalid_opcode                            ; $6d
-.else
-    .byte <@invalid_opcode                            ; $6c
-    .byte <@invalid_opcode                            ; $6d
-.endif
 .if FAMISTUDIO_USE_VOLUME_SLIDES
-    .byte <@special_code_volume_slide                 ; $6e
+    .byte <@opcode_volume_slide                 ; $50
 .else
-    .byte <@invalid_opcode                            ; $6e
+    .byte <@opcode_invalid                      ; $50
 .endif
 .if FAMISTUDIO_USE_DELTA_COUNTER
-    .byte <@special_dmc_counter                       ; $6f
+    .byte <@opcode_dmc_counter                  ; $51
 .else
-    .byte <@invalid_opcode                            ; $6f
+    .byte <@opcode_invalid                      ; $51
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte <@opcode_fds_mod_speed                ; $52
+    .byte <@opcode_fds_mod_depth                ; $53
+.else
+    .byte <@opcode_invalid                      ; $52
+    .byte <@opcode_invalid                      ; $53
+.endif
+.if FAMISTUDIO_EXP_VRC6
+    .byte <@opcode_vrc6_saw_volume              ; $54
+.else
+    .byte <@opcode_invalid                      ; $54
 .endif
 
-@famistudio_special_code_jmp_hi:
-.if FAMISTUDIO_USE_SLIDE_NOTES
-    .byte >@special_code_slide                        ; $61
+@famistudio_opcode_jmp_hi:
+    .byte >@opcode_extended_note                ; $40
+    .byte >@opcode_release_note                 ; $41
+    .byte >@opcode_set_reference                ; $42
+    .byte >@opcode_loop                         ; $43
+    .byte >@opcode_disable_attack               ; $44
+.if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
+    .byte >@opcode_famitracker_speed            ; $45
 .else
-    .byte >@invalid_opcode                            ; $61
-.endif     
-    .byte >@special_code_disable_attack               ; $62
-.if FAMISTUDIO_USE_VIBRATO        
-    .byte >@special_code_override_pitch_envelope      ; $63
-    .byte >@special_code_clear_pitch_override_flag    ; $64
-.else    
-    .byte >@invalid_opcode                            ; $63
-    .byte >@invalid_opcode                            ; $64
+    .byte >@opcode_invalid                      ; $45
 .endif
-.if FAMISTUDIO_USE_ARPEGGIO
-    .byte >@special_code_override_arpeggio_envelope   ; $64
-    .byte >@special_code_clear_arpeggio_override_flag ; $66
-    .byte >@special_code_reset_arpeggio               ; $67
-.else
-    .byte >@invalid_opcode                            ; $65
-    .byte >@invalid_opcode                            ; $66
-    .byte >@invalid_opcode                            ; $67
-.endif       
-.if FAMISTUDIO_USE_PITCH_TRACK
-    .byte >@special_code_fine_pitch                   ; $68
-.else
-    .byte >@invalid_opcode                            ; $68
-.endif  
-.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-    .byte >@special_code_duty_cycle_effect            ; $69
-.else
-    .byte >@invalid_opcode                            ; $69
-.endif    
 .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
-    .byte >@special_code_note_delay                   ; $6a
-    .byte >@special_code_cut_delay                    ; $6b    
+    .byte >@opcode_note_delay                   ; $46
+    .byte >@opcode_cut_delay                    ; $47
 .elseif !FAMISTUDIO_USE_FAMITRACKER_TEMPO
-    .byte >@special_code_set_tempo_envelope           ; $6a
-    .byte >@special_code_reset_tempo_envelope         ; $6b
+    .byte >@opcode_set_tempo_envelope           ; $46
+    .byte >@opcode_reset_tempo_envelope         ; $47
 .else
-    .byte >@invalid_opcode                            ; $6a
-    .byte >@invalid_opcode                            ; $6b    
+    .byte >@opcode_invalid                      ; $46
+    .byte >@opcode_invalid                      ; $47
 .endif    
-.if FAMISTUDIO_EXP_FDS        
-    .byte >@special_code_fds_mod_speed                ; $6c
-    .byte >@special_code_fds_mod_depth                ; $6d
-.elseif FAMISTUDIO_EXP_VRC6
-    .byte >@special_code_vrc6_saw_volume              ; $6c
-    .byte >@invalid_opcode                            ; $6d
+.if FAMISTUDIO_USE_VIBRATO    
+    .byte >@opcode_override_pitch_envelope      ; $48
+    .byte >@opcode_clear_pitch_override_flag    ; $49
 .else
-    .byte >@invalid_opcode                            ; $6c
-    .byte >@invalid_opcode                            ; $6d    
-.endif
+    .byte >@opcode_invalid                      ; $48
+    .byte >@opcode_invalid                      ; $49
+.endif   
+.if FAMISTUDIO_USE_ARPEGGIO
+    .byte >@opcode_override_arpeggio_envelope   ; $4a
+    .byte >@opcode_clear_arpeggio_override_flag ; $4b
+    .byte >@opcode_reset_arpeggio               ; $4c
+.else
+    .byte >@opcode_invalid                      ; $4a
+    .byte >@opcode_invalid                      ; $4b
+    .byte >@opcode_invalid                      ; $4c
+.endif    
+.if FAMISTUDIO_USE_PITCH_TRACK
+    .byte >@opcode_fine_pitch                   ; $4d
+.else
+    .byte >@opcode_invalid                      ; $4d
+.endif    
+.if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
+    .byte >@opcode_duty_cycle_effect            ; $4e
+.else
+    .byte >@opcode_invalid                      ; $4e
+.endif    
+.if FAMISTUDIO_USE_SLIDE_NOTES
+    .byte >@opcode_slide                        ; $4f
+.else
+    .byte >@opcode_invalid                      ; $4f
+.endif    
 .if FAMISTUDIO_USE_VOLUME_SLIDES
-    .byte >@special_code_volume_slide                 ; $6e
+    .byte >@opcode_volume_slide                 ; $50
 .else
-    .byte >@invalid_opcode                            ; $6e
+    .byte >@opcode_invalid                      ; $50
 .endif
 .if FAMISTUDIO_USE_DELTA_COUNTER
-    .byte >@special_dmc_counter                       ; $6f
+    .byte >@opcode_dmc_counter                  ; $51
 .else
-    .byte >@invalid_opcode                            ; $6f
+    .byte >@opcode_invalid                      ; $51
+.endif
+.if FAMISTUDIO_EXP_FDS
+    .byte >@opcode_fds_mod_speed                ; $52
+    .byte >@opcode_fds_mod_depth                ; $53
+.else
+    .byte >@opcode_invalid                      ; $52
+    .byte >@opcode_invalid                      ; $53
+.endif
+.if FAMISTUDIO_EXP_VRC6
+    .byte >@opcode_vrc6_saw_volume              ; $54
+.else
+    .byte >@opcode_invalid                      ; $54
 .endif
 
 ;======================================================================================================================
