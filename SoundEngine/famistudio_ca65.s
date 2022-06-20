@@ -4473,8 +4473,6 @@ famistudio_update_channel:
     lda @update_flags ; Reload to get correct flags.
     rts
 
-;================== OPCODES ====================
-
 @opcode_extended_note:
     lda (@channel_data_ptr),y
     iny
