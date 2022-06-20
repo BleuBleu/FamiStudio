@@ -774,6 +774,7 @@ famistudio_chn_vrc7_trigger:      .rs 6 ; bit 0 = new note triggered, bit 7 = no
 famistudio_chn_epsm_trigger:      .rs 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:   .rs 6
 famistudio_chn_epsm_rhythm_stereo: .rs 6
+famistudio_chn_epsm_fm_stereo:    .rs 6
 famistudio_chn_epsm_alg:          .rs 6
 famistudio_chn_epsm_vol_op1:      .rs 6
 famistudio_chn_epsm_vol_op2:      .rs 6
@@ -1162,8 +1163,8 @@ famistudio_init:
         sta famistudio_exp_instrument_hi
         iny
     .endif
-	
-	    ; Expansions instrument address (currently incorrect?)
+    
+        ; Expansions instrument address (currently incorrect?)
     .if FAMISTUDIO_EXP_EPSM
         lda [.music_data_ptr],y
         sta famistudio_exp_instrument_lo
@@ -2332,7 +2333,8 @@ famistudio_epsm_vol_table_op4:
     .byte FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12,FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12
 famistudio_epsm_fm_vol_table:
     .byte $7e, $65, $50, $3f, $32, $27, $1e, $17, $12, $0d, $09, $06, $04, $02, $01, $00
-	;.byte $00,$01,$02,$04,$06,$09,$0d,$12,$17,$1e,$27,$32,$3f,$50,$65,$7e
+famistudio_epsm_fm_stereo_reg_table:
+    .byte $b4,$b5,$b6,$b4,$b5,$b6
 famistudio_channel_epsm_chan_table:
     .byte $00, $01, $02, $00, $01, $02
 famistudio_epsm_rhythm_key_table:
@@ -2361,7 +2363,7 @@ famistudio_epsm_square_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_A, FAMISTUDIO_EPSM_REG_VOL_B, FAMISTUDIO_EPSM_REG_VOL_C
 famistudio_epsm_square_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS
-	
+    
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_SQUARE_CHANNEL_SOUND (internal)
 ;
@@ -2478,14 +2480,27 @@ famistudio_update_epsm_fm_channel_sound:
     ; Untrigger note.  
     lda #FAMISTUDIO_EPSM_REG_KEY
     sta FAMISTUDIO_EPSM_REG_SEL0
-	;todo mute channel
+    
     lda famistudio_epsm_channel_key_table, y
     and #$0f ; remove trigger
     sta FAMISTUDIO_EPSM_REG_WRITE0
+    
+    ;Mute channel
+    ldx <.reg_offset
+    lda famistudio_epsm_fm_stereo_reg_table,y
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
+    lda #$00
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
     rts
 
 .nocut:
 
+    ldx <.reg_offset
+    lda famistudio_epsm_fm_stereo_reg_table,y
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
+    lda famistudio_chn_epsm_fm_stereo,y
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    lda famistudio_chn_note+FAMISTUDIO_EPSM_CH3_IDX,y
     ; Read note, apply arpeggio
     clc
     ldx famistudio_epsm_fm_env_table,y    
@@ -2507,7 +2522,7 @@ famistudio_update_epsm_fm_channel_sound:
         ror <.pitch+0
         cmp #$02
         bcc .octave_done
-		bcs .compute_octave_loop ;unconditional
+        bcs .compute_octave_loop ;unconditional
     .octave_done:
     sta <.pitch+1
 
@@ -2533,19 +2548,19 @@ famistudio_update_epsm_fm_channel_sound:
     lda famistudio_chn_epsm_trigger,y
     beq .write_hi_period
     .untrigger_prev_note:
-		; Untrigger note.  
-		lda #FAMISTUDIO_EPSM_REG_KEY
-		sta FAMISTUDIO_EPSM_REG_SEL0
+        ; Untrigger note.  
+        lda #FAMISTUDIO_EPSM_REG_KEY
+        sta FAMISTUDIO_EPSM_REG_SEL0
 
-		lda famistudio_epsm_channel_key_table, y
-		and #$0f ; remove trigger
-		sta FAMISTUDIO_EPSM_REG_WRITE0
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
+        lda famistudio_epsm_channel_key_table, y
+        and #$0f ; remove trigger
+        sta FAMISTUDIO_EPSM_REG_WRITE0
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
 ;        rts
 
     .write_hi_period:
@@ -2576,92 +2591,92 @@ famistudio_update_epsm_fm_channel_sound:
     .else
         lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
-	
+    
     .if FAMISTUDIO_USE_VOLUME_TRACK
         tax
         lda famistudio_volume_table,x
-    .endif	
-		sta <.vol_offset
+    .endif    
+        sta <.vol_offset
 
-	
-	;sta .vol_offset
+    
+    ;sta .vol_offset
         lda #0
         sta famistudio_chn_epsm_trigger,y
 
     .update_volume:
 
-	lda famistudio_chn_epsm_alg,y
-	cmp #7
-	bpl .op_1_2_3_4
-	cmp #5
-	bpl .op_2_3_4
-	cmp #4
-	bpl .op_2_4
-	jmp .op_4
-	
-	; todo
-	.op_1_2_3_4:
+    lda famistudio_chn_epsm_alg,y
+    cmp #7
+    bpl .op_1_2_3_4
+    cmp #5
+    bpl .op_2_3_4
+    cmp #4
+    bpl .op_2_4
+    jmp .op_4
+    
+    ; todo
+    .op_1_2_3_4:
         lda famistudio_epsm_vol_table_op1,y
         ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-		ldx <.vol_offset
-		lda famistudio_chn_epsm_vol_op1,y
-		adc famistudio_epsm_fm_vol_table,x
-		cmp #127
-		bmi .save_op1
-		lda #127
-	.save_op1:
-		ldx <.reg_offset
-		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-	.op_2_3_4:
+        ldx <.vol_offset
+        lda famistudio_chn_epsm_vol_op1,y
+        adc famistudio_epsm_fm_vol_table,x
+        cmp #127
+        bmi .save_op1
+        lda #127
+    .save_op1:
+        ldx <.reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    .op_2_3_4:
         lda famistudio_epsm_vol_table_op3,y
         ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-		ldx <.vol_offset
-		lda famistudio_chn_epsm_vol_op3,y
-		adc famistudio_epsm_fm_vol_table,x
-		cmp #127
-		bmi .save_op3
-		lda #127
-	.save_op3:
-		ldx <.reg_offset
-		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-	.op_2_4:
+        ldx <.vol_offset
+        lda famistudio_chn_epsm_vol_op3,y
+        adc famistudio_epsm_fm_vol_table,x
+        cmp #127
+        bmi .save_op3
+        lda #127
+    .save_op3:
+        ldx <.reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    .op_2_4:
         lda famistudio_epsm_vol_table_op2,y
         ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-		ldx <.vol_offset
-		lda famistudio_chn_epsm_vol_op2,y
-		adc famistudio_epsm_fm_vol_table,x
-		cmp #127
-		bmi .save_op2
-		lda #127
-	.save_op2:
-		ldx <.reg_offset
-		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-	.op_4:
+        ldx <.vol_offset
+        lda famistudio_chn_epsm_vol_op2,y
+        adc famistudio_epsm_fm_vol_table,x
+        cmp #127
+        bmi .save_op2
+        lda #127
+    .save_op2:
+        ldx <.reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    .op_4:
         ; Write volume
         lda famistudio_epsm_vol_table_op4,y
         ldx <.reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-		ldx <.vol_offset
-		lda famistudio_chn_epsm_vol_op4,y
-		adc famistudio_epsm_fm_vol_table,x
-		cmp #127
-		bmi .save_op4
-		lda #127
-	.save_op4:
-		ldx <.reg_offset
-		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-		nop
-		nop
-		nop
-		nop
-		nop
-		lda #FAMISTUDIO_EPSM_REG_KEY
-		sta FAMISTUDIO_EPSM_REG_SEL0
-		lda famistudio_epsm_channel_key_table, y
-		sta FAMISTUDIO_EPSM_REG_WRITE0
+        ldx <.vol_offset
+        lda famistudio_chn_epsm_vol_op4,y
+        adc famistudio_epsm_fm_vol_table,x
+        cmp #127
+        bmi .save_op4
+        lda #127
+    .save_op4:
+        ldx <.reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+        nop
+        nop
+        nop
+        nop
+        nop
+        lda #FAMISTUDIO_EPSM_REG_KEY
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda famistudio_epsm_channel_key_table, y
+        sta FAMISTUDIO_EPSM_REG_WRITE0
 
     rts
 
@@ -2680,7 +2695,7 @@ famistudio_update_epsm_rhythm_channel_sound:
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
     ;bne .note
     bne .nocut
-	sta famistudio_chn_epsm_rhythm_key,y
+    sta famistudio_chn_epsm_rhythm_key,y
     ldx #0 ; This will fetch volume 0.
     beq .noupdate
 .nocut:
@@ -2691,11 +2706,11 @@ famistudio_update_epsm_rhythm_channel_sound:
     ;tax
 
     lda famistudio_chn_epsm_rhythm_key,y
-	cmp #$10
-	beq .noupdate
+    cmp #$10
+    beq .noupdate
     ; Write pitch
 
-	;lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
+    ;lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
     ; Read/multiply volume
     ldx famistudio_epsm_rhythm_env_table,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -2718,15 +2733,15 @@ famistudio_update_epsm_rhythm_channel_sound:
     .if FAMISTUDIO_USE_VOLUME_TRACK    
         lda famistudio_volume_table,x 
     .else
-		txa
+        txa
     .endif
-		rol a
-		adc famistudio_chn_epsm_rhythm_stereo,y
+        rol a
+        adc famistudio_chn_epsm_rhythm_stereo,y
         sta FAMISTUDIO_EPSM_DATA
 
 
     lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
-	sta famistudio_chn_epsm_rhythm_key,y
+    sta famistudio_chn_epsm_rhythm_key,y
     sta FAMISTUDIO_EPSM_ADDR
     lda famistudio_epsm_rhythm_key_table,y
     sta FAMISTUDIO_EPSM_DATA
@@ -3904,7 +3919,7 @@ famistudio_set_vrc7_instrument:
     .done:
     ldx <.chan_idx
     rts
-	
+    
     .endif
 
     .if (FAMISTUDIO_EXP_EPSM)
@@ -3957,7 +3972,7 @@ famistudio_set_epsm_instrument:
 .chan_idx   = famistudio_r1
      famistudio_set_exp_instrument
 
-	
+    
 
     ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
     lda [.ptr],y
@@ -3978,52 +3993,54 @@ famistudio_set_epsm_instrument:
     ; if we are an FM instrument then there is a offset we need to apply to the register select
     cmp #FAMISTUDIO_EPSM_CHAN_FM_MAX
     bmi .fm_channel
-		lda <.chan_idx
-		sbc #FAMISTUDIO_EPSM_CHAN_FM_MAX
-		tax
-		iny
+        lda <.chan_idx
+        sbc #FAMISTUDIO_EPSM_CHAN_FM_MAX
+        tax
+        iny
         lda [.ptr],y
-		and #$c0
+        and #$c0
         sta famistudio_chn_epsm_rhythm_stereo,x
 
-		ldx <.chan_idx	
-		rts
+        ldx <.chan_idx    
+        rts
     .fm_channel:
-	
-		
-	lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x
+    
+        
+    lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x
     bne .continue
-	    ldx <.chan_idx
-		rts
-	
+        ldx <.chan_idx
+        rts
+    
 .continue:
-	lda <.chan_idx
+    lda <.chan_idx
     ; FM channel 1-6, we need to look up the register select offset from the table
     sec
     sbc #FAMISTUDIO_EPSM_CH3_IDX
     tax
     lda famistudio_channel_epsm_chan_table,x
     sta <.reg_offset
-	
-		lda #FAMISTUDIO_EPSM_REG_KEY
-		sta FAMISTUDIO_EPSM_REG_SEL0
-		lda famistudio_epsm_channel_key_table, x
-		and #$0f ; remove trigger
-		sta FAMISTUDIO_EPSM_REG_WRITE0
+    
+        lda #FAMISTUDIO_EPSM_REG_KEY
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda famistudio_epsm_channel_key_table, x
+        and #$0f ; remove trigger
+        sta FAMISTUDIO_EPSM_REG_WRITE0
 
-	
-	; Now we need to store the algorithm and 1st operator volume for later use
-		lda [.ptr],y
-		and #$07
-		sta famistudio_chn_epsm_alg,x ;store algorithm
-		iny
-		iny
-		iny
-		lda [.ptr],y
-		sta famistudio_chn_epsm_vol_op1,x
-		dey
-		dey
-		dey
+    
+    ; Now we need to store the algorithm and 1st operator volume for later use
+        lda [.ptr],y
+        and #$07
+        sta famistudio_chn_epsm_alg,x ;store algorithm
+        iny
+        lda [.ptr],y
+                sta famistudio_chn_epsm_fm_stereo ,x
+        iny
+        iny
+        lda [.ptr],y
+        sta famistudio_chn_epsm_vol_op1,x
+        dey
+        dey
+        dey
     ; Now if we are channels 1-3 then we use .reg_set_0, otherwise for 4-6 its reg set 1
     lda <.chan_idx
     cmp #FAMISTUDIO_EPSM_CH6_IDX
@@ -4037,27 +4054,27 @@ famistudio_set_epsm_instrument:
         famistudio_epsm_write_patch_reg FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
     
     .last_reg:
-	    lda famistudio_epsm_register_order,x
+        lda famistudio_epsm_register_order,x
         clc
         adc <.reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0
         lda [.ex_patch],y
         sta FAMISTUDIO_EPSM_REG_WRITE0
-		
-		
-		lda <.chan_idx	
-		sbc #7
-		tax
-		ldy #2
-		lda [.ex_patch],y
-		sta famistudio_chn_epsm_vol_op2,x
-		ldy #9
-		lda [.ex_patch],y
-		sta famistudio_chn_epsm_vol_op3,x
-		ldy #16 
-		lda [.ex_patch],y
-		sta famistudio_chn_epsm_vol_op4,x
-    .done:		
+        
+        
+        lda <.chan_idx    
+        sbc #7
+        tax
+        ldy #2
+        lda [.ex_patch],y
+        sta famistudio_chn_epsm_vol_op2,x
+        ldy #9
+        lda [.ex_patch],y
+        sta famistudio_chn_epsm_vol_op3,x
+        ldy #16 
+        lda [.ex_patch],y
+        sta famistudio_chn_epsm_vol_op4,x
+    .done:        
     ldx <.chan_idx
     rts
     .endif
