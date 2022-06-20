@@ -15,8 +15,9 @@
                     DpiScaling.Initialize();
 
                 Theme.Initialize();
-                NesApu.Initialize();
             }
+
+            NesApu.Initialize();
 
             return true;
         }

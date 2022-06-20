@@ -14,6 +14,7 @@ namespace FamiStudio
         public static event AudioDeviceChangedDelegate AudioDeviceChanged;
 
         public static string ApplicationVersion => version;
+        public static bool IsCommandLine => !initializedGlfw;
 
         private static bool initializedGlfw;
         private static string version;
@@ -177,7 +178,7 @@ namespace FamiStudio
 
         public static int GetKeyScancode(Keys key)
         {
-            return glfwGetKeyScancode((int)key);
+            return initializedGlfw ? glfwGetKeyScancode((int)key) : 0;
         }
 
         public static string KeyToString(Keys key)

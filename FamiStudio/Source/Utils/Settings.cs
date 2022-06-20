@@ -388,6 +388,11 @@ namespace FamiStudio
 
         public static void Save()
         {
+            // Never same settings in command line, we dont have the proper
+            // QWERTY keys set up since GLFW isnt initialized.
+            if (Platform.IsCommandLine)
+                return;
+
             var ini = new IniFile();
 
             // General

@@ -19,6 +19,8 @@ namespace FamiStudio
     {
         public delegate void AudioDeviceChangedDelegate();
         public static event AudioDeviceChangedDelegate AudioDeviceChanged;
+        
+        public static bool IsCommandLine => false;
 
         private static Toast    lastToast;
         private static DateTime lastToastTime = DateTime.MinValue;
