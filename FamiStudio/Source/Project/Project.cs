@@ -1662,12 +1662,6 @@ namespace FamiStudio
                 arp.SerializeState(buffer);
         }
 
-        public void DisableEpsmMultipleExpansions()
-        {
-            // Cant have EPSM with other expansions.
-            if (UsesMultipleExpansionAudios && UsesEPSMExpansion)
-                SetExpansionAudioMask(ExpansionAudioMask & (~ExpansionType.EPSMMask), ExpansionNumN163Channels);
-        }
 
         public void SerializeState(ProjectBuffer buffer, bool includeSamples = true)
         {
@@ -1746,7 +1740,6 @@ namespace FamiStudio
                 // At version 10 (FamiStudio 3.0.0) we allow users to re-order songs.
                 SortEverything(buffer.Version < 10);
 
-                DisableEpsmMultipleExpansions();
             }
         }
 
