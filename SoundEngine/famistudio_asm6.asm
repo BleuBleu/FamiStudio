@@ -664,15 +664,15 @@ FAMISTUDIO_EPSM_PITCH_SHIFT = 3
 .if FAMISTUDIO_EXP_VRC7
     FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_VRC7_PITCH_SHIFT
 .else
-	.if FAMISTUDIO_EXP_EPSM
-		FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_EPSM_PITCH_SHIFT
-	.else
-		.if FAMISTUDIO_EXP_N163
-			FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_N163_PITCH_SHIFT
-		.else
-			FAMISTUDIO_PITCH_SHIFT = 0
-		.endif    
-	.endif
+    .if FAMISTUDIO_EXP_EPSM
+        FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_EPSM_PITCH_SHIFT
+    .else
+        .if FAMISTUDIO_EXP_N163
+            FAMISTUDIO_PITCH_SHIFT = FAMISTUDIO_N163_PITCH_SHIFT
+        .else
+            FAMISTUDIO_PITCH_SHIFT = 0
+        .endif    
+    .endif
 .endif
 
 
@@ -766,6 +766,7 @@ famistudio_chn_vrc7_trigger:      .dsb 6 ; bit 0 = new note triggered, bit 7 = n
 famistudio_chn_epsm_trigger:      .dsb 6 ; bit 0 = new note triggered, bit 7 = note released.
 famistudio_chn_epsm_rhythm_key:   .dsb 6
 famistudio_chn_epsm_rhythm_stereo: .dsb 6
+famistudio_chn_epsm_fm_stereo:    .dsb 6
 famistudio_chn_epsm_alg:          .dsb 6
 famistudio_chn_epsm_vol_op1:      .dsb 6
 famistudio_chn_epsm_vol_op2:      .dsb 6
@@ -1145,8 +1146,8 @@ famistudio_init:
         sta famistudio_exp_instrument_hi
         iny
     .endif
-	
-	    ; Expansions instrument address (currently incorrect?)
+    
+        ; Expansions instrument address (currently incorrect?)
     .if FAMISTUDIO_EXP_EPSM
         lda (music_data_ptr),y
         sta famistudio_exp_instrument_lo
@@ -2278,7 +2279,8 @@ famistudio_epsm_vol_table_op4:
     .byte FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12,FAMISTUDIO_EPSM_REG_TL+12, FAMISTUDIO_EPSM_REG_TL+1+12, FAMISTUDIO_EPSM_REG_TL+2+12
 famistudio_epsm_fm_vol_table:
     .byte $7e, $65, $50, $3f, $32, $27, $1e, $17, $12, $0d, $09, $06, $04, $02, $01, $00
-	;.byte $00,$01,$02,$04,$06,$09,$0d,$12,$17,$1e,$27,$32,$3f,$50,$65,$7e
+famistudio_epsm_fm_stereo_reg_table:
+    .byte $b4,$b5,$b6,$b4,$b5,$b6
 famistudio_channel_epsm_chan_table:
     .byte $00, $01, $02, $00, $01, $02
 famistudio_epsm_rhythm_key_table:
@@ -2307,7 +2309,7 @@ famistudio_epsm_square_vol_table:
     .byte FAMISTUDIO_EPSM_REG_VOL_A, FAMISTUDIO_EPSM_REG_VOL_B, FAMISTUDIO_EPSM_REG_VOL_C
 famistudio_epsm_square_env_table:
     .byte FAMISTUDIO_EPSM_CH0_ENVS, FAMISTUDIO_EPSM_CH1_ENVS, FAMISTUDIO_EPSM_CH2_ENVS
-	
+    
 ;======================================================================================================================
 ; FAMISTUDIO_UPDATE_EPSM_SQUARE_CHANNEL_SOUND (internal)
 ;
@@ -2385,7 +2387,7 @@ famistudio_update_epsm_fm_channel_sound:
 
     pitch      = famistudio_ptr1
     reg_offset = famistudio_r1
-	vol_offset = famistudio_r0
+    vol_offset = famistudio_r0
 
     lda #0
     sta famistudio_chn_inst_changed,y
@@ -2424,14 +2426,27 @@ famistudio_update_epsm_fm_channel_sound:
     ; Untrigger note.  
     lda #FAMISTUDIO_EPSM_REG_KEY
     sta FAMISTUDIO_EPSM_REG_SEL0
-	;todo mute channel
+    
     lda famistudio_epsm_channel_key_table, y
     and #$0f ; remove trigger
     sta FAMISTUDIO_EPSM_REG_WRITE0
+    
+    ;Mute channel
+    ldx reg_offset
+    lda famistudio_epsm_fm_stereo_reg_table,y
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
+    lda #$00
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
     rts
 
 @nocut:
 
+    ldx reg_offset
+    lda famistudio_epsm_fm_stereo_reg_table,y
+    sta FAMISTUDIO_EPSM_REG_SEL0,x
+    lda famistudio_chn_epsm_fm_stereo,y
+    sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    lda famistudio_chn_note+FAMISTUDIO_EPSM_CH3_IDX,y
     ; Read note, apply arpeggio
     clc
     ldx famistudio_epsm_fm_env_table,y    
@@ -2453,7 +2468,7 @@ famistudio_update_epsm_fm_channel_sound:
         ror pitch+0
         cmp #$02
         bcc @octave_done
-		bcs @compute_octave_loop ;unconditional
+        bcs @compute_octave_loop ;unconditional
     @octave_done:
     sta pitch+1
 
@@ -2479,19 +2494,19 @@ famistudio_update_epsm_fm_channel_sound:
     lda famistudio_chn_epsm_trigger,y
     beq @write_hi_period
     @untrigger_prev_note:
-		; Untrigger note.  
-		lda #FAMISTUDIO_EPSM_REG_KEY
-		sta FAMISTUDIO_EPSM_REG_SEL0
+        ; Untrigger note.  
+        lda #FAMISTUDIO_EPSM_REG_KEY
+        sta FAMISTUDIO_EPSM_REG_SEL0
 
-		lda famistudio_epsm_channel_key_table, y
-		and #$0f ; remove trigger
-		sta FAMISTUDIO_EPSM_REG_WRITE0
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
+        lda famistudio_epsm_channel_key_table, y
+        and #$0f ; remove trigger
+        sta FAMISTUDIO_EPSM_REG_WRITE0
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
 ;        rts
 
     @write_hi_period:
@@ -2522,92 +2537,92 @@ famistudio_update_epsm_fm_channel_sound:
     .else
         lda famistudio_env_value+FAMISTUDIO_ENV_VOLUME_OFF,x
     .endif
-	
+    
     .if FAMISTUDIO_USE_VOLUME_TRACK
         tax
         lda famistudio_volume_table,x
-    .endif	
-		sta vol_offset
+    .endif    
+        sta vol_offset
 
-	
-	;sta vol_offset
+    
+    ;sta vol_offset
         lda #0
         sta famistudio_chn_epsm_trigger,y
 
     @update_volume:
 
-	lda famistudio_chn_epsm_alg,y
-	cmp #7
-	bpl @op_1_2_3_4
-	cmp #5
-	bpl @op_2_3_4
-	cmp #4
-	bpl @op_2_4
-	jmp @op_4
-	
-	; todo
-	@op_1_2_3_4:
+    lda famistudio_chn_epsm_alg,y
+    cmp #7
+    bpl @op_1_2_3_4
+    cmp #5
+    bpl @op_2_3_4
+    cmp #4
+    bpl @op_2_4
+    jmp @op_4
+    
+    ; todo
+    @op_1_2_3_4:
         lda famistudio_epsm_vol_table_op1,y
         ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-		ldx vol_offset
-		lda famistudio_chn_epsm_vol_op1,y
-		adc famistudio_epsm_fm_vol_table,x
-		cmp #127
-		bmi @save_op1
-		lda #127
-	@save_op1:
-		ldx reg_offset
-		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-	@op_2_3_4:
+        ldx vol_offset
+        lda famistudio_chn_epsm_vol_op1,y
+        adc famistudio_epsm_fm_vol_table,x
+        cmp #127
+        bmi @save_op1
+        lda #127
+    @save_op1:
+        ldx reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    @op_2_3_4:
         lda famistudio_epsm_vol_table_op3,y
         ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-		ldx vol_offset
-		lda famistudio_chn_epsm_vol_op3,y
-		adc famistudio_epsm_fm_vol_table,x
-		cmp #127
-		bmi @save_op3
-		lda #127
-	@save_op3:
-		ldx reg_offset
-		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-	@op_2_4:
+        ldx vol_offset
+        lda famistudio_chn_epsm_vol_op3,y
+        adc famistudio_epsm_fm_vol_table,x
+        cmp #127
+        bmi @save_op3
+        lda #127
+    @save_op3:
+        ldx reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    @op_2_4:
         lda famistudio_epsm_vol_table_op2,y
         ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-		ldx vol_offset
-		lda famistudio_chn_epsm_vol_op2,y
-		adc famistudio_epsm_fm_vol_table,x
-		cmp #127
-		bmi @save_op2
-		lda #127
-	@save_op2:
-		ldx reg_offset
-		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-	@op_4:
+        ldx vol_offset
+        lda famistudio_chn_epsm_vol_op2,y
+        adc famistudio_epsm_fm_vol_table,x
+        cmp #127
+        bmi @save_op2
+        lda #127
+    @save_op2:
+        ldx reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+    @op_4:
         ; Write volume
         lda famistudio_epsm_vol_table_op4,y
         ldx reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0,x
-		ldx vol_offset
-		lda famistudio_chn_epsm_vol_op4,y
-		adc famistudio_epsm_fm_vol_table,x
-		cmp #127
-		bmi @save_op4
-		lda #127
-	@save_op4:
-		ldx reg_offset
-		sta FAMISTUDIO_EPSM_REG_WRITE0,x
-		nop
-		nop
-		nop
-		nop
-		nop
-		lda #FAMISTUDIO_EPSM_REG_KEY
-		sta FAMISTUDIO_EPSM_REG_SEL0
-		lda famistudio_epsm_channel_key_table, y
-		sta FAMISTUDIO_EPSM_REG_WRITE0
+        ldx vol_offset
+        lda famistudio_chn_epsm_vol_op4,y
+        adc famistudio_epsm_fm_vol_table,x
+        cmp #127
+        bmi @save_op4
+        lda #127
+    @save_op4:
+        ldx reg_offset
+        sta FAMISTUDIO_EPSM_REG_WRITE0,x
+        nop
+        nop
+        nop
+        nop
+        nop
+        lda #FAMISTUDIO_EPSM_REG_KEY
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda famistudio_epsm_channel_key_table, y
+        sta FAMISTUDIO_EPSM_REG_WRITE0
 
     rts
 
@@ -2626,7 +2641,7 @@ famistudio_update_epsm_rhythm_channel_sound:
     lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
     ;bne @note
     bne @nocut
-	sta famistudio_chn_epsm_rhythm_key,y
+    sta famistudio_chn_epsm_rhythm_key,y
     ldx #0 ; This will fetch volume 0.
     beq @noupdate
 @nocut:
@@ -2637,11 +2652,11 @@ famistudio_update_epsm_rhythm_channel_sound:
     ;tax
 
     lda famistudio_chn_epsm_rhythm_key,y
-	cmp #$10
-	beq @noupdate
+    cmp #$10
+    beq @noupdate
     ; Write pitch
 
-	;lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
+    ;lda famistudio_chn_note+FAMISTUDIO_EPSM_CH9_IDX,y
     ; Read/multiply volume
     ldx famistudio_epsm_rhythm_env_table,y
     .if FAMISTUDIO_USE_VOLUME_TRACK
@@ -2664,20 +2679,20 @@ famistudio_update_epsm_rhythm_channel_sound:
     .if FAMISTUDIO_USE_VOLUME_TRACK    
         lda famistudio_volume_table,x 
     .else
-		txa
+        txa
     .endif
-		rol
-		adc famistudio_chn_epsm_rhythm_stereo,y
+        rol
+        adc famistudio_chn_epsm_rhythm_stereo,y
         sta FAMISTUDIO_EPSM_DATA
-	
-	
+    
+    
     lda #$10 ;FAMISTUDIO_EPSM_REG_RHY_KY
-	sta famistudio_chn_epsm_rhythm_key,y
+    sta famistudio_chn_epsm_rhythm_key,y
     sta FAMISTUDIO_EPSM_ADDR
     lda famistudio_epsm_rhythm_key_table,y
     sta FAMISTUDIO_EPSM_DATA
-	
-	
+    
+    
 @noupdate:
     rts
 
@@ -3449,10 +3464,10 @@ famistudio_update:
 
 .if FAMISTUDIO_EXP_EPSM
     ldy #2
-	@epsm_square_channel_loop:
-		jsr famistudio_update_epsm_square_channel_sound
-		dey
-		bpl @epsm_square_channel_loop
+    @epsm_square_channel_loop:
+        jsr famistudio_update_epsm_square_channel_sound
+        dey
+        bpl @epsm_square_channel_loop
     ldy #5
     @epsm_fm_channel_loop:
         jsr famistudio_update_epsm_fm_channel_sound
@@ -3898,7 +3913,7 @@ famistudio_set_epsm_instrument:
     reg_offset = famistudio_r0
     chan_idx   = famistudio_r1
     famistudio_set_exp_instrument
-	
+    
 
     ; after the volume pitch and arp env pointers, we have a pointer to the rest of the patch data.
     lda (ptr),y
@@ -3919,52 +3934,54 @@ famistudio_set_epsm_instrument:
     ; if we are an FM instrument then there is a offset we need to apply to the register select
     cmp #FAMISTUDIO_EPSM_CHAN_FM_MAX
     bmi @fm_channel
-		lda chan_idx
-		sbc #FAMISTUDIO_EPSM_CHAN_FM_MAX
-		tax
-		iny
+        lda chan_idx
+        sbc #FAMISTUDIO_EPSM_CHAN_FM_MAX
+        tax
+        iny
         lda (ptr),y
-		and #$c0
+        and #$c0
         sta famistudio_chn_epsm_rhythm_stereo,x
 
-		ldx chan_idx	
-		rts
+        ldx chan_idx    
+        rts
     @fm_channel:
-	
-		
-	lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x
+    
+        
+    lda famistudio_chn_inst_changed-FAMISTUDIO_EXPANSION_CH3_IDX,x
     bne @continue
-	    ldx chan_idx
-		rts
-	
+        ldx chan_idx
+        rts
+    
 @continue:
-	lda chan_idx
+    lda chan_idx
     ; FM channel 1-6, we need to look up the register select offset from the table
     sec
     sbc #FAMISTUDIO_EPSM_CH3_IDX
     tax
     lda famistudio_channel_epsm_chan_table,x
     sta reg_offset
-	
-		lda #FAMISTUDIO_EPSM_REG_KEY
-		sta FAMISTUDIO_EPSM_REG_SEL0
-		lda famistudio_epsm_channel_key_table, x
-		and #$0f ; remove trigger
-		sta FAMISTUDIO_EPSM_REG_WRITE0
+    
+        lda #FAMISTUDIO_EPSM_REG_KEY
+        sta FAMISTUDIO_EPSM_REG_SEL0
+        lda famistudio_epsm_channel_key_table, x
+        and #$0f ; remove trigger
+        sta FAMISTUDIO_EPSM_REG_WRITE0
 
-	
-	; Now we need to store the algorithm and 1st operator volume for later use
-		lda (ptr),y
-		and #$07
-		sta famistudio_chn_epsm_alg,x ;store algorithm
-		iny
-		iny
-		iny
-		lda (ptr),y
-		sta famistudio_chn_epsm_vol_op1,x
-		dey
-		dey
-		dey
+    
+    ; Now we need to store the algorithm and 1st operator volume for later use
+        lda (ptr),y
+        and #$07
+        sta famistudio_chn_epsm_alg,x ;store algorithm
+        iny
+        lda (ptr),y
+            sta famistudio_chn_epsm_fm_stereo ,x
+        iny
+        iny
+        lda (ptr),y
+        sta famistudio_chn_epsm_vol_op1,x
+        dey
+        dey
+        dey
     ; Now if we are channels 1-3 then we use @reg_set_0, otherwise for 4-6 its reg set 1
     lda chan_idx
     cmp #FAMISTUDIO_EPSM_CH6_IDX
@@ -3978,30 +3995,30 @@ famistudio_set_epsm_instrument:
         famistudio_epsm_write_patch_registers FAMISTUDIO_EPSM_REG_SEL1, FAMISTUDIO_EPSM_REG_WRITE1
     
     @last_reg:
-	    lda famistudio_epsm_register_order,x
+        lda famistudio_epsm_register_order,x
         clc
         adc reg_offset
         sta FAMISTUDIO_EPSM_REG_SEL0
         lda (ex_patch),y
         sta FAMISTUDIO_EPSM_REG_WRITE0
-		
-		
-		lda chan_idx	
-		sbc #7
-		tax
-		ldy #2
-		lda (ex_patch),y
-		sta famistudio_chn_epsm_vol_op2,x
-		ldy #9
-		lda (ex_patch),y
-		sta famistudio_chn_epsm_vol_op3,x
-		ldy #16 
-		lda (ex_patch),y
-		sta famistudio_chn_epsm_vol_op4,x
-    @done:		
+        
+        
+        lda chan_idx    
+        sbc #7
+        tax
+        ldy #2
+        lda (ex_patch),y
+        sta famistudio_chn_epsm_vol_op2,x
+        ldy #9
+        lda (ex_patch),y
+        sta famistudio_chn_epsm_vol_op3,x
+        ldy #16 
+        lda (ex_patch),y
+        sta famistudio_chn_epsm_vol_op4,x
+    @done:        
     ldx chan_idx
     rts
-	
+    
 .endif
 
 .if FAMISTUDIO_EXP_FDS
@@ -5400,46 +5417,46 @@ famistudio_vrc7_note_table_msb:
 .if FAMISTUDIO_EXP_EPSM
 famistudio_exp_note_table_lsb:
 famistudio_epsm_note_table_lsb:
-	.byte $00
-	.byte $9a, $a3, $ad, $b7, $c2, $cd, $da, $e7, $f4, $03, $12, $23 ; Octave 0
-	.byte $34, $46, $5a, $6e, $84, $9a, $b4, $ce, $e8, $06, $24, $46 ; Octave 1
-	.byte $68, $8c, $b4, $dc, $08, $34, $68, $9c, $d0, $0c, $48, $8c ; Octave 2
-	.byte $d0, $18, $68, $b8, $10, $68, $d0, $38, $a0, $18, $90, $18 ; Octave 3
-	.byte $a0, $30, $d0, $70, $20, $d0, $a0, $70, $40, $30, $20, $30 ; Octave 4
-	.byte $40, $60, $a0, $e0, $40, $a0, $40, $e0, $80, $60, $40, $60 ; Octave 5
-	.byte $80, $c0, $40, $c0, $80, $40, $80, $c0, $00, $c0, $80, $c0 ; Octave 6
-	.byte $00, $80, $80, $80, $00, $80, $00, $80, $00, $80, $00, $80 ; Octave 7
+    .byte $00
+    .byte $9a, $a3, $ad, $b7, $c2, $cd, $da, $e7, $f4, $03, $12, $23 ; Octave 0
+    .byte $34, $46, $5a, $6e, $84, $9a, $b4, $ce, $e8, $06, $24, $46 ; Octave 1
+    .byte $68, $8c, $b4, $dc, $08, $34, $68, $9c, $d0, $0c, $48, $8c ; Octave 2
+    .byte $d0, $18, $68, $b8, $10, $68, $d0, $38, $a0, $18, $90, $18 ; Octave 3
+    .byte $a0, $30, $d0, $70, $20, $d0, $a0, $70, $40, $30, $20, $30 ; Octave 4
+    .byte $40, $60, $a0, $e0, $40, $a0, $40, $e0, $80, $60, $40, $60 ; Octave 5
+    .byte $80, $c0, $40, $c0, $80, $40, $80, $c0, $00, $c0, $80, $c0 ; Octave 6
+    .byte $00, $80, $80, $80, $00, $80, $00, $80, $00, $80, $00, $80 ; Octave 7
 famistudio_exp_note_table_msb:
 famistudio_epsm_note_table_msb:
-	.byte $00
-	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01 ; Octave 0
-	.byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02, $02 ; Octave 1
-	.byte $02, $02, $02, $02, $03, $03, $03, $03, $03, $04, $04, $04 ; Octave 2
-	.byte $04, $05, $05, $05, $06, $06, $06, $07, $07, $08, $08, $09 ; Octave 3
-	.byte $09, $0a, $0a, $0b, $0c, $0c, $0d, $0e, $0f, $10, $11, $12 ; Octave 4
-	.byte $13, $14, $15, $16, $18, $19, $1b, $1c, $1e, $20, $22, $24 ; Octave 5
-	.byte $26, $28, $2b, $2d, $30, $33, $36, $39, $3d, $40, $44, $48 ; Octave 6
-	.byte $4d, $51, $56, $5b, $61, $66, $6d, $73, $7a, $81, $89, $91 ; Octave 7  
+    .byte $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01 ; Octave 0
+    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02, $02 ; Octave 1
+    .byte $02, $02, $02, $02, $03, $03, $03, $03, $03, $04, $04, $04 ; Octave 2
+    .byte $04, $05, $05, $05, $06, $06, $06, $07, $07, $08, $08, $09 ; Octave 3
+    .byte $09, $0a, $0a, $0b, $0c, $0c, $0d, $0e, $0f, $10, $11, $12 ; Octave 4
+    .byte $13, $14, $15, $16, $18, $19, $1b, $1c, $1e, $20, $22, $24 ; Octave 5
+    .byte $26, $28, $2b, $2d, $30, $33, $36, $39, $3d, $40, $44, $48 ; Octave 6
+    .byte $4d, $51, $56, $5b, $61, $66, $6d, $73, $7a, $81, $89, $91 ; Octave 7  
 famistudio_epsm_square_note_table_lsb:
-	.byte $00
-	.byte $dc, $2e, $99, $1b, $b2, $5e, $1c, $ed, $cf, $c0, $c1, $d1 ; Octave 0
-	.byte $ed, $17, $4c, $8d, $d9, $2e, $8e, $f6, $67, $e0, $60, $e8 ; Octave 1
-	.byte $76, $0b, $a6, $46, $ec, $97, $46, $fb, $b3, $6f, $30, $f3 ; Octave 2
-	.byte $bb, $85, $52, $23, $f5, $cb, $a3, $7d, $59, $37, $17, $f9 ; Octave 3
-	.byte $dd, $c2, $a9, $91, $7a, $65, $51, $3e, $2c, $1b, $0b, $fc ; Octave 4
-	.byte $ee, $e0, $d4, $c8, $bd, $b2, $a8, $9e, $95, $8d, $85, $7e ; Octave 5
-	.byte $76, $70, $69, $63, $5e, $58, $53, $4f, $4a, $46, $42, $3e ; Octave 6
-	.byte $3b, $37, $34, $31, $2e, $2c, $29, $27, $25, $23, $21, $1f ; Octave 7
+    .byte $00
+    .byte $dc, $2e, $99, $1b, $b2, $5e, $1c, $ed, $cf, $c0, $c1, $d1 ; Octave 0
+    .byte $ed, $17, $4c, $8d, $d9, $2e, $8e, $f6, $67, $e0, $60, $e8 ; Octave 1
+    .byte $76, $0b, $a6, $46, $ec, $97, $46, $fb, $b3, $6f, $30, $f3 ; Octave 2
+    .byte $bb, $85, $52, $23, $f5, $cb, $a3, $7d, $59, $37, $17, $f9 ; Octave 3
+    .byte $dd, $c2, $a9, $91, $7a, $65, $51, $3e, $2c, $1b, $0b, $fc ; Octave 4
+    .byte $ee, $e0, $d4, $c8, $bd, $b2, $a8, $9e, $95, $8d, $85, $7e ; Octave 5
+    .byte $76, $70, $69, $63, $5e, $58, $53, $4f, $4a, $46, $42, $3e ; Octave 6
+    .byte $3b, $37, $34, $31, $2e, $2c, $29, $27, $25, $23, $21, $1f ; Octave 7
 famistudio_epsm_square_note_table_msb:
-	.byte $00
-	.byte $1d, $1c, $1a, $19, $17, $16, $15, $13, $12, $11, $10, $0f ; Octave 0
-	.byte $0e, $0e, $0d, $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07 ; Octave 1
-	.byte $07, $07, $06, $06, $05, $05, $05, $04, $04, $04, $04, $03 ; Octave 2
-	.byte $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02, $01 ; Octave 3
-	.byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $00 ; Octave 4
-	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
-	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
-	.byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
+    .byte $00
+    .byte $1d, $1c, $1a, $19, $17, $16, $15, $13, $12, $11, $10, $0f ; Octave 0
+    .byte $0e, $0e, $0d, $0c, $0b, $0b, $0a, $09, $09, $08, $08, $07 ; Octave 1
+    .byte $07, $07, $06, $06, $05, $05, $05, $04, $04, $04, $04, $03 ; Octave 2
+    .byte $03, $03, $03, $03, $02, $02, $02, $02, $02, $02, $02, $01 ; Octave 3
+    .byte $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $00 ; Octave 4
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 5
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 6
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; Octave 7
 .endif
 
 .if FAMISTUDIO_EXP_FDS
