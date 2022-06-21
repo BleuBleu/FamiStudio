@@ -638,7 +638,6 @@ namespace FamiStudio
                     }
                 }
 
-                project.DisableEpsmMultipleExpansions();
                 project.SortEverything(false);
                 ResetCulture();
 

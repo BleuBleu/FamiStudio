@@ -8,10 +8,10 @@
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Crash, 240 BPM / 1 / 1
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
+- BUG : Hide channels + scroll doesnt work. 
 
 NSF "famistudio_channel_update" refactoring
 ===========================================
-- Help Perkka with multi/EPSM.
 - Test more songs
 - Retest FamiTone2
 

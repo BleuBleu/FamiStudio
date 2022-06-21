@@ -144,6 +144,11 @@ namespace FamiStudio
 
                         kernelBinary += $"_multi";
                         kernelBinary += $"_n163_{numN163Channels}ch";
+
+                        if (project.UsesEPSMExpansion)
+                        {
+                            kernelBinary += $"_epsm";
+                        }
                     }
                 }
                 else

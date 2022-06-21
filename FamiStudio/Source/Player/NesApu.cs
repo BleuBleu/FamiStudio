@@ -189,26 +189,26 @@ namespace FamiStudio
         public const int EPSM_ADDR1         = 0x401e;
         public const int EPSM_DATA1         = 0x401f;
 
-        public const int EPSM_REG_LO_A = 0x00;
-        public const int EPSM_REG_HI_A = 0x01;
-        public const int EPSM_REG_LO_B = 0x02;
-        public const int EPSM_REG_HI_B = 0x03;
-        public const int EPSM_REG_LO_C = 0x04;
-        public const int EPSM_REG_HI_C = 0x05;
-        public const int EPSM_REG_NOISE = 0x06;
-        public const int EPSM_REG_TONE = 0x07;
-        public const int EPSM_REG_VOL_A = 0x08;
-        public const int EPSM_REG_VOL_B = 0x09;
-        public const int EPSM_REG_VOL_C = 0x0a;
-        public const int EPSM_REG_ENV_LO = 0x0b;
-        public const int EPSM_REG_ENV_HI = 0x0c;
-        public const int EPSM_REG_SHAPE = 0x0d;
-        public const int EPSM_REG_IO_A = 0x0e;
-        public const int EPSM_REG_IO_B = 0x0f;
-        public const int EPSM_REG_RYTHM = 0x10;
+        public const int EPSM_REG_LO_A        = 0x00;
+        public const int EPSM_REG_HI_A        = 0x01;
+        public const int EPSM_REG_LO_B        = 0x02;
+        public const int EPSM_REG_HI_B        = 0x03;
+        public const int EPSM_REG_LO_C        = 0x04;
+        public const int EPSM_REG_HI_C        = 0x05;
+        public const int EPSM_REG_NOISE       = 0x06;
+        public const int EPSM_REG_TONE        = 0x07;
+        public const int EPSM_REG_VOL_A       = 0x08;
+        public const int EPSM_REG_VOL_B       = 0x09;
+        public const int EPSM_REG_VOL_C       = 0x0a;
+        public const int EPSM_REG_ENV_LO      = 0x0b;
+        public const int EPSM_REG_ENV_HI      = 0x0c;
+        public const int EPSM_REG_SHAPE       = 0x0d;
+        public const int EPSM_REG_IO_A        = 0x0e;
+        public const int EPSM_REG_IO_B        = 0x0f;
+        public const int EPSM_REG_RYTHM       = 0x10;
         public const int EPSM_REG_RYTHM_LEVEL = 0x18;
-        public const int EPSM_REG_FM_LO_A = 0xA0;
-        public const int EPSM_REG_FM_HI_A = 0xA4;
+        public const int EPSM_REG_FM_LO_A     = 0xA0;
+        public const int EPSM_REG_FM_HI_A     = 0xA4;
 
         // See comment in Simple_Apu.h.
         public const int TND_MODE_SINGLE           = 0;

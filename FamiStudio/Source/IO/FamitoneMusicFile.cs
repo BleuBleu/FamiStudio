@@ -1543,8 +1543,10 @@ namespace FamiStudio
             {
                 Debug.Assert(kernel == FamiToneKernel.FamiStudio);
 
-                // The sound engine for multiple expansion always has all expansion enabled.(except EPSM for now)
-                project.SetExpansionAudioMask(ExpansionType.AllMask & (~ExpansionType.EPSMMask), 8);
+                if (project.UsesEPSMExpansion)
+                    project.SetExpansionAudioMask(ExpansionType.AllMask, 8);
+                else
+                    project.SetExpansionAudioMask(ExpansionType.AllMask & ~(ExpansionType.EPSMMask), 8);
             }
         }
 
