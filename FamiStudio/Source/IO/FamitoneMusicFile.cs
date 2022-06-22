@@ -1110,7 +1110,7 @@ namespace FamiStudio
                                     var requiresExtendedNote = kernel == FamiToneKernel.FamiStudio && note.IsMusical && (note.Value <= SingleByteNoteMin || note.Value > SingleByteNoteMax);
 
                                     // The valid range of DPCM sample should perfectly match the single-byte note range.
-                                    Debug.Assert(kernel != FamiToneKernel.FamiStudio || !channel.IsDpcmChannel || requiresExtendedNote);
+                                    Debug.Assert(kernel != FamiToneKernel.FamiStudio || !channel.IsDpcmChannel || !requiresExtendedNote);
 
                                     // We encode very common notes [C1 - G7] with a single bytes and emit a special
                                     // "extended note" opcode when it falls outside of that range.
