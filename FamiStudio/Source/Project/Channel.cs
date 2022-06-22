@@ -34,6 +34,7 @@ namespace FamiStudio
         public bool IsMmc5Channel      => Expansion == ExpansionType.Mmc5;
         public bool IsS5BChannel       => Expansion == ExpansionType.S5B;
         public bool IsNoiseChannel     => type == ChannelType.Noise;
+        public bool IsDpcmChannel      => type == ChannelType.Dpcm;
         public bool IsEPSMChannel      => Expansion == ExpansionType.EPSM;
         public bool IsEPSMFmChannel    => type >= ChannelType.EPSMFm1 && type <= ChannelType.EPSMFm6;
         public bool IsEPSMRythmChannel => type >= ChannelType.EPSMrythm1 && type <= ChannelType.EPSMrythm6;

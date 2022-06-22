@@ -1766,7 +1766,7 @@ famistudio_music_pause:
 
     @pitch   = famistudio_ptr1
     @tmp_ror = famistudio_r0
- 
+
 .if FAMISTUDIO_USE_PITCH_TRACK
 
     ; Pitch envelope + fine pitch (sign extended)
@@ -3046,6 +3046,7 @@ famistudio_update_row:
         ldx #4
         bne @no_new_note
         @play_sample:
+            sbc #12 ; Carry already set. HACK : We always add 12 to all single-byte notes, undoing here.
             jsr famistudio_music_sample_play
             ldx #4
             jmp @new_note
@@ -4457,7 +4458,7 @@ famistudio_update_channel:
 @common_note:
     cmp #0
     beq @play_note
-        adc #12 ; Carry is clear here.
+        adc #11 ; Carry is set here.
 
 @play_note:    
     sta famistudio_chn_note,x ; Store note code

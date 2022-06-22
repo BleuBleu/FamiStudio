@@ -60,10 +60,14 @@ namespace FamiStudio
         private const byte OpcodeFdsModDepth           = 0x53; // FDS only
         private const byte OpcodeVrc6SawMasterVolume   = 0x54; // VRC6 only
 
+        private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
+        private const byte OpcodeLoopFT2               = 0xfd; // FT2
+        private const byte OpcodeSpeedFT2              = 0xfb; // FT2
+
         private const byte OpcodeVolumeBits            = 0x70;
 
         // MATTT : Double check this.
-        private const int SingleByteNoteMin = 13; // MATTT : Make this match DPCMNoteMin.
+        private const int SingleByteNoteMin = 12; // MATTT : Make this match DPCMNoteMin.
         private const int SingleByteNoteMax = SingleByteNoteMin + (OpcodeFirst - 1);
 
         private bool usesFamiTrackerTempo = false;
@@ -760,14 +764,18 @@ namespace FamiStudio
                     Debug.Assert(Note.IsMusicalNote(value));
 
                     if (channel == ChannelType.Dpcm)
-                        value = Utils.Clamp(value - Note.DPCMNoteMin, 1, 63); // MATTT : Does this even work on Note.DPCMNoteMin?
-                    else //if (channel != ChannelType.Noise) // MATTT : What did that do??
+                    {
+                        value = Utils.Clamp(value - Note.DPCMNoteMin, 1, 63);
+                    }
+                    else
+                    {
                         value = Utils.Clamp(value, 1, 96);
 
-                    if (singleByte)
-                    {
-                        Debug.Assert(value >= SingleByteNoteMin && value <= SingleByteNoteMax);
-                        value -= SingleByteNoteMin;
+                        if (singleByte)
+                        {
+                            Debug.Assert(value > SingleByteNoteMin && value <= SingleByteNoteMax);
+                            value -= SingleByteNoteMin;
+                        }
                     }
                 }
 
@@ -798,7 +806,7 @@ namespace FamiStudio
 
                 if (isSpeedChannel && project.UsesFamiTrackerTempo)
                 {
-                    songData.Add($"${OpcodeSpeed:x2}+");
+                    songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeSpeed : OpcodeSpeedFT2):x2}+");
                     songData.Add($"${song.FamitrackerSpeed:x2}");
                 }
 
@@ -1099,9 +1107,14 @@ namespace FamiStudio
                                 }
                                 else
                                 {
+                                    var requiresExtendedNote = kernel == FamiToneKernel.FamiStudio && note.IsMusical && (note.Value <= SingleByteNoteMin || note.Value > SingleByteNoteMax);
+
+                                    // The valid range of DPCM sample should perfectly match the single-byte note range.
+                                    Debug.Assert(kernel != FamiToneKernel.FamiStudio || !channel.IsDpcmChannel || requiresExtendedNote);
+
                                     // We encode very common notes [C1 - G7] with a single bytes and emit a special
                                     // "extended note" opcode when it falls outside of that range.
-                                    if (kernel == FamiToneKernel.FamiStudio && note.IsMusical && (note.Value < SingleByteNoteMin || note.Value > SingleByteNoteMax))
+                                    if (requiresExtendedNote)
                                     {
                                         songData.Add($"${OpcodeExtendedNote:x2}+");
                                         songData.Add($"${EncodeNoteValue(c, note.Value, false):x2}*");
@@ -1162,7 +1175,7 @@ namespace FamiStudio
                     songData.Add($"${EncodeNoteValue(c, Note.NoteStop):x2}");
                 }
 
-                songData.Add($"${OpcodeLoop:x2}");
+                songData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeLoop : OpcodeLoopFT2):x2}");
                 songData.Add($"{ll}song{songIdx}ch{c}loop");
             }
 
@@ -1260,7 +1273,7 @@ namespace FamiStudio
                                 refs.Add(bestPatternIdx);
                                 jumpToRefs.Add(compressedData.Count);
 
-                                compressedData.Add($"${OpcodeSetReference:x2}");
+                                compressedData.Add($"${(kernel == FamiToneKernel.FamiStudio ? OpcodeSetReference : OpcodeSetReferenceFT2):x2}");
                                 compressedData.Add($"${bestPatternNumNotes:x2}");
                                 compressedData.Add($"{ll}song{songIdx}ref{bestPatternIdx}");
 

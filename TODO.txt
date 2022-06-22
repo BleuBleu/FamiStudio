@@ -1,19 +1,14 @@
 4.0.0
 =====
-- Is CPU usage higher?
+- CRASH : Open 2 NSF in a row with diff expansions. editChannel is out of bounds.
 - BUG : Shy mode vs. channel icons.
+- BUG : Hide channels + scroll doesnt work. 
 - BUG : Stop sound after xx sec broken??
 - BUG : Grid "a" bug from how2? Right click!
-- BUG : Alphabetical ordering should be a bit smarter about numbers.
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Crash, 240 BPM / 1 / 1
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
-- BUG : Hide channels + scroll doesnt work. 
-
-NSF "famistudio_channel_update" refactoring
-===========================================
-- Test more songs
-- Retest FamiTone2
+- BUG : Envelope dragging is broken
 
 N163 Multi-wave:
 ================
@@ -39,9 +34,9 @@ N163 Multi-wave:
 	- When loading a new instrument, we load + reset the envelope
 	- On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
 
-P1:
+P0:
 - Add text box to numero up/down
-- Sound output selection?
+- Alphabetical ordering should be a bit smarter about numbers.
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
@@ -54,11 +49,16 @@ P1:
   	- Add to context menu somewhere?
   	- Do it on mobile too
 
-P2 (Unlikely):
-- Give better names to auto saves
+P1:
+- Is CPU usage higher?
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
+
+P2 (Unlikely):
+- BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
+- Sound output selection?
+- Give better names to auto saves
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Volume/effect scaling, easy one we have context menus.
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)- Paste special, option to rename patterns.
@@ -69,6 +69,7 @@ P2 (Unlikely):
 - C0 is hidden in piano roll video
 - Piano roll scale on desktop?
 - Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
+- Dont reset camera in piano roll when deleting instrument (probably to handle case where you were editing the instrument)
 
 Testing:
 ========
