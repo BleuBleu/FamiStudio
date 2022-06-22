@@ -101,7 +101,7 @@ Properties unique FamiStudio tempo mode:
 
 ## Tempo
 
-Configuring tempo in FamiStudio is definately less intuitive than in a regular DAW, so please bear with me. This mainly for technical reasons (the fact that the NES runs at 50/60 FPS).
+Configuring tempo in FamiStudio is definitely less intuitive than in a regular DAW, so please bear with me. This mainly for technical reasons (the fact that the NES runs at 50/60 FPS).
 
 The key thing to understand is that the piano roll simply gives you a series of, what I am going to loosely call, **notes** (**rows** if you come from FamiTracker). It is up to the composer to configure these notes and achieve the desired time signature.
 
