@@ -602,7 +602,7 @@ namespace FamiStudio
             EnvelopeMax           = EnvelopeType.Count,
 
             // Other buttons
-            Add,
+            Add = EnvelopeType.Count,
             DPCM,
             Load,
             Save,
@@ -782,7 +782,7 @@ namespace FamiStudio
                             var buttons = new SubButtonType[numSubButtons];
                             buttons[0] = SubButtonType.Properties;
 
-                            for (int i = 0, j = 1; i < EnvelopeType.Count; i++)
+                            for (int i = 0, j = 1; i < EnvelopeDisplayOrder.Length; i++)
                             {
                                 int idx = EnvelopeDisplayOrder[i];
                                 if (instrument.Envelopes[idx] != null)
@@ -1073,7 +1073,7 @@ namespace FamiStudio
                 widgetType = ButtonType.ParamCustomDraw;
             else if (param.IsList)
                 widgetType = ButtonType.ParamList;
-            else if (param.MaxValue == 1)
+            else if (param.GetMaxValue() == 1)
                 widgetType = ButtonType.ParamCheckbox;
 
             return widgetType;
@@ -1534,9 +1534,12 @@ namespace FamiStudio
                         var paramVal = button.param.GetValue();
                         var paramStr = button.param.GetValueString();
 
+
                         if (button.type == ButtonType.ParamSlider)
                         {
-                            var valSizeX = (int)Math.Round((paramVal - button.param.MinValue) / (float)(button.param.MaxValue - button.param.MinValue) * sliderSizeX);
+                            var paramMinValue = button.param.GetMinValue();
+                            var paramMaxValue = button.param.GetMaxValue();
+                            var valSizeX = (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * sliderSizeX);
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
                             c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
@@ -2291,13 +2294,13 @@ namespace FamiStudio
                 var delta = (x - captureMouseX) / 4;
                 if (delta != 0)
                 {
-                    paramVal = Utils.Clamp(paramVal + delta * button.param.SnapValue, button.param.MinValue, button.param.MaxValue);
+                    paramVal = Utils.Clamp(paramVal + delta * button.param.SnapValue, button.param.GetMinValue(), button.param.GetMaxValue());
                     captureMouseX = x;
                 }
             }
             else
             {
-                paramVal = (int)Math.Round(Utils.Lerp(button.param.MinValue, button.param.MaxValue, Utils.Clamp((buttonX - (contentSizeX - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
+                paramVal = (int)Math.Round(Utils.Lerp(button.param.GetMinValue(), button.param.GetMaxValue(), Utils.Clamp((buttonX - (contentSizeX - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
                 captureMouseX = x;
             }
 

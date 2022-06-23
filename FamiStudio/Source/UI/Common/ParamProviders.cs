@@ -8,8 +8,8 @@ namespace FamiStudio
     {
         public string Name;
         public string ToolTip;
-        public int MinValue;
-        public int MaxValue;
+        private int MinValue;
+        private int MaxValue;
         public int DefaultValue;
         public int SnapValue;
         public int CustomHeight;
@@ -18,6 +18,7 @@ namespace FamiStudio
         public object CustomUserData1;
         public object CustomUserData2;
 
+        public delegate void GetMinMaxValueDelegate(out int min, out int max);
         public delegate int GetValueDelegate();
         public delegate bool EnabledDelegate();
         public delegate void SetValueDelegate(int value);
@@ -29,6 +30,8 @@ namespace FamiStudio
         public SetValueDelegate SetValue;
         public GetValueStringDelegate GetValueString;
         public CustomDrawDelegate CustomDraw;
+        public GetValueDelegate GetMinValue;
+        public GetValueDelegate GetMaxValue;
 
         public bool HasTab => !string.IsNullOrEmpty(TabName);
 
@@ -52,6 +55,8 @@ namespace FamiStudio
             IsList = list;
             SnapValue = snap;
             GetValueString = () => GetValue().ToString();
+            GetMinValue = () => MinValue;
+            GetMaxValue = () => MaxValue;
         }
     };
 
@@ -126,10 +131,12 @@ namespace FamiStudio
                 case ExpansionType.N163:
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Size", 4, 248, 16, null, false, 4)
-                        { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Position", 0, 244, 0, null, false, 4)
                         { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;} });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Size", 4, 248, 16, null, false, 4)
+                        { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, 64, 1)
+                        { GetValue = () => { return instrument.N163WaveCount; }, SetValue = (v) => { instrument.N163WaveCount = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveCount; } });
                     break;
 
                 case ExpansionType.Vrc6:

@@ -2,7 +2,6 @@
 =====
 - CRASH : Open 2 NSF in a row with diff expansions. editChannel is out of bounds.
 - CRASH : 240 BPM / 1 / 1
-
 - BUG : Shy mode vs. channel icons.
 - BUG : Hide channels + scroll doesnt work. 
 - BUG : Stop sound after xx sec broken??
@@ -12,27 +11,36 @@
 
 N163 Multi-wave:
 ================
-- Max 16 waves for now
-- Display a huge envelope, wave size * num waves
-- Add a "repeat effect"
-- LATER : Effect to change the wave index manually? Will likely require uncompressed envelopes?
-- See what's the best way to encode this in NSF
-- NSF:
-	- we have 6 bytes free for N163 instruments
-		- 2 bytes for the wave index envelope
-		- 2 bytes for the wave list
-	- wave list for each instrument:
-		inst_abc_waves:
-			$wave1,
-			$wave2,
-			$wave3,
-			$wave4
-	- envelope will tell us the index of the wave
-		{ 0, 0, 0, 1, 1, 2, 3, 3, 3, 4 }
-	- for each N163 instrument we will also keep the current index of the wave
-		n163_current_wave, 8
-	- When loading a new instrument, we load + reset the envelope
-	- On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
+1) Env editor
+- Envelope has an "effect envelope" or something, the factor is env.lenght / fx.length. WHich will drive the whole thing. If none, factor = 1.
+- Render envelope editor correctly (indices repeat, chunks.)
+- Resize must change the number of waves
+- Loop/release, store in the actualy wave, enforce multiple. Add validation.
+- "Repeat" effect editor
+2) Playback
+- Channel state
+- Instrument player correct play position
+3) NSF/Sound Engine:
+- we have 6 bytes free for N163 instruments
+	- 2 bytes for the wave index envelope
+	- 2 bytes for the wave list
+- wave list for each instrument:
+	inst_abc_waves:
+		$wave1,
+		$wave2,
+		$wave3,
+		$wave4
+- envelope will tell us the index of the wave
+	{ 0, 0, 0, 1, 1, 2, 3, 3, 3, 4 }
+- for each N163 instrument we will also keep the current index of the wave
+	n163_current_wave, 8
+- When loading a new instrument, we load + reset the envelope
+- On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
+4) Polish
+- Add +/- buttons to PE sliders.
+- FTI import
+- Famitracker import/export.
+- Same for FDS.
 
 P0:
 - Add text box to numero up/down
@@ -42,8 +50,7 @@ P0:
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
 	=> Remove 1-frame snap glitch.
 	=> Snap effect values (at least give the option to!)
-- N163 multi-wave
-- Improve oscilloscope stability (min square norm?)
+- Improve oscilloscope stability (use channel frequency)
 / Sequencer improvement
   	- Add shortcut ([2] ?). Make sure to abort capture if that happens.
   	- Add to context menu somewhere?
@@ -63,7 +70,8 @@ P2 (Unlikely):
 - Give better names to auto saves
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Volume/effect scaling, easy one we have context menus.
-- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)- Paste special, option to rename patterns.
+- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
+- Paste special, option to rename patterns.
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Uncompressed envelopes
 - CLI only EXE (Linux only).

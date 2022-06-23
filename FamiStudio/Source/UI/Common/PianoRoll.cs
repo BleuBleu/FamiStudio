@@ -816,6 +816,35 @@ namespace FamiStudio
             }
         }
 
+        private Envelope EditControlEnvelope
+        {
+            get
+            {
+                if (editMode == EditionMode.Enveloppe)
+                    return editInstrument?.GetControlEnvelope((int)editEnvelope);
+                return null;
+            }
+        }
+
+        private int ControlEnvelopeFactor
+        {
+            get
+            {
+                var env = EditEnvelope;
+                var ctrl = EditControlEnvelope;
+                
+                if (env != null && ctrl != null)
+                {
+                    Debug.Assert(env.Length % ctrl.Length == 0);
+                    return env.Length / ctrl.Length;
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+        }
+
         public void HighlightPianoNote(int note)
         {
             if (note != highlightNote)
@@ -1130,9 +1159,16 @@ namespace FamiStudio
             if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && EditEnvelope != null)
             {
                 var env = EditEnvelope;
+                var ctrl = EditControlEnvelope;
+                var ctrlFactor = ControlEnvelopeFactor;
                 var iconPos = (headerSizeY / 2 - ScaleCustom(bmpLoopSmallFill.ElementSize.Width, bitmapScale)) / 2;
 
                 r.ch.PushTranslation(0, headerSizeY / 2);
+
+                if (ctrl != null)
+                {
+                    r.ch.FillRectangle(0, 0, GetPixelForNote(env.Length), headerSizeY / 2, r.ch.Graphics.GetSolidBrush(editInstrument.Color));
+                }
 
                 DrawSelectionRect(r.ch, headerSizeY);
 
@@ -1178,9 +1214,16 @@ namespace FamiStudio
                     {
                         r.ch.DrawLine(x, 0, x, headerSizeY / 2, ThemeResources.BlackBrush, 1);
                     }
+                    if (ctrl != null && n % ctrlFactor == 0)
+                    {
+                        if (x != 0)
+                            r.ch.DrawLine(x, headerSizeY / 2, x, headerSizeY, ThemeResources.BlackBrush, 1);
+                        int x1 = GetPixelForNote(n + ctrlFactor);
+                        r.ch.DrawText((n / ctrlFactor).ToString(), ThemeResources.FontMedium, x, headerSizeY / 2 - 1, ThemeResources.BlackBrush, TextFlags.MiddleCenter, x1 - x, headerSizeY / 2);
+                    }
                     if (n != env.Length)
                     {
-                        var label = editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos + n : n;
+                        var label = (editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos : 0) + (n % ctrlFactor);
                         var labelString = label.ToString();
                         if (labelString.Length * fontSmallCharSizeX + 2 < noteSizeX)
                             r.ch.DrawText(labelString, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);

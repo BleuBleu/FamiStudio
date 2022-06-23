@@ -21,14 +21,16 @@ namespace FamiStudio
         private ushort fdsModSpeed;
         private byte fdsModDepth;
         private byte fdsModDelay;
+        private byte fdsWaveCount = 1;
 
         // N163
         private byte n163WavePreset = WavePresetType.Sine;
         private byte n163WaveSize = 16;
         private byte n163WavePos = 0;
+        private byte n163WaveCount = 1;
 
         // VRC6
-        private byte vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Half; 
+        private byte vrc6SawMasterVolume = Vrc6SawMasterVolumeType.Half;
 
         // VRC7
         private byte vrc7Patch = Vrc7InstrumentPatch.Bell;
@@ -45,18 +47,17 @@ namespace FamiStudio
         public int Expansion => expansion;
         public bool IsExpansionInstrument => expansion != ExpansionType.None;
         public Envelope[] Envelopes => envelopes;
-        public int NumActiveEnvelopes => envelopes.Count(e => e != null);
         public bool HasReleaseEnvelope => envelopes[EnvelopeType.Volume] != null && envelopes[EnvelopeType.Volume].Release >= 0;
         public byte[] Vrc7PatchRegs => vrc7PatchRegs;
         public byte[] EpsmPatchRegs => epsmPatchRegs;
 
         public bool IsRegularInstrument => expansion == ExpansionType.None;
-        public bool IsFdsInstrument     => expansion == ExpansionType.Fds;
-        public bool IsVrc6Instrument    => expansion == ExpansionType.Vrc6;
-        public bool IsVrc7Instrument    => expansion == ExpansionType.Vrc7;
-        public bool IsN163Instrument    => expansion == ExpansionType.N163;
-        public bool IsS5BInstrument     => expansion == ExpansionType.S5B;
-        public bool IsEpsmInstrument    => expansion == ExpansionType.EPSM;
+        public bool IsFdsInstrument => expansion == ExpansionType.Fds;
+        public bool IsVrc6Instrument => expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Instrument => expansion == ExpansionType.Vrc7;
+        public bool IsN163Instrument => expansion == ExpansionType.N163;
+        public bool IsS5BInstrument => expansion == ExpansionType.S5B;
+        public bool IsEpsmInstrument => expansion == ExpansionType.EPSM;
 
         public Instrument()
         {
@@ -98,7 +99,7 @@ namespace FamiStudio
         public bool IsEnvelopeActive(int envelopeType)
         {
             if (envelopeType == EnvelopeType.Volume ||
-                envelopeType == EnvelopeType.Pitch  ||
+                envelopeType == EnvelopeType.Pitch ||
                 envelopeType == EnvelopeType.Arpeggio)
             {
                 return true;
@@ -118,13 +119,37 @@ namespace FamiStudio
             {
                 return expansion == ExpansionType.N163;
             }
+            else if (envelopeType == EnvelopeType.WaveformRepeat)
+            {
+                return expansion == ExpansionType.N163 ||
+                       expansion == ExpansionType.Fds;
+            }
 
             return false;
+        }
+
+        public bool IsEnvelopeVisible(int envelopeType)
+        {
+            return envelopeType != EnvelopeType.WaveformRepeat;
         }
 
         public bool IsEnvelopeEmpty(int envelopeType)
         {
             return envelopes[envelopeType].IsEmpty(envelopeType);
+        }
+
+        public int NumActiveEnvelopes
+        {
+            get 
+            {
+                var count = 0;
+                for (int i = 0; i < EnvelopeType.Count; i++)
+                {
+                    if (envelopes[i] != null && IsEnvelopeVisible(i))
+                        count++;
+                }
+                return count;
+            }
         }
 
         public byte FdsWavePreset
@@ -165,6 +190,7 @@ namespace FamiStudio
                 Debug.Assert((value & 0x03) == 0);
                 n163WaveSize = (byte)Utils.Clamp(value       & 0xfc, 4, 248);
                 n163WavePos  = (byte)Utils.Clamp(n163WavePos & 0xfc, 0, 248 - n163WaveSize);
+                ClampN163WaveCount();
                 UpdateN163WaveEnvelope();
             }
         }
@@ -177,9 +203,28 @@ namespace FamiStudio
                 Debug.Assert((value & 0x03) == 0);
                 n163WavePos  = (byte)Utils.Clamp(value        & 0xfc, 0, 248);
                 n163WaveSize = (byte)Utils.Clamp(n163WaveSize & 0xfc, 4, 248 - n163WavePos);
+                ClampN163WaveCount();
             }
         }
-        
+
+        public byte N163WaveCount
+        {
+            get { return n163WaveCount; }
+            set
+            {
+                n163WaveCount = (byte)Utils.Clamp(value, 1, N163MaxWaveCount);
+                UpdateN163WaveEnvelope();
+            }
+        }
+
+        public int N163MaxWaveCount
+        {
+            get
+            {
+                return Math.Min(64, envelopes[EnvelopeType.N163Waveform].MaxLength / n163WaveSize); 
+            }
+        }
+
         public byte Vrc6SawMasterVolume
         {
             get { return vrc6SawMasterVolume; }
@@ -215,18 +260,23 @@ namespace FamiStudio
 
         public void UpdateFdsWaveEnvelope()
         {
-            envelopes[EnvelopeType.FdsWaveform].SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
+            envelopes[EnvelopeType.FdsWaveform].SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset, 64); // MATTT Hardcoded
         }
 
         public void UpdateFdsModulationEnvelope()
         {
-            envelopes[EnvelopeType.FdsModulation].SetFromPreset(EnvelopeType.FdsModulation, fdsModPreset);
+            envelopes[EnvelopeType.FdsModulation].SetFromPreset(EnvelopeType.FdsModulation, fdsModPreset, 32); // MATTT Hardcoded.
         }
 
         public void UpdateN163WaveEnvelope()
         {
-            envelopes[EnvelopeType.N163Waveform].MaxLength = n163WaveSize;
-            envelopes[EnvelopeType.N163Waveform].SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
+            envelopes[EnvelopeType.N163Waveform].Length = n163WaveSize * n163WaveCount;
+            envelopes[EnvelopeType.N163Waveform].SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset, n163WaveSize);
+        }
+
+        private void ClampN163WaveCount()
+        {
+            n163WaveCount = (byte)Utils.Clamp(n163WaveCount, 1, N163MaxWaveCount);
         }
 
         public static string GetVrc7PatchName(int preset)
@@ -237,6 +287,17 @@ namespace FamiStudio
         public static string GetEpsmPatchName(int preset)
         {
             return EpsmInstrumentPatch.Infos[preset].name;
+        }
+
+        public Envelope GetControlEnvelope(int type)
+        {
+            if (type == EnvelopeType.N163Waveform && IsN163Instrument ||
+                type == EnvelopeType.FdsWaveform  && IsFdsInstrument)
+            {
+                return envelopes[EnvelopeType.WaveformRepeat];
+            }
+
+            return null;
         }
 
         public uint ComputeCRC(uint crc = 0)
@@ -260,13 +321,22 @@ namespace FamiStudio
 
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
-                bool envelopeExists = envelopes[i] != null;
-                bool envelopeShouldExists = IsEnvelopeActive(i);
+                var env = envelopes[i];
+                var envelopeExists = env != null;
+                var envelopeShouldExists = IsEnvelopeActive(i);
                 Debug.Assert(envelopeExists == envelopeShouldExists);
 
                 if (envelopeExists)
-                    Debug.Assert(envelopes[i].ValuesInValidRange(this, i));
+                {
+                    Debug.Assert(env.ValuesInValidRange(this, i));
+
+                    var ctrl = GetControlEnvelope(i);
+                    if (ctrl != null)
+                        Debug.Assert(env.Length % ctrl.Length == 0);
+                }
             }
+
+            // MATTT : Add more validation for FDS/N163. Make sure envelope length are multiples of the wave size, etc.
 #endif
         }
 
