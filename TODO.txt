@@ -1,13 +1,13 @@
 4.0.0
 =====
 - CRASH : Open 2 NSF in a row with diff expansions. editChannel is out of bounds.
+- CRASH : 240 BPM / 1 / 1
+
 - BUG : Shy mode vs. channel icons.
 - BUG : Hide channels + scroll doesnt work. 
 - BUG : Stop sound after xx sec broken??
-- BUG : Grid "a" bug from how2? Right click!
+- BUG : Grid "a" bug from how2? Right click! Mac only???
 - BUG : Notes per beat doesnt go to 1?
-- BUG : Crash, 240 BPM / 1 / 1
-- BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : Envelope dragging is broken
 
 N163 Multi-wave:
@@ -56,6 +56,8 @@ P1:
 	- Draw attack as red if user makes a mistake.
 
 P2 (Unlikely):
+- BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
+- BUG : Selecting a full pattern selects + 1 frame?
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Sound output selection?
 - Give better names to auto saves
