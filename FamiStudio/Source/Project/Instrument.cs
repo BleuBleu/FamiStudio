@@ -270,6 +270,7 @@ namespace FamiStudio
 
         public void UpdateN163WaveEnvelope()
         {
+            envelopes[EnvelopeType.WaveformRepeat].Length = n163WaveCount;
             envelopes[EnvelopeType.N163Waveform].Length = n163WaveSize * n163WaveCount;
             envelopes[EnvelopeType.N163Waveform].SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset, n163WaveSize);
         }
