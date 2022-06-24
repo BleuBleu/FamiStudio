@@ -308,6 +308,10 @@
     <EmbeddedResource Include="Resources\ArrowRight@2x.tga" />
     <EmbeddedResource Include="Resources\ButtonLeft.tga" />
     <EmbeddedResource Include="Resources\ButtonLeft@2x.tga" />
+    <EmbeddedResource Include="Resources\ButtonMinus.tga" />
+    <EmbeddedResource Include="Resources\ButtonMinus@2x.tga" />
+    <EmbeddedResource Include="Resources\ButtonPlus.tga" />
+    <EmbeddedResource Include="Resources\ButtonPlus@2x.tga" />
     <EmbeddedResource Include="Resources\ButtonRight.tga" />
     <EmbeddedResource Include="Resources\ButtonRight@2x.tga" />
     <EmbeddedResource Include="Resources\ChannelDPCM.tga" />

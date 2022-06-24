@@ -46,6 +46,7 @@ namespace FamiStudio
         int sliderPosY;
         int sliderSizeX;
         int sliderSizeY;
+        int paramButtonSizeX;
         int checkBoxPosX;
         int checkBoxPosY;
         int paramRightPadX;
@@ -705,6 +706,8 @@ namespace FamiStudio
         BitmapAtlasRef bmpCheckBoxNo;
         BitmapAtlasRef bmpButtonLeft;
         BitmapAtlasRef bmpButtonRight;
+        BitmapAtlasRef bmpButtonMinus;
+        BitmapAtlasRef bmpButtonPlus;
         BitmapAtlasRef bmpSong;
         BitmapAtlasRef bmpAdd;
         BitmapAtlasRef bmpPlay;
@@ -1020,6 +1023,7 @@ namespace FamiStudio
             paramRightPadX       = ScaleForWindow(DefaultParamRightPadX);
             draggedLineSizeY     = ScaleForWindow(DefaultDraggedLineSizeY);
             registerLabelSizeX   = ScaleForWindow(DefaultRegisterLabelSizeX);
+            paramButtonSizeX     = bmpButtonPlus != null ? ScaleCustom(bmpButtonPlus.ElementSize.Width, bitmapScale) : 16;
             topTabSizeY          = Settings.ShowRegisterViewer ? buttonSizeY : 0;
             scrollAreaSizeY      = Height - topTabSizeY;
             contentSizeX         = Width;
@@ -1249,6 +1253,8 @@ namespace FamiStudio
             bmpCheckBoxNo  = g.GetBitmapAtlasRef("CheckBoxNo");
             bmpButtonLeft  = g.GetBitmapAtlasRef("ButtonLeft");
             bmpButtonRight = g.GetBitmapAtlasRef("ButtonRight");
+            bmpButtonMinus = g.GetBitmapAtlasRef("ButtonMinus");
+            bmpButtonPlus  = g.GetBitmapAtlasRef("ButtonPlus");
             bmpSong        = g.GetBitmapAtlasRef("Music");
             bmpAdd         = g.GetBitmapAtlasRef("Add");
             bmpPlay        = g.GetBitmapAtlasRef("PlaySource");
@@ -1539,12 +1545,17 @@ namespace FamiStudio
                         {
                             var paramMinValue = button.param.GetMinValue();
                             var paramMaxValue = button.param.GetMaxValue();
-                            var valSizeX = (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * sliderSizeX);
+                            var actualSliderSizeX = sliderSizeX - paramButtonSizeX * 2;
+                            var valSizeX = (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
+                            c.DrawBitmapAtlas(bmpButtonMinus, 0, 0, 1, bitmapScale, Color.Black);
+                            c.PushTranslation(paramButtonSizeX, 0);
                             c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
-                            c.DrawRectangle(0, 0, sliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1);
-                            c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, TextFlags.MiddleCenter, sliderSizeX, buttonSizeY);
+                            c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1);
+                            c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
+                            c.PopTransform();
+                            c.DrawBitmapAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, 1, bitmapScale, Color.Black);
                             c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamCheckbox)
@@ -1558,11 +1569,10 @@ namespace FamiStudio
                         {
                             var paramPrev = button.param.SnapAndClampValue(paramVal - 1);
                             var paramNext = button.param.SnapAndClampValue(paramVal + 1);
-                            var buttonWidth = ScaleCustom(bmpButtonLeft.ElementSize.Width, bitmapScale);
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
                             c.DrawBitmapAtlas(bmpButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
-                            c.DrawBitmapAtlas(bmpButtonRight, sliderSizeX - buttonWidth, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
                             c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, TextFlags.MiddleCenter, sliderSizeX, button.height);
                             c.PopTransform();
                         }
@@ -2279,8 +2289,11 @@ namespace FamiStudio
             var buttonX = x;
             var buttonY = y + scrollY - buttonTopY - topTabSizeY;
 
-            bool insideSlider = (buttonX > (contentSizeX - sliderPosX) &&
-                                 buttonX < (contentSizeX - sliderPosX + sliderSizeX) &&
+            var sliderMinX = contentSizeX - sliderPosX + paramButtonSizeX;
+            var sliderMaxX = sliderMinX + (sliderSizeX - paramButtonSizeX * 2);
+
+            bool insideSlider = (buttonX > (sliderMinX) &&
+                                 buttonX < (sliderMaxX) &&
                                  buttonY > (sliderPosY) &&
                                  buttonY < (sliderPosY + sliderSizeY));
 
@@ -2300,7 +2313,7 @@ namespace FamiStudio
             }
             else
             {
-                paramVal = (int)Math.Round(Utils.Lerp(button.param.GetMinValue(), button.param.GetMaxValue(), Utils.Clamp((buttonX - (contentSizeX - sliderPosX)) / (float)sliderSizeX, 0.0f, 1.0f)));
+                paramVal = (int)Math.Round(Utils.Lerp(button.param.GetMinValue(), button.param.GetMaxValue(), Utils.Clamp((buttonX - sliderMinX) / (float)(sliderMaxX - sliderMinX), 0.0f, 1.0f)));
                 captureMouseX = x;
             }
 
@@ -3038,6 +3051,11 @@ namespace FamiStudio
 
         private bool HandleMouseDownParamSliderButton(MouseEventArgs e, Button button, int buttonIdx)
         {
+            if (ClickParamListOrSliderButton(e.X, e.Y, button))
+            {
+                return true;
+            }
+
             if (e.Left)
             {
                 StartMoveSlider(e.X, e.Y, button, buttonIdx);
@@ -3047,36 +3065,25 @@ namespace FamiStudio
             return false;
         }
 
-        private void ClickParamCheckbox(int x, int y, Button button, bool reset)
+        private void ClickParamCheckbox(int x, int y, Button button)
         {
             if (x >= contentSizeX - checkBoxPosX)
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-
-                if (!reset)
-                {
-                    var val = button.param.GetValue();
-                    button.param.SetValue(val == 0 ? 1 : 0);
-                }
-                else
-                {
-                    button.param.SetValue(button.param.DefaultValue);
-                }
-
+                button.param.SetValue(button.param.DefaultValue);
                 App.UndoRedoManager.EndTransaction();
                 MarkDirty();
             }
         }
 
-        private void ClickParamListButton(int x, int y, Button button, bool reset)
+        private bool ClickParamListOrSliderButton(int x, int y, Button button)
         {
-            var buttonWidth = ScaleCustom(bmpButtonLeft.ElementSize.Width, bitmapScale);
             var buttonX = x;
-            var leftButton  = buttonX > (contentSizeX - sliderPosX) && buttonX < (contentSizeX - sliderPosX + buttonWidth);
-            var rightButton = buttonX > (contentSizeX - sliderPosX + sliderSizeX - buttonWidth) && buttonX < (contentSizeX - sliderPosX + sliderSizeX);
+            var leftButton  = buttonX > (contentSizeX - sliderPosX) && buttonX < (contentSizeX - sliderPosX + paramButtonSizeX);
+            var rightButton = buttonX > (contentSizeX - sliderPosX + sliderSizeX - paramButtonSizeX) && buttonX < (contentSizeX - sliderPosX + sliderSizeX);
             var delta = leftButton ? -1 : (rightButton ? 1 : 0);
 
-            if (!reset && (leftButton || rightButton))
+            if (leftButton || rightButton)
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
 
@@ -3091,14 +3098,10 @@ namespace FamiStudio
 
                 App.UndoRedoManager.EndTransaction();
                 MarkDirty();
+                return true;
             }
-            else if (reset && buttonX > (contentSizeX - sliderPosX))
-            {
-                App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-                button.param.SetValue(button.param.DefaultValue);
-                App.UndoRedoManager.EndTransaction();
-                MarkDirty();
-            }
+
+            return false;
         }
 
         private void ClickParamTabsButton(int x, int y, Button button)
@@ -3114,7 +3117,7 @@ namespace FamiStudio
         private bool HandleMouseDownParamCheckboxButton(MouseEventArgs e, Button button)
         {
             if (e.Left)
-                ClickParamCheckbox(e.X, e.Y, button, false);
+                ClickParamCheckbox(e.X, e.Y, button);
 
             return true;
         }
@@ -3122,7 +3125,7 @@ namespace FamiStudio
         private bool HandleMouseDownParamListButton(MouseEventArgs e, Button button)
         {
             if (e.Left)
-                ClickParamListButton(e.X, e.Y, button, false);
+                ClickParamListOrSliderButton(e.X, e.Y, button);
 
             return true;
         }
@@ -3419,13 +3422,19 @@ namespace FamiStudio
 
         private bool HandleTouchClickParamCheckboxButton(int x, int y, Button button)
         {
-            ClickParamCheckbox(x, y, button, false);
+            ClickParamCheckbox(x, y, button);
             return true;
         }
 
         private bool HandleTouchClickParamListButton(int x, int y, Button button)
         {
-            ClickParamListButton(x, y, button, false);
+            ClickParamListOrSliderButton(x, y, button);
+            return true;
+        }
+
+        private bool HandleTouchClickParamSliderButton(int x, int y, Button button)
+        {
+            ClickParamListOrSliderButton(x, y, button);
             return true;
         }
 
@@ -3461,6 +3470,8 @@ namespace FamiStudio
                         return HandleTouchClickParamListButton(x, y, button);
                     case ButtonType.ParamTabs:
                         return HandleTouchClickParamTabsButton(x, y, button);
+                    case ButtonType.ParamSlider:
+                        return HandleTouchClickParamSliderButton(x, y, button);
                     case ButtonType.ArpeggioHeader:
                         return HandleTouchClickArpeggioHeaderButton(x, y, subButtonType);
                     case ButtonType.Arpeggio:
@@ -3843,6 +3854,40 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        private bool HandleTouchDoubleClickParamListButton(int x, int y, Button button)
+        {
+            return ClickParamListOrSliderButton(x, y, button);
+        }
+
+        private bool HandleTouchDoubleClickButtons(int x, int y)
+        {
+            var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType, out var buttonRelX, out var buttonRelY);
+
+            if (buttonIdx >= 0)
+            {
+                var button = buttons[buttonIdx];
+
+                switch (button.type)
+                {
+                    case ButtonType.ParamList:
+                    case ButtonType.ParamSlider:
+                        return HandleTouchDoubleClickParamListButton(x, y, button);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        protected override void OnTouchDoubleClick(int x, int y)
+        {
+            if (HandleTouchDoubleClickButtons(x, y)) goto Handled;
+            return;
+            Handled:
+            MarkDirty();
+        }
+
         protected override void OnTouchLongPress(int x, int y)
         {
             AbortCaptureOperation();
@@ -4212,7 +4257,7 @@ namespace FamiStudio
             });
         }
 
-        private bool HandleMouseDoubleClickSong(Button button, MouseEventArgs e)
+        private bool HandleMouseDoubleClickSong(MouseEventArgs e, Button button)
         {
             if (App.Project.Songs.Count > 1)
             {
@@ -4223,7 +4268,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDoubleClickInstrument(Button button, MouseEventArgs e)
+        private bool HandleMouseDoubleClickInstrument(MouseEventArgs e, Button button)
         {
             if (button.instrument != null)
             {
@@ -4234,16 +4279,21 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleMouseDoubleClickArpeggio(Button button, MouseEventArgs e)
+        private bool HandleMouseDoubleClickArpeggio(MouseEventArgs e, Button button)
         {
             AskDeleteArpeggio(button.arpeggio);
             return true;
         }
 
-        private bool HandleMouseDoubleClickDPCMSample(Button button, MouseEventArgs e)
+        private bool HandleMouseDoubleClickDPCMSample(MouseEventArgs e, Button button)
         {
             AskDeleteDPCMSample(button.sample);
             return true;
+        }
+
+        private bool HandleMouseDoubleClickParamListButton(MouseEventArgs e, Button button)
+        {
+            return ClickParamListOrSliderButton(e.X, e.Y, button);
         }
 
         private bool HandleMouseDoubleClickButtons(MouseEventArgs e)
@@ -4259,14 +4309,21 @@ namespace FamiStudio
 
                 switch (button.type)
                 {
-                    case ButtonType.Song:
-                        return HandleMouseDoubleClickSong(button, e);
-                    case ButtonType.Instrument:
-                        return HandleMouseDoubleClickInstrument(button, e);
-                    case ButtonType.Arpeggio:
-                        return HandleMouseDoubleClickArpeggio(button, e);
-                    case ButtonType.Dpcm:
-                        return HandleMouseDoubleClickDPCMSample(button, e);
+                    // MATTT : Figure out the delete thing.
+                    //case ButtonType.Song:
+                    //    return HandleMouseDoubleClickSong(e, button);
+                    //case ButtonType.Instrument:
+                    //    return HandleMouseDoubleClickInstrument(e, button);
+                    //case ButtonType.Arpeggio:
+                    //    return HandleMouseDoubleClickArpeggio(e, button);
+                    //case ButtonType.Dpcm:
+                    //    return HandleMouseDoubleClickDPCMSample(e, button);
+
+                    case ButtonType.ParamSlider:
+                    case ButtonType.ParamList:
+                        // Treat double-clicks as click. These are generated when click
+                        // very fast on a button : click -> double click -> click -> double click -> ...
+                        return HandleMouseDoubleClickParamListButton(e, button);
                 }
 
                 return true;
@@ -4277,11 +4334,10 @@ namespace FamiStudio
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
-            // Disabled. Double-click to delete will confuse existing users.
-            //if (HandleMouseDoubleClickButtons(e)) goto Handled;
-            //return;
-            //Handled:
-            //MarkDirty();
+            if (HandleMouseDoubleClickButtons(e)) goto Handled;
+            return;
+        Handled:
+            MarkDirty();
         }
 
         public void ValidateIntegrity()

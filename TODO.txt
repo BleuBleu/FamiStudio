@@ -37,7 +37,6 @@ N163 Multi-wave:
 - When loading a new instrument, we load + reset the envelope
 - On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
 4) Polish
-- Add +/- buttons to PE sliders.
 - FTI import
 - Famitracker import/export.
 - Same for FDS.
@@ -88,7 +87,7 @@ Testing:
 
 Batch convert PNG -> TGA
 ==========================
-"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path C:\Dump\PngToTga\Tga -compress RLE -format tga *.png
+"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
 
 Linux notes 
 =========== 
