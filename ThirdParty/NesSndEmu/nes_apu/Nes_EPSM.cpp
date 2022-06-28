@@ -81,10 +81,28 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 	}
 	if (idx < 9 && idx > 2)
 	{
-		if (enabled)
-		mask_fm = mask_fm | (1 << (idx-3));
-		else
-		mask_fm = mask_fm & ~(1 << (idx-3));
+		if (enabled){
+			mask_fm = mask_fm | (1 << (idx-3));
+			if(idx < 6){
+				queue.push(0 | (0 << 1), 0xB4+idx-3);
+				queue.push(1 | (0 << 1), regs_a0[0xB4+idx-3]);
+			}
+			else{
+				queue.push(0 | (1 << 1), 0xB4+idx-6);
+				queue.push(1 | (1 << 1), regs_a0[0xB4+idx-6]);
+			}
+		}
+		else{
+			mask_fm = mask_fm & ~(1 << (idx-3));
+			if(idx < 6){
+				queue.push(0 | (0 << 1), 0xB4+idx-3);
+				queue.push(1 | (0 << 1), 0x00);
+			}
+			else{
+				queue.push(0 | (1 << 1), 0xB4+idx-6);
+				queue.push(1 | (1 << 1), 0x00);
+			}
+		}
 	}
 	if (idx > 8)
 	{
@@ -116,13 +134,13 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 				data = data & maskRythm;
 			}
 				//currentRegister = data;
-			else if (current_register == 0x28) {
-				if(!(mask_fm & 0x1) && ((data & 0x7)) == 0){ mask = 1; }
-				else if (!(mask_fm & 0x2) && ((data & 0x7)) == 1) { mask = 1; }
-				else if (!(mask_fm & 0x4) && ((data & 0x7)) == 2) { mask = 1; }
-				else if (!(mask_fm & 0x8) && ((data & 0x7)) == 4) { mask = 1; }
-				else if (!(mask_fm & 0x10) && ((data & 0x7)) == 5) { mask = 1; }
-				else if (!(mask_fm & 0x20) && ((data & 0x7)) == 6) { mask = 1; }
+			else if (current_register == 0xB4 | current_register == 0xB5 | current_register == 0xB6) {
+				if      (!(mask_fm & 0x01) && (current_register == 0xB4) && (addr == 0x401d)) { mask = 1; }
+				else if (!(mask_fm & 0x02) && (current_register == 0xB5) && (addr == 0x401d)) { mask = 1; }
+				else if (!(mask_fm & 0x04) && (current_register == 0xB6) && (addr == 0x401d)) { mask = 1; }
+				else if (!(mask_fm & 0x08) && (current_register == 0xB4) && (addr == 0x401f)) { mask = 1; }
+				else if (!(mask_fm & 0x10) && (current_register == 0xB5) && (addr == 0x401f)) { mask = 1; }
+				else if (!(mask_fm & 0x20) && (current_register == 0xB6) && (addr == 0x401f)) { mask = 1; }
 				//std::cout << "fm" << std::endl;
 			}
 			break;
@@ -135,17 +153,17 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	if (!mask) 
 	{	
 		queue.push(a0 | (a1 << 1), data);
-	
-		switch (addr) {
-		case 0x401d:
-			regs_a0[current_register] = data;
-			ages_a0[current_register] = 0;
-			break;
-		case 0x401f:
-			regs_a1[current_register] = data;
-			ages_a1[current_register] = 0;
-			break;
-		}
+	}
+
+	switch (addr) {
+	case 0x401d:
+		regs_a0[current_register] = data;
+		ages_a0[current_register] = 0;
+		break;
+	case 0x401f:
+		regs_a1[current_register] = data;
+		ages_a1[current_register] = 0;
+		break;
 	}
 	//if (!mask) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
 	//run_until(time);
