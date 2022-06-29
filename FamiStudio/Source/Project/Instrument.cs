@@ -487,16 +487,11 @@ namespace FamiStudio
 
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
+                if (buffer.IsReading)
+                    envelopes[i] = IsEnvelopeActive(i) ? new Envelope(i) : null;
+
                 if ((envelopeMask & (1 << i)) != 0)
-                {
-                    if (buffer.IsReading)
-                        envelopes[i] = new Envelope(i);
                     envelopes[i].SerializeState(buffer, i);
-                }
-                else
-                {
-                    envelopes[i] = null;
-                }
             }
 
             if (buffer.Version < 5)
