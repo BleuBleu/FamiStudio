@@ -320,17 +320,6 @@ namespace FamiStudio
             return EpsmInstrumentPatch.Infos[preset].name;
         }
 
-        public Envelope GetControlEnvelope(int type)
-        {
-            if (type == EnvelopeType.N163Waveform && IsN163Instrument ||
-                type == EnvelopeType.FdsWaveform  && IsFdsInstrument)
-            {
-                return envelopes[EnvelopeType.WaveformRepeat];
-            }
-
-            return null;
-        }
-
         public uint ComputeCRC(uint crc = 0)
         {
             var serializer = new ProjectCrcBuffer(crc);
@@ -355,6 +344,7 @@ namespace FamiStudio
                 var env = envelopes[i];
                 var envelopeExists = env != null;
                 var envelopeShouldExists = IsEnvelopeActive(i);
+
                 Debug.Assert(envelopeExists == envelopeShouldExists);
 
                 if (envelopeExists)
@@ -362,18 +352,18 @@ namespace FamiStudio
                     Debug.Assert(env.Length % env.ChunkLength == 0);
                     Debug.Assert(env.ValuesInValidRange(this, i));
 
-                    var ctrl = GetControlEnvelope(i);
-                    Debug.Assert(ctrl == null || env.Length / env.ChunkLength == ctrl.Length);
-
                     if (i == EnvelopeType.N163Waveform)
                     {
                         Debug.Assert(env.ChunkLength == n163WaveSize);
                         Debug.Assert(env.Length == n163WaveSize * n163WaveCount);
+                        Debug.Assert(env.Length / env.ChunkLength == envelopes[EnvelopeType.WaveformRepeat].Length);
                     }
+
                     if (i == EnvelopeType.FdsWaveform)
                     {
                         Debug.Assert(env.ChunkLength == 64);
                         Debug.Assert(env.Length == 64 * fdsWaveCount);
+                        Debug.Assert(env.Length / env.ChunkLength == envelopes[EnvelopeType.WaveformRepeat].Length);
                     }
                 }
             }

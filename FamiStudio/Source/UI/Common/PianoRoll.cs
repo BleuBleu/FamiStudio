@@ -816,14 +816,19 @@ namespace FamiStudio
             }
         }
 
-        private Envelope EditControlEnvelope
+        private Envelope EditRepeatEnvelope
         {
             get
             {
                 if (editMode == EditionMode.Enveloppe)
-                    return editInstrument?.GetControlEnvelope((int)editEnvelope);
+                    return editInstrument?.Envelopes[EnvelopeType.WaveformRepeat];
                 return null;
             }
+        }
+
+        private bool HasRepeatEnvelope()
+        {
+            return EditRepeatEnvelope != null;
         }
 
         public void HighlightPianoNote(int note)
@@ -1140,17 +1145,12 @@ namespace FamiStudio
             if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && EditEnvelope != null)
             {
                 var env = EditEnvelope;
-                var ctrl = EditControlEnvelope;
                 var iconPos = (headerSizeY / 2 - ScaleCustom(bmpLoopSmallFill.ElementSize.Width, bitmapScale)) / 2;
 
                 r.ch.PushTranslation(0, headerSizeY / 2);
 
-                if (ctrl != null)
-                {
+                if (env.ChunkLength > 1)
                     r.ch.FillRectangle(0, 0, GetPixelForNote(env.Length), headerSizeY / 2, r.ch.Graphics.GetSolidBrush(editInstrument.Color));
-                }
-
-                DrawSelectionRect(r.ch, headerSizeY);
 
                 if (env.Loop >= 0)
                 {
@@ -1174,7 +1174,6 @@ namespace FamiStudio
                     r.ch.PopTransform();
                 }
 
-                r.ch.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, ThemeResources.BlackBrush);
                 r.ch.PopTransform();
 
                 if (env.CanResize)
@@ -1192,14 +1191,14 @@ namespace FamiStudio
                     int x = GetPixelForNote(n);
                     if (x != 0)
                     {
-                        r.ch.DrawLine(x, 0, x, headerSizeY / 2, ThemeResources.BlackBrush, 1);
+                        r.ch.DrawLine(x, 0, x, headerSizeY / 2, ThemeResources.BlackBrush, env.ChunkLength > 1 && n % env.ChunkLength == 0 && n != env.Length ? 3 : 1);
                     }
                     if (n != env.Length)
                     {
                         if (env.ChunkLength > 1 && n % env.ChunkLength == 0)
                         {
                             if (x != 0)
-                                r.ch.DrawLine(x, headerSizeY / 2, x, headerSizeY, ThemeResources.BlackBrush, 1);
+                                r.ch.DrawLine(x, headerSizeY / 2, x, headerSizeY, ThemeResources.BlackBrush, 3);
                             int x1 = GetPixelForNote(n + env.ChunkLength);
                             r.ch.DrawText((n / env.ChunkLength).ToString(), ThemeResources.FontMedium, x, headerSizeY / 2 - 1, ThemeResources.BlackBrush, TextFlags.MiddleCenter, x1 - x, headerSizeY / 2);
                         }
@@ -1319,7 +1318,7 @@ namespace FamiStudio
             // Effect icons
             if (editMode == EditionMode.Channel)
             {
-                var toggleRect = GetToggleEffectPannelButtonRect();
+                var toggleRect = GetToggleEffectPanelButtonRect();
                 r.cc.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, toggleRect.X, toggleRect.Y, 1.0f, bitmapScale, Theme.LightGreyColor1);
 
                 if (SnapAllowed && !Platform.IsMobile)
@@ -1360,7 +1359,7 @@ namespace FamiStudio
                     r.cc.PopTransform();
                 }
             }
-            else if (editMode == EditionMode.DPCM)
+            else if (editMode == EditionMode.DPCM || editMode == EditionMode.Enveloppe && editInstrument.Envelopes[EnvelopeType.WaveformRepeat] != null)
             {
                 r.cc.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, 0, 0, 1.0f, bitmapScale, Theme.LightGreyColor1);
 
@@ -1368,13 +1367,15 @@ namespace FamiStudio
                 {
                     r.cc.PushTranslation(0, headerSizeY);
                     r.cc.DrawLine(0, -1, pianoSizeX, -1, ThemeResources.BlackBrush);
-                    
-                    r.cc.DrawBitmapAtlas(bmpEffects[Note.EffectVolume], effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
-                    r.cc.DrawText(Note.EffectNames[Note.EffectVolume], ThemeResources.FontSmallBold, effectNamePosX, 0, ThemeResources.LightGreyBrush2, TextFlags.Middle, 0, effectButtonSizeY);
-                    r.cc.PopTransform();
 
+                    var bmp  = bmpEffects[editMode == EditionMode.DPCM ? Note.EffectVolume : Note.EffectDeltaCounter];
+                    var text = editMode == EditionMode.DPCM ? Note.EffectNames[Note.EffectVolume] : EnvelopeType.Names[EnvelopeType.WaveformRepeat];
+
+                    r.cc.DrawBitmapAtlas(bmp, effectIconPosX, effectIconPosY, 1.0f, effectBitmapScale, Theme.LightGreyColor1);
+                    r.cc.DrawText(text, ThemeResources.FontSmallBold, effectNamePosX, 0, ThemeResources.LightGreyBrush2, TextFlags.Middle, 0, effectButtonSizeY);
                     r.cc.PushTranslation(0, effectButtonSizeY);
                     r.cc.DrawLine(0, -1, pianoSizeX, -1, ThemeResources.BlackBrush);
+                    r.cc.PopTransform();
                     r.cc.PopTransform();
                 }
             }
@@ -1517,7 +1518,7 @@ namespace FamiStudio
 
         private void RenderEffectPanel(RenderInfo r)
         {
-            if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && showEffectsPanel)
+            if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Enveloppe && HasRepeatEnvelope()) && showEffectsPanel)
             {
                 r.ch.PushTranslation(pianoSizeX, headerSizeY);
 
@@ -1699,7 +1700,6 @@ namespace FamiStudio
                     // Draw the actual effect bars.
                     for (var it = channel.GetSparseNoteIterator(minLocation, maxLocation, NoteFilter.All); !it.Done; it.Next())
                     {
-                        var pattern = it.Pattern;
                         var note = it.Note;
                         var location = it.Location;
 
@@ -1755,12 +1755,57 @@ namespace FamiStudio
                         foreach (var g in gizmos)
                         {
                             var lineColor = IsGizmoHighlighted(g, headerSizeY) ? Color.White : Color.Black;
-                            var scaling = r.g.WindowScaling;
 
                             if (g.FillImage != null)
                                 r.cz.DrawBitmapAtlas(g.FillImage, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, Theme.LightGreyColor1);
                             r.cz.DrawBitmapAtlas(g.Image, g.Rect.X, g.Rect.Y, 1.0f, g.Rect.Width / (float)g.Image.ElementSize.Width, lineColor);
                         }
+                    }
+                }
+                else if (editMode == EditionMode.Enveloppe)
+                {
+                    var env = EditEnvelope;
+                    var rep = EditRepeatEnvelope;
+
+                    Debug.Assert(env.Length % rep.Length == 0);
+                    Debug.Assert(env.ChunkCount == rep.Length);
+
+                    var ratio = env.Length / rep.Length;
+
+                    Envelope.GetMinMaxValueForType(editInstrument, EnvelopeType.WaveformRepeat, out var minRepeat, out var maxRepeat);
+
+                    for (var i = 0; i < rep.Length; i++)
+                    {
+                        var x0 = GetPixelForNote((i + 0) * ratio);
+                        var x1 = GetPixelForNote((i + 1) * ratio);
+                        var sizeX = x1 - x0;
+                        var val = rep.Values[i];
+
+                        var sizeY = (float)Math.Floor((val - minRepeat) / (float)(maxRepeat - minRepeat) * effectPanelSizeY);
+
+                        r.ch.PushTranslation(x0, 0);
+
+                        var selected = false; // MATTT IsNoteSelected(location);
+                        var highlighted = false; // MATTT
+
+                        r.ch.FillAndDrawRectangle(
+                            0, effectPanelSizeY - sizeY, sizeX, effectPanelSizeY,
+                            ThemeResources.LightGreyBrush1,
+                            highlighted ? ThemeResources.WhiteBrush : ThemeResources.BlackBrush, highlighted || selected ? 2 : 1, highlighted || selected);
+
+                        var text = val.ToString();
+                        if (text.Length * fontSmallCharSizeX + 2 < sizeX)
+                        {
+                            if (sizeY < effectPanelSizeY / 2)
+                                r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY - effectValuePosTextOffsetY, ThemeResources.LightGreyBrush1, TextFlags.Center, sizeX);
+                            else
+                                r.ch.DrawText(text, ThemeResources.FontSmall, 0, effectPanelSizeY - sizeY + effectValueNegTextOffsetY, ThemeResources.BlackBrush, TextFlags.Center, sizeX);
+                        }
+
+                        if (i != 0)
+                            r.ch.DrawLine(0, 0, 0, effectPanelSizeY, ThemeResources.BlackBrush, 3);
+
+                        r.ch.PopTransform();
                     }
                 }
                 else if (editMode == EditionMode.DPCM)
@@ -2610,7 +2655,7 @@ namespace FamiStudio
             for (int b = 0; b < env.Length; b++)
             {
                 int x = GetPixelForNote(b);
-                if (b != 0) r.cb.DrawLine(x, 0, x, Height, ThemeResources.DarkGreyBrush1);
+                if (b != 0) r.cb.DrawLine(x, 0, x, Height, ThemeResources.DarkGreyBrush1, env.ChunkLength > 1 && b % env.ChunkLength == 0 ? 3 : 1);
             }
 
             if (env.Loop >= 0)
@@ -4769,9 +4814,9 @@ namespace FamiStudio
             }
         }
 
-        public void ToggleEffectPannel()
+        public void ToggleEffectPanel()
         {
-            if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM)
+            if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Enveloppe && HasRepeatEnvelope())
                 SetShowEffectPanel(!showEffectsPanel);
         }
 
@@ -5084,9 +5129,9 @@ namespace FamiStudio
 
         private bool HandleMouseDownToggleEffectPanelButton(MouseEventArgs e)
         {
-            if (e.Left && IsPointOnToggleEffectPannelButton(e.X, e.Y))
+            if (e.Left && IsPointOnToggleEffectPanelButton(e.X, e.Y))
             {
-                ToggleEffectPannel();
+                ToggleEffectPanel();
                 return true;
             }
 
@@ -5288,7 +5333,8 @@ namespace FamiStudio
             }
 
             if (editMode == EditionMode.Channel ||
-                editMode == EditionMode.DPCM)
+                editMode == EditionMode.DPCM    ||
+                editMode == EditionMode.Enveloppe && HasRepeatEnvelope())
             {
                 if (HandleMouseDownToggleEffectPanelButton(e)) goto Handled;
             }
@@ -5727,7 +5773,7 @@ namespace FamiStudio
         {
             if (IsPointInTopLeftCorner(x, y))
             {
-                ToggleEffectPannel();
+                ToggleEffectPanel();
                 return true;
             }
 
@@ -7249,7 +7295,7 @@ namespace FamiStudio
             return (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && y < headerSizeY && x < pianoSizeX;
         }
 
-        private Rectangle GetToggleEffectPannelButtonRect()
+        private Rectangle GetToggleEffectPanelButtonRect()
         {
             var expandButtonSize = bmpExpandedSmall.ElementSize.Width;
             return new Rectangle(effectIconPosX, effectIconPosY, expandButtonSize, expandButtonSize);
@@ -7271,14 +7317,14 @@ namespace FamiStudio
 
         private Rectangle GetSnapResolutionRect()
         {
-            var toggleRect = GetToggleEffectPannelButtonRect();
+            var toggleRect = GetToggleEffectPanelButtonRect();
             var snapRect   = GetSnapButtonRect();
             return new Rectangle(toggleRect.Right, toggleRect.Top + 1, snapRect.Left - toggleRect.Right - (int)WindowScaling, snapRect.Height);
         }
 
-        private bool IsPointOnToggleEffectPannelButton(int x, int y)
+        private bool IsPointOnToggleEffectPanelButton(int x, int y)
         {
-            return GetToggleEffectPannelButtonRect().Contains(x, y);
+            return GetToggleEffectPanelButtonRect().Contains(x, y);
         }
 
         private bool IsPointOnSnapButton(int x, int y)

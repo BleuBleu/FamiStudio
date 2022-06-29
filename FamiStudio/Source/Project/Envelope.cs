@@ -6,14 +6,16 @@ namespace FamiStudio
     public class Envelope
     {
         sbyte[] values;
-        
         int length;
         int loop = -1;
         int release = -1;
+        bool relative = false;
+
+        // These are replicated from instrument.
         int maxLength = 256;
         int chunkLength = 1;
 
-        bool relative = false;
+        // These are static, depend on type.
         bool canResize;
         bool canLoop;
         bool canRelease;
@@ -37,12 +39,13 @@ namespace FamiStudio
             canLoop = type <= EnvelopeType.DutyCycle;
             chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
 
-            if (chunkLength > 1)
+            if (canResize)
             {
-                length = chunkLength;
-            }
-            else if (canResize)
-            {
+                if (chunkLength > 1)
+                    length = chunkLength;
+                else
+                    length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
+
                 ClearToDefault(type);
             }
             else
@@ -75,21 +78,20 @@ namespace FamiStudio
             }
         }
 
+        public int ChunkCount
+        { 
+            get
+            {
+                return length / chunkLength;
+            }
+        }
+
         public void ClearToDefault(int type)
         {
-            // Give envelope a default size, more intuitive.
-            if (canResize)
-                length = type == EnvelopeType.DutyCycle || type == EnvelopeType.Volume ? 1 : 8;
+            var def = GetEnvelopeDefaultValue(type);
 
-            Array.Clear(values, 0, values.Length);
-
-            if (type == EnvelopeType.Volume)
-            {
-                values[0] = Note.VolumeMax;
-            }
-
-            loop = -1;
-            release = -1;
+            for (int i = 0; i < values.Length; i++)
+                values[i] = def;
         }
 
         public int Loop
@@ -301,6 +303,7 @@ namespace FamiStudio
             env.release = release;
             env.relative = relative;
             env.maxLength = maxLength;
+            env.chunkLength = chunkLength;
             env.canResize = canResize;
             env.values = values.Clone() as sbyte[];
             return env;
@@ -389,6 +392,8 @@ namespace FamiStudio
                 crc = CRC32.Compute(BitConverter.GetBytes(loop), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(release), crc);
                 crc = CRC32.Compute(BitConverter.GetBytes(relative), crc);
+                crc = CRC32.Compute(BitConverter.GetBytes(maxLength), crc);
+                crc = CRC32.Compute(BitConverter.GetBytes(chunkLength), crc);
                 crc = CRC32.Compute(values, crc);
                 return crc;
             }
@@ -412,6 +417,19 @@ namespace FamiStudio
                     return 64;
                 default:
                     return 256;
+            }
+        }
+
+        public static sbyte GetEnvelopeDefaultValue(int type)
+        {
+            switch (type)
+            {
+                case EnvelopeType.Volume:
+                    return Note.VolumeMax;
+                case EnvelopeType.WaveformRepeat:
+                    return 1;
+                default:
+                    return 0;
             }
         }
 
@@ -474,6 +492,12 @@ namespace FamiStudio
             {
                 min = 0;
                 max = 63;
+            }
+            else if (type == EnvelopeType.WaveformRepeat)
+            {
+                // MATTT : What is a sensible value.
+                min = 0;
+                max = 15;
             }
             else
             {

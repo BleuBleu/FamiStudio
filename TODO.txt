@@ -12,14 +12,10 @@
 N163 Multi-wave:
 ================
 1) Env editor
-- Envelope has an "effect envelope" or something, the factor is env.lenght / fx.length. WHich will drive the whole thing. If none, factor = 1.
-- Render envelope editor correctly (indices repeat, chunks.)
-- Resize must change the number of waves
-- Loop/release, store in the actualy wave, enforce multiple. Add validation.
-- "Repeat" effect editor
+- Repeat effect editor
 2) Playback
 - Channel state
-- Instrument player correct play position
+- Instrument player correct play position readback.
 3) NSF/Sound Engine:
 - we have 6 bytes free for N163 instruments
 	- 2 bytes for the wave index envelope

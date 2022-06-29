@@ -1828,7 +1828,7 @@ namespace FamiStudio
             {
                 if (ctrl)
                 {
-                    PianoRoll.ToggleEffectPannel();
+                    PianoRoll.ToggleEffectPanel();
                 }
                 else 
                 {
