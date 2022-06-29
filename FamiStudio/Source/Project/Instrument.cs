@@ -452,11 +452,16 @@ namespace FamiStudio
 
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
-                if (buffer.IsReading)
-                    envelopes[i] = IsEnvelopeActive(i) ? new Envelope(i) : null;
-
                 if ((envelopeMask & (1 << i)) != 0)
+                {
+                    if (buffer.IsReading)
+                        envelopes[i] = new Envelope(i);
                     envelopes[i].SerializeState(buffer, i);
+                }
+                else
+                {
+                    envelopes[i] = null;
+                }
             }
 
             if (buffer.Version < 5)
@@ -469,7 +474,7 @@ namespace FamiStudio
                 }
             }
 
-            // At FamiStudio 3.2.0, we realized that we had some FDS envelopes (likely imported from NSF)
+            // At version 12, FamiStudio 3.2.0, we realized that we had some FDS envelopes (likely imported from NSF)
             // with bad values. Also, some pitches as well.
             if (buffer.Version < 12)
             {
@@ -477,6 +482,12 @@ namespace FamiStudio
                     envelopes[EnvelopeType.FdsWaveform].ClampToValidRange(this, EnvelopeType.FdsWaveform);
                 if (IsVrc6Instrument)
                     envelopes[EnvelopeType.Pitch].ClampToValidRange(this, EnvelopeType.Pitch);
+            }
+
+            // At version 14 (FamiStudio 4.0.0), we added multi-waveforms for N163 and FDS.
+            if (buffer.Version < 14 && (IsN163Instrument || IsFdsInstrument))
+            {
+                envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
             }
 
             if (buffer.IsReading)
