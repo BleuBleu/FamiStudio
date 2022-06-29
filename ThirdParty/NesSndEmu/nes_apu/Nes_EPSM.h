@@ -110,6 +110,7 @@ private:
 	cpu_time_t last_time;
 	int last_amp;
 	int last_amp_right;
+	uint16_t opn2_mask;
 	Blip_Synth<blip_med_quality, 15420> synth;
 	Blip_Synth<blip_med_quality, 15420> synth_right;
 

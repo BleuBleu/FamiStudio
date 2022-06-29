@@ -1077,7 +1077,11 @@ void OPN2_ChGenerate(ym3438_t *chip)
 
     if (op == 0 || test_dac)
     {
-        chip->ch_out[channel] = chip->ch_acc[channel];
+    Bit16u mask = chip->mask;
+        if(!(mask & (1 << channel)))
+            chip->ch_out[channel] = chip->ch_acc[channel];
+        else
+            chip->ch_out[channel] = 0;
     }
     chip->ch_acc[channel] = sum;
 }
@@ -1281,8 +1285,15 @@ void OPNmod_RhythmGenerate(ym3438_t* chip)
 			out = ((chip->rhythm_adpcm_acc[channel] * chip->rhythm_vol_mul[channel]) >> chip->rhythm_vol_shift[channel]) & ~3; /* multiply, shift and mask out 2 LSB bits */
 
 		end:
-			chip->rhythml[channel] = panl ? (out >> 1) : 0;
-			chip->rhythmr[channel] = panr ? (out >> 1) : 0;
+            Bit16u mask = chip->mask;
+            if(!((mask >> 6) & (1 << (channel)))){
+			    chip->rhythml[channel] = panl ? (out >> 1) : 0;
+			    chip->rhythmr[channel] = panr ? (out >> 1) : 0;
+            }
+            else{
+			    chip->rhythml[channel] = 0;
+			    chip->rhythmr[channel] = 0;
+            }
 		}
 	}
 }
@@ -1598,6 +1609,15 @@ void OPN2_Clock(ym3438_t* chip, Bit16s* buffer, bool fm, bool rythm, bool misc)
     if (chip->status_time)
         chip->status_time--;
 }
+
+void OPN2_MuteChannel(ym3438_t *chip, Bit16u mask)
+{
+  if(chip)
+  {
+    chip->mask = mask;
+  }
+}
+
 
 void OPN2_Write(ym3438_t *chip, Bit32u port, Bit8u data)
 {

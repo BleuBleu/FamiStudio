@@ -135,6 +135,7 @@ typedef struct __ym3438_t
     Bit8u ch_lock_l;
     Bit8u ch_lock_r;
     Bit16s ch_read;
+    Bit16u mask;
 	 /*OPNA: Rhythm channel*/
 	 Bit8u rhythm_tl;
 	 Bit8u rhythm_key[6];
@@ -216,6 +217,7 @@ void OPN2_SetChipType(Bit32u type);
 void OPN2_Clock(ym3438_t *chip, Bit16s *buffer, bool fm = 1, bool rythm = 1, bool misc = 1);
 void OPN2_Write(ym3438_t *chip, Bit32u port, Bit8u data);
 void OPN2_SetTestPin(ym3438_t *chip, Bit32u value);
+void OPN2_MuteChannel(ym3438_t *chip, Bit16u mask);
 ym3438_t *OPN_New();
 Bit32u OPN2_ReadTestPin(ym3438_t *chip);
 Bit32u OPN2_ReadIRQPin(ym3438_t *chip);
