@@ -419,49 +419,14 @@ namespace FamiStudio
 
                         case ExpansionType.Vrc7:
                             buffer.Serialize(ref vrc7Patch);
-                            buffer.Serialize(ref vrc7PatchRegs[0]);
-                            buffer.Serialize(ref vrc7PatchRegs[1]);
-                            buffer.Serialize(ref vrc7PatchRegs[2]);
-                            buffer.Serialize(ref vrc7PatchRegs[3]);
-                            buffer.Serialize(ref vrc7PatchRegs[4]);
-                            buffer.Serialize(ref vrc7PatchRegs[5]);
-                            buffer.Serialize(ref vrc7PatchRegs[6]);
-                            buffer.Serialize(ref vrc7PatchRegs[7]);
+                            for (int i = 0; i < vrc7PatchRegs.Length; i++)
+                                buffer.Serialize(ref vrc7PatchRegs[i]);
                             break;
 
                         case ExpansionType.EPSM:
                             buffer.Serialize(ref epsmPatch);
-                            buffer.Serialize(ref epsmPatchRegs[0]);
-                            buffer.Serialize(ref epsmPatchRegs[1]);
-                            buffer.Serialize(ref epsmPatchRegs[2]);
-                            buffer.Serialize(ref epsmPatchRegs[3]);
-                            buffer.Serialize(ref epsmPatchRegs[4]);
-                            buffer.Serialize(ref epsmPatchRegs[5]);
-                            buffer.Serialize(ref epsmPatchRegs[6]);
-                            buffer.Serialize(ref epsmPatchRegs[7]);
-                            buffer.Serialize(ref epsmPatchRegs[8]);
-                            buffer.Serialize(ref epsmPatchRegs[9]);
-                            buffer.Serialize(ref epsmPatchRegs[10]);
-                            buffer.Serialize(ref epsmPatchRegs[11]);
-                            buffer.Serialize(ref epsmPatchRegs[12]);
-                            buffer.Serialize(ref epsmPatchRegs[13]);
-                            buffer.Serialize(ref epsmPatchRegs[14]);
-                            buffer.Serialize(ref epsmPatchRegs[15]);
-                            buffer.Serialize(ref epsmPatchRegs[16]);
-                            buffer.Serialize(ref epsmPatchRegs[17]);
-                            buffer.Serialize(ref epsmPatchRegs[18]);
-                            buffer.Serialize(ref epsmPatchRegs[19]);
-                            buffer.Serialize(ref epsmPatchRegs[20]);
-                            buffer.Serialize(ref epsmPatchRegs[21]);
-                            buffer.Serialize(ref epsmPatchRegs[22]);
-                            buffer.Serialize(ref epsmPatchRegs[23]);
-                            buffer.Serialize(ref epsmPatchRegs[24]);
-                            buffer.Serialize(ref epsmPatchRegs[25]);
-                            buffer.Serialize(ref epsmPatchRegs[26]);
-                            buffer.Serialize(ref epsmPatchRegs[27]);
-                            buffer.Serialize(ref epsmPatchRegs[28]);
-                            buffer.Serialize(ref epsmPatchRegs[29]);
-                            buffer.Serialize(ref epsmPatchRegs[30]);
+                            for (int i = 0; i < epsmPatchRegs.Length; i++)
+                                buffer.Serialize(ref epsmPatchRegs[i]);
                             break;
                         case ExpansionType.Vrc6:
                             // At version 10 (FamiStudio 3.0.0) we added a master volume to the VRC6 saw.
