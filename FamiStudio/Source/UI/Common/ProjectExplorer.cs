@@ -781,7 +781,7 @@ namespace FamiStudio
                         else
                         {
                             var expandButton = projectExplorer.ShowExpandButtons() && InstrumentParamProvider.HasParams(instrument);
-                            var numSubButtons = instrument.NumActiveEnvelopes + (expandButton ? 1 : 0) + 1;
+                            var numSubButtons = instrument.NumVisibleEnvelopes + (expandButton ? 1 : 0) + 1;
                             var buttons = new SubButtonType[numSubButtons];
                             buttons[0] = SubButtonType.Properties;
 
@@ -3090,9 +3090,9 @@ namespace FamiStudio
                 var val = button.param.GetValue();
 
                 if (rightButton)
-                    val = button.param.SnapAndClampValue(button.param.GetValue() + 1);
+                    val = button.param.SnapAndClampValue(button.param.GetValue() + button.param.SnapValue);
                 else
-                    val = button.param.SnapAndClampValue(button.param.GetValue() - 1);
+                    val = button.param.SnapAndClampValue(button.param.GetValue() - button.param.SnapValue);
 
                 button.param.SetValue(val);
 

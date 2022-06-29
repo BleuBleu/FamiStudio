@@ -57,7 +57,7 @@ namespace FamiStudio
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);
-            envelope.SerializeState(buffer);
+            envelope.SerializeState(buffer, EnvelopeType.Arpeggio);
         }
 
         public void ChangeId(int newId)

@@ -52,12 +52,12 @@ namespace FamiStudio
         public byte[] EpsmPatchRegs => epsmPatchRegs;
 
         public bool IsRegularInstrument => expansion == ExpansionType.None;
-        public bool IsFdsInstrument => expansion == ExpansionType.Fds;
-        public bool IsVrc6Instrument => expansion == ExpansionType.Vrc6;
-        public bool IsVrc7Instrument => expansion == ExpansionType.Vrc7;
-        public bool IsN163Instrument => expansion == ExpansionType.N163;
-        public bool IsS5BInstrument => expansion == ExpansionType.S5B;
-        public bool IsEpsmInstrument => expansion == ExpansionType.EPSM;
+        public bool IsFdsInstrument     => expansion == ExpansionType.Fds;
+        public bool IsVrc6Instrument    => expansion == ExpansionType.Vrc6;
+        public bool IsVrc7Instrument    => expansion == ExpansionType.Vrc7;
+        public bool IsN163Instrument    => expansion == ExpansionType.N163;
+        public bool IsS5BInstrument     => expansion == ExpansionType.S5B;
+        public bool IsEpsmInstrument    => expansion == ExpansionType.EPSM;
 
         public Instrument()
         {
@@ -99,7 +99,7 @@ namespace FamiStudio
         public bool IsEnvelopeActive(int envelopeType)
         {
             if (envelopeType == EnvelopeType.Volume ||
-                envelopeType == EnvelopeType.Pitch ||
+                envelopeType == EnvelopeType.Pitch  ||
                 envelopeType == EnvelopeType.Arpeggio)
             {
                 return true;
@@ -138,7 +138,7 @@ namespace FamiStudio
             return envelopes[envelopeType].IsEmpty(envelopeType);
         }
 
-        public int NumActiveEnvelopes
+        public int NumVisibleEnvelopes
         {
             get 
             {
@@ -221,7 +221,7 @@ namespace FamiStudio
         {
             get
             {
-                return Math.Min(64, envelopes[EnvelopeType.N163Waveform].MaxLength / n163WaveSize); 
+                return Math.Min(64, envelopes[EnvelopeType.N163Waveform].Values.Length / n163WaveSize); 
             }
         }
 
@@ -260,19 +260,49 @@ namespace FamiStudio
 
         public void UpdateFdsWaveEnvelope()
         {
-            envelopes[EnvelopeType.FdsWaveform].SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset, 64); // MATTT Hardcoded
+            envelopes[EnvelopeType.FdsWaveform].SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
         }
 
         public void UpdateFdsModulationEnvelope()
         {
-            envelopes[EnvelopeType.FdsModulation].SetFromPreset(EnvelopeType.FdsModulation, fdsModPreset, 32); // MATTT Hardcoded.
+            envelopes[EnvelopeType.FdsModulation].SetFromPreset(EnvelopeType.FdsModulation, fdsModPreset);
         }
 
         public void UpdateN163WaveEnvelope()
         {
             envelopes[EnvelopeType.WaveformRepeat].Length = n163WaveCount;
             envelopes[EnvelopeType.N163Waveform].Length = n163WaveSize * n163WaveCount;
-            envelopes[EnvelopeType.N163Waveform].SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset, n163WaveSize);
+            envelopes[EnvelopeType.N163Waveform].ChunkLength = n163WaveSize;
+			envelopes[EnvelopeType.N163Waveform].MaxLength = N163MaxWaveCount * n163WaveSize;
+            envelopes[EnvelopeType.N163Waveform].SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
+        }
+
+        private void SyncEnvelopes()
+        {
+            switch (expansion)
+            {
+                case ExpansionType.N163:
+                    UpdateN163WaveEnvelope();
+                    break;
+                case ExpansionType.Fds:
+                    UpdateFdsWaveEnvelope();
+                    break;
+            }
+        }
+
+        public void NotifyEnvelopeResized()
+        {
+            switch (expansion)
+            {
+                case ExpansionType.N163:
+                    n163WaveCount = (byte)(envelopes[EnvelopeType.N163Waveform].Length / envelopes[EnvelopeType.N163Waveform].ChunkLength);
+                    UpdateN163WaveEnvelope();
+                    break;
+                case ExpansionType.Fds:
+                    //UpdateFdsWaveEnvelope();
+                    Debug.Assert(false);
+                    break;
+            }
         }
 
         private void ClampN163WaveCount()
@@ -329,11 +359,22 @@ namespace FamiStudio
 
                 if (envelopeExists)
                 {
+                    Debug.Assert(env.Length % env.ChunkLength == 0);
                     Debug.Assert(env.ValuesInValidRange(this, i));
 
                     var ctrl = GetControlEnvelope(i);
-                    if (ctrl != null)
-                        Debug.Assert(env.Length % ctrl.Length == 0);
+                    Debug.Assert(ctrl == null || env.Length / env.ChunkLength == ctrl.Length);
+
+                    if (i == EnvelopeType.N163Waveform)
+                    {
+                        Debug.Assert(env.ChunkLength == n163WaveSize);
+                        Debug.Assert(env.Length == n163WaveSize * n163WaveCount);
+                    }
+                    if (i == EnvelopeType.FdsWaveform)
+                    {
+                        Debug.Assert(env.ChunkLength == 64);
+                        Debug.Assert(env.Length == 64 * fdsWaveCount);
+                    }
                 }
             }
 
@@ -460,7 +501,7 @@ namespace FamiStudio
                 {
                     if (buffer.IsReading)
                         envelopes[i] = new Envelope(i);
-                    envelopes[i].SerializeState(buffer);
+                    envelopes[i].SerializeState(buffer, i);
                 }
                 else
                 {
@@ -486,6 +527,11 @@ namespace FamiStudio
                     envelopes[EnvelopeType.FdsWaveform].ClampToValidRange(this, EnvelopeType.FdsWaveform);
                 if (IsVrc6Instrument)
                     envelopes[EnvelopeType.Pitch].ClampToValidRange(this, EnvelopeType.Pitch);
+            }
+
+            if (buffer.IsReading)
+            {
+                SyncEnvelopes();
             }
         }
     }

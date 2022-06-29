@@ -826,25 +826,6 @@ namespace FamiStudio
             }
         }
 
-        private int ControlEnvelopeFactor
-        {
-            get
-            {
-                var env = EditEnvelope;
-                var ctrl = EditControlEnvelope;
-                
-                if (env != null && ctrl != null)
-                {
-                    Debug.Assert(env.Length % ctrl.Length == 0);
-                    return env.Length / ctrl.Length;
-                }
-                else
-                {
-                    return 1;
-                }
-            }
-        }
-
         public void HighlightPianoNote(int note)
         {
             if (note != highlightNote)
@@ -1160,7 +1141,6 @@ namespace FamiStudio
             {
                 var env = EditEnvelope;
                 var ctrl = EditControlEnvelope;
-                var ctrlFactor = ControlEnvelopeFactor;
                 var iconPos = (headerSizeY / 2 - ScaleCustom(bmpLoopSmallFill.ElementSize.Width, bitmapScale)) / 2;
 
                 r.ch.PushTranslation(0, headerSizeY / 2);
@@ -1214,16 +1194,17 @@ namespace FamiStudio
                     {
                         r.ch.DrawLine(x, 0, x, headerSizeY / 2, ThemeResources.BlackBrush, 1);
                     }
-                    if (ctrl != null && n % ctrlFactor == 0)
-                    {
-                        if (x != 0)
-                            r.ch.DrawLine(x, headerSizeY / 2, x, headerSizeY, ThemeResources.BlackBrush, 1);
-                        int x1 = GetPixelForNote(n + ctrlFactor);
-                        r.ch.DrawText((n / ctrlFactor).ToString(), ThemeResources.FontMedium, x, headerSizeY / 2 - 1, ThemeResources.BlackBrush, TextFlags.MiddleCenter, x1 - x, headerSizeY / 2);
-                    }
                     if (n != env.Length)
                     {
-                        var label = (editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos : 0) + (n % ctrlFactor);
+                        if (env.ChunkLength > 1 && n % env.ChunkLength == 0)
+                        {
+                            if (x != 0)
+                                r.ch.DrawLine(x, headerSizeY / 2, x, headerSizeY, ThemeResources.BlackBrush, 1);
+                            int x1 = GetPixelForNote(n + env.ChunkLength);
+                            r.ch.DrawText((n / env.ChunkLength).ToString(), ThemeResources.FontMedium, x, headerSizeY / 2 - 1, ThemeResources.BlackBrush, TextFlags.MiddleCenter, x1 - x, headerSizeY / 2);
+                        }
+
+                        var label = (editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos : 0) + (n % env.ChunkLength);
                         var labelString = label.ToString();
                         if (labelString.Length * fontSmallCharSizeX + 2 < noteSizeX)
                             r.ch.DrawText(labelString, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);
@@ -3353,36 +3334,44 @@ namespace FamiStudio
             return false;
         }
 
-        void ResizeEnvelope(int x, int y)
+        void ResizeEnvelope(int x, int y, bool final)
         {
             var env = EditEnvelope;
-            int length = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
+            var inst = EditInstrument;
+
+            var length = Utils.RoundDown(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), env.ChunkLength);
 
             ScrollIfNearEdge(x, y);
 
             switch (captureOperation)
             {
                 case CaptureOperation.ResizeEnvelope:
-                    if (env.Length == length)
-                        return;
-                    env.Length = length;
-                    if (IsSelectionValid())
-                        SetSelection(selectionMin, selectionMax);
+                    if (env.Length != length)
+                    {
+                        env.Length = length;
+                        inst.NotifyEnvelopeResized();
+                        if (IsSelectionValid())
+                            SetSelection(selectionMin, selectionMax);
+                    }
                     break;
                 case CaptureOperation.DragRelease:
-                    if (env.Release == length)
-                        return;
-                    env.Release = length;
+                    if (env.Release != length)
+                        env.Release = length;
                     break;
                 case CaptureOperation.DragLoop:
-                    if (env.Loop == length)
-                        return;
-                    env.Loop = length;
+                    if (env.Loop != length)
+                        env.Loop = length;
                     break;
             }
 
             ClampScroll();
             MarkDirty();
+
+            if (final)
+            {
+                EnvelopeChanged?.Invoke();
+                App.UndoRedoManager.EndTransaction();
+            }
         }
 
         void StartChangeEffectValue(int x, int y, NoteLocation location)
@@ -3879,7 +3868,7 @@ namespace FamiStudio
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
                     case CaptureOperation.ResizeEnvelope:
-                        ResizeEnvelope(x, y);
+                        ResizeEnvelope(x, y, false);
                         break;
                     case CaptureOperation.PlayPiano:
                         PlayPiano(x, y);
@@ -4036,6 +4025,8 @@ namespace FamiStudio
                         EndPlayPiano();
                         break;
                     case CaptureOperation.ResizeEnvelope:
+                        ResizeEnvelope(x, y, true);
+                        break;
                     case CaptureOperation.DrawEnvelope:
                         UpdateWavePreset(true);
                         break;
@@ -4947,7 +4938,7 @@ namespace FamiStudio
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
 
-            ResizeEnvelope(x, y);
+            ResizeEnvelope(x, y, false);
         }
 
         private bool HandleMouseDownEnvelopeResize(MouseEventArgs e)
@@ -4976,7 +4967,7 @@ namespace FamiStudio
                 else
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
 
-                ResizeEnvelope(e.X, e.Y);
+                ResizeEnvelope(e.X, e.Y, false);
                 return true;
             }
 

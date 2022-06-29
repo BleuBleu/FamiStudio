@@ -121,22 +121,22 @@ namespace FamiStudio
 
         public static int RoundDownAndClamp(int x, int factor, int min)
         {
-            return Math.Max((x & ~(factor- 1)), min);
+            return Math.Max(RoundDown(x, factor), min);
         }
 
         public static int RoundUpAndClamp(int x, int factor, int max)
         {
-            return Math.Min((x + factor - 1) & ~(factor - 1), max);
+            return Math.Min(RoundUp(x, factor), max);
         }
 
         public static int RoundDown(int x, int factor)
         {
-            return (x & ~(factor - 1));
+            return (x / factor) * factor;
         }
 
         public static int RoundUp(int x, int factor)
         {
-            return (x + factor - 1) & ~(factor - 1);
+            return ((x + factor - 1) / factor) * factor;
         }
 
         public static int DivideAndRoundUp(int x, int y)

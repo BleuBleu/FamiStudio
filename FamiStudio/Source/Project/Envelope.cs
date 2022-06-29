@@ -6,9 +6,13 @@ namespace FamiStudio
     public class Envelope
     {
         sbyte[] values;
+        
         int length;
         int loop = -1;
         int release = -1;
+        int maxLength = 256;
+        int chunkLength = 1;
+
         bool relative = false;
         bool canResize;
         bool canLoop;
@@ -25,20 +29,25 @@ namespace FamiStudio
 
         public Envelope(int type)
         {
-            var maxLength = GetEnvelopeMaxLength(type);
+            maxLength = GetEnvelopeMaxLength(type);
 
             values = new sbyte[maxLength];
-            canResize = true; // MATTT type != EnvelopeType.FdsWaveform && type != EnvelopeType.FdsModulation && type != EnvelopeType.N163Waveform;
+            canResize = type != EnvelopeType.FdsModulation;
             canRelease = type == EnvelopeType.Volume;
             canLoop = type <= EnvelopeType.DutyCycle;
+            chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
 
-            if (canResize)
+            if (chunkLength > 1)
+            {
+                length = chunkLength;
+            }
+            else if (canResize)
             {
                 ClearToDefault(type);
             }
             else
             {
-                length = maxLength; // MATTT : Will not be true for N163/FDS
+                length = maxLength;
             }
         }
 
@@ -48,11 +57,21 @@ namespace FamiStudio
             set
             {
                 if (canResize)
-                    length = Utils.Clamp(value, 0, values.Length);
+                    length = Utils.Clamp(value, 0, maxLength); 
                 if (loop >= length)
                     loop = -1;
                 if (release >= length)
                     release = -1;
+            }
+        }
+
+        public int ChunkLength
+        {
+            get { return chunkLength; }
+            set
+            {
+                chunkLength = value;
+                // MATTT : Should we move the repeats/loops here?
             }
         }
 
@@ -116,20 +135,20 @@ namespace FamiStudio
             }
         }
 
-        public int MaxLength => values.Length;
+        public int MaxLength
+        {
+            get { return maxLength; }
+            set
+            {
+                Debug.Assert(value <= values.Length);
 
-        //public int MaxLength
-        //{
-        //    get { return maxLength; }
-        //    set
-        //    {
-        //        maxLength = value;
-        //        if (!canResize)
-        //            length = maxLength;
-        //        else if (length > maxLength)
-        //            length = maxLength;
-        //    }
-        //}
+                maxLength = value;
+                if (!canResize)
+                    length = maxLength;
+                else if (length > maxLength)
+                    length = maxLength;
+            }
+        }
 
         static readonly sbyte[] FdsModulationDeltas = new sbyte[] { 0, 1, 2, 4, 0, -4, -2, -1 };
 
@@ -275,11 +294,13 @@ namespace FamiStudio
 
         public Envelope ShallowClone()
         {
+			// MATTT copy chunk here.
             var env = new Envelope();
             env.length = length;
             env.loop = loop;
             env.release = release;
             env.relative = relative;
+            env.maxLength = maxLength;
             env.canResize = canResize;
             env.values = values.Clone() as sbyte[];
             return env;
@@ -314,36 +335,48 @@ namespace FamiStudio
             return env;
         }
 
-        public void SetFromPreset(int type, int preset, int period)
+        public void SetFromPreset(int type, int preset)
         {
             GetMinMaxValueForType(null, type, out var min, out var max);
 
-            switch (preset)
+            Debug.Assert(length % chunkLength == 0);
+
+            var chunkCount = length / chunkLength;
+
+            for (int j = 0; j < chunkCount; j++)
             {
-                case WavePresetType.Sine:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, (float)Math.Sin((i % period) * 2.0f * Math.PI / period) * -0.5f + 0.5f));
-                    break;
-                case WavePresetType.Triangle:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, ((i % period) < period / 2 ? (i % period) : (period - (i % period) - 1)) / (float)(period / 2 - 1)));
-                    break;
-                case WavePresetType.Sawtooth:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)Math.Round(Utils.Lerp(min, max, (i % period) / (float)(period - 1)));
-                    break;
-                case WavePresetType.Square50:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)((i % period) >= period / 2 ? max : min);
-                    break;
-                case WavePresetType.Square25:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)((i % period) >= period / 4 ? max : min);
-                    break;
-                case WavePresetType.Flat:
-                    for (int i = 0; i < length; i++)
-                        values[i] = (sbyte)((min + max) / 2);
-                    break;
+                var chunkOffset = j * chunkLength;
+
+                switch (preset)
+                {
+                    case WavePresetType.Sine:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, (float)Math.Sin(i * 2.0f * Math.PI / chunkLength) * -0.5f + 0.5f));
+                        break;
+                    case WavePresetType.Triangle:
+                        for (int i = 0; i < chunkLength / 2; i++)
+                        {
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(chunkLength / 2 - 1)));
+                            values[chunkOffset + chunkLength - i - 1] = values[i];
+                        }
+                        break;
+                    case WavePresetType.Sawtooth:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)Math.Round(Utils.Lerp(min, max, i / (float)(chunkLength - 1)));
+                        break;
+                    case WavePresetType.Square50:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= chunkLength / 2 ? max : min);
+                        break;
+                    case WavePresetType.Square25:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= chunkLength / 4 ? max : min);
+                        break;
+                    case WavePresetType.Flat:
+                        for (int i = 0; i < chunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)((min + max) / 2);
+                        break;
+                }
             }
         }
 
@@ -470,7 +503,15 @@ namespace FamiStudio
                 values[i] = (sbyte)Utils.Clamp(values[i], min, max);
         }
 
-        public void SerializeState(ProjectBuffer buffer)
+        private void FixBadEnvelopeLength(int type)
+        {
+            var maxTypeLength = GetEnvelopeMaxLength(type);
+
+            if (values.Length != maxTypeLength)
+                Array.Resize(ref values, maxTypeLength);
+        }
+
+        public void SerializeState(ProjectBuffer buffer, int type)
         {
             buffer.Serialize(ref length);
             buffer.Serialize(ref loop);
@@ -478,12 +519,10 @@ namespace FamiStudio
                 buffer.Serialize(ref release);
             if (buffer.Version >= 4)
                 buffer.Serialize(ref relative);
-
-            var maxLength = values.Length;
             buffer.Serialize(ref values);
 
-            if (buffer.IsReading && !buffer.IsForUndoRedo && values.Length != maxLength)
-                Array.Resize(ref values, maxLength);
+            if (buffer.IsReading && !buffer.IsForUndoRedo)
+                FixBadEnvelopeLength(type);
         }
     }
 
