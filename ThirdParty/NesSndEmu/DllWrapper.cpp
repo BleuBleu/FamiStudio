@@ -32,6 +32,11 @@ extern "C" void __stdcall NesApuWriteRegister(int apuIdx, unsigned int addr, int
 	apu[apuIdx].write_register(addr, data);
 }
 
+extern "C" int __stdcall NesApuReadRegister(int apuIdx, int exp, unsigned int addr)
+{
+	return apu[apuIdx].read_register(exp, addr);
+}
+
 extern "C" int __stdcall NesApuSamplesAvailable(int apuIdx)
 {
 	return apu[apuIdx].samples_avail();

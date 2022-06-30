@@ -71,6 +71,7 @@ public:
 	
 	// Write to register (0x4000-0x4017, except 0x4014 and 0x4016)
 	void write_register( cpu_addr_t, int data );
+	int  read_register( int exp, cpu_addr_t );
 	void get_register_values(int exp, void* regs);
 
 	// Read from status register at 0x4015

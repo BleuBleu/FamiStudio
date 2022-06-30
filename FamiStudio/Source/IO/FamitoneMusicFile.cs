@@ -332,7 +332,7 @@ namespace FamiStudio
                     switch (i)
                     {
                         case EnvelopeType.N163Waveform:
-                            processed = env.BuildN163Waveform();
+                            processed = env.BuildN163Waveform(0); // MATTT pass wave index!
                             break;
                         case EnvelopeType.FdsModulation:
                             processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();

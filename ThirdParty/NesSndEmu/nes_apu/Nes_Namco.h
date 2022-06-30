@@ -35,6 +35,7 @@ public:
 	void write_addr( int );
 
 	void write_register( cpu_time_t, int addr, int data );
+	int read_register(int addr);
 	void get_register_values(struct n163_register_values* regs);
 
 	// to do: implement save/restore
@@ -115,6 +116,11 @@ inline void Nes_Namco::write_register(cpu_time_t time, int addr, int data)
 		write_addr(data);
 	else if (addr >= data_reg_addr && addr < (data_reg_addr + reg_range))
 		write_data(time, data);
+}
+
+inline int Nes_Namco::read_register(int addr)
+{
+	return access();
 }
 
 #endif

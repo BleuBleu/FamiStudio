@@ -35,8 +35,8 @@ namespace FamiStudio
 
             values = new sbyte[maxLength];
             canResize = type != EnvelopeType.FdsModulation;
-            canRelease = type == EnvelopeType.Volume;
-            canLoop = type <= EnvelopeType.DutyCycle;
+            canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.WaveformRepeat;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.WaveformRepeat;
             chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
 
             if (canResize)
@@ -229,14 +229,38 @@ namespace FamiStudio
             return mod;
         }
 
-        public byte[] BuildN163Waveform()
+        public byte[] BuildN163Waveform(int waveIndex)
         {
-            var packed = new byte[length / 2];
+            Debug.Assert(waveIndex >= 0 && waveIndex < 64); // MATTT : Whats the actual max here?
 
-            for (int i = 0; i < length; i += 2)
-                packed[i / 2] = (byte)((byte)(values[i + 1] << 4) | (byte)(values[i + 0]));
+            var len = chunkLength;
+            var offset = waveIndex * chunkLength;
+            var packed = new byte[len / 2];
+
+            for (int i = 0; i < len; i += 2)
+                packed[i / 2] = (byte)((byte)(values[offset + i + 1] << 4) | (byte)(values[offset + i + 0]));
 
             return packed;
+        }
+
+        public byte[] BuildRepeatPlaybackEnvelope()
+        {
+            var sum = 0;
+            for (int i = 0; i < length; i++)
+                sum += values[i];
+
+            var repeat = new byte[sum];
+            var idx = 0;
+
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < values[i]; j++)
+                {
+                    repeat[idx++] = (byte)i;
+                }
+            }
+
+            return repeat;
         }
 
         public bool Relative
@@ -496,7 +520,7 @@ namespace FamiStudio
             else if (type == EnvelopeType.WaveformRepeat)
             {
                 // MATTT : What is a sensible value.
-                min = 0;
+                min = 1;
                 max = 15;
             }
             else

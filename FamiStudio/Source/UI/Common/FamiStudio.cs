@@ -1504,15 +1504,12 @@ namespace FamiStudio
 
         public void StopOrReleaseIntrumentNote(bool allowRecording = false)
         {
-            if (selectedInstrument != null &&
-                (selectedInstrument.HasReleaseEnvelope || selectedInstrument.IsVrc7Instrument) &&
-                song.Channels[selectedChannelIndex].SupportsInstrument(selectedInstrument))
-            {
-                instrumentPlayer.ReleaseNote(selectedChannelIndex);
-            }
-            if (selectedInstrument != null &&
-                (selectedInstrument.HasReleaseEnvelope || selectedInstrument.IsEpsmInstrument) &&
-                song.Channels[selectedChannelIndex].SupportsInstrument(selectedInstrument) && (song.Channels[selectedChannelIndex].IsEPSMFmChannel || song.Channels[selectedChannelIndex].IsEPSMRythmChannel))
+            var channel = song.Channels[selectedChannelIndex];
+
+            if (selectedInstrument != null && 
+                selectedInstrument.CanRelease &&
+                channel.SupportsInstrument(selectedInstrument) && 
+                !channel.IsEPSMSquareChannel)
             {
                 instrumentPlayer.ReleaseNote(selectedChannelIndex);
             }

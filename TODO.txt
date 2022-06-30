@@ -4,7 +4,6 @@
 - CRASH : 240 BPM / 1 / 1
 - BUG : Shy mode vs. channel icons.
 - BUG : Hide channels + scroll doesnt work. 
-- BUG : Stop sound after xx sec broken??
 - BUG : Grid "a" bug from how2? Right click! Mac only???
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Envelope dragging is broken
@@ -15,8 +14,9 @@ N163 Multi-wave:
 - PC: Highlight, cursors, tooltip.
 - Mobile : Gizmos, highlight, etc.
 2) Playback
-- Channel state
-- Instrument player correct play position readback.
+/ Channel state
+- Test no attack and stuff.
+- Option to reset to beginning of wave.
 3) NSF/Sound Engine:
 - we have 6 bytes free for N163 instruments
 	- 2 bytes for the wave index envelope

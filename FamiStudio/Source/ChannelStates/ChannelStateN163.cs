@@ -7,6 +7,8 @@ namespace FamiStudio
     {
         int regOffset;
         int waveLength;
+        int waveIndex = -1;
+        int wavePos;
         int channelMask;
 
         public ChannelStateN163(IPlayerInterface player, int apuIdx, int channelType, int numChannels, bool pal) : base(player, apuIdx, channelType, pal, numChannels)
@@ -35,6 +37,15 @@ namespace FamiStudio
             WriteRegister(NesApu.N163_DATA, data);
         }
 
+        private int ReadN163Register(int reg)
+        {
+            if ((NesApu.GetAudioExpansions(apuIdx) & NesApu.APU_EXPANSION_MASK_SUNSOFT) != 0)
+                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_IO_A);
+
+            WriteRegister(NesApu.N163_ADDR, reg);
+            return ReadRegister(NesApu.N163_DATA);
+        }
+
         protected override void LoadInstrument(Instrument instrument)
         {
             if (instrument != null)
@@ -46,15 +57,39 @@ namespace FamiStudio
                     // This can actually trigger if you tweak an instrument while playing a song.
                     //Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
 
-                    var pos = instrument.N163WavePos / 2;
-                    var wave = instrument.Envelopes[EnvelopeType.N163Waveform].BuildN163Waveform();
-
-                    for (int i = 0; i < wave.Length; i++)
-                        WriteN163Register(pos + i, wave[i]);
-
+                    wavePos = instrument.N163WavePos / 2;
+                    ConditionalLoadWave(true);
                     WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
                     waveLength = 256 - instrument.N163WaveSize;
                 }
+            }
+        }
+
+        private void ConditionalLoadWave(bool force = false)
+        {
+            var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
+
+            if (newWaveIndex != waveIndex || force)
+            {
+                var wav = envelopes[EnvelopeType.N163Waveform].BuildN163Waveform(newWaveIndex);
+
+                for (int i = 0; i < wav.Length; i++)
+                    WriteN163Register(wavePos + i, wav[i]);
+
+                waveIndex = newWaveIndex;
+            }
+        }
+
+        public override int GetEnvelopeFrame(int envIdx)
+        {
+            if (envIdx == EnvelopeType.N163Waveform)
+            {
+                // Hi-byte of 24-bit internal counter is the position.
+                return waveIndex * (256 - waveLength) + ReadN163Register(NesApu.N163_REG_PHASE_HI + regOffset);
+            }
+            else
+            {
+                return base.GetEnvelopeFrame(envIdx);
             }
         }
 
@@ -66,6 +101,8 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
+                ConditionalLoadWave();
+
                 var period = GetPeriod();
                 var volume = GetVolume();
 
@@ -80,5 +117,4 @@ namespace FamiStudio
 
             base.UpdateAPU();
         }
-    };
-}
+    }}
