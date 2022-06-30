@@ -164,6 +164,7 @@ namespace FamiStudio
             DragRelease,
             ChangeEffectValue,
             ChangeSelectionEffectValue,
+            ChangeEnvelopeRepeatValue,
             DrawEnvelope,
             Select,
             SelectWave,
@@ -201,6 +202,7 @@ namespace FamiStudio
             false, // DragRelease
             false, // ChangeEffectValue
             false, // ChangeSelectionEffectValue
+            false, // ChangeEnvelopeRepeatValue
             false, // DrawEnvelope
             Platform.IsMobile, // Select
             Platform.IsMobile, // SelectWave
@@ -238,6 +240,7 @@ namespace FamiStudio
             false, // DragRelease
             false, // ChangeEffectValue
             false, // ChangeSelectionEffectValue
+            false, // ChangeEnvelopeRepeatValue
             false, // DrawEnvelope
             true,  // Select
             true,  // SelectWave
@@ -3514,6 +3517,51 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        void StartChangeEnvelopeRepeatValue(int x, int y)
+        {
+            StartCaptureOperation(x, y, CaptureOperation.ChangeEnvelopeRepeatValue);
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
+            UpdateChangeEnvelopeRepeatValue(x, y);
+        }
+
+        void UpdateChangeEnvelopeRepeatValue(int x, int y)
+        {
+            var env = EditEnvelope;
+            var rep = EditRepeatEnvelope;
+            var idx = Utils.Clamp(captureMouseAbsoluteIdx, 0, env.Length);
+
+            idx /= env.Length / rep.Length;
+
+            Envelope.GetMinMaxValueForType(editInstrument, EnvelopeType.WaveformRepeat, out var minRepeat, out var maxRepeat);
+
+            var delta = 0;
+
+            if (Platform.IsDesktop)
+            {
+                var ratio = (y - headerSizeY) / (float)effectPanelSizeY;
+                var newValue = (int)Math.Round(Utils.Lerp(maxRepeat, minRepeat, ratio));
+
+                var originalValue = rep.Values[idx];
+                delta = newValue - originalValue;
+            }
+            else // On mobile we drag using gizmos
+            {
+                Debug.Assert(false);
+
+                // MATTT Mobile gizmos!
+                //var origRatio = (captureMouseY - headerSizeY) / (float)effectPanelSizeY;
+                //var origValue = (int)Math.Round(Utils.Lerp(maxValue, minValue, origRatio));
+                //var newRatio = (y - headerSizeY) / (float)effectPanelSizeY;
+                //var newValue = (int)Math.Round(Utils.Lerp(maxValue, minValue, newRatio));
+
+                //delta = newValue - origValue;
+            }
+
+            rep.Values[idx] = (sbyte)Utils.Clamp(rep.Values[idx] + delta, minRepeat, maxRepeat);
+
+            MarkDirty();
+        }
+
         void StartDragVolumeSlide(int x, int y, NoteLocation location)
         {
             StartCaptureOperation(x, y, CaptureOperation.DragVolumeSlideTarget, false, location.ToAbsoluteNoteIndex(Song));
@@ -3922,6 +3970,9 @@ namespace FamiStudio
                     case CaptureOperation.ChangeSelectionEffectValue:
                         UpdateChangeEffectValue(x, y);
                         break;
+                    case CaptureOperation.ChangeEnvelopeRepeatValue:
+                        UpdateChangeEnvelopeRepeatValue(x, y);
+                        break;
                     case CaptureOperation.DragSample:
                         UpdateDragDPCMSampleMapping(x, y);
                         break;
@@ -4118,6 +4169,7 @@ namespace FamiStudio
                     case CaptureOperation.DragRelease:
                     case CaptureOperation.ChangeEffectValue:
                     case CaptureOperation.ChangeSelectionEffectValue:
+                    case CaptureOperation.ChangeEnvelopeRepeatValue:
                     case CaptureOperation.MoveNoteRelease:
                     case CaptureOperation.ChangeEnvelopeValue:
                         App.UndoRedoManager.EndTransaction();
@@ -4936,6 +4988,17 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleMouseDownEnvelopeEffectPanel(MouseEventArgs e)
+        {
+            if (e.Left && HasRepeatEnvelope() && IsPointInEffectPanel(e.X, e.Y))
+            {
+                StartChangeEnvelopeRepeatValue(e.X, e.Y);
+                return true;
+            }
+
+            return false;
+        }
+
         private bool HandleMouseDownEnvelopeSelection(MouseEventArgs e)
         {
             if (e.Right && (IsPointInHeaderTopPart(e.X, e.Y) || IsPointInNoteArea(e.X, e.Y)))
@@ -5320,6 +5383,8 @@ namespace FamiStudio
             if (editMode == EditionMode.Enveloppe || 
                 editMode == EditionMode.Arpeggio)
             {
+                //if (HandleMouseDownEnvelopeEffectGizmos(e)) goto Handled; // MATTT : Need to have gizmo handling here.
+                if (HandleMouseDownEnvelopeEffectPanel(e)) goto Handled;
                 if (HandleMouseDownEnvelopeSelection(e)) goto Handled;
                 if (HandleMouseDownEnvelopeResize(e)) goto Handled;
                 if (HandleMouseDownEnvelopeLoopRelease(e)) goto Handled;
@@ -7282,7 +7347,7 @@ namespace FamiStudio
 
         private bool IsPointInEffectPanel(int x, int y)
         {
-            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM) && x > pianoSizeX && y > headerSizeY && y < headerAndEffectSizeY;
+            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Enveloppe && HasRepeatEnvelope()) && x > pianoSizeX && y > headerSizeY && y < headerAndEffectSizeY;
         }
 
         private bool IsPointInNoteArea(int x, int y)

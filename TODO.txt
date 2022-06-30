@@ -12,7 +12,8 @@
 N163 Multi-wave:
 ================
 1) Env editor
-- Repeat effect editor
+- PC: Highlight, cursors, tooltip.
+- Mobile : Gizmos, highlight, etc.
 2) Playback
 - Channel state
 - Instrument player correct play position readback.
