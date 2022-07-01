@@ -428,7 +428,7 @@ FAMISTUDIO_NUM_CHANNELS         = 20
 FAMISTUDIO_NUM_DUTY_CYCLES      = 3
     .endif
     .if FAMISTUDIO_EXP_FDS
-FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+2
+FAMISTUDIO_NUM_ENVELOPES        = 3+3+2+3+3
 FAMISTUDIO_NUM_PITCH_ENVELOPES  = 4
 FAMISTUDIO_NUM_CHANNELS         = 6
 FAMISTUDIO_NUM_DUTY_CYCLES      = 3   
@@ -585,7 +585,8 @@ FAMISTUDIO_EPSM_CH14_ENVS = 39
 FAMISTUDIO_ENV_VOLUME_OFF        = 0
 FAMISTUDIO_ENV_NOTE_OFF          = 1
 FAMISTUDIO_ENV_DUTY_OFF          = 2
-FAMISTUDIO_N163_ENV_WAVE_IDX_OFF = 2
+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF = 2
+FAMISTUDIO_ENV_FDS_WAVE_IDX_OFF  = 2
 
     .if FAMISTUDIO_EXP_VRC6
 FAMISTUDIO_VRC6_CH0_DUTY_IDX = 3
@@ -838,6 +839,7 @@ famistudio_mmc5_pulse2_prev:      .rs 1
 famistudio_fds_mod_speed:         .rs 2
 famistudio_fds_mod_depth:         .rs 1
 famistudio_fds_mod_delay:         .rs 1
+famistudio_fds_wave_index:        .rs 1
 famistudio_fds_override_flags:    .rs 1 ; Bit 7 = mod speed overriden, bit 6 mod depth overriden
     .endif
 
@@ -1541,6 +1543,7 @@ famistudio_music_play:
     sta famistudio_fds_mod_speed+1
     sta famistudio_fds_mod_depth
     sta famistudio_fds_mod_delay
+    sta famistudio_fds_wave_index
     sta famistudio_fds_override_flags
     .endif
 
@@ -2009,6 +2012,10 @@ famistudio_update_fds_channel_sound:
     jmp .set_volume
 
 .nocut:
+
+    jsr famistudio_update_fds_wave
+
+    lda famistudio_chn_note+FAMISTUDIO_FDS_CH0_IDX
     clc
     adc famistudio_env_value+FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_NOTE_OFF
     tax
@@ -2903,6 +2910,7 @@ famistudio_update_row:
     jsr famistudio_update_channel
     beq .no_new_note
 
+    ; TODO : See if we keep the instrument in X instead of Y, this is a mess.
     txa
     tay
     ldx famistudio_channel_env,y
@@ -2961,7 +2969,6 @@ famistudio_update_row:
         sta famistudio_chn_note_counter, x
     .endif
     .no_new_note:
-
     rts
 
     .if FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS
@@ -3859,7 +3866,6 @@ famistudio_set_vrc7_instrument:
     .done:
     ldx <.chan_idx
     rts
-    
     .endif
 
     .if (FAMISTUDIO_EXP_EPSM)
@@ -3902,7 +3908,6 @@ write\@ = \2
         inx
         cpx #30
         bne .loop_extra_patch\@
-    
     .endm
 
 ;======================================================================================================================
@@ -4030,6 +4035,76 @@ famistudio_set_epsm_instrument:
     .if FAMISTUDIO_EXP_FDS
 
 ;======================================================================================================================
+; FAMISTUDIO_UPDATE_FDS_WAVE (internal)
+;
+; Internal function to upload the FDS waveform (if needed) of an FDS instrument. 
+;======================================================================================================================
+
+famistudio_update_fds_wave:
+
+.ptr        = famistudio_ptr0
+.wave_ptr   = famistudio_ptr1
+.master_vol = famistudio_r1
+
+    ; See if the wave index has changed.
+    lda famistudio_env_value+FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_FDS_WAVE_IDX_OFF
+    cmp famistudio_fds_wave_index
+    beq .done
+
+    ; Retrieve the instrument pointer.
+    sta famistudio_fds_wave_index
+    lda famistudio_chn_instrument+FAMISTUDIO_FDS_CH0_IDX
+    famistudio_get_exp_inst_ptr
+
+    tya
+    adc #12 ; Carry is clear here.
+    tay
+    lda [.ptr],y
+    and #3
+    sta <.master_vol
+    iny
+    iny
+
+    ; Load the wave table pointer.
+    lda [.ptr],y
+    sta <.wave_ptr+0
+    iny
+    lda [.ptr],y
+    sta <.wave_ptr+1
+
+    ; Load the pointer for the current wave in the table.
+    lda famistudio_fds_wave_index
+    asl a
+    tay
+    lda [.wave_ptr],y
+    sta <.ptr+0
+    iny
+    lda [.wave_ptr],y
+    sta <.ptr+1
+
+    ; Update load FDS RAM
+    lda <.master_vol
+    ora #$80
+    sta FAMISTUDIO_FDS_VOL ; Enable wave RAM write
+
+    ; FDS Waveform
+    ldy #0
+    .wave_loop:
+        lda [.ptr],y
+        sta FAMISTUDIO_FDS_WAV_START,y
+        iny
+        cpy #64
+        bne .wave_loop
+
+    lda #$80
+    sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
+    lda <.master_vol
+    sta FAMISTUDIO_FDS_VOL ; Disable RAM write.
+
+    .done:
+    rts
+ 
+;======================================================================================================================
 ; FAMISTUDIO_SET_FDS_INSTRUMENT (internal)
 ;
 ; Internal function to set a FDS instrument. Will upload the wave and modulation envelope if needed.
@@ -4043,60 +4118,45 @@ famistudio_set_fds_instrument:
 
 .ptr        = famistudio_ptr0
 .wave_ptr   = famistudio_ptr1
-.master_vol = famistudio_r1
 .tmp_y      = famistudio_r2
 
     famistudio_set_exp_instrument
 
+    ; Load the wave index envelope, x contains the channel index.
+    lda famistudio_channel_env,x
+    tax
+    lda [.ptr],y
+    sta famistudio_env_addr_lo+FAMISTUDIO_ENV_FDS_WAVE_IDX_OFF,x
+    iny
+    lda [.ptr],y
+    sta famistudio_env_addr_hi+FAMISTUDIO_ENV_FDS_WAVE_IDX_OFF,x
+    iny
+    lda #0
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_FDS_WAVE_IDX_OFF,x
+    lda #1 ; Index 0 is release point, so envelope starts at 1.
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_FDS_WAVE_IDX_OFF,x
+
+    ; Clear wave index to -1 to force reload.
+    lda #$ff
+    sta famistudio_fds_wave_index
+
     lda #0
     sta FAMISTUDIO_FDS_SWEEP_BIAS
 
-    lda famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL,x
-    bne .write_fds_wave
+    lda famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL+FAMISTUDIO_FDS_CH0_IDX
+    bne .load_fds_envs
 
-    iny ; Skip master volume + wave + mod envelope.
-    iny
-    iny
-    iny
+    iny ; Skip mod table
     iny
 
     jmp .load_mod_param
 
-    .write_fds_wave:
+    .load_fds_envs:
 
-        lda [.ptr],y
-        sta <.master_vol
-        iny
-
-        ora #$80
-        sta FAMISTUDIO_FDS_VOL ; Enable wave RAM write
-
-        ; FDS Waveform
-        lda [.ptr],y
-        sta <.wave_ptr+0
-        iny
-        lda [.ptr],y
-        sta <.wave_ptr+1
-        iny
-        sty <.tmp_y
-
-        ldy #0
-        .wave_loop:
-            lda [.wave_ptr],y
-            sta FAMISTUDIO_FDS_WAV_START,y
-            iny
-            cpy #64
-            bne .wave_loop
-
-        lda #$80
-        sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
-        lda <.master_vol
-        sta FAMISTUDIO_FDS_VOL ; Disable RAM write.
         lda #0
         sta FAMISTUDIO_FDS_SWEEP_BIAS
 
         ; FDS Modulation
-        ldy <.tmp_y
         lda [.ptr],y
         sta <.wave_ptr+0
         iny
@@ -4114,7 +4174,7 @@ famistudio_set_fds_instrument:
             bne .mod_loop
 
         lda #0
-        sta famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL,x
+        sta famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL+FAMISTUDIO_FDS_CH0_IDX
 
         ldy <.tmp_y
 
@@ -4142,6 +4202,8 @@ famistudio_set_fds_instrument:
 
             .load_mod_depth:
                 lda [.ptr],y
+                lsr a ; 2-lower bits are master volume.
+                lsr a
                 sta famistudio_fds_mod_depth
 
             .mod_depth_overriden:
@@ -4149,7 +4211,7 @@ famistudio_set_fds_instrument:
                 lda [.ptr],y
                 sta famistudio_fds_mod_delay
 
-    ldx #5
+    ldx #FAMISTUDIO_FDS_CH0_IDX
     rts
     .endif
 
@@ -4185,7 +4247,7 @@ famistudio_update_n163_wave:
     tax 
 
     ; See if the wave index has changed.
-    lda famistudio_env_value+FAMISTUDIO_N163_ENV_WAVE_IDX_OFF,x
+    lda famistudio_env_value+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
     cmp famistudio_chn_n163_wave_index,y
     beq .done
 
@@ -4277,15 +4339,15 @@ famistudio_set_n163_instrument:
     lda famistudio_channel_env,x
     tax
     lda [.ptr],y
-    sta famistudio_env_addr_lo+FAMISTUDIO_N163_ENV_WAVE_IDX_OFF,x
+    sta famistudio_env_addr_lo+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
     iny
     lda [.ptr],y
-    sta famistudio_env_addr_hi+FAMISTUDIO_N163_ENV_WAVE_IDX_OFF,x
+    sta famistudio_env_addr_hi+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
     iny
     lda #0
-    sta famistudio_env_repeat+FAMISTUDIO_N163_ENV_WAVE_IDX_OFF,x
+    sta famistudio_env_repeat+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
     lda #1 ; Index 0 is release point, so envelope starts at 1.
-    sta famistudio_env_ptr+FAMISTUDIO_N163_ENV_WAVE_IDX_OFF,x
+    sta famistudio_env_ptr+FAMISTUDIO_ENV_N163_WAVE_IDX_OFF,x
 
     ; Clear wave index to -1 to force reload.
     lda #$ff
@@ -4557,14 +4619,15 @@ famistudio_update_channel:
 
 .if FAMISTUDIO_EXP_FDS
 .opcode_fds_release_note:
-    ; MATTT : TODO + Use short jump.
+    ldx #FAMISTUDIO_FDS_CH0_ENVS
+    jsr .jump_to_release_envelope
 .endif
 
 .if FAMISTUDIO_EXP_N163
 .opcode_n163_release_note:
     lda famistudio_channel_env,x 
     tax 
-    inx ; +2 for FAMISTUDIO_N163_ENV_WAVE_IDX_OFF.
+    inx ; +2 for FAMISTUDIO_ENV_N163_WAVE_IDX_OFF.
     inx
     jsr .jump_to_release_envelope
 .endif

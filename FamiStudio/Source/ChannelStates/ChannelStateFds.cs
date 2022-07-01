@@ -9,7 +9,7 @@ namespace FamiStudio
         ushort modDepth;
         ushort modSpeed;
         int    waveIndex = -1;
-        int    masterVolume = 3;
+        int    masterVolume;
 
         public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx) : base(player, apuIdx, channelIdx, false)
         {

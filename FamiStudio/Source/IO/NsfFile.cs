@@ -472,7 +472,6 @@ namespace FamiStudio
         private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
-            var channelIdx = channel.Index;
             var hasNote = false;
 
             if (channel.Type == ChannelType.Dpcm)
@@ -688,7 +687,6 @@ namespace FamiStudio
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
-                    var periodLimit = NesApu.GetPitchLimitForChannelType(channel.Type);
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;

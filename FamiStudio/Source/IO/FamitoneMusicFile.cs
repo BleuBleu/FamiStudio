@@ -490,12 +490,15 @@ namespace FamiStudio
 
                         if (instrument.IsFdsInstrument)
                         {
-                            var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
+                            var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
-                            lines.Add($"\t{db} {instrument.FdsMasterVolume}");
-                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
-                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00");
+                            lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
+                            lines.Add($"\t{dw} {ll}env{fdsModEnvIdx}");
+                            lines.Add($"\t{dw} {instrument.FdsModSpeed}");
+                            lines.Add($"\t{db} {(instrument.FdsModDepth << 2) | instrument.FdsMasterVolume}");
+                            lines.Add($"\t{db} {instrument.FdsModDelay}");
+                            lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
                         }
                         else if (instrument.IsN163Instrument)
                         {

@@ -25,6 +25,7 @@ N163 Multi-wave:
 - FamiStudio text.
 - Same for FDS.
 - *** Volume envelope for N163 doesnt show position in piano roll
+- Add multi-wave to N163/FDS unit tests.
 
 P0:
 - Remove ugly multiplication code for anything that isnt 5 channels.
