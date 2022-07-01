@@ -342,7 +342,11 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 .ifndef FAMISTUDIO_USE_DELTA_COUNTER
     FAMISTUDIO_USE_DELTA_COUNTER = 0
 .endif
-
+    
+.ifndef FAMISTUDIO_USE_RELEASE_NOTES
+    FAMISTUDIO_USE_RELEASE_NOTES = 0    
+.endif
+    
 .ifndef FAMISTUDIO_CFG_THREAD
     FAMISTUDIO_CFG_THREAD = 0
 .endif
@@ -1319,9 +1323,9 @@ ldx #0
 
 @set_envelopes:
 
-    lda #.lobyte(famistudio_dummy_envelope)
+    lda #<famistudio_dummy_envelope
     sta famistudio_env_addr_lo,x
-    lda #.hibyte(famistudio_dummy_envelope)
+    lda #>famistudio_dummy_envelope
     sta famistudio_env_addr_hi,x
     lda #0
     sta famistudio_env_repeat,x
@@ -1335,9 +1339,9 @@ ldx #0
 
 @set_pitch_envelopes:
 
-    lda #.lobyte(famistudio_dummy_pitch_envelope)
+    lda #<famistudio_dummy_pitch_envelope
     sta famistudio_pitch_env_addr_lo,x
-    lda #.hibyte(famistudio_dummy_pitch_envelope)
+    lda #>famistudio_dummy_pitch_envelope
     sta famistudio_pitch_env_addr_hi,x
     lda #0
     sta famistudio_pitch_env_repeat,x
@@ -1379,7 +1383,7 @@ famistudio_music_play:
     rts ; Invalid song index.
 
 @valid_song:
-.if FAMISTUDIO_NUM_CHANNELS = 5 
+.if FAMISTUDIO_NUM_CHANNELS = 5
     ; Here we basically assume we have 17 songs or less (17 songs * 14 bytes per song + 5 bytes header < 256).
     asl
     sta @tmp
@@ -1392,8 +1396,6 @@ famistudio_music_play:
     adc #5 ; Song count + instrument ptr + sample ptr
     tay
 .else
-    ; MATTT : Replicate on all assemblers + multi.
-
     ; This supports a larger number of songs as it increments the pointer itself, not Y.
     ; As the number of channel becomes huge, this become necessary to support a decent
     ; number of songs.
@@ -2891,7 +2893,7 @@ famistudio_update_row:
     jsr famistudio_update_channel
     beq @no_new_note
 
-    ; MATTT : Why do we switch to Y for the channel index here? So messy.
+    ; TODO : See if we keep the instrument in X instead of Y, this is a mess.
     txa
     tay
     ldx famistudio_channel_env,y
@@ -3149,7 +3151,7 @@ famistudio_update:
     jmp @env_read_value
 
 @env_set_repeat:
-    iny 
+    iny
     sta famistudio_env_repeat,x ; Store the repeat counter value
 
 @env_next_store_ptr:
@@ -3689,7 +3691,7 @@ famistudio_set_instrument:
 .if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_EPSM
 
 ;======================================================================================================================
-; FAMISTUDIO_GET_EXP_INSTRUMENT_POINTER (internal)
+; FAMISTUDIO_GET_EXP_INST_PTR (internal)
 ;
 ; Internal macro to retrive the instrument pointer for a given index.
 ;
@@ -3698,7 +3700,7 @@ famistudio_set_instrument:
 ; [out] y:  index in the instrument array.
 ;======================================================================================================================
 
-.macro famistudio_get_exp_instrument_pointer
+.macro famistudio_get_exp_inst_ptr
 
     .local @ptr
 
@@ -3741,7 +3743,7 @@ famistudio_set_instrument:
 
     sty @chan_idx
 
-    famistudio_get_exp_instrument_pointer
+    famistudio_get_exp_inst_ptr
 
     ; Volume envelope
     lda (@ptr),y
@@ -3877,7 +3879,7 @@ famistudio_set_vrc7_instrument:
     .local @loop_extra_patch
 
     ldx #0
-@loop_main_patch:
+    @loop_main_patch:
         lda famistudio_epsm_register_order,x
         clc
         adc @reg_offset
@@ -3891,7 +3893,7 @@ famistudio_set_vrc7_instrument:
         bne @loop_main_patch
     ; load bytes 8-30 from the extra patch data pointer
     ldy #0
-@loop_extra_patch:
+    @loop_extra_patch:
         lda famistudio_epsm_register_order,x
         clc
         adc @reg_offset
@@ -4174,11 +4176,11 @@ famistudio_n163_wave_table:
 
 famistudio_update_n163_wave:
     
-    @ptr           = famistudio_ptr0
-    @wave_ptr      = famistudio_ptr1
-    @n163_chan_idx = famistudio_r0 
-    @wave_pos      = famistudio_r1
-    @wave_len      = famistudio_r2
+    ptr           = famistudio_ptr0
+    wave_ptr      = famistudio_ptr1
+    n163_chan_idx = famistudio_r0 
+    wave_pos      = famistudio_r1
+    wave_len      = famistudio_r2
 
     lda famistudio_n163_env_table, y
     tax 
@@ -4193,7 +4195,7 @@ famistudio_update_n163_wave:
     tya
     tax
     lda famistudio_chn_instrument+FAMISTUDIO_N163_CH0_IDX,y
-    famistudio_get_exp_instrument_pointer
+    famistudio_get_exp_inst_ptr
 
     lda famistudio_n163_wave_table, x
     sta FAMISTUDIO_N163_ADDR
@@ -4202,51 +4204,51 @@ famistudio_update_n163_wave:
     tya
     adc #8 ; Carry is clear here.
     tay
-    lda (@ptr),y
-    sta @wave_pos
+    lda (ptr),y
+    sta wave_pos
     sta FAMISTUDIO_N163_DATA
     iny
 
     ; Wave length
-    lda (@ptr),y
+    lda (ptr),y
     lsr
-    sta @wave_len
+    sta wave_len
     lda #$80 ; (128 - wave length / 2) * 2 == 256 - wave length
     sec
-    sbc @wave_len
+    sbc wave_len
     asl
     sta famistudio_chn_n163_wave_len, x
     iny
 
     ; Load the wave table pointer.
-    lda (@ptr),y
-    sta @wave_ptr+0
+    lda (ptr),y
+    sta wave_ptr+0
     iny
-    lda (@ptr),y
-    sta @wave_ptr+1
+    lda (ptr),y
+    sta wave_ptr+1
 
     ; Load the pointer for the current wave in the table.
     lda famistudio_chn_n163_wave_index,x
     asl
     tay
-    lda (@wave_ptr),y
-    sta @ptr+0
+    lda (wave_ptr),y
+    sta ptr+0
     iny
-    lda (@wave_ptr),y
-    sta @ptr+1
+    lda (wave_ptr),y
+    sta ptr+1
 
     ; Upload to N163
     ldy #0
-    lda @wave_pos
+    lda wave_pos
     lsr 
     ora #$80
     sta FAMISTUDIO_N163_ADDR
     ldy #0
     @wave_loop:
-        lda (@ptr),y
+        lda (ptr),y
         sta FAMISTUDIO_N163_DATA
         iny
-        cpy @wave_len
+        cpy wave_len
         bne @wave_loop
 
     txa
@@ -4527,8 +4529,7 @@ famistudio_update_channel:
     sta @update_flags
     jmp @read_byte 
 
-.if FAMISTUDIO_USE_RELEASE_NOTES    
-
+.if FAMISTUDIO_USE_RELEASE_NOTES
 @jump_to_release_envelope:
     lda famistudio_env_addr_lo,x ; Load envelope data address into temp
     sta @env_ptr+0
@@ -5113,7 +5114,7 @@ famistudio_update_channel:
     .byte >@opcode_invalid                      ; $55
 .endif
 .if FAMISTUDIO_EXP_FDS && FAMISTUDIO_USE_RELEASE_NOTES
-    .byte >@opcode_fds_release_note            ; $57
+    .byte >@opcode_fds_release_note             ; $57
 .else
     .byte >@opcode_invalid                      ; $57
 .endif

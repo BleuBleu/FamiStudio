@@ -18,26 +18,13 @@ N163 Multi-wave:
 - Test no attack and stuff.
 - Option to reset to beginning of wave.
 3) NSF/Sound Engine:
-- we have 6 bytes free for N163 instruments
-	- 2 bytes for the wave index envelope
-	- 2 bytes for the wave list
-- wave list for each instrument:
-	inst_abc_waves:
-		$wave1,
-		$wave2,
-		$wave3,
-		$wave4
-- envelope will tell us the index of the wave
-	{ 0, 0, 0, 1, 1, 2, 3, 3, 3, 4 }
-- for each N163 instrument we will also keep the current index of the wave
-	n163_current_wave, 8
-- When loading a new instrument, we load + reset the envelope
-- On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
+- There are MATTT in the ASM
 4) Polish
 - FTI import
 - Famitracker import/export.
 - FamiStudio text.
 - Same for FDS.
+
 - *** Volume envelope for N163 doesnt show position in piano roll
 
 P0:
