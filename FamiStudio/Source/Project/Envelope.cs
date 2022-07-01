@@ -243,24 +243,31 @@ namespace FamiStudio
             return packed;
         }
 
-        public byte[] BuildRepeatPlaybackEnvelope()
+        public Envelope CreateRepeatPlaybackEnvelope()
         {
             var sum = 0;
             for (int i = 0; i < length; i++)
                 sum += values[i];
 
-            var repeat = new byte[sum];
+            // Create a dummy envelope.
+            var env = new Envelope(EnvelopeType.Count);
+            Array.Resize(ref env.values, sum);
+            env.length = sum;
+            env.maxLength = sum;
+
             var idx = 0;
 
             for (int i = 0; i < length; i++)
             {
+                if (i == loop)
+                    env.loop = idx;
+                if (i == release)
+                    env.release = idx;
                 for (int j = 0; j < values[i]; j++)
-                {
-                    repeat[idx++] = (byte)i;
-                }
+                    env.values[idx++] = (sbyte)i;
             }
 
-            return repeat;
+            return env;
         }
 
         public bool Relative

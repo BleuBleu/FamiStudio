@@ -160,6 +160,10 @@ FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 ; More information at: https://famistudio.org/doc/song/#tempo-modes
 ; FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1
 
+; Must be enabled if the songs uses release notes. 
+; More information at: https://famistudio.org/doc/pianoroll/#release-point
+FAMISTUDIO_USE_RELEASE_NOTES = 1
+
 ; Must be enabled if the songs uses delayed notes or delayed cuts. This is obviously only available when using
 ; FamiTracker tempo mode as FamiStudio tempo mode does not need this.
 ; FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1
@@ -776,6 +780,7 @@ famistudio_chn_epsm_vol_op3:      .res 6
 famistudio_chn_epsm_vol_op4:      .res 6
 .endif
 .if FAMISTUDIO_EXP_N163
+famistudio_chn_n163_wave_index:   .res FAMISTUDIO_EXP_N163_CHN_CNT
 famistudio_chn_n163_wave_len:     .res FAMISTUDIO_EXP_N163_CHN_CNT
 .endif
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
@@ -1369,7 +1374,8 @@ famistudio_music_play:
     rts ; Invalid song index.
 
 @valid_song:
-.if FAMISTUDIO_NUM_CHANNELS = 5
+.if FAMISTUDIO_NUM_CHANNELS = 5 
+    ; Here we basically assume we have 17 songs or less (17 songs * 14 bytes per song + 5 bytes header < 256).
     asl
     sta @tmp
     asl
@@ -1378,117 +1384,33 @@ famistudio_music_play:
     adc @tmp
     stx @tmp
     adc @tmp
-.elseif FAMISTUDIO_NUM_CHANNELS = 6
-    asl
-    asl
-    asl
-    asl
-.elseif FAMISTUDIO_NUM_CHANNELS = 7
-    asl
-    sta @tmp
-    asl
-    asl
-    asl
-    adc @tmp  
-.elseif FAMISTUDIO_NUM_CHANNELS = 8
-    asl
-    asl
-    sta @tmp
-    asl
-    asl
-    adc @tmp
-.elseif FAMISTUDIO_NUM_CHANNELS = 9
-    asl
-    sta @tmp
-    asl
+    adc #5 ; Song count + instrument ptr + sample ptr
+    tay
+.else
+    ; MATTT : Replicate on all assemblers + multi.
+
+    ; This supports a larger number of songs as it increments the pointer itself, not Y.
+    ; As the number of channel becomes huge, this become necessary to support a decent
+    ; number of songs.
     tax
-    asl
-    asl
-    adc @tmp
-    stx @tmp
-    adc @tmp
-.elseif FAMISTUDIO_NUM_CHANNELS = 10
-    asl
-    asl
-    asl
-    sta @tmp
-    asl
-    adc @tmp  
-.elseif FAMISTUDIO_NUM_CHANNELS = 11
-    asl
-    sta @tmp
-    asl
-    asl
-    tax
-    asl
-    adc @tmp
-    stx @tmp
-    adc @tmp
-.elseif FAMISTUDIO_NUM_CHANNELS = 12
-    asl
-    asl
-    sta @tmp
-    asl
-    tax
-    asl
-    adc @tmp
-    stx @tmp
-    adc @tmp
-.elseif FAMISTUDIO_NUM_CHANNELS = 13
-    asl
-    sta @tmp
-    asl
-    asl
-    asl
-    asl
-    sec
-    sbc @tmp
-    clc
-.elseif FAMISTUDIO_NUM_CHANNELS = 20 ; EPSM = 32 + 8 + 4 = 2 * 20 + 4
-    asl
-    asl
-    sta @tmp
-    asl
-    tax
-    asl
-    asl
-    adc @tmp
-    stx @tmp
-    adc @tmp
-.elseif FAMISTUDIO_NUM_CHANNELS = 28 ; This is only used by the multiple expansion version.
-    asl
-    asl
-    sta @tmp
-    asl
-    asl
-    asl
-    sec
-    sbc @tmp
-    clc
-.elseif FAMISTUDIO_NUM_CHANNELS = 43 ; This is only used by the multiple expansion version.
-    sta @tmp ; tmp = 1a
-    asl
-    asl
-    asl
-    asl
-    tax ; x = 16
-    asl
-    adc @tmp
-    stx @tmp
-    sec
-    sbc @tmp
-    clc
-.endif
+    lda @song_list_ptr+0
+    @song_mult_loop:
+        dex
+        bmi @song_mult_loop_done
+        adc #(FAMISTUDIO_NUM_CHANNELS * 2 + 4)
+        bcc @song_mult_loop
+        inc @song_list_ptr+1
+        bcs @song_mult_loop
+
+    @song_mult_loop_done:
+        sta @song_list_ptr+0
 
 .if FAMISTUDIO_EXP_FDS || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_EPSM || FAMISTUDIO_EXP_N163
-    adc #7 ; We have an extra expansion instrument pointer for these.
+    ldy #7 ; Song count + instrument ptr + exp instrument ptr + sample ptr
 .else
-    adc #5 
+    ldy #5 ; Song count + instrument ptr + sample ptr
 .endif
-    tay
-
-    lda famistudio_song_list_lo
-    sta @song_list_ptr+0
+.endif
 
     jsr famistudio_music_stop
 
@@ -1626,6 +1548,7 @@ famistudio_music_play:
     lda #0
     ldx #(FAMISTUDIO_EXP_N163_CHN_CNT - 1)
     @clear_n163_loop:
+        sta famistudio_chn_n163_wave_index, x
         sta famistudio_chn_n163_wave_len, x
         dex
         bpl @clear_n163_loop 
@@ -3218,10 +3141,11 @@ famistudio_update:
     jmp @env_read_value
 
 @env_set_repeat:
-    iny
+    iny 
     sta famistudio_env_repeat,x ; Store the repeat counter value
 
 @env_next_store_ptr:
+    ; MATTT Both paths that lead here do INY, combine here and test!
     tya
     sta famistudio_env_ptr,x
 
@@ -3785,7 +3709,7 @@ famistudio_set_instrument:
     asl
     tay
     lda famistudio_exp_instrument_hi
-    adc #0  ; Use carry to extend range for 64 instruments
+    adc #0  ; Use carry to extend range for 32 expansion instruments
     sta @ptr+1
     lda famistudio_exp_instrument_lo
     sta @ptr+0
@@ -4200,9 +4124,33 @@ famistudio_n163_wave_table:
     .byte FAMISTUDIO_N163_REG_WAVE - $38
 
 ;======================================================================================================================
-; FAMISTUDIO_SET_FDS_INSTRUMENT (internal)
+; FAMISTUDIO_UPDATE_N163_WAVE (internal)
 ;
-; Internal function to set a N163 instrument. Will upload the waveform if needed.
+; Internal function to upload the waveform of an N163 instrument. 
+;
+; MATTT : Review those.
+; [in] x: first envelope index for this channel.
+; [in] y: channel index
+; [in] a: instrument index.
+;======================================================================================================================
+
+famistudio_update_n163_wave:
+    
+    ; MATTTT : 
+    ; 1) Compare envelope wave index VS. loaded wave index.
+    ; 2) If same exit
+    ; 3) Load instrument pointer
+    ; 4) Load wave pos + size
+    ; 5) Load wave table pointer (we could store this when loading the instrument?)
+    ; 6) Load wave pointer from table
+    ; 7) Write to N163.
+
+    rts
+
+;======================================================================================================================
+; FAMISTUDIO_SET_N163_INSTRUMENT (internal)
+;
+; Internal function to set a N163 instrument.
 ;
 ; [in] x: first envelope index for this channel.
 ; [in] y: channel index
@@ -4221,6 +4169,11 @@ famistudio_set_n163_instrument:
 
     lda famistudio_chn_inst_changed-FAMISTUDIO_FIRST_EXP_INST_CHANNEL,x
     beq @done
+
+    ; MATTT : 
+    ; 1) Load/setup wave repeat envelope here.
+    ; 2) Clear repeat envelope ptr here, to force reload.
+    ; 3) Clear the loaded wave index to -1 or something.
 
     lda famistudio_n163_wave_table-FAMISTUDIO_N163_CH0_IDX, x
     sta FAMISTUDIO_N163_ADDR
@@ -4462,45 +4415,6 @@ famistudio_update_channel:
     iny
     jmp @play_note
 
-@opcode_release_note:
-.if FAMISTUDIO_EXP_VRC7
-    cpx #FAMISTUDIO_VRC7_CH0_IDX
-    bcc @apu_channel
-    lda #$80
-    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set release flag for VRC7
-.endif    
-@apu_channel_or_epsm:
-.if FAMISTUDIO_EXP_EPSM
-    cpx #FAMISTUDIO_EPSM_CHAN_FM_START
-    bcc @apu_channel
-    lda #$80
-    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,x ; Set release flag for EPSM
-.endif    
-
-@apu_channel:
-    lda famistudio_channel_to_volume_env,x ; DPCM(5) will never have releases.
-    tax
-
-    lda famistudio_env_addr_lo,x ; Load envelope data address into temp
-    sta @volume_env_ptr+0
-    lda famistudio_env_addr_hi,x
-    sta @volume_env_ptr+1
-    
-    sty @tmp_y1
-    ldy #0
-    lda (@volume_env_ptr),y ; Read first byte of the envelope data, this contains the release index.
-    beq @env_has_no_release
-
-    sta famistudio_env_ptr,x
-    lda #0
-    sta famistudio_env_repeat,x ; Need to reset envelope repeat to force update.
-    
-@env_has_no_release:
-    ldx @chan_idx
-    ldy @tmp_y1
-    clc
-    jmp @done
-
 @opcode_set_reference:
     clc ; Remember return address+3
     tya
@@ -4539,6 +4453,48 @@ famistudio_update_channel:
     ora @update_flags
     sta @update_flags
     jmp @read_byte 
+
+; MATTT : Create specialized opcode for VRC7/EPSM/N163 releases. Will simplify code a lot.
+.if FAMISTUDIO_USE_RELEASE_NOTES    
+@opcode_release_note:
+.if FAMISTUDIO_EXP_VRC7
+    cpx #FAMISTUDIO_VRC7_CH0_IDX
+    bcc @apu_channel
+    lda #$80
+    sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set release flag for VRC7
+.endif    
+@apu_channel_or_epsm:
+.if FAMISTUDIO_EXP_EPSM
+    cpx #FAMISTUDIO_EPSM_CHAN_FM_START
+    bcc @apu_channel
+    lda #$80
+    sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,x ; Set release flag for EPSM
+.endif    
+
+@apu_channel:
+    lda famistudio_channel_to_volume_env,x ; DPCM(5) will never have releases.
+    tax
+
+    lda famistudio_env_addr_lo,x ; Load envelope data address into temp
+    sta @volume_env_ptr+0
+    lda famistudio_env_addr_hi,x
+    sta @volume_env_ptr+1
+    
+    sty @tmp_y1
+    ldy #0
+    lda (@volume_env_ptr),y ; Read first byte of the envelope data, this contains the release index.
+    beq @env_has_no_release
+
+    sta famistudio_env_ptr,x
+    lda #0
+    sta famistudio_env_repeat,x ; Need to reset envelope repeat to force update.
+    
+@env_has_no_release:
+    ldx @chan_idx
+    ldy @tmp_y1
+    clc
+    jmp @done
+.endif
 
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO
 @opcode_famitracker_speed:
@@ -4885,10 +4841,14 @@ famistudio_update_channel:
 
 @famistudio_opcode_jmp_lo:
     .byte <@opcode_extended_note                ; $40
-    .byte <@opcode_release_note                 ; $41
-    .byte <@opcode_set_reference                ; $42
-    .byte <@opcode_loop                         ; $43
-    .byte <@opcode_disable_attack               ; $44
+    .byte <@opcode_set_reference                ; $41
+    .byte <@opcode_loop                         ; $42
+    .byte <@opcode_disable_attack               ; $43
+.if FAMISTUDIO_USE_RELEASE_NOTES    
+    .byte <@opcode_release_note                 ; $44
+.else
+    .byte <@opcode_invalid                      ; $44
+.endif
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
     .byte <@opcode_famitracker_speed            ; $45
 .else
@@ -4960,10 +4920,14 @@ famistudio_update_channel:
 
 @famistudio_opcode_jmp_hi:
     .byte >@opcode_extended_note                ; $40
-    .byte >@opcode_release_note                 ; $41
-    .byte >@opcode_set_reference                ; $42
-    .byte >@opcode_loop                         ; $43
-    .byte >@opcode_disable_attack               ; $44
+    .byte >@opcode_set_reference                ; $41
+    .byte >@opcode_loop                         ; $42
+    .byte >@opcode_disable_attack               ; $43
+.if FAMISTUDIO_USE_RELEASE_NOTES    
+    .byte >@opcode_release_note                 ; $44
+.else
+    .byte >@opcode_invalid                      ; $44
+.endif
 .if FAMISTUDIO_USE_FAMITRACKER_TEMPO    
     .byte >@opcode_famitracker_speed            ; $45
 .else

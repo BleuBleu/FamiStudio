@@ -107,7 +107,7 @@ namespace FamiStudio
         private readonly string StopInstrumentTooltip           = "Number of seconds to wait before stopping instruments that have a release part in their volume envelopes.";
         private readonly string PreventPoppingTooltip           = "When enabled, FamiStudio will use the sweep unit to prevent popping around certain notes on the 2 main square channels. Also known as 'Blargg's Smooth Vibrato' technique.";
         private readonly string ClampPeriodsTooltip             = "When enabled, FamiStudio will clamp periods and note values to their valid hardware range. Note that the NSF/Sound Engine does not do that, so disabling this option will result in more hardware-accurate sound where periods and notes can sometimes wrap-around.";
-        private readonly string NoDragSoundTooltip              = "When enabled, FamiStudio wil not emit sounds when dragging notes in the Piano Roll if the song is playing.";
+        private readonly string NoDragSoundTooltip              = "When enabled, FamiStudio will not emit sounds when dragging notes in the Piano Roll if the song is playing.";
         private readonly string MetronomeVolumeTooltip          = "Volume of the metronome.";
 
         // Mixer

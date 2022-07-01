@@ -36,11 +36,12 @@ N163 Multi-wave:
 4) Polish
 - FTI import
 - Famitracker import/export.
+- FamiStudio text.
 - Same for FDS.
 
 P0:
+- Remove ugly multiplication code for anything that isnt 5 channels.
 - Add text box to numero up/down
-- Alphabetical ordering should be a bit smarter about numbers.
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
@@ -59,6 +60,7 @@ P1:
 	- Draw attack as red if user makes a mistake.
 
 P2 (Unlikely):
+- Alphabetical ordering should be a bit smarter about numbers.
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : Selecting a full pattern selects + 1 frame?
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
@@ -81,6 +83,7 @@ Testing:
 ========
 - Restest sequencer hide channel a bunch, test vertical scroll bars, test mobile too. Make sure not broken.
 - Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
+- Restest multiple songs per file (changed multiplication thing)
 
 Batch convert PNG -> TGA
 ==========================

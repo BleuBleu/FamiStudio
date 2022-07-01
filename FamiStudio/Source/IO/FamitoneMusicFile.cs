@@ -37,10 +37,10 @@ namespace FamiStudio
         // Matches "famistudio_opcode_jmp" in assembly.
         private const byte OpcodeFirst                 = 0x40;
         private const byte OpcodeExtendedNote          = 0x40;
-        private const byte OpcodeReleaseNote           = 0x41;
-        private const byte OpcodeSetReference          = 0x42;
-        private const byte OpcodeLoop                  = 0x43;
-        private const byte OpcodeDisableAttack         = 0x44;
+        private const byte OpcodeSetReference          = 0x41;
+        private const byte OpcodeLoop                  = 0x42;
+        private const byte OpcodeDisableAttack         = 0x43;
+        private const byte OpcodeReleaseNote           = 0x44;
         private const byte OpcodeSpeed                 = 0x45; // FamiTracker tempo only
         private const byte OpcodeDelayedNote           = 0x46; // FamiTracker tempo only
         private const byte OpcodeDelayedCut            = 0x47; // FamiTracker tempo only
@@ -59,6 +59,10 @@ namespace FamiStudio
         private const byte OpcodeFdsModSpeed           = 0x52; // FDS only
         private const byte OpcodeFdsModDepth           = 0x53; // FDS only
         private const byte OpcodeVrc6SawMasterVolume   = 0x54; // VRC6 only
+        private const byte OpcodeVrc7ReleaseNote       = 0x55; // VRC7 only
+        private const byte OpcodeEpsmReleaseNote       = 0x56; // EPSM only
+        private const byte OpcodeN163ReleaseNote       = 0x57; // N163 only
+        private const byte OpcodeFdsReleaseNote        = 0x58; // FDS only
 
         private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
         private const byte OpcodeLoopFT2               = 0xfd; // FT2
@@ -81,6 +85,7 @@ namespace FamiStudio
         private bool usesDutyCycleEffect = false;
         private bool usesDelayedNotesOrCuts = false;
         private bool usesDeltaCounter = false;
+        private bool usesReleaseNotes = false;
 
         public FamitoneMusicFile(int kernel, bool outputLog)
         {
@@ -297,6 +302,7 @@ namespace FamiStudio
             // Process all envelope, make unique, etc.
             var uniqueEnvelopes = new SortedList<uint, byte[]>();
             var instrumentEnvelopes = new Dictionary<Envelope, uint>();
+            var instrumentWaveforms = new Dictionary<Instrument, List<uint>>();
 
             var defaultEnv = new byte[] { 0xc0, 0x7f, 0x00, 0x00 };
             var defaultDutyEnv = new byte[] { 0x7f, 0x00, 0x00 }; // This is a "do nothing" envelope, simply loops, never sets a value.
@@ -327,18 +333,19 @@ namespace FamiStudio
                     if (kernel != FamiToneKernel.FamiStudio && i == EnvelopeType.DutyCycle)
                         continue;
 
-                    byte[] processed;
+                    byte[] processed = null;
 
                     switch (i)
                     {
                         case EnvelopeType.N163Waveform:
-                            processed = env.BuildN163Waveform(0); // MATTT pass wave index!
+                        case EnvelopeType.FdsWaveform:
+                            // Handled as special case below.
+                            break;
+                        case EnvelopeType.WaveformRepeat:
+                            processed = ProcessEnvelope(env.CreateRepeatPlaybackEnvelope(), true, false);
                             break;
                         case EnvelopeType.FdsModulation:
                             processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
-                            break;
-                        case EnvelopeType.FdsWaveform:
-                            processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
                             break;
                         default:
                             processed = ProcessEnvelope(env,
@@ -363,11 +370,35 @@ namespace FamiStudio
                         instrumentEnvelopes[env] = crc;
                     }
                 }
+
+                if (instrument.IsN163Instrument)
+                {
+                    var waveforms = new List<uint>();
+
+                    for (int i = 0; i < instrument.N163WaveCount; i++)
+                    {
+                        var wav = instrument.Envelopes[EnvelopeType.N163Waveform].BuildN163Waveform(i);
+                        var crc = CRC32.Compute(wav);
+                        uniqueEnvelopes[crc] = wav;
+                        waveforms.Add(crc);
+                    }
+
+                    instrumentWaveforms[instrument] = waveforms;
+                }
+                else if (instrument.IsFdsInstrument)
+                {
+                    Debug.Assert(false); // MATTT
+                }
+
+                //processed = env.BuildN163Waveform(0); // MATTT pass wave index!
+                //break;
+                //processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
+                //break;
             }
 
-            // Write the arpeggio envelopes.
             if (kernel == FamiToneKernel.FamiStudio)
             {
+                // Write the arpeggio envelopes.
                 var arpeggioEnvelopes = new Dictionary<Arpeggio, uint>();
 
                 foreach (var arpeggio in project.Arpeggios)
@@ -389,6 +420,7 @@ namespace FamiStudio
             // Write instruments
             lines.Add($"{ll}instruments:");
 
+            // MATTT : Limit of 64 to enforce here?
             for (int i = 0, j = 0; i < project.Instruments.Count; i++)
             {
                 var instrument = project.Instruments[i];
@@ -434,6 +466,7 @@ namespace FamiStudio
             {
                 lines.Add($"{ll}instruments_exp:");
 
+                // MATTT : Is there a limit of 32 to enforce here?
                 for (int i = 0, j = 0; i < project.Instruments.Count; i++)
                 {
                     var instrument = project.Instruments[i];
@@ -460,11 +493,12 @@ namespace FamiStudio
                         }
                         else if (instrument.IsN163Instrument)
                         {
-                            var n163WaveIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.N163Waveform]]);
+                            var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
 
                             lines.Add($"\t{db} ${instrument.N163WavePos:x2}, ${instrument.N163WaveSize:x2}");
-                            lines.Add($"\t{dw} {ll}env{n163WaveIdx}");
-                            lines.Add($"\t{db} $00, $00, $00, $00, $00, $00");
+                            lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
+                            lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
+                            lines.Add($"\t{db} $00, $00, $00, $00");
                         }
                         else if (instrument.IsVrc7Instrument)
                         {
@@ -540,9 +574,9 @@ namespace FamiStudio
                         }
                     }
                 }
-
-                lines.Add("");
             }
+
+            lines.Add("");
 
             // Write envelopes.
             int idx = 0;
@@ -558,6 +592,30 @@ namespace FamiStudio
                     defaultPitchEnvName = name;
 
                 size += kv.Value.Length;
+            }
+
+            lines.Add("");
+
+            // Write the N163/FDS multiple waveforms.
+            if (project.UsesN163Expansion || project.UsesFdsExpansion)
+            {
+                foreach (var instrument in project.Instruments)
+                {
+                    if (instrument.IsN163Instrument || instrument.IsFdsInstrument)
+                    {
+                        lines.Add($"{ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves:");
+
+                        var waves = instrumentWaveforms[instrument];
+                        for (int i = 0; i < waves.Count; i++)
+                        {
+                            var waveIdx = uniqueEnvelopes.IndexOfKey(waves[i]);
+                            lines.Add($"\t{dw} {ll}env{waveIdx}");
+                        }
+
+                        size += waves.Count * 2;
+                        lines.Add("");
+                    }
+                }
             }
 
             noArpeggioEnvelopeName = defaultEnvName;
@@ -654,6 +712,8 @@ namespace FamiStudio
 
                     size += env.Length;
                 }
+
+                lines.Add("");
             }
 
             return size;
@@ -1104,6 +1164,7 @@ namespace FamiStudio
                                 if (note.IsRelease)
                                 {
                                     songData.Add($"${OpcodeReleaseNote:x2}+*");
+                                    usesReleaseNotes = true;
                                 }
                                 else
                                 {
@@ -1641,6 +1702,8 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, "Project uses FamiTracker tempo, you must set FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1.");
                     if (usesDelayedNotesOrCuts)
                         Log.LogMessage(LogSeverity.Info, "Project uses delayed notes or cuts, you must set FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1.");
+                    if (usesReleaseNotes)
+                        Log.LogMessage(LogSeverity.Info, "Project uses release notes, you must set FAMISTUDIO_USE_RELEASE_NOTES = 1.");
                     if (usesVolumeTrack)
                         Log.LogMessage(LogSeverity.Info, "Volume track is used, you must set FAMISTUDIO_USE_VOLUME_TRACK = 1.");
                     if (usesVolumeSlide)
