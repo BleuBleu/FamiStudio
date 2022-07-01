@@ -1398,7 +1398,7 @@ ldx #0
 
 famistudio_music_play:
 
-    @tmp = famistudio_ptr0_lo
+    @tmp = famistudio_r0
     @song_list_ptr = famistudio_ptr0
     @temp_env_ptr  = famistudio_ptr1
 
@@ -4648,13 +4648,13 @@ famistudio_update_channel:
 @opcode_vrc7_release_note:
     lda #$80
     sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set release flag for VRC7
-    ;bne @opcode_release_note  MATTT : Will ne needed in multi.
+    jmp @opcode_release_note
 .endif
 
 .if FAMISTUDIO_EXP_FDS
 @opcode_fds_release_note:
     ; MATTT : TODO + Use short jump.
-    ;jmp @opcode_release_note  MATTT : Will ne needed in multi.
+    jmp @opcode_release_note
 .endif
 
 .if FAMISTUDIO_EXP_N163
@@ -4664,7 +4664,7 @@ famistudio_update_channel:
     inx ; +2 for FAMISTUDIO_N163_ENV_WAVE_IDX_OFF.
     inx
     jsr @jump_to_release_envelope
-    ;jmp @opcode_release_note MATTT : Will ne needed in multi.
+    jmp @opcode_release_note
 .endif
 
 .if FAMISTUDIO_EXP_EPSM

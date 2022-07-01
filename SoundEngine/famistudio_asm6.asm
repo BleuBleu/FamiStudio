@@ -1350,7 +1350,7 @@ ldx #0
 
 famistudio_music_play:
 
-    tmp = famistudio_ptr0_lo
+    tmp = famistudio_r0
     song_list_ptr = famistudio_ptr0
     temp_env_ptr  = famistudio_ptr1
 
