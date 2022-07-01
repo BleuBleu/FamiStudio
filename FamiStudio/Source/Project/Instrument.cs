@@ -293,10 +293,10 @@ namespace FamiStudio
             wavEnv.Length = 64 * fdsWaveCount;
             wavEnv.ChunkLength = 64;
             wavEnv.MaxLength = 1024;
-            wavEnv.SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
             repEnv.Length = fdsWaveCount;
             repEnv.Loop = wavEnv.Loop >= 0 ? wavEnv.Loop / 64 : -1;
             repEnv.Release = wavEnv.Release >= 0 ? wavEnv.Release / 64 : -1;
+            wavEnv.SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
         }
 
         public void UpdateFdsModulationEnvelope()
@@ -312,10 +312,10 @@ namespace FamiStudio
             wavEnv.Length = n163WaveSize * n163WaveCount;
             wavEnv.ChunkLength = n163WaveSize;
 			wavEnv.MaxLength = N163MaxWaveCount * n163WaveSize;
-            wavEnv.SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
             repEnv.Length = n163WaveCount;
             repEnv.Loop = wavEnv.Loop >= 0 ? wavEnv.Loop / n163WaveSize : -1;
             repEnv.Release = wavEnv.Release >= 0 ? wavEnv.Release / n163WaveSize : -1;
+            wavEnv.SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
         }
 
         private void SyncEnvelopes()

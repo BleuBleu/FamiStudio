@@ -25,6 +25,8 @@ N163 Multi-wave:
 - FamiStudio text.
 - Add multi-wave to N163/FDS unit tests.
 - Add FDS mod to unit tests (effect + delay)
+- BUG : Changing N163 wave size to a huge number asserts. => Need to move loop/releases!
+- Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).
 
 P0:
 - Add text box to numero up/down
