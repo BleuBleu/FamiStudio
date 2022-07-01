@@ -13,8 +13,6 @@ namespace FamiStudio
         public extern static int Init(int apuIdx, int sampleRate, int pal, int seperateTnd, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuWriteRegister")]
         public extern static void WriteRegister(int apuIdx, int addr, int data);
-        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuReadRegister")]
-        public extern static int ReadRegister(int apuIdx, int exp, int addr);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuSamplesAvailable")]
         public extern static int SamplesAvailable(int apuIdx);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuReadSamples")]
@@ -45,6 +43,10 @@ namespace FamiStudio
         public extern static int SetExpansionVolume(int apuIdx, int expansion, double volume);
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetRegisterValues")]
         public extern unsafe static void GetRegisterValues(int apuIdx, int exp, void* regs);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetN163WavePos")]
+        public extern static int GetN163WavePos(int apuIdx, int n163ChanIndex);
+        [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuGetFdsWavePos")]
+        public extern static int GetFdsWavePos(int apuIdx);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int DmcReadDelegate(IntPtr data, int addr);

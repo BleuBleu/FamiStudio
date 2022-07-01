@@ -5,6 +5,7 @@ namespace FamiStudio
 {
     public class ChannelStateN163 : ChannelState
     {
+        int channelIndex;
         int regOffset;
         int waveLength;
         int waveIndex = -1;
@@ -13,7 +14,8 @@ namespace FamiStudio
 
         public ChannelStateN163(IPlayerInterface player, int apuIdx, int channelType, int numChannels, bool pal) : base(player, apuIdx, channelType, pal, numChannels)
         {
-            regOffset = 8 * -(channelType - ChannelType.N163Wave1);
+            channelIndex = channelType - ChannelType.N163Wave1;
+            regOffset = 8 * -channelIndex;
             channelMask = (numChannels - 1) << 4;
         }
 
@@ -35,15 +37,6 @@ namespace FamiStudio
 
             WriteRegister(NesApu.N163_ADDR, reg);
             WriteRegister(NesApu.N163_DATA, data);
-        }
-
-        private int ReadN163Register(int reg)
-        {
-            if ((NesApu.GetAudioExpansions(apuIdx) & NesApu.APU_EXPANSION_MASK_SUNSOFT) != 0)
-                WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_IO_A);
-
-            WriteRegister(NesApu.N163_ADDR, reg);
-            return ReadRegister(NesApu.N163_DATA);
         }
 
         protected override void LoadInstrument(Instrument instrument)
@@ -88,7 +81,7 @@ namespace FamiStudio
             if (envIdx == EnvelopeType.N163Waveform)
             {
                 // Hi-byte of 24-bit internal counter is the position.
-                return waveIndex * (256 - waveLength) + ReadN163Register(NesApu.N163_REG_PHASE_HI + regOffset);
+                return waveIndex * (256 - waveLength) + NesApu.GetN163WavePos(apuIdx, channelIndex);
             }
             else
             {

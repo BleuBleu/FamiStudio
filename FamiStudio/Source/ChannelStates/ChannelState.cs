@@ -468,11 +468,6 @@ namespace FamiStudio
             }
         }
 
-        protected int ReadRegister(int addr)
-        {
-            return NesApu.ReadRegister(apuIdx, ChannelType.GetExpansionTypeForChannelType(channelType), addr);
-        }
-
         protected void WriteRegister(int reg, int data)
         {
             NesApu.WriteRegister(apuIdx, reg, data);

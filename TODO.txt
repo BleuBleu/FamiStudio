@@ -23,12 +23,10 @@ N163 Multi-wave:
 - FTI import
 - Famitracker import/export.
 - FamiStudio text.
-- Same for FDS.
-- *** Volume envelope for N163 doesnt show position in piano roll
 - Add multi-wave to N163/FDS unit tests.
+- Add FDS mod to unit tests (effect + delay)
 
 P0:
-- Remove ugly multiplication code for anything that isnt 5 channels.
 - Add text box to numero up/down
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).

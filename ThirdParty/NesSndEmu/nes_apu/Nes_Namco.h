@@ -35,8 +35,8 @@ public:
 	void write_addr( int );
 
 	void write_register( cpu_time_t, int addr, int data );
-	int read_register(int addr);
 	void get_register_values(struct n163_register_values* regs);
+	int get_wave_pos(int chan);
 
 	// to do: implement save/restore
 	void save_snapshot( namco_snapshot_t* out );
@@ -118,9 +118,9 @@ inline void Nes_Namco::write_register(cpu_time_t time, int addr, int data)
 		write_data(time, data);
 }
 
-inline int Nes_Namco::read_register(int addr)
+inline int Nes_Namco::get_wave_pos(int chan)
 {
-	return access();
+	return reg[0x80 - (chan + 1) * 8 + 0x5];
 }
 
 #endif

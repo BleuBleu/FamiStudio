@@ -32,11 +32,6 @@ extern "C" void __stdcall NesApuWriteRegister(int apuIdx, unsigned int addr, int
 	apu[apuIdx].write_register(addr, data);
 }
 
-extern "C" int __stdcall NesApuReadRegister(int apuIdx, int exp, unsigned int addr)
-{
-	return apu[apuIdx].read_register(exp, addr);
-}
-
 extern "C" int __stdcall NesApuSamplesAvailable(int apuIdx)
 {
 	return apu[apuIdx].samples_avail();
@@ -110,4 +105,14 @@ extern "C" void __stdcall NesApuSkipCycles(int apuIdx, int cycles)
 extern "C" void __stdcall NesApuGetRegisterValues(int apuIdx, int exp, void* regs)
 {
 	apu[apuIdx].get_register_values(exp, regs);
+}
+
+extern "C" int __stdcall NesApuGetN163WavePos(int apuIdx, int n163ChanIndex)
+{
+	return apu[apuIdx].get_namco_wave_pos(n163ChanIndex);
+}
+
+extern "C" int __stdcall NesApuGetFdsWavePos(int apuIdx)
+{
+	return apu[apuIdx].get_fds_wave_pos();
 }

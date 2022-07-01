@@ -63,7 +63,7 @@ namespace FamiStudio
         {
             if (envIdx == EnvelopeType.FdsWaveform)
             {
-                return 3; // MATTT TODO!
+                return waveIndex * 64 + NesApu.GetFdsWavePos(apuIdx);
             }
             else
             {

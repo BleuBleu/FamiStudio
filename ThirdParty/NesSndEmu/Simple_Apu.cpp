@@ -189,21 +189,6 @@ void Simple_Apu::write_register(cpu_addr_t addr, int data)
 	}
 }
 
-int Simple_Apu::read_register(int exp, cpu_addr_t addr)
-{
-	assert(!seeking);
-
-	switch (exp)
-	{
-	//case expansion_fds: fds.read_register(addr); break; MATTT : TODO!
-	case expansion_namco: return namco.read_register(addr); break;
-	default:
-		assert(false); // Not implemented for all.
-	}
-
-	return 0;
-}
-
 void Simple_Apu::get_register_values(int exp, void* regs)
 {
 	assert(!seeking);
@@ -262,6 +247,18 @@ void Simple_Apu::skip_cycles(long cycles)
 		time += cycles;
 		apu.run_until(time);
 	}
+}
+
+int Simple_Apu::get_namco_wave_pos(int n163ChanIndex)
+{
+	assert((expansions & expansion_mask_namco) != 0 && !seeking);
+	return namco.get_wave_pos(n163ChanIndex);
+}
+
+int Simple_Apu::get_fds_wave_pos()
+{
+	assert((expansions & expansion_mask_fds) != 0 && !seeking);
+	return fds.get_wave_pos();
 }
 
 void Simple_Apu::end_frame()
