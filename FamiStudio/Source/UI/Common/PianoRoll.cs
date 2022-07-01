@@ -3404,7 +3404,7 @@ namespace FamiStudio
                     if (env.Length != length)
                     {
                         env.Length = length;
-                        editInstrument.NotifyEnvelopeResized(editEnvelope);
+                        editInstrument.NotifyEnvelopeChanged(editEnvelope);
                         if (IsSelectionValid())
                             SetSelection(selectionMin, selectionMax);
                     }
@@ -3413,14 +3413,14 @@ namespace FamiStudio
                     if (env.Release != length)
                     {
                         env.Release = length;
-                        editInstrument.NotifyEnvelopeLoopReleaseChanged(editEnvelope);
+                        editInstrument.NotifyEnvelopeChanged(editEnvelope);
                     }
                     break;
                 case CaptureOperation.DragLoop:
                     if (env.Loop != length)
                     {
                         env.Loop = length;
-                        editInstrument.NotifyEnvelopeLoopReleaseChanged(editEnvelope);
+                        editInstrument.NotifyEnvelopeChanged(editEnvelope);
                     }
                     break;
             }
@@ -6281,7 +6281,7 @@ namespace FamiStudio
                 env.Loop = idx;
             }
 
-            editInstrument.NotifyEnvelopeLoopReleaseChanged(editEnvelope);
+            editInstrument.NotifyEnvelopeChanged(editEnvelope);
             App.UndoRedoManager.EndTransaction();
         }
 
@@ -6299,7 +6299,7 @@ namespace FamiStudio
             else
                 env.Loop = -1;
 
-            editInstrument.NotifyEnvelopeLoopReleaseChanged(editEnvelope);
+            editInstrument.NotifyEnvelopeChanged(editEnvelope);
             App.UndoRedoManager.EndTransaction();
         }
 

@@ -388,7 +388,17 @@ namespace FamiStudio
                 }
                 else if (instrument.IsFdsInstrument)
                 {
-                    Debug.Assert(false); // MATTT
+                    var waveforms = new List<uint>();
+
+                    for (int i = 0; i < instrument.FdsWaveCount; i++)
+                    {
+                        var wav = instrument.Envelopes[EnvelopeType.FdsWaveform].GetFdsWaveform(i);
+                        var crc = CRC32.Compute(wav);
+                        uniqueEnvelopes[crc] = wav;
+                        waveforms.Add(crc);
+                    }
+
+                    instrumentWaveforms[instrument] = waveforms;
                 }
             }
 
@@ -1088,7 +1098,6 @@ namespace FamiStudio
                                         songData.Add($"${1 - sawVolume:x2}");
                                     }
 
-                                    // MATTT : Difference encoding now???
                                     int idx = instrumentIndices[note.Instrument];
                                     songData.Add($"${(byte)(0x80 | (idx << 1)):x2}+");
                                     instrument = note.Instrument;

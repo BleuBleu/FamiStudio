@@ -256,7 +256,7 @@ namespace FamiStudio
 
                     // See comment un UpdateEnvelope about why we handle these differently.
                     if (envelopes[EnvelopeType.WaveformRepeat] != null)
-                        envelopeValues[EnvelopeType.WaveformRepeat] = envelopes[EnvelopeType.WaveformRepeat].Values[0];
+                        envelopeValues[EnvelopeType.WaveformRepeat] = envelopes[EnvelopeType.WaveformRepeat].Values[0] + 1;
 
                     noteTriggered = true;
                 }

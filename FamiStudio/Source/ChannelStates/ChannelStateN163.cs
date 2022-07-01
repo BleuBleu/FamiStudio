@@ -57,19 +57,22 @@ namespace FamiStudio
                     // This can actually trigger if you tweak an instrument while playing a song.
                     //Debug.Assert(instrument.Envelopes[Envelope.N163Waveform].Length == instrument.N163WaveSize);
 
+                    waveIndex = -1;
                     wavePos = instrument.N163WavePos / 2;
-                    ConditionalLoadWave(true);
-                    WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
                     waveLength = 256 - instrument.N163WaveSize;
+
+                    WriteN163Register(NesApu.N163_REG_WAVE + regOffset, instrument.N163WavePos);
                 }
             }
         }
 
-        private void ConditionalLoadWave(bool force = false)
+        private void ConditionalLoadWave()
         {
+            // MATTT : I think we start at wave index 1.
+            // MATTT : The +1 fixed it, but test release as well.
             var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
 
-            if (newWaveIndex != waveIndex || force)
+            if (newWaveIndex != waveIndex)
             {
                 var wav = envelopes[EnvelopeType.N163Waveform].BuildN163Waveform(newWaveIndex);
 

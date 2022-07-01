@@ -117,9 +117,11 @@ namespace FamiStudio
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Master Volume", 0, 3, 0, null, true)
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
-                        { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; instrument.UpdateFdsWaveEnvelope(); } });
+                        { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, 64, 1) // MATTT : Sensible max?
+                        { GetValue = () => { return instrument.FdsWaveCount; }, SetValue = (v) => { instrument.FdsWaveCount = (byte)v;}, GetMaxValue = () => { return instrument.FdsMaxWaveCount; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.Count - 1, WavePresetType.Flat, null, true )
-                        { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; instrument.UpdateFdsModulationEnvelope(); } });
+                        { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Speed", 0, 4095, 0)
                         { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Depth", 0, 63, 0)
@@ -135,7 +137,7 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;} });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Size", 4, 248, 16, null, false, 4)
                         { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, 64, 1)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, 64, 1) // MATTT : Sensible max?
                         { GetValue = () => { return instrument.N163WaveCount; }, SetValue = (v) => { instrument.N163WaveCount = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveCount; } });
                     break;
 

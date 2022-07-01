@@ -35,8 +35,8 @@ namespace FamiStudio
 
             values = new sbyte[maxLength];
             canResize = type != EnvelopeType.FdsModulation;
-            canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.WaveformRepeat;
-            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.WaveformRepeat;
+            canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
             chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
 
             if (canResize)
@@ -74,7 +74,7 @@ namespace FamiStudio
             set
             {
                 chunkLength = value;
-                // MATTT : Should we move the repeats/loops here?
+                // MATTT : Move the repeats/loops here?
             }
         }
 
@@ -243,6 +243,20 @@ namespace FamiStudio
             return packed;
         }
 
+        public byte[] GetFdsWaveform(int waveIndex)
+        {
+            Debug.Assert(waveIndex >= 0 && waveIndex < 64); // MATTT : Whats the actual max here?
+
+            var len = chunkLength;
+            var offset = waveIndex * chunkLength;
+            var wav = new byte[len];
+
+            for (int i = 0; i < len; i++)
+                wav[i] = (byte)values[offset + i];
+
+            return wav;
+        }
+
         public Envelope CreateRepeatPlaybackEnvelope()
         {
             var sum = 0;
@@ -327,7 +341,6 @@ namespace FamiStudio
 
         public Envelope ShallowClone()
         {
-			// MATTT copy chunk here.
             var env = new Envelope();
             env.length = length;
             env.loop = loop;

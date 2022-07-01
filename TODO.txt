@@ -24,7 +24,6 @@ N163 Multi-wave:
 - Famitracker import/export.
 - FamiStudio text.
 - Same for FDS.
-
 - *** Volume envelope for N163 doesnt show position in piano roll
 
 P0:
@@ -42,6 +41,7 @@ P0:
   	- Do it on mobile too
 
 P1:
+- Redo System.Drawing removal, not part of .NET standard.
 - Is CPU usage higher?
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
