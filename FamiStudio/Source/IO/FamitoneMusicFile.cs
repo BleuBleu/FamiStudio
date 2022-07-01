@@ -56,13 +56,13 @@ namespace FamiStudio
         private const byte OpcodeSlide                 = 0x4f;
         private const byte OpcodeVolumeSlide           = 0x50;
         private const byte OpcodeDeltaCounter          = 0x51;
-        private const byte OpcodeFdsModSpeed           = 0x52; // FDS only
-        private const byte OpcodeFdsModDepth           = 0x53; // FDS only
-        private const byte OpcodeVrc6SawMasterVolume   = 0x54; // VRC6 only
-        private const byte OpcodeVrc7ReleaseNote       = 0x55; // VRC7 only
-        private const byte OpcodeEpsmReleaseNote       = 0x56; // EPSM only
+        private const byte OpcodeVrc6SawMasterVolume   = 0x52; // VRC6 only
+        private const byte OpcodeVrc7ReleaseNote       = 0x53; // VRC7 only
+        private const byte OpcodeFdsModSpeed           = 0x54; // FDS only
+        private const byte OpcodeFdsModDepth           = 0x55; // FDS only
+        private const byte OpcodeFdsReleaseNote        = 0x56; // FDS only
         private const byte OpcodeN163ReleaseNote       = 0x57; // N163 only
-        private const byte OpcodeFdsReleaseNote        = 0x58; // FDS only
+        private const byte OpcodeEpsmReleaseNote       = 0x58; // EPSM only
 
         private const byte OpcodeSetReferenceFT2       = 0xff; // FT2
         private const byte OpcodeLoopFT2               = 0xfd; // FT2
@@ -389,11 +389,6 @@ namespace FamiStudio
                 {
                     Debug.Assert(false); // MATTT
                 }
-
-                //processed = env.BuildN163Waveform(0); // MATTT pass wave index!
-                //break;
-                //processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
-                //break;
             }
 
             if (kernel == FamiToneKernel.FamiStudio)
@@ -495,9 +490,9 @@ namespace FamiStudio
                         {
                             var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
 
+                            lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
                             lines.Add($"\t{db} ${instrument.N163WavePos:x2}, ${instrument.N163WaveSize:x2}");
                             lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
-                            lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
                             lines.Add($"\t{db} $00, $00, $00, $00");
                         }
                         else if (instrument.IsVrc7Instrument)
@@ -1163,7 +1158,19 @@ namespace FamiStudio
                                 // MATTT : Test noise too.
                                 if (note.IsRelease)
                                 {
-                                    songData.Add($"${OpcodeReleaseNote:x2}+*");
+                                    var opcode = OpcodeReleaseNote;
+
+                                    // This is a bit overkill but simplifies the asm code. If we every run
+                                    // out of opcodes, we could easily go back to a single release opcode.
+                                    switch (channel.Expansion)
+                                    {
+                                        case ExpansionType.Vrc7: opcode = OpcodeVrc7ReleaseNote; break;
+                                        case ExpansionType.Fds:  opcode = OpcodeFdsReleaseNote;  break;
+                                        case ExpansionType.N163: opcode = OpcodeN163ReleaseNote; break;
+                                        case ExpansionType.EPSM: opcode = OpcodeEpsmReleaseNote; break;
+                                    }
+
+                                    songData.Add($"${opcode:x2}+*");
                                     usesReleaseNotes = true;
                                 }
                                 else
@@ -1698,6 +1705,23 @@ namespace FamiStudio
 
                 if (kernel == FamiToneKernel.FamiStudio)
                 {
+                    // Expansion defines
+                    if (project.UsesVrc6Expansion)
+                        Log.LogMessage(LogSeverity.Info, "Project uses VRC6 expansion, you must set FAMISTUDIO_EXP_VRC6 = 1.");
+                    if (project.UsesVrc7Expansion)
+                        Log.LogMessage(LogSeverity.Info, "Project uses VRC7 expansion, you must set FAMISTUDIO_EXP_VRC7 = 1.");
+                    if (project.UsesMmc5Expansion)
+                        Log.LogMessage(LogSeverity.Info, "Project uses MMC5 expansion, you must set FAMISTUDIO_EXP_MMC5 = 1.");
+                    if (project.UsesS5BExpansion)
+                        Log.LogMessage(LogSeverity.Info, "Project uses S5B expansion, you must set FAMISTUDIO_EXP_S5B = 1.");
+                    if (project.UsesFdsExpansion)
+                        Log.LogMessage(LogSeverity.Info, "Project uses FDS expansion, you must set FAMISTUDIO_EXP_FDS = 1.");
+                    if (project.UsesN163Expansion)
+                        Log.LogMessage(LogSeverity.Info, $"Project uses N163 expansion, you must set FAMISTUDIO_EXP_N163 = 1 and FAMISTUDIO_EXP_N163_CHN_CNT = {project.ExpansionNumN163Channels}.");
+                    if (project.UsesEPSMExpansion)
+                        Log.LogMessage(LogSeverity.Info, "Project uses EPSM expansion, you must set FAMISTUDIO_EXP_EPSM = 1.");
+                    
+                    // Feature usage defines.
                     if (usesFamiTrackerTempo)
                         Log.LogMessage(LogSeverity.Info, "Project uses FamiTracker tempo, you must set FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1.");
                     if (usesDelayedNotesOrCuts)

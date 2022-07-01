@@ -12,4 +12,4 @@ copy /y nsf_famistudio_n163_1ch_ntsc.dbg nsf.dbg
 @del %USERPROFILE%\Documents\Mesen\Debugger\nsf.cdl
 @del %USERPROFILE%\Documents\Mesen\RecentGames\nsf.*
 
-..\..\Tools\MesenX.exe nsf.nsf
+..\..\Tools\Mesen.exe nsf.nsf
