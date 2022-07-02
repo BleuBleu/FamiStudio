@@ -46,7 +46,7 @@ namespace FamiStudio
 
             if (newWaveIndex != waveIndex)
             {
-                var wav = envelopes[EnvelopeType.FdsWaveform].GetFdsWaveform(newWaveIndex);
+                var wav = envelopes[EnvelopeType.FdsWaveform].GetChunk(newWaveIndex);
 
                 WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume);
                 for (int i = 0; i < 0x40; ++i)

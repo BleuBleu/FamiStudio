@@ -251,12 +251,12 @@ namespace FamiStudio
             return packed;
         }
 
-        public byte[] GetFdsWaveform(int waveIndex)
+        public byte[] GetChunk(int chunkIndex)
         {
-            Debug.Assert(waveIndex >= 0 && waveIndex < 64); // MATTT : Whats the actual max here?
+            Debug.Assert(chunkIndex >= 0 && chunkIndex < 64); // MATTT : Whats the actual max here?
 
             var len = chunkLength;
-            var offset = waveIndex * chunkLength;
+            var offset = chunkIndex * chunkLength;
             var wav = new byte[len];
 
             for (int i = 0; i < len; i++)

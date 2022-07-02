@@ -364,7 +364,7 @@ namespace FamiStudio
         // Convert from our "repeat" based representation to the "index" based
         // representation used by our NSF driver and FamiTracker. Will optimize
         // duplicated sub-waveforms.
-        public void BuildWaveformsAndWaveIndexEnvelope(out byte[][] waves, out Envelope indexEnvelope)
+        public void BuildWaveformsAndWaveIndexEnvelope(out byte[][] waves, out Envelope indexEnvelope, bool encode)
         {
             Debug.Assert(IsFdsInstrument || IsN163Instrument);
 
@@ -410,10 +410,10 @@ namespace FamiStudio
             {
                 var oldIndex = waveIndexNewToOld[i];
 
-                if (IsN163Instrument)
+                if (IsN163Instrument && encode)
                     waves[i] = env.GetN163Waveform(oldIndex);
                 else
-                    waves[i] = env.GetFdsWaveform(oldIndex);
+                    waves[i] = env.GetChunk(oldIndex);
             }
         }
 

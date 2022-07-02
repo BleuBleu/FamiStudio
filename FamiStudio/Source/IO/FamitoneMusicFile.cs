@@ -381,7 +381,7 @@ namespace FamiStudio
                     var envType = instrument.IsN163Instrument ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
                     var envRepeat = instrument.Envelopes[EnvelopeType.WaveformRepeat];
 
-                    instrument.BuildWaveformsAndWaveIndexEnvelope(out var subWaveforms, out var waveIndexEnvelope);
+                    instrument.BuildWaveformsAndWaveIndexEnvelope(out var subWaveforms, out var waveIndexEnvelope, true);
                     var processedWaveIndexEnvelope = ProcessEnvelope(waveIndexEnvelope, true, false);
 
                     if (processedWaveIndexEnvelope != null)

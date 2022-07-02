@@ -568,6 +568,11 @@ namespace FamiStudio
                 {
                     var env = instrument.Envelopes[i];
 
+                    // Our FDS/N163 use a repeat count and needs to be converted to a 
+                    // "wave index" envelope before exporting.
+                    if (instrument.IsN163Instrument && i == EnvelopeType.WaveformRepeat)
+                        instrument.BuildWaveformsAndWaveIndexEnvelope(out _, out env, false);
+
                     if (env == null || env.IsEmpty(i))
                         continue;
 
@@ -679,6 +684,29 @@ namespace FamiStudio
             }
         }
 
+        private int FindEnvelopeIndex(Envelope[,][] envelopes, Instrument inst, Envelope env, int envType)
+        {
+            var envList = envelopes[inst.IsExpansionInstrument ? 1 : 0, envType];
+
+            // HACK : Our N163 envelope gets transformed, so we cant compare by reference
+            // so we compare by value.
+            if (envType == EnvelopeType.WaveformRepeat)
+            {
+                var crc = env.CRC;
+                for (int i = 0; i < envList.Length; i++)
+                {
+                    if (crc == envList[i].CRC)
+                        return i;
+                }
+
+                return -1;
+            }
+            else
+            {
+                return env != null && env.Length > 0 ? Array.IndexOf(envList, env) : -1;
+            }
+        }
+
         public bool Save(Project originalProject, string filename, int[] songIds)
         {
             if (originalProject.UsesMultipleExpansionAudios)
@@ -760,6 +788,17 @@ namespace FamiStudio
                         lines.Add($"MACRO{suffix}{FamiStudioToFamiTrackerEnvelopeLookup[i],8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                     }
                 }
+
+                // Special case for N163 wave index envelopes.
+                if (project.UsesN163Expansion)
+                {
+                    var envArray = envelopes[1, EnvelopeType.WaveformRepeat];
+                    for (int j = 0; j < envArray.Length; j++)
+                    {
+                        var env = envArray[j];
+                        lines.Add($"MACRO{suffix}{4 /* SEQ_DUTYCYCLE */,8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                    }
+                }
             }
 
             lines.Add("");
@@ -787,10 +826,10 @@ namespace FamiStudio
                 var dutEnv = instrument.Envelopes[EnvelopeType.DutyCycle];
 
                 var expIdx    = instrument.IsExpansionInstrument ? 1 : 0;
-                int volEnvIdx = volEnv != null && volEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, EnvelopeType.Volume],    instrument.Envelopes[EnvelopeType.Volume])    : -1;
-                int arpEnvIdx = arpEnv != null && arpEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, EnvelopeType.Arpeggio],  instrument.Envelopes[EnvelopeType.Arpeggio])  : -1;
-                int pitEnvIdx = pitEnv != null && pitEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, EnvelopeType.Pitch],     instrument.Envelopes[EnvelopeType.Pitch])     : -1;
-                int dutEnvIdx = dutEnv != null && dutEnv.Length > 0 ? Array.IndexOf(envelopes[expIdx, EnvelopeType.DutyCycle], instrument.Envelopes[EnvelopeType.DutyCycle]) : -1;
+                int volEnvIdx = FindEnvelopeIndex(envelopes, instrument, volEnv, EnvelopeType.Volume);
+                int arpEnvIdx = FindEnvelopeIndex(envelopes, instrument, arpEnv, EnvelopeType.Arpeggio);
+                int pitEnvIdx = FindEnvelopeIndex(envelopes, instrument, pitEnv, EnvelopeType.Pitch);
+                int dutEnvIdx = FindEnvelopeIndex(envelopes, instrument, dutEnv, EnvelopeType.DutyCycle);
 
                 if (instrument.IsRegularInstrument)
                 {
@@ -813,14 +852,23 @@ namespace FamiStudio
                 }
                 else if (instrument.IsN163Instrument)
                 {
-                    lines.Add($"INSTN163{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4}{instrument.N163WaveSize,4}{instrument.N163WavePos,4}{1,4} \"{instrument.Name}\"");
+                    instrument.BuildWaveformsAndWaveIndexEnvelope(out var waves, out var wavIndexEnv, false);
 
-                    var wavEnv = instrument.Envelopes[EnvelopeType.N163Waveform];
-                    lines.Add($"N163WAVE{i,4}{0,6} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");
+                    var wavIndexEnvIdx = FindEnvelopeIndex(envelopes, instrument, wavIndexEnv, EnvelopeType.WaveformRepeat);
+                    lines.Add($"INSTN163{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{wavIndexEnvIdx,4}{instrument.N163WaveSize,4}{instrument.N163WavePos,4}{waves.Length,4} \"{instrument.Name}\"");
+
+                    for (int j = 0; j < waves.Length; j++)
+                        lines.Add($"N163WAVE{i,4}{j,6} : {string.Join(" ", waves[j])}");
                 }
                 else if (instrument.IsFdsInstrument)
                 {
                     lines.Add($"INSTFDS{i,5}{1,6}{instrument.FdsModSpeed,4}{instrument.FdsModDepth,4}{instrument.FdsModDelay,4} \"{instrument.Name}\"");
+
+                    if (instrument.FdsWaveCount > 1)
+                    {
+                        uniqueWarnings.Add($"FDS Instrument '{instrument.Name}' uses multiple waveforms, the original FamiTracker only supported one, truncating.");
+                        instrument.FdsWaveCount = 1;
+                    }
 
                     var wavEnv = instrument.Envelopes[EnvelopeType.FdsWaveform];
                     lines.Add($"FDSWAVE{i,5} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");
