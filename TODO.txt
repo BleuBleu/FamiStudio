@@ -39,6 +39,7 @@ P0:
   	- Do it on mobile too
 
 P1:
+- Context menu to apply DPCM processing
 - Redo System.Drawing removal, not part of .NET standard.
 - Is CPU usage higher?
 - Improve no-attack.
