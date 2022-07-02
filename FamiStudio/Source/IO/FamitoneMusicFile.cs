@@ -70,8 +70,7 @@ namespace FamiStudio
 
         private const byte OpcodeVolumeBits            = 0x70;
 
-        // MATTT : Double check this.
-        private const int SingleByteNoteMin = 12; // MATTT : Make this match DPCMNoteMin.
+        private const int SingleByteNoteMin = 12;
         private const int SingleByteNoteMax = SingleByteNoteMin + (OpcodeFirst - 1);
 
         private bool usesFamiTrackerTempo = false;
