@@ -136,7 +136,7 @@ namespace FamiStudio
                         var rel  = int.Parse(param[3]);
                         var arp  = int.Parse(param[4]);
 
-                        var famistudioType = FamiTrackerToFamiStudioEnvelopeLookup[type];
+                        var famistudioType = expansion == ExpansionType.N163 && type == 4 /* SEQ_DUTYCYCLE */ ? EnvelopeType.WaveformRepeat : FamiTrackerToFamiStudioEnvelopeLookup[type];
 
                         if (famistudioType < EnvelopeType.Count)
                         {

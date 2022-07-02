@@ -10,25 +10,20 @@
 
 N163 Multi-wave:
 ================
-1) Env editor
-- PC: Highlight, cursors, tooltip.
-- Mobile : Gizmos, highlight, etc.
-- Move release points when resizing envelopes.
-2) Playback
-- Make sure the one-off thing is fixed.
-- Test no attack and stuff.
-4) Polish
-- FTI import
-- Famitracker import/export.
-	- Import : Make sure FDS works too.
-	- Import : Restest a lot, did envelope refactoring.
-- FamiStudio text.
+- IMPORTER??? How should it work?
+
+- UI : PC: Highlight, cursors, tooltip.
+- UI : Mobile : Gizmos, highlight, etc.
+- IO : FamiStudio text import/export.
+- FIX : Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).
+- TEST : Test no attack in playback + NSF.
+- TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
+- UNIT-TEST : Add multi-wave to N163/FDS unit tests.
+- UNIT-TEST : Add FDS mod to unit tests (effect + delay)
 - BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
-- Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).
-- When N163/FDS only has 1 waveform, bind an envelope that does nothing in NSF export. 
-- Lots of N163 poppin in FTM song "donkey kong contry"? Also pops in FamiTracker, but a bit less?
-- Add multi-wave to N163/FDS unit tests.
-- Add FDS mod to unit tests (effect + delay)
+- BUG : Right-click, set loop point assert.
+- BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
+- POLISH : Lots of N163 poppin in FTM song "donkey kong contry"? Also pops in FamiTracker, but a bit less?
 
 P0:
 - Add text box to numero up/down + handle double click to fix fast click issue.
