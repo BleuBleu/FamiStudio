@@ -1080,13 +1080,8 @@ namespace FamiStudio
             }
         }
 
-        protected void ConvertN163WaveIndexToRepeatEnvelope(Instrument inst)
+        public static void ConvertN163WaveIndexToRepeatEnvelope(Instrument inst, Envelope waveIndexEnv)
         {
-            if (!n163WaveEnvs.TryGetValue(inst, out var waveIndexEnvIdx))
-                waveIndexEnvIdx = -1;
-
-            var waveIndexEnv = GetFamiTrackerEnvelope(ExpansionType.N163, 4 /* SEQ_DUTYCYCLE */, waveIndexEnvIdx);
-
             if (waveIndexEnv == null)
             {
                 // When there is no wave index envelope, just truncate to 1 waveform and set the maximum repeat we allow.
@@ -1101,15 +1096,23 @@ namespace FamiStudio
                 var indices = new List<int>();
                 var prevIdx = 0;
                 var prevVal = waveIndexEnv.Values[0];
+                var loopIdx = -1;
+                var relIdx  = -1;
 
                 for (int i = 1; i < waveIndexEnv.Length; i++)
                 {
-                    if (waveIndexEnv.Values[i] != prevVal)
+                    // Must break for loop and releases too.
+                    if (waveIndexEnv.Values[i] != prevVal || i == waveIndexEnv.Loop || i == waveIndexEnv.Release)
                     {
                         repeats.Add(i - prevIdx);
                         indices.Add(prevVal);
                         prevVal = waveIndexEnv.Values[i];
                         prevIdx = i;
+
+                        if (i == waveIndexEnv.Loop)
+                            loopIdx = indices.Count;
+                        if (i == waveIndexEnv.Release)
+                            relIdx = indices.Count;
                     }
                 }
 
@@ -1130,6 +1133,14 @@ namespace FamiStudio
                     for (int j = 0; j < inst.N163WaveSize; j++)
                         wavEnv.Values[i * inst.N163WaveSize + j] = originalWaveforms[idx * inst.N163WaveSize + j];
                 }
+
+                var waveEnv = inst.Envelopes[EnvelopeType.N163Waveform];
+
+                repEnv.Loop    = loopIdx;
+                repEnv.Release = relIdx;
+
+                waveEnv.Loop    = repEnv.Loop    >= 0 ? repEnv.Loop    * inst.N163WaveSize : -1;
+                waveEnv.Release = repEnv.Release >= 0 ? repEnv.Release * inst.N163WaveSize : -1;
             }
         }
 
@@ -1154,7 +1165,12 @@ namespace FamiStudio
 
                 if (inst.IsN163Instrument)
                 {
-                    ConvertN163WaveIndexToRepeatEnvelope(inst);
+                    if (!n163WaveEnvs.TryGetValue(inst, out var waveIndexEnvIdx))
+                        waveIndexEnvIdx = -1;
+
+                    var waveIndexEnv = GetFamiTrackerEnvelope(ExpansionType.N163, 4 /* SEQ_DUTYCYCLE */, waveIndexEnvIdx);
+
+                    ConvertN163WaveIndexToRepeatEnvelope(inst, waveIndexEnv);
                 }
             }
 

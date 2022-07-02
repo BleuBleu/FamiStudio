@@ -20,9 +20,8 @@ N163 Multi-wave:
 4) Polish
 - FTI import
 - Famitracker import/export.
-	- TEXT import : Make sure loop/release for N163 import correctly.
-	- TEXT import : Make sure FDS works too.
-	- TEXT import : Restest a lot, did envelope refactoring.
+	- Import : Make sure FDS works too.
+	- Import : Restest a lot, did envelope refactoring.
 - FamiStudio text.
 - BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
 - Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).

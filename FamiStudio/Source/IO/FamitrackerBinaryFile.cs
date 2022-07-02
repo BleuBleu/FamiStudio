@@ -482,7 +482,8 @@ namespace FamiStudio
                 types[i] = type;
                 loops[i] = loopPoint;
 
-                var env = new Envelope(FamiTrackerToFamiStudioEnvelopeLookup[type]);
+                var envType = type == 4 /* SEQ_DUTYCYCLE */ ? EnvelopeType.WaveformRepeat : FamiTrackerToFamiStudioEnvelopeLookup[type];
+                var env = new Envelope(envType);
 
                 if (env.CanResize)
                     env.Length = seqCount;
