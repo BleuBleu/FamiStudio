@@ -18,8 +18,6 @@ namespace FamiStudio
         const int BlockNameLength = 16;
         const int MaxInstruments = 64;
         const int MaxSamples     = 64;
-        const int MaxSequences   = 128;
-        const int SequenceCount  = 5;
         const int OctaveRange    = 8;
 
         struct BlockInfo
@@ -34,8 +32,6 @@ namespace FamiStudio
         private int blockVersion;
         private int blockSize;
         private byte[] bytes;
-        private Envelope[,] envelopes    = new Envelope[MaxSequences, SequenceCount];
-        private Envelope[,] envelopesExp = new Envelope[MaxSequences, SequenceCount];
         private Dictionary<Song, byte[]> songEffectColumnCount = new Dictionary<Song, byte[]>();
         private Instrument[] instruments = new Instrument[MaxInstruments];
         private DPCMSample[] samples = new DPCMSample[MaxSamples];
@@ -130,7 +126,7 @@ namespace FamiStudio
 
                 if (enabled != 0)
                 {
-                    var envType = EnvelopeTypeLookup[i];
+                    var envType = FamiTrackerToFamiStudioEnvelopeLookup[i];
 
                     if (envType != EnvelopeType.Count)
                     {
@@ -384,7 +380,7 @@ namespace FamiStudio
                     settings[i] = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
                 }
 
-                var env = new Envelope(EnvelopeTypeLookup[type]);
+                var env = new Envelope(FamiTrackerToFamiStudioEnvelopeLookup[type]);
 
                 if (env.CanResize)
                     env.Length = seqCount;
@@ -473,7 +469,7 @@ namespace FamiStudio
                 types[i] = type;
                 loops[i] = loopPoint;
 
-                var env = new Envelope(EnvelopeTypeLookup[type]);
+                var env = new Envelope(FamiTrackerToFamiStudioEnvelopeLookup[type]);
 
                 if (env.CanResize)
                     env.Length = seqCount;

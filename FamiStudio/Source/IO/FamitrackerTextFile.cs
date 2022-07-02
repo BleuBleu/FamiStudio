@@ -50,14 +50,9 @@ namespace FamiStudio
 
         public Project Load(string filename)
         {
-            var envelopes   = new Dictionary<int, Envelope>[ExpansionType.Count, EnvelopeType.Count];
-            var instruments = new Dictionary<int, Instrument>();
-            var dpcms       = new Dictionary<int, DPCMSample>();
-            var columns     = new int[5] { 1, 1, 1, 1, 1 };
-
-            for (int i = 0; i < envelopes.GetLength(0); i++)
-                for (int j = 0; j < envelopes.GetLength(1); j++)
-                    envelopes[i, j] = new Dictionary<int, Envelope>();
+            var instruments  = new Dictionary<int, Instrument>();
+            var dpcms        = new Dictionary<int, DPCMSample>();
+            var columns      = new int[5] { 1, 1, 1, 1, 1 };
 
             project = new Project();
             project.TempoMode = TempoType.FamiTracker;
@@ -141,7 +136,7 @@ namespace FamiStudio
                         var rel  = int.Parse(param[3]);
                         var arp  = int.Parse(param[4]);
 
-                        var famistudioType = EnvelopeTypeLookup[type];
+                        var famistudioType = FamiTrackerToFamiStudioEnvelopeLookup[type];
 
                         if (famistudioType < EnvelopeType.Count)
                         {
@@ -159,7 +154,7 @@ namespace FamiStudio
                             for (int j = 0; j < curve.Length; j++)
                                 env.Values[j] = sbyte.Parse(curve[j]);
 
-                            envelopes[expansion, famistudioType][idx] = env;
+                            SetFamiTrackerEnvelope(expansion, type, idx, env);
 
                             if (famistudioType == EnvelopeType.Arpeggio && arp != 0)
                                 Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {idx} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
@@ -241,21 +236,25 @@ namespace FamiStudio
                             instrument.N163WavePreset = WavePresetType.Custom;
                             instrument.N163WaveSize   = byte.Parse(param[6]);
                             instrument.N163WavePos    = byte.Parse(param[7]);
+                            instrument.N163WaveCount  = byte.Parse(param[8]);
 
-                            var wavCount = byte.Parse(param[8]);
-                            if (wavCount > 1)
-                                Log.LogMessage(LogSeverity.Warning, $"N163 instrument '{instrument.Name}' has more than 1 waveform ({wavCount}). All others will be ignored.");
+                            // Store for later, we use a different representation and will need to convert.
+                            n163WaveEnvs[instrument] = int.Parse(param[5]); // MATTT : Make sure this works well when there is no wave sequence.
                         }
 
                         var usedEnvelopes = new bool[commonEnvelopes.Length];
 
                         for (int envTypeIdx = 0; envTypeIdx <= EnvelopeType.DutyCycle; envTypeIdx++)
                         {
-                            int envIdx = commonEnvelopes[envTypeIdx];
-                            if (envIdx >= 0 && instrument.IsEnvelopeActive(envTypeIdx) && envelopes[expansion, envTypeIdx].TryGetValue(envIdx, out var foundEnv) && foundEnv != null)
+                            var envIdx = commonEnvelopes[envTypeIdx];
+                            if (envIdx >= 0 && instrument.IsEnvelopeActive(envTypeIdx))
                             {
-                                instrument.Envelopes[envTypeIdx] = envelopes[expansion, envTypeIdx][envIdx].ShallowClone();
-                                usedEnvelopes[envTypeIdx] = true;
+                                var env = GetFamiTrackerEnvelope(expansion, FamiStudioToFamiTrackerEnvelopeLookup[envTypeIdx], envIdx);
+                                if (env != null)
+                                {
+                                    instrument.Envelopes[envTypeIdx] = env.ShallowClone();
+                                    usedEnvelopes[envTypeIdx] = true;
+                                }
                             }
                         }
 
@@ -326,7 +325,7 @@ namespace FamiStudio
                         var loop = int.Parse(param[2]);
                         var rel  = int.Parse(param[3]);
 
-                        var famistudioType = EnvelopeTypeLookup[type];
+                        var famistudioType = FamiTrackerToFamiStudioEnvelopeLookup[type];
 
                         var env = instruments[inst].Envelopes[famistudioType];
 
@@ -359,19 +358,21 @@ namespace FamiStudio
                     }
                     else if (line.StartsWith("N163WAVE"))
                     {
-                        var param = line.Substring(8).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        var param = line.Substring(8).Split(new[] { ' ', ':' }, StringSplitOptions.RemoveEmptyEntries);
 
                         var instIdx = int.Parse(param[0]);
                         var waveIdx = int.Parse(param[1]);
 
-                        // TODO: We could create different instruments for each wave.
-                        if (waveIdx == 0)
-                        {
-                            var env = instruments[instIdx].Envelopes[EnvelopeType.N163Waveform];
+                        // Here we will load all the waveforms, but will later convert to our
+                        // representation. FamiTracker use a "wave index" envelope, we simply
+                        // store a repeat count for each wave. 
+                        var inst = instruments[instIdx];
+                        var env  = inst.Envelopes[EnvelopeType.N163Waveform];
 
-                            for (int j = 3; j < param.Length; j++)
-                                env.Values[j - 3] = sbyte.Parse(param[j]);
-                        }
+                        Debug.Assert(param.Length == inst.N163WaveSize + 2);
+
+                        for (int j = 0; j < inst.N163WaveSize; j++)
+                            env.Values[waveIdx * inst.N163WaveSize + j] = sbyte.Parse(param[j + 2]);
                     }
                     else if (line.StartsWith("TRACK"))
                     {
@@ -742,7 +743,7 @@ namespace FamiStudio
                 for (int j = 0; j < envArray.Length; j++)
                 {
                     var env = envArray[j];
-                    lines.Add($"MACRO{ReverseEnvelopeTypeLookup[i],8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                    lines.Add($"MACRO{FamiStudioToFamiTrackerEnvelopeLookup[i],8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                 }
             }
 
@@ -756,7 +757,7 @@ namespace FamiStudio
                     for (int j = 0; j < envArray.Length; j++)
                     {
                         var env = envArray[j];
-                        lines.Add($"MACRO{suffix}{ReverseEnvelopeTypeLookup[i],8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
+                        lines.Add($"MACRO{suffix}{FamiStudioToFamiTrackerEnvelopeLookup[i],8} {j,4} {env.Loop,4} {(env.Release >= 0 ? env.Release - 1 : -1),4}   0 : {string.Join(" ", env.Values.Take(env.Length))}");
                     }
                 }
             }

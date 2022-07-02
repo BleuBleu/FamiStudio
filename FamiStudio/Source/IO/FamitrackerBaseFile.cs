@@ -164,7 +164,7 @@ namespace FamiStudio
         };
 
         // FamiTracker -> FamiStudio
-        protected static int[] EnvelopeTypeLookup =
+        protected static int[] FamiTrackerToFamiStudioEnvelopeLookup =
         {
             EnvelopeType.Volume,   // SEQ_VOLUME
             EnvelopeType.Arpeggio, // SEQ_ARPEGGIO
@@ -174,7 +174,7 @@ namespace FamiStudio
         };
 
         // FamiStudio -> FamiTracker
-        protected static int[] ReverseEnvelopeTypeLookup =
+        protected static int[] FamiStudioToFamiTrackerEnvelopeLookup =
         {
              0, // Volume
              1, // Arpeggio
@@ -188,11 +188,32 @@ namespace FamiStudio
             public byte param;
         }
 
+        protected const int MaxSequences = 128;
+        protected const int SequenceCount = 5;
+
         protected Project project;
         protected Dictionary<Pattern, RowFxData[,]> patternFxData = new Dictionary<Pattern, RowFxData[,]>();
         protected Dictionary<Pattern, int> patternLengths = new Dictionary<Pattern, int>();
         protected Dictionary<Song, int> songDurations = new Dictionary<Song, int>();
+        protected Dictionary<Instrument, int> n163WaveEnvs = new Dictionary<Instrument, int>();
+        protected Envelope[,] envelopes = new Envelope[MaxSequences, SequenceCount];
+        protected Envelope[,] envelopesExp = new Envelope[MaxSequences, SequenceCount];
         protected int barLength = -1;
+
+        protected Envelope GetFamiTrackerEnvelope(int exp, int famitrackerType, int idx)
+        {
+            if (idx < 0)
+                return null;
+
+            var list = exp == ExpansionType.None ? envelopes : envelopesExp;
+            return list[idx, famitrackerType];
+        }
+
+        protected void SetFamiTrackerEnvelope(int exp, int famitrackerType, int idx, Envelope env)
+        {
+            var list = exp == ExpansionType.None ? envelopes : envelopesExp;
+            list[idx, famitrackerType] = env;
+        }
 
         protected int ConvertExpansionAudio(int exp)
         {
@@ -1059,6 +1080,58 @@ namespace FamiStudio
             }
         }
 
+        protected void ConvertN163WaveIndexToRepeatEnvelope(Instrument inst)
+        {
+            // MATTT : Make sure this works well when there is no wave sequence.
+            var waveIndexEnvIdx = n163WaveEnvs[inst];
+            var waveIndexEnv = GetFamiTrackerEnvelope(ExpansionType.N163, 4 /* SEQ_DUTYCYCLE */, waveIndexEnvIdx);
+
+            if (waveIndexEnv == null)
+            {
+                // When there is no wave index envelope, just truncate to 1 waveform and set the maximum repeat we allow.
+                Envelope.GetMinMaxValueForType(inst, EnvelopeType.WaveformRepeat, out _, out var maxRepeat);
+                inst.N163WaveCount = 1;
+                inst.Envelopes[EnvelopeType.WaveformRepeat].Values[0] = (sbyte)maxRepeat;
+            }
+            else
+            {
+                // Looks for contiguous sequences in the wave index sequence.
+                var repeats = new List<int>();
+                var indices = new List<int>();
+                var prevIdx = 0;
+                var prevVal = waveIndexEnv.Values[0];
+
+                for (int i = 1; i < waveIndexEnv.Length; i++)
+                {
+                    if (waveIndexEnv.Values[i] != prevVal)
+                    {
+                        repeats.Add(i - prevIdx);
+                        indices.Add(prevVal);
+                        prevVal = waveIndexEnv.Values[i];
+                        prevIdx = i;
+                    }
+                }
+
+                repeats.Add(waveIndexEnv.Length - prevIdx);
+                indices.Add(waveIndexEnv.Values[waveIndexEnv.Length - 1]);
+
+                // Build the equivalent waveform + repeat envelope.
+                var wavEnv = inst.Envelopes[EnvelopeType.N163Waveform];
+                var repEnv = inst.Envelopes[EnvelopeType.WaveformRepeat];
+                var originalWaveforms = wavEnv.Values.Clone() as sbyte[];
+
+                inst.N163WaveCount = (byte)repeats.Count;
+
+                for (int i = 0; i < repeats.Count; i++)
+                {
+                    repEnv.Values[i] = (sbyte)repeats[i];
+                    var idx = indices[i];
+                    for (int j = 0; j < inst.N163WaveSize; j++)
+                        wavEnv.Values[i * inst.N163WaveSize + j] = originalWaveforms[idx * inst.N163WaveSize + j];
+                }
+            }
+        }
+
         protected bool FinishImport()
         {
             foreach (var s in project.Samples)
@@ -1076,6 +1149,11 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Warning, $"Envelope '{EnvelopeType.Names[i]}' of instrument '{inst.Name}' have values outside of the supported range, clamping.");
                         env.ClampToValidRange(inst, i);
                     }
+                }
+
+                if (inst.IsN163Instrument)
+                {
+                    ConvertN163WaveIndexToRepeatEnvelope(inst);
                 }
             }
 
