@@ -65,7 +65,7 @@ namespace FamiStudio
 
             if (newWaveIndex != waveIndex)
             {
-                var wav = envelopes[EnvelopeType.N163Waveform].BuildN163Waveform(newWaveIndex);
+                var wav = envelopes[EnvelopeType.N163Waveform].GetN163Waveform(newWaveIndex);
 
                 for (int i = 0; i < wav.Length; i++)
                     WriteN163Register(wavePos + i, wav[i]);

@@ -237,7 +237,7 @@ namespace FamiStudio
             return mod;
         }
 
-        public byte[] BuildN163Waveform(int waveIndex)
+        public byte[] GetN163Waveform(int waveIndex)
         {
             Debug.Assert(waveIndex >= 0 && waveIndex < 64); // MATTT : Whats the actual max here?
 
@@ -265,7 +265,7 @@ namespace FamiStudio
             return wav;
         }
 
-        public Envelope CreateRepeatPlaybackEnvelope()
+        public Envelope CreateWaveIndexEnvelope()
         {
             var sum = 0;
             for (int i = 0; i < length; i++)

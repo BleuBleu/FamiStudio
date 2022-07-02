@@ -32,7 +32,7 @@ N163 Multi-wave:
 - Add FDS mod to unit tests (effect + delay)
 
 P0:
-- Add text box to numero up/down
+- Add text box to numero up/down + handle double click to fix fast click issue.
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")

@@ -204,10 +204,8 @@ namespace FamiStudio
             // Make them 127 in length so that they update less often.
             if (env.Length == 1 && !env.Relative && env.Release < 0)
             {
-                if (newPitchEnvelope)
-                    return new byte[] { 0x00, (byte)(192 + env.Values[0]), 0x7f, 0x00, 0x01 };
-                else if (allowReleases)
-                    return new byte[] { 0x04, (byte)(192 + env.Values[0]), 0x7f, 0x00, 0x01 };
+                if (newPitchEnvelope || allowReleases)
+                    return new byte[] { 0x00, (byte)(192 + env.Values[0]), 0x7f, 0x00, 0x02 };
                 else
                     return new byte[] { (byte)(192 + env.Values[0]), 0x7f, 0x00, 0x00 } ;
             }
@@ -302,14 +300,14 @@ namespace FamiStudio
             // Process all envelope, make unique, etc.
             var uniqueEnvelopes = new SortedList<uint, byte[]>();
             var instrumentEnvelopes = new Dictionary<Envelope, uint>();
-            var instrumentWaveforms = new Dictionary<Instrument, List<uint>>();
+            var instrumentWaveforms = new Dictionary<Instrument, uint[]>();
 
-            var defaultEnv = new byte[] { 0xc0, 0x7f, 0x00, 0x00 };
+            var defaultEnv = new byte[] { 0xc0, 0x7f, 0x00, 0x01 };
             var defaultDutyEnv = new byte[] { 0x7f, 0x00, 0x00 }; // This is a "do nothing" envelope, simply loops, never sets a value.
-            var defaultPitchEnv = new byte[] { 0x00, 0xc0, 0x7f, 0x00, 0x01 };
+            var defaultPitchOrReleaseEnv = new byte[] { 0x00, 0xc0, 0x7f, 0x00, 0x02 }; // For pitch, first byte means absolute, for other envelope, it means no release.
             var defaultEnvCRC = CRC32.Compute(defaultEnv);
             var defaultDutyEnvCRC = CRC32.Compute(defaultDutyEnv);
-            var defaultPitchEnvCRC = CRC32.Compute(defaultPitchEnv);
+            var defaultPitchOrReleaseEnvCRC = CRC32.Compute(defaultPitchOrReleaseEnv);
             var defaultEnvName = "";
             var defaultPitchEnvName = "";
 
@@ -317,9 +315,16 @@ namespace FamiStudio
 
             if (kernel == FamiToneKernel.FamiStudio)
             {
+                uniqueEnvelopes.Add(defaultPitchOrReleaseEnvCRC, defaultPitchOrReleaseEnv);
                 uniqueEnvelopes.Add(defaultDutyEnvCRC, defaultDutyEnv);
-                uniqueEnvelopes.Add(defaultPitchEnvCRC, defaultPitchEnv);
             }
+
+            Action<Envelope, byte[]> AddProcessedEnvelope = (env, processed) => 
+            {
+                uint crc = CRC32.Compute(processed);
+                uniqueEnvelopes[crc] = processed;
+                instrumentEnvelopes[env] = crc;
+            };
 
             foreach (var instrument in project.Instruments)
             {
@@ -339,10 +344,9 @@ namespace FamiStudio
                     {
                         case EnvelopeType.N163Waveform:
                         case EnvelopeType.FdsWaveform:
-                            // Handled as special case below.
-                            break;
                         case EnvelopeType.WaveformRepeat:
-                            processed = ProcessEnvelope(env.CreateRepeatPlaybackEnvelope(), true, false);
+                            // Handled as special case below since multiple-waveform must be splitted and
+                            // repeat envelope must be converted.
                             break;
                         case EnvelopeType.FdsModulation:
                             processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
@@ -356,45 +360,43 @@ namespace FamiStudio
 
                     if (processed == null)
                     {
-                        if (kernel == FamiToneKernel.FamiStudio && i == EnvelopeType.Pitch)
-                            instrumentEnvelopes[env] = defaultPitchEnvCRC;
+                        if (kernel == FamiToneKernel.FamiStudio && (i == EnvelopeType.Pitch || i == EnvelopeType.Volume))
+                            instrumentEnvelopes[env] = defaultPitchOrReleaseEnvCRC;
                         else if (kernel == FamiToneKernel.FamiStudio && i == EnvelopeType.DutyCycle)
                             instrumentEnvelopes[env] = defaultDutyEnvCRC;
+                        else if (kernel == FamiToneKernel.FamiStudio && i == EnvelopeType.Volume)
+                            instrumentEnvelopes[env] = defaultPitchOrReleaseEnvCRC;
                         else
                             instrumentEnvelopes[env] = defaultEnvCRC;
                     }
                     else
                     {
-                        uint crc = CRC32.Compute(processed);
-                        uniqueEnvelopes[crc] = processed;
-                        instrumentEnvelopes[env] = crc;
+                        AddProcessedEnvelope(env, processed);
                     }
                 }
 
-                if (instrument.IsN163Instrument)
+                // Special case for N163/FDS multiple waveforms.
+                if (instrument.IsN163Instrument || instrument.IsFdsInstrument)
                 {
-                    var waveforms = new List<uint>();
+                    var envType = instrument.IsN163Instrument ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
+                    var envRepeat = instrument.Envelopes[EnvelopeType.WaveformRepeat];
 
-                    for (int i = 0; i < instrument.N163WaveCount; i++)
+                    instrument.BuildWaveformsAndWaveIndexEnvelope(out var subWaveforms, out var waveIndexEnvelope);
+                    var processedWaveIndexEnvelope = ProcessEnvelope(waveIndexEnvelope, true, false);
+
+                    if (processedWaveIndexEnvelope != null)
+                        AddProcessedEnvelope(envRepeat, processedWaveIndexEnvelope);
+                    else
+                        instrumentEnvelopes[envRepeat] = defaultPitchOrReleaseEnvCRC;
+
+                    var waveforms = new uint[subWaveforms.GetLength(0)];
+
+                    for (int i = 0; i < subWaveforms.GetLength(0); i++)
                     {
-                        var wav = instrument.Envelopes[EnvelopeType.N163Waveform].BuildN163Waveform(i);
+                        var wav = subWaveforms[i];
                         var crc = CRC32.Compute(wav);
                         uniqueEnvelopes[crc] = wav;
-                        waveforms.Add(crc);
-                    }
-
-                    instrumentWaveforms[instrument] = waveforms;
-                }
-                else if (instrument.IsFdsInstrument)
-                {
-                    var waveforms = new List<uint>();
-
-                    for (int i = 0; i < instrument.FdsWaveCount; i++)
-                    {
-                        var wav = instrument.Envelopes[EnvelopeType.FdsWaveform].GetFdsWaveform(i);
-                        var crc = CRC32.Compute(wav);
-                        uniqueEnvelopes[crc] = wav;
-                        waveforms.Add(crc);
+                        waveforms[i] = crc;
                     }
 
                     instrumentWaveforms[instrument] = waveforms;
@@ -604,7 +606,7 @@ namespace FamiStudio
 
                 if (kv.Key == defaultEnvCRC)
                     defaultEnvName = name;
-                if (kv.Key == defaultPitchEnvCRC)
+                if (kv.Key == defaultPitchOrReleaseEnvCRC)
                     defaultPitchEnvName = name;
 
                 size += kv.Value.Length;
@@ -622,13 +624,13 @@ namespace FamiStudio
                         lines.Add($"{ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves:");
 
                         var waves = instrumentWaveforms[instrument];
-                        for (int i = 0; i < waves.Count; i++)
+                        for (int i = 0; i < waves.Length; i++)
                         {
                             var waveIdx = uniqueEnvelopes.IndexOfKey(waves[i]);
                             lines.Add($"\t{dw} {ll}env{waveIdx}");
                         }
 
-                        size += waves.Count * 2;
+                        size += waves.Length * 2;
                         lines.Add("");
                     }
                 }

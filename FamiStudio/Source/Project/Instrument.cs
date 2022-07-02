@@ -361,6 +361,62 @@ namespace FamiStudio
             return EpsmInstrumentPatch.Infos[preset].name;
         }
 
+        // Convert from our "repeat" based representation to the "index" based
+        // representation used by our NSF driver and FamiTracker. Will optimize
+        // duplicated sub-waveforms.
+        public void BuildWaveformsAndWaveIndexEnvelope(out byte[][] waves, out Envelope indexEnvelope)
+        {
+            Debug.Assert(IsFdsInstrument || IsN163Instrument);
+
+            var env = envelopes[IsN163Instrument ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform];
+            var rep = envelopes[EnvelopeType.WaveformRepeat];
+
+            // Compute CRCs, this will eliminate duplicates.
+            var waveCrcs = new Dictionary<uint, int>();
+            var waveIndexOldToNew = new int[n163WaveCount];
+            var waveCount = 0;
+
+            for (int i = 0; i < n163WaveCount; i++)
+            {
+                var crc = CRC32.Compute(env.Values, i * n163WaveSize, n163WaveSize);
+
+                if (waveCrcs.TryGetValue(crc, out var existingIndex))
+                {
+                    waveIndexOldToNew[i] = existingIndex;
+                }
+                else
+                {
+                    waveCrcs[crc] = waveCount;
+                    waveIndexOldToNew[i] = waveCount;
+                    waveCount++;
+                }
+            }
+
+            var waveIndexNewToOld = new int[waveCount];
+            for (int i = n163WaveCount - 1; i >= 0; i--)
+                waveIndexNewToOld[waveIndexOldToNew[i]] = i;
+
+            // Create the wave index envelope.
+            indexEnvelope = rep.CreateWaveIndexEnvelope();
+           
+            // Remap the indices in the wave index envelope.
+            for (int i = 0; i < indexEnvelope.Values.Length; i++)
+                indexEnvelope.Values[i] = (sbyte)waveIndexOldToNew[indexEnvelope.Values[i]];
+
+            // Create the individual waveforms.
+            waves = new byte[waveCount][];
+
+            for (int i = 0; i < waveCount; i++)
+            {
+                var oldIndex = waveIndexNewToOld[i];
+
+                if (IsN163Instrument)
+                    waves[i] = env.GetN163Waveform(oldIndex);
+                else
+                    waves[i] = env.GetFdsWaveform(oldIndex);
+            }
+        }
+
         public uint ComputeCRC(uint crc = 0)
         {
             var serializer = new ProjectCrcBuffer(crc);
