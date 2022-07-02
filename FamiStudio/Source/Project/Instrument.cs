@@ -290,8 +290,8 @@ namespace FamiStudio
             var wavEnv = envelopes[EnvelopeType.FdsWaveform];
             var repEnv = envelopes[EnvelopeType.WaveformRepeat];
 
-            wavEnv.Length = 64 * fdsWaveCount;
             wavEnv.ChunkLength = 64;
+            wavEnv.Length = 64 * fdsWaveCount;
             wavEnv.MaxLength = 1024;
             repEnv.Length = fdsWaveCount;
             repEnv.Loop = wavEnv.Loop >= 0 ? wavEnv.Loop / 64 : -1;
@@ -309,8 +309,8 @@ namespace FamiStudio
             var wavEnv = envelopes[EnvelopeType.N163Waveform];
             var repEnv = envelopes[EnvelopeType.WaveformRepeat];
 
-            wavEnv.Length = n163WaveSize * n163WaveCount;
             wavEnv.ChunkLength = n163WaveSize;
+            wavEnv.Length = n163WaveSize * n163WaveCount;
 			wavEnv.MaxLength = N163MaxWaveCount * n163WaveSize;
             repEnv.Length = n163WaveCount;
             repEnv.Loop = wavEnv.Loop >= 0 ? wavEnv.Loop / n163WaveSize : -1;

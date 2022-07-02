@@ -73,8 +73,16 @@ namespace FamiStudio
             get { return chunkLength; }
             set
             {
+                var prevChunkLength = chunkLength;
+                var prevLoop = loop;
+                var prevRelease = release;
+
                 chunkLength = value;
-                // MATTT : Move the repeats/loops here?
+
+                if (prevLoop >= 0)
+                    loop = prevLoop / prevChunkLength * chunkLength;
+                if (prevRelease >= 0)
+                    release = prevRelease / prevChunkLength * chunkLength;
             }
         }
 
@@ -539,9 +547,8 @@ namespace FamiStudio
             }
             else if (type == EnvelopeType.WaveformRepeat)
             {
-                // MATTT : What is a sensible value.
                 min = 1;
-                max = 15;
+                max = 15; // Arbitrary.
             }
             else
             {

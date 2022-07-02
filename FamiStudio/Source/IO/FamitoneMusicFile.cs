@@ -1176,7 +1176,6 @@ namespace FamiStudio
 
                             if (!emittedSlideNote)
                             {
-                                // MATTT : Test noise too.
                                 if (note.IsRelease)
                                 {
                                     var opcode = OpcodeReleaseNote;
