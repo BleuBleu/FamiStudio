@@ -426,8 +426,9 @@ namespace FamiStudio
             // Write instruments
             lines.Add($"{ll}instruments:");
 
-            // MATTT : Limit of 64 to enforce here?
-            for (int i = 0, j = 0; i < project.Instruments.Count; i++)
+            var instrumentCount = 0;
+
+            for (int i = 0; i < project.Instruments.Count; i++)
             {
                 var instrument = project.Instruments[i];
 
@@ -444,7 +445,7 @@ namespace FamiStudio
                     {
                         var dutyEnvIdx = instrument.IsEnvelopeActive(EnvelopeType.DutyCycle) ? uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.DutyCycle]]) : uniqueEnvelopes.IndexOfKey(defaultEnvCRC);
 
-                        lines.Add($"\t{dw} {ll}env{volumeEnvIdx},{ll}env{arpeggioEnvIdx},{ll}env{dutyEnvIdx},{ll}env{pitchEnvIdx} ; {j:x2} : {instrument.Name}");
+                        lines.Add($"\t{dw} {ll}env{volumeEnvIdx},{ll}env{arpeggioEnvIdx},{ll}env{dutyEnvIdx},{ll}env{pitchEnvIdx} ; {instrumentCount:x2} : {instrument.Name}");
                     }
                     else
                     {
@@ -452,15 +453,18 @@ namespace FamiStudio
                         var dutyShift = instrument.IsRegularInstrument ? 6    : 4;
                         var dutyBits  = instrument.IsRegularInstrument ? 0x30 : 0;
 
-                        lines.Add($"\t{db} ${(duty << dutyShift) | dutyBits:x2} ; {j:x2} : {instrument.Name}");
+                        lines.Add($"\t{db} ${(duty << dutyShift) | dutyBits:x2} ; {instrumentCount:x2} : {instrument.Name}");
                         lines.Add($"\t{dw} {ll}env{volumeEnvIdx}, {ll}env{arpeggioEnvIdx}, {ll}env{pitchEnvIdx}");
                         lines.Add($"\t{db} $00");
                     }
 
                     size += 8;
-                    instrumentIndices[instrument] = j++;
+                    instrumentIndices[instrument] = instrumentCount++;
                 }
             }
+
+            if (instrumentCount > 64)
+                Log.LogMessage(LogSeverity.Error, $"Number of instrument ({instrumentCount}) exceeds the limit of 64, song will not sound correct.");
 
             lines.Add("");
 
@@ -472,8 +476,9 @@ namespace FamiStudio
             {
                 lines.Add($"{ll}instruments_exp:");
 
-                // MATTT : Is there a limit of 32 to enforce here?
-                for (int i = 0, j = 0; i < project.Instruments.Count; i++)
+                var instrumentCountExp = 0;
+
+                for (int i = 0; i < project.Instruments.Count; i++)
                 {
                     var instrument = project.Instruments[i];
 
@@ -486,7 +491,7 @@ namespace FamiStudio
                         var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
                         var pitchEnvIdx    = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Pitch]]);
 
-                        lines.Add($"\t{dw} {ll}env{volumeEnvIdx}, {ll}env{arpeggioEnvIdx}, {ll}env{pitchEnvIdx} ; {j:x2} : {instrument.Name}");
+                        lines.Add($"\t{dw} {ll}env{volumeEnvIdx}, {ll}env{arpeggioEnvIdx}, {ll}env{pitchEnvIdx} ; {instrumentCountExp:x2} : {instrument.Name}");
 
                         if (instrument.IsFdsInstrument)
                         {
@@ -522,9 +527,12 @@ namespace FamiStudio
                         }
 
                         size += 16;
-                        instrumentIndices[instrument] = j++;
+                        instrumentIndices[instrument] = instrumentCountExp++;
                     }
                 }
+
+                if (instrumentCountExp > 32)
+                    Log.LogMessage(LogSeverity.Error, $"Number of expansion instrument ({instrumentCountExp}) exceeds the limit of 32, song will not sound correct.");
 
                 lines.Add("");
             }
