@@ -13,12 +13,10 @@ N163 Multi-wave:
 1) Env editor
 - PC: Highlight, cursors, tooltip.
 - Mobile : Gizmos, highlight, etc.
+- Move release points when resizing envelopes.
 2) Playback
-/ Channel state
+- Make sure the one-off thing is fixed.
 - Test no attack and stuff.
-- Option to reset to beginning of wave.
-3) NSF/Sound Engine:
-- There are MATTT in the ASM
 4) Polish
 - FTI import
 - Famitracker import/export.

@@ -61,8 +61,6 @@ namespace FamiStudio
 
         private void ConditionalLoadWave()
         {
-            // MATTT : I think we start at wave index 1.
-            // MATTT : The +1 fixed it, but test release as well.
             var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
 
             if (newWaveIndex != waveIndex)

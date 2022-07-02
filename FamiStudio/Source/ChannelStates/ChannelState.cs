@@ -197,7 +197,7 @@ namespace FamiStudio
                         {
                             envelopeIdx[j] = envelopes[j].Release;
                             if (j == EnvelopeType.WaveformRepeat)
-                                envelopeValues[j] = envelopes[EnvelopeType.WaveformRepeat].Values[envelopeIdx[j]];
+                                envelopeValues[j] = envelopes[EnvelopeType.WaveformRepeat].Values[envelopeIdx[j]] + 1;
                         }
                     }
                 }
