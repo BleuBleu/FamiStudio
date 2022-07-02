@@ -1082,8 +1082,9 @@ namespace FamiStudio
 
         protected void ConvertN163WaveIndexToRepeatEnvelope(Instrument inst)
         {
-            // MATTT : Make sure this works well when there is no wave sequence.
-            var waveIndexEnvIdx = n163WaveEnvs[inst];
+            if (!n163WaveEnvs.TryGetValue(inst, out var waveIndexEnvIdx))
+                waveIndexEnvIdx = -1;
+
             var waveIndexEnv = GetFamiTrackerEnvelope(ExpansionType.N163, 4 /* SEQ_DUTYCYCLE */, waveIndexEnvIdx);
 
             if (waveIndexEnv == null)
