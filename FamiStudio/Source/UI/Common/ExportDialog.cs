@@ -270,12 +270,13 @@ namespace FamiStudio
                     page.AddTextBox("Name :", project.Name, 31); // 0
                     page.AddTextBox("Artist :", project.Author, 31); // 1
                     page.AddTextBox("Copyright :", project.Copyright, 31); // 2
-                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 3
-                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null); // 4
+                    page.AddDropDownList("Format :", new[] { "NSF", "NSFe" }, "NSF"); // 3
+                    page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 4
+                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null); // 5
 #if DEBUG
-                    page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 5
+                    page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 6
 #endif
-                    page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
+                    page.SetPropertyEnabled(4, !project.UsesAnyExpansionAudio);
                     break;
                 case ExportFormat.Rom:
                     page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM"); // 0
@@ -628,24 +629,28 @@ namespace FamiStudio
 
         private void ExportNsf()
         {
+            var props = dialog.GetPropertyPage((int)ExportFormat.Nsf);
+            var nsfe = props.GetSelectedIndex(3) > 0;
+            var extension = nsfe ? "nsfe" : "nsf";
+
             Action<string> ExportNsfAction = (filename) =>
             {
                 if (filename != null)
                 {
-                    var props = dialog.GetPropertyPage((int)ExportFormat.Nsf);
-                    var mode = MachineType.GetValueForName(props.GetPropertyValue<string>(3));
+                    var mode = MachineType.GetValueForName(props.GetPropertyValue<string>(4));
 #if DEBUG
-                    var kernel = FamiToneKernel.GetValueForName(props.GetPropertyValue<string>(5));
+                    var kernel = FamiToneKernel.GetValueForName(props.GetPropertyValue<string>(6));
 #else
                     var kernel = FamiToneKernel.FamiStudio;
 #endif
 
                     new NsfFile().Save(project, kernel, filename,
-                        GetSongIds(props.GetPropertyValue<bool[]>(4)),
+                        GetSongIds(props.GetPropertyValue<bool[]>(5)),
                         props.GetPropertyValue<string>(0),
                         props.GetPropertyValue<string>(1),
                         props.GetPropertyValue<string>(2),
-                        mode);
+                        mode,
+                        nsfe);
 
                     lastExportFilename = filename;
                 }
@@ -653,7 +658,7 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                Platform.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.nsf", (f) =>
+                Platform.StartMobileSaveFileOperationAsync("*/*", $"{project.Name}.{extension}", (f) =>
                 {
                     ExportNsfAction(f);
                     Platform.FinishMobileSaveFileOperationAsync(true, () => { Platform.ShowToast("NSF Export Successful!"); });
@@ -661,7 +666,7 @@ namespace FamiStudio
             }
             else
             {
-                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export NSF File", "Nintendo Sound Files (*.nsf)|*.nsf", ref Settings.LastExportFolder);
+                var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog(dialog.ParentWindow, "Export NSF File", $"Nintendo Sound Files (*.{extension})|*.{extension}", ref Settings.LastExportFolder);
                 ExportNsfAction(filename);
             }
         }

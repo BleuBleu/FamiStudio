@@ -73,6 +73,9 @@ public:
 	void write_register( cpu_addr_t, int data );
 	void get_register_values(int exp, void* regs);
 
+	int get_namco_wave_pos(int n163ChanIndex);
+	int get_fds_wave_pos();
+
 	// Read from status register at 0x4015
 	int read_status();
 	

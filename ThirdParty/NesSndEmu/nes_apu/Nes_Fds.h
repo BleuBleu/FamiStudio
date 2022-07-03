@@ -19,6 +19,7 @@ public:
 	void end_frame(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	void get_register_values(struct fds_register_values* regs);
+	int get_wave_pos();
 
 	enum { shadow_regs_count = 11 };
 	void start_seeking();
@@ -73,6 +74,11 @@ private:
 	void run_until(cpu_time_t);
 	void run_fds(cpu_time_t end_time);
 };
+
+inline int Nes_Fds::get_wave_pos()
+{
+	return (osc.phase >> 16) & 0x3f;
+}
 
 // Must match the definition in NesApu.cs.
 struct fds_register_values

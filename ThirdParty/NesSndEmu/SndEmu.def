@@ -17,3 +17,5 @@ EXPORTS
 	NesApuSetExpansionVolume @15
 	NesApuSkipCycles         @16
 	NesApuGetRegisterValues  @17
+	NesApuGetN163WavePos     @18
+	NesApuGetFdsWavePos      @19

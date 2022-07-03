@@ -106,3 +106,13 @@ extern "C" void __stdcall NesApuGetRegisterValues(int apuIdx, int exp, void* reg
 {
 	apu[apuIdx].get_register_values(exp, regs);
 }
+
+extern "C" int __stdcall NesApuGetN163WavePos(int apuIdx, int n163ChanIndex)
+{
+	return apu[apuIdx].get_namco_wave_pos(n163ChanIndex);
+}
+
+extern "C" int __stdcall NesApuGetFdsWavePos(int apuIdx)
+{
+	return apu[apuIdx].get_fds_wave_pos();
+}

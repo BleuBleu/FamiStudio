@@ -54,6 +54,66 @@ namespace FamiStudio
             public fixed byte programSize[3];
         };
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        unsafe struct NsfeHeader
+        {
+            public fixed byte id[4];
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        unsafe struct NsfeChunkHeader
+        {
+            public int size;
+            public fixed byte id[4];
+
+            public void SetId(string s)
+            {
+                id[0] = (byte)s[0];
+                id[1] = (byte)s[1];
+                id[2] = (byte)s[2];
+                id[3] = (byte)s[3];
+            }
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        unsafe struct NsfeInfoChunk
+        {
+            public ushort loadAddr;
+            public ushort initAddr;
+            public ushort playAddr;
+            public byte palNtscFlags;
+            public byte extensionFlags;
+            public byte numSongs;
+            public byte startSong;
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        unsafe struct NsfeBankChunk
+        {
+            public fixed byte banks[8];
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        unsafe struct NsfeRateChunk
+        {
+            public ushort playSpeedNTSC;
+            public ushort playSpeedPAL;
+            public ushort playSpeedDendy;
+        };
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        unsafe struct NsfeRegionChunk
+        {
+            public byte supported;
+            public byte preferred;
+        };
+
+        // time : This optional chunk contains a list of 4 byte signed integers. Each integer represents the length in milliseconds for the corresponding NSFe track. 
+        // fade : This optional chunk contains a list of 4 byte signed integers. It is like the 'time' chunk, but instead specifies a fadeout length in milliseconds for each track.
+        // tlbl : This optional chunk contains names for each track(tlbl = track label). This contains a series of null-terminated strings, in track order. (Like 'time' and 'fade', this is not related to the 'plst' chunk's playlist.) 
+        // taut : This optional chunk contains an author name for each track (taut = track author), useful if several composers contributed to this NSF. This contains a series of null-terminated strings, in track order. (Not related to 'plst' order.) 
+        // auth : This optional chunk contains four null-terminated strings describing in order: Game title, Artist, Copyright, Ripper
+
         byte GetNsfExtensionFlags(int mask)
         {
             byte flags = 0;
@@ -68,7 +128,7 @@ namespace FamiStudio
 
             return flags;
         }
-        public unsafe bool Save(Project originalProject, int kernel, string filename, int[] songIds, string name, string author, string copyright, int machine)
+        public unsafe bool Save(Project originalProject, int kernel, string filename, int[] songIds, string name, string author, string copyright, int machine, bool nsfe)
         {
 #if !DEBUG
             try
@@ -81,43 +141,6 @@ namespace FamiStudio
 
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
-
-                // Header
-                var header = new NsfHeader();
-                header.id[0] = (byte)'N';
-                header.id[1] = (byte)'E';
-                header.id[2] = (byte)'S';
-                header.id[3] = (byte)'M';
-                header.id[4] = (byte)0x1a;
-                header.version = 1;
-                header.numSongs = (byte)project.Songs.Count;
-                header.startingSong = 1;
-                header.loadAddr = 0x8000;
-                header.initAddr = NsfInitAddr;
-                header.playAddr = NsfPlayAddr;
-                header.playSpeedNTSC = 16639;
-                header.playSpeedPAL = 19997;
-                header.palNtscFlags = (byte)machine;
-                header.extensionFlags = GetNsfExtensionFlags((byte)(project.UsesAnyExpansionAudio ? project.ExpansionAudioMask : 0));
-                header.banks[0] = 0;
-                header.banks[1] = 1;
-                header.banks[2] = 2;
-                header.banks[3] = 3;
-                header.banks[4] = 4;
-                header.banks[5] = 5;
-                header.banks[6] = 6;
-                header.banks[7] = 7;
-
-                var nameBytes      = Encoding.ASCII.GetBytes(name);
-                var artistBytes    = Encoding.ASCII.GetBytes(author);
-                var copyrightBytes = Encoding.ASCII.GetBytes(copyright);
-
-                Marshal.Copy(nameBytes,      0, new IntPtr(header.song),      Math.Min(31, nameBytes.Length));
-                Marshal.Copy(artistBytes,    0, new IntPtr(header.artist),    Math.Min(31, artistBytes.Length));
-                Marshal.Copy(copyrightBytes, 0, new IntPtr(header.copyright), Math.Min(31, copyrightBytes.Length));
-
-                var headerBytes = new byte[sizeof(NsfHeader)];
-                Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
 
                 var nsfBytes = new List<byte>();
 
@@ -257,8 +280,185 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
 
-                // Finally insert the header, not very efficient, but easy.
-                nsfBytes.InsertRange(0, headerBytes);
+                if (nsfe)
+                {
+                    var nsfePreData = new byte[4096];
+                    var nsfePreDataSize = 0;
+                    var nsfePostData = new byte[8];
+                    
+                    fixed (byte* fixedPtr = &nsfePreData[0])
+                    {
+                        byte* p = fixedPtr;
+
+                        // NSFE
+                        NsfeHeader* header = (NsfeHeader*)p;
+                        header->id[0] = (byte)'N';
+                        header->id[1] = (byte)'S';
+                        header->id[2] = (byte)'F';
+                        header->id[3] = (byte)'E';
+                        p += sizeof(NsfeHeader);
+
+                        // INFO chunk
+                        NsfeChunkHeader* infoHeader = (NsfeChunkHeader*)p;
+                        infoHeader->SetId("INFO");
+                        infoHeader->size = sizeof(NsfeInfoChunk);
+                        p += sizeof(NsfeChunkHeader);
+
+                        NsfeInfoChunk* infoChunk = (NsfeInfoChunk*)p;
+                        infoChunk->loadAddr = 0x8000;
+                        infoChunk->initAddr = NsfInitAddr;
+                        infoChunk->playAddr = NsfPlayAddr;
+                        infoChunk->palNtscFlags = (byte)machine;
+                        infoChunk->extensionFlags = GetNsfExtensionFlags(project.ExpansionAudioMask);
+                        infoChunk->numSongs = (byte)project.Songs.Count;
+                        infoChunk->startSong = 1;
+                        p += sizeof(NsfeInfoChunk);
+                        
+                        // BANK chunk
+                        NsfeChunkHeader* bankHeader = (NsfeChunkHeader*)p;
+                        bankHeader->SetId("BANK");
+                        bankHeader->size = 8;
+                        p += sizeof(NsfeChunkHeader);
+                        p[0] = 0;
+                        p[1] = 1;
+                        p[2] = 2;
+                        p[3] = 3;
+                        p[4] = 4;
+                        p[5] = 5;
+                        p[6] = 6;
+                        p[7] = 7;
+                        p += 8;
+
+                        // auth chunk.
+                        var nameBytes      = Encoding.ASCII.GetBytes(name + "\0");
+                        var artistBytes    = Encoding.ASCII.GetBytes(author + "\0");
+                        var copyrightBytes = Encoding.ASCII.GetBytes(copyright + "\0");
+                        var ripperBytes    = Encoding.ASCII.GetBytes("FamiStudio\0");
+
+                        NsfeChunkHeader* authHeader = (NsfeChunkHeader*)p;
+                        authHeader->SetId("auth");
+                        authHeader->size = nameBytes.Length + artistBytes.Length + copyrightBytes.Length + ripperBytes.Length;
+                        p += sizeof(NsfeChunkHeader);
+
+                        Marshal.Copy(nameBytes, 0, (IntPtr)p, nameBytes.Length);
+                        p += nameBytes.Length;
+                        Marshal.Copy(artistBytes, 0, (IntPtr)p, artistBytes.Length);
+                        p += artistBytes.Length;
+                        Marshal.Copy(copyrightBytes, 0, (IntPtr)p, copyrightBytes.Length);
+                        p += copyrightBytes.Length;
+                        Marshal.Copy(ripperBytes, 0, (IntPtr)p, ripperBytes.Length);
+                        p += ripperBytes.Length;
+
+                        // time chunk.
+                        NsfeChunkHeader* timeHeader = (NsfeChunkHeader*)p;
+                        timeHeader->SetId("time");
+                        timeHeader->size = project.Songs.Count * 4;
+                        p += sizeof(NsfeChunkHeader);
+
+                        for (int i = 0; i < project.Songs.Count; i++)
+                        {
+                            // Use approximation to compute the time. We could *really* run the player
+                            // and know the exact number of samples, but this should be good enough.
+                            var pal = machine == MachineType.PAL;
+                            var song = project.Songs[i];
+                            var frames = song.CountFramesBetween(new NoteLocation(0, 0), song.EndLocation, song.FamitrackerSpeed, pal);
+                            var time = (int)(frames / (double)(pal ? NesApu.FpsPAL : NesApu.FpsNTSC) * 1000.0);
+                            var timeBytes = BitConverter.GetBytes(time);
+
+                            p[0] = timeBytes[0];
+                            p[1] = timeBytes[1];
+                            p[2] = timeBytes[2];
+                            p[3] = timeBytes[3];
+                            p += 4;
+                        }
+
+                        // tlbl chunk
+                        NsfeChunkHeader* tlblHeader = (NsfeChunkHeader*)p;
+                        tlblHeader->SetId("tlbl");
+                        p += sizeof(NsfeChunkHeader);
+
+                        for (int i = 0; i < project.Songs.Count; i++)
+                        {
+                            var song = project.Songs[i];
+                            var songNameBytes = Encoding.ASCII.GetBytes(song.Name + "\0");
+                            Marshal.Copy(songNameBytes, 0, (IntPtr)p, songNameBytes.Length);
+                            p += songNameBytes.Length;
+                        }
+
+                        tlblHeader->size = (int)(p - (byte*)tlblHeader) - 8;
+
+                        // DATA chunk (must be at end).
+                        NsfeChunkHeader* dataHeader = (NsfeChunkHeader*)p;
+                        dataHeader->SetId("DATA");
+                        dataHeader->size = nsfBytes.Count;
+                        p += sizeof(NsfeChunkHeader);
+
+                        nsfePreDataSize = (int)(p - fixedPtr);
+                    }
+
+                    fixed (byte* fixedPtr = &nsfePostData[0])
+                    {
+                        // NEND chunk
+                        NsfeChunkHeader* nendHeader = (NsfeChunkHeader*)fixedPtr;
+                        nendHeader->SetId("NEND");
+                        nendHeader->size = 0;
+                    }
+                    
+                    // Finally insert the NSFE header before the data, not very efficient, but easy.
+                    nsfBytes.InsertRange(0, nsfePreData.Take(nsfePreDataSize));
+
+                    // Add NEND chunk at end.
+                    nsfBytes.AddRange(nsfePostData);
+
+                    // time : This optional chunk contains a list of 4 byte signed integers. Each integer represents the length in milliseconds for the corresponding NSFe track. 
+                    // fade : This optional chunk contains a list of 4 byte signed integers. It is like the 'time' chunk, but instead specifies a fadeout length in milliseconds for each track.
+                    // tlbl : This optional chunk contains names for each track(tlbl = track label). This contains a series of null-terminated strings, in track order. (Like 'time' and 'fade', this is not related to the 'plst' chunk's playlist.) 
+                    // taut : This optional chunk contains an author name for each track (taut = track author), useful if several composers contributed to this NSF. This contains a series of null-terminated strings, in track order. (Not related to 'plst' order.) 
+                    // auth : This optional chunk contains four null-terminated strings describing in order: Game title, Artist, Copyright, Ripper
+
+                }
+                else
+                {
+                    // Header
+                    var header = new NsfHeader();
+                    header.id[0] = (byte)'N';
+                    header.id[1] = (byte)'E';
+                    header.id[2] = (byte)'S';
+                    header.id[3] = (byte)'M';
+                    header.id[4] = (byte)0x1a;
+                    header.version = 1;
+                    header.numSongs = (byte)project.Songs.Count;
+                    header.startingSong = 1;
+                    header.loadAddr = 0x8000;
+                    header.initAddr = NsfInitAddr;
+                    header.playAddr = NsfPlayAddr;
+                    header.playSpeedNTSC = 16639;
+                    header.playSpeedPAL = 19997;
+                    header.palNtscFlags = (byte)machine;
+                    header.extensionFlags = GetNsfExtensionFlags(project.ExpansionAudioMask);
+                    header.banks[0] = 0;
+                    header.banks[1] = 1;
+                    header.banks[2] = 2;
+                    header.banks[3] = 3;
+                    header.banks[4] = 4;
+                    header.banks[5] = 5;
+                    header.banks[6] = 6;
+                    header.banks[7] = 7;
+
+                    var nameBytes      = Encoding.ASCII.GetBytes(name);
+                    var artistBytes    = Encoding.ASCII.GetBytes(author);
+                    var copyrightBytes = Encoding.ASCII.GetBytes(copyright);
+
+                    Marshal.Copy(nameBytes,      0, new IntPtr(header.song),      Math.Min(31, nameBytes.Length));
+                    Marshal.Copy(artistBytes,    0, new IntPtr(header.artist),    Math.Min(31, artistBytes.Length));
+                    Marshal.Copy(copyrightBytes, 0, new IntPtr(header.copyright), Math.Min(31, copyrightBytes.Length));
+
+                    var headerBytes = new byte[sizeof(NsfHeader)];
+                    Marshal.Copy(new IntPtr(&header), headerBytes, 0, headerBytes.Length);
+
+                    // Finally insert the NSF header, not very efficient, but easy.
+                    nsfBytes.InsertRange(0, headerBytes);
+                }
 
                 File.WriteAllBytes(filename, nsfBytes.ToArray());
 
@@ -472,7 +672,6 @@ namespace FamiStudio
         private bool UpdateChannel(int p, int n, Channel channel, ChannelState state)
         {
             var project = channel.Song.Project;
-            var channelIdx = channel.Index;
             var hasNote = false;
 
             if (channel.Type == ChannelType.Dpcm)
@@ -688,7 +887,6 @@ namespace FamiStudio
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
-                    var periodLimit = NesApu.GetPitchLimitForChannelType(channel.Type);
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;

@@ -203,7 +203,8 @@ void Simple_Apu::get_register_values(int exp, void* regs)
 		case expansion_namco: namco.get_register_values((n163_register_values*)regs); break;
 		case expansion_sunsoft: sunsoft.get_register_values((s5b_register_values*)regs); break;
 		case expansion_epsm: epsm.get_register_values((epsm_register_values*)regs); break;
-	}}
+	}
+}
 
 void Simple_Apu::start_seeking()
 {
@@ -246,6 +247,18 @@ void Simple_Apu::skip_cycles(long cycles)
 		time += cycles;
 		apu.run_until(time);
 	}
+}
+
+int Simple_Apu::get_namco_wave_pos(int n163ChanIndex)
+{
+	assert((expansions & expansion_mask_namco) != 0 && !seeking);
+	return namco.get_wave_pos(n163ChanIndex);
+}
+
+int Simple_Apu::get_fds_wave_pos()
+{
+	assert((expansions & expansion_mask_fds) != 0 && !seeking);
+	return fds.get_wave_pos();
 }
 
 void Simple_Apu::end_frame()

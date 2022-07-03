@@ -3408,6 +3408,10 @@ namespace GLFWDotNet
 		public static unsafe string glfwGetClipboardString(IntPtr window)
 		{
 			var ptr = _glfwGetClipboardString(window);
+
+			if (ptr == IntPtr.Zero)
+				return null;
+
 			var p = (byte*)ptr.ToPointer();
 			var n = 0;
 			for (; p[n] != 0; n++) ;

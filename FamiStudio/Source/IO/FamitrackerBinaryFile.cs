@@ -18,8 +18,6 @@ namespace FamiStudio
         const int BlockNameLength = 16;
         const int MaxInstruments = 64;
         const int MaxSamples     = 64;
-        const int MaxSequences   = 128;
-        const int SequenceCount  = 5;
         const int OctaveRange    = 8;
 
         struct BlockInfo
@@ -34,8 +32,6 @@ namespace FamiStudio
         private int blockVersion;
         private int blockSize;
         private byte[] bytes;
-        private Envelope[,] envelopes    = new Envelope[MaxSequences, SequenceCount];
-        private Envelope[,] envelopesExp = new Envelope[MaxSequences, SequenceCount];
         private Dictionary<Song, byte[]> songEffectColumnCount = new Dictionary<Song, byte[]>();
         private Instrument[] instruments = new Instrument[MaxInstruments];
         private DPCMSample[] samples = new DPCMSample[MaxSamples];
@@ -130,15 +126,21 @@ namespace FamiStudio
 
                 if (enabled != 0)
                 {
-                    var envType = EnvelopeTypeLookup[i];
+                    var envType = FamiTrackerToFamiStudioEnvelopeLookup[i];
 
                     if (envType != EnvelopeType.Count)
                     {
-                        if (instrument.Envelopes[envType] != null && envelopesArray[index, i] != null)
+                        if (instrument.IsN163Instrument && i == 4 /* SEQ_DUTYCYCLE */)
+                        {
+                            // N163 wave index envelopes are special since we need to 
+                            // convert them to our internal representation (repeat-based).
+                            n163WaveEnvs[instrument] = index;
+                        }
+                        else if (instrument.Envelopes[envType] != null && envelopesArray[index, i] != null)
                         {
                             instrument.Envelopes[envType] = envelopesArray[index, i];
                             usedEnvelopes[envType] = true;
-                        }
+                        } 
                     }
                     else
                     {
@@ -289,16 +291,23 @@ namespace FamiStudio
             instrument.N163WaveSize   = (byte)fileWaveSize;
             instrument.N163WavePos    = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
-            var wavCount = BitConverter.ToInt32(bytes, idx); idx += sizeof(int); 
+            var wavCount = (byte)BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
 
-            for (int j = 0; j < fileWaveSize; j++)
-                instrument.Envelopes[EnvelopeType.N163Waveform].Values[j] = (sbyte)bytes[idx++];
+            instrument.N163WaveCount = wavCount;
 
-            if (wavCount > 1)
-                Log.LogMessage(LogSeverity.Warning, $"N163 instrument index {instIdx} has more than 1 waveform ({wavCount}). All others will be ignored.");
-
-            // Skip any extra waves.
-            idx += (wavCount - 1) * fileWaveSize;
+            for (int i = 0; i < wavCount; i++)
+            {
+                if (i < instrument.N163WaveCount)
+                {
+                    for (int j = 0; j < fileWaveSize; j++)
+                        instrument.Envelopes[EnvelopeType.N163Waveform].Values[i * instrument.N163WaveSize + j] = (sbyte)bytes[idx++];
+                }
+                else
+                {
+                    // TODO : Give warning here.
+                    idx += fileWaveSize;
+                }
+            }
         }
 
         private void ReadInstrumentS5B(Instrument instrument, int instIdx, ref int idx)
@@ -384,7 +393,7 @@ namespace FamiStudio
                     settings[i] = BitConverter.ToInt32(bytes, idx); idx += sizeof(int);
                 }
 
-                var env = new Envelope(EnvelopeTypeLookup[type]);
+                var env = new Envelope(FamiTrackerToFamiStudioEnvelopeLookup[type]);
 
                 if (env.CanResize)
                     env.Length = seqCount;
@@ -473,7 +482,8 @@ namespace FamiStudio
                 types[i] = type;
                 loops[i] = loopPoint;
 
-                var env = new Envelope(EnvelopeTypeLookup[type]);
+                var envType = type == 4 /* SEQ_DUTYCYCLE */ ? EnvelopeType.WaveformRepeat : FamiTrackerToFamiStudioEnvelopeLookup[type];
+                var env = new Envelope(envType);
 
                 if (env.CanResize)
                     env.Length = seqCount;

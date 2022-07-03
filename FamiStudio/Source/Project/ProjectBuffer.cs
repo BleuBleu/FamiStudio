@@ -131,17 +131,11 @@ namespace FamiStudio
             }
             else
             {
-                buffer.AddRange(BitConverter.GetBytes(str.Length));
+                var bytes = Encoding.Unicode.GetBytes(str);
+                buffer.AddRange(BitConverter.GetBytes(bytes.Length));
                 idx += sizeof(int);
-                buffer.AddRange(Encoding.ASCII.GetBytes(str));
+                buffer.AddRange(bytes);
                 idx += str.Length;
-
-                // MATTT : Disabled temporarely.
-                //var bytes = Encoding.Unicode.GetBytes(str);
-                //buffer.AddRange(BitConverter.GetBytes(bytes.Length));
-                //idx += sizeof(int);
-                //buffer.AddRange(bytes);
-                //idx += str.Length;
             }
         }
 
@@ -336,12 +330,11 @@ namespace FamiStudio
             }
             else
             {
-                // MATTT : Temporarely disabled.
                 // At version 14 (FamiStudio 4.0.0) we switch to Unicode strings.
-                //if (version < 14)
+                if (version < 14)
                     str = Encoding.ASCII.GetString(buffer, idx, len);
-                //else
-                //    str = Encoding.Unicode.GetString(buffer, idx, len);
+                else
+                    str = Encoding.Unicode.GetString(buffer, idx, len);
 
                 idx += len;
             }

@@ -2,60 +2,58 @@
 =====
 - CRASH : Open 2 NSF in a row with diff expansions. editChannel is out of bounds.
 - CRASH : 240 BPM / 1 / 1
-
 - BUG : Shy mode vs. channel icons.
 - BUG : Hide channels + scroll doesnt work. 
-- BUG : Stop sound after xx sec broken??
 - BUG : Grid "a" bug from how2? Right click! Mac only???
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Envelope dragging is broken
 
 N163 Multi-wave:
 ================
-- Max 16 waves for now
-- Display a huge envelope, wave size * num waves
-- Add a "repeat effect"
-- LATER : Effect to change the wave index manually? Will likely require uncompressed envelopes?
-- See what's the best way to encode this in NSF
-- NSF:
-	- we have 6 bytes free for N163 instruments
-		- 2 bytes for the wave index envelope
-		- 2 bytes for the wave list
-	- wave list for each instrument:
-		inst_abc_waves:
-			$wave1,
-			$wave2,
-			$wave3,
-			$wave4
-	- envelope will tell us the index of the wave
-		{ 0, 0, 0, 1, 1, 2, 3, 3, 3, 4 }
-	- for each N163 instrument we will also keep the current index of the wave
-		n163_current_wave, 8
-	- When loading a new instrument, we load + reset the envelope
-	- On new notes we reset the envelope (seems like we reset the whole freaking instrument now...)
+- IMPORTER??? How should it work?
+- UI : PC: Highlight, cursors, tooltip.
+- UI : Mobile : Gizmos, highlight, etc.
+- IO : FamiStudio text import/export.
+- FIX : Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).
+- TEST : Test no attack in playback + NSF.
+- TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
+- UNIT-TEST : Add multi-wave to N163/FDS unit tests.
+- UNIT-TEST : Add FDS mod to unit tests (effect + delay)
+- BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
+- BUG : Right-click, set loop point assert.
+- BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
+- POLISH : Lots of N163 poppin in FTM song "donkey kong contry"? Also pops in FamiTracker, but a bit less?
 
 P0:
-- Add text box to numero up/down
-- Alphabetical ordering should be a bit smarter about numbers.
+- Add text box to numero up/down + handle double click to fix fast click issue.
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
 	=> Remove 1-frame snap glitch.
 	=> Snap effect values (at least give the option to!)
-- N163 multi-wave
-- Improve oscilloscope stability (min square norm?)
+- Improve oscilloscope stability (use channel frequency)
 / Sequencer improvement
   	- Add shortcut ([2] ?). Make sure to abort capture if that happens.
   	- Add to context menu somewhere?
   	- Do it on mobile too
 
 P1:
+- Context menu to apply DPCM processing
+- ROM export with expansion? Tier list:
+	1. VRC6
+	2. VRC7
+	3. N163
+	4. 5B ( plus full 5B support )
+	5. MMC5
+- Redo System.Drawing removal, not part of .NET standard.
 - Is CPU usage higher?
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
+- BUG : In Dr. Wily, when exported as NSF, between 50 and 60 sec, there is some weird stuff. Mesen skips notes, NSFPlay plays high pitch notes.
 
 P2 (Unlikely):
+- Alphabetical ordering should be a bit smarter about numbers.
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : Selecting a full pattern selects + 1 frame?
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
@@ -63,7 +61,8 @@ P2 (Unlikely):
 - Give better names to auto saves
 - Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Volume/effect scaling, easy one we have context menus.
-- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)- Paste special, option to rename patterns.
+- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
+- Paste special, option to rename patterns.
 - ffmpeg path on Linux should work on path (Puna on CC discord).
 - Uncompressed envelopes
 - CLI only EXE (Linux only).
@@ -77,10 +76,11 @@ Testing:
 ========
 - Restest sequencer hide channel a bunch, test vertical scroll bars, test mobile too. Make sure not broken.
 - Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
+- Restest multiple songs per file (changed multiplication thing)
 
 Batch convert PNG -> TGA
 ==========================
-"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path C:\Dump\PngToTga\Tga -compress RLE -format tga *.png
+"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
 
 Linux notes 
 =========== 
@@ -152,7 +152,6 @@ Discord
 Backlog: 
 =========
 - Reorder channels for video export.
-- ROM export with expansion?
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
 - Save snapping + qwerty settings + some export settings.

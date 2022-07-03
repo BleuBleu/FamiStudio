@@ -66,6 +66,18 @@ namespace FamiStudio
             return c ^ 0xFFFFFFFF;
         }
 
+        static public uint Compute(sbyte[] data, int start, int count, uint initial = 0)
+        {
+            GenerateTable();
+
+            uint c = initial ^ 0xFFFFFFFF;
+            for (int i = start; i < start + count; ++i)
+            {
+                c = table[(c ^ data[i]) & 0xFF] ^ (c >> 8);
+            }
+            return c ^ 0xFFFFFFFF;
+        }
+
         static public uint Compute(int val, uint initial = 0)
         {
             return Compute(BitConverter.GetBytes(val), initial);
