@@ -282,7 +282,7 @@ namespace FamiStudio
 
                 if (nsfe)
                 {
-                    var nsfePreData = new byte[1024];
+                    var nsfePreData = new byte[4096];
                     var nsfePreDataSize = 0;
                     var nsfePostData = new byte[8];
                     
