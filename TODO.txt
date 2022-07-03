@@ -11,7 +11,6 @@
 N163 Multi-wave:
 ================
 - IMPORTER??? How should it work?
-
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
 - IO : FamiStudio text import/export.
@@ -40,6 +39,13 @@ P0:
 
 P1:
 - Context menu to apply DPCM processing
+- ROM export with expansion? Tier list:
+	1. VRC6
+	2. VRC7
+	3. N163
+	4. 5B ( plus full 5B support )
+	5. MMC5
+- NSFe export.
 - Redo System.Drawing removal, not part of .NET standard.
 - Is CPU usage higher?
 - Improve no-attack.
@@ -146,7 +152,6 @@ Discord
 Backlog: 
 =========
 - Reorder channels for video export.
-- ROM export with expansion?
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
 - Save snapping + qwerty settings + some export settings.
