@@ -378,7 +378,8 @@ namespace FamiStudio
                     project.Name,
                     project.Author,
                     project.Copyright,
-                    machine);
+                    machine,
+                    false); // MATTT
             }
         }
 

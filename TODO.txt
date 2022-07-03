@@ -45,12 +45,12 @@ P1:
 	3. N163
 	4. 5B ( plus full 5B support )
 	5. MMC5
-- NSFe export.
 - Redo System.Drawing removal, not part of .NET standard.
 - Is CPU usage higher?
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
+- BUG : In Dr. Wily, when exported as NSF, between 50 and 60 sec, there is some weird stuff. Mesen skips notes, NSFPlay plays high pitch notes.
 
 P2 (Unlikely):
 - Alphabetical ordering should be a bit smarter about numbers.

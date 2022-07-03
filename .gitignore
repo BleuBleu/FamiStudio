@@ -19,6 +19,7 @@ site/
 *.htm
 .DS_Store
 *.nsf
+*.nsfe
 *.ipdb
 *.iobj
 FamiStudio/*.lib
