@@ -34,10 +34,34 @@ ROM export with expansion?
 - Cleanup NMI update (unify buffers, use ZP)
 - Do it for all:
 	1. VRC6
+    $8000-$BFFF: 16 KB switchable PRG ROM bank
+    $C000-$DFFF: 8 KB switchable PRG ROM bank
+    $E000-$FFFF: 8 KB PRG ROM bank, fixed to the last bank
 	2. VRC7
+    $8000-$9FFF: 8 KB switchable PRG-ROM bank
+    $A000-$BFFF: 8 KB switchable PRG-ROM bank
+    $C000-$DFFF: 8 KB switchable PRG-ROM bank
+    $E000-$FFFF: 8 KB PRG-ROM bank, fixed to the last bank	
 	3. N163
+		CPU $8000-$9FFF: 8 KB switchable PRG ROM bank
+		CPU $A000-$BFFF: 8 KB switchable PRG ROM bank
+		CPU $C000-$DFFF: 8 KB switchable PRG ROM bank
+		CPU $E000-$FFFF: 8 KB PRG ROM bank, fixed to the last bank
 	4. 5B
-	5. MMC5
+		CPU $8000-$9FFF: 8 KB Bankable PRG ROM
+		CPU $A000-$BFFF: 8 KB Bankable PRG ROM
+		CPU $C000-$DFFF: 8 KB Bankable PRG ROM
+		CPU $E000-$FFFF: 8 KB PRG ROM, fixed to the last bank of ROM	
+	5. MMC5 (in PRG mode 3, default at power on)
+    CPU $8000-$9FFF: 8 KB switchable PRG ROM/RAM bank
+    CPU $A000-$BFFF: 8 KB switchable PRG ROM/RAM bank
+    CPU $C000-$DFFF: 8 KB switchable PRG ROM/RAM bank
+    CPU $E000-$FFFF: 8 KB switchable PRG ROM bank <====  "Games seem to expect $5117 to be $FF at power on." NICE.
+	X. MMC3:
+		CPU $8000-$9FFF: 8 KB switchable PRG ROM bank
+		CPU $A000-$BFFF: 8 KB switchable PRG ROM bank
+		CPU $C000-$DFFF: 8 KB PRG ROM bank, fixed to the second-last bank
+		CPU $E000-$FFFF: 8 KB PRG ROM bank, fixed to the last bank
 
 P0:
 - Add text box to numero up/down + handle double click to fix fast click issue.
