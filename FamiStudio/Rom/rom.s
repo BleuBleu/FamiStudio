@@ -1,6 +1,10 @@
 ; Simple FamiStudio ROM to play music on actual hardware.
 ; Based off Brad's (rainwarrior.ca) CA65 template, both the regular and FDS version.
 
+FAMISTUDIO_VERSION_MAJOR  = 4
+FAMISTUDIO_VERSION_MINOR  = 0
+FAMISTUDIO_VERSION_HOTFIX = 0
+
 ; Enable all features.
 FAMISTUDIO_CFG_EXTERNAL          = 1
 FAMISTUDIO_CFG_SMOOTH_VIBRATO    = 1
@@ -31,8 +35,6 @@ FAMISTUDIO_USE_RELEASE_NOTES     = 1
 nmi_lock:           .res 1 ; prevents NMI re-entry
 nmi_count:          .res 1 ; is incremented every NMI
 nmi_ready:          .res 1 ; set to 1 to push a PPU frame update, 2 to turn rendering off next NMI
-nmt_row_update_len: .res 1 ; number of bytes in nmt_row_update buffer
-nmt_col_update_len: .res 1 ; number of bytes in nmt_row_update buffer
 scroll_x:           .res 1 ; x scroll position
 scroll_y:           .res 1 ; y scroll position
 scroll_nmt:         .res 1 ; nametable select (0-3 = $2000,$2400,$2800,$2C00)
@@ -40,6 +42,10 @@ gamepad:            .res 1
 gamepad_previous:   .res 1
 gamepad_pressed:    .res 1
 song_index:         .res 1
+nmt_update_mode:    .res 1   ; update "mode", 0 = nothing to do, 1 = column mode, 2 = row mode + palettes
+nmt_update_data:    .res 128 ; nametable update entry buffer for PPU update
+nmt_update_len:     .res 1 ; number of bytes in nmt_update_data buffer
+palette:            .res 32  ; palette buffer for PPU update
 
 ; General purpose temporary vars.
 r0: .res 1
@@ -53,10 +59,6 @@ r5: .res 1
 p0: .res 2
 
 .segment "RAM"
-; TODO: These 2 arent actually used at the same time... unify.
-nmt_col_update: .res 128 ; nametable update entry buffer for PPU update (column mode)
-nmt_row_update: .res 128 ; nametable update entry buffer for PPU update (row mode)
-palette:        .res 32  ; palette buffer for PPU update
 
 .segment "OAM"
 oam: .res 256        ; sprite OAM data to be uploaded by DMA
@@ -70,20 +72,18 @@ INES_SRAM   = 0 ; 1 = battery backed SRAM at $6000-7FFF
 .if FAMISTUDIO_EXP_FDS
     .byte 'F','D','S',$1a
     .byte 1 ; side count
-.elseif FAMISTUDIO_EXP_EPSM
-    .byte 'N', 'E', 'S', $1A ; ID
-    .byte $02 ; 16k PRG bank count
-    .byte $01 ; 8k CHR bank count
-    .byte INES_MIRROR | (INES_SRAM << 1) | ((INES_MAPPER & $f) << 4)
-    .byte (INES_MAPPER & %11110000) | 11
-    .byte $0, $0, $0, $0, $0, $4, $0, $0 ; padding
 .else
     .byte 'N', 'E', 'S', $1A ; ID
     .byte $02 ; 16k PRG bank count
     .byte $01 ; 8k CHR bank count
     .byte INES_MIRROR | (INES_SRAM << 1) | ((INES_MAPPER & $f) << 4)
+.if FAMISTUDIO_EXP_EPSM    
+    .byte (INES_MAPPER & %11110000) | (%00001011) ; ines v2 + extended console type.
+    .byte $0, $0, $0, $0, $0, $4, $0, $0 ; padding
+.else
     .byte (INES_MAPPER & %11110000)
     .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
+.endif    
 .endif
 
 .if FAMISTUDIO_EXP_FDS
@@ -264,8 +264,8 @@ song_fds_file:   .byte $00
 .else
 song_page_start: .byte $00
 .endif
-song_addr_start: .word $8222 ; Test song has $222 bytes of DPCM, song is right after.
-song_flags:      .byte $01   ; Test song uses DPCM
+song_addr_start: .word $8000
+song_flags:      .byte $00
 song_name:       .res  28
 
 ; the remaining 7 songs.
@@ -509,145 +509,119 @@ oam_dma:
     sta $4014
 
 ; nametable update (column)
-col_update:
-    ldx #0
-    cpx nmt_col_update_len
-    beq row_update
-    lda #%10001100
-    sta $2000 ; set vertical nametable increment
-    ldx #0
-    cpx nmt_col_update_len
-    bcs palettes
-    nmt_col_update_loop:
-        lda nmt_col_update, x
-        inx
-        sta $2006
-        lda nmt_col_update, x
-        inx
-        sta $2006
-        ldy nmt_col_update, x
-        inx
-        col_loop:
-            lda nmt_col_update, x
+nmt_update:
+    lda nmt_update_mode 
+    bne do_update
+    jmp update_done
+    do_update:
+        ldx #0
+        cpx nmt_update_len
+        beq palettes
+        asl
+        asl
+        ora #%10000000
+        sta $2000 ; set vertical nametable increment
+        ldx #0
+        nmt_update_loop:
+            lda nmt_update_data, x
             inx
-            sta $2007
-            dey
-            bne col_loop
-        cpx nmt_col_update_len
-        bcc nmt_col_update_loop
-    lda #0
-    sta nmt_col_update_len
-
-; nametable update (row)
-row_update:
-    lda #%10001000
-    sta $2000 ; set horizontal nametable increment
-    ldx #0
-    cpx nmt_row_update_len
-    bcs palettes
-    nmt_row_update_loop:
-        lda nmt_row_update, x
-        inx
-        sta $2006
-        lda nmt_row_update, x
-        inx
-        sta $2006
-        ldy nmt_row_update, x
-        inx
-        row_loop:
-            lda nmt_row_update, x
+            sta $2006
+            lda nmt_update_data, x
             inx
-            sta $2007
-            dey
-            bne row_loop
-        cpx nmt_row_update_len
-        bcc nmt_row_update_loop
-    lda #0
-    sta nmt_row_update_len
+            sta $2006
+            ldy nmt_update_data, x
+            inx
+            col_loop:
+                lda nmt_update_data, x
+                inx
+                sta $2007
+                dey
+                bne col_loop
+            cpx nmt_update_len
+            bcc nmt_update_loop
 
 ; palettes
 palettes:
-    lda $2002
-    lda #$3F
-    sta $2006
-    ldx #0
-    stx $2006 ; set PPU address to $3F00
-
-.if ::FAMISTUDIO_EXP_FDS        
-
-    ; Need to squeeze a few more cycles of the NMI when in FDS mode.
-    lda palette+0
-    sta $2007
-    lda palette+1
-    sta $2007
-    lda palette+2
-    sta $2007
-    lda palette+3
-    sta $2007
-    lda palette+4
-    sta $2007
-    lda palette+5
-    sta $2007
-    lda palette+6
-    sta $2007
-    lda palette+7
-    sta $2007
-    lda palette+8
-    sta $2007
-    lda palette+9
-    sta $2007
-    lda palette+10
-    sta $2007
-    lda palette+11
-    sta $2007
-    lda palette+12
-    sta $2007
-    lda palette+13
-    sta $2007
-    lda palette+14
-    sta $2007
-    lda palette+15
-    sta $2007
-    lda palette+16
-    sta $2007
-    lda palette+17
-    sta $2007
-    lda palette+18
-    sta $2007
-    lda palette+19
-    sta $2007
-    lda palette+20
-    sta $2007
-    lda palette+21
-    sta $2007
-    lda palette+22
-    sta $2007
-    lda palette+23
-    sta $2007
-    lda palette+24
-    sta $2007
-    lda palette+25
-    sta $2007
-    lda palette+26
-    sta $2007
-    lda palette+27
-    sta $2007
-    lda palette+28
-    sta $2007
-    lda palette+29
-    sta $2007
-    lda palette+30
-    sta $2007
-    lda palette+31
-    sta $2007
-.else
-    pal_loop:
-        lda palette, x
+    lda nmt_update_mode
+    cmp #2
+    bne palettes_need_update
+    jmp update_done
+    palettes_need_update:
+        lda $2002
+        lda #$3F
+        sta $2006
+        ldx #0
+        stx $2006 ; set PPU address to $3F00
+        lda palette+0
         sta $2007
-        inx
-        cpx #32
-        bne pal_loop
-.endif
+        lda palette+1
+        sta $2007
+        lda palette+2
+        sta $2007
+        lda palette+3
+        sta $2007
+        lda palette+4
+        sta $2007
+        lda palette+5
+        sta $2007
+        lda palette+6
+        sta $2007
+        lda palette+7
+        sta $2007
+        lda palette+8
+        sta $2007
+        lda palette+9
+        sta $2007
+        lda palette+10
+        sta $2007
+        lda palette+11
+        sta $2007
+        lda palette+12
+        sta $2007
+        lda palette+13
+        sta $2007
+        lda palette+14
+        sta $2007
+        lda palette+15
+        sta $2007
+        lda palette+16
+        sta $2007
+        lda palette+17
+        sta $2007
+        lda palette+18
+        sta $2007
+        lda palette+19
+        sta $2007
+        lda palette+20
+        sta $2007
+        lda palette+21
+        sta $2007
+        lda palette+22
+        sta $2007
+        lda palette+23
+        sta $2007
+        lda palette+24
+        sta $2007
+        lda palette+25
+        sta $2007
+        lda palette+26
+        sta $2007
+        lda palette+27
+        sta $2007
+        lda palette+28
+        sta $2007
+        lda palette+29
+        sta $2007
+        lda palette+30
+        sta $2007
+        lda palette+31
+        sta $2007
+
+update_done:
+    ; Clear update mode.
+    lda #0 
+    sta nmt_update_mode
+    sta nmt_update_len
 
 scroll:
     lda scroll_nmt
@@ -808,6 +782,8 @@ loading_text: ; Loading....
 
 .endif
 
+version_text: ; 
+    .byte $34 + FAMISTUDIO_VERSION_MAJOR, $3e, $34 + FAMISTUDIO_VERSION_MINOR, $3e, $34 + FAMISTUDIO_VERSION_HOTFIX
 
 .proc play_song
 
@@ -919,15 +895,15 @@ done:
 .endproc 
 
 equalizer_lookup:
-    .byte $f0, $f0, $f0, $f0 ; 0
-    .byte $f0, $f0, $f0, $b8 ; 1
-    .byte $f0, $f0, $f0, $c8 ; 2
-    .byte $f0, $f0, $b8, $c8 ; 3
-    .byte $f0, $f0, $c8, $c8 ; 4
-    .byte $f0, $b8, $c8, $c8 ; 5
-    .byte $f0, $c8, $c8, $c8 ; 6
-    .byte $b8, $c8, $c8, $c8 ; 7
-    .byte $c8, $c8, $c8, $c8 ; 8
+    .byte $e3, $e3, $e3, $e3 ; 0
+    .byte $e3, $e3, $e3, $e0 ; 1
+    .byte $e3, $e3, $e3, $f0 ; 2
+    .byte $e3, $e3, $e0, $f0 ; 3
+    .byte $e3, $e3, $f0, $f0 ; 4
+    .byte $e3, $e0, $f0, $f0 ; 5
+    .byte $e3, $f0, $f0, $f0 ; 6
+    .byte $e0, $f0, $f0, $f0 ; 7
+    .byte $f0, $f0, $f0, $f0 ; 8
 equalizer_color_lookup:
     .byte $01, $02, $00, $02, $02, $02
 
@@ -954,10 +930,9 @@ equalizer_color_lookup:
     tay
 
     ; compute 2 addresses
-    ldx nmt_col_update_len
+    ldx nmt_update_len
     lda #$22
-    sta nmt_col_update,x
-    sta nmt_col_update+7,x
+    sta nmt_update_data,x
 .if ::FAMISTUDIO_EXP_FDS    
     lda #$45
 .else
@@ -965,33 +940,26 @@ equalizer_color_lookup:
 .endif
     clc
     adc pos_x
-    sta nmt_col_update+1,x
-    adc #1
-    sta nmt_col_update+8,x
+    sta nmt_update_data+1,x
     lda #4
-    sta nmt_col_update+2,x
-    sta nmt_col_update+9,x
+    sta nmt_update_data+2,x
 
     lda equalizer_lookup, y
     adc color_offset
-    sta nmt_col_update+3,x
-    sta nmt_col_update+10,x
+    sta nmt_update_data+3,x
     lda equalizer_lookup+1, y
     adc color_offset
-    sta nmt_col_update+4,x
-    sta nmt_col_update+11,x
+    sta nmt_update_data+4,x
     lda equalizer_lookup+2, y
     adc color_offset
-    sta nmt_col_update+5,x
-    sta nmt_col_update+12,x
+    sta nmt_update_data+5,x
     lda equalizer_lookup+3, y
     adc color_offset
-    sta nmt_col_update+6,x
-    sta nmt_col_update+13,x
+    sta nmt_update_data+6,x
     
-    lda #14
-    adc nmt_col_update_len
-    sta nmt_col_update_len 
+    lda #7
+    adc nmt_update_len
+    sta nmt_update_len 
 
     rts
 
@@ -1147,13 +1115,13 @@ done:
     temp   = r3
     
     stx temp_x
-    ldx nmt_row_update_len
+    ldx nmt_update_len
     tya
     lsr
     lsr
     lsr
     ora #$20 ; high bits of Y + $20
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
     tya
     asl
@@ -1164,23 +1132,23 @@ done:
     sta temp
     lda temp_x
     ora temp
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
     lda #28 ; all our strings have 28 characters.
-    sta nmt_row_update,x
+    sta nmt_update_data,x
     inx
 
     ldy #0
     text_loop:
         lda (p0),y
-        sta nmt_row_update,x
+        sta nmt_update_data,x
         inx
         iny
         cpy #28
         bne text_loop
 
 
-    stx nmt_row_update_len
+    stx nmt_update_len
     rts
 
 .endproc
@@ -1204,7 +1172,7 @@ done:
     sta oam+3
     lda #15
     sta oam+0
-    lda #$81
+    lda #$51
     sta oam+1
     lda #1
     sta oam+2
@@ -1213,7 +1181,7 @@ done:
     sta oam+7
     lda #23
     sta oam+4
-    lda #$90
+    lda #$60
     sta oam+5
     lda #1
     sta oam+6
@@ -1222,7 +1190,7 @@ done:
     sta oam+11
     lda #23
     sta oam+8
-    lda #$92
+    lda #$62
     sta oam+9
     lda #1
     sta oam+10
@@ -1252,6 +1220,19 @@ done:
         iny
         cpy #28
         bne author_loop
+
+    ; Draw version
+    ldx #25
+    ldy #27
+    jsr ppu_address_tile
+
+    ldy #0
+    version_loop:
+        lda version_text,y
+        sta $2007
+        iny
+        cpy #5
+        bne version_loop
 
     rts
 

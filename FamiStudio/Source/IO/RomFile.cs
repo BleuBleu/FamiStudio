@@ -13,24 +13,24 @@ namespace FamiStudio
         //   0x8000 [swap]  : start of song data (max 16KB per song)
         //   0xa000 [swap]  : continued song data
         //   0xc000 [fixed] : DPCM samples start
-        //   0xec00 [fixed] : Sound engine code (A bit over 4K)
+        //   0xeb00 [fixed] : Sound engine code (A bit over 4K)
         //   0xfe00 [fixed] : Song table (max 15 songs, to not step over vectors).
 
-        const int RomSongDataStart    = 0x8000;
-        const int RomBankSize         = 0x2000; // MMC3 has 8KB banks.
-        const int RomCodeAndTocSize   = 0x1400; // 5KB of code + TOC + vectors. 
-        const int RomEPSMCodeAndTocSize   = 0x1900; // 6.4KB of code + TOC + vectors. 
-        const int RomTocOffset        = 0x1200; // Table of content is right after the code at FE00
-        const int RomEPSMTocOffset        = 0x1700; // Table of content is right after the code at FE00
-        const int RomTileSize         = 0x2000; // 8KB CHR data.
-        const int MaxSongSize         = 0x4000; // 16KB max per song.
-        const int RomMinNumberBanks   = 2;
-        const int RomCodeDpcmNumBanks = 2;
-        const int RomHeaderLength     = 16;     // INES header size.
-        const int RomHeaderPrgOffset  = 4;      // Offset of the PRG bank count in INES header.
-        const int RomDpcmStart        = 0xc000;
-        const int MaxDpcmSize         = 0x2c00; // 11KB
-        const int MaxEPSMDpcmSize         = 0x2700; // 10KB
+        const int RomSongDataStart      = 0x8000;
+        const int RomBankSize           = 0x2000; // MMC3 has 8KB banks.
+        const int RomCodeAndTocSize     = 0x1500; // 5KB of code + TOC + vectors. 
+        const int RomEPSMCodeAndTocSize = 0x1900; // 6.4KB of code + TOC + vectors. 
+        const int RomTocOffset          = 0x1300; // Table of content is right after the code at FE00
+        const int RomEPSMTocOffset      = 0x1700; // Table of content is right after the code at FE00
+        const int RomTileSize           = 0x2000; // 8KB CHR data.
+        const int MaxSongSize           = 0x4000; // 16KB max per song.
+        const int RomMinNumberBanks     = 2;
+        const int RomCodeDpcmNumBanks   = 2;
+        const int RomHeaderLength       = 16;     // INES header size.
+        const int RomHeaderPrgOffset    = 4;      // Offset of the PRG bank count in INES header.
+        const int RomDpcmStart          = 0xc000;
+        const int MaxDpcmSize           = 0x2b00; // 11KB (a bit less)
+        const int MaxEPSMDpcmSize       = 0x2700; // 10KB
 
         public unsafe bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
@@ -131,6 +131,8 @@ namespace FamiStudio
                             songBanks.Add(new List<byte>());
 
                         songBanks[songBank].AddRange(songBytes);
+
+                        //File.WriteAllBytes("d:\\dump\\song.bin", songBytes);
                     }
                     else
                     {
@@ -153,8 +155,6 @@ namespace FamiStudio
 
                     Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
-
-                //File.WriteAllBytes("D:\\debug.bin", songDataBytes.ToArray());
 
                 // Add extra empty banks if we haven't reached the minimum.
                 if (songBanks.Count < RomMinNumberBanks)

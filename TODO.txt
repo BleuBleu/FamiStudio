@@ -7,6 +7,8 @@
 - BUG : Grid "a" bug from how2? Right click! Mac only???
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Envelope dragging is broken
+- BUG : In Dr. Wily, when exported as NSF, between 50 and 60 sec, there is some weird stuff. Mesen skips notes, NSFPlay plays high pitch notes.
+- BUG : Selecting a full pattern selects + 1 frame?
 
 N163 Multi-wave:
 ================
@@ -22,7 +24,20 @@ N163 Multi-wave:
 - BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
 - BUG : Right-click, set loop point assert.
 - BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
+- BUG : Instrument player crashes???
 - POLISH : Lots of N163 poppin in FTM song "donkey kong contry"? Also pops in FamiTracker, but a bit less?
+
+ROM export with expansion? 
+==========================
+- Change tileset
+- Write version in code
+- Cleanup NMI update (unify buffers, use ZP)
+- Do it for all:
+	1. VRC6
+	2. VRC7
+	3. N163
+	4. 5B
+	5. MMC5
 
 P0:
 - Add text box to numero up/down + handle double click to fix fast click issue.
@@ -39,38 +54,11 @@ P0:
 
 P1:
 - Context menu to apply DPCM processing
-- ROM export with expansion? Tier list:
-	1. VRC6
-	2. VRC7
-	3. N163
-	4. 5B ( plus full 5B support )
-	5. MMC5
 - Redo System.Drawing removal, not part of .NET standard.
 - Is CPU usage higher?
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
-- BUG : In Dr. Wily, when exported as NSF, between 50 and 60 sec, there is some weird stuff. Mesen skips notes, NSFPlay plays high pitch notes.
-
-P2 (Unlikely):
-- Alphabetical ordering should be a bit smarter about numbers.
-- BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
-- BUG : Selecting a full pattern selects + 1 frame?
-- BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
-- Sound output selection?
-- Give better names to auto saves
-- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
-- Volume/effect scaling, easy one we have context menus.
-- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
-- Paste special, option to rename patterns.
-- ffmpeg path on Linux should work on path (Puna on CC discord).
-- Uncompressed envelopes
-- CLI only EXE (Linux only).
-- C0 is hidden by scroll bars
-- C0 is hidden in piano roll video
-- Piano roll scale on desktop?
-- Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
-- Dont reset camera in piano roll when deleting instrument (probably to handle case where you were editing the instrument)
 
 Testing:
 ========
@@ -151,12 +139,28 @@ Discord
 
 Backlog: 
 =========
+- BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
+- BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Reorder channels for video export.
 - More options for oscilloscope (https://github.com/maxim-zhao/SidWizPlus/wiki)
 - Overclocking (2x, 3x, 4x would be a good start).
 - Save snapping + qwerty settings + some export settings.
-- Left/right pan with +/- (cubase style)?
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Scales
 - Raw FDS modulation table envelope. 
 - Instrument folders + collapse entire sections (samples, arps, etc.) 
+- Alphabetical ordering should be a bit smarter about numbers.
+- Sound output selection?
+- Give better names to auto saves
+- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
+- Volume/effect scaling, easy one we have context menus.
+- Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
+- Paste special, option to rename patterns.
+- ffmpeg path on Linux should work on path (Puna on CC discord).
+- Uncompressed envelopes
+- CLI only EXE (Linux only).
+- C0 is hidden by scroll bars
+- C0 is hidden in piano roll video
+- Piano roll scale on desktop?
+- Poppin issue on FDS? See messages from "JHĀKRI" on discord. Change volume on FDS with a blank waveform.
+- Dont reset camera in piano roll when deleting instrument (probably to handle case where you were editing the instrument)
