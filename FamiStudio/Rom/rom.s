@@ -508,7 +508,7 @@ oam_dma:
     lda #>oam
     sta $4014
 
-; nametable update (column)
+; nametable update
 nmt_update:
     lda nmt_update_mode 
     bne do_update
@@ -520,7 +520,7 @@ nmt_update:
         asl
         asl
         ora #%10000000
-        sta $2000 ; set vertical nametable increment
+        sta $2000
         ldx #0
         nmt_update_loop:
             lda nmt_update_data, x
@@ -544,7 +544,7 @@ nmt_update:
 palettes:
     lda nmt_update_mode
     cmp #2
-    bne palettes_need_update
+    beq palettes_need_update
     jmp update_done
     palettes_need_update:
         lda $2002
@@ -967,6 +967,9 @@ equalizer_color_lookup:
 
 .proc update_all_equalizers
 
+    lda nmt_update_mode
+    bne equalizers_done ; Dont allow update if we already have an update pending.
+
     lda #0
     jsr update_equalizer
     lda #1
@@ -982,6 +985,10 @@ equalizer_color_lookup:
     jsr update_equalizer
 .endif
 
+    lda #1
+    sta nmt_update_mode
+
+    equalizers_done:
     rts
 
 .endproc
@@ -998,7 +1005,11 @@ equalizer_color_lookup:
         inx
         cpx #16
         bcc palette_loop
-    
+
+    ; Force palette update.
+    lda #2
+    sta nmt_update_mode
+
     jsr setup_background
     jsr ppu_update
 
@@ -1149,6 +1160,8 @@ done:
 
 
     stx nmt_update_len
+    lda #2
+    sta nmt_update_mode
     rts
 
 .endproc
