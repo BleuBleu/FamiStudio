@@ -16,8 +16,9 @@ namespace FamiStudio
         protected unsafe struct RomProjectInfo
         {
             public byte maxSong;
+            public byte dpcmBank;
             public byte fdsFileCount; // Number of files on FDS
-            public fixed byte reserved[6];
+            public fixed byte reserved[5];
             public fixed byte name[28];
             public fixed byte author[28];
         }
