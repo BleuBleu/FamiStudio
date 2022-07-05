@@ -814,7 +814,7 @@ namespace FamiStudio
                         else
                         {
                             if (string.IsNullOrEmpty(sample.SourceFilename))
-                                active &= ~(1 << 3);
+                                active &= ~(1 << 2);
                             return new[] { SubButtonType.Properties, SubButtonType.EditWave, SubButtonType.Reload, SubButtonType.Play, SubButtonType.Expand };
                         }
                 }
@@ -3659,6 +3659,13 @@ namespace FamiStudio
             return true;
         }
 
+        private void DeleteDpcmSourceWavData(DPCMSample sample)
+        {
+            App.UndoRedoManager.BeginTransaction(TransactionScope.Project);
+            sample.PermanentlyApplyAllProcessing();
+            App.UndoRedoManager.EndTransaction();
+        }
+
         private bool HandleContextMenuDpcmButton(int x, int y, Button button, SubButtonType subButtonType, int buttonIdx)
         {
             if (subButtonType != SubButtonType.Max)
@@ -3670,6 +3677,11 @@ namespace FamiStudio
             {
                 menu.Add(new ContextMenuOption("MenuSave", "Export Processed DMC Data...", () => { ExportDPCMSampleProcessedData(button.sample); }));
                 menu.Add(new ContextMenuOption("MenuSave", "Export Source Data...", () => { ExportDPCMSampleSourceData(button.sample); }));
+            }
+
+            if (button.sample.SourceDataIsWav)
+            {
+                menu.Add(new ContextMenuOption("MenuTrash", "Delete Source WAV Data", "Permanently applies processing options, delete source WAV\n data and keeps the resulting DMC data. Reduces FMS file size.", () => { DeleteDpcmSourceWavData(button.sample); }, Platform.IsDesktop));
             }
 
             menu.Add(new ContextMenuOption("MenuDelete", "Delete DPCM Sample", () => { AskDeleteDPCMSample(button.sample); }, Platform.IsDesktop));

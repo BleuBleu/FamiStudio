@@ -29,7 +29,6 @@ N163 Multi-wave:
 - POLISH : Lots of N163 poppin in FTM song "donkey kong contry"? Also pops in FamiTracker, but a bit less?
 
 P0:
-- Context menu to apply DPCM processing
 - Redo System.Drawing removal, not part of .NET standard.
 
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
