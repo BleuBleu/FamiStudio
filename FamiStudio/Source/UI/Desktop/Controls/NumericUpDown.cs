@@ -106,6 +106,13 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            // Double clicks get triggered if you click quickly, so
+            // treat those as click so that the buttons remain resposive.
+            OnMouseDown(e);
+        }
+
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (captureButton >= 0)
