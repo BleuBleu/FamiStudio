@@ -9,6 +9,7 @@
 - BUG : Envelope dragging is broken
 - BUG : In Dr. Wily, when exported as NSF, between 50 and 60 sec, there is some weird stuff. Mesen skips notes, NSFPlay plays high pitch notes.
 - BUG : Selecting a full pattern selects + 1 frame?
+- BUG : Rom export, when there are 12 songs (sonic), the last 4 loop over the first ones.
 
 N163 Multi-wave:
 ================
@@ -27,48 +28,11 @@ N163 Multi-wave:
 - BUG : Instrument player crashes???
 - POLISH : Lots of N163 poppin in FTM song "donkey kong contry"? Also pops in FamiTracker, but a bit less?
 
-ROM export with expansion? 
-==========================
-- Change tileset
-- Write version in code
-- Cleanup NMI update (unify buffers, use ZP)
-- Do it for all:
-	1. VRC6
-		CPU $8000-$BFFF: 16 KB switchable PRG ROM bank
-		CPU $C000-$DFFF: 8 KB switchable PRG ROM bank
-		CPU $E000-$FFFF: 8 KB PRG ROM bank, fixed to the last bank
-	X. VRC7
-		CPU $8000-$9FFF: 8 KB switchable PRG-ROM bank
-		CPU $A000-$BFFF: 8 KB switchable PRG-ROM bank
-		CPU $C000-$DFFF: 8 KB switchable PRG-ROM bank
-		CPU $E000-$FFFF: 8 KB PRG-ROM bank, fixed to the last bank	
-	X. N163
-		CPU $8000-$9FFF: 8 KB switchable PRG ROM bank
-		CPU $A000-$BFFF: 8 KB switchable PRG ROM bank
-		CPU $C000-$DFFF: 8 KB switchable PRG ROM bank
-		CPU $E000-$FFFF: 8 KB PRG ROM bank, fixed to the last bank
-	X. 5B
-		CPU $8000-$9FFF: 8 KB Bankable PRG ROM
-		CPU $A000-$BFFF: 8 KB Bankable PRG ROM
-		CPU $C000-$DFFF: 8 KB Bankable PRG ROM
-		CPU $E000-$FFFF: 8 KB PRG ROM, fixed to the last bank of ROM	
-	X. MMC5 (in PRG mode 3, default at power on)
-    CPU $8000-$9FFF: 8 KB switchable PRG ROM/RAM bank
-    CPU $A000-$BFFF: 8 KB switchable PRG ROM/RAM bank
-    CPU $C000-$DFFF: 8 KB switchable PRG ROM/RAM bank
-    CPU $E000-$FFFF: 8 KB switchable PRG ROM bank <====  "Games seem to expect $5117 to be $FF at power on." NICE.
-
-  - EPSM :
-  	- Draw image
-
-	X. MMC3:
-		CPU $8000-$9FFF: 8 KB switchable PRG ROM bank
-		CPU $A000-$BFFF: 8 KB switchable PRG ROM bank
-		CPU $C000-$DFFF: 8 KB PRG ROM bank, fixed to the second-last bank
-		CPU $E000-$FFFF: 8 KB PRG ROM bank, fixed to the last bank
-
 P0:
+- Context menu to apply DPCM processing
+- Redo System.Drawing removal, not part of .NET standard.
 - Add text box to numero up/down + handle double click to fix fast click issue.
+
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
@@ -78,15 +42,24 @@ P0:
 / Sequencer improvement
   	- Add shortcut ([2] ?). Make sure to abort capture if that happens.
   	- Add to context menu somewhere?
-  	- Do it on mobile too
+  	- Do it on mobile too?
 
 P1:
-- Context menu to apply DPCM processing
-- Redo System.Drawing removal, not part of .NET standard.
 - Is CPU usage higher?
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.
 	- Draw attack as red if user makes a mistake.
+
+4.0.0 Change Log
+================
+- Revamped desktop version, based on GLFW using custom drawn widgets
+- Redesigned desktop controls : context menu, gizmos, etc. 
+- Animated GIFs for intro tutorial on desktop
+- More control over sequencer height & ability to hide unused channels
+- Support to multiple audio expansions with EPSM
+- Support for multiple waveforms for N163/FDS
+- Support for audio expansions for ROM export 
+- 
 
 Testing:
 ========
