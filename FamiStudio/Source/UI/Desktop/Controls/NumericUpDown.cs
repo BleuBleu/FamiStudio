@@ -1,9 +1,10 @@
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 
 namespace FamiStudio
 {
-    public class NumericUpDown : Control
+    public class NumericUpDown : TextBox
     {
         public delegate void ValueChangedDelegate(Control sender, int val);
         public event ValueChangedDelegate ValueChanged;
@@ -12,36 +13,54 @@ namespace FamiStudio
         private int min;
         private int max = 10;
         private BitmapAtlasRef[] bmp;
-
         private float captureDuration;
         private int   captureButton = -1;
+        private int   hoverButton = -1;
 
-        private int hoverButton = -1;
+        protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
-        public NumericUpDown(Dialog dlg, int value, int minVal, int maxVal) : base(dlg)
+        public NumericUpDown(Dialog dlg, int value, int minVal, int maxVal) : base(dlg, value, minVal, maxVal)
         {
             val = value;
             min = minVal;
             max = maxVal;
             height = DpiScaling.ScaleForWindow(24);
+            SetTextBoxValue();
         }
 
         public int Value
         {
-            get { return val; }
-            set { if (SetAndMarkDirty(ref val, Utils.Clamp(value, min, max))) ValueChanged?.Invoke(this, val); }
+            get 
+            {
+                Debug.Assert(val >= min && val <= max);
+                return val; 
+            }
+            set 
+            {
+                if (SetAndMarkDirty(ref val, Utils.Clamp(value, min, max)))
+                {
+                    SetTextBoxValue();
+                    ValueChanged?.Invoke(this, val);
+                }
+            }
         }
 
         public int Minimum
         {
             get { return min; }
-            set { min = value; val = Utils.Clamp(val, min, max); MarkDirty(); }
+            set { min = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
         }
 
         public int Maximum
         {
             get { return max; }
-            set { max = value; val = Utils.Clamp(val, min, max); MarkDirty(); }
+            set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
+        }
+
+        protected override void OnAddedToDialog()
+        {
+            outerMargin = GetButtonRect(0).Width + textBoxMargin;
+            base.OnAddedToDialog();
         }
 
         protected override void OnRenderInitialized(Graphics g)
@@ -51,12 +70,14 @@ namespace FamiStudio
                 g.GetBitmapAtlasRef("UpDownMinus"),
                 g.GetBitmapAtlasRef("UpDownPlus")
             };
+
+            base.OnRenderInitialized(g);
         }
 
         private Rectangle GetButtonRect(int idx)
         {
-            return idx == 0 ? new Rectangle(0, 0, width / 4, height) :
-                              new Rectangle(width * 3 / 4, 0, width / 4, height);
+            return idx == 0 ? new Rectangle(0, 0, width / 4, height - 1) :
+                              new Rectangle(width * 3 / 4, 0, width / 4, height - 1);
         }
 
         private int IsPointInButton(int x, int y)
@@ -92,6 +113,8 @@ namespace FamiStudio
                     Value += (captureButton == 0 ? -1 : 1) * (lastDuration >= 1.5f && (Value % 10) == 0 ? 10 : 1);
                 }
             }
+
+            base.Tick(delta);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -99,18 +122,54 @@ namespace FamiStudio
             var idx = IsPointInButton(e.X, e.Y);
             if (idx >= 0)
             {
+                GetValueFromTextBox();
                 captureButton = idx;
                 captureDuration = 0;
                 Value += captureButton == 0 ? -1 : 1;
                 Capture = true;
             }
+            else
+            {
+                base.OnMouseDown(e);
+            }
+        }
+
+        private void GetValueFromTextBox()
+        {
+            ClampNumber();
+            val = Utils.ParseIntWithTrailingGarbage(text);
+        }
+
+        private void SetTextBoxValue()
+        {
+            text = val.ToString(CultureInfo.InvariantCulture);
+            SelectAll();
+            caretIndex = text.Length;
+        }
+
+        protected override void OnAcquiredDialogFocus()
+        {
+            SelectAll();
+            caretIndex = text.Length;
+        }
+
+        protected override void OnLostDialogFocus()
+        {
+            GetValueFromTextBox();
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
-            // Double clicks get triggered if you click quickly, so
-            // treat those as click so that the buttons remain resposive.
-            OnMouseDown(e);
+            if (IsPointInButton(e.X, e.Y) >= 0)
+            {
+                // Double clicks get triggered if you click quickly, so
+                // treat those as click so that the buttons remain responsive.
+                OnMouseDown(e);
+            }
+            else
+            {
+                base.OnMouseDoubleClick(e);
+            }
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -120,16 +179,22 @@ namespace FamiStudio
                 captureButton = -1;
                 Capture = false;
             }
+            else
+            {
+                base.OnMouseUp(e);
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, e.Y));
+            base.OnMouseMove(e);
         }
 
         protected override void OnMouseLeave(System.EventArgs e)
         {
             SetAndMarkDirty(ref hoverButton, -1);
+            base.OnMouseLeave(e);
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -142,6 +207,8 @@ namespace FamiStudio
 
         protected override void OnRender(Graphics g)
         {
+            base.OnRender(g);
+
             var c = parentDialog.CommandList;
             var brush = enabled ? ThemeResources.LightGreyBrush1 : ThemeResources.MediumGreyBrush1;
 
@@ -163,8 +230,6 @@ namespace FamiStudio
                 c.DrawBitmapAtlasCentered(bmp[i], rects[i], 1, 1, brush.Color0);
                 c.PopTransform();
             }
-
-            c.DrawText(val.ToString(CultureInfo.InvariantCulture), ThemeResources.FontMedium, rects[0].Right, 0, brush, TextFlags.MiddleCenter, rects[1].Left - rects[0].Right, height);
         }
     }
 }

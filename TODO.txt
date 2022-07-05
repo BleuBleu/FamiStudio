@@ -31,7 +31,6 @@ N163 Multi-wave:
 P0:
 - Context menu to apply DPCM processing
 - Redo System.Drawing removal, not part of .NET standard.
-- Add text box to numero up/down + handle double click to fix fast click issue.
 
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).

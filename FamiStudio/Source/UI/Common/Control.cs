@@ -59,6 +59,7 @@ namespace FamiStudio
         protected virtual void OnTouchScaleEnd(int x, int y) { }
         protected virtual void OnTouchFling(int x, int y, float velX, float velY) { }
         protected virtual void OnLostDialogFocus() { }
+        protected virtual void OnAcquiredDialogFocus() { }
         protected virtual void OnVisibleChanged() { }
         protected virtual void OnAddedToDialog() { }
 
@@ -90,6 +91,7 @@ namespace FamiStudio
         public void TouchScaleEnd(int x, int y) { OnTouchScaleEnd(x, y); }
         public void TouchFling(int x, int y, float velX, float velY) { OnTouchFling(x, y, velX, velY); }
         public void LostDialogFocus() { OnLostDialogFocus(); }
+        public void AcquiredDialogFocus() { OnAcquiredDialogFocus(); }
         public void AddedToDialog() { OnAddedToDialog(); }
         public void DialogMouseDownNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseDownNotify(this, e); }
         public void DialogMouseMoveNotify(MouseEventArgs e) { if (parentDialog != null) parentDialog.DialogMouseMoveNotify(this, e); }

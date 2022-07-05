@@ -48,6 +48,10 @@ namespace FamiStudio
                     focusedControl.LostDialogFocus();
 
                 focusedControl = value;
+                
+                if (focusedControl != null)
+                    focusedControl.AcquiredDialogFocus();
+
                 MarkDirty();
             }
         }
@@ -90,6 +94,8 @@ namespace FamiStudio
 
         public void Close(DialogResult res)
         {
+            FocusedControl = null;
+
             foreach (var ctrl in initControls)
             {
                 ctrl.RenderTerminated();
