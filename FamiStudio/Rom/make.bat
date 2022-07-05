@@ -26,6 +26,8 @@
 ..\..\Tools\ca65 rom.s -g -o rom_n163_8ch_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_N163=1 -D FAMISTUDIO_EXP_N163_CHN_CNT=8
 ..\..\Tools\ca65 rom.s -g -o rom_s5b_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_S5B=1
 ..\..\Tools\ca65 rom.s -g -o rom_s5b_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_S5B=1
+..\..\Tools\ca65 rom.s -g -o rom_vrc6_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_VRC6=1
+..\..\Tools\ca65 rom.s -g -o rom_vrc6_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_VRC6=1
 ..\..\Tools\ca65 rom.s -g -o rom_vrc7_ntsc.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_VRC7=1
 ..\..\Tools\ca65 rom.s -g -o rom_vrc7_ntsc_famitracker.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_USE_FAMITRACKER_TEMPO=1 -D FAMISTUDIO_EXP_VRC7=1
 ..\..\Tools\ca65 rom.s -g -o fds.o -D FAMISTUDIO_CFG_NTSC_SUPPORT=1 -D FAMISTUDIO_EXP_FDS=1
@@ -59,6 +61,8 @@
 ..\..\Tools\ld65 -C rom.cfg -o rom_n163_8ch_ntsc_famitracker.nes rom_n163_8ch_ntsc_famitracker.o --mapfile rom_n163_8ch_ntsc_famitracker.map --dbgfile rom_n163_8ch_ntsc_famitracker.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_s5b_ntsc.nes rom_s5b_ntsc.o --mapfile rom_s5b_ntsc.map --dbgfile rom_s5b_ntsc.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_s5b_ntsc_famitracker.nes rom_s5b_ntsc_famitracker.o --mapfile rom_s5b_ntsc_famitracker.map --dbgfile rom_s5b_ntsc_famitracker.dbg
+..\..\Tools\ld65 -C rom.cfg -o rom_vrc6_ntsc.nes rom_vrc6_ntsc.o --mapfile rom_vrc6_ntsc.map --dbgfile rom_vrc6_ntsc.dbg
+..\..\Tools\ld65 -C rom.cfg -o rom_vrc6_ntsc_famitracker.nes rom_vrc6_ntsc_famitracker.o --mapfile rom_vrc6_ntsc_famitracker.map --dbgfile rom_vrc6_ntsc_famitracker.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_vrc7_ntsc.nes rom_vrc7_ntsc.o --mapfile rom_vrc7_ntsc.map --dbgfile rom_vrc7_ntsc.dbg
 ..\..\Tools\ld65 -C rom.cfg -o rom_vrc7_ntsc_famitracker.nes rom_vrc7_ntsc_famitracker.o --mapfile rom_vrc7_ntsc_famitracker.map --dbgfile rom_vrc7_ntsc_famitracker.dbg
 ..\..\Tools\ld65 -C fds.cfg -o fds.fds fds.o --mapfile fds.map --dbgfile fds.dbg

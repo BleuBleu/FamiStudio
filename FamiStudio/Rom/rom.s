@@ -66,7 +66,9 @@ oam: .res 256        ; sprite OAM data to be uploaded by DMA
 
 .segment "HEADER"
 
-.if FAMISTUDIO_EXP_VRC7
+.if FAMISTUDIO_EXP_VRC6
+INES_MAPPER = 24 ; VRC6 mapper.
+.elseif FAMISTUDIO_EXP_VRC7
 INES_MAPPER = 85 ; VRC7 mapper.
 .elseif FAMISTUDIO_EXP_S5B
 INES_MAPPER = 69 ; FME7 mapper.
@@ -220,14 +222,18 @@ FILE_COUNT = 6 + 1
 .endif
 
 .segment "SONG"
-.if FAMISTUDIO_EXP_VRC7
+.if FAMISTUDIO_EXP_VRC6
+.incbin "song_vrc6.bin" ; VRC6 debug song, Another Winter
+.elseif FAMISTUDIO_EXP_VRC7
 .incbin "song_vrc7.bin" ; VRC7 debug song, Lagrange Point
 .elseif FAMISTUDIO_EXP_MMC5
 .incbin "song_mmc5.bin" ; MMC5 debug song, Temple Raiders
 .elseif FAMISTUDIO_EXP_N163
 .incbin "song_n163_4ch.bin" ; N163 debug song, Megami Tensei II (4 channels)
 .elseif FAMISTUDIO_EXP_S5B
-.incbin "song_s5b.bin" ; S5B debug song, Temple Raiders (badly modified to use S5B)
+.incbin "song_s5b.bin" ; S5B debug song, Disco Decent
+.elseif FAMISTUDIO_EXP_EPSM
+.incbin "song_epsm.bin" ; EPSM debug song, Sonic 1 title theme
 .elseif !FAMISTUDIO_EXP_FDS
 .incbin "song.bin" ; Debug song, Bloody Tears.
 .endif
@@ -302,8 +308,12 @@ screen_data_rle:
 .incbin "rom_s5b.rle"
 .elseif FAMISTUDIO_EXP_N163
 .incbin "rom_n163.rle"
+.elseif FAMISTUDIO_EXP_VRC6
+.incbin "rom_vrc6.rle"
 .elseif FAMISTUDIO_EXP_VRC7
 .incbin "rom_vrc7.rle"
+.elseif FAMISTUDIO_EXP_EPSM
+.incbin "rom_epsm.rle"
 .else
 .incbin "rom.rle"
 .endif
@@ -311,7 +321,23 @@ screen_data_rle:
 default_palette:
 .incbin "rom.pal"
 
-.if FAMISTUDIO_EXP_VRC7
+.if FAMISTUDIO_EXP_VRC6
+
+    VRC6_PRG_SELECT_8000 = $8000
+    VRC6_PRG_SELECT_C000 = $C000
+
+    VRC6_CHR_SELECT_0000 = $D000
+    VRC6_CHR_SELECT_0400 = $D001
+    VRC6_CHR_SELECT_0800 = $D002
+    VRC6_CHR_SELECT_0C00 = $D003
+    VRC6_CHR_SELECT_1000 = $E000
+    VRC6_CHR_SELECT_1400 = $E001
+    VRC6_CHR_SELECT_1800 = $E002
+    VRC6_CHR_SELECT_1C00 = $E003
+
+    VRC6_BANK_MODE       = $B003
+
+.elseif FAMISTUDIO_EXP_VRC7
         
     VRC7_PRG_SELECT_8000 = $8000
     VRC7_PRG_SELECT_A000 = $8008
@@ -393,6 +419,27 @@ default_palette:
         lda $fa
         and #%11110111
         sta $4025
+
+    .elseif ::FAMISTUDIO_EXP_VRC6
+
+        lda #0
+        sta VRC6_BANK_MODE
+        lda #0
+        sta VRC6_CHR_SELECT_0000
+        lda #1
+        sta VRC6_CHR_SELECT_0400
+        lda #2
+        sta VRC6_CHR_SELECT_0800
+        lda #3
+        sta VRC6_CHR_SELECT_0C00
+        lda #4
+        sta VRC6_CHR_SELECT_1000
+        lda #5
+        sta VRC6_CHR_SELECT_1400
+        lda #6
+        sta VRC6_CHR_SELECT_1800
+        lda #7
+        sta VRC6_CHR_SELECT_1C00
 
     .elseif ::FAMISTUDIO_EXP_VRC7
 
@@ -903,6 +950,12 @@ loading_text: ; Loading....
 version_text: ; 
     .byte $34 + FAMISTUDIO_VERSION_MAJOR, $3e, $34 + FAMISTUDIO_VERSION_MINOR, $3e, $34 + FAMISTUDIO_VERSION_HOTFIX
 
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_S5B || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_EPSM
+    TEXT_OFFSET_Y = 0
+.else
+    TEXT_OFFSET_Y = 1
+.endif
+
 .proc play_song
 
     text_ptr = p0
@@ -933,7 +986,7 @@ version_text: ;
     sta text_ptr+1
 
     ldx #2
-    ldy #11
+    ldy #(10+TEXT_OFFSET_Y)
     jsr draw_text
     jsr ppu_update
 
@@ -1015,8 +1068,18 @@ load_success:
         ora #MMC5_ROM_FLAGS
         sta MMC5_PRG_SELECT_C000
 
+    .elseif ::FAMISTUDIO_EXP_VRC6
+
+        ; VRC6 uses 16KB pages, so just one page to map.
+        lda song_page_start, x
+        sta VRC6_PRG_SELECT_8000
+        lda dpcm_bank
+        asl ; We count in 16KB page, but are mapping a 8KB page, x2.
+        sta VRC6_PRG_SELECT_C000
+
     .else
 
+        ; No need to worry about DPCM page here, MMC3 has second-to-last page fixed.
         lda #6
         ldy song_page_start, x
         sta MMC3_BANK_SELECT
@@ -1055,7 +1118,7 @@ load_success:
     sta text_ptr+1
 
     ldx #2
-    ldy #11
+    ldy #(10+TEXT_OFFSET_Y)
     jsr draw_text
     jsr ppu_update
 
@@ -1064,12 +1127,16 @@ done:
 
 .endproc 
 
-.if FAMISTUDIO_EXP_VRC7
+.if FAMISTUDIO_EXP_VRC6
+    NUM_EQUALIZERS = 8
+.elseif FAMISTUDIO_EXP_VRC7
     NUM_EQUALIZERS = 11
 .elseif FAMISTUDIO_EXP_MMC5
     NUM_EQUALIZERS = 7
 .elseif FAMISTUDIO_EXP_S5B
     NUM_EQUALIZERS = 8
+.elseif FAMISTUDIO_EXP_EPSM
+    NUM_EQUALIZERS = 14 ; We dont display the rhythm channels
 .elseif FAMISTUDIO_EXP_N163
     NUM_EQUALIZERS = 5 + FAMISTUDIO_EXP_N163_CHN_CNT
 .elseif FAMISTUDIO_EXP_FDS
@@ -1080,12 +1147,18 @@ done:
 
 ; Position and number of equalizers (well VU meter i guess) for each expansion
 equalizer_ppu_addr_lo_lookup:
-.if FAMISTUDIO_EXP_VRC7
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_S5B || FAMISTUDIO_EXP_EPSM 
     .byte $87 ; Square 1
     .byte $8b ; Square 2
     .byte $8f ; Triangle
     .byte $93 ; Noise
     .byte $97 ; DPCM
+.endif
+.if FAMISTUDIO_EXP_VRC6
+    .byte $8b ; VRC6 Square 1
+    .byte $8f ; VRC6 Square 2
+    .byte $93 ; VRC6 Saw
+.elseif FAMISTUDIO_EXP_VRC7
     .byte $85 ; FM1
     .byte $89 ; FM2
     .byte $8d ; FM3
@@ -1093,11 +1166,6 @@ equalizer_ppu_addr_lo_lookup:
     .byte $95 ; FM5
     .byte $99 ; FM6
 .elseif FAMISTUDIO_EXP_N163
-    .byte $87 ; Square 1
-    .byte $8b ; Square 2
-    .byte $8f ; Triangle
-    .byte $93 ; Noise
-    .byte $97 ; DPCM
     .byte $85 ; Wavetable 1
     .byte $88 ; Wavetable 2
     .byte $8b ; Wavetable 3
@@ -1107,14 +1175,19 @@ equalizer_ppu_addr_lo_lookup:
     .byte $97 ; Wavetable 7
     .byte $9a ; Wavetable 8
 .elseif FAMISTUDIO_EXP_S5B    
-    .byte $87 ; Square 1
-    .byte $8b ; Square 2
-    .byte $8f ; Triangle
-    .byte $93 ; Noise
-    .byte $97 ; DPCM
     .byte $8b ; S5B Square 1
     .byte $8f ; S5B Square 2
     .byte $93 ; S5B Square 3
+.elseif FAMISTUDIO_EXP_EPSM
+    .byte $83 ; EPSM Square 1
+    .byte $86 ; EPSM Square 2
+    .byte $89 ; EPSM Square 3
+    .byte $8c ; EPSM FM1
+    .byte $8f ; EPSM FM2
+    .byte $92 ; EPSM FM3
+    .byte $95 ; EPSM FM4
+    .byte $98 ; EPSM FM5
+    .byte $9b ; EPSM FM6
 .elseif FAMISTUDIO_EXP_MMC5
     .byte $43 ; Square 1
     .byte $47 ; Square 2
@@ -1132,7 +1205,7 @@ equalizer_ppu_addr_lo_lookup:
 .endif    
 
 equalizer_ppu_addr_hi_lookup:
-.if FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_S5B || FAMISTUDIO_EXP_N163
+.if FAMISTUDIO_EXP_VRC6 || FAMISTUDIO_EXP_VRC7 || FAMISTUDIO_EXP_S5B || FAMISTUDIO_EXP_N163 || FAMISTUDIO_EXP_EPSM
     .byte $21 ; Square 1
     .byte $21 ; Square 2
     .byte $21 ; Triangle
@@ -1145,31 +1218,15 @@ equalizer_ppu_addr_hi_lookup:
     .byte $22 ; Noise
     .byte $22 ; DPCM
 .endif
-
-.if FAMISTUDIO_EXP_MMC5
-    .byte $22 ; MMC5 Square 1
-    .byte $22 ; MMC5 Square 2
-.elseif FAMISTUDIO_EXP_S5B
-    .byte $22 ; S5B Square 1
-    .byte $22 ; S5B Square 2
-    .byte $22 ; S5B Square 3
-.elseif FAMISTUDIO_EXP_VRC7
-    .byte $22 ; FM1
-    .byte $22 ; FM2
-    .byte $22 ; FM3
-    .byte $22 ; FM4
-    .byte $22 ; FM5
-    .byte $22 ; FM6
-.elseif FAMISTUDIO_EXP_N163
-    .byte $22 ; Wavetable 1
-    .byte $22 ; Wavetable 2
-    .byte $22 ; Wavetable 3
-    .byte $22 ; Wavetable 4
-    .byte $22 ; Wavetable 5
-    .byte $22 ; Wavetable 6
-    .byte $22 ; Wavetable 7
-    .byte $22 ; Wavetable 8 
-.endif
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
+    .byte $22
 
 ; Which 4 BG tiles to draw for each "volume" [0-7]
 equalizer_volume_lookup:
@@ -1478,7 +1535,7 @@ done:
 
     ; Draw title
     ldx #2
-    ldy #7
+    ldy #(6+TEXT_OFFSET_Y)
     jsr ppu_address_tile
 
     ldy #0
@@ -1491,7 +1548,7 @@ done:
 
     ; Draw author
     ldx #2
-    ldy #9
+    ldy #(8+TEXT_OFFSET_Y)
     jsr ppu_address_tile
 
     ldy #0
