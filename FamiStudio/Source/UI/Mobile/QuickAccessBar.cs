@@ -684,13 +684,13 @@ namespace FamiStudio
 
             popupSelectedIdx = -1;
 
-            var items = new ListItem[inst.NumActiveEnvelopes];
+            var items = new ListItem[inst.NumVisibleEnvelopes];
 
             for (int i = 0, j = 0; i < EnvelopeType.Count; i++)
             {
                 var env = inst.Envelopes[i];
                 
-                if (env != null)
+                if (env != null && inst.IsEnvelopeVisible(i))
                 {
                     var item = new ListItem();
                     item.Color = Theme.LightGreyColor1;

@@ -19,7 +19,6 @@ using Google.Android.Material.Button;
 using Java.Util;
 
 using Debug       = System.Diagnostics.Debug;
-using Color       = System.Drawing.Color;
 using Orientation = Android.Widget.Orientation;
 using AndroidX.Core.Graphics;
 
@@ -178,7 +177,7 @@ namespace FamiStudio
                 (prop.controls[i] as CheckBox).Checked = selected[i];
         }
 
-        public int AddColoredTextBox(string value, System.Drawing.Color color)
+        public int AddColoredTextBox(string value, Color color)
         {
             return AddTextBox("Name", value);
         }

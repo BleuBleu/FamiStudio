@@ -23,7 +23,7 @@ namespace FamiStudio
             return dimension;
         }
 
-        public static Android.Graphics.Color ToAndroidColor(System.Drawing.Color color)
+        public static Android.Graphics.Color ToAndroidColor(Color color)
         {
             return new Android.Graphics.Color(color.R, color.G, color.B, color.A);
         }

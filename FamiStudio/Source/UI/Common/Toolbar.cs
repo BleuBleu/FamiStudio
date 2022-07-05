@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -310,7 +309,7 @@ namespace FamiStudio
             else
                 toolbarBrush = g.CreateVerticalGradientBrush(0, Height, Theme.DarkGreyColor5, Theme.DarkGreyColor4);
 
-            warningBrush = g.CreateSolidBrush(System.Drawing.Color.FromArgb(205, 77, 64));
+            warningBrush = g.CreateSolidBrush(Color.FromArgb(205, 77, 64));
             bmpButtons = g.GetBitmapAtlasRefs(ButtonImageNames);
             timeCodeFont = ThemeResources.FontHuge;
 

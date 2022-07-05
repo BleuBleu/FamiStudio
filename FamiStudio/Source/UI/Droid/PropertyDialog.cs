@@ -44,7 +44,7 @@ namespace FamiStudio
             this.canCancel = canCancel;
         }
 
-        public PropertyDialog(FamiStudioWindow win, string text, System.Drawing.Point pt, int width, bool leftAlign = false, bool topAlign = false)
+        public PropertyDialog(FamiStudioWindow win, string text, Point pt, int width, bool leftAlign = false, bool topAlign = false)
         {
             title = text;
         }

@@ -64,7 +64,7 @@ namespace FamiStudio
 
         public int Width  => glSurfaceView.Width;
         public int Height => glSurfaceView.Height;
-        public System.Drawing.Size Size => new System.Drawing.Size(glSurfaceView.Width, glSurfaceView.Height);
+        public Size Size => new Size(glSurfaceView.Width, glSurfaceView.Height);
         public bool IsLandscape => glSurfaceView.Width > glSurfaceView.Height;
         public bool MobilePianoVisible { get => controls.MobilePianoVisible; set => controls.MobilePianoVisible = value; }
         public string Text { get; set; }
@@ -81,13 +81,13 @@ namespace FamiStudio
             Debug.Assert(false);
         }
 
-        public System.Drawing.Rectangle Bounds
+        public Rectangle Bounds
         {
             get
             {
                 Android.Graphics.Rect rect = new Android.Graphics.Rect();
                 glSurfaceView.GetDrawingRect(rect);
-                return new System.Drawing.Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
+                return new Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
             }
         }
 
@@ -294,7 +294,7 @@ namespace FamiStudio
             var dlg = new PropertyDialog(this, "Test Dialog", 200);
 
             dlg.Properties.AddTextBox("TextBox", "Hello1", 0, "This is a long tooltip explaining what this property is all about");
-            dlg.Properties.AddColorPicker(System.Drawing.Color.Pink);
+            dlg.Properties.AddColorPicker(Color.Pink);
             dlg.Properties.AddButton("Hey", "This is a button", "Button tooltip");
             dlg.Properties.AddNumericUpDown("Integer", 10, 2, 50, "Integer Tooltip");
             dlg.Properties.AddDropDownList("Hey", new[] { "Option1 QQQ", "Option2 QQQ", "Option3 QQQ", "Option4 QQQ" }, "Option3 QQQ", "Dropdown tooltip");
@@ -398,29 +398,29 @@ namespace FamiStudio
             return modifiers;
         }
 
-        public System.Drawing.Point GetCursorPosition()
+        public Point GetCursorPosition()
         {
-            return System.Drawing.Point.Empty;
+            return Point.Empty;
         }
 
-        public System.Drawing.Point PointToClient(System.Drawing.Point p)
+        public Point PointToClient(Point p)
         {
-            return System.Drawing.Point.Empty;
+            return Point.Empty;
         }
 
-        public System.Drawing.Point PointToScreen(System.Drawing.Point p)
+        public Point PointToScreen(Point p)
         {
-            return System.Drawing.Point.Empty;
+            return Point.Empty;
         }
 
-        public System.Drawing.Point PointToClient(Control ctrl, System.Drawing.Point p)
+        public Point PointToClient(Control ctrl, Point p)
         {
-            return System.Drawing.Point.Empty;
+            return Point.Empty;
         }
 
-        public System.Drawing.Point PointToScreen(Control ctrl, System.Drawing.Point p)
+        public Point PointToScreen(Control ctrl, Point p)
         {
-            return System.Drawing.Point.Empty;
+            return Point.Empty;
         }
 
         public void RunEventLoop(bool allowSleep = false)

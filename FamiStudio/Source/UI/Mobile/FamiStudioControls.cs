@@ -221,9 +221,9 @@ namespace FamiStudio
             var fullscreenViewport = ctrl.WantsFullScreenViewport;
 
             if (fullscreenViewport)
-                gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
+                gfx.BeginDrawControl(new Rectangle(0, 0, width, height), height);
             else
-                gfx.BeginDrawControl(new System.Drawing.Rectangle(ctrl.WindowLeft, ctrl.WindowTop, ctrl.Width, ctrl.Height), height);
+                gfx.BeginDrawControl(new Rectangle(ctrl.WindowLeft, ctrl.WindowTop, ctrl.Width, ctrl.Height), height);
 
             gfx.SetLineBias(2);
 
@@ -237,7 +237,7 @@ namespace FamiStudio
             if (ShowRenderingTimes)
             {
                 var cmd = gfx.CreateCommandList();
-                cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontVeryLargeBold, 10, 10, gfx.GetSolidBrush(System.Drawing.Color.SpringGreen));
+                cmd.DrawText($"{(t1 - t0).TotalMilliseconds}", res.FontVeryLargeBold, 10, 10, gfx.GetSolidBrush(Color.SpringGreen));
                 gfx.DrawCommandList(cmd);
             }
 
@@ -253,11 +253,11 @@ namespace FamiStudio
         {
             if (transitionTimer > 0.0f)
             {
-                gfx.BeginDrawControl(new System.Drawing.Rectangle(0, 0, width, height), height);
+                gfx.BeginDrawControl(new Rectangle(0, 0, width, height), height);
 
                 var cmd = gfx.CreateCommandList();
                 var alpha = (byte)((1.0f - Math.Abs(transitionTimer - 0.5f) * 2) * 255);
-                var brush = gfx.GetSolidBrush(System.Drawing.Color.FromArgb(alpha, Theme.DarkGreyColor4));
+                var brush = gfx.GetSolidBrush(Color.FromArgb(alpha, Theme.DarkGreyColor4));
 
                 cmd.FillRectangle(activeControl.WindowLeft, activeControl.WindowTop, activeControl.WindowRight, activeControl.WindowBottom, brush);
 
