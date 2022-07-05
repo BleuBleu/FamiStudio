@@ -70,6 +70,7 @@ namespace FamiStudio
         private string lastExportFilename;
         private FamiStudio app;
 
+        private bool canExportToRom         = true;
         private bool canExportToFamiTracker = true;
         private bool canExportToFamiTone2   = true;
         private bool canExportToSoundEngine = true;
@@ -279,15 +280,21 @@ namespace FamiStudio
                     page.SetPropertyEnabled(4, !project.UsesAnyExpansionAudio);
                     break;
                 case ExportFormat.Rom:
-                    page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM"); // 0
-                    page.AddTextBox("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
-                    page.AddTextBox("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
-                    page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
-                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null); // 4
-                    if (project.UsesAnyExpansionAudio)
-                        page.AddLabel(Platform.IsDesktop ? null : "Note", "ROM export does not support audio expansions besides EPSM. FDS disk export only supports the FDS expansion. Any incompatible expansion channel(s) will be ignored during the export.", true);
-                    page.SetPropertyEnabled(0,  project.UsesFdsExpansion);
-                    page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
+                    if (!project.UsesMultipleExpansionAudios)
+                    {
+                        page.AddDropDownList("Type :", new[] { "NES ROM", "FDS Disk" }, project.UsesFdsExpansion ? "FDS Disk" : "NES ROM"); // 0
+                        page.AddTextBox("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
+                        page.AddTextBox("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
+                        page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
+                        page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null); // 4
+                        page.SetPropertyEnabled(0, project.UsesFdsExpansion);
+                        page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
+                    }
+                    else
+                    {
+                        page.AddLabel(null, "ROM export does not support multiple audio expansions. Limit yourself to a single expansion to enable export.", true);
+                        canExportToRom = false;
+                    }
                     break;
                 case ExportFormat.Midi:
                     page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
@@ -673,6 +680,9 @@ namespace FamiStudio
 
         private void ExportRom()
         {
+            if (!canExportToRom)
+                return;
+
             var props = dialog.GetPropertyPage((int)ExportFormat.Rom);
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(4));
 
