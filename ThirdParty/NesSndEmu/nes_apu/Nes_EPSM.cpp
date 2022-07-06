@@ -81,10 +81,12 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 	}
 	if (idx < 9 && idx > 2)
 	{
-		if (enabled)
-		mask_fm = mask_fm | (1 << (idx-3));
-		else
-		mask_fm = mask_fm & ~(1 << (idx-3));
+		if (enabled){
+			mask_fm = mask_fm | (1 << (idx-3));
+		}
+		else{
+			mask_fm = mask_fm & ~(1 << (idx-3));
+		}
 	}
 	if (idx > 8)
 	{
@@ -93,6 +95,17 @@ void Nes_EPSM::enable_channel(int idx, bool enabled)
 			maskRythm = maskRythm | (1 << (idx-9));
 		else
 			maskRythm = maskRythm & ~(1 << (idx-9));
+	}
+	if (idx > 2)
+	{
+		if (enabled){
+			opn2_mask = opn2_mask & ~(1 << (idx-3));
+			OPN2_MuteChannel(&opn2, opn2_mask);
+		}
+		else{
+			opn2_mask = opn2_mask | (1 << (idx-3));
+			OPN2_MuteChannel(&opn2, opn2_mask);
+		}
 	}
 }
 
@@ -112,19 +125,6 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 			break;
 		case 0x401d:
 		case 0x401f:
-			if (current_register == 0x10) {
-				data = data & maskRythm;
-			}
-				//currentRegister = data;
-			else if (current_register == 0x28) {
-				if(!(mask_fm & 0x1) && ((data & 0x7)) == 0){ mask = 1; }
-				else if (!(mask_fm & 0x2) && ((data & 0x7)) == 1) { mask = 1; }
-				else if (!(mask_fm & 0x4) && ((data & 0x7)) == 2) { mask = 1; }
-				else if (!(mask_fm & 0x8) && ((data & 0x7)) == 4) { mask = 1; }
-				else if (!(mask_fm & 0x10) && ((data & 0x7)) == 5) { mask = 1; }
-				else if (!(mask_fm & 0x20) && ((data & 0x7)) == 6) { mask = 1; }
-				//std::cout << "fm" << std::endl;
-			}
 			break;
 	}
 
@@ -135,17 +135,17 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	if (!mask) 
 	{	
 		queue.push(a0 | (a1 << 1), data);
-	
-		switch (addr) {
-		case 0x401d:
-			regs_a0[current_register] = data;
-			ages_a0[current_register] = 0;
-			break;
-		case 0x401f:
-			regs_a1[current_register] = data;
-			ages_a1[current_register] = 0;
-			break;
-		}
+	}
+
+	switch (addr) {
+	case 0x401d:
+		regs_a0[current_register] = data;
+		ages_a0[current_register] = 0;
+		break;
+	case 0x401f:
+		regs_a1[current_register] = data;
+		ages_a1[current_register] = 0;
+		break;
 	}
 	//if (!mask) OPN2_Write(&opn2, (a0 | (a1 << 1)), data);
 	//run_until(time);
