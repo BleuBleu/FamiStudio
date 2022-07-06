@@ -145,6 +145,12 @@ namespace FamiStudio
             }
         }
 
+        public void SetChunkMaxLengthUnsafe(int c, int m)
+        {
+            chunkLength = c;
+            maxLength = m;
+        }
+
         public void SetLoopReleaseUnsafe(int l, int r)
         {
             loop = l;

@@ -320,10 +320,10 @@ namespace FamiStudio
             switch (expansion)
             {
                 case ExpansionType.N163:
-                    UpdateN163WaveEnvelope();
+                    envelopes[EnvelopeType.N163Waveform].SetChunkMaxLengthUnsafe(n163WaveSize, N163MaxWaveCount * n163WaveSize);
                     break;
                 case ExpansionType.Fds:
-                    UpdateFdsWaveEnvelope();
+                    envelopes[EnvelopeType.FdsWaveform].SetChunkMaxLengthUnsafe(n163WaveSize, N163MaxWaveCount * n163WaveSize);
                     break;
             }
         }

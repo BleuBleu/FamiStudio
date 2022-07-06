@@ -481,6 +481,7 @@ namespace FamiStudio
                             {
                                 if (instrumentNew == null)
                                 {
+                                    note.HasRelease = false;
                                     note.Value = Note.NoteInvalid;
                                     note.Duration = 0;
                                 }

@@ -12,7 +12,6 @@
 
 N163 Multi-wave:
 ================
-- Release note dont save? See 4000.fms, not sure what hes talking about.
 - IMPORTER??? How should it work?
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
