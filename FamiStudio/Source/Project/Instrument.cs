@@ -591,6 +591,7 @@ namespace FamiStudio
             if (buffer.Version < 14 && (IsN163Instrument || IsFdsInstrument))
             {
                 envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
+                envelopes[EnvelopeType.WaveformRepeat].Length = 1;
             }
 
             if (buffer.IsReading)
