@@ -1,7 +1,11 @@
-﻿using System;
+﻿// Enable to update the .bin files that help debug the ROM.
+//#define DUMP_FDSDATA_BIN
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -111,8 +115,12 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Info, $"FDS code and graphics files: {fdsDiskInitBytes.Length} bytes.");
 
                 var fileIndex     = FdsFirstFileIndex;
-                var dpcmFileIndex = 0;
+                var dpcmFileIndex = 0xff;
 
+#if DUMP_FDSDATA_BIN
+                // No code, no samples.
+                fdsFileBytes.Clear();
+#else
                 // Create the DPCM file if needed.
                 if (project.UsesSamples)
                 {
@@ -131,6 +139,7 @@ namespace FamiStudio
 
                     Log.LogMessage(LogSeverity.Info, $"DPCM file size: {dpcmBytes.Length} bytes.");
                 }
+#endif
 
                 var projectInfo = BuildProjectInfo(songIds, name, author);
                 var songTable   = BuildSongTableOfContent(project);
@@ -142,7 +151,7 @@ namespace FamiStudio
                     var songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, FdsSongDataAddr, FdsDpcmStart, MachineType.NTSC);
 
                     songTable[i].bank  = (byte)fileIndex;
-                    songTable[i].flags = (byte)(song.UsesDpcm ? dpcmFileIndex : 0);
+                    songTable[i].flags = (byte)(song.UsesDpcm ? dpcmFileIndex : 0xff);
 
                     if (songBytes.Length > FdsMaxSongSize)
                     {
@@ -156,14 +165,20 @@ namespace FamiStudio
                         break;
                     }
 
-                    AddFile(fdsFileBytes, fileIndex, FdsSongDataAddr, $"SONG{i}...", songBytes);
+                    var songFilename = $"SONG{i}";
+                    songFilename += new string('.', 8 - songFilename.Length);
+
+                    AddFile(fdsFileBytes, fileIndex, FdsSongDataAddr, songFilename, songBytes);
 
                     fileIndex++;
 
                     Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' file size: {songBytes.Length} bytes.");
                 }
 
-                //File.WriteAllBytes("D:\\dump\\fdsdata.bin", fdsFileBytes.ToArray());
+#if DUMP_FDSDATA_BIN
+                var songDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"..\\..\\Rom\\fdsdata.bin");
+                File.WriteAllBytes(songDataPath, fdsFileBytes.ToArray());
+#endif
 
                 // Use this field for the number of files.
                 projectInfo.fdsFileCount = (byte)fileIndex;
@@ -182,7 +197,10 @@ namespace FamiStudio
                         Marshal.Copy(new IntPtr(songEntry), tocBytes, sizeof(RomProjectInfo) + i * sizeof(RomSongEntry), sizeof(RomSongEntry));
                 }
 
-                //File.WriteAllBytes("D:\\dump\\fdstoc.bin", tocBytes);
+#if DUMP_FDSDATA_BIN
+                var tocDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"..\\..\\Rom\\fdstoc.bin");
+                File.WriteAllBytes(tocDataPath, tocBytes);
+#endif
 
                 // Path TOC file.
                 var byteArray = fdsFileBytes.ToArray();

@@ -7,12 +7,12 @@
 - BUG : Grid "a" bug from how2? Right click! Mac only???
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Envelope dragging is broken
-- BUG : In Dr. Wily, when exported as NSF, between 50 and 60 sec, there is some weird stuff. Mesen skips notes, NSFPlay plays high pitch notes.
 - BUG : Selecting a full pattern selects + 1 frame?
-- BUG : Rom export, when there are 12 songs (sonic), the last 4 loop over the first ones.
+- Keypad ENTER not recognized.
 
 N163 Multi-wave:
 ================
+- Release note dont save? See 4000.fms, not sure what hes talking about.
 - IMPORTER??? How should it work?
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
@@ -20,8 +20,6 @@ N163 Multi-wave:
 - FIX : Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).
 - TEST : Test no attack in playback + NSF.
 - TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
-- UNIT-TEST : Add multi-wave to N163/FDS unit tests.
-- UNIT-TEST : Add FDS mod to unit tests (effect + delay)
 - BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
 - BUG : Right-click, set loop point assert.
 - BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
@@ -62,6 +60,12 @@ Testing:
 - Restest sequencer hide channel a bunch, test vertical scroll bars, test mobile too. Make sure not broken.
 - Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
 - Restest multiple songs per file (changed multiplication thing)
+
+Packaging:
+==========
+- UNIT-TEST : Add multi-wave to N163/FDS unit tests.
+- UNIT-TEST : Add FDS mod to unit tests (effect + delay)
+- Opening Gyruss (see if other FDS/N163 songs affected) sets the waveform to 'Sine'. This is bad data. How did it happen??
 
 Batch convert PNG -> TGA
 ==========================

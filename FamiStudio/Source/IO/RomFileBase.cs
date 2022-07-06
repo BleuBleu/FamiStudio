@@ -27,10 +27,10 @@ namespace FamiStudio
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         protected unsafe struct RomSongEntry
         {
-            public byte bank;
-            public ushort address;
-            public byte flags;
             public fixed byte name[28];
+            public byte bank;
+            public byte flags;
+            public ushort address;
         }
 
         protected static readonly Dictionary<char, byte> specialCharMap = new Dictionary<char, byte>

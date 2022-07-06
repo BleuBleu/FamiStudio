@@ -58,6 +58,7 @@ r5: .res 1
 
 ; General purpose pointers.
 p0: .res 2
+p1: .res 2
 
 .segment "RAM"
 
@@ -102,7 +103,7 @@ INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
 .if FAMISTUDIO_EXP_FDS
 
 ; FDS File headers
-FILE_COUNT = 6 + 1
+FILE_COUNT = 6
 
 .segment "SIDE1A"
 ; block 1
@@ -256,21 +257,21 @@ MAX_SONGS = 12
 
 ; Will be overwritten by FamiStudio.
 ; Each entry in the song table is 32-bytes:
+;  - 28 bytes: song name.
 ;  - 1 byte: start page of the song
 ;  - 2 byte: start address of the song.
 ;  - 1 byte: song flags (uses DPCM or not)
-;  - 28 bytes: song name.
 song_table:
+song_name:       .res  28
 .if FAMISTUDIO_EXP_FDS
 song_fds_file:   .byte $00
 .else
 song_page_start: .byte $00
 .endif
-song_addr_start: .word $8000
 song_flags:      .byte $00
-song_name:       .res  28
+song_addr_start: .word $8000
 
-; the remaining 7 songs.
+; the remaining songs.
 .res 32 * (MAX_SONGS - 1)
 
 .segment "CHR0"
@@ -534,8 +535,6 @@ default_palette:
             bne bank_loop
 
     .endif
-
-
 
     sei       ; mask interrupts
     lda #0
@@ -958,9 +957,8 @@ version_text: ;
 
 .proc play_song
 
+    song_ptr = p1
     text_ptr = p0
-    song_idx_mul_32 = r4
-    temp_x = r5
 
     ; each song table entry is 32-bytes.
     asl
@@ -968,12 +966,23 @@ version_text: ;
     asl
     asl
     asl
-    sta song_idx_mul_32
-    tax
+    tay
+    sta song_ptr+0
+    lda #0
+    adc #0
+    sta song_ptr+1
+
+    lda #<song_table
+    adc song_ptr+0
+    sta song_ptr+0
+    sta text_ptr+0
+    lda #>song_table
+    adc song_ptr+1
+    sta song_ptr+1
+    sta text_ptr+1
 
 .if ::FAMISTUDIO_EXP_FDS
     
-    stx temp_x
     jsr famistudio_music_stop
     jsr famistudio_update
     jsr update_all_equalizers
@@ -991,18 +1000,13 @@ version_text: ;
     jsr ppu_update
 
     ; Load song + DPCM if used.
-    ldx temp_x
-    lda song_fds_file, x
+    ldy #28
+    lda (song_ptr), y
     sta load_list+0
 
-    ; We use the "song_flags" field to store the DPCM file index (0 = no DPCM)
-    lda song_flags, x
-    beq no_dpcm
-    sta load_list+1
-    jmp load_file
-
-no_dpcm:
-    lda #$ff
+    ; We use the "song_flags" field to store the DPCM file index (-1 = no DPCM)
+    iny
+    lda (song_ptr), y
     sta load_list+1
 
 load_file:
@@ -1017,38 +1021,47 @@ load_success:
     ldy #>__SONG_RUN__
     ldx #<__SONG_RUN__
 
+    lda song_ptr+0
+    sta text_ptr+0
+    lda song_ptr+1
+    sta text_ptr+1    
+
 .else
 
     ; Map 2 consecutive 8KB pages from the song start page.
     .if ::FAMISTUDIO_EXP_VRC7
 
-        ldy song_page_start, x
-        sty VRC7_PRG_SELECT_8000
-        iny
-        sty VRC7_PRG_SELECT_A000
-        ldy dpcm_bank
-        sty VRC7_PRG_SELECT_C000
+        ldy #28
+        lda (song_ptr), y
+        tax
+        stx VRC7_PRG_SELECT_8000
+        inx
+        stx VRC7_PRG_SELECT_A000
+        ldx dpcm_bank
+        stx VRC7_PRG_SELECT_C000
 
     .elseif ::FAMISTUDIO_EXP_S5B
 
         ; Commands $9, $A, $B control PRG bank at $8000, $a000 and $c000 respectively.
-        ldy #9
-        sty FME7_COMMAND
-        lda song_page_start, x
+        ldx #9
+        stx FME7_COMMAND
+        ldy #28
+        lda (song_ptr), y
         sta FME7_PARAM
-        iny
+        inx
         clc
         adc #1
-        sty FME7_COMMAND
+        stx FME7_COMMAND
         sta FME7_PARAM
-        iny        
-        sty FME7_COMMAND
+        inx        
+        stx FME7_COMMAND
         lda dpcm_bank
         sta FME7_PARAM     
 
     .elseif ::FAMISTUDIO_EXP_N163
 
-        lda song_page_start, x
+        ldy #28
+        lda (song_ptr), y
         sta N163_PRG_SELECT_8000
         clc
         adc #1
@@ -1058,7 +1071,8 @@ load_success:
 
     .elseif ::FAMISTUDIO_EXP_MMC5
 
-        lda song_page_start, x
+        ldy #28
+        lda (song_ptr), y
         ora #MMC5_ROM_FLAGS
         sta MMC5_PRG_SELECT_8000
         clc
@@ -1071,7 +1085,8 @@ load_success:
     .elseif ::FAMISTUDIO_EXP_VRC6
 
         ; VRC6 uses 16KB pages, so just one page to map.
-        lda song_page_start, x
+        ldy #28
+        lda (song_ptr), y
         sta VRC6_PRG_SELECT_8000
         lda dpcm_bank
         asl ; We count in 16KB page, but are mapping a 8KB page, x2.
@@ -1080,21 +1095,26 @@ load_success:
     .else
 
         ; No need to worry about DPCM page here, MMC3 has second-to-last page fixed.
-        lda #6
-        ldy song_page_start, x
-        sta MMC3_BANK_SELECT
+        ldx #6
+        ldy #28
+        lda (song_ptr), y
+        tay
+        stx MMC3_BANK_SELECT
         sty MMC3_BANK_DATA
-        lda #7
+        ldx #7
         iny
-        sta MMC3_BANK_SELECT
+        stx MMC3_BANK_SELECT
         sty MMC3_BANK_DATA       
 
     .endif
 
     ; Load song pointer
-    ldy song_addr_start+1, x ; hi-byte
-    lda song_addr_start+0, x ; lo-byte
+    ldy #30
+    lda (song_ptr), y    
     tax
+    iny
+    lda (song_ptr), y    
+    tay
 
 .endif
 
@@ -1109,14 +1129,6 @@ load_success:
     jsr famistudio_music_play
 
     ;update title.
-    lda #<song_name
-    clc
-    adc song_idx_mul_32
-    sta text_ptr+0
-    lda #>song_name
-    adc #0
-    sta text_ptr+1
-
     ldx #2
     ldy #(10+TEXT_OFFSET_Y)
     jsr draw_text
@@ -1188,8 +1200,15 @@ equalizer_ppu_addr_lo_lookup:
     .byte $95 ; EPSM FM4
     .byte $98 ; EPSM FM5
     .byte $9b ; EPSM FM6
+.elseif FAMISTUDIO_EXP_FDS
+    .byte $45 ; Square 1
+    .byte $49 ; Square 2
+    .byte $4d ; Triangle
+    .byte $51 ; Noise
+    .byte $55 ; DPCM
+    .byte $59 ; FDS
 .elseif FAMISTUDIO_EXP_MMC5
-    .byte $43 ; Square 1
+    .byte $44 ; Square 1
     .byte $47 ; Square 2
     .byte $4b ; Triangle
     .byte $4f ; Noise
