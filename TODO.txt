@@ -11,7 +11,6 @@ N163 Multi-wave:
 - IMPORTER??? How should it work?
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
-- IO : FamiStudio text import/export.
 - FIX : Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).
 - TEST : Test no attack in playback + NSF.
 - TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.

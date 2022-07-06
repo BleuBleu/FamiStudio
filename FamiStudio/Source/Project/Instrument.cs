@@ -315,7 +315,7 @@ namespace FamiStudio
             wavEnv.SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
         }
 
-        private void InitWaveformsChunkLengths()
+        public void PerformPostLoadActions()
         {
             switch (expansion)
             {
@@ -609,7 +609,7 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
-                InitWaveformsChunkLengths();
+                PerformPostLoadActions();
             }
         }
     }

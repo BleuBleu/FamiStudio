@@ -108,6 +108,7 @@ namespace FamiStudio
 
                     if (instrument.IsFdsInstrument)
                     {
+                        instrumentLine += GenerateAttribute("FdsWaveCount", instrument.FdsWaveCount);
                         instrumentLine += GenerateAttribute("FdsWavePreset", WavePresetType.Names[instrument.FdsWavePreset]);
                         instrumentLine += GenerateAttribute("FdsModPreset",  WavePresetType.Names[instrument.FdsModPreset]);
                         if (instrument.FdsMasterVolume != 0) instrumentLine += GenerateAttribute("FdsMasterVolume", instrument.FdsMasterVolume);
@@ -120,6 +121,7 @@ namespace FamiStudio
                         instrumentLine += GenerateAttribute("N163WavePreset", WavePresetType.Names[instrument.N163WavePreset]);
                         instrumentLine += GenerateAttribute("N163WaveSize", instrument.N163WaveSize);
                         instrumentLine += GenerateAttribute("N163WavePos", instrument.N163WavePos);
+                        instrumentLine += GenerateAttribute("N163WaveCount", instrument.N163WaveCount);
                     }
                     else if (instrument.IsVrc6Instrument)
                     {
@@ -435,12 +437,14 @@ namespace FamiStudio
                                 if (parameters.TryGetValue("FdsModSpeed",     out var fdsModSpeedStr))  instrument.FdsModSpeed     = ushort.Parse(fdsModSpeedStr);
                                 if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
                                 if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
+                                if (parameters.TryGetValue("FdsWaveCount",    out var wavCountStr))     instrument.FdsWaveCount    = byte.Parse(wavCountStr);
                             }
                             else if (instrument.IsN163Instrument)
                             {
                                  if (parameters.TryGetValue("N163WavePreset", out var wavPresetStr))    instrument.N163WavePreset = (byte)WavePresetType.GetValueForName(wavPresetStr);
                                  if (parameters.TryGetValue("N163WaveSize",   out var n163WavSizeStr))  instrument.N163WaveSize   = byte.Parse(n163WavSizeStr);
                                  if (parameters.TryGetValue("N163WavePos",    out var n163WavPosStr))   instrument.N163WavePos    = byte.Parse(n163WavPosStr);
+                                 if (parameters.TryGetValue("N163WaveCount",  out var wavCountStr))     instrument.N163WaveCount  = byte.Parse(wavCountStr);
                             }
                             else if (instrument.IsVrc6Instrument)
                             {
@@ -638,7 +642,15 @@ namespace FamiStudio
                     }
                 }
 
+                // Post-load
+                foreach (var inst in project.Instruments)
+                {
+                    inst.PerformPostLoadActions();
+                }
+
                 project.SortEverything(false);
+                project.ValidateIntegrity();
+
                 ResetCulture();
 
                 return project;
