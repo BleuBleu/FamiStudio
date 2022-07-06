@@ -466,6 +466,11 @@ namespace FamiStudio
                     }
                 }
             }
+
+            if (IsN163Instrument && n163WavePreset != WavePresetType.Custom)
+                Debug.Assert(envelopes[EnvelopeType.N163Waveform].ValidatePreset(EnvelopeType.N163Waveform, n163WavePreset));
+            if (IsFdsInstrument && fdsWavPreset != WavePresetType.Custom)
+                Debug.Assert(envelopes[EnvelopeType.FdsWaveform].ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset));
 #endif
         }
 

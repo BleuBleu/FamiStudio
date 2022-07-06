@@ -1632,24 +1632,44 @@ namespace FamiStudio
                 }
             }
 
-            if (captureOperation == CaptureOperation.DragSong && captureThresholdMet)
+            if (captureOperation != CaptureOperation.None && captureThresholdMet)
             {
-                var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
-                var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
-
-                if (buttonIdx >= 0)
+                if (captureOperation == CaptureOperation.DragSong)
                 {
-                    var button = buttons[buttonIdx];
+                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
+                    var buttonIdx = GetButtonAtCoord(pt.X, pt.Y - buttonSizeY / 2, out _);
 
-                    if (button.type == ButtonType.Song ||
-                        button.type == ButtonType.SongHeader)
+                    if (buttonIdx >= 0)
                     {
-                        var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
-                        c.DrawLine(0, lineY, contentSizeX, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                        var button = buttons[buttonIdx];
+
+                        if (button.type == ButtonType.Song ||
+                            button.type == ButtonType.SongHeader)
+                        {
+                            var lineY = (buttonIdx + 1) * buttonSizeY - scrollY;
+                            c.DrawLine(0, lineY, contentSizeX, lineY, c.Graphics.GetSolidBrush(draggedSong.Color), draggedLineSizeY);
+                        }
+                    }
+                }
+                else if ((captureOperation == CaptureOperation.DragInstrument && envelopeDragIdx >= 0) || (captureOperation == CaptureOperation.DragArpeggio && draggedArpeggio != null))
+                {
+                    var pt = Platform.IsDesktop ? PointToClient(CursorPosition) : new Point(mouseLastX, mouseLastY);
+                    if (ClientRectangle.Contains(pt))
+                    {
+                        var button = buttons[captureButtonIdx];
+                        var bx = pt.X - captureButtonRelX;
+                        var by = pt.Y - captureButtonRelY - topTabSizeY;
+
+                        if (envelopeDragIdx >= 0)
+                            c.DrawBitmapAtlas(bmpEnvelopes[envelopeDragIdx], bx, by, 0.5f, bitmapScale, Color.Black);
+                        else
+                            c.DrawBitmapAtlas(button.bmp, bx, by, 0.5f, bitmapScale, Color.Black);
+
+                        if (Platform.IsMobile)
+                            c.DrawRectangle(bx, by, bx + iconSize - 4, by + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
                     }
                 }
             }
-
             if (needsScrollBar)
             {
                 int scrollBarSizeY = (int)Math.Round(scrollAreaSizeY * (scrollAreaSizeY / (float)virtualSizeY));
@@ -2070,17 +2090,104 @@ namespace FamiStudio
 
         private void UpdateDragInstrument(int x, int y, bool final)
         {
-            if (final && Platform.IsDesktop && !ClientRectangle.Contains(x, y))
+            if (final)
             {
-                InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(x, y)));
+                if (ClientRectangle.Contains(x, y))
+                {
+                    var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
+
+                    var instrumentSrc = draggedInstrument;
+                    var instrumentDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Instrument ? buttons[buttonIdx].instrument : null;
+
+                    if (instrumentSrc != instrumentDst && instrumentSrc != null && instrumentDst != null && envelopeDragIdx != -1)
+                    {
+                        if (instrumentSrc.Expansion == instrumentDst.Expansion)
+                        {
+                            Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the {EnvelopeType.Names[envelopeDragIdx]} envelope of instrument '{instrumentSrc.Name}' to '{instrumentDst.Name}'?", "Copy Envelope", MessageBoxButtons.YesNo, (r) =>
+                            {
+                                if (r == DialogResult.Yes)
+                                {
+                                    App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrumentDst.Id);
+                                    instrumentDst.Envelopes[envelopeDragIdx] = instrumentSrc.Envelopes[envelopeDragIdx].ShallowClone();
+                                    instrumentDst.Envelopes[envelopeDragIdx].ClampToValidRange(instrumentDst, envelopeDragIdx);
+
+                                    // HACK : Copy some envelope related stuff. Need to cleanup the envelope code.
+                                    switch (envelopeDragIdx)
+                                    {
+                                        case EnvelopeType.FdsWaveform:
+                                            instrumentDst.FdsWavePreset = instrumentSrc.FdsWavePreset;
+                                            break;
+                                        case EnvelopeType.FdsModulation:
+                                            instrumentDst.FdsModPreset = instrumentSrc.FdsModPreset;
+                                            break;
+                                        case EnvelopeType.N163Waveform:
+                                            instrumentDst.N163WavePreset = instrumentSrc.N163WavePreset;
+                                            instrumentDst.N163WaveSize = instrumentSrc.N163WaveSize;
+                                            break;
+                                    }
+
+                                    App.UndoRedoManager.EndTransaction();
+
+                                    if (Platform.IsDesktop)
+                                        App.StartEditInstrument(instrumentDst, envelopeDragIdx);
+                                }
+                            });
+                        }
+                        else
+                        {
+                            App.DisplayNotification($"Incompatible audio expansion!"); ;
+                        }
+                    }
+                }
+                else if (Platform.IsDesktop)
+                {
+                    InstrumentDroppedOutside(draggedInstrument, PointToScreen(new Point(x, y)));
+                }
+            }
+            else
+            {
+                ScrollIfNearEdge(x, y);
+                MarkDirty();
             }
         }
 
         private void UpdateDragArpeggio(int x, int y, bool final)
         {
-            if (final && Platform.IsDesktop && !ClientRectangle.Contains(x, y))
+            if (final)
             {
-                ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(x, y)));
+                if (ClientRectangle.Contains(x, y))
+                {
+                    var buttonIdx = GetButtonAtCoord(x, y, out var subButtonType);
+
+                    var arpeggioSrc = draggedArpeggio;
+                    var arpeggioDst = buttonIdx >= 0 && buttons[buttonIdx].type == ButtonType.Arpeggio ? buttons[buttonIdx].arpeggio : null;
+
+                    if (arpeggioSrc != arpeggioDst && arpeggioSrc != null && arpeggioDst != null && envelopeDragIdx != -1)
+                    {
+                        Platform.MessageBoxAsync(ParentWindow, $"Are you sure you want to copy the arpeggio values from '{arpeggioSrc.Name}' to '{arpeggioDst.Name}'?", "Copy Arpeggio", MessageBoxButtons.YesNo, (r) =>
+                        {
+                            if (r == DialogResult.Yes)
+                            {
+                                App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, arpeggioDst.Id);
+                                arpeggioDst.Envelope.Length = arpeggioSrc.Envelope.Length;
+                                arpeggioDst.Envelope.Loop = arpeggioSrc.Envelope.Loop;
+                                Array.Copy(arpeggioSrc.Envelope.Values, arpeggioDst.Envelope.Values, arpeggioDst.Envelope.Values.Length);
+                                App.UndoRedoManager.EndTransaction();
+                                if (Platform.IsDesktop)
+                                    App.StartEditArpeggio(arpeggioDst);
+                            }
+                        });
+                    }
+                }
+                else if (Platform.IsDesktop)
+                {
+                    ArpeggioDroppedOutside?.Invoke(draggedArpeggio, PointToScreen(new Point(x, y)));
+                }
+            }
+            else
+            {
+                ScrollIfNearEdge(x, y);
+                MarkDirty();
             }
         }
 

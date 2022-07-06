@@ -6,7 +6,6 @@
 - BUG : Hide channels + scroll doesnt work. 
 - BUG : Grid "a" bug from how2? Right click! Mac only???
 - BUG : Notes per beat doesnt go to 1?
-- BUG : Envelope dragging is broken
 - BUG : Selecting a full pattern selects + 1 frame?
 - Keypad ENTER not recognized.
 
@@ -21,7 +20,6 @@ N163 Multi-wave:
 - TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
 - BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
 - BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
-- BUG : Instrument player crashes???
 
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
