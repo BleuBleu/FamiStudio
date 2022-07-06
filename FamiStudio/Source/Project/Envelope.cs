@@ -447,6 +447,25 @@ namespace FamiStudio
             }
         }
 
+        public bool ValidatePreset(int type, int preset)
+        {
+            var oldValues = values.Clone() as sbyte[];
+            SetFromPreset(type, preset);
+            var matches = true;
+
+            for (int i = 0; i < length; i++)
+            {
+                if (oldValues[i] != values[i])
+                {
+                    matches = false;
+                    break;
+                }
+            }
+
+            values = oldValues;
+            return matches;
+        }
+
         public uint CRC
         {
             get

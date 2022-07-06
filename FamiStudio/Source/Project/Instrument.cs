@@ -592,6 +592,14 @@ namespace FamiStudio
             {
                 envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;
+
+                // I found some old files where the preset does not match with 
+                // the actual waves. Likely stuff i made with an old development
+                // version. Need to check if the preset matches the waveform here :(
+                if (IsN163Instrument && n163WavePreset != WavePresetType.Custom && !envelopes[EnvelopeType.N163Waveform].ValidatePreset(EnvelopeType.N163Waveform, n163WavePreset))
+                    n163WavePreset = WavePresetType.Custom;
+                if (IsFdsInstrument && fdsWavPreset != WavePresetType.Custom && !envelopes[EnvelopeType.FdsWaveform].ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
+                    n163WavePreset = WavePresetType.Custom;
             }
 
             if (buffer.IsReading)
