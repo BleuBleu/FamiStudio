@@ -1,6 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
-using System.Drawing;
 using System.Diagnostics;
 using static GLFWDotNet.GLFW;
 
