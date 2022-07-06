@@ -315,7 +315,7 @@ namespace FamiStudio
             wavEnv.SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
         }
 
-        private void SyncEnvelopes()
+        private void InitWaveformsChunkLengths()
         {
             switch (expansion)
             {
@@ -323,7 +323,7 @@ namespace FamiStudio
                     envelopes[EnvelopeType.N163Waveform].SetChunkMaxLengthUnsafe(n163WaveSize, N163MaxWaveCount * n163WaveSize);
                     break;
                 case ExpansionType.Fds:
-                    envelopes[EnvelopeType.FdsWaveform].SetChunkMaxLengthUnsafe(n163WaveSize, N163MaxWaveCount * n163WaveSize);
+                    envelopes[EnvelopeType.FdsWaveform].SetChunkMaxLengthUnsafe(64, FdsMaxWaveCount * 64);
                     break;
             }
         }
@@ -595,7 +595,7 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
-                SyncEnvelopes();
+                InitWaveformsChunkLengths();
             }
         }
     }
