@@ -988,13 +988,14 @@ namespace FamiStudio
 
             if (requiresDialog)
             {
-                // Our rendering code currently always requires a valid project/song
-                // to be present so we create a dummy project while the MIDI/NSF dialog
-                // is running.
+                // HACK : Our rendering code currently always requires a valid project/song
+                // to be present so we create a dummy project while the MIDI/NSF dialog is
+                // running.
                 Debug.Assert(this.project == null);
 
                 this.project = new Project(true);
                 this.song = this.project.Songs[0];
+                this.ResetEverything();
 
                 if (mid)
                 {
@@ -1007,6 +1008,7 @@ namespace FamiStudio
                     project = dlg.ShowDialog(window);
                 }
 
+                // Undo the hack mentionned above.
                 this.song = null;
                 this.project = null;
             }
