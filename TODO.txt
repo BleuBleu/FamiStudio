@@ -7,7 +7,6 @@
 - BUG : Grid "a" bug from how2? Right click! Mac only???
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Selecting a full pattern selects + 1 frame?
-- Keypad ENTER not recognized.
 
 N163 Multi-wave:
 ================

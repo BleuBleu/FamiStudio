@@ -120,7 +120,7 @@ namespace FamiStudio
             }
             else if (hoveredItemIndex >= 0)
             {
-                if (e.Key == Keys.Enter)
+                if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
                 {
                     App.HideContextMenu();
                     MarkDirty();
