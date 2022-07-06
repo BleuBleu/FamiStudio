@@ -366,7 +366,7 @@ namespace FamiStudio
                 }
                 else if (click == ClickType.Right)
                 {
-                    qwertyKeys[rowIdx, colIdx - 2] = 0;
+                    qwertyKeys[rowIdx, colIdx - 2] = -1;
                     pages[(int)ConfigSection.QWERTY].UpdateGrid(1, GetQwertyMappingStrings());
                 }
             }

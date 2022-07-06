@@ -1,10 +1,8 @@
 4.0.0
 =====
-- CRASH : Open 2 NSF in a row with diff expansions. editChannel is out of bounds.
 - CRASH : 240 BPM / 1 / 1
 - BUG : Shy mode vs. channel icons.
 - BUG : Hide channels + scroll doesnt work. 
-- BUG : Grid "a" bug from how2? Right click! Mac only???
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Selecting a full pattern selects + 1 frame?
 

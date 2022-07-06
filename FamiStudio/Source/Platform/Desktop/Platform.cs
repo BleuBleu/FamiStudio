@@ -177,7 +177,7 @@ namespace FamiStudio
 
         public static int GetKeyScancode(Keys key)
         {
-            return initializedGlfw ? glfwGetKeyScancode((int)key) : 0;
+            return initializedGlfw ? glfwGetKeyScancode((int)key) : -1;
         }
 
         public static string KeyToString(Keys key)
