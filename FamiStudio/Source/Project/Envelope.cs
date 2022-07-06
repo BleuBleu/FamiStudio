@@ -110,7 +110,7 @@ namespace FamiStudio
                 if (value >= 0 && canLoop)
                 {
                     if (release >= 0)
-                        loop = Utils.Clamp(value, 0, release - 1);
+                        loop = Utils.Clamp(value, 0, release - chunkLength);
                     else
                         loop = Math.Min(value, length);
 
@@ -133,7 +133,7 @@ namespace FamiStudio
                 if (value >= 0 && canRelease)
                 {
                     if (loop >= 0)
-                        release = Utils.Clamp(value, loop + 1, length);
+                        release = Utils.Clamp(value, loop + chunkLength, length);
 
                     if (release >= length)
                         release = -1;
@@ -143,6 +143,12 @@ namespace FamiStudio
                     release = -1;
                 }
             }
+        }
+
+        public void SetLoopReleaseUnsafe(int l, int r)
+        {
+            loop = l;
+            release = r;
         }
 
         public int MaxLength

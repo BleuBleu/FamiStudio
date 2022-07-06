@@ -293,8 +293,7 @@ namespace FamiStudio
             wavEnv.Length = 64 * fdsWaveCount;
             wavEnv.MaxLength = 1024;
             repEnv.Length = fdsWaveCount;
-            repEnv.Loop = wavEnv.Loop >= 0 ? wavEnv.Loop / 64 : -1;
-            repEnv.Release = wavEnv.Release >= 0 ? wavEnv.Release / 64 : -1;
+            repEnv.SetLoopReleaseUnsafe(wavEnv.Loop >= 0 ? wavEnv.Loop / 64 : -1, wavEnv.Release >= 0 ? wavEnv.Release / 64 : -1);
             wavEnv.SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
         }
 
@@ -312,8 +311,7 @@ namespace FamiStudio
             wavEnv.Length = n163WaveSize * n163WaveCount;
 			wavEnv.MaxLength = N163MaxWaveCount * n163WaveSize;
             repEnv.Length = n163WaveCount;
-            repEnv.Loop = wavEnv.Loop >= 0 ? wavEnv.Loop / n163WaveSize : -1;
-            repEnv.Release = wavEnv.Release >= 0 ? wavEnv.Release / n163WaveSize : -1;
+            repEnv.SetLoopReleaseUnsafe(wavEnv.Loop >= 0 ? wavEnv.Loop / n163WaveSize : -1, wavEnv.Release >= 0 ? wavEnv.Release / n163WaveSize : -1);
             wavEnv.SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
         }
 

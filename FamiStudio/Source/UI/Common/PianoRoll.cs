@@ -3409,7 +3409,7 @@ namespace FamiStudio
                     }
                     break;
                 case CaptureOperation.DragRelease:
-                    if (env.Release != length)
+                    if (env.Release != length && length > 0)
                     {
                         env.Release = length;
                         editInstrument.NotifyEnvelopeChanged(editEnvelope);
@@ -6258,8 +6258,8 @@ namespace FamiStudio
 
         private void SetEnvelopeLoopRelease(int x, int y, bool release)
         {
-            int idx = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
             var env = EditEnvelope;
+            var idx = Utils.RoundDown(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), env.ChunkLength);
 
             if (editMode == EditionMode.Enveloppe)
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
@@ -6268,15 +6268,17 @@ namespace FamiStudio
 
             if (release)
             {
-                Debug.Assert(idx > 0);
-                if (env.Loop < 0 || env.Loop >= idx)
-                    env.Loop = idx - 1;
-                env.Release = idx;
+                if (idx > 0)
+                {
+                    if (env.Loop < 0 || env.Loop >= idx)
+                        env.Loop = idx - env.ChunkLength;
+                    env.Release = idx;
+                }
             }
             else
             {
                 if (env.Release > 0)
-                    env.Release = idx + 1;
+                    env.Release = idx + env.ChunkLength;
                 env.Loop = idx;
             }
 

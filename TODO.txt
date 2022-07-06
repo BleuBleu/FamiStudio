@@ -21,10 +21,8 @@ N163 Multi-wave:
 - TEST : Test no attack in playback + NSF.
 - TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
 - BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
-- BUG : Right-click, set loop point assert.
 - BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
 - BUG : Instrument player crashes???
-- POLISH : Lots of N163 poppin in FTM song "donkey kong contry"? Also pops in FamiTracker, but a bit less?
 
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
