@@ -877,6 +877,7 @@ namespace FamiStudio
                 showEffectsPanel = false;
                 ClearSelection();
                 UpdateRenderCoords();
+                MarkDirty();
             }
         }
 
@@ -4657,15 +4658,7 @@ namespace FamiStudio
             }
             else if (e.Key == Keys.A && e.Control && IsActiveControl)
             {
-                if (editMode == EditionMode.Arpeggio ||
-                    editMode == EditionMode.Enveloppe)
-                {
-                    SetSelection(0, EditEnvelope.Length - 1);
-                }
-                else if (editMode == EditionMode.Channel)
-                {
-                    SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1);
-                }
+                SelectAll();
             }
             else if (e.Key == Keys.S && e.Shift)
             {
@@ -7129,17 +7122,29 @@ namespace FamiStudio
             var channel = Song.Channels[editChannel];
             var absoluteNoteIndex = noteLocation.ToAbsoluteNoteIndex(Song);
             SetSelection(absoluteNoteIndex, absoluteNoteIndex + Math.Min(note.Duration, channel.GetDistanceToNextNote(noteLocation)) - 1);
+            MarkDirty();
         }
 
         private void SelectPattern(int p)
         {
             SetSelection(Song.GetPatternStartAbsoluteNoteIndex(p),
                          Song.GetPatternStartAbsoluteNoteIndex(p + 1));
+            MarkDirty();
         }
 
         private void SelectAll()
         {
-            SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
+            if (editMode == EditionMode.Arpeggio ||
+                editMode == EditionMode.Enveloppe)
+            {
+                SetSelection(0, EditEnvelope.Length - 1);
+            }
+            else if (editMode == EditionMode.Channel)
+            {
+                SetSelection(0, Song.GetPatternStartAbsoluteNoteIndex(Song.Length));
+            }
+
+            MarkDirty();
         }
 
         private void DeleteSingleNote(NoteLocation noteLocation, NoteLocation mouseLocation, Note note)
