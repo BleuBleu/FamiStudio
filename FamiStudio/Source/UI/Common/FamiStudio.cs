@@ -31,7 +31,7 @@ namespace FamiStudio
         private LogProgressDialog progressLogDialog;
 
         private int selectedChannelIndex;
-        private int forceDisplayChannelMask = 0;
+        private long forceDisplayChannelMask = 0;
         private int lastMidiNote = -1;
         private int tutorialCounter = Platform.IsDesktop ? 3 : 1;
         private int baseRecordingOctave = 3;
@@ -70,7 +70,7 @@ namespace FamiStudio
         public int   BaseRecordingOctave => baseRecordingOctave;
         public bool  MobilePianoVisible { get => window.MobilePianoVisible; set => window.MobilePianoVisible = value; }
         public int   CurrentFrame => lastTickCurrentFrame >= 0 ? lastTickCurrentFrame : (songPlayer != null ? songPlayer.PlayPosition : 0);
-        public int   ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : -1; set => songPlayer.ChannelMask = value; }
+        public long  ChannelMask { get => songPlayer != null ? songPlayer.ChannelMask : -1; set => songPlayer.ChannelMask = value; }
         public int   PlayRate { get => songPlayer != null ? songPlayer.PlayRate : 1; set { songPlayer.PlayRate = value; } }
         public float AverageTickRate => averageTickRateMs;
         public int   EditEnvelopeType { get => PianoRoll.EditEnvelopeType; }
@@ -315,20 +315,20 @@ namespace FamiStudio
 
         public bool IsChannelActive(int idx)
         {
-            return songPlayer != null && (songPlayer.ChannelMask & (1 << idx)) != 0;
+            return songPlayer != null && (songPlayer.ChannelMask & (1L << idx)) != 0;
         }
 
         public void ToggleChannelActive(int idx)
         {
             if (songPlayer != null)
-                songPlayer.ChannelMask ^= (1 << idx);
+                songPlayer.ChannelMask ^= (1L << idx);
         }
 
         public void ToggleChannelSolo(int idx, bool toggleAll = false)
         {
             if (songPlayer != null)
             {
-                var bit = 1 << idx;
+                var bit = 1L << idx;
                 if (songPlayer.ChannelMask == 0 && toggleAll)
                     songPlayer.ChannelMask = -1;
                 else
@@ -339,22 +339,22 @@ namespace FamiStudio
         public void SoloChannel(int idx)
         {
             if (songPlayer != null)
-                songPlayer.ChannelMask = 1 << idx;
+                songPlayer.ChannelMask = 1L << idx;
         }
         
         public bool IsChannelSolo(int idx)
         {
-            return songPlayer != null && songPlayer.ChannelMask == (1 << idx);
+            return songPlayer != null && songPlayer.ChannelMask == (1L << idx);
         }
 
         public bool IsChannelForceDisplay(int idx)
         {
-            return (forceDisplayChannelMask & (1 << idx)) != 0;
+            return (forceDisplayChannelMask & (1L << idx)) != 0;
         }
 
         public void ToggleChannelForceDisplay(int idx)
         {
-            ForceDisplayChannelMask ^= (1 << idx);
+            ForceDisplayChannelMask ^= (1L << idx);
         }
 
         public void SetActiveControl(Control ctrl, bool animate = true)
@@ -1786,7 +1786,7 @@ namespace FamiStudio
             if (!recordingMode && e.Key >= Keys.F1 && e.Key <= Keys.F24)
             {
                 if (ctrl)
-                    ForceDisplayChannelMask ^= (1 << (e.Key - Keys.F1));
+                    ForceDisplayChannelMask ^= (1L << (e.Key - Keys.F1));
                 else
                     SelectedChannelIndex = (e.Key - Keys.F1);
                 Sequencer.MarkDirty();
@@ -2057,7 +2057,7 @@ namespace FamiStudio
             }
         }
 
-        public int ForceDisplayChannelMask
+        public long ForceDisplayChannelMask
         {
             get { return forceDisplayChannelMask; }
             set

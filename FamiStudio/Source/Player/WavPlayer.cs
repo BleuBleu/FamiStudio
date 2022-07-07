@@ -8,7 +8,7 @@ namespace FamiStudio
     {
         List<short> samples;
 
-        public WavPlayer(int sampleRate, bool stereo, int maxLoop, int mask, int threadIndex = 0, int tnd = NesApu.TND_MODE_SINGLE) : base(NesApu.APU_WAV_EXPORT + threadIndex, stereo, sampleRate)
+        public WavPlayer(int sampleRate, bool stereo, int maxLoop, long mask, int threadIndex = 0, int tnd = NesApu.TND_MODE_SINGLE) : base(NesApu.APU_WAV_EXPORT + threadIndex, stereo, sampleRate)
         {
             Debug.Assert(threadIndex < NesApu.NUM_WAV_EXPORT_APU);
 

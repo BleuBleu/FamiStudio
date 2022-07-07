@@ -93,7 +93,7 @@ namespace FamiStudio
             }
         }
 
-        protected bool Initialize(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
+        protected bool Initialize(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioBitRate, int videoBitRate, bool stereo, float[] pan)
         {
             if (channelMask == 0 || loopCount < 1)
                 return false;
@@ -133,7 +133,7 @@ namespace FamiStudio
 
             for (int i = 0, channelIndex = 0; i < song.Channels.Length; i++)
             {
-                if ((channelMask & (1 << i)) == 0)
+                if ((channelMask & (1L << i)) == 0)
                     continue;
 
                 var channel = song.Channels[i];

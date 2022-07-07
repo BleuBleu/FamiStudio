@@ -12,14 +12,14 @@ namespace FamiStudio
         const int ThinNoteThreshold = 288;
         const int VeryThinNoteThreshold = 192;
 
-        private void ComputeChannelsScroll(VideoFrameMetadata[] frames, int channelMask, int numVisibleNotes)
+        private void ComputeChannelsScroll(VideoFrameMetadata[] frames, long channelMask, int numVisibleNotes)
         {
             var numFrames = frames.Length;
             var numChannels = frames[0].channelNotes.Length;
 
             for (int c = 0; c < numChannels; c++)
             {
-                if ((channelMask & (1 << c)) == 0)
+                if ((channelMask & (1L << c)) == 0)
                     continue;
 
                 // Go through all the frames and split them in segments. 
@@ -253,7 +253,7 @@ namespace FamiStudio
             }
         }
 
-        public unsafe bool Save(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, int channelMask, int audioBitRate, int videoBitRate, float pianoRollZoom, bool stereo, float[] pan)
+        public unsafe bool Save(Project originalProject, int songId, int loopCount, string filename, int resX, int resY, bool halfFrameRate, long channelMask, int audioBitRate, int videoBitRate, float pianoRollZoom, bool stereo, float[] pan)
         {
             if (!Initialize(originalProject, songId, loopCount, filename, resX, resY, halfFrameRate, channelMask, audioBitRate, videoBitRate, stereo, pan))
                 return false;

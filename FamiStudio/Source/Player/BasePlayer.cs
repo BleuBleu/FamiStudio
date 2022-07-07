@@ -44,8 +44,8 @@ namespace FamiStudio
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
-        protected volatile int channelMask = -1;
-        protected volatile int playPosition = 0;
+        protected long channelMask = -1;
+        protected int  playPosition = 0;
         protected NoteLocation playLocation = new NoteLocation(0, 0);
         protected NesApu.NesRegisterValues registerValues = new NesApu.NesRegisterValues();
 
@@ -73,10 +73,10 @@ namespace FamiStudio
         {
         }
 
-        public int ChannelMask
+        public long ChannelMask
         {
-            get { return channelMask; }
-            set { channelMask = value; }
+            get { return Thread.VolatileRead(ref channelMask); }
+            set { Thread.VolatileWrite(ref channelMask, value); }
         }
 
         public LoopMode Loop
@@ -87,8 +87,8 @@ namespace FamiStudio
 
         public int PlayPosition
         {
-            get { return Math.Max(0, playPosition); }
-            set { playPosition = value; }
+            get { return Math.Max(0, Thread.VolatileRead(ref playPosition)); }
+            set { Thread.VolatileWrite(ref playPosition, value); }
         }
 
         public int PlayRate
@@ -224,7 +224,7 @@ namespace FamiStudio
             {
                 var state = channelStates[i];
 
-                EnableChannelType(state.InnerChannelType, (channelMask & (1 << i)) != 0);
+                EnableChannelType(state.InnerChannelType, (channelMask & (1L << i)) != 0);
             }
         }
 

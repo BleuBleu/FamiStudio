@@ -10,7 +10,7 @@ namespace FamiStudio
 {
     static class AudioExportUtils
     {
-        public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, int channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, bool log, Action<short[], int, string> function)
+        public unsafe static void Save(Song song, string filename, int sampleRate, int loopCount, int duration, long channelMask, bool separateFiles, bool separateIntro, bool stereo, float[] pan, bool log, Action<short[], int, string> function)
         {
             var project = song.Project;
             var introDuration = separateIntro ? GetIntroDuration(song, sampleRate, log) : 0;
@@ -32,7 +32,7 @@ namespace FamiStudio
                 centerPan = true;
                 for (int i = 0; i < pan.Length; i++)
                 {
-                    var channelBit = 1 << i;
+                    var channelBit = 1L << i;
                     if ((channelBit & channelMask) != 0)
                     {
                         if (pan[i] != 0.5f)
@@ -187,7 +187,7 @@ namespace FamiStudio
                 }
             }
         }
-        private static short[][] GetIndividualChannelSamples(Song song, bool outputsStereo, int channelMask, int sampleRate, int loopCount, bool pal, int duration, bool log)
+        private static short[][] GetIndividualChannelSamples(Song song, bool outputsStereo, long channelMask, int sampleRate, int loopCount, bool pal, int duration, bool log)
         {
             // Get all the samples for all channels.
             var channelSamples = new short[song.Channels.Length][];
@@ -195,7 +195,7 @@ namespace FamiStudio
 
             Utils.NonBlockingParallelFor(song.Channels.Length, NesApu.NUM_WAV_EXPORT_APU, counter, (channelIdx, threadIndex) =>
             {
-                var channelBit = 1 << channelIdx;
+                var channelBit = 1L << channelIdx;
                 if ((channelBit & channelMask) != 0)
                 {
                     var player = new WavPlayer(sampleRate, outputsStereo, loopCount, channelBit, threadIndex, NesApu.TND_MODE_SEPARATE);

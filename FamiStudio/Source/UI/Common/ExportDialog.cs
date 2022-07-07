@@ -443,7 +443,7 @@ namespace FamiStudio
                     var song = project.GetSong(songName);
 
                     var channelCount = project.GetActiveChannelCount();
-                    var channelMask = 0;
+                    var channelMask = 0L;
                     var pan = (float[])null;
 
                     if (Platform.IsDesktop)
@@ -453,7 +453,7 @@ namespace FamiStudio
                         for (int i = 0; i < channelCount; i++)
                         {
                             if (props.GetPropertyValue<bool>(10, i, 0))
-                                channelMask |= (1 << i);
+                                channelMask |= (1L << i);
 
                             pan[i] = props.GetPropertyValue<int>(10, i, 2) / 100.0f;
                         }
@@ -464,7 +464,7 @@ namespace FamiStudio
                         for (int i = 0; i < channelCount; i++)
                         {
                             if (selectedChannels[i])
-                                channelMask |= (1 << i);
+                                channelMask |= (1L << i);
                         }
                     }
 
@@ -554,7 +554,7 @@ namespace FamiStudio
                     var stereo = props.GetPropertyValue<bool>(stereoPropIdx);
                     var song = project.GetSong(songName);
                     var channelCount = project.GetActiveChannelCount();
-                    var channelMask = 0;
+                    var channelMask = 0L;
                     var pan = (float[])null;
 
                     if (Platform.IsDesktop)
@@ -564,7 +564,7 @@ namespace FamiStudio
                         for (int i = 0; i < channelCount; i++)
                         {
                             if (props.GetPropertyValue<bool>(channelsPropIdx, i, 0))
-                                channelMask |= (1 << i);
+                                channelMask |= (1L << i);
 
                             pan[i] = props.GetPropertyValue<int>(channelsPropIdx, i, 2) / 100.0f;
                         }
@@ -575,7 +575,7 @@ namespace FamiStudio
                         for (int i = 0; i < channelCount; i++)
                         {
                             if (selectedChannels[i])
-                                channelMask |= (1 << i);
+                                channelMask |= (1L << i);
                         }
                     }
 

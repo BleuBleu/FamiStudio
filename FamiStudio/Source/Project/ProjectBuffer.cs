@@ -13,6 +13,7 @@ namespace FamiStudio
         void Serialize(ref short i);
         void Serialize(ref ushort i);
         void Serialize(ref int b, bool id = false);
+        void Serialize(ref long b);
         void Serialize(ref uint b);
         void Serialize(ref ulong b);
         void Serialize(ref float b);
@@ -96,6 +97,12 @@ namespace FamiStudio
         {
             buffer.AddRange(BitConverter.GetBytes(i));
             idx += sizeof(int);
+        }
+
+        public void Serialize(ref long i)
+        {
+            buffer.AddRange(BitConverter.GetBytes(i));
+            idx += sizeof(long);
         }
 
         public void Serialize(ref uint i)
@@ -291,6 +298,12 @@ namespace FamiStudio
             idx += sizeof(int);
         }
 
+        public void Serialize(ref long i)
+        {
+            i = BitConverter.ToInt64(buffer, idx);
+            idx += sizeof(long);
+        }
+
         public void Serialize(ref uint i)
         {
             i = BitConverter.ToUInt32(buffer, idx);
@@ -482,6 +495,11 @@ namespace FamiStudio
             // Ignore IDs for CRC
             if (!id)
                 crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
+        }
+
+        public void Serialize(ref long i)
+        {
+            crc = CRC32.Compute(BitConverter.GetBytes(i), crc);
         }
 
         public void Serialize(ref uint i)

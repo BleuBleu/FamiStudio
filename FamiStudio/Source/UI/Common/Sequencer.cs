@@ -597,7 +597,7 @@ namespace FamiStudio
                     // Icon
                     var channel = Song.Channels[i];
                     var bitmapIndex = showExpIcons ? channel.Expansion : channel.Type;
-                    cc.DrawBitmapAtlas(atlas[bitmapIndex], trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, channelBitmapScale, Theme.LightGreyColor1);
+                    cc.DrawBitmapAtlas(atlas[bitmapIndex], trackIconPosX, y + trackIconPosY, (App.ChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f, channelBitmapScale, Theme.LightGreyColor1);
 
                     // Name
                     var font = i == selectedChannelIndex ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
@@ -605,7 +605,7 @@ namespace FamiStudio
                     cc.DrawText(Song.Channels[i].Name, font, trackNamePosX, y + trackIconPosY, ThemeResources.LightGreyBrush2, TextFlags.MiddleLeft, 0, iconHeight);
 
                     // Force display icon.
-                    cc.DrawBitmapAtlas(bmpForceDisplay, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.ForceDisplayChannelMask & (1 << i)) != 0 ? 1.0f : 0.2f, bitmapScale, Theme.LightGreyColor1);
+                    cc.DrawBitmapAtlas(bmpForceDisplay, trackNameSizeX - ghostNoteOffsetX, y + trackSizeY - ghostNoteOffsetY - 1, (App.ForceDisplayChannelMask & (1L << i)) != 0 ? 1.0f : 0.2f, bitmapScale, Theme.LightGreyColor1);
 
                     y += trackSizeY;
                 }

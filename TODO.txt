@@ -5,6 +5,8 @@
 - BUG : Hide channels + scroll doesnt work. 
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Selecting a full pattern selects + 1 frame?
+- BUG : Sequencer height cant choose 10%? 
+- BUG : CTRL+A doesnt refresh?
 
 N163 Multi-wave:
 ================
@@ -18,6 +20,7 @@ N163 Multi-wave:
 - BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
 
 P0:
+- Update demo ROM to have version + same look.
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
 	=> Context menu option to set the snapping to the length of a note ("snapping eyedropper")
@@ -25,11 +28,12 @@ P0:
 	=> Snap effect values (at least give the option to!)
 - Improve oscilloscope stability (use channel frequency)
 / Sequencer improvement
-  	- Add shortcut ([2] ?). Make sure to abort capture if that happens.
-  	- Add to context menu somewhere?
-  	- Do it on mobile too?
+	- Double click to force display all channel.
+  - Add shortcut ([2] ?). Make sure to abort capture if that happens.
+  - Add to shy to context menu somewhere.
 
 P1:
+- Display number of selected channels in grid for video export?
 - Is CPU usage higher?
 - Improve no-attack.
 	- Allow disabling attacks if all envelopes of both instruments are exactly the same.

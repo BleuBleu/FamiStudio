@@ -2385,7 +2385,7 @@ namespace FamiStudio
                     var channel = song.Channels[c];
                     var isActiveChannel = c == editChannel;
 
-                    if (isActiveChannel || (ghostChannelMask & (1 << c)) != 0)
+                    if (isActiveChannel || (ghostChannelMask & (1L << c)) != 0)
                     {
                         var drawImplicitStopNotes = 
                             isActiveChannel &&
