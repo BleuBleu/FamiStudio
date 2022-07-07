@@ -4611,34 +4611,34 @@ famistudio_update_channel:
     ldy <.tmp_y1
     rts
 
-.if FAMISTUDIO_EXP_VRC7
+    .if FAMISTUDIO_EXP_VRC7
 .opcode_vrc7_release_note:
     lda #$80
     sta famistudio_chn_vrc7_trigger-FAMISTUDIO_VRC7_CH0_IDX,x ; Set release flag for VRC7
- endif
+     endif
 
-.if FAMISTUDIO_EXP_FDS
+    .if FAMISTUDIO_EXP_FDS
 .opcode_fds_release_note:
     ldx #FAMISTUDIO_FDS_CH0_ENVS
     jsr .jump_to_release_envelope
-.endif
+    .endif
 
-.if FAMISTUDIO_EXP_N163
+    .if FAMISTUDIO_EXP_N163
 .opcode_n163_release_note:
     lda famistudio_channel_env,x 
     tax 
     inx ; +2 for FAMISTUDIO_ENV_N163_WAVE_IDX_OFF.
     inx
     jsr .jump_to_release_envelope
-.endif
+    .endif
 
-.if FAMISTUDIO_EXP_EPSM
+    .if FAMISTUDIO_EXP_EPSM
 .opcode_epsm_release_note:
     lda #$80
     sta famistudio_chn_epsm_trigger-FAMISTUDIO_EPSM_CHAN_FM_START,x ; Set release flag for EPSM
-.endif
+    .endif
 
-@opcode_release_note:
+.opcode_release_note:
     lda famistudio_channel_to_volume_env,x ; DPCM(5) will never have releases.
     tax
     jsr .jump_to_release_envelope

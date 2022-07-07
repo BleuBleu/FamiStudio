@@ -4332,7 +4332,7 @@ famistudio_update_channel:
     channel_data_ptr     = famistudio_ptr0
     opcode_jmp_ptr       = famistudio_ptr1
     tempo_env_ptr        = famistudio_ptr1
-    volume_env_ptr       = famistudio_ptr1
+    env_ptr              = famistudio_ptr1
 
     lda famistudio_chn_repeat,x
     beq @no_repeat
