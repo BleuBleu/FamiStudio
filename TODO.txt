@@ -1,12 +1,8 @@
 4.0.0
 =====
 - CRASH : 240 BPM / 1 / 1
-- BUG : Shy mode vs. channel icons.
-- BUG : Hide channels + scroll doesnt work. 
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Selecting a full pattern selects + 1 frame?
-- BUG : Sequencer height cant choose 10%? 
-- BUG : Sequencer selection changes color when focus changes? But not really? Weird.
 
 N163 Multi-wave:
 ================
@@ -28,7 +24,6 @@ P0:
 	=> Snap effect values (at least give the option to!)
 - Improve oscilloscope stability (use channel frequency)
 / Sequencer improvement
-	- Double click to force display all channel.
   - Add shortcut ([2] ?). Make sure to abort capture if that happens.
   - Add to shy to context menu somewhere.
 

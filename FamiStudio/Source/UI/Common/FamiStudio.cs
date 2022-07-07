@@ -357,6 +357,15 @@ namespace FamiStudio
             ForceDisplayChannelMask ^= (1L << idx);
         }
 
+        public void ToggleChannelForceDisplayAll(int idx, bool toggleAll = false)
+        {
+            var bit = 1L << idx;
+            if (forceDisplayChannelMask == 0 && toggleAll)
+                ForceDisplayChannelMask = -1;
+            else
+                ForceDisplayChannelMask = forceDisplayChannelMask == bit ? -1 : bit;
+        }
+
         public void SetActiveControl(Control ctrl, bool animate = true)
         {
             Debug.Assert(ctrl == PianoRoll || ctrl == Sequencer || ctrl == ProjectExplorer);

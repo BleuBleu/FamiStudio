@@ -205,7 +205,7 @@ namespace FamiStudio
             scrollBarThickness = ScaleForWindow(scrollBarSize);
             minScrollBarLength = ScaleForWindow(DefaultMinScrollBarLength);
             noteSizeX          = ScaleForWindowFloat(zoom * patternZoom);
-            virtualSizeY       = Song != null ? trackSizeY * Song.Channels.Length : 0;
+            virtualSizeY       = Song != null ? trackSizeY * rowToChannel.Length : 0;
             scrollMargin       = (width - trackNameSizeX) / 8;
 
             // Shave a couple pixels when the size is getting too small.
@@ -583,7 +583,7 @@ namespace FamiStudio
             cc.PushTranslation(0, headerSizeY - scrollY);
 
             // Horizontal lines seperating patterns.
-            for (int i = 0, y = 0; i < Song.Channels.Length; i++, y += trackSizeY)
+            for (int i = 0, y = 0; i < rowToChannel.Length; i++, y += trackSizeY)
                 cc.DrawLine(0, y, Width, y, ThemeResources.BlackBrush);
 
             var showExpIcons = showExpansionIcons && Song.Project.UsesAnyExpansionAudio;
@@ -705,7 +705,7 @@ namespace FamiStudio
             cb.PushTranslation(0, -scrollY);
 
             // Horizontal lines
-            for (int i = 0, y = headerSizeY; i < Song.Channels.Length; i++, y += trackSizeY)
+            for (int i = 0, y = headerSizeY; i < rowToChannel.Length; i++, y += trackSizeY)
                 cb.DrawLine(0, y, Width, y, ThemeResources.BlackBrush);
             
             // Patterns
@@ -835,9 +835,9 @@ namespace FamiStudio
             }
 
             // Piano roll view rect
-            if (App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex))
+            if (App.GetPianoRollViewRange(out var pianoRollMinNoteIdx, out var pianoRollMaxNoteIdx, out var pianoRollChannelIndex) && channelToRow[pianoRollChannelIndex] >= 0)
             {
-                cp.PushTranslation(GetPixelForNote(pianoRollMinNoteIdx), pianoRollChannelIndex * trackSizeY + headerSizeY);
+                cp.PushTranslation(GetPixelForNote(pianoRollMinNoteIdx), channelToRow[pianoRollChannelIndex] * trackSizeY + headerSizeY);
                 cp.DrawRectangle(1, patternHeaderSizeY + 1, GetPixelForNote(pianoRollMaxNoteIdx - pianoRollMinNoteIdx, false) - 1, trackSizeY - 1, ThemeResources.LightGreyBrush2);
                 cp.PopTransform();
             }
@@ -1120,20 +1120,20 @@ namespace FamiStudio
             channelIdx = GetChannelIndexForCoord(y);
         }
 
-        Rectangle GetTrackIconRect(int idx)
+        Rectangle GetRowIconRect(int rowIdx)
         {
             return new Rectangle(
                 trackIconPosX,
-                trackIconPosY + headerSizeY + idx * trackSizeY, 
+                trackIconPosY + headerSizeY + rowIdx * trackSizeY, 
                 ScaleForWindow(16),
                 ScaleForWindow(16));
         }
 
-        Rectangle GetTrackGhostRect(int idx)
+        Rectangle GetRowGhostRect(int rowIdx)
         {
             return new Rectangle(
                 trackNameSizeX - ghostNoteOffsetX, 
-                headerSizeY + (idx + 1) * trackSizeY - ghostNoteOffsetY - 1,
+                headerSizeY + (rowIdx + 1) * trackSizeY - ghostNoteOffsetY - 1,
                 ScaleForWindow(12),
                 ScaleForWindow(12));
         }
@@ -1302,17 +1302,17 @@ namespace FamiStudio
         {
             if (e.Left && IsMouseInTrackName(e))
             { 
-                var trackIcon = GetTrackIconForPos(e);
-                var ghostIcon = GetTrackGhostForPos(e);
-
-                if (trackIcon >= 0)
+                var chanIdx = GetChannelIndexFromIconPos(e);
+                if (chanIdx >= 0)
                 {
-                    App.ToggleChannelActive(trackIcon);
+                    App.ToggleChannelActive(chanIdx);
                     return true;
                 }
-                else if (ghostIcon >= 0)
+
+                chanIdx = GetChannelIndexFromGhostIconPos(e);
+                if (chanIdx >= 0)
                 {
-                    App.ToggleChannelForceDisplay(ghostIcon);
+                    App.ToggleChannelForceDisplay(chanIdx);
                     return true;
                 }
             }
@@ -2332,6 +2332,7 @@ namespace FamiStudio
                 Capture = false;
                 panning = false;
                 captureOperation = CaptureOperation.None;
+                MarkDirty();
             }
         }
 
@@ -2614,23 +2615,23 @@ namespace FamiStudio
             return e.Y > headerSizeY && e.X < trackNameSizeX;
         }
 
-        private int GetTrackIconForPos(MouseEventArgs e)
+        private int GetChannelIndexFromIconPos(MouseEventArgs e)
         {
-            for (int i = 0; i < Song.Channels.Length; i++)
+            for (int i = 0; i < rowToChannel.Length; i++)
             {
-                if (GetTrackIconRect(i).Contains(e.X, e.Y))
-                    return i;
+                if (GetRowIconRect(i).Contains(e.X, e.Y))
+                    return rowToChannel[i];
             }
 
             return -1;
         }
 
-        private int GetTrackGhostForPos(MouseEventArgs e)
+        private int GetChannelIndexFromGhostIconPos(MouseEventArgs e)
         {
-            for (int i = 0; i < Song.Channels.Length; i++)
+            for (int i = 0; i < rowToChannel.Length; i++)
             {
-                if (GetTrackGhostRect(i).Contains(e.X, e.Y))
-                    return i;
+                if (GetRowGhostRect(i).Contains(e.X, e.Y))
+                    return rowToChannel[i];
             }
 
             return -1;
@@ -2686,7 +2687,7 @@ namespace FamiStudio
             }
             else if (IsPointInShyButton(e.X, e.Y))
             {
-                tooltip = "{MouseLeft} Toggle Hide Unused Channels";
+                tooltip = "{MouseLeft} Toggle Hide Unused Channels (shy mode)";
             }
             else if (IsMouseInHeader(e))
             {
@@ -2694,13 +2695,13 @@ namespace FamiStudio
             }
             else if (IsMouseInTrackName(e))
             {
-                if (GetTrackIconForPos(e) >= 0)
+                if (GetChannelIndexFromIconPos(e) >= 0)
                 {
                     tooltip = "{MouseLeft} Mute Channel - {MouseLeft}{MouseLeft} Solo Channel - {MouseRight} More Options...";
                 }
-                else if (GetTrackGhostForPos(e) >= 0)
+                else if (GetChannelIndexFromGhostIconPos(e) >= 0)
                 {
-                    tooltip = "{MouseLeft} Toggle channel force display in Piano Roll - {MouseRight} More Options...";
+                    tooltip = "{MouseLeft} Toggle channel force display in Piano Roll\n{MouseLeft}{MouseLeft} Toggle all channel force display - {MouseRight} More Options...";
                     int idx = GetChannelIndexForCoord(e.Y) + 1;
                     if (idx >= 1 && idx <= 12)
                         tooltip += $" {{Ctrl}}{{F{idx}}}";
@@ -2940,11 +2941,17 @@ namespace FamiStudio
         {
             if (e.Left && IsMouseInTrackName(e))
             {
-                var trackIcon = GetTrackIconForPos(e);
-                
-                if (trackIcon >= 0)
+                var chanIdx = GetChannelIndexFromIconPos(e);
+                if (chanIdx >= 0)
                 {
-                    App.ToggleChannelSolo(trackIcon, true);
+                    App.ToggleChannelSolo(chanIdx, true);
+                    return true;
+                }
+
+                chanIdx = GetChannelIndexFromGhostIconPos(e);
+                if (chanIdx >= 0)
+                {
+                    App.ToggleChannelForceDisplayAll(chanIdx, true);
                     return true;
                 }
             }

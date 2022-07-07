@@ -170,7 +170,7 @@ namespace FamiStudio
 
         private int GetSequencerSizeIndex(int s)
         {
-            return Utils.Clamp((s - 10) / 5, 1, IdealSequencerHeightStrings.Length - 1);
+            return Utils.Clamp((s - 10) / 5, 0, IdealSequencerHeightStrings.Length - 1);
         }
 
         private PropertyPage CreatePropertyPage(PropertyPage page, ConfigSection section)
