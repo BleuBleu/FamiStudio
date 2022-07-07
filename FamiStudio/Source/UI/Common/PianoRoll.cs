@@ -7128,7 +7128,7 @@ namespace FamiStudio
         private void SelectPattern(int p)
         {
             SetSelection(Song.GetPatternStartAbsoluteNoteIndex(p),
-                         Song.GetPatternStartAbsoluteNoteIndex(p + 1));
+                         Song.GetPatternStartAbsoluteNoteIndex(p + 1) - 1);
             MarkDirty();
         }
 

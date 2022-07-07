@@ -2,7 +2,6 @@
 =====
 - CRASH : 240 BPM / 1 / 1
 - BUG : Notes per beat doesnt go to 1?
-- BUG : Selecting a full pattern selects + 1 frame?
 
 N163 Multi-wave:
 ================
@@ -10,8 +9,6 @@ N163 Multi-wave:
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
 - FIX : Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).
-- TEST : Test no attack in playback + NSF.
-- TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
 - BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
 - BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
 
@@ -46,6 +43,8 @@ P1:
 
 Testing:
 ========
+- TEST : Test no attack in playback + NSF.
+- TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
 - Restest sequencer hide channel a bunch, test vertical scroll bars, test mobile too. Make sure not broken.
 - Restest slide notes on mobile, make sure gizmo is stable on both sides when releasing(up/down)
 - Restest multiple songs per file (changed multiplication thing)
