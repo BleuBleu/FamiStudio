@@ -1,16 +1,11 @@
 4.0.0
 =====
-- CRASH : 240 BPM / 1 / 1
-- BUG : Notes per beat doesnt go to 1?
 
 N163 Multi-wave:
 ================
 - IMPORTER??? How should it work?
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
-- FIX : Bind max wave size to the number of N163 channels. (256 - 8 * channelcount).
-- BUG : Changing N163 wave size to a huge number asserts. => Happens when length is clamped.
-- BUG : Crash opening FTI with very large N163 waves (from https://editor.p5js.org/Eulous/full/IwXWv9U-7)
 
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

@@ -1126,7 +1126,12 @@ namespace FamiStudio
 
                 inst.N163WaveCount = (byte)repeats.Count;
 
-                for (int i = 0; i < repeats.Count; i++)
+                if (inst.N163WaveCount < repeats.Count)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"The total size of the N163 or FDS waveforms is larger than the maximum supported, truncating.");
+                }
+
+                for (int i = 0; i < inst.N163WaveCount; i++)
                 {
                     repEnv.Values[i] = (sbyte)repeats[i];
                     var idx = indices[i];

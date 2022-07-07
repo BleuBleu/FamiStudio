@@ -12,6 +12,7 @@ namespace FamiStudio
         private int expansion = ExpansionType.None;
         private Envelope[] envelopes = new Envelope[EnvelopeType.Count];
         private Color color;
+        private Project project;
 
         // FDS
         private byte fdsMasterVolume = FdsMasterVolumeType.Volume100;
@@ -66,12 +67,14 @@ namespace FamiStudio
         {
         }
 
-        public Instrument(int id, int expansion, string name)
+        public Instrument(Project project, int id, int expansion, string name)
         {
+            this.project = project;
             this.id = id;
             this.expansion = expansion;
             this.name = name;
             this.color = Theme.RandomCustomColor();
+
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
                 if (IsEnvelopeActive(i))
@@ -196,8 +199,8 @@ namespace FamiStudio
             set
             {
                 Debug.Assert((value & 0x03) == 0);
-                n163WaveSize = (byte)Utils.Clamp(value       & 0xfc, 4, 248);
-                n163WavePos  = (byte)Utils.Clamp(n163WavePos & 0xfc, 0, 248 - n163WaveSize);
+                n163WaveSize = (byte)Utils.Clamp(value       & 0xfc, 4, N163MaxWaveSize);
+                n163WavePos  = (byte)Utils.Clamp(n163WavePos & 0xfc, 0, N163MaxWavePos);
                 ClampN163WaveCount();
                 UpdateN163WaveEnvelope();
             }
@@ -209,8 +212,8 @@ namespace FamiStudio
             set
             {
                 Debug.Assert((value & 0x03) == 0);
-                n163WavePos  = (byte)Utils.Clamp(value        & 0xfc, 0, 248);
-                n163WaveSize = (byte)Utils.Clamp(n163WaveSize & 0xfc, 4, 248 - n163WavePos);
+                n163WavePos  = (byte)Utils.Clamp(value        & 0xfc, 0, N163MaxWavePos);
+                n163WaveSize = (byte)Utils.Clamp(n163WaveSize & 0xfc, 4, N163MaxWaveSize);
                 ClampN163WaveCount();
             }
         }
@@ -224,6 +227,9 @@ namespace FamiStudio
                 UpdateN163WaveEnvelope();
             }
         }
+
+        public int N163MaxWaveSize => project.N163WaveRAMSize;
+        public int N163MaxWavePos  => project.N163WaveRAMSize - 4;
 
         public int N163MaxWaveCount
         {
@@ -289,9 +295,9 @@ namespace FamiStudio
             var wavEnv = envelopes[EnvelopeType.FdsWaveform];
             var repEnv = envelopes[EnvelopeType.WaveformRepeat];
 
+            wavEnv.MaxLength = 1024;
             wavEnv.ChunkLength = 64;
             wavEnv.Length = 64 * fdsWaveCount;
-            wavEnv.MaxLength = 1024;
             repEnv.Length = fdsWaveCount;
             repEnv.SetLoopReleaseUnsafe(wavEnv.Loop >= 0 ? wavEnv.Loop / 64 : -1, wavEnv.Release >= 0 ? wavEnv.Release / 64 : -1);
             wavEnv.SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
@@ -307,9 +313,9 @@ namespace FamiStudio
             var wavEnv = envelopes[EnvelopeType.N163Waveform];
             var repEnv = envelopes[EnvelopeType.WaveformRepeat];
 
+            wavEnv.MaxLength = N163MaxWaveCount * n163WaveSize;
             wavEnv.ChunkLength = n163WaveSize;
             wavEnv.Length = n163WaveSize * n163WaveCount;
-			wavEnv.MaxLength = N163MaxWaveCount * n163WaveSize;
             repEnv.Length = n163WaveCount;
             repEnv.SetLoopReleaseUnsafe(wavEnv.Loop >= 0 ? wavEnv.Loop / n163WaveSize : -1, wavEnv.Release >= 0 ? wavEnv.Release / n163WaveSize : -1);
             wavEnv.SetFromPreset(EnvelopeType.N163Waveform, n163WavePreset);
@@ -321,9 +327,11 @@ namespace FamiStudio
             {
                 case ExpansionType.N163:
                     envelopes[EnvelopeType.N163Waveform].SetChunkMaxLengthUnsafe(n163WaveSize, N163MaxWaveCount * n163WaveSize);
+                    UpdateN163WaveEnvelope(); // Safety
                     break;
                 case ExpansionType.Fds:
                     envelopes[EnvelopeType.FdsWaveform].SetChunkMaxLengthUnsafe(64, FdsMaxWaveCount * 64);
+                    UpdateFdsWaveEnvelope(); // Safety
                     break;
             }
         }
@@ -454,6 +462,8 @@ namespace FamiStudio
                         Debug.Assert(env.Length / env.ChunkLength == rep.Length);
                         Debug.Assert(env.Loop < 0 && rep.Loop < 0 || rep.Loop == env.Loop / n163WaveSize);
                         Debug.Assert(env.Release < 0 && rep.Release < 0 || rep.Release == env.Release / n163WaveSize);
+                        //Debug.Assert(n163WavePos  >= 0 && n163WavePos <= project.N163WaveRAMSize - 4);
+                        //Debug.Assert(n163WaveSize >= 4 && n163WavePos + n163WaveSize <= project.N163WaveRAMSize);
                     }
 
                     if (i == EnvelopeType.FdsWaveform)
@@ -486,6 +496,9 @@ namespace FamiStudio
 
         public void SerializeState(ProjectBuffer buffer)
         {
+            if (buffer.IsReading)
+                project = buffer.Project;
+
             buffer.Serialize(ref id, true);
             buffer.Serialize(ref name);
             buffer.Serialize(ref color);

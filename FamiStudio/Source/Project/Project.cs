@@ -55,9 +55,11 @@ namespace FamiStudio
         public bool UsesFamiStudioTempo  => tempoMode == TempoType.FamiStudio;
         public bool UsesFamiTrackerTempo => tempoMode == TempoType.FamiTracker;
 
-        public int  ExpansionAudioMask       => expansionMask;
-        public int  ExpansionNumN163Channels => expansionNumN163Channels;
-                    
+        public int ExpansionAudioMask       => expansionMask;
+        public int ExpansionNumN163Channels => expansionNumN163Channels;
+        
+        public int N163WaveRAMSize => 256 - 8 * expansionNumN163Channels;
+
         public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
         public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);
         public bool UsesMultipleExpansionAudios => (Utils.NumberOfSetBits(expansionMask) > 1);
@@ -423,7 +425,7 @@ namespace FamiStudio
             else if (instruments.Find(inst => inst.Name == name) != null)
                 return null;
 
-            var instrument = new Instrument(GenerateUniqueId(), expansion, name);
+            var instrument = new Instrument(this, GenerateUniqueId(), expansion, name);
             instruments.Add(instrument);
             SortInstruments();
             return instrument;
