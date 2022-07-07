@@ -28,7 +28,7 @@ namespace FamiStudio
         const int DefaultCheckBoxPosY         = 3;
         const int DefaultDraggedLineSizeY     = 5;
         const int DefaultParamRightPadX       = 4;
-        const int DefaultRegisterLabelSizeX   = 60;
+        const int DefaultRegisterLabelSizeX   = 58;
         const float ScrollSpeedFactor         = Platform.IsMobile ? 2.0f : 1.0f;
 
         int expandButtonSizeX;
