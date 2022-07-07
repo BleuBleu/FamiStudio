@@ -3176,7 +3176,7 @@ namespace FamiStudio
             if (x >= contentSizeX - checkBoxPosX)
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
-                button.param.SetValue(button.param.DefaultValue);
+                button.param.SetValue(button.param.GetValue() == 0 ? 1 : 0);
                 App.UndoRedoManager.EndTransaction();
                 MarkDirty();
             }

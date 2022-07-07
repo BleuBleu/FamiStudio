@@ -1215,7 +1215,7 @@ namespace FamiStudio
                             r.ch.DrawText((n / env.ChunkLength).ToString(), ThemeResources.FontMedium, x, headerSizeY / 2 - 1, ThemeResources.BlackBrush, TextFlags.MiddleCenter, x1 - x, headerSizeY / 2);
                         }
 
-                        var label = (editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos : 0) + (n % env.ChunkLength);
+                        var label = (editEnvelope == EnvelopeType.N163Waveform ? editInstrument.N163WavePos : 0) + (env.ChunkLength > 1 ? n % env.ChunkLength : n);
                         var labelString = label.ToString();
                         if (labelString.Length * fontSmallCharSizeX + 2 < noteSizeX)
                             r.ch.DrawText(labelString, ThemeResources.FontMedium, x, 0, ThemeResources.LightGreyBrush1, TextFlags.MiddleCenter, noteSizeX, headerSizeY / 2 - 1);

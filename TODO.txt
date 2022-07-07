@@ -6,7 +6,7 @@
 - BUG : Notes per beat doesnt go to 1?
 - BUG : Selecting a full pattern selects + 1 frame?
 - BUG : Sequencer height cant choose 10%? 
-- BUG : CTRL+A doesnt refresh?
+- BUG : Sequencer selection changes color when focus changes? But not really? Weird.
 
 N163 Multi-wave:
 ================
