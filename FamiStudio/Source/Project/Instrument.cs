@@ -228,8 +228,8 @@ namespace FamiStudio
             }
         }
 
-        public int N163MaxWaveSize => project.N163WaveRAMSize;
-        public int N163MaxWavePos  => project.N163WaveRAMSize - 4;
+        public int N163MaxWaveSize => project.N163WaveRAMSize * 2;
+        public int N163MaxWavePos  => project.N163WaveRAMSize * 2 - 4;
 
         public int N163MaxWaveCount
         {

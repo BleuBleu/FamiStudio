@@ -58,7 +58,7 @@ namespace FamiStudio
         public int ExpansionAudioMask       => expansionMask;
         public int ExpansionNumN163Channels => expansionNumN163Channels;
         
-        public int N163WaveRAMSize => 256 - 8 * expansionNumN163Channels;
+        public int N163WaveRAMSize => 128 - 8 * expansionNumN163Channels;
 
         public bool UsesAnyExpansionAudio       => (expansionMask != ExpansionType.NoneMask);
         public bool UsesSingleExpansionAudio    => (Utils.NumberOfSetBits(expansionMask) == 1);

@@ -417,7 +417,7 @@ namespace FamiStudio
                 var ramSize   = 128 - i.NumActiveChannels * 8;
                 var numValues = ramSize * 2;
 
-                var sx = rect.Width  / numValues;
+                var sx = Math.Max(1, rect.Width  / numValues);
                 var sy = rect.Height / 15.0f;
                 var h  = rect.Height;
 
