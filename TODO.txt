@@ -4,6 +4,9 @@
 N163 Multi-wave:
 ================
 - IMPORTER??? How should it work?
+	- Import max ~1/4sec of sample
+	- Scale/bias param
+	- That's it
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
 
@@ -19,6 +22,8 @@ P0:
   - Add to shy to context menu somewhere.
 
 P1:
+- Extend channel grid in export dialog where there is space.
+- Dark mode for open/save dialogs on MacOS? + title bar?
 - Display number of selected channels in grid for video export?
 - Is CPU usage higher?
 - Improve no-attack.
