@@ -580,9 +580,11 @@ namespace FamiStudio
             if (!ValidateExtension(filename, ".txt"))
                 return;
 
+            var numFrames = ParseOption("epsm-num-frames", 7200);
+
             InitializeConsole();
             Log.SetLogOutput(this);
-            EpsmUnitTest.DumpEpsmRegs(nsf, filename);
+            EpsmUnitTest.DumpEpsmRegs(nsf, filename, numFrames);
             ShutdownConsole();
         }
 
@@ -595,7 +597,7 @@ namespace FamiStudio
             }
 
             // Super hacky EPSM unit tests.
-            if (args.Length == 3 && args[1].ToLower().Trim() == "unit-test-epsm")
+            if (args.Length >= 3 && args[1].ToLower().Trim() == "unit-test-epsm")
             {
                 RunEpsmUnitTest(args[0], args[2]);
                 return true;
