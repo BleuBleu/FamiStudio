@@ -143,6 +143,13 @@ namespace FamiStudio
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
 
+                // In the multiple expansion driver, with EPSM enabled, we run out of RAM and use MMC5 EXRAM
+                // so we need to force enable it here.
+                if (project.UsesMultipleExpansionAudios && project.UsesEPSMExpansion && !project.UsesMmc5Expansion)
+                {
+                    project.SetExpansionAudioMask(project.ExpansionAudioMask | ExpansionType.Mmc5Mask);
+                }
+
                 var nsfBytes = new List<byte>();
 
                 string kernelBinary = "nsf";

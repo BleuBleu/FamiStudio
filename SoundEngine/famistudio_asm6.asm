@@ -1192,8 +1192,8 @@ famistudio_init:
     sta FAMISTUDIO_VRC7_SILENCE ; Enable VRC7 audio.
 .endif
 
-.if FAMISTUDIO_EXP_EPSM
 @init_epsm:
+.if FAMISTUDIO_EXP_EPSM
     lda #FAMISTUDIO_EPSM_REG_TONE
     sta FAMISTUDIO_EPSM_ADDR
     lda #$38 ; No noise, just 3 tones for now.
