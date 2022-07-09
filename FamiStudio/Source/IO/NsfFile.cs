@@ -128,6 +128,7 @@ namespace FamiStudio
 
             return flags;
         }
+
         public unsafe bool Save(Project originalProject, int kernel, string filename, int[] songIds, string name, string author, string copyright, int machine, bool nsfe)
         {
 #if !DEBUG
@@ -1001,6 +1002,21 @@ namespace FamiStudio
             return numNamcoChannels;
         }
 
+        int GetExpansionMaskFromNsfFlags(int flags)
+        {
+            var mask = 0;
+
+            if ((flags & 0x01) != 0) mask |= ExpansionType.Vrc6Mask;
+            if ((flags & 0x02) != 0) mask |= ExpansionType.Vrc7Mask;
+            if ((flags & 0x04) != 0) mask |= ExpansionType.FdsMask;
+            if ((flags & 0x08) != 0) mask |= ExpansionType.Mmc5Mask;
+            if ((flags & 0x10) != 0) mask |= ExpansionType.N163Mask;
+            if ((flags & 0x20) != 0) mask |= ExpansionType.S5BMask;
+            if ((flags & 0x80) != 0) mask |= ExpansionType.EPSMMask;
+
+            return mask;
+        }
+
         public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence, bool reverseDpcm, bool preserveDpcmPad)
         {
             nsf = NotSoFatso.NsfOpen(filename);
@@ -1037,7 +1053,7 @@ namespace FamiStudio
             project.PalMode   = palSource;
 
             // Our expansion mask is the same as NSF.
-            var expansionMask = NotSoFatso.NsfGetExpansion(nsf);
+            var expansionMask = GetExpansionMaskFromNsfFlags(NotSoFatso.NsfGetExpansion(nsf));
 
             // The 2 upper bits of the mask need to be zero, we dont support these.
             if (expansionMask != (expansionMask & ExpansionType.AllMask))
@@ -1045,6 +1061,12 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, "NSF uses unknown or unsupported expansion chips, aborting.");
                 NotSoFatso.NsfClose(nsf);
                 return null;
+            }
+
+            if ((expansionMask & ExpansionType.EPSMMask) != 0)
+            {
+                Log.LogMessage(LogSeverity.Warning, "NSF seem to use EPSM, import is still not supported.");
+                expansionMask &= (~ExpansionType.EPSMMask);
             }
 
             var numN163Channels = (expansionMask & ExpansionType.N163Mask) != 0 ? GetNumNamcoChannels(filename, songIndex, numFrames) : 1;
