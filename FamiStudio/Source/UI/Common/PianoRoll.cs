@@ -3405,6 +3405,7 @@ namespace FamiStudio
                     {
                         env.Length = length;
                         editInstrument.NotifyEnvelopeChanged(editEnvelope);
+                        editInstrument?.NotifyEnvelopeChanged(editEnvelope); // Instrument is null when editing arps.
                         if (IsSelectionValid())
                             SetSelection(selectionMin, selectionMax);
                     }
@@ -3414,6 +3415,7 @@ namespace FamiStudio
                     {
                         env.Release = length;
                         editInstrument.NotifyEnvelopeChanged(editEnvelope);
+                        editInstrument?.NotifyEnvelopeChanged(editEnvelope); // Instrument is null when editing arps.
                     }
                     break;
                 case CaptureOperation.DragLoop:
@@ -3421,6 +3423,7 @@ namespace FamiStudio
                     {
                         env.Loop = length;
                         editInstrument.NotifyEnvelopeChanged(editEnvelope);
+                        editInstrument?.NotifyEnvelopeChanged(editEnvelope); // Instrument is null when editing arps.
                     }
                     break;
             }
