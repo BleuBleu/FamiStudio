@@ -695,7 +695,11 @@ namespace FamiStudio
         NesApu.NesRegisterValues registerValues;
         ExpansionRegisterViewer[] registerViewers = new ExpansionRegisterViewer[ExpansionType.Count];
 
-        Brush   sliderFillBrush;
+        // Hover
+        int hoverButtonIndex = -1;
+        int hoverSubButtonTypeOrParamIndex = -1;
+
+        Brush sliderFillBrush;
         Brush   disabledBrush;
         Brush[] registerBrushes = new Brush[11];
         BitmapAtlasRef bmpExpand;
@@ -1440,6 +1444,7 @@ namespace FamiStudio
             for (int i = 0; i < buttons.Count; i++)
             {
                 var button = buttons[i];
+                var hovered = i == hoverButtonIndex;
                 var highlighted = i == highlightedButtonIdx;
 
                 if (y + button.height >= 0)
@@ -1539,39 +1544,44 @@ namespace FamiStudio
                         var paramVal = button.param.GetValue();
                         var paramStr = button.param.GetValueString();
 
-
                         if (button.type == ButtonType.ParamSlider)
                         {
                             var paramMinValue = button.param.GetMinValue();
                             var paramMaxValue = button.param.GetMaxValue();
                             var actualSliderSizeX = sliderSizeX - paramButtonSizeX * 2;
                             var valSizeX = (int)Math.Round((paramVal - paramMinValue) / (float)(paramMaxValue - paramMinValue) * actualSliderSizeX);
+                            var hoverOpacityL = hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f;
+                            var hoverOpacityR = hovered && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f;
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
-                            c.DrawBitmapAtlas(bmpButtonMinus, 0, 0, 1, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(bmpButtonMinus, 0, 0, hoverOpacityL, bitmapScale, Color.Black);
                             c.PushTranslation(paramButtonSizeX, 0);
                             c.FillRectangle(0, 0, valSizeX, sliderSizeY, sliderFillBrush);
                             c.DrawRectangle(0, 0, actualSliderSizeX, sliderSizeY, enabled ? ThemeResources.BlackBrush : disabledBrush, 1);
                             c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, TextFlags.MiddleCenter, actualSliderSizeX, buttonSizeY);
                             c.PopTransform();
-                            c.DrawBitmapAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, 1, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(bmpButtonPlus, paramButtonSizeX + actualSliderSizeX, 0, hoverOpacityR, bitmapScale, Color.Black);
                             c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamCheckbox)
                         {
+                            var opacity = enabled ? (hovered && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f) : 0.25f;
+
                             c.PushTranslation(contentSizeX - checkBoxPosX, checkBoxPosY);
-                            c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width * bitmapScale - 1, bmpCheckBoxYes.ElementSize.Height * bitmapScale - 1, g.GetSolidBrush(Color.Black, 1, enabled ? 1.0f : 0.25f));
-                            c.DrawBitmapAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, enabled ? 1.0f : 0.25f, bitmapScale, Color.Black);
+                            c.DrawRectangle(0, 0, bmpCheckBoxYes.ElementSize.Width * bitmapScale - 1, bmpCheckBoxYes.ElementSize.Height * bitmapScale - 1, g.GetSolidBrush(Color.Black, 1, opacity));
+                            c.DrawBitmapAtlas(paramVal == 0 ? bmpCheckBoxNo : bmpCheckBoxYes, 0, 0, opacity, bitmapScale, Color.Black);
                             c.PopTransform();
                         }
                         else if (button.type == ButtonType.ParamList)
                         {
                             var paramPrev = button.param.SnapAndClampValue(paramVal - 1);
                             var paramNext = button.param.SnapAndClampValue(paramVal + 1);
+                            var hoverOpacityL = hovered && enabled && hoverSubButtonTypeOrParamIndex == 1 ? 0.6f : 1.0f;
+                            var hoverOpacityR = hovered && enabled && hoverSubButtonTypeOrParamIndex == 2 ? 0.6f : 1.0f;
 
                             c.PushTranslation(contentSizeX - sliderPosX, sliderPosY);
-                            c.DrawBitmapAtlas(bmpButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
-                            c.DrawBitmapAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, paramVal == paramNext || !enabled ? 0.25f : 1.0f, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(bmpButtonLeft, 0, 0, paramVal == paramPrev || !enabled ? 0.25f : hoverOpacityL, bitmapScale, Color.Black);
+                            c.DrawBitmapAtlas(bmpButtonRight, sliderSizeX - paramButtonSizeX, 0, paramVal == paramNext || !enabled ? 0.25f : hoverOpacityR, bitmapScale, Color.Black);
                             c.DrawText(paramStr, ThemeResources.FontMedium, 0, -sliderPosY, ThemeResources.BlackBrush, TextFlags.MiddleCenter, sliderSizeX, button.height);
                             c.PopTransform();
                         }
@@ -1581,11 +1591,12 @@ namespace FamiStudio
 
                             for (var j = 0; j < button.tabNames.Length; j++)
                             {
-                                var tabName      = button.tabNames[j];
-                                var tabSelect    = tabName == selectedInstrumentTab;
-                                var tabFont      = tabSelect ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
-                                var tabLineBrush = tabSelect ? ThemeResources.BlackBrush : g.GetSolidBrush(Color.Black, 1.0f, 0.5f);
-                                var tabLine      = tabSelect ? 3 : 1;
+                                var tabName         = button.tabNames[j];
+                                var tabHoverOpacity = hovered && hoverSubButtonTypeOrParamIndex == j ? 0.6f : 1.0f;
+                                var tabSelect       = tabName == selectedInstrumentTab;
+                                var tabLineBrush    = g.GetSolidBrush(Color.Black, 1.0f, (tabSelect ? 1.0f : 0.5f) * tabHoverOpacity);
+                                var tabFont         = tabSelect ? ThemeResources.FontMediumBold : ThemeResources.FontMedium;
+                                var tabLine         = tabSelect ? 3 : 1;
 
                                 c.PushTranslation(leftPadding + tabWidth * j, 0);
                                 c.DrawText(tabName, tabFont, 0, 0, tabLineBrush, TextFlags.MiddleCenter, tabWidth, button.height);
@@ -1604,17 +1615,19 @@ namespace FamiStudio
                         {
                             for (int j = 0, x = contentSizeX - subButtonSpacingX; j < subButtons.Length; j++, x -= subButtonSpacingX)
                             {
-                                var bmp = button.GetIcon(subButtons[j]);
+                                var sub = subButtons[j];
+                                var bmp = button.GetIcon(sub);
+                                var hoverOpacity = hovered && (int)sub == hoverSubButtonTypeOrParamIndex ? 0.6f : 1.0f;
 
-                                if (subButtons[j] == SubButtonType.Expand)
+                                if (sub == SubButtonType.Expand)
                                 {
-                                    c.DrawBitmapAtlas(bmp, expandButtonPosX, expandButtonPosY, 1.0f, bitmapScale, tint);
+                                    c.DrawBitmapAtlas(bmp, expandButtonPosX, expandButtonPosY, hoverOpacity, bitmapScale, tint);
                                 }
                                 else
                                 {
-                                    c.DrawBitmapAtlas(bmp, x, subButtonPosY, (activeMask & (1 << j)) != 0 ? 1.0f : 0.2f, bitmapScale, tint);
+                                    c.DrawBitmapAtlas(bmp, x, subButtonPosY, ((activeMask & (1 << j)) != 0 ? 1.0f : 0.2f) * hoverOpacity, bitmapScale, tint);
 
-                                    if (highlighted && subButtons[j] < SubButtonType.EnvelopeMax)
+                                    if (highlighted && sub < SubButtonType.EnvelopeMax)
                                         c.DrawRectangle(x, subButtonPosY, x + iconSize - 4, subButtonPosY + iconSize - 4, ThemeResources.WhiteBrush, 2, true);
                                 }
                             }
@@ -1890,7 +1903,7 @@ namespace FamiStudio
                 }
                 else if (buttonType == ButtonType.ParamCheckbox)
                 {
-                    if (x >= contentSizeX - checkBoxPosX)
+                    if (IsPointInCheckbox(x, y))
                     {
                         tooltip = "{MouseLeft} Toggle value\n{MouseRight} More Options...";
                     }
@@ -2248,11 +2261,10 @@ namespace FamiStudio
 
             UpdateCursor();
             UpdateCaptureOperation(e.X, e.Y);
+            UpdateHover(e);
 
             if (middle)
-            {
                 DoScroll(e.Y - mouseLastY);
-            }
 
             UpdateToolTip(e.X, e.Y);
             ConditionalShowExpansionIcons(e.X, e.Y);
@@ -2261,9 +2273,55 @@ namespace FamiStudio
             mouseLastY = e.Y;
         }
 
+        private void UpdateHover(MouseEventArgs e)
+        {
+            if (Platform.IsDesktop)
+            {
+                var buttonIdx = GetButtonAtCoord(e.X, e.Y, out var subButtonType);
+                var sub = -1;
+
+                if (buttonIdx >= 0)
+                {
+                    var button = buttons[buttonIdx];
+
+                    switch (button.type)
+                    {
+                        case ButtonType.ParamTabs:
+                            sub = GetTabIndex(e.X, e.Y, button);
+                            break;
+                        case ButtonType.ParamCheckbox:
+                            if (IsPointInCheckbox(e.X, e.Y)) sub = 1;
+                            break;
+                        case ButtonType.ParamList:
+                        case ButtonType.ParamSlider:
+                            if (IsPointInParamListOrSliderButton(e.X, e.Y, true)) sub = 1;
+                            else if (IsPointInParamListOrSliderButton(e.X, e.Y, false)) sub = 2;
+                            // MATTT : Slider here
+                            break;
+                        default:
+                            sub = (int)subButtonType;
+                            break;
+                    }
+                }
+
+                SetAndMarkDirty(ref hoverButtonIndex, buttonIdx);
+                SetAndMarkDirty(ref hoverSubButtonTypeOrParamIndex, sub);
+            }
+        }
+
+        private void ClearHover()
+        {
+            if (Platform.IsDesktop)
+            {
+                SetAndMarkDirty(ref hoverButtonIndex, -1);
+                SetAndMarkDirty(ref hoverSubButtonTypeOrParamIndex, -1);
+            }
+        }
+
         protected override void OnMouseLeave(EventArgs e)
         {
             App.SequencerShowExpansionIcons = false;
+            ClearHover();
         }
 
         protected bool HandleMouseUpButtons(MouseEventArgs e)
@@ -3171,9 +3229,22 @@ namespace FamiStudio
             return false;
         }
 
+        private bool IsPointInCheckbox(int x, int y)
+        {
+            return x >= contentSizeX - checkBoxPosX;
+        }
+
+        private bool IsPointInParamListOrSliderButton(int x, int y, bool left)
+        {
+            if (left)
+                return x > (contentSizeX - sliderPosX) && x < (contentSizeX - sliderPosX + paramButtonSizeX);
+            else
+                return x > (contentSizeX - sliderPosX + sliderSizeX - paramButtonSizeX) && x < (contentSizeX - sliderPosX + sliderSizeX);
+        }
+
         private void ClickParamCheckbox(int x, int y, Button button)
         {
-            if (x >= contentSizeX - checkBoxPosX)
+            if (IsPointInCheckbox(x, y))
             {
                 App.UndoRedoManager.BeginTransaction(button.paramScope, button.paramObjectId);
                 button.param.SetValue(button.param.GetValue() == 0 ? 1 : 0);
@@ -3185,8 +3256,8 @@ namespace FamiStudio
         private bool ClickParamListOrSliderButton(int x, int y, Button button)
         {
             var buttonX = x;
-            var leftButton  = buttonX > (contentSizeX - sliderPosX) && buttonX < (contentSizeX - sliderPosX + paramButtonSizeX);
-            var rightButton = buttonX > (contentSizeX - sliderPosX + sliderSizeX - paramButtonSizeX) && buttonX < (contentSizeX - sliderPosX + sliderSizeX);
+            var leftButton  = IsPointInParamListOrSliderButton(x, y, true);
+            var rightButton = IsPointInParamListOrSliderButton(x, y, false);
             var delta = leftButton ? -1 : (rightButton ? 1 : 0);
 
             if (leftButton || rightButton)
@@ -3210,13 +3281,16 @@ namespace FamiStudio
             return false;
         }
 
-        private void ClickParamTabsButton(int x, int y, Button button)
+        private int GetTabIndex(int x, int y, Button button)
         {
             var tabWidth = Utils.DivideAndRoundUp(contentSizeX - expandButtonSizeX - paramRightPadX, button.tabNames.Length);
-            var tabIndex = Utils.Clamp((x - expandButtonSizeX) / tabWidth, 0, button.tabNames.Length - 1);
+            return Utils.Clamp((x - expandButtonSizeX) / tabWidth, 0, button.tabNames.Length - 1);
+        }
 
+        private void ClickParamTabsButton(int x, int y, Button button)
+        {
+            var tabIndex = GetTabIndex(x, y, button);
             selectedInstrumentTab = button.tabNames[tabIndex];
-
             RefreshButtons();
         }
 
@@ -3868,7 +3942,7 @@ namespace FamiStudio
             return false;
         }
 
-        private bool IsPositionInButtonIcon(Button button, int buttonRelX, int buttonRelY)
+        private bool IsPointInButtonIcon(Button button, int buttonRelX, int buttonRelY)
         {
             var iconSize = ScaleCustom(bmpEnvelopes[0].ElementSize.Width, bitmapScale);
             var iconRelX = buttonRelX - (buttonIconPosX + (ShowExpandButtons() ? expandButtonPosX + expandButtonSizeX : 0));
@@ -3894,7 +3968,7 @@ namespace FamiStudio
                 var button = buttons[buttonIdx];
                 if (button.instrument != null && buttonIdx == highlightedButtonIdx && subButtonType != SubButtonType.Expand)
                 {
-                    if (subButtonType == SubButtonType.Max && !IsPositionInButtonIcon(button, buttonRelX, buttonRelY))
+                    if (subButtonType == SubButtonType.Max && !IsPointInButtonIcon(button, buttonRelX, buttonRelY))
                         return false;
 
                     envelopeDragIdx = subButtonType < SubButtonType.EnvelopeMax ? (int)subButtonType : -1;
@@ -3914,7 +3988,7 @@ namespace FamiStudio
             if (buttonIdx >= 0)
             {
                 var button = buttons[buttonIdx];
-                if (button.song != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPositionInButtonIcon(button, buttonRelX, buttonRelY))
+                if (button.song != null && buttonIdx == highlightedButtonIdx && subButtonType == SubButtonType.Max && IsPointInButtonIcon(button, buttonRelX, buttonRelY))
                 {
                     App.SelectedSong = button.song;
                     StartCaptureOperation(x, y, CaptureOperation.DragSong, buttonIdx);
