@@ -335,8 +335,12 @@ namespace FamiStudio
                     sr.WriteLine("S5B_WRITE = 5");
                     sr.WriteLine("VRC7_WRITE = 6");
                     sr.WriteLine("N163_WRITE = 7");
-                    sr.WriteLine("MMC5_WRITE = 8");
-                    sr.WriteLine("LOOP_VGM = 9");
+                    sr.WriteLine("LOOP_VGM = 8");
+                    sr.WriteLine("STOP_VGM = 9");
+                    sr.WriteLine("MMC5_WRITE = 10");
+                    sr.WriteLine(".byte APU_WRITE, $08, $15, $0f, $08, $80, $0f, $00, $00, $30, $04, $30, $0c, $30, $01, $08, $05, $08");
+                    sr.WriteLine(".byte EPSM_A0_WRITE, $01, $07, $38");
+                    sr.WriteLine(".byte EPSM_A0_WRITE, $04, $07, $38, $29, $80, $27, $00, $11, $37");
                     string writeByteStream = "";
                     string writeCommandByte = ";start";
                     int lastReg = 0;
