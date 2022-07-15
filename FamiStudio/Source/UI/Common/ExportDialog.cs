@@ -241,7 +241,7 @@ namespace FamiStudio
                         page.AddDropDownList("Piano Roll Zoom :", new[] { "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", "Higher zoom values scrolls faster and shows less far ahead."); // 6
                         page.AddCheckBox("Stereo", project.OutputsStereoAudio); // 7
                         if (Platform.IsDesktop)
-                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData()); // 8
+                            page.AddGrid(new[] { new ColumnDesc("", 0.0f, ColumnType.CheckBox), new ColumnDesc("Channel", 0.4f), new ColumnDesc("Pan (% L/R)", 0.6f, ColumnType.Slider, "{0} %") }, GetDefaultChannelsGridData(), 10); // 8
                         else
                             page.AddCheckBoxList("Channels", GetChannelNames(), GetDefaultActiveChannels()); // 8
                         page.SetPropertyVisible(7, Platform.IsDesktop); // Stereo on mobile.
@@ -273,7 +273,7 @@ namespace FamiStudio
                     page.AddTextBox("Copyright :", project.Copyright, 31); // 2
                     page.AddDropDownList("Format :", new[] { "NSF", "NSFe" }, "NSF"); // 3
                     page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 4
-                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null); // 5
+                    page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null, null, 12); // 5
 #if DEBUG
                     page.AddDropDownList("Engine :", FamiToneKernel.Names, FamiToneKernel.Names[FamiToneKernel.FamiStudio]); // 6
 #endif
@@ -286,7 +286,7 @@ namespace FamiStudio
                         page.AddTextBox("Name :", project.Name.Substring(0, Math.Min(28, project.Name.Length)), 28); // 1
                         page.AddTextBox("Artist :", project.Author.Substring(0, Math.Min(28, project.Author.Length)), 28); // 2
                         page.AddDropDownList("Mode :", new[] { "NTSC", "PAL" }, project.PalMode ? "PAL" : "NTSC"); // 3
-                        page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null); // 4
+                        page.AddCheckBoxList(Platform.IsDesktop ? null : "Songs", songNames, null, null, 12); // 4
                         page.SetPropertyEnabled(0, project.UsesFdsExpansion);
                         page.SetPropertyEnabled(3, !project.UsesAnyExpansionAudio);
                     }
@@ -302,17 +302,17 @@ namespace FamiStudio
                     page.AddCheckBox("Export slide notes as pitch wheel :", true); // 2
                     page.AddNumericUpDown("Pitch wheel range :", 24, 1, 24); // 3
                     page.AddDropDownList("Instrument Mode :", MidiExportInstrumentMode.Names, MidiExportInstrumentMode.Names[0]); // 4
-                    page.AddGrid(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null); // 5
+                    page.AddGrid(new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, null, 14); // 5
                     page.PropertyChanged += Midi_PropertyChanged;
                     break;
                 case ExportFormat.Text:
-                    page.AddCheckBoxList(null, songNames, null); // 0
+                    page.AddCheckBoxList(null, songNames, null, null, 12); // 0
                     page.AddCheckBox("Delete unused data :", false); // 1
                     break;
                 case ExportFormat.FamiTracker:
                     if (!project.UsesMultipleExpansionAudios)
                     {
-                        page.AddCheckBoxList(null, songNames, null); // 0
+                        page.AddCheckBoxList(null, songNames, null, null, 12); // 0
                         canExportToFamiTracker = true;
                     }
                     else
@@ -340,7 +340,7 @@ namespace FamiStudio
                         page.AddTextBox("Song Name Pattern :", "{project}_{song}"); // 2
                         page.AddTextBox("DMC Name Pattern :", "{project}"); // 3
                         page.AddCheckBox("Generate song list include :", false); // 4
-                        page.AddCheckBoxList(null, songNames, null); // 5
+                        page.AddCheckBoxList(null, songNames, null, null, 12); // 5
                         page.SetPropertyEnabled(2, false);
                         page.SetPropertyEnabled(3, false);
                         page.PropertyChanged += SoundEngine_PropertyChanged;
@@ -351,7 +351,7 @@ namespace FamiStudio
                     page.AddDropDownList("Format :", AssemblyFormat.Names, AssemblyFormat.Names[0]); // 0
                     page.AddDropDownList("Mode :", MachineType.Names, MachineType.Names[project.PalMode ? MachineType.PAL : MachineType.NTSC]); // 1
                     page.AddCheckBox("Generate SFX list include :", false); // 2
-                    page.AddCheckBoxList(null, songNames, null); // 3
+                    page.AddCheckBoxList(null, songNames, null, null, 12); // 3
                     break;
                 case ExportFormat.CommandLog:
                     page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
