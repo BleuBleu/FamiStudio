@@ -29,7 +29,6 @@ P0:
 - Full S5B support?
 
 P1:
-- Option to copy envelope data as text.
 - Holding the -/+ buttons in project explorer = go fast.
 - Extend channel grid in export dialog where there is space.
 - Dark mode for open/save dialogs on MacOS? + title bar?

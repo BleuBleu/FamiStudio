@@ -318,7 +318,7 @@ namespace FamiStudio
             buttons[(int)ButtonType.Open]      = new Button { BmpAtlasIndex = ButtonImageIndices.Open, Click = OnOpen, RightClick = Platform.IsDesktop ? OnOpenRecent : (MouseClickDelegate)null };
             buttons[(int)ButtonType.Save]      = new Button { BmpAtlasIndex = ButtonImageIndices.Save, Click = OnSave, RightClick = OnSaveAs };
             buttons[(int)ButtonType.Export]    = new Button { BmpAtlasIndex = ButtonImageIndices.Export, Click = OnExport, RightClick = Platform.IsDesktop ? OnRepeatLastExport : (MouseClickDelegate)null };
-            buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, Enabled = OnCopyEnabled };
+            buttons[(int)ButtonType.Copy]      = new Button { BmpAtlasIndex = ButtonImageIndices.Copy, Click = OnCopy, RightClick = Platform.IsDesktop ? OnCopyAsText : (MouseClickDelegate)null, Enabled = OnCopyEnabled };
             buttons[(int)ButtonType.Cut]       = new Button { BmpAtlasIndex = ButtonImageIndices.Cut, Click = OnCut, Enabled = OnCutEnabled };
             buttons[(int)ButtonType.Paste]     = new Button { BmpAtlasIndex = ButtonImageIndices.Paste, Click = OnPaste, RightClick = OnPasteSpecial, Enabled = OnPasteEnabled };
             buttons[(int)ButtonType.Undo]      = new Button { BmpAtlasIndex = ButtonImageIndices.Undo, Click = OnUndo, Enabled = OnUndoEnabled };
@@ -693,6 +693,17 @@ namespace FamiStudio
         private void OnCopy(int x, int y)
         {
             App.Copy();
+        }
+
+        private void OnCopyAsText(int x, int y)
+        {
+            if (App.CanCopyAsText)
+            {
+                App.ShowContextMenu(left + x, top + y, new[]
+                {
+                    new ContextMenuOption("MenuCopy", "Copy as Text", "Copy context as human readable text", () => { App.CopyAsText(); }),
+                });
+            }
         }
 
         private ButtonStatus OnCopyEnabled()

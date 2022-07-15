@@ -1873,9 +1873,10 @@ namespace FamiStudio
             PlaySong();
         }
 
-        public bool CanCopy   => PianoRoll.IsActiveControl && PianoRoll.CanCopy   || Sequencer.IsActiveControl && Sequencer.CanCopy;
-        public bool CanPaste  => PianoRoll.IsActiveControl && PianoRoll.CanPaste  || Sequencer.IsActiveControl && Sequencer.CanPaste;
-        public bool CanDelete => PianoRoll.IsActiveControl && PianoRoll.CanDelete || Sequencer.IsActiveControl && Sequencer.CanDelete;
+        public bool CanCopy       => PianoRoll.IsActiveControl && PianoRoll.CanCopy   || Sequencer.IsActiveControl && Sequencer.CanCopy;
+        public bool CanCopyAsText => PianoRoll.IsActiveControl && PianoRoll.CanCopyAsText;
+        public bool CanPaste      => PianoRoll.IsActiveControl && PianoRoll.CanPaste  || Sequencer.IsActiveControl && Sequencer.CanPaste;
+        public bool CanDelete     => PianoRoll.IsActiveControl && PianoRoll.CanDelete || Sequencer.IsActiveControl && Sequencer.CanDelete;
 
         public void Copy()
         {
@@ -1883,6 +1884,12 @@ namespace FamiStudio
                 PianoRoll.Copy();
             else if (Sequencer.IsActiveControl)
                 Sequencer.Copy();
+        }
+
+        public void CopyAsText()
+        {
+            if (PianoRoll.IsActiveControl)
+                PianoRoll.CopyAsText();
         }
 
         public void Cut()

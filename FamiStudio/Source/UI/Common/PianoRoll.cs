@@ -401,9 +401,10 @@ namespace FamiStudio
         public bool IsEditingDPCMSample        => editMode == EditionMode.DPCM;
         public bool IsEditingDPCMSampleMapping => editMode == EditionMode.DPCMMapping;
         
-        public bool CanCopy   => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
-        public bool CanPaste  => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
-        public bool CanDelete => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio || editMode == EditionMode.DPCM);
+        public bool CanCopy       => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
+        public bool CanCopyAsText => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
+        public bool CanPaste      => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
+        public bool CanDelete     => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio || editMode == EditionMode.DPCM);
         public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public Instrument EditInstrument   => editInstrument;
@@ -2092,14 +2093,19 @@ namespace FamiStudio
             return values;
         }
 
-        private void CopyEnvelopeValues()
+        private void CopyEnvelopeValues(bool text)
         {
-            ClipboardUtils.SaveEnvelopeValues(GetSelectedEnvelopeValues());
+            var values = GetSelectedEnvelopeValues();
+
+            if (text)
+                Platform.SetClipboardString(string.Join(" ", values));
+            else
+                ClipboardUtils.SaveEnvelopeValues(values);
         }
 
         private void CutEnvelopeValues()
         {
-            CopyEnvelopeValues();
+            CopyEnvelopeValues(false);
             DeleteSelectedEnvelopeValues();
         }
 
@@ -2131,7 +2137,13 @@ namespace FamiStudio
             if (editMode == EditionMode.Channel)
                 CopyNotes();
             else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
-                CopyEnvelopeValues();
+                CopyEnvelopeValues(false);
+        }
+
+        public void CopyAsText()
+        {
+            if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+                CopyEnvelopeValues(true);
         }
 
         public void Cut()
@@ -6360,16 +6372,21 @@ namespace FamiStudio
 
                 if (editMode == EditionMode.Enveloppe && x < lastPixel)
                 {
+                    if (Platform.IsDesktop && IsSelectionValid())
+                    {
+                        menu.Add(new ContextMenuOption("MenuCopy", "Copy Selection As Text", () => { CopyAsText(); }, true));
+                    }
+
                     if (env.CanLoop || (rep != null && rep.CanLoop))
                     {
-                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }));
+                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }, true));
                         if (env.Loop >= 0)
                             menu.Add(new ContextMenuOption("MenuClearLoopPoint", "Clear Loop Point", () => { ClearEnvelopeLoopRelease(false); }));
                     }
                     if (env.CanRelease || (rep != null && rep.CanRelease))
                     {
                         if (absIdx > 0)
-                            menu.Add(new ContextMenuOption("MenuRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }));
+                            menu.Add(new ContextMenuOption("MenuRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }, true));
                         if (env.Release >= 0)
                             menu.Add(new ContextMenuOption("MenuClearRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
                     }

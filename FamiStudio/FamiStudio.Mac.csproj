@@ -511,6 +511,8 @@
     <EmbeddedResource Include="Resources\MenuClearRelease@2x.tga" />
     <EmbeddedResource Include="Resources\MenuClearSelection.tga" />
     <EmbeddedResource Include="Resources\MenuClearSelection@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuCopy.tga" />
+    <EmbeddedResource Include="Resources\MenuCopy@2x.tga" />
     <EmbeddedResource Include="Resources\MenuCustomPatternSettings.tga" />
     <EmbeddedResource Include="Resources\MenuCustomPatternSettings@2x.tga" />
     <EmbeddedResource Include="Resources\MenuDelete.tga" />
