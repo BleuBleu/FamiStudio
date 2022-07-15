@@ -29,7 +29,6 @@ P0:
 - Full S5B support?
 
 P1:
-- Holding the -/+ buttons in project explorer = go fast.
 - Extend channel grid in export dialog where there is space.
 - Dark mode for open/save dialogs on MacOS? + title bar?
 - Display number of selected channels in grid for video export?
@@ -49,6 +48,7 @@ P1:
 
 Testing:
 ========
+- TEST : Test -/+ fast scroll on mobile.
 - TEST : Test no attack in playback + NSF.
 - TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
 - Restest sequencer hide channel a bunch, test vertical scroll bars, test mobile too. Make sure not broken.
