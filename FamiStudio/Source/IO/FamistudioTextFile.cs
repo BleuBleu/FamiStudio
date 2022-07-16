@@ -101,6 +101,14 @@ namespace FamiStudio
             // Instruments
             foreach (var instrument in project.Instruments)
             {
+                if (instrument.IsN163Instrument && instrument.N163WavePreset == WavePresetType.Resample && instrument.N163ResampleWaveData != null ||
+                    instrument.IsFdsInstrument  && instrument.FdsWavePreset  == WavePresetType.Resample && instrument.FdsResampleWaveData  != null)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instrument.Name} is resampled from WAV data. Discarding WAV data.");
+                    instrument.DeleteFdsResampleWavData();
+                    instrument.DeleteN163ResampleWavData();
+                }
+
                 var instrumentLine = $"\tInstrument{GenerateAttribute("Name", instrument.Name)}";
                 if (instrument.IsExpansionInstrument)
                 {

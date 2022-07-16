@@ -2663,8 +2663,11 @@ namespace FamiStudio
         private void RenderEnvelopeValues(RenderInfo r)
         {
             var env = EditEnvelope;
+            var resampled = editInstrument.IsN163Instrument && editEnvelope == EnvelopeType.N163Waveform && editInstrument.N163ResampleWaveData != null && editInstrument.N163WavePreset == WavePresetType.Resample ||
+                            editInstrument.IsFdsInstrument  && editEnvelope == EnvelopeType.FdsWaveform  && editInstrument.FdsResampleWaveData  != null && editInstrument.FdsWavePreset  == WavePresetType.Resample;
             var spacing = editEnvelope == EnvelopeType.DutyCycle ? 4 : (editEnvelope == EnvelopeType.Arpeggio ? 12 : 16);
             var color = editMode == EditionMode.Enveloppe ? editInstrument.Color : editArpeggio.Color;
+            var brush = r.g.GetSolidBrush(color, 1, resampled ? 0.4f : 1.0f);
 
             Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int envTypeMinValue, out int envTypeMaxValue);
 
@@ -2747,7 +2750,7 @@ namespace FamiStudio
                     float x1 = GetPixelForNote(i + 1);
                     float y = (virtualSizeY - envelopeValueSizeY * (env.Values[i] + bias)) - scrollY;
 
-                    r.cf.FillRectangle(x0, y - envelopeValueSizeY, x1, y, r.g.GetVerticalGradientBrush(color, (int)envelopeValueSizeY, 0.8f));
+                    r.cf.FillRectangle(x0, y - envelopeValueSizeY, x1, y, brush);
 
                     if (!highlighted)
                         r.cf.DrawRectangle(x0, y - envelopeValueSizeY, x1, y, selected ? selectionNoteBrush : ThemeResources.BlackBrush, selected ? 2 : 1, selected);
@@ -2785,29 +2788,30 @@ namespace FamiStudio
                     var selected = IsEnvelopeValueSelected(i);
                     var highlighted = Platform.IsMobile && highlightNoteAbsIndex == i;
 
-                    r.cf.FillRectangle(x0, y0, x1, y1, r.g.GetSolidBrush(color));
+                    r.cf.FillRectangle(x0, y0, x1, y1, brush);
 
                     if (!highlighted)
                         r.cf.DrawRectangle(x0, y0, x1, y1, selected ? selectionNoteBrush : ThemeResources.BlackBrush, selected ? 2 : 1, selected);
                     else
                         highlightRect = new Rectangle((int)x0, (int)y0, (int)(x1 - x0), (int)(y1 - y0)); // MATTT : Was RectangleF???
 
-                    bool drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * WindowScaling * 2);
-                    var brush = drawOutside ? ThemeResources.LightGreyBrush1 : ThemeResources.BlackBrush;
-                    var offset = drawOutside != val < center ? -effectValuePosTextOffsetY : effectValueNegTextOffsetY;
-
                     var label = val.ToString();
                     if (label.Length * fontSmallCharSizeX + 2 < noteSizeX)
-                        r.cf.DrawText(label, ThemeResources.FontSmall, x0, ty + offset, brush, TextFlags.Center, noteSizeX);
+                    {
+                        var drawOutside = Math.Abs(y1 - y0) < (DefaultEnvelopeSizeY * WindowScaling * 2);
+                        var textBrush = drawOutside ? ThemeResources.LightGreyBrush1 : ThemeResources.BlackBrush;
+                        var offset = drawOutside != val < center ? -effectValuePosTextOffsetY : effectValueNegTextOffsetY;
+
+                        r.cf.DrawText(label, ThemeResources.FontSmall, x0, ty + offset, textBrush, TextFlags.Center, noteSizeX);
+                    }
                 }
             }
 
             if (!highlightRect.IsEmpty)
                 r.cf.DrawRectangle(highlightRect, highlightNoteBrush, 2, true);
 
-            if (editMode == EditionMode.Enveloppe && 
-                ((editInstrument.IsN163Instrument && editInstrument.N163ResampleWaveData != null && editInstrument.N163WavePreset == WavePresetType.Resample) || 
-                 (editInstrument.IsFdsInstrument  && editInstrument.FdsResampleWaveData  != null && editInstrument.FdsWavePreset  == WavePresetType.Resample)))
+            // Drawing the N163/FDS waveform on top. 
+            if (resampled)
             {
                 var isN163     = editInstrument.IsN163Instrument;
 
@@ -2823,6 +2827,8 @@ namespace FamiStudio
 
                 var line = new List<float>(width);
                 var prevSampleIndex = -1;
+                var prevX = 0.0f;
+                var prevY = 0.0f;
 
                 // Start at -1 to always draw the first little bit in the first 1/2 of the first value.
                 for (var i = -1; i < env.Length; i++)
@@ -2830,10 +2836,9 @@ namespace FamiStudio
                     var x0 = GetPixelForNote(i + 0);
                     var x1 = GetPixelForNote(i + 1);
 
-                    // MATTT : We draw a little bit past the end!
                     for (var j = 0; j < numVerticesPerColumn; j++)
                     {
-                        var sampleIndex = (int)Math.Round(waveOffset + i * numSamplesPerEnvelopeValue + (j * numSamplesPerEnvelopeValue / numVerticesPerColumn));
+                        var sampleIndex = (int)Math.Floor(waveOffset + i * numSamplesPerEnvelopeValue + (j * numSamplesPerEnvelopeValue / numVerticesPerColumn));
                         if (sampleIndex >= 0 && sampleIndex != prevSampleIndex)
                         {
                             if (sampleIndex >= waveData.Length)
@@ -2848,15 +2853,26 @@ namespace FamiStudio
                             var x = Utils.Lerp(x0, x1, j / (float)numVerticesPerColumn) + noteSizeX * 0.5f;
                             var y = (virtualSizeY - envelopeValueSizeY * (val + bias)) - scrollY;
 
+                            // Clip line at end.
+                            if (x >= maxX)
+                            {
+                                var ratio = (maxX - prevX) / (x - prevX);
+                                x = Utils.Lerp(prevX, x, ratio);
+                                y = Utils.Lerp(prevY, y, ratio);
+                                i = env.Length;
+                            }
+
                             line.Add(x);
                             line.Add(y);
 
                             prevSampleIndex = sampleIndex;
+                            prevX = x;
+                            prevY = y;
                         }
                     }
                 }
 
-                r.cf.DrawLine(line, ThemeResources.WhiteBrush, 1, true);
+                r.cf.DrawLine(line, ThemeResources.LightGreyBrush2, 1, true);
             }
 
             if (editMode == EditionMode.Enveloppe)

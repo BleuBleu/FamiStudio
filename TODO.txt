@@ -3,10 +3,6 @@
 
 N163 Multi-wave:
 ================
-- IMPORTER??? How should it work?
-	- Draw waveform on top of envelope. UGLY!
-	- Option to clear the wave data + project cleanup.
-		- When exporting to FamiStudio text, clear to custom profile.
 / Re-run unit tests after FDS.
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
@@ -33,7 +29,6 @@ P0:
 
 P1:
 - Move notes per beat in advanced section + time signature tooltip.
-- Display number of selected channels in grid for video export?
 - BUG : Selection rec in envelope editor has 1 extra pixel in lower part of header.
 - Is CPU usage higher?
 
@@ -51,6 +46,7 @@ P1:
 
 Testing:
 ========
+- Do a pass on tooltips for ParamProviders.
 - TEST : Test -/+ fast scroll on mobile.
 - TEST : Test no attack in playback + NSF.
 - TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
@@ -139,6 +135,7 @@ Discord
 
 Backlog: 
 =========
+- Display number of selected channels in grid for video export?
 - Dark mode for open/save dialogs on MacOS? + title bar?
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.

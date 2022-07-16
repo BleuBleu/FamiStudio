@@ -3797,9 +3797,9 @@ namespace FamiStudio
             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
 
             if (inst.IsN163Instrument)
-                inst.ClearN163ResampleWavData();
+                inst.DeleteN163ResampleWavData();
             else
-                inst.ClearFdsResampleWavData();
+                inst.DeleteFdsResampleWavData();
 
             App.UndoRedoManager.EndTransaction();
             MarkDirty();
@@ -4373,7 +4373,7 @@ namespace FamiStudio
             }
 
             if (numExpansionsSelected > 1)
-                props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to FamiTracker.");
+                props.SetPropertyWarning(6, CommentType.Warning, "Using multiple expansions will prevent you from exporting to FamiTracker or as an NES ROM.");
             else
                 props.SetPropertyWarning(6, CommentType.Good, "");
         }

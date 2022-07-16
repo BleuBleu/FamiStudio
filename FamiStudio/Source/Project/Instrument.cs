@@ -348,12 +348,14 @@ namespace FamiStudio
             Debug.Assert(wav.Length <= MaxResampleWavSamples);
             fdsResampleWavData = wav;
             fdsWavPreset = WavePresetType.Resample;
+            UpdateFdsWaveEnvelope();
         }
 
-        public void ClearFdsResampleWavData()
+        public void DeleteFdsResampleWavData()
         {
             fdsResampleWavData = null;
-            fdsWavPreset = WavePresetType.Custom;
+            if (fdsWavPreset == WavePresetType.Resample)
+                fdsWavPreset = WavePresetType.Custom;
         }
 
         public void UpdateN163WaveEnvelope()
@@ -378,12 +380,14 @@ namespace FamiStudio
             Debug.Assert(wav.Length <= MaxResampleWavSamples);
             n163ResampleWavData = wav;
             n163WavPreset = WavePresetType.Resample;
+            UpdateN163WaveEnvelope();
         }
 
-        public void ClearN163ResampleWavData()
+        public void DeleteN163ResampleWavData()
         {
             n163ResampleWavData = null;
-            n163WavPreset = WavePresetType.Custom;
+            if (n163WavPreset == WavePresetType.Resample)
+                n163WavPreset = WavePresetType.Custom;
         }
 
         private void ResampleWaveform()

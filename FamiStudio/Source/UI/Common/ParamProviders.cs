@@ -126,7 +126,7 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.FdsModDepth; }, SetValue = (v) => { instrument.FdsModDepth = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Delay", 0, 255, 0)
                         { GetValue = () => { return instrument.FdsModDelay; }, SetValue = (v) => { instrument.FdsModDelay = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Period", 1, 1024, 128)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Period", 2, 1024, 128)
                         { GetValue = () => { return instrument.FdsResampleWavePeriod; }, SetValue = (v) => { instrument.FdsResampleWavePeriod = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Offset", 0, 0, 0)
                         { GetValue = () => { return instrument.FdsResampleWaveOffset; }, SetValue = (v) => { instrument.FdsResampleWaveOffset = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; }, GetMaxValue = () => { return instrument.FdsResampleWaveData != null ? instrument.FdsResampleWaveData.Length - 1 : 100; } });
