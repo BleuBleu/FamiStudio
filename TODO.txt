@@ -28,7 +28,6 @@ P0:
 - Full S5B support?
 
 P1:
-- Move notes per beat in advanced section + time signature tooltip.
 - BUG : Selection rec in envelope editor has 1 extra pixel in lower part of header.
 - Is CPU usage higher?
 
