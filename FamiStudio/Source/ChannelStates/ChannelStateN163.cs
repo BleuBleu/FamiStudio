@@ -68,7 +68,10 @@ namespace FamiStudio
                 var wav = envelopes[EnvelopeType.N163Waveform].GetN163Waveform(newWaveIndex);
 
                 for (int i = 0; i < wav.Length; i++)
+                {
                     WriteN163Register(wavePos + i, wav[i]);
+                    NesApu.SkipCycles(apuIdx, 14); // We internally skip 4 cycles for each writes, total 18.
+                }
 
                 waveIndex = newWaveIndex;
             }

@@ -22,6 +22,7 @@ public:
 	enum { osc_count = 8 };
 	void osc_output( int index, Blip_Buffer* );
 	void reset();
+	void run_until(cpu_time_t);
 	void end_frame( cpu_time_t );
 	
 	// Read/write data register is at 0x4800 to 0x4fff.
@@ -77,7 +78,6 @@ private:
 	short shadow_internal_regs[shadow_internal_regs_count];
 
 	BOOST::uint8_t& access();
-	void run_until( cpu_time_t );
 };
 
 // Must match the definition in NesApu.cs.

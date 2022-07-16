@@ -24,6 +24,7 @@ void Nes_Vrc7::reset()
 	reg = 0;
 	last_amp = 0;
 	last_time = 0;
+	delay = 0;
 	silence = false;
 	silence_age = 0;
 	memset(&regs_age[0], 0, array_count(regs_age));
@@ -94,20 +95,29 @@ void Nes_Vrc7::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 		OPLL_writeReg(opll, reg, data);
 		regs_age[reg] = 0;
 		break;
+	default:
+		return;
 	}
+
+	run_until(time);
 }
 
-void Nes_Vrc7::end_frame(cpu_time_t time)
+void Nes_Vrc7::run_until(cpu_time_t end_time)
 {
+	end_time <<= 8; // Keep 8 bit of fraction.
+
+	require(end_time >= last_time);
+
 	if (!output_buffer)
 		return;
 
-	time <<= 8; // Keep 8 bit of fraction.
+	cpu_time_t time = last_time;
+	time += delay;
+	delay = 0;
 
-	cpu_time_t t = last_time;
 	cpu_time_t increment = (output_buffer->clock_rate() << 8) / opll->rate;
 
-	while (t < time)
+	while (time < end_time)
 	{
 		int sample = OPLL_calc(opll);
 		sample = clamp(sample, -3200, 3600);
@@ -118,14 +128,25 @@ void Nes_Vrc7::end_frame(cpu_time_t time)
 		int delta = sample - last_amp;
 		if (delta)
 		{
-			synth.offset(t >> 8, delta, output_buffer);
+			synth.offset(time >> 8, delta, output_buffer);
 			last_amp = sample;
 		}
 
-		t += increment;
+		time += increment;
 	}
 
-	last_time = t - time;
+	delay = time - end_time;
+	last_time = end_time;
+} 
+
+void Nes_Vrc7::end_frame(cpu_time_t time)
+{
+	if (time << 8 > last_time)
+	{
+		run_until(time);
+	}
+	last_time -= time << 8;
+	assert(last_time >= 0);
 }
 
 void Nes_Vrc7::start_seeking()

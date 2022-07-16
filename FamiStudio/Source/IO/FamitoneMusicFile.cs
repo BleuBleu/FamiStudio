@@ -343,13 +343,15 @@ namespace FamiStudio
                     switch (i)
                     {
                         case EnvelopeType.N163Waveform:
-                        case EnvelopeType.FdsWaveform:
                         case EnvelopeType.WaveformRepeat:
                             // Handled as special case below since multiple-waveform must be splitted and
                             // repeat envelope must be converted.
                             break;
                         case EnvelopeType.FdsModulation:
                             processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
+                            break;
+                        case EnvelopeType.FdsWaveform:
+                            processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
                             break;
                         default:
                             processed = ProcessEnvelope(env,
@@ -375,8 +377,8 @@ namespace FamiStudio
                     }
                 }
 
-                // Special case for N163/FDS multiple waveforms.
-                if (instrument.IsN163Instrument || instrument.IsFdsInstrument)
+                // Special case for N163 multiple waveforms.
+                if (instrument.IsN163Instrument)
                 {
                     var envType = instrument.IsN163Instrument ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
                     var envRepeat = instrument.Envelopes[EnvelopeType.WaveformRepeat];
@@ -496,15 +498,12 @@ namespace FamiStudio
 
                         if (instrument.IsFdsInstrument)
                         {
-                            var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
+                            var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
-                            lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
-                            lines.Add($"\t{dw} {ll}env{fdsModEnvIdx}");
-                            lines.Add($"\t{dw} {instrument.FdsModSpeed}");
-                            lines.Add($"\t{db} {(instrument.FdsModDepth << 2) | instrument.FdsMasterVolume}");
-                            lines.Add($"\t{db} {instrument.FdsModDelay}");
-                            lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
+                            lines.Add($"\t{db} {instrument.FdsMasterVolume}");
+                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
+                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00");
                         }
                         else if (instrument.IsN163Instrument)
                         {
@@ -614,8 +613,8 @@ namespace FamiStudio
 
             lines.Add("");
 
-            // Write the N163/FDS multiple waveforms.
-            if (project.UsesN163Expansion || project.UsesFdsExpansion)
+            // Write the N163 multiple waveforms.
+            if (project.UsesN163Expansion)
             {
                 foreach (var instrument in project.Instruments)
                 {

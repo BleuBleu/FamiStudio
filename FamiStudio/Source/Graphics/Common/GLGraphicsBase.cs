@@ -1316,8 +1316,11 @@ namespace FamiStudio
             DrawLineInternal(x0, y0, x1, y1, brush, width, smooth, dash);
         }
 
-        public void DrawLine(float[] points, Brush brush, int width = 1, bool smooth = false)
+        public void DrawLine(IList<float> points, Brush brush, int width = 1, bool smooth = false)
         {
+            if (points.Count == 0)
+                return;
+
             width += lineWidthBias;
 
             var x0 = points[0];
@@ -1325,7 +1328,7 @@ namespace FamiStudio
 
             xform.TransformPoint(ref x0, ref y0);
 
-            for (int i = 2; i < points.Length; i += 2)
+            for (int i = 2; i < points.Count; i += 2)
             {
                 var x1 = points[i + 0];
                 var y1 = points[i + 1];

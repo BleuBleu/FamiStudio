@@ -34,7 +34,7 @@ namespace FamiStudio
             maxLength = GetEnvelopeMaxLength(type);
 
             values = new sbyte[maxLength];
-            canResize = type != EnvelopeType.FdsModulation;
+            canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
             canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
             canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
             chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
@@ -492,6 +492,7 @@ namespace FamiStudio
             switch (type)
             {
                 case EnvelopeType.FdsWaveform:
+                    return 64;
                 case EnvelopeType.N163Waveform:
                     return 1024; // Actually includes multiple waveforms.
                 case EnvelopeType.FdsModulation:
@@ -694,14 +695,16 @@ namespace FamiStudio
 
     public static class WavePresetType
     {
-        public const int Sine     = 0;
-        public const int Triangle = 1;
-        public const int Sawtooth = 2;
-        public const int Square50 = 3;
-        public const int Square25 = 4;
-        public const int Flat     = 5;
-        public const int Custom   = 6;
-        public const int Count    = 7;
+        public const int Sine       = 0;
+        public const int Triangle   = 1;
+        public const int Sawtooth   = 2;
+        public const int Square50   = 3;
+        public const int Square25   = 4;
+        public const int Flat       = 5;
+        public const int Custom     = 6;
+        public const int CountNoWav = 8;
+        public const int Resample    = 7;
+        public const int Count      = 8;
 
         public static readonly string[] Names =
         {
@@ -711,7 +714,8 @@ namespace FamiStudio
             "Square 50%",
             "Square 25%",
             "Flat",
-            "Custom"
+            "Custom",
+            "Resample"
         };
 
         public static int GetValueForName(string str)

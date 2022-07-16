@@ -4,17 +4,20 @@
 N163 Multi-wave:
 ================
 - IMPORTER??? How should it work?
-	- Add context menu to open wave file.
-		- Import a fixed number of samples (12000?).
-	- Draw waveform on top of envelope.
-	- Add "From Wav File" preset.
-	- Add scale + bias parameters.
-	- Scale/bias param
+	- Draw waveform on top of envelope. UGLY!
 	- Option to clear the wave data + project cleanup.
-	- When exporting to FamiStudio text, clear to custom profile.
-	- That's it
+		- When exporting to FamiStudio text, clear to custom profile.
+/ Re-run unit tests after FDS.
 - UI : PC: Highlight, cursors, tooltip.
 - UI : Mobile : Gizmos, highlight, etc.
+
+	- Retest VRC7 without the skip cycles, must be identical.
+		// For testing.
+		//for (int i = 100; i < time + 100; i += 100)
+		//{
+		//	int j = min(i, time);
+		//	run_until(j);
+		//}
 
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
@@ -29,20 +32,21 @@ P0:
 - Full S5B support?
 
 P1:
-- Dark mode for open/save dialogs on MacOS? + title bar?
+- Move notes per beat in advanced section + time signature tooltip.
 - Display number of selected channels in grid for video export?
 - BUG : Selection rec in envelope editor has 1 extra pixel in lower part of header.
 - Is CPU usage higher?
 
 4.0.0 Change Log
 ================
-- Revamped desktop version, based on GLFW using custom drawn widgets
+- Revamped desktop version, based on GLFW using custom drawn widgets. 
 - Redesigned desktop controls : context menu, gizmos, etc. 
 - Animated GIFs for intro tutorial on desktop
 - More control over sequencer height & ability to hide unused channels
 - Support to multiple audio expansions with EPSM
-- Support for multiple waveforms for N163/FDS
+- Support for multiple waveforms for N163
 - Support for audio expansions for ROM export 
+- Wave resampling for N163/FDS waveforms
 - 
 
 Testing:
@@ -59,6 +63,8 @@ Packaging:
 - UNIT-TEST : Add multi-wave to N163/FDS unit tests.
 - UNIT-TEST : Add FDS mod to unit tests (effect + delay)
 - Opening Gyruss (see if other FDS/N163 songs affected) sets the waveform to 'Sine'. This is bad data. How did it happen??
+- Doc
+	- Add common time signature examples
 
 Batch convert PNG -> TGA
 ==========================
@@ -133,6 +139,7 @@ Discord
 
 Backlog: 
 =========
+- Dark mode for open/save dialogs on MacOS? + title bar?
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Reorder channels for video export.

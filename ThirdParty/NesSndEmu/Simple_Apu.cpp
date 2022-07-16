@@ -246,6 +246,14 @@ void Simple_Apu::skip_cycles(long cycles)
 	{
 		time += cycles;
 		apu.run_until(time);
+
+		if (expansions & expansion_mask_vrc6) vrc6.run_until(time);
+		if (expansions & expansion_mask_vrc7) vrc7.run_until(time);
+		if (expansions & expansion_mask_fds) fds.run_until(time);
+		if (expansions & expansion_mask_mmc5) mmc5.run_until(time);
+		if (expansions & expansion_mask_namco) namco.run_until(time);
+		if (expansions & expansion_mask_sunsoft) sunsoft.run_until(time);
+		if (expansions & expansion_mask_epsm) epsm.run_until(time);
 	}
 }
 

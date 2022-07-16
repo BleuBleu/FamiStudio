@@ -2733,6 +2733,8 @@ namespace FamiStudio
             }
 
             var highlightRect = RectangleF.Empty;
+            var center = editEnvelope == EnvelopeType.FdsWaveform ? 32 : 0;
+            var bias = Platform.IsMobile ? -envTypeMinValue : midValue;
 
             if (editEnvelope == EnvelopeType.Arpeggio)
             {
@@ -2740,7 +2742,6 @@ namespace FamiStudio
                 {
                     var selected = IsEnvelopeValueSelected(i);
                     var highlighted = Platform.IsMobile && highlightNoteAbsIndex == i;
-                    var bias = Platform.IsMobile ? -envTypeMinValue : midValue;
 
                     float x0 = GetPixelForNote(i + 0);
                     float x1 = GetPixelForNote(i + 1);
@@ -2760,10 +2761,9 @@ namespace FamiStudio
             }
             else
             {
+
                 for (int i = 0; i < env.Length; i++)
                 {
-                    var center = editEnvelope == EnvelopeType.FdsWaveform ? 32 : 0;
-                    var bias = Platform.IsMobile ? -envTypeMinValue : midValue;
                     int val = env.Values[i];
 
                     float y0, y1, ty;
@@ -2804,6 +2804,60 @@ namespace FamiStudio
 
             if (!highlightRect.IsEmpty)
                 r.cf.DrawRectangle(highlightRect, highlightNoteBrush, 2, true);
+
+            if (editMode == EditionMode.Enveloppe && 
+                ((editInstrument.IsN163Instrument && editInstrument.N163ResampleWaveData != null && editInstrument.N163WavePreset == WavePresetType.Resample) || 
+                 (editInstrument.IsFdsInstrument  && editInstrument.FdsResampleWaveData  != null && editInstrument.FdsWavePreset  == WavePresetType.Resample)))
+            {
+                var isN163     = editInstrument.IsN163Instrument;
+
+                var waveSize   = isN163 ? editInstrument.N163WaveSize : 64;
+                var wavePeriod = isN163 ? editInstrument.N163ResampleWavePeriod : editInstrument.FdsResampleWavePeriod;
+                var waveOffset = isN163 ? editInstrument.N163ResampleWaveOffset : editInstrument.FdsResampleWaveOffset;
+                var waveData   = isN163 ? editInstrument.N163ResampleWaveData   : editInstrument.FdsResampleWaveData;
+
+                var numSamplesPerEnvelopeValue  = wavePeriod / (float)waveSize;
+                var numVerticesPerColumn = (int)(noteSizeX * 0.5f);
+
+                Debug.Assert(numVerticesPerColumn >= 1);
+
+                var line = new List<float>(width);
+                var prevSampleIndex = -1;
+
+                // Start at -1 to always draw the first little bit in the first 1/2 of the first value.
+                for (var i = -1; i < env.Length; i++)
+                {
+                    var x0 = GetPixelForNote(i + 0);
+                    var x1 = GetPixelForNote(i + 1);
+
+                    // MATTT : We draw a little bit past the end!
+                    for (var j = 0; j < numVerticesPerColumn; j++)
+                    {
+                        var sampleIndex = (int)Math.Round(waveOffset + i * numSamplesPerEnvelopeValue + (j * numSamplesPerEnvelopeValue / numVerticesPerColumn));
+                        if (sampleIndex >= 0 && sampleIndex != prevSampleIndex)
+                        {
+                            if (sampleIndex >= waveData.Length)
+                            {
+                                i = env.Length;
+                                break;
+                            }
+
+                            var sample = waveData[sampleIndex];
+                            var val = Utils.Lerp(envTypeMinValue, envTypeMaxValue, (sample + 32768.0f) / 65535.0f);
+
+                            var x = Utils.Lerp(x0, x1, j / (float)numVerticesPerColumn) + noteSizeX * 0.5f;
+                            var y = (virtualSizeY - envelopeValueSizeY * (val + bias)) - scrollY;
+
+                            line.Add(x);
+                            line.Add(y);
+
+                            prevSampleIndex = sampleIndex;
+                        }
+                    }
+                }
+
+                r.cf.DrawLine(line, ThemeResources.WhiteBrush, 1, true);
+            }
 
             if (editMode == EditionMode.Enveloppe)
             {
@@ -3449,8 +3503,7 @@ namespace FamiStudio
                     if (env.Length != length)
                     {
                         env.Length = length;
-                        editInstrument.NotifyEnvelopeChanged(editEnvelope);
-                        editInstrument?.NotifyEnvelopeChanged(editEnvelope); // Instrument is null when editing arps.
+                        editInstrument?.NotifyEnvelopeChanged(editEnvelope, false); // Instrument is null when editing arps.
                         if (IsSelectionValid())
                             SetSelection(selectionMin, selectionMax);
                     }
@@ -3459,16 +3512,14 @@ namespace FamiStudio
                     if (env.Release != length && length > 0)
                     {
                         env.Release = length;
-                        editInstrument.NotifyEnvelopeChanged(editEnvelope);
-                        editInstrument?.NotifyEnvelopeChanged(editEnvelope); // Instrument is null when editing arps.
+                        editInstrument?.NotifyEnvelopeChanged(editEnvelope, false); // Instrument is null when editing arps.
                     }
                     break;
                 case CaptureOperation.DragLoop:
                     if (env.Loop != length)
                     {
                         env.Loop = length;
-                        editInstrument.NotifyEnvelopeChanged(editEnvelope);
-                        editInstrument?.NotifyEnvelopeChanged(editEnvelope); // Instrument is null when editing arps.
+                        editInstrument?.NotifyEnvelopeChanged(editEnvelope, false); // Instrument is null when editing arps.
                     }
                     break;
             }
@@ -3701,7 +3752,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        void DrawEnvelope(int x, int y, bool first = false)
+        void DrawEnvelope(int x, int y, bool first = false, bool final = false)
         {
             if (GetEnvelopeValueForCoord(x, y, out int idx1, out sbyte val1))
             {
@@ -3742,6 +3793,13 @@ namespace FamiStudio
 
                 MarkDirty();
             }
+
+            if (final)
+            {
+                editInstrument?.NotifyEnvelopeChanged(editEnvelope, true);
+                EnvelopeChanged?.Invoke();
+                App.UndoRedoManager.EndTransaction();
+            }
         }
 
         void DrawSingleEnvelopeValue(int x, int y)
@@ -3763,30 +3821,6 @@ namespace FamiStudio
 
                 App.UndoRedoManager.EndTransaction();
             }
-        }
-
-        private void UpdateWavePreset(bool final)
-        {
-            if (editMode == EditionMode.Enveloppe)
-            {
-                if (editInstrument.IsFdsInstrument)
-                {
-                    if (editEnvelope == EnvelopeType.FdsWaveform)
-                        editInstrument.FdsWavePreset = WavePresetType.Custom;
-                    if (editEnvelope == EnvelopeType.FdsModulation)
-                        editInstrument.FdsModPreset = WavePresetType.Custom;
-                }
-                else if (editInstrument.IsN163Instrument)
-                {
-                    if (editEnvelope == EnvelopeType.N163Waveform)
-                        editInstrument.N163WavePreset = WavePresetType.Custom;
-                }
-            }
-
-            EnvelopeChanged?.Invoke();
-
-            if (final)
-                App.UndoRedoManager.EndTransaction();
         }
 
         protected int GetPianoNote(int x, int y)
@@ -4185,7 +4219,7 @@ namespace FamiStudio
                         ResizeEnvelope(x, y, true);
                         break;
                     case CaptureOperation.DrawEnvelope:
-                        UpdateWavePreset(true);
+                        DrawEnvelope(x, y, false, true);
                         break;
                     case CaptureOperation.CreateSlideNote:
                     case CaptureOperation.DragSlideNoteTarget:
@@ -4364,7 +4398,8 @@ namespace FamiStudio
             for (int i = startFrameIdx; i <= endFrameIdx; i++)
                 EditEnvelope.Values[i] = (sbyte)Utils.Clamp(function(EditEnvelope.Values[i], i - startFrameIdx), minVal, maxVal);
 
-            UpdateWavePreset(false);
+            editInstrument?.NotifyEnvelopeChanged(editEnvelope, true);
+            EnvelopeChanged?.Invoke();
             App.UndoRedoManager.EndTransaction();
             MarkDirty();
         }
@@ -6337,7 +6372,7 @@ namespace FamiStudio
                 env.Loop = idx;
             }
 
-            editInstrument.NotifyEnvelopeChanged(editEnvelope);
+            editInstrument.NotifyEnvelopeChanged(editEnvelope, false);
             App.UndoRedoManager.EndTransaction();
         }
 
@@ -6355,7 +6390,7 @@ namespace FamiStudio
             else
                 env.Loop = -1;
 
-            editInstrument.NotifyEnvelopeChanged(editEnvelope);
+            editInstrument.NotifyEnvelopeChanged(editEnvelope, false);
             App.UndoRedoManager.EndTransaction();
         }
 

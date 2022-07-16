@@ -108,7 +108,6 @@ namespace FamiStudio
 
                     if (instrument.IsFdsInstrument)
                     {
-                        instrumentLine += GenerateAttribute("FdsWaveCount", instrument.FdsWaveCount);
                         instrumentLine += GenerateAttribute("FdsWavePreset", WavePresetType.Names[instrument.FdsWavePreset]);
                         instrumentLine += GenerateAttribute("FdsModPreset",  WavePresetType.Names[instrument.FdsModPreset]);
                         if (instrument.FdsMasterVolume != 0) instrumentLine += GenerateAttribute("FdsMasterVolume", instrument.FdsMasterVolume);
@@ -437,7 +436,6 @@ namespace FamiStudio
                                 if (parameters.TryGetValue("FdsModSpeed",     out var fdsModSpeedStr))  instrument.FdsModSpeed     = ushort.Parse(fdsModSpeedStr);
                                 if (parameters.TryGetValue("FdsModDepth",     out var fdsModDepthStr))  instrument.FdsModDepth     = byte.Parse(fdsModDepthStr);
                                 if (parameters.TryGetValue("FdsModDelay",     out var fdsModDelayStr))  instrument.FdsModDelay     = byte.Parse(fdsModDelayStr);
-                                if (parameters.TryGetValue("FdsWaveCount",    out var wavCountStr))     instrument.FdsWaveCount    = byte.Parse(wavCountStr);
                             }
                             else if (instrument.IsN163Instrument)
                             {

@@ -6,7 +6,7 @@ namespace FamiStudio
     public class ContextMenu : Control
     {
         const int DefaultItemSizeY    = 22;
-        const int DefaultIconPos      = 4;
+        const int DefaultIconPos      = 3;
         const int DefaultTextPosX     = 22;
         const int DefaultMenuMinSizeX = 100;
 
@@ -16,7 +16,6 @@ namespace FamiStudio
         int minSizeX;
 
         int hoveredItemIndex = -1;
-        BitmapAtlasRef[] bmpExpansions;
         BitmapAtlasRef[] bmpContextMenu;
         BitmapAtlasRef bmpMenuCheckOn;
         BitmapAtlasRef bmpMenuCheckOff;
@@ -29,7 +28,6 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(Graphics g)
         {
-            bmpExpansions   = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpMenuCheckOn  = g.GetBitmapAtlasRef("MenuCheckOn");
             bmpMenuCheckOff = g.GetBitmapAtlasRef("MenuCheckOff");
             bmpMenuRadio    = g.GetBitmapAtlasRef("MenuRadio");
@@ -175,7 +173,7 @@ namespace FamiStudio
                 if (hover)
                     c.FillRectangle(0, 0, Width, itemSizeY, ThemeResources.MediumGreyBrush1);
 
-                if (option.Separator) 
+                if (i > 0 && option.Separator) 
                     c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyBrush1);
 
                 var bmp = bmpContextMenu[i];
