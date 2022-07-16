@@ -1,22 +1,6 @@
 4.0.0
 =====
 
-N163 Multi-wave:
-================
-/ Re-run unit tests after FDS.
-
-	- Retest VRC7 without the skip cycles, must be identical.
-		// For testing.
-		//for (int i = 100; i < time + 100; i += 100)
-		//{
-		//	int j = min(i, time);
-		//	run_until(j);
-		//}
-
-- Android:
-	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
-	-  
-
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
@@ -30,6 +14,9 @@ P0:
 - Full S5B support?
 - Is CPU usage higher?
 
+- Android:
+	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
+
 4.0.0 Change Log
 ================
 - Revamped desktop version, based on GLFW using custom drawn widgets. 
@@ -40,7 +27,6 @@ P0:
 - Support for multiple waveforms for N163
 - Support for audio expansions for ROM export 
 - Wave resampling for N163/FDS waveforms
-- 
 
 Testing:
 ========
@@ -54,9 +40,9 @@ Testing:
 
 Packaging:
 ==========
+- Fix Multi + MultiEPSM unit tests.
 - UNIT-TEST : Add multi-wave to N163/FDS unit tests.
 - UNIT-TEST : Add FDS mod to unit tests (effect + delay)
-- Opening Gyruss (see if other FDS/N163 songs affected) sets the waveform to 'Sine'. This is bad data. How did it happen??
 - Doc
 	- Add common time signature examples
 

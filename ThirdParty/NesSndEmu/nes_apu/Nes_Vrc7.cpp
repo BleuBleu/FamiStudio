@@ -142,9 +142,8 @@ void Nes_Vrc7::run_until(cpu_time_t end_time)
 void Nes_Vrc7::end_frame(cpu_time_t time)
 {
 	if (time << 8 > last_time)
-	{
 		run_until(time);
-	}
+
 	last_time -= time << 8;
 	assert(last_time >= 0);
 }
