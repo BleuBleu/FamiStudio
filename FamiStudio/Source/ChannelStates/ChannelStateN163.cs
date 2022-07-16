@@ -19,7 +19,7 @@ namespace FamiStudio
             channelMask = (numChannels - 1) << 4;
         }
 
-        private void WriteN163Register(int reg, int data)
+        private void WriteN163Register(int reg, int data, int skip = 0)
         {
             // HACK : There are conflicts between N163 registers and S5B register, a N163 addr write
             // can be interpreted as a S5B data write. To prevent this, we select a dummy register 
@@ -36,7 +36,7 @@ namespace FamiStudio
                 WriteRegister(NesApu.S5B_ADDR, NesApu.S5B_REG_IO_A);
 
             WriteRegister(NesApu.N163_ADDR, reg);
-            WriteRegister(NesApu.N163_DATA, data);
+            WriteRegister(NesApu.N163_DATA, data, skip);
         }
 
         protected override void LoadInstrument(Instrument instrument)
@@ -68,10 +68,7 @@ namespace FamiStudio
                 var wav = envelopes[EnvelopeType.N163Waveform].GetN163Waveform(newWaveIndex);
 
                 for (int i = 0; i < wav.Length; i++)
-                {
-                    WriteN163Register(wavePos + i, wav[i]);
-                    NesApu.SkipCycles(apuIdx, 14); // We internally skip 4 cycles for each writes, total 18.
-                }
+                    WriteN163Register(wavePos + i, wav[i], 14); // We internally skip 4 cycles for each writes, total 18.
 
                 waveIndex = newWaveIndex;
             }

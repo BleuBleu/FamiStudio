@@ -17,10 +17,8 @@ namespace FamiStudio
 
         private void WriteVrc7Register(int reg, int data)
         {
-            WriteRegister(NesApu.VRC7_REG_SEL, reg);
-            NesApu.SkipCycles(apuIdx, 12); // Roughly equivalent to what we do in sound engine (jsr + rts).
-            WriteRegister(NesApu.VRC7_REG_WRITE, data);
-            NesApu.SkipCycles(apuIdx, 80); // Roughly equivalent to what we do in sound engine (jsr + rts + 8 dummy loops).
+            WriteRegister(NesApu.VRC7_REG_SEL, reg, 12);    // Roughly equivalent to what we do in sound engine (jsr + rts).
+            WriteRegister(NesApu.VRC7_REG_WRITE, data, 80); // Roughly equivalent to what we do in sound engine (jsr + rts + 8 dummy loops).
         }
 
         protected override void LoadInstrument(Instrument instrument)

@@ -468,10 +468,12 @@ namespace FamiStudio
             }
         }
 
-        protected void WriteRegister(int reg, int data)
+        protected void WriteRegister(int reg, int data, int skipCycles = 0)
         {
             NesApu.WriteRegister(apuIdx, reg, data);
             player.NotifyRegisterWrite(apuIdx, reg, data);
+            if (skipCycles > 0)
+                NesApu.SkipCycles(apuIdx, skipCycles);
         }
 
         protected bool IsSeeking
