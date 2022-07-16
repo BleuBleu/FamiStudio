@@ -4,13 +4,6 @@
 N163 Multi-wave:
 ================
 / Re-run unit tests after FDS.
-- UI : PC:
-	- Draw selectionin panel
-	- Highlight under mouse
-	- Cursor up/down
-	- Tooltip.
-
-- UI : Mobile : Gizmos, highlight, etc.
 
 	- Retest VRC7 without the skip cycles, must be identical.
 		// For testing.
@@ -19,6 +12,10 @@ N163 Multi-wave:
 		//	int j = min(i, time);
 		//	run_until(j);
 		//}
+
+- Android:
+	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
+	-  
 
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)

@@ -214,11 +214,11 @@ namespace FamiStudio
             return null;
         }
 
-        public BitmapAtlasRef[] GetBitmapAtlasRefs(string[] name)
+        public BitmapAtlasRef[] GetBitmapAtlasRefs(string[] name, string prefix = null)
         {
             var refs = new BitmapAtlasRef[name.Length];
             for (int i = 0; i < refs.Length; i++)
-                refs[i] = GetBitmapAtlasRef(name[i]);
+                refs[i] = GetBitmapAtlasRef(prefix != null ? prefix + name[i] : name[i]);
             return refs;
         }
 

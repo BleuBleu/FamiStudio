@@ -156,7 +156,7 @@ namespace FamiStudio
             bmpGhostSmall = g.GetBitmapAtlasRef("GhostSmall");
             bmpPlay = g.GetBitmapAtlasRef("Play");
             bmpEffectNone = g.GetBitmapAtlasRef("MobileEffectNone");
-            bmpEffects = g.GetBitmapAtlasRefs(Note.EffectIcons);
+            bmpEffects = g.GetBitmapAtlasRefs(Note.EffectIcons, "Mobile");
             bmpExpansions = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpEnvelopes = g.GetBitmapAtlasRefs(EnvelopeType.Icons);
             bmpChannels = g.GetBitmapAtlasRefs(ChannelType.Icons);
