@@ -8,11 +8,8 @@ P0:
 	=> Remove 1-frame snap glitch.
 	=> Snap effect values (at least give the option to!)
 - Improve oscilloscope stability (use channel frequency)
-/ Sequencer improvement
-  - Add shortcut ([2] ?). Make sure to abort capture if that happens.
-  - Add to shy to context menu somewhere.
-- Full S5B support?
 - Is CPU usage higher?
+- Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
