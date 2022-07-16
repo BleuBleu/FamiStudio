@@ -4,7 +4,12 @@
 N163 Multi-wave:
 ================
 / Re-run unit tests after FDS.
-- UI : PC: Highlight, cursors, tooltip.
+- UI : PC:
+	- Draw selectionin panel
+	- Highlight under mouse
+	- Cursor up/down
+	- Tooltip.
+
 - UI : Mobile : Gizmos, highlight, etc.
 
 	- Retest VRC7 without the skip cycles, must be identical.
