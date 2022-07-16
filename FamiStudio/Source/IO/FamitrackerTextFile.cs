@@ -570,7 +570,7 @@ namespace FamiStudio
 
                     // Our FDS/N163 use a repeat count and needs to be converted to a 
                     // "wave index" envelope before exporting.
-                    if (instrument.IsN163Instrument && i == EnvelopeType.WaveformRepeat)
+                    if (instrument.IsN163 && i == EnvelopeType.WaveformRepeat)
                         instrument.BuildWaveformsAndWaveIndexEnvelope(out _, out env, false);
 
                     if (env == null || env.IsEmpty(i))
@@ -831,15 +831,15 @@ namespace FamiStudio
                 int pitEnvIdx = FindEnvelopeIndex(envelopes, instrument, pitEnv, EnvelopeType.Pitch);
                 int dutEnvIdx = FindEnvelopeIndex(envelopes, instrument, dutEnv, EnvelopeType.DutyCycle);
 
-                if (instrument.IsRegularInstrument)
+                if (instrument.IsRegular)
                 {
                     lines.Add($"INST2A03{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
                 }
-                else if (instrument.IsVrc6Instrument)
+                else if (instrument.IsVrc6)
                 {
                     lines.Add($"INSTVRC6{i,4}{volEnvIdx,6}{arpEnvIdx,4}{pitEnvIdx,4}{-1,4}{dutEnvIdx,4} \"{instrument.Name}\"");
                 }
-                else if (instrument.IsVrc7Instrument)
+                else if (instrument.IsVrc7)
                 {
                     lines.Add($"INSTVRC7{i,4}{instrument.Vrc7Patch,4} {String.Join(" ", instrument.Vrc7PatchRegs.Select(x => $"{x:X2}"))} \"{instrument.Name}\"");
 
@@ -850,7 +850,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Warning, $"VRC7 Instrument '{instrument.Name}' uses a volume, pitch or arpeggio envelope. FamiTracker does not support this. Ignoring.");
                     }
                 }
-                else if (instrument.IsN163Instrument)
+                else if (instrument.IsN163)
                 {
                     instrument.BuildWaveformsAndWaveIndexEnvelope(out var waves, out var wavIndexEnv, false);
 
@@ -860,7 +860,7 @@ namespace FamiStudio
                     for (int j = 0; j < waves.Length; j++)
                         lines.Add($"N163WAVE{i,4}{j,6} : {string.Join(" ", waves[j])}");
                 }
-                else if (instrument.IsFdsInstrument)
+                else if (instrument.IsFds)
                 {
                     lines.Add($"INSTFDS{i,5}{1,6}{instrument.FdsModSpeed,4}{instrument.FdsModDepth,4}{instrument.FdsModDelay,4} \"{instrument.Name}\"");
                     var wavEnv = instrument.Envelopes[EnvelopeType.FdsWaveform];

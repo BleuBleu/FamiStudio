@@ -27,9 +27,9 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.IsVrc7Instrument);
+                Debug.Assert(instrument.IsVrc7);
 
-                if (instrument.IsVrc7Instrument)
+                if (instrument.IsVrc7)
                 {
                     if (instrument.Vrc7Patch == 0)
                     {
@@ -55,7 +55,7 @@ namespace FamiStudio
 
         public override void IntrumentLoadedNotify(Instrument instrument)
         {
-            Debug.Assert(instrument.IsVrc7Instrument && instrument.Vrc7Patch == 0);
+            Debug.Assert(instrument.IsVrc7 && instrument.Vrc7Patch == 0);
 
             // This will be called when another channel loads a custom patch.
             if (note.Instrument != null && 

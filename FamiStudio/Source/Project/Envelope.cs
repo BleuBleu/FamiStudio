@@ -570,7 +570,7 @@ namespace FamiStudio
             else if (type == EnvelopeType.DutyCycle)
             {
                 min = 0;
-                max = instrument.IsVrc6Instrument ? 7 : 3;
+                max = instrument.IsVrc6 ? 7 : 3;
             }
             else if (type == EnvelopeType.FdsWaveform)
             {

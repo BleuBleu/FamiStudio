@@ -63,13 +63,13 @@ namespace FamiStudio
             expansion == ExpansionType.Vrc7 || 
             expansion == ExpansionType.EPSM;
 
-        public bool IsRegularInstrument => expansion == ExpansionType.None;
-        public bool IsFdsInstrument     => expansion == ExpansionType.Fds;
-        public bool IsVrc6Instrument    => expansion == ExpansionType.Vrc6;
-        public bool IsVrc7Instrument    => expansion == ExpansionType.Vrc7;
-        public bool IsN163Instrument    => expansion == ExpansionType.N163;
-        public bool IsS5BInstrument     => expansion == ExpansionType.S5B;
-        public bool IsEpsmInstrument    => expansion == ExpansionType.EPSM;
+        public bool IsRegular => expansion == ExpansionType.None;
+        public bool IsFds     => expansion == ExpansionType.Fds;
+        public bool IsVrc6    => expansion == ExpansionType.Vrc6;
+        public bool IsVrc7    => expansion == ExpansionType.Vrc7;
+        public bool IsN163    => expansion == ExpansionType.N163;
+        public bool IsS5B     => expansion == ExpansionType.S5B;
+        public bool IsEpsm    => expansion == ExpansionType.EPSM;
 
         public Envelope VolumeEnvelope         => envelopes[EnvelopeType.Volume];
         public Envelope PitchEnvelope          => envelopes[EnvelopeType.Pitch];
@@ -392,13 +392,13 @@ namespace FamiStudio
 
         private void ResampleWaveform()
         {
-            Debug.Assert(IsN163Instrument || IsFdsInstrument);
+            Debug.Assert(IsN163 || IsFds);
 
-            var wavData = IsN163Instrument ? n163ResampleWavData : fdsResampleWavData;
+            var wavData = IsN163 ? n163ResampleWavData : fdsResampleWavData;
 
             if (wavData != null)
             {
-                var isN163 = IsN163Instrument;
+                var isN163 = IsN163;
 
                 var waveCount     = isN163 ? n163WavCount : 1;
                 var waveSize      = isN163 ? n163WavSize  : 64;
@@ -416,7 +416,7 @@ namespace FamiStudio
                 var resampling = new short[waveCount * waveSize];
                 WaveUtils.Resample(wavFiltered, waveOffset, waveOffset + waveCount * wavePeriod, resampling);
 
-                var envType = IsN163Instrument ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
+                var envType = IsN163 ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
                 Envelope.GetMinMaxValueForType(this, envType, out var minValue, out var maxValue);
 
                 var env = envelopes[envType];
@@ -478,12 +478,12 @@ namespace FamiStudio
         // duplicated sub-waveforms.
         public void BuildWaveformsAndWaveIndexEnvelope(out byte[][] waves, out Envelope indexEnvelope, bool encode)
         {
-            Debug.Assert(IsFdsInstrument || IsN163Instrument);
+            Debug.Assert(IsFds || IsN163);
 
-            var sourceWaveCount = IsN163Instrument ? N163WaveCount : 1;
-            var waveSize        = IsN163Instrument ? N163WaveSize  : 64;
+            var sourceWaveCount = IsN163 ? N163WaveCount : 1;
+            var waveSize        = IsN163 ? N163WaveSize  : 64;
 
-            var env = IsN163Instrument ? N163WaveformEnvelope : FdsWaveformEnvelope;
+            var env = IsN163 ? N163WaveformEnvelope : FdsWaveformEnvelope;
             var rep = WaveformRepeatEnvelope;
 
             // Compute CRCs, this will eliminate duplicates.
@@ -525,7 +525,7 @@ namespace FamiStudio
             {
                 var oldIndex = waveIndexNewToOld[i];
 
-                if (IsN163Instrument && encode)
+                if (IsN163 && encode)
                     waves[i] = env.GetN163Waveform(oldIndex);
                 else
                     waves[i] = env.GetChunk(oldIndex);
@@ -583,9 +583,9 @@ namespace FamiStudio
                 }
             }
 
-            if (IsN163Instrument && n163WavPreset != WavePresetType.Custom)
+            if (IsN163 && n163WavPreset != WavePresetType.Custom)
                 Debug.Assert(N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset));
-            if (IsFdsInstrument && fdsWavPreset != WavePresetType.Custom)
+            if (IsFds && fdsWavPreset != WavePresetType.Custom)
                 Debug.Assert(FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset));
 #endif
         }
@@ -716,14 +716,14 @@ namespace FamiStudio
             // with bad values. Also, some pitches as well.
             if (buffer.Version < 12)
             {
-                if (IsFdsInstrument)
+                if (IsFds)
                     FdsWaveformEnvelope.ClampToValidRange(this, EnvelopeType.FdsWaveform);
-                if (IsVrc6Instrument)
+                if (IsVrc6)
                     PitchEnvelope.ClampToValidRange(this, EnvelopeType.Pitch);
             }
 
             // At version 14 (FamiStudio 4.0.0), we added multi-waveforms for N163
-            if (buffer.Version < 14 && IsN163Instrument)
+            if (buffer.Version < 14 && IsN163)
             {
                 envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;
@@ -733,11 +733,11 @@ namespace FamiStudio
             // preset does not match with the actual waves. Likely stuff i made
             // with an old development version. Need to check if the preset matches
             // the waveform here :(
-            if (buffer.Version < 14 && (IsN163Instrument || IsFdsInstrument))
+            if (buffer.Version < 14 && (IsN163 || IsFds))
             {
-                if (IsN163Instrument && n163WavPreset != WavePresetType.Custom && !N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset))
+                if (IsN163 && n163WavPreset != WavePresetType.Custom && !N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset))
                     n163WavPreset = WavePresetType.Custom;
-                if (IsFdsInstrument && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
+                if (IsFds && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
                     fdsWavPreset = WavePresetType.Custom;
             }
 

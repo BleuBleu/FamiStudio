@@ -31,9 +31,6 @@ P0:
   - Add shortcut ([2] ?). Make sure to abort capture if that happens.
   - Add to shy to context menu somewhere.
 - Full S5B support?
-
-P1:
-- BUG : Selection rec in envelope editor has 1 extra pixel in lower part of header.
 - Is CPU usage higher?
 
 4.0.0 Change Log

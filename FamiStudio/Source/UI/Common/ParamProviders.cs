@@ -74,11 +74,11 @@ namespace FamiStudio
         {
             return
                 instrument.IsEnvelopeActive(EnvelopeType.Pitch) ||
-                instrument.IsFdsInstrument  ||
-                instrument.IsN163Instrument ||
-                instrument.IsVrc6Instrument ||
-                instrument.IsEpsmInstrument ||
-                instrument.IsVrc7Instrument;
+                instrument.IsFds  ||
+                instrument.IsN163 ||
+                instrument.IsVrc6 ||
+                instrument.IsEpsm ||
+                instrument.IsVrc7;
         }
 
         static public ParamInfo[] GetParams(Instrument instrument)
@@ -296,7 +296,7 @@ namespace FamiStudio
             var releaseEndX   = 0;
             var releaseEndY   = 0;
 
-            if (instrument.IsVrc7Instrument)
+            if (instrument.IsVrc7)
             {
                 var opAttackRate   = (instrument.Vrc7PatchRegs[op + 4] & 0xf0) >> 4; // "Carrier Attack"
                 var opDecayRate    = (instrument.Vrc7PatchRegs[op + 4] & 0x0f) >> 0; // "Carrier Decay"
@@ -334,7 +334,7 @@ namespace FamiStudio
                     releaseEndX = (graphWidth);
                 }
             }
-            else if (instrument.IsEpsmInstrument)
+            else if (instrument.IsEpsm)
             {
                 int opAttackRate   = (instrument.EpsmPatchRegs[7*op + 4] & 0x1f); //31
                 int opDecayRate    = (instrument.EpsmPatchRegs[7*op + 5] & 0x1f); //31

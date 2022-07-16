@@ -130,7 +130,7 @@ namespace FamiStudio
 
                     if (envType != EnvelopeType.Count)
                     {
-                        if (instrument.IsN163Instrument && i == 4 /* SEQ_DUTYCYCLE */)
+                        if (instrument.IsN163 && i == 4 /* SEQ_DUTYCYCLE */)
                         {
                             // N163 wave index envelopes are special since we need to 
                             // convert them to our internal representation (repeat-based).

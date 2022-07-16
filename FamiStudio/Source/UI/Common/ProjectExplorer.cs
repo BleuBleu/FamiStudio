@@ -3779,7 +3779,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Warning, $"Wave file duration exceeds the {Instrument.MaxResampleWavSamples} samples limit. Truncating.");
                     }
 
-                    if (inst.IsN163Instrument)
+                    if (inst.IsN163)
                         inst.SetN163ResampleWaveData(wav);
                     else
                         inst.SetFdsResampleWaveData(wav);
@@ -3796,7 +3796,7 @@ namespace FamiStudio
         {
             App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, inst.Id);
 
-            if (inst.IsN163Instrument)
+            if (inst.IsN163)
                 inst.DeleteN163ResampleWavData();
             else
                 inst.DeleteFdsResampleWavData();
@@ -3819,13 +3819,13 @@ namespace FamiStudio
             {
                 if (subButtonType == SubButtonType.Max)
                 {
-                    if (inst.IsN163Instrument || 
-                        inst.IsFdsInstrument)
+                    if (inst.IsN163 || 
+                        inst.IsFds)
                     {
                         menu.Add(new ContextMenuOption("MenuWave", "Resample Wav File...", () => { LoadN163FdsResampleWavFile(inst); }, true)); 
 
-                        if (inst.IsN163Instrument && inst.N163ResampleWaveData != null ||
-                            inst.IsFdsInstrument  && inst.FdsResampleWaveData  != null)
+                        if (inst.IsN163 && inst.N163ResampleWaveData != null ||
+                            inst.IsFds  && inst.FdsResampleWaveData  != null)
                         {
                             menu.Add(new ContextMenuOption("MenuTrash", "Discard Resample Wav Data", () => { ClearN163FdsResampleWavData(inst); }));
                         }

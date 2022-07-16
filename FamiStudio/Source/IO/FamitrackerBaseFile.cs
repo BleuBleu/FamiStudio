@@ -1168,7 +1168,7 @@ namespace FamiStudio
                     }
                 }
 
-                if (inst.IsN163Instrument)
+                if (inst.IsN163)
                 {
                     if (!n163WaveEnvs.TryGetValue(inst, out var waveIndexEnvIdx))
                         waveIndexEnvIdx = -1;

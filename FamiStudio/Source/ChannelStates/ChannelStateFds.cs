@@ -17,9 +17,9 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.IsFdsInstrument);
+                Debug.Assert(instrument.IsFds);
 
-                if (instrument.IsFdsInstrument)
+                if (instrument.IsFds)
                 {
                     var wav = instrument.Envelopes[EnvelopeType.FdsWaveform];
                     var mod = instrument.Envelopes[EnvelopeType.FdsModulation].BuildFdsModulationTable();
@@ -76,7 +76,7 @@ namespace FamiStudio
 
                     if (note.Instrument != null)
                     {
-                        Debug.Assert(note.Instrument.IsFdsInstrument);
+                        Debug.Assert(note.Instrument.IsFds);
                         modDelayCounter = note.Instrument.FdsModDelay;
                         modDepth = note.Instrument.FdsModDepth;
                         modSpeed = note.Instrument.FdsModSpeed;

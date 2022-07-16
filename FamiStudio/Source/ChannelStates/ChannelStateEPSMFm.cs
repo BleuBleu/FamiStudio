@@ -47,7 +47,7 @@ namespace FamiStudio
 
         protected override void LoadInstrument(Instrument instrument)
         {
-            Debug.Assert(instrument.IsEpsmInstrument);
+            Debug.Assert(instrument.IsEpsm);
             int a1 = 0;
             if (channelIdx >= 3)
             {
@@ -59,7 +59,7 @@ namespace FamiStudio
                 channelIdxHigh = channelIdx;
             }
             opStereo[channelIdx] = instrument.EpsmPatchRegs[1];
-            if (instrument.IsEpsmInstrument)
+            if (instrument.IsEpsm)
             {
                 newInstrument[channelIdx] = 1;
                 channelAlgorithm[channelIdx] = instrument.EpsmPatchRegs[0];
