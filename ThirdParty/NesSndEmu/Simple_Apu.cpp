@@ -253,7 +253,7 @@ void Simple_Apu::skip_cycles(long cycles)
 		if (expansions & expansion_mask_mmc5) mmc5.run_until(time);
 		if (expansions & expansion_mask_namco) namco.run_until(time);
 		if (expansions & expansion_mask_sunsoft) sunsoft.run_until(time);
-		//if (expansions & expansion_mask_epsm) epsm.run_until(time); Disabled until Perkka takes a look.
+		if (expansions & expansion_mask_epsm) epsm.run_until(time); //Disabled until Perkka takes a look.
 	}
 }
 

@@ -90,8 +90,6 @@ private:
 	Nes_EPSM(const Nes_EPSM&);
 	Nes_EPSM& operator = (const Nes_EPSM&);
 	
-	epsm_write_queue queue;
-
 	void reset_psg();
 	void reset_opn2();
 
@@ -108,6 +106,7 @@ private:
 	Blip_Buffer* output_buffer;
 	Blip_Buffer* output_buffer_right;
 	cpu_time_t last_time;
+	int delay;
 	int last_amp;
 	int last_amp_right;
 	uint16_t opn2_mask;
