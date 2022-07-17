@@ -1,6 +1,8 @@
 4.0.0
 =====
 
+- Clear loop point icon 
+
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
