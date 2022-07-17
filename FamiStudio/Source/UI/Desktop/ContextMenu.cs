@@ -159,8 +159,9 @@ namespace FamiStudio
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
             var c = g.CreateCommandList();
-
             c.DrawRectangle(0, 0, Width - 1, Height - 1, ThemeResources.LightGreyBrush1);
+
+            var prevWantedSeparator = false;
 
             for (int i = 0, y = 0; i < menuOptions.Length; i++, y += itemSizeY)
             {
@@ -173,8 +174,11 @@ namespace FamiStudio
                 if (hover)
                     c.FillRectangle(0, 0, Width, itemSizeY, ThemeResources.MediumGreyBrush1);
 
-                if (i > 0 && option.Separator) 
+                if (i > 0 && (option.Separator == ContextMenuSeparator.Before || prevWantedSeparator))
+                {
                     c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyBrush1);
+                    prevWantedSeparator = false;
+                }
 
                 var bmp = bmpContextMenu[i];
 
@@ -196,6 +200,8 @@ namespace FamiStudio
 
                 c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyBrush2 : ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
+
+                prevWantedSeparator = option.Separator == ContextMenuSeparator.After;
             }
 
             g.Clear(Theme.DarkGreyColor4);

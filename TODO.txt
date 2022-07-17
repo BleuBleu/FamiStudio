@@ -8,7 +8,6 @@ P0:
 	=> Remove 1-frame snap glitch.
 	=> Snap effect values (at least give the option to!)
 - Improve oscilloscope stability (use channel frequency)
-- Is CPU usage higher?
 - Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 
 - Android:

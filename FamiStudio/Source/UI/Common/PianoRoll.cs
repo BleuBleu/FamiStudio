@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -2102,6 +2103,44 @@ namespace FamiStudio
                 values[i - selectionMin] = EditEnvelope.Values[i];
 
             return values;
+        }
+
+        private void CopyEffectValues(bool text)
+        {
+            if (editMode == EditionMode.Channel && selectedEffectIdx >= 0 && IsSelectionValid())
+            {
+                var channel = Song.Channels[editChannel];
+                var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(selectionMin);
+                var wantsPreviousValue = Note.EffectWantsPreviousValue(selectedEffectIdx);
+                var prevVal = wantsPreviousValue ? channel.GetCachedLastValidEffectValue(patternIdx - 1, selectedEffectIdx, out _) : Note.GetEffectDefaultValue(Song, selectedEffectIdx);
+                var selectedNotes = GetSelectedNotes(false);
+                var values = new int[selectedNotes.Length];
+
+                for (int i = 0; i < selectedNotes.Length; i++)
+                {
+                    var note = selectedNotes[i];
+                    if (note != null && note.HasValidEffectValue(selectedEffectIdx))
+                    {
+                        var val = note.GetEffectValue(selectedEffectIdx);
+                        values[i] = val;
+                        if (wantsPreviousValue)
+                            prevVal = val;
+                    }
+                    else
+                    {
+                        values[i] = prevVal;
+                    }
+                }
+
+                if (text)
+                {
+                    Platform.SetClipboardString(string.Join(" ", values));
+                }
+                else
+                {
+                    ClipboardUtils.SaveEnvelopeValues(values.Select(v => (sbyte)Utils.Clamp(v, sbyte.MinValue, sbyte.MaxValue)).ToArray());
+                }
+            }
         }
 
         private void CopyEnvelopeValues(bool text)
@@ -6342,6 +6381,12 @@ namespace FamiStudio
 
                 var menu = new List<ContextMenuOption>();
 
+                if (IsSelectionValid())
+                {
+                    menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Envelope Values", () => { CopyEffectValues(false); }));
+                    menu.Add(new ContextMenuOption("MenuCopy", "Copy Effect Values as Text", () => { CopyEffectValues(true); }, ContextMenuSeparator.After));
+                }
+
                 if (hasValue || IsNoteSelected(location))
                 {
                     menu.Add(new ContextMenuOption("MenuDelete", "Clear Effect Value", () => { ClearEffectValue(location, note, IsNoteSelected(location)); }));
@@ -6452,19 +6497,19 @@ namespace FamiStudio
                 {
                     if (Platform.IsDesktop && IsSelectionValid())
                     {
-                        menu.Add(new ContextMenuOption("MenuCopy", "Copy Selection As Text", () => { CopyAsText(); }, true));
+                        menu.Add(new ContextMenuOption("MenuCopy", "Copy Selected Values as Text", () => { CopyAsText(); }, ContextMenuSeparator.Before));
                     }
 
                     if (env.CanLoop || (rep != null && rep.CanLoop))
                     {
-                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }, true));
+                        menu.Add(new ContextMenuOption("MenuLoopPoint", "Set Loop Point", () => { SetEnvelopeLoopRelease(x, y, false); }, ContextMenuSeparator.Before));
                         if (env.Loop >= 0)
                             menu.Add(new ContextMenuOption("MenuClearLoopPoint", "Clear Loop Point", () => { ClearEnvelopeLoopRelease(false); }));
                     }
                     if (env.CanRelease || (rep != null && rep.CanRelease))
                     {
                         if (absIdx > 0)
-                            menu.Add(new ContextMenuOption("MenuRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }, true));
+                            menu.Add(new ContextMenuOption("MenuRelease", "Set Release Point", () => { SetEnvelopeLoopRelease(x, y, true); }, ContextMenuSeparator.Before));
                         if (env.Release >= 0)
                             menu.Add(new ContextMenuOption("MenuClearRelease", "Clear Release Point", () => { ClearEnvelopeLoopRelease(true); }));
                     }
@@ -6523,7 +6568,7 @@ namespace FamiStudio
 
             if (IsSelectionValid())
             {
-                menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, menu.Count > 0));
+                menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, menu.Count > 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None));
                 menu.Add(new ContextMenuOption("MenuDeleteSelection", "Delete Selected Samples", () => { DeleteSelectedWaveSection(); }));
             }
 
@@ -8478,12 +8523,12 @@ namespace FamiStudio
             { 
                 var options = new ContextMenuOption[SnapResolutionType.Max - SnapResolutionType.Min + 2];
 
-                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping the specified number of\nbeats in the piano roll", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked , false );
+                options[0] = new ContextMenuOption("Enable Snapping", "Enables snapping the specified number of\nbeats in the piano roll", () => { snap = !snap; }, () => snap ? ContextMenuCheckState.Checked : ContextMenuCheckState.Unchecked );
 
                 for (var i = SnapResolutionType.Min; i <= SnapResolutionType.Max; i++)
                 {
                     var j = i; // Important, copy for lamdba.
-                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]} {(SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat")}", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0);
+                    options[i + 1] = new ContextMenuOption($"Snap To {SnapResolutionType.Names[i]} {(SnapResolutionType.Factors[i] > 1.0 ? "Beats" : "Beat")}", "", () => { snapResolution = j; }, () => snapResolution == j ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, i == 0 ? ContextMenuSeparator.Before : ContextMenuSeparator.None);
                 }
 
                 App.ShowContextMenu(left + e.X, top + e.Y, options);
