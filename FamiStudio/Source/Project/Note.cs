@@ -536,6 +536,12 @@ namespace FamiStudio
             return note >= MusicalNoteMin && note <= MusicalNoteMax;
         }
 
+        public static void GetOctaveAndNote(int note, out int octave, out int octaveNote)
+        {
+            octave     = (note - 1) / 12;
+            octaveNote = (note - 1) - octave * 12;
+        }
+
         public Note Clone()
         {
             return (Note)MemberwiseClone();

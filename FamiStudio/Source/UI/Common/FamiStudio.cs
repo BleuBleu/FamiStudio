@@ -1873,9 +1873,10 @@ namespace FamiStudio
             PlaySong();
         }
 
-        public bool CanCopy   => PianoRoll.IsActiveControl && PianoRoll.CanCopy   || Sequencer.IsActiveControl && Sequencer.CanCopy;
-        public bool CanPaste  => PianoRoll.IsActiveControl && PianoRoll.CanPaste  || Sequencer.IsActiveControl && Sequencer.CanPaste;
-        public bool CanDelete => PianoRoll.IsActiveControl && PianoRoll.CanDelete || Sequencer.IsActiveControl && Sequencer.CanDelete;
+        public bool CanCopy       => PianoRoll.IsActiveControl && PianoRoll.CanCopy   || Sequencer.IsActiveControl && Sequencer.CanCopy;
+        public bool CanCopyAsText => PianoRoll.IsActiveControl && PianoRoll.CanCopyAsText;
+        public bool CanPaste      => PianoRoll.IsActiveControl && PianoRoll.CanPaste  || Sequencer.IsActiveControl && Sequencer.CanPaste;
+        public bool CanDelete     => PianoRoll.IsActiveControl && PianoRoll.CanDelete || Sequencer.IsActiveControl && Sequencer.CanDelete;
 
         public void Copy()
         {
@@ -1883,6 +1884,12 @@ namespace FamiStudio
                 PianoRoll.Copy();
             else if (Sequencer.IsActiveControl)
                 Sequencer.Copy();
+        }
+
+        public void CopyAsText()
+        {
+            if (PianoRoll.IsActiveControl)
+                PianoRoll.CopyAsText();
         }
 
         public void Cut()
@@ -2391,6 +2398,13 @@ namespace FamiStudio
         Radio
     }
 
+    public enum ContextMenuSeparator
+    {
+        None,
+        Before,
+        After
+    }
+
     // Move these to a common class
     public class ContextMenuOption
     {
@@ -2399,9 +2413,9 @@ namespace FamiStudio
         public string ToolTip;
         public Func<ContextMenuCheckState> CheckState;
         public Action Callback;
-        public bool Separator;
+        public ContextMenuSeparator Separator;
 
-        public ContextMenuOption(string img, string text, Action callback, bool separator = false)
+        public ContextMenuOption(string img, string text, Action callback, ContextMenuSeparator separator = ContextMenuSeparator.None)
         {
             Image = img;
             Text = text;
@@ -2410,7 +2424,7 @@ namespace FamiStudio
             CheckState = () => ContextMenuCheckState.None;
         }
 
-        public ContextMenuOption(string img, string text, string tooltip, Action callback, bool separator = false)
+        public ContextMenuOption(string img, string text, string tooltip, Action callback, ContextMenuSeparator separator = ContextMenuSeparator.None)
         {
             Image = img;
             ToolTip = tooltip;
@@ -2420,7 +2434,7 @@ namespace FamiStudio
             CheckState = () => ContextMenuCheckState.None;
         }
 
-        public ContextMenuOption(string text, string tooltip, Action callback, Func<ContextMenuCheckState> checkState, bool separator = false)
+        public ContextMenuOption(string text, string tooltip, Action callback, Func<ContextMenuCheckState> checkState, ContextMenuSeparator separator = ContextMenuSeparator.None)
         {
             ToolTip = tooltip;
             Text = text;

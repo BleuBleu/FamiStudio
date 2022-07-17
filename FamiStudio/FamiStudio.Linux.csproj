@@ -510,6 +510,8 @@
     <EmbeddedResource Include="Resources\MenuClearRelease@2x.tga" />
     <EmbeddedResource Include="Resources\MenuClearSelection.tga" />
     <EmbeddedResource Include="Resources\MenuClearSelection@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuCopy.tga" />
+    <EmbeddedResource Include="Resources\MenuCopy@2x.tga" />
     <EmbeddedResource Include="Resources\MenuCustomPatternSettings.tga" />
     <EmbeddedResource Include="Resources\MenuCustomPatternSettings@2x.tga" />
     <EmbeddedResource Include="Resources\MenuDelete.tga" />
@@ -562,6 +564,10 @@
     <EmbeddedResource Include="Resources\MenuToggleRelease@2x.tga" />
     <EmbeddedResource Include="Resources\MenuToggleSlide.tga" />
     <EmbeddedResource Include="Resources\MenuToggleSlide@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuTrash.tga" />
+    <EmbeddedResource Include="Resources\MenuTrash@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuWave.tga" />
+    <EmbeddedResource Include="Resources\MenuWave@2x.tga" />
     <EmbeddedResource Include="Resources\MessageCancel.tga" />
     <EmbeddedResource Include="Resources\MessageCancel@2x.tga" />
     <EmbeddedResource Include="Resources\MessageError.tga" />

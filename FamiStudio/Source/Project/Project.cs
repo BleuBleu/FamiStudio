@@ -1461,6 +1461,15 @@ namespace FamiStudio
             }
         }
 
+        public void DeleteAllN163FdsResampleWavData()
+        {
+            foreach (var inst in instruments)
+            {
+                inst.DeleteFdsResampleWavData();
+                inst.DeleteN163ResampleWavData();
+            }
+        }
+
         public void DeleteUnusedArpeggios()
         {
             var usedArpeggios = new HashSet<Arpeggio>();

@@ -41,7 +41,7 @@ namespace FamiStudio
                 value = (value / SnapValue) * SnapValue;
             }
 
-            return Utils.Clamp(value, MinValue, MaxValue);
+            return Utils.Clamp(value, GetMinValue(), GetMaxValue());
         }
 
         protected ParamInfo(string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, int snap = 1)
@@ -56,6 +56,7 @@ namespace FamiStudio
             GetValueString = () => GetValue().ToString();
             GetMinValue = () => MinValue;
             GetMaxValue = () => MaxValue;
+            IsEnabled = () => true;
         }
     };
 
@@ -73,11 +74,11 @@ namespace FamiStudio
         {
             return
                 instrument.IsEnvelopeActive(EnvelopeType.Pitch) ||
-                instrument.IsFdsInstrument  ||
-                instrument.IsN163Instrument ||
-                instrument.IsVrc6Instrument ||
-                instrument.IsEpsmInstrument ||
-                instrument.IsVrc7Instrument;
+                instrument.IsFds  ||
+                instrument.IsN163 ||
+                instrument.IsVrc6 ||
+                instrument.IsEpsm ||
+                instrument.IsVrc7;
         }
 
         static public ParamInfo[] GetParams(Instrument instrument)
@@ -117,9 +118,7 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, instrument.Envelopes[EnvelopeType.FdsWaveform].Values.Length / 64, 1)
-                        { GetValue = () => { return instrument.FdsWaveCount; }, SetValue = (v) => { instrument.FdsWaveCount = (byte)v;}, GetMaxValue = () => { return instrument.FdsMaxWaveCount; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.Count - 1, WavePresetType.Flat, null, true )
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Preset", 0, WavePresetType.CountNoWav - 1, WavePresetType.Flat, null, true )
                         { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.Names[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Speed", 0, 4095, 0)
                         { GetValue = () => { return instrument.FdsModSpeed; }, SetValue = (v) => { instrument.FdsModSpeed = (ushort)v; } });
@@ -127,17 +126,30 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.FdsModDepth; }, SetValue = (v) => { instrument.FdsModDepth = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Mod Delay", 0, 255, 0)
                         { GetValue = () => { return instrument.FdsModDelay; }, SetValue = (v) => { instrument.FdsModDelay = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Period", 2, 1024, 128)
+                        { GetValue = () => { return instrument.FdsResampleWavePeriod; }, SetValue = (v) => { instrument.FdsResampleWavePeriod = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Offset", 0, 0, 0)
+                        { GetValue = () => { return instrument.FdsResampleWaveOffset; }, SetValue = (v) => { instrument.FdsResampleWaveOffset = v; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; }, GetMaxValue = () => { return instrument.FdsResampleWaveData != null ? instrument.FdsResampleWaveData.Length - 1 : 100; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Normalize", 0, 1, 1)
+                        { GetValue = () => { return instrument.FdsResampleWavNormalize ? 1 : 0; }, SetValue = (v) => { instrument.FdsResampleWavNormalize = v != 0; }, IsEnabled = () => { return instrument.FdsResampleWaveData != null && instrument.FdsWavePreset == WavePresetType.Resample; } });
                     break;
 
                 case ExpansionType.N163:
+                    // MATTT : Retest this, made changes with the max values.
                     paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Preset", 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.N163WavePreset; }, GetValueString = () => { return WavePresetType.Names[instrument.N163WavePreset]; }, SetValue = (v) => { instrument.N163WavePreset = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Position", 0, instrument.N163MaxWavePos, 0, null, false, 4)
-                        { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Size", 4, instrument.N163MaxWaveSize, 16, null, false, 4)
-                        { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;} });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, instrument.Envelopes[EnvelopeType.N163Waveform].Values.Length / instrument.N163WaveSize, 1) 
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Position", 0, 0, 0, null, false, 4)
+                        { GetValue = () => { return instrument.N163WavePos; }, SetValue = (v) => { instrument.N163WavePos = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWavePos; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Size", 4, 4, 16, null, false, 4)
+                        { GetValue = () => { return instrument.N163WaveSize; }, SetValue = (v) => { instrument.N163WaveSize = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveSize; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Wave Count", 1, 1, 1) 
                         { GetValue = () => { return instrument.N163WaveCount; }, SetValue = (v) => { instrument.N163WaveCount = (byte)v;}, GetMaxValue = () => { return instrument.N163MaxWaveCount; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Period", 1, 1024, 128) 
+                        { GetValue = () => { return instrument.N163ResampleWavePeriod; }, SetValue = (v) => { instrument.N163ResampleWavePeriod = v;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Offset", 0, 0, 0) 
+                        { GetValue = () => { return instrument.N163ResampleWaveOffset; }, SetValue = (v) => { instrument.N163ResampleWaveOffset = v;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; }, GetMaxValue = () => { return instrument.N163ResampleWaveData != null ? instrument.N163ResampleWaveData.Length - 1 : 100; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, "Resample Normalize", 0, 1, 1) 
+                        { GetValue = () => { return instrument.N163ResampleWavNormalize ? 1 : 0; }, SetValue = (v) => { instrument.N163ResampleWavNormalize = v != 0;}, IsEnabled = () => { return instrument.N163ResampleWaveData != null && instrument.N163WavePreset == WavePresetType.Resample; } });
                     break;
 
                 case ExpansionType.Vrc6:
@@ -284,7 +296,7 @@ namespace FamiStudio
             var releaseEndX   = 0;
             var releaseEndY   = 0;
 
-            if (instrument.IsVrc7Instrument)
+            if (instrument.IsVrc7)
             {
                 var opAttackRate   = (instrument.Vrc7PatchRegs[op + 4] & 0xf0) >> 4; // "Carrier Attack"
                 var opDecayRate    = (instrument.Vrc7PatchRegs[op + 4] & 0x0f) >> 0; // "Carrier Decay"
@@ -322,7 +334,7 @@ namespace FamiStudio
                     releaseEndX = (graphWidth);
                 }
             }
-            else if (instrument.IsEpsmInstrument)
+            else if (instrument.IsEpsm)
             {
                 int opAttackRate   = (instrument.EpsmPatchRegs[7*op + 4] & 0x1f); //31
                 int opDecayRate    = (instrument.EpsmPatchRegs[7*op + 5] & 0x1f); //31

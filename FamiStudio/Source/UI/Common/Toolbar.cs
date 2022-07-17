@@ -280,6 +280,7 @@ namespace FamiStudio
 
         private bool oscilloscopeVisible = true;
         private bool lastOscilloscopeHadNonZeroSample = false;
+        private int  hoverButtonIdx = -1;
 
         // Mobile-only stuff
         private float expandRatio = 0.0f;
@@ -694,6 +695,18 @@ namespace FamiStudio
             App.Copy();
         }
 
+        // Unused.
+        //private void OnCopyAsText(int x, int y)
+        //{
+        //    if (App.CanCopyAsText)
+        //    {
+        //        App.ShowContextMenu(left + x, top + y, new[]
+        //        {
+        //            new ContextMenuOption("MenuCopy", "Copy as Text", "Copy context as human readable text", () => { App.CopyAsText(); }),
+        //        });
+        //    }
+        //}
+
         private ButtonStatus OnCopyEnabled()
         {
             return App.CanCopy ? ButtonStatus.Enabled : ButtonStatus.Disabled;
@@ -780,7 +793,7 @@ namespace FamiStudio
                 new ContextMenuOption("MenuPlay", "Play From Beginning of Song", "Plays from the start of the song {ForceCtrl}{Space}", () => { App.StopSong(); App.PlaySongFromBeginning(); } ),
                 new ContextMenuOption("MenuPlay", "Play From Beginning of Current Pattern", "Plays from the start of the current pattern {Shift}{Space}", () => { App.StopSong(); App.PlaySongFromStartOfPattern(); } ),
                 new ContextMenuOption("MenuPlay", "Play From Loop Point", "Plays from the loop point {Ctrl}{Shift}{Space}", () => { App.StopSong(); App.PlaySongFromLoopPoint(); } ),
-                new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, true ),
+                new ContextMenuOption("Regular Speed",  "Sets the play rate to 100%", () => { App.PlayRate = 1; }, () => App.PlayRate == 1 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None, ContextMenuSeparator.Before ),
                 new ContextMenuOption("Half Speed",     "Sets the play rate to 50%",  () => { App.PlayRate = 2; }, () => App.PlayRate == 2 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
                 new ContextMenuOption("Quarter Speed",  "Sets the play rate to 25%",  () => { App.PlayRate = 4; }, () => App.PlayRate == 4 ? ContextMenuCheckState.Radio : ContextMenuCheckState.None ),
             });
@@ -935,15 +948,15 @@ namespace FamiStudio
 
         private void RenderButtons(CommandList c)
         {
-            var pt = PointToClient(CursorPosition);
-
             // Buttons
-            foreach (var btn in buttons)
+            for (int i = 0; i < buttons.Length; i++)
             {
+                var btn = buttons[i];
+
                 if (btn == null || !btn.Visible)
                     continue;
 
-                var hover = btn.Rect.Contains(pt) && !Platform.IsMobile;
+                var hover = hoverButtonIdx == i;
                 var tint = Theme.LightGreyColor1;
                 var bmpIndex = btn.GetBitmap != null ? btn.GetBitmap(ref tint) : btn.BmpAtlasIndex;
                 var status = btn.Enabled == null ? ButtonStatus.Enabled : btn.Enabled();
@@ -1207,25 +1220,28 @@ namespace FamiStudio
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            MarkDirty();
-            base.OnMouseLeave(e);
+            SetAndMarkDirty(ref hoverButtonIdx, -1);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            base.OnMouseMove(e);
+            var newHoverButtonIdx = -1;
+            var newTooltip = "";
 
-            foreach (var btn in buttons)
+            for (int i = 0; i < buttons.Length; i++)
             {
+                var btn = buttons[i];
+
                 if (btn != null && btn.Visible && btn.Rect.Contains(e.X, e.Y))
                 {
-                    SetToolTip(btn.ToolTip);
-                    return;
+                    newHoverButtonIdx = i;
+                    newTooltip = btn.ToolTip;
+                    break;
                 }
             }
 
-            MarkDirty();
-            SetToolTip("");
+            SetAndMarkDirty(ref hoverButtonIdx, newHoverButtonIdx);
+            SetToolTip(newTooltip);
         }
 
         private Button GetButtonAtCoord(int x, int y)

@@ -365,13 +365,10 @@ namespace FamiStudio
             {
                 for (int j = 0; j < EnvelopeType.Count; j++)
                 {
-                    // MATTT : Move this to when we set the envelope??
-                    if (envelopes[j] == null || envelopes[j].IsEmpty(j))
+                    if (envelopes[j] == null || envelopes[j].Length == 0)
                     {
-                        if (j == EnvelopeType.Volume)
-                            envelopeValues[j] = 15;
-                        else if (j != EnvelopeType.DutyCycle)
-                            envelopeValues[j] = 0;
+                        if (j != EnvelopeType.DutyCycle)
+                            envelopeValues[j] = Envelope.GetEnvelopeDefaultValue(j);
                         continue;
                     }
 
@@ -468,10 +465,15 @@ namespace FamiStudio
             }
         }
 
-        protected void WriteRegister(int reg, int data)
+        protected void WriteRegister(int reg, int data, int skipCycles = 4)
         {
             NesApu.WriteRegister(apuIdx, reg, data);
             player.NotifyRegisterWrite(apuIdx, reg, data);
+            
+            // Internally, NesSndEmu skips 4 cycles. Here we have the option to add more.
+            skipCycles -= 4;
+            if (skipCycles > 0)
+                NesApu.SkipCycles(apuIdx, skipCycles);
         }
 
         protected bool IsSeeking

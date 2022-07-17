@@ -1,21 +1,6 @@
 4.0.0
 =====
 
-N163 Multi-wave:
-================
-- IMPORTER??? How should it work?
-	- Add context menu to open wave file.
-		- Import a fixed number of samples (12000?).
-	- Draw waveform on top of envelope.
-	- Add "From Wav File" preset.
-	- Add scale + bias parameters.
-	- Scale/bias param
-	- Option to clear the wave data + project cleanup.
-	- When exporting to FamiStudio text, clear to custom profile.
-	- That's it
-- UI : PC: Highlight, cursors, tooltip.
-- UI : Mobile : Gizmos, highlight, etc.
-
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
@@ -23,33 +8,26 @@ P0:
 	=> Remove 1-frame snap glitch.
 	=> Snap effect values (at least give the option to!)
 - Improve oscilloscope stability (use channel frequency)
-/ Sequencer improvement
-  - Add shortcut ([2] ?). Make sure to abort capture if that happens.
-  - Add to shy to context menu somewhere.
-- Full S5B support?
+- Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 
-P1:
-- Highlight more stuff (ex: sequencer row/column)
-- Option to copy envelope data as text.
-- Holding the -/+ buttons in project explorer = go fast.
-- Extend channel grid in export dialog where there is space.
-- Dark mode for open/save dialogs on MacOS? + title bar?
-- Display number of selected channels in grid for video export?
-- Is CPU usage higher?
+- Android:
+	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
 
 4.0.0 Change Log
 ================
-- Revamped desktop version, based on GLFW using custom drawn widgets
+- Revamped desktop version, based on GLFW using custom drawn widgets. 
 - Redesigned desktop controls : context menu, gizmos, etc. 
 - Animated GIFs for intro tutorial on desktop
 - More control over sequencer height & ability to hide unused channels
 - Support to multiple audio expansions with EPSM
-- Support for multiple waveforms for N163/FDS
+- Support for multiple waveforms for N163
 - Support for audio expansions for ROM export 
-- 
+- Wave resampling for N163/FDS waveforms
 
 Testing:
 ========
+- Do a pass on tooltips for ParamProviders.
+- TEST : Test -/+ fast scroll on mobile.
 - TEST : Test no attack in playback + NSF.
 - TEST : Restest Famitracker formats a lot, import FTM/TXT and compare. Re-test FDS too.
 - Restest sequencer hide channel a bunch, test vertical scroll bars, test mobile too. Make sure not broken.
@@ -58,9 +36,11 @@ Testing:
 
 Packaging:
 ==========
+- Fix Multi + MultiEPSM unit tests.
 - UNIT-TEST : Add multi-wave to N163/FDS unit tests.
 - UNIT-TEST : Add FDS mod to unit tests (effect + delay)
-- Opening Gyruss (see if other FDS/N163 songs affected) sets the waveform to 'Sine'. This is bad data. How did it happen??
+- Doc
+	- Add common time signature examples
 
 Batch convert PNG -> TGA
 ==========================
@@ -135,6 +115,8 @@ Discord
 
 Backlog: 
 =========
+- Display number of selected channels in grid for video export?
+- Dark mode for open/save dialogs on MacOS? + title bar?
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
 - BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Reorder channels for video export.

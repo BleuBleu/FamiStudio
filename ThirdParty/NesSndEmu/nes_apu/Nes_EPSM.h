@@ -59,6 +59,7 @@ public:
 	void output(Blip_Buffer*, Blip_Buffer*);
 	void treble_eq(blip_eq_t const& eq);
 	void enable_channel(int idx, bool enabled);
+	long run_until(cpu_time_t);
 	void end_frame(cpu_time_t);
 	void mix_samples(blip_sample_t* sample_buffer, long sample_cnt);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
@@ -93,7 +94,6 @@ private:
 
 	void reset_psg();
 	void reset_opn2();
-	long run_until(cpu_time_t);
 
 	int reg;
 	BOOST::uint8_t a0;

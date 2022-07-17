@@ -247,7 +247,7 @@ namespace FamiStudio
             }
         }
 
-        private List<string> SplitLongTooltip(string str)
+        private List<string> SplitLongString(string str)
         {
             var splits = new List<string>();
 
@@ -278,6 +278,17 @@ namespace FamiStudio
             {
                 splits.Add(str);
             }
+
+            return splits;
+        }
+
+        private List<string> SplitLongTooltip(string str)
+        {
+            var lines = str.Split(new[] { '\n' });
+            var splits = new List<string>();
+
+            foreach (var l in lines)
+                splits.AddRange(SplitLongString(l));
 
             return splits;
         }

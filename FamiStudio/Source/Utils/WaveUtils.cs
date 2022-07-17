@@ -49,6 +49,26 @@ namespace FamiStudio
             }
         }
 
+        static public void Normalize(short[] wav)
+        {
+            var min = short.MaxValue;
+            var max = short.MinValue;
+
+            for (int i = 0; i < wav.Length; i++)
+            {
+                var val = wav[i];
+                min = Math.Min(min, val);
+                max = Math.Max(max, val);
+            }
+
+            var ratio = 32767.0f / Math.Max(-min, max);
+
+            for (int i = 0; i < wav.Length; i++)
+            {
+                wav[i] = (short)Math.Round(wav[i] * ratio);
+            }
+        }
+
         static public int DpcmCounterToWaveSample(int counter)
         {
             Debug.Assert(counter >= 0 && counter < 64);
@@ -369,9 +389,9 @@ namespace FamiStudio
 
         // Based off this great article : https://tomroelandts.com/articles/how-to-create-a-simple-low-pass-filter
         // cutoff and transition are expressed as fractions of the sample rate (ex: 1000 / 44100 = 0.22)
-        static public void LowPassFilter(ref short[] wave, float cutoff, float transition)
+        static public void LowPassFilter(ref short[] wave, float cutoff, float transition, int maxFilterSize = int.MaxValue)
         {
-            var n = (int)Math.Ceiling(4.6f / transition);
+            var n = Math.Min(maxFilterSize, (int)Math.Ceiling(4.6f / transition));
             if ((n & 1) == 0) n++;
             var filter = new float[n];
             var sum = 0.0f;

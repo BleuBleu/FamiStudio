@@ -26,6 +26,7 @@ public:
 	void output( Blip_Buffer* );
 	enum { osc_count = 3 };
 	void osc_output( int index, Blip_Buffer* );
+	void run_until(blip_time_t);
 	void end_frame( blip_time_t );
 	void save_state( fme7_apu_state_t* ) const;
 	void load_state( fme7_apu_state_t const& );
@@ -67,8 +68,6 @@ private:
 	
 	enum { amp_range = 192 }; // can be any value; this gives best error/quality tradeoff
 	Blip_Synth<blip_good_quality,1> synth;
-	
-	void run_until( blip_time_t );
 
 	short shadow_internal_regs[shadow_internal_regs_count];
 };

@@ -22,6 +22,7 @@ public:
 	void output( Blip_Buffer* );
 	enum { osc_count = 3 };
 	void osc_output( int index, Blip_Buffer* );
+	void run_until(cpu_time_t);
 	void end_frame( cpu_time_t );
 	void save_snapshot( vrc6_snapshot_t* ) const;
 	void load_snapshot( vrc6_snapshot_t const& );
@@ -70,7 +71,6 @@ private:
 	
 	short shadow_regs[shadow_regs_count];
 
-	void run_until( cpu_time_t );
 	void run_square( Vrc6_Osc& osc, cpu_time_t );
 	void run_saw( cpu_time_t );
 };

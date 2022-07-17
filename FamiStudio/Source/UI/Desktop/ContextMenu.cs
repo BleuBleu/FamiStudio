@@ -6,7 +6,7 @@ namespace FamiStudio
     public class ContextMenu : Control
     {
         const int DefaultItemSizeY    = 22;
-        const int DefaultIconPos      = 4;
+        const int DefaultIconPos      = 3;
         const int DefaultTextPosX     = 22;
         const int DefaultMenuMinSizeX = 100;
 
@@ -16,7 +16,6 @@ namespace FamiStudio
         int minSizeX;
 
         int hoveredItemIndex = -1;
-        BitmapAtlasRef[] bmpExpansions;
         BitmapAtlasRef[] bmpContextMenu;
         BitmapAtlasRef bmpMenuCheckOn;
         BitmapAtlasRef bmpMenuCheckOff;
@@ -29,7 +28,6 @@ namespace FamiStudio
 
         protected override void OnRenderInitialized(Graphics g)
         {
-            bmpExpansions   = g.GetBitmapAtlasRefs(ExpansionType.Icons);
             bmpMenuCheckOn  = g.GetBitmapAtlasRef("MenuCheckOn");
             bmpMenuCheckOff = g.GetBitmapAtlasRef("MenuCheckOff");
             bmpMenuRadio    = g.GetBitmapAtlasRef("MenuRadio");
@@ -161,8 +159,9 @@ namespace FamiStudio
             Debug.Assert(menuOptions != null && menuOptions.Length > 0);
 
             var c = g.CreateCommandList();
-
             c.DrawRectangle(0, 0, Width - 1, Height - 1, ThemeResources.LightGreyBrush1);
+
+            var prevWantedSeparator = false;
 
             for (int i = 0, y = 0; i < menuOptions.Length; i++, y += itemSizeY)
             {
@@ -175,8 +174,11 @@ namespace FamiStudio
                 if (hover)
                     c.FillRectangle(0, 0, Width, itemSizeY, ThemeResources.MediumGreyBrush1);
 
-                if (option.Separator) 
+                if (i > 0 && (option.Separator == ContextMenuSeparator.Before || prevWantedSeparator))
+                {
                     c.DrawLine(0, 0, Width, 0, ThemeResources.LightGreyBrush1);
+                    prevWantedSeparator = false;
+                }
 
                 var bmp = bmpContextMenu[i];
 
@@ -198,6 +200,8 @@ namespace FamiStudio
 
                 c.DrawText(option.Text, ThemeResources.FontMedium, textPosX, 0, hover ? ThemeResources.LightGreyBrush2 : ThemeResources.LightGreyBrush1, TextFlags.MiddleLeft, Width, itemSizeY);
                 c.PopTransform();
+
+                prevWantedSeparator = option.Separator == ContextMenuSeparator.After;
             }
 
             g.Clear(Theme.DarkGreyColor4);

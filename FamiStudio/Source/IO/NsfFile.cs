@@ -562,7 +562,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.IsFdsInstrument)
+                if (inst.IsFds)
                 {
                     if (inst.FdsMasterVolume == masterVolume &&
                         wavEnv.SequenceEqual(inst.Envelopes[EnvelopeType.FdsWaveform].Values.Take(64)) &&
@@ -599,7 +599,7 @@ namespace FamiStudio
                 // Custom instrument, look for a match.
                 foreach (var inst in project.Instruments)
                 {
-                    if (inst.IsVrc7Instrument)
+                    if (inst.IsVrc7)
                     {
                         if (inst.Vrc7Patch == 0 && inst.Vrc7PatchRegs.SequenceEqual(patchRegs))
                             return inst;
@@ -638,7 +638,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.IsN163Instrument)
+                if (inst.IsN163)
                 {
                     if (inst.N163WavePos  == wavePos &&
                         inst.N163WaveSize == waveData.Length &&
@@ -670,7 +670,7 @@ namespace FamiStudio
         {
             foreach (var inst in project.Instruments)
             {
-                if (inst.IsS5BInstrument)
+                if (inst.IsS5B)
                     return inst;
             }
 
