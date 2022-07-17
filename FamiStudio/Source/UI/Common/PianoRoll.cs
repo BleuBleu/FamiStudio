@@ -6517,7 +6517,7 @@ namespace FamiStudio
 
                 if (IsSelectionValid())
                 {
-                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }));
+                    menu.Add(new ContextMenuOption("MenuClearSelection", "Clear Selection", () => { ClearSelection(); ClearHighlightedNote(); }, ContextMenuSeparator.Before));
 
                     if (GetEnvelopeValueForCoord(x, y, out int idx, out _) && idx < EditEnvelope.Length)
                         menu.Add(new ContextMenuOption("MenuClearEnvelope", "Flatten Selection", () => { FlattenEnvelopeValues(idx); }));
