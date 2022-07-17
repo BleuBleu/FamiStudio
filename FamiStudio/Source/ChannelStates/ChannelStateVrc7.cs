@@ -17,8 +17,8 @@ namespace FamiStudio
 
         private void WriteVrc7Register(int reg, int data)
         {
-            WriteRegister(NesApu.VRC7_REG_SEL, reg, 12);    // Roughly equivalent to what we do in sound engine (jsr + rts).
-            WriteRegister(NesApu.VRC7_REG_WRITE, data, 80); // Roughly equivalent to what we do in sound engine (jsr + rts + 8 dummy loops).
+            WriteRegister(NesApu.VRC7_REG_SEL, reg, 16);    // Roughly equivalent to what we do in sound engine (jsr + rts).
+            WriteRegister(NesApu.VRC7_REG_WRITE, data, 84); // Roughly equivalent to what we do in sound engine (jsr + rts + 8 dummy loops).
         }
 
         protected override void LoadInstrument(Instrument instrument)
@@ -99,9 +99,9 @@ namespace FamiStudio
                 if (noteTriggered && (prevPeriodHi & 0x10) != 0)
                     WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi & ~(0x10));
 
-                WriteVrc7Register(NesApu.VRC7_REG_LO_1  + channelIdx, periodLo);
-                WriteVrc7Register(NesApu.VRC7_REG_HI_1  + channelIdx, periodHi);
                 WriteVrc7Register(NesApu.VRC7_REG_VOL_1 + channelIdx, vrc7Instrument | volume);
+                WriteVrc7Register(NesApu.VRC7_REG_LO_1  + channelIdx, periodLo);
+                WriteVrc7Register(NesApu.VRC7_REG_HI_1  + channelIdx, periodHi); // This is what seems to trigger the note, do last.
 
                 prevPeriodHi = periodHi;
             }
