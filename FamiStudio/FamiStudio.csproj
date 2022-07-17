@@ -576,6 +576,8 @@
     <EmbeddedResource Include="Resources\MenuToggleSlide@2x.tga" />
     <EmbeddedResource Include="Resources\MenuTrash.tga" />
     <EmbeddedResource Include="Resources\MenuTrash@2x.tga" />
+    <EmbeddedResource Include="Resources\MenuWave.tga" />
+    <EmbeddedResource Include="Resources\MenuWave@2x.tga" />
     <EmbeddedResource Include="Resources\MessageCancel.tga" />
     <EmbeddedResource Include="Resources\MessageCancel@2x.tga" />
     <EmbeddedResource Include="Resources\MessageError.tga" />

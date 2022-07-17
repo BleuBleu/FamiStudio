@@ -550,6 +550,7 @@
     <EmbeddedResource Include="Resources\MobileMenuToggleAttack.tga" />
     <EmbeddedResource Include="Resources\MobileMenuToggleRelease.tga" />
     <EmbeddedResource Include="Resources\MobileMenuToggleSlide.tga" />
+    <EmbeddedResource Include="Resources\MobileMenuWave.tga" />
     <EmbeddedResource Include="Resources\MobilePianoDrag.tga" />
     <EmbeddedResource Include="Resources\MobilePianoRest.tga" />
     <EmbeddedResource Include="Resources\MobileSnapOff.tga" />

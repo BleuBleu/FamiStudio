@@ -144,7 +144,7 @@ void Nes_Namco::run_until(cpu_time_t end_time)
 	}
 
 	delay = time - end_time;
-	last_time = time;
+	last_time = end_time;
 }
 
 void Nes_Namco::start_seeking()

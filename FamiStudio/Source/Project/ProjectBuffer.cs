@@ -165,11 +165,19 @@ namespace FamiStudio
 
         public void Serialize(ref short[] values)
         {
-            buffer.AddRange(BitConverter.GetBytes(values.Length));
-            idx += sizeof(int);
-            for (int i = 0; i < values.Length; i++)
-                buffer.AddRange(BitConverter.GetBytes(values[i]));
-            idx += values.Length * sizeof(short);
+            if (values == null)
+            {
+                buffer.AddRange(BitConverter.GetBytes(-1));
+                idx += sizeof(int);
+            }
+            else
+            {
+                buffer.AddRange(BitConverter.GetBytes(values.Length));
+                idx += sizeof(int);
+                for (int i = 0; i < values.Length; i++)
+                    buffer.AddRange(BitConverter.GetBytes(values[i]));
+                idx += values.Length * sizeof(short);
+            }
         }
 
         public void Serialize(ref int[] values)
@@ -377,11 +385,18 @@ namespace FamiStudio
         {
             int len = BitConverter.ToInt32(buffer, idx);
             idx += sizeof(int);
-            dest = new short[len];
-            for (int i = 0; i < dest.Length; i++)
+            if (len < 0)
             {
-                dest[i] = BitConverter.ToInt16(buffer, idx);
-                idx += sizeof(short);
+                dest = null;
+            }
+            else
+            {
+                dest = new short[len];
+                for (int i = 0; i < dest.Length; i++)
+                {
+                    dest[i] = BitConverter.ToInt16(buffer, idx);
+                    idx += sizeof(short);
+                }
             }
         }
 
@@ -541,9 +556,16 @@ namespace FamiStudio
 
         public void Serialize(ref short[] values)
         {
-            crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
-            for (int i = 0; i < values.Length; i++)
-                crc = CRC32.Compute(BitConverter.GetBytes(values[i]), crc);
+            if (values == null)
+            {
+                crc = CRC32.Compute(BitConverter.GetBytes(-1), crc);
+            }
+            else
+            { 
+                crc = CRC32.Compute(BitConverter.GetBytes(values.Length), crc);
+                for (int i = 0; i < values.Length; i++)
+                    crc = CRC32.Compute(BitConverter.GetBytes(values[i]), crc);
+            }
         }
 
         public void Serialize(ref int[] values)

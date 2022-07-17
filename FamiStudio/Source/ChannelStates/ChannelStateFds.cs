@@ -8,8 +8,6 @@ namespace FamiStudio
         byte   modDelayCounter;
         ushort modDepth;
         ushort modSpeed;
-        int    waveIndex = -1;
-        int    masterVolume;
 
         public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx) : base(player, apuIdx, channelIdx, false)
         {
@@ -19,16 +17,20 @@ namespace FamiStudio
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.IsFdsInstrument);
+                Debug.Assert(instrument.IsFds);
 
-                if (instrument.IsFdsInstrument)
+                if (instrument.IsFds)
                 {
+                    var wav = instrument.Envelopes[EnvelopeType.FdsWaveform];
                     var mod = instrument.Envelopes[EnvelopeType.FdsModulation].BuildFdsModulationTable();
 
+                    Debug.Assert(wav.Length == 0x40);
                     Debug.Assert(mod.Length == 0x20);
 
-                    waveIndex = -1;
-                    masterVolume = instrument.FdsMasterVolume;
+                    WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
+
+                    for (int i = 0; i < 0x40; ++i)
+                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff);
 
                     WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
                     WriteRegister(NesApu.FDS_MOD_HI, 0x80);
@@ -40,28 +42,11 @@ namespace FamiStudio
             }
         }
 
-        private void ConditionalLoadWave()
-        {
-            var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
-
-            if (newWaveIndex != waveIndex)
-            {
-                var wav = envelopes[EnvelopeType.FdsWaveform].GetChunk(newWaveIndex);
-
-                WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume);
-                for (int i = 0; i < 0x40; ++i)
-                    WriteRegister(NesApu.FDS_WAV_START + i, wav[i]);
-                WriteRegister(NesApu.FDS_VOL, masterVolume);
-
-                waveIndex = newWaveIndex;
-            }
-        }
-
         public override int GetEnvelopeFrame(int envIdx)
         {
             if (envIdx == EnvelopeType.FdsWaveform)
             {
-                return waveIndex * 64 + NesApu.GetFdsWavePos(apuIdx);
+                return + NesApu.GetFdsWavePos(apuIdx);
             }
             else
             {
@@ -78,8 +63,6 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
-                ConditionalLoadWave();
-
                 var period = GetPeriod();
                 var volume = GetVolume();
 
@@ -93,7 +76,7 @@ namespace FamiStudio
 
                     if (note.Instrument != null)
                     {
-                        Debug.Assert(note.Instrument.IsFdsInstrument);
+                        Debug.Assert(note.Instrument.IsFds);
                         modDelayCounter = note.Instrument.FdsModDelay;
                         modDepth = note.Instrument.FdsModDepth;
                         modSpeed = note.Instrument.FdsModSpeed;

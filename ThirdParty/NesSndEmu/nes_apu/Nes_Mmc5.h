@@ -18,6 +18,7 @@ public:
 	void output(Blip_Buffer*);
 	void osc_output(int index, Blip_Buffer*);
 	void end_frame(cpu_time_t);
+	void run_until(cpu_time_t);
 	void write_register(cpu_time_t time, cpu_addr_t addr, int data);
 	void get_register_values(struct mmc5_register_values* regs);
 
@@ -52,8 +53,6 @@ private:
 	int osc_enables;
 
 	short shadow_regs[shadow_regs_count];
-
-	void run_until(cpu_time_t);
 };
 
 // Must match the definition in NesApu.cs.

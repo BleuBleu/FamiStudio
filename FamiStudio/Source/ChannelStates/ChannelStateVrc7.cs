@@ -17,17 +17,17 @@ namespace FamiStudio
 
         private void WriteVrc7Register(int reg, int data)
         {
-            WriteRegister(NesApu.VRC7_REG_SEL,   reg);
-            WriteRegister(NesApu.VRC7_REG_WRITE, data);
+            WriteRegister(NesApu.VRC7_REG_SEL, reg, 16);    // Roughly equivalent to what we do in sound engine (jsr + rts).
+            WriteRegister(NesApu.VRC7_REG_WRITE, data, 84); // Roughly equivalent to what we do in sound engine (jsr + rts + 8 dummy loops).
         }
 
         protected override void LoadInstrument(Instrument instrument)
         {
             if (instrument != null)
             {
-                Debug.Assert(instrument.IsVrc7Instrument);
+                Debug.Assert(instrument.IsVrc7);
 
-                if (instrument.IsVrc7Instrument)
+                if (instrument.IsVrc7)
                 {
                     if (instrument.Vrc7Patch == 0)
                     {
@@ -53,7 +53,7 @@ namespace FamiStudio
 
         public override void IntrumentLoadedNotify(Instrument instrument)
         {
-            Debug.Assert(instrument.IsVrc7Instrument && instrument.Vrc7Patch == 0);
+            Debug.Assert(instrument.IsVrc7 && instrument.Vrc7Patch == 0);
 
             // This will be called when another channel loads a custom patch.
             if (note.Instrument != null && 
@@ -99,9 +99,9 @@ namespace FamiStudio
                 if (noteTriggered && (prevPeriodHi & 0x10) != 0)
                     WriteVrc7Register(NesApu.VRC7_REG_HI_1 + channelIdx, prevPeriodHi & ~(0x10));
 
-                WriteVrc7Register(NesApu.VRC7_REG_LO_1  + channelIdx, periodLo);
-                WriteVrc7Register(NesApu.VRC7_REG_HI_1  + channelIdx, periodHi);
                 WriteVrc7Register(NesApu.VRC7_REG_VOL_1 + channelIdx, vrc7Instrument | volume);
+                WriteVrc7Register(NesApu.VRC7_REG_LO_1  + channelIdx, periodLo);
+                WriteVrc7Register(NesApu.VRC7_REG_HI_1  + channelIdx, periodHi); // This is what seems to trigger the note, do last.
 
                 prevPeriodHi = periodHi;
             }

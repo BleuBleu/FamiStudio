@@ -29,6 +29,7 @@ namespace FamiStudio
         private readonly string UnassignUnusedSamplesTooltip      = "Remove any samples from the 'DPCM Instrument' that are not used in any song. Does not deleted the actual samples from the project.";
         private readonly string DeleteUnassignedSamplesTooltip    = "Delete any DPCM samples that is not assigned to any keys of the 'DPCM Instrument'.";
         private readonly string PermanentlyApplyProcessingTooltip = "For any DPCM sample that use processing (volume adjustment, etc.), will permanently apply those to the DMC data and makes this the source data. Only do this when you are completely done adjusting. For samples using WAV files as source data, this can make your project file much smaller.";
+        private readonly string DiscardN163FdsResampleWavTooltip  = "Discards any source data for FDS/N163 instrument that are resampled from a wav file. You can do this to reduce the size of your project when you are done adjusting the resampling parameters.";
         private readonly string DeleteUnusedArpeggiosTooltip      = "Delete any arpeggio that is not used throughout the entire project.";
 
         public delegate void EmptyDelegate();
@@ -75,8 +76,8 @@ namespace FamiStudio
                     page.AddCheckBox("Unassign unused DPCM instrument keys:", true, UnassignUnusedSamplesTooltip);                    // 2
                     page.AddCheckBox("Delete unassigned samples:", true, DeleteUnassignedSamplesTooltip);                             // 3
                     page.AddCheckBox("Permanently apply all DPCM samples processing:", false, PermanentlyApplyProcessingTooltip);     // 4
-                    page.AddCheckBox("Delete unused arpeggios:", true, DeleteUnusedArpeggiosTooltip);                                 // 5
-                    page.PropertyChanged += ProjectCleanup_PropertyChanged;
+                    page.AddCheckBox("Discard resample wav data for NSF/N163:", false, DiscardN163FdsResampleWavTooltip);             // 5
+                    page.AddCheckBox("Delete unused arpeggios:", true, DeleteUnusedArpeggiosTooltip);                                 // 6
                     break;
             }
 
@@ -84,20 +85,6 @@ namespace FamiStudio
             pages[(int)section] = page;
 
             return page;
-        }
-
-        private void ProjectCleanup_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
-        {
-            // Applying processing implies deleting source data.
-            if (propIdx == 5)
-            {
-                var applyProcessing = (bool)value;
-
-                if (applyProcessing)
-                    props.SetPropertyValue(4, true);
-
-                props.SetPropertyEnabled(4, !applyProcessing);
-            }
         }
 
         private int[] GetSongIds(bool[] selectedSongs)
@@ -164,9 +151,10 @@ namespace FamiStudio
             var unassignUnusedSamples     = props.GetPropertyValue<bool>(2);
             var deleteUnusedSamples       = props.GetPropertyValue<bool>(3);
             var applyAllSamplesProcessing = props.GetPropertyValue<bool>(4);
-            var deleteUnusedArpeggios     = props.GetPropertyValue<bool>(5);
+            var discardN163FdsResampling  = props.GetPropertyValue<bool>(5);
+            var deleteUnusedArpeggios     = props.GetPropertyValue<bool>(6);
 
-            if (mergeIdenticalInstruments || deleteUnusedInstruments || unassignUnusedSamples || deleteUnusedSamples || applyAllSamplesProcessing || deleteUnusedArpeggios)
+            if (mergeIdenticalInstruments || deleteUnusedInstruments || unassignUnusedSamples || deleteUnusedSamples || applyAllSamplesProcessing || discardN163FdsResampling || deleteUnusedArpeggios)
             {
                 app.UndoRedoManager.BeginTransaction(TransactionScope.Project);
 
@@ -195,6 +183,11 @@ namespace FamiStudio
                 if (applyAllSamplesProcessing)
                 {
                     app.Project.PermanentlyApplyAllSamplesProcessing();
+                }
+
+                if (discardN163FdsResampling)
+                {
+                    app.Project.DeleteAllN163FdsResampleWavData();
                 }
                 
                 if (deleteUnusedArpeggios)

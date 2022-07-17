@@ -343,13 +343,15 @@ namespace FamiStudio
                     switch (i)
                     {
                         case EnvelopeType.N163Waveform:
-                        case EnvelopeType.FdsWaveform:
                         case EnvelopeType.WaveformRepeat:
                             // Handled as special case below since multiple-waveform must be splitted and
                             // repeat envelope must be converted.
                             break;
                         case EnvelopeType.FdsModulation:
                             processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
+                            break;
+                        case EnvelopeType.FdsWaveform:
+                            processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
                             break;
                         default:
                             processed = ProcessEnvelope(env,
@@ -375,10 +377,10 @@ namespace FamiStudio
                     }
                 }
 
-                // Special case for N163/FDS multiple waveforms.
-                if (instrument.IsN163Instrument || instrument.IsFdsInstrument)
+                // Special case for N163 multiple waveforms.
+                if (instrument.IsN163)
                 {
-                    var envType = instrument.IsN163Instrument ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
+                    var envType = instrument.IsN163 ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
                     var envRepeat = instrument.Envelopes[EnvelopeType.WaveformRepeat];
 
                     instrument.BuildWaveformsAndWaveIndexEnvelope(out var subWaveforms, out var waveIndexEnvelope, true);
@@ -433,10 +435,10 @@ namespace FamiStudio
             {
                 var instrument = project.Instruments[i];
 
-                if (!instrument.IsFdsInstrument  && 
-                    !instrument.IsN163Instrument &&
-                    !instrument.IsVrc7Instrument &&
-                    !instrument.IsEpsmInstrument)
+                if (!instrument.IsFds  && 
+                    !instrument.IsN163 &&
+                    !instrument.IsVrc7 &&
+                    !instrument.IsEpsm)
                 {
                     var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                     var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -451,8 +453,8 @@ namespace FamiStudio
                     else
                     {
                         var duty = instrument.IsEnvelopeActive(EnvelopeType.DutyCycle) ? instrument.Envelopes[EnvelopeType.DutyCycle].Values[0] : 0;
-                        var dutyShift = instrument.IsRegularInstrument ? 6    : 4;
-                        var dutyBits  = instrument.IsRegularInstrument ? 0x30 : 0;
+                        var dutyShift = instrument.IsRegular ? 6    : 4;
+                        var dutyBits  = instrument.IsRegular ? 0x30 : 0;
 
                         lines.Add($"\t{db} ${(duty << dutyShift) | dutyBits:x2} ; {instrumentCount:x2} : {instrument.Name}");
                         lines.Add($"\t{dw} {ll}env{volumeEnvIdx}, {ll}env{arpeggioEnvIdx}, {ll}env{pitchEnvIdx}");
@@ -483,10 +485,10 @@ namespace FamiStudio
                 {
                     var instrument = project.Instruments[i];
 
-                    if (instrument.IsFdsInstrument  || 
-                        instrument.IsVrc7Instrument ||
-                        instrument.IsN163Instrument ||
-                        instrument.IsEpsmInstrument)
+                    if (instrument.IsFds  || 
+                        instrument.IsVrc7 ||
+                        instrument.IsN163 ||
+                        instrument.IsEpsm)
                     {
                         var volumeEnvIdx   = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Volume]]);
                         var arpeggioEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.Arpeggio]]);
@@ -494,19 +496,16 @@ namespace FamiStudio
 
                         lines.Add($"\t{dw} {ll}env{volumeEnvIdx}, {ll}env{arpeggioEnvIdx}, {ll}env{pitchEnvIdx} ; {instrumentCountExp:x2} : {instrument.Name}");
 
-                        if (instrument.IsFdsInstrument)
+                        if (instrument.IsFds)
                         {
-                            var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
+                            var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
-                            lines.Add($"\t{dw} {ll}env{repeatEnvIdx}");
-                            lines.Add($"\t{dw} {ll}env{fdsModEnvIdx}");
-                            lines.Add($"\t{dw} {instrument.FdsModSpeed}");
-                            lines.Add($"\t{db} {(instrument.FdsModDepth << 2) | instrument.FdsMasterVolume}");
-                            lines.Add($"\t{db} {instrument.FdsModDelay}");
-                            lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
+                            lines.Add($"\t{db} {instrument.FdsMasterVolume}");
+                            lines.Add($"\t{dw} {ll}env{fdsWavEnvIdx}, {ll}env{fdsModEnvIdx}, {instrument.FdsModSpeed}");
+                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}, $00");
                         }
-                        else if (instrument.IsN163Instrument)
+                        else if (instrument.IsN163)
                         {
                             var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
 
@@ -515,12 +514,12 @@ namespace FamiStudio
                             lines.Add($"\t{dw} {ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves");
                             lines.Add($"\t{db} $00, $00, $00, $00");
                         }
-                        else if (instrument.IsVrc7Instrument)
+                        else if (instrument.IsVrc7)
                         {
                             lines.Add($"\t{db} ${(instrument.Vrc7Patch << 4):x2}, $00");
                             lines.Add($"\t{db} {String.Join(",", instrument.Vrc7PatchRegs.Select(r => $"${r:x2}"))}");
                         }
-                        else if (instrument.IsEpsmInstrument)
+                        else if (instrument.IsEpsm)
                         {
                             lines.Add($"\t{dw} {ll}instrument_epsm_extra_patch{i}");
                             // we can fit the first 8 bytes of data here to avoid needing to add padding
@@ -545,7 +544,7 @@ namespace FamiStudio
                 for (int i = 0; i < project.Instruments.Count; i++)
                 {
                     var instrument = project.Instruments[i];
-                    if (instrument.IsEpsmInstrument)
+                    if (instrument.IsEpsm)
                     {
                         lines.Add($"{ll}instrument_epsm_extra_patch{i}:");
                         lines.Add($"\t{db} {String.Join(",", instrument.EpsmPatchRegs.Skip(8).Select(r => $"${r:x2}"))}");
@@ -614,12 +613,12 @@ namespace FamiStudio
 
             lines.Add("");
 
-            // Write the N163/FDS multiple waveforms.
-            if (project.UsesN163Expansion || project.UsesFdsExpansion)
+            // Write the N163 multiple waveforms.
+            if (project.UsesN163Expansion)
             {
                 foreach (var instrument in project.Instruments)
                 {
-                    if (instrument.IsN163Instrument || instrument.IsFdsInstrument)
+                    if (instrument.IsN163 || instrument.IsFds)
                     {
                         lines.Add($"{ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves:");
 
@@ -784,7 +783,7 @@ namespace FamiStudio
             if (project.UsesVrc7Expansion && 
                 channel.IsVrc7Channel &&
                 instrument != null &&
-                instrument.IsVrc7Instrument &&
+                instrument.IsVrc7 &&
                 instrument.Vrc7Patch == 0)
             {
                 foreach (var c in song.Channels)
@@ -797,7 +796,7 @@ namespace FamiStudio
                             note != null &&
                             note.Instrument != null &&
                             note.Instrument != instrument &&
-                            note.Instrument.IsVrc7Instrument &&
+                            note.Instrument.IsVrc7 &&
                             note.Instrument.Vrc7Patch == 0)
                         {
                             return true;
