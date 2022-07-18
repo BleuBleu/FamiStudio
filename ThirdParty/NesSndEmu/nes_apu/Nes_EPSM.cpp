@@ -42,7 +42,7 @@ void Nes_EPSM::reset_psg()
 	if (psg)
 		PSG_delete(psg);
 
-	psg = PSG_new(psg_clock, (uint32_t)(psg_clock / 12 / (4000000.0/1789773.0)));
+	psg = PSG_new(psg_clock, (uint32_t)(psg_clock / 12 / (psg_clock/1789773.0)));
 	PSG_reset(psg);
 }
 
@@ -115,6 +115,7 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 	}
 	else if (addr >= reg_write && addr < (reg_write + reg_range)) {
 			if((addr == 0x401d) && (reg < 0x10)){
+				PSG_writeReg(psg, reg, data);
 			}
 	}
 	int mask = 0;
@@ -131,8 +132,10 @@ void Nes_EPSM::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 
 	a0 = (addr & 0x000D) == 0x000D; //const uint8_t a0 = (addr & 0xF000) == 0xE000;
 	a1 = !!(addr & 0x2); //const uint8_t a1 = !!(addr & 0xF);
-	if (a1 == 0x0) { PSG_writeReg(psg, reg, data); }
-
+	/*if (!mask)
+	{
+		queue.push(a0 | (a1 << 1), data);
+	}*/
 	switch (addr) {
 	case 0x401d:
 		regs_a0[current_register] = data;
@@ -153,7 +156,6 @@ long Nes_EPSM::run_until(cpu_time_t time)
 {
 	if (!output_buffer)
 		return 0;
-	time <<= 8;
 	require(time >= last_time);
 	cpu_time_t t = last_time;
 	t += delay;
@@ -161,6 +163,11 @@ long Nes_EPSM::run_until(cpu_time_t time)
 
 	while (t < time)
 	{
+		/*if (!queue.empty() && !(t % 1))
+		{
+			epsm_write write = queue.pop();
+			OPN2_Write(&opn2, write.addr, write.data);
+		}*/
 		int sample = (int)(PSG_calc(psg)/1.8);
 		int sample_right;
 		sample = clamp(sample, -7710, 7710);
@@ -173,22 +180,22 @@ long Nes_EPSM::run_until(cpu_time_t time)
 			sample += (int)(samples[2]*1.1);
 			sample_right += (int)(samples[1]) * 12;
 			sample_right += (int)(samples[3] * 1.1);
-			epsm_time += (1789773.0 / (8000000/6));
+			epsm_time += (1789773.0 / (epsm_clock/epsm_internal_multiplier));
 		}
 		int delta = sample - last_amp;
 		int delta_right = sample_right - last_amp_right;
 		if (delta)
 		{
-			synth.offset(t>>8, delta, output_buffer);
+			synth.offset(t, delta, output_buffer);
 			last_amp = sample;
 		}
 		if (delta_right)
 		{
-			synth_right.offset(t>>8, delta_right, output_buffer_right);
+			synth_right.offset(t, delta_right, output_buffer_right);
 			last_amp_right = sample_right;
 		}
 		epsm_time -= 12;
-		t += (12 << 8);// / 0.9955;
+		t += 12;
 	}
 
 	delay = t - time;
@@ -198,10 +205,10 @@ long Nes_EPSM::run_until(cpu_time_t time)
 
 void Nes_EPSM::end_frame(cpu_time_t time)
 {
-	if (time << 8 > last_time)
+	if (time> last_time)
 		run_until(time);
 
-	last_time -= (time << 8);
+	last_time -= time;
 	assert(last_time >= 0);
 }
 

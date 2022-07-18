@@ -73,6 +73,8 @@ public:
 	unsigned char ages_a1[184];
 
 	enum { psg_clock = 4000000 };
+	enum { epsm_clock = 8000000 };
+	enum { epsm_internal_multiplier = 6 }; //no clue why it behaves like this
 	enum { reg_select = 0x401c };
 	enum { reg_write = 0x401d };
 	enum { reg_select2 = 0x401e };
