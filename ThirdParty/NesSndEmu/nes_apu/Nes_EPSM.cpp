@@ -42,7 +42,7 @@ void Nes_EPSM::reset_psg()
 	if (psg)
 		PSG_delete(psg);
 
-	psg = PSG_new(psg_clock, (uint32_t)(psg_clock / 16.0 / (4000000.0/1789773.0)));
+	psg = PSG_new(psg_clock, (uint32_t)(psg_clock / 12 / (4000000.0/1789773.0)));
 	PSG_reset(psg);
 }
 
@@ -165,16 +165,15 @@ long Nes_EPSM::run_until(cpu_time_t time)
 		int sample_right;
 		sample = clamp(sample, -7710, 7710);
 		sample_right = clamp(sample, -7710, 7710);
-		int t2 = 0;
 		int16_t samples[4];
-		while (t2 < 12)
+		while (epsm_time < 12)
 		{
 			OPN2_Clock(&opn2, samples, mask_fm, maskRythm, false);
 			sample += (int)(samples[0] * 12);
 			sample += (int)(samples[2]*1.1);
 			sample_right += (int)(samples[1]) * 12;
 			sample_right += (int)(samples[3] * 1.1);
-			t2++;
+			epsm_time += (1789773.0 / (8000000/6));
 		}
 		int delta = sample - last_amp;
 		int delta_right = sample_right - last_amp_right;
@@ -188,7 +187,8 @@ long Nes_EPSM::run_until(cpu_time_t time)
 			synth_right.offset(t>>8, delta_right, output_buffer_right);
 			last_amp_right = sample_right;
 		}
-		t += (16 << 8);// / 0.9955;
+		epsm_time -= 12;
+		t += (12 << 8);// / 0.9955;
 	}
 
 	delay = t - time;

@@ -107,6 +107,7 @@ private:
 	Blip_Buffer* output_buffer_right;
 	cpu_time_t last_time;
 	int delay;
+	double epsm_time;
 	int last_amp;
 	int last_amp_right;
 	uint16_t opn2_mask;
