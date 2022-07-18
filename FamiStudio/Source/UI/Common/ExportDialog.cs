@@ -192,7 +192,7 @@ namespace FamiStudio
                 page.AddDropDownList("Song :", songNames, app.SelectedSong.Name); // 0
                 page.AddDropDownList("Resolution :", VideoResolution.Names, VideoResolution.Names[0]); // 1
                 page.AddDropDownList("Frame Rate :", new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS"); // 2
-                page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256" }, "128"); // 3
+                page.AddDropDownList("Audio Bit Rate (Kb/s) :", new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192"); // 3
                 page.AddDropDownList("Video Bit Rate (Kb/s):", new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000" }, "8000"); // 4
                 page.AddNumericUpDown("Loop Count :", 1, 1, 8); // 5
                 return true;

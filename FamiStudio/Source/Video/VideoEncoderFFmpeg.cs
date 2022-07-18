@@ -9,19 +9,20 @@ namespace FamiStudio
 {
     class VideoEncoderFFmpeg
     {
+        private bool mp3Audio = false;
         private Process process;
         private BinaryWriter stream;
 
-        private VideoEncoderFFmpeg()
+        private VideoEncoderFFmpeg(bool mp3)
         {
-
+            mp3Audio = mp3;
         }
 
         public static VideoEncoderFFmpeg CreateInstance()
         {
-            if (DetectFFmpeg(Settings.FFmpegExecutablePath))
+            if (DetectFFmpeg(Settings.FFmpegExecutablePath, out var mp3))
             {
-                return new VideoEncoderFFmpeg();
+                return new VideoEncoderFFmpeg(mp3);
             }
             else
             {
@@ -31,7 +32,9 @@ namespace FamiStudio
 
         public bool BeginEncoding(int resX, int resY, int frameRateNumer, int frameRateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
         {
-            process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a aac -b:a {audioBitRate}k \"{outputFile}\"", true, false);
+            var audioCodec = mp3Audio ? "libmp3lame" : "aac";
+
+            process = LaunchFFmpeg(Settings.FFmpegExecutablePath, $"-y -f rawvideo -pix_fmt argb -s {resX}x{resY} -r {frameRateNumer}/{frameRateDenom} -i - -i \"{audioFile}\" -c:v h264 -pix_fmt yuv420p -b:v {videoBitRate}K -c:a {audioCodec} -b:a {audioBitRate}k \"{outputFile}\"", true, false);
             stream = new BinaryWriter(process.StandardInput.BaseStream);
 
             if (Platform.IsWindows)
@@ -88,7 +91,7 @@ namespace FamiStudio
             return process;
         }
 
-        private static bool DetectFFmpeg(string ffmpegExecutable)
+        private static bool DetectFFmpeg(string ffmpegExecutable, out bool mp3Support)
         {
             try
             {
@@ -112,6 +115,20 @@ namespace FamiStudio
                     ret = false;
                 }
 
+                // Favor MP3 if available. According to the ffmpeg doc (and our internal testing), the ffmpeg codecs
+                // are, in order of quality:
+                //
+                //   libopus > libvorbis >= libfdk_aac > libmp3lame >= eac3/ac3 > aac > libtwolame > vorbis > mp2 > wmav2/wmav1
+                //
+                // https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio
+
+                mp3Support = output.Contains("--enable-libmp3lame");
+
+                if (mp3Support)
+                    Log.LogMessage(LogSeverity.Info, "FFmpeg MP3 support detected, will be used for audio compression.");
+                else
+                    Log.LogMessage(LogSeverity.Info, "FFmpeg MP3 support not detected, will fall back on AAC.");
+
                 process.WaitForExit();
                 process.Dispose();
 
@@ -119,6 +136,7 @@ namespace FamiStudio
             }
             catch
             {
+                mp3Support = false;
                 Log.LogMessage(LogSeverity.Error, "Error launching ffmpeg. Make sure the path is correct.");
                 return false;
             }
