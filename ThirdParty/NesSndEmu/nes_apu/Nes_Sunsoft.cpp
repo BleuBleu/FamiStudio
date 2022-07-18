@@ -76,14 +76,18 @@ void Nes_Sunsoft::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 		PSG_writeReg(psg, reg, data);
 		ages[reg] = 0;
 	}
+	run_until(time);
 }
 
-void Nes_Sunsoft::end_frame(cpu_time_t time)
+long Nes_Sunsoft::run_until(cpu_time_t time)
 {
 	if (!output_buffer)
-		return;
+		return 0;
 
+	require(time >= last_time);
 	cpu_time_t t = last_time;
+	t += delay;
+	delay = 0;
 
 	while (t < time)
 	{
@@ -100,7 +104,19 @@ void Nes_Sunsoft::end_frame(cpu_time_t time)
 		t += 16;
 	}
 
-	last_time = t - time;
+
+	delay = t - time;
+	last_time = time;
+	return t;
+}
+
+void Nes_Sunsoft::end_frame(cpu_time_t time)
+{
+	if (time > last_time)
+		run_until(time);
+
+	last_time -= time;
+	assert(last_time >= 0);
 }
 
 void Nes_Sunsoft::start_seeking()
