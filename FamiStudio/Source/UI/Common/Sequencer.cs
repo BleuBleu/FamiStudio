@@ -1716,11 +1716,13 @@ namespace FamiStudio
 
                 if (patternIdx >= 0)
                 {
+                    var isLoopPoint = Song.LoopPoint == patternIdx;
+
                     App.ShowContextMenu(left + x, top + y, new[]
                     {
-                        new ContextMenuOption("MenuLoopPoint", Song.LoopPoint == patternIdx ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
+                        new ContextMenuOption(isLoopPoint ? "MenuClearLoopPoint" :  "MenuLoopPoint", isLoopPoint ? "Clear Loop Point" : "Set Loop Point", () => { SetLoopPoint(patternIdx); } ),
                         new ContextMenuOption("MenuCustomPatternSettings", "Custom Pattern Settings...", () => { EditPatternCustomSettings(new Point(x, y), patternIdx); } )
-                    });
+                    }); ;
                 }
 
                 return true;

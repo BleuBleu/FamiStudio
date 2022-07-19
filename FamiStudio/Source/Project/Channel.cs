@@ -634,6 +634,20 @@ namespace FamiStudio
             return Note.GetEffectDefaultValue(song, effect);
         }
 
+        public int GetLastEffectValue(NoteLocation location, int effect)
+        {
+            var lastLocation = GetLastEffectLocation(location, effect);
+
+            if (lastLocation.IsValid)
+            {
+                return GetNoteAt(lastLocation).GetEffectValue(effect);
+            }
+            else
+            {
+                return Note.GetEffectDefaultValue(song, effect);
+            }
+        }
+
         public NoteLocation GetLastEffectLocation(NoteLocation location, int effect)
         {
             var effectLocation = NoteLocation.Invalid;
