@@ -2110,9 +2110,9 @@ namespace FamiStudio
             if (editMode == EditionMode.Channel && selectedEffectIdx >= 0 && IsSelectionValid())
             {
                 var channel = Song.Channels[editChannel];
-                var patternIdx = Song.PatternIndexFromAbsoluteNoteIndex(selectionMin);
+                var location = NoteLocation.FromAbsoluteNoteIndex(Song, selectionMin);
                 var wantsPreviousValue = Note.EffectWantsPreviousValue(selectedEffectIdx);
-                var prevVal = wantsPreviousValue ? channel.GetCachedLastValidEffectValue(patternIdx - 1, selectedEffectIdx, out _) : Note.GetEffectDefaultValue(Song, selectedEffectIdx);
+                var prevVal = wantsPreviousValue ? channel.GetLastEffectValue(location, selectedEffectIdx) : Note.GetEffectDefaultValue(Song, selectedEffectIdx);
                 var selectedNotes = GetSelectedNotes(false);
                 var values = new int[selectedNotes.Length];
 

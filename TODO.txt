@@ -1,8 +1,6 @@
 4.0.0
 =====
 
-- Clear loop point icon 
-
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
 	=> Way to temporarely disable snapping (FL studio does it with ALT).
@@ -10,7 +8,6 @@ P0:
 	=> Remove 1-frame snap glitch.
 	=> Snap effect values (at least give the option to!)
 - Improve oscilloscope stability (use channel frequency)
-- Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 
 - Android:
 	- N163 multi wave UI : Mobile : Gizmos, highlight, etc. (Currently no effect panel in envelope edit)
@@ -117,6 +114,7 @@ Discord
 
 Backlog: 
 =========
+- Full S5B support? Not very intersting... Noise + envelopes. Meuh.
 - Display number of selected channels in grid for video export?
 - Dark mode for open/save dialogs on MacOS? + title bar?
 - BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
