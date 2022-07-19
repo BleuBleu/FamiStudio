@@ -2729,8 +2729,9 @@ namespace FamiStudio
         private void RenderEnvelopeValues(RenderInfo r)
         {
             var env = EditEnvelope;
-            var resampled = editInstrument.IsN163 && editEnvelope == EnvelopeType.N163Waveform && editInstrument.N163ResampleWaveData != null && editInstrument.N163WavePreset == WavePresetType.Resample ||
-                            editInstrument.IsFds  && editEnvelope == EnvelopeType.FdsWaveform  && editInstrument.FdsResampleWaveData  != null && editInstrument.FdsWavePreset  == WavePresetType.Resample;
+            var resampled = editMode == EditionMode.Enveloppe && 
+                           (editInstrument.IsN163 && editEnvelope == EnvelopeType.N163Waveform && editInstrument.N163ResampleWaveData != null && editInstrument.N163WavePreset == WavePresetType.Resample ||
+                            editInstrument.IsFds  && editEnvelope == EnvelopeType.FdsWaveform  && editInstrument.FdsResampleWaveData  != null && editInstrument.FdsWavePreset  == WavePresetType.Resample);
             var spacing = editEnvelope == EnvelopeType.DutyCycle ? 4 : (editEnvelope == EnvelopeType.Arpeggio ? 12 : 16);
             var color = editMode == EditionMode.Enveloppe ? editInstrument.Color : editArpeggio.Color;
             var brush = r.g.GetSolidBrush(color, 1, resampled ? 0.4f : 1.0f);
