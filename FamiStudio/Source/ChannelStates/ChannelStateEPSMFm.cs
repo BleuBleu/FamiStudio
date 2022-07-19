@@ -79,10 +79,6 @@ namespace FamiStudio
 
             }
         }
-        public static int Clamp(int value, int min, int max)
-        {
-            return (value < min) ? min : (value > max) ? max : value;
-        }
         private int GetOctave(ref int period)
         {
             var octave = 0;
@@ -156,28 +152,28 @@ namespace FamiStudio
                     switch (channelAlgorithmMask[channelAlgorithm[channelIdx] & 0x7])
                     {
                         case 0xF:
-                            WriteEPSMRegister(0x40 + channelIdxHigh, Clamp(opVolume[0 + 4 * channelIdx] + volume,0,127), a1);
-                            WriteEPSMRegister(0x44 + channelIdxHigh, Clamp(opVolume[1 + 4 * channelIdx] + volume, 0, 127), a1);
-                            WriteEPSMRegister(0x48 + channelIdxHigh, Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
-                            WriteEPSMRegister(0x4c + channelIdxHigh, Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x40 + channelIdxHigh, Utils.Clamp(opVolume[0 + 4 * channelIdx] + volume,0,127), a1);
+                            WriteEPSMRegister(0x44 + channelIdxHigh, Utils.Clamp(opVolume[1 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x48 + channelIdxHigh, Utils.Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x4c + channelIdxHigh, Utils.Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
                             break;
                         case 0xE:
                             WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
-                            WriteEPSMRegister(0x44 + channelIdxHigh, Clamp(opVolume[1 + 4 * channelIdx] + volume, 0, 127), a1);
-                            WriteEPSMRegister(0x48 + channelIdxHigh, Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
-                            WriteEPSMRegister(0x4c + channelIdxHigh, Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x44 + channelIdxHigh, Utils.Clamp(opVolume[1 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x48 + channelIdxHigh, Utils.Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x4c + channelIdxHigh, Utils.Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
                             break;
                         case 0xC:
                             WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
                             WriteEPSMRegister(0x44 + channelIdxHigh, opVolume[1 + 4 * channelIdx], a1);
-                            WriteEPSMRegister(0x48 + channelIdxHigh, Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
-                            WriteEPSMRegister(0x4c + channelIdxHigh, Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x48 + channelIdxHigh, Utils.Clamp(opVolume[2 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x4c + channelIdxHigh, Utils.Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
                             break;
                         case 0x8:
                             WriteEPSMRegister(0x40 + channelIdxHigh, opVolume[0 + 4 * channelIdx], a1);
                             WriteEPSMRegister(0x44 + channelIdxHigh, opVolume[1 + 4 * channelIdx], a1);
                             WriteEPSMRegister(0x48 + channelIdxHigh, opVolume[2 + 4 * channelIdx], a1);
-                            WriteEPSMRegister(0x4c + channelIdxHigh, Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
+                            WriteEPSMRegister(0x4c + channelIdxHigh, Utils.Clamp(opVolume[3 + 4 * channelIdx] + volume, 0, 127), a1);
                             break;
 
                     }
