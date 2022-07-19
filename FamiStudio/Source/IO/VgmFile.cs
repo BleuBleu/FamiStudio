@@ -490,6 +490,7 @@ namespace FamiStudio
                         }
                     }
                     sr.WriteLine(writeCommandByte + $"${repeatingReg:X2}" + writeByteStream);
+                    sr.WriteLine(".byte STOP_VGM");
                     sr.WriteLine($" .segment \"DPCM\"");
                     var i = 0;
                     string dpcmData = "";
