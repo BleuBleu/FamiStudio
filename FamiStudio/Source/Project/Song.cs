@@ -897,11 +897,13 @@ namespace FamiStudio
                     {
                         GetPatternCustomSettings(p).patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(localPatternLength, localGroove, localGroovePadMode);
                         GetPatternCustomSettings(p).beatLength    = Utils.Sum(localGroove);
+                        GetPatternCustomSettings(p).groove        = new[] { 1 };
                     }
                 }
 
                 patternLength = FamiStudioTempoUtils.ComputeNumberOfFrameForGroove(patternLength, groove, groovePaddingMode);
                 beatLength    = Utils.Sum(groove);
+                groove        = new [] { 1 };
 
                 UpdatePatternStartNotes();
                 InvalidateCumulativePatternCache();

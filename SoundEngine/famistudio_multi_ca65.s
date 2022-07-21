@@ -3413,7 +3413,7 @@ famistudio_update:
     cmp famistudio_chn_volume_slide_target,x
     beq @clear_volume_slide
     bmi @clear_volume_slide
-    bcc @volume_slide_next
+    bpl @volume_slide_next
 
 @slide_upper_half:
     sta famistudio_chn_volume_track,x
