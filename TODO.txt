@@ -2,7 +2,6 @@
 =====
 
 - ROM power-of-two.
-- NSF bug juef
 - Replace instrument grid color.
 
 P0:
