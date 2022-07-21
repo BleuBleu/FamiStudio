@@ -235,11 +235,22 @@ namespace FamiStudio
                 data[i, 1] = values[i];
             }
 
+            grid.FullRowSelect = true;
             grid.UpdateData(data);
             grid.ValueChanged += Grid_ValueChanged;
+            grid.CellClicked += RadioButtonList_CellClicked;
             grid.ToolTip = tooltip;
 
             return grid;
+        }
+
+        private void RadioButtonList_CellClicked(Control sender, bool left, int rowIndex, int colIndex)
+        {
+            if (colIndex > 0)
+            {
+                var grid = sender as Grid;
+                grid.SetRadio(rowIndex, 0);
+            }
         }
 
         private Button CreateButton(string text, string tooltip)
@@ -559,6 +570,12 @@ namespace FamiStudio
         {
             var grid = properties[propIdx].control as Grid;
             grid.SetColumnEnabled(colIdx, enabled);
+        }
+
+        public void SetRowColor(int propIdx, int rowIdx, Color color)
+        {
+            var grid = properties[propIdx].control as Grid;
+            grid.SetRowColor(rowIdx, color);
         }
 
         public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int numRows = 7)

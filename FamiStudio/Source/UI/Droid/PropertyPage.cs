@@ -743,6 +743,10 @@ namespace FamiStudio
         {
         }
 
+        public void SetRowColor(int propIdx, int rowIdx, Color color)
+        {
+        }
+
         public void AddGrid(ColumnDesc[] columnDescs, object[,] data, int rows = 10)
         {
             properties.Add(new Property());

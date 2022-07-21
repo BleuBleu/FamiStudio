@@ -3731,12 +3731,16 @@ namespace FamiStudio
 
         private void AskReplaceInstrument(Instrument inst)
         {
-            var instrumentNames = new List<string>();
+            var instrumentNames  = new List<string>();
+            var instrumentColors = new List<Color>();
 
             foreach (var i in App.Project.Instruments)
             {
                 if (i.Expansion == inst.Expansion && i != inst)
+                {
                     instrumentNames.Add(i.Name);
+                    instrumentColors.Add(i.Color);
+                } 
             }
 
             if (instrumentNames.Count > 0)
@@ -3745,6 +3749,9 @@ namespace FamiStudio
                 dlg.Properties.AddLabel(null, $"Select the instrument to replace with. All notes using '{inst.Name}' will be replaced by the selected one.", true); // 0
                 dlg.Properties.AddRadioButtonList(null, instrumentNames.ToArray(), 0, null, 12); // 1
                 dlg.Properties.Build();
+
+                for (int i = 0; i < instrumentColors.Count; i++)
+                    dlg.Properties.SetRowColor(1, i, instrumentColors[i]);
 
                 dlg.ShowDialogAsync((r) =>
                 {
@@ -3881,12 +3888,16 @@ namespace FamiStudio
 
         private void AskReplaceArpeggio(Arpeggio arp)
         {
-            var arpeggioNames = new List<string>();
+            var arpeggioNames  = new List<string>();
+            var arpeggioColors = new List<Color>();
 
             foreach (var a in App.Project.Arpeggios)
             {
                 if (a != arp)
+                {
                     arpeggioNames.Add(a.Name);
+                    arpeggioColors.Add(a.Color);
+                }
             }
 
             if (arpeggioNames.Count > 0)
@@ -3895,6 +3906,9 @@ namespace FamiStudio
                 dlg.Properties.AddLabel(null, $"Select the arpeggio to replace with. All notes using '{arp.Name}' will be replaced by the selected one.", true); // 0
                 dlg.Properties.AddRadioButtonList(null, arpeggioNames.ToArray(), 0, null, 12); // 1
                 dlg.Properties.Build();
+
+                for (int i = 0; i < arpeggioColors.Count; i++)
+                    dlg.Properties.SetRowColor(1, i, arpeggioColors[i]);
 
                 dlg.ShowDialogAsync((r) =>
                 {
