@@ -3,6 +3,7 @@
 
 - ROM power-of-two.
 - NSF bug juef
+- Replace instrument grid color.
 
 P0:
 - Improve snapping. (Ask Infu for feedback, he showed an app that he found intuitive)
