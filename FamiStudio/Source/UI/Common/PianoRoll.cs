@@ -110,7 +110,7 @@ namespace FamiStudio
         enum EditionMode
         {
             Channel,
-            Enveloppe,
+            Envelope,
             DPCM,
             DPCMMapping,
             Arpeggio,
@@ -398,15 +398,15 @@ namespace FamiStudio
 
         public bool IsMaximized                => maximized;
         public bool IsEditingChannel           => editMode == EditionMode.Channel; 
-        public bool IsEditingInstrument        => editMode == EditionMode.Enveloppe; 
+        public bool IsEditingInstrument        => editMode == EditionMode.Envelope; 
         public bool IsEditingArpeggio          => editMode == EditionMode.Arpeggio;
         public bool IsEditingDPCMSample        => editMode == EditionMode.DPCM;
         public bool IsEditingDPCMSampleMapping => editMode == EditionMode.DPCMMapping;
         
-        public bool CanCopy       => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
-        public bool CanCopyAsText => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio);
-        public bool CanPaste      => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
-        public bool CanDelete     => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio || editMode == EditionMode.DPCM);
+        public bool CanCopy       => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio);
+        public bool CanCopyAsText => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio);
+        public bool CanPaste      => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel && ClipboardUtils.ContainsNotes || (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && ClipboardUtils.ContainsEnvelope);
+        public bool CanDelete     => IsActiveControl && IsSelectionValid() && (editMode == EditionMode.Channel || editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio || editMode == EditionMode.DPCM);
         public bool IsActiveControl => App != null && App.ActiveControl == this;
 
         public Instrument EditInstrument   => editInstrument;
@@ -492,7 +492,7 @@ namespace FamiStudio
             virtualSizeY = NumNotes * noteSizeY;
             pianoVisible = editMode == EditionMode.Channel || editMode == EditionMode.DPCMMapping || editMode == EditionMode.VideoRecording || Platform.IsDesktop;
 
-            if (Platform.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Enveloppe))
+            if (Platform.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Envelope))
             {
                 Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
                 var maxValuesInScreen = editEnvelope == EnvelopeType.FdsWaveform || editEnvelope == EnvelopeType.FdsModulation ? 64 : 16;
@@ -537,7 +537,7 @@ namespace FamiStudio
         {
             SaveChannelScroll();
 
-            editMode = EditionMode.Enveloppe;
+            editMode = EditionMode.Envelope;
             editInstrument = instrument;
             editEnvelope = envelope;
             showEffectsPanel = false;
@@ -715,7 +715,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Arpeggio)
                 CenterEnvelopeScroll(editArpeggio.Envelope, EnvelopeType.Arpeggio);
-            else if (editMode == EditionMode.Enveloppe)
+            else if (editMode == EditionMode.Envelope)
                 CenterEnvelopeScroll(editInstrument.Envelopes[editEnvelope], editEnvelope, editInstrument);
         }
 
@@ -821,7 +821,7 @@ namespace FamiStudio
         {
             get
             {
-                if (editMode == EditionMode.Enveloppe)
+                if (editMode == EditionMode.Envelope)
                     return editInstrument?.Envelopes[(int)editEnvelope];
                 else if (editMode == EditionMode.Arpeggio)
                     return editArpeggio.Envelope;
@@ -834,7 +834,7 @@ namespace FamiStudio
         {
             get
             {
-                if (editMode == EditionMode.Enveloppe && editInstrument != null && editInstrument.EnvelopeHasRepeat(editEnvelope))
+                if (editMode == EditionMode.Envelope && editInstrument != null && editInstrument.EnvelopeHasRepeat(editEnvelope))
                     return editInstrument.Envelopes[EnvelopeType.WaveformRepeat];
                 return null;
             }
@@ -1164,7 +1164,7 @@ namespace FamiStudio
         {
             r.ch.PushTranslation(pianoSizeX, 0);
 
-            if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && EditEnvelope != null)
+            if ((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && EditEnvelope != null)
             {
                 var env = EditEnvelope;
                 var rep = EditRepeatEnvelope;
@@ -1330,9 +1330,9 @@ namespace FamiStudio
 
             r.ch.DrawLine(0, headerSizeY - 1, Width, headerSizeY - 1, ThemeResources.BlackBrush);
 
-            if (((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && CanEnvelopeDisplayFrame()) || (editMode == EditionMode.Channel))
+            if (((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && CanEnvelopeDisplayFrame()) || (editMode == EditionMode.Channel))
             {
-                var seekFrame = editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : GetSeekFrameToDraw();
+                var seekFrame = editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio ? App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio) : GetSeekFrameToDraw();
                 if (seekFrame >= 0)
                 {
                     r.ch.PushTranslation(GetPixelForNote(seekFrame), 0);
@@ -1401,7 +1401,7 @@ namespace FamiStudio
                     r.cc.PopTransform();
                 }
             }
-            else if (editMode == EditionMode.DPCM || editMode == EditionMode.Enveloppe && editInstrument.Envelopes[EnvelopeType.WaveformRepeat] != null)
+            else if (editMode == EditionMode.DPCM || editMode == EditionMode.Envelope && editInstrument.Envelopes[EnvelopeType.WaveformRepeat] != null)
             {
                 r.cc.DrawBitmapAtlas(showEffectsPanel ? bmpExpandedSmall : bmpCollapsedSmall, 0, 0, 1.0f, bitmapScale, Theme.LightGreyColor1);
 
@@ -1566,7 +1566,7 @@ namespace FamiStudio
 
         private void RenderEffectPanel(RenderInfo r)
         {
-            if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Enveloppe && HasRepeatEnvelope()) && showEffectsPanel)
+            if ((editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Envelope && HasRepeatEnvelope()) && showEffectsPanel)
             {
                 r.ch.PushTranslation(pianoSizeX, headerSizeY);
 
@@ -1803,7 +1803,7 @@ namespace FamiStudio
                         }
                     }
                 }
-                else if (editMode == EditionMode.Enveloppe && HasRepeatEnvelope())
+                else if (editMode == EditionMode.Envelope && HasRepeatEnvelope())
                 {
                     var env = EditEnvelope;
                     var rep = EditRepeatEnvelope;
@@ -2186,13 +2186,13 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
                 CopyNotes();
-            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+            else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 CopyEnvelopeValues(false);
         }
 
         public void CopyAsText()
         {
-            if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+            if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 CopyEnvelopeValues(true);
         }
 
@@ -2200,7 +2200,7 @@ namespace FamiStudio
         {
             if (editMode == EditionMode.Channel)
                 CutNotes();
-            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+            else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 CutEnvelopeValues();
         }
 
@@ -2210,7 +2210,7 @@ namespace FamiStudio
 
             if (editMode == EditionMode.Channel)
                 PasteNotes();
-            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+            else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 PasteEnvelopeValues();
         }
 
@@ -2248,7 +2248,7 @@ namespace FamiStudio
                 DeleteSelectedWaveSection();
             else if (editMode == EditionMode.Channel)
                 DeleteSelectedNotes();
-            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+            else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 DeleteSelectedEnvelopeValues();
         }
 
@@ -2729,16 +2729,16 @@ namespace FamiStudio
         private void RenderEnvelopeValues(RenderInfo r)
         {
             var env = EditEnvelope;
-            var resampled = editMode == EditionMode.Enveloppe && 
+            var resampled = editMode == EditionMode.Envelope && 
                            (editInstrument.IsN163 && editEnvelope == EnvelopeType.N163Waveform && editInstrument.N163ResampleWaveData != null && editInstrument.N163WavePreset == WavePresetType.Resample ||
                             editInstrument.IsFds  && editEnvelope == EnvelopeType.FdsWaveform  && editInstrument.FdsResampleWaveData  != null && editInstrument.FdsWavePreset  == WavePresetType.Resample);
             var spacing = editEnvelope == EnvelopeType.DutyCycle ? 4 : (editEnvelope == EnvelopeType.Arpeggio ? 12 : 16);
-            var color = editMode == EditionMode.Enveloppe ? editInstrument.Color : editArpeggio.Color;
+            var color = editMode == EditionMode.Envelope ? editInstrument.Color : editArpeggio.Color;
             var brush = r.g.GetSolidBrush(color, 1, resampled ? 0.4f : 1.0f);
 
             Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int envTypeMinValue, out int envTypeMaxValue);
 
-            // Draw the enveloppe value backgrounds.
+            // Draw the envelope value backgrounds.
             int maxValue = 128 / (int)envelopeValueZoom;
             int midValue =  64 / (int)envelopeValueZoom;
 
@@ -2792,7 +2792,7 @@ namespace FamiStudio
             if (env.Length > 0)
                 r.cb.DrawLine(GetPixelForNote(env.Length), 0, GetPixelForNote(env.Length), Height, ThemeResources.BlackBrush);
 
-            if ((editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && CanEnvelopeDisplayFrame())
+            if ((editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && CanEnvelopeDisplayFrame())
             {
                 var seekFrame = App.GetEnvelopeFrame(editInstrument, editEnvelope, editMode == EditionMode.Arpeggio);
                 if (seekFrame >= 0)
@@ -2942,7 +2942,7 @@ namespace FamiStudio
                 r.cf.DrawLine(line, ThemeResources.LightGreyBrush2, 1, true);
             }
 
-            if (editMode == EditionMode.Enveloppe)
+            if (editMode == EditionMode.Envelope)
             {
                 var envelopeString = EnvelopeType.Names[editEnvelope];
 
@@ -2985,7 +2985,7 @@ namespace FamiStudio
             {
                 RenderNotes(r);
             }
-            else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+            else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
             {
                 RenderEnvelopeValues(r);
             }
@@ -3894,7 +3894,7 @@ namespace FamiStudio
 
                 Envelope.GetMinMaxValueForType(editInstrument, editEnvelope, out int min, out int max);
 
-                if (editMode == EditionMode.Enveloppe)
+                if (editMode == EditionMode.Envelope)
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 else
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
@@ -4079,7 +4079,7 @@ namespace FamiStudio
             captureOffsetY = offsetY;
             canFling = false;
 
-            if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+            if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 GetEnvelopeValueForCoord(x, y, out _, out captureEnvelopeValue);
 
             captureMouseAbsoluteIdx = GetAbsoluteNoteIndexForPixel(x - pianoSizeX);
@@ -4860,7 +4860,7 @@ namespace FamiStudio
                         else
                             DeleteSelectedNotes();
                     }
-                    else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+                    else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                     {
                         DeleteSelectedEnvelopeValues();
                     }
@@ -4888,7 +4888,7 @@ namespace FamiStudio
                             break;
                     }
                 }
-                else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+                else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 {
                     switch (e.Key)
                     {
@@ -5039,7 +5039,7 @@ namespace FamiStudio
 
         public void ToggleEffectPanel()
         {
-            if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Enveloppe && HasRepeatEnvelope())
+            if (editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Envelope && HasRepeatEnvelope())
                 SetShowEffectPanel(!showEffectsPanel);
         }
 
@@ -5226,7 +5226,7 @@ namespace FamiStudio
         {
             StartCaptureOperation(x, y, CaptureOperation.ResizeEnvelope);
 
-            if (editMode == EditionMode.Enveloppe)
+            if (editMode == EditionMode.Envelope)
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
@@ -5258,7 +5258,7 @@ namespace FamiStudio
                 CaptureOperation op = e.Left ? CaptureOperation.DragLoop : CaptureOperation.DragRelease;
                 StartCaptureOperation(e.X, e.Y, op);
 
-                if (editMode == EditionMode.Enveloppe)
+                if (editMode == EditionMode.Envelope)
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
                 else
                     App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
@@ -5274,7 +5274,7 @@ namespace FamiStudio
         {
             StartCaptureOperation(x, y, CaptureOperation.DrawEnvelope);
 
-            if (editMode == EditionMode.Enveloppe)
+            if (editMode == EditionMode.Envelope)
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
@@ -5568,7 +5568,7 @@ namespace FamiStudio
                 if (HandleMouseDownChannelNote(e)) goto Handled;
             }
 
-            if (editMode == EditionMode.Enveloppe || 
+            if (editMode == EditionMode.Envelope || 
                 editMode == EditionMode.Arpeggio)
             {
                 //if (HandleMouseDownEnvelopeEffectGizmos(e)) goto Handled; // MATTT : Need to have gizmo handling here.
@@ -5587,7 +5587,7 @@ namespace FamiStudio
 
             if (editMode == EditionMode.Channel ||
                 editMode == EditionMode.DPCM    ||
-                editMode == EditionMode.Enveloppe && HasRepeatEnvelope())
+                editMode == EditionMode.Envelope && HasRepeatEnvelope())
             {
                 if (HandleMouseDownToggleEffectPanelButton(e)) goto Handled;
             }
@@ -5678,7 +5678,7 @@ namespace FamiStudio
                 if (HandleMouseDownDelayedEffectPanel(e)) goto Handled;
             }
 
-            if (editMode == EditionMode.Enveloppe ||
+            if (editMode == EditionMode.Envelope ||
                 editMode == EditionMode.Arpeggio)
             {
                 if (HandleMouseDownDelayedEnvelopeSelection(e)) goto Handled;
@@ -5933,7 +5933,7 @@ namespace FamiStudio
         {
             StartCaptureOperation(x, y, CaptureOperation.ChangeEnvelopeValue);
 
-            if (editMode == EditionMode.Enveloppe)
+            if (editMode == EditionMode.Envelope)
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
@@ -6440,7 +6440,7 @@ namespace FamiStudio
             var env = EditEnvelope;
             var idx = Utils.RoundDown(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), env.ChunkLength);
 
-            if (editMode == EditionMode.Enveloppe)
+            if (editMode == EditionMode.Envelope)
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
@@ -6467,7 +6467,7 @@ namespace FamiStudio
 
         private void ClearEnvelopeLoopRelease(bool release)
         {
-            if (editMode == EditionMode.Enveloppe)
+            if (editMode == EditionMode.Envelope)
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, editInstrument.Id);
             else
                 App.UndoRedoManager.BeginTransaction(TransactionScope.Arpeggio, editArpeggio.Id);
@@ -6494,7 +6494,7 @@ namespace FamiStudio
                 var menu = new List<ContextMenuOption>();
                 var absIdx = Utils.Clamp(GetAbsoluteNoteIndexForPixel(x - pianoSizeX), 0, EditEnvelope.Length - 1);
 
-                if (editMode == EditionMode.Enveloppe && x < lastPixel)
+                if (editMode == EditionMode.Envelope && x < lastPixel)
                 {
                     if (Platform.IsDesktop && IsSelectionValid())
                     {
@@ -6627,7 +6627,7 @@ namespace FamiStudio
                 if (HandleTouchDownDragNote(x, y)) goto Handled;
             }
 
-            if (editMode == EditionMode.Enveloppe ||
+            if (editMode == EditionMode.Envelope ||
                 editMode == EditionMode.Arpeggio)
             {
                 if (HandleTouchDownEnvelopeSelection(x, y)) goto Handled;
@@ -6715,7 +6715,7 @@ namespace FamiStudio
                 if (HandleTouchClickEffectPanel(x, y)) goto Handled;
             }
 
-            if (editMode == EditionMode.Enveloppe ||
+            if (editMode == EditionMode.Envelope ||
                 editMode == EditionMode.Arpeggio)
             {
                 if (HandleTouchClickEnvelope(x, y)) goto Handled;
@@ -6776,7 +6776,7 @@ namespace FamiStudio
                 if (HandleTouchLongPressChannelHeader(x, y)) goto Handled;
             }
 
-            if (editMode == EditionMode.Enveloppe ||
+            if (editMode == EditionMode.Envelope ||
                 editMode == EditionMode.Arpeggio)
             {
                 if (HandleTouchLongPressDrawEnvelope(x, y)) goto Handled;
@@ -6811,7 +6811,7 @@ namespace FamiStudio
             UpdateRenderCoords();
             ClampScroll();
 
-            if (Platform.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Enveloppe))
+            if (Platform.IsMobile && (editMode == EditionMode.Arpeggio || editMode == EditionMode.Envelope))
                 CenterEnvelopeScroll();
         }
 
@@ -6827,7 +6827,7 @@ namespace FamiStudio
             {
                 maxScrollX = Math.Max(GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(Song.Length), false) - scrollMargin, 0);
             }
-            else if (editMode == EditionMode.Enveloppe ||
+            else if (editMode == EditionMode.Envelope ||
                      editMode == EditionMode.Arpeggio)
             {
                 maxScrollX = Math.Max(GetPixelForNote(EditEnvelope.Length, false) - scrollMargin, 0);
@@ -6873,7 +6873,7 @@ namespace FamiStudio
             int rangeMax;
 
             if (editMode == EditionMode.Channel ||
-                editMode == EditionMode.Enveloppe ||
+                editMode == EditionMode.Envelope ||
                 editMode == EditionMode.Arpeggio)
             {
                 rangeMax = editMode == EditionMode.Channel ? Song.GetPatternStartAbsoluteNoteIndex(Song.Length) - 1 : EditEnvelope.Length - 1;
@@ -7326,7 +7326,7 @@ namespace FamiStudio
         private void SelectAll()
         {
             if (editMode == EditionMode.Arpeggio ||
-                editMode == EditionMode.Enveloppe)
+                editMode == EditionMode.Envelope)
             {
                 SetSelection(0, EditEnvelope.Length - 1);
             }
@@ -7535,12 +7535,12 @@ namespace FamiStudio
 
         private bool IsPointInHeaderTopPart(int x, int y)
         {
-            return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && x > pianoSizeX && y > 0 && y < headerSizeY / 2;
+            return (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && x > pianoSizeX && y > 0 && y < headerSizeY / 2;
         }
 
         private bool IsPointInHeaderBottomPart(int x, int y)
         {
-            return (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio) && x > pianoSizeX && y >= headerSizeY / 2 && y < headerSizeY;
+            return (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio) && x > pianoSizeX && y >= headerSizeY / 2 && y < headerSizeY;
         }
 
         private bool IsPointWhereCanResizeEnvelope(int x, int y)
@@ -7563,7 +7563,7 @@ namespace FamiStudio
 
         private bool IsPointInEffectPanel(int x, int y)
         {
-            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Enveloppe && HasRepeatEnvelope()) && x > pianoSizeX && y > headerSizeY && y < headerAndEffectSizeY;
+            return showEffectsPanel && (editMode == EditionMode.Channel || editMode == EditionMode.DPCM || editMode == EditionMode.Envelope && HasRepeatEnvelope()) && x > pianoSizeX && y > headerSizeY && y < headerAndEffectSizeY;
         }
 
         private bool IsPointInNoteArea(int x, int y)
@@ -7632,14 +7632,14 @@ namespace FamiStudio
             {
                 tooltip = "{MouseLeft} Seek - {MouseRight}{Drag} Select - {MouseRight} More Options...";
             }
-            else if (IsPointInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
+            else if (IsPointInHeaderTopPart(e.X, e.Y) && (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio))
             {
                 if (IsPointWhereCanResizeEnvelope(e.X, e.Y))
                     tooltip = "{MouseLeft} Resize envelope\n";
                 else
                     tooltip = "{MouseRight}{Drag} Select";
             }
-            else if (IsPointInHeaderBottomPart(e.X, e.Y) && (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio))
+            else if (IsPointInHeaderBottomPart(e.X, e.Y) && (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio))
             {
                 tooltip = "{MouseLeft} Set loop point\n{MouseRight} Set release point (volume only, must have loop point)";
             }
@@ -7678,7 +7678,7 @@ namespace FamiStudio
                         tooltip = "{MouseLeft}{Drag} Move volume envelope vertex\n{MouseRight} More Options...%";
                     }
                 }
-                else if (editMode == EditionMode.Enveloppe)
+                else if (editMode == EditionMode.Envelope)
                 {
                     tooltip = "{MouseLeft} Set effect value - {MouseWheel} Pan\n{MouseRight} More Options...";
                 }
@@ -7777,7 +7777,7 @@ namespace FamiStudio
                         newNoteTooltip += $"{(selectionMax - selectionMin + 1)}{(Song.Project.UsesFamiTrackerTempo ? "notes" : "frames")} selected";
                     }
                 }
-                else if (editMode == EditionMode.Enveloppe || editMode == EditionMode.Arpeggio)
+                else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 {
                     tooltip = "{MouseLeft} Set envelope value - {MouseWheel} Pan\n{MouseRight} More Options...";
 
@@ -8487,7 +8487,7 @@ namespace FamiStudio
 
                 if (editMode == EditionMode.Channel ||
                     editMode == EditionMode.DPCM    ||
-                    editMode == EditionMode.Enveloppe && HasRepeatEnvelope())
+                    editMode == EditionMode.Envelope && HasRepeatEnvelope())
                 {
                     newHoverTopLeftButton |= IsPointOnToggleEffectPanelButton(e.X, e.Y) ? 1 : 0;
                 }
@@ -8596,7 +8596,7 @@ namespace FamiStudio
                     if (HandleMouseUpChannelHeader(e)) goto Handled;
                 }
 
-                if (editMode == EditionMode.Enveloppe ||
+                if (editMode == EditionMode.Envelope ||
                     editMode == EditionMode.Arpeggio)
                 {
                     if (HandleMouseUpEnvelope(e)) goto Handled;
