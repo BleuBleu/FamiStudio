@@ -108,12 +108,6 @@ namespace FamiStudio
             public byte preferred;
         };
 
-        // time : This optional chunk contains a list of 4 byte signed integers. Each integer represents the length in milliseconds for the corresponding NSFe track. 
-        // fade : This optional chunk contains a list of 4 byte signed integers. It is like the 'time' chunk, but instead specifies a fadeout length in milliseconds for each track.
-        // tlbl : This optional chunk contains names for each track(tlbl = track label). This contains a series of null-terminated strings, in track order. (Like 'time' and 'fade', this is not related to the 'plst' chunk's playlist.) 
-        // taut : This optional chunk contains an author name for each track (taut = track author), useful if several composers contributed to this NSF. This contains a series of null-terminated strings, in track order. (Not related to 'plst' order.) 
-        // auth : This optional chunk contains four null-terminated strings describing in order: Game title, Artist, Copyright, Ripper
-
         byte GetNsfExtensionFlags(int mask)
         {
             byte flags = 0;
@@ -417,13 +411,6 @@ namespace FamiStudio
 
                     // Add NEND chunk at end.
                     nsfBytes.AddRange(nsfePostData);
-
-                    // time : This optional chunk contains a list of 4 byte signed integers. Each integer represents the length in milliseconds for the corresponding NSFe track. 
-                    // fade : This optional chunk contains a list of 4 byte signed integers. It is like the 'time' chunk, but instead specifies a fadeout length in milliseconds for each track.
-                    // tlbl : This optional chunk contains names for each track(tlbl = track label). This contains a series of null-terminated strings, in track order. (Like 'time' and 'fade', this is not related to the 'plst' chunk's playlist.) 
-                    // taut : This optional chunk contains an author name for each track (taut = track author), useful if several composers contributed to this NSF. This contains a series of null-terminated strings, in track order. (Not related to 'plst' order.) 
-                    // auth : This optional chunk contains four null-terminated strings describing in order: Game title, Artist, Copyright, Ripper
-
                 }
                 else
                 {
@@ -1157,11 +1144,13 @@ namespace FamiStudio
                             break;
                     }
                 }
-                                
+
                 song.ChangeFamiStudioTempoGroove(new[] { noteLen }, false);
             }
             else
+            {
                 song.ChangeFamiStudioTempoGroove(new[] { 1 }, false);
+            }
 
             song.SetSensibleBeatLength();
             song.ConvertToCompoundNotes();

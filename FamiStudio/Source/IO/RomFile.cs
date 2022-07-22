@@ -26,6 +26,7 @@ namespace FamiStudio
         const int MaxSongSize             = 0x4000; // 16KB max per song.
         const int MinRomSizeInKB          = 32; // 32KB minimum.
         const int RomCodeDpcmNumBanks     = 2;
+        const int RomCodeDpcmNumBanksVrc6 = 1;
         const int RomHeaderLength         = 16;     // INES header size.
         const int RomHeaderPrgOffset      = 4;      // Offset of the PRG bank count in INES header.
         const int RomDpcmStart            = 0xc000;
@@ -160,19 +161,11 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
 
-                var bankDivider = project.UsesVrc6Expansion ? 2 : 1; // VRC6 uses 16KB banks.
-                var codeAndDpcmNumBanks = RomCodeDpcmNumBanks / bankDivider;
+                var codeAndDpcmNumBanks = project.UsesVrc6Expansion ? RomCodeDpcmNumBanksVrc6 : RomCodeDpcmNumBanks;
                 var romSizeInKb = (codeAndDpcmNumBanks + songBanks.Count) * bankSizeInKB;
 
-                // Add extra empty banks if we haven't reached the minimum.
-                while (romSizeInKb < MinRomSizeInKB)
-                {
-                    songBanks.Add(new List<byte>());
-                    romSizeInKb += bankSizeInKB;
-                }
-
-                // Then make sure its a power of two.
-                while (Utils.NextPowerOfTwo(romSizeInKb) != romSizeInKb)
+                // Add extra empty banks if we haven't reached the minimum or if not a power-of-two.
+                while (romSizeInKb < MinRomSizeInKB || Utils.NextPowerOfTwo(romSizeInKb) != romSizeInKb)
                 {
                     songBanks.Add(new List<byte>());
                     romSizeInKb += bankSizeInKB;
