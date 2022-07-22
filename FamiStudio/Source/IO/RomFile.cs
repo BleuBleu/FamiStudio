@@ -24,14 +24,12 @@ namespace FamiStudio
         const int RomTocOffset            = 0x1800; // Table of content is right after the code at FE00
         const int RomTileSize             = 0x2000; // 8KB CHR data.
         const int MaxSongSize             = 0x4000; // 16KB max per song.
-        const int RomMinNumberBanks       = 2;
-        const int RomMinNumberBanksVrc6   = 1;
+        const int MinRomSizeInKB          = 32; // 32KB minimum.
         const int RomCodeDpcmNumBanks     = 2;
-        const int RomCodeDpcmNumBanksVrc6 = 1;
         const int RomHeaderLength         = 16;     // INES header size.
         const int RomHeaderPrgOffset      = 4;      // Offset of the PRG bank count in INES header.
         const int RomDpcmStart            = 0xc000;
-        const int MaxDpcmSize             = 0x2600; // 9.5KB
+        const int MaxDpcmSize             = 0x2600;
 
         public unsafe bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
@@ -83,6 +81,7 @@ namespace FamiStudio
                 // Gathersong data.
                 var songBanks = new List<List<byte>>();
                 var bankSize = project.UsesVrc6Expansion ? RomBankSizeVrc6 : RomBankSize;
+                var bankSizeInKB = bankSize / 1024;
 
                 // Export each song individually, build TOC at the same time.
                 for (int i = 0; i < project.Songs.Count; i++)
@@ -161,17 +160,22 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Song '{song.Name}' size: {songBytes.Length} bytes.");
                 }
 
-                var minBanks = project.UsesVrc6Expansion ? RomMinNumberBanksVrc6 : RomMinNumberBanks;
+                var bankDivider = project.UsesVrc6Expansion ? 2 : 1; // VRC6 uses 16KB banks.
+                var codeAndDpcmNumBanks = RomCodeDpcmNumBanks / bankDivider;
+                var romSizeInKb = (codeAndDpcmNumBanks + songBanks.Count) * bankSizeInKB;
 
                 // Add extra empty banks if we haven't reached the minimum.
-                if (songBanks.Count < minBanks)
-                {
-                    for (int i = songBanks.Count; i < minBanks; i++)
-                        songBanks.Add(new List<byte>());
-                }
-                else if ((songBanks.Count & 1) != 0 && minBanks == 2) // If using 8KB banks, make sure even number.
+                while (romSizeInKb < MinRomSizeInKB)
                 {
                     songBanks.Add(new List<byte>());
+                    romSizeInKb += bankSizeInKB;
+                }
+
+                // Then make sure its a power of two.
+                while (Utils.NextPowerOfTwo(romSizeInKb) != romSizeInKb)
+                {
+                    songBanks.Add(new List<byte>());
+                    romSizeInKb += bankSizeInKB;
                 }
 
                 // Build final song bank data.
@@ -191,7 +195,6 @@ namespace FamiStudio
                 }
 
                 // Patch header (iNES header always counts in 16KB banks, MMC3 counts in 8KB banks)
-                var codeAndDpcmNumBanks = project.UsesVrc6Expansion ? RomCodeDpcmNumBanksVrc6 : RomCodeDpcmNumBanks;
                 headerBytes[RomHeaderPrgOffset] = (byte)((songBanks.Count + codeAndDpcmNumBanks) * bankSize / 0x4000);
 
                 // Build final ROM and save.
